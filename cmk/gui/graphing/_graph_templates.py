@@ -153,13 +153,13 @@ def _create_graph_recipe_from_translated_metric(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
+    consolidation_function: GraphConsolidationFunction,
     translated_metric: TranslatedMetric,
     specification: TemplateGraphSpecification,
     *,
     temperature_unit: TemperatureUnit,
 ) -> GraphRecipe:
     title = translated_metric.title
-    consolidation_function: Literal["max"] = "max"
     graph_metric = GraphMetric(
         title=title,
         line_type="area",
@@ -233,9 +233,9 @@ def _compute_graph_recipes(
     translated_metrics: Mapping[str, TranslatedMetric],
     specification: TemplateGraphSpecification,
     *,
+    consolidation_function: GraphConsolidationFunction,
     temperature_unit: TemperatureUnit,
 ) -> Iterator[tuple[str, GraphRecipe]]:
-    consolidation_function: Literal["max"] = "max"
     already_graphed_metrics: set[str] = set()
     for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         if (
@@ -386,6 +386,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
         user_permissions: UserPermissions,
         *,
+        consolidation_function: GraphConsolidationFunction,
         debug: bool,
         temperature_unit: TemperatureUnit,
     ) -> list[GraphRecipe]:
@@ -423,6 +424,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         site_id,
                         host_name,
                         service_name,
+                        consolidation_function,
                         translated_metrics[self.graph_id[7:]],
                         self,  # does not matter here, it will be overwritten in _post_process_recipe
                         temperature_unit=temperature_unit,
@@ -441,6 +443,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         service_name,
                         translated_metrics,
                         self,  # does not matter here, it will be overwritten in _post_process_recipe
+                        consolidation_function=consolidation_function,
                         temperature_unit=temperature_unit,
                     )
                 )

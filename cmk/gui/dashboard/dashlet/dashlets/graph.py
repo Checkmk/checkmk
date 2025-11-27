@@ -294,6 +294,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
                 metrics_from_api,
                 graphs_from_api,
                 UserPermissions.from_config(active_config, permission_registry),
+                consolidation_function="max",
                 debug=active_config.debug,
                 temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
             )

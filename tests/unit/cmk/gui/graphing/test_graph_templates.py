@@ -857,6 +857,7 @@ def test_template_recipes_matching(
                 ),
             },
             UserPermissions({}, {}, {}, []),
+            consolidation_function="max",
             debug=False,
             temperature_unit=TemperatureUnit.CELSIUS,
         )
@@ -1037,6 +1038,7 @@ def test__compute_graph_recipes_1(
                     host_name=HostName("host_name"),
                     service_description=ServiceName("service_name"),
                 ),
+                consolidation_function="max",
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
@@ -1085,6 +1087,7 @@ def test__compute_graph_recipes_2(
                     host_name=HostName("host_name"),
                     service_description=ServiceName("service_name"),
                 ),
+                consolidation_function="max",
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
@@ -1525,6 +1528,7 @@ def test__compute_graph_recipes_with_predictive_metrics(
                 host_name=HostName("host_name"),
                 service_description=ServiceName("service_name"),
             ),
+            consolidation_function="max",
             temperature_unit=TemperatureUnit.CELSIUS,
         )
     ] == graph_templates
@@ -2067,6 +2071,7 @@ def test_conflicting_metrics(
                     host_name=HostName("host_name"),
                     service_description=ServiceName("service_name"),
                 ),
+                consolidation_function="max",
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
@@ -2153,6 +2158,7 @@ def test_template_recipes_fs() -> None:
             ),
         },
         UserPermissions({}, {}, {}, []),
+        consolidation_function="max",
         debug=False,
         temperature_unit=TemperatureUnit.CELSIUS,
     ) == [

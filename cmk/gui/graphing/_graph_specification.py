@@ -108,6 +108,7 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
         user_permissions: UserPermissions,
         *,
+        consolidation_function: GraphConsolidationFunction,
         debug: bool,
         temperature_unit: TemperatureUnit,
     ) -> Sequence[GraphRecipe]: ...

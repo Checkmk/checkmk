@@ -753,6 +753,7 @@ def render_graphs_from_specification_html(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            consolidation_function="max",
             debug=debug,
             temperature_unit=temperature_unit,
         )
@@ -1212,6 +1213,7 @@ def host_service_graph_dashlet_cmk(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            consolidation_function="max",
             debug=debug,
             temperature_unit=temperature_unit,
         )

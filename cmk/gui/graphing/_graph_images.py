@@ -151,6 +151,7 @@ def _answer_graph_image_request(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            consolidation_function="max",
             debug=debug,
             temperature_unit=temperature_unit,
         )
@@ -291,6 +292,7 @@ def graph_recipes_for_api_request(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            consolidation_function=api_request.get("consolidation_function", "max"),
             debug=debug,
             temperature_unit=temperature_unit,
         )
@@ -300,12 +302,6 @@ def graph_recipes_for_api_request(
 
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
-
-    if consolidation_function := api_request.get("consolidation_function"):
-        graph_recipes = [
-            graph_recipe.model_copy(update={"consolidation_function": consolidation_function})
-            for graph_recipe in graph_recipes
-        ]
 
     return GraphDataRange.model_validate(raw_graph_data_range), graph_recipes
 

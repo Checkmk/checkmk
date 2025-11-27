@@ -7,6 +7,7 @@ import json
 
 import pytest
 
+from cmk.gui.graphing import GraphConsolidationFunction
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import RestApiClient
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
@@ -16,8 +17,11 @@ COLOR_HEX = "#87cefa"
 
 
 @pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize("consolidation_function", ["min", "max", "average"])
 def test_openapi_get_graph_graph(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    consolidation_function: GraphConsolidationFunction,
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table(
@@ -42,7 +46,7 @@ def test_openapi_get_graph_graph(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.max:0:30:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        f"GET services\nColumns: rrddata:load1:load1.{consolidation_function}:0:30:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
@@ -58,6 +62,7 @@ def test_openapi_get_graph_graph(
                     "type": "predefined_graph",
                     "graph_id": "cpu_load",
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
+                    "reduce": consolidation_function,
                 }
             ),
         )
@@ -77,8 +82,11 @@ def test_openapi_get_graph_graph(
 
 
 @pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize("consolidation_function", ["min", "max", "average"])
 def test_openapi_get_graph_metric(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    consolidation_function: GraphConsolidationFunction,
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table(
@@ -101,7 +109,7 @@ def test_openapi_get_graph_metric(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.max:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        f"GET services\nColumns: rrddata:load1:load1.{consolidation_function}:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
@@ -117,6 +125,7 @@ def test_openapi_get_graph_metric(
                     "metric_id": "load1",
                     "type": "single_metric",
                     "time_range": {"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
+                    "reduce": consolidation_function,
                 }
             ),
         )
@@ -136,8 +145,11 @@ def test_openapi_get_graph_metric(
 
 
 @pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize("consolidation_function", ["min", "max", "average"])
 def test_openapi_get_graph_metric_without_site(
-    api_client: RestApiClient, mock_livestatus: MockLiveStatusConnection
+    api_client: RestApiClient,
+    mock_livestatus: MockLiveStatusConnection,
+    consolidation_function: GraphConsolidationFunction,
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table(
@@ -160,7 +172,7 @@ def test_openapi_get_graph_metric_without_site(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.max:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        f"GET services\nColumns: rrddata:load1:load1.{consolidation_function}:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = api_client.get_graph(
@@ -169,6 +181,7 @@ def test_openapi_get_graph_metric_without_site(
             graph_or_metric_id="load1",
             type_="single_metric",
             time_range={"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
+            reduce=consolidation_function,
         )
     expected = {
         "metrics": [

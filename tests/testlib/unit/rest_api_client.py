@@ -36,6 +36,7 @@ from typing import (
 
 from cmk.ccc import version
 from cmk.ccc.crash_reporting import make_crash_report_base_path
+from cmk.gui.graphing import GraphConsolidationFunction
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.endpoints.configuration_entity._common import to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
@@ -414,6 +415,7 @@ class RestApiClient:
         service_description: str,
         type_: Literal["single_metric", "graph"],
         time_range: TimeRange,
+        reduce: GraphConsolidationFunction,
         graph_or_metric_id: str,
         site: str | None = None,
         expect_ok: bool = True,
@@ -423,6 +425,7 @@ class RestApiClient:
             "service_description": service_description,
             "type": type_,
             "time_range": time_range,
+            "reduce": reduce,
         }
         if type_ == "graph":
             body["graph_id"] = graph_or_metric_id

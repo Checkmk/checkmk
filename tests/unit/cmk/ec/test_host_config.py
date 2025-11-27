@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from pathlib import Path
 
 import pytest
 
@@ -63,8 +64,11 @@ def _test_table() -> list[dict[str, object]]:
 
 @pytest.fixture(name="live")
 def fixture_livestatus(
-    patch_omd_site: None, mock_livestatus: MockLiveStatusConnection
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> MockLiveStatusConnection:
+    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
     mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table("hosts", _test_table())
     return mock_livestatus

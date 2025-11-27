@@ -127,7 +127,7 @@ class LEDResults:
 def parse_audiocodes_leds(
     string_table: Sequence[StringTable],
 ) -> LEDResults | None:
-    if not string_table:
+    if not string_table or all(not led_set for led_set in string_table):
         return None
 
     module_leds = string_table[0]

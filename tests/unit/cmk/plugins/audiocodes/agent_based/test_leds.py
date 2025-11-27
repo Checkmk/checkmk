@@ -66,6 +66,11 @@ def test_discovery_function() -> None:
     ]
 
 
+def test_parse_audiocodes_leds() -> None:
+    assert parse_audiocodes_leds([]) is None
+    assert parse_audiocodes_leds([[], [], [], [], []]) is None
+
+
 @pytest.mark.parametrize(
     "string_table, expected",
     [

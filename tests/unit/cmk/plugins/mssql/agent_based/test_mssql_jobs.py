@@ -1010,3 +1010,28 @@ def test_check_mssql_jobs_consider_if_enabled(
     section = parse_mssql_jobs(string_table)
 
     assert list(check_mssql_jobs(item, params, section)) == expected_result
+
+
+INFO_NO_JOB_NAME = [
+    ["MSSQLSERVER"],
+    [
+        "{2C32E575-3C76-48E0-9E04-43BD2A15B2E1}",
+        "",  # empty line - problems with decoding(or it may be simply empty!)
+        "1",
+        "",
+        "",
+        "5",
+        "",
+        "0",
+        "0",
+        "0",
+        "",
+        "2021-02-08 07:38:50",
+    ],
+]
+
+
+def test_discovery_empty_job_name() -> None:
+    assert list(discover_mssql_jobs(parse_mssql_jobs(INFO_NO_JOB_NAME))) == [
+        Service(item="{2C32E575-3C76-48E0-9E04-43BD2A15B2E1} - MSSQLSERVER"),
+    ]

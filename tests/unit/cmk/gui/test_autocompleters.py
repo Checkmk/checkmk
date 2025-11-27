@@ -46,6 +46,7 @@ def test_builtin_autocompleters_registered() -> None:
 
     if is_ultimate_repo():
         expected += [
+            "otel_host_name_computation",
             "otel_metric_name_autocompleter",
             "relay_choices",
             "azure_labels",

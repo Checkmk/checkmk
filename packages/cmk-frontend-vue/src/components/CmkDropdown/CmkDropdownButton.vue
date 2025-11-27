@@ -12,8 +12,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { useTemplateRef } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
-
 export interface ButtonProps {
   group?: ButtonVariants['group']
 }
@@ -50,17 +48,18 @@ const {
   width?: ButtonVariants['width']
 }>()
 
-const button = useTemplateRef<InstanceType<typeof CmkButton>>('button')
+const button = useTemplateRef<HTMLButtonElement>('button')
 
 defineExpose({
   focus: () => {
     button.value?.focus()
   }
 })
+defineEmits(['click'])
 </script>
 
 <template>
-  <CmkButton
+  <button
     ref="button"
     role="combobox"
     class="cmk-dropdown-button"
@@ -72,13 +71,18 @@ defineExpose({
         no_value: !valueIsSelected
       }
     ]"
+    @click.prevent="
+      (e) => {
+        $emit('click', e)
+      }
+    "
   >
     <slot />
-  </CmkButton>
+  </button>
 </template>
-
 <style scoped>
 .cmk-dropdown-button {
+  display: inline-flex;
   height: var(--form-field-height);
   margin: 0;
   padding: 3px 6px 4px;

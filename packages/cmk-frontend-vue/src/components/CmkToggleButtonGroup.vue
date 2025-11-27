@@ -4,8 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkButton from './CmkButton.vue'
-
 export type ToggleButtonOption = {
   label: string
   value: string
@@ -28,16 +26,17 @@ function setSelectedOption(value: string) {
 
 <template>
   <div class="toggle_buttons_container">
-    <CmkButton
+    <button
       v-for="option in options"
       :key="option.value"
       class="toggle_option"
       :class="{ selected: isSelected(option.value) }"
       :aria-label="`Toggle ${option.label}`"
-      :disabled="option.disabled"
-      @click="setSelectedOption(option.value)"
-      >{{ option.label }}</CmkButton
+      :disabled="option.disabled === true || option.disabled === 'true'"
+      @click.prevent="setSelectedOption(option.value)"
     >
+      {{ option.label }}
+    </button>
   </div>
 </template>
 
@@ -68,7 +67,7 @@ function setSelectedOption(value: string) {
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.selected {
+button.selected {
   border: 1px solid var(--default-form-element-border-color);
   background-color: var(--default-form-element-bg-color);
 }

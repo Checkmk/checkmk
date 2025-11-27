@@ -253,6 +253,8 @@ const createDashboard = async (
 
   if (nextStep === 'setFilters') {
     openDashboardFilterSettings.value = true
+    const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboardId)
+    urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
   } else {
@@ -282,6 +284,8 @@ const cloneDashboard = async (
   }
   if (nextStep === 'setFilters') {
     openDashboardFilterSettings.value = true
+    const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboardId)
+    urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
   } else {

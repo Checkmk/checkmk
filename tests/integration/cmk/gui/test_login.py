@@ -78,7 +78,7 @@ def test_automation_user_gui(with_automation_user: tuple[str, str], site: Site) 
         "dashboard.py",
         auth=(username, password),
     )
-    assert "Dashboard" in response.text
+    assert "cmk-dashboard" in response.text
     assert not session.is_logged_in()
     assert session.get_auth_cookie() is None
 
@@ -89,7 +89,7 @@ def test_automation_user_gui(with_automation_user: tuple[str, str], site: Site) 
             "Authorization": f"Bearer {username} {password}",
         },
     )
-    assert "Dashboard" in response.text
+    assert "cmk-dashboard" in response.text
     assert not session.is_logged_in()
     assert session.get_auth_cookie() is None
 
@@ -143,7 +143,7 @@ def test_human_user_gui(site: Site) -> None:
         },
         allow_redirect_to_login=True,
     )
-    assert "Dashboard" not in response.text
+    assert "cmk-dashboard" not in response.text
     assert not session.is_logged_in()
     assert session.get_auth_cookie() is None
 
@@ -152,7 +152,7 @@ def test_human_user_gui(site: Site) -> None:
         "dashboard.py",
         auth=(username, password),
     )
-    assert "Dashboard" in response.text
+    assert "cmk-dashboard" in response.text
     assert session.is_logged_in()
     assert session.get_auth_cookie() is not None
 
@@ -163,7 +163,7 @@ def test_human_user_gui(site: Site) -> None:
             "Authorization": f"Bearer {username} {password}",
         },
     )
-    assert "Dashboard" in response.text
+    assert "cmk-dashboard" in response.text
     assert session.is_logged_in()
     assert session.get_auth_cookie() is not None
 
@@ -314,7 +314,7 @@ def test_local_secret_no_sessions(site: Site) -> None:
             "Authorization": f"InternalToken {b64_token}",
         },
     )
-    assert "Dashboard" in response.text
+    assert "cmk-dashboard" in response.text
     assert not session.is_logged_in()
     assert session.get_auth_cookie() is None
 

@@ -160,14 +160,17 @@ def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
         job = dict(zip(_COL_HEADERS, line))
         last_run_outcome = _OUTCOME_TRANSLATION[job["last_run_outcome"]]
 
+        # in some cases job_name is empty, so we use job_id as fallback
+        job_name = job["job_name"] if job["job_name"] else job["job_id"]
+
         # The output may contain more than one line per job, depending on how often it is scheduled.
         # The user is only interested in the upcoming "next_run_time".
         section.setdefault(
             (
-                f"{job['job_name']} - {current_instance}"
+                f"{job_name} - {current_instance}"
                 # should always be set but we anyway guard against it
                 if current_instance
-                else job["job_name"]
+                else job_name
             ),
             JobSpec(
                 last_run_duration=_calculate_seconds(job["last_run_duration"]),

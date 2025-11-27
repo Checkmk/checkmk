@@ -11,13 +11,15 @@ It creates a number of random services with random states.
 # mypy: disable-error-code="no-untyped-def"
 
 import argparse
-import ast
-import os
+import json
 import random
 import sys
 import time
 from collections.abc import Sequence
-from pathlib import Path
+
+from cmk.server_side_programs.v1_unstable import Storage
+
+AGENT = "agent_random"
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -35,16 +37,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 def main(argv=None):
     args = parse_arguments(argv or sys.argv[1:])
 
-    state_dir = Path(os.getenv("OMD_ROOT", "/"), "tmp/check_mk/ds_random/")
-    state_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    state_file = state_dir / args.hostname
-    try:
-        history = ast.literal_eval(state_file.read_text())
-    except (OSError, SyntaxError):
-        history = {}
+    state_storage = Storage(AGENT, args.hostname)
+    history = json.loads(state_storage.read("history", "{}"))
 
     services = [
         "Gnarz Usage",
@@ -87,4 +81,4 @@ def main(argv=None):
             % (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
         )
 
-    state_file.write_text("%r\n" % history)
+    state_storage.write("history", json.dumps(history))

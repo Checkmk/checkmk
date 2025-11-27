@@ -55,6 +55,9 @@ VARIABLES:
     - NAME: CHANGED_GROOVY_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '\\.groovy$' || true"
 
+    - NAME: CHANGED_GROOVY_LINT_RC
+      SH: "echo '${CHANGED_FILES_REL}' | grep '.groovylintrc.json$' || true"
+
     - NAME: CHANGED_PYPROJECT_TOML_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^pyproject.toml' || true"
 
@@ -464,7 +467,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/bazel-lint.txt"
 
     - NAME: "Groovy Lint"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_GROOVY_FILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_GROOVY_FILE,CHANGED_GROOVY_LINT_RC
       DIR: "tests"
       ENV_VARS:
           GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.sarif"

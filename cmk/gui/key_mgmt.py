@@ -5,16 +5,12 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import pprint
 import time
-from collections.abc import Mapping
-from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 from dateutil.relativedelta import relativedelta
 
 import cmk.utils.render
-from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
@@ -27,6 +23,7 @@ from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
+from cmk.gui.keypair_store import KeypairMap, KeypairStore
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -37,7 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Key
+from cmk.gui.type_defs import ActionResult, Key, KeyId
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
@@ -51,63 +48,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.log.security_event import log_security_event
-
-
-class KeypairStore:
-    def __init__(self, path: Path, attr: str) -> None:
-        super().__init__()
-        self._path = path
-        self._attr = attr
-
-    def load(self) -> dict[int, Key]:
-        if not self._path.exists():
-            return {}
-
-        variables: dict[str, dict[int, dict[str, Any]]] = {self._attr: {}}
-        with self._path.open("rb") as f:
-            exec(f.read(), variables, variables)  # nosec B102 # BNS:aee528
-        return self._parse(variables[self._attr])
-
-    def save(self, keys: Mapping[int, Key]) -> None:
-        self._path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        with store.locked(self._path):
-            store.save_mk_file(
-                self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"
-            )
-
-    def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
-        return {key_id: Key.model_validate(raw_key) for key_id, raw_key in raw_keys.items()}
-
-    def _unparse(self, keys: Mapping[int, Key]) -> dict[int, dict[str, Any]]:
-        return {key_id: key.model_dump() for key_id, key in keys.items()}
-
-    def choices(self) -> list[tuple[str, str]]:
-        choices = []
-        for key in self.load().values():
-            choices.append((key.fingerprint(HashAlgorithm.MD5), key.alias))
-        return sorted(choices, key=lambda x: x[1])
-
-    def get_key_by_digest(self, digest: str) -> tuple[int, Key]:
-        for key_id, key in self.load().items():
-            if key.fingerprint(HashAlgorithm.MD5) == digest:
-                return key_id, key
-        raise KeyError()
-
-    def add(self, key: Key) -> None:
-        keys = self.load()
-        new_id = max(keys, default=0) + 1
-
-        this_digest = key.fingerprint(HashAlgorithm.MD5)
-        for key_id, stored_key in keys.items():
-            if stored_key.fingerprint(HashAlgorithm.MD5) == this_digest:
-                raise MKUserError(
-                    None,
-                    _("The key / certificate already exists (Key: %d, Description: %s)")
-                    % (key_id, stored_key.alias),
-                )
-
-        keys[new_id] = key
-        self.save(keys)
 
 
 class PageKeyManagement:
@@ -172,10 +112,7 @@ class PageKeyManagement:
         check_csrf_token()
 
         if self._may_edit_config() and request.has_var("_delete"):
-            key_id_as_str = request.var("_delete")
-            if key_id_as_str is None:
-                raise Exception("cannot happen")
-            key_id = int(key_id_as_str)
+            key_id = request.get_validated_type_input_mandatory(KeyId, "_delete")
             keys = self.key_store.load()
             if key_id not in keys:
                 return None
@@ -194,7 +131,7 @@ class PageKeyManagement:
     def component_name(self) -> CertManagementEvent.ComponentType:
         raise NotImplementedError()
 
-    def _log_delete_action(self, key_id: int, key: Key, *, use_git: bool) -> None:
+    def _log_delete_action(self, key_id: KeyId, key: Key, *, use_git: bool) -> None:
         log_security_event(
             CertManagementEvent(
                 event="certificate removed",
@@ -210,7 +147,7 @@ class PageKeyManagement:
     def _delete_confirm_title(self, nr: int) -> str:
         raise NotImplementedError()
 
-    def _key_in_use(self, key_id: int, key: Key) -> bool:
+    def _key_in_use(self, key_id: KeyId, key: Key) -> bool:
         raise NotImplementedError()
 
     def _table_title(self) -> str:
@@ -288,17 +225,10 @@ class PageEditKey:
     def _create_key(
         self, alias: str, passphrase: PasswordType, *, use_git: bool, default_key_size: int = 4096
     ) -> None:
-        keys = self.key_store.load()
-
-        new_id = 1
-        for key_id in keys:
-            new_id = max(new_id, key_id + 1)
-
         assert user.id is not None
         key = generate_key(alias, passphrase, user.id, omd_site(), key_size=default_key_size)
         self._log_create_key(key.to_certificate())
-        keys[new_id] = key
-        self.key_store.save(keys)
+        self.key_store.add(key)
 
     @property
     def component_name(self) -> CertManagementEvent.ComponentType:
@@ -533,10 +463,7 @@ class PageDownloadKey:
             keys = self.key_store.load()
 
             try:
-                key_id_str = request.var("key")
-                if key_id_str is None:
-                    raise Exception("cannot happen")  # is this really the case?
-                key_id = int(key_id_str)
+                key_id = request.get_validated_type_input_mandatory(KeyId, "key")
             except ValueError:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 
@@ -555,7 +482,7 @@ class PageDownloadKey:
             return FinalizeRequest(code=200)
         return None
 
-    def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
+    def _send_download(self, keys: KeypairMap, key_id: KeyId) -> None:
         key = keys[key_id]
         response.set_content_type("application/x-pem-file")
         response.set_content_disposition(
@@ -563,7 +490,7 @@ class PageDownloadKey:
         )
         response.set_data(key.private_key + key.certificate)
 
-    def _file_name(self, key_id: int, key: Key) -> str:
+    def _file_name(self, key_id: KeyId, key: Key) -> str:
         raise NotImplementedError()
 
     def page(self, config: Config) -> None:

@@ -20,6 +20,7 @@ from typing import (
     NewType,
     NotRequired,
     override,
+    Self,
     TypedDict,
     TypeVar,
 )
@@ -727,6 +728,21 @@ class Key(BaseModel):
             .hex(":")
             .upper()
         )
+
+
+class KeyId(str):
+    """KeyId type used for dictionary keys of KeypairStore & agent signature keys.
+    Accepts str|int|uuid.UUID on initialization and coerces to str internally.
+    Earlier key_id were integers, later changed to UUIDs. To support both types transparently,
+    we accept str|int|uuid.UUID here.
+    """
+
+    def __new__(cls, value: str | int | uuid.UUID) -> Self:
+        return super().__new__(cls, str(value))
+
+    @classmethod
+    def generate(cls) -> Self:
+        return cls(uuid.uuid4())
 
 
 GlobalSettings = Mapping[str, Any]

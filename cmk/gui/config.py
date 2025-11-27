@@ -25,10 +25,11 @@ from cmk.gui import log, utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
+from cmk.gui.keypair_store import KeypairStore
 from cmk.gui.plugins.config.base import (  # pylint: disable=cmk-module-layer-violation
     CREConfig,
 )
-from cmk.gui.type_defs import Key, RoleName
+from cmk.gui.type_defs import RoleName
 from cmk.utils import paths
 from cmk.utils.experimental_config import load_experimental_config
 
@@ -213,10 +214,7 @@ def load_config() -> Config:
     # TODO: Temporary local hack to transform the values to the correct type. This needs
     # to be done in make_config_object() in the next step.
     if "agent_signature_keys" in raw_config:
-        raw_config["agent_signature_keys"] = {
-            key_id: Key.model_validate(raw_key)
-            for key_id, raw_key in raw_config["agent_signature_keys"].items()
-        }
+        raw_config["agent_signature_keys"] = KeypairStore.parse(raw_config["agent_signature_keys"])
 
     # Make sure, built-in roles are present, even if not modified and saved with Setup.
     for br in builtin_role_ids:

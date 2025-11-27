@@ -59,4 +59,4 @@ def test_download_agent_shipped_with_checkmk(
 )
 def test_openapi_agent_key_id_above_zero_regression(clients: ClientRegistry) -> None:
     # make sure this doesn't crash
-    clients.Agent.bake_and_sign(key_id=0, passphrase="", expect_ok=False).assert_status_code(400)
+    clients.Agent.bake_and_sign(key_id="0", passphrase="", expect_ok=False).assert_status_code(400)

@@ -41,6 +41,7 @@ import requests
 
 from cmk import trace
 from cmk.gui.http import HTTPMethod
+from cmk.gui.type_defs import KeyId
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 from cmk.relay_protocols.tasks import (
@@ -920,7 +921,7 @@ class AgentsAPI(BaseAPI):
             started=result["started"],
         )
 
-    def sign(self, key_id: int, passphrase: str) -> None:
+    def sign(self, key_id: KeyId | str, passphrase: str) -> None:
         response = self.session.post(
             "/domain-types/agent/actions/sign/invoke",
             json={"key_id": key_id, "passphrase": passphrase},

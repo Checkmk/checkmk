@@ -31,9 +31,10 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
+from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password as PasswordType
 from cmk.crypto.pem import PEMDecodingError
-from cmk.gui import forms, key_mgmt
+from cmk.gui import forms, key_mgmt, keypair_store
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
@@ -62,6 +63,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.keypair_store import KeypairMap
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -72,7 +74,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Key
+from cmk.gui.type_defs import ActionResult, Key, KeyId
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -452,7 +454,7 @@ class PageBackup:
     def title(self) -> str:
         return _("Site backup")
 
-    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
+    def __init__(self, key_store: keypair_store.KeypairStore) -> None:
         super().__init__()
         self.key_store = key_store
 
@@ -733,7 +735,7 @@ class PageBackup:
 
 
 class PageEditBackupJob:
-    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
+    def __init__(self, key_store: keypair_store.KeypairStore) -> None:
         super().__init__()
         self.key_store = key_store
         job_ident = request.get_str_input("job")
@@ -1989,7 +1991,7 @@ class PageEditBackupTarget:
 #   '----------------------------------------------------------------------'
 
 
-class BackupKeypairStore(key_mgmt.KeypairStore):
+class BackupKeypairStore(keypair_store.KeypairStore):
     pass
 
 
@@ -2005,11 +2007,12 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         show_key_download_warning(self.key_store.load())
         super().page(config)
 
-    def _key_in_use(self, key_id: int, key: Key) -> bool:
-        for job in BackupConfig.load().jobs.values():
-            if (job_key_id := job.key_ident()) and str(key_id) == job_key_id:
-                return True
-        return False
+    def _key_in_use(self, key_id: KeyId, key: Key) -> bool:
+        key_digest = key.fingerprint(HashAlgorithm.MD5)
+        return any(
+            (job_key_fp := job.key_ident()) and key_digest == job_key_fp
+            for job in BackupConfig.load().jobs.values()
+        )
 
     def _table_title(self) -> str:
         return self.title()
@@ -2077,16 +2080,16 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
     def title(self) -> str:
         return _("Download backup key")
 
-    def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
+    def _send_download(self, keys: KeypairMap, key_id: KeyId) -> None:
         super()._send_download(keys, key_id)
         keys[key_id].not_downloaded = False
         self.key_store.save(keys)
 
-    def _file_name(self, key_id: int, key: Key) -> str:
+    def _file_name(self, key_id: KeyId, key: Key) -> str:
         return f"Check_MK-{hostname()}-{omd_site()}-backup_key-{key_id}.pem"
 
 
-def show_key_download_warning(keys: dict[int, Key]) -> None:
+def show_key_download_warning(keys: KeypairMap) -> None:
     to_load = [k.alias for k in keys.values() if k.not_downloaded]
     if to_load:
         html.show_warning(
@@ -2153,7 +2156,7 @@ class RestoreJob(MKBackupJob):
 
 
 class PageBackupRestore:
-    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
+    def __init__(self, key_store: keypair_store.KeypairStore) -> None:
         super().__init__()
         self.key_store = key_store
         self._load_target()

@@ -1581,7 +1581,7 @@ class AgentClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def bake_and_sign(self, key_id: int, passphrase: str, expect_ok: bool = True) -> Response:
+    def bake_and_sign(self, key_id: str, passphrase: str, expect_ok: bool = True) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/bake_and_sign/invoke",

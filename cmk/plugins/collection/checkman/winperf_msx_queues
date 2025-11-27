@@ -4,20 +4,29 @@ catalog: app/exchange
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the current length of various MS Exchange
- mail queues. You need a Windows agent of version {1.1.11i1} or
- later and have the counter object {msx_queues} activated.
- This counter is activated per default with the number {10332}.
+ This check monitors the current length of various MS Exchange mail queues.
 
- If the counter number is different in your installation or
- you are using a {check_mk.ini} with custom counter definitions,
- add the counter to the section {[winperf]} with {counters = 10332:msx_queues} ... .
- Look in the output of {lodctr /s:counters.ini} for the object with
- the name {MSExchangeTransport Queues}.
+ You need a Windows agent of version `1.1.11i1` or later, and have the counter object `msx_queues` activated.
+ This counter is activated per default.
 
- You can set levels for warning and critical. Per default
- the queues {Active Remote Delivery}, {Active Mailbox Delivery},
- {Retry Remote Delivery} and {Poison} are monitored.
+ If you have a custom installation, you can use the Agent rule **Windows Performance-Counter objects**
+ in order to add the counter to the section `[winperf]` with `counters = MSExchangeTransport Queues:msx_queues`
+
+ If the check does not work out of the box:
+
+ * Make sure the counter is activated on the monitored host by looking in the output of `lodctr /s:counters.ini` for the object with the name **MSExchangeTransport Queues**.
+
+ * Then look in `C:\ProgramData\checkmk\agent\check_mk.user.yml` and make sure you have:
+
+ ```yaml
+ winperf:
+   counters:
+   - MSExchangeTransport Queues: msx_queues
+   enabled: true
+ ```
+ You can set levels for maximum number of emails in queue and offset using the monitoring rule **MS Exchange Message Queues**.
+
+ By default the queues **Active Remote Delivery**, **Active Mailbox Delivery**, **Retry Remote Delivery** and **Poison** are monitored.
 
 item:
  The name of the queue

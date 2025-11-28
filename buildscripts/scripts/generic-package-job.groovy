@@ -51,16 +51,24 @@ void main() {
     }
 
     dir(checkout_dir) {
-        inside_container(inside_container_args) {
-            withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
-                helper.execute_test([
-                    name       : PACKAGE_PATH,
-                    cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
-                    output_file: output_file,
-                ]);
-            }
-            sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
+        def lock_label = "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}";
+        if (kubernetes_inherit_from != "UNSET") {
+            lock_label = "bzl_lock_k8s";
         }
+
+        lock(label: lock_label, quantity: 1, resource : null) {
+            inside_container(inside_container_args) {
+                withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
+                    helper.execute_test([
+                        name       : PACKAGE_PATH,
+                        cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
+                        output_file: output_file,
+                    ]);
+                }
+                sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
+            }
+        }
+
         // Can be removed once ci-artifacts doesn't fail anymore on empty files
         def is_empty = sh(script:"[[ -s ${output_file} ]]", returnStatus:true)
         def artifacts = "${FILE_ARCHIVING_PATTERN}" + (is_empty ? "": ", ${output_file}")

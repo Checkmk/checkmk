@@ -15,7 +15,8 @@ from typing import NamedTuple
 
 import requests
 import urllib3
-from requests.adapters import HTTPAdapter
+from requests.adapters import DEFAULT_POOLBLOCK, HTTPAdapter
+from urllib3.poolmanager import PoolManager
 
 from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
@@ -91,7 +92,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     )
     parser.add_argument(
         "--cert-server-name",
-        help="""Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.""",
+        help=(
+            "Provides this name for SNI and expects this as the server's name"
+            " in the ssl certificate. Overrides '--no-cert-check'."
+        ),
     )
     parser.add_argument(
         "--api-token",
@@ -122,12 +126,39 @@ class SectionError(Exception):
 
 class HostNameValidationAdapter(HTTPAdapter):
     def __init__(self, host_name: str) -> None:
-        super().__init__()
         self._reference_host_name = host_name
+        super().__init__()
 
     def cert_verify(self, conn, url, verify, cert):
         conn.assert_hostname = self._reference_host_name
         return super().cert_verify(conn, url, verify, cert)
+
+    def init_poolmanager(self, connections, maxsize, block=DEFAULT_POOLBLOCK, **pool_kwargs):
+        # Override this method to make sure the connection pools use the assert_hostname and
+        # server_hostname argument for SNI as in
+        # https://urllib3.readthedocs.io/en/1.26.15/advanced-usage.html#custom-sni-hostname
+        pool_kwargs["assert_hostname"] = self._reference_host_name
+        pool_kwargs["server_hostname"] = self._reference_host_name
+
+        # The rest of the method stays the same as in HTTPAdapter
+        self._pool_connections = connections
+        self._pool_maxsize = maxsize
+        self._pool_block = block
+
+        # PoolManager takes care already of setting assert_same_host=False in urlopen()
+        self.poolmanager = PoolManager(
+            num_pools=connections,
+            maxsize=maxsize,
+            block=block,
+            **pool_kwargs,
+        )
+
+    def send(self, request, *args, **kwargs):
+        # Add Host header for proper SNI implementation as per urllib3 docs
+        if "Host" not in request.headers:
+            request.headers["Host"] = self._reference_host_name
+
+        return super().send(request, *args, **kwargs)
 
 
 class _PureStorageFlashArraySession:

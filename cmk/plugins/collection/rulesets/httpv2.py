@@ -26,6 +26,7 @@ from cmk.rulesets.v1.form_specs import (
     MatchingScope,
     Password,
     RegularExpression,
+    ServiceState,
     SIMagnitude,
     SimpleLevels,
     SimpleLevelsConfigModel,
@@ -650,6 +651,16 @@ def _valuespec_content() -> Dictionary:
                         ),
                     ],
                 )
+            ),
+            "on_error": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("State if expected string is not found"),
+                    help_text=Help(
+                        "Set the state of the service if the expected string or regex is not found "
+                        "in the response body or headers."
+                    ),
+                    prefill=DefaultValue(ServiceState.CRIT),
+                ),
             ),
         },
     )

@@ -39,6 +39,7 @@ pub struct CheckParameters {
     pub header_matchers: Vec<(TextMatcher, TextMatcher)>,
     pub certificate_levels: Option<LowerLevels<u64>>,
     pub disable_certificate_verification: bool,
+    pub on_error_state: State,
 }
 
 pub enum TextMatcher {
@@ -121,8 +122,16 @@ pub fn collect_response_checks(
         params.disable_certificate_verification,
     ))
     .chain(check_user_agent(request_information.user_agent))
-    .chain(check_headers(&response.headers, params.header_matchers))
-    .chain(check_body_matching(body.as_ref(), params.body_matchers))
+    .chain(check_headers(
+        &response.headers,
+        params.header_matchers,
+        params.on_error_state.clone(),
+    ))
+    .chain(check_body_matching(
+        body.as_ref(),
+        params.body_matchers,
+        params.on_error_state,
+    ))
     .flatten()
     .collect()
 }
@@ -278,6 +287,7 @@ fn check_redirect(
 fn check_headers(
     headers: &HeaderMap,
     matchers: Vec<(TextMatcher, TextMatcher)>,
+    on_error_state: State,
 ) -> Vec<Option<CheckResult>> {
     if matchers.is_empty() {
         return vec![];
@@ -340,7 +350,7 @@ fn check_headers(
                 )]
             } else {
                 notice(
-                    State::Crit,
+                    on_error_state.clone(),
                     &format!(
                         "{}: {} ({})",
                         match_text, header_regex, negative_result_text
@@ -392,7 +402,11 @@ fn check_body<T: std::error::Error>(
     (Some(body), vec![])
 }
 
-fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Option<CheckResult>> {
+fn check_body_matching(
+    body: Option<&Body>,
+    matcher: Vec<TextMatcher>,
+    on_error_state: State,
+) -> Vec<Option<CheckResult>> {
     let Some(body) = body else {
         return vec![];
     };
@@ -427,7 +441,7 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
                 )]
             } else {
                 notice(
-                    State::Crit,
+                    on_error_state.clone(),
                     &format!("{}: {} ({})", match_text, m.inner(), negative_result_text),
                 )
             }
@@ -913,7 +927,8 @@ mod test_check_headers {
                         TextMatcher::Exact("some_key3".to_string()),
                         TextMatcher::Exact(String::new())
                     ),
-                ]
+                ],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(
@@ -952,7 +967,8 @@ mod test_check_headers {
                         TextMatcher::Exact(String::new()),
                         TextMatcher::Exact("value".to_string())
                     ),
-                ]
+                ],
+                State::Crit,
             ),
             vec![
                 CheckResult::details(
@@ -985,7 +1001,8 @@ mod test_check_headers {
                         TextMatcher::Exact("some_key3".to_string()),
                         TextMatcher::Exact("some_value3".to_string())
                     ),
-                ]
+                ],
+                State::Crit,
             ),
             vec![
                 CheckResult::details(
@@ -1014,7 +1031,8 @@ mod test_check_headers {
                 vec![(
                     TextMatcher::Exact("some_key1".to_string()),
                     TextMatcher::Exact("some_value2".to_string())
-                ),]
+                ),],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(
@@ -1039,7 +1057,8 @@ mod test_check_headers {
                 vec![(
                     TextMatcher::Exact("some_key1".to_string()),
                     TextMatcher::Exact("ßome_value1".to_string())
-                ),]
+                ),],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(
@@ -1067,7 +1086,8 @@ mod test_check_headers {
                 vec![(
                     TextMatcher::Exact("some_key".to_string()),
                     TextMatcher::Exact("öäü".to_string())
-                ),]
+                ),],
+                State::Crit,
             ),
             vec![CheckResult::details(
                 State::Ok,
@@ -1096,7 +1116,8 @@ mod test_check_headers {
                         TextMatcher::from_regex(Regex::new("foobar").unwrap(), true),
                         TextMatcher::from_regex(Regex::new("baz").unwrap(), true)
                     ),
-                ]
+                ],
+                State::Crit,
             ),
             vec![
                 CheckResult::details(
@@ -1125,7 +1146,8 @@ mod test_check_headers {
                 vec![(
                     TextMatcher::from_regex(Regex::new("s.*y[0-9]").unwrap(), false),
                     TextMatcher::from_regex(Regex::new("s[a-z]+_*value1").unwrap(), false)
-                ),]
+                ),],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(
@@ -1280,7 +1302,7 @@ mod test_check_body_matching {
 
     #[test]
     fn test_no_matcher() {
-        assert!(check_body_matching(test_body("foobar").as_ref(), vec![]).is_empty());
+        assert!(check_body_matching(test_body("foobar").as_ref(), vec![], State::Crit).is_empty());
     }
 
     #[test]
@@ -1288,7 +1310,8 @@ mod test_check_body_matching {
         assert_eq!(
             check_body_matching(
                 test_body("foobar").as_ref(),
-                vec![TextMatcher::Contains("bar".to_string())]
+                vec![TextMatcher::Contains("bar".to_string())],
+                State::Crit,
             ),
             vec![CheckResult::details(
                 State::Ok,
@@ -1302,7 +1325,8 @@ mod test_check_body_matching {
         assert_eq!(
             check_body_matching(
                 test_body("foobär").as_ref(),
-                vec![TextMatcher::Contains("bar".to_string())]
+                vec![TextMatcher::Contains("bar".to_string())],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(State::Crit, "Expected string in body: bar (not found)"),
@@ -1319,7 +1343,8 @@ mod test_check_body_matching {
                 vec![
                     TextMatcher::Contains("bar".to_string()),
                     TextMatcher::Contains("baz".to_string())
-                ]
+                ],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(State::Crit, "Expected string in body: bar (not found)"),
@@ -1335,7 +1360,8 @@ mod test_check_body_matching {
         assert_eq!(
             check_body_matching(
                 test_body("foobar").as_ref(),
-                vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)]
+                vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)],
+                State::Crit,
             ),
             vec![CheckResult::details(
                 State::Ok,
@@ -1349,7 +1375,8 @@ mod test_check_body_matching {
         assert_eq!(
             check_body_matching(
                 test_body("foobar").as_ref(),
-                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)]
+                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(State::Crit, "Expected regex in body: f.*z (no match found)"),
@@ -1363,7 +1390,8 @@ mod test_check_body_matching {
         assert_eq!(
             check_body_matching(
                 test_body("foobar").as_ref(),
-                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)]
+                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)],
+                State::Crit,
             ),
             vec![CheckResult::details(
                 State::Ok,
@@ -1377,7 +1405,8 @@ mod test_check_body_matching {
         assert_eq!(
             check_body_matching(
                 test_body("argl").as_ref(),
-                vec![TextMatcher::from_regex(Regex::new("argl").unwrap(), false)]
+                vec![TextMatcher::from_regex(Regex::new("argl").unwrap(), false)],
+                State::Crit,
             ),
             vec![
                 CheckResult::summary(
@@ -1400,7 +1429,8 @@ mod test_check_body_matching {
                 vec![
                     TextMatcher::Contains("bar".to_string()),
                     TextMatcher::Contains("foo".to_string())
-                ]
+                ],
+                State::Crit,
             ),
             vec![
                 CheckResult::details(State::Ok, "Expected string in body: bar (found)"),

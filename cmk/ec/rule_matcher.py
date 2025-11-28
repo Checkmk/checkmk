@@ -10,7 +10,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from logging import Logger
-from typing import Literal, NamedTuple
+from typing import Literal
 
 from cmk.ccc.site import SiteId
 
@@ -18,7 +18,8 @@ from .config import MatchGroups, Rule, StatePatterns, TextMatchResult, TextPatte
 from .event import Event
 
 
-class MatchPriority(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class MatchPriority:
     has_match: bool
     has_canceling_match: bool
 

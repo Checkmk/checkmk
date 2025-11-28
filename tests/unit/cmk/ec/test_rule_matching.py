@@ -196,8 +196,8 @@ def test_match_message(
 )
 def test_match_priority(
     priority: int,
-    match_priority: MatchPriority | None,
-    cancel_priority: MatchPriority | None,
+    match_priority: tuple[int, int] | None,
+    cancel_priority: tuple[int, int] | None,
     expected: MatchPriority | None,
 ) -> None:
     m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)

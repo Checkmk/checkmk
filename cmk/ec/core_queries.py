@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import NamedTuple
+from dataclasses import dataclass
 
 from livestatus import LocalConnection
 
@@ -29,7 +29,8 @@ def query_contactgroups_members(group_names: Iterable[_ContactgroupName]) -> set
     return {UserId(contact) for row in rows for contact in row[0]}
 
 
-class HostInfo(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class HostInfo:
     name: HostName
     alias: str
     address: HostAddress

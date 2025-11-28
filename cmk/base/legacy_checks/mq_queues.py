@@ -40,12 +40,13 @@ def check_mq_queues(item, params, info):
     for line in info:
         if found is True:
             size, consumerCount, enqueueCount, dequeueCount = map(int, line)
-
+            consumer_count_upper_levels = params["consumerCount"] or (None, None)
+            consumer_count_lower_levels = params["consumer_count_levels_lower"] or (None, None)
             if (
                 count_result := check_levels(
                     consumerCount,
                     None,
-                    params["consumerCount"],
+                    consumer_count_upper_levels + consumer_count_lower_levels,
                     infoname="Consuming connections",
                     human_readable_func=str,
                 )
@@ -80,5 +81,6 @@ check_info["mq_queues"] = LegacyCheckDefinition(
     check_default_parameters={
         "size": None,
         "consumerCount": None,
+        "consumer_count_levels_lower": None,
     },
 )

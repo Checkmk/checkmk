@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -35,9 +34,19 @@ def _parameter_valuespec_mq_queues():
             (
                 "consumerCount",
                 SimpleLevels(
-                    title=_("Levels for the consumer count"),
+                    title=_("Upper Levels for the consumer count"),
                     help=_("Consumer Count is the size of connected consumers to a queue"),
                     spec=Integer,
+                    direction="upper",
+                ),
+            ),
+            (
+                "consumer_count_levels_lower",
+                SimpleLevels(
+                    title=_("Lower levels for the consumer count"),
+                    help=_("Consumer Count is the size of connected consumers to a queue"),
+                    spec=Integer,
+                    direction="lower",
                 ),
             ),
         ],

@@ -324,7 +324,7 @@ def match_event_rule(
         if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
-    time_period = ec.TimePeriods(log.logger)
+    time_period = ec.TimePeriods(log.logger, LocalConnection())
     rule_matcher = ec.RuleMatcher(
         logger=None,
         omd_site_id=omd_site(),

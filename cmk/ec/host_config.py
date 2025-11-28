@@ -8,7 +8,7 @@ from threading import Lock
 
 from cmk.ccc.hostaddress import HostName
 
-from .core_queries import HostInfo, query_hosts_infos, query_status_program_start
+from .core_queries import Connection, HostInfo, query_hosts_infos, query_status_program_start
 
 # .
 #   .--Host config---------------------------------------------------------.
@@ -25,12 +25,13 @@ from .core_queries import HostInfo, query_hosts_infos, query_status_program_star
 
 
 class HostConfig:
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: Logger, connection: Connection) -> None:
         self._logger = logger
         self._lock = Lock()
         self._hosts_by_name: dict[HostName, HostInfo] = {}
         self._hosts_by_designation: dict[str, HostName] = {}
         self._cache_timestamp: int | None = None
+        self._connection = connection
 
     def get_config_for_host(self, host_name: HostName) -> HostInfo | None:
         with self._lock:
@@ -55,7 +56,7 @@ class HostConfig:
             False in case the update failed, otherwise True.
         """
         try:
-            timestamp = query_status_program_start()
+            timestamp = query_status_program_start(self._connection)
             if self._cache_timestamp is None or self._cache_timestamp < timestamp:
                 self._update_cache()
                 self._cache_timestamp = timestamp
@@ -68,7 +69,7 @@ class HostConfig:
         self._logger.debug("Fetching host config from core")
         self._hosts_by_name.clear()
         self._hosts_by_designation.clear()
-        for info in query_hosts_infos():
+        for info in query_hosts_infos(self._connection):
             self._hosts_by_name[info.name] = info
             # Note: It is important that we use exactly the same algorithm here as
             # in the core, see World::loadHosts and World::getHostByDesignation.

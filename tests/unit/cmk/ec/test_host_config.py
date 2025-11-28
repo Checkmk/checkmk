@@ -11,12 +11,13 @@ import pytest
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ec.core_queries import HostInfo
 from cmk.ec.host_config import HostConfig
+from cmk.livestatus_client import LocalConnection
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="host_config")
-def fixture_host_config() -> HostConfig:
-    return HostConfig(logging.getLogger("cmk.mkeventd.EventServer"))
+def fixture_host_config(live: MockLiveStatusConnection) -> HostConfig:
+    return HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), LocalConnection())
 
 
 def _heute_config() -> dict[str, object]:

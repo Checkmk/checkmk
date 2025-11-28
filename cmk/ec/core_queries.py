@@ -5,8 +5,7 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-
-from livestatus import LocalConnection
+from typing import Any, Protocol
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
@@ -17,16 +16,25 @@ _ContactgroupName = str
 _HostGroupName = str
 
 
+class Connection(Protocol):
+    def query(self, query: str) -> Sequence[Sequence[Any]]: ...
+
+
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/
-def query_contactgroups_members(group_names: Iterable[_ContactgroupName]) -> set[UserId]:
+def query_contactgroups_members(
+    connection: Connection, group_names: Iterable[_ContactgroupName]
+) -> set[UserId]:
     query = "GET contactgroups\nColumns: members"
     num_group_names = 0
     for group_name in group_names:
         query += f"\nFilter: name = {group_name}"
         num_group_names += 1
     query += f"\nOr: {num_group_names}"
-    rows = LocalConnection().query(query) if num_group_names else []
-    return {UserId(contact) for row in rows for contact in row[0]}
+    return {
+        UserId(contact)
+        for row in (connection.query(query) if num_group_names else [])
+        for contact in row[0]
+    }
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -40,7 +48,7 @@ class HostInfo:
     host_groups: set[_HostGroupName]
 
 
-def query_hosts_infos() -> Sequence[HostInfo]:
+def query_hosts_infos(connection: Connection) -> Sequence[HostInfo]:
     return [
         HostInfo(
             name=name,
@@ -51,30 +59,27 @@ def query_hosts_infos() -> Sequence[HostInfo]:
             contact_groups=set(contact_groups),
             host_groups=set(groups),
         )
-        for name, alias, address, custom_variables, contacts, contact_groups, groups in LocalConnection().query(
+        for name, alias, address, custom_variables, contacts, contact_groups, groups in connection.query(
             "GET hosts\nColumns: name alias address custom_variables contacts contact_groups groups"
         )
     ]
 
 
-def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
+def query_hosts_scheduled_downtime_depth(connection: Connection, host_name: HostName) -> int:
     return int(
-        LocalConnection().query(
+        connection.query(
             f"GET hosts\nColumns: scheduled_downtime_depth\nFilter: host_name = {host_name}"
         )[0][0]
     )
 
 
-def query_status_program_start() -> int:
-    return int(LocalConnection().query("GET status\nColumns: program_start")[0][0])
+def query_status_program_start(connection: Connection) -> int:
+    return int(connection.query("GET status\nColumns: program_start")[0][0])
 
 
-def query_status_enable_notifications() -> bool:
-    return bool(LocalConnection().query("GET status\nColumns: enable_notifications")[0][0])
+def query_status_enable_notifications(connection: Connection) -> bool:
+    return bool(connection.query("GET status\nColumns: enable_notifications")[0][0])
 
 
-def query_timeperiods_in() -> Mapping[TimeperiodName, bool]:
-    return {
-        name: bool(in_)
-        for name, in_ in LocalConnection().query("GET timeperiods\nColumns: name in")
-    }
+def query_timeperiods_in(connection: Connection) -> Mapping[TimeperiodName, bool]:
+    return {name: bool(in_) for name, in_ in connection.query("GET timeperiods\nColumns: name in")}

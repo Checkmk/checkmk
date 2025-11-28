@@ -563,6 +563,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_MKP_TOOL,
         "cmk.events",
+        "cmk.livestatus_client",
         "cmk.utils",
     ),
     Component("cmk.fetchers"): _allow(

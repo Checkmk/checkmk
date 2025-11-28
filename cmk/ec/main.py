@@ -53,6 +53,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
 from cmk.ccc.translations import translate
 from cmk.ccc.version import get_general_version_infos
+from cmk.livestatus_client import LocalConnection
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import (
@@ -65,7 +66,7 @@ from .config import (
     MatchGroups,
     Rule,
 )
-from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth
+from .core_queries import Connection, HostInfo, query_hosts_scheduled_downtime_depth
 from .crash_reporting import ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
@@ -390,6 +391,8 @@ class EventServer(ECServerThread):
         history: History,
         event_status: EventStatus,
         event_columns: Columns,
+        connection: Connection,
+        *,
         create_pipes_and_sockets: bool = True,
     ) -> None:
         super().__init__(
@@ -412,14 +415,15 @@ class EventServer(ECServerThread):
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
 
-        self.host_config = HostConfig(self._logger)
+        self._connection = connection
+        self.host_config = HostConfig(self._logger, self._connection)
         self._perfcounters = perfcounters
         self._lock_configuration = lock_configuration
         self._history = history
         self._event_status = event_status
         self._event_columns = event_columns
         self._message_period = ActiveHistoryPeriod()
-        self._time_period = TimePeriods(logger)
+        self._time_period = TimePeriods(self._logger, self._connection)
         self._rule_matcher = RuleMatcher(
             logger=self._logger if config["debug_rules"] else None,
             omd_site_id=omd_site(),
@@ -946,6 +950,7 @@ class EventServer(ECServerThread):
                             self.settings,
                             self._config,
                             self._logger,
+                            self._connection,
                             self.host_config,
                             self._event_columns,
                             rule,
@@ -1126,6 +1131,7 @@ class EventServer(ECServerThread):
                 self.settings,
                 self._config,
                 self._logger,
+                self._connection,
                 self.host_config,
                 self._event_columns,
                 rule,
@@ -1142,7 +1148,7 @@ class EventServer(ECServerThread):
             self.settings, self._config, self._logger.getChild("snmp")
         ).parse
         self.compile_rules(self._config["rule_packs"])
-        self.host_config = HostConfig(self._logger)
+        self.host_config = HostConfig(self._logger, self._connection)
         self._rule_matcher = RuleMatcher(
             logger=self._logger if config["debug_rules"] else None,
             omd_site_id=omd_site(),
@@ -1384,6 +1390,7 @@ class EventServer(ECServerThread):
                                 self.settings,
                                 self._config,
                                 self._logger,
+                                self._connection,
                                 self.host_config,
                                 self._event_columns,
                                 rule,
@@ -1415,6 +1422,7 @@ class EventServer(ECServerThread):
                             self.settings,
                             self._config,
                             self._logger,
+                            self._connection,
                             self.host_config,
                             self._event_columns,
                             rule,
@@ -1461,7 +1469,7 @@ class EventServer(ECServerThread):
         if not host_name:
             return False  # Found no host in core: Not in downtime!
         try:
-            return query_hosts_scheduled_downtime_depth(host_name) >= 1
+            return query_hosts_scheduled_downtime_depth(self._connection, host_name) >= 1
         except Exception:
             self._logger.exception(
                 "Cannot get downtime info for host '%s', assuming no downtime.", host_name
@@ -1661,7 +1669,7 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
-            do_notify(self.host_config, self._logger, overflow_event)
+            do_notify(self.host_config, self._logger, self._connection, overflow_event)
 
         return False
 
@@ -1997,6 +2005,7 @@ class StatusServer(ECServerThread):
         event_server: EventServer,
         terminate_main_event: threading.Event,
         reload_config_event: threading.Event,
+        connection: Connection,
     ) -> None:
         super().__init__(
             name="StatusServer",
@@ -2023,6 +2032,7 @@ class StatusServer(ECServerThread):
         self._event_columns = StatusTableEvents.columns
         self._terminate_main_event = terminate_main_event
         self._reload_config_event = reload_config_event
+        self._connection = connection
 
         self.open_unix_socket()
         self.open_tcp_socket()
@@ -2389,7 +2399,12 @@ class StatusServer(ECServerThread):
             # TODO: De-duplicate code from do_event_actions()
             if action_id == "@NOTIFY" and event is not None:
                 do_notify(
-                    self._event_server.host_config, self._logger, event, user, is_cancelling=False
+                    self._event_server.host_config,
+                    self._logger,
+                    self._connection,
+                    event,
+                    user,
+                    is_cancelling=False,
                 )
             else:
                 # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
@@ -2595,6 +2610,7 @@ class EventStatus:
         perfcounters: Perfcounters,
         history: History,
         logger: Logger,
+        connection: Connection,
     ) -> None:
         self.settings = settings
         self._config = config
@@ -2602,6 +2618,7 @@ class EventStatus:
         self.lock = threading.Lock()
         self._history = history
         self._logger = logger
+        self._connection = connection
         self.flush()
 
     def reload_configuration(self, config: Config, history: History) -> None:
@@ -2894,6 +2911,7 @@ class EventStatus:
                                 self.settings,
                                 self._config,
                                 self._logger,
+                                self._connection,
                                 event_server.host_config,
                                 event_columns,
                                 actions,
@@ -3498,8 +3516,9 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
 
         # First do all things that might fail, before daemonizing
         perfcounters = Perfcounters(logger.getChild("lock.perfcounters"))
+        connection = LocalConnection()
         event_status = EventStatus(
-            settings, config, perfcounters, history, logger.getChild("EventStatus")
+            settings, config, perfcounters, history, logger.getChild("EventStatus"), connection
         )
         lock_configuration = ECLock(logger.getChild("lock.configuration"))
         event_server = EventServer(
@@ -3512,6 +3531,7 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
             history,
             event_status,
             StatusTableEvents.columns,
+            connection,
         )
         terminate_main_event = threading.Event()
         reload_config_event = threading.Event()
@@ -3527,6 +3547,7 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
             event_server,
             terminate_main_event,
             reload_config_event,
+            connection,
         )
 
         event_status.load_status(event_server)

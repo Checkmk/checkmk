@@ -6,8 +6,9 @@
 import logging
 import os
 import threading
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -114,12 +115,22 @@ def fixture_perfcounters() -> Perfcounters:
     return Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
 
 
+class RaisingConnection:
+    def query(self, query: str) -> Sequence[Sequence[Any]]:
+        raise Exception("no queries allowed")
+
+
 @pytest.fixture(name="event_status")
 def fixture_event_status(
     settings: ec.Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
 ) -> EventStatus:
     return EventStatus(
-        settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus")
+        settings,
+        config,
+        perfcounters,
+        history,
+        logging.getLogger("cmk.mkeventd.EventStatus"),
+        RaisingConnection(),
     )
 
 
@@ -143,7 +154,8 @@ def fixture_event_server(
         history,
         event_status,
         StatusTableEvents.columns,
-        False,
+        RaisingConnection(),
+        create_pipes_and_sockets=False,
     )
 
 
@@ -170,4 +182,5 @@ def fixture_status_server(
         event_server,
         threading.Event(),
         threading.Event(),
+        RaisingConnection(),
     )

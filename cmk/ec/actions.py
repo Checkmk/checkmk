@@ -14,7 +14,7 @@ from logging import Logger
 from cmk.events import event_context
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
-from .core_queries import query_contactgroups_members, query_status_enable_notifications
+from .core_queries import Connection, query_contactgroups_members, query_status_enable_notifications
 from .event import Event
 from .history import History
 from .host_config import HostConfig
@@ -77,6 +77,7 @@ def event_has_opened(
     settings: Settings,
     config: Config,
     logger: Logger,
+    connection: Connection,
     host_config: HostConfig,
     event_columns: Iterable[tuple[str, object]],
     rule: Rule,
@@ -100,6 +101,7 @@ def event_has_opened(
         settings,
         config,
         logger,
+        connection,
         host_config,
         event_columns,
         rule.get("actions", []),
@@ -113,6 +115,7 @@ def do_event_actions(
     settings: Settings,
     config: Config,
     logger: Logger,
+    connection: Connection,
     host_config: HostConfig,
     event_columns: Iterable[tuple[str, object]],
     actions: Iterable[str],
@@ -123,7 +126,7 @@ def do_event_actions(
     table = config["action"]
     for aname in actions:
         if aname == "@NOTIFY":
-            do_notify(host_config, logger, event, is_cancelling=is_cancelling)
+            do_notify(host_config, logger, connection, event, is_cancelling=is_cancelling)
         elif action := table.get(aname):
             logger.info('executing action "%s" on event %s', action["title"], event["id"])
             do_event_action(history, settings, config, logger, event_columns, action, event, "")
@@ -324,6 +327,7 @@ def _get_event_tags(
 def do_notify(
     host_config: HostConfig,
     logger: Logger,
+    connection: Connection,
     event: Event,
     username: str | None = None,
     is_cancelling: bool = False,
@@ -333,13 +337,15 @@ def do_notify(
 
     We simulate a *service* notification.
     """
-    if not _core_has_notifications_enabled(logger):
+    if not _core_has_notifications_enabled(logger, connection):
         logger.info(
             "Notifications are currently disabled. Skipped notification for event %d", event["id"]
         )
         return
 
-    context = _create_notification_context(host_config, event, username, is_cancelling, logger)
+    context = _create_notification_context(
+        host_config, event, username, is_cancelling, logger, connection
+    )
 
     if logger.isEnabledFor(VERBOSE):
         logger.log(VERBOSE, "Sending notification via Check_MK with the following context:")
@@ -384,10 +390,11 @@ def _create_notification_context(
     username: str | None,
     is_cancelling: bool,
     logger: Logger,
+    connection: Connection,
 ) -> ECEventContext:
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(host_config, context, event)  # involves Livestatus query
-    _add_contacts_from_rule(context, event, logger)
+    _add_contacts_from_rule(context, event, logger, connection)
     return context
 
 
@@ -495,7 +502,12 @@ def _add_infos_from_monitoring_host(
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 
 
-def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logger) -> None:
+def _add_contacts_from_rule(
+    context: ECEventContext,
+    event: Event,
+    logger: Logger,
+    connection: Connection,
+) -> None:
     """
     Add contact information from the rule, but only if the
     host is unknown or if contact groups in rule have precedence.
@@ -510,14 +522,17 @@ def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logge
             or not event["core_host"]
         )
     ):
-        _add_contact_information_to_context(context, contact_groups, logger)
+        _add_contact_information_to_context(context, contact_groups, logger, connection)
 
 
 def _add_contact_information_to_context(
-    context: ECEventContext, contact_groups: Iterable[_ContactgroupName], logger: Logger
+    context: ECEventContext,
+    contact_groups: Iterable[_ContactgroupName],
+    logger: Logger,
+    connection: Connection,
 ) -> None:
     try:
-        contact_names = query_contactgroups_members(contact_groups)
+        contact_names = query_contactgroups_members(connection, contact_groups)
     except Exception:
         logger.exception("Cannot get contact group members, assuming none:")
         contact_names = set()
@@ -532,9 +547,9 @@ def _add_contact_information_to_context(
     )
 
 
-def _core_has_notifications_enabled(logger: Logger) -> bool:
+def _core_has_notifications_enabled(logger: Logger, connection: Connection) -> bool:
     try:
-        return query_status_enable_notifications()
+        return query_status_enable_notifications(connection)
     except Exception:
         logger.exception(
             "Cannot determine whether notifications are enabled in core, assuming YES."

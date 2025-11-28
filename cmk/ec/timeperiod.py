@@ -8,24 +8,25 @@ from collections.abc import Mapping
 from logging import Logger
 
 from .config import TimeperiodName
-from .core_queries import query_timeperiods_in
+from .core_queries import Connection, query_timeperiods_in
 
 
 # TODO: Replace this with cmk.utils.timeperiod
 class TimePeriods:
     """Time Periods are used in rule conditions."""
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: Logger, connection: Connection) -> None:
         self._logger = logger
         self._active: Mapping[TimeperiodName, bool] = {}
         self._cache_timestamp: int | None = None
+        self._connection = connection
 
     def _update(self) -> None:
         try:
             timestamp = int(time.time())
             # update at most once a minute
             if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
-                self._active = query_timeperiods_in()
+                self._active = query_timeperiods_in(self._connection)
                 self._cache_timestamp = timestamp
         except Exception:
             self._logger.exception("Cannot update time period information.")

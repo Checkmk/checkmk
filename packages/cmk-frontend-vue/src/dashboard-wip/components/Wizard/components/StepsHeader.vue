@@ -4,10 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIconButton from '@/components/CmkIconButton.vue'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
+
+const { _t } = usei18n()
 
 interface BackButtonProps {
   title: TranslatedString
@@ -22,13 +25,13 @@ defineProps<BackButtonProps>()
 
 <template>
   <div class="db-steps-header__container">
-    <div v-if="!hideBackButton" class="db-steps-header__icon">
-      <CmkIconButton
+    <div v-if="!hideBackButton" @click="emit('back')">
+      <CmkMultitoneIcon
         name="back"
-        variant="plain"
-        size="xxlarge"
-        :colored="false"
-        @click="() => emit('back')"
+        :title="_t('Back')"
+        size="xlarge"
+        primary-color="font"
+        class="db-steps-header__icon"
       />
     </div>
     <div class="db-steps-header__label">
@@ -45,13 +48,15 @@ defineProps<BackButtonProps>()
   break-after: always;
 }
 
-.db-steps-header__icon {
-  position: relative;
-  left: -3px;
-}
-
 .db-steps-header__container {
   display: flex;
+  padding-top: var(--dimension-4);
+}
+
+.db-steps-header__icon {
+  padding-left: var(--dimension-2);
+  padding-right: var(--dimension-4);
+  cursor: pointer;
 }
 
 .db-steps-header__label {

@@ -75,7 +75,7 @@ const enabledWidgets = useSelectGraphTypes(hostFilterType, serviceFilterType, me
 const availableWidgets: WidgetItemList = [
   { id: Graph.ANY_GRAPH, label: _t('Graph'), icon: 'graph' },
   { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' },
-  { id: Graph.SINGLE_METRIC, label: _t('Single metric'), icon: 'single-metric' },
+  { id: Graph.SINGLE_METRIC, label: _t('Single'), icon: 'single-metric' },
   { id: Graph.BARPLOT, label: _t('Barplot'), icon: 'barplot' },
   { id: Graph.SCATTERPLOT, label: _t('Scatterplot'), icon: 'scatterplot' },
   { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' }
@@ -119,7 +119,7 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
 
 <template>
   <CmkHeading type="h1">
-    {{ _t('Widget data') }}
+    {{ _t('Data selection') }}
   </CmkHeading>
 
   <ContentSpacer />
@@ -133,7 +133,7 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
     />
   </ActionBar>
 
-  <ContentSpacer />
+  <ContentSpacer :dimension="11" />
 
   <CmkParagraph>
     {{ _t('Select the data you want to analyze') }} <br />
@@ -142,9 +142,12 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
 
   <ContentSpacer />
 
-  <CmkHeading type="h2">
+  <CmkHeading type="h3">
     {{ _t('Host selection') }}
   </CmkHeading>
+
+  <ContentSpacer :dimension="5" />
+
   <SingleMultiWidgetObjectFilterConfiguration
     v-model:mode-selection="hostFilterType"
     :object-type="hostObjectType"
@@ -159,9 +162,12 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
 
   <ContentSpacer />
 
-  <CmkHeading type="h2">
+  <CmkHeading type="h3">
     {{ _t('Service selection') }}
   </CmkHeading>
+
+  <ContentSpacer :dimension="5" />
+
   <SingleMultiWidgetObjectFilterConfiguration
     v-model:mode-selection="serviceFilterType"
     :object-type="serviceObjectType"
@@ -176,9 +182,11 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
 
   <ContentSpacer />
 
-  <CmkHeading type="h2">
+  <CmkHeading type="h3">
     {{ _t('Metric selection') }}
   </CmkHeading>
+
+  <ContentSpacer :dimension="5" />
 
   <MetricSelector
     v-model:metric-type="metricType"
@@ -193,6 +201,8 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
   <CmkHeading type="h3">
     {{ _t('Available visualization types') }}
   </CmkHeading>
+
+  <ContentSpacer :dimension="5" />
 
   <AvailableWidgets :available-items="availableWidgets" :enabled-widgets="enabledWidgets" />
 

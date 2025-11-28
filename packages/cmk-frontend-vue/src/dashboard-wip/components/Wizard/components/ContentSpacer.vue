@@ -9,6 +9,7 @@ import { computed } from 'vue'
 interface ContentSpacerProps {
   variant?: 'blank' | 'line'
   height?: number
+  dimension?: number
 }
 
 const props = withDefaults(defineProps<ContentSpacerProps>(), {
@@ -17,10 +18,14 @@ const props = withDefaults(defineProps<ContentSpacerProps>(), {
 })
 
 const pixelHeight = computed(() => `${props.height}px`)
+const dimensionParameter = computed(() => `var(--dimension-${props.dimension})`)
+const heightClass = computed(() =>
+  props.dimension ? 'content-spacer__dimension-height' : 'content-spacer__px-height'
+)
 </script>
 
 <template>
-  <div class="content-spacer">
+  <div class="content-spacer" :class="heightClass">
     <hr v-if="variant === 'line'" class="content-spacer__horizontal-line" />
   </div>
 </template>
@@ -31,7 +36,16 @@ const pixelHeight = computed(() => `${props.height}px`)
   flex: 1;
   display: flex;
   align-items: center;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.content-spacer__px-height {
   min-height: v-bind(pixelHeight);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.content-spacer__dimension-height {
+  min-height: v-bind(dimensionParameter);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

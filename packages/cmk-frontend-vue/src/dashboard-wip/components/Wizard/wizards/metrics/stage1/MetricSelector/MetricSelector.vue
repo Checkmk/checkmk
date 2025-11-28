@@ -10,6 +10,7 @@ import CmkIndent from '@/components/CmkIndent.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import AutocompleteHost from '@/dashboard-wip/components/Wizard/components/autocompleters/AutocompleteHost.vue'
@@ -66,53 +67,83 @@ const _updateMetricType = (value: string) => {
       v-if="metricType === MetricSelection.SINGLE_METRIC"
       class="db-metric-selector__base-container"
     >
-      <CmkLabel>{{ _t('Service metric') }} (*)</CmkLabel>
+      <CmkLabel>{{ _t('Service metric') }}</CmkLabel
+      ><CmkLabelRequired space="before" />
 
-      <ContentSpacer />
+      <ContentSpacer :dimension="4" />
 
       <CmkIndent>
+        <CmkLabel>{{ _t('Filter service metric by') }}</CmkLabel>
         <div class="db-metric-selector__container">
-          <div class="row db-metric-selector__top-row">
-            <div class="db-metric-selector__top-cell">
-              <AutocompleteHost v-model:host-name="handler.host.value" />
-            </div>
-            <div class="db-metric-selector__top-cell">
-              <AutocompleteService v-model:service-description="handler.service.value" />
+          <div class="db-metric-selector__host-filter">
+            <div class="db-metric-selector__label-field-row">
+              <div class="db-metric-selector__label-field-cell">
+                <CmkLabel>{{ _t('Host name') }}:</CmkLabel>
+              </div>
+
+              <div class="db-metric-selector__label-field-cell">
+                <AutocompleteHost
+                  v-model:host-name="handler.host.value"
+                  width="max"
+                  class="db-metric-selector__autocompleter"
+                  :placeholder="_t('Select')"
+                />
+              </div>
             </div>
           </div>
-          <div class="row db-metric-selector__bottom-row">
+
+          <div class="db-metric-selector__service-filter">
+            <div class="db-metric-selector__label-field-row">
+              <div class="db-metric-selector__label-field-cell">
+                <CmkLabel>{{ _t('Service') }}:</CmkLabel>
+              </div>
+
+              <div class="db-metric-selector__label-field-cell">
+                <AutocompleteService
+                  v-model:service-description="handler.service.value"
+                  width="max"
+                  class="db-metric-selector__autocompleter"
+                  :placeholder="_t('Select')"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="db-metric-selector__metric-selector">
             <AutocompleteMonitoredMetrics
               v-if="metricType === MetricSelection.SINGLE_METRIC"
               v-model:service-metrics="handler.metric.value"
               :host-name="handler.host.value"
               :service-description="handler.service.value"
+              class="db-metric-selector__autocompleter"
+              width="max"
             />
-            <CmkInlineValidation
-              v-if="handler.metricValidationError.value"
-              :validation="[_t('Must select an option')]"
-            />
+          </div>
+          <div v-if="handler.metricValidationError.value">
+            <CmkInlineValidation :validation="[_t('Must select an option')]" />
           </div>
         </div>
       </CmkIndent>
     </div>
 
     <div v-else class="db-metric-selector__base-container">
-      <CmkLabel>{{ _t('Service graph') }} (*)</CmkLabel>
+      <CmkLabel>{{ _t('Service graph') }}</CmkLabel
+      ><CmkLabelRequired space="before" />
 
-      <ContentSpacer />
+      <ContentSpacer :dimension="4" />
 
       <CmkIndent>
-        <div class="db-metric-selector__container">
-          <div class="row db-metric-selector__bottom-row">
-            <GraphAutocompleter
-              v-model:combined-metrics="handler.metric.value"
-              :host-selection-mode="hostSelectionMode"
-              :service-selection-mode="serviceSelectionMode"
-            />
-            <CmkInlineValidation
-              v-if="handler.metricValidationError.value"
-              :validation="[_t('Must select an option')]"
-            />
+        <div class="db-metric-selector__container"></div>
+        <div class="db-metric-selector__metric-selector">
+          <GraphAutocompleter
+            v-model:combined-metrics="handler.metric.value"
+            :host-selection-mode="hostSelectionMode"
+            :service-selection-mode="serviceSelectionMode"
+            width="max"
+            class="db-metric-selector__autocompleter"
+          />
+          <div v-if="handler.metricValidationError.value">
+            <CmkInlineValidation :validation="[_t('Must select an option')]" />
           </div>
         </div>
       </CmkIndent>
@@ -127,27 +158,47 @@ const _updateMetricType = (value: string) => {
 }
 
 .db-metric-selector__container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0 var(--dimension-4);
 }
 
-.db-metric-selector__top-row {
-  display: flex;
-  flex: 1;
+.db-metric-selector__host-filter {
+  grid-area: 1 / 1 / 2 / 2;
+  padding-bottom: var(--dimension-4);
 }
 
-.db-metric-selector__top-cell {
-  flex: 1;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding-bottom: 10px;
+.db-metric-selector__service-filter {
+  grid-area: 1 / 2 / 2 / 3;
+  padding-bottom: var(--dimension-4);
 }
 
-.db-metric-selector__bottom-row {
+.db-metric-selector__metric-selector {
+  grid-area: 2 / 1 / 3 / 3;
+  padding-bottom: var(--dimension-4);
+}
+
+.db-metric-selector__autocompleter {
+  width: 100%;
+}
+
+.db-metric-selector__label-field-row {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.db-metric-selector__label-field-cell {
+  flex: 0 0 auto;
+}
+
+.db-metric-selector__label-field-cell:nth-child(1) {
+  flex: 0 0 auto;
+}
+
+.db-metric-selector__label-field-cell:nth-child(2) {
+  flex: 1 1 auto;
 }
 </style>

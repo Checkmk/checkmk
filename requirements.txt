@@ -1046,6 +1046,10 @@ elementpath==4.8.0 \
     --hash=sha256:5393191f84969bcf8033b05ec4593ef940e58622ea13cefe60ecefbbf09d58d9 \
     --hash=sha256:5822a2560d99e2633d95f78694c7ff9646adaa187db520da200a8e9479dc46ae
     # via xmlschema
+exceptiongroup==1.3.1 \
+    --hash=sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219 \
+    --hash=sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598
+    # via pyleak
 exchangelib==5.6.0 \
     --hash=sha256:7d843ff56f41f3a1eaff73e4bbb4ecce21957aa52b65bef01440414ffbba377e \
     --hash=sha256:a65cffba3b4d1166347059e88b1f11eae9a9d70119c3ad9b33389d7258f6181c
@@ -3699,6 +3703,10 @@ pyjwt[crypto]==2.10.1 \
     # via
     #   -r cmk/requirements.in
     #   msal
+pyleak==0.1.14 \
+    --hash=sha256:51be2741542fdaa6024c31a1b8212e59485e2a91e7fdc34c151d488e9a6fb3c4 \
+    --hash=sha256:98d6cf19f3eeed172effef42415bf9f01a3d46cbde59780b85924f9dcd57003a
+    # via -r non-free/packages/cmk-relay-engine/dev-requirements.in
 pylint==4.0.3 \
     --hash=sha256:896d09afb0e78bbf2e030cd1f3d8dc92771a51f7e46828cbc3948a89cd03433a \
     --hash=sha256:a427fe76e0e5355e9fb9b604fd106c419cafb395886ba7f3cebebb03f30e081d

@@ -1473,7 +1473,7 @@ class UsageDetailsCache(AzureAsyncCache):
         super().__init__(
             host_name=cache_id,  # we have no host name.
             agent=f"agent_{AGENT}",
-            key=f"{subscription}-{metric_names}",
+            key=f"{subscription[:6]}-{metric_names}",
             debug=debug,
         )
 
@@ -1603,14 +1603,13 @@ class MetricCache(AzureAsyncCache):
         }
 
         key_prefix = self.get_cache_key_prefix(
-            cache_id,
             self.metrics_definitions.resource_type,
             self.metrics_definitions.region,
             subscription,
         )
 
         # 'replace' to not create random directories
-        key_suffix = ",".join([alias.replace("/", "_") for alias in self.metric_aliases.values()])
+        key_suffix = ".".join([alias.replace("/", "") for alias in self.metric_aliases.values()])
         super().__init__(
             host_name=cache_id,  # we have no host name
             agent=f"agent_{AGENT}",
@@ -1634,12 +1633,11 @@ class MetricCache(AzureAsyncCache):
         self.end_time = ref_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
-    def get_cache_key_prefix(
-        cache_id: str, resource_type: str, region: str, subscription: str
-    ) -> str:
+    def get_cache_key_prefix(resource_type: str, region: str, subscription: str) -> str:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         subdir = "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
-        return f"{subscription}_{subdir}"
+        # only use first 5 chars for subscription to avoid too long paths, and simplify
+        return f"{subscription[:6]}_{subdir}"
 
     @property
     def cache_interval(self) -> int:

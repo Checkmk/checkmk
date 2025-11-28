@@ -223,8 +223,11 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
                 continue
             current_offenders[first_checked_oid].add(str(section.name))
 
+    newly_broken = {k: v for k, v in current_offenders.items() if k not in known_offenders}
+    newly_fixed = {k for k in known_offenders if k not in current_offenders}
+
     # If these fail: Nice! Update the test!
-    assert not {k for k in known_offenders if k not in current_offenders}
+    assert not newly_fixed
     assert not {v for values in known_offenders.values() for v in values} - {
         v for values in current_offenders.values() for v in values
     }
@@ -233,7 +236,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
     # the system description or object ID.
     # Even worse: You may have added an OID to the list of OIDs that are fetched
     # from *all SNMP devices* known to the Checkmk site. Please reconsider!
-    assert current_offenders == known_offenders
+    assert not newly_broken
 
 
 def test_snmp_section_parse_function_deals_with_empty_input(

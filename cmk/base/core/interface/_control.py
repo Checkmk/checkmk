@@ -197,7 +197,7 @@ def do_create_config(
                 "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
             },
         ):
-            _create_core_config(
+            _create_active_config(
                 core,
                 config_cache,
                 hosts_config,
@@ -265,7 +265,14 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             os.remove(backup_path)
 
 
-def _create_core_config(
+# NOTE:
+# this does more than just creating the core config!
+# It also creates the relay config and the core _helper_ configs
+# (the core helpers are *not* part of the core!)
+# We generally understand the existence of the "latest" link that
+# we create below to indicate that the configuration is ready to be used.
+# Everything that should be in it must be created before creating that link.
+def _create_active_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     hosts_config: Hosts,

@@ -16,6 +16,7 @@ from cmk.plugins.azure_v2.agent_based import azure_firewall
 from cmk.plugins.azure_v2.agent_based.azure_firewall import (
     discover_azure_firewall_health,
     discover_azure_firewall_snat,
+    discover_azure_firewall_throughput,
 )
 from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
 
@@ -49,6 +50,12 @@ AZURE_FIREWALL_RESOURCE = Resource(
             aggregation="maximum",
             value=90.0,
             unit="Percent",
+        ),
+        "average_Throughput": AzureMetric(
+            name="Throughput",
+            aggregation="average",
+            value=250000000.0,  # 250 MB/s
+            unit="BytesPerSecond",
         ),
     },
 )
@@ -186,5 +193,48 @@ def test_check_azure_firewall_snat(
     expected_results: Sequence[Result | Metric],
 ) -> None:
     check_function = azure_firewall.check_plugin_azure_firewall_snat.check_function
+    results = list(check_function(params, resource))
+    assert results == expected_results
+
+
+def test_discover_azure_firewall_throughput() -> None:
+    assert list(discover_azure_firewall_throughput(AZURE_FIREWALL_RESOURCE)) == [Service()]
+
+
+@pytest.mark.parametrize(
+    "resource, params, expected_results",
+    [
+        pytest.param(
+            AZURE_FIREWALL_RESOURCE,
+            {"throughput": ("no_levels", None)},
+            [
+                Result(
+                    state=State.OK,
+                    summary="Throughput: 31.2 MB/s",
+                ),
+                Metric("azure_firewall_throughput", 31250000.0),
+            ],
+            id="throughput with no levels",
+        ),
+        pytest.param(
+            AZURE_FIREWALL_RESOURCE,
+            {"throughput": ("fixed", (20000000.0, 40000000.0))},
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Throughput: 31.2 MB/s (warn/crit at 20.0 MB/s/40.0 MB/s)",
+                ),
+                Metric("azure_firewall_throughput", 31250000.0, levels=(20000000.0, 40000000.0)),
+            ],
+            id="throughput at warn level",
+        ),
+    ],
+)
+def test_check_azure_firewall_throughput(
+    resource: Resource,
+    params: Mapping[str, Any],
+    expected_results: Sequence[Result | Metric],
+) -> None:
+    check_function = azure_firewall.check_plugin_azure_firewall_throughput.check_function
     results = list(check_function(params, resource))
     assert results == expected_results

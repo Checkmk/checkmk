@@ -86,3 +86,32 @@ check_plugin_azure_firewall_snat = CheckPlugin(
         "snat_utilization": ("fixed", (85.0, 95.0)),
     },
 )
+
+
+def discover_azure_firewall_throughput(section: Resource) -> DiscoveryResult:
+    yield Service()
+
+
+check_plugin_azure_firewall_throughput = CheckPlugin(
+    name="azure_v2_firewall_throughput",
+    sections=["azure_v2_azurefirewalls"],
+    service_name="Azure/Firewall Throughput",
+    discovery_function=discover_azure_firewall_throughput,
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_Throughput",
+                "azure_firewall_throughput",
+                "Throughput",
+                render.iobandwidth,
+                map_func=lambda x: x / 8,  # we get bits per second from Azure
+                upper_levels_param="throughput",
+            ),
+        ],
+        check_levels=check_levels_v2,
+    ),
+    check_ruleset_name="azure_v2_firewall_throughput",
+    check_default_parameters={
+        "throughput": ("no_levels", None),
+    },
+)

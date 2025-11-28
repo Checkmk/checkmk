@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# TODO: File deprecated -> to remove when dashboard tests migration is competed
+
 import logging
 import re
 from collections.abc import Iterator
@@ -9,12 +12,12 @@ from collections.abc import Iterator
 import pytest
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.pom.customize.dashboard_properties import (
+from tests.gui_e2e.testlib.playwright.pom.customize.dashboard_properties_old import (
     CreateDashboard,
     EditDashboard,
 )
-from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
-from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import (
+from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard_old import CustomDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard_old import (
     MainDashboard,
     SummaryDashletType,
 )
@@ -22,7 +25,7 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.edit_element_top_list import (
     AddElementTopList,
     EditElementTopList,
 )
-from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import (
+from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard_old import (
     LinuxHostsDashboard,
     WindowsHostsDashboard,
 )

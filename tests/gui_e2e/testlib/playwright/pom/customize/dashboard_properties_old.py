@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# TODO: File deprecated -> to remove when dashboard tests migration is competed
+
 import logging
 from enum import StrEnum
 from typing import override
@@ -9,8 +12,8 @@ from typing import override
 from playwright.sync_api import expect, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
-from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
-from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import BaseDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard_old import CustomDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard_old import BaseDashboard
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)

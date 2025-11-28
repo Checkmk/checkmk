@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# TODO: File deprecated -> to remove when dashboard tests migration is competed
+
 import logging
 import re
 from typing import override
@@ -17,11 +20,11 @@ logger = logging.getLogger(__name__)
 class HostsDashboard(BaseDashboard):
     """Represent a base class for 'Linux hosts' and 'Windows hosts' pages."""
 
-    chart_widgets: list[str] = []
-    table_widgets: list[str] = []
-    plot_widgets: list[str] = []
+    chart_dashlets: list[str] = []
+    table_dashlets: list[str] = []
+    plot_dashlets: list[str] = []
 
-    widgets_list: list[str] = []
+    dashlets_list: list[str] = []
 
     @override
     def navigate(self) -> None:
@@ -51,7 +54,7 @@ class LinuxHostsDashboard(HostsDashboard):
 
     page_title = "Linux hosts"
 
-    table_widgets = [
+    table_dashlets = [
         "Top 10: CPU utilization",
         "Top 10: Memory utilization",
         "Top 10: Input bandwidth",
@@ -60,13 +63,13 @@ class LinuxHostsDashboard(HostsDashboard):
         "Host information",
         "Filesystems",
     ]
-    chart_widgets = [
+    chart_dashlets = [
         "Host statistics",
         "Service statistics",
     ]
-    plot_widgets = ["Total agent execution time"]
+    plot_dashlets = ["Total agent execution time"]
 
-    widgets_list = table_widgets + chart_widgets + plot_widgets
+    dashlets_list = table_dashlets + chart_dashlets + plot_dashlets
 
 
 class WindowsHostsDashboard(HostsDashboard):
@@ -77,7 +80,7 @@ class WindowsHostsDashboard(HostsDashboard):
 
     page_title = "Windows hosts"
 
-    table_widgets = [
+    table_dashlets = [
         "Top 10: CPU utilization (Windows)",
         "Top 10: Memory utilization",
         "Top 10: Input bandwidth",
@@ -86,10 +89,10 @@ class WindowsHostsDashboard(HostsDashboard):
         "Host information",
         "Filesystems",
     ]
-    chart_widgets = [
+    chart_dashlets = [
         "Host statistics",
         "Service statistics",
     ]
-    plot_widgets = ["Total agent execution time"]
+    plot_dashlets = ["Total agent execution time"]
 
-    widgets_list = table_widgets + chart_widgets + plot_widgets
+    dashlets_list = table_dashlets + chart_dashlets + plot_dashlets

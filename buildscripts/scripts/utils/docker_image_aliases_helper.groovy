@@ -45,6 +45,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         + (privileged ? ["-v /var/run/docker.sock:/var/run/docker.sock"] : [])
         + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
         + (mount_reference_repo ? ["${mount_reference_repo_dir}"] : [])
+        + "--cpus=8"
     ).join(" ");
 
     println("inside_container(image=${image} docker_args: ${run_args_str})");

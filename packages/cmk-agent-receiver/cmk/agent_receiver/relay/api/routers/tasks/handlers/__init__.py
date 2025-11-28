@@ -13,6 +13,9 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.get_tasks import (
     GetRelayTaskHandler,
     GetRelayTasksHandler,
 )
+from cmk.agent_receiver.relay.api.routers.tasks.handlers.get_version import (
+    GetVersionHandler,
+)
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
     UpdateTaskHandler,
 )
@@ -20,6 +23,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
 __all__ = [
     "GetRelayTaskHandler",
     "GetRelayTasksHandler",
+    "GetVersionHandler",
     "CreateTaskHandler",
     "UpdateTaskHandler",
     "ActivateConfigHandler",

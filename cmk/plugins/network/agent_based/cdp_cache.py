@@ -16,8 +16,9 @@ from typing import NotRequired, TypedDict
 from pydantic import BaseModel
 
 from cmk.agent_based.v2 import (
+    any_of,
     Attributes,
-    exists,
+    contains,
     HostLabel,
     HostLabelGenerator,
     InventoryPlugin,
@@ -534,7 +535,11 @@ snmp_section_inv_cdp_cache = SNMPSection(
             ],
         ),
     ],
-    detect=exists(".1.3.6.1.4.1.9.9.23.1.2.1.1.*"),  # CISCO-CDP-MIB::cdpCacheEntry
+    detect=any_of(  # FIXME probably to narrow.
+        contains(".1.3.6.1.2.1.1.1.0", "meraki"),
+        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+    ),
+    # detect=exists(".1.3.6.1.4.1.9.9.23.1.2.1.1.*"),  # CISCO-CDP-MIB::cdpCacheEntry
 )
 
 inventory_plugin_inv_cdp_cache = InventoryPlugin(

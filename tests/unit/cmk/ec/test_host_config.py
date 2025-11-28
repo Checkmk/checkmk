@@ -4,82 +4,95 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from pathlib import Path
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import Any
 
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ec.core_queries import HostInfo
 from cmk.ec.host_config import HostConfig
-from cmk.livestatus_client import LocalConnection
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+type Rows = Sequence[Sequence[Any]]
 
 
-@pytest.fixture(name="host_config")
-def fixture_host_config(live: MockLiveStatusConnection) -> HostConfig:
-    return HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), LocalConnection())
+@dataclass(frozen=True)
+class QueryAndResponse:
+    query_lines: Iterable[str]
+    response: Rows
 
 
-def _heute_config() -> dict[str, object]:
-    return {
-        "name": "heute",
-        "alias": "heute alias",
-        "address": "127.0.0.1",
-        "custom_variables": {
-            "FILENAME": "/wato/hosts.mk",
-            "ADDRESS_FAMILY": "4",
-            "ADDRESS_4": "127.0.0.1",
-            "ADDRESS_6": "",
-            "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
-        },
-        "contacts": [],
-        "contact_groups": ["all"],
-        "groups": ["custom-group"],
-    }
+class ObservedConnection:
+    @contextmanager
+    def expect(self, queries: Iterable[QueryAndResponse]) -> Iterator[None]:
+        self._queries = list(reversed(list(queries)))
+        yield
+        assert not self._queries
+
+    def query(self, query: str) -> Rows:
+        expected_query = self._queries.pop()
+        assert query == "\n".join(expected_query.query_lines)
+        return expected_query.response
 
 
-def _example_com_config() -> dict[str, object]:
-    return {
-        "name": "example.com",
-        "alias": "example.com alias",
-        "address": "server.example.com",
-        "custom_variables": {
-            "FILENAME": "/wato/hosts.mk",
-            "ADDRESS_FAMILY": "4",
-            "ADDRESS_4": "127.0.0.1",
-            "ADDRESS_6": "",
-            "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
-        },
-        "contacts": [],
-        "contact_groups": ["all"],
-        "groups": [],
-    }
+def status_query(now: int) -> QueryAndResponse:
+    return QueryAndResponse(
+        query_lines=[
+            "GET status",
+            "Columns: program_start",
+        ],
+        response=[[now]],
+    )
 
 
-def _test_table() -> list[dict[str, object]]:
-    return [
-        _heute_config(),
-        _example_com_config(),
-    ]
-
-
-@pytest.fixture(name="live")
-def fixture_livestatus(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    mock_livestatus: MockLiveStatusConnection,
-) -> MockLiveStatusConnection:
-    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
-    mock_livestatus.set_sites(["NO_SITE"])
-    mock_livestatus.add_table("hosts", _test_table())
-    return mock_livestatus
+def hosts_query(heute_alias: str = "heute alias") -> QueryAndResponse:
+    return QueryAndResponse(
+        query_lines=[
+            "GET hosts",
+            "Columns: name alias address custom_variables contacts contact_groups groups",
+        ],
+        response=[
+            [
+                "heute",
+                heute_alias,
+                "127.0.0.1",
+                {
+                    "FILENAME": "/wato/hosts.mk",
+                    "ADDRESS_FAMILY": "4",
+                    "ADDRESS_4": "127.0.0.1",
+                    "ADDRESS_6": "",
+                    "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+                },
+                [],
+                ["all"],
+                ["custom-group"],
+            ],
+            [
+                "example.com",
+                "example.com alias",
+                "server.example.com",
+                {
+                    "FILENAME": "/wato/hosts.mk",
+                    "ADDRESS_FAMILY": "4",
+                    "ADDRESS_4": "127.0.0.1",
+                    "ADDRESS_6": "",
+                    "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+                },
+                [],
+                ["all"],
+                [],
+            ],
+        ],
+    )
 
 
 @pytest.mark.parametrize(
-    "hostname_str, result",
+    "hostname, result",
     [
         (
-            "heute",
+            HostName("heute"),
             HostInfo(
                 name=HostName("heute"),
                 alias="heute alias",
@@ -96,28 +109,20 @@ def fixture_livestatus(
                 host_groups={"custom-group"},
             ),
         ),
-        ("HEUTE", None),
-        ("127.0.0.1", None),
+        (HostName("HEUTE"), None),
+        (HostName("127.0.0.1"), None),
     ],
 )
-def test_host_config(
-    host_config: HostConfig,
-    live: MockLiveStatusConnection,
-    hostname_str: str,
-    result: HostInfo | None,
-) -> None:
-    hostname = HostName(hostname_str)
-    with live(expect_status_query=False):
-        live.expect_query(["GET status", "Columns: program_start"])
-        live.expect_query(
-            [
-                "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups groups",
-            ]
-        )
+def test_host_config(hostname: HostName, result: HostInfo | None) -> None:
+    connection = ObservedConnection()
+    host_config = HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), connection)
+    now = 1764329250
+
+    with connection.expect([status_query(now), hosts_query()]):
         assert host_config.get_config_for_host(hostname) == result
-        # Data is cached and not queried twice.
-        live.expect_query(["GET status", "Columns: program_start"])
+
+    # Data is cached and not queried twice.
+    with connection.expect([status_query(now)]):
         assert host_config.get_config_for_host(hostname) == result
 
 
@@ -133,54 +138,30 @@ def test_host_config(
         ("heute alias", HostName("heute")),
     ],
 )
-def test_host_config_get_canonical_name(
-    host_config: HostConfig,
-    live: MockLiveStatusConnection,
-    search_term: str,
-    result: HostName | None,
-) -> None:
-    with live(expect_status_query=False):
-        live.expect_query(["GET status", "Columns: program_start"])
-        live.expect_query(
-            [
-                "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups groups",
-            ]
-        )
+def test_host_config_get_canonical_name(search_term: str, result: HostName | None) -> None:
+    connection = ObservedConnection()
+    host_config = HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), connection)
+    now = 1764329250
+
+    with connection.expect([status_query(now), hosts_query()]):
         assert host_config.get_canonical_name(search_term) == result
 
-        live.expect_query(["GET status", "Columns: program_start"])
+    # Data is cached and not queried twice.
+    with connection.expect([status_query(now)]):
         assert host_config.get_canonical_name(search_term) == result
 
 
-def test_host_config_get_canonical_name_is_cached_updated(
-    host_config: HostConfig, live: MockLiveStatusConnection
-) -> None:
-    with live(expect_status_query=False):
-        live.expect_query(["GET status", "Columns: program_start"])
-        live.expect_query(
-            [
-                "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups groups",
-            ]
-        )
+def test_host_config_get_canonical_name_is_cached_updated() -> None:
+    connection = ObservedConnection()
+    host_config = HostConfig(logging.getLogger("cmk.mkeventd.EventServer"), connection)
+    now = 1764329250
+
+    with connection.expect([status_query(now), hosts_query()]):
         assert host_config.get_canonical_name("heute alias") == HostName("heute")
 
-        # Update the config to simulate a config change
-        live.tables["hosts"]["NO_SITE"][0]["alias"] = "new alias"
-        live.tables["status"]["NO_SITE"][0]["program_start"] = (
-            live.tables["status"]["NO_SITE"][0]["program_start"] + 10
-        )
-
-        # Original alias is not matching anymore, cache is updated
-        live.expect_query(["GET status", "Columns: program_start"])
-        live.expect_query(
-            [
-                "GET hosts",
-                "Columns: name alias address custom_variables contacts contact_groups groups",
-            ]
-        )
+    # Simulate config update
+    with connection.expect([status_query(now + 10), hosts_query("new alias")]):
         assert host_config.get_canonical_name("heute alias") is None
 
-        live.expect_query(["GET status", "Columns: program_start"])
+    with connection.expect([status_query(now + 10)]):
         assert host_config.get_canonical_name("new alias") == HostName("heute")

@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-lnMR+ElVMWlpvbHY1LmDcY70IzhjnGIexMNP3e81Xpk=",
+  "strip_prefix": "openssl-3.5.4",
+  "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-veupFJxObUfewJ9s4Tz6L9utSF2oSjAjJIUC1jzn3tg=",
+    "MODULE.bazel": "sha256-XPEoW9lBwc3OCY6N19guYsSG+uuTcMcpqHptIcL7j8c="
+  }
+}

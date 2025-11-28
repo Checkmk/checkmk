@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-11-25 23:05+0000\n"
+"PO-Revision-Date: 2025-11-26 20:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -13116,19 +13116,19 @@ msgid "Clickable URLs"
 msgstr "Anklickbare URLs"
 
 msgid "Client"
-msgstr "Kunde"
+msgstr "Client"
 
 msgid "Client Contacted Services"
 msgstr "Services, die vom Client kontaktiert wurden"
 
 msgid "Client ID"
-msgstr "Kunden ID"
+msgstr "Client-ID"
 
 msgid "Client ID / Application ID"
-msgstr "Kunden-ID / Anwendungs-ID"
+msgstr "Client-ID / Anwendungs-ID"
 
 msgid "Client Secret"
-msgstr "Kunden-Geheimnis"
+msgstr "Client-Geheimnis"
 
 msgid "Client TLS errors"
 msgstr "TLS-Fehler auf Client-Seite"
@@ -13137,10 +13137,10 @@ msgid "Client connections"
 msgstr "Client-Verbindungen"
 
 msgid "Client connections accepted"
-msgstr "Client-Verbindung akzeptiert"
+msgstr "Client-Verbindungen akzeptiert"
 
 msgid "Client connects"
-msgstr "Klientverbindungen"
+msgstr "Client-Verbindungen"
 
 msgid "Client connects for 2,4 Ghz band"
 msgstr "2,4 Ghz-Band Client-Verbindungen"
@@ -13149,22 +13149,22 @@ msgid "Client connects for 5 Ghz band"
 msgstr "5 Ghz-Band Client-Verbindungen"
 
 msgid "Client name"
-msgstr "Name des Kunden"
+msgstr "Name des Client"
 
 msgid "Client requests received"
 msgstr "Client-Anfrage empfangen"
 
 msgid "Client secret"
-msgstr "Kunden-Geheimnis"
+msgstr "Client-Geheimnis"
 
 msgid "ClientID"
-msgstr "Kunden-ID"
+msgstr "Client-ID"
 
 msgid "ClientId"
 msgstr "ClientID"
 
 msgid "ClientSecret"
-msgstr ""
+msgstr "Client-Geheimnis"
 
 msgid "Clients"
 msgstr "Clients"
@@ -13173,13 +13173,13 @@ msgid "Clients connected"
 msgstr "Verbundene Clients"
 
 msgid "Clients maximum"
-msgstr "Kunden maximal"
+msgstr "Clients maximal"
 
 msgid "Clients pending on a blocking call"
 msgstr "Auf Blocking Calls wartende Clients"
 
 msgid "Clients total"
-msgstr "Kunden insgesamt"
+msgstr "Clients insgesamt"
 
 msgid "Climb (long)"
 msgstr "Ansteigend (lang)"
@@ -48103,6 +48103,7 @@ msgstr "Berechtigte Kontaktgruppen"
 
 msgid "Persistence period for node disk usage fallback"
 msgstr ""
+"Persistenz-Periode für den Fallback der Festplattenauslastung des Knotens"
 
 msgid "Persistent (long)"
 msgstr "Dauerhaft (lang)"
@@ -49384,13 +49385,13 @@ msgid "Power Supplies"
 msgstr "Netzteile"
 
 msgid "Power Usage"
-msgstr "Energie Verbrauch"
+msgstr "Energieverbrauch"
 
 msgid "Power consumption draw"
 msgstr "Stromverbrauch"
 
 msgid "Power state unknown"
-msgstr "Zustand der Stromversorgung unbekannt"
+msgstr "Leistungszustand unbekannt"
 
 msgid "Power supplies"
 msgstr "Netzteile"
@@ -81035,6 +81036,14 @@ msgid ""
 "of people, especially when belonging to different organizations, we "
 "recommend to disable this setting."
 msgstr ""
+"Wenn diese Option aktiviert ist, kann die Zentralinstanz durch eine "
+"betrügerische Remote-Instanz kompromittiert werden. Wenn Sie diese Option "
+"deaktivieren, funktionieren einige Funktionen, wie z. B. die HTML-"
+"Darstellung in den Service-Beschreibungen für die auf dieser Remote-Instanz "
+"überwachten Services, nicht mehr. Wenn die Instanzen von verschiedenen "
+"Personengruppen verwaltet werden, insbesondere wenn diese zu "
+"unterschiedlichen Organisationen gehören, empfehlen wir, diese Einstellung "
+"zu deaktivieren."
 
 msgid ""
 "When this option is enabled then after each change of the service "
@@ -85409,7 +85418,7 @@ msgid "icon not found"
 msgstr "Icon nicht gefunden"
 
 msgid "idle connections"
-msgstr "idle Verbindungen"
+msgstr "Leerlauf-Verbindungen"
 
 msgid "ignore"
 msgstr "ignoriere"

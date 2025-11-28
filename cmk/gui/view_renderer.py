@@ -550,11 +550,11 @@ class GUIViewRenderer(ABCViewRenderer):
             display_dropdown.topics.insert(
                 0,
                 PageMenuTopic(
-                    title=_("Graph time and refresh"),
+                    title=_("Set graph time"),
                     entries=[
                         PageMenuEntry(
-                            title=_("Graph time and refresh"),
-                            icon_name="painteroptions",
+                            title=_("Set graph time"),
+                            icon_name="graph_time",
                             item=PageMenuPopup(
                                 self._render_painter_options_timerange_form(painter_options)
                             ),

@@ -22,35 +22,35 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 const { _t } = usei18n()
 
 const props = defineProps<
-  CmkWizardStepProps & { nameValidationRegex: string; nameValidationRegexHelp: string }
+  CmkWizardStepProps & { aliasValidationRegex: string; aliasValidationRegexHelp: string }
 >()
 
-const relayName = defineModel<string>({ default: '' })
+const relayAlias = defineModel<string>({ default: '' })
 const savedRelays = ref<Relay[]>([])
 
 const displayErrors = ref(false)
 
-const getNameErrors = () => {
+const getAliasErrors = () => {
   const errors: string[] = []
-  const name = relayName.value.trim()
-  if (name.length === 0) {
-    errors.push('A relay name is required')
-  } else if (savedRelays.value.some((relay) => relay.alias === name)) {
-    errors.push('This relay name is already in use')
-  } else if (!new RegExp(props.nameValidationRegex).test(name)) {
-    errors.push(props.nameValidationRegexHelp)
+  const alias = relayAlias.value.trim()
+  if (alias.length === 0) {
+    errors.push('A relay alias is required')
+  } else if (savedRelays.value.some((relay) => relay.alias === alias)) {
+    errors.push('This relay alias is already in use')
+  } else if (!new RegExp(props.aliasValidationRegex).test(alias)) {
+    errors.push(props.aliasValidationRegexHelp)
   }
   return errors
 }
 
-const nameErrors = computed(() => {
-  return displayErrors.value ? getNameErrors() : []
+const aliasErrors = computed(() => {
+  return displayErrors.value ? getAliasErrors() : []
 })
 
 async function validate(): Promise<boolean> {
   displayErrors.value = true
   savedRelays.value = await getRelayCollection()
-  return getNameErrors().length === 0
+  return getAliasErrors().length === 0
 }
 </script>
 
@@ -62,24 +62,24 @@ async function validate(): Promise<boolean> {
 
     <template #content>
       <CmkParagraph>
-        {{ _t('Provide a display name for your Relay.') }}
+        {{ _t('Provide a display alias for your Relay.') }}
       </CmkParagraph>
       <div class="mode-relay-name-relay__form-row">
         <CmkLabel>
-          {{ _t('Relay display name') }}
+          {{ _t('Relay display alias') }}
           <CmkLabelRequired />
         </CmkLabel>
         <CmkInput
-          v-model="relayName"
+          v-model="relayAlias"
           type="text"
           field-size="MEDIUM"
-          :external-errors="nameErrors"
+          :external-errors="aliasErrors"
         />
       </div>
       <CmkAlertBox variant="info">
         {{
           _t(
-            'The name you enter here will be automatically inserted into the terminal code in the next step.'
+            'The alias you enter here will be automatically inserted into the terminal code in the next step.'
           )
         }}
       </CmkAlertBox>

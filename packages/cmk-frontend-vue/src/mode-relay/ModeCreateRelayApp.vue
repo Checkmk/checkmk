@@ -18,10 +18,10 @@ import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistrati
 const props = defineProps<CreateRelay>()
 
 const currentStep = ref<number>(1)
-const relayName = ref<string>('')
+const relayAlias = ref<string>('')
 
 const openCreateHostPage = () => {
-  const url = `${props.urls.create_host}&relay=${relayName.value}&prefill=relay`
+  const url = `${props.urls.create_host}&relay=${relayAlias.value}&prefill=relay`
   window.location.href = url
 }
 const openRelayOverviewPage = () => {
@@ -38,14 +38,14 @@ const openRelayOverviewPage = () => {
         :is-completed="() => currentStep > 1"
       />
       <NameRelay
-        v-model="relayName"
+        v-model="relayAlias"
         :index="2"
         :is-completed="() => currentStep > 2"
-        :name-validation-regex="props.name_validation.regex"
-        :name-validation-regex-help="props.name_validation.regex_help"
+        :alias-validation-regex="props.alias_validation.regex"
+        :alias-validation-regex-help="props.alias_validation.regex_help"
       />
       <RegisterRelay
-        :relay-name="relayName"
+        :relay-alias="relayAlias"
         :site-name="props.site_name"
         :domain="props.domain"
         :site-version="props.site_version"
@@ -54,7 +54,7 @@ const openRelayOverviewPage = () => {
         :is-completed="() => currentStep > 3"
       />
       <VerifyRegistration
-        :relay-name="relayName"
+        :relay-alias="relayAlias"
         :index="4"
         :is-completed="() => currentStep > 4"
         @open-create-host-page="openCreateHostPage"

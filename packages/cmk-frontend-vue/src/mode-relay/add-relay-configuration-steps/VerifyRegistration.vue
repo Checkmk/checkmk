@@ -20,7 +20,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<CmkWizardStepProps & { relayName: string }>()
+const props = defineProps<CmkWizardStepProps & { relayAlias: string }>()
 
 defineEmits(['openCreateHostPage', 'openRelayOverviewPage'])
 
@@ -37,7 +37,7 @@ async function verifyRegistration() {
 
   try {
     const relays = await getRelayCollection()
-    registrationSuccess.value = relays.some((relay) => relay.alias === props.relayName)
+    registrationSuccess.value = relays.some((relay) => relay.alias === props.relayAlias)
   } catch (err) {
     unexpectedErrorMessage.value = err instanceof Error ? err.message : 'Unknown error'
   } finally {

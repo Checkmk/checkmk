@@ -28,7 +28,7 @@ const escapeShellArg = (arg: string): string => {
 
 const props = defineProps<
   CmkWizardStepProps & {
-    relayName: string
+    relayAlias: string
     siteName: string
     domain: string
     siteVersion: string
@@ -48,7 +48,7 @@ const registrationCommand = computed(() =>
     `    --site ${props.siteName} \\`,
     '    --user agent_registration \\',
     '    --password [automation-secret] \\',
-    `    -n ${escapeShellArg(props.relayName)}"`
+    `    -n ${escapeShellArg(props.relayAlias)}"`
   ].join('\n')
 )
 

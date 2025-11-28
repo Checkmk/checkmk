@@ -3,7 +3,7 @@
   "type": "object",
   "title": "Create relay",
   "properties": {
-    "name_validation": {
+    "alias_validation": {
       "type": "object",
       "properties": {
         "regex": {
@@ -40,5 +40,5 @@
       "type": "string"
     }
   },
-  "required": ["name_validation", "urls", "site_name", "domain", "site_version"]
+  "required": ["alias_validation", "urls", "site_name", "domain", "site_version"]
 }

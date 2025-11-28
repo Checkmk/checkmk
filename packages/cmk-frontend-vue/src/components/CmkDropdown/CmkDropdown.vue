@@ -14,7 +14,7 @@ import CmkSuggestions, { ErrorResponse, type Suggestions } from '@/components/Cm
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-import CmkDropdownButton from './CmkDropdownButton.vue'
+import CmkDropdownButton, { type ButtonVariants } from './CmkDropdownButton.vue'
 
 export interface DropdownOption {
   name: string
@@ -43,7 +43,7 @@ const {
   required?: boolean
   label: TranslatedString
   startOfGroup?: boolean
-  width?: 'max' | 'wide' | 'default'
+  width?: ButtonVariants['width']
   formValidation?: boolean
 }>()
 

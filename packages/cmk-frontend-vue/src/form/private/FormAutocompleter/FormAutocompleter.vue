@@ -10,6 +10,7 @@ import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown'
+import type { ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import { ErrorResponse, Response, type Suggestion } from '@/components/CmkSuggestions'
 
 import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
@@ -22,6 +23,7 @@ const props = defineProps<{
   startOfGroup?: boolean
   size?: number
   label?: string
+  width?: ButtonVariants['width']
 }>()
 
 const model = defineModel<string | null>({ default: null })
@@ -55,6 +57,6 @@ async function suggestionCallback(query: string): Promise<ErrorResponse | Respon
     :input-hint="placeholder"
     :label="untranslated(label || '')"
     :start-of-group="startOfGroup || false"
-    width="wide"
+    :width="width || 'wide'"
   />
 </template>

@@ -10,6 +10,8 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import type { ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
+
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
 import { type HostServiceContext } from './types'
@@ -20,6 +22,7 @@ const serviceDescription = defineModel<string | null>('serviceDescription', { re
 interface CmkAutocompleteServiceProps {
   hostName?: string | null
   placeholder?: TranslatedString
+  width?: ButtonVariants['width']
 }
 
 const props = defineProps<CmkAutocompleteServiceProps>()
@@ -50,5 +53,6 @@ const serviceNameAutocompleter = computed(() => {
     :autocompleter="serviceNameAutocompleter"
     :size="0"
     :placeholder="props.placeholder || _t('Filter by service')"
+    :width="width || 'wide'"
   />
 </template>

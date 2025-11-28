@@ -9,12 +9,15 @@ import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_co
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import type { ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
+
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
 const { _t } = usei18n()
 
 interface AutocompleteHostProps {
   placeholder?: TranslatedString
+  width?: ButtonVariants['width']
 }
 
 defineProps<AutocompleteHostProps>()
@@ -36,5 +39,6 @@ const hostNameAutocompleter: Autocompleter = {
     :autocompleter="hostNameAutocompleter"
     :size="0"
     :placeholder="placeholder || _t('Filter by host name')"
+    :width="width || 'wide'"
   />
 </template>

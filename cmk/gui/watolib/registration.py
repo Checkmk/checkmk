@@ -209,6 +209,7 @@ def _register_config_domains(config_domain_registry: ConfigDomainRegistry) -> No
     config_domain_registry.register(config_domains.ConfigDomainGUI())
     config_domain_registry.register(config_domains.ConfigDomainLiveproxy())
     config_domain_registry.register(config_domains.ConfigDomainCACertificates())
+    config_domain_registry.register(config_domains.ConfigDomainSiteCertificate())
     config_domain_registry.register(config_domains.ConfigDomainOMD())
 
 

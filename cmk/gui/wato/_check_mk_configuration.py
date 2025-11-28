@@ -79,6 +79,7 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainCore,
     ConfigDomainGUI,
     ConfigDomainOMD,
+    ConfigDomainSiteCertificate,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.config_variable_groups import (
@@ -175,6 +176,7 @@ def register(
     config_variable_registry.register(ConfigVariableAcknowledgeProblems)
     config_variable_registry.register(ConfigVariableDefaultTemperatureUnit)
     config_variable_registry.register(ConfigVariableTrustedCertificateAuthorities)
+    config_variable_registry.register(ConfigVariableSiteSubjectAlternativeNames)
     config_variable_registry.register(ConfigVariableAgentControllerCertificates)
     config_variable_registry.register(RestAPIETagLocking)
     config_variable_registry.register(ConfigVariableWATOMaxSnapshots)
@@ -1820,6 +1822,30 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
         optional_keys=False,
     ),
 )
+
+ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
+    group=ConfigVariableGroupSiteManagement,
+    primary_domain=ConfigDomainSiteCertificate,
+    ident="site_subject_alternative_names",
+    need_restart=True,
+    valuespec=lambda context: ListOf(
+        valuespec=HostAddress(),
+        title=_("Site certificate subject alternative names"),
+        help=_(
+            "Set the host names or IP addresses of the site. "
+            "The entries will be added as additional subject alternative names (SANs) to the site "
+            "certificate, alongside the default SANs. "
+            "Configuring this allows proper server name identification when connecting to the site "
+            "via TLS, for example for instrumented applications connecting to the OpenTelemetry "
+            "collector.\\n"
+            "Note: Changing this setting will trigger re-issuance of the site certificate by the "
+            "site CA. "
+            "In distributed setups, configure SANs separately for each site in the distributed "
+            "monitoring configuration."
+        ),
+    ),
+)
+
 
 ConfigVariableAgentControllerCertificates = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,

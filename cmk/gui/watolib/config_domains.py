@@ -51,7 +51,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-from cmk.utils.certs import CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore
+from cmk.utils.certs import cert_dir, CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore, SiteCA
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log.security_event import log_security_event
@@ -90,6 +90,19 @@ def _core_config_default_globals(
     from cmk.gui.watolib.check_mk_automations import get_configuration
 
     return get_configuration(config_var_names, debug=debug).result
+
+
+def _hang_up(pid_file: Path) -> None:
+    if pid := pid_from_file(pid_file):
+        os.kill(pid, signal.SIGHUP)
+
+
+def reload_stunnel() -> None:
+    _hang_up(cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid")
+
+
+def reload_agent_receiver() -> None:
+    _hang_up(cmk.utils.paths.omd_root / "tmp" / "run" / "agent-receiver.pid")
 
 
 class ConfigDomainCore(ABCConfigDomain):
@@ -382,13 +395,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     ) -> None:
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
-        current_config = settings.get(
-            "trusted_certificate_authorities",
-            {
-                "use_system_wide_cas": True,
-                "trusted_cas": [],
-            },
-        )
+        current_config = settings.get("trusted_certificate_authorities", self.default_globals())
 
         # We need to activate this immediately to make syncs to distributed
         # setup remote sites possible right after changing the option
@@ -404,17 +411,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
             warnings = self._update_trusted_cas(active_config.trusted_certificate_authorities)
-            stunnel_pid = pid_from_file(
-                cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid"
-            )
-            if stunnel_pid:
-                os.kill(stunnel_pid, signal.SIGHUP)
-            return warnings
+            reload_stunnel()
         except Exception:
             logger.exception("error updating trusted CAs")
             return [
                 f"Failed to create trusted CA file '{self.trusted_cas_file}': {traceback.format_exc()}"
             ]
+        return warnings
 
     def _update_trusted_cas(
         self, current_config: TrustedCertificateAuthorities
@@ -530,6 +533,32 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 "trusted_cas": [],
             }
         }
+
+
+class ConfigDomainSiteCertificate(ABCConfigDomain):
+    @override
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return config_domain_name.SITE_CERTIFICATE
+
+    @override
+    def config_dir(self) -> Path:
+        return multisite_dir() / "site_certificate"
+
+    @override
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        SiteCA.load(cert_dir(cmk.utils.paths.omd_root)).create_site_certificate(
+            omd_site(),
+            additional_sans=active_config.site_subject_alternative_names,
+        )
+        reload_stunnel()
+        reload_agent_receiver()
+
+        return []
+
+    @override
+    def default_globals(self) -> GlobalSettings:
+        return {"site_subject_alternative_names": []}
 
 
 def pid_from_file(pid_file: Path) -> ProcessId | None:

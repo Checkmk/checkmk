@@ -43,6 +43,7 @@ CORE: Final[ConfigDomainName] = "check_mk"
 GUI: Final[ConfigDomainName] = "multisite"
 LIVEPROXY: Final[ConfigDomainName] = "liveproxyd"
 CA_CERTIFICATES: Final[ConfigDomainName] = "ca-certificates"
+SITE_CERTIFICATE: Final[ConfigDomainName] = "site-certificate"
 OMD: Final[ConfigDomainName] = "omd"
 
 

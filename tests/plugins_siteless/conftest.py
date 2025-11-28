@@ -2,6 +2,11 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import os
+import shutil
+from collections.abc import Generator
+from pathlib import Path
+
 import pytest
 
 
@@ -12,3 +17,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Store the services' states in the test data directory.",
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _cleanup_var_dir() -> Generator[None]:
+    var_dir = Path(os.getcwd()) / "var"
+    if var_dir.exists():
+        shutil.rmtree(var_dir)
+    yield
+    if var_dir.exists():
+        shutil.rmtree(var_dir)

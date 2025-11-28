@@ -14,13 +14,17 @@ interface AvailableWidgetProps {
   label: TranslatedString
   icon: SimpleIcons
   disabled?: boolean
+  isButton?: boolean
 }
 
 defineProps<AvailableWidgetProps>()
 </script>
 
 <template>
-  <div class="db-available-widget__item">
+  <div
+    class="db-available-widget__item"
+    :class="isButton && !disabled ? 'db-available-widget__item-button' : ''"
+  >
     <div class="db-available-widget__item-icon">
       <CmkIcon :name="icon" size="xxlarge" :colored="!disabled" />
     </div>
@@ -38,10 +42,20 @@ defineProps<AvailableWidgetProps>()
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4);
   max-width: 72px;
   text-align: center;
+}
+
+.db-available-widget__item-button {
+  cursor: pointer;
+  border: 1px solid var(--ux-theme-6);
+  border-radius: var(--dimension-4);
+
+  &:hover {
+    background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
+  }
 }
 
 .db-available-widget__item-icon {

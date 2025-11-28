@@ -8,7 +8,7 @@ from typing import cast, override
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.dashboard import DashboardConfig, DashboardName, get_all_dashboards
+from cmk.gui.dashboard import DashboardConfig, DashboardName, dashlet_registry, get_all_dashboards
 from cmk.gui.dashboard.metadata import dashboard_uses_relative_grid
 from cmk.gui.dashboard.type_defs import DashletConfig, EmbeddedViewDashletConfig, ViewDashletConfig
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
@@ -52,6 +52,11 @@ class MigrateUserDashboards(UpdateAction):
         embedded_views = dashboard.get("embedded_views", dict())
         dashlets: list[DashletConfig] = []
         for dashlet in dashboard["dashlets"]:
+            if "size" not in dashlet:
+                # dashlets with fixed sizes didn't save the size before
+                dashlet_type = dashlet_registry[dashlet["type"]]
+                dashlet["size"] = dashlet_type.initial_size()
+
             if dashlet["type"] != "view":
                 dashlets.append(dashlet)
                 continue

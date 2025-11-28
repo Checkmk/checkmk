@@ -812,6 +812,11 @@ class AzureResource(_AzureEntity):
         self.group = self.info["group"].lower()
         self.metrics: list = []
 
+        # resource-specific labels
+        self.labels: dict[str, str | bool] = {}
+        if region := self.info.get("location"):
+            self.labels["region"] = region
+
     def _safename(self) -> str:
         return self._compute_safename(
             (
@@ -1322,6 +1327,7 @@ async def process_cosmosdb(
     subscription: AzureSubscription,
     args: argparse.Namespace,
 ) -> list[AzureResource]:
+    resource.labels["cosmosdb_account"] = resource.name
     resources = [resource]  # always include the main cosmosdb account resource
 
     # to collect cosmos databases (will become piggybacked hosts)
@@ -1400,6 +1406,7 @@ async def process_cosmosdb(
                     args.safe_hostnames,
                 )
                 db_resource.metrics.append(metric)
+                db_resource.labels["cosmosdb_account"] = resource.name
 
                 cosmosdb_databases[database_name] = db_resource
                 resources.append(db_resource)
@@ -1862,16 +1869,12 @@ def get_resource_host_labels_section(
     subscription = resource.subscription
     labels = {
         "resource_group": resource.group,
-        "entity": resource.section,
+        "resource": resource.section,
+        "entity": "resource",
         "subscription_name": subscription.hostname,
         "subscription": subscription.id,
-        **({"region": region} if (region := resource.info.get("location")) else {}),
+        **resource.labels,
     }
-
-    # for backward compatibility
-    if resource.info["type"] == "Microsoft.Compute/virtualMachines":
-        labels["vm_instance"] = True
-
     resource_tags = dict(resource.tags)
 
     # merge resource tags with group tags, resource tags have precedence
@@ -2227,6 +2230,9 @@ async def _collect_virtual_machines_resources(
             raise ApiErrorMissingData("Virtual machine instance's statuses must be present")
 
         resource.info["specific_info"] = {"statuses": statuses}
+        # for backward compatibility
+        resource.labels["vm_instance"] = True
+
         virtual_machines.append(resource)
 
     return virtual_machines

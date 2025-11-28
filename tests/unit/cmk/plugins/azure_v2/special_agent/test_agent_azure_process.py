@@ -78,8 +78,8 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "burningman", "entity": "virtualmachines", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
+                    '{"cloud": "azure", "resource_group": "burningman", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
                 ["MyVM"],
@@ -117,7 +117,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
@@ -153,7 +153,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     "{}\n",
                 ],
@@ -192,7 +192,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],

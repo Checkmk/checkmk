@@ -16,9 +16,10 @@ from typing import NotRequired, TypedDict
 from pydantic import BaseModel
 
 from cmk.agent_based.v2 import (
+    all_of,
     any_of,
     Attributes,
-    contains,
+    exists,
     HostLabel,
     HostLabelGenerator,
     InventoryPlugin,
@@ -30,6 +31,7 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     TableRow,
 )
+from cmk.plugins.network.agent_based.lib import DETECT_CISCO, DETECT_MERAKI
 
 _INTERFACE_DISPLAY_HINTS = {
     "ethernet": "eth",
@@ -535,11 +537,10 @@ snmp_section_inv_cdp_cache = SNMPSection(
             ],
         ),
     ],
-    detect=any_of(  # FIXME probably to narrow.
-        contains(".1.3.6.1.2.1.1.1.0", "meraki"),
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+    detect=all_of(
+        any_of(DETECT_MERAKI, DETECT_CISCO),
+        exists(".1.3.6.1.4.1.9.9.23.1.2.1.1.*"),  # CISCO-CDP-MIB::cdpCacheEntry
     ),
-    # detect=exists(".1.3.6.1.4.1.9.9.23.1.2.1.1.*"),  # CISCO-CDP-MIB::cdpCacheEntry
 )
 
 inventory_plugin_inv_cdp_cache = InventoryPlugin(

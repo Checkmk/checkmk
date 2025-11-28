@@ -376,10 +376,9 @@ def _create_core_config(
             hosts_to_update=hosts_to_update,
             passwords=passwords,
         )
-
-    cmk.utils.password_store.save(
-        passwords, cmk.utils.password_store.core_password_store_path(config_path)
-    )
+        cmk.utils.password_store.save(
+            passwords, cmk.utils.password_store.core_password_store_path(config_path)
+        )
 
 
 def _verify_non_deprecated_checkgroups() -> None:

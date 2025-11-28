@@ -213,6 +213,80 @@ def test_get_resource_host_labels_section(
     assert labels_section._piggytargets == expected_result[1]
 
 
+@pytest.mark.parametrize(
+    "resource_info, custom_labels, group_tags, expected_labels_line",
+    [
+        pytest.param(
+            {
+                "id": "cosmos_id",
+                "name": "my_cosmos_db",
+                "type": "Microsoft.DocumentDB/databaseAccounts",
+                "location": "eastus",
+                "tags": {},
+                "group": "cosmos_group",
+            },
+            {"cosmosdb_account": "my_cosmos_db"},
+            {
+                "cosmos_group": AzureResourceGroup(
+                    info={
+                        "tags": {},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "cosmos_group",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                    use_safe_names=False,
+                )
+            },
+            '{"cloud": "azure", "resource_group": "cosmos_group", "resource": "databaseaccounts", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "eastus", "cosmosdb_account": "my_cosmos_db"}\n',
+            id="CosmosDB account with cosmosdb_account label",
+        ),
+        pytest.param(
+            {
+                "id": "vm_id",
+                "name": "my_vm",
+                "type": "Microsoft.Compute/virtualMachines",
+                "location": "westeurope",
+                "tags": {},
+                "group": "vm_group",
+            },
+            {"vm_instance": True},
+            {
+                "vm_group": AzureResourceGroup(
+                    info={
+                        "tags": {},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "vm_group",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                    use_safe_names=False,
+                )
+            },
+            '{"cloud": "azure", "resource_group": "vm_group", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
+            id="Virtual machine with vm_instance label",
+        ),
+    ],
+)
+def test_resource_with_custom_labels(
+    resource_info: Mapping[str, str],
+    custom_labels: Mapping[str, str | bool],
+    group_tags: Mapping[str, AzureResourceGroup],
+    expected_labels_line: str,
+) -> None:
+    resource = AzureResource(
+        dict(resource_info),
+        TagsImportPatternOption.import_all,
+        subscription=fake_azure_subscription(),
+        use_safe_names=False,
+    )
+    resource.labels.update(custom_labels)
+
+    labels_section = get_resource_host_labels_section(resource, group_tags)
+    assert labels_section._cont[0] == expected_labels_line
+    assert labels_section._piggytargets == [resource.piggytarget]
+
+
 RESOURCE_GROUPS_RESPONSE = [
     {
         "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",

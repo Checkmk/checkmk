@@ -187,7 +187,7 @@ def get_welcome_data() -> WelcomePage:
                 request,
                 addvars=[
                     ("mode", "new_special_agent_configuration"),
-                    ("varname", "special_agents:azure"),
+                    ("varname", "special_agents:azure_v2"),
                 ],
                 filename="wato.py",
             ),

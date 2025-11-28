@@ -34,10 +34,6 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const filterDefinitions = useFilterDefinitions()
-
-const handleRemoveFilter = (filterId: string) => {
-  emit('remove-filter', filterId)
-}
 </script>
 
 <template>
@@ -56,9 +52,9 @@ const handleRemoveFilter = (filterId: string) => {
     <button
       class="db-multi-filter__remove-button"
       :aria-label="`Remove ${filterDefinitions[name]!.title} filter`"
-      @click="handleRemoveFilter(name as string)"
+      @click="emit('remove-filter', name as string)"
     >
-      <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
+      <CmkIcon :aria-label="_t('Remove filter')" name="close" size="xxsmall" />
     </button>
   </div>
   <ActionButton

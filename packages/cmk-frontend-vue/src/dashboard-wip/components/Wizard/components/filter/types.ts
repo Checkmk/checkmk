@@ -9,6 +9,7 @@ import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 export interface FilterEmits {
   (e: 'set-focus', target: ObjectType): void
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
+  (e: 'remove-filter', filterId: string): void
 }
 
 export interface SingleMultiFilterEmits extends FilterEmits {

@@ -139,5 +139,6 @@ const displayLabels = computed(() => {
     }"
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+    @remove-filter="(filterId) => emit('remove-filter', filterId)"
   />
 </template>

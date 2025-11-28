@@ -187,6 +187,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           (filterId, values) => widgetFilterManager.updateFilterValues(filterId, values)
         "
         @reset-object-type-filters="handleObjectTypeSwitch"
+        @remove-filter="(filterId) => widgetFilterManager.filterHandler.removeFilter(filterId)"
       />
       <Suspense>
         <Stage2

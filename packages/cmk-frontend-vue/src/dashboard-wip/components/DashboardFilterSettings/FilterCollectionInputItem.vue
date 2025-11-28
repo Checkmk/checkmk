@@ -33,10 +33,6 @@ const emit = defineEmits<Emits>()
 const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) => {
   emit('update-filter-values', filterId, values)
 }
-
-const handleRemoveFilter = () => {
-  emit('remove-filter', props.filterId)
-}
 </script>
 
 <template>
@@ -51,7 +47,7 @@ const handleRemoveFilter = () => {
       v-if="allowRemove"
       class="filter-collection-item__container__remove-button"
       :aria-label="`Remove ${props.filterDefinitions[filterId]!.title} filter`"
-      @click="handleRemoveFilter"
+      @click="emit('remove-filter', props.filterId)"
     >
       <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
     </button>

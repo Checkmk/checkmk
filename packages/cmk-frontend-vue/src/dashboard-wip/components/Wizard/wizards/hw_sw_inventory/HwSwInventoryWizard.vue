@@ -177,6 +177,7 @@ const handleAddWidget = (
         @reset-object-type-filters="
           (objectType) => widgetFilterManager.resetFilterValuesOfObjectType(objectType)
         "
+        @remove-filter="(filterId) => widgetFilterManager.filterHandler.removeFilter(filterId)"
       />
       <Suspense>
         <Stage2

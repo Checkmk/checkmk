@@ -36,6 +36,7 @@ interface Stage1Props {
 interface Emits {
   (e: 'set-focus', target: ObjectType): void
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
+  (e: 'remove-filter', filterId: string): void
   (e: 'goNext'): void
 }
 
@@ -115,6 +116,7 @@ const configuredFiltersByObjectType = computed(() =>
       }"
       @set-focus="emit('set-focus', $event)"
       @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+      @remove-filter="(filterId) => emit('remove-filter', filterId)"
     />
   </CmkIndent>
   <ContentSpacer />

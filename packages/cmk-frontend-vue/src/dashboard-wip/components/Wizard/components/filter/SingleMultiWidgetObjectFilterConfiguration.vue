@@ -37,6 +37,7 @@ interface Emits {
   (e: 'set-focus', target: ObjectType): void
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
   (e: 'reset-object-type-filters', objectType: string): void
+  (e: 'remove-filter', filterId: string): void
 }
 
 const emit = defineEmits<Emits>()
@@ -78,6 +79,7 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
         :context-filters="contextFilters"
         @set-focus="emit('set-focus', $event)"
         @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+        @remove-filter="(filterId) => emit('remove-filter', filterId)"
       />
     </CmkIndent>
   </template>
@@ -90,6 +92,7 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
       :context-filters="contextFilters"
       @set-focus="emit('set-focus', $event)"
       @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+      @remove-filter="(filterId) => emit('remove-filter', filterId)"
     />
   </template>
 </template>

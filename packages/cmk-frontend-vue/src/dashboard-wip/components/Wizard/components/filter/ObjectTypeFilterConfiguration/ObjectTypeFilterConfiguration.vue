@@ -34,6 +34,7 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'set-focus', target: ObjectType): void
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
+  (e: 'remove-filter', filterId: string): void
 }>()
 
 const displayFilters = ref(true)
@@ -61,6 +62,7 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
       :in-focus="inFocus"
       @set-focus="emit('set-focus', $event)"
       @update-filter-values="onUpdateFilterValues"
+      @remove-filter="(filterId) => emit('remove-filter', filterId)"
     />
     <RestrictedToSingleFilter
       v-else

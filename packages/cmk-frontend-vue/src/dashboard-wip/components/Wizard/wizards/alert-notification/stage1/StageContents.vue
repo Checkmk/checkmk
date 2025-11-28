@@ -38,6 +38,7 @@ interface Emits {
   (e: 'set-focus', target: ObjectType): void
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
   (e: 'reset-object-type-filters', objectType: ObjectType): void
+  (e: 'remove-filter', filterId: string): void
   (e: 'goNext'): void
 }
 
@@ -106,6 +107,7 @@ const configuredFiltersByObjectType = computed(() =>
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
     @reset-object-type-filters="emit('reset-object-type-filters', $event)"
+    @remove-filter="(filterId) => emit('remove-filter', filterId)"
   />
 
   <ContentSpacer />
@@ -122,6 +124,7 @@ const configuredFiltersByObjectType = computed(() =>
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
     @reset-object-type-filters="emit('reset-object-type-filters', $event)"
+    @remove-filter="(filterId) => emit('remove-filter', filterId)"
   />
 
   <ContentSpacer />

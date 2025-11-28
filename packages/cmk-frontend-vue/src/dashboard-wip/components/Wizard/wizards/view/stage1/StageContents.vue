@@ -54,6 +54,7 @@ const emit = defineEmits<{
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
   (e: 'reset-object-type-filters', objectType: ObjectType): void
   (e: 'reset-all-filters'): void
+  (e: 'remove-filter', filterId: string): void
   (e: 'goNext', selectedView: ViewSelection): void
 }>()
 
@@ -240,6 +241,7 @@ const sortedContextInfos = computed(() => {
         :show-context-filters-section="objectType in ['host', 'service']"
         @set-focus="emit('set-focus', $event)"
         @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+        @remove-filter="(filterId) => emit('remove-filter', filterId)"
       />
       <ContentSpacer :height="10" />
     </div>

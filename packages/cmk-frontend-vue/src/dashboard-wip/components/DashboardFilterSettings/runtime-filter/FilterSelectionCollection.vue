@@ -21,12 +21,8 @@ const { _t } = usei18n()
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  removeFilter: [filterId: string]
+  'remove-filter': [filterId: string]
 }>()
-
-const handleRemoveFilter = (filterId: string) => {
-  emit('removeFilter', filterId)
-}
 </script>
 
 <template>
@@ -42,7 +38,7 @@ const handleRemoveFilter = (filterId: string) => {
         class="quick-filter__remove-button"
         type="button"
         :aria-label="`Remove ${props.filterDefinitions[filterId]!.title} filter`"
-        @click="handleRemoveFilter(filterId)"
+        @click="() => emit('remove-filter', filterId)"
       >
         <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
       </button>

@@ -34,6 +34,7 @@ const emit = defineEmits<{
   (e: 'set-focus', target: ObjectType): void
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
   (e: 'reset-object-type-filters', objectType: string): void
+  (e: 'remove-filter', filterId: string): void
 }>()
 
 const gotoNextStage = () => {
@@ -82,5 +83,6 @@ const hostObjectType = 'host'
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
     @reset-object-type-filters="emit('reset-object-type-filters', $event)"
+    @remove-filter="(filterId) => emit('remove-filter', filterId)"
   />
 </template>

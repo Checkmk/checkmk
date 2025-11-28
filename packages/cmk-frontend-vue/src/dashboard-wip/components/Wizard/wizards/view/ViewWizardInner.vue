@@ -296,6 +296,7 @@ const handleResetAllFilters = (): void => {
         "
         @reset-all-filters="handleResetAllFilters"
         @reset-object-type-filters="handleObjectTypeSwitch"
+        @remove-filter="(filterId) => widgetFilterManager.filterHandler.removeFilter(filterId)"
       />
       <Stage2
         v-if="wizardHandler.stage.value === 1"

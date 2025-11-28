@@ -302,7 +302,7 @@ test-plugins-piggyback:
 
 test-plugins-siteless:
 	$(PYTEST) --log-cli-level=INFO $(realpath plugins_siteless) \
-	--session-timeout 1800
+	plugins_siteless/test_plugins.py --session-timeout 1800
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"

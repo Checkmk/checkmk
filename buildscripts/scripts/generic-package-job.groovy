@@ -24,19 +24,21 @@ def main() {
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     currentBuild.description = "Running ${PACKAGE_PATH}<br>${currentBuild.description}";
 
-
     def output_file = PACKAGE_PATH.split("/")[-1] + ".log"
     dir(checkout_dir) {
-        inside_container(init: true) {
-            withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
-                helper.execute_test([
-                    name       : PACKAGE_PATH,
-                    cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
-                    output_file: output_file,
-                ]);
+        lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {
+            inside_container(init: true) {
+                withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
+                    helper.execute_test([
+                        name       : PACKAGE_PATH,
+                        cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
+                        output_file: output_file,
+                    ]);
+                }
+                sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
             }
-            sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
         }
+
         archiveArtifacts(
             artifacts: "${output_file}",
             fingerprint: true,

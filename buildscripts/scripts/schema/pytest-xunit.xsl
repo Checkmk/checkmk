@@ -59,12 +59,27 @@
           <xsl:value-of select="@time"/>
         </xsl:attribute>
       </xsl:if>
-      <xsl:if test="error">
-        <xsl:copy-of select="error"/>
-      </xsl:if>
       <xsl:if test="failure">
         <xsl:copy-of select="failure"/>
       </xsl:if>
+      <xsl:for-each select="error">
+        <error>
+          <xsl:attribute name="message">
+            <xsl:choose>
+              <xsl:when test="../../system-out">
+                <xsl:value-of select="../../system-out"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="@message"/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:attribute>
+          <xsl:if test="@type">
+            <xsl:attribute name="type"><xsl:value-of select="@type"/></xsl:attribute>
+          </xsl:if>
+          <xsl:value-of select="."/>
+        </error>
+      </xsl:for-each>
     </testcase>
   </xsl:template>
 </xsl:stylesheet>

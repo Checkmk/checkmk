@@ -188,6 +188,7 @@ py_test(
         "--durations=5",
     ],
     main = "__component_test__.py",
+    tags = ["component"],
     deps = [
         ":__component_test__",
         ":cmk-agent-receiver",

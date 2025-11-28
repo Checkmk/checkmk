@@ -651,12 +651,13 @@ def _valuespec_content() -> Dictionary:
                     ],
                 )
             ),
-            "on_error": DictElement(
+            "fail_state": DictElement(
                 parameter_form=ServiceState(
-                    title=Title("State if expected string is not found"),
+                    title=Title("Service state for failing text search condition."),
                     help_text=Help(
-                        "Set the state of the service if the expected string or regex is not found "
-                        "in the response body or headers."
+                        "If the configured string/regex searches fail, this will result in a CRIT "
+                        "state by default. Here you can choose an alternative state that will apply "
+                        "to all configured string/regex searches when failing their condition."
                     ),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),

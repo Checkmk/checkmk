@@ -216,9 +216,9 @@ pub struct Cli {
     #[arg(short = 'e', long)]
     pub status_code: Vec<StatusCode>,
 
-    /// State to report if expected string/regex is not found in body or headers
+    /// State to report if expected body/headers string/regex conditions fail
     #[arg(long)]
-    pub on_error: Option<OnErrorState>,
+    pub content_search_fail_state: Option<ContentSearchFailState>,
 
     /// Use TLS version for HTTPS requests.
     ///
@@ -331,7 +331,7 @@ pub enum ForceIP {
 }
 
 #[derive(Clone, Debug, ValueEnum)]
-pub enum OnErrorState {
+pub enum ContentSearchFailState {
     Ok,
     Warning,
     Critical,

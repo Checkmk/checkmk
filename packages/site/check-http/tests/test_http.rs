@@ -127,7 +127,7 @@ fn make_standard_configs(
             header_matchers: vec![],
             certificate_levels: None,
             disable_certificate_verification: false,
-            on_error_state: State::Crit,
+            content_search_fail_state: State::Crit,
         },
     )
 }

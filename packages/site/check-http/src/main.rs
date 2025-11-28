@@ -253,10 +253,10 @@ fn make_configs(
                 (x, Some(y)) => LowerLevels::warn_crit(x, y),
             }),
             disable_certificate_verification: args.disable_certificate_verification,
-            on_error_state: args
-                .on_error
+            content_search_fail_state: args
+                .content_search_fail_state
                 .as_ref()
-                .map(map_on_error_state)
+                .map(map_content_search_fail_state)
                 .unwrap_or(State::Crit),
         },
     )
@@ -271,12 +271,12 @@ fn map_tls_version(tls_version: &cli::TlsVersion) -> TlsVersion {
     }
 }
 
-fn map_on_error_state(on_error_state: &cli::OnErrorState) -> State {
-    match *on_error_state {
-        cli::OnErrorState::Ok => State::Ok,
-        cli::OnErrorState::Warning => State::Warn,
-        cli::OnErrorState::Critical => State::Crit,
-        cli::OnErrorState::Unknown => State::Unknown,
+fn map_content_search_fail_state(fail_state: &cli::ContentSearchFailState) -> State {
+    match *fail_state {
+        cli::ContentSearchFailState::Ok => State::Ok,
+        cli::ContentSearchFailState::Warning => State::Warn,
+        cli::ContentSearchFailState::Critical => State::Crit,
+        cli::ContentSearchFailState::Unknown => State::Unknown,
     }
 }
 

@@ -1,0 +1,6 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px" y="0px"
+     viewBox="0 0 20 20" xml:space="preserve">
+  <path class="icon-primary-color" d="M10 2c4.411 0 8 3.589 8 8s-3.589 8-8 8-8-3.589-8-8 3.589-8 8-8Zm0-2C4.477 0 0 4.478 0 10c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.522-4.477-10-10-10Z"/>
+  <path class="icon-primary-color" d="m9.5 6-5 4 5 4v-3h6V9h-6V6Z"/>
+</svg>

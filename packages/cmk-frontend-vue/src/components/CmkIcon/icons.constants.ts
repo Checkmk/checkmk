@@ -186,7 +186,8 @@ export const oneColorIcons = [
   'sidebar',
   'success',
   'user',
-  'warning'
+  'warning',
+  'back'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

@@ -57,6 +57,13 @@ def site_context(
 
     set_up_ca_certs(config=site_context)
 
+    # Create version symlink structure
+    version_name = "some.detailed.version.ultimate"
+    version_path = site_context.omd_root / version_name
+    version_path.mkdir(exist_ok=True)
+    version_link = site_context.omd_root / "version"
+    version_link.symlink_to(version_path)
+
     return site_context
 
 

@@ -28,6 +28,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
     return Dictionary(
+        migrate=_migrate,
         elements={
             "username": DictElement(
                 required=True,

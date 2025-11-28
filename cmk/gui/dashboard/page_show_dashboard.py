@@ -333,7 +333,6 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
             get_permitted_dashboards(),
             dashboard_name,
         )
-        board = _add_context_to_dashboard(board)
 
         # For the topology dashboard filters are retrieved from a corresponding view context.
         # This should not be needed here. Can't we load the context from the board as we usually do?
@@ -408,7 +407,7 @@ def ajax_dashlet(ctx: PageContext) -> None:
     except KeyError:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    board = _add_context_to_dashboard(board)
+    board = copy.deepcopy(board)
     board_context = visuals.active_context_from_request(["host", "service"], board["context"])
     board["context"] = board_context
 
@@ -458,14 +457,3 @@ def ajax_dashlet(ctx: PageContext) -> None:
         content = render_dashlet_exception_content(dashlet, e)
 
     html.write_html(HTML.with_escaping(content))
-
-
-# TODO: This should not be done during runtime at "random" places. Instead the typing and
-# cmk.update_config need to ensure that the data is correct. However, there is the chance that this
-# has already been done in the meantime.
-def _add_context_to_dashboard(board: DashboardConfig) -> DashboardConfig:
-    board = copy.deepcopy(board)
-    board.setdefault("single_infos", [])
-    board.setdefault("context", {})
-    board.setdefault("mandatory_context_filters", [])
-    return board

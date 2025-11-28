@@ -23,6 +23,12 @@ class MigrateUserDashboards(UpdateAction):
         migrated_dashboards: dict[UserId, list[tuple[DashboardName, DashboardConfig]]] = {}
         for (owner, dashboard_name), dashboard in all_dashboards.items():
             owner_dashboards = migrated_dashboards.setdefault(owner, list())
+
+            # ensure required fields exist
+            dashboard.setdefault("single_infos", [])
+            dashboard.setdefault("context", {})
+            dashboard.setdefault("mandatory_context_filters", [])
+
             if not dashboard_uses_relative_grid(dashboard):
                 # responsive dashboard always uses the new view format already
                 owner_dashboards.append((dashboard_name, dashboard))

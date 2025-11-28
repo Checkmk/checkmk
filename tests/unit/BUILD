@@ -79,6 +79,7 @@ py_test(
         "--import-mode=importlib",
         "--random-order-bucket=global",
         "--dist=loadfile",
+        "--numprocesses=4",
     ],
     data = ["@//:pyproject.toml"] + glob(
         include = [

@@ -330,6 +330,7 @@ def _create_active_config(
             {k: s.reveal() for k, s in passwords.items()},
             cmk.utils.password_store.active_secrets_path_site(Path(config_path)),
         )
+        _snapshot_local_dir(cmk.utils.paths.local_root, config_path)
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
@@ -339,6 +340,18 @@ def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
             "This might lead to invalid/incomplete monitoring for these hosts."
             % ", ".join(duplicates)
         )
+
+
+def _snapshot_local_dir(local_root: Path, config_path: VersionedConfigPath) -> None:
+    """Create a snapshot of the local directory into the new config path.
+
+    At the time of writing this is only written to be used by the relay, but it would
+    also be correct for the core(s) to use it.
+    """
+    try:
+        shutil.copytree(local_root, Path(config_path, "local"), symlinks=True)
+    except FileNotFoundError:
+        pass
 
 
 def _print(txt: str) -> None:

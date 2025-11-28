@@ -39,7 +39,7 @@ pub struct CheckParameters {
     pub header_matchers: Vec<(TextMatcher, TextMatcher)>,
     pub certificate_levels: Option<LowerLevels<u64>>,
     pub disable_certificate_verification: bool,
-    pub on_error_state: State,
+    pub content_search_fail_state: State,
 }
 
 pub enum TextMatcher {
@@ -125,12 +125,12 @@ pub fn collect_response_checks(
     .chain(check_headers(
         &response.headers,
         params.header_matchers,
-        params.on_error_state.clone(),
+        params.content_search_fail_state.clone(),
     ))
     .chain(check_body_matching(
         body.as_ref(),
         params.body_matchers,
-        params.on_error_state,
+        params.content_search_fail_state,
     ))
     .flatten()
     .collect()
@@ -287,7 +287,7 @@ fn check_redirect(
 fn check_headers(
     headers: &HeaderMap,
     matchers: Vec<(TextMatcher, TextMatcher)>,
-    on_error_state: State,
+    fail_state: State,
 ) -> Vec<Option<CheckResult>> {
     if matchers.is_empty() {
         return vec![];
@@ -350,7 +350,7 @@ fn check_headers(
                 )]
             } else {
                 notice(
-                    on_error_state.clone(),
+                    fail_state.clone(),
                     &format!(
                         "{}: {} ({})",
                         match_text, header_regex, negative_result_text
@@ -405,7 +405,7 @@ fn check_body<T: std::error::Error>(
 fn check_body_matching(
     body: Option<&Body>,
     matcher: Vec<TextMatcher>,
-    on_error_state: State,
+    fail_state: State,
 ) -> Vec<Option<CheckResult>> {
     let Some(body) = body else {
         return vec![];
@@ -441,7 +441,7 @@ fn check_body_matching(
                 )]
             } else {
                 notice(
-                    on_error_state.clone(),
+                    fail_state.clone(),
                     &format!("{}: {} ({})", match_text, m.inner(), negative_result_text),
                 )
             }

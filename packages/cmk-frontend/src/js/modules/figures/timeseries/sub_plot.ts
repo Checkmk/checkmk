@@ -435,21 +435,23 @@ export class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
     const state_font_size = 14
     const state_is_visible = label_paint_style && label_status_cls
 
-    background_status_component(this.svg!, {
-      size: {
-        width: plot_size.width,
-        height: plot_size.height
-      },
-      css_class: background_status_cls,
-      visible: background_status_cls !== ''
-    })
+    if (svc_status_display !== undefined) {
+      background_status_component(this.svg!, {
+        size: {
+          width: plot_size.width,
+          height: plot_size.height
+        },
+        css_class: background_status_cls,
+        visible: background_status_cls !== ''
+      })
 
-    state_component(this._renderer!, {
-      visible: state_is_visible,
-      label: svc_status_display.msg,
-      css_class: label_status_cls,
-      font_size: state_font_size
-    })
+      state_component(this._renderer!, {
+        visible: state_is_visible,
+        label: svc_status_display.msg,
+        css_class: label_status_cls,
+        font_size: state_font_size
+      })
+    }
 
     metric_value_component(this.svg!, {
       value: value,

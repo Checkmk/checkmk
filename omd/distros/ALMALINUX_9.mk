@@ -18,6 +18,7 @@ OS_PACKAGES      += perl-Locale-Maketext-Simple
 OS_PACKAGES      += perl-IO-Zlib
 OS_PACKAGES      += perl-Net-Ping
 OS_PACKAGES      += perl-lib
+OS_PACKAGES      += perl-subs # Needed by Nagios
 OS_PACKAGES      += php
 OS_PACKAGES      += php-cli
 OS_PACKAGES      += php-xml

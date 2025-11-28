@@ -115,3 +115,32 @@ check_plugin_azure_firewall_throughput = CheckPlugin(
         "throughput": ("no_levels", None),
     },
 )
+
+
+def discover_azure_firewall_latency(section: Resource) -> DiscoveryResult:
+    yield Service()
+
+
+check_plugin_azure_firewall_latency = CheckPlugin(
+    name="azure_v2_firewall_latency",
+    sections=["azure_v2_azurefirewalls"],
+    service_name="Azure/Firewall Latency",
+    discovery_function=discover_azure_firewall_latency,
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_FirewallLatencyPng",
+                "azure_firewall_latency",
+                "Latency",
+                render.timespan,
+                upper_levels_param="latency",
+                map_func=lambda ms: ms / 1000.0,  # render.timespan wants seconds, not milliseconds
+            ),
+        ],
+        check_levels=check_levels_v2,
+    ),
+    check_ruleset_name="azure_v2_firewall_latency",
+    check_default_parameters={
+        "latency": ("fixed", (0.5, 1.0)),  # 500 milliseconds, 1000 milliseconds
+    },
+)

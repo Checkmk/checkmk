@@ -15,6 +15,7 @@ from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, Stat
 from cmk.plugins.azure_v2.agent_based import azure_firewall
 from cmk.plugins.azure_v2.agent_based.azure_firewall import (
     discover_azure_firewall_health,
+    discover_azure_firewall_latency,
     discover_azure_firewall_snat,
     discover_azure_firewall_throughput,
 )
@@ -56,6 +57,12 @@ AZURE_FIREWALL_RESOURCE = Resource(
             aggregation="average",
             value=250000000.0,  # 250 MB/s
             unit="BytesPerSecond",
+        ),
+        "average_FirewallLatencyPng": AzureMetric(
+            name="FirewallLatencyPng",
+            aggregation="average",
+            value=1500.0,
+            unit="Milliseconds",
         ),
     },
 )
@@ -236,5 +243,48 @@ def test_check_azure_firewall_throughput(
     expected_results: Sequence[Result | Metric],
 ) -> None:
     check_function = azure_firewall.check_plugin_azure_firewall_throughput.check_function
+    results = list(check_function(params, resource))
+    assert results == expected_results
+
+
+def test_discover_azure_firewall_latency() -> None:
+    assert list(discover_azure_firewall_latency(AZURE_FIREWALL_RESOURCE)) == [Service()]
+
+
+@pytest.mark.parametrize(
+    "resource, params, expected_results",
+    [
+        pytest.param(
+            AZURE_FIREWALL_RESOURCE,
+            {"latency": ("fixed", (0.5, 1.0))},
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Latency: 2 seconds (warn/crit at 500 milliseconds/1 second)",
+                ),
+                Metric("azure_firewall_latency", 1.5, levels=(0.5, 1.0)),
+            ],
+            id="latency at crit level",
+        ),
+        pytest.param(
+            AZURE_FIREWALL_RESOURCE,
+            {"latency": ("fixed", (2.0, 3.0))},
+            [
+                Result(
+                    state=State.OK,
+                    summary="Latency: 2 seconds",
+                ),
+                Metric("azure_firewall_latency", 1.5, levels=(2.0, 3.0)),
+            ],
+            id="latency below warn level",
+        ),
+    ],
+)
+def test_check_azure_firewall_latency(
+    resource: Resource,
+    params: Mapping[str, Any],
+    expected_results: Sequence[Result | Metric],
+) -> None:
+    check_function = azure_firewall.check_plugin_azure_firewall_latency.check_function
     results = list(check_function(params, resource))
     assert results == expected_results

@@ -73,6 +73,7 @@ RUN yum -y makecache \
     perl-IO-Zlib \
     perl-Locale-Maketext-Simple \
     perl-Time-HiRes \
+    perl-Time-Piece \
     perl-devel \
     php \
     postgresql-devel \

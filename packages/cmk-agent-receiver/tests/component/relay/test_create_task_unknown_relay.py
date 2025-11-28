@@ -13,13 +13,11 @@ from cmk.testlib.agent_receiver.relay import random_relay_id
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
 
-def test_create_task_unknown_relay(
+def test_create_task_unknow_relay(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
 ) -> None:
-    # We allow creating tasks for unknown relays. For now it's the site's responsibility
-    # to handle such cases.
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
     register_relay(agent_receiver, name="relay1", relay_id=relay_id)

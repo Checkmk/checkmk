@@ -8,7 +8,6 @@ from typing import Annotated
 import fastapi
 from pydantic import SecretStr
 
-from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_dependency
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
     get_forward_monitoring_data_handler,
     get_register_relay_handler,
@@ -20,6 +19,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import (
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     FailedToSendMonitoringDataError,
 )
+from cmk.agent_receiver.relay.lib.check_relay import check_relay
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
@@ -60,7 +60,7 @@ async def register_relay(
 @router.post(
     "/{relay_id}/monitoring",
     status_code=fastapi.status.HTTP_204_NO_CONTENT,
-    dependencies=[mtls_authorization_dependency("relay_id")],
+    dependencies=[fastapi.Depends(check_relay)],
 )
 async def forward_monitoring_data(
     monitoring_data: MonitoringData,

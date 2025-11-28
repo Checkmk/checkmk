@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-V+A8UP6rXTGxUq8rdk8QN5rs2O6S8WyYWYPOSpn374Y=",
+  "strip_prefix": "openssl-3.0.16",
+  "url": "https://github.com/openssl/openssl/releases/download/openssl-3.0.16/openssl-3.0.16.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-veupFJxObUfewJ9s4Tz6L9utSF2oSjAjJIUC1jzn3tg=",
+    "MODULE.bazel": "sha256-N5q62XUa3k+5yaN98Cbs/WR4KokaQoGRblZFVa8fXKs="
+  }
+}

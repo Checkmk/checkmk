@@ -226,6 +226,7 @@
     --inline-help-icon-bg: rgb(6 103 193);
     --inline-error-border-color: var(--color-light-red-40);
     --inline-error-text-color: var(--color-light-red-30);
+    --slide-in-left-part: var(--color-midnight-grey-80);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);

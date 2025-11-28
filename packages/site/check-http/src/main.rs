@@ -253,6 +253,7 @@ fn make_configs(
                 (x, Some(y)) => LowerLevels::warn_crit(x, y),
             }),
             disable_certificate_verification: args.disable_certificate_verification,
+            on_error_state: args.on_error.unwrap_or(State::Crit),
         },
     )
 }

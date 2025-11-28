@@ -5,6 +5,7 @@
 use crate::pwstore::password_from_store;
 use crate::version;
 use anyhow::{bail, Result as AnyhowResult};
+use check_http::checking_types::State;
 use clap::{Args, Parser, ValueEnum};
 use regex::{Regex, RegexBuilder};
 use reqwest::{
@@ -16,7 +17,7 @@ use std::net::IpAddr;
 use std::{str::FromStr, time::Duration};
 use tracing_subscriber::filter::LevelFilter;
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(version = version::VERSION)]
 /// check_httpv2
 pub struct Cli {
@@ -215,6 +216,10 @@ pub struct Cli {
     /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"
     #[arg(short = 'e', long)]
     pub status_code: Vec<StatusCode>,
+
+    /// State to report if expected string/regex is not found in body or headers
+    #[arg(long, value_parser = parse_on_error_state)]
+    pub on_error: Option<State>,
 
     /// Use TLS version for HTTPS requests.
     ///
@@ -473,6 +478,19 @@ fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(Regex, R
 
 fn parse_regex_pattern(pattern: &str) -> Result<Regex, regex::Error> {
     RegexBuilder::new(pattern).crlf(true).build()
+}
+
+fn parse_on_error_state(state: &str) -> AnyhowResult<State> {
+    match state.to_lowercase().as_str() {
+        "ok" => Ok(State::Ok),
+        "warning" | "warn" => Ok(State::Warn),
+        "critical" | "crit" => Ok(State::Crit),
+        "unknown" => Ok(State::Unknown),
+        _ => bail!(
+            "Invalid state: '{}'. Expected one of: ok, warning, critical, unknown",
+            state
+        ),
+    }
 }
 
 #[cfg(test)]

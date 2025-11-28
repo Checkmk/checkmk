@@ -201,6 +201,7 @@ class Content(BaseModel):
     body: (
         tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex] | None
     ) = None
+    on_error: Literal[0, 1, 2, 3] | None = None
 
 
 class HttpSettings(BaseModel):
@@ -512,6 +513,17 @@ def _content_args(content: Content) -> Iterator[str]:
         yield from _header_match_args(header)
     if (body := content.body) is not None:
         yield from _body_match_args(body)
+    if (on_error := content.on_error) is not None:
+        yield "--on-error"
+        match on_error:
+            case 0:
+                yield "ok"
+            case 1:
+                yield "warning"
+            case 2:
+                yield "critical"
+            case 3:
+                yield "unknown"
 
 
 def _header_match_args(

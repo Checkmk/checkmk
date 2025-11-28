@@ -48,7 +48,7 @@ const registrationCommand = computed(() =>
     `    --site ${props.siteName} \\`,
     '    --user agent_registration \\',
     '    --password [automation-secret] \\',
-    `    -n ${escapeShellArg(props.relayAlias)}"`
+    `    --relay-alias ${escapeShellArg(props.relayAlias)}"`
   ].join('\n')
 )
 

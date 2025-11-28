@@ -10,13 +10,14 @@ import json
 import ssl
 from collections.abc import Mapping
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, override, TypedDict
 from urllib.parse import urljoin
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Response, Session
-from requests.adapters import HTTPAdapter
+from requests.adapters import DEFAULT_POOLBLOCK, HTTPAdapter
 from requests.auth import HTTPBasicAuth
+from urllib3.poolmanager import PoolManager
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -112,13 +113,43 @@ class HTTPSAuthRequester(Requester):
 
 
 class HostnameValidationAdapter(HTTPAdapter):
-    def __init__(self, hostname: str) -> None:
+    def __init__(self, host_name: str) -> None:
+        self._reference_host_name = host_name
         super().__init__()
-        self._reference_hostname = hostname
 
+    @override
     def cert_verify(self, conn, url, verify, cert):
-        conn.assert_hostname = self._reference_hostname
+        conn.assert_hostname = self._reference_host_name
         return super().cert_verify(conn, url, verify, cert)
+
+    @override
+    def init_poolmanager(self, connections, maxsize, block=DEFAULT_POOLBLOCK, **pool_kwargs):
+        # Override this method to make sure the connection pools use the assert_hostname and
+        # server_hostname argument for SNI as in
+        # https://urllib3.readthedocs.io/en/1.26.15/advanced-usage.html#custom-sni-hostname
+        pool_kwargs["assert_hostname"] = self._reference_host_name
+        pool_kwargs["server_hostname"] = self._reference_host_name
+
+        # The rest of the method stays the same as in HTTPAdapter
+        self._pool_connections = connections
+        self._pool_maxsize = maxsize
+        self._pool_block = block
+
+        # PoolManager takes care already of setting assert_same_host=False in urlopen()
+        self.poolmanager = PoolManager(
+            num_pools=connections,
+            maxsize=maxsize,
+            block=block,
+            **pool_kwargs,
+        )
+
+    @override
+    def send(self, request, *args, **kwargs):
+        # Add Host header for proper SNI implementation as per urllib3 docs
+        if "Host" not in request.headers:
+            request.headers["Host"] = self._reference_host_name
+
+        return super().send(request, *args, **kwargs)
 
 
 class ApiSession:

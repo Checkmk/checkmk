@@ -86,7 +86,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     )
     parser.add_argument(
         "--cert-server-name",
-        help="""Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.""",
+        help=(
+            "Provides this name for SNI and expects this as the server's name"
+            " in the ssl certificate. Overrides '--no-cert-check'."
+        ),
     )
     parser.add_argument(
         "--api-token",

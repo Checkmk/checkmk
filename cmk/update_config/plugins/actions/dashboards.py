@@ -55,6 +55,7 @@ class MigrateUserDashboards(UpdateAction):
             dashlet_embedded_view: EmbeddedViewDashletConfig = {
                 "name": view_name,
                 "datasource": dashlet["datasource"],
+                "single_infos": dashlet["single_infos"],
                 # position and size are expected since we are in a relative dashboard context
                 "position": dashlet["position"],
                 "size": dashlet["size"],

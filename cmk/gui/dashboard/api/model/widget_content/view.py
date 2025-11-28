@@ -86,7 +86,7 @@ class EmbeddedViewContent(BaseWidgetContent):
             type="embedded_view",
             embedded_id=config["name"],
             datasource=config["datasource"],
-            restricted_to_single=list(config["single_infos"]),
+            restricted_to_single=list(config.get("single_infos", [])),
         )
 
     @override

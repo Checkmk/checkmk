@@ -1452,6 +1452,9 @@ class Site:
                 is_automation_user=True,
             )
         self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
+        self.openapi_agent_receiver.set_authentication_header(
+            user=username, password=self._automation_secret.raw
+        )
 
     @tracer.instrument("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:

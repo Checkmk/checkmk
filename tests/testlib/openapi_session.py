@@ -274,6 +274,9 @@ class AgentReceiverApiSession(requests.Session):
         self.relays = AgentReceiverRelayAPI(self)
         self.verify = False
 
+    def set_authentication_header(self, user: str, password: str) -> None:
+        self.headers["Authorization"] = f"Bearer {user} {password}"
+
     @property
     def port(self) -> int:
         if self._port is None:

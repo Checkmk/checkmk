@@ -3844,6 +3844,10 @@ msgstr "フィルタを追加"
 msgid "Add NGINX instance"
 msgstr "NGINXインスタンスを追加します"
 
+#, fuzzy
+msgid "Add OAuth2 connection"
+msgstr "LDAP接続を追加します"
+
 msgid "Add OID descriptions"
 msgstr "OIDの説明を追加する"
 
@@ -4161,9 +4165,6 @@ msgstr "新しいエントリーを追加する"
 #, fuzzy
 msgid "Add new exclude pattern"
 msgstr "新しいパターンを追加する"
-
-msgid "Add new field"
-msgstr "新しいフィールドを追加"
 
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
@@ -7022,6 +7023,9 @@ msgstr "イベントのアーカイブ"
 msgid "Archive events of hosts"
 msgstr "ホストのイベントをアーカイブする"
 
+msgid "Archive exceeds total size limit"
+msgstr ""
+
 msgid "Archive log"
 msgstr "アーカイブログ"
 
@@ -7720,9 +7724,6 @@ msgstr "監視エージェントを自動的に作成する"
 
 #, fuzzy
 msgid "Automatically delete hosts without OpenTelemetry data"
-msgstr "OpenTelemetryデータなしでホストを自動的に削除します"
-
-msgid "Automatically delete hosts without open telemetry data"
 msgstr "OpenTelemetryデータなしでホストを自動的に削除します"
 
 msgid "Automatically delete hosts without piggyback data"
@@ -8608,6 +8609,10 @@ msgid "Azure Databases"
 msgstr "Azureデータベース"
 
 #, fuzzy
+msgid "Azure Firewalls"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
 msgid "Azure Load Balancer Health"
 msgstr "ロードバランサーヘルス"
 
@@ -8617,6 +8622,10 @@ msgstr "Azureロードバランサーヘルス"
 
 #, fuzzy
 msgid "Azure NAT Gateways Connections"
+msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure NAT Gateways Packets"
 msgstr "Azure データベース接続"
 
 #, fuzzy
@@ -9984,9 +9993,6 @@ msgstr ""
 "デフォルトでは、Checkmkはコミュニティ[public]を使用してSNMP v1/v2経由でホスト"
 "に接続します。このルールを使用して、SNMPを介してホストに接続するときに使用す"
 "る資格情報をカスタマイズできます。"
-
-msgid "By default all of the sections will be executed."
-msgstr "デフォルトでは、すべてのセクションが実行されます。"
 
 msgid "By default crash reports will be sent to our crash reporting server."
 msgstr ""
@@ -14251,9 +14257,6 @@ msgstr ""
 "注意：平均は指数移動平均（EMA）法を使用して計算され、新しい値と前回の平均の両"
 "方を考慮し、それぞれに重み付け係数を適用します。"
 
-msgid "Compute host name from left part of the service.instance.id attribute."
-msgstr "service.instance.id属性の左側部分からホスト名を計算する。"
-
 msgid "Compute range accoring to displayed data"
 msgstr "表示されたデータに応じて範囲を計算します"
 
@@ -16920,9 +16923,6 @@ msgstr "カスタムホスト"
 msgid "Custom host attributes"
 msgstr "カスタムホスト属性"
 
-msgid "Custom host name computation"
-msgstr "カスタムホスト名算出"
-
 msgid "Custom host name prefix"
 msgstr "カスタムホスト名プレフィックス"
 
@@ -18654,13 +18654,6 @@ msgstr "ターゲット#%dを削除"
 #, fuzzy
 msgid ""
 "Delete the hosts created by this connection whose OpenTelemetry data is no "
-"longer present."
-msgstr ""
-"この接続によって作成されたホストのうち、Open Telemetryのデータが存在しないホ"
-"ストを削除します。"
-
-msgid ""
-"Delete the hosts created by this connection whose open telemetry data is no "
 "longer present."
 msgstr ""
 "この接続によって作成されたホストのうち、Open Telemetryのデータが存在しないホ"
@@ -21383,6 +21376,10 @@ msgstr ""
 "ドメイン部分を削除します (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 
 msgid "Dropped messages"
+msgstr "ドロップされたメッセージ"
+
+#, fuzzy
+msgid "Dropped packets"
 msgstr "ドロップされたメッセージ"
 
 msgid "Dropped work requests"
@@ -27026,10 +27023,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "グラフテンプレート"
 
-#, fuzzy
-msgid "Graph time and refresh"
-msgstr "グラフの時間範囲"
-
 msgid "Graph time range"
 msgstr "グラフの時間範囲"
 
@@ -30050,9 +30043,6 @@ msgstr "ホスト名またはエイリアス(正規表現)"
 #, fuzzy
 msgid "Host name resource attribute"
 msgstr "属性をリセット"
-
-msgid "Host name rules"
-msgstr "ホスト名ルール"
 
 msgid "Host name template"
 msgstr "ホスト名のテンプレート"
@@ -33622,6 +33612,10 @@ msgstr "インバウンドレベル(毎秒)"
 
 msgid "Inbound messages"
 msgstr "インバウンドメッセージ"
+
+#, fuzzy
+msgid "Inbound packets"
+msgstr "入力パケット"
 
 #, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
@@ -37590,9 +37584,6 @@ msgstr ""
 "さまざまな状態のサービスの数とともに、ホストグループのメンバーを一覧表示しま"
 "す。"
 
-msgid "Literal string"
-msgstr "固定文字列"
-
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr "全監視サーバーの全体パフォーマンスをライブで監視"
 
@@ -41071,6 +41062,10 @@ msgstr "パラメータ \"%s\" がありません。"
 
 msgid "Missing prerequisite"
 msgstr "前提条件の欠落"
+
+#, fuzzy, python-format
+msgid "Missing request variable '%s'"
+msgstr "変数siteidがありません"
 
 msgid "Missing required \"Host name\" selection."
 msgstr "必須項目\"ホスト名\"が選択されていません。"
@@ -45293,6 +45288,10 @@ msgstr "OAuth トークン認証"
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2（クライアントID/テナントID）"
 
+#, fuzzy
+msgid "OAuth2 connection"
+msgstr "接続を追加"
+
 msgid "OEM data interpretation"
 msgstr "OEMデータの解釈"
 
@@ -46037,12 +46036,6 @@ msgstr "出力ハンドルを開く"
 msgid "Open slots"
 msgstr "空きスロット"
 
-msgid "Open telemetry collector creation options"
-msgstr "Open telemetry コレクターの作成オプション"
-
-msgid "Open telemetry hosts creation options"
-msgstr "Open telemetryホスト作成オプション"
-
 msgid "Open the action menu"
 msgstr "アクションメニューを開く"
 
@@ -46139,9 +46132,6 @@ msgstr "OpenVMSのプロセス"
 
 msgid "OpenVPN clients"
 msgstr "OpenVPNクライアント"
-
-msgid "Opentelemetry collector data"
-msgstr "Opentelemetry コレクターデータ"
 
 msgid "Operating CPU"
 msgstr "動作中のCPU"
@@ -47270,6 +47260,10 @@ msgstr "アウトバウンドレベル（1秒あたり）"
 msgid "Outbound messages"
 msgstr "アウトバウンドメッセージ"
 
+#, fuzzy
+msgid "Outbound packets"
+msgstr "出力パケット"
+
 msgid "Outbound rule"
 msgstr "アウトバウンドルール"
 
@@ -47946,6 +47940,18 @@ msgstr "パケット速度asic"
 
 msgid "Packets"
 msgstr "パケット"
+
+#, fuzzy
+msgid "Packets (dropped)"
+msgstr "ドロップされたパケット"
+
+#, fuzzy
+msgid "Packets (in/out)"
+msgstr "コールイン/アウト"
+
+#, fuzzy
+msgid "Packets (total)"
+msgstr "ライセンス詳細"
 
 msgid "Packets Dropped"
 msgstr "ドロップされたパケット"
@@ -49837,9 +49843,6 @@ msgstr "アプリケーション名を指定してください"
 msgid "Please specify at least on address"
 msgstr "少なくとも1つのアドレスを指定してください"
 
-msgid "Please specify at least one \"Open telemetry hosts creation option\""
-msgstr "\"Open telemetry ホストの作成オプション\"を1つ以上指定してください"
-
 #, fuzzy
 msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
 msgstr "\"Open telemetry ホストの作成オプション\"を1つ以上指定してください"
@@ -49880,10 +49883,6 @@ msgstr "レベルの種類を少なくとも1つ指定してください"
 
 msgid "Please specify at least one value"
 msgstr "少なくとも1つの値を指定してください"
-
-#, python-format
-msgid "Please specify at least one value for \"%s\""
-msgstr "\"%s\"には少なくとも１つの値を指定してください"
 
 msgid "Please specify host or hash."
 msgstr "ホストまたはハッシュを指定してください。"
@@ -55590,6 +55589,9 @@ msgstr "セキュリティレベル"
 msgid "Security advice"
 msgstr "セキュリティに関するアドバイス"
 
+msgid "Security checks have failed for the uploaded tar.gz file"
+msgstr ""
+
 #, python-format
 msgid "Security message #%d"
 msgstr "セキュリティメッセージ #%d"
@@ -55726,10 +55728,6 @@ msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr ""
 "監視対象として選択し、設定するMicrosoft Azureサービスを選択してください"
-
-#, fuzzy
-msgid "Select at least one column."
-msgstr "少なくとも1つの要素を選択してください"
 
 #, fuzzy
 msgid "Select at least one element"
@@ -57120,6 +57118,10 @@ msgstr ""
 "は<tt>${}</tt>なしで与えられる。(より強力な変数設定メカニズムについては "
 "<tt>--variablefile</tt> を参照してください。)"
 
+#, fuzzy
+msgid "Set graph time"
+msgstr "グラフタイトルを使用する"
+
 msgid "Set height"
 msgstr "高さを設定する"
 
@@ -57367,17 +57369,6 @@ msgid ""
 msgstr ""
 "LDAPサーバーのホストアドレスを設定します。IPアドレスまたは解決可能なホスト名"
 "である可能性があります。"
-
-msgid ""
-"Set the host names or IP addresses of the site. The entries will be added as "
-"additional subject alternative names (SANs) to the site certificate, "
-"alongside the default SANs. Configuring this allows proper server name "
-"identification when connecting to the site via TLS, for example for "
-"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
-"Changing this setting will trigger re-issuance of the site certificate by "
-"the site CA. In distributed setups, configure SANs separately for each site "
-"in the distributed monitoring configuration."
-msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Windowsエージェントのログレベルを設定します"
@@ -58599,10 +58590,6 @@ msgstr "サイトのバックアップ"
 
 msgid "Site backup targets"
 msgstr "サイトのバックアップターゲット"
-
-#, fuzzy
-msgid "Site certificate subject alternative names"
-msgstr "証明書サブジェクトの別名"
 
 msgid "Site certificate validity"
 msgstr "サイト証明書の有効性"
@@ -63487,13 +63474,6 @@ msgid "The Number of the power Phase."
 msgstr "電力フェーズの数。"
 
 msgid ""
-"The OpenTelemetry collector is an experimental beta feature, and not "
-"supported yet. "
-msgstr ""
-"OpenTelemetryコレクターは実験的なベータ機能であり、まだサポートされていませ"
-"ん。 "
-
-msgid ""
 "The Organisation-ID will be used as prefix for the hostname (separated by a "
 "-). Use this option together with a \"Hostname translation for piggybacked "
 "hosts\" to add a organisation prefix to the hosts from the Cisco Meraki "
@@ -65209,44 +65189,6 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "ホスト名属性を列に割り当てる必要があります。"
 
-#, python-format
-msgid ""
-"The host name computation computes the name of the host that should have the "
-"corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"%s\" attribute. For every rule "
-"configured here, the provided fields are concatenated in the order they are "
-"listed. The first rule that results in a non-empty value is used. For "
-"example:\n"
-"<ol><li>A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"%s\" to the value of that attribute, if it is "
-"present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.</li><li>A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"%s\" to the value of that attribute, if it is "
-"present and \"%s\" has not been set by the previous rule.</li><li>A third "
-"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
-"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
-"the attribute is present and \"%s\" has not been set by the previous rules.</"
-"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
-"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
-"</li></ol>"
-msgstr ""
-"ホスト名の計算は、対応するCheckmkサービスを持つべきホストの名前を計算します。"
-"この計算はOpenTelemetryコレクタによって行われ、結果は \"%s\"属性に格納されま"
-"す。ここで設定された全てのルールについては、提供されたフィールドがリスト化さ"
-"れた順に連結されます。空ではない値になる最初のルールが使用されます。例え"
-"ば：\n"
-"<ol><li>最初のルールは1つのフィールド \"Value of attribute: service.name\" で"
-"構成され、その属性が存在する場合、その値を\"%s\"と設定します。この属性は、例"
-"えばprometheusのスクレイプジョブ名に設定されます。</li><li>2番目のルールは1つ"
-"のフィールド \"Value of attribute: container.name \"で構成され、その属性が存"
-"在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"をその属性の値に設"
-"定します。</li><li>3番目のルールは2つのフィールド \"Resource attribute "
-"value: custom_attr\"と \"Literal string: some_suffix\"から構成され、その属性"
-"が存在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"を "
-"\"VALUEsome_suffix \"に設定します。</li><li>最後のルールは1つのフィールド "
-"\"Literal string: fallback_host\" で構成され、まだ設定されていないすべての"
-"\"%s\"属性を \"fallback_host\"に設定します。</li></ol>"
-
 msgid "The host name is missing."
 msgstr "ホスト名がありません。"
 
@@ -65393,13 +65335,6 @@ msgstr ""
 msgid ""
 "The interval the connection will be executed to check the available "
 "OpenTelemetry data and update the configuration."
-msgstr ""
-"使用可能なOpen telemetryデータを確認し、構成を更新するために接続が実行される"
-"間隔。"
-
-msgid ""
-"The interval the connection will be executed to check the available open "
-"telemetry data and update the configuration."
 msgstr ""
 "使用可能なOpen telemetryデータを確認し、構成を更新するために接続が実行される"
 "間隔。"
@@ -67658,12 +67593,6 @@ msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 "アップロードされたZIPファイルの展開後のサイズが制限を超えています: %s > %s"
 
-#, python-format
-msgid ""
-"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-msgstr ""
-"アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s > %s"
-
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "アップロードされたファイルは有効なZIPファイルではありません。"
 
@@ -68997,13 +68926,6 @@ msgstr "この接続は現在有効になっています"
 msgid "This connection is currently not being used for synchronization."
 msgstr "この接続は現在、同期に使用されていません。"
 
-msgid ""
-"This connector can be used to automatically create hosts based on "
-"Opentelemetry collector data."
-msgstr ""
-"このコネクターはOpentelemetry コレクターのデータに基づいてホストを自動作成す"
-"るために使用します。"
-
 #, fuzzy
 msgid ""
 "This connector can be used to automatically create hosts based on data in "
@@ -69158,10 +69080,6 @@ msgstr ""
 "適用される追加のルールを指定できます。複数のマッチングルールの場合、最初の"
 "マッチングルールが適用されます。注意:この機能は外れ値を対象としているため、サ"
 "ブグループの構成には適していません。 "
-
-#, fuzzy
-msgid "This field can not be empty."
-msgstr "入力を空にすることはできません"
 
 msgid ""
 "This field declares the end date of the forecast, which starts on the last "
@@ -69686,9 +69604,10 @@ msgstr ""
 "ビットネットワークインタフェースカウンタ（セクション<tt>if</tt> 、<tt>if64</"
 "tt> に取って代わられる）を強制することがあります。"
 
+#, fuzzy
 msgid ""
-"This option allows to select specific sections of the Checkmk agent. By "
-"default all of the sections will be executed. Sections that are not selected "
+"This option allows to select specific sections of the Checkmk agent. All of "
+"the sections checked below will be executed. Sections that are not selected "
 "here will be skipped. Skipping sections reduces CPU load on the monitored "
 "host and the amount of transferred data. However, it may result in the "
 "absence of the associated Checkmk service or services. The most CPU "
@@ -71627,6 +71546,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways packets, "
+"including thresholds for dropped packets."
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "throughput monitoring"
 msgstr ""
@@ -73162,10 +73089,6 @@ msgid ""
 "Time range to continue to consider outdated OpenTelemetry data as valid."
 msgstr "古いオープンテレメトリデータを有効なデータとして継続して扱う期間。"
 
-msgid ""
-"Time range to continue to consider outdated open telemetry data as valid."
-msgstr "古いオープンテレメトリデータを有効なデータとして継続して扱う期間。"
-
 msgid "Time range to continue to consider outdated piggyback data as valid."
 msgstr "古いピギーバックデータを有効なものだとみなしつづける時間範囲。"
 
@@ -73178,25 +73101,6 @@ msgid ""
 msgstr ""
 "ピギーバック元が他のホストのピギーバックデータのみを送信する間、ホストを保持"
 "する時間範囲。"
-
-msgid ""
-"Time range to prevent host deletion after site startup, e.g. when booting "
-"the Checkmk server. This is caused by the 'tmp' directory which needs more "
-"time to initialize and can result in missing data from some sources."
-msgstr ""
-"サイト起動後、ホストの削除を防止するためだけの時間範囲。例えば、Checkmkサー"
-"バーを起動する際など。これは”tmp”ディレクトリが初期化に追加時間が必要であり、"
-"一部のソースからのデータが欠落する原因となる可能性があります。"
-
-msgid ""
-"Time range to prevent host deletion after site startup, e.g. when booting "
-"the Checkmk server. This is caused by the 'tmp' directory which needs more "
-"time to initialize and can result in missing open telemetry information from "
-"some sources."
-msgstr ""
-"サイト起動後、ホストの削除を防止するための時間範囲。例えば、Checkmkサーバーを"
-"起動する際など。これは、『tmp』ディレクトリが初期化に追加の時間が必要であり、"
-"一部のソースからopen telemetry 情報が欠落する原因となる可能性があります。"
 
 msgid ""
 "Time range to prevent host deletion after site startup, e.g. when booting "
@@ -74299,6 +74203,10 @@ msgstr "ゾンビジョブの総数"
 #, python-brace-format
 msgid "Total number of {property} upper levels"
 msgstr "{property}上位レベルの総数"
+
+#, fuzzy
+msgid "Total packets"
+msgstr "最大総パケット数"
 
 msgid "Total packets maximum"
 msgstr "最大総パケット数"
@@ -78283,13 +78191,6 @@ msgstr "すべての地図回転を使用"
 msgid "Use alternative display name for services"
 msgstr "サービスに代替表示名を使用する"
 
-msgid ""
-"Use and test at your heart's desire, just don’t rely on it in production - "
-"scope & features may change."
-msgstr ""
-"ご自由に使用し、テストしてください。ただし、本番環境での使用は避けてください "
-"- 機能範囲や仕様は変更される可能性があります。"
-
 msgid "Use any network address"
 msgstr "ネットワークアドレスを使用"
 
@@ -80039,9 +79940,6 @@ msgstr "値は '%s' のいずれかでなければならない"
 
 msgid "Value must be string"
 msgstr "値は文字列であること"
-
-msgid "Value of attribute"
-msgstr "アトリビュートの値"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -84516,9 +84414,6 @@ msgstr "一部またはすべてのエージェントパッケージに署名し
 
 msgid "You have to provide a role ID."
 msgstr "ロールIDを指定する必要があります。"
-
-msgid "You have to select a valid host name computation method."
-msgstr "有効なホスト名のの算出方法を選択する必要があります。"
 
 msgid "You have to select at least one element."
 msgstr "少なくとも1つの要素を選択する必要があります。"
@@ -89184,6 +89079,88 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Application successfully authorized!"
+msgstr "通知ルールが正常に修正されました！"
+
+#, fuzzy
+msgid "Access token successfully requested!"
+msgstr "ホスト作成に成功しました"
+
+#, fuzzy
+msgid "You can now close this window."
+msgstr "このルールを保存することはできません。"
+
+#, fuzzy
+msgid "Verifying the authorization..."
+msgstr "登録を確認中…"
+
+#, fuzzy
+msgid "Authorization failed."
+msgstr "認証失敗"
+
+#, fuzzy
+msgid "Requesting access token"
+msgstr "APIアクセストークン"
+
+#, fuzzy
+msgid "${res.message}"
+msgstr "メッセージ"
+
+#, fuzzy
+msgid "Failed to request and save access token: ${e}"
+msgstr "Adressbookファイルへのリクエストの失敗"
+
+#, fuzzy
+msgid "Authorization was not completed. Please try again."
+msgstr "何か問題が発生しました: %s"
+
+#, fuzzy
+msgid "Authorize application"
+msgstr "承認"
+
+#, fuzzy
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application"
+msgstr "ブラウザの指示に従って認証を行ってください。"
+
+#, fuzzy
+msgid "OAuth2 connection created successfully!"
+msgstr "エージェント%sが成功しました"
+
+#, fuzzy
+msgid "Go back to restart authorization process"
+msgstr "認証リクエスト作成不可"
+
+#, fuzzy
+msgid "Define OAuth2 parameter"
+msgstr "デフォルトパラメータ"
+
+#, fuzzy
+msgid "Description:"
+msgstr "説明"
+
+#, fuzzy
+msgid "Authority:"
+msgstr "権限"
+
+#, fuzzy
+msgid "Tenant ID:"
+msgstr "テナントID"
+
+#, fuzzy
+msgid "Client ID:"
+msgstr "クライアントID"
+
+#, fuzzy
+msgid "Client secret:"
+msgstr "Client secret"
+
+#, fuzzy
+msgid "Start authorization"
+msgstr "基本認証"
+
+#, fuzzy
 msgid "Configure title and site"
 msgstr "煙のレベルを設定する"
 
@@ -89748,6 +89725,171 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Add new field"
+#~ msgstr "新しいフィールドを追加"
+
+#~ msgid "Automatically delete hosts without open telemetry data"
+#~ msgstr "OpenTelemetryデータなしでホストを自動的に削除します"
+
+#~ msgid "By default all of the sections will be executed."
+#~ msgstr "デフォルトでは、すべてのセクションが実行されます。"
+
+#~ msgid ""
+#~ "Compute host name from left part of the service.instance.id attribute."
+#~ msgstr "service.instance.id属性の左側部分からホスト名を計算する。"
+
+#~ msgid "Custom host name computation"
+#~ msgstr "カスタムホスト名算出"
+
+#~ msgid ""
+#~ "Delete the hosts created by this connection whose open telemetry data is "
+#~ "no longer present."
+#~ msgstr ""
+#~ "この接続によって作成されたホストのうち、Open Telemetryのデータが存在しない"
+#~ "ホストを削除します。"
+
+#, fuzzy
+#~ msgid "Graph time and refresh"
+#~ msgstr "グラフの時間範囲"
+
+#~ msgid "Host name rules"
+#~ msgstr "ホスト名ルール"
+
+#~ msgid "Literal string"
+#~ msgstr "固定文字列"
+
+#~ msgid "Open telemetry collector creation options"
+#~ msgstr "Open telemetry コレクターの作成オプション"
+
+#~ msgid "Open telemetry hosts creation options"
+#~ msgstr "Open telemetryホスト作成オプション"
+
+#~ msgid "Opentelemetry collector data"
+#~ msgstr "Opentelemetry コレクターデータ"
+
+#~ msgid "Please specify at least one \"Open telemetry hosts creation option\""
+#~ msgstr "\"Open telemetry ホストの作成オプション\"を1つ以上指定してください"
+
+#, python-format
+#~ msgid "Please specify at least one value for \"%s\""
+#~ msgstr "\"%s\"には少なくとも１つの値を指定してください"
+
+#, fuzzy
+#~ msgid "Select at least one column."
+#~ msgstr "少なくとも1つの要素を選択してください"
+
+#, fuzzy
+#~ msgid "Site certificate subject alternative names"
+#~ msgstr "証明書サブジェクトの別名"
+
+#~ msgid ""
+#~ "The OpenTelemetry collector is an experimental beta feature, and not "
+#~ "supported yet. "
+#~ msgstr ""
+#~ "OpenTelemetryコレクターは実験的なベータ機能であり、まだサポートされていま"
+#~ "せん。 "
+
+#, python-format
+#~ msgid ""
+#~ "The host name computation computes the name of the host that should have "
+#~ "the corresponding Checkmk services. The computation is done by the "
+#~ "OpenTelemetry collector and the result is stored in the \"%s\" attribute. "
+#~ "For every rule configured here, the provided fields are concatenated in "
+#~ "the order they are listed. The first rule that results in a non-empty "
+#~ "value is used. For example:\n"
+#~ "<ol><li>A first rule consisting of one field \"Value of attribute: "
+#~ "service.name\" will set \"%s\" to the value of that attribute, if it is "
+#~ "present. This attribute will be set to the prometheus scrape jobs name, "
+#~ "for example.</li><li>A second rule consisting of one field \"Value of "
+#~ "attribute: container.name\" will set \"%s\" to the value of that "
+#~ "attribute, if it is present and \"%s\" has not been set by the previous "
+#~ "rule.</li><li>A third rule consisting of two fields \"Resource attribute "
+#~ "value: custom_attr\" and \"Literal string: some_suffix\" will set \"%s\" "
+#~ "to \"VALUEsome_suffix\", if the attribute is present and \"%s\" has not "
+#~ "been set by the previous rules.</li><li>A last rule consisting of one "
+#~ "field \"Literal string: fallback_host\" will set all \"%s\" attributes "
+#~ "that are not yet filled to \"fallback_host\".</li></ol>"
+#~ msgstr ""
+#~ "ホスト名の計算は、対応するCheckmkサービスを持つべきホストの名前を計算しま"
+#~ "す。この計算はOpenTelemetryコレクタによって行われ、結果は \"%s\"属性に格納"
+#~ "されます。ここで設定された全てのルールについては、提供されたフィールドがリ"
+#~ "スト化された順に連結されます。空ではない値になる最初のルールが使用されま"
+#~ "す。例えば：\n"
+#~ "<ol><li>最初のルールは1つのフィールド \"Value of attribute: "
+#~ "service.name\" で構成され、その属性が存在する場合、その値を\"%s\"と設定し"
+#~ "ます。この属性は、例えばprometheusのスクレイプジョブ名に設定されます。</"
+#~ "li><li>2番目のルールは1つのフィールド \"Value of attribute: "
+#~ "container.name \"で構成され、その属性が存在し、かつ前のルールで\"%s\"が設"
+#~ "定されていない場合、\"%s\"をその属性の値に設定します。</li><li>3番目のルー"
+#~ "ルは2つのフィールド \"Resource attribute value: custom_attr\"と \"Literal "
+#~ "string: some_suffix\"から構成され、その属性が存在し、かつ前のルールで"
+#~ "\"%s\"が設定されていない場合、\"%s\"を \"VALUEsome_suffix \"に設定します。"
+#~ "</li><li>最後のルールは1つのフィールド \"Literal string: fallback_host\" "
+#~ "で構成され、まだ設定されていないすべての\"%s\"属性を \"fallback_host\"に設"
+#~ "定します。</li></ol>"
+
+#~ msgid ""
+#~ "The interval the connection will be executed to check the available open "
+#~ "telemetry data and update the configuration."
+#~ msgstr ""
+#~ "使用可能なOpen telemetryデータを確認し、構成を更新するために接続が実行され"
+#~ "る間隔。"
+
+#, python-format
+#~ msgid ""
+#~ "The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+#~ msgstr ""
+#~ "アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s "
+#~ "> %s"
+
+#~ msgid ""
+#~ "This connector can be used to automatically create hosts based on "
+#~ "Opentelemetry collector data."
+#~ msgstr ""
+#~ "このコネクターはOpentelemetry コレクターのデータに基づいてホストを自動作成"
+#~ "するために使用します。"
+
+#, fuzzy
+#~ msgid "This field can not be empty."
+#~ msgstr "入力を空にすることはできません"
+
+#~ msgid ""
+#~ "Time range to continue to consider outdated open telemetry data as valid."
+#~ msgstr "古いオープンテレメトリデータを有効なデータとして継続して扱う期間。"
+
+#~ msgid ""
+#~ "Time range to prevent host deletion after site startup, e.g. when booting "
+#~ "the Checkmk server. This is caused by the 'tmp' directory which needs "
+#~ "more time to initialize and can result in missing data from some sources."
+#~ msgstr ""
+#~ "サイト起動後、ホストの削除を防止するためだけの時間範囲。例えば、Checkmk"
+#~ "サーバーを起動する際など。これは”tmp”ディレクトリが初期化に追加時間が必要"
+#~ "であり、一部のソースからのデータが欠落する原因となる可能性があります。"
+
+#~ msgid ""
+#~ "Time range to prevent host deletion after site startup, e.g. when booting "
+#~ "the Checkmk server. This is caused by the 'tmp' directory which needs "
+#~ "more time to initialize and can result in missing open telemetry "
+#~ "information from some sources."
+#~ msgstr ""
+#~ "サイト起動後、ホストの削除を防止するための時間範囲。例えば、Checkmkサー"
+#~ "バーを起動する際など。これは、『tmp』ディレクトリが初期化に追加の時間が必"
+#~ "要であり、一部のソースからopen telemetry 情報が欠落する原因となる可能性が"
+#~ "あります。"
+
+#~ msgid ""
+#~ "Use and test at your heart's desire, just don’t rely on it in production "
+#~ "- scope & features may change."
+#~ msgstr ""
+#~ "ご自由に使用し、テストしてください。ただし、本番環境での使用は避けてくださ"
+#~ "い - 機能範囲や仕様は変更される可能性があります。"
+
+#~ msgid "Value of attribute"
+#~ msgstr "アトリビュートの値"
+
+#~ msgid "You have to select a valid host name computation method."
+#~ msgstr "有効なホスト名のの算出方法を選択する必要があります。"
 
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
@@ -90557,9 +90699,6 @@ msgstr ""
 
 #~ msgid "Calls in"
 #~ msgstr "コールイン"
-
-#~ msgid "Calls in/out"
-#~ msgstr "コールイン/アウト"
 
 #~ msgid "Calls out"
 #~ msgstr "コールアウト"
@@ -91697,10 +91836,6 @@ msgstr ""
 
 #~ msgid "Resulting notifications"
 #~ msgstr "結果の通知"
-
-#~ msgid "message"
-#~ msgid_plural "messages"
-#~ msgstr[0] "メッセージ"
 
 #, fuzzy
 #~ msgid "notification"

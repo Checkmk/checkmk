@@ -4055,6 +4055,10 @@ msgstr "Adaugă filtre"
 msgid "Add NGINX instance"
 msgstr "Adăugați instanța NGINX"
 
+#, fuzzy
+msgid "Add OAuth2 connection"
+msgstr "Adăugați conexiunea LDAP"
+
 msgid "Add OID descriptions"
 msgstr "Adăugați descrieri OID"
 
@@ -4381,10 +4385,6 @@ msgstr "Adăugați o nouă intrare"
 #, fuzzy
 msgid "Add new exclude pattern"
 msgstr "Adăugați un nou model"
-
-#, fuzzy
-msgid "Add new field"
-msgstr "Adăugați o nouă oră"
 
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
@@ -7448,6 +7448,9 @@ msgstr "Arhiva evenimentelor"
 msgid "Archive events of hosts"
 msgstr "Arhiva evenimentelor de gazde"
 
+msgid "Archive exceeds total size limit"
+msgstr ""
+
 msgid "Archive log"
 msgstr "Jurnal de arhivă"
 
@@ -8171,10 +8174,6 @@ msgstr "Crearea automată a agenților de monitorizare"
 
 #, fuzzy
 msgid "Automatically delete hosts without OpenTelemetry data"
-msgstr "Ștergeți automat gazdele fără date piggyback"
-
-#, fuzzy
-msgid "Automatically delete hosts without open telemetry data"
 msgstr "Ștergeți automat gazdele fără date piggyback"
 
 msgid "Automatically delete hosts without piggyback data"
@@ -9216,6 +9215,10 @@ msgid "Azure Databases"
 msgstr "Baze de date Azure"
 
 #, fuzzy
+msgid "Azure Firewalls"
+msgstr "Zorp firewall"
+
+#, fuzzy
 msgid "Azure Load Balancer Health"
 msgstr "Sănătatea echilibrului de încărcare"
 
@@ -9225,6 +9228,10 @@ msgstr "Sănătatea Azure Load Balancer"
 
 #, fuzzy
 msgid "Azure NAT Gateways Connections"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure NAT Gateways Packets"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
@@ -10672,9 +10679,6 @@ msgstr ""
 "gazdele prin SNMP v1/v2. Această regulă poate fi utilizată pentru a "
 "personaliza acreditările care urmează să fie utilizate la contactarea "
 "gazdelor prin SNMP."
-
-msgid "By default all of the sections will be executed."
-msgstr "În mod implicit, toate secțiunile vor fi executate."
 
 msgid "By default crash reports will be sent to our crash reporting server."
 msgstr ""
@@ -15150,9 +15154,6 @@ msgstr ""
 "opțiune are efect numai dacă cel puțin una dintre subopțiunile 'Apply single-"
 "core levels' sau 'Graphs for average single-core utilizations' este activată."
 
-msgid "Compute host name from left part of the service.instance.id attribute."
-msgstr ""
-
 msgid "Compute range accoring to displayed data"
 msgstr "Calculați intervalul în funcție de datele afișate"
 
@@ -17958,10 +17959,6 @@ msgstr "Gazdă personalizată"
 msgid "Custom host attributes"
 msgstr "Atribute personalizate ale gazdei"
 
-#, fuzzy
-msgid "Custom host name computation"
-msgstr "Calcularea numelui de gazdă"
-
 msgid "Custom host name prefix"
 msgstr "Prefixul personalizat al numelui de gazdă"
 
@@ -19764,14 +19761,6 @@ msgstr "Ștergeți ținta #%d"
 #, fuzzy
 msgid ""
 "Delete the hosts created by this connection whose OpenTelemetry data is no "
-"longer present."
-msgstr ""
-"Șterge gazdele create de această conexiune ale căror date de piggyback nu "
-"mai sunt prezente."
-
-#, fuzzy
-msgid ""
-"Delete the hosts created by this connection whose open telemetry data is no "
 "longer present."
 msgstr ""
 "Șterge gazdele create de această conexiune ale căror date de piggyback nu "
@@ -22764,6 +22753,10 @@ msgstr ""
 "Elimină partea de domeniu (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 
 msgid "Dropped messages"
+msgstr "Mesaje pierdute"
+
+#, fuzzy
+msgid "Dropped packets"
 msgstr "Mesaje pierdute"
 
 msgid "Dropped work requests"
@@ -28667,10 +28660,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "Șablon grafic"
 
-#, fuzzy
-msgid "Graph time and refresh"
-msgstr "Intervalul de timp al graficului"
-
 msgid "Graph time range"
 msgstr "Intervalul de timp al graficului"
 
@@ -32087,10 +32076,6 @@ msgstr "Numele de gazdă sau alias (regex)"
 #, fuzzy
 msgid "Host name resource attribute"
 msgstr "Resetarea atributelor"
-
-#, fuzzy
-msgid "Host name rules"
-msgstr "Numele gazdei: %s"
 
 #, fuzzy
 msgid "Host name template"
@@ -35898,6 +35883,10 @@ msgstr "evenimente pe secundă"
 
 msgid "Inbound messages"
 msgstr "Mesaje primite"
+
+#, fuzzy
+msgid "Inbound packets"
+msgstr "Pachete de intrare"
 
 #, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
@@ -40089,10 +40078,6 @@ msgid ""
 msgstr ""
 "Listează membrii unui grup de gazde cu numărul de servicii în diferite stări."
 
-#, fuzzy
-msgid "Literal string"
-msgstr "Șir fix"
-
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr ""
 "Monitorizarea live a performanței generale a tuturor serverelor de "
@@ -43732,6 +43717,10 @@ msgstr "Lipsește parametrul \"%s\"."
 #, fuzzy
 msgid "Missing prerequisite"
 msgstr "Precondiții lipsă"
+
+#, fuzzy, python-format
+msgid "Missing request variable '%s'"
+msgstr "Variabila lipsă siteid"
 
 msgid "Missing required \"Host name\" selection."
 msgstr "Lipsește selecția necesară \"Host name\"."
@@ -48266,6 +48255,10 @@ msgstr "Autentificare cu jeton"
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2 (ClientID/TenantID)"
 
+#, fuzzy
+msgid "OAuth2 connection"
+msgstr "Adăugați o conexiune"
+
 msgid "OEM data interpretation"
 msgstr "Interpretarea datelor OEM"
 
@@ -49057,14 +49050,6 @@ msgstr "Mânere de ieșire deschise"
 msgid "Open slots"
 msgstr "Sloturi deschise"
 
-#, fuzzy
-msgid "Open telemetry collector creation options"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
-msgid "Open telemetry hosts creation options"
-msgstr "Opțiuni de creare Piggyback"
-
 msgid "Open the action menu"
 msgstr "Deschideți meniul de acțiune"
 
@@ -49167,10 +49152,6 @@ msgstr "Procesele OpenVMS"
 
 msgid "OpenVPN clients"
 msgstr "Clienți OpenVPN"
-
-#, fuzzy
-msgid "Opentelemetry collector data"
-msgstr "Configurația stilului selectat"
 
 msgid "Operating CPU"
 msgstr "Operare CPU"
@@ -50526,6 +50507,10 @@ msgid "Outbound messages"
 msgstr "Mesaje de ieșire"
 
 #, fuzzy
+msgid "Outbound packets"
+msgstr "Pachete de ieșire"
+
+#, fuzzy
 msgid "Outbound rule"
 msgstr "Regula de ieșire"
 
@@ -51230,6 +51215,18 @@ msgstr "Viteza pachetelor asic"
 
 msgid "Packets"
 msgstr "Pachete"
+
+#, fuzzy
+msgid "Packets (dropped)"
+msgstr "Pachete abandonate"
+
+#, fuzzy
+msgid "Packets (in/out)"
+msgstr "Apelarea unei reguli"
+
+#, fuzzy
+msgid "Packets (total)"
+msgstr "Detalii licență"
 
 msgid "Packets Dropped"
 msgstr "Pachete pierdute"
@@ -53281,10 +53278,6 @@ msgid "Please specify at least on address"
 msgstr "Vă rugăm să specificați cel puțin o adresă"
 
 #, fuzzy
-msgid "Please specify at least one \"Open telemetry hosts creation option\""
-msgstr "Vă rugăm să specificați cel puțin o \"opțiune de creare Piggyback\""
-
-#, fuzzy
 msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
 msgstr "Vă rugăm să specificați cel puțin o \"opțiune de creare Piggyback\""
 
@@ -53323,10 +53316,6 @@ msgid "Please specify at least one type of levels"
 msgstr "Vă rugăm să specificați cel puțin un tip de nivel"
 
 msgid "Please specify at least one value"
-msgstr "Vă rugăm să specificați cel puțin o valoare"
-
-#, fuzzy, python-format
-msgid "Please specify at least one value for \"%s\""
 msgstr "Vă rugăm să specificați cel puțin o valoare"
 
 msgid "Please specify host or hash."
@@ -59394,6 +59383,9 @@ msgstr "Nivelul de securitate"
 msgid "Security advice"
 msgstr "Denumire de securitate"
 
+msgid "Security checks have failed for the uploaded tar.gz file"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Security message #%d"
 msgstr "Denumire de securitate"
@@ -59531,10 +59523,6 @@ msgstr "Servicii Azure de monitorizat"
 msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "Servicii Azure de monitorizat"
-
-#, fuzzy
-msgid "Select at least one column."
-msgstr "Vă rugăm să selectați cel puțin un element"
 
 #, fuzzy
 msgid "Select at least one element"
@@ -61028,6 +61016,10 @@ msgstr ""
 "vedea <tt>--variablefile</tt> pentru un mecanism mai puternic de stabilire a "
 "variabilelor)."
 
+#, fuzzy
+msgid "Set graph time"
+msgstr "Utilizați titlul graficului"
+
 msgid "Set height"
 msgstr "Setați înălțimea"
 
@@ -61306,17 +61298,6 @@ msgid ""
 msgstr ""
 "Setați adresa gazdă a serverului LDAP. Poate fi o adresă IP sau un nume de "
 "gazdă rezolvabil."
-
-msgid ""
-"Set the host names or IP addresses of the site. The entries will be added as "
-"additional subject alternative names (SANs) to the site certificate, "
-"alongside the default SANs. Configuring this allows proper server name "
-"identification when connecting to the site via TLS, for example for "
-"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
-"Changing this setting will trigger re-issuance of the site certificate by "
-"the site CA. In distributed setups, configure SANs separately for each site "
-"in the distributed monitoring configuration."
-msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Setați nivelul de jurnalizare pentru Windows Agent"
@@ -62608,10 +62589,6 @@ msgstr "Copie de rezervă a site-ului"
 
 msgid "Site backup targets"
 msgstr "Ținte de backup pentru site"
-
-#, fuzzy
-msgid "Site certificate subject alternative names"
-msgstr "Denumirea alternativă a subiectului certificatului"
 
 msgid "Site certificate validity"
 msgstr "Valabilitatea certificatului site-ului"
@@ -67831,11 +67808,6 @@ msgid "The Number of the power Phase."
 msgstr "Numărul fazei de putere."
 
 msgid ""
-"The OpenTelemetry collector is an experimental beta feature, and not "
-"supported yet. "
-msgstr ""
-
-msgid ""
 "The Organisation-ID will be used as prefix for the hostname (separated by a "
 "-). Use this option together with a \"Hostname translation for piggybacked "
 "hosts\" to add a organisation prefix to the hosts from the Cisco Meraki "
@@ -69596,28 +69568,6 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "Atributul \"host name\" trebuie să fie atribuit unei coloane."
 
-#, python-format
-msgid ""
-"The host name computation computes the name of the host that should have the "
-"corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"%s\" attribute. For every rule "
-"configured here, the provided fields are concatenated in the order they are "
-"listed. The first rule that results in a non-empty value is used. For "
-"example:\n"
-"<ol><li>A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"%s\" to the value of that attribute, if it is "
-"present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.</li><li>A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"%s\" to the value of that attribute, if it is "
-"present and \"%s\" has not been set by the previous rule.</li><li>A third "
-"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
-"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
-"the attribute is present and \"%s\" has not been set by the previous rules.</"
-"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
-"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
-"</li></ol>"
-msgstr ""
-
 #, fuzzy
 msgid "The host name is missing."
 msgstr "Numele de gazdă lipsește."
@@ -69779,14 +69729,6 @@ msgstr ""
 msgid ""
 "The interval the connection will be executed to check the available "
 "OpenTelemetry data and update the configuration."
-msgstr ""
-"Intervalul la care va fi executată conexiunea pentru a verifica piggyback-ul "
-"disponibil și pentru a actualiza configurația."
-
-#, fuzzy
-msgid ""
-"The interval the connection will be executed to check the available open "
-"telemetry data and update the configuration."
 msgstr ""
 "Intervalul la care va fi executată conexiunea pentru a verifica piggyback-ul "
 "disponibil și pentru a actualiza configurația."
@@ -72120,11 +72062,6 @@ msgstr "Tipul timestamp-ului trebuie să fie int sau float, dar este %s."
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 
-#, python-format
-msgid ""
-"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-msgstr ""
-
 #, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "Fișierul nu pare a fi un fișier cheie valid."
@@ -73526,14 +73463,6 @@ msgstr "Această conexiune nu este utilizată în prezent pentru sincronizare."
 
 #, fuzzy
 msgid ""
-"This connector can be used to automatically create hosts based on "
-"Opentelemetry collector data."
-msgstr ""
-"Acest conector poate fi utilizat pentru a crea automat gazde pe baza datelor "
-"mele."
-
-#, fuzzy
-msgid ""
 "This connector can be used to automatically create hosts based on data in "
 "the OpenTelemetry metrics backend."
 msgstr ""
@@ -73689,10 +73618,6 @@ msgstr ""
 "există mai multe reguli de potrivire, se aplică prima regulă de potrivire. "
 "Notă: această funcție este destinată valorilor aberante și, prin urmare, nu "
 "este potrivită pentru configurarea subgrupurilor. "
-
-#, fuzzy
-msgid "This field can not be empty."
-msgstr "Cheia secretă"
 
 msgid ""
 "This field declares the end date of the forecast, which starts on the last "
@@ -74253,9 +74178,10 @@ msgstr ""
 "contoarele pe 64 de biți raportate de dispozitiv sunt inutile din cauza unui "
 "firmware defect."
 
+#, fuzzy
 msgid ""
-"This option allows to select specific sections of the Checkmk agent. By "
-"default all of the sections will be executed. Sections that are not selected "
+"This option allows to select specific sections of the Checkmk agent. All of "
+"the sections checked below will be executed. Sections that are not selected "
 "here will be skipped. Skipping sections reduces CPU load on the monitored "
 "host and the amount of transferred data. However, it may result in the "
 "absence of the associated Checkmk service or services. The most CPU "
@@ -76300,6 +76226,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways packets, "
+"including thresholds for dropped packets."
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "throughput monitoring"
 msgstr ""
@@ -77945,13 +77879,6 @@ msgstr ""
 "Intervalul de timp pentru a continua să se considere valabile datele de "
 "piggyback învechite."
 
-#, fuzzy
-msgid ""
-"Time range to continue to consider outdated open telemetry data as valid."
-msgstr ""
-"Intervalul de timp pentru a continua să se considere valabile datele de "
-"piggyback învechite."
-
 msgid "Time range to continue to consider outdated piggyback data as valid."
 msgstr ""
 "Intervalul de timp pentru a continua să se considere valabile datele de "
@@ -77966,29 +77893,6 @@ msgid ""
 msgstr ""
 "Intervalul de timp pentru a păstra gazdele atunci când sursa de piggyback "
 "trimite date de piggyback numai pentru alte gazde."
-
-#, fuzzy
-msgid ""
-"Time range to prevent host deletion after site startup, e.g. when booting "
-"the Checkmk server. This is caused by the 'tmp' directory which needs more "
-"time to initialize and can result in missing data from some sources."
-msgstr ""
-"Interval de timp pentru a preveni ștergerea gazdei după pornirea site-ului, "
-"de exemplu, la pornirea serverului Checkmk. Acest lucru este cauzat de "
-"directorul 'tmp' care are nevoie de mai mult timp pentru a se inițializa și "
-"poate duce la lipsa informațiilor piggyback din unele surse."
-
-#, fuzzy
-msgid ""
-"Time range to prevent host deletion after site startup, e.g. when booting "
-"the Checkmk server. This is caused by the 'tmp' directory which needs more "
-"time to initialize and can result in missing open telemetry information from "
-"some sources."
-msgstr ""
-"Interval de timp pentru a preveni ștergerea gazdei după pornirea site-ului, "
-"de exemplu, la pornirea serverului Checkmk. Acest lucru este cauzat de "
-"directorul 'tmp' care are nevoie de mai mult timp pentru a se inițializa și "
-"poate duce la lipsa informațiilor piggyback din unele surse."
 
 msgid ""
 "Time range to prevent host deletion after site startup, e.g. when booting "
@@ -79134,6 +79038,10 @@ msgstr "Numărul total de locuri de muncă zombi"
 #, fuzzy, python-brace-format
 msgid "Total number of {property} upper levels"
 msgstr "Numărul total de utilizatori nivel superior"
+
+#, fuzzy
+msgid "Total packets"
+msgstr "Total pachete Maxim"
 
 #, fuzzy
 msgid "Total packets maximum"
@@ -83691,11 +83599,6 @@ msgstr "Utilizați toate rotațiile hărții"
 msgid "Use alternative display name for services"
 msgstr "Utilizați un nume de afișare alternativ pentru servicii"
 
-msgid ""
-"Use and test at your heart's desire, just don’t rely on it in production - "
-"scope & features may change."
-msgstr ""
-
 msgid "Use any network address"
 msgstr "Utilizați orice adresă de rețea"
 
@@ -85685,10 +85588,6 @@ msgstr "trebuie să fie egală cu '%s'"
 
 msgid "Value must be string"
 msgstr "Valoarea trebuie să fie un șir de caractere"
-
-#, fuzzy
-msgid "Value of attribute"
-msgstr "Atributul rolului"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -90429,10 +90328,6 @@ msgstr "Ați semnat o parte sau toate pachetele de agenți"
 
 msgid "You have to provide a role ID."
 msgstr "Trebuie să furnizați un ID de rol."
-
-#, fuzzy
-msgid "You have to select a valid host name computation method."
-msgstr "Trebuie să selectați cel puțin un element."
 
 msgid "You have to select at least one element."
 msgstr "Trebuie să selectați cel puțin un element."
@@ -95257,6 +95152,92 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Application successfully authorized!"
+msgstr "Gazdă creată cu succes"
+
+#, fuzzy
+msgid "Access token successfully requested!"
+msgstr "Gazdă creată cu succes"
+
+#, fuzzy
+msgid "You can now close this window."
+msgstr "Nu puteți salva această regulă."
+
+#, fuzzy
+msgid "Verifying the authorization..."
+msgstr "Înregistrarea agentului"
+
+#, fuzzy
+msgid "Authorization failed."
+msgstr "Autentificarea a eșuat"
+
+#, fuzzy
+msgid "Requesting access token"
+msgstr "Token de acces la API"
+
+#, fuzzy
+msgid "${res.message}"
+msgstr "mesaj"
+
+#, fuzzy
+msgid "Failed to request and save access token: ${e}"
+msgstr "Solicitări eșuate la fișierele Adressbook"
+
+#, fuzzy
+msgid "Authorization was not completed. Please try again."
+msgstr ""
+"Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
+"de căutare."
+
+#, fuzzy
+msgid "Authorize application"
+msgstr "Autorizare"
+
+#, fuzzy
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application"
+msgstr ""
+"Vă rugăm să urmați instrucțiunile de autentificare ale browserului "
+"dumneavoastră."
+
+#, fuzzy
+msgid "OAuth2 connection created successfully!"
+msgstr "Agent %s a reușit"
+
+#, fuzzy
+msgid "Go back to restart authorization process"
+msgstr "Nu se poate crea o cerere de autentificare"
+
+#, fuzzy
+msgid "Define OAuth2 parameter"
+msgstr "Parametrii impliciți"
+
+#, fuzzy
+msgid "Description:"
+msgstr "Descriere"
+
+#, fuzzy
+msgid "Authority:"
+msgstr "Autoritatea"
+
+#, fuzzy
+msgid "Tenant ID:"
+msgstr "TenantID"
+
+#, fuzzy
+msgid "Client ID:"
+msgstr "ID client"
+
+#, fuzzy
+msgid "Client secret:"
+msgstr "Secretul clientului"
+
+#, fuzzy
+msgid "Start authorization"
+msgstr "Autorizare de bază"
+
+#, fuzzy
 msgid "Configure title and site"
 msgstr "Configurați nivelurile de fum"
 
@@ -95841,6 +95822,127 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Add new field"
+#~ msgstr "Adăugați o nouă oră"
+
+#, fuzzy
+#~ msgid "Automatically delete hosts without open telemetry data"
+#~ msgstr "Ștergeți automat gazdele fără date piggyback"
+
+#~ msgid "By default all of the sections will be executed."
+#~ msgstr "În mod implicit, toate secțiunile vor fi executate."
+
+#, fuzzy
+#~ msgid "Custom host name computation"
+#~ msgstr "Calcularea numelui de gazdă"
+
+#, fuzzy
+#~ msgid ""
+#~ "Delete the hosts created by this connection whose open telemetry data is "
+#~ "no longer present."
+#~ msgstr ""
+#~ "Șterge gazdele create de această conexiune ale căror date de piggyback nu "
+#~ "mai sunt prezente."
+
+#, fuzzy
+#~ msgid "Graph time and refresh"
+#~ msgstr "Intervalul de timp al graficului"
+
+#, fuzzy
+#~ msgid "Host name rules"
+#~ msgstr "Numele gazdei: %s"
+
+#, fuzzy
+#~ msgid "Literal string"
+#~ msgstr "Șir fix"
+
+#, fuzzy
+#~ msgid "Open telemetry collector creation options"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "Open telemetry hosts creation options"
+#~ msgstr "Opțiuni de creare Piggyback"
+
+#, fuzzy
+#~ msgid "Opentelemetry collector data"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "Please specify at least one \"Open telemetry hosts creation option\""
+#~ msgstr "Vă rugăm să specificați cel puțin o \"opțiune de creare Piggyback\""
+
+#, fuzzy, python-format
+#~ msgid "Please specify at least one value for \"%s\""
+#~ msgstr "Vă rugăm să specificați cel puțin o valoare"
+
+#, fuzzy
+#~ msgid "Select at least one column."
+#~ msgstr "Vă rugăm să selectați cel puțin un element"
+
+#, fuzzy
+#~ msgid "Site certificate subject alternative names"
+#~ msgstr "Denumirea alternativă a subiectului certificatului"
+
+#, fuzzy
+#~ msgid ""
+#~ "The interval the connection will be executed to check the available open "
+#~ "telemetry data and update the configuration."
+#~ msgstr ""
+#~ "Intervalul la care va fi executată conexiunea pentru a verifica piggyback-"
+#~ "ul disponibil și pentru a actualiza configurația."
+
+#, fuzzy
+#~ msgid ""
+#~ "This connector can be used to automatically create hosts based on "
+#~ "Opentelemetry collector data."
+#~ msgstr ""
+#~ "Acest conector poate fi utilizat pentru a crea automat gazde pe baza "
+#~ "datelor mele."
+
+#, fuzzy
+#~ msgid "This field can not be empty."
+#~ msgstr "Cheia secretă"
+
+#, fuzzy
+#~ msgid ""
+#~ "Time range to continue to consider outdated open telemetry data as valid."
+#~ msgstr ""
+#~ "Intervalul de timp pentru a continua să se considere valabile datele de "
+#~ "piggyback învechite."
+
+#, fuzzy
+#~ msgid ""
+#~ "Time range to prevent host deletion after site startup, e.g. when booting "
+#~ "the Checkmk server. This is caused by the 'tmp' directory which needs "
+#~ "more time to initialize and can result in missing data from some sources."
+#~ msgstr ""
+#~ "Interval de timp pentru a preveni ștergerea gazdei după pornirea site-"
+#~ "ului, de exemplu, la pornirea serverului Checkmk. Acest lucru este cauzat "
+#~ "de directorul 'tmp' care are nevoie de mai mult timp pentru a se "
+#~ "inițializa și poate duce la lipsa informațiilor piggyback din unele surse."
+
+#, fuzzy
+#~ msgid ""
+#~ "Time range to prevent host deletion after site startup, e.g. when booting "
+#~ "the Checkmk server. This is caused by the 'tmp' directory which needs "
+#~ "more time to initialize and can result in missing open telemetry "
+#~ "information from some sources."
+#~ msgstr ""
+#~ "Interval de timp pentru a preveni ștergerea gazdei după pornirea site-"
+#~ "ului, de exemplu, la pornirea serverului Checkmk. Acest lucru este cauzat "
+#~ "de directorul 'tmp' care are nevoie de mai mult timp pentru a se "
+#~ "inițializa și poate duce la lipsa informațiilor piggyback din unele surse."
+
+#, fuzzy
+#~ msgid "Value of attribute"
+#~ msgstr "Atributul rolului"
+
+#, fuzzy
+#~ msgid "You have to select a valid host name computation method."
+#~ msgstr "Trebuie să selectați cel puțin un element."
 
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
@@ -96665,10 +96767,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Calls in"
 #~ msgstr "Identificarea apelantului"
-
-#, fuzzy
-#~ msgid "Calls in/out"
-#~ msgstr "Apelarea unei reguli"
 
 #, fuzzy
 #~ msgid "Calls out"
@@ -97807,12 +97905,6 @@ msgstr ""
 
 #~ msgid "Resulting notifications"
 #~ msgstr "Notificări rezultate"
-
-#~ msgid "message"
-#~ msgid_plural "messages"
-#~ msgstr[0] "mesaj"
-#~ msgstr[1] ""
-#~ msgstr[2] ""
 
 #, fuzzy
 #~ msgid "notification"

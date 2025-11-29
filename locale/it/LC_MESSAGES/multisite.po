@@ -4011,6 +4011,10 @@ msgstr "Aggiungere il filtro"
 msgid "Add NGINX instance"
 msgstr "Aggiungere l'istanza NGINX"
 
+#, fuzzy
+msgid "Add OAuth2 connection"
+msgstr "Aggiungere la connessione LDAP"
+
 msgid "Add OID descriptions"
 msgstr "Aggiungere descrizioni OID"
 
@@ -4336,10 +4340,6 @@ msgstr "Aggiungi una nuova voce"
 #, fuzzy
 msgid "Add new exclude pattern"
 msgstr "Aggiungi un nuovo modello"
-
-#, fuzzy
-msgid "Add new field"
-msgstr "Aggiungi un nuovo tempo"
 
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
@@ -7386,6 +7386,9 @@ msgstr "Archivio eventi"
 msgid "Archive events of hosts"
 msgstr "Archivia gli eventi dei padroni di casa"
 
+msgid "Archive exceeds total size limit"
+msgstr ""
+
 msgid "Archive log"
 msgstr "Archivio log"
 
@@ -8102,10 +8105,6 @@ msgstr "Creare automaticamente agenti di monitoraggio"
 
 #, fuzzy
 msgid "Automatically delete hosts without OpenTelemetry data"
-msgstr "Elimina automaticamente gli host senza dati di piggyback"
-
-#, fuzzy
-msgid "Automatically delete hosts without open telemetry data"
 msgstr "Elimina automaticamente gli host senza dati di piggyback"
 
 msgid "Automatically delete hosts without piggyback data"
@@ -9150,6 +9149,10 @@ msgid "Azure Databases"
 msgstr "Basi di dati Azure"
 
 #, fuzzy
+msgid "Azure Firewalls"
+msgstr "Firewall Zorp"
+
+#, fuzzy
 msgid "Azure Load Balancer Health"
 msgstr "Stato del Load Balancer"
 
@@ -9159,6 +9162,10 @@ msgstr "Stato del bilanciatore di carico di Azure"
 
 #, fuzzy
 msgid "Azure NAT Gateways Connections"
+msgstr "Connessioni al database"
+
+#, fuzzy
+msgid "Azure NAT Gateways Packets"
 msgstr "Connessioni al database"
 
 #, fuzzy
@@ -10597,9 +10604,6 @@ msgstr ""
 "contattare gli host tramite SNMP v1/v2. Questa regola può essere usata per "
 "personalizzare le credenziali da usare quando si contattano gli host via "
 "SNMP."
-
-msgid "By default all of the sections will be executed."
-msgstr "Per default tutte le sezioni saranno eseguite."
 
 msgid "By default crash reports will be sent to our crash reporting server."
 msgstr ""
@@ -14988,9 +14992,6 @@ msgstr ""
 "effetto solo se almeno una delle sotto-opzioni 'Applica livelli single-core' "
 "o 'Grafici per utilizzazioni medie single-core' è abilitata."
 
-msgid "Compute host name from left part of the service.instance.id attribute."
-msgstr ""
-
 msgid "Compute range accoring to displayed data"
 msgstr "Calcolare l'intervallo in base ai dati visualizzati"
 
@@ -17770,10 +17771,6 @@ msgstr "Host personalizzato"
 msgid "Custom host attributes"
 msgstr "Attributi dell'host personalizzati"
 
-#, fuzzy
-msgid "Custom host name computation"
-msgstr "Calcolo del nome host"
-
 msgid "Custom host name prefix"
 msgstr "Prefisso del nome host personalizzato"
 
@@ -19551,14 +19548,6 @@ msgstr "Regola cancellata #%d"
 #, fuzzy
 msgid ""
 "Delete the hosts created by this connection whose OpenTelemetry data is no "
-"longer present."
-msgstr ""
-"Elimina gli host creati da questa connessione i cui dati di piggyback non "
-"sono più presenti."
-
-#, fuzzy
-msgid ""
-"Delete the hosts created by this connection whose open telemetry data is no "
 "longer present."
 msgstr ""
 "Elimina gli host creati da questa connessione i cui dati di piggyback non "
@@ -22535,6 +22524,10 @@ msgstr ""
 "Eliminare la parte di dominio (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 
 msgid "Dropped messages"
+msgstr "Messaggi caduti"
+
+#, fuzzy
+msgid "Dropped packets"
 msgstr "Messaggi caduti"
 
 msgid "Dropped work requests"
@@ -28365,10 +28358,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "Modello di grafico"
 
-#, fuzzy
-msgid "Graph time and refresh"
-msgstr "Intervallo di tempo del grafico"
-
 msgid "Graph time range"
 msgstr "Intervallo di tempo del grafico"
 
@@ -31776,10 +31765,6 @@ msgstr "Nome host o alias (regex)"
 #, fuzzy
 msgid "Host name resource attribute"
 msgstr "Azzeramento degli attributi"
-
-#, fuzzy
-msgid "Host name rules"
-msgstr "Nome host: %s"
 
 #, fuzzy
 msgid "Host name template"
@@ -35514,6 +35499,10 @@ msgstr "eventi al secondo"
 
 msgid "Inbound messages"
 msgstr "Messaggi in entrata"
+
+#, fuzzy
+msgid "Inbound packets"
+msgstr "Pacchetti di ingresso"
 
 #, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
@@ -39683,10 +39672,6 @@ msgstr ""
 "Elenca i membri di un gruppo di host con il numero di servizi nei diversi "
 "stati."
 
-#, fuzzy
-msgid "Literal string"
-msgstr "Stringa fissa"
-
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr ""
 "Monitoraggio in tempo reale delle prestazioni complessive di tutti i server "
@@ -43297,6 +43282,10 @@ msgstr "Parametro mancante \"%s\"."
 #, fuzzy
 msgid "Missing prerequisite"
 msgstr "Prerequisito mancante"
+
+#, fuzzy, python-format
+msgid "Missing request variable '%s'"
+msgstr "Variabile mancante siteid"
 
 msgid "Missing required \"Host name\" selection."
 msgstr "Manca la selezione richiesta \"Nome host\"."
@@ -47781,6 +47770,10 @@ msgstr "Autenticazione con token"
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2 (ClientID/TenantID)"
 
+#, fuzzy
+msgid "OAuth2 connection"
+msgstr "Aggiungere la connessione"
+
 msgid "OEM data interpretation"
 msgstr "Interpretazione dei dati OEM"
 
@@ -48556,14 +48549,6 @@ msgstr "Maniglie di uscita aperte"
 msgid "Open slots"
 msgstr "Fessure aperte"
 
-#, fuzzy
-msgid "Open telemetry collector creation options"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "Open telemetry hosts creation options"
-msgstr "Opzioni di creazione di piggyback"
-
 msgid "Open the action menu"
 msgstr "Aprire il menu azione"
 
@@ -48663,10 +48648,6 @@ msgstr "Processi OpenVMS"
 
 msgid "OpenVPN clients"
 msgstr "Client OpenVPN"
-
-#, fuzzy
-msgid "Opentelemetry collector data"
-msgstr "Configurazione dello stile selezionato"
 
 msgid "Operating CPU"
 msgstr "CPU operativa"
@@ -50017,6 +49998,10 @@ msgid "Outbound messages"
 msgstr "Messaggi in uscita"
 
 #, fuzzy
+msgid "Outbound packets"
+msgstr "Pacchetti di uscita"
+
+#, fuzzy
 msgid "Outbound rule"
 msgstr "Regola in uscita"
 
@@ -50721,6 +50706,18 @@ msgstr "Velocità del pacchetto asic"
 
 msgid "Packets"
 msgstr "Pacchetti"
+
+#, fuzzy
+msgid "Packets (dropped)"
+msgstr "Pacchetti abbandonati"
+
+#, fuzzy
+msgid "Packets (in/out)"
+msgstr "Chiamare una regola"
+
+#, fuzzy
+msgid "Packets (total)"
+msgstr "Dettagli della licenza"
 
 msgid "Packets Dropped"
 msgstr "Pacchetti eliminati"
@@ -52758,10 +52755,6 @@ msgid "Please specify at least on address"
 msgstr "Specificare almeno un indirizzo"
 
 #, fuzzy
-msgid "Please specify at least one \"Open telemetry hosts creation option\""
-msgstr "Si prega di specificare almeno una \"opzione di creazione Piggyback\""
-
-#, fuzzy
 msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
 msgstr "Si prega di specificare almeno una \"opzione di creazione Piggyback\""
 
@@ -52800,10 +52793,6 @@ msgid "Please specify at least one type of levels"
 msgstr "Si prega di specificare almeno un tipo di livelli"
 
 msgid "Please specify at least one value"
-msgstr "Si prega di specificare almeno un valore"
-
-#, fuzzy, python-format
-msgid "Please specify at least one value for \"%s\""
 msgstr "Si prega di specificare almeno un valore"
 
 msgid "Please specify host or hash."
@@ -58833,6 +58822,9 @@ msgstr "Livello di sicurezza"
 msgid "Security advice"
 msgstr "Nome di sicurezza"
 
+msgid "Security checks have failed for the uploaded tar.gz file"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Security message #%d"
 msgstr "Nome di sicurezza"
@@ -58968,10 +58960,6 @@ msgstr "Servizi Azure da monitorare"
 msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "Servizi Azure da monitorare"
-
-#, fuzzy
-msgid "Select at least one column."
-msgstr "Seleziona almeno un elemento"
 
 #, fuzzy
 msgid "Select at least one element"
@@ -60405,6 +60393,10 @@ msgid ""
 "tt> for a more powerful variable setting mechanism.)"
 msgstr ""
 
+#, fuzzy
+msgid "Set graph time"
+msgstr "Usa il titolo del grafico"
+
 msgid "Set height"
 msgstr "Imposta l'altezza"
 
@@ -60679,17 +60671,6 @@ msgid ""
 msgstr ""
 "Imposta l'indirizzo dell'host del server LDAP. Potrebbe essere un indirizzo "
 "IP o un hostname risolvibile."
-
-msgid ""
-"Set the host names or IP addresses of the site. The entries will be added as "
-"additional subject alternative names (SANs) to the site certificate, "
-"alongside the default SANs. Configuring this allows proper server name "
-"identification when connecting to the site via TLS, for example for "
-"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
-"Changing this setting will trigger re-issuance of the site certificate by "
-"the site CA. In distributed setups, configure SANs separately for each site "
-"in the distributed monitoring configuration."
-msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Impostare il livello di registrazione per Windows Agent"
@@ -61960,10 +61941,6 @@ msgstr "Backup del sito"
 
 msgid "Site backup targets"
 msgstr "Obiettivi di backup del sito"
-
-#, fuzzy
-msgid "Site certificate subject alternative names"
-msgstr "Nome alternativo del soggetto del certificato"
 
 msgid "Site certificate validity"
 msgstr "Validità del certificato del sito"
@@ -67120,11 +67097,6 @@ msgid "The Number of the power Phase."
 msgstr "Il numero della fase di potenza."
 
 msgid ""
-"The OpenTelemetry collector is an experimental beta feature, and not "
-"supported yet. "
-msgstr ""
-
-msgid ""
 "The Organisation-ID will be used as prefix for the hostname (separated by a "
 "-). Use this option together with a \"Hostname translation for piggybacked "
 "hosts\" to add a organisation prefix to the hosts from the Cisco Meraki "
@@ -68862,28 +68834,6 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "L'attributo del nome dell'host deve essere assegnato a una colonna."
 
-#, python-format
-msgid ""
-"The host name computation computes the name of the host that should have the "
-"corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"%s\" attribute. For every rule "
-"configured here, the provided fields are concatenated in the order they are "
-"listed. The first rule that results in a non-empty value is used. For "
-"example:\n"
-"<ol><li>A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"%s\" to the value of that attribute, if it is "
-"present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.</li><li>A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"%s\" to the value of that attribute, if it is "
-"present and \"%s\" has not been set by the previous rule.</li><li>A third "
-"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
-"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
-"the attribute is present and \"%s\" has not been set by the previous rules.</"
-"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
-"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
-"</li></ol>"
-msgstr ""
-
 #, fuzzy
 msgid "The host name is missing."
 msgstr "Manca il nome dell'host."
@@ -69043,14 +68993,6 @@ msgstr ""
 msgid ""
 "The interval the connection will be executed to check the available "
 "OpenTelemetry data and update the configuration."
-msgstr ""
-"L'intervallo in cui la connessione verrà eseguita per controllare il "
-"piggyback disponibile e aggiornare la configurazione."
-
-#, fuzzy
-msgid ""
-"The interval the connection will be executed to check the available open "
-"telemetry data and update the configuration."
 msgstr ""
 "L'intervallo in cui la connessione verrà eseguita per controllare il "
 "piggyback disponibile e aggiornare la configurazione."
@@ -71357,11 +71299,6 @@ msgstr "Il tipo del timestamp deve essere int o float, ma è %s"
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 
-#, python-format
-msgid ""
-"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-msgstr ""
-
 #, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "Il file non sembra un file chiave valido."
@@ -72725,14 +72662,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This connector can be used to automatically create hosts based on "
-"Opentelemetry collector data."
-msgstr ""
-"Questo connettore può essere utilizzato per creare automaticamente gli host "
-"in base ai miei dati."
-
-#, fuzzy
-msgid ""
 "This connector can be used to automatically create hosts based on data in "
 "the OpenTelemetry metrics backend."
 msgstr ""
@@ -72886,10 +72815,6 @@ msgstr ""
 "corrispondenti, viene applicata la prima regola corrispondente. Nota: questa "
 "funzione è intesa per gli outlier, e non è quindi adatta a configurare i "
 "sottogruppi. "
-
-#, fuzzy
-msgid "This field can not be empty."
-msgstr "Chiave segreta"
 
 msgid ""
 "This field declares the end date of the forecast, which starts on the last "
@@ -73441,9 +73366,10 @@ msgstr ""
 "i contatori a 64 bit riportati dal dispositivo siano inutilizzabili a causa "
 "di un firmware rotto."
 
+#, fuzzy
 msgid ""
-"This option allows to select specific sections of the Checkmk agent. By "
-"default all of the sections will be executed. Sections that are not selected "
+"This option allows to select specific sections of the Checkmk agent. All of "
+"the sections checked below will be executed. Sections that are not selected "
 "here will be skipped. Skipping sections reduces CPU load on the monitored "
 "host and the amount of transferred data. However, it may result in the "
 "absence of the associated Checkmk service or services. The most CPU "
@@ -75454,6 +75380,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways packets, "
+"including thresholds for dropped packets."
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "throughput monitoring"
 msgstr ""
@@ -77094,13 +77028,6 @@ msgstr ""
 "Intervallo di tempo per continuare a considerare validi i dati piggyback "
 "obsoleti."
 
-#, fuzzy
-msgid ""
-"Time range to continue to consider outdated open telemetry data as valid."
-msgstr ""
-"Intervallo di tempo per continuare a considerare validi i dati piggyback "
-"obsoleti."
-
 msgid "Time range to continue to consider outdated piggyback data as valid."
 msgstr ""
 "Intervallo di tempo per continuare a considerare validi i dati piggyback "
@@ -77115,29 +77042,6 @@ msgid ""
 msgstr ""
 "Intervallo di tempo per mantenere gli host quando la sorgente piggyback "
 "invia solo dati piggyback per altri host."
-
-#, fuzzy
-msgid ""
-"Time range to prevent host deletion after site startup, e.g. when booting "
-"the Checkmk server. This is caused by the 'tmp' directory which needs more "
-"time to initialize and can result in missing data from some sources."
-msgstr ""
-"Intervallo di tempo per evitare la cancellazione dell'host dopo l'avvio del "
-"sito, ad esempio quando si avvia il server Checkmk. Questo è causato dalla "
-"directory 'tmp' che ha bisogno di più tempo per inizializzarsi e può causare "
-"la mancanza di informazioni piggyback da alcune fonti."
-
-#, fuzzy
-msgid ""
-"Time range to prevent host deletion after site startup, e.g. when booting "
-"the Checkmk server. This is caused by the 'tmp' directory which needs more "
-"time to initialize and can result in missing open telemetry information from "
-"some sources."
-msgstr ""
-"Intervallo di tempo per evitare la cancellazione dell'host dopo l'avvio del "
-"sito, ad esempio quando si avvia il server Checkmk. Questo è causato dalla "
-"directory 'tmp' che ha bisogno di più tempo per inizializzarsi e può causare "
-"la mancanza di informazioni piggyback da alcune fonti."
 
 msgid ""
 "Time range to prevent host deletion after site startup, e.g. when booting "
@@ -78262,6 +78166,10 @@ msgstr "Numero totale di lavori zombie"
 #, fuzzy, python-brace-format
 msgid "Total number of {property} upper levels"
 msgstr "Numero totale di utenti di livello superiore"
+
+#, fuzzy
+msgid "Total packets"
+msgstr "Totale pacchetti massimo"
 
 #, fuzzy
 msgid "Total packets maximum"
@@ -82807,11 +82715,6 @@ msgstr "Utilizzare tutte le rotazioni della mappa"
 msgid "Use alternative display name for services"
 msgstr "Utilizzare un nome di visualizzazione alternativo per i servizi"
 
-msgid ""
-"Use and test at your heart's desire, just don’t rely on it in production - "
-"scope & features may change."
-msgstr ""
-
 msgid "Use any network address"
 msgstr "Utilizzare qualsiasi indirizzo di rete"
 
@@ -84785,10 +84688,6 @@ msgstr "deve essere uguale a '%s'"
 
 msgid "Value must be string"
 msgstr "Il valore deve essere una stringa"
-
-#, fuzzy
-msgid "Value of attribute"
-msgstr "Attributo del ruolo"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -89488,10 +89387,6 @@ msgstr "Avete firmato alcuni o tutti i pacchetti di agenti"
 
 msgid "You have to provide a role ID."
 msgstr "È necessario fornire un ID di ruolo."
-
-#, fuzzy
-msgid "You have to select a valid host name computation method."
-msgstr "Devi selezionare almeno un elemento."
 
 msgid "You have to select at least one element."
 msgstr "Devi selezionare almeno un elemento."
@@ -94248,6 +94143,88 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Application successfully authorized!"
+msgstr "Host creato con successo"
+
+#, fuzzy
+msgid "Access token successfully requested!"
+msgstr "Host creato con successo"
+
+#, fuzzy
+msgid "You can now close this window."
+msgstr "Non è possibile salvare questa regola."
+
+#, fuzzy
+msgid "Verifying the authorization..."
+msgstr "Registrazione dell'agente"
+
+#, fuzzy
+msgid "Authorization failed."
+msgstr "Autenticazione fallita"
+
+#, fuzzy
+msgid "Requesting access token"
+msgstr "Token di accesso API"
+
+#, fuzzy
+msgid "${res.message}"
+msgstr "messaggio"
+
+#, fuzzy
+msgid "Failed to request and save access token: ${e}"
+msgstr "Richieste fallite ai file di Adressbook"
+
+#, fuzzy
+msgid "Authorization was not completed. Please try again."
+msgstr ""
+"Non ho trovato righe corrispondenti. Prova un altro termine di ricerca."
+
+#, fuzzy
+msgid "Authorize application"
+msgstr "Autorizzazione"
+
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application"
+msgstr ""
+
+#, fuzzy
+msgid "OAuth2 connection created successfully!"
+msgstr "Agente %s riuscito"
+
+#, fuzzy
+msgid "Go back to restart authorization process"
+msgstr "Impossibile creare una richiesta di autenticazione"
+
+#, fuzzy
+msgid "Define OAuth2 parameter"
+msgstr "Parametri predefiniti"
+
+#, fuzzy
+msgid "Description:"
+msgstr "Descrizione"
+
+#, fuzzy
+msgid "Authority:"
+msgstr "Autorità"
+
+#, fuzzy
+msgid "Tenant ID:"
+msgstr "ID inquilino"
+
+#, fuzzy
+msgid "Client ID:"
+msgstr "ID cliente"
+
+#, fuzzy
+msgid "Client secret:"
+msgstr "Segreto del cliente"
+
+#, fuzzy
+msgid "Start authorization"
+msgstr "Autorizzazione di base"
+
+#, fuzzy
 msgid "Configure title and site"
 msgstr "Configurare i livelli sul fumo"
 
@@ -94829,6 +94806,128 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Add new field"
+#~ msgstr "Aggiungi un nuovo tempo"
+
+#, fuzzy
+#~ msgid "Automatically delete hosts without open telemetry data"
+#~ msgstr "Elimina automaticamente gli host senza dati di piggyback"
+
+#~ msgid "By default all of the sections will be executed."
+#~ msgstr "Per default tutte le sezioni saranno eseguite."
+
+#, fuzzy
+#~ msgid "Custom host name computation"
+#~ msgstr "Calcolo del nome host"
+
+#, fuzzy
+#~ msgid ""
+#~ "Delete the hosts created by this connection whose open telemetry data is "
+#~ "no longer present."
+#~ msgstr ""
+#~ "Elimina gli host creati da questa connessione i cui dati di piggyback non "
+#~ "sono più presenti."
+
+#, fuzzy
+#~ msgid "Graph time and refresh"
+#~ msgstr "Intervallo di tempo del grafico"
+
+#, fuzzy
+#~ msgid "Host name rules"
+#~ msgstr "Nome host: %s"
+
+#, fuzzy
+#~ msgid "Literal string"
+#~ msgstr "Stringa fissa"
+
+#, fuzzy
+#~ msgid "Open telemetry collector creation options"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "Open telemetry hosts creation options"
+#~ msgstr "Opzioni di creazione di piggyback"
+
+#, fuzzy
+#~ msgid "Opentelemetry collector data"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "Please specify at least one \"Open telemetry hosts creation option\""
+#~ msgstr ""
+#~ "Si prega di specificare almeno una \"opzione di creazione Piggyback\""
+
+#, fuzzy, python-format
+#~ msgid "Please specify at least one value for \"%s\""
+#~ msgstr "Si prega di specificare almeno un valore"
+
+#, fuzzy
+#~ msgid "Select at least one column."
+#~ msgstr "Seleziona almeno un elemento"
+
+#, fuzzy
+#~ msgid "Site certificate subject alternative names"
+#~ msgstr "Nome alternativo del soggetto del certificato"
+
+#, fuzzy
+#~ msgid ""
+#~ "The interval the connection will be executed to check the available open "
+#~ "telemetry data and update the configuration."
+#~ msgstr ""
+#~ "L'intervallo in cui la connessione verrà eseguita per controllare il "
+#~ "piggyback disponibile e aggiornare la configurazione."
+
+#, fuzzy
+#~ msgid ""
+#~ "This connector can be used to automatically create hosts based on "
+#~ "Opentelemetry collector data."
+#~ msgstr ""
+#~ "Questo connettore può essere utilizzato per creare automaticamente gli "
+#~ "host in base ai miei dati."
+
+#, fuzzy
+#~ msgid "This field can not be empty."
+#~ msgstr "Chiave segreta"
+
+#, fuzzy
+#~ msgid ""
+#~ "Time range to continue to consider outdated open telemetry data as valid."
+#~ msgstr ""
+#~ "Intervallo di tempo per continuare a considerare validi i dati piggyback "
+#~ "obsoleti."
+
+#, fuzzy
+#~ msgid ""
+#~ "Time range to prevent host deletion after site startup, e.g. when booting "
+#~ "the Checkmk server. This is caused by the 'tmp' directory which needs "
+#~ "more time to initialize and can result in missing data from some sources."
+#~ msgstr ""
+#~ "Intervallo di tempo per evitare la cancellazione dell'host dopo l'avvio "
+#~ "del sito, ad esempio quando si avvia il server Checkmk. Questo è causato "
+#~ "dalla directory 'tmp' che ha bisogno di più tempo per inizializzarsi e "
+#~ "può causare la mancanza di informazioni piggyback da alcune fonti."
+
+#, fuzzy
+#~ msgid ""
+#~ "Time range to prevent host deletion after site startup, e.g. when booting "
+#~ "the Checkmk server. This is caused by the 'tmp' directory which needs "
+#~ "more time to initialize and can result in missing open telemetry "
+#~ "information from some sources."
+#~ msgstr ""
+#~ "Intervallo di tempo per evitare la cancellazione dell'host dopo l'avvio "
+#~ "del sito, ad esempio quando si avvia il server Checkmk. Questo è causato "
+#~ "dalla directory 'tmp' che ha bisogno di più tempo per inizializzarsi e "
+#~ "può causare la mancanza di informazioni piggyback da alcune fonti."
+
+#, fuzzy
+#~ msgid "Value of attribute"
+#~ msgstr "Attributo del ruolo"
+
+#, fuzzy
+#~ msgid "You have to select a valid host name computation method."
+#~ msgstr "Devi selezionare almeno un elemento."
 
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
@@ -95639,10 +95738,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Calls in"
 #~ msgstr "ID chiamante"
-
-#, fuzzy
-#~ msgid "Calls in/out"
-#~ msgstr "Chiamare una regola"
 
 #, fuzzy
 #~ msgid "Calls out"
@@ -96740,11 +96835,6 @@ msgstr ""
 
 #~ msgid "Resulting notifications"
 #~ msgstr "Notifiche risultanti"
-
-#~ msgid "message"
-#~ msgid_plural "messages"
-#~ msgstr[0] "messaggio"
-#~ msgstr[1] "messaggi"
 
 #, fuzzy
 #~ msgid "notification"

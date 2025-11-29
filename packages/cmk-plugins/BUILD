@@ -1,6 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
@@ -312,48 +313,6 @@ filegroup(
     ),
 ) for family in FAMILIES]
 
-# inline this once it's not needed anymore
-COMMON_DEPS = [
-    ":%s" % family
-    for family in FAMILIES
-] + [
-    ":agent-%s" % family
-    for family in FAMILIES
-] + [
-    ":checkman-%s" % family
-    for family in FAMILIES
-]
-
-py_wheel(
-    name = "wheel",
-    distribution = "cmk-plugins",
-    strip_path_prefixes = ["packages/cmk-plugins"],
-    # TODO: Duplicated from pyproject.toml
-    version = "1.0.0",
-    deps = COMMON_DEPS + [
-        ":libexec-%s" % family
-        for family in FAMILIES
-    ],
-)
-
-# One wheel per family:
-# Same as above, but with the loop outside.
-[py_wheel(
-    name = "wheel-%s" % family,
-    distribution = "cmk-plugins-%s" % family,
-    entry_points = {
-        "cmk.special_agent_supported_on_relay": ["%s = %s" % (family, family)],
-    },
-    strip_path_prefixes = ["packages/cmk-plugins"],
-    version = "1.0.0",
-    deps = [
-        ":%s" % family,
-        ":agent-%s" % family,
-        ":checkman-%s" % family,
-        ":libexec-%s" % family,
-    ],
-) for family in FAMILIES]
-
 # Here comes the HACK to work around CMK-27714.
 # `package_wheel` will not preserve the +x flag
 # on the libexec files.
@@ -373,27 +332,22 @@ py_wheel(
     prefix = "lib/python%s/site-packages/cmk/plugins/%s/libexec" % (PYTHON_MAJOR_DOT_MINOR, family),
 ) for family in FAMILIES]
 
-py_wheel(
-    name = "wheel-for-pkg_tar",
-    distribution = "cmk-plugins-tar",
+[py_wheel(
+    name = "wheel-for-f12-%s" % family,
+    distribution = "cmk-plugins-%s-tar" % family,
     entry_points = {
-        "cmk.special_agent_supported_on_relay": [
-            "%s = %s" % (family, family)
-            for family in FAMILIES
-        ],
+        "cmk.special_agent_supported_on_relay": ["%s = %s" % (family, family)],
     },
     strip_path_prefixes = ["packages/cmk-plugins"],
-    # TODO: Duplicated from pyproject.toml
+    tags = ["manual"],
     version = "1.0.0",
-    deps = COMMON_DEPS,
-)
-
-package_wheel(
-    name = "pkg_tar",
-    additional_files = [":libexec-for-pkg_tar-%s" % family for family in FAMILIES],
-    visibility = ["//visibility:public"],
-    whl = "wheel-for-pkg_tar",
-)
+    deps = [
+        ":%s" % family,
+        ":agent-%s" % family,
+        ":checkman-%s" % family,
+        ":libexec-%s" % family,
+    ],
+) for family in FAMILIES]
 
 [py_wheel(
     name = "wheel-for-pkg_tar-%s" % family,
@@ -416,3 +370,9 @@ package_wheel(
     visibility = ["//visibility:public"],
     whl = "wheel-for-pkg_tar-%s" % family,
 ) for family in FAMILIES]
+
+pkg_tar(
+    name = "pkg_tar",
+    visibility = ["//visibility:public"],
+    deps = [":pkg_tar-%s" % family for family in FAMILIES],
+)

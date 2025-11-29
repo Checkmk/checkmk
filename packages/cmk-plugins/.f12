@@ -13,7 +13,15 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-bazel build ":wheel"
+WHEEL_TARGETS=$(bazel query --ui_event_filters=-info --noshow_progress 'filter(":wheel-for-f12-\w*$", //packages/cmk-plugins/...)')
+# shellcheck disable=SC2086
+bazel build $WHEEL_TARGETS
+
+WHEELS=()
+for target in $WHEEL_TARGETS; do
+    WHEEL_PATH=$(bazel cquery "$target" --output=starlark --starlark:expr="target.files.to_list()[0].path")
+    WHEELS+=("$(bazel info workspace)/$WHEEL_PATH")
+done
 
 # pip installs the package in the user directory in case of missing permissions
 # this might be surprising and hard to spot, so we force the global installation
@@ -25,4 +33,4 @@ export PYTHONNOUSERSITE=1
     --upgrade \
     --force-reinstall \
     --isolated \
-    "$(bazel info workspace)/$(bazel cquery :wheel --output=starlark --starlark:expr="target.files.to_list()[0].path")"
+    "${WHEELS[@]}"

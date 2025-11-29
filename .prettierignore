@@ -3,6 +3,7 @@ package-lock.json
 pnpm-lock.yaml
 node_modules/
 .werks/
+**/.mypy_cache/**
 
 *.jsonl
 

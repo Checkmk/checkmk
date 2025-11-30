@@ -326,6 +326,9 @@ py_test(
 exports_files([
     "dev-requirements.in",
     "pyproject.toml",
+] + [
+    "requirements.in-%s" % family
+    for family in FAMILIES
 ])
 
 concat_files(

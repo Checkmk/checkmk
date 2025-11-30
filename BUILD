@@ -154,7 +154,10 @@ multirun(
         ":requirements",
         ":community_requirements",
         ":runtime_requirements",
-    ],
+    ] + select({
+        "@//:gpl+nonfree_repo": ["//omd/non-free/relay:requirements"],
+        "@//:gpl_repo": [],
+    }),
     # Running in a single threaded mode allows consecutive `uv` invocations to benefit
     # from the `uv` cache from the first run.
     jobs = 1,

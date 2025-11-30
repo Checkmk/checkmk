@@ -1172,6 +1172,9 @@ msgstr "Niveaux supérieurs de la sortie 12 volts"
 msgid "15 minutes"
 msgstr "15 minutes"
 
+msgid "17"
+msgstr ""
+
 msgid "2 weeks back"
 msgstr "2 semaines en arrière"
 
@@ -1186,6 +1189,10 @@ msgstr "20,0 - 50,0 ms"
 
 msgid "200.0 - 500.0 ms"
 msgstr "200,0 - 500,0 ms"
+
+#, fuzzy
+msgid "3"
+msgstr "A3"
 
 msgid "3 months"
 msgstr "3 mois"
@@ -13397,6 +13404,10 @@ msgstr "Dossier choisi : %s"
 
 msgid "Chrony timesynchronisation"
 msgstr "Synchronisation de la chronologie"
+
+#, fuzzy
+msgid "Cipher suite ID"
+msgstr "Utiliser l'ID du site"
 
 msgid "Cisco ASA Firewall Connections"
 msgstr "Connexions du pare-feu Cisco ASA"
@@ -61594,6 +61605,9 @@ msgstr ""
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
 "Indiquez les noms des comptes de stockage auxquels la règle doit s'appliquer"
+
+msgid "Specify the IPMI 2.0 cipher suite ID to use. Default is 17."
+msgstr ""
 
 msgid "Specify the LED, for example 'Rack Unit 1 0'."
 msgstr "Spécifiez la DEL, par exemple \"Unité de rack 1 0\"."

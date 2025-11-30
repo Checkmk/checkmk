@@ -1145,6 +1145,9 @@ msgstr "12ボルト出力の上位レベル"
 msgid "15 minutes"
 msgstr "15分"
 
+msgid "17"
+msgstr ""
+
 msgid "2 weeks back"
 msgstr "2週間前"
 
@@ -1159,6 +1162,10 @@ msgstr "20.0 - 50.0ミリ秒"
 
 msgid "200.0 - 500.0 ms"
 msgstr "200.0 - 500.0ミリ秒"
+
+#, fuzzy
+msgid "3"
+msgstr "A3"
 
 msgid "3 months"
 msgstr "3ヶ月"
@@ -12488,6 +12495,10 @@ msgstr "選ばれたファイル：%s"
 
 msgid "Chrony timesynchronisation"
 msgstr "慢性的な時間同期"
+
+#, fuzzy
+msgid "Cipher suite ID"
+msgstr "サイトIDを使用する"
 
 msgid "Cisco ASA Firewall Connections"
 msgstr "Cisco ASAファイアウォール接続"
@@ -57301,6 +57312,9 @@ msgstr "OpenTelemetry コレクターを実行するサイトを指定してく�
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr "ルールを適用するストレージアカウント名を指定します"
+
+msgid "Specify the IPMI 2.0 cipher suite ID to use. Default is 17."
+msgstr ""
 
 msgid "Specify the LED, for example 'Rack Unit 1 0'."
 msgstr "LEDを指定します(例: \"ラックユニット 1 0\")。"

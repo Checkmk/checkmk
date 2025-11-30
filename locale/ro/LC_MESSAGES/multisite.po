@@ -1173,6 +1173,9 @@ msgstr "Niveluri superioare de ieșire de 12 volți"
 msgid "15 minutes"
 msgstr "15 minute"
 
+msgid "17"
+msgstr ""
+
 msgid "2 weeks back"
 msgstr "2 săptămâni înapoi"
 
@@ -1187,6 +1190,10 @@ msgstr "20.0 - 50.0 ms"
 
 msgid "200.0 - 500.0 ms"
 msgstr "200.0 - 500.0 ms"
+
+#, fuzzy
+msgid "3"
+msgstr "A3"
 
 msgid "3 months"
 msgstr "3 luni"
@@ -13318,6 +13325,10 @@ msgstr "Fișiere de bază"
 
 msgid "Chrony timesynchronisation"
 msgstr "Sincronizarea cronică a timpului"
+
+#, fuzzy
+msgid "Cipher suite ID"
+msgstr "Utilizați ID-ul site-ului"
 
 msgid "Cisco ASA Firewall Connections"
 msgstr "Conexiuni Cisco ASA Firewall"
@@ -61180,6 +61191,9 @@ msgid "Specify storage account names that the rule should apply to"
 msgstr ""
 "Specificați numele conturilor de stocare cărora trebuie să li se aplice "
 "regula"
+
+msgid "Specify the IPMI 2.0 cipher suite ID to use. Default is 17."
+msgstr ""
 
 msgid "Specify the LED, for example 'Rack Unit 1 0'."
 msgstr "Specificați LED-ul, de exemplu 'Rack Unit 1 0'."

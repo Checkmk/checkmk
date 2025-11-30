@@ -1169,6 +1169,9 @@ msgstr "Obergrenzen für 12 Volt Ausgabe"
 msgid "15 minutes"
 msgstr "15 Minuten"
 
+msgid "17"
+msgstr ""
+
 msgid "2 weeks back"
 msgstr "Vor 2 Wochen"
 
@@ -1183,6 +1186,10 @@ msgstr "20.0 - 50.0 ms"
 
 msgid "200.0 - 500.0 ms"
 msgstr "200.0 - 500.0 ms"
+
+#, fuzzy
+msgid "3"
+msgstr "A3"
 
 msgid "3 months"
 msgstr "3 Monate"
@@ -12894,6 +12901,10 @@ msgstr "Gewählte Datei: %s"
 
 msgid "Chrony timesynchronisation"
 msgstr "Chrony Zeitsynchronisation"
+
+#, fuzzy
+msgid "Cipher suite ID"
+msgstr "Instanz-ID verwenden"
 
 msgid "Cisco ASA Firewall Connections"
 msgstr "Cisco ASA Firewall Verbindungen"
@@ -58754,6 +58765,9 @@ msgstr ""
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
 "Geben Sie die Namen der Speicherkonten an, für die diese Regel gelten soll"
+
+msgid "Specify the IPMI 2.0 cipher suite ID to use. Default is 17."
+msgstr ""
 
 msgid "Specify the LED, for example 'Rack Unit 1 0'."
 msgstr "Geben Sie die LED an, z.B. 'Rack Unit 1 0'."

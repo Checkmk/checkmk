@@ -7,6 +7,7 @@
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from importlib.metadata import entry_points
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -20,7 +21,6 @@ from .config_processing import (
     GlobalProxiesWithLookup,
     process_configuration_to_parameters,
 )
-from .relay_support import RELAY_SUPPORTED_MODULES
 
 
 @dataclass(frozen=True)
@@ -95,7 +95,7 @@ class SpecialAgent:
             return
 
         if self._for_relay:
-            if _cut_module(self._modules[name]) not in RELAY_SUPPORTED_MODULES:
+            if name not in _relay_compatible_plugin_families():
                 msg = f"Config creation for special agent {agent_name} failed on {self.host_name}: Agent is not supported on relays."
                 config_warnings.warn(msg)
                 # Continue anyway. The datasource will fail on the relay side, and the Checkmk service will go CRIT.
@@ -103,5 +103,5 @@ class SpecialAgent:
         yield from self._iter_commands(special_agent, params)
 
 
-def _cut_module(mod_name: str) -> str:
-    return ".".join(mod_name.split(".")[:3])
+def _relay_compatible_plugin_families() -> list[str]:
+    return [ep.name for ep in entry_points(group="cmk.special_agent_supported_on_relay")]

@@ -2,6 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
@@ -340,6 +341,9 @@ py_wheel(
 [py_wheel(
     name = "wheel-%s" % family,
     distribution = "cmk-plugins-%s" % family,
+    entry_points = {
+        "cmk.special_agent_supported_on_relay": ["%s = %s" % (family, family)],
+    },
     strip_path_prefixes = ["packages/cmk-plugins"],
     version = "1.0.0",
     deps = [
@@ -372,6 +376,12 @@ py_wheel(
 py_wheel(
     name = "wheel-for-pkg_tar",
     distribution = "cmk-plugins-tar",
+    entry_points = {
+        "cmk.special_agent_supported_on_relay": [
+            "%s = %s" % (family, family)
+            for family in FAMILIES
+        ],
+    },
     strip_path_prefixes = ["packages/cmk-plugins"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
@@ -388,6 +398,9 @@ package_wheel(
 [py_wheel(
     name = "wheel-for-pkg_tar-%s" % family,
     distribution = "cmk-plugins-%s-tar" % family,
+    entry_points = {
+        "cmk.special_agent_supported_on_relay": ["%s = %s" % (family, family)],
+    },
     strip_path_prefixes = ["packages/cmk-plugins"],
     version = "1.0.0",
     deps = [

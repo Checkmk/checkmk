@@ -98,6 +98,7 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
                 + ["-v \"${container_shadow_workspace}/checkout_cache:${checkout_dir}/.cache\""]
                 + "--cpus=8"
+                + "--memory=24g"
             ).join(" ");
             /// We have to make sure both, the source directory and (if applicable) the target
             /// directory inside an already mounted parent directory (here: /home/<USER>)

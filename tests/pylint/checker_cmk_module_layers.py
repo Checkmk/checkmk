@@ -247,6 +247,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     "metric_backend": (
         "cmk.metric_backend",
         "cmk.utils.paths",
+        "cmk.gui.form_specs.nonfree.ultimate.unstable.metric_backend_custom_query",
     ),
     "otel": (
         "cmk.gui.form_specs.unstable",

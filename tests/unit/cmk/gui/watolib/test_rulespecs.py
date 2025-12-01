@@ -274,7 +274,9 @@ def test_rulespec_get_all_groups() -> None:
         "datasource_programs/apps",
         "datasource_programs/custom",
         "datasource_programs/hw",
-        "datasource_programs/os",
+        # Currently does not show up in the test because all of the plugins have been
+        # migrated to cmk-plugins and the test can't see them.
+        # "datasource_programs/os",
         "inventory",
         "eventconsole",
     ]

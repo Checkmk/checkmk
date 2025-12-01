@@ -30,7 +30,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=None,
             ),
             False,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -52,7 +52,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -76,7 +76,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.CRIT,
+            lambda _: State.CRIT,
             [
                 Result(
                     state=State.CRIT,
@@ -100,7 +100,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             True,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -123,7 +123,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             True,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -171,7 +171,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -199,7 +199,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -235,7 +235,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -272,7 +272,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -301,7 +301,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.UNKNOWN,
@@ -326,7 +326,7 @@ from cmk.plugins.ipmi.lib import ipmi
                 type_="Temperature",
             ),
             True,
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Result(
                     state=State.OK,
@@ -460,7 +460,7 @@ SECTION = {
     [
         (
             {},
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Metric("ambient_temp", 18.5),
                 Result(state=State.OK, summary="10 sensors in total"),
@@ -584,7 +584,7 @@ SECTION = {
         ),
         (
             {"ignored_sensors": ["CPU", "VCORE"]},
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Metric("ambient_temp", 18.5),
                 Result(state=State.OK, summary="10 sensors in total"),
@@ -636,7 +636,7 @@ SECTION = {
         ),
         (
             {"ignored_sensorstates": ["ns", "nr", "na"]},
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Metric("ambient_temp", 18.5),
                 Result(state=State.OK, summary="10 sensors in total"),
@@ -695,7 +695,7 @@ SECTION = {
                 "ignored_sensorstates": ["ns", "nr", "na"],
                 "sensor_states": [{"ipmi_state": "ok", "target_state": 1}],
             },
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Metric("ambient_temp", 18.5),
                 Result(
@@ -762,7 +762,7 @@ SECTION = {
                     },
                 ]
             },
-            lambda txt: State.OK,
+            lambda _: State.OK,
             [
                 Metric("ambient_temp", 18.5),
                 Result(state=State.OK, summary="10 sensors in total"),
@@ -857,7 +857,7 @@ def test_freeipmi_supplied_state_wins() -> None:
                 )
             },
             False,
-            lambda x: State.CRIT,
+            lambda _: State.CRIT,
         )
     ) == [
         Result(state=State.OK, summary="1 sensors in total"),

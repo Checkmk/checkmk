@@ -5,6 +5,8 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
+from collections.abc import Mapping
+
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
@@ -15,6 +17,18 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.rule_specs import InventoryParameters, Topic
+
+
+def _migrate_lldp_cache(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict):
+        if "removecolumns" in value.keys():
+            value["remove_columns"] = value.pop("removecolumns")
+
+        if "remove_columns" not in value.keys() or not isinstance(value["remove_columns"], list):
+            value["remove_columns"] = []
+
+        return value
+    return {}
 
 
 def _parameter_form_lldp_cache() -> Dictionary:
@@ -28,6 +42,7 @@ def _parameter_form_lldp_cache() -> Dictionary:
     ]
 
     return Dictionary(
+        migrate=_migrate_lldp_cache,
         elements={
             "remove_domain": DictElement(
                 parameter_form=FixedValue(
@@ -41,7 +56,7 @@ def _parameter_form_lldp_cache() -> Dictionary:
                     title=Title("Specific domain name to remove from neighbor device name"),
                 )
             ),
-            "removecolumns": DictElement(
+            "remove_columns": DictElement(
                 parameter_form=MultipleChoice(
                     title=Title("Columns to remove"),
                     elements=remove_columns,
@@ -61,7 +76,7 @@ def _parameter_form_lldp_cache() -> Dictionary:
                     label=Label("enabled"),
                 )
             ),
-        }
+        },
     )
 
 

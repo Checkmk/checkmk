@@ -407,7 +407,7 @@ def inventory_lldp_cache(params: Any, section: Lldp) -> InventoryResult:
             ("port_description", neighbor.port_description),
             ("system_description", neighbor.system_description),
         ]:
-            if key not in params.get("removecolumns", []) and value:
+            if key not in params.get("remove_columns", []) and value:
                 inventory_columns[key] = value
 
         yield TableRow(path=path, key_columns=key_columns, inventory_columns=inventory_columns)

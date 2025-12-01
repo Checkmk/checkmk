@@ -110,3 +110,12 @@ def agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
     key = load_pem_private_key(pem_bytes, None)
     assert isinstance(key, RSAPrivateKey)
     return load_pem_x509_certificate(pem_bytes), key
+
+
+@cache
+def relay_root_ca() -> tuple[Certificate, RSAPrivateKey]:
+    config = get_config()
+    pem_bytes = config.relay_ca_path.read_bytes()
+    key = load_pem_private_key(pem_bytes, None)
+    assert isinstance(key, RSAPrivateKey)
+    return load_pem_x509_certificate(pem_bytes), key

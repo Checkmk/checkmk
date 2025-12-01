@@ -75,6 +75,10 @@ class Config(BaseModel):
         return self.omd_root / "etc/ssl/agents/ca.pem"
 
     @property
+    def relay_ca_path(self) -> Path:
+        return self.omd_root / "etc/ssl/relays/ca.pem"
+
+    @property
     def helper_config_dir(self) -> Path:
         return self.omd_root / "var/check_mk/core/helper_config"
 

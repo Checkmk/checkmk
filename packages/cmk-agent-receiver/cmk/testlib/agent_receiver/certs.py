@@ -73,6 +73,7 @@ def set_up_ca_certs(config: Config) -> None:
     for ca_path in (
         config.site_ca_path,
         config.agent_ca_path,
+        config.relay_ca_path,
     ):
         ca_path.parent.mkdir(parents=True, exist_ok=True)
         ca_path.write_bytes(CA_CERT)

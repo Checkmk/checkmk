@@ -8,9 +8,9 @@ from cryptography.x509 import CertificateSigningRequest
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.certs import (
-    agent_root_ca,
     current_time_naive,
     extract_cn_from_csr,
+    relay_root_ca,
     serialize_to_pem,
     sign_csr,
     site_root_certificate,
@@ -36,7 +36,7 @@ class RegisterRelayHandler:
             sign_csr(
                 csr=csr,
                 lifetime_in_months=15,
-                keypair=agent_root_ca(),
+                keypair=relay_root_ca(),
                 valid_from=current_time_naive(),
             )
         )

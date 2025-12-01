@@ -56,9 +56,6 @@ from cmk.gui.form_specs import (
     validate_value_from_frontend,
     VisitorOptions,
 )
-from cmk.gui.form_specs.unstable import (
-    LegacyValueSpec,
-)
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -2013,8 +2010,7 @@ def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
 
     # FRONTEND rendering
     if not rulespec.has_form_spec and rulespec.has_valuespec:
-        # Rendered legacy valuespec in the frontend
-        return RenderMode.FRONTEND, LegacyValueSpec(valuespec=rulespec.valuespec)
+        return RenderMode.BACKEND, None
 
     # FRONTEND rendering of form_spec
     return RenderMode.FRONTEND, rulespec.form_spec
@@ -2541,6 +2537,8 @@ class ABCEditRuleMode(WatoMode):
             valuespec.render_input("ve", valuespec.default_value())
             valuespec.set_focus("ve")
 
+        forms.end()
+
         if is_locked:
             forms.warning_message(
                 _("Conditions of rules managed by Quick setup cannot be changed.")
@@ -2680,7 +2678,6 @@ class ABCEditRuleMode(WatoMode):
             case _:
                 raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
-        forms.end()
         html.hidden_fields()
 
 

@@ -3,7 +3,7 @@ def _concat_files_impl(ctx):
     ctx.actions.run_shell(
         inputs = ctx.files.srcs,
         outputs = [out],
-        command = "cat {} > {}".format(" ".join([f.path for f in ctx.files.srcs]), out.path),
+        command = "awk '{{print}}' {} > {}".format(" ".join([f.path for f in ctx.files.srcs]), out.path),
     )
     return [DefaultInfo(files = depset([out]))]
 

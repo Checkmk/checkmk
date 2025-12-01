@@ -320,15 +320,15 @@ class Discovery:
                     apply_changes = True
 
                 _apply_state_change(
-                    entry.check_source,
-                    table_target,
-                    key,
-                    changed_value,
-                    entry.description,
-                    changed_services,
-                    saved_services,
-                    add_disabled_rule,
-                    remove_disabled_rule,
+                    table_source=entry.check_source,
+                    table_target=table_target,
+                    key=key,
+                    value=changed_value,
+                    descr=entry.description,
+                    autochecks_to_save=changed_services,
+                    saved_services=saved_services,
+                    add_disabled_rule=add_disabled_rule,
+                    remove_disabled_rule=remove_disabled_rule,
                 )
 
                 # Vanished services have to be added here because of audit log entries.
@@ -807,6 +807,7 @@ def _apply_state_change(
             | DiscoveryState.CLUSTERED_IGNORED
         ):
             _case_clustered(
+                table_target,
                 key,
                 value,
                 descr,
@@ -920,6 +921,7 @@ def _case_ignored(
 
 
 def _case_clustered(
+    table_target: str,
     key: ServiceName,
     value: AutocheckEntry,
     descr: str,
@@ -932,7 +934,10 @@ def _case_clustered(
     # do not allow any operation for this clustered service on the related node.
     # We just display the clustered service state (OLD, NEW, VANISHED).
     autochecks_to_save[key] = value
-    saved_services.add(descr)
+    # But if the user wants to disable the service on the host, this is what we do.
+    # Ideally, there would be no service discovery on the cluster hosts at all.
+    if table_target != "ignored":
+        saved_services.add(descr)
 
 
 def _make_host_audit_log_object(

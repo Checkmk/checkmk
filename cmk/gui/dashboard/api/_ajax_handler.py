@@ -136,7 +136,7 @@ def _general_settings_to_internal(
 
 @dataclass
 class FigureRequestInternal:
-    figure_config: FigureDashletConfig
+    dashlet_config: FigureDashletConfig
     context: VisualContext
     single_infos: SingleInfos
     general_settings: _WidgetGeneralSettingsInternal
@@ -150,7 +150,7 @@ class _FigureRequest(BaseModel, frozen=True):
 
     def to_internal(self) -> FigureRequestInternal:
         return FigureRequestInternal(
-            figure_config=self.content.to_internal(),
+            dashlet_config=self.content.to_internal(),
             context=self.context,
             single_infos=self.single_infos,
             general_settings=_general_settings_to_internal(self.general_settings),
@@ -194,7 +194,7 @@ type GraphDashletConfig = (
 @dataclass
 class GraphRequestInternal:
     widget_id: str
-    graph_config: GraphDashletConfig
+    dashlet_config: GraphDashletConfig
     context: VisualContext
     single_infos: SingleInfos
 
@@ -208,7 +208,7 @@ class _GraphRequest(BaseModel, frozen=True):
     def to_internal(self) -> GraphRequestInternal:
         return GraphRequestInternal(
             widget_id=self.widget_id,
-            graph_config=self.content.to_internal(),
+            dashlet_config=self.content.to_internal(),
             context=self.context,
             single_infos=self.single_infos,
         )
@@ -227,4 +227,4 @@ def get_validated_internal_graph_request(
     try:
         return _GraphRequest.model_validate(request_dict).to_internal()
     except ValidationError as exc:
-        raise MKUserError("figure_request_validation", str(exc))
+        raise MKUserError("graph_request_validation", str(exc))

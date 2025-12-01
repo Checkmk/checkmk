@@ -26,20 +26,12 @@ from .page_create_view_dashlet import (
     page_create_view_dashlet_infos,
 )
 from .page_edit_dashboard import page_edit_dashboard
-from .page_edit_dashboard_actions import (
-    ajax_dashlet_pos,
-    page_clone_dashlet,
-    page_delete_dashlet,
-)
+from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_edit_dashlet import EditDashletPage
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
-from .page_graph_widget import GraphWidgetPage
-from .page_show_dashboard import (
-    ajax_dashlet,
-    AjaxInitialDashboardFilters,
-    page_dashboard_app,
-)
+from .page_graph_widget import GraphWidgetPage, GraphWidgetTokenAuthPage
+from .page_show_dashboard import ajax_dashlet, AjaxInitialDashboardFilters, page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
 from .visual_type import VisualTypeDashboards
 
@@ -88,6 +80,9 @@ def register(
 
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint(FigureWidgetTokenAuthPage.ident(), FigureWidgetTokenAuthPage())
+    )
+    token_authenticated_page_registry.register(
+        TokenAuthenticatedEndpoint(GraphWidgetTokenAuthPage.ident(), GraphWidgetTokenAuthPage())
     )
 
     register_dashlets(dashlet_registry_, autocompleter_registry)

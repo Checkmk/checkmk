@@ -19,7 +19,7 @@ from cmk.gui.dashboard.dashlet.dashlets.stats import (
     HostStatsDashletDataGenerator,
     ServiceStatsDashletDataGenerator,
 )
-from cmk.gui.dashboard.store import get_permitted_dashboards_by_owners
+from cmk.gui.dashboard.dashlet.utils import get_dashlet_config_via_token
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.http import response
@@ -58,15 +58,15 @@ class FigureWidgetPage(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         request_data: FigureRequestInternal = get_validated_internal_figure_request(ctx)
-        figure_config: FigureDashletConfig = request_data.figure_config
-        figure_config.update(
+        dashlet_config: FigureDashletConfig = request_data.dashlet_config
+        dashlet_config.update(
             {
                 "context": request_data.context,
                 "single_infos": request_data.single_infos,
             }
         )
         if (title := request_data.general_settings.get("title")) is not None:
-            figure_config.update(
+            dashlet_config.update(
                 {
                     "show_title": title["show_title"],
                     "title": title["text"],
@@ -75,8 +75,8 @@ class FigureWidgetPage(AjaxPage):
             )
 
         return create_figures_response(
-            self.get_data_generator(request_data.figure_config["type"])(
-                figure_config,
+            self.get_data_generator(request_data.dashlet_config["type"])(
+                dashlet_config,
                 request_data.context,
                 request_data.single_infos,
             )
@@ -104,23 +104,7 @@ class FigureWidgetTokenAuthPage(TokenAuthenticatedPage):
             if (widget_id := ctx.request.get_str_input("widget_id")) is None:
                 raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
 
-            board_name = token.details.dashboard_name
-            try:
-                board = get_permitted_dashboards_by_owners()[board_name][token.details.owner]
-            except KeyError:
-                raise MKUserError(
-                    "invalid_dashboard",
-                    _("No dashboard found for the given dashboard name and/or dashboard owner"),
-                )
-
-            widgets = {
-                f"{board_name}-{idx}": d_config for idx, d_config in enumerate(board["dashlets"])
-            }
-            if (dashlet_config := widgets.get(widget_id)) is None:
-                raise MKUserError(
-                    "dashlet_config",
-                    _("The given widget id does not match any of this dashboard's widgets"),
-                )
+            dashlet_config = get_dashlet_config_via_token(ctx, token, widget_id)
 
             action_response = create_figures_response(
                 self.get_data_generator(dashlet_config["type"])(

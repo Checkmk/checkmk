@@ -2,11 +2,9 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""EC History sqlite backend"""
 
 import logging
 import sqlite3
-from collections.abc import Iterator
 from typing import Literal
 
 import pytest
@@ -18,66 +16,54 @@ from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
 
-@pytest.fixture(name="test_conn")
-def fixture_sqlite_test_connection() -> Iterator[sqlite3.Connection]:
-    """test_conn as an in :memory: database"""
-
+def in_memory_db() -> sqlite3.Connection:
     con = sqlite3.connect(":memory:")
-    con.execute("""CREATE TABLE IF NOT EXISTS history(id INTEGER, text TEXT)""")
-
-    yield con
-
-    con.execute("DROP TABLE IF EXISTS history")
-    con.close()
+    con.execute("CREATE TABLE history(id INTEGER, text TEXT)")
+    return con
 
 
-def test_equal_operator_with_matching_lower_case_argument_returns_matching_lower_case_text(
-    test_conn: sqlite3.Connection,
-) -> None:
-    con = test_conn
-    con.execute("INSERT INTO history VALUES(0, 'test text')")
-    con.execute("INSERT INTO history VALUES(1, 'wrong text')")
-    con.execute("INSERT INTO history VALUES(2, 'TEST TEXT')")
-    con.execute("INSERT INTO history VALUES(3, 'TeSt tExt')")
-    con.execute("INSERT INTO history VALUES(4, 'test text')")
+def test_equal_operator_with_matching_lower_case_argument_returns_matching_lower_case_text() -> (
+    None
+):
+    with in_memory_db() as con:
+        con.execute("INSERT INTO history VALUES(0, 'test text')")
+        con.execute("INSERT INTO history VALUES(1, 'wrong text')")
+        con.execute("INSERT INTO history VALUES(2, 'TEST TEXT')")
+        con.execute("INSERT INTO history VALUES(3, 'TeSt tExt')")
+        con.execute("INSERT INTO history VALUES(4, 'test text')")
 
-    (query, params) = filters_to_sqlite_query(
-        [
-            QueryFilter(
-                column_name="event_text",
-                operator_name="=",
-                predicate=lambda x: True,
-                argument="test text",
-            )
-        ]
-    )
+        (query, params) = filters_to_sqlite_query(
+            [
+                QueryFilter(
+                    column_name="event_text",
+                    operator_name="=",
+                    predicate=lambda x: True,
+                    argument="test text",
+                )
+            ]
+        )
 
-    result = con.execute(query, params)
-
-    assert result.fetchall() == [(0, "test text"), (4, "test text")]
-
-
-def test_equal_operator_with_unmatching_lower_case_argument_returns_empty_result(
-    test_conn: sqlite3.Connection,
-) -> None:
-    con = test_conn
-    (query, params) = filters_to_sqlite_query(
-        [
-            QueryFilter(
-                column_name="event_text",
-                operator_name="=",
-                predicate=lambda x: True,
-                argument="test text",
-            )
-        ]
-    )
-
-    result = con.execute(query, params)
-
-    assert result.fetchall() == []
+        result = con.execute(query, params)
+        assert result.fetchall() == [(0, "test text"), (4, "test text")]
 
 
-# fmt: off
+def test_equal_operator_with_unmatching_lower_case_argument_returns_empty_result() -> None:
+    with in_memory_db() as con:
+        (query, params) = filters_to_sqlite_query(
+            [
+                QueryFilter(
+                    column_name="event_text",
+                    operator_name="=",
+                    predicate=lambda x: True,
+                    argument="test text",
+                )
+            ]
+        )
+
+        result = con.execute(query, params)
+        assert result.fetchall() == []
+
+
 @pytest.mark.parametrize(
     "filter_value, expected_results",
     [
@@ -86,26 +72,25 @@ def test_equal_operator_with_unmatching_lower_case_argument_returns_empty_result
         ("TeSt tExt", [(0, "test text")]),
     ],
 )
-# fmt: on
 def test_case_insensitive_equal_operator_with_matching_data_returns_matching_text(
-    test_conn: sqlite3.Connection, filter_value: str, expected_results: list[tuple[int, str]]
+    filter_value: str, expected_results: list[tuple[int, str]]
 ) -> None:
-    con = test_conn
-    con.execute("INSERT INTO history VALUES(0, 'test text')")
+    with in_memory_db() as con:
+        con.execute("INSERT INTO history VALUES(0, 'test text')")
 
-    (query, params) = filters_to_sqlite_query(
-        [
-            QueryFilter(
-                column_name="event_text",
-                operator_name="=~",
-                predicate=lambda x: True,
-                argument=filter_value,
-            )
-        ]
-    )
+        (query, params) = filters_to_sqlite_query(
+            [
+                QueryFilter(
+                    column_name="event_text",
+                    operator_name="=~",
+                    predicate=lambda x: True,
+                    argument=filter_value,
+                )
+            ]
+        )
 
-    result = con.execute(query, params)
-    assert result.fetchall() == expected_results
+        result = con.execute(query, params)
+        assert result.fetchall() == expected_results
 
 
 @pytest.mark.parametrize(
@@ -117,64 +102,64 @@ def test_case_insensitive_equal_operator_with_matching_data_returns_matching_tex
     ],
 )
 def test_case_insensitive_equal_operator_with_no_matching_data_returns_matching_text(
-    test_conn: sqlite3.Connection, filter_value: str, expected_results: list[tuple[int, str]]
+    filter_value: str, expected_results: list[tuple[int, str]]
 ) -> None:
-    con = test_conn
+    with in_memory_db() as con:
+        (query, params) = filters_to_sqlite_query(
+            [
+                QueryFilter(
+                    column_name="event_text",
+                    operator_name="=~",
+                    predicate=lambda x: True,
+                    argument=filter_value,
+                )
+            ]
+        )
 
-    (query, params) = filters_to_sqlite_query(
-        [
-            QueryFilter(
-                column_name="event_text",
-                operator_name="=~",
-                predicate=lambda x: True,
-                argument=filter_value,
-            )
-        ]
-    )
-
-    result = con.execute(query, params)
-    assert result.fetchall() == expected_results
+        result = con.execute(query, params)
+        assert result.fetchall() == expected_results
 
 
 Operator = Literal[">", "<", ">=", "<="]
-# fmt: off
+
+
 @pytest.mark.parametrize(
     "operator, filter_value, expected_results",
     [
         (">", 3, [(4, "value4"), (5, "value5")]),
         ("<", 3, [(0, "value0"), (1, "value1"), (2, "value2")]),
-        (">=",3, [(3, "value3"), (4, "value4"), (5, "value5")]),
-        ("<=",3, [(0, "value0"), (1, "value1"), (2, "value2"), (3, "value3")]),
+        (">=", 3, [(3, "value3"), (4, "value4"), (5, "value5")]),
+        ("<=", 3, [(0, "value0"), (1, "value1"), (2, "value2"), (3, "value3")]),
     ],
 )
-# fmt: on
 def test_case_comparative_operator_with_matching_adjacent_data_returns_matching_text(
-        test_conn: sqlite3.Connection, operator: Operator, filter_value: int, expected_results: list[tuple[int, str]]
+    operator: Operator,
+    filter_value: int,
+    expected_results: list[tuple[int, str]],
 ) -> None:
-    con = test_conn
-    con.execute("INSERT INTO history VALUES(0, 'value0')")
-    con.execute("INSERT INTO history VALUES(1, 'value1')")
-    con.execute("INSERT INTO history VALUES(2, 'value2')")
-    con.execute("INSERT INTO history VALUES(3, 'value3')")
-    con.execute("INSERT INTO history VALUES(4, 'value4')")
-    con.execute("INSERT INTO history VALUES(5, 'value5')")
+    with in_memory_db() as con:
+        con.execute("INSERT INTO history VALUES(0, 'value0')")
+        con.execute("INSERT INTO history VALUES(1, 'value1')")
+        con.execute("INSERT INTO history VALUES(2, 'value2')")
+        con.execute("INSERT INTO history VALUES(3, 'value3')")
+        con.execute("INSERT INTO history VALUES(4, 'value4')")
+        con.execute("INSERT INTO history VALUES(5, 'value5')")
 
-    (query, params) = filters_to_sqlite_query(
-        [
-            QueryFilter(
-                column_name="event_id",
-                operator_name=operator,
-                predicate=lambda x: True,
-                argument=filter_value,
-            )
-        ]
-    )
+        (query, params) = filters_to_sqlite_query(
+            [
+                QueryFilter(
+                    column_name="event_id",
+                    operator_name=operator,
+                    predicate=lambda x: True,
+                    argument=filter_value,
+                )
+            ]
+        )
 
-    result = con.execute(query, params)
-    assert result.fetchall() == expected_results
+        result = con.execute(query, params)
+        assert result.fetchall() == expected_results
 
 
-# fmt: off
 @pytest.mark.parametrize(
     "filter_value, expected_results",
     [
@@ -184,31 +169,30 @@ def test_case_comparative_operator_with_matching_adjacent_data_returns_matching_
         (("dropped",), [(5, "dropped")]),
     ],
 )
-# fmt: on
 def test_case_in_operator_with_some_matching_data_returns_matching_text(
-    test_conn: sqlite3.Connection, filter_value: str, expected_results: list[tuple[int, str]]
+    filter_value: str, expected_results: list[tuple[int, str]]
 ) -> None:
-    con = test_conn
-    con.execute("INSERT INTO history VALUES(0, 'hello')")
-    con.execute("INSERT INTO history VALUES(1, 'hello')")
-    con.execute("INSERT INTO history VALUES(2, 'hello')")
-    con.execute("INSERT INTO history VALUES(3, 'world')")
-    con.execute("INSERT INTO history VALUES(4, 'connection dropped')")
-    con.execute("INSERT INTO history VALUES(5, 'dropped')")
+    with in_memory_db() as con:
+        con.execute("INSERT INTO history VALUES(0, 'hello')")
+        con.execute("INSERT INTO history VALUES(1, 'hello')")
+        con.execute("INSERT INTO history VALUES(2, 'hello')")
+        con.execute("INSERT INTO history VALUES(3, 'world')")
+        con.execute("INSERT INTO history VALUES(4, 'connection dropped')")
+        con.execute("INSERT INTO history VALUES(5, 'dropped')")
 
-    (query, params) = filters_to_sqlite_query(
-        [
-            QueryFilter(
-                column_name="event_text",
-                operator_name="in",
-                predicate=lambda x: True,
-                argument=filter_value,
-            )
-        ]
-    )
+        (query, params) = filters_to_sqlite_query(
+            [
+                QueryFilter(
+                    column_name="event_text",
+                    operator_name="in",
+                    predicate=lambda x: True,
+                    argument=filter_value,
+                )
+            ]
+        )
 
-    result = con.execute(query, params)
-    assert result.fetchall() == expected_results
+        result = con.execute(query, params)
+        assert result.fetchall() == expected_results
 
 
 def test_filters_to_sqlite_query_with_simple_equality_filter_has_correct_query() -> None:

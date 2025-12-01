@@ -124,6 +124,34 @@ VARIABLES:
     - NAME: CHANGED_JS_DEPENDENCIES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^package.json\\|^pnpm-' || true"
 
+    - NAME: CHANGED_CMK_PLUGINS
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/plugins/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CMK_CHECKENGINE
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/checkengine/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CMK_DISCOVER_PLUGINS
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/discover_plugins/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CMK_GUI
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/gui/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CMK_SERVER_SIDE_CALLS_BACKEND
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/server_side_calls_backend/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CMK_UTILS
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/utils/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CMK_BASE_CONFIG
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/base/config' || true"
+      REPLACE_NEWLINES: true
+
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
@@ -499,6 +527,14 @@ STAGES:
       DIR: ""
       COMMAND: "./scripts/check-merge-conflicts ${PATCHSET_REVISION} &> ${RESULTS}/merge-conflicts.txt"
       RESULT_CHECK_FILE_PATTERN: "results/merge-conflicts.txt"
+
+    - NAME: "Plugins Consistency"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_PLUGINS,CHANGED_CMK_CHECKENGINE,CHANGED_CMK_DISCOVER_PLUGINS,CHANGED_CMK_GUI,CHANGED_CMK_SERVER_SIDE_CALLS_BACKEND,CHANGED_CMK_UTILS,CHANGED_CMK_BASE_CONFIG
+      DIR: "tests"
+      COMMAND: "make test-plugins-consistency"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-plugins files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/plugins-consistency.txt"
 
     ########## packages ########################################################
 

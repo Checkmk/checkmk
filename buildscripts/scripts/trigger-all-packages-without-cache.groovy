@@ -36,7 +36,7 @@ void main() {
         |===================================================
         """.stripMargin());
 
-    def success = false;
+    def success = true;
     for (edition in all_editions) {
         def stepName = "Trigger ${edition}";
         def run_condition = edition in editions_to_test;

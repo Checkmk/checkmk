@@ -68,7 +68,10 @@ def tls_connect(
 
     if error_1 in ("unexpected eof while reading", "no protocols available"):
         raise CMKTLSError(f"{error_0}:{error_1}")
-    if error_1 == "sslv3 alert handshake failure" and msg == "SSL alert number 40":
+    if (
+        error_1 in ("sslv3 alert handshake failure", "ssl/tls alert handshake failure")
+        and msg == "SSL alert number 40"
+    ):
         # I think this is due to a client cert required
         return
     if error_1 == "tlsv1 alert protocol version" and msg == "SSL alert number 70":

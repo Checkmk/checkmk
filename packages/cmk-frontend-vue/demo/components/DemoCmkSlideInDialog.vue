@@ -79,7 +79,8 @@ const catalog = ref<Catalog>({
             groups: []
           } as Dictionary
         } as TopicElement
-      ]
+      ],
+      locked: null
     } as Topic
   ]
 })

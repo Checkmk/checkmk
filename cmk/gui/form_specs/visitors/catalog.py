@@ -155,7 +155,14 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
 
             # Compute vue spec, either a list of TopicElements or a list of TopicGroup
             vue_topic = shared_type_defs.Topic(
-                name=topic_name, title=localize(topic.title), elements=[]
+                name=topic_name,
+                title=localize(topic.title),
+                elements=[],
+                locked=(
+                    None
+                    if topic.locked is None
+                    else shared_type_defs.Locked(message=topic.locked.message)
+                ),
             )
 
             # tmp_group_element / tmp_element is required since mypy can differentiate

@@ -73,7 +73,8 @@ const spec = ref<Catalog>({
           } as Integer,
           default_value: 0
         }
-      ]
+      ],
+      locked: null
     },
     {
       name: 'user_authentication',
@@ -150,7 +151,74 @@ const spec = ref<Catalog>({
             }
           ]
         }
-      ]
+      ],
+      locked: null
+    },
+    {
+      name: 'ungrouped_locked',
+      title: 'Ungrouped (locked)',
+      elements: [
+        {
+          type: 'topic_element',
+          name: 'simple_text',
+          required: true,
+          parameter_form: {
+            type: 'string',
+            title: 'Required Text Field',
+            help: 'This is an ungrouped text input field for basic testing - it is required',
+            label: 'Enter your name',
+            input_hint: 'John Doe',
+            field_size: 'MEDIUM',
+            autocompleter: null,
+            validators: [
+              {
+                type: 'length_in_range',
+                min_value: 3,
+                max_value: 50,
+                error_message: 'Name must be between 3 and 50 characters'
+              }
+            ]
+          } as FormString,
+          default_value: ''
+        }
+      ],
+      locked: { message: 'This topic is locked' }
+    },
+    {
+      name: 'grouped_locked',
+      title: 'Grouped (locked)',
+      elements: [
+        {
+          type: 'topic_group',
+          title: 'Basic Credentials',
+          elements: [
+            {
+              type: 'topic_element',
+              name: 'simple_text',
+              required: true,
+              parameter_form: {
+                type: 'string',
+                title: 'Required Text Field',
+                help: 'This is an ungrouped text input field for basic testing - it is required',
+                label: 'Enter your name',
+                input_hint: 'John Doe',
+                field_size: 'MEDIUM',
+                autocompleter: null,
+                validators: [
+                  {
+                    type: 'length_in_range',
+                    min_value: 3,
+                    max_value: 50,
+                    error_message: 'Name must be between 3 and 50 characters'
+                  }
+                ]
+              } as FormString,
+              default_value: ''
+            }
+          ]
+        }
+      ],
+      locked: { message: 'This topic is locked' }
     }
   ]
 })

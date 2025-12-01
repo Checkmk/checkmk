@@ -164,7 +164,8 @@ function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Cat
             parameter_form: getLongTitleInteger('some integer'),
             default_value: 123
           }
-        ]
+        ],
+        locked: null
       },
       {
         name: 'something_grouped',
@@ -190,7 +191,8 @@ function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Cat
               }
             ]
           }
-        ]
+        ],
+        locked: null
       }
     ],
     ...options

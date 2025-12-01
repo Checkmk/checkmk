@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -23,9 +24,15 @@ class TopicGroup:
 
 
 @dataclass(frozen=True, kw_only=True)
+class Locked:
+    message: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class Topic:
     title: Title
     elements: dict[str, TopicElement] | list[TopicGroup]
+    locked: Locked | None = None
 
     def __post_init__(self) -> None:
         if isinstance(self.elements, list):

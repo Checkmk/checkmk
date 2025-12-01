@@ -1090,9 +1090,21 @@
               }
             }
           ]
+        },
+        "locked": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" }
+              },
+              "required": ["message"]
+            },
+            { "type": "null" }
+          ]
         }
       },
-      "required": ["name", "title", "elements"]
+      "required": ["name", "title", "elements", "locked"]
     },
     "catalog": {
       "type": "object",

@@ -59,18 +59,23 @@ function isGroupedTopic(topic: Topic): boolean {
       :key="topic.name"
       :title="untranslated(topic.title)"
     >
-      <TopicGrouped
-        v-if="isGroupedTopic(topic)"
-        v-model:data="data[topic.name]!"
-        :elements="topic.elements as unknown as TopicGroup[]"
-        :backend-validation="elementValidation[topic.name]!"
-      />
-      <TopicUngrouped
-        v-else
-        v-model:data="data[topic.name]!"
-        :elements="topic.elements as unknown as TopicElement[]"
-        :backend-validation="elementValidation[topic.name]!"
-      />
+      <div v-if="topic.locked === null">
+        <TopicGrouped
+          v-if="isGroupedTopic(topic)"
+          v-model:data="data[topic.name]!"
+          :elements="topic.elements as unknown as TopicGroup[]"
+          :backend-validation="elementValidation[topic.name]!"
+        />
+        <TopicUngrouped
+          v-else
+          v-model:data="data[topic.name]!"
+          :elements="topic.elements as unknown as TopicElement[]"
+          :backend-validation="elementValidation[topic.name]!"
+        />
+      </div>
+      <div v-else>
+        {{ topic.locked.message }}
+      </div>
     </CmkCatalogPanel>
   </div>
 </template>

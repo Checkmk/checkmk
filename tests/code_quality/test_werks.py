@@ -9,6 +9,7 @@ import subprocess
 from collections import defaultdict
 from pathlib import Path
 
+import git
 import pytest
 
 from tests.testlib.repo import repo_path
@@ -22,6 +23,7 @@ CVSS_REGEX_V31 = re.compile(
 CVSS_REGEX_V40 = re.compile(
     r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH]"
 )
+JIRA_ISSUE_REGEX = re.compile(r"(CMK|SUP|KNW)-\d+")
 
 
 @pytest.fixture(scope="function", name="precompiled_werks")
@@ -144,6 +146,24 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
     )
 
 
+def test_werks_commit_message() -> None:
+    repo = git.Repo(repo_path())
+
+    if not _are_werks_files_added_in_the_commit(repo.head.commit):
+        pytest.skip("No werks files added in the latest commit")
+
+    commit_messsage = repo.head.commit.message
+
+    if isinstance(commit_messsage, bytes):
+        commit_messsage = commit_messsage.decode(repo.head.commit.encoding or "utf-8")
+
+    assert JIRA_ISSUE_REGEX.search(commit_messsage) is not None, (
+        "The latest commit message for a Werk does not contain a valid reference to "
+        "a Jira issue ID (e.g., CMK-12345, SUP-12345, KNW-12345). Commit message is:\n%s"
+        % commit_messsage
+    )
+
+
 def _assert_git_tags_available() -> None:
     # By the time writing, we had more than 700 tags in the git repo
     assert (
@@ -205,3 +225,12 @@ def _werks_in_git_tag(tag: str) -> list[str]:
         _werk_to_git_tag[werk_id].append(tag)
 
     return werks_in_tag
+
+
+def _are_werks_files_added_in_the_commit(commit: git.Commit) -> bool:
+    for parent in commit.parents if commit.parents else (git.NULL_TREE,):
+        for change in commit.diff(parent, R=True):  # type: ignore[arg-type]
+            if change.new_file and change.b_path and change.b_path.startswith(".werks/"):
+                return True
+
+    return False

@@ -185,6 +185,39 @@ py_test(
 )
 
 py_library(
+    name = "prism",
+    srcs = glob(["cmk/plugins/prism/**/*.py"]),
+    data = glob([
+        "cmk/plugins/prism/checkman/*",
+        "cmk/plugins/prism/libexec/*",
+    ]) + ["cmk/plugins/prism/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("requests"),
+    ],
+)
+
+py_test(
+    name = "prism-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/prism/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":prism",
+        requirement("pytest"),
+    ],
+)
+
+py_library(
     name = "randomds",
     srcs = glob(
         [

@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     TableRow,
 )
+from cmk.plugins.network.agent_based.lib import DETECT_FORTINET
 
 _interface_displayhints = {
     "ethernet": "eth",
@@ -584,6 +585,7 @@ snmp_section_inv_lldp_cache_fortinet = SNMPSection(
         fortinet_trunk_member,
     ],
     detect=all_of(
+        DETECT_FORTINET,
         exists(".1.0.8802.1.1.2.1.4.1.1.4.*"),
         exists(".1.3.6.1.4.1.12356.106.3.1.*"),
         exists(".1.3.6.1.2.1.31.1.1.1.1.*"),

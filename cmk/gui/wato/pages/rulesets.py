@@ -5,9 +5,6 @@
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
 # mypy: disable-error-code="unreachable"
-
-# mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
@@ -1639,6 +1636,8 @@ class ModeEditRuleset(WatoMode):
             case RenderMode.FRONTEND:
                 assert form_spec is not None
                 _show_rule_frontend(form_spec)
+            case _:
+                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
         # Comment
         table.cell(_("Description"), css=["description"])
@@ -2419,6 +2418,8 @@ class ABCEditRuleMode(WatoMode):
                     frontend_value,
                 ):
                     process_validation_errors(list(validation_errors))
+            case _:
+                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
         return _RulePropertiesAndConditions(
             self._get_rule_options_from_catalog_value(
@@ -2665,6 +2666,8 @@ class ABCEditRuleMode(WatoMode):
                     rule_spec_item=rule_spec_item,
                     debug=debug,
                 )
+            case _:
+                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
         forms.end()
         html.hidden_fields()

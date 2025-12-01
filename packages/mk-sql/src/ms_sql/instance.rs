@@ -166,9 +166,9 @@ impl SqlInstanceBuilder {
         self.port.as_ref().or(self.dynamic_port.as_ref())
     }
 
-    pub fn build(self) -> SqlInstance {
+    pub fn build(self, ep: &Endpoint) -> SqlInstance {
         let version_table = parse_version(&self.version);
-        let endpoint = self.endpoint.unwrap_or_default();
+        let endpoint = self.endpoint.unwrap_or(ep.clone());
         let name = self.name.unwrap_or_default();
         let tcp = is_use_tcp(&name, endpoint.auth(), endpoint.conn());
         SqlInstance {
@@ -2061,7 +2061,7 @@ async fn find_working_instances(
         .map(|b: SqlInstanceBuilder| {
             b.environment(environment)
                 .cache_dir(&ms_sql.config_cache_dir())
-                .build()
+                .build(&ms_sql.endpoint())
         })
         .collect::<Vec<SqlInstance>>())
 }
@@ -2589,13 +2589,17 @@ mod tests {
         generate_instance_entries, generate_signaling_blocks, SqlInstance, SqlInstanceBuilder,
     };
     use crate::args::Args;
+    use crate::config::ms_sql::{Authentication, Connection, Endpoint};
+    use crate::config::yaml::test_tools::create_yaml;
     use crate::setup::Env;
     use crate::types::Port;
     use std::path::Path;
 
     #[test]
     fn test_generate_state_entry() {
-        let i = SqlInstanceBuilder::new().name("test_name").build();
+        let i = SqlInstanceBuilder::new()
+            .name("test_name")
+            .build(&Endpoint::default());
 
         assert_eq!(
             i.generate_bad_state_entry('.', "bad"),
@@ -2617,7 +2621,7 @@ mod tests {
 
         builders
             .into_iter()
-            .map(|b: SqlInstanceBuilder| b.build())
+            .map(|b: SqlInstanceBuilder| b.build(&Endpoint::default()))
             .collect::<Vec<SqlInstance>>()
     }
     #[test]
@@ -2691,13 +2695,15 @@ mssql:
 
     #[test]
     fn test_instance_header_footer() {
-        let normal = SqlInstanceBuilder::new().name("test_name").build();
+        let normal = SqlInstanceBuilder::new()
+            .name("test_name")
+            .build(&Endpoint::default());
         assert_eq!(normal.generate_header(), "");
         assert_eq!(normal.generate_footer(), "");
         let piggyback = SqlInstanceBuilder::new()
             .name("test_name")
             .piggyback(Some("Y".to_string().into()))
-            .build();
+            .build(&Endpoint::default());
         assert_eq!(piggyback.generate_header(), "<<<<Y>>>>\n");
         assert_eq!(piggyback.generate_footer(), "<<<<>>>>\n");
     }
@@ -2716,6 +2722,17 @@ mssql:
         assert!(calc_unused("500 KB", "", "500 KB").is_none());
         assert!(calc_unused("500 KB", "A", "500 KB").is_none());
     }
+    const AUTHENTICATION_MINI: &str = r#"
+authentication:
+  username: "foo"
+  password: "x"
+  type: sql_server
+"#;
+
+    const CONNECTION_MINI: &str = r#"
+connection:
+  hostname: "alice"
+"#;
 
     #[test]
     fn test_sql_builder() {
@@ -2737,8 +2754,9 @@ mssql:
             .piggyback(Some("piggYback".to_string().into()));
         assert_eq!(standard.get_port(), Port(2u16));
         let cluster = standard.clone().cluster(Some("cluster".to_string().into()));
+        let parent_ep = standard.clone();
 
-        let s = standard.build();
+        let s = standard.build(&Endpoint::default());
         assert_eq!(s.id.to_string(), "id");
         assert_eq!(s.name.to_string(), "NAME");
         assert_eq!(s.alias, Some("alias".to_string().into()));
@@ -2760,12 +2778,22 @@ mssql:
             "MSSQL_NAME.config.version.edition.\n"
         );
 
-        let c = cluster.build();
+        let c = cluster.build(&Endpoint::default());
         assert_eq!(c.cluster, Some("cluster".to_string().into()));
         assert_eq!(c.legacy_name(), "cluster/NAME");
         assert_eq!(
             c.generate_leading_entry('.'),
             "MSSQL_NAME.config.version.edition.cluster\n"
         );
+        assert_eq!(c.endpoint.conn().hostname().to_string(), "localhost");
+
+        let a = Authentication::from_yaml(&create_yaml(AUTHENTICATION_MINI)).unwrap();
+        let c = Connection::from_yaml(&create_yaml(CONNECTION_MINI), Some(&a))
+            .unwrap()
+            .unwrap();
+        let ep = Endpoint::new(&a, &c);
+        let p = parent_ep.build(&ep);
+        assert_eq!(p.endpoint.conn().hostname().to_string(), "alice");
+        assert_eq!(p.endpoint.auth().username().to_string(), "foo");
     }
 }

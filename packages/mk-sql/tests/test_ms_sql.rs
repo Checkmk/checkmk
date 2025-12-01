@@ -149,7 +149,7 @@ async fn test_obtain_all_instances_from_registry_local() {
     let builders = instance::obtain_instance_builders(&endpoint, &[], &Discovery::default())
         .await
         .unwrap();
-    let all: Vec<SqlInstance> = to_instances(builders)
+    let all: Vec<SqlInstance> = to_instances(builders, &endpoint)
         .into_iter()
         .filter(|i| expected_instances().contains(&i.name))
         .collect::<Vec<_>>();
@@ -175,7 +175,7 @@ async fn test_obtain_all_instances_from_registry_local_include() {
     let builders = instance::obtain_instance_builders(&endpoint, &[], &discovery)
         .await
         .unwrap();
-    let all: Vec<SqlInstance> = to_instances(builders);
+    let all: Vec<SqlInstance> = to_instances(builders, &endpoint);
     let names: Vec<InstanceName> = all.into_iter().map(|i| i.name).collect();
     assert_eq!(
         names,
@@ -200,7 +200,7 @@ async fn test_obtain_all_instances_from_registry_local_exclude() {
     let builders = instance::obtain_instance_builders(&endpoint, &[], &discovery)
         .await
         .unwrap();
-    let all: Vec<SqlInstance> = to_instances(builders);
+    let all: Vec<SqlInstance> = to_instances(builders, &endpoint);
     let names: Vec<InstanceName> = all.into_iter().map(|i| i.name).collect();
     assert_eq!(
         names,
@@ -276,21 +276,21 @@ async fn test_remote_connection() {
     }
 }
 
-fn to_instances(builders: Vec<SqlInstanceBuilder>) -> Vec<SqlInstance> {
+fn to_instances(builders: Vec<SqlInstanceBuilder>, ep: &Endpoint) -> Vec<SqlInstance> {
     builders
         .into_iter()
-        .map(|i| i.build())
+        .map(|i| i.build(ep))
         .collect::<Vec<SqlInstance>>()
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders =
-            instance::obtain_instance_builders(&endpoint.make_ep(), &[], &Discovery::default())
-                .await
-                .unwrap();
-        let all = to_instances(builders);
+        let ep = endpoint.make_ep();
+        let builders = instance::obtain_instance_builders(&ep, &[], &Discovery::default())
+            .await
+            .unwrap();
+        let all = to_instances(builders, &ep);
         assert!(all.iter().all(is_instance_good));
         assert_eq!(all.len(), expected_instances().len());
 
@@ -313,11 +313,11 @@ async fn test_find_all_instances_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders =
-            instance::obtain_instance_builders(&endpoint.make_ep(), &[], &Discovery::default())
-                .await
-                .unwrap();
-        let is = to_instances(builders);
+        let ep = endpoint.make_ep();
+        let builders = instance::obtain_instance_builders(&ep, &[], &Discovery::default())
+            .await
+            .unwrap();
+        let is = to_instances(builders, &ep);
 
         let cfg = Config::from_string(&create_remote_config(endpoint))
             .unwrap()
@@ -773,11 +773,11 @@ async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders =
-            instance::obtain_instance_builders(&endpoint.make_ep(), &[], &Discovery::default())
-                .await
-                .unwrap();
-        let is = to_instances(builders);
+        let ep = endpoint.make_ep();
+        let builders = instance::obtain_instance_builders(&ep, &[], &Discovery::default())
+            .await
+            .unwrap();
+        let is = to_instances(builders, &ep);
         let ms_sql = Config::from_string(
             r"---
 mssql:
@@ -984,7 +984,10 @@ async fn test_find_no_detect_two_custom_instances_local() {
     ))
     .unwrap()
     .unwrap();
-    let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
+    let instances = to_instances(
+        instance::find_all_instance_builders(&mssql).await.unwrap(),
+        &mssql.endpoint(),
+    );
     assert_eq!(instances.len(), 1);
     assert_eq!(instances[0].name, main_instance_name());
     assert!(instances[0].edition.to_string().contains(" Edition"));
@@ -1033,7 +1036,10 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         ))
         .unwrap()
         .unwrap();
-        let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
+        let instances = to_instances(
+            instance::find_all_instance_builders(&mssql).await.unwrap(),
+            &mssql.endpoint(),
+        );
         assert_eq!(instances.len(), 1);
         assert_eq!(instances[0].name, main_instance_name());
         assert!(instances[0].edition.to_string().contains(" Edition"));

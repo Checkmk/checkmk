@@ -46,6 +46,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
         + (mount_reference_repo ? ["${mount_reference_repo_dir}"] : [])
         + "--cpus=8"
+        + "--memory=24g"
     ).join(" ");
 
     println("inside_container(image=${image} docker_args: ${run_args_str})");

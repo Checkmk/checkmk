@@ -647,6 +647,182 @@ def test_perform_discovery_single_update(
     ] == [f"Saved check configuration of host '{sample_host_name}' with 2 services"]
 
 
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_perform_discovery_single_update__ignore(
+    mocker: MockerFixture,
+    sample_host_name: HostName,
+    sample_host: Host,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    mock_save_function = mocker.patch(
+        "cmk.gui.watolib.services.Discovery._save_host_service_enable_disable_rules",
+        return_value=None,
+    )
+    mocker.patch(
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
+            check_table=[
+                CheckPreviewEntry(
+                    check_source="unchanged",
+                    check_plugin_name="checkmk_agent",
+                    ruleset_name="agent_update",
+                    discovery_ruleset_name=None,
+                    item=None,
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
+                    effective_parameters={
+                        "agent_version": ("ignore", {}),
+                        "agent_version_missmatch": 1,
+                        "restricted_address_mismatch": 1,
+                        "legacy_pull_mode": 1,
+                    },
+                    description="Check_MK Agent",
+                    state=1,
+                    output=(
+                        "Version: 2022.05.23, OS: linux, TLS is not activated on monitored host"
+                        " (see details)(!), Agent plug-ins: 0, Local checks: 0\nVersion:"
+                        " 2022.05.23\nOS: linux\nThe hosts agent supports TLS, but it is not"
+                        " being used.\nWe strongly recommend to enable TLS by registering the host"
+                        " to the site (using the `cmk-agent-ctl register` command on the monitored"
+                        " host).\nNOTE: A registered host will refuse all unencrypted connections."
+                        " If the host is monitored by multiple sites, you must register to all of"
+                        " them. This can be problematic if you are monitoring the same host from a"
+                        " site running Checkmk version 2.0 or earlier.\nIf you can not register"
+                        ' the host, you can configure missing TLS to be OK in the setting "State'
+                        ' in case of available but not enabled TLS" of the ruleset "Checkmk Agent'
+                        ' installation auditing".(!)\nAgent plug-ins: 0\nLocal checks: 0'
+                    ),
+                    metrics=[],
+                    old_labels={},
+                    new_labels={},
+                    found_on_nodes=[HostName("TODAY")],
+                ),
+                CheckPreviewEntry(
+                    check_source="unchanged",
+                    check_plugin_name="mssql_instance",
+                    ruleset_name="mssql_instance",
+                    discovery_ruleset_name=None,
+                    item="S2DT",
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
+                    effective_parameters={},
+                    description="MSSQL S2DT Instance",
+                    state=0,
+                    output="nobody cares",
+                    metrics=[],
+                    old_labels={},
+                    new_labels={},
+                    found_on_nodes=[HostName("host23")],
+                ),
+            ],
+            nodes_check_table={},
+            host_labels={
+                "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+            },
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={
+                HostName("host23"): [],
+            },
+        ),
+    )
+
+    previous_discovery_result = DiscoveryResult(
+        job_status={
+            "state": "finished",
+            "started": 1764593093.764405,
+            "pid": 604583,
+            "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+            "is_active": False,
+            "duration": 0.36932802200317383,
+            "title": "Refresh",
+            "stoppable": True,
+            "deletable": True,
+            "user": "cmkadmin",
+            "estimated_duration": 0.0,
+            "ppid": 604485,
+            "logfile_path": "~/var/log/web.log",
+            "acknowledged_by": None,
+            "lock_wato": False,
+            "host_name": sample_host_name,
+        },
+        check_table_created=1764596025,
+        check_table=[
+            CheckPreviewEntry(
+                check_source="unchanged",
+                check_plugin_name="mssql_instance",
+                ruleset_name="mssql_instance",
+                discovery_ruleset_name=None,
+                item="S2DT",
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="MSSQL S2DT Instance",
+                state=0,
+                output="nobody cares",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[HostName("host23")],
+            ),
+        ],
+        nodes_check_table={
+            HostName("host22"): [],
+            HostName("host23"): [
+                CheckPreviewEntry(
+                    check_source="clustered_old",
+                    check_plugin_name="mssql_instance",
+                    ruleset_name="mssql_instance",
+                    discovery_ruleset_name=None,
+                    item="S2DT",
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
+                    effective_parameters={},
+                    description="MSSQL S2DT Instance",
+                    state=0,
+                    output="nobody cares",
+                    metrics=[],
+                    old_labels={},
+                    new_labels={},
+                    found_on_nodes=[HostName("host23")],
+                )
+            ],
+        },
+        host_labels={},
+        new_labels={},
+        vanished_labels={},
+        changed_labels={},
+        labels_by_host={HostName("host22"): [], HostName("host23"): [], sample_host_name: []},
+        sources={
+            "agent": (0, "[agent] Success"),
+            "piggyback": (0, "[piggyback] Success (but no data found for this host)"),
+        },
+    )
+
+    perform_service_discovery(
+        action=DiscoveryAction.SINGLE_UPDATE,
+        discovery_result=previous_discovery_result,
+        selected_services=(("mssql_instance", "S2DT"),),
+        update_source="unchanged",
+        update_target="ignored",
+        host=sample_host,
+        raise_errors=True,
+        automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+    )
+    mock_save_function.assert_called_once()
+    remove_disabled_rule, add_disabled_rule, *_ = mock_save_function.call_args_list[0][0]
+    assert len(remove_disabled_rule) == 0
+    assert add_disabled_rule == {"MSSQL S2DT Instance"}
+
+
 def test_perform_discovery_action_update_services(
     mocker: MockerFixture,
     sample_host_name: HostName,

@@ -2404,6 +2404,10 @@ class ABCEditRuleMode(WatoMode):
     ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
+            case RenderMode.BACKEND:
+                value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
+                self._ruleset.rulespec.valuespec.validate_value(value, "ve")
+                self._rule.value = value
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
                 frontend_value = read_data_from_frontend("_vue_edit_rule_value")
@@ -2415,10 +2419,6 @@ class ABCEditRuleMode(WatoMode):
                     frontend_value,
                 ):
                     process_validation_errors(list(validation_errors))
-            case RenderMode.BACKEND:
-                value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
-                self._ruleset.rulespec.valuespec.validate_value(value, "ve")
-                self._rule.value = value
 
         return _RulePropertiesAndConditions(
             self._get_rule_options_from_catalog_value(

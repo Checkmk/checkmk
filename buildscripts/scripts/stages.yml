@@ -121,6 +121,9 @@ VARIABLES:
     - NAME: CHANGED_SEMGREP_RULE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/semgrep/rules' || true"
 
+    - NAME: CHANGED_JS_DEPENDENCIES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^package.json\\|^pnpm-' || true"
+
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
@@ -691,7 +694,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-update-agent.txt"
 
     - NAME: "Package cmk-frontend-vue"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES
       DIR: "packages/cmk-frontend-vue"
       COMMAND: "./run --build -B --build-dev --tests --tsc --lint &> ${RESULTS}/cmk-frontend-vue.txt"
       BAZEL_LOCKS_AMOUNT: 1
@@ -746,7 +749,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
 
     - NAME: "Package cmk-frontend"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES,CHANGED_JS_DEPENDENCIES
       DIR: "packages/cmk-frontend"
       COMMAND: "./run --build --tests --tsc --eslint &> ${RESULTS}/cmk-frontend.txt"
       BAZEL_LOCKS_AMOUNT: 1

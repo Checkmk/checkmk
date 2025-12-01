@@ -27,9 +27,11 @@ import CmkSwitch from '@/components/CmkSwitch.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
+import FormMetricBackendCustomQuery, {
+  type Query
+} from '@/graph-designer/FormMetricBackendCustomQuery.vue'
 import FixedMetricRowRenderer from '@/graph-designer/private/FixedMetricRowRenderer.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/private/FormMetricCells.vue'
-import FormQuery, { type Query } from '@/graph-designer/private/FormQuery.vue'
 import FormTitle from '@/graph-designer/private/FormTitle.vue'
 import GraphOptionsEditor from '@/graph-designer/private/GraphOptionsEditor.vue'
 import MetricRowRenderer from '@/graph-designer/private/MetricRowRenderer.vue'
@@ -887,7 +889,7 @@ const graphDesignerContentAsJson = computed(() => {
         <td>
           <div v-if="graphLine.type === 'query'">
             {{ _t('Query') }}:
-            <FormQuery
+            <FormMetricBackendCustomQuery
               v-model:metric-name="graphLine.metric_name"
               v-model:resource-attributes="graphLine.resource_attributes"
               v-model:scope-attributes="graphLine.scope_attributes"
@@ -988,7 +990,7 @@ const graphDesignerContentAsJson = computed(() => {
   <TopicsRenderer :topics="topics">
     <template #query>
       <div>
-        <FormQuery
+        <FormMetricBackendCustomQuery
           v-model:metric-name="dataQuery.metricName"
           v-model:resource-attributes="dataQuery.resourceAttributes"
           v-model:scope-attributes="dataQuery.scopeAttributes"

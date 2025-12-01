@@ -225,7 +225,9 @@ class ProblemGraphContent(_BaseGraphContent):
         return cls(
             type="problem_graph",
             timerange=timerange_from_internal(config["timerange"]),
-            graph_render_options=GraphRenderOptions.from_internal(config["graph_render_options"]),
+            graph_render_options=GraphRenderOptions.from_internal(
+                config.get("graph_render_options", {})
+            ),
         )
 
     @override
@@ -263,7 +265,9 @@ class CombinedGraphContent(_BaseGraphContent):
         return cls(
             type="combined_graph",
             timerange=timerange_from_internal(config["timerange"]),
-            graph_render_options=GraphRenderOptions.from_internal(config["graph_render_options"]),
+            graph_render_options=GraphRenderOptions.from_internal(
+                config.get("graph_render_options", {})
+            ),
             graph_template=config["graph_template"],
             presentation=config["presentation"],
         )
@@ -301,7 +305,9 @@ class SingleTimeseriesContent(_BaseGraphContent):
         return cls(
             type="single_timeseries",
             timerange=timerange_from_internal(config["timerange"]),
-            graph_render_options=GraphRenderOptions.from_internal(config["graph_render_options"]),
+            graph_render_options=GraphRenderOptions.from_internal(
+                config.get("graph_render_options", {})
+            ),
             metric=config["metric"],
             color=config["color"],
         )
@@ -345,7 +351,9 @@ class CustomGraphContent(_BaseGraphContent):
         return cls(
             type="custom_graph",
             timerange=timerange_from_internal(config["timerange"]),
-            graph_render_options=GraphRenderOptions.from_internal(config["graph_render_options"]),
+            graph_render_options=GraphRenderOptions.from_internal(
+                config.get("graph_render_options", {})
+            ),
             custom_graph=config["custom_graph"],
         )
 
@@ -385,7 +393,9 @@ class PerformanceGraphContent(_BaseGraphContent):
         return cls(
             type="performance_graph",
             timerange=timerange_from_internal(config["timerange"]),
-            graph_render_options=GraphRenderOptions.from_internal(config["graph_render_options"]),
+            graph_render_options=GraphRenderOptions.from_internal(
+                config.get("graph_render_options", {})
+            ),
             source=config["source"],
         )
 

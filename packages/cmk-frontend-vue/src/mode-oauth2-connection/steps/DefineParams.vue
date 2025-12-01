@@ -42,21 +42,21 @@ const suggestions: Suggestions = {
 
 const model = defineModel<MsGraphApi>({ required: true })
 
-const description = ref<string>(model.value.description ?? '')
+const title = ref<string>(model.value.title ?? '')
 const authority = ref<'global_' | 'china'>(model.value.authority ?? 'global_')
 const tenantId = ref<string>(model.value.tenant_id ?? '')
 const clientId = ref<string>(model.value.client_id ?? '')
 const clientSecret = ref<string>(model.value.client_secret ?? '')
 
 async function validate(): Promise<boolean> {
-  if (!description.value || !tenantId.value || !clientId.value || !clientSecret.value) {
+  if (!title.value || !tenantId.value || !clientId.value || !clientSecret.value) {
     return false
   }
 
   model.value = {
     type: 'ms_graph_api',
     id: uuid(),
-    description: description.value,
+    title: title.value,
     authority: authority.value,
     tenant_id: tenantId.value,
     client_id: clientId.value,
@@ -79,7 +79,7 @@ async function validate(): Promise<boolean> {
         <CmkLabel class="mode-oauth2-connection-define-params__label" for="description">{{
           _t('Description:')
         }}</CmkLabel>
-        <CmkInput id="description" v-model="description" type="text" field-size="MEDIUM" />
+        <CmkInput id="title" v-model="title" type="text" field-size="MEDIUM" />
       </div>
       <div class="mode-oauth2-connection-define-params__form-row">
         <CmkLabel class="mode-oauth2-connection-define-params__label" for="authority">{{

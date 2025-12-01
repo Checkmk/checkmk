@@ -32,8 +32,8 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         if not (ident := data.id):
             return {"status": "error", "message": f"ID missing in request data: {data}"}
 
-        if not (description := data.description):
-            return {"status": "error", "message": f"Description missing in request data: {data}"}
+        if not (title := data.title):
+            return {"status": "error", "message": f"Title missing in request data: {data}"}
 
         if not (client_id := data.client_id):
             return {"status": "error", "message": f"Client ID missing in request data: {data}"}
@@ -94,7 +94,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
 
         self._save_token_to_passwordstore(
             ident,
-            description,
+            title,
             access_token,
             refresh_token,
             client_secret,
@@ -102,7 +102,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
 
         self._save_reference_to_config_file(
             ident,
-            description,
+            title,
             client_id,
             tenant_id,
         )
@@ -150,14 +150,14 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
     def _save_reference_to_config_file(
         self,
         ident: str,
-        description: str,
+        title: str,
         client_id: str,
         tenant_id: str,
     ) -> None:
         save_oauth_connection(
             ident=ident,
             details=OAuthConnection(
-                description=description,
+                title=title,
                 access_token_reference=f"{ident}_access_token",
                 client_id=client_id,
                 client_secret_reference=f"{ident}_client_secret",

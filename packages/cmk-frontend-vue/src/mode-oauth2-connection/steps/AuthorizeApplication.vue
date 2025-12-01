@@ -100,7 +100,7 @@ async function requestAndSaveAccessToken(): Promise<boolean> {
       id: model.value.id,
       redirect_uri: model.value.redirect_uri,
       tenant_id: model.value.tenant_id as string,
-      description: model.value.description as string,
+      title: model.value.title as string,
       authority: model.value.authority as string,
       code: model.value.code as string,
       client_id: model.value.client_id as string,

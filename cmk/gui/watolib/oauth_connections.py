@@ -14,7 +14,7 @@ def register(config_file_registry: ConfigFileRegistry) -> None:
 
 
 class OAuthConnection(TypedDict):
-    description: str
+    title: str
     client_secret_reference: str
     access_token_reference: str
     refresh_token_reference: str

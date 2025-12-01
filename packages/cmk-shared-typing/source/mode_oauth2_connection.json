@@ -51,7 +51,7 @@
         "type": { "enum": ["ms_graph_api"] },
         "id": { "type": "string" },
         "redirect_uri": { "type": "string" },
-        "description": { "type": "string" },
+        "title": { "type": "string" },
         "access_token": { "type": "string" },
         "refresh_token": { "type": "string" }
       },

@@ -13,7 +13,7 @@ export interface MsGraphApiAccessTokenRequestObject {
   client_id: string
   client_secret: string
   redirect_uri: string
-  description: string
+  title: string
   authority: string
 }
 

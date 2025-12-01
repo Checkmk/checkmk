@@ -8,7 +8,8 @@
       "anyOf": [{ "$ref": "#/$templates/explain_this_issue" }]
     },
     "teleport": { "type": "string" },
-    "user_id": { "type": "string" }
+    "user_id": { "type": "string" },
+    "hide_button": { "type": "boolean" }
   },
   "required": ["button_text", "template", "user_id"],
   "$defs": {

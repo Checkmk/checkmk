@@ -4,16 +4,21 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { type Ref, computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import useTimer from '@/lib/useTimer.ts'
 
+import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
+const cmkToken = inject(cmkTokenKey) as string | undefined
+const dataEndpointUrl: Ref<string> = computed(() => {
+  return cmkToken ? 'widget_graph_token_auth.py' : 'widget_graph.py'
+})
 
 // @ts-expect-error comes from different javascript file
 const cmkToolkit = window['cmk']
@@ -22,6 +27,12 @@ const contentDiv = ref<HTMLDivElement | null>(null)
 const parentDiv = computed(() => contentDiv.value?.parentElement || null)
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
+  if (cmkToken !== undefined) {
+    return {
+      widget_id: props.widget_id,
+      'cmk-token': cmkToken
+    }
+  }
   return {
     widget_id: props.widget_id,
     content: JSON.stringify(props.content),
@@ -43,7 +54,7 @@ const handleRefreshData = (widgetId: string, body: string) => {
 }
 
 const updateGraph = () => {
-  cmkToolkit.ajax.call_ajax('widget_graph.py', {
+  cmkToolkit.ajax.call_ajax(dataEndpointUrl.value, {
     post_data: new URLSearchParams({ ...httpVars.value, ...sizeVars.value }).toString(),
     method: 'POST',
     response_handler: handleRefreshData,

@@ -84,9 +84,6 @@ body[data-theme='modern-dark'] {
   .cmk-icon__icon--select-arrow {
     content: url('~cmk-frontend/themes/modern-dark/images/select_arrow.png');
   }
-  .cmk-icon__icon--dashboard-grid {
-    content: url('~cmk-frontend/themes/modern-dark/images/dashboard_grid.png');
-  }
   .cmk-icon__icon--search {
     content: url('~cmk-frontend/themes/modern-dark/images/icon_search.svg');
   }
@@ -95,9 +92,6 @@ body[data-theme='modern-dark'] {
 body[data-theme='facelift'] {
   .cmk-icon__icon--select-arrow {
     content: url('~cmk-frontend/themes/facelift/images/select_arrow.png');
-  }
-  .cmk-icon__icon--dashboard-grid {
-    content: url('~cmk-frontend/themes/facelift/images/icon_dashboard_grid.svg');
   }
   .cmk-icon__icon--search {
     content: url('~cmk-frontend/themes/facelift/images/icon_search.png');
@@ -657,7 +651,8 @@ $unthemed-icons: (
   'static-checks': 'icon_static_checks.svg',
   'inventory-failed': 'icon_inventory_failed.png',
   'alert-warn': 'icon_alert_warn.png',
-  'inline-error': 'icon_inline_error.svg'
+  'inline-error': 'icon_inline_error.svg',
+  'dashboard-grid': 'icon_dashboard_grid.svg'
 );
 $themed-icons: (
   'info-circle': 'icon_info_circle.svg',

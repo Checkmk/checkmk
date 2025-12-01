@@ -2057,6 +2057,7 @@ def _parse_explicit_hosts_or_services_for_vue(
 @dataclass(frozen=True)
 class _RulePropertiesAndConditions:
     options: RuleOptions
+    value: object
     conditions: RuleConditions
 
 
@@ -2066,6 +2067,7 @@ class ABCEditRuleMode(WatoMode):
 
     def __init__(self) -> None:
         self._do_validate_on_render = False
+        self._failed_frontend_data: RawFrontendData | None = None
         super().__init__()
 
     @staticmethod
@@ -2230,7 +2232,7 @@ class ABCEditRuleMode(WatoMode):
             else None
         )
         tree = folder_tree()
-        rule_values = self._set_or_get_rule_values_from_vars(
+        rule_values = self._validate_and_get_rule_values_from_vars(
             rule_identifier=RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name),
             is_locked=is_locked,
             tree=tree,
@@ -2243,6 +2245,7 @@ class ABCEditRuleMode(WatoMode):
         )
 
         self._rule.rule_options = rule_values.options
+        self._rule.value = rule_values.value
 
         if is_locked and self._rule.conditions != rule_values.conditions:
             flash(
@@ -2313,10 +2316,10 @@ class ABCEditRuleMode(WatoMode):
             disabled=raw_properties["disabled"],
         )
 
-    def _get_rule_value_from_catalog_value(self, raw_value: RawFrontendData) -> object:
+    def _extract_rule_value_from_catalog_value(self, raw_value: RawFrontendData) -> RawFrontendData:
         if not isinstance(raw_value.value, dict):
             raise TypeError(raw_value.value)
-        return raw_value.value["value"]["value"]
+        return RawFrontendData(raw_value.value["value"]["value"])
 
     def _get_rule_conditions_from_catalog_value(self, raw_value: object) -> RuleConditions:
         if not isinstance(raw_value, dict):
@@ -2392,7 +2395,7 @@ class ABCEditRuleMode(WatoMode):
             raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
-    def _set_or_get_rule_values_from_vars(
+    def _validate_and_get_rule_values_from_vars(
         self,
         *,
         rule_identifier: RuleIdentifier,
@@ -2402,22 +2405,27 @@ class ABCEditRuleMode(WatoMode):
         rule_spec_item: RuleSpecItem | None,
     ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
+        value: object | RawFrontendData
         match render_mode:
             case RenderMode.BACKEND:
                 value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
                 self._ruleset.rulespec.valuespec.validate_value(value, "ve")
-                self._rule.value = value
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
-                frontend_value = read_data_from_frontend("_vue_edit_rule_value")
-                self._rule.value = self._get_rule_value_from_catalog_value(frontend_value)
+                catalog_value = read_data_from_frontend("_vue_edit_rule_value")
                 if validation_errors := validate_value_from_frontend(
                     create_rule_value_catalog(
                         title=None, value_parameter_form=registered_form_spec
                     ),
-                    frontend_value,
+                    catalog_value,
                 ):
+                    # Persist data to re-populate the form on early out
+                    self._failed_frontend_data = catalog_value
                     process_validation_errors(list(validation_errors))
+                value = get_visitor(
+                    registered_form_spec,
+                    VisitorOptions(migrate_values=False, mask_values=False),
+                ).to_disk(self._extract_rule_value_from_catalog_value(catalog_value))
             case _:
                 raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
@@ -2430,6 +2438,7 @@ class ABCEditRuleMode(WatoMode):
                     "_vue_edit_rule_properties",
                 )
             ),
+            value,
             self._get_rule_conditions_from_catalog_value(
                 parse_data_from_field_id(
                     create_rule_conditions_catalog(
@@ -2571,7 +2580,9 @@ class ABCEditRuleMode(WatoMode):
             render_form_spec(
                 create_rule_value_catalog(title=title, value_parameter_form=value_parameter_form),
                 "_vue_edit_rule_value",
-                self._get_rule_value_from_rule(),
+                self._get_rule_value_from_rule()
+                if self._failed_frontend_data is None
+                else self._failed_frontend_data,
                 self._should_validate_on_render(),
             )
         except Exception as e:

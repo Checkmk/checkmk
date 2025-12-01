@@ -91,14 +91,15 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 + (privileged ? ["-v /var/run/docker.sock:/var/run/docker.sock"] : [])
                 + ["-v \"${container_shadow_workspace}/home:${env.HOME}\""]
                 // use different size locally vs in CI, 16GB locally is to much.
-                // As CMK distro packages are built in k8s, no more than 16GB shall be required in CI
-                + "--tmpfs ${env.HOME}/.cache:exec,size=16g,mode=777"
+                // As CMK distro packages are built in k8s, no more than 24GB shall be required in CI
+                // 16GB is not enough to build "cmk-plugins" or "cmk-frontend-vue"
+                + "--tmpfs ${env.HOME}/.cache:exec,size=24g,mode=777"
                 + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
                 + (mount_host_user_files ? ["-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro"] : [])
                 + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
                 + ["-v \"${container_shadow_workspace}/checkout_cache:${checkout_dir}/.cache\""]
                 + "--cpus=8"
-                + "--memory=24g"
+                + "--memory=32g"
             ).join(" ");
             /// We have to make sure both, the source directory and (if applicable) the target
             /// directory inside an already mounted parent directory (here: /home/<USER>)

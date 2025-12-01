@@ -47,8 +47,8 @@ function setSelectedOption(value: string) {
   margin-bottom: 8px;
   padding: 5px;
   border-radius: 5px;
-  border: 2px solid var(--default-border-color);
-  background-color: transparent;
+  border: 1px solid var(--toggle-button-group-border-color);
+  background-color: var(--toggle-button-group-inactive-bg-color);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -56,7 +56,8 @@ function setSelectedOption(value: string) {
   height: auto;
   min-width: 150px;
   border: none;
-  background-color: transparent;
+  background-color: var(--toggle-button-group-inactive-bg-color);
+  color: var(--toggle-button-group-inactive-text-color);
   margin: 0 2px;
   padding: 3px;
 }
@@ -67,8 +68,9 @@ function setSelectedOption(value: string) {
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-button.selected {
-  border: 1px solid var(--default-form-element-border-color);
-  background-color: var(--default-form-element-bg-color);
+.selected {
+  border: 1px solid var(--toggle-button-group-border-color);
+  background-color: var(--toggle-button-group-active-bg-color);
+  color: var(--toggle-button-group-active-text-color);
 }
 </style>

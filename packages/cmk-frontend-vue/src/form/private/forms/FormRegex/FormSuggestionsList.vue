@@ -318,7 +318,7 @@ defineExpose({
 </template>
 <style scoped>
 .form-suggestions-list__highlight {
-  color: var(--perfometer-bg-color);
+  color: var(--color-white-100);
   font-weight: var(--font-weight-bold);
 }
 
@@ -344,12 +344,12 @@ defineExpose({
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.selected {
-      color: var(--perfometer-bg-color);
+      color: var(--color-white-100);
       background-color: var(--color-white-10);
     }
 
     &:hover {
-      color: var(--perfometer-bg-color);
+      color: var(--color-white-100);
     }
   }
 }

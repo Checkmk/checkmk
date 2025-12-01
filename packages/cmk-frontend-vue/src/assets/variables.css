@@ -15,7 +15,6 @@
   --white: rgb(255 255 255);
   --white-dimmed: rgb(255 255 255 / 50%);
   --black: rgb(0 0 0);
-  --grey-4: rgb(51 51 51);
   --grey-4-dimmed: rgb(51 51 51 / 80%);
   --error-msg-bg-color: rgb(200 50 50 / 15%);
   --form-readonly-error-bg-color: rgb(252 85 85);
@@ -84,25 +83,23 @@
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
     /* Fonts */
-    --font-color: var(--grey-4);
+    --font-color: var(--color-conference-grey-100);
     --font-color-dimmed: var(--grey-4-dimmed);
     --font-color-light-bg: var(--font-color);
+    --font-perfometer-color: var(--color-conference-grey-100);
 
     /* Colors */
     --default-nav-bg-color: var(--ux-theme-0);
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
-    --default-bg-color: var(--ux-theme-0);
-    --default-table-th-color: rgb(232 232 238);
+    --default-bg-color: var(--ux-theme-2);
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-bg-color-disabled: var(--ux-theme-6);
-    --default-form-element-border-color: rgb(183 180 180);
-    --default-form-element-placeholder-color: rgb(30 38 46 / 50%);
+    --default-form-element-border-color: var(--color-mid-grey-60);
+    --default-form-element-placeholder-color: var(--color-conference-grey-50);
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
-    --default-button-emphasis-color: rgb(13 141 91);
     --default-border-color-green: rgb(21 209 160);
-    --default-tooltip-icon-color: rgb(233 233 233);
     --default-tooltip-background-color: rgb(233 233 233);
     --default-tooltip-text-color: rgb(17 24 29);
     --custom-scroll-bar-thumb-border-color: rgb(234 234 234);
@@ -110,7 +107,7 @@
     --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
     --default-component-bg-color: rgb(240 240 240);
     --help-text-bg-color: var(--ux-theme-5);
-    --help-text-font-color: var(--grey-4);
+    --help-text-font-color: var(--color-conference-grey-100);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-daylight-grey-50);
@@ -118,23 +115,31 @@
     --wizard-progress-bar-background-badge-color: var(--color-daylight-grey-60);
     --headline-color: var(--ux-theme-4);
     --db-content-bg-color: var(--ux-theme-1);
-    --even-tr-bg-color: var(--ux-theme-2);
+    --even-tr-bg-color: var(--ux-theme-3);
     --odd-tr-bg-color: var(--ux-theme-4);
-    --perfometer-bg-color: var(--color-white-100);
     --inline-help-text-bg: rgb(223 239 251);
     --inline-help-icon-bg: rgb(12 129 238);
+    --slide-in-left-part: var(--color-daylight-grey-30);
+
+    /* Cmk Toggle Button Group */
+    --toggle-button-group-active-bg-color: var(--ux-theme-10);
+    --toggle-button-group-inactive-bg-color: var(--ux-theme-6);
+    --toggle-button-group-border-color: var(--color-mid-grey-50);
+    --toggle-button-group-active-text-color: var(--color-white-100);
+    --toggle-button-group-inactive-text-color: var(--color-conference-grey-100);
+
+    /* Cmk Inline Validation */
     --inline-error-border-color: var(--color-light-red-50);
     --inline-error-text-color: var(--color-light-red-50);
-    --slide-in-left-part: var(--color-daylight-grey-30);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
     --button-primary-border-color: var(--color-corporate-green-70);
     --button-primary-text-color: var(--black);
-    --default-button-secondary-color: var(--color-daylight-grey-60);
+    --default-button-secondary-color: var(--ux-theme-6);
     --button-secondary-border-color: var(--color-corporate-green-70);
     --button-secondary-text-color: var(--black);
-    --default-button-optional-color: var(--color-daylight-grey-60);
+    --default-button-optional-color: var(--ux-theme-6);
     --button-optional-border-color: var(--color-mid-grey-50);
     --button-optional-text-color: var(--black);
     --default-button-warning-color: var(--color-yellow-50);
@@ -142,11 +147,11 @@
     --button-warning-text-color: var(--black);
     --default-button-danger-color: var(--color-dark-red-50);
     --button-danger-border-color: var(--color-dark-red-50);
-    --button-danger-text-color: var(--white);
+    --button-danger-text-color: var(--color-white-100);
     --default-button-info-color: var(--color-dark-blue-50);
     --button-info-border-color: var(--color-dark-blue-50);
-    --button-info-text-color: var(--white);
-    --default-button-form-color: var(--color-daylight-grey-60);
+    --button-info-text-color: var(--color-white-100);
+    --default-button-form-color: var(--ux-theme-6);
     --button-form-border-color: var(--color-mid-grey-50);
     --button-form-text-color: var(--black);
 
@@ -185,71 +190,77 @@
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
     /* Fonts */
-    --font-color: var(--white);
+    --font-color: var(--color-white-100);
     --font-color-dimmed: var(--white-dimmed);
-    --font-color-light-bg: rgb(33 33 33); /* grey-6 */
+    --font-color-light-bg: var(--color-mist-grey-100);
+    --font-perfometer-color: var(--color-mid-grey-60);
 
     /* Colors */
     --default-nav-bg-color: rgb(17 24 29);
-    --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
     --default-bg-color: var(--ux-theme-1);
-    --default-table-th-color: var(--ux-theme-2);
-    --default-form-element-bg-color: var(--color-midnight-grey-50);
+    --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-bg-color-disabled: var(--ux-theme-3);
     --default-form-element-border-color: var(--color-mid-grey-60);
-    --default-form-element-placeholder-color: rgb(255 255 255 / 50%);
+    --default-form-element-placeholder-color: var(--color-white-50);
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
-    --default-button-emphasis-color: rgb(19 211 137);
     --default-border-color-green: rgb(21 209 160);
-    --default-tooltip-icon-color: rgb(83 83 83);
     --default-tooltip-background-color: rgb(17 24 29);
     --default-tooltip-text-color: var(--white);
     --custom-scroll-bar-thumb-border-color: var(--ux-theme-5);
     --custom-scroll-bar-thumb-color: rgb(224 224 228);
     --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
     --default-component-bg-color: rgb(46 44 44);
+    --help-text-font-color: var(--color-conference-grey-100);
     --default-dialog-bg-color: var(--ux-theme-5);
-    --default-dialog-font-color: var(--white);
+    --default-dialog-font-color: var(--color-white-100);
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
-    --code-background-color: var(--color-midnight-grey-100);
+    --code-background-color: var(--ux-theme-0);
     --wizard-progress-bar-background-color: var(--white);
-    --wizard-progress-bar-background-badge-color: var(--color-conference-grey-100);
+    --wizard-progress-bar-background-badge-color: var(--ux-theme-0);
     --headline-color: var(--ux-theme-3);
     --db-content-bg-color: var(--ux-theme-2);
     --even-tr-bg-color: var(--ux-theme-3);
     --odd-tr-bg-color: var(--ux-theme-2);
-    --perfometer-bg-color: var(--color-mist-grey-30);
     --inline-help-text-bg: rgb(17 24 29);
     --inline-help-icon-bg: rgb(6 103 193);
+    --slide-in-left-part: var(--ux-theme-2);
+
+    /* Cmk Toggle Button Group */
+    --toggle-button-group-active-bg-color: var(--ux-theme-8);
+    --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
+    --toggle-button-group-border-color: var(--color-mid-grey-60);
+    --toggle-button-group-active-text-color: var(--color-white-100);
+    --toggle-button-group-inactive-text-color: var(--color-white-100);
+
+    /* Cmk Inline Validation */
     --inline-error-border-color: var(--color-light-red-40);
     --inline-error-text-color: var(--color-light-red-30);
-    --slide-in-left-part: var(--color-midnight-grey-80);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
     --button-primary-border-color: var(--color-corporate-green-50);
     --button-primary-text-color: var(--black);
-    --default-button-secondary-color: var(--color-midnight-grey-100);
+    --default-button-secondary-color: var(--ux-theme-0);
     --button-secondary-border-color: var(--color-corporate-green-50);
-    --button-secondary-text-color: var(--white);
-    --default-button-optional-color: var(--color-midnight-grey-100);
+    --button-secondary-text-color: var(--color-white-100);
+    --default-button-optional-color: var(--ux-theme-0);
     --button-optional-border-color: var(--color-mid-grey-60);
-    --button-optional-text-color: var(--white);
+    --button-optional-text-color: var(--color-white-100);
     --default-button-warning-color: var(--color-yellow-50);
     --button-warning-border-color: var(--color-yellow-50);
     --button-warning-text-color: var(--black);
     --default-button-danger-color: var(--color-dark-red-50);
     --button-danger-border-color: var(--color-dark-red-40);
-    --button-danger-text-color: var(--white);
+    --button-danger-text-color: var(--color-white-100);
     --default-button-info-color: var(--color-dark-blue-50);
     --button-info-border-color: var(--color-dark-blue-40);
-    --button-info-text-color: var(--white);
-    --default-button-form-color: var(--color-midnight-grey-100);
+    --button-info-text-color: var(--color-white-100);
+    --default-button-form-color: var(--ux-theme-0);
     --button-form-border-color: var(--color-mid-grey-60);
-    --button-form-text-color: var(--white);
+    --button-form-text-color: var(--color-white-100);
 
     /* breadcrumb colors */
     --font-color-breadcrumb-inactive: var(--color-white-70);

@@ -196,11 +196,7 @@ const truncatedButtonLabel = computed(() =>
 
   .cmk-dropdown--arrow {
     width: 0.7em;
-
-    /* This replicates the dropdown in checkmk, which useses select2 which
-       uses #888 as color by default. The color is not themed there, so we
-       also don't theme it. */
-    color: #888;
+    color: var(--color-conference-grey-100);
     margin: 0 3px 0 10px;
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

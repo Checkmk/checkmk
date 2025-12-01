@@ -223,7 +223,6 @@ const percentage = (metricValue: number) => {
   > div {
     position: relative;
     height: 22px;
-    background-color: var(--perfometer-bg-color);
     filter: saturate(50%);
 
     > div {
@@ -246,7 +245,7 @@ const percentage = (metricValue: number) => {
   overflow: hidden;
   font-weight: var(--font-weight-bold);
   line-height: 22px;
-  color: var(--font-color-light-bg);
+  color: var(--font-perfometer-color);
   text-align: center;
   white-space: nowrap;
 }

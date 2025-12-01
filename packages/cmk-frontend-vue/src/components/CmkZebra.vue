@@ -19,12 +19,12 @@ defineProps<{ num: number }>()
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.even {
-    --default-bg-color: var(--ux-theme-3);
+    --default-bg-color: var(--even-tr-bg-color);
   }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.odd {
-    --default-bg-color: var(--ux-theme-2);
+    --default-bg-color: var(--odd-tr-bg-color);
   }
 }
 </style>

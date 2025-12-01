@@ -24,22 +24,27 @@ $ux-theme-6: rgb(53, 63, 74);
 
 // UX colors
 $navbar-color: $ux-theme-0;
-$bg-color: $ux-theme-1;
+$bg-color: $color-midnight-grey-90;
 $bg-color-secondary: $ux-theme-2;
 $base-color: $ux-theme-2;
 $headline-color: $ux-theme-3;
 $table-highlight-color: $ux-theme-4;
-$line-color: $ux-theme-5;
+$line-color: $color-midnight-grey-30;
 
 // -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
-$font-color: $white;
+$font-color: $color-white-100;
 $font-color-dimmed: rgba($white, 0.5);
 $font-color-light-bg: $grey-6;
 $font-color-light-grey: $midgrey;
 $font-color-green: $success;
-$font-color-orange: $orange-1;
+$font-color-orange: $color-orange-50;
+
+// perf-o-meter colors
+$font-perfometer-color: $color-white-100;
+$perfometer-border-color: $color-mid-grey-60;
+
 // breadcrumb font colors
 $font-color-breadcrumb-inactive: $color-white-70;
 $font-color-breadcrumb-interactive: $color-white-100;
@@ -50,28 +55,32 @@ $font-color-table-action: $color-white-100;
 // -----------------------------------------------------------------------------
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
-$default-button-border-color: $ux-theme-5;
+$default-button-border-color: $color-mid-grey-50;
 $default-submit-button-border-color: color.adjust($success, $lightness: -25%);
 
-$input-background-color: $ux-theme-5;
+$input-background-color: $color-midnight-grey-50;
 $input-hover-bg-color: $ux-theme-4;
 $input-nested-background-color: rgb(63, 75, 93);
-$input-dropdown-border-color: $ux-theme-6;
+$input-dropdown-border-color: $color-midnight-grey-60;
 
 // -----------------------------------------------------------------------------
 // States
 // -----------------------------------------------------------------------------
-$color-state-1-background: $yellow;
-$color-state-2-background: rgb(200, 50, 50);
-$color-state-3-background: rgb(255, 132, 0);
-$color-state-4-background: $darkgrey;
+$color-state-1-background: $color-yellow-50;
+$color-state-1-border: $color-yellow-50;
+$color-state-2-background: $color-dark-red-50;
+$color-state-2-border: $color-dark-red-40;
+$color-state-3-background: $color-orange-50;
+$color-state-3-border: $color-orange-50;
+$color-state-4-background: $color-mist-grey-50;
 $color-state-5-background: rgb(72, 203, 240);
 $color-state-6-background: rgb(185, 236, 250);
 $color-state-7-background: rgb(233, 128, 110);
 $color-state-8-background: rgb(241, 174, 162);
 $color-state-9-background: rgb(191, 90, 191);
-$color-state-success-background: $success; // green
-$color-state-running-background: $hostdown;
+$color-state-success-background: $color-corporate-green-50;
+$color-state-success-border: $color-corporate-green-50;
+$color-state-running-background: $color-dark-blue-50;
 
 // -----------------------------------------------------------------------------
 // Tables
@@ -91,8 +100,8 @@ $data-container-bg-color: $ux-theme-2;
 $input-button-bg-color: $ux-theme-0;
 $input-button-hover-bg-color: $ux-theme-6;
 
-$odd-tr-bg-color: $ux-theme-2;
-$even-tr-bg-color: $ux-theme-4;
+$odd-tr-bg-color: $color-midnight-grey-80;
+$even-tr-bg-color: $color-midnight-grey-70;
 
 $floatfilter-bg-color: null;
 
@@ -204,13 +213,13 @@ $ntop-protocol-painter-padding-top: 4px;
 // The main dashboard shows the hosts and services stats dashlets right next to the total host and
 // service problems graphs. Therefore, we should keep the colors in sync.
 // metrics counterpart: cmk_hosts_down, cmk_services_critical
-$hexagon-critical-color: $danger;
+$hexagon-critical-color: $color-dark-red-40;
 // metrics counterpart: cmk_hosts_unreachable, cmk_services_unknown
-$hexagon-unknown-color: rgb(255, 136, 0);
+$hexagon-unknown-color: $color-orange-50;
 // metrics counterpart: cmk_hosts_in_downtime, cmk_services_in_downtime
-$hexagon-downtime-color: rgb(60, 194, 255);
+$hexagon-downtime-color: $color-light-blue-50;
 // metrics counterpart: cmk_services_on_down_hosts
-$hexagon-host-down-color: rgb(16, 99, 176);
+$hexagon-host-down-color: $color-dark-blue-40;
 // =============================
 $hexagon-empty-color: $white;
 $hexagon-empty-fill-opacity: 0.03;

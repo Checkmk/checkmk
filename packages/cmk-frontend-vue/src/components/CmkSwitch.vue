@@ -36,7 +36,7 @@ const data = defineModel('data', { type: Boolean, default: false })
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: #ccc;
+  background-color: var(--color-daylight-grey-60);
   transition: 0.4s;
   border-radius: 5px; /* Rounded sliders */
 
@@ -54,7 +54,7 @@ const data = defineModel('data', { type: Boolean, default: false })
 }
 
 input:checked + .cmk-switch__slider {
-  background-color: #13d389;
+  background-color: var(--color-corporate-green-50);
 
   &::before {
     transform: translateX(8px);
@@ -62,6 +62,6 @@ input:checked + .cmk-switch__slider {
 }
 
 input:focus + .cmk-switch__slider {
-  box-shadow: 0 0 1px #2196f3;
+  box-shadow: 0 0 1px var(--color-light-blue-50);
 }
 </style>

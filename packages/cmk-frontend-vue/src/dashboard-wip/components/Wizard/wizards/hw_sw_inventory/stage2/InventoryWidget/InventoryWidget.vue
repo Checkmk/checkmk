@@ -52,7 +52,7 @@ onBeforeMount(async () => {
 
 <template>
   <CollapsibleTitle
-    :title="_t('Widget visualization')"
+    :title="_t('Widget settings')"
     :open="displayVisualizationSettings"
     class="collapsible"
     @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"

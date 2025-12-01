@@ -52,7 +52,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
     <ContentSpacer />
 
     <CollapsibleTitle
-      :title="_t('Widget visualization')"
+      :title="_t('Widget settings')"
       :open="displayVisualizationSettings"
       @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
     />

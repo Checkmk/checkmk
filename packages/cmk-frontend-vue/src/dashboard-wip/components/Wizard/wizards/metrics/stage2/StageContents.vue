@@ -113,8 +113,8 @@ const enabledWidgets = getAvailableGraphs(
 )
 
 const availableWidgetsTop: WidgetItemList = [
-  { id: Graph.SINGLE_GRAPH, label: _t('Single graph'), icon: 'graph' },
-  { id: Graph.SINGLE_METRIC, label: _t('Single metric'), icon: 'single-metric' },
+  { id: Graph.SINGLE_GRAPH, label: _t('Graph'), icon: 'graph' },
+  { id: Graph.SINGLE_METRIC, label: _t('Metric'), icon: 'single-metric' },
   { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' }
 ]
 
@@ -202,17 +202,19 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
   <ActionBar align-items="left">
     <ActionButton
       :label="_t('Previous step')"
-      :icon="{ name: 'back', side: 'left' }"
+      :icon="{ name: 'continue', side: 'left', rotate: 180 }"
       :action="gotoPrevStage"
       variant="secondary"
     />
     <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="primary" />
   </ActionBar>
 
-  <ContentSpacer />
+  <ContentSpacer :dimension="11" />
 
   <div v-if="metricType === MetricSelection.SINGLE_METRIC">
     <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
+
+    <ContentSpacer :dimension="5" />
 
     <SelectableWidgets
       v-model:selected-widget="selectedWidget as Graph"

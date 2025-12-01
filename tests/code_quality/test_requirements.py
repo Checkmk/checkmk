@@ -42,26 +42,32 @@ IGNORED_LIBS = {
 }  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
-DEV_REQ_FILES_LIST = (
-    [
-        repo_path() / "cmk/dev-requirements.in",
-    ]
-    + list((repo_path() / "packages").glob("*/dev-requirements.in"))
-    + list((repo_path() / "non-free" / "packages").glob("*/dev-requirements.in"))
-)
-RUNTIME_REQ_FILES_LIST = (
-    [
-        repo_path() / "cmk/requirements.in",
-    ]
-    + list((repo_path() / "packages").glob("*/requirements.in"))
-    + list((repo_path() / "non-free" / "packages").glob("*/requirements.in"))
-)
 
-REQUIREMENTS_FILES = {
-    "dev": DEV_REQ_FILES_LIST,
-    "runtime": RUNTIME_REQ_FILES_LIST,
-    "all": DEV_REQ_FILES_LIST + RUNTIME_REQ_FILES_LIST,
-}
+
+def requirements_files() -> dict[str, list[Path]]:
+    dev_req_files_list = (
+        [
+            repo_path() / "cmk/dev-requirements.in",
+        ]
+        + list((repo_path() / "packages").glob("*/dev-requirements.in"))
+        + list((repo_path() / "non-free" / "packages").glob("*/dev-requirements.in"))
+    )
+
+    runtime_req_files_list = (
+        [
+            repo_path() / "cmk/requirements.in",
+        ]
+        + list((repo_path() / "packages").glob("*/requirements.in"))
+        + list((repo_path() / "packages").glob("*/requirements.in-*"))
+        + list((repo_path() / "non-free" / "packages").glob("*/requirements.in"))
+    )
+
+    return {
+        "dev": dev_req_files_list,
+        "runtime": runtime_req_files_list,
+        "all": dev_req_files_list + runtime_req_files_list,
+    }
+
 
 PackageName = NewType("PackageName", str)  # Name in requirements file
 ImportName = NewType("ImportName", str)  # Name in Source (import ...)
@@ -110,7 +116,7 @@ def load_requirements(requirements_type: str) -> dict[str, str]:
     """Load requirements of the given type (dev, runtime, all) and return
     a dictionary of package names and their versions."""
     requirements_dict = {}
-    file_path_list = REQUIREMENTS_FILES[requirements_type]
+    file_path_list = requirements_files()[requirements_type]
     for requirements_file_path in file_path_list:
         requirements_dict.update(parse_requirements_file(requirements_file_path))
     return requirements_dict

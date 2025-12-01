@@ -4,6 +4,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
+load("//bazel/rules:concat_files.bzl", "concat_files")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
@@ -264,8 +265,16 @@ py_test(
 exports_files([
     "dev-requirements.in",
     "pyproject.toml",
-    "requirements.in",
 ])
+
+concat_files(
+    name = "requirements.in",
+    srcs = [
+        ":requirements.in-%s" % family
+        for family in FAMILIES
+    ],
+    visibility = ["//visibility:public"],
+)
 
 py_pytest_main(
     name = "__test__",

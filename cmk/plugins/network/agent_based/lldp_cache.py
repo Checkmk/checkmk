@@ -1,8 +1,9 @@
 from collections.abc import MutableSequence, Sequence
-from dataclasses import dataclass
 from ipaddress import ip_address
 from re import compile as re_compile
 from typing import Any, Self
+
+from pydantic import BaseModel
 
 from cmk.agent_based.v2 import (
     all_of,
@@ -36,8 +37,7 @@ _interface_displayhints = {
 }
 
 
-@dataclass(frozen=True)
-class LldpGlobal:
+class LldpGlobal(BaseModel, frozen=True):
     id: str | None
     name: str | None
     description: str | None
@@ -67,8 +67,7 @@ class LldpGlobal:
             )
 
 
-@dataclass(frozen=True)
-class LldpNeighbor:
+class LldpNeighbor(BaseModel, frozen=True):
     capabilities: str | None
     capabilities_map_supported: str | None
     local_port: str | None
@@ -81,8 +80,7 @@ class LldpNeighbor:
     system_description: str
 
 
-@dataclass(frozen=True)
-class Lldp:
+class Lldp(BaseModel, frozen=True):
     lldp_global: LldpGlobal | None
     lldp_neighbors: list[LldpNeighbor]
 

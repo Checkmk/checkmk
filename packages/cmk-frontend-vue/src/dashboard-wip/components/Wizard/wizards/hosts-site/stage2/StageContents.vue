@@ -179,13 +179,13 @@ const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTE
   />
 
   <HostStateSummary
-    v-if="selectedWidget === Graph.HOST_STATE_SUMMARY"
+    v-if="selectedWidget === Graph.HOST_STATE_SUMMARY && isUnrestricted"
     v-model:handler="handler[Graph.HOST_STATE_SUMMARY] as unknown as UseHostStateSummary"
     :dashboard-name="dashboardName"
   />
 
   <HostStatistics
-    v-if="selectedWidget === Graph.HOST_STATISTICS && isUnrestricted"
+    v-if="selectedWidget === Graph.HOST_STATISTICS"
     v-model:handler="handler[Graph.HOST_STATISTICS] as unknown as UseHostStatistics"
     :dashboard-name="dashboardName"
   />

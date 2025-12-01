@@ -343,9 +343,27 @@ hex_decode() {
 
 parse_kdf_output() {
     local kdf_output="$1"
-    salt_hex=$(echo "$kdf_output" | grep -oP "(?<=salt=)[0-9A-F]+")
-    key_hex=$(echo "$kdf_output" | grep -oP "(?<=key=)[0-9A-F]+")
-    iv_hex=$(echo "$kdf_output" | grep -oP "(?<=iv =)[0-9A-F]+")
+    salt_hex=$(echo "$kdf_output" | awk '
+            /salt=/ {
+                sub(/^.*salt=/, "");
+                sub(/[^0-9A-F].*$/, "");
+                print;
+            }
+    ')
+    key_hex=$(echo "$kdf_output" | awk '
+        /key=/ {
+            sub(/^.*key=/, "");
+            sub(/[^0-9A-F].*$/, "");
+            print;
+        }
+    ')
+    iv_hex=$(echo "$kdf_output" | awk '
+        /iv =/ {
+            sub(/^.*iv =/, "");
+            sub(/[^0-9A-F].*$/, "");
+            print;
+        }
+    ')
     # Make sure this rather brittle grepping worked. For example, some openssl update might decide
     # to remove that odd-looking space behind 'iv'.
     # Note that the expected LENGTHS ARE DOUBLED because the values are hex encoded.

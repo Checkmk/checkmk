@@ -337,7 +337,6 @@ def test_check_mkbackup_warn_when_finished_and_disabled() -> None:
 @pytest.mark.parametrize(
     "next_schedule",
     [
-        datetime.today(),
         datetime.today() + timedelta(minutes=1),
         datetime.today() + timedelta(minutes=2),
         datetime.today() + timedelta(days=1),

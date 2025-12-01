@@ -68,7 +68,7 @@ class ModeManageReadOnly(WatoMode):
         return ["set_read_only"]
 
     def title(self) -> str:
-        return _("Manage configuration read only mode")
+        return _("Read-only mode for configuration")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -83,7 +83,7 @@ class ModeManageReadOnly(WatoMode):
 
         self._save(settings, pprint_value=config.wato_pprint_config)
         config.wato_read_only = settings
-        flash(_("Saved read only settings"))
+        flash(_("Saved read-only settings"))
         return redirect(mode_url("read_only"))
 
     def _save(self, settings: ReadOnlySpec, *, pprint_value: bool) -> None:
@@ -125,13 +125,13 @@ class ModeManageReadOnly(WatoMode):
     def _fs(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_flat_catalog_from_dictionary(
             Dictionary(
-                title=Title("Read only mode"),
+                title=Title("Read-only mode"),
                 elements={
                     "enabled": DictElement(
                         required=True,
                         parameter_form=enable_deprecated_alternative(
                             wrapped_form_spec=CascadingSingleChoice(
-                                title=Title("Enabled"),
+                                title=Title("Read-only mode"),
                                 elements=[
                                     CascadingSingleChoiceElement(
                                         name="alternative_0",

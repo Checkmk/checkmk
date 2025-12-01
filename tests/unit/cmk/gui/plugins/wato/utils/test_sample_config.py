@@ -23,6 +23,7 @@ def test_registered_generators() -> None:
         expected_generators += [
             "cee_agent_bakery",
             "cee_rrd_config",
+            "create_relay_dyndns_rule",
         ]
 
     assert sorted(utils.sample_config_generator_registry.keys()) == sorted(expected_generators)
@@ -46,6 +47,7 @@ def test_get_sorted_generators() -> None:
         "ec_sample_rule_pack",
         "create_initial_admin_user",
         "create_registration_automation_user",
+        "create_relay_dyndns_rule",
     ]
 
     assert [g.ident() for g in utils.sample_config_generator_registry.get_generators()] == expected

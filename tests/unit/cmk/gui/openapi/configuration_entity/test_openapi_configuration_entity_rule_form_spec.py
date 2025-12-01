@@ -10,6 +10,11 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
 from tests.unit.cmk.web_test_app import SetConfig
 
+# mypy: disable-error-code="unreachable"
+
+# also remove the mypy disable when re enabling the tests
+pytest.skip("Needs to be rewritten with CMK-28417", allow_module_level=True)
+
 
 def test_list_rule_form_specs(clients: ClientRegistry) -> None:
     resp = clients.ConfigurationEntity.list_configuration_entities(

@@ -57,6 +57,40 @@ py_test(
 )
 
 py_library(
+    name = "elasticsearch",
+    srcs = glob(["cmk/plugins/elasticsearch/**/*.py"]),
+    data = glob([
+        "cmk/plugins/elasticsearch/checkman/*",
+        "cmk/plugins/elasticsearch/libexec/*",
+    ]) + ["cmk/plugins/elasticsearch/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("pydantic"),
+        requirement("requests"),
+        requirement("urllib3"),
+    ],
+)
+
+py_test(
+    name = "elasticsearch-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/elasticsearch/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":elasticsearch",
+        requirement("pytest"),
+    ],
+)
+
+py_library(
     name = "ipmi",
     srcs = glob([
         "cmk/plugins/ipmi/**/*.py",

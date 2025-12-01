@@ -332,7 +332,12 @@ export async function copyToClipboard(text: string): Promise<void> {
 }
 
 export function getSharedDashboardLink(publicToken: string): string {
+  const removeFileNameFromPath = (str: string) => {
+    const idx = str.lastIndexOf('/')
+    return idx !== -1 ? str.substring(0, idx) : str
+  }
+
   const checkmkUrl = new URL(window.parent.location.href ?? window.location.href)
-  checkmkUrl.searchParams.set('cmk-token', `0:${publicToken}`)
-  return checkmkUrl.toString()
+
+  return `${checkmkUrl.origin}${removeFileNameFromPath(checkmkUrl.pathname)}/shared_dashboard.py?=cmk-token=${publicToken}`
 }

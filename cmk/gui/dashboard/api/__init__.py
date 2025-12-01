@@ -7,6 +7,9 @@ from ._ajax_handler import (
     FigureDashletConfig,
     FigureRequestInternal,
     get_validated_internal_figure_request,
+    get_validated_internal_graph_request,
+    GraphDashletConfig,
+    GraphRequestInternal,
 )
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
@@ -26,10 +29,13 @@ __all__ = [
     "DashboardConstants",
     "FigureDashletConfig",
     "FigureRequestInternal",
+    "GraphDashletConfig",
+    "GraphRequestInternal",
     "PERMISSIONS_DASHBOARD",
     "PERMISSIONS_DASHBOARD_EDIT",
     "get_permitted_user_id",
     "get_validated_internal_figure_request",
+    "get_validated_internal_graph_request",
     "register_endpoints",
     "save_dashboard_to_file",
     "convert_internal_relative_dashboard_to_api_model_dict",

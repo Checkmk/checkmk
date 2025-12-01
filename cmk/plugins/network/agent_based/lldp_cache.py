@@ -1,7 +1,7 @@
 from collections.abc import MutableSequence, Sequence
 from ipaddress import ip_address
 from re import compile as re_compile
-from typing import Any, Self
+from typing import NotRequired, Self, TypedDict
 
 from pydantic import BaseModel
 
@@ -35,6 +35,13 @@ _interface_displayhints = {
     "vlan": "Vlan",
     "management": "Ma",
 }
+
+
+class InventoryParams(TypedDict):
+    remove_domain: NotRequired[bool]
+    domain_name: NotRequired[str]
+    use_short_if_name: NotRequired[bool]
+    remove_columns: NotRequired[Sequence[str]]
 
 
 class LldpGlobal(BaseModel, frozen=True):
@@ -336,7 +343,7 @@ def host_label_lldp_cache(section: Lldp) -> HostLabelGenerator:
             yield HostLabel(name="cmk/lldp_neighbor", value=neighbor.neighbor_name)
 
 
-def inventory_lldp_cache(params: Any, section: Lldp) -> InventoryResult:
+def inventory_lldp_cache(params: InventoryParams, section: Lldp) -> InventoryResult:
     path = ["networking", "lldp_cache"]
     if section.lldp_global:
         yield Attributes(
@@ -477,7 +484,7 @@ snmp_section_inv_lldp_cache = SNMPSection(
 inventory_plugin_inv_lldp_cache = InventoryPlugin(
     name="inv_lldp_cache",
     inventory_function=inventory_lldp_cache,
-    inventory_default_parameters={},
+    inventory_default_parameters=InventoryParams(),
     inventory_ruleset_name="inv_lldp_cache",
 )
 

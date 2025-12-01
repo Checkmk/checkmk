@@ -45,7 +45,7 @@ from cmk.base.core.shared import (
     host_check_command,
 )
 from cmk.ccc import store, tty
-from cmk.ccc.config_path import VersionedConfigPath
+from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -114,7 +114,7 @@ class NagiosCore(MonitoringCore):
 
     def _create_config(
         self,
-        config_path: VersionedConfigPath,
+        config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,
         hosts_config: Hosts,
         final_service_name_config: Callable[
@@ -140,7 +140,7 @@ class NagiosCore(MonitoringCore):
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(
-            Path(config_path),
+            config_creation_context.path_created,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,
@@ -153,11 +153,11 @@ class NagiosCore(MonitoringCore):
             service_depends_on,
         )
         store.save_text_to_file(
-            plugin_index.make_index_file(Path(config_path)),
+            plugin_index.make_index_file(config_creation_context.path_created),
             plugin_index.create_plugin_index(plugins),
         )
         self._precompile_hostchecks(
-            Path(config_path),
+            config_creation_context.path_created,
             passive_service_name_config,
             enforced_services_table,
             plugins,

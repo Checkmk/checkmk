@@ -307,10 +307,14 @@ def _create_active_config(
         cmk.utils.password_store.pending_secrets_path_site(),
     )
 
-    config_path = VersionedConfigPath.next(cmk.utils.paths.omd_root)
-    with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
+    with (
+        VersionedConfigPath.next(cmk.utils.paths.omd_root).create(
+            is_cmc=core.is_cmc()
+        ) as config_creation_context,
+        _backup_objects_file(core),
+    ):
         core.create_config(
-            config_path,
+            config_creation_context,
             config_cache,
             hosts_config,
             final_service_name_config,
@@ -328,9 +332,9 @@ def _create_active_config(
         )
         cmk.utils.password_store.save(
             {k: s.reveal() for k, s in passwords.items()},
-            cmk.utils.password_store.active_secrets_path_site(Path(config_path)),
+            cmk.utils.password_store.active_secrets_path_site(config_creation_context.path_created),
         )
-        _snapshot_local_dir(cmk.utils.paths.local_root, config_path)
+        _snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
@@ -342,14 +346,14 @@ def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
         )
 
 
-def _snapshot_local_dir(local_root: Path, config_path: VersionedConfigPath) -> None:
+def _snapshot_local_dir(local_root: Path, config_path: Path) -> None:
     """Create a snapshot of the local directory into the new config path.
 
     At the time of writing this is only written to be used by the relay, but it would
     also be correct for the core(s) to use it.
     """
     try:
-        shutil.copytree(local_root, Path(config_path, "local"), symlinks=True)
+        shutil.copytree(local_root, config_path / "local", symlinks=True)
     except FileNotFoundError:
         pass
 

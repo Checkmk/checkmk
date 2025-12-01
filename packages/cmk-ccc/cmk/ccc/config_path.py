@@ -10,12 +10,22 @@ import os
 import shutil
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Self
 
 from cmk.ccc.store import DimSerializer, ObjectStore
 
-__all__ = ["VersionedConfigPath"]
+__all__ = ["VersionedConfigPath", "ConfigCreationContext"]
+
+
+@dataclass(frozen=True)
+class ConfigCreationContext:
+    """Hold information on the currently active config and the one being created."""
+
+    path_active: Path
+    path_created: Path
+    serial_created: int
 
 
 class VersionedConfigPath:
@@ -61,11 +71,11 @@ class VersionedConfigPath:
             store.write_obj(new_serial)
         return cls(base, new_serial)
 
-    def previous_config_path(self) -> VersionedConfigPath:
-        return VersionedConfigPath(self.root, self.serial - 1)
-
     @contextmanager
-    def create(self, *, is_cmc: bool) -> Iterator[None]:
+    def create(self, *, is_cmc: bool) -> Iterator[ConfigCreationContext]:
+        # NOTE:
+        # The "latest" symlink points to the last successfully created config.
+        # The "serial.mk" file contains the last serial we started to create.
         if not is_cmc:  # CMC manages the configs on its own.
             for path in self.root.iterdir() if self.root.exists() else []:
                 if (
@@ -75,7 +85,11 @@ class VersionedConfigPath:
                 ):
                     shutil.rmtree(path)
         Path(self).mkdir(parents=True, exist_ok=True)
-        yield
+        yield ConfigCreationContext(
+            path_active=self.latest.resolve(),
+            path_created=Path(self),
+            serial_created=self.serial,
+        )
         # TODO(ml) We should probably remove the files that were created
         #          previously and not update `serial.mk` on error.
         # TODO: Should this be in a "finally" or not? Unclear...

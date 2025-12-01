@@ -17,7 +17,7 @@ from typing import Final, Literal
 from cmk import trace
 from cmk.base.config import ConfigCache
 from cmk.ccc import tty
-from cmk.ccc.config_path import VersionedConfigPath
+from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -62,7 +62,7 @@ class MonitoringCore(abc.ABC):
 
     def create_config(
         self,
-        config_path: VersionedConfigPath,
+        config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,
         hosts_config: Hosts,
         final_service_name_config: Callable[
@@ -87,7 +87,7 @@ class MonitoringCore(abc.ABC):
         licensing_handler = self.licensing_handler_type.make()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path())
         self._create_config(
-            config_path,
+            config_creation_context,
             config_cache,
             hosts_config,
             final_service_name_config,
@@ -108,7 +108,7 @@ class MonitoringCore(abc.ABC):
     @abc.abstractmethod
     def _create_config(
         self,
-        config_path: VersionedConfigPath,
+        config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,
         hosts_config: Hosts,
         final_service_name_config: Callable[

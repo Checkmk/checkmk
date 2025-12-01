@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.pages import PageRegistry
+from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from .wato import register_modes, register_pages
+from .wato import register_main_module, register_modes, register_pages
 
 
 def register(
     mode_registry: ModeRegistry,
     page_registry: PageRegistry,
+    main_module_registry: MainModuleRegistry,
 ) -> None:
     register_modes(mode_registry)
     register_pages(page_registry)
+    register_main_module(main_module_registry)

@@ -914,6 +914,70 @@
         }
       ]
     },
+    "metric_backend_custom_query_metric_name": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "../graph_designer.json#/$defs/graph_line_metric_name"
+        }
+      ]
+    },
+    "metric_backend_custom_query_attributes": {
+      "$ref": "../graph_designer.json#/$defs/graph_line_query_attributes"
+    },
+    "metric_backend_custom_query_aggregation_sum": {
+      "$ref": "../graph_designer.json#/$defs/query_aggregation_sum_rate"
+    },
+    "metric_backend_custom_query_aggregation_histogram": {
+      "$ref": "../graph_designer.json#/$defs/query_aggregation_histogram_percentile"
+    },
+    "metric_backend_custom_query": {
+      "id": "metric_backend_custom_query",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "metric_backend_custom_query",
+              "default": "metric_backend_custom_query"
+            },
+            "metric_name": {
+              "$ref": "#/$defs/metric_backend_custom_query_metric_name"
+            },
+            "resource_attributes": {
+              "$ref": "#/$defs/metric_backend_custom_query_attributes"
+            },
+            "scope_attributes": {
+              "$ref": "#/$defs/metric_backend_custom_query_attributes"
+            },
+            "data_point_attributes": {
+              "$ref": "#/$defs/metric_backend_custom_query_attributes"
+            },
+            "aggregation_sum": {
+              "$ref": "#/$defs/metric_backend_custom_query_aggregation_sum"
+            },
+            "aggregation_histogram": {
+              "$ref": "#/$defs/metric_backend_custom_query_aggregation_histogram"
+            }
+          },
+          "required": [
+            "type",
+            "metric_name",
+            "resource_attributes",
+            "scope_attributes",
+            "data_point_attributes",
+            "aggregation_sum",
+            "aggregation_histogram"
+          ]
+        }
+      ]
+    },
     "metric": {
       "id": "metric",
       "type": "object",
@@ -1770,6 +1834,9 @@
         },
         {
           "$ref": "#/$defs/time_span"
+        },
+        {
+          "$ref": "#/$defs/metric_backend_custom_query"
         },
         {
           "$ref": "#/$defs/metric"

@@ -28,6 +28,7 @@ import type {
   LegacyValuespec,
   List,
   ListOfStrings,
+  MetricBackendCustomQuery,
   MultilineText,
   MultipleChoiceElement,
   OptionalChoice,
@@ -149,6 +150,8 @@ function renderForm(
       return renderTimeSpecific(formSpec as TimeSpecific, value, backendValidation)
     case 'file_upload':
       return renderFileUpload(formSpec as FileUpload, value as [string, string, string])
+    case 'metric_backend_custom_query':
+      return renderMetricBackendCustomQuery(value as MetricBackendCustomQuery)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -159,6 +162,61 @@ function renderSimplePassword(): VNode {
 
 function renderFileUpload(_formSpec: FileUpload, value: [string, string, string]): VNode {
   return h('div', [value[0]])
+}
+
+function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode {
+  const rows: VNode[] = []
+
+  if (value.metric_name) {
+    rows.push(
+      h('tr', [h('td', { class: 'dict_title' }, ['Metric:']), h('td', [value.metric_name])])
+    )
+  }
+
+  const renderAttributes = (
+    title: string,
+    attributes: typeof value.resource_attributes
+  ): VNode | null => {
+    if (!attributes || attributes.length === 0) {
+      return null
+    }
+    const attributeText = attributes.map((attr) => `${attr.key}:${attr.value}`).join(', ')
+    return h('tr', [h('td', { class: 'dict_title' }, [`${title}:`]), h('td', [attributeText])])
+  }
+
+  const resourceRow = renderAttributes('Resource Attributes', value.resource_attributes)
+  if (resourceRow) {
+    rows.push(resourceRow)
+  }
+
+  const scopeRow = renderAttributes('Scope Attributes', value.scope_attributes)
+  if (scopeRow) {
+    rows.push(scopeRow)
+  }
+
+  const dataPointRow = renderAttributes('Data Point Attributes', value.data_point_attributes)
+  if (dataPointRow) {
+    rows.push(dataPointRow)
+  }
+
+  if (value.aggregation_sum && value.aggregation_sum.enabled) {
+    const rateText = `${value.aggregation_sum.value} ${value.aggregation_sum.unit}`
+    rows.push(
+      h('tr', [h('td', { class: 'dict_title' }, ['Aggregation Sum Rate:']), h('td', [rateText])])
+    )
+  }
+
+  if (value.aggregation_histogram && value.aggregation_histogram.enabled) {
+    const percentileText = `${value.aggregation_histogram.value}`
+    rows.push(
+      h('tr', [
+        h('td', { class: 'dict_title' }, ['Aggregation Histogram Percentile:']),
+        h('td', [percentileText])
+      ])
+    )
+  }
+
+  return h('table', { class: 'form-readonly__dictionary' }, rows)
 }
 
 function renderOptionalChoice(

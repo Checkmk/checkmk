@@ -122,7 +122,10 @@ def check(suffix: str, path: Path) -> bool:
     try:
         return CHECKER[suffix].check(
             path,
-            HEADER_CEE if path.is_relative_to(Path("src/graph-designer")) else HEADER,
+            HEADER_CEE
+            if path.is_relative_to(Path("src/graph-designer"))
+            or path == Path("src/form/private/forms/FormMetricBackendCustomQuery.vue")
+            else HEADER,
         )
     except Exception as e:
         raise RuntimeError(f"Could not find Checker for {path}") from e

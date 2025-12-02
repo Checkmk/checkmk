@@ -339,5 +339,5 @@ export function getSharedDashboardLink(publicToken: string): string {
 
   const checkmkUrl = new URL(window.parent.location.href ?? window.location.href)
 
-  return `${checkmkUrl.origin}${removeFileNameFromPath(checkmkUrl.pathname)}/shared_dashboard.py?=cmk-token=${publicToken}`
+  return `${checkmkUrl.origin}${removeFileNameFromPath(checkmkUrl.pathname)}/shared_dashboard.py?cmk-token=0:${publicToken}`
 }

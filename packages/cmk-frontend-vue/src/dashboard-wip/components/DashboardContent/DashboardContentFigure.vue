@@ -86,16 +86,18 @@ function handleResize(newWidth: number, newHeight: number) {
 }
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
-  const vars: FilterHTTPVars = {
+  if (cmkToken !== undefined) {
+    return {
+      widget_id: props.widget_id,
+      'cmk-token': cmkToken
+    }
+  }
+  return {
     content: JSON.stringify(props.content),
     context: JSON.stringify(props.effective_filter_context.filters),
     general_settings: JSON.stringify(props.general_settings),
     single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
   }
-  if (cmkToken !== undefined) {
-    vars['cmk-token'] = cmkToken
-  }
-  return vars
 })
 
 // Resolve figure type for special cases where figure and content type are not the same

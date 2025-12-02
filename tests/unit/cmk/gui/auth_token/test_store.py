@@ -47,7 +47,7 @@ def test_revokation(tmp_path: Path) -> None:
         store.verify(f"0:{token.token_id}", now=some_time)
 
 
-def test_expired(tmp_path: Path) -> None:
+def test_expired_w_expiration(tmp_path: Path) -> None:
     store = TokenStore(tmp_path / "store.json")
     token = store.issue(
         token_details=DashboardToken(
@@ -61,6 +61,20 @@ def test_expired(tmp_path: Path) -> None:
 
     with pytest.raises(TokenExpired):
         store.verify(f"0:{token.token_id}", now=some_time + datetime.timedelta(days=1, seconds=1))
+
+
+def test_expired_wo_expiration(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = store.issue(
+        token_details=DashboardToken(
+            owner=UserId("owner"),
+            dashboard_name="unit-dashboard",
+        ),
+        issuer=UserId("issuer"),
+        now=some_time,
+        valid_for=None,
+    )
+    store.verify(f"0:{token.token_id}", now=some_time + datetime.timedelta(days=1, seconds=1))
 
 
 def test_invalid_token(tmp_path: Path) -> None:
@@ -106,3 +120,24 @@ def test_delete_token(tmp_path: Path) -> None:
 
     with pytest.raises(InvalidToken, match=f"Could not find token '{token.token_id}'"):
         store.verify(f"0:{token.token_id}", now=some_time)
+
+
+def test_last_successful_verification(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = store.issue(
+        token_details=DashboardToken(
+            owner=UserId("owner"),
+            dashboard_name="unit-dashboard",
+        ),
+        issuer=UserId("issuer"),
+        now=some_time,
+        valid_for=relativedelta(days=1),
+    )
+    assert token.last_successful_verification is None
+
+    token = store.verify(f"0:{token.token_id}", now=some_time)
+    # It was never verified before
+    assert token.last_successful_verification is None
+
+    token = store.verify(f"0:{token.token_id}", now=some_time)
+    assert token.last_successful_verification == some_time

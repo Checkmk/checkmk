@@ -6,9 +6,9 @@
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import assert_never, Final, NewType
+from typing import Final, NewType
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel, Field, RootModel
@@ -54,12 +54,22 @@ TokenId = NewType("TokenId", str)
 
 
 class AuthToken(BaseModel):
+    """The general token
+
+    details/scope is stored in details.
+
+    last_successful_verification: is meant to indicate if a token is actively used. Since we do some
+        ajax calls there can be multiple requests in a short time frame. Therefore we only update after
+        some time (5m) has passed.
+    """
+
     issuer: AnnotatedUserId
     issued_at: datetime
-    valid_until: datetime
+    valid_until: datetime | None
     details: DashboardToken = Field(discriminator="type_")
     token_id: TokenId
     revoked: bool = False
+    last_successful_verification: datetime | None = None
 
 
 class _SerializedTokens(RootModel[dict[TokenId, AuthToken]]):
@@ -76,6 +86,9 @@ class _SerializedTokens(RootModel[dict[TokenId, AuthToken]]):
 
     def delete(self, token_id: TokenId) -> None:
         del self.root[token_id]
+
+    def update_last_successful_verification(self, token_id: TokenId, now: datetime) -> None:
+        self.root[token_id].last_successful_verification = now
 
 
 class TokenStore:
@@ -113,7 +126,7 @@ class TokenStore:
         if (token := self._read().get(TokenId(token_id))) is None:
             raise InvalidToken(f"Could not find token {token_id!r}")
 
-        if token.valid_until < now:
+        if token.valid_until is not None and token.valid_until < now:
             raise TokenExpired(
                 f"Token {token.token_id} expired at {token.valid_until.isoformat()}",
                 token_type=token.details.type_,
@@ -124,6 +137,13 @@ class TokenStore:
                 f"Token {token_id} was revoked",
                 token_type=token.details.type_,
             )
+
+        if (
+            token.last_successful_verification is None
+            or now - token.last_successful_verification < timedelta(minutes=5)
+        ):
+            with self.read_locked() as data:
+                data.update_last_successful_verification(token.token_id, now)
 
         return token
 
@@ -142,17 +162,10 @@ class TokenStore:
         now: datetime,
         valid_for: relativedelta | None = None,
     ) -> AuthToken:
-        if valid_for is None:
-            match token_details:
-                case DashboardToken():
-                    valid_for = relativedelta(years=1)
-                case _:
-                    assert_never(token_details)
-
         token = AuthToken(
             issuer=issuer,
             issued_at=now,
-            valid_until=now + valid_for,
+            valid_until=None if valid_for is None else now + valid_for,
             details=token_details,
             token_id=TokenId(str(uuid.uuid4())),
             revoked=False,

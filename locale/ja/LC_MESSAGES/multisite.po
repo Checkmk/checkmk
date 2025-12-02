@@ -2263,7 +2263,8 @@ msgstr ""
 msgid "A host with this name already exists in this folder."
 msgstr "この名前のホストは、このフォルダーに既に存在します。"
 
-msgid "A human-readable name for this relay configuration."
+#, fuzzy
+msgid "A human-readable alias for this relay configuration."
 msgstr "このリレー構成の可読性の良い名前。"
 
 msgid ""
@@ -8607,6 +8608,14 @@ msgstr "Azure DB ストレージ"
 
 msgid "Azure Databases"
 msgstr "Azureデータベース"
+
+#, fuzzy
+msgid "Azure Firewall Health"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Azure Firewall SNAT Utilization"
+msgstr "GCP/Redis CPU使用率"
 
 #, fuzzy
 msgid "Azure Firewalls"
@@ -16313,6 +16322,10 @@ msgstr "保存されたレポートを作成する"
 
 msgid "Create the following interface groups"
 msgstr "次のインターフェイスグループを作成します"
+
+#, fuzzy
+msgid "Create the rule in the configured folder"
+msgstr "新しい仮想ホストツリー構成を作成する"
 
 msgid "Create topic"
 msgstr "トピックを作成する"
@@ -24184,9 +24197,6 @@ msgstr "明示的"
 
 msgid "Explicit Queue Names"
 msgstr "明示的なキュー名"
-
-msgid "Explicit condition"
-msgstr "明示的な条件"
 
 msgid "Explicit conditions"
 msgstr "明示的な条件"
@@ -34664,10 +34674,6 @@ msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "無効な拡張子タイプです：%s"
 
-#, fuzzy, python-format
-msgid "Invalid figure content: %s"
-msgstr "無効なユーザー接続: %s"
-
 msgid "Invalid file name"
 msgstr "無効なファイル名"
 
@@ -42585,6 +42591,11 @@ msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "否定: このパッケージを <b>持っていない</b>ホストを見つける"
 
 #, fuzzy
+msgid "Negate: make rule apply for all but the above entries"
+msgstr ""
+"<b>否定:</b>上記のエントリを<b>除く</b>すべてのエントリにルールを適用する"
+
+#, fuzzy
 msgid "Negative age tolerance"
 msgstr "負の値は不可"
 
@@ -43200,6 +43211,10 @@ msgid "No datasource defined."
 msgstr "データソースが定義されていません。"
 
 msgid "No default values can be set for condition choices."
+msgstr "条件の選択肢にデフォルト値を設定することはできません。"
+
+#, fuzzy
+msgid "No default values can be set."
 msgstr "条件の選択肢にデフォルト値を設定することはできません。"
 
 msgid "No defaults"
@@ -49302,6 +49317,10 @@ msgstr "少なくとも1つの受信者を追加してください"
 msgid "Please add at least one service group."
 msgstr "少なくとも1つのサービスグループを追加してください。"
 
+#, fuzzy
+msgid "Please add at least one service item."
+msgstr "少なくとも1つのサービスを追加してください。"
+
 msgid "Please add at least one service label."
 msgstr "少なくとも1つのサービスラベルを追加してください。"
 
@@ -50316,10 +50335,6 @@ msgstr "プリコンパイル済み"
 
 msgid "Predefined condition"
 msgstr "事前定義された条件"
-
-#, python-format
-msgid "Predefined condition '%s' does not exist or using not permitted"
-msgstr "事前定義された条件 '%s' が存在しないか、使用が許可されていません"
 
 #, python-format
 msgid "Predefined condition: '%s' does not exist or using not permitted"
@@ -52442,6 +52457,10 @@ msgid "Relay ID"
 msgstr "キーID"
 
 #, fuzzy
+msgid "Relay alias"
+msgstr "ディレイ:"
+
+#, fuzzy
 msgid "Relay configuration"
 msgstr "プラン構成"
 
@@ -52450,15 +52469,11 @@ msgid "Relay configurations"
 msgstr "プラン構成"
 
 #, fuzzy
-msgid "Relay display name"
+msgid "Relay display alias"
 msgstr "表示名"
 
 msgid "Relay log size"
 msgstr "中継用ログサイズ"
-
-#, fuzzy
-msgid "Relay name"
-msgstr "名前を変更する"
 
 #, fuzzy
 msgid "Relay properties"
@@ -54836,6 +54851,18 @@ msgstr "SNAT使用量"
 #, fuzzy
 msgid "SNAT Usage (Deprecated)"
 msgstr "Azureストレージ使用量"
+
+#, fuzzy
+msgid "SNAT port utilization"
+msgstr "ノードの使用率"
+
+#, fuzzy
+msgid "SNAT port utilization %"
+msgstr "ノードの使用率"
+
+#, fuzzy
+msgid "SNAT port utilization levels"
+msgstr "CPU使用率レベル"
 
 msgid "SNAT usage"
 msgstr "SNAT 利用量"
@@ -58358,6 +58385,10 @@ msgstr ""
 "す。"
 
 msgid "Signing agents' client certificates"
+msgstr "エージェントのクライアント証明書の署名"
+
+#, fuzzy
+msgid "Signing relay client certificates"
 msgstr "エージェントのクライアント証明書の署名"
 
 msgid "Signing the site certificate"
@@ -64286,13 +64317,6 @@ msgstr ""
 "設定されたパスワードが削除されたか、このパスワードの使用が許可されていませ"
 "ん。別のものを選択してください。"
 
-msgid ""
-"The configured predefined condition has either be removed or you are not "
-"permitted to use it. Please choose another one."
-msgstr ""
-"構成済みの事前定義された条件が削除されたか、使用が許可されていません。別のも"
-"のを選択してください。"
-
 msgid "The configured site is not known to this site."
 msgstr "構成されたサイトはこのサイトに認識されていません。"
 
@@ -66624,6 +66648,10 @@ msgstr ""
 "検索される提供された文字列は、生のドキュメント本文とまったく同じである必要が"
 "あります。これは、ユーザー指向の文字列間のhtmlマークアップを含みます。これは"
 "正規表現で検索する場合にも当てはまります。"
+
+#, fuzzy
+msgid "The provided token is not valid for the requested page."
+msgstr "キーファイルが無効です、またはパスワードが間違っています。"
 
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "照会されたESXシステム(vCenter /ホスト)"
@@ -70469,13 +70497,6 @@ msgstr ""
 "RAID コントローラと接続されたハードディスクの監視情報を提供します。このツール"
 "は<a href='http://www.lsi.com/'>LSI</a> からダウンロードできます。"
 
-msgid ""
-"This predefined condition can not be used with the current ruleset, because "
-"it defines the same label conditions as set by this rule."
-msgstr ""
-"事前定義された各条件は、このルールで設定されたものと同じラベル条件を定義して"
-"いるため、現在のルールセットで使用することはできません。"
-
 msgid "This problem has been acknowledged"
 msgstr "この問題は承認済です"
 
@@ -71524,6 +71545,21 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall SNAT port "
+"utilization monitoring"
+msgstr ""
+"このルールでは、データベースのCPU使用率のレベルを設定することができます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
 msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
@@ -76571,19 +76607,6 @@ msgstr "提供されたデータを解析できません: %s"
 
 msgid "Unable to process request"
 msgstr "リクエスト処理不可"
-
-#, python-format
-msgid ""
-"Unable to read current conditions of this rule. Falling back to default "
-"values. When saving this rule now, your previous settings will be "
-"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
-"issue may be caused by an inconsistent configuration, e.g. when rules refer "
-"to tag groups or tags that do not exist anymore."
-msgstr ""
-"このルールの現在の条件を読み取れません。デフォルト値に戻ります。このルールを"
-"保存すると以前の設定は上書きされます。問題：%sでした、以前の条件：<pre>%s</"
-"pre>このような問題は、ルールがすでに存在しないタググループやタグを参照してい"
-"る場合など、設定に一貫性がないために発生することがあります。"
 
 #, python-format
 msgid ""
@@ -83300,10 +83323,6 @@ msgid ""
 msgstr ""
 "以下のデータ構造をコピーして、REST APIリクエストで使用することができます。"
 
-#, python-format
-msgid "You can create predefined conditions <a href=\"%s\">here</a>."
-msgstr "<a href=\"%s\">ここ</a>で事前定義された条件を作成できます。"
-
 msgid ""
 "You can customize the list of icon categories to be able to assign your <a "
 "href=\"wato.py?mode=icons\">custom icons</a> to these categories. They will "
@@ -83379,14 +83398,6 @@ msgstr ""
 msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
 "プランをアップグレードすることで、サイトの容量を簡単に増やすことができます。"
-
-msgid ""
-"You can either specify individual conditions for this rule, or use a set of "
-"predefined conditions, which may be handy if you have to configure the same "
-"conditions in different rulesets."
-msgstr ""
-"このルールに個別の条件を指定するか、事前定義された条件のセットを使用できま"
-"す。これは、異なるルールセットで同じ条件を構成する必要がある場合に便利です。"
 
 msgid ""
 "You can enter a text here that will be displayed in the element when viewing "
@@ -87338,6 +87349,10 @@ msgid "There is %{ n } apple"
 msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 
+#, fuzzy
+msgid "Error retrieving AI service information. Please try again later."
+msgstr "何か問題が発生しました: %s"
+
 msgid "Checkmk AI feature documentation & privacy policy"
 msgstr ""
 
@@ -87373,6 +87388,10 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "見つかりません"
+
+#, fuzzy
+msgid "Error retrieving available AI actions. Please try again later."
+msgstr "何か問題が発生しました: %s"
 
 msgid "The following feature uses a Large Language Model (LLM)."
 msgstr ""
@@ -88541,6 +88560,10 @@ msgid "Service metric"
 msgstr "サービスメトリクス"
 
 #, fuzzy
+msgid "Filter service metric by"
+msgstr "サービスメトリクス"
+
+#, fuzzy
 msgid "Must select an option"
 msgstr "オプション選択"
 
@@ -88654,6 +88677,26 @@ msgstr ""
 #, fuzzy
 msgid "Copy existing view: %{viewName}"
 msgstr "既存のビューをコピーする"
+
+#, fuzzy
+msgid "Select operator"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Select label"
+msgstr "ラベルを選択..."
+
+#, fuzzy
+msgid "Remove item"
+msgstr "フィルタを取り外します"
+
+#, fuzzy
+msgid "Remove group"
+msgstr "削除：%r"
+
+#, fuzzy
+msgid "and not"
+msgstr "ではありません"
 
 #, fuzzy
 msgid "explicit password"
@@ -89201,11 +89244,12 @@ msgstr "Dockerコンテナプラグインをデプロイする"
 msgid "Name the relay"
 msgstr "プロキシの名前"
 
-msgid "Provide a display name for your Relay."
+#, fuzzy
+msgid "Provide a display alias for your Relay."
 msgstr "リレーの表示名を入力してください。"
 
 msgid ""
-"The name you enter here will be automatically inserted into the terminal "
+"The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
 
@@ -89725,6 +89769,61 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Explicit condition"
+#~ msgstr "明示的な条件"
+
+#, fuzzy, python-format
+#~ msgid "Invalid figure content: %s"
+#~ msgstr "無効なユーザー接続: %s"
+
+#, python-format
+#~ msgid "Predefined condition '%s' does not exist or using not permitted"
+#~ msgstr "事前定義された条件 '%s' が存在しないか、使用が許可されていません"
+
+#, fuzzy
+#~ msgid "Relay name"
+#~ msgstr "名前を変更する"
+
+#~ msgid ""
+#~ "The configured predefined condition has either be removed or you are not "
+#~ "permitted to use it. Please choose another one."
+#~ msgstr ""
+#~ "構成済みの事前定義された条件が削除されたか、使用が許可されていません。別の"
+#~ "ものを選択してください。"
+
+#~ msgid ""
+#~ "This predefined condition can not be used with the current ruleset, "
+#~ "because it defines the same label conditions as set by this rule."
+#~ msgstr ""
+#~ "事前定義された各条件は、このルールで設定されたものと同じラベル条件を定義し"
+#~ "ているため、現在のルールセットで使用することはできません。"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to read current conditions of this rule. Falling back to default "
+#~ "values. When saving this rule now, your previous settings will be "
+#~ "overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such "
+#~ "an issue may be caused by an inconsistent configuration, e.g. when rules "
+#~ "refer to tag groups or tags that do not exist anymore."
+#~ msgstr ""
+#~ "このルールの現在の条件を読み取れません。デフォルト値に戻ります。このルール"
+#~ "を保存すると以前の設定は上書きされます。問題：%sでした、以前の条件："
+#~ "<pre>%s</pre>このような問題は、ルールがすでに存在しないタググループやタグ"
+#~ "を参照している場合など、設定に一貫性がないために発生することがあります。"
+
+#, python-format
+#~ msgid "You can create predefined conditions <a href=\"%s\">here</a>."
+#~ msgstr "<a href=\"%s\">ここ</a>で事前定義された条件を作成できます。"
+
+#~ msgid ""
+#~ "You can either specify individual conditions for this rule, or use a set "
+#~ "of predefined conditions, which may be handy if you have to configure the "
+#~ "same conditions in different rulesets."
+#~ msgstr ""
+#~ "このルールに個別の条件を指定するか、事前定義された条件のセットを使用できま"
+#~ "す。これは、異なるルールセットで同じ条件を構成する必要がある場合に便利で"
+#~ "す。"
 
 #~ msgid "Add new field"
 #~ msgstr "新しいフィールドを追加"

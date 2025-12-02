@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-11-27 20:04+0000\n"
+"PO-Revision-Date: 2025-12-01 21:04+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -1183,7 +1183,7 @@ msgid "15 minutes"
 msgstr "15 Minuten"
 
 msgid "17"
-msgstr ""
+msgstr "17"
 
 msgid "2 weeks back"
 msgstr "Vor 2 Wochen"
@@ -1200,9 +1200,8 @@ msgstr "20.0 - 50.0 ms"
 msgid "200.0 - 500.0 ms"
 msgstr "200.0 - 500.0 ms"
 
-#, fuzzy
 msgid "3"
-msgstr "A3"
+msgstr "3"
 
 msgid "3 months"
 msgstr "3 Monate"
@@ -2377,7 +2376,8 @@ msgstr ""
 msgid "A host with this name already exists in this folder."
 msgstr "Ein Host mit diesem Namen existiert in diesem Ordner bereits."
 
-msgid "A human-readable name for this relay configuration."
+#, fuzzy
+msgid "A human-readable alias for this relay configuration."
 msgstr "Ein für Menschen lesbarer Name für diese Relaiskonfiguration."
 
 msgid ""
@@ -3891,9 +3891,9 @@ msgstr "Hinzufügen"
 msgid "Add %s"
 msgstr "%s hinzufügen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Add %s (deprecated)"
-msgstr "RCC (veraltet)"
+msgstr "%s hinzufügen (veraltet)"
 
 #, python-format
 msgid "Add %s configuration"
@@ -3979,9 +3979,8 @@ msgstr "Filterregel für Meldungs-Pattern hinzufügen"
 msgid "Add NGINX instance"
 msgstr "NGNIX-Instanz hinzufügen"
 
-#, fuzzy
 msgid "Add OAuth2 connection"
-msgstr "LDAP-Verbindung hinzufügen"
+msgstr "OAuth2-Verbindung hinzufügen"
 
 msgid "Add OID descriptions"
 msgstr "OID-Beschreibung hinzufügen"
@@ -4123,9 +4122,8 @@ msgstr "Kontaktinformation zu Titel ergänzen"
 msgid "Add customer"
 msgstr "Kunde hinzufügen"
 
-#, fuzzy
 msgid "Add dashboard"
-msgstr "Zum Dashboard hinzufügen"
+msgstr "Dashboard hinzufügen"
 
 msgid "Add destination address"
 msgstr "Zieladresse hinzufügen"
@@ -6990,13 +6988,11 @@ msgstr "Appliance"
 msgid "Appliance uplink VPN statuses"
 msgstr ""
 
-#, fuzzy
 msgid "Appliance uplink performance"
-msgstr "Oracle Performance"
+msgstr "Uplink-Performance der Appliance"
 
-#, fuzzy
 msgid "Appliance uplink statuses"
-msgstr "Apache-Status"
+msgstr "Uplink-Status der Aplliance"
 
 msgid "Appliances, other dedicated hardware"
 msgstr "Appliances, andere spezialisierte Hardware"
@@ -8853,8 +8849,15 @@ msgid "Azure Databases"
 msgstr "Azure Datenbanken"
 
 #, fuzzy
+msgid "Azure Firewall Health"
+msgstr "Azure Firewalls"
+
+#, fuzzy
+msgid "Azure Firewall SNAT Utilization"
+msgstr "Azure Redis CPU-Auslastung"
+
 msgid "Azure Firewalls"
-msgstr "Zorp-Firewall"
+msgstr "Azure Firewalls"
 
 msgid "Azure Load Balancer Health"
 msgstr "Azure Load Balancer Gesundheit"
@@ -8865,9 +8868,8 @@ msgstr "Azure Load Balancer Gesundheit (veraltet)"
 msgid "Azure NAT Gateways Connections"
 msgstr "Azure NAT Gateways Verbindungen"
 
-#, fuzzy
 msgid "Azure NAT Gateways Packets"
-msgstr "Azure NAT Gateways Verbindungen"
+msgstr "Azure NAT Gateways Pakete"
 
 msgid "Azure NAT Gateways Throughput"
 msgstr "Azure NAT Gateways Durchsatz"
@@ -9373,9 +9375,8 @@ msgstr "Bandbreite"
 msgid "Bandwidth levels (per second)"
 msgstr "Bandbreiten-Levels (pro Sekunde)"
 
-#, fuzzy
 msgid "Bandwidth monitoring enabled"
-msgstr "Durchsatz in MByte/Sek"
+msgstr "Monitoring der Bandbreite aktiviert"
 
 msgid "Bank (30 day) month"
 msgstr "Vorrat (30 Tage) Monat"
@@ -10924,12 +10925,11 @@ msgstr "CBC-DES"
 msgid "CCMS paths to monitor"
 msgstr "Zu überwachende CCMS-Pfade"
 
-#, fuzzy
 msgid "CDP cache"
-msgstr "Zwischengespeichert"
+msgstr "CDP-Cache"
 
 msgid "CDP neighbors"
-msgstr ""
+msgstr "CDP-Nachbarn"
 
 msgid "CIFS"
 msgstr "CIFS"
@@ -11879,9 +11879,8 @@ msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nicht schreiben: %s"
 
-#, fuzzy
 msgid "Capabilities"
-msgstr "Kompatibilität"
+msgstr "Fähigkeiten"
 
 msgid "Capacity filled"
 msgstr "Gefüllte Papiermenge"
@@ -13518,9 +13517,8 @@ msgstr "Gewählte Datei: %s"
 msgid "Chrony timesynchronisation"
 msgstr "Chrony Zeitsynchronisation"
 
-#, fuzzy
 msgid "Cipher suite ID"
-msgstr "Instanz-ID verwenden"
+msgstr "Cipher Suite-ID"
 
 msgid "Cisco ASA Firewall Connections"
 msgstr "Cisco ASA Firewall Verbindungen"
@@ -13537,9 +13535,8 @@ msgstr "Cisco IP SLA"
 msgid "Cisco Meraki"
 msgstr "Cisco Meraki"
 
-#, fuzzy
 msgid "Cisco Meraki Appliance Performance Utilization"
-msgstr "Checkmk Appliance Information"
+msgstr "Performance-Auslastung der Cisco Meraki Appliance"
 
 msgid "Cisco Meraki Device status"
 msgstr "Cisco Meraki Gerätestatus"
@@ -13547,17 +13544,14 @@ msgstr "Cisco Meraki Gerätestatus"
 msgid "Cisco Meraki Organisation Licenses Overview"
 msgstr "Cisco Meraki Organisation Lizenzen Übersicht"
 
-#, fuzzy
 msgid "Cisco Meraki appliance VPNs"
-msgstr "Cisco Meraki Gerätestatus"
+msgstr "VPNs der Cisco Meraki Appliance"
 
-#, fuzzy
 msgid "Cisco Meraki appliance uplinks"
-msgstr "Cisco Meraki Netzteil"
+msgstr "Uplinks der Cisco Meraki Appliance"
 
-#, fuzzy
 msgid "Cisco Meraki appliance utilization"
-msgstr "Cisco Meraki Gerätestatus"
+msgstr "Auslastung der Cisco Meraki Appliance"
 
 msgid "Cisco Meraki power supply"
 msgstr "Cisco Meraki Netzteil"
@@ -14237,9 +14231,8 @@ msgstr "Spalten"
 msgid "Columns to match"
 msgstr "Übereinstimmende Spalten"
 
-#, fuzzy
 msgid "Columns to remove"
-msgstr "Übereinstimmende Spalten"
+msgstr "Zu entfernende Spalten"
 
 msgid "Com. buf. max/total"
 msgstr "Bef. buf. max/gesamt"
@@ -16699,6 +16692,10 @@ msgstr "Gespeicherten Bericht erstellen"
 
 msgid "Create the following interface groups"
 msgstr "Erstelle die folgenden Schnittstellengruppen"
+
+#, fuzzy
+msgid "Create the rule in the configured folder"
+msgstr "Neuen virtuellen Hostbaum erstellen"
 
 msgid "Create topic"
 msgstr "Thema erstellen"
@@ -21804,9 +21801,8 @@ msgstr "Domänenteil weglassen (<tt>host123.foobar.de</tt> → <tt>host123</tt>)
 msgid "Dropped messages"
 msgstr "Verworfene Meldungen"
 
-#, fuzzy
 msgid "Dropped packets"
-msgstr "Verworfene Meldungen"
+msgstr "Fallen gelassene Pakete"
 
 msgid "Dropped work requests"
 msgstr "Ignorierte Arbeitsanfragen"
@@ -21859,7 +21855,7 @@ msgid "Dump file: %s"
 msgstr "Dump-Datei: %s"
 
 msgid "Duplex"
-msgstr ""
+msgstr "Duplex"
 
 #, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
@@ -22955,9 +22951,8 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Automatische Host-Entfernung aktivieren"
 
-#, fuzzy
 msgid "Enable compatibility mode"
-msgstr "Kompatibilität"
+msgstr "Kompatibilitätsmodus aktivieren"
 
 msgid "Enable controller"
 msgstr "Controller aktivieren"
@@ -24678,9 +24673,6 @@ msgstr "Explizit"
 
 msgid "Explicit Queue Names"
 msgstr "Einschränkung für Warteschlangen"
-
-msgid "Explicit condition"
-msgstr "Explizite Bedingung"
 
 msgid "Explicit conditions"
 msgstr "Explizite Bedingungen"
@@ -28060,9 +28052,9 @@ msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 msgid "HW/SW Inventory cleanup"
 msgstr "Bereinigung der HW-/SW-Inventur"
 
-#, fuzzy, python-format
+#, python-format
 msgid "HW/SW Inventory display hints in %r"
-msgstr "Historie der HW-/SW-Inventur"
+msgstr ""
 
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
@@ -34374,9 +34366,8 @@ msgstr "Eingangslevels (pro Sekunde)"
 msgid "Inbound messages"
 msgstr "Eingehende Meldungen"
 
-#, fuzzy
 msgid "Inbound packets"
-msgstr "Eingabepakete"
+msgstr "Eingehende Pakete"
 
 msgid "Inbound throughput lower levels (/sec)"
 msgstr "Untergrenzen des eingehenden Durchsatzes (/sec)"
@@ -35430,10 +35421,6 @@ msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 #, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ungültiger Erweiterungstyp, unterstützte Typen sind: %s"
-
-#, python-format
-msgid "Invalid figure content: %s"
-msgstr "Ungültiger Zahleninhalt: %s"
 
 msgid "Invalid file name"
 msgstr "Ungültiger Dateiname"
@@ -38647,9 +38634,8 @@ msgstr ""
 "(Die Datei $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt wird "
 "hochgeladen)."
 
-#, fuzzy
 msgid "Local port"
-msgstr "Lokaler Pfad"
+msgstr "Lokaler Port"
 
 msgid "Local port number"
 msgstr "Lokale Portnummer"
@@ -40214,9 +40200,8 @@ msgstr ""
 msgid "Map to contact groups"
 msgstr "Kontaktgruppen zuordnen"
 
-#, fuzzy
 msgid "Map uplink status to monitoring state"
-msgstr "Gerätestatus dem Monitoring-Zustand zuweisen"
+msgstr "Uplink-Status dem Monitoring-Zustand zuweisen"
 
 msgid "Map value to specific groups"
 msgstr "Wert spezifischen Gruppen zuordnen"
@@ -41915,9 +41900,9 @@ msgstr "Der Parameter \"%s\" fehlt."
 msgid "Missing prerequisite"
 msgstr "Fehlende Voraussetzung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Missing request variable '%s'"
-msgstr "Variable siteid fehlt"
+msgstr "Fehlende Anfragevariable '%s'"
 
 msgid "Missing required \"Host name\" selection."
 msgstr "Fehlende erforderliche \"Host-Name\" Auswahl."
@@ -42505,9 +42490,8 @@ msgid "Monitoring state if the Cluster Collector reports no Machine Metrics"
 msgstr ""
 "Monitoring-Zustand, wenn der Cluster-Kollektor keine Maschinenmetriken meldet"
 
-#, fuzzy
 msgid "Monitoring state if the VPN peer is not reachable"
-msgstr "Monitoring-Zustand falls der Task nicht aktiviert ist"
+msgstr "Monitoring-Zustand falls der VPN-Peer nicht erreichbar ist"
 
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "Monitoring-Zustand, wenn die falsche Einheit aktiv oder im standby ist"
@@ -43399,7 +43383,7 @@ msgid "Naming for outlets at discovery"
 msgstr "Benennung für Stromanschlüsse bei der Erkennung"
 
 msgid "Native VLAN"
-msgstr ""
+msgstr "Natives VLAN"
 
 msgid "Native cluster mode"
 msgstr "Nativer Cluster-Modus"
@@ -43457,6 +43441,12 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
 
+#, fuzzy
+msgid "Negate: make rule apply for all but the above entries"
+msgstr ""
+"<b>Negation:</b> Wende Regel auf alle <b>außer</b> den oben stehenden "
+"Einträgen an"
+
 msgid "Negative age tolerance"
 msgstr "Toleranz für negative Altersangaben"
 
@@ -43474,28 +43464,24 @@ msgstr "Negative Werte sind nicht erlaubt"
 msgid "Negotiate"
 msgstr "Verhandeln"
 
-#, fuzzy
 msgid "Neighbor ID"
-msgstr "Sensor-ID"
+msgstr "Nachbar-ID"
 
 #, fuzzy
 msgid "Neighbor address"
 msgstr "Netzwerkadresse"
 
-#, fuzzy
 msgid "Neighbor name"
-msgstr "Sensorname"
+msgstr "Name des Nachbarn"
 
 msgid "Neighbor platform"
 msgstr ""
 
-#, fuzzy
 msgid "Neighbor platform details"
-msgstr "Klicken Sie hier für Details."
+msgstr "Details der Nachbar-Plattform"
 
-#, fuzzy
 msgid "Neighbor port"
-msgstr "Port des Message Broker"
+msgstr "Port des Nachbarn"
 
 msgid "Neither"
 msgstr "Weder"
@@ -44063,6 +44049,11 @@ msgid "No datasource defined."
 msgstr "Keine Datenquelle definiert."
 
 msgid "No default values can be set for condition choices."
+msgstr ""
+"Für die Auswahl von Bedingungen können keine Standardwerte festgelegt werden."
+
+#, fuzzy
+msgid "No default values can be set."
 msgstr ""
 "Für die Auswahl von Bedingungen können keine Standardwerte festgelegt werden."
 
@@ -46212,9 +46203,8 @@ msgstr "OAuth-Token-Authentifizierung"
 msgid "OAuth2 (ClientID/TenantID)"
 msgstr "OAuth2 (ClientID/TenantID)"
 
-#, fuzzy
 msgid "OAuth2 connection"
-msgstr "Verbindung hinzufügen"
+msgstr "OAuth2-Verbindung"
 
 msgid "OEM data interpretation"
 msgstr "OEM-Dateninterpretation"
@@ -48216,9 +48206,8 @@ msgstr "Ausgangslevels (pro Sekunde)"
 msgid "Outbound messages"
 msgstr "Ausgehende Meldungen"
 
-#, fuzzy
 msgid "Outbound packets"
-msgstr "Ausgabepakete"
+msgstr "Ausgehende Pakete"
 
 msgid "Outbound rule"
 msgstr "Ausgangsregel"
@@ -48910,17 +48899,14 @@ msgstr "ASIC Paket Beschleunigung"
 msgid "Packets"
 msgstr "Pakete"
 
-#, fuzzy
 msgid "Packets (dropped)"
-msgstr "Pakete verworfen"
+msgstr "Pakete (fallen gelassen)"
 
-#, fuzzy
 msgid "Packets (in/out)"
-msgstr "Eingehende/ausgehende Anrufe"
+msgstr "Pakete (ein-/ausgehend)"
 
-#, fuzzy
 msgid "Packets (total)"
-msgstr "Lizenzen (gesamt)"
+msgstr "Pakete (gesamt)"
 
 msgid "Packets Dropped"
 msgstr "Pakete verworfen"
@@ -49889,9 +49875,8 @@ msgstr "Zeitreihen-Graph"
 msgid "Performance options"
 msgstr "Performance-Einstellungen"
 
-#, fuzzy
 msgid "Performance utilization"
-msgstr "Auslastung pro Kern"
+msgstr "Performance-Auslastung"
 
 msgid "Performance: IO stats"
 msgstr "Performance: E/A-Statistiken"
@@ -50289,6 +50274,10 @@ msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
 
 msgid "Please add at least one service group."
 msgstr "Bitte fügen Sie mindestens eine Service-Gruppe hinzu."
+
+#, fuzzy
+msgid "Please add at least one service item."
+msgstr "Bitte fügen Sie mindestens einen Service hinzu."
 
 msgid "Please add at least one service label."
 msgstr "Bitte fügen Sie mindestens ein Service-Label hinzu."
@@ -51289,9 +51278,8 @@ msgstr "Energieverbrauch"
 msgid "Power consumption draw"
 msgstr "Stromverbrauch"
 
-#, fuzzy
 msgid "Power level"
-msgstr "Untergrenzen"
+msgstr "Stromlevel"
 
 msgid "Power state mapping"
 msgstr "Zuordnung des Energiezustands"
@@ -51353,12 +51341,6 @@ msgstr "Vorkompiliert"
 
 msgid "Predefined condition"
 msgstr "Vordefinierte Bedingung"
-
-#, python-format
-msgid "Predefined condition '%s' does not exist or using not permitted"
-msgstr ""
-"Vordefinierte Bedingung'%s' existiert nicht oder die Verwendung ist nicht "
-"erlaubt"
 
 #, python-format
 msgid "Predefined condition: '%s' does not exist or using not permitted"
@@ -53484,20 +53466,22 @@ msgstr "Relais"
 msgid "Relay ID"
 msgstr "Relais-ID"
 
+#, fuzzy
+msgid "Relay alias"
+msgstr "Relais"
+
 msgid "Relay configuration"
 msgstr "Relais-Konfiguration"
 
 msgid "Relay configurations"
 msgstr "Relais-Konfigurationen"
 
-msgid "Relay display name"
+#, fuzzy
+msgid "Relay display alias"
 msgstr "Relais-Anzeigename"
 
 msgid "Relay log size"
 msgstr "Relais Log-Größe"
-
-msgid "Relay name"
-msgstr "Relais-Name"
 
 msgid "Relay properties"
 msgstr "Relais-Eigenschaften"
@@ -54915,9 +54899,8 @@ msgstr "Test wiederholen"
 msgid "Retry time"
 msgstr "Wiederholungszeitraum"
 
-#, fuzzy
 msgid "Return CRITICAL if found, OK if not"
-msgstr "Rückgabewert: CRITICAL wenn gefunden, OK wenn nicht"
+msgstr "Liefere CRITICAL zurück, wenn gefunden, OK, wenn nicht"
 
 msgid "Return code class 2xx (success)"
 msgstr "Rückgabecode Klasse 2xx (Erfolg)"
@@ -55886,6 +55869,18 @@ msgstr "SNAT-Nutzung"
 
 msgid "SNAT Usage (Deprecated)"
 msgstr "SNAT-Auslastung (veraltet)"
+
+#, fuzzy
+msgid "SNAT port utilization"
+msgstr "Knoten-Auslastung"
+
+#, fuzzy
+msgid "SNAT port utilization %"
+msgstr "Knoten-Auslastung"
+
+#, fuzzy
+msgid "SNAT port utilization levels"
+msgstr "CPU-Auslastungslevels"
 
 msgid "SNAT usage"
 msgstr "SNAT-Nutzung"
@@ -58208,9 +58203,8 @@ msgstr ""
 "variablefile</tt> für einen mächtigeren Mechanismus zum Setzen von "
 "Variablen.)"
 
-#, fuzzy
 msgid "Set graph time"
-msgstr "Benutze Graphtitel"
+msgstr "Graph-Zeit setzen"
 
 msgid "Set height"
 msgstr "Höhe festlegen"
@@ -59498,6 +59492,10 @@ msgid "Signing agents in a&nbsp;<a href=\"%s\">background job</a>."
 msgstr "Agenten werden in einem <a href=\"%s\">Hintergrund-Job</a> signiert."
 
 msgid "Signing agents' client certificates"
+msgstr "Signieren der Client-Zertifikate des Agenten"
+
+#, fuzzy
+msgid "Signing relay client certificates"
 msgstr "Signieren der Client-Zertifikate des Agenten"
 
 msgid "Signing the site certificate"
@@ -65647,13 +65645,6 @@ msgstr ""
 "Das konfigurierte Passwort wurde entweder entfernt oder Sie sind nicht "
 "berechtigt das Passwort zu nutzen. Wählen Sie ein anderes Passwort."
 
-msgid ""
-"The configured predefined condition has either be removed or you are not "
-"permitted to use it. Please choose another one."
-msgstr ""
-"Die konfigurierte vordefinierte Bedingung wurde entweder entfernt oder Sie "
-"dürfen sie nicht verwenden. Bitte wählen Sie eine andere aus."
-
 msgid "The configured site is not known to this site."
 msgstr "Die konfigurierte Instanz ist dieser Instanz nicht bekannt."
 
@@ -68149,7 +68140,6 @@ msgstr ""
 "Die oben genannten Probleme können durch fehlende Caches verursacht worden "
 "sein. Bitte führen Sie einen Rescan durch."
 
-#, fuzzy
 msgid ""
 "The provided header key and value need to match exactly with the actual "
 "header of the response. Please note that the service will get a CRIT, if "
@@ -68158,7 +68148,7 @@ msgid ""
 msgstr ""
 "Der angegebene Header-Schlüssel und der Wert müssen exakt mit dem "
 "tatsächlichen Header der Antwort übereinstimmen. Bitte beachten Sie, dass "
-"der Service ein WARN erhält, wenn entweder der Schlüssel oder der Wert nicht "
+"der Service ein CRIT erhält, wenn entweder der Schlüssel oder der Wert nicht "
 "übereinstimmen. Bei der Suche nach einem regulären Ausdruck wird die erste "
 "Übereinstimmung als Erfolg gewertet."
 
@@ -68171,6 +68161,10 @@ msgstr ""
 "so sein wie im Rohtext des Dokuments. Dies gilt auch für Html-Auszeichnungen "
 "zwischen benutzerorientierten Zeichenketten. Dies gilt auch für die Suche in "
 "einem regulären Ausdruck."
+
+#, fuzzy
+msgid "The provided token is not valid for the requested page."
+msgstr "Der Zugriffstoken ist ungültig, widerrufen oder abgelaufen."
 
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Das abzufragende ESX-System (vCenter / Host)"
@@ -71326,7 +71320,7 @@ msgid ""
 "case the 64-bit counters reported by the device are useless due to broken "
 "firmware."
 msgstr ""
-"Mit dieser Option kann das Holen einzelner Sektionen ausgeschlossen werden. "
+"Diese Option ermöglicht es, das Holen einzelner Sektionen auszuschließen. "
 "Infolgedessen können zugehörige Checkmk-Services vollständig fehlen. Einige "
 "Check-Plugins verarbeiten jedoch mehrere Sektionen und ihr Verhalten kann "
 "sich ändern, wenn eine von ihnen ausgeschlossen wird. In solchen Fällen "
@@ -71339,7 +71333,6 @@ msgstr ""
 "<tt>if64</tt>) für den Fall, dass die vom Gerät gemeldeten 64-Bit-Zähler "
 "aufgrund einer defekten Firmware unbrauchbar sind."
 
-#, fuzzy
 msgid ""
 "This option allows to select specific sections of the Checkmk agent. All of "
 "the sections checked below will be executed. Sections that are not selected "
@@ -71349,9 +71342,9 @@ msgid ""
 "performance is needed by the Eventlog monitoring and the performance "
 "counters. "
 msgstr ""
-"Mit dieser Option können Sie spezifische Sektionen des Checkmk-Agenten "
-"auswählen. Standardmäßig werden alle Sektionen ausgeführt. Sektionen, die "
-"hier nicht ausgewählt sind, werden übersprungen. Das Überspringen von "
+"Diese Option ermöglicht es, spezifische Sektionen des Checkmk-Agenten "
+"auszuwählen. Alle unten ausgewählten Sektionen werden ausgeführt. Sektionen, "
+"die hier nicht ausgewählt sind, werden übersprungen. Das Überspringen von "
 "Sektionen reduziert die CPU-Last auf dem überwachten Host und die Menge der "
 "übertragenen Daten. Es kann jedoch dazu führen, dass der zugehörige Checkmk-"
 "Service oder die zugehörigen Services ausfallen. Die meiste CPU-Performance "
@@ -71382,18 +71375,18 @@ msgid ""
 "expressions matching one or more Datadog tags. Any matching tag will be "
 "added to the text of the corresponding event."
 msgstr ""
-"Mit dieser Option können Sie konfigurieren, welche Datadog-Merkmale in den "
-"an die Event Console weitergeleiteten Ereignissen angezeigt werden sollen. "
-"Dies geschieht durch die Eingabe von regulären Ausdrücken, die mit einem "
-"oder mehreren Datadog-Merkmalen übereinstimmen. Jedes übereinstimmende "
-"Merkmal wird dem Text des entsprechenden Ereignisses hinzugefügt."
+"Diese Option ermöglicht die Konfiguration, welche Datadog-Merkmale in den an "
+"die Event Console weitergeleiteten Ereignissen angezeigt werden sollen. Dies "
+"geschieht durch die Eingabe von regulären Ausdrücken, die mit einem oder "
+"mehreren Datadog-Merkmalen übereinstimmen. Jedes übereinstimmende Merkmal "
+"wird dem Text des entsprechenden Ereignisses hinzugefügt."
 
 msgid ""
 "This option allows you to configure which Datadog tags will be shown in the "
 "service output. This is done by entering regular expressions matching one or "
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
-"Mit dieser Option können Sie konfigurieren, welche Datadog-Merkmale in der "
+"Diese Option ermöglicht die Konfiguration, welche Datadog-Merkmale in der "
 "Service-Ausgabe angezeigt werden sollen. Dies geschieht durch die Eingabe "
 "regulärer Ausdrücke, die mit einem oder mehreren Datadog-Merkmalen "
 "übereinstimmen. Jedes übereinstimmende Merkmal wird in der Service-Ausgabe "
@@ -71407,8 +71400,8 @@ msgid ""
 "than 70% of servers reachable</tt>. This message is also shown within the BI "
 "aggregation check plug-ins."
 msgstr ""
-"Mit dieser Option können Sie einen zusätzlichen, frei konfigurierbaren Text "
-"zum Ergebnis der Regel anzeigen lassen, der den Zustand detaillierter "
+"Diese Option ermöglicht es Ihnen einen zusätzlichen, frei konfigurierbaren "
+"Text zum Ergebnis der Regel anzeigen lassen, der den Zustand detaillierter "
 "beschreibt. Zum Beispiel kann die Regel statt <tt>CRIT</tt> nun <tt>CRIT, "
 "weniger als 70% der Server erreichbar</tt> anzeigen. Diese Meldung wird auch "
 "in den BI-Aggregat-Check-Plugins angezeigt."
@@ -72251,14 +72244,6 @@ msgstr ""
 "Monitoring-Informationen von LSI-RAID-Controllern und angeschlossenen "
 "Festplatten zu ermitteln. Sie können es von <a href='http://"
 "www.lsi.com/'>LSI</a> herunterladen."
-
-msgid ""
-"This predefined condition can not be used with the current ruleset, because "
-"it defines the same label conditions as set by this rule."
-msgstr ""
-"Diese vordefinierte Bedingung kann nicht mit dem aktuellen Regelsatz "
-"verwendet werden, da sie die gleichen Label-Bedingungen definiert, wie sie "
-"von dieser Regel festgelegt wurden."
 
 msgid "This problem has been acknowledged"
 msgstr "Dieses Problem wurde quittiert"
@@ -73370,6 +73355,22 @@ msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für die Durchsatzmetriken von "
 "Azure Cosmos DB zu konfigurieren"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall SNAT port "
+"utilization monitoring"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der CPU-"
+"Nutzung für Azure Redis zu konfigurieren"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Gesundheitsmonitoring "
+"der Azure NAT Gateways zu konfigurieren"
+
 msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "connections monitoring"
@@ -73384,13 +73385,13 @@ msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Gesundheitsmonitoring "
 "der Azure NAT Gateways zu konfigurieren"
 
-#, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways packets, "
 "including thresholds for dropped packets."
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
-"NAT Gateways Verbindungen zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für Pakete von Azure NAT "
+"Gateways, inklusive Schwellwerten für fallen gelassenen Pakete, zu "
+"konfigurieren."
 
 msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
@@ -76127,9 +76128,8 @@ msgstr "Gesamtzahl Zombie Aufträge"
 msgid "Total number of {property} upper levels"
 msgstr "Obergrenze für die Gesamtzahl an {property}"
 
-#, fuzzy
 msgid "Total packets"
-msgstr "Maximale Gesamtzahl Pakete"
+msgstr "Gesamtzahl Pakete"
 
 msgid "Total packets maximum"
 msgstr "Maximale Gesamtzahl Pakete"
@@ -78500,21 +78500,6 @@ msgstr "Anfrage kann nicht bearbeitet werden"
 
 #, python-format
 msgid ""
-"Unable to read current conditions of this rule. Falling back to default "
-"values. When saving this rule now, your previous settings will be "
-"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
-"issue may be caused by an inconsistent configuration, e.g. when rules refer "
-"to tag groups or tags that do not exist anymore."
-msgstr ""
-"Die aktuellen Optionen dieser Regel können nicht gelesen werden. Fallback "
-"auf Standardwerte. Wenn Sie diese Regel jetzt speichern, werden Ihre "
-"bisherigen Einstellungen überschrieben. Das Problem war: %s, Vorherige "
-"Bedingungen: <pre>%s</pre>So ein Problem kann durch eine inkonsistente "
-"Konfiguration verursacht werden, z.B. wenn sich Regeln auf Merkmalsgruppen "
-"oder Merkmale beziehen, die nicht mehr existieren."
-
-#, python-format
-msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
 "When saving this rule now, your previous settings will be overwritten. The "
 "problem was: %s."
@@ -79128,23 +79113,20 @@ msgstr ""
 "Upgrade auf Checkmk Enterprise oder Checkmk Ultimate durchführen, um diese "
 "Funktion zu nutzen"
 
-#, fuzzy
 msgid "Uplink name"
-msgstr "Name des Client"
+msgstr "Name des Uplinks"
 
 msgid "Uplink status \"active\""
 msgstr ""
 
-#, fuzzy
 msgid "Uplink status \"connecting\""
-msgstr "Livestatus-Verbindungen"
+msgstr "Uplink-Status \"wird verbunden\""
 
 msgid "Uplink status \"failed\""
 msgstr ""
 
-#, fuzzy
 msgid "Uplink status \"not connected\""
-msgstr "Verbundene Clients"
+msgstr "Uplink-Status \"nicht verbunden\""
 
 msgid "Uplink status \"ready\""
 msgstr ""
@@ -81877,9 +81859,8 @@ msgstr "VSID"
 msgid "VServer name"
 msgstr "VServer Name"
 
-#, fuzzy
 msgid "VTP domain"
-msgstr "Virtual Domain"
+msgstr "VTP-Domain"
 
 #, python-format
 msgid "Val. %d"
@@ -84324,13 +84305,11 @@ msgstr "Windows Tasks"
 msgid "Windows Terminal Server Sessions"
 msgstr "Windows Terminal Server Sessions"
 
-#, fuzzy
 msgid "Windows Time Service (peers)"
-msgstr "Peers des Windows Zeit-Services"
+msgstr "Windows Zeit-Service (Peers)"
 
-#, fuzzy
 msgid "Windows Time Service (status)"
-msgstr "Status des Windows Zeit-Services"
+msgstr "Windows Zeit-Service (Status)"
 
 msgid "Windows Updates"
 msgstr "Windows-Updates"
@@ -85454,11 +85433,6 @@ msgstr ""
 "Sie können die nachstehende Datenstruktur kopieren und in Ihren REST-API-"
 "Anfragen verwenden."
 
-#, python-format
-msgid "You can create predefined conditions <a href=\"%s\">here</a>."
-msgstr ""
-"Sie können vordefinierte Bedingungen <a href=\"%s\">hier</a> erstellen."
-
 msgid ""
 "You can customize the list of icon categories to be able to assign your <a "
 "href=\"wato.py?mode=icons\">custom icons</a> to these categories. They will "
@@ -85543,16 +85517,6 @@ msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
 "Sie können die Kapazität Ihrer Instanz ganz einfach erhöhen, indem Sie ein "
 "Upgrade Ihres Plans durchführen."
-
-msgid ""
-"You can either specify individual conditions for this rule, or use a set of "
-"predefined conditions, which may be handy if you have to configure the same "
-"conditions in different rulesets."
-msgstr ""
-"Sie können entweder individuelle Bedingungen für diese Regel angeben oder "
-"eine Reihe von vordefinierten Bedingungen verwenden, was nützlich sein kann, "
-"wenn Sie die gleichen Bedingungen in verschiedenen Regelsätzen konfigurieren "
-"müssen."
 
 msgid ""
 "You can enter a text here that will be displayed in the element when viewing "
@@ -89652,6 +89616,10 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] "Es gibt %{ n } Apfel"
 msgstr[1] "Es gibt %{ n } Äpfel"
 
+#, fuzzy
+msgid "Error retrieving AI service information. Please try again later."
+msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es später noch einmal."
+
 msgid "Checkmk AI feature documentation & privacy policy"
 msgstr "Checkmk KI-Funktionsdokumentation & Datenschutzerklärung"
 
@@ -89685,6 +89653,10 @@ msgstr "Was soll die KI tun?"
 
 msgid "No actions found"
 msgstr "Keine Aktionen gefunden"
+
+#, fuzzy
+msgid "Error retrieving available AI actions. Please try again later."
+msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es später noch einmal."
 
 msgid "The following feature uses a Large Language Model (LLM)."
 msgstr "Die folgende Funktion nutzt ein Large Language Model (LLM)."
@@ -90685,6 +90657,10 @@ msgstr "Graph (kombiniert)"
 msgid "Service metric"
 msgstr "Service-Metrik"
 
+#, fuzzy
+msgid "Filter service metric by"
+msgstr "Service-Metrik auswählen"
+
 msgid "Must select an option"
 msgstr "Sie müssen eine Option auswählen"
 
@@ -90777,6 +90753,26 @@ msgstr ""
 
 msgid "Copy existing view: %{viewName}"
 msgstr "Vorhandene Ansicht kopieren: %{viewName}"
+
+#, fuzzy
+msgid "Select operator"
+msgstr "Option auswählen"
+
+#, fuzzy
+msgid "Select label"
+msgstr "Label auswählen..."
+
+#, fuzzy
+msgid "Remove item"
+msgstr "Filter entfernen"
+
+#, fuzzy
+msgid "Remove group"
+msgstr "Zeile entfernen"
+
+#, fuzzy
+msgid "and not"
+msgstr "Ist nicht"
 
 msgid "explicit password"
 msgstr "explizites Passwort"
@@ -91170,87 +91166,70 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
-#, fuzzy
 msgid "Application successfully authorized!"
-msgstr "Die Benachrichtigungsregel wurde erfolgreich bearbeitet!"
+msgstr "Applikation wurde erfolgreich autorisiert!"
 
-#, fuzzy
 msgid "Access token successfully requested!"
-msgstr "Host erfolgreich erstellt"
+msgstr "Ein Zugangstoken wurde erfolgreich angefordert!"
 
-#, fuzzy
 msgid "You can now close this window."
-msgstr "Sie können diese Regel nicht speichern."
+msgstr "Sie können diese Fenster jetzt schließen."
 
-#, fuzzy
 msgid "Verifying the authorization..."
-msgstr "Die Registrierung wird verifiziert..."
+msgstr "Autorisierung wird verifiziert..."
 
-#, fuzzy
 msgid "Authorization failed."
-msgstr "Authentifizierung fehlgeschlagen"
+msgstr "Authentifizierung fehlgeschlagen."
 
-#, fuzzy
 msgid "Requesting access token"
-msgstr "API Zugriffstoken"
+msgstr "Zugriffstoken wird angefragt"
 
-#, fuzzy
 msgid "${res.message}"
-msgstr "Nachricht"
+msgstr "${res.message}"
 
-#, fuzzy
 msgid "Failed to request and save access token: ${e}"
-msgstr "Fehlgeschlagene Anfragen an Adressbuchdateien"
+msgstr "Anfrage und Speicherung des Zugriffstokens sind fehlgeschlagen: ${e}"
 
-#, fuzzy
 msgid "Authorization was not completed. Please try again."
-msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es später noch einmal."
+msgstr ""
+"Autorisierung wurde nicht abgeschlossen. Bitte versuchen Sie es erneut."
 
-#, fuzzy
 msgid "Authorize application"
-msgstr "Authorisation"
+msgstr "Applikation autorisieren"
 
-#, fuzzy
 msgid ""
 "A new tab will be opened. Please follow the instructions to authorize the "
 "application"
-msgstr "Bitte folgen Sie den Anweisungen Ihres Browsers zur Authentifizierung."
+msgstr ""
+"Es wird ein neuer Reiter geöffnet. Bitte folgen Sie den Anweisungen für die "
+"Autorisierung der Applikation"
 
-#, fuzzy
 msgid "OAuth2 connection created successfully!"
-msgstr "Agentenverbindung erfolgreich"
+msgstr "OAuth2-Verbindung wurde erfolgreich erstellt!"
 
-#, fuzzy
 msgid "Go back to restart authorization process"
-msgstr "Authentifizierungsanfrage kann nicht erstellt werden"
+msgstr "Zurückgehen, um Autorisierungsprozess erneut zu starten"
 
-#, fuzzy
 msgid "Define OAuth2 parameter"
-msgstr "Standardparameter"
+msgstr "OAuth2-Parameter definieren"
 
-#, fuzzy
 msgid "Description:"
-msgstr "Beschreibung"
+msgstr "Beschreibung:"
 
-#, fuzzy
 msgid "Authority:"
-msgstr "Einrichtung"
+msgstr "Einrichtung:"
 
-#, fuzzy
 msgid "Tenant ID:"
-msgstr "Tenant-ID"
+msgstr "Tenant-ID:"
 
-#, fuzzy
 msgid "Client ID:"
-msgstr "Client-ID"
+msgstr "Client-ID:"
 
-#, fuzzy
 msgid "Client secret:"
-msgstr "Client-Geheimnis"
+msgstr "Client-Geheimnis:"
 
-#, fuzzy
 msgid "Start authorization"
-msgstr "Basis-Autorisierung"
+msgstr "Autorisierung starten"
 
 msgid "Configure title and site"
 msgstr "Titel und Instanz konfigurieren"
@@ -91287,11 +91266,12 @@ msgstr "Das Image des Relais-Containers verteilen."
 msgid "Name the relay"
 msgstr ""
 
-msgid "Provide a display name for your Relay."
+#, fuzzy
+msgid "Provide a display alias for your Relay."
 msgstr "Geben Sie einen Anzeigenamen für Ihre Relais an."
 
 msgid ""
-"The name you enter here will be automatically inserted into the terminal "
+"The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
 
@@ -91778,6 +91758,67 @@ msgstr "Willkommensseite beim Start anzeigen"
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Explicit condition"
+#~ msgstr "Explizite Bedingung"
+
+#, python-format
+#~ msgid "Invalid figure content: %s"
+#~ msgstr "Ungültiger Zahleninhalt: %s"
+
+#, python-format
+#~ msgid "Predefined condition '%s' does not exist or using not permitted"
+#~ msgstr ""
+#~ "Vordefinierte Bedingung'%s' existiert nicht oder die Verwendung ist nicht "
+#~ "erlaubt"
+
+#~ msgid "Relay name"
+#~ msgstr "Relais-Name"
+
+#~ msgid ""
+#~ "The configured predefined condition has either be removed or you are not "
+#~ "permitted to use it. Please choose another one."
+#~ msgstr ""
+#~ "Die konfigurierte vordefinierte Bedingung wurde entweder entfernt oder "
+#~ "Sie dürfen sie nicht verwenden. Bitte wählen Sie eine andere aus."
+
+#~ msgid ""
+#~ "This predefined condition can not be used with the current ruleset, "
+#~ "because it defines the same label conditions as set by this rule."
+#~ msgstr ""
+#~ "Diese vordefinierte Bedingung kann nicht mit dem aktuellen Regelsatz "
+#~ "verwendet werden, da sie die gleichen Label-Bedingungen definiert, wie "
+#~ "sie von dieser Regel festgelegt wurden."
+
+#, python-format
+#~ msgid ""
+#~ "Unable to read current conditions of this rule. Falling back to default "
+#~ "values. When saving this rule now, your previous settings will be "
+#~ "overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such "
+#~ "an issue may be caused by an inconsistent configuration, e.g. when rules "
+#~ "refer to tag groups or tags that do not exist anymore."
+#~ msgstr ""
+#~ "Die aktuellen Optionen dieser Regel können nicht gelesen werden. Fallback "
+#~ "auf Standardwerte. Wenn Sie diese Regel jetzt speichern, werden Ihre "
+#~ "bisherigen Einstellungen überschrieben. Das Problem war: %s, Vorherige "
+#~ "Bedingungen: <pre>%s</pre>So ein Problem kann durch eine inkonsistente "
+#~ "Konfiguration verursacht werden, z.B. wenn sich Regeln auf "
+#~ "Merkmalsgruppen oder Merkmale beziehen, die nicht mehr existieren."
+
+#, python-format
+#~ msgid "You can create predefined conditions <a href=\"%s\">here</a>."
+#~ msgstr ""
+#~ "Sie können vordefinierte Bedingungen <a href=\"%s\">hier</a> erstellen."
+
+#~ msgid ""
+#~ "You can either specify individual conditions for this rule, or use a set "
+#~ "of predefined conditions, which may be handy if you have to configure the "
+#~ "same conditions in different rulesets."
+#~ msgstr ""
+#~ "Sie können entweder individuelle Bedingungen für diese Regel angeben oder "
+#~ "eine Reihe von vordefinierten Bedingungen verwenden, was nützlich sein "
+#~ "kann, wenn Sie die gleichen Bedingungen in verschiedenen Regelsätzen "
+#~ "konfigurieren müssen."
 
 #~ msgid "Add new field"
 #~ msgstr "Neues Feld hinzufügen"

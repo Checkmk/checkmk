@@ -2353,7 +2353,7 @@ msgid "A host with this name already exists in this folder."
 msgstr "Ya existe un host con este nombre en esta carpeta."
 
 #, fuzzy
-msgid "A human-readable name for this relay configuration."
+msgid "A human-readable alias for this relay configuration."
 msgstr "Crear una nueva configuración del árbol de hosts virtuales"
 
 #, fuzzy
@@ -9285,6 +9285,14 @@ msgstr "Almacenamiento Azure DB"
 
 msgid "Azure Databases"
 msgstr "Bases de datos Azure"
+
+#, fuzzy
+msgid "Azure Firewall Health"
+msgstr "Cortafuegos Zorp"
+
+#, fuzzy
+msgid "Azure Firewall SNAT Utilization"
+msgstr "Utilización de la CPU de GCP/Redis"
 
 #, fuzzy
 msgid "Azure Firewalls"
@@ -17398,6 +17406,10 @@ msgstr "Crear un informe almacenado"
 
 msgid "Create the following interface groups"
 msgstr "Cree los siguientes grupos de interfaces"
+
+#, fuzzy
+msgid "Create the rule in the configured folder"
+msgstr "Crear una nueva configuración del árbol de hosts virtuales"
 
 msgid "Create topic"
 msgstr "Crear tema"
@@ -25778,10 +25790,6 @@ msgstr "Explícito"
 
 msgid "Explicit Queue Names"
 msgstr "Nombres de cola explícitos"
-
-#, fuzzy
-msgid "Explicit condition"
-msgstr "Condiciones explícitas"
 
 msgid "Explicit conditions"
 msgstr "Condiciones explícitas"
@@ -37136,10 +37144,6 @@ msgstr "Llamada esperada no válida para %s en idx %d: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tipo de perfómetro no válido: %s"
 
-#, fuzzy, python-format
-msgid "Invalid figure content: %s"
-msgstr "Conexión de usuario no válida: %s"
-
 msgid "Invalid file name"
 msgstr "Nombre de archivo no válido"
 
@@ -45595,6 +45599,12 @@ msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negar: encontrar hosts <b>que no tengan este paquete</b>"
 
 #, fuzzy
+msgid "Negate: make rule apply for all but the above entries"
+msgstr ""
+"<b>Negar:</b> hacer que la regla se aplique para <b>todas menos</b> las "
+"entradas anteriores"
+
+#, fuzzy
 msgid "Negative age tolerance"
 msgstr "Aquí no se permite un valor vacío."
 
@@ -46263,6 +46273,10 @@ msgstr "No se ha definido ninguna fuente de datos."
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
+msgstr "Establecer valores por defecto para todas las secciones"
+
+#, fuzzy
+msgid "No default values can be set."
 msgstr "Establecer valores por defecto para todas las secciones"
 
 #, fuzzy
@@ -52966,6 +52980,10 @@ msgid "Please add at least one service group."
 msgstr "Por favor, añada al menos un nodo hijo."
 
 #, fuzzy
+msgid "Please add at least one service item."
+msgstr "Por favor, añada al menos un nodo hijo."
+
+#, fuzzy
 msgid "Please add at least one service label."
 msgstr "Por favor, añada al menos un nodo hijo."
 
@@ -54095,10 +54113,6 @@ msgstr "Precompilado"
 
 msgid "Predefined condition"
 msgstr "Condición predefinida"
-
-#, python-format
-msgid "Predefined condition '%s' does not exist or using not permitted"
-msgstr "La condición predefinida '%s' no existe o su uso no está permitido"
 
 #, python-format
 msgid "Predefined condition: '%s' does not exist or using not permitted"
@@ -56373,6 +56387,10 @@ msgid "Relay ID"
 msgstr "Clave ID"
 
 #, fuzzy
+msgid "Relay alias"
+msgstr "Retraso:"
+
+#, fuzzy
 msgid "Relay configuration"
 msgstr "configuración"
 
@@ -56381,16 +56399,12 @@ msgid "Relay configurations"
 msgstr "configuración"
 
 #, fuzzy
-msgid "Relay display name"
+msgid "Relay display alias"
 msgstr "Mostrar nombre"
 
 #, fuzzy
 msgid "Relay log size"
 msgstr "Tamaño del registro de relés"
-
-#, fuzzy
-msgid "Relay name"
-msgstr "Cambiar el nombre de"
 
 #, fuzzy
 msgid "Relay properties"
@@ -58950,6 +58964,18 @@ msgstr "Uso de SNAT"
 #, fuzzy
 msgid "SNAT Usage (Deprecated)"
 msgstr "Almacenamiento de Azure"
+
+#, fuzzy
+msgid "SNAT port utilization"
+msgstr "Utilización de la cinta"
+
+#, fuzzy
+msgid "SNAT port utilization %"
+msgstr "Utilización de la cinta"
+
+#, fuzzy
+msgid "SNAT port utilization levels"
+msgstr "Utilización de la CPU"
 
 msgid "SNAT usage"
 msgstr "Uso del SNAT"
@@ -62690,6 +62716,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Signing agents' client certificates"
+msgstr "Certificados SSL de Citrix Netscaler"
+
+#, fuzzy
+msgid "Signing relay client certificates"
 msgstr "Certificados SSL de Citrix Netscaler"
 
 #, fuzzy
@@ -69004,13 +69034,6 @@ msgstr ""
 "La contraseña configurada ha sido eliminada o no se le permite utilizar esta "
 "contraseña. Por favor, elija otra."
 
-msgid ""
-"The configured predefined condition has either be removed or you are not "
-"permitted to use it. Please choose another one."
-msgstr ""
-"La condición predefinida configurada ha sido eliminada o no se le permite "
-"utilizarla. Por favor, elija otra."
-
 msgid "The configured site is not known to this site."
 msgstr "El sitio configurado no es conocido por este sitio."
 
@@ -71431,6 +71454,10 @@ msgid ""
 "raw document body. This includes html markups between user-oriented strings. "
 "This is also true for searching in a regular expression."
 msgstr ""
+
+#, fuzzy
+msgid "The provided token is not valid for the requested page."
+msgstr "El archivo no parece un archivo de claves válido."
 
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "El sistema ESX consultado (vCenter / Host)"
@@ -75470,14 +75497,6 @@ msgstr ""
 "LSI y de los discos duros conectados. Puede descargar esta herramienta desde "
 "<a href='http://www.lsi.com/'>LSI</a>."
 
-msgid ""
-"This predefined condition can not be used with the current ruleset, because "
-"it defines the same label conditions as set by this rule."
-msgstr ""
-"Esta condición predefinida no se puede utilizar con el conjunto de reglas "
-"actual, porque define las mismas condiciones de etiqueta que establece esta "
-"regla."
-
 msgid "This problem has been acknowledged"
 msgstr "Este problema ha sido reconocido"
 
@@ -76543,6 +76562,22 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall SNAT port "
+"utilization monitoring"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
 msgstr ""
 "Esta regla permite configurar los niveles de bloat para el tablespace y el "
 "indexspace de una base de datos."
@@ -82301,21 +82336,6 @@ msgstr "No se han podido analizar los datos proporcionados: %s"
 
 msgid "Unable to process request"
 msgstr "No se puede procesar la solicitud"
-
-#, fuzzy, python-format
-msgid ""
-"Unable to read current conditions of this rule. Falling back to default "
-"values. When saving this rule now, your previous settings will be "
-"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
-"issue may be caused by an inconsistent configuration, e.g. when rules refer "
-"to tag groups or tags that do not exist anymore."
-msgstr ""
-"No se pueden leer las condiciones actuales de esta regla. Volviendo a los "
-"valores por defecto. Al guardar esta regla ahora, se sobrescribirán los "
-"valores anteriores. El problema era: %s, Condiciones anteriores: <pre>%s</"
-"pre>Este problema puede ser causado por una configuración inconsistente, por "
-"ejemplo, cuando las reglas se refieren a grupos de etiquetas o etiquetas que "
-"ya no existen."
 
 #, fuzzy, python-format
 msgid ""
@@ -89605,10 +89625,6 @@ msgstr ""
 "Puede copiar y utilizar la estructura de datos que aparece a continuación en "
 "sus solicitudes de la API REST."
 
-#, python-format
-msgid "You can create predefined conditions <a href=\"%s\">here</a>."
-msgstr "Puede crear condiciones predefinidas <a href=\"%s\">aquí</a>."
-
 msgid ""
 "You can customize the list of icon categories to be able to assign your <a "
 "href=\"wato.py?mode=icons\">custom icons</a> to these categories. They will "
@@ -89682,15 +89698,6 @@ msgstr ""
 
 msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
-
-msgid ""
-"You can either specify individual conditions for this rule, or use a set of "
-"predefined conditions, which may be handy if you have to configure the same "
-"conditions in different rulesets."
-msgstr ""
-"Puede especificar condiciones individuales para esta regla o utilizar un "
-"conjunto de condiciones predefinidas, lo que puede ser útil si tiene que "
-"configurar las mismas condiciones en diferentes conjuntos de reglas."
 
 msgid ""
 "You can enter a text here that will be displayed in the element when viewing "
@@ -93831,6 +93838,12 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 msgstr[1] ""
 
+#, fuzzy
+msgid "Error retrieving AI service information. Please try again later."
+msgstr ""
+"No se han encontrado filas coincidentes. Por favor, intente con otro término "
+"de búsqueda."
+
 msgid "Checkmk AI feature documentation & privacy policy"
 msgstr ""
 
@@ -93866,6 +93879,12 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "No se ha encontrado"
+
+#, fuzzy
+msgid "Error retrieving available AI actions. Please try again later."
+msgstr ""
+"No se han encontrado filas coincidentes. Por favor, intente con otro término "
+"de búsqueda."
 
 msgid "The following feature uses a Large Language Model (LLM)."
 msgstr ""
@@ -95060,6 +95079,10 @@ msgid "Service metric"
 msgstr "Métricas de servicio"
 
 #, fuzzy
+msgid "Filter service metric by"
+msgstr "Métricas de servicio"
+
+#, fuzzy
 msgid "Must select an option"
 msgstr "Conexiones rechazadas"
 
@@ -95176,6 +95199,26 @@ msgstr ""
 #, fuzzy
 msgid "Copy existing view: %{viewName}"
 msgstr "Copiar la vista existente"
+
+#, fuzzy
+msgid "Select operator"
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
+msgid "Select label"
+msgstr "Seleccione el archivo"
+
+#, fuzzy
+msgid "Remove item"
+msgstr "Eliminar el filtro"
+
+#, fuzzy
+msgid "Remove group"
+msgstr "Eliminado: %s"
+
+#, fuzzy
+msgid "and not"
+msgstr "no es"
 
 #, fuzzy
 msgid "explicit password"
@@ -95752,11 +95795,11 @@ msgid "Name the relay"
 msgstr "Nombre del Proxy"
 
 #, fuzzy
-msgid "Provide a display name for your Relay."
+msgid "Provide a display alias for your Relay."
 msgstr "Nombre alternativo para mostrar los servicios"
 
 msgid ""
-"The name you enter here will be automatically inserted into the terminal "
+"The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
 
@@ -96290,6 +96333,65 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Explicit condition"
+#~ msgstr "Condiciones explícitas"
+
+#, fuzzy, python-format
+#~ msgid "Invalid figure content: %s"
+#~ msgstr "Conexión de usuario no válida: %s"
+
+#, python-format
+#~ msgid "Predefined condition '%s' does not exist or using not permitted"
+#~ msgstr "La condición predefinida '%s' no existe o su uso no está permitido"
+
+#, fuzzy
+#~ msgid "Relay name"
+#~ msgstr "Cambiar el nombre de"
+
+#~ msgid ""
+#~ "The configured predefined condition has either be removed or you are not "
+#~ "permitted to use it. Please choose another one."
+#~ msgstr ""
+#~ "La condición predefinida configurada ha sido eliminada o no se le permite "
+#~ "utilizarla. Por favor, elija otra."
+
+#~ msgid ""
+#~ "This predefined condition can not be used with the current ruleset, "
+#~ "because it defines the same label conditions as set by this rule."
+#~ msgstr ""
+#~ "Esta condición predefinida no se puede utilizar con el conjunto de reglas "
+#~ "actual, porque define las mismas condiciones de etiqueta que establece "
+#~ "esta regla."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Unable to read current conditions of this rule. Falling back to default "
+#~ "values. When saving this rule now, your previous settings will be "
+#~ "overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such "
+#~ "an issue may be caused by an inconsistent configuration, e.g. when rules "
+#~ "refer to tag groups or tags that do not exist anymore."
+#~ msgstr ""
+#~ "No se pueden leer las condiciones actuales de esta regla. Volviendo a los "
+#~ "valores por defecto. Al guardar esta regla ahora, se sobrescribirán los "
+#~ "valores anteriores. El problema era: %s, Condiciones anteriores: <pre>%s</"
+#~ "pre>Este problema puede ser causado por una configuración inconsistente, "
+#~ "por ejemplo, cuando las reglas se refieren a grupos de etiquetas o "
+#~ "etiquetas que ya no existen."
+
+#, python-format
+#~ msgid "You can create predefined conditions <a href=\"%s\">here</a>."
+#~ msgstr "Puede crear condiciones predefinidas <a href=\"%s\">aquí</a>."
+
+#~ msgid ""
+#~ "You can either specify individual conditions for this rule, or use a set "
+#~ "of predefined conditions, which may be handy if you have to configure the "
+#~ "same conditions in different rulesets."
+#~ msgstr ""
+#~ "Puede especificar condiciones individuales para esta regla o utilizar un "
+#~ "conjunto de condiciones predefinidas, lo que puede ser útil si tiene que "
+#~ "configurar las mismas condiciones en diferentes conjuntos de reglas."
 
 #, fuzzy
 #~ msgid "Add new field"

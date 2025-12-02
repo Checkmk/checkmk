@@ -2348,7 +2348,7 @@ msgid "A host with this name already exists in this folder."
 msgstr "Een host met deze naam bestaat al in deze map."
 
 #, fuzzy
-msgid "A human-readable name for this relay configuration."
+msgid "A human-readable alias for this relay configuration."
 msgstr "Nieuwe virtuele hostboomconfiguratie maken"
 
 #, fuzzy
@@ -9212,6 +9212,14 @@ msgstr "Azure DB opslag"
 
 msgid "Azure Databases"
 msgstr "Azure Databases"
+
+#, fuzzy
+msgid "Azure Firewall Health"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure Firewall SNAT Utilization"
+msgstr "GCP/Redis CPU-gebruik"
 
 #, fuzzy
 msgid "Azure Firewalls"
@@ -17280,6 +17288,10 @@ msgstr "Opgeslagen rapport maken"
 
 msgid "Create the following interface groups"
 msgstr "Maak de volgende interface groepen"
+
+#, fuzzy
+msgid "Create the rule in the configured folder"
+msgstr "Nieuwe virtuele hostboomconfiguratie maken"
 
 msgid "Create topic"
 msgstr "Onderwerp maken"
@@ -25582,10 +25594,6 @@ msgstr "Expliciet"
 
 msgid "Explicit Queue Names"
 msgstr "Expliciete wachtrijnamen"
-
-#, fuzzy
-msgid "Explicit condition"
-msgstr "Expliciete voorwaarden"
 
 msgid "Explicit conditions"
 msgstr "Expliciete voorwaarden"
@@ -36858,10 +36866,6 @@ msgstr "Ongeldig verwacht callable voor %s op idx %d: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
 
-#, fuzzy, python-format
-msgid "Invalid figure content: %s"
-msgstr "Ongeldige gebruikersverbinding: %s"
-
 msgid "Invalid file name"
 msgstr "Ongeldige bestandsnaam"
 
@@ -45246,6 +45250,12 @@ msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negeren: zoek hosts <b>die dit pakket niet</b> hebben"
 
 #, fuzzy
+msgid "Negate: make rule apply for all but the above entries"
+msgstr ""
+"<b>Sluit uit:</b> pas de regel toe voor <b>alles behalve</b> de bovenstaande "
+"gegevens"
+
+#, fuzzy
 msgid "Negative age tolerance"
 msgstr "Een lege waarde is hier niet toegestaan."
 
@@ -45910,6 +45920,10 @@ msgstr "Geen datasource gedefinieerd."
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
+msgstr "Standaardwaarden instellen voor alle secties"
+
+#, fuzzy
+msgid "No default values can be set."
 msgstr "Standaardwaarden instellen voor alle secties"
 
 #, fuzzy
@@ -52576,6 +52590,10 @@ msgid "Please add at least one service group."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
 #, fuzzy
+msgid "Please add at least one service item."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
 msgid "Please add at least one service label."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
@@ -53680,11 +53698,6 @@ msgstr "Voorgecompileerd"
 
 msgid "Predefined condition"
 msgstr "Voorgedefinieerde voorwaarde"
-
-#, python-format
-msgid "Predefined condition '%s' does not exist or using not permitted"
-msgstr ""
-"Voorgedefinieerde voorwaarde '%s' bestaat niet of gebruik is niet toegestaan"
 
 #, python-format
 msgid "Predefined condition: '%s' does not exist or using not permitted"
@@ -55944,6 +55957,10 @@ msgid "Relay ID"
 msgstr ""
 
 #, fuzzy
+msgid "Relay alias"
+msgstr "Vertraging:"
+
+#, fuzzy
 msgid "Relay configuration"
 msgstr "configuratie"
 
@@ -55952,16 +55969,12 @@ msgid "Relay configurations"
 msgstr "configuratie"
 
 #, fuzzy
-msgid "Relay display name"
+msgid "Relay display alias"
 msgstr "Naam weergeven"
 
 #, fuzzy
 msgid "Relay log size"
 msgstr "Logboekgrootte relais"
-
-#, fuzzy
-msgid "Relay name"
-msgstr "Hernoemen"
 
 #, fuzzy
 msgid "Relay properties"
@@ -58471,6 +58484,18 @@ msgstr "SNAT gebruik"
 #, fuzzy
 msgid "SNAT Usage (Deprecated)"
 msgstr "Azure Opslag"
+
+#, fuzzy
+msgid "SNAT port utilization"
+msgstr "Gebruik knooppunten"
+
+#, fuzzy
+msgid "SNAT port utilization %"
+msgstr "Gebruik knooppunten"
+
+#, fuzzy
+msgid "SNAT port utilization levels"
+msgstr "CPU-gebruik"
 
 msgid "SNAT usage"
 msgstr "SNAT gebruik"
@@ -62168,6 +62193,10 @@ msgstr "Agent %s draait momenteel in <a href=\"%s\">background job</a>."
 
 #, fuzzy
 msgid "Signing agents' client certificates"
+msgstr "Citrix Netscaler SSL-certificaten"
+
+#, fuzzy
+msgid "Signing relay client certificates"
 msgstr "Citrix Netscaler SSL-certificaten"
 
 #, fuzzy
@@ -68432,13 +68461,6 @@ msgstr ""
 "Het geconfigureerde wachtwoord is ofwel verwijderd of u mag dit wachtwoord "
 "niet gebruiken. Gelieve een ander te kiezen."
 
-msgid ""
-"The configured predefined condition has either be removed or you are not "
-"permitted to use it. Please choose another one."
-msgstr ""
-"De geconfigureerde voorgedefinieerde voorwaarde is ofwel verwijderd of u mag "
-"ze niet gebruiken. Gelieve een andere te kiezen."
-
 msgid "The configured site is not known to this site."
 msgstr "De geconfigureerde plaats is niet bekend bij deze site."
 
@@ -70847,6 +70869,10 @@ msgid ""
 "raw document body. This includes html markups between user-oriented strings. "
 "This is also true for searching in a regular expression."
 msgstr ""
+
+#, fuzzy
+msgid "The provided token is not valid for the requested page."
+msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
 
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Het opgevraagde ESX systeem (vCenter / Host)"
@@ -74844,14 +74870,6 @@ msgstr ""
 "harde schijven. U kunt dit hulpprogramma downloaden van <a href='http://"
 "www.lsi.com/'>LSI</a>."
 
-msgid ""
-"This predefined condition can not be used with the current ruleset, because "
-"it defines the same label conditions as set by this rule."
-msgstr ""
-"Deze vooraf gedefinieerde voorwaarde kan niet worden gebruikt met de huidige "
-"regelset, omdat die dezelfde labelvoorwaarden definieert als door deze regel "
-"ingesteld."
-
 msgid "This problem has been acknowledged"
 msgstr "Dit probleem is erkend"
 
@@ -75907,6 +75925,22 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall SNAT port "
+"utilization monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
 "tablespace en indexspace."
@@ -81648,21 +81682,6 @@ msgstr "Kan verstrekte gegevens niet ontleden: %s"
 
 msgid "Unable to process request"
 msgstr "Kan verzoek niet verwerken"
-
-#, fuzzy, python-format
-msgid ""
-"Unable to read current conditions of this rule. Falling back to default "
-"values. When saving this rule now, your previous settings will be "
-"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
-"issue may be caused by an inconsistent configuration, e.g. when rules refer "
-"to tag groups or tags that do not exist anymore."
-msgstr ""
-"Kan de huidige condities van deze regel niet lezen. Terugvallen op "
-"standaardwaarden. Wanneer je deze regel nu opslaat, zullen je vorige "
-"instellingen overschreven worden. Probleem was: %s, Vorige condities: "
-"<pre>%s</pre>Een dergelijk probleem kan veroorzaakt worden door een "
-"inconsistente configuratie, bv. wanneer regels verwijzen naar tag groepen of "
-"tags die niet meer bestaan."
 
 #, fuzzy, python-format
 msgid ""
@@ -88904,11 +88923,6 @@ msgstr ""
 "U kunt de onderstaande gegevensstructuur kopiëren en gebruiken in uw REST "
 "API verzoeken."
 
-#, python-format
-msgid "You can create predefined conditions <a href=\"%s\">here</a>."
-msgstr ""
-"U kunt vooraf gedefinieerde voorwaarden <a href=\"%s\">hier</a> aanmaken."
-
 msgid ""
 "You can customize the list of icon categories to be able to assign your <a "
 "href=\"wato.py?mode=icons\">custom icons</a> to these categories. They will "
@@ -88983,15 +88997,6 @@ msgstr ""
 
 msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
-
-msgid ""
-"You can either specify individual conditions for this rule, or use a set of "
-"predefined conditions, which may be handy if you have to configure the same "
-"conditions in different rulesets."
-msgstr ""
-"U kan ofwel individuele voorwaarden specificeren voor deze regel, of een set "
-"van voorgedefinieerde voorwaarden gebruiken, wat handig kan zijn als u "
-"dezelfde voorwaarden in verschillende regelsets moet configureren."
 
 msgid ""
 "You can enter a text here that will be displayed in the element when viewing "
@@ -93094,6 +93099,10 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 msgstr[1] ""
 
+#, fuzzy
+msgid "Error retrieving AI service information. Please try again later."
+msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
+
 msgid "Checkmk AI feature documentation & privacy policy"
 msgstr ""
 
@@ -93129,6 +93138,10 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Niet gevonden"
+
+#, fuzzy
+msgid "Error retrieving available AI actions. Please try again later."
+msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 
 msgid "The following feature uses a Large Language Model (LLM)."
 msgstr ""
@@ -94321,6 +94334,10 @@ msgid "Service metric"
 msgstr "Dienst Metriek"
 
 #, fuzzy
+msgid "Filter service metric by"
+msgstr "Dienst Metriek"
+
+#, fuzzy
 msgid "Must select an option"
 msgstr "Afgewezen verbindingen"
 
@@ -94436,6 +94453,26 @@ msgstr ""
 #, fuzzy
 msgid "Copy existing view: %{viewName}"
 msgstr "Bestaand uitzicht kopiëren"
+
+#, fuzzy
+msgid "Select operator"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Select label"
+msgstr "Selecteer bestand"
+
+#, fuzzy
+msgid "Remove item"
+msgstr "Verwijder filter"
+
+#, fuzzy
+msgid "Remove group"
+msgstr "Verwijderd: %s"
+
+#, fuzzy
+msgid "and not"
+msgstr "is niet"
 
 #, fuzzy
 msgid "explicit password"
@@ -95008,11 +95045,11 @@ msgid "Name the relay"
 msgstr "Naam van de gevolmachtigde"
 
 #, fuzzy
-msgid "Provide a display name for your Relay."
+msgid "Provide a display alias for your Relay."
 msgstr "Alternatieve weergavenaam voor diensten"
 
 msgid ""
-"The name you enter here will be automatically inserted into the terminal "
+"The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
 
@@ -95545,6 +95582,68 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Explicit condition"
+#~ msgstr "Expliciete voorwaarden"
+
+#, fuzzy, python-format
+#~ msgid "Invalid figure content: %s"
+#~ msgstr "Ongeldige gebruikersverbinding: %s"
+
+#, python-format
+#~ msgid "Predefined condition '%s' does not exist or using not permitted"
+#~ msgstr ""
+#~ "Voorgedefinieerde voorwaarde '%s' bestaat niet of gebruik is niet "
+#~ "toegestaan"
+
+#, fuzzy
+#~ msgid "Relay name"
+#~ msgstr "Hernoemen"
+
+#~ msgid ""
+#~ "The configured predefined condition has either be removed or you are not "
+#~ "permitted to use it. Please choose another one."
+#~ msgstr ""
+#~ "De geconfigureerde voorgedefinieerde voorwaarde is ofwel verwijderd of u "
+#~ "mag ze niet gebruiken. Gelieve een andere te kiezen."
+
+#~ msgid ""
+#~ "This predefined condition can not be used with the current ruleset, "
+#~ "because it defines the same label conditions as set by this rule."
+#~ msgstr ""
+#~ "Deze vooraf gedefinieerde voorwaarde kan niet worden gebruikt met de "
+#~ "huidige regelset, omdat die dezelfde labelvoorwaarden definieert als door "
+#~ "deze regel ingesteld."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Unable to read current conditions of this rule. Falling back to default "
+#~ "values. When saving this rule now, your previous settings will be "
+#~ "overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such "
+#~ "an issue may be caused by an inconsistent configuration, e.g. when rules "
+#~ "refer to tag groups or tags that do not exist anymore."
+#~ msgstr ""
+#~ "Kan de huidige condities van deze regel niet lezen. Terugvallen op "
+#~ "standaardwaarden. Wanneer je deze regel nu opslaat, zullen je vorige "
+#~ "instellingen overschreven worden. Probleem was: %s, Vorige condities: "
+#~ "<pre>%s</pre>Een dergelijk probleem kan veroorzaakt worden door een "
+#~ "inconsistente configuratie, bv. wanneer regels verwijzen naar tag groepen "
+#~ "of tags die niet meer bestaan."
+
+#, python-format
+#~ msgid "You can create predefined conditions <a href=\"%s\">here</a>."
+#~ msgstr ""
+#~ "U kunt vooraf gedefinieerde voorwaarden <a href=\"%s\">hier</a> aanmaken."
+
+#~ msgid ""
+#~ "You can either specify individual conditions for this rule, or use a set "
+#~ "of predefined conditions, which may be handy if you have to configure the "
+#~ "same conditions in different rulesets."
+#~ msgstr ""
+#~ "U kan ofwel individuele voorwaarden specificeren voor deze regel, of een "
+#~ "set van voorgedefinieerde voorwaarden gebruiken, wat handig kan zijn als "
+#~ "u dezelfde voorwaarden in verschillende regelsets moet configureren."
 
 #, fuzzy
 #~ msgid "Add new field"

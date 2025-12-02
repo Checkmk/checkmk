@@ -499,7 +499,11 @@ def parse_lldp_cache_fortinet(string_table: Sequence[StringByteTable]) -> Lldp |
     map_if_name2idx = {name: idx for idx, name in if_name}
     map_if_idx2name = {idx: name for idx, name in if_name}
 
-    list_trunks = [trunk for trunk in str(trunk_member[0][0]).split("::") if trunk]
+    if trunk_member:
+        list_trunks = [trunk for trunk in str(trunk_member[0][0]).split("::") if trunk]
+    else:
+        list_trunks = []
+
     map_trunk2member = {}
     for list_trunk in list_trunks:
         trunk_id, members_str = list_trunk.split(":")

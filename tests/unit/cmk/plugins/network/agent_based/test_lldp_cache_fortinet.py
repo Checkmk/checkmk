@@ -105,8 +105,9 @@ LLDP = Lldp(
             None,
         ),
         (STRING_TABLE, LLDP),
+        ([[], [], [], [], [], []], Lldp(lldp_global=None, lldp_neighbors=[])),
     ],
-    ids=["no data", "lldp available"],
+    ids=["no data", "lldp available", "empty individual items (from siteless tests)"],
 )
 def test_parse_lldp_cache_fortinet(data: Sequence[StringByteTable], expected: Lldp | None) -> None:
     parsed = parse_lldp_cache_fortinet(string_table=data)

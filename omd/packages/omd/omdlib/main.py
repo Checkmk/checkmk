@@ -3344,7 +3344,7 @@ def main() -> None:
 
     site = (
         RootContext()
-        if site_name is None
+        if site_name is None or is_root()
         else _site_environment(site_name, command, global_opts.verbose)
     )
 

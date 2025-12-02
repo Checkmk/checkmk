@@ -27,7 +27,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
-    RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
     RulespecRegistry,
     RulespecSubGroup,
@@ -341,16 +340,6 @@ def test_rulespec_get_host_groups() -> None:
         if not _is_dynamically_generated_group(g)
     ]
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
-
-
-@pytest.fixture(name="patch_rulespec_registries")
-def fixture_patch_rulespec_registries(monkeypatch: MonkeyPatch) -> None:
-    group_registry = RulespecGroupRegistry()
-    group_registry.register(RulespecGroupEnforcedServices)
-    test_rulespec_registry = RulespecRegistry(group_registry)
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", test_rulespec_registry)
-    monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", test_rulespec_registry)
 
 
 class DummyGroup(RulespecGroup):

@@ -5,7 +5,7 @@
 
 from collections.abc import Collection
 from dataclasses import dataclass
-from types import ModuleType, UnionType
+from types import ModuleType
 
 import pytest
 
@@ -118,7 +118,7 @@ class MyOtherPlugin:
     name: str
 
 
-AllMyPlugins: UnionType = MyTestPlugin | MyOtherPlugin
+type AllMyPlugins = MyTestPlugin | MyOtherPlugin
 
 
 class TestCollector:

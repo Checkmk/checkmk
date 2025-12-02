@@ -63,6 +63,7 @@ from cmk.gui.watolib.password_store import (
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
+    EMPTY_PARAMETER_FORM_SPEC,
     FormSpecDefinition,
     ManualCheckParameterRulespec,
     rulespec_group_registry,
@@ -302,6 +303,12 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         case other:
             assert_never(other)
 
+    value_form_spec: Callable[[], ruleset_api_v1.form_specs.FormSpec] = (
+        (lambda: EMPTY_PARAMETER_FORM_SPEC)
+        if to_convert.parameter_form is None
+        else to_convert.parameter_form
+    )
+
     return ManualCheckParameterRulespec(
         group=_convert_to_legacy_rulespec_group(
             legacy_rulespecs.RulespecGroupEnforcedServices, to_convert.topic, localizer
@@ -318,9 +325,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         is_deprecated=False,
         match_type="all",
         item_spec=item_spec,
-        form_spec_definition=None
-        if to_convert.parameter_form is None
-        else FormSpecDefinition(to_convert.parameter_form, item_form_spec),
+        form_spec_definition=FormSpecDefinition(value_form_spec, item_form_spec),
     )
 
 

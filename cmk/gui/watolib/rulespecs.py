@@ -16,7 +16,7 @@ import re
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Literal, NamedTuple
+from typing import Any, cast, Final, Literal
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
@@ -320,9 +320,37 @@ def _validate_function_args(arg_infos: list[tuple[Any, bool, bool]], hint: str) 
             )
 
 
-class FormSpecDefinition(NamedTuple):
-    value: Callable[[], FormSpec]
-    item: Callable[[], FormSpec] | None
+class FormSpecDefinition[ModelT, ModelU]:
+    def __init__(
+        self,
+        value: Callable[[], FormSpec[ModelT]],
+        item: Callable[[], FormSpec[ModelU]] | None,
+    ) -> None:
+        self._value_factory: Final = value
+        self._item_factory: Final = item
+        self._value: FormSpec[ModelT] | None = None
+        self._item: FormSpec[ModelU] | None = None
+
+    @property
+    def value(self) -> Callable[[], FormSpec[ModelT]]:
+        return self._get_value
+
+    @property
+    def item(self) -> Callable[[], FormSpec[ModelU]] | None:
+        if self._item_factory is None:
+            return None
+        return self._get_item
+
+    def _get_value(self) -> FormSpec[ModelT]:
+        if self._value is None:
+            self._value = self._value_factory()
+        return self._value
+
+    def _get_item(self) -> FormSpec[ModelU]:
+        assert self._item_factory is not None
+        if self._item is None:
+            self._item = self._item_factory()
+        return self._item
 
 
 class FormSpecNotImplementedError(Exception):
@@ -596,7 +624,7 @@ class HostRulespec(Rulespec):
             factory_default=factory_default,
             help_func=help_func,
             doc_references=doc_references,
-            form_spec_definition=None if form_spec_definition is None else form_spec_definition,
+            form_spec_definition=form_spec_definition,
             # Excplicit set
             is_for_services=False,
             item_type=None,
@@ -769,6 +797,14 @@ class BinaryServiceRulespec(ServiceRulespec):
         )
 
 
+EMPTY_PARAMETER_FORM_SPEC = FSFixedValue(
+    title=Title("Parameters"),
+    value=None,
+    help_text=Help("This check has no parameters."),
+    label=Label(""),
+)
+
+
 def _get_manual_check_parameter_rulespec_instance(
     group: type[Any],
     check_group_name: str,
@@ -877,7 +913,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             form_spec_definition=None
             if form_spec_definition is None
             else FormSpecDefinition(
-                lambda: _wrap_form_spec_in_timeperiod_form_spec(form_spec_definition.value()),
+                _wrap_form_spec_in_timespecific(form_spec_definition.value),
                 form_spec_definition.item,
             ),
         )
@@ -951,7 +987,8 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
             form_spec_definition=None
             if form_spec_definition is None
             else FormSpecDefinition(
-                lambda: _wrap_form_spec_in_timeperiod_form_spec(form_spec_definition.value()), None
+                _wrap_form_spec_in_timespecific(form_spec_definition.value),
+                None,
             ),
         )
 
@@ -989,16 +1026,19 @@ def _wrap_valuespec_in_timeperiod_valuespec(valuespec: ValueSpec) -> ValueSpec:
     return TimeperiodValuespec(valuespec)
 
 
-def _wrap_form_spec_in_timeperiod_form_spec(form_spec: FormSpec) -> TimeSpecific:
+def _wrap_form_spec_in_timespecific[ModelT](
+    form_spec_callable: Callable[[], FormSpec[ModelT]],
+) -> Callable[[], FormSpec]:
     """Enclose the parameter form_spec with a TimeSpecific form spec.
     The given form_spec will be transformed to a list of form specs,
     whereas each element can be set to a specific timeperiod.
     """
+    form_spec = form_spec_callable()
     if isinstance(form_spec, TimeSpecific):
         # Legacy check parameters registered through register_check_parameters() already
         # have their form_spec wrapped in TimeSpecific.
-        return form_spec
-    return TimeSpecific(parameter_form=form_spec)
+        return form_spec_callable
+    return lambda: TimeSpecific(parameter_form=form_spec)
 
 
 class ManualCheckParameterRulespec(HostRulespec):
@@ -1021,6 +1061,15 @@ class ManualCheckParameterRulespec(HostRulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         form_spec_definition: FormSpecDefinition | None = None,
     ):
+        if form_spec_definition is not None:
+            form_spec_definition = FormSpecDefinition(
+                _wrap_form_spec_in_timespecific(form_spec_definition.value),
+                form_spec_definition.item,
+            )
+        # If no parameter_valuespec is given, we create an empty form spec definition
+        elif parameter_valuespec is None:
+            form_spec_definition = FormSpecDefinition(lambda: EMPTY_PARAMETER_FORM_SPEC, None)
+
         # Mandatory keys
         self._check_group_name = check_group_name
         if name is None:
@@ -1044,9 +1093,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             factory_default=factory_default,
             # Explicit set
             valuespec=self._rulespec_valuespec,
-            form_spec_definition=None
-            if form_spec_definition is None
-            else FormSpecDefinition(lambda: self._rulespec_form_spec(form_spec_definition), None),
+            form_spec_definition=self._rulespec_form_spec(form_spec_definition),
         )
 
         # Optional keys
@@ -1099,38 +1146,34 @@ class ManualCheckParameterRulespec(HostRulespec):
             totext="",
         )
 
-    def _rulespec_form_spec(self, form_spec_definition: FormSpecDefinition) -> FormSpec:
+    def _rulespec_form_spec(
+        self, form_spec_definition: FormSpecDefinition | None
+    ) -> FormSpecDefinition | None:
         """Wraps the parameter together with the other needed form specs
 
         This should not be overridden by specific manual checks. Normally the parameter_form_spec
         is the one that should be overridden.
         """
+        if form_spec_definition is None:
+            return None
 
-        value_form_spec, item_form_spec = form_spec_definition
+        parameter_fs = form_spec_definition.value()
 
-        parameter_fs: FormSpec[Any]
-        if value_form_spec is None:
-            parameter_fs = FSFixedValue(
-                title=Title("Parameters"),
-                value=None,
-                help_text=Help("This check has no parameters."),
-                label=Label(""),
-            )
-        else:
-            parameter_fs = _wrap_form_spec_in_timeperiod_form_spec(value_form_spec())
-
-        return FSTuple(
-            title=parameter_fs.title,
-            elements=[
-                _get_check_type_group_choice(
-                    title=Title("Check type"),
-                    help_text=Help("Please choose the check plug-in"),
-                    check_group_name=self.check_group_name,
-                    debug=active_config.debug,
-                ),
-                self._compute_item_form_spec(item_form_spec),
-                parameter_fs,
-            ],
+        return FormSpecDefinition(
+            lambda: FSTuple(
+                title=parameter_fs.title,
+                elements=[
+                    _get_check_type_group_choice(
+                        title=Title("Check type"),
+                        help_text=Help("Please choose the check plug-in"),
+                        check_group_name=self.check_group_name,
+                        debug=active_config.debug,
+                    ),
+                    self._compute_item_form_spec(form_spec_definition.item),
+                    parameter_fs,
+                ],
+            ),
+            form_spec_definition.item,
         )
 
     def _compute_item_form_spec(self, form_spec: Callable[[], FormSpec] | None) -> FormSpec:

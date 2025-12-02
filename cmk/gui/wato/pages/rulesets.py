@@ -2051,7 +2051,7 @@ def _parse_explicit_hosts_or_services_for_vue(
 
 
 @dataclass(frozen=True)
-class _RulePropertiesAndConditions:
+class _RuleValuesFromVars:
     options: RuleOptions
     value: object
     conditions: RuleConditions
@@ -2399,7 +2399,7 @@ class ABCEditRuleMode(WatoMode):
         tree: FolderTree,
         rule_spec_name: str,
         rule_spec_item: RuleSpecItem | None,
-    ) -> _RulePropertiesAndConditions:
+    ) -> _RuleValuesFromVars:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         value: object | RawFrontendData
         match render_mode:
@@ -2425,7 +2425,7 @@ class ABCEditRuleMode(WatoMode):
             case _:
                 raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
-        return _RulePropertiesAndConditions(
+        return _RuleValuesFromVars(
             self._get_rule_options_from_catalog_value(
                 parse_data_from_field_id(
                     create_rule_properties_catalog(

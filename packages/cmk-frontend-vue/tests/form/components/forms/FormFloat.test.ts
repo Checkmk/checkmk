@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 
 import FormFloat from '@/form/private/forms/FormFloat.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -56,7 +56,7 @@ test('FormFloat renders required', () => {
 })
 
 test('FormFloat updates data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: 42.5,
     backendValidation: []

@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 
 import FormString from '@/form/private/forms/FormString.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -45,7 +45,7 @@ test('FormString renders value', () => {
 })
 
 test('FormString updates data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: 'fooData',
     backendValidation: []

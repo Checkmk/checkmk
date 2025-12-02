@@ -11,7 +11,7 @@ import { Response } from '@/components/CmkSuggestions'
 
 import FormLabel from '@/form/private/forms/FormLabels.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const EXISTING_LABEL_KEY = 'existing_key'
 const EXISTING_LABEL_VALUE = 'existing_value'
@@ -82,7 +82,7 @@ describe('FormLabels', () => {
   })
 
   test('should add new label on pressing enter key after put a value in input', async () => {
-    const { getCurrentData } = renderFormWithData({
+    const { getCurrentData } = await renderForm({
       spec,
       data: { key1: 'value1', key2: 'value2' },
       backendValidation: []
@@ -101,7 +101,7 @@ describe('FormLabels', () => {
   })
 
   test('should remove label on clicking on remove button', async () => {
-    const { getCurrentData } = renderFormWithData({
+    const { getCurrentData } = await renderForm({
       spec,
       data: { key1: 'value1', key2: 'value2' },
       backendValidation: []
@@ -121,7 +121,7 @@ describe('FormLabels', () => {
   })
 
   test('should suggest existing labels', async () => {
-    renderFormWithData({
+    await renderForm({
       spec,
       data: {},
       backendValidation: []
@@ -140,7 +140,7 @@ describe('FormLabels', () => {
     ['already chosen label', EXISTING_LABEL_CONCAT],
     ['same key prefix', `${EXISTING_LABEL_KEY}:something`]
   ] as Array<[string, string]>)('should suggest nothing for %s', async ([_name, label]) => {
-    renderFormWithData({
+    await renderForm({
       spec,
       data: { [EXISTING_LABEL_KEY]: EXISTING_LABEL_VALUE },
       backendValidation: []
@@ -163,7 +163,7 @@ describe('FormLabels', () => {
   })
 
   test('should allow remove label', async () => {
-    const { getCurrentData } = renderFormWithData({
+    const { getCurrentData } = await renderForm({
       spec,
       data: { key1: 'value1', key2: 'value2' },
       backendValidation: []
@@ -179,7 +179,7 @@ describe('FormLabels', () => {
   })
 
   test('should reset selection input element on add item', async () => {
-    const { getCurrentData } = renderFormWithData({
+    const { getCurrentData } = await renderForm({
       spec,
       data: {},
       backendValidation: []

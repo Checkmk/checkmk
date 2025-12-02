@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormEdit from '@/form/FormEdit.vue'
+import { renderForm } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -39,24 +39,20 @@ const spec: FormSpec.ListOfStrings = {
 }
 
 test('FormListOfStrings renders backend validation messages', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: [],
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
-    }
+  await renderForm({
+    spec,
+    data: [],
+    backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
   })
 
   screen.getByText('Backend error message')
 })
 
 test('FormListOfStrings updated backend child validation shows validation error', async () => {
-  const { rerender } = render(FormEdit, {
-    props: {
-      spec,
-      data: ['some value'],
-      backendValidation: []
-    }
+  const { rerender } = await renderForm({
+    spec,
+    data: ['some value'],
+    backendValidation: []
   })
 
   expect(screen.queryByText('Backend error message')).toBeNull()
@@ -75,14 +71,12 @@ test('FormListOfStrings updated backend child validation shows validation error'
 })
 
 test('FormListOfStrings local child validation overwrites backend validation', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: ['some value'],
-      backendValidation: [
-        { location: ['0'], message: 'Backend error message', replacement_value: 'other value' }
-      ]
-    }
+  await renderForm({
+    spec,
+    data: ['some value'],
+    backendValidation: [
+      { location: ['0'], message: 'Backend error message', replacement_value: 'other value' }
+    ]
   })
 
   const textboxes = await screen.getAllByRole<HTMLInputElement>('textbox')
@@ -93,13 +87,13 @@ test('FormListOfStrings local child validation overwrites backend validation', a
 })
 
 test('FormListOfStrings shows frontend validation on existing element', async () => {
-  render(FormEdit, {
-    props: {
+  ;(
+    await renderForm({
       spec,
       data: ['some_value'],
       backendValidation: []
-    }
-  }).emitted('select')
+    })
+  ).emitted('select')
 
   const textboxes = await screen.getAllByRole<HTMLInputElement>('textbox')
   await fireEvent.update(textboxes[0]!, '')
@@ -108,12 +102,10 @@ test('FormListOfStrings shows frontend validation on existing element', async ()
 })
 
 test('FormListOfStrings check autoextend', async () => {
-  render(FormEdit, {
-    props: {
-      spec: spec,
-      data: [],
-      backendValidation: []
-    }
+  await renderForm({
+    spec: spec,
+    data: [],
+    backendValidation: []
   })
 
   let elements = await screen.getAllByRole('textbox')

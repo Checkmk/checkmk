@@ -8,7 +8,7 @@ import type { TimeSpan } from 'cmk-shared-typing/typescript/vue_formspec_compone
 
 import FormTimeSpan from '@/form/private/forms/FormTimeSpan/FormTimeSpan.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 function getSpec(
   displayedMagnitudes: TimeSpan['displayed_magnitudes'],
@@ -46,7 +46,7 @@ test('FormTimeSpan renders value', () => {
 })
 
 test('FormTimeSpan updates data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec: getSpec(['minute', 'millisecond', 'second'], []),
     data: 66.6,
     backendValidation: []
@@ -67,7 +67,7 @@ test('FormTimeSpan updates data', async () => {
 })
 
 test('FormTimeSpan shows frontend validation', async () => {
-  renderFormWithData({
+  await renderForm({
     spec: getSpec(
       ['hour'],
       [
@@ -91,7 +91,7 @@ test('FormTimeSpan shows frontend validation', async () => {
 })
 
 test('FormTimeSpan shows error for negative values', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec: getSpec(['hour', 'minute'], []),
     data: 1 * 60 * 60,
     backendValidation: []

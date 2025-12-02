@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormEdit from '@/form/FormEdit.vue'
+import { renderForm } from '../cmk-form-helper'
 
 const stringSpec1: FormSpec.String = {
   type: 'string',
@@ -41,38 +41,32 @@ const spec: FormSpec.Tuple = {
 }
 
 test('FormTuple renders element validation message', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: ['foo', 'bar'],
-      backendValidation: [
-        { location: ['0'], message: 'Backend error message', replacement_value: '23' }
-      ]
-    }
+  await renderForm({
+    spec,
+    data: ['foo', 'bar'],
+    backendValidation: [
+      { location: ['0'], message: 'Backend error message', replacement_value: '23' }
+    ]
   })
 
   await screen.findByText('Backend error message')
 })
 
 test('FormTuple renders own validation message', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: ['foo', 'bar'],
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
-    }
+  await renderForm({
+    spec,
+    data: ['foo', 'bar'],
+    backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
   })
 
   screen.getByText('Backend error message')
 })
 
 test('FormTuple renders value', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: ['some value', 'other value'],
-      backendValidation: []
-    }
+  await renderForm({
+    spec,
+    data: ['some value', 'other value'],
+    backendValidation: []
   })
 
   const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'firstFooTitle' })
@@ -81,12 +75,10 @@ test('FormTuple renders value', async () => {
 })
 
 test('FormTuple renders updated validation', async () => {
-  const { rerender } = render(FormEdit, {
-    props: {
-      spec,
-      data: ['some value', 'other value'],
-      backendValidation: []
-    }
+  const { rerender } = await renderForm({
+    spec,
+    data: ['some value', 'other value'],
+    backendValidation: []
   })
 
   expect(screen.queryByText('Backend error message')).toBeNull()

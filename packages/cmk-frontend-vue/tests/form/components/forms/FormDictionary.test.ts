@@ -9,7 +9,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import FormEdit from '@/form/FormEdit.vue'
 import FormDictionary from '@/form/private/forms/FormDictionary/FormDictionary.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -58,8 +58,8 @@ const spec: FormSpec.Dictionary = {
   ]
 }
 
-test('FormDictionary empty on non-required elements results in empty form data', () => {
-  const { getCurrentData } = renderFormWithData({
+test('FormDictionary empty on non-required elements results in empty form data', async () => {
+  const { getCurrentData } = await renderForm({
     spec,
     data: {},
     backendValidation: []
@@ -72,7 +72,7 @@ test('FormDictionary empty on non-required elements results in empty form data',
 })
 
 test('FormDictionary displays dictelement data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: { bar: 'some_value' },
     backendValidation: []
@@ -254,7 +254,7 @@ test.skip('FormDictionary enable element, render backend validation message', as
 })
 
 test('FormDictionary appends default of required element if missing in data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec: {
       type: 'dictionary',
       title: 'fooTitle',
@@ -321,7 +321,7 @@ test('FormDictionary reads new defaultValue on updated spec', async () => {
     }
   }
 
-  const { getCurrentData, rerender } = renderFormWithData({
+  const { getCurrentData, rerender } = await renderForm({
     spec: getSpec('some_id'),
     data: {},
     backendValidation: []
@@ -349,7 +349,7 @@ test('FormDictionary is able to be rerenderd: static value', async () => {
     }
   }
 
-  const { getCurrentData, rerender } = renderFormWithData({
+  const { getCurrentData, rerender } = await renderForm({
     spec: getSpec({ some_key: 'some_value' }),
     data: {},
     backendValidation: []
@@ -414,7 +414,7 @@ test('Default values of dict elements dont influence each other', async () => {
     no_element_label: 'No element'
   }
 
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec: outerList,
     data: [],
     backendValidation: []

@@ -10,12 +10,14 @@ import type { ValidationMessages } from '@/form/private/validation'
 
 import FormDataVisualizer from './FormDataVisualizer.vue'
 
-export function renderFormWithData(props: {
+export async function renderForm(props: {
   spec: FormSpec
   data: unknown
   backendValidation: ValidationMessages
-}): RenderResult & { getCurrentData: () => string | null | undefined } {
+}): Promise<RenderResult & { getCurrentData: () => string | null | undefined }> {
   const { container, ...renderResult } = render(FormDataVisualizer, { props: props })
+
+  await vi.dynamicImportSettled()
 
   const getCurrentData = () => container.querySelector('[id=test-data]')?.textContent
 

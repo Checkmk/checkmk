@@ -3,12 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormEdit from '@/form/FormEdit.vue'
-
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const embeddedSpec: FormSpec.String = {
   type: 'string',
@@ -78,12 +76,10 @@ const spec: FormSpec.TimeSpecific = {
 }
 
 test('FormTimeSpecific test toggle button text', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: '42',
-      backendValidation: []
-    }
+  await renderForm({
+    spec,
+    data: '42',
+    backendValidation: []
   })
 
   const toggleButton = screen.getByText<HTMLButtonElement>('enable')
@@ -94,7 +90,7 @@ test('FormTimeSpecific test toggle button text', async () => {
 })
 
 test('FormTimeSpecific test enable/disable', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: '42',
     backendValidation: []
@@ -109,36 +105,32 @@ test('FormTimeSpecific test enable/disable', async () => {
 })
 
 test('FormTimeSpecific: check embedded validation message', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: { tp_default_value: '42', tp_values: [] },
-      backendValidation: [
-        {
-          location: ['tp_default_value'],
-          message: 'Backend error message',
-          replacement_value: 'other_value'
-        }
-      ]
-    }
+  await renderForm({
+    spec,
+    data: { tp_default_value: '42', tp_values: [] },
+    backendValidation: [
+      {
+        location: ['tp_default_value'],
+        message: 'Backend error message',
+        replacement_value: 'other_value'
+      }
+    ]
   })
   // Search updated value in embeddedSpec
   await screen.findByDisplayValue('other_value')
 })
 
 test('FormTimeSpecific: check time specific validation message', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: '42',
-      backendValidation: [
-        {
-          location: [],
-          message: 'TimeSpecific problems',
-          replacement_value: '42'
-        }
-      ]
-    }
+  await renderForm({
+    spec,
+    data: '42',
+    backendValidation: [
+      {
+        location: [],
+        message: 'TimeSpecific problems',
+        replacement_value: '42'
+      }
+    ]
   })
   // Search error message on screen
   await screen.findByText('TimeSpecific problems')

@@ -14,7 +14,7 @@ import type {
 
 import FormCatalog from '@/form/private/forms/FormCatalog/FormCatalog.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 type PartialExcept<T, K extends keyof T> = Pick<T, K> & Partial<Omit<T, K>>
 
@@ -168,7 +168,7 @@ test('FormCatalog default value', async () => {
       backendValidation: []
     }
   }
-  const { getCurrentData, rerender } = renderFormWithData(getDefinition('ut_string_1_name_default'))
+  const { getCurrentData, rerender } = await renderForm(getDefinition('ut_string_1_name_default'))
 
   // wait until everything is rendered:
   await screen.findByText('title of string input')
@@ -243,7 +243,7 @@ test('FormCatalog backend validation', async () => {
       }
     ]
   }
-  renderFormWithData(spec)
+  await renderForm(spec)
   expect(await screen.findAllByText('ut_error_1')).toHaveLength(1)
   expect(await screen.findAllByText('ut_error_2')).toHaveLength(1)
 })

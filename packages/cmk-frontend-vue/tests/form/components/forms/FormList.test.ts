@@ -8,10 +8,9 @@ import { mount } from '@vue/test-utils'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import FormEdit from '@/form/FormEdit.vue'
-import FormList from '@/form/private/forms/FormList/FormList.vue'
 
 import FormDataVisualizer from '../FormDataVisualizer.vue'
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -77,24 +76,20 @@ test.skip('List elements are draggable', async () => {
 })
 
 test('FormList renders backend validation messages', async () => {
-  render(FormList, {
-    props: {
-      spec,
-      data: [],
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
-    }
+  await renderForm({
+    spec,
+    data: [],
+    backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
   })
 
   screen.getByText('Backend error message')
 })
 
 test.skip('FormList updated backend child validation shows validation error', async () => {
-  const { rerender } = render(FormList, {
-    props: {
-      spec,
-      data: ['some value'],
-      backendValidation: []
-    }
+  const { rerender } = await renderForm({
+    spec,
+    data: ['some value'],
+    backendValidation: []
   })
 
   expect(screen.queryByText('Backend error message')).toBeNull()
@@ -179,7 +174,7 @@ const listSpec: FormSpec.List = {
 }
 
 test('FormList adds two new elements and enters data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec: listSpec,
     data: [],
     backendValidation: []

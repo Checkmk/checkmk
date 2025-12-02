@@ -9,7 +9,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import FormEdit from '@/form/FormEdit.vue'
 import FormCascadingSingleChoice from '@/form/private/forms/FormCascadingSingleChoice.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -67,7 +67,7 @@ const spec: FormSpec.CascadingSingleChoice = {
 }
 
 test('FormCascadingSingleChoice displays data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: ['stringChoice', 'some_value'],
     backendValidation: []
@@ -84,7 +84,7 @@ test('FormCascadingSingleChoice displays data', async () => {
 })
 
 test('FormDictionary updates data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: ['stringChoice', 'some_value'],
     backendValidation: []
@@ -97,7 +97,7 @@ test('FormDictionary updates data', async () => {
 })
 
 test('FormCascadingSingleChoice sets default on switch', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: ['stringChoice', 'some_value'],
     backendValidation: []
@@ -116,7 +116,7 @@ test('FormCascadingSingleChoice sets default on switch', async () => {
 })
 
 test('FormCascadingSingleChoice keeps previously inserted data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: ['stringChoice', 'bar'],
     backendValidation: []

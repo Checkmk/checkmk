@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 
 import FormCommentTextArea from '@/form/private/forms/FormCommentTextArea.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -49,7 +49,7 @@ test('FormCommentTextArea renders value', () => {
 })
 
 test('FormCommentTextArea updates data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: 'fooData',
     backendValidation: []

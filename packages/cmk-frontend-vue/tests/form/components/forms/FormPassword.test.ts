@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 
 import FormPassword from '@/form/private/forms/FormPassword.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -71,7 +71,7 @@ test('FormPassword user input', async () => {
 })
 
 test('FormPassword updates validation but dont touch value', async () => {
-  const { rerender, getCurrentData } = renderFormWithData({
+  const { rerender, getCurrentData } = await renderForm({
     spec,
     data: ['explicit_password', '', '', true],
     backendValidation: []
@@ -96,7 +96,7 @@ test('FormPassword updates validation but dont touch value', async () => {
 })
 
 test('FormPassword selected first password store choice if present', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: ['explicit_password', '', '', true],
     backendValidation: []

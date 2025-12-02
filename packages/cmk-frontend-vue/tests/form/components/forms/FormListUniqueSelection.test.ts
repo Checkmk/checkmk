@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 
 import FormEdit from '@/form/FormEdit.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -107,7 +107,7 @@ const listSpec: FormSpec.ListUniqueSelection = {
 }
 
 test('FormListUniqueSelection (CascadingSingleChoice) no add button if selected and both are unique', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec: listCascadingSpec,
     data: [['integerChoice', 10]],
     backendValidation: []
@@ -125,7 +125,7 @@ test('FormListUniqueSelection (CascadingSingleChoice) no add button if selected 
 })
 
 test('FormListUniqueSelection (SingleChoice) no add button if selected and both are unique', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec: listSpec,
     data: ['choice1'],
     backendValidation: []

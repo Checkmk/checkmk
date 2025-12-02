@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 
 import FormSingleChoice from '@/form/private/forms/FormSingleChoice.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 const spec: FormSpec.SingleChoice = {
   type: 'single_choice',
@@ -56,7 +56,7 @@ test('FormSingleChoice renders something when noting is selected', () => {
 })
 
 test('FormSingleChoice updates data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: 'choice1',
     backendValidation: []

@@ -11,7 +11,7 @@ import { Response } from '@/components/CmkSuggestions'
 
 import FormMetric from '@/form/private/forms/FormMetric.vue'
 
-import { renderFormWithData } from '../cmk-form-helper'
+import { renderForm } from '../cmk-form-helper'
 
 vi.mock(import('@/form/private/FormAutocompleter/autocompleter'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred
@@ -102,7 +102,7 @@ test.skip('FormMetric renders value', () => {
 })
 
 test.skip('FormMetric updates data', async () => {
-  const { getCurrentData } = renderFormWithData({
+  const { getCurrentData } = await renderForm({
     spec,
     data: 'choicea',
     backendValidation: []

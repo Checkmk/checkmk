@@ -3,11 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormEdit from '@/form/FormEdit.vue'
-import FormOptionalChoice from '@/form/private/forms/FormOptionalChoice.vue'
+import { renderForm } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -41,38 +40,32 @@ const spec: FormSpec.OptionalChoice = {
 }
 
 test('FormOptionalChoice renders element validation message', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: 42,
-      backendValidation: [
-        { location: ['parameter_form'], message: 'Backend error message', replacement_value: 23 }
-      ]
-    }
+  await renderForm({
+    spec,
+    data: 42,
+    backendValidation: [
+      { location: ['parameter_form'], message: 'Backend error message', replacement_value: 23 }
+    ]
   })
 
   await screen.findByText('Backend error message')
 })
 
 test('FormOptionalChoice renders own validation message', async () => {
-  render(FormOptionalChoice, {
-    props: {
-      spec,
-      data: 42,
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: 23 }]
-    }
+  await renderForm({
+    spec,
+    data: 42,
+    backendValidation: [{ location: [], message: 'Backend error message', replacement_value: 23 }]
   })
 
   await screen.findByText('Backend error message')
 })
 
 test('FormOptionalChoice renders None/null value', async () => {
-  render(FormOptionalChoice, {
-    props: {
-      spec,
-      data: null,
-      backendValidation: []
-    }
+  await renderForm({
+    spec,
+    data: null,
+    backendValidation: []
   })
 
   screen.getByRole<HTMLInputElement>('checkbox', { name: 'optional choice label' })
@@ -81,12 +74,10 @@ test('FormOptionalChoice renders None/null value', async () => {
 })
 
 test('FormOptionalChoice renders parameter_form(Integer) value', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: 23,
-      backendValidation: []
-    }
+  await renderForm({
+    spec,
+    data: 23,
+    backendValidation: []
   })
 
   const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
@@ -95,12 +86,10 @@ test('FormOptionalChoice renders parameter_form(Integer) value', async () => {
 })
 
 test('FormOptionalChoice updates validation', async () => {
-  const { rerender } = render(FormEdit, {
-    props: {
-      spec,
-      data: 23,
-      backendValidation: []
-    }
+  const { rerender } = await renderForm({
+    spec,
+    data: 23,
+    backendValidation: []
   })
 
   expect(screen.queryByText('Backend error message')).toBeNull()
@@ -124,12 +113,10 @@ test('FormOptionalChoice updates validation', async () => {
 })
 
 test('FormOptionalChoice enables/disables option', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: null,
-      backendValidation: []
-    }
+  await renderForm({
+    spec,
+    data: null,
+    backendValidation: []
   })
 
   const element = screen.getByRole<HTMLInputElement>('checkbox', { name: 'optional choice label' })

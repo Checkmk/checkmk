@@ -3,10 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Component, h, inject } from 'vue'
+import { type Component, defineAsyncComponent, inject } from 'vue'
 import type { InjectionKey } from 'vue'
 
 export const dispatcherKey = Symbol() as InjectionKey<Component>
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const FormEditDispatcher = defineAsyncComponent(
+  () => import('@/form/private/FormEditDispatcher/FormEditDispatcher.vue')
+)
 
 export function useFormEditDispatcher() {
   // we do all this stuff to resolve our circular dependencies: FormEdit needs
@@ -17,15 +22,6 @@ export function useFormEditDispatcher() {
   // FormDictionary can then request the provided dependency (FormEditDispatcher) and use this
   // to render arbitrary forms, without the need to import FormEdit or FormEditDispatcher.
   return {
-    FormEditDispatcher: inject(
-      dispatcherKey,
-      h(
-        'span',
-        {
-          style: 'background-color: red'
-        },
-        ['Composite form components can only be used with FormEdit as their root element.']
-      )
-    )
+    FormEditDispatcher: inject(dispatcherKey, FormEditDispatcher, true)
   }
 }

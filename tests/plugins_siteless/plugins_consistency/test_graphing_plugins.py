@@ -12,14 +12,12 @@ from typing import Literal
 
 import pytest
 
-from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing_main import _load_graphing_plugins
-from cmk.utils.paths import omd_root
 from tests.testlib.common.repo import is_non_free_repo
 
 
@@ -339,14 +337,6 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
 )
 
 
-_CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
-    "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
-    "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
-    "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
-    "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
-}
-
-
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Active": {"docker_active", "mem_lnx_active"},
     "Active connections": {
@@ -438,15 +428,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Utilization": {"cisco_sma_queue_utilization", "generic_util"},
     "Write latency": {"write_latency", "db_write_latency_s"},
     "Write operations": {"write_ops_s", "disk_write_ios"},
-    "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
-    "Cache misses": {"varnish_cache_miss_rate", "azure_redis_cache_misses"},
-    "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
-    "Memory utilization": {"memory_util", "azure_redis_memory_utilization"},
 }
-
-
-if edition(omd_root) not in (Edition.COMMUNITY, Edition.PRO):
-    _ALLOWED_DUPLICATE_METRIC_TITLES.update(_CCE_ALLOWED_DUPLICATE_METRIC_TITLES)
 
 
 def test_duplicate_metric_titles_new() -> None:

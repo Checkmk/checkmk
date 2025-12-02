@@ -25,8 +25,8 @@ class OAuth2Connection(TypedDict):
 class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=wato_root_dir() / "oauth_connections.mk",
-            config_variable="oauth_connections",
+            config_file_path=wato_root_dir() / "oauth2_connections.mk",
+            config_variable="oauth2_connections",
             spec_class=OAuth2Connection,
         )
 

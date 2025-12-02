@@ -344,37 +344,6 @@ _CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
     "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
     "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
-    "Data usage": {"azure_cosmosdb_data_usage", "data_usage"},
-    "Failed requests (404)": {
-        "azure_cosmosdb_database_failed_requests",
-        "azure_cosmosdb_database_container_failed_requests",
-        "azure_cosmosdb_failed_requests",
-    },
-    "Throttled requests ratio": {
-        "azure_cosmosdb_throttled_ratio",
-        "azure_cosmosdb_database_throttled_ratio",
-        "azure_cosmosdb_database_container_throttled_ratio",
-    },
-    "Throttled requests (429)": {
-        "azure_cosmosdb_throttled_requests",
-        "azure_cosmosdb_database_throttled_requests",
-        "azure_cosmosdb_database_container_throttled_requests",
-    },
-    "Total requests": {
-        "azure_cosmosdb_totalrequests",
-        "azure_cosmosdb_database_total_requests",
-        "azure_cosmosdb_database_container_total_requests",
-    },
-    "Normalized RU consumption": {
-        "azure_cosmosdb_normalized_ru_consumption",
-        "azure_cosmosdb_database_normalized_ru_consumption",
-        "azure_cosmosdb_database_container_normalized_ru_consumption",
-    },
-    "Total RUs": {
-        "azure_cosmosdb_total_rus",
-        "azure_cosmosdb_database_total_rus",
-        "azure_cosmosdb_database_container_total_rus",
-    },
 }
 
 
@@ -469,37 +438,6 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Utilization": {"cisco_sma_queue_utilization", "generic_util"},
     "Write latency": {"write_latency", "db_write_latency_s"},
     "Write operations": {"write_ops_s", "disk_write_ios"},
-    "Failed requests (404)": {
-        "azure_cosmosdb_database_failed_requests",
-        "azure_cosmosdb_database_container_failed_requests",
-        "azure_cosmosdb_failed_requests",
-    },
-    "Throttled requests ratio": {
-        "azure_cosmosdb_throttled_ratio",
-        "azure_cosmosdb_database_throttled_ratio",
-        "azure_cosmosdb_database_container_throttled_ratio",
-    },
-    "Throttled requests (429)": {
-        "azure_cosmosdb_database_container_throttled_requests",
-        "azure_cosmosdb_database_throttled_requests",
-        "azure_cosmosdb_throttled_requests",
-    },
-    "Total requests": {
-        "azure_cosmosdb_database_container_total_requests",
-        "azure_cosmosdb_database_total_requests",
-        "azure_cosmosdb_totalrequests",
-    },
-    "Normalized RU consumption": {
-        "azure_cosmosdb_normalized_ru_consumption",
-        "azure_cosmosdb_database_normalized_ru_consumption",
-        "azure_cosmosdb_database_container_normalized_ru_consumption",
-    },
-    "Total RUs": {
-        "azure_cosmosdb_database_total_rus",
-        "azure_cosmosdb_total_rus",
-        "azure_cosmosdb_database_container_total_rus",
-    },
-    "Data usage": {"data_usage", "azure_cosmosdb_data_usage"},
     "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
     "Cache misses": {"varnish_cache_miss_rate", "azure_redis_cache_misses"},
     "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
@@ -563,14 +501,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Disk latency": {"disk_latency", "disk_rw_latency"},
     "Huge pages": {"huge_pages_2", "huge_pages"},
     "Packets": {"packets_1", "packets_2", "packets_3"},
-    "Requests (Azure, CosmosDB)": {
-        "azure_cosmosdb_database_container_requests",
-        "azure_cosmosdb_database_requests",
-    },
-    "Throttled Requests Ratio": {
-        "azure_cosmosdb_database_throttled_ratio",
-        "azure_cosmosdb_database_container_throttled_ratio",
-    },
     "Throughput": {"azure_natgateways_throughput_in_out", "azure_redis_throughput"},
     "Traffic": {"traffic", "read_write_data"},
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
@@ -579,14 +509,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
 
 _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Throughput": {"azure_redis_throughput", "azure_natgateways_throughput_in_out"},
-    "Requests (Azure, CosmosDB)": {
-        "azure_cosmosdb_database_container_requests",
-        "azure_cosmosdb_database_requests",
-    },
-    "Throttled Requests Ratio": {
-        "azure_cosmosdb_database_container_throttled_ratio",
-        "azure_cosmosdb_database_throttled_ratio",
-    },
 }
 
 

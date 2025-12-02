@@ -15,6 +15,7 @@ import DemoFormDataSize from './DemoFormDataSize.vue'
 import DemoFormDatePicker from './DemoFormDatePicker.vue'
 import DemoFormDictionary from './DemoFormDictionary.vue'
 import DemoFormDualListChoice from './DemoFormDualListChoice.vue'
+import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoFormFixedValue from './DemoFormFixedValue.vue'
 import DemoFormFloat from './DemoFormFloat.vue'
 import DemoFormInteger from './DemoFormInteger.vue'
@@ -29,7 +30,6 @@ import DemoFormRegex from './DemoFormRegex.vue'
 import DemoFormSimplePassword from './DemoFormSimplePassword.vue'
 import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
-import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
 import DemoFormTimePicker from './DemoFormTimePicker.vue'
 import DemoFormTimeSpan from './DemoFormTimeSpan.vue'
 import DemoFormTimeSpecific from './DemoFormTimeSpecific.vue'
@@ -48,7 +48,7 @@ export const pages: Array<Folder | Page> = [
   new Page('FormTuple', DemoFormTuple),
   new Page('FormRegex', DemoFormRegex),
   new Page('FormLabels', DemoFormLabels),
-  new Page('FormSingleChoiceEditableEditAsync', DemoFormSingleChoiceEditableEditAsync),
+  new Page('FormEditAsync', DemoFormEditAsync),
   new Page('FormListOfStrings', DemoFormListOfStrings),
   new Page('FormDualListChoice', DemoFormDualListChoice),
   new Page('FormInteger', DemoFormInteger),

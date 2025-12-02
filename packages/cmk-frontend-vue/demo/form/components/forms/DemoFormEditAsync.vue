@@ -12,13 +12,12 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { provide, ref, toRaw } from 'vue'
 
+import FormSingleChoiceEditableEditAsync, {
+  type API,
+  type SetDataResult
+} from '@/form/FormEditAsync.vue'
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import { dispatcherKey } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
-import type {
-  API,
-  SetDataResult
-} from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
-import FormSingleChoiceEditableEditAsync from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -104,7 +103,7 @@ provide(dispatcherKey, FormEditDispatcher)
 </script>
 
 <template>
-  <div class="demo-form-single-choice-editable-edit-async__control">
+  <div class="demo-form-edit-async__control">
     <button @click="reloadCount += 1">reload</button>
     <label>
       delay
@@ -161,14 +160,14 @@ provide(dispatcherKey, FormEditDispatcher)
 </template>
 
 <style scoped>
-.demo-form-single-choice-editable-edit-async__control {
+.demo-form-edit-async__control {
   margin-bottom: 1em;
   padding: 1em;
   display: flex;
   flex-direction: column;
 }
 
-.demo-form-single-choice-editable-edit-async__control > * {
+.demo-form-edit-async__control > * {
   display: flex;
   flex: 1 100%;
   margin-bottom: 0.5em;

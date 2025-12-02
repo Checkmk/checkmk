@@ -17,8 +17,8 @@ import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
+import FormSingleChoiceEditableEditAsync from '@/form/FormEditAsync.vue'
 import FormButton from '@/form/private/FormButton.vue'
-import FormSingleChoiceEditableEditAsync from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
 import {
   type Payload,
   configEntityAPI

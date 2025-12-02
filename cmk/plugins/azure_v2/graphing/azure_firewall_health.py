@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_azure_firewall_health = metrics.Metric(
     name="azure_firewall_health",
-    title=Title("Health"),
+    title=Title("Azure firewall health"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_GREEN,
 )

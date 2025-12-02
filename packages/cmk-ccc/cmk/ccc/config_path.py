@@ -43,7 +43,7 @@ class VersionedConfigPath:
         return str(self)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.serial})"
+        return f"{self.__class__.__name__}({self.base!r}, {self.serial!r})"
 
     def __eq__(self, other: object) -> bool:
         return Path(self) == Path(other) if isinstance(other, os.PathLike) else NotImplemented

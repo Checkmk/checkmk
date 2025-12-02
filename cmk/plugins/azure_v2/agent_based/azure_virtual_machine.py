@@ -7,14 +7,15 @@ import time
 from collections.abc import Iterator, Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
     get_value_store,
     InventoryPlugin,
+    LevelsT,
     render,
     Result,
     Service,
@@ -180,7 +181,7 @@ check_plugin_azure_vm_cpu_utilization = CheckPlugin(
 
 
 def check_azure_vm_burst_cpu_credits(
-    params: Mapping[str, tuple[float, float]], section: Resource
+    params: Mapping[str, LevelsT[float]], section: Resource
 ) -> CheckResult:
     yield from create_check_metrics_function_single(
         [
@@ -197,7 +198,8 @@ def check_azure_vm_burst_cpu_credits(
                 str,
                 lower_levels_param="levels",
             ),
-        ]
+        ],
+        check_levels=check_levels,
     )(params, section)
 
 
@@ -262,12 +264,10 @@ check_plugin_azure_vm_memory = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def check_azure_vm_disk(
-    params: Mapping[str, tuple[float, float]], section: Resource
-) -> CheckResult:
+def check_azure_vm_disk(params: Mapping[str, LevelsT[float]], section: Resource) -> CheckResult:
     if (read_bytes := section.metrics.get("total_Disk_Read_Bytes")) is not None:
-        yield from check_levels_v1(
-            read_bytes.value / 60,
+        yield from check_levels(
+            value=read_bytes.value / 60,
             levels_upper=params.get("disk_read"),
             metric_name="disk_read_throughput",
             label="Read",
@@ -275,8 +275,8 @@ def check_azure_vm_disk(
         )
 
     if (write_bytes := section.metrics.get("total_Disk_Write_Bytes")) is not None:
-        yield from check_levels_v1(
-            write_bytes.value / 60,
+        yield from check_levels(
+            value=write_bytes.value / 60,
             levels_upper=params.get("disk_write"),
             metric_name="disk_write_throughput",
             label="Write",
@@ -284,8 +284,8 @@ def check_azure_vm_disk(
         )
 
     if (read_ops := section.metrics.get("average_Disk_Read_Operations/Sec")) is not None:
-        yield from check_levels_v1(
-            read_ops.value,
+        yield from check_levels(
+            value=read_ops.value,
             levels_upper=params.get("disk_read_ios"),
             metric_name="disk_read_ios",
             label="Read operations",
@@ -293,8 +293,8 @@ def check_azure_vm_disk(
         )
 
     if (write_ops := section.metrics.get("average_Disk_Write_Operations/Sec")) is not None:
-        yield from check_levels_v1(
-            write_ops.value,
+        yield from check_levels(
+            value=write_ops.value,
             levels_upper=params.get("disk_write_ios"),
             metric_name="disk_write_ios",
             label="Write operations",

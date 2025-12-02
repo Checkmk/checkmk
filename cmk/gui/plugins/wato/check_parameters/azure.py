@@ -876,13 +876,3 @@ rulespec_registry.register(
         title=lambda: _("Azure VM Disk (deprecated)"),
     )
 )
-
-# TODO: migrate and move to new folder structure
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="azure_v2_vm_disk",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_vm_disk,
-        title=lambda: _("Azure VM Disk"),
-    )
-)

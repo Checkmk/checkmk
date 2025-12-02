@@ -12,6 +12,7 @@ import pytest
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     Metric,
     Result,
     Service,
@@ -266,7 +267,7 @@ def test_check_azure_vm_cpu_utilization(
     "params,section,expected_result",
     [
         (
-            {"levels": (200.0, 150.0)},
+            {"levels": ("fixed", (200.0, 150.0))},
             SECTION,
             [
                 Result(state=State.OK, summary="Consumed: 0"),
@@ -278,7 +279,7 @@ def test_check_azure_vm_cpu_utilization(
     ],
 )
 def test_check_azure_vm_burst_cpu_credits(
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, LevelsT[float]],
     section: Resource,
     expected_result: CheckResult,
 ) -> None:
@@ -313,7 +314,7 @@ def test_check_azure_vm_memory(
     "params,section,expected_result",
     [
         (
-            {"disk_write_ios": (0.2, 0.5)},
+            {"disk_write_ios": ("fixed", (0.2, 0.5))},
             SECTION,
             [
                 Result(state=State.OK, summary="Read: 0.00 B/s"),
@@ -332,7 +333,7 @@ def test_check_azure_vm_memory(
     ],
 )
 def test_check_azure_vm_disk(
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, LevelsT[float]],
     section: Resource,
     expected_result: CheckResult,
 ) -> None:

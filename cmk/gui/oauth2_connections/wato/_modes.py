@@ -4,12 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import asdict
 from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
+from cmk.gui.form_specs import serialize_data_for_frontend
+from cmk.gui.form_specs.unstable import (
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+    TwoColumnDictionary,
+)
+from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -24,9 +31,16 @@ from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Password,
+    String,
+)
 from cmk.shared_typing.mode_oauth2_connection import (
     AuthorityUrls,
-    MsGraphApi,
     MsGraphApiUrls,
     Oauth2ConnectionConfig,
     Oauth2Urls,
@@ -39,7 +53,63 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeOAuth2Connections)
 
 
-def get_oauth2_connection_config(connection: MsGraphApi | None = None) -> Oauth2ConnectionConfig:
+def get_oauth_2_connection_form_spec() -> Dictionary:
+    return TwoColumnDictionary(
+        title=Title("Define OAuth parameters"),
+        elements={
+            "title": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Title"),
+                    help_text=Help("A descriptive name for this OAuth2 connection."),
+                ),
+            ),
+            "authority": DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended(
+                    title=Title("Authority"),
+                    help_text=Help("Select the authority for the OAuth2 connection."),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name="global",
+                            title=Title("Global"),
+                        ),
+                        SingleChoiceElementExtended(
+                            name="china",
+                            title=Title("China"),
+                        ),
+                    ],
+                    prefill=DefaultValue("global"),
+                ),
+            ),
+            "tenant_id": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Tenant ID"),
+                    help_text=Help("The Tenant ID of your Azure AD instance."),
+                ),
+            ),
+            "client_id": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Client ID"),
+                    help_text=Help(
+                        "The Client ID (Application ID) of your registered application."
+                    ),
+                ),
+            ),
+            "client_secret": DictElement(
+                required=True,
+                parameter_form=Password(
+                    title=Title("Client secret"),
+                    help_text=Help("The Client secret of your registered application."),
+                ),
+            ),
+        },
+    )
+
+
+def get_oauth2_connection_config() -> Oauth2ConnectionConfig:
     return Oauth2ConnectionConfig(
         urls=Oauth2Urls(
             redirect=makeuri(request, [("mode", "redirect_oauth2_connection")]),
@@ -51,9 +121,15 @@ def get_oauth2_connection_config(connection: MsGraphApi | None = None) -> Oauth2
                     base_url="https://login.chinacloudapi.cn/###tenant_id###/oauth2/v2.0"
                 ),
             ),
-        ),
-        connection=connection,
+        )
     )
+
+
+def get_authority_mapping() -> Mapping[str, str]:
+    return {
+        SingleChoiceVisitor.option_id("global"): "global_",
+        SingleChoiceVisitor.option_id("china"): "china",
+    }
 
 
 class OAuth2ModeType(SimpleModeType[OAuth2Connection]):
@@ -136,7 +212,17 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     def page(self, config: Config, form_name: str = "edit") -> None:
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
-            data=asdict(get_oauth2_connection_config()),
+            data={
+                "config": asdict(get_oauth2_connection_config()),
+                "form_spec": asdict(
+                    serialize_data_for_frontend(
+                        form_spec=get_oauth_2_connection_form_spec(),
+                        field_id=form_name,
+                        do_validate=False,
+                    )
+                ),
+                "authority_mapping": get_authority_mapping(),
+            },
         )
 
 

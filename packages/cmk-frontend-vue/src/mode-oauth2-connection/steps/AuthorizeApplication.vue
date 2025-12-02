@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { MsGraphApi, Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
+import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
+import { v4 as uuid } from 'uuid'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -20,14 +21,20 @@ import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import { Oauth2ConnectionApi } from '../lib/service/oauth2-connection-api'
+import { type OAuth2FormData, Oauth2ConnectionApi } from '../lib/service/oauth2-connection-api'
 import { waitForRedirect } from '../lib/waitForRedirect'
 
 const { _t } = usei18n()
 
 const api = new Oauth2ConnectionApi()
 
-const props = defineProps<CmkWizardStepProps & { urls: Oauth2Urls }>()
+const props = defineProps<
+  CmkWizardStepProps & {
+    urls: Oauth2Urls
+    authorityMapping: Record<string, string>
+    oAuth2Type: 'ms_graph_api'
+  }
+>()
 
 const context = getWizardContext()
 
@@ -37,35 +44,37 @@ const errorTitle = ref(_t('Authorization failed.'))
 const authSucceeded = ref(false)
 const refId = randomId()
 
-const model = defineModel<MsGraphApi>({ required: true })
+const dataRef = defineModel<OAuth2FormData>({ required: true })
+const resultCode = ref<string | null>(null)
 
 async function authorize(): Promise<string | null> {
   return new Promise((resolve) => {
-    if (model.value.type) {
-      const baseUrl = props.urls[model.value.type][model.value.authority ?? 'global_'].base_url
-      if (baseUrl) {
-        const url = new URL(
-          `${baseUrl.replace('###tenant_id###', model.value.tenant_id as string)}/authorize`
-        )
+    const authorityKey = dataRef.value.authority as keyof typeof props.authorityMapping
+    const mappingValue = props.authorityMapping[authorityKey] ?? 'global_'
+    const baseUrl =
+      props.urls[props.oAuth2Type][
+        mappingValue as keyof (typeof props.urls)[typeof props.oAuth2Type]
+      ].base_url
+    if (baseUrl) {
+      const url = new URL(
+        `${baseUrl.replace('###tenant_id###', dataRef.value.tenant_id as string)}/authorize`
+      )
 
-        url.searchParams.append('client_id', model.value.client_id as string)
-        url.searchParams.append(
-          'redirect_uri',
-          location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect
-        )
-        url.searchParams.append('response_type', 'code')
-        url.searchParams.append('response_mode', 'query')
-        url.searchParams.append('scope', '.default')
-        url.searchParams.append('state', refId)
+      url.searchParams.append('client_id', dataRef.value.client_id as string)
+      url.searchParams.append(
+        'redirect_uri',
+        location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect
+      )
+      url.searchParams.append('response_type', 'code')
+      url.searchParams.append('response_mode', 'query')
+      url.searchParams.append('scope', '.default')
+      url.searchParams.append('state', refId)
 
-        const authWindow = open(url, '_blank')
-        if (authWindow) {
-          // TODO: think about how to handle the timeout properly
-          waitForRedirect<string | null>(authWindow, resolve, verifyAuthorization)
-        }
+      const authWindow = open(url, '_blank')
+      if (authWindow) {
+        // TODO: think about how to handle the timeout properly
+        waitForRedirect<string | null>(authWindow, resolve, verifyAuthorization)
       }
-    } else {
-      resolve(null)
     }
   })
 }
@@ -95,22 +104,21 @@ function verifyAuthorization(
 async function requestAndSaveAccessToken(): Promise<boolean> {
   loadingTitle.value = _t('Requesting access token')
   try {
-    const res = await api.requestAndSaveAccessToken({
-      type: model.value.type,
-      id: model.value.id,
-      redirect_uri: model.value.redirect_uri,
-      tenant_id: model.value.tenant_id as string,
-      title: model.value.title as string,
-      authority: model.value.authority as string,
-      code: model.value.code as string,
-      client_id: model.value.client_id as string,
-      client_secret: model.value.client_secret as string
-    })
-    if (res.status !== 'success') {
-      errorTitle.value = _t(`${res.message}`)
-      return false
+    if (props.oAuth2Type === 'ms_graph_api' && resultCode.value) {
+      const res = await api.requestAndSaveAccessToken({
+        type: 'ms_graph_api',
+        id: uuid(),
+        redirect_uri:
+          location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect,
+        data: dataRef.value,
+        code: resultCode.value
+      })
+      if (res.status !== 'success') {
+        errorTitle.value = _t(`${res.message}`)
+        return false
+      }
+      return true
     }
-    return true
   } catch (e) {
     errorTitle.value = _t(`Failed to request and save access token: ${e}`)
   }
@@ -125,7 +133,7 @@ immediateWatch(
       loading.value = true
       const code = await authorize()
       if (code) {
-        model.value.code = code
+        resultCode.value = code
         authSucceeded.value = await requestAndSaveAccessToken()
         loading.value = false
       } else {

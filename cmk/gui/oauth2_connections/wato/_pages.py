@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import asdict
-from typing import override
+from typing import Literal, override
 
 import requests
 
 from cmk.ccc.site import omd_site
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    parse_and_validate_frontend_data,
+    RawFrontendData,
+)
+from cmk.gui.oauth2_connections.wato._modes import get_oauth_2_connection_form_spec
 from cmk.gui.oauth2_connections.watolib.store import OAuth2Connection, save_oauth2_connection
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.watolib.passwords import load_passwords, save_password
-from cmk.shared_typing.mode_oauth2_connection import MsGraphApi
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
 from cmk.utils.password_store import Password
 
@@ -25,41 +29,69 @@ def register(page_registry: PageRegistry) -> None:
     )
 
 
+def _parse_client_secret(
+    value: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ],
+) -> str:
+    match value:
+        case ("cmk_postprocessed", "stored_password", (password_id, str())):
+            password_entries = load_passwords()
+            password_entry = password_entries[password_id]
+            if not password_entry:
+                raise MKUserError("client_secret", f"Password with ID '{password_id}' not found")
+            return str(password_entry["password"])
+        case ("cmk_postprocessed", "explicit_password", (_password_id, password)):
+            return str(password)
+        case _:
+            raise MKUserError("client_secret", "Incorrect format for secret value")
+
+
 class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        data = MsGraphApi(**ctx.request.get_json())
-        if not (ident := data.id):
+        result = ctx.request.get_json()
+        data = parse_and_validate_frontend_data(
+            get_oauth_2_connection_form_spec(), RawFrontendData(value=result["data"])
+        )
+        assert isinstance(data, dict)
+        if not (ident := result.get("id")):
             return {"status": "error", "message": f"ID missing in request data: {data}"}
 
-        if not (title := data.title):
+        if not (title := data.get("title")):
             return {"status": "error", "message": f"Title missing in request data: {data}"}
 
-        if not (client_id := data.client_id):
+        if not (client_id := data.get("client_id")):
             return {"status": "error", "message": f"Client ID missing in request data: {data}"}
 
-        if not (client_secret := data.client_secret):
+        if not (client_secret_raw := data.get("client_secret")):
             return {"status": "error", "message": f"Client secret missing in request data: {data}"}
 
-        if not (tenant_id := data.tenant_id):
+        if not (tenant_id := data.get("tenant_id")):
             return {"status": "error", "message": f"Tenant ID missing in request data: {data}"}
 
-        post_data = asdict(data) | {
+        client_secret = _parse_client_secret(client_secret_raw)
+        post_data = data | {
             "scope": ".default offline_access",
             "grant_type": "authorization_code",
+            "redirect_uri": result.get("redirect_uri"),
+            "code": result.get("code"),
+            "client_secret": client_secret,
         }
         try:
-            match data.authority:
+            match data.get("authority"):
                 case "china":
                     res = requests.post(
-                        url=f"https://login.chinacloudapi.cn/{data.tenant_id}/oauth2/v2.0/token",
+                        url=f"https://login.chinacloudapi.cn/{tenant_id}/oauth2/v2.0/token",
                         data=post_data,
                         headers={"Content-Type": "application/x-www-form-urlencoded"},
                         timeout=10,
                     )
-                case "global_":
+                case "global":
                     res = requests.post(
-                        url=f"https://login.microsoftonline.com/{data.tenant_id}/oauth2/v2.0/token",
+                        url=f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token",
                         data=post_data,
                         headers={"Content-Type": "application/x-www-form-urlencoded"},
                         timeout=10,

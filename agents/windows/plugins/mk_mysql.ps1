@@ -9,13 +9,13 @@ $CMK_VERSION = "2.5.0b1"
 
 # Entries which assumed as safe during testing security permission check
 # ----------------------------------------------------------------------
-# Add to the list of entries which 
+# Add to the list of entries which
 # 1. May have write access to Mysql binaries
 # 2. Are not Administrators
 # Typical example: 'DOMAIN\DbInstaller' or 'MYPC\SpecialUser'
 # For the case above you need to add $CURRENT_SAFE_ENTRIES = @("DOMAIN\\DbInstaller", "MYPC\\SpecialUser)
 $CURRENT_SAFE_ENTRIES = @()
-$SKIP_MYSQL_SECURITY_CHECK = 1 # Set to 0 when local test will be successful
+$SKIP_MYSQL_SECURITY_CHECK = 0
 
 function Test-Administrator {
      return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
@@ -216,80 +216,92 @@ function Test-SafeEntry([string]$entry) {
 
 <#
     .SYNOPSIS
-        Checks that file is safe to run by administrator.
+        Checks that file AND its parent folder are safe.
     .DESCRIPTION
         If non-admin users have Write, Modify or Full Control to the file
-        then returns error with detailed description.
+        OR the folder containing the file, returns error.
 #>
 function Invoke-SafetyCheck( [String]$file ) {
+     # 1. Clean the input string (remove quotes)
+     $file = $file.Trim('"')
+
      if (-not (Test-Path -path $file)) {
           return
      }
 
-     # the groups are confirmed by Security team too
+     # 2. Check both the file AND the parent folder
+     $parentDir = Split-Path -Parent $file
+     $pathsToCheck = @($file)
+     if ($parentDir -and (Test-Path $parentDir)) {
+         $pathsToCheck += $parentDir
+     }
+
      $admin_sids = @(
           "S-1-5-18", # SYSTEM
           "S-1-5-32-544" # Administrators
      )
      $forbidden_rights = @("Modify", "FullControl", "Write")
+
      class Actor {
           [string]$name
           [string]$sid
           [string]$rights
      }
-     try {
-          $acl = Get-Acl $file -ErrorAction Stop
-          $access = $acl.Access
-          $admins = Get-LocalGroupMember -SID "S-1-5-32-544"
-          $actors = $access | ForEach-Object {
-               $a = [Actor]::new()
-               $object = New-Object System.Security.Principal.NTAccount -ArgumentList $_.IdentityReference
-               $a.name = $object
-               try {
-                    $a.sid = $object.Translate([System.Security.Principal.SecurityIdentifier])
-                    $a.rights = $_.FileSystemRights.ToString()
-                    $a
-               }
-               catch {
-                    # we skip silently not convertable from the name to sid objects
-                    # they are doesn't exist for the OS
-                    # code below may be executed for files that are not converted to trace problems
-                    # debug_echo "$_  $object can not be translated"
-               }
-          }
 
-          foreach ($entry in $actors ) {
-               $name = $entry.name
-               $sid = $entry.sid
-               if ( $admin_sids -contains $sid ) {
-                    # predefined admin groups are safe
-                    continue
-               }
-               if (Test-DomainSid $sid) {
-                    # 'Domain Admins' and 'Enterprise Admins' are safe too
-                    continue
-               }
-               if ( Test-SafeEntry $name ) {
-                    # Some entries may be assumed safe, see $CURRENT_SAFE_ENTRIES
-                    continue
-               }
-               if ( $admins.Name -contains "$name" ) {
-                    # members of local admin groups are safe
-                    continue
-               }
+     foreach ($targetPath in $pathsToCheck) {
+         try {
+              $acl = Get-Acl $targetPath -ErrorAction Stop
+              $access = $acl.Access
+              $admins = Get-LocalGroupMember -SID "S-1-5-32-544"
 
-               # check for forbidden rights
-               $rights = $entry.rights
-               $forbidden_rights |
-               Foreach-Object {
-                    if ($rights -match $_) {
-                         return "$name has '$_' access permissions '$file'"
-                    }
-               }
-          }
-     }
-     catch {
-          return "Exception '$_' during check '$file'"
+              $actors = $access | ForEach-Object {
+                   $a = [Actor]::new()
+                   $object = New-Object System.Security.Principal.NTAccount -ArgumentList $_.IdentityReference
+                   $a.name = $object
+                   try {
+                        $a.sid = $object.Translate([System.Security.Principal.SecurityIdentifier])
+                        $a.rights = $_.FileSystemRights.ToString()
+                        $a
+                   }
+                   catch {
+                        # Silently skip translation errors
+                   }
+              }
+
+              foreach ($entry in $actors ) {
+                   $name = $entry.name
+                   $sid = $entry.sid
+
+                   # --- SAFEGUARDS ---
+
+                   # 1. Check Predefined SIDs (System, Local Admin)
+                   if ( $admin_sids -contains $sid ) { continue }
+
+                   # 2. Check Name: TrustedInstaller
+                   if ($name -match "TrustedInstaller") { continue }
+
+                   # 3. Check Domain Admins
+                   if (Test-DomainSid $sid) { continue }
+
+                   # 4. Check Whitelist variable
+                   if ( Test-SafeEntry $name ) { continue }
+
+                   # 5. Check Local Admin Group Membership
+                   if ( $admins.Name -contains "$name" ) { continue }
+
+                   # --- PERMISSION CHECK ---
+                   $rights = $entry.rights
+                   $forbidden_rights |
+                   Foreach-Object {
+                        if ($rights -match $_) {
+                             return "'$name' has '$_' access permissions on '$targetPath'"
+                        }
+                   }
+              }
+         }
+         catch {
+              return "Exception '$_' during check '$targetPath'"
+         }
      }
 }
 
@@ -317,7 +329,7 @@ function OutputInfosForTheInstance {
         $result = Invoke-SafetyCheck($cmd)
         if ($Null -ne $result) {
             Write-Output "<<<mysql>>>"
-            Write-Output "Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users."
+            Write-Output "Execution is blocked because: $result"
             exit
         }
     }

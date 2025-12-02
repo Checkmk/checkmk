@@ -3871,7 +3871,7 @@ class ModeUnknownRulesets(WatoMode):
         return None
 
 
-def render_rulespec_value_model_readonly(
+def render_value_model_readonly(
     used_value_model: FormSpec[Any] | ValueSpec, value: object
 ) -> HTML | str:
     if isinstance(used_value_model, FormSpec):

@@ -7,8 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v1 import HostLabel
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import HostLabel, StringTable
 from cmk.plugins.azure_v2.agent_based.azure_section_labels import (
     _parse_host_labels,
     host_labels,

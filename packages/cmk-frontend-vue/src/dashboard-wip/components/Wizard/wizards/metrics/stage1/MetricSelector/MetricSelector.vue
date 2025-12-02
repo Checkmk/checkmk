@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
@@ -74,11 +75,22 @@ const _updateMetricType = (value: string) => {
 
       <CmkIndent>
         <CmkLabel>{{ _t('Filter service metric by') }}</CmkLabel>
+        <CmkHelpText
+          :help="
+            _t(
+              'Use these fields to narrow down the list of available service metrics.<br />Click the Host name or Service label to clear the filter.'
+            )
+          "
+        />
+        <ContentSpacer :dimension="2" />
         <div class="db-metric-selector__container">
           <div class="db-metric-selector__host-filter">
             <div class="db-metric-selector__label-field-row">
-              <div class="db-metric-selector__label-field-cell">
-                <CmkLabel>{{ _t('Host name') }}:</CmkLabel>
+              <div
+                class="db-metric-selector__label-field-cell"
+                @click="() => (handler.host.value = null)"
+              >
+                <CmkLabel style="cursor: pointer">{{ _t('Host name') }}:</CmkLabel>
               </div>
 
               <div class="db-metric-selector__label-field-cell">
@@ -94,8 +106,11 @@ const _updateMetricType = (value: string) => {
 
           <div class="db-metric-selector__service-filter">
             <div class="db-metric-selector__label-field-row">
-              <div class="db-metric-selector__label-field-cell">
-                <CmkLabel>{{ _t('Service') }}:</CmkLabel>
+              <div
+                class="db-metric-selector__label-field-cell"
+                @click="() => (handler.service.value = null)"
+              >
+                <CmkLabel style="cursor: pointer">{{ _t('Service') }}:</CmkLabel>
               </div>
 
               <div class="db-metric-selector__label-field-cell">

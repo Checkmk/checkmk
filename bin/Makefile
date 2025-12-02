@@ -2,9 +2,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-EXECUTABLES := mkevent mkeventd_open514 cmk-passwordstore
+EXECUTABLES := mkevent mkeventd_open514 cmk-pwstore
 include ../standalone.make
 
-cmk-passwordstore: ../cmk/utils/password_store/cli.py
+cmk-pwstore: ../cmk/utils/password_store/cli.py
 	cp $< $@
 	chmod 755 $@

@@ -32,7 +32,7 @@ def main(args: Sequence[str]) -> int:
     try:
         password = lookup(pending_password_store_path(), parsed_args.lookup)
     except ValueError as e:
-        sys.stderr.write(f"cmk-passwordstore: {e}\n")
+        sys.stderr.write(f"cmk-pwstore: {e}\n")
         return 1
     sys.stdout.write(password)
     return 0

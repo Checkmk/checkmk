@@ -26,7 +26,7 @@ from cmk.crypto.certificate import (
 )
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames
-from cmk.utils.log.security_event import SecurityEvent
+from cmk.utils.log.security_event import log_security_event, SecurityEvent
 
 CertificateType = Literal["site", "site-ca", "agent-ca", "broker-ca", "broker"]
 
@@ -322,6 +322,7 @@ class CertManagementEvent(SecurityEvent):
         "site certificate",
         "broker certificate authority",
         "broker certificate",
+        "relay certificate authority",
     ]
 
     def __init__(
@@ -545,6 +546,14 @@ class RelaysCA:
             certificate=ca.certificate,
             private_key=ca.private_key,
             issuer=None,
+        )
+        log_security_event(
+            CertManagementEvent(
+                event="certificate created",
+                component="relay certificate authority",
+                cert=ca.certificate,
+                actor=None,
+            )
         )
         return cls(cert_dir, ca)
 

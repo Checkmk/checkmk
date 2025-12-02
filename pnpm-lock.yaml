@@ -78,8 +78,8 @@ importers:
         specifier: ^3.5.22
         version: 3.5.22
       npm-groovy-lint:
-        specifier: 15.2.1
-        version: 15.2.1
+        specifier: 15.2.2
+        version: 15.2.2
       prettier:
         specifier: 3.6.2
         version: 3.6.2
@@ -11852,8 +11852,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /npm-groovy-lint@15.2.1:
-    resolution: {integrity: sha512-LQvEOZMySW7OFwwHSUs/aR42SJ9lVqFMgzPKdsaNpz88pbumjlSVvU+Q5rueSsiS2WY1HUJs14UpYHimtPVAnA==}
+  /npm-groovy-lint@15.2.2:
+    resolution: {integrity: sha512-98V89wymtIUg+D6/apw2e7G073RzSCG6mJSf6up2SEdBS8FrtHN/ShTeN6IHU4Kb5ANnphAYirTO0tsXZZIqHA==}
     engines: {node: '>=20.0.0'}
     hasBin: true
     dependencies:
@@ -11873,7 +11873,7 @@ packages:
       node-sarif-builder: 3.2.0
       optionator: 0.9.4
       strip-json-comments: 5.0.3
-      uuid: 10.0.0
+      uuid: 13.0.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -14741,15 +14741,9 @@ packages:
   /util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
-  /uuid@10.0.0:
-    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
-    hasBin: true
-    dev: true
-
   /uuid@13.0.0:
     resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
     hasBin: true
-    dev: false
 
   /v8-to-istanbul@9.3.0:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}

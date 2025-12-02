@@ -7,11 +7,10 @@
 
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, LevelsT, Metric, Result, State, StringTable
 from cmk.plugins.azure_v2.agent_based.azure_load_balancer import (
     BackendIpConfiguration,
     check_byte_count,
@@ -290,7 +289,7 @@ def test_parse_load_balancer(string_table: StringTable, expected_section: LoadBa
     [
         (
             SECTION,
-            {"lower_levels": (300, 100), "upper_levels": (100000, 500000)},
+            {"levels_lower": ("fixed", (300, 100)), "levels_upper": ("fixed", (100000, 500000))},
             [
                 Result(
                     state=State.WARN,
@@ -303,7 +302,7 @@ def test_parse_load_balancer(string_table: StringTable, expected_section: LoadBa
 )
 def test_check_byte_count(
     section: LoadBalancer,
-    params: Mapping[str, Any],
+    params: Mapping[str, LevelsT[float]],
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_byte_count(params, section)) == expected_result
@@ -328,7 +327,7 @@ def test_check_byte_count_stale(section: LoadBalancer) -> None:
     [
         pytest.param(
             SECTION,
-            {"upper_levels": (10, 20)},
+            {"levels_upper": ("fixed", (10, 20))},
             [
                 Result(state=State.WARN, summary="SNAT usage: 18.75% (warn/crit at 10.00%/20.00%)"),
                 Metric("snat_usage", 18.75, levels=(10.0, 20.0)),
@@ -423,7 +422,7 @@ def test_check_byte_count_stale(section: LoadBalancer) -> None:
 )
 def test_check_snat(
     section: LoadBalancer,
-    params: Mapping[str, Any],
+    params: Mapping[str, LevelsT[float]],
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_snat(params, section)) == expected_result
@@ -448,7 +447,7 @@ def test_check_snat_stale(section: LoadBalancer) -> None:
     [
         (
             SECTION,
-            {"vip_availability": (90.0, 25.0), "health_probe": (90.0, 25.0)},
+            {"vip_availability": ("fixed", (90.0, 25.0)), "health_probe": ("fixed", (90.0, 25.0))},
             [
                 Result(
                     state=State.OK,
@@ -466,7 +465,7 @@ def test_check_snat_stale(section: LoadBalancer) -> None:
 )
 def test_check_health(
     section: LoadBalancer,
-    params: Mapping[str, Any],
+    params: Mapping[str, LevelsT[float]],
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_health(params, section)) == expected_result

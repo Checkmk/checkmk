@@ -801,16 +801,6 @@ rulespec_registry.register(
     )
 )
 
-# TODO: migrate and move to new folder structure
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="azure_v2_load_balancer_health",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_health,
-        title=lambda: _("Azure Load Balancer Health"),
-    )
-)
-
 
 def _parameter_valuespec_vm_burst_cpu_credits() -> Dictionary:
     return Dictionary(

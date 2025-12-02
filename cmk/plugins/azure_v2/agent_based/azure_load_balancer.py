@@ -5,19 +5,19 @@
 
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
     InventoryPlugin,
     InventoryResult,
+    LevelsT,
     Metric,
     render,
     Result,
@@ -136,17 +136,17 @@ def discover_load_balancer_by_metrics(
 #   +----------------------------------------------------------------------+
 
 
-def check_byte_count(params: Mapping[str, Any], section: LoadBalancer) -> CheckResult:
+def check_byte_count(params: Mapping[str, LevelsT[float]], section: LoadBalancer) -> CheckResult:
     metric = section.resource.metrics.get("total_ByteCount")
     if metric is None:
         raise IgnoreResultsError("Data not present at the moment")
 
     bytes_per_second = metric.value / 60.0
 
-    yield from check_levels_v1(
-        bytes_per_second,
-        levels_upper=params.get("upper_levels"),
-        levels_lower=params.get("lower_levels"),
+    yield from check_levels(
+        value=bytes_per_second,
+        levels_upper=params.get("levels_upper"),
+        levels_lower=params.get("levels_lower"),
         metric_name="byte_count",
         label="Bytes transmitted",
         render_func=render.iobandwidth,
@@ -159,7 +159,7 @@ check_plugin_azure_load_balancer_byte_count = CheckPlugin(
     service_name="Azure/Load Balancer Byte Count",
     discovery_function=discover_load_balancer_by_metrics("total_ByteCount"),
     check_function=check_byte_count,
-    check_ruleset_name="byte_count_without_item",
+    check_ruleset_name="azure_v2_load_balancer_byte_count",
     check_default_parameters={},
 )
 
@@ -174,7 +174,7 @@ check_plugin_azure_load_balancer_byte_count = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def check_snat(params: Mapping[str, Any], section: LoadBalancer) -> CheckResult:
+def check_snat(params: Mapping[str, LevelsT[float]], section: LoadBalancer) -> CheckResult:
     allocated_ports_metric = section.resource.metrics.get("average_AllocatedSnatPorts")
     used_ports_metric = section.resource.metrics.get("average_UsedSnatPorts")
 
@@ -187,10 +187,10 @@ def check_snat(params: Mapping[str, Any], section: LoadBalancer) -> CheckResult:
     if allocated_ports != 0:
         snat_usage = used_ports / allocated_ports * 100
 
-        yield from check_levels_v1(
-            snat_usage,
-            levels_upper=params.get("upper_levels"),
-            levels_lower=params.get("lower_levels"),
+        yield from check_levels(
+            value=snat_usage,
+            levels_upper=params.get("levels_upper"),
+            levels_lower=params.get("levels_lower"),
             metric_name="snat_usage",
             label="SNAT usage",
             render_func=render.percent,
@@ -210,9 +210,9 @@ check_plugin_azure_load_balancer_snat = CheckPlugin(
         "average_AllocatedSnatPorts", "average_UsedSnatPorts"
     ),
     check_function=check_snat,
-    check_ruleset_name="snat_usage_without_item",
+    check_ruleset_name="azure_v2_load_balancer_snat",
     check_default_parameters={
-        "upper_levels": (75.0, 95.0),
+        "levels_upper": ("fixed", (75.0, 95.0)),
     },
 )
 
@@ -227,7 +227,7 @@ check_plugin_azure_load_balancer_snat = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def check_health(params: Mapping[str, Any], section: LoadBalancer) -> CheckResult:
+def check_health(params: Mapping[str, LevelsT[float]], section: LoadBalancer) -> CheckResult:
     yield from create_check_metrics_function_single(
         [
             MetricData(
@@ -245,6 +245,7 @@ def check_health(params: Mapping[str, Any], section: LoadBalancer) -> CheckResul
                 lower_levels_param="health_probe",
             ),
         ],
+        check_levels=check_levels,
     )(params, section.resource)
 
 
@@ -257,5 +258,8 @@ check_plugin_azure_load_balancer_health = CheckPlugin(
     ),
     check_function=check_health,
     check_ruleset_name="azure_v2_load_balancer_health",
-    check_default_parameters={"vip_availability": (90.0, 25.0), "health_probe": (90.0, 25.0)},
+    check_default_parameters={
+        "vip_availability": ("fixed", (90.0, 25.0)),
+        "health_probe": ("fixed", (90.0, 25.0)),
+    },
 )

@@ -14,6 +14,7 @@ from unittest import mock
 import pytest
 
 import cmk.ec.export as ec
+from cmk.ccc.site import SiteId
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
 from cmk.ec.history_file import FileHistory
@@ -155,6 +156,7 @@ def fixture_event_server(
         event_status,
         StatusTableEvents.columns,
         RaisingConnection(),
+        SiteId("hurz"),
         create_pipes_and_sockets=False,
     )
 

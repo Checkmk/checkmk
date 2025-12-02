@@ -50,7 +50,7 @@ from cmk.ccc import store
 from cmk.ccc.crash_reporting import CrashReportStore, make_crash_report_base_path
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.translations import translate
 from cmk.ccc.version import get_general_version_infos
 from cmk.livestatus_client import LocalConnection
@@ -392,6 +392,7 @@ class EventServer(ECServerThread):
         event_status: EventStatus,
         event_columns: Columns,
         connection: Connection,
+        omd_site: SiteId,
         *,
         create_pipes_and_sockets: bool = True,
     ) -> None:
@@ -416,6 +417,7 @@ class EventServer(ECServerThread):
             self._hash_stats.append([0] * 8)
 
         self._connection = connection
+        self._omd_site = omd_site
         self.host_config = HostConfig(self._logger, self._connection)
         self._perfcounters = perfcounters
         self._lock_configuration = lock_configuration
@@ -426,7 +428,7 @@ class EventServer(ECServerThread):
         self._time_period = TimePeriods(self._logger, self._connection)
         self._rule_matcher = RuleMatcher(
             logger=self._logger if config["debug_rules"] else None,
-            omd_site_id=omd_site(),
+            omd_site_id=self._omd_site,
             is_active_time_period=self._time_period.active,
         )
 
@@ -1151,7 +1153,7 @@ class EventServer(ECServerThread):
         self.host_config = HostConfig(self._logger, self._connection)
         self._rule_matcher = RuleMatcher(
             logger=self._logger if config["debug_rules"] else None,
-            omd_site_id=omd_site(),
+            omd_site_id=self._omd_site,
             is_active_time_period=self._time_period.active,
         )
 
@@ -3532,6 +3534,7 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
             event_status,
             StatusTableEvents.columns,
             connection,
+            omd_site(),
         )
         terminate_main_event = threading.Event()
         reload_config_event = threading.Event()

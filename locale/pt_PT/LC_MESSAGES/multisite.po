@@ -56930,6 +56930,10 @@ msgstr "Ver as vistas de disponibilidade de anfitriões e serviços"
 msgid "See user %s"
 msgstr "Ver %s de utilizadores"
 
+#, fuzzy
+msgid "Select"
+msgstr "Selecionado"
+
 msgid "Select a time period"
 msgstr "Seleccionar um período de tempo"
 
@@ -57048,6 +57052,10 @@ msgstr "Parâmetros por defeito"
 
 #, fuzzy
 msgid "Select recipient"
+msgstr "Selecione o arquivo"
+
+#, fuzzy
+msgid "Select site"
 msgstr "Selecione o arquivo"
 
 #, python-format
@@ -68633,6 +68641,10 @@ msgstr "O local está marcado como morto. Não está a tentar replicar."
 
 msgid "The site of the status host does not exist."
 msgstr "O site do status anfitrião não existe."
+
+#, fuzzy
+msgid "The site to create a dump for."
+msgstr "Intervalo de tempo para criar relatório para"
 
 #, fuzzy, python-format
 msgid ""

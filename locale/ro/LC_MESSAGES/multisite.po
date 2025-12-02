@@ -57010,6 +57010,10 @@ msgstr "Vedeți vizualizările de disponibilitate ale gazdelor și serviciilor"
 msgid "See user %s"
 msgstr "Vezi utilizator %s"
 
+#, fuzzy
+msgid "Select"
+msgstr "Selectată"
+
 msgid "Select a time period"
 msgstr "Selectați o perioadă de timp"
 
@@ -57128,6 +57132,10 @@ msgstr "Parametrii impliciți"
 
 #, fuzzy
 msgid "Select recipient"
+msgstr "Selectați fișierul"
+
+#, fuzzy
+msgid "Select site"
 msgstr "Selectați fișierul"
 
 #, python-format
@@ -68846,6 +68854,10 @@ msgstr "Site-ul este marcat ca fiind mort. Nu încerc să reproduc."
 
 msgid "The site of the status host does not exist."
 msgstr "Site-ul gazdei de stare nu există."
+
+#, fuzzy
+msgid "The site to create a dump for."
+msgstr "Intervalul de timp pentru care se creează raportul"
 
 #, fuzzy, python-format
 msgid ""

@@ -57451,6 +57451,10 @@ msgstr "Voir la disponibilité des hôtes et des services"
 msgid "See user %s"
 msgstr "Voir l'utilisateur %s"
 
+#, fuzzy
+msgid "Select"
+msgstr "Sélectionné"
+
 msgid "Select a time period"
 msgstr "Sélectionner une période"
 
@@ -57571,6 +57575,10 @@ msgstr "Paramètres du modèle"
 
 #, fuzzy
 msgid "Select recipient"
+msgstr "Sélectionnez le fichier"
+
+#, fuzzy
+msgid "Select site"
 msgstr "Sélectionnez le fichier"
 
 #, python-format
@@ -69293,6 +69301,10 @@ msgstr "Le site est marqué comme mort. Je n'essaie pas de le répliquer."
 
 msgid "The site of the status host does not exist."
 msgstr "Le site de l'hôte d'état n'existe pas."
+
+#, fuzzy
+msgid "The site to create a dump for."
+msgstr "Période pour laquelle le rapport doit être créé"
 
 #, fuzzy, python-format
 msgid ""

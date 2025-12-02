@@ -53389,6 +53389,10 @@ msgstr "ホストとサービスの可用性ビューを見る"
 msgid "See user %s"
 msgstr "ユーザー%sを参照してください"
 
+#, fuzzy
+msgid "Select"
+msgstr "選択済み"
+
 msgid "Select a time period"
 msgstr "期間を選択してください"
 
@@ -53513,6 +53517,10 @@ msgstr "パラメータを選択"
 
 msgid "Select recipient"
 msgstr "受信者を選択"
+
+#, fuzzy
+msgid "Select site"
+msgstr "ファイルを選択"
 
 #, python-format
 msgid ""
@@ -64570,6 +64578,10 @@ msgstr "サイトは停止としてマークされています。レプリケー
 
 msgid "The site of the status host does not exist."
 msgstr "ステータスホストのサイトが存在しません。"
+
+#, fuzzy
+msgid "The site to create a dump for."
+msgstr "レポートを作成する時間範囲"
 
 #, python-format
 msgid ""

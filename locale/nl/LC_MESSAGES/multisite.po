@@ -56941,6 +56941,10 @@ msgstr "Bekijk de beschikbaarheidsoverzichten van hosts en diensten"
 msgid "See user %s"
 msgstr "Zie gebruiker %s"
 
+#, fuzzy
+msgid "Select"
+msgstr "Geselecteerd"
+
 msgid "Select a time period"
 msgstr "Selecteer een periode"
 
@@ -57060,6 +57064,10 @@ msgstr "Modelparameters"
 
 #, fuzzy
 msgid "Select recipient"
+msgstr "Selecteer bestand"
+
+#, fuzzy
+msgid "Select site"
 msgstr "Selecteer bestand"
 
 #, python-format
@@ -68666,6 +68674,10 @@ msgstr "De site is gemarkeerd als dood. Ik probeer niet te repliceren."
 
 msgid "The site of the status host does not exist."
 msgstr "De site van de status host bestaat niet."
+
+#, fuzzy
+msgid "The site to create a dump for."
+msgstr "Tijdsspanne om rapport te maken voor"
 
 #, fuzzy, python-format
 msgid ""

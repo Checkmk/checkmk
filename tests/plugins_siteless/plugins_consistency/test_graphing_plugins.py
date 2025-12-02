@@ -501,19 +501,9 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Disk latency": {"disk_latency", "disk_rw_latency"},
     "Huge pages": {"huge_pages_2", "huge_pages"},
     "Packets": {"packets_1", "packets_2", "packets_3"},
-    "Throughput": {"azure_natgateways_throughput_in_out", "azure_redis_throughput"},
     "Traffic": {"traffic", "read_write_data"},
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
 }
-
-
-_CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Throughput": {"azure_redis_throughput", "azure_natgateways_throughput_in_out"},
-}
-
-
-if edition(omd_root) not in (Edition.COMMUNITY, Edition.PRO):
-    _ALLOWED_DUPLICATE_GRAPH_TITLES.update(_CCE_ALLOWED_DUPLICATE_GRAPH_TITLES)
 
 
 def test_duplicate_graph_titles_new() -> None:

@@ -9,7 +9,7 @@ from typing import override
 import requests
 
 from cmk.ccc.site import omd_site
-from cmk.gui.oauth2_connections.watolib.store import OAuthConnection, save_oauth_connection
+from cmk.gui.oauth2_connections.watolib.store import OAuth2Connection, save_oauth2_connection
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.watolib.passwords import load_passwords, save_password
 from cmk.shared_typing.mode_oauth2_connection import MsGraphApi
@@ -154,9 +154,9 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         client_id: str,
         tenant_id: str,
     ) -> None:
-        save_oauth_connection(
+        save_oauth2_connection(
             ident=ident,
-            details=OAuthConnection(
+            details=OAuth2Connection(
                 title=title,
                 access_token_reference=f"{ident}_access_token",
                 client_id=client_id,

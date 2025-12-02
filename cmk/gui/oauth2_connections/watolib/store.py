@@ -10,10 +10,10 @@ from cmk.gui.watolib.utils import wato_root_dir
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
-    config_file_registry.register(OAuthConnectionsConfigFile())
+    config_file_registry.register(OAuth2ConnectionsConfigFile())
 
 
-class OAuthConnection(TypedDict):
+class OAuth2Connection(TypedDict):
     title: str
     client_secret_reference: str
     access_token_reference: str
@@ -22,22 +22,22 @@ class OAuthConnection(TypedDict):
     tenant_id: str
 
 
-class OAuthConnectionsConfigFile(WatoSimpleConfigFile[OAuthConnection]):
+class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):
     def __init__(self) -> None:
         super().__init__(
             config_file_path=wato_root_dir() / "oauth_connections.mk",
             config_variable="oauth_connections",
-            spec_class=OAuthConnection,
+            spec_class=OAuth2Connection,
         )
 
 
-def save_oauth_connection(
+def save_oauth2_connection(
     ident: str,
-    details: OAuthConnection,
+    details: OAuth2Connection,
     *,
     pprint_value: bool,
 ) -> None:
-    oauth_connections_config_file = OAuthConnectionsConfigFile()
-    entries = oauth_connections_config_file.load_for_modification()
+    oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
+    entries = oauth2_connections_config_file.load_for_modification()
     entries[ident] = details
-    oauth_connections_config_file.save(entries, pprint_value)
+    oauth2_connections_config_file.save(entries, pprint_value)

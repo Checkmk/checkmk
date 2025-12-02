@@ -13,7 +13,7 @@ from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.oauth2_connections.watolib.store import OAuthConnection, OAuthConnectionsConfigFile
+from cmk.gui.oauth2_connections.watolib.store import OAuth2Connection, OAuth2ConnectionsConfigFile
 from cmk.gui.page_menu import (
     PageMenu,
 )
@@ -56,7 +56,7 @@ def get_oauth2_connection_config(connection: MsGraphApi | None = None) -> Oauth2
     )
 
 
-class OAuth2ModeType(SimpleModeType[OAuthConnection]):
+class OAuth2ModeType(SimpleModeType[OAuth2Connection]):
     def type_name(self) -> str:
         return "oauth2_connection"
 
@@ -73,7 +73,7 @@ class OAuth2ModeType(SimpleModeType[OAuthConnection]):
         return [ConfigDomainCore()]
 
 
-class ModeOAuth2Connections(SimpleListMode[OAuthConnection]):
+class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     @classmethod
     def name(cls) -> str:
         return "oauth2_connections"
@@ -88,7 +88,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuthConnection]):
     def __init__(self) -> None:
         super().__init__(
             mode_type=OAuth2ModeType(),
-            store=OAuthConnectionsConfigFile(),
+            store=OAuth2ConnectionsConfigFile(),
         )
 
     def title(self) -> str:
@@ -97,7 +97,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuthConnection]):
     def page(self, config: Config) -> None:
         super().page(config)
 
-    def _show_entry_cells(self, table: Table, ident: str, entry: OAuthConnection) -> None:
+    def _show_entry_cells(self, table: Table, ident: str, entry: OAuth2Connection) -> None:
         table.cell(_("ID"), ident)
         table.cell(_("Title"), entry["title"])
 

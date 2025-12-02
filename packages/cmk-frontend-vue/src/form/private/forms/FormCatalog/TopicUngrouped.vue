@@ -89,7 +89,11 @@ const { FormEditDispatcher } = useFormEditDispatcher()
           dots
           @update:model-value="toggleElement(element.name)"
         />
-        <CmkLabel v-else :help="untranslated(element.parameter_form.help)" dots>
+        <CmkLabel
+          v-else-if="element.parameter_form.title.length > 0"
+          :help="untranslated(element.parameter_form.help)"
+          dots
+        >
           {{ element.parameter_form.title
           }}<FormRequired
             v-if="!rendersRequiredLabelItself(element.parameter_form)"

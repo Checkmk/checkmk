@@ -81,7 +81,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   >
     <td class="form-topic-grouped__group-title">
       <span class="form-topic-grouped__fixed-content-width">
-        <CmkLabel dots>
+        <CmkLabel v-if="topic_group.title.length > 0" dots>
           {{ topic_group.title }}
         </CmkLabel>
       </span>

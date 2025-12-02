@@ -28,6 +28,7 @@ class SecurityEvent:
             "user_management",
             "user_permissions",
             "cert_management",
+            "input_validation",
         ],
     )
 
@@ -56,6 +57,27 @@ class SiteStartStoppedEvent(SecurityEvent):
                 "daemon": daemon or "all",
             },
             SecurityEvent.Domain.service,
+        )
+
+
+@dataclass
+class InputValidationFailureEvent(SecurityEvent):
+    """Indicates a failed input validation"""
+
+    def __init__(
+        self,
+        *,
+        summary: str,
+        input_value: str,
+        validation_entity: Literal["HostName"],
+    ) -> None:
+        super().__init__(
+            summary,
+            {
+                "input_value": input_value,
+                "validation_entity": validation_entity,
+            },
+            SecurityEvent.Domain.input_validation,
         )
 
 

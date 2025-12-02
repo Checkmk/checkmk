@@ -823,6 +823,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_MESSAGING,
         "cmk.utils.paths",
+        "cmk.utils.log.security_event",
     ),
     **{  # some plugin families that refuse to play by the rules:
         Component(f"cmk.plugins.{family}"): _allow(

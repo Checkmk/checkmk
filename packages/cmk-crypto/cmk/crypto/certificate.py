@@ -437,12 +437,12 @@ class Certificate:
             with warnings_module.catch_warnings(record=True, category=UserWarning):
                 cert = cls(pyca_x509.load_pem_x509_certificate(pem_data.bytes))
 
-            if cert.serial_number < 0:
-                raise NegativeSerialException(
-                    f"Certificate with a negative serial number {cert.serial_number!r}",
-                    cert.subject.rfc4514_string(),
-                    cert.show_fingerprint(),
-                )
+                if cert.serial_number < 0:
+                    raise NegativeSerialException(
+                        f"Certificate with a negative serial number {cert.serial_number!r}",
+                        cert.subject.rfc4514_string(),
+                        cert.show_fingerprint(),
+                    )
 
             return cert
 
@@ -455,7 +455,13 @@ class Certificate:
     @property
     def serial_number(self) -> int:
         """The serial as a Python integer."""
-        return self._cert.serial_number
+        with warnings_module.catch_warnings(record=True, category=UserWarning):
+            # We raise on negative serials. But there are a lot of certs with a zero serial.
+            # See also: https://github.com/pyca/cryptography/issues/13287
+            # > Yes, we will not end the deprecation period until these CAs are removed
+            # > from certifi or other major trust stores.
+            # So lets suppress for now.
+            return self._cert.serial_number
 
     @property
     def serial_number_string(self) -> str:

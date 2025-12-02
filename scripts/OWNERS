@@ -1,0 +1,14 @@
+# CI platform
+
+set noparent
+
+per-file check-merge-conflicts=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file decent-output=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file fake-artifacts=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file find-python-files=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file find-shell-files=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-buildifier=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-groovy-lint=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-in-docker.sh=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-mypy=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-uvenv=file:/component_owners/ci_platform/OWNERS_DEFINITION

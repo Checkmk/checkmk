@@ -6,9 +6,9 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     IgnoreResultsError,
@@ -42,8 +42,8 @@ def check_qps(params: Mapping[str, Any], section: Resource) -> CheckResult:
 
     queries_per_second = metric.value / 60.0
 
-    yield from check_levels_v1(
-        queries_per_second,
+    yield from check_levels(
+        value=queries_per_second,
         levels_upper=params.get("levels"),
         metric_name="queries_per_sec",
         label="Queries per second",

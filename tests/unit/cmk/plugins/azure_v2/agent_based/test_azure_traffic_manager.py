@@ -40,7 +40,7 @@ from .inventory import get_inventory_value
                     ),
                 },
             ),
-            {"levels": (10, 50)},
+            {"levels": ("fixed", (10, 50))},
             [
                 Result(state=State.CRIT, summary="Queries per second: 100 (warn/crit at 10/50)"),
                 Metric("queries_per_sec", 100.0, levels=(10.0, 50.0)),

@@ -744,16 +744,6 @@ rulespec_registry.register(
     )
 )
 
-# TODO: migrate and move to new folder structure
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="azure_v2_traffic_manager_qps",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_qps,
-        title=lambda: _("Azure Traffic Manager Qps"),
-    )
-)
-
 
 def _parameter_valuespec_probe_state():
     return Dictionary(
@@ -781,16 +771,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_probe_state,
         title=lambda: _("Azure Traffic Manager Probe State (deprecated)"),
-    )
-)
-
-# TODO: migrate and move to new folder structure
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="azure_v2_traffic_manager_probe_state",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_probe_state,
-        title=lambda: _("Azure Traffic Manager Probe State"),
     )
 )
 

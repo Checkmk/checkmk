@@ -559,7 +559,7 @@ mod tests {
         assert!(cli.validate().is_err());
         assert_eq!(
             cli.validate().unwrap_err().to_string(),
-            "TLS 1.3 is not allowed in compatibility mode"
+            "Enforcing TLS 1.3 is not possible in compatibility mode."
         );
 
         cli = Cli::parse_from(&[
@@ -573,7 +573,7 @@ mod tests {
         assert!(cli.validate().is_err());
         assert_eq!(
             cli.validate().unwrap_err().to_string(),
-            "Minimum TLS 1.3 is not allowed in compatibility mode"
+            "Minimum TLS 1.3 is not possible in compatibility mode"
         );
 
         cli = Cli::parse_from(&[

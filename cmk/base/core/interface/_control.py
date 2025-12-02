@@ -21,8 +21,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache
-from cmk.ccc import tty
-from cmk.ccc.config_path import VersionedConfigPath
+from cmk.ccc import config_path, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
@@ -308,8 +307,8 @@ def _create_active_config(
     )
 
     with (
-        VersionedConfigPath.next(cmk.utils.paths.omd_root).create(
-            is_cmc=core.is_cmc()
+        config_path.create(
+            cmk.utils.paths.omd_root, is_cmc=core.is_cmc()
         ) as config_creation_context,
         _backup_objects_file(core),
     ):

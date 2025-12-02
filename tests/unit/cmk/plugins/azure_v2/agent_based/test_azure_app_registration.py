@@ -10,7 +10,15 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    FixedLevelsT,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.azure_v2.agent_based.azure_app_registration import (
     check_app_registration,
     ClientSecret,
@@ -82,10 +90,16 @@ def test_discover_app_registration(section: Section, expected_discovery: Discove
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
-        pytest.param("srv-whatever - MyVault", {}, {}, [], id="item_missing"),
+        pytest.param(
+            "srv-whatever - MyVault",
+            {},
+            {},
+            [],
+            id="item_missing",
+        ),
         pytest.param(
             "srv-whatever - Very very secure",
-            {"expiration_time": (500 * 24 * 60 * 60, 100 * 24 * 60 * 60)},
+            {"expiration_time": ("fixed", (500 * 24 * 60 * 60, 100 * 24 * 60 * 60))},
             SECTION,
             [
                 Result(
@@ -97,7 +111,7 @@ def test_discover_app_registration(section: Section, expected_discovery: Discove
         ),
         pytest.param(
             "srv-whatever - MyVault",
-            {"expiration_time": (30 * 24 * 60 * 60, 7 * 24 * 60 * 60)},
+            {"expiration_time": ("fixed", (30 * 24 * 60 * 60, 7 * 24 * 60 * 60))},
             SECTION,
             [Result(state=State.CRIT, summary="Secret expired: 230 days 15 hours ago")],
             id="secret_expired",
@@ -106,7 +120,7 @@ def test_discover_app_registration(section: Section, expected_discovery: Discove
 )
 def test_check_app_registration(
     item: str,
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, FixedLevelsT[float]],
     section: Section,
     expected_result: CheckResult,
 ) -> None:

@@ -31,6 +31,7 @@ def _parameter_valuespec_credentials_expiration() -> Dictionary:
     )
 
 
+# Only used in azure_deprecated, remove when azure_deprecated is removed
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="credentials_expiration",

@@ -10,7 +10,8 @@ from unittest.mock import patch
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.product_telemetry.transmission import transmit_telemetry_data
+from cmk.product_telemetry.exceptions import InvalidTelemetryEndpointError
+from cmk.product_telemetry.transmission import _get_api_url, transmit_telemetry_data
 
 
 class FileInfo(TypedDict):
@@ -70,3 +71,27 @@ def test_transmission(
             assert file_path.exists()
 
     assert (mocked_telemetry_dir / "grafana_usage.json").exists() != grafana_info_deleted
+
+
+@pytest.mark.parametrize(
+    "url, valid",
+    [
+        ("", False),
+        ("https://checkmk.com", True),
+        ("https://checkmk.com/path", True),
+        ("https://telemetry.checkmk.com/upload", True),
+        ("ftp://checkmk.com", False),
+        ("http://checkmk.com", False),
+        ("https://", False),
+        ("https://?.com", False),
+        ("https://#.com", False),
+    ],
+)
+def test_get_api_url(url: str, valid: bool, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CMK_TELEMETRY_URL", url)
+
+    if valid:
+        assert url == _get_api_url()
+    else:
+        with pytest.raises(InvalidTelemetryEndpointError):
+            _get_api_url()

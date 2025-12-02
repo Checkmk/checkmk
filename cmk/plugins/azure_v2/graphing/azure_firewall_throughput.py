@@ -9,7 +9,7 @@ UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 
 metric_azure_firewall_throughput = metrics.Metric(
     name="azure_firewall_throughput",
-    title=Title("Throughput"),
+    title=Title("Firewall throughput"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_PURPLE,
 )

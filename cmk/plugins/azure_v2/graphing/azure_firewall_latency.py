@@ -9,7 +9,7 @@ UNIT_SECOND = metrics.Unit(metrics.TimeNotation())
 
 metric_azure_firewall_latency = metrics.Metric(
     name="azure_firewall_latency",
-    title=Title("Azure firewall latency"),
+    title=Title("Firewall latency"),
     unit=UNIT_SECOND,
     color=metrics.Color.BLUE,
 )

@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_azure_firewall_snat_port_utilization = metrics.Metric(
     name="azure_firewall_snat_port_utilization",
-    title=Title("SNAT port utilization"),
+    title=Title("Firewall SNAT port utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_BLUE,
 )

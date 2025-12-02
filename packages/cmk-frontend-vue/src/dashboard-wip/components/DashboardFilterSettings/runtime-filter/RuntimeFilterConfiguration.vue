@@ -21,14 +21,16 @@ import type {
 } from '@/dashboard-wip/components/filter/types.ts'
 import { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
 
-import FilterCollection from '../FilterCollection.vue'
 import FilterCollectionInputItem from '../FilterCollectionInputItem.vue'
+import RuntimeFilterCollection from './RuntimeFilterCollection.vue'
 
 const { _t } = usei18n()
 const props = defineProps<{
   filterDefinitions: Record<string, FilterDefinition>
   runtimeFilters: ReturnType<typeof useFilters>
   dashboardFilters: ConfiguredFilters
+  hostDashboardFilters: string[]
+  serviceDashboardFilters: string[]
   mandatoryFilters: Set<string>
   runtimeFiltersMode: RuntimeFilterMode
   canEdit: boolean
@@ -36,7 +38,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'apply-runtime-filters': []
-  'set-configuration-target': [target: 'required-filter']
+  'open-configuration': []
   'update:runtime-filters-mode': [mode: RuntimeFilterMode]
 }>()
 
@@ -85,8 +87,8 @@ const applyRuntimeFilters = () => {
   showAppliedConfirmation.value = true
 }
 
-const switchToRequiredConfiguration = () => {
-  emit('set-configuration-target', 'required-filter')
+const openConfiguration = () => {
+  emit('open-configuration')
 }
 
 const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) => {
@@ -111,10 +113,10 @@ watch(
   <div>
     <div class="filter-configuration__apply">
       <CmkButton variant="primary" @click="applyRuntimeFilters">
-        {{ _t('Apply to dashboard') }}
+        {{ _t('Apply') }}
       </CmkButton>
-      <CmkButton v-if="canEdit" variant="secondary" @click="switchToRequiredConfiguration">
-        {{ _t('Edit required runtime filters') }}
+      <CmkButton v-if="canEdit" variant="secondary" @click="openConfiguration">
+        {{ _t('Edit filter configuration') }}
       </CmkButton>
     </div>
     <div class="filter-configuration__mode-toggle">
@@ -127,11 +129,15 @@ watch(
         </CmkLabel>
       </CmkAlertBox>
     </div>
-    <FilterCollection
-      :title="_t('Host filter')"
+
+    <RuntimeFilterCollection
+      object-type="host"
       :filters="hostRuntimeFilters"
       :get-filter-values="runtimeFilters.getFilterValues"
-      additional-item-label="Select additional filters from list"
+      additional-item-label="Select from list"
+      :dashboard-filters="hostDashboardFilters"
+      :dashboard-configured-filters="dashboardFilters"
+      :force-override="overrideMode"
     >
       <template #default="{ filterId, configuredFilterValues }">
         <FilterCollectionInputItem
@@ -148,12 +154,16 @@ watch(
           @remove-filter="handleRemoveFilter"
         />
       </template>
-    </FilterCollection>
-    <FilterCollection
-      :title="_t('Service filter')"
+    </RuntimeFilterCollection>
+
+    <RuntimeFilterCollection
+      object-type="service"
       :filters="serviceRuntimeFilters"
       :get-filter-values="runtimeFilters.getFilterValues"
-      additional-item-label="Select additional filters from list"
+      additional-item-label="Select from list"
+      :dashboard-filters="serviceDashboardFilters"
+      :dashboard-configured-filters="dashboardFilters"
+      :force-override="overrideMode"
     >
       <template #default="{ filterId, configuredFilterValues }">
         <FilterCollectionInputItem
@@ -170,7 +180,7 @@ watch(
           @remove-filter="handleRemoveFilter"
         />
       </template>
-    </FilterCollection>
+    </RuntimeFilterCollection>
   </div>
 </template>
 
@@ -180,7 +190,7 @@ watch(
   display: flex;
   align-items: center;
   margin-bottom: var(--dimension-5);
-  gap: var(--dimension-4);
+  justify-content: space-between;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

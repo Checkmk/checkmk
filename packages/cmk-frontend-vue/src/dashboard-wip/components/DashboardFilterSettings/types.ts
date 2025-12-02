@@ -12,12 +12,13 @@ export type FilterSettingsProps = {
   appliedRuntimeFilters: ConfiguredFilters
   configuredRuntimeFiltersMode: RuntimeFilterMode
   canEdit: boolean
-  startingTab: 'dashboard-filter' | 'quick-filter'
+  startingWindow: 'runtime-filters' | 'filter-configuration'
 }
 
 export interface FilterSettingsEmits {
   close: []
-  'save-dashboard-filters': [filters: ConfiguredFilters]
   'apply-runtime-filters': [filters: ConfiguredFilters, mode: RuntimeFilterMode]
-  'save-mandatory-runtime-filters': [filters: string[]]
+  'save-filter-settings': [
+    { dashboardFilters: ConfiguredFilters; mandatoryRuntimeFilters: string[] }
+  ]
 }

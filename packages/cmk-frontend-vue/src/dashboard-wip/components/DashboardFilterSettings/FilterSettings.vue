@@ -4,21 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
-import CmkLabel from '@/components/CmkLabel.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 
 import type {
   FilterSettingsEmits,
   FilterSettingsProps
 } from '@/dashboard-wip/components/DashboardFilterSettings/types.ts'
-import FilterDisplayItem from '@/dashboard-wip/components/filter/FilterDisplayItem/FilterDisplayItem.vue'
 import FilterSelection from '@/dashboard-wip/components/filter/FilterSelection/FilterSelection.vue'
 import { CATEGORY_DEFINITIONS } from '@/dashboard-wip/components/filter/FilterSelection/utils.ts'
 import { useFilters } from '@/dashboard-wip/components/filter/composables/useFilters.ts'
@@ -27,7 +24,7 @@ import type { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
 
 import FilterCollection from './FilterCollection.vue'
 import FilterCollectionInputItem from './FilterCollectionInputItem.vue'
-import RequiredFilterConfiguration from './runtime-filter/RequiredFilterConfiguration.vue'
+import FilterSelectionCollection from './runtime-filter/FilterSelectionCollection.vue'
 import RuntimeFilterConfiguration from './runtime-filter/RuntimeFilterConfiguration.vue'
 
 const props = defineProps<FilterSettingsProps>()
@@ -46,22 +43,12 @@ const closeWindow = () => {
   emit('close')
 }
 
-const saveDashboardFilters = () => {
-  emit('save-dashboard-filters', dashboardFilters.getFilters())
-  showSavedDashboardAlert.value = true
-}
-
-const resetDashboardFilters = () => {
-  dashboardFilters.setFilters(props.configuredDashboardFilters)
-}
-
 const applyRuntimeFilters = () => {
   emit('apply-runtime-filters', runtimeFilters.getFilters(), runtimeFiltersMode.value)
 }
 
 const filterCategories = parseFilterTypes(filterDefinitions, new Set(['host', 'service']))
 
-const showSavedDashboardAlert = ref(false)
 const runtimeFiltersMode = ref<RuntimeFilterMode>(props.configuredRuntimeFiltersMode)
 const dashboardFilters = useFilters(props.configuredDashboardFilters)
 
@@ -74,67 +61,69 @@ const mergedRuntimeFilterIds = [...props.configuredMandatoryRuntimeFilters, ...n
 
 const runtimeFilters = useFilters(props.appliedRuntimeFilters, mergedRuntimeFilterIds)
 const mandatoryRuntimeFilters = useFilters(undefined, props.configuredMandatoryRuntimeFilters)
-const mandatoryRuntimeFiltersBackup = ref<string[]>([...props.configuredMandatoryRuntimeFilters])
 
-const openedTab = ref<string | number>('dashboard-filter')
-const runtimeFilterConfigurationTarget = ref<'runtime-filter' | 'required-filter'>('runtime-filter')
+// Track whether the configuration sub-window is open
+const isConfigurationWindowOpen = ref(props.startingWindow === 'filter-configuration')
+const configurationTab = ref<string | number>('dashboard-filter')
 
-const tabs: {
+const configurationTabs: {
   id: string
   title: string
 }[] = [
   {
     id: 'dashboard-filter',
-    title: 'Dashboard filters'
+    title: 'Dashboard filter setup'
   },
   {
-    id: 'runtime-filter',
-    title: 'Runtime filters'
+    id: 'required-filter',
+    title: 'Runtime filter setup'
   }
 ]
 
 const targetFilters = computed(() => {
-  switch (openedTab.value) {
+  if (!isConfigurationWindowOpen.value) {
+    return runtimeFilters
+  }
+  switch (configurationTab.value) {
     case 'dashboard-filter':
       return dashboardFilters
-    case 'runtime-filter':
-      return runtimeFilterConfigurationTarget.value === 'runtime-filter'
-        ? runtimeFilters
-        : mandatoryRuntimeFilters
+    case 'required-filter':
+      return mandatoryRuntimeFilters
     default:
-      return runtimeFilters
+      return dashboardFilters
   }
 })
 
-const isFilterSelectionDisabled = computed(() => {
-  return !props.canEdit && openedTab.value === 'dashboard-filter'
-})
-
-const setRuntimeFilterConfigurationTarget = (target: 'runtime-filter' | 'required-filter') => {
-  runtimeFilterConfigurationTarget.value = target
+const openConfigurationWindow = () => {
+  isConfigurationWindowOpen.value = true
+  configurationTab.value = 'dashboard-filter'
 }
 
 const handleUpdateRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
   runtimeFiltersMode.value = mode
 }
 
-const handleSaveRequiredFilters = () => {
-  mandatoryRuntimeFiltersBackup.value = [...mandatoryRuntimeFilters.getSelectedFilters()]
+const handleSaveConfiguration = () => {
+  const mandatorySelectedFilters = mandatoryRuntimeFilters.getSelectedFilters()
+  emit('save-filter-settings', {
+    dashboardFilters: dashboardFilters.getFilters(),
+    mandatoryRuntimeFilters: mandatorySelectedFilters
+  })
 
+  // Set runtime filters
   const currentRuntimeFilters = new Set(runtimeFilters.getSelectedFilters())
-  const mandatoryFilters = new Set(mandatoryRuntimeFilters.getSelectedFilters())
-
+  const mandatoryFilters = new Set(mandatorySelectedFilters)
   const allRequiredFilters = new Set([...currentRuntimeFilters, ...mandatoryFilters])
   runtimeFilters.resetThroughSelectedFilters([...allRequiredFilters])
 
-  runtimeFilterConfigurationTarget.value = 'runtime-filter'
-  emit('save-mandatory-runtime-filters', mandatoryRuntimeFilters.getSelectedFilters())
+  isConfigurationWindowOpen.value = false
 }
 
-const handleCancelRequiredFilters = () => {
-  // Restore from backup and return to runtime filter view
-  mandatoryRuntimeFilters.resetThroughSelectedFilters([...mandatoryRuntimeFiltersBackup.value])
-  runtimeFilterConfigurationTarget.value = 'runtime-filter'
+const handleCancelConfiguration = () => {
+  // Restore from props
+  mandatoryRuntimeFilters.resetThroughSelectedFilters([...props.configuredMandatoryRuntimeFilters])
+  dashboardFilters.setFilters(JSON.parse(JSON.stringify(props.configuredDashboardFilters)))
+  isConfigurationWindowOpen.value = false
 }
 
 const hostDashboardFilters = computed(() => {
@@ -159,15 +148,27 @@ const serviceDashboardFilters = computed(() => {
   return filters
 })
 
-watch(
-  () => JSON.stringify(dashboardFilters.getFilters()),
-  (newVal, oldVal) => {
-    // if alert is visible and the filters changed, hide the alert
-    if (showSavedDashboardAlert.value && newVal !== oldVal) {
-      showSavedDashboardAlert.value = false
+const hostMandatoryFilters = computed(() => {
+  const filters: string[] = []
+  mandatoryRuntimeFilters.activeFilters.value?.forEach((filterId) => {
+    const filterDef = filterDefinitions[filterId]
+    if (filterDef && filterDef.extensions.info === 'host') {
+      filters.push(filterId)
     }
-  }
-)
+  })
+  return filters
+})
+
+const serviceMandatoryFilters = computed(() => {
+  const filters: string[] = []
+  mandatoryRuntimeFilters.activeFilters.value?.forEach((filterId) => {
+    const filterDef = filterDefinitions[filterId]
+    if (filterDef && filterDef.extensions.info === 'service') {
+      filters.push(filterId)
+    }
+  })
+  return filters
+})
 </script>
 
 <template>
@@ -187,16 +188,13 @@ watch(
             :filters="targetFilters"
             class="filter-selection__item"
           />
-
-          <!-- Overlay when disabled -->
-          <div v-if="isFilterSelectionDisabled" class="filter-selection__disabled-overlay"></div>
         </div>
       </div>
       <div class="filter-configuration__definition-container">
         <div class="filter-configuration__header">
-          <CmkLabel variant="title">
-            {{ _t('Dashboard filter') }}
-          </CmkLabel>
+          <div class="filter-configuration__window-title">
+            {{ isConfigurationWindowOpen ? _t('Filter configuration') : _t('Runtime filters') }}
+          </div>
           <button
             class="filter-configuration__close-button"
             type="button"
@@ -206,141 +204,131 @@ watch(
             <CmkIcon :aria-label="_t('Clear search')" name="close" size="xxsmall" />
           </button>
         </div>
-        <CmkTabs v-model="openedTab">
-          <template #tabs>
-            <CmkTab v-for="tab in tabs" :id="tab.id" :key="tab.id" class="cmk-demo-tabs">
-              {{ tab.title }}
-            </CmkTab>
-          </template>
-          <template #tab-contents>
-            <CmkTabContent id="dashboard-filter">
-              <div v-if="!canEdit">
-                <div class="filter-configuration__owner-message">
-                  <CmkLabel variant="title">
-                    {{ _t('Filters included by dashboard owner') }}</CmkLabel
-                  >
-                  <CmkLabel>
-                    {{ _t('You can override these by adding a runtime filter') }}
-                  </CmkLabel>
-                </div>
-                <FilterCollection
-                  :title="_t('Host filter')"
-                  :filters="hostDashboardFilters"
-                  :get-filter-values="dashboardFilters.getFilterValues"
-                  :additional-item-label="_t('Select from list')"
-                >
-                  <template #default="{ filterId, configuredFilterValues }">
-                    <div class="filter-collection-item__container">
-                      <FilterDisplayItem
-                        :filter-id="filterId"
-                        :configured-values="configuredFilterValues!"
-                      />
+
+        <div v-if="!isConfigurationWindowOpen">
+          <div class="runtime-filter-info">
+            <div class="filter-configuration__title">
+              {{ _t('Runtime filters are required to load data.') }}
+            </div>
+            <div class="filter-configuration__subtitle">
+              {{ _t('Values are temporary and can be overridden by widget filters.') }}
+            </div>
+          </div>
+
+          <RuntimeFilterConfiguration
+            :filter-definitions="filterDefinitions"
+            :runtime-filters="runtimeFilters"
+            :dashboard-filters="dashboardFilters.getFilters()"
+            :host-dashboard-filters="hostDashboardFilters"
+            :service-dashboard-filters="serviceDashboardFilters"
+            :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
+            :runtime-filters-mode="runtimeFiltersMode"
+            :can-edit="canEdit"
+            @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
+            @apply-runtime-filters="applyRuntimeFilters"
+            @open-configuration="openConfigurationWindow"
+          />
+        </div>
+
+        <div v-else class="configuration-subwindow">
+          <div class="configuration-subwindow__actions">
+            <CmkButton variant="primary" @click="handleSaveConfiguration">
+              {{ _t('Save') }}
+            </CmkButton>
+            <CmkButton variant="secondary" class="cancel-button" @click="handleCancelConfiguration">
+              <CmkIcon name="cancel" size="xsmall" />
+              {{ _t('Cancel') }}
+            </CmkButton>
+          </div>
+
+          <CmkTabs v-model="configurationTab">
+            <template #tabs>
+              <CmkTab
+                v-for="tab in configurationTabs"
+                :id="tab.id"
+                :key="tab.id"
+                class="cmk-demo-tabs"
+              >
+                {{ tab.title }}
+              </CmkTab>
+            </template>
+            <template #tab-contents>
+              <CmkTabContent id="dashboard-filter">
+                <div>
+                  <div class="filter-configuration__info-header">
+                    <div class="filter-configuration__title">
+                      {{ _t('Set filters for all widgets.') }}
                     </div>
-                  </template>
-                </FilterCollection>
-                <FilterCollection
-                  :title="_t('Service filter')"
-                  :filters="serviceDashboardFilters"
-                  :get-filter-values="dashboardFilters.getFilterValues"
-                  additional-item-label="Select from list"
-                >
-                  <template #default="{ filterId, configuredFilterValues }">
-                    <div class="filter-collection-item__container">
-                      <FilterDisplayItem
-                        :filter-id="filterId"
-                        :configured-values="configuredFilterValues!"
-                      />
+                    <div class="filter-configuration__subtitle">
+                      {{ _t('Values can be overriden by runtime or widget filters.') }}
                     </div>
-                  </template>
-                </FilterCollection>
-              </div>
-              <div v-else>
-                <div class="filter-configuration__apply">
-                  <CmkButton variant="primary" @click="saveDashboardFilters">
-                    {{ _t('Save') }}</CmkButton
+                  </div>
+                  <hr class="cmk-hr" />
+
+                  <FilterCollection
+                    :title="_t('Host filters')"
+                    :filters="hostDashboardFilters"
+                    :get-filter-values="dashboardFilters.getFilterValues"
+                    additional-item-label="Select from list"
                   >
-                  <CmkButton variant="secondary" @click="resetDashboardFilters">
-                    {{ _t('Reset to saved filters') }}
-                  </CmkButton>
+                    <template #default="{ filterId, configuredFilterValues }">
+                      <FilterCollectionInputItem
+                        :filter-id="filterId"
+                        :configured-filter-values="configuredFilterValues"
+                        :filter-definitions="filterDefinitions"
+                        @update-filter-values="dashboardFilters.updateFilterValues"
+                        @remove-filter="dashboardFilters.removeFilter"
+                      />
+                    </template>
+                  </FilterCollection>
+                  <FilterCollection
+                    :title="_t('Service filters')"
+                    :filters="serviceDashboardFilters"
+                    :get-filter-values="dashboardFilters.getFilterValues"
+                    additional-item-label="Select from list"
+                  >
+                    <template #default="{ filterId, configuredFilterValues }">
+                      <FilterCollectionInputItem
+                        :filter-id="filterId"
+                        :configured-filter-values="configuredFilterValues"
+                        :filter-definitions="filterDefinitions"
+                        @update-filter-values="dashboardFilters.updateFilterValues"
+                        @remove-filter="dashboardFilters.removeFilter"
+                      />
+                    </template>
+                  </FilterCollection>
                 </div>
-                <div v-if="showSavedDashboardAlert">
-                  <CmkAlertBox variant="success">
-                    <CmkLabel>
-                      {{ _t('Success! Your new dashboard filters have been saved') }}
-                    </CmkLabel>
-                  </CmkAlertBox>
+              </CmkTabContent>
+
+              <CmkTabContent id="required-filter">
+                <div class="required-filters-content">
+                  <div class="filter-configuration__info-header">
+                    <div class="filter-configuration__title">
+                      {{ _t('Set required filters for viewers to enter on load.') }}
+                    </div>
+                    <div class="filter-configuration__subtitle">
+                      {{ _t('Values are temporary and can be overriden by widget filters.') }}
+                    </div>
+                  </div>
+                  <hr class="cmk-hr" />
+
+                  <FilterSelectionCollection
+                    :title="_t('Host filters')"
+                    :filters="hostMandatoryFilters"
+                    :filter-definitions="filterDefinitions"
+                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                  />
+                  <FilterSelectionCollection
+                    :title="_t('Service filters')"
+                    :filters="serviceMandatoryFilters"
+                    :filter-definitions="filterDefinitions"
+                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                  />
                 </div>
-
-                <FilterCollection
-                  :title="_t('Host filter')"
-                  :filters="hostDashboardFilters"
-                  :get-filter-values="dashboardFilters.getFilterValues"
-                  additional-item-label="Select from list"
-                >
-                  <template #default="{ filterId, configuredFilterValues }">
-                    <FilterCollectionInputItem
-                      :filter-id="filterId"
-                      :configured-filter-values="configuredFilterValues"
-                      :filter-definitions="filterDefinitions"
-                      @update-filter-values="dashboardFilters.updateFilterValues"
-                      @remove-filter="dashboardFilters.removeFilter"
-                    />
-                  </template>
-                </FilterCollection>
-                <FilterCollection
-                  :title="_t('Service filter')"
-                  :filters="serviceDashboardFilters"
-                  :get-filter-values="dashboardFilters.getFilterValues"
-                  additional-item-label="Select from list"
-                >
-                  <template #default="{ filterId, configuredFilterValues }">
-                    <FilterCollectionInputItem
-                      :filter-id="filterId"
-                      :configured-filter-values="configuredFilterValues"
-                      :filter-definitions="filterDefinitions"
-                      @update-filter-values="dashboardFilters.updateFilterValues"
-                      @remove-filter="dashboardFilters.removeFilter"
-                    />
-                  </template>
-                </FilterCollection>
-              </div>
-            </CmkTabContent>
-            <CmkTabContent id="runtime-filter">
-              <div>
-                <CmkAlertBox variant="info">
-                  <CmkLabel>
-                    {{ _t('Runtime filters are required to load data.') }}
-                  </CmkLabel>
-                  <CmkLabel>
-                    {{ _t('Values apply across all widgets.') }}
-                  </CmkLabel>
-                </CmkAlertBox>
-              </div>
-
-              <RuntimeFilterConfiguration
-                v-if="runtimeFilterConfigurationTarget === 'runtime-filter'"
-                :filter-definitions="filterDefinitions"
-                :runtime-filters="runtimeFilters"
-                :dashboard-filters="dashboardFilters.getFilters()"
-                :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
-                :runtime-filters-mode="runtimeFiltersMode"
-                :can-edit="canEdit"
-                @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
-                @apply-runtime-filters="applyRuntimeFilters"
-                @set-configuration-target="setRuntimeFilterConfigurationTarget"
-              />
-
-              <RequiredFilterConfiguration
-                v-if="runtimeFilterConfigurationTarget === 'required-filter'"
-                :filter-definitions="filterDefinitions"
-                :runtime-filters="mandatoryRuntimeFilters"
-                @save-runtime-filters="handleSaveRequiredFilters"
-                @cancel-runtime-filters="handleCancelRequiredFilters"
-                @set-configuration-target="setRuntimeFilterConfigurationTarget"
-              />
-            </CmkTabContent>
-          </template>
-        </CmkTabs>
+              </CmkTabContent>
+            </template>
+          </CmkTabs>
+        </div>
       </div>
     </div>
   </div>
@@ -415,14 +403,6 @@ watch(
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__apply {
-  display: flex;
-  align-items: center;
-  margin-bottom: var(--dimension-5);
-  gap: var(--dimension-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-configuration__close-button {
   background: none;
   border: none;
@@ -438,15 +418,61 @@ watch(
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__owner-message {
-  margin-bottom: var(--dimension-4);
-  padding: var(--dimension-3);
+.runtime-filter-info {
+  margin-bottom: var(--dimension-5);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-collection-item__container {
-  padding: var(--dimension-7);
-  position: relative;
-  display: block;
+.configuration-subwindow__actions {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--dimension-5);
+  gap: var(--dimension-4);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-configuration__info-header {
+  margin-top: var(--dimension-4);
+  margin-bottom: var(--dimension-4);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.cmk-hr {
+  border: none;
+  border-top: 1px solid var(--ux-theme-5);
+  margin: var(--dimension-5) 0;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.required-filters-content {
+  margin-top: var(--dimension-4);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-configuration__window-title {
+  font-size: var(--dimension-6);
+  color: var(--font-color);
+  font-weight: var(--font-weight-bold);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-configuration__title {
+  font-size: 14px;
+  color: var(--font-color);
+  font-weight: var(--font-weight-bold);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-configuration__subtitle {
+  font-size: var(--dimension-5);
+  color: var(--font-color);
+  margin-top: var(--dimension-1);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.cancel-button {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
 }
 </style>

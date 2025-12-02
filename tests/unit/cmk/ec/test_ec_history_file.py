@@ -123,7 +123,7 @@ def test_history_parse(tmp_path: Path) -> None:
     filter_ = QueryFilter(
         column_name="event_id",
         operator_name="=",
-        predicate=lambda x: True,
+        predicate=lambda _: True,
         argument="1",
     )
     tac = f"nl -b a {shlex.quote(str(path))} | tac"
@@ -132,7 +132,7 @@ def test_history_parse(tmp_path: Path) -> None:
     new_entries = parse_history_file(
         StatusTableHistory.columns,
         path,
-        lambda x: True,
+        lambda _: True,
         cmd,
         None,
         logging.getLogger("cmk.mkeventd"),

@@ -59,55 +59,55 @@ def test_filters_to_mongo_query() -> None:
         QueryFilter(
             column_name="event_text",
             operator_name="=",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="test_event",
         ),
         QueryFilter(
             column_name="event_time",
             operator_name="<",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument=1234,
         ),
         QueryFilter(
             column_name="event_delay_until",
             operator_name="<=",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument=120,
         ),
         QueryFilter(
             column_name="event_comment",
             operator_name="~",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="test",
         ),
         QueryFilter(
             column_name="event_location",
             operator_name="=~",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="seattle",
         ),
         QueryFilter(
             column_name="event_phase",
             operator_name="~~",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="test",
         ),
         QueryFilter(
             column_name="event_owner",
             operator_name="in",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument=["foo", "bar"],
         ),
         QueryFilter(
             column_name="history_owner",
             operator_name="in",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="foobar",
         ),
         QueryFilter(
             column_name="history_line",
             operator_name="in",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="some text",
         ),
     ]
@@ -135,7 +135,7 @@ def test_filters_to_mongo_query_Exception() -> None:
                 QueryFilter(
                     column_name="wrong_column_name",
                     operator_name="=",
-                    predicate=lambda x: True,
+                    predicate=lambda _: True,
                     argument="test_event",
                 )
             ]

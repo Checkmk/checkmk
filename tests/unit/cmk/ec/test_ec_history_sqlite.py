@@ -37,7 +37,7 @@ def test_equal_operator_with_matching_lower_case_argument_returns_matching_lower
                 QueryFilter(
                     column_name="event_text",
                     operator_name="=",
-                    predicate=lambda x: True,
+                    predicate=lambda _: True,
                     argument="test text",
                 )
             ]
@@ -54,7 +54,7 @@ def test_equal_operator_with_unmatching_lower_case_argument_returns_empty_result
                 QueryFilter(
                     column_name="event_text",
                     operator_name="=",
-                    predicate=lambda x: True,
+                    predicate=lambda _: True,
                     argument="test text",
                 )
             ]
@@ -83,7 +83,7 @@ def test_case_insensitive_equal_operator_with_matching_data_returns_matching_tex
                 QueryFilter(
                     column_name="event_text",
                     operator_name="=~",
-                    predicate=lambda x: True,
+                    predicate=lambda _: True,
                     argument=filter_value,
                 )
             ]
@@ -110,7 +110,7 @@ def test_case_insensitive_equal_operator_with_no_matching_data_returns_matching_
                 QueryFilter(
                     column_name="event_text",
                     operator_name="=~",
-                    predicate=lambda x: True,
+                    predicate=lambda _: True,
                     argument=filter_value,
                 )
             ]
@@ -150,7 +150,7 @@ def test_case_comparative_operator_with_matching_adjacent_data_returns_matching_
                 QueryFilter(
                     column_name="event_id",
                     operator_name=operator,
-                    predicate=lambda x: True,
+                    predicate=lambda _: True,
                     argument=filter_value,
                 )
             ]
@@ -185,7 +185,7 @@ def test_case_in_operator_with_some_matching_data_returns_matching_text(
                 QueryFilter(
                     column_name="event_text",
                     operator_name="in",
-                    predicate=lambda x: True,
+                    predicate=lambda _: True,
                     argument=filter_value,
                 )
             ]
@@ -200,7 +200,7 @@ def test_filters_to_sqlite_query_with_simple_equality_filter_has_correct_query()
         QueryFilter(
             column_name="event_text",
             operator_name="=",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="test_event",
         )
     ]
@@ -216,7 +216,7 @@ def test_filters_to_sqlite_query_with_one_in_filter_has_one_placeholder_in_query
         QueryFilter(
             column_name="event_text",
             operator_name="in",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument=("test_event",),
         )
     ]
@@ -234,7 +234,7 @@ def test_filters_to_sqlite_query_with_multiple_in_filters_has_multiple_matching_
         QueryFilter(
             column_name="event_text",
             operator_name="in",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument=("test_event", "test_event", "test_event"),
         )
     ]
@@ -252,13 +252,13 @@ def test_filters_to_sqlite_query_with_less_than_and_greater_than_filters_have_co
         QueryFilter(
             column_name="event_time",
             operator_name="<",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument=123456789,
         ),
         QueryFilter(
             column_name="event_time",
             operator_name=">",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument=1234,
         ),
     ]
@@ -275,13 +275,13 @@ def test_filters_to_sqlite_query_with_regex_and_case_insensitive_equality_filter
         QueryFilter(
             column_name="history_who",
             operator_name="~~",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="admin",
         ),
         QueryFilter(
             column_name="event_owner",
             operator_name="=~",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="user",
         ),
     ]
@@ -303,7 +303,7 @@ def test_filters_to_sqlite_query_raises_ValueError() -> None:
         QueryFilter(
             column_name="impossible_column_name",
             operator_name="=",
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="test_event",
         )
     ]
@@ -318,7 +318,7 @@ def test_filters_to_sqlite_query_raises_KeyError() -> None:
         QueryFilter(
             column_name="event_text",
             operator_name="=asdf or true;",  # type: ignore[arg-type]
-            predicate=lambda x: True,
+            predicate=lambda _: True,
             argument="test_event",
         )
     ]

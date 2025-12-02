@@ -150,7 +150,7 @@ def test_match_message(
     match_result: TextMatchResult,
     cancel_groups: bool | None,
 ) -> None:
-    m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
+    m = ec.RuleMatcher(None, SiteId("test_site"), lambda _time_period_name: True)
     rule = (
         ec.Rule(match=match_message)
         if cancel_message is None
@@ -200,7 +200,7 @@ def test_match_priority(
     cancel_priority: tuple[int, int] | None,
     expected: MatchPriority | None,
 ) -> None:
-    m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
+    m = ec.RuleMatcher(None, SiteId("test_site"), lambda _time_period_name: True)
     rule = ec.Rule()
     if match_priority is not None:
         rule["match_priority"] = match_priority
@@ -261,7 +261,7 @@ def test_match_outcome(
     match_priority: MatchPriority,
     expected: ec.MatchResult,
 ) -> None:
-    m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
+    m = ec.RuleMatcher(None, SiteId("test_site"), lambda _time_period_name: True)
     assert m._check_match_outcome(rule, match_groups, match_priority) == expected
 
 
@@ -279,7 +279,7 @@ def test_match_outcome(
 )
 def test_match_site(rule: ec.Rule, result: ec.MatchResult) -> None:
     # TODO why is "NO_SITE" necessary here. Random string as SiteId fails
-    m = ec.RuleMatcher(None, SiteId("NO_SITE"), lambda time_period_name: True)
+    m = ec.RuleMatcher(None, SiteId("NO_SITE"), lambda _time_period_name: True)
     assert m.event_rule_matches_site(rule, {}) == result
 
 
@@ -336,7 +336,7 @@ def test_match_site(rule: ec.Rule, result: ec.MatchResult) -> None:
     ],
 )
 def test_match_host(result: ec.MatchResult, rule: ec.Rule, event: ec.Event) -> None:
-    m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
+    m = ec.RuleMatcher(None, SiteId("test_site"), lambda _time_period_name: True)
     rule = rule.copy()
     ec.compile_rule(rule)
     assert m.event_rule_matches_host(rule, event) == result
@@ -401,7 +401,7 @@ def test_match_host(result: ec.MatchResult, rule: ec.Rule, event: ec.Event) -> N
     ],
 )
 def test_match_ipaddress(result: ec.MatchResult, rule: ec.Rule, event: ec.Event) -> None:
-    m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
+    m = ec.RuleMatcher(None, SiteId("test_site"), lambda _time_period_name: True)
     assert m.event_rule_matches_ip(rule, event) == result
 
 
@@ -427,7 +427,7 @@ def test_match_ipaddress(result: ec.MatchResult, rule: ec.Rule, event: ec.Event)
     ],
 )
 def test_match_facility(result: ec.MatchResult, rule: ec.Rule, event: ec.Event) -> None:
-    m = ec.RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
+    m = ec.RuleMatcher(None, SiteId("test_site"), lambda _time_period_name: True)
     assert m.event_rule_matches_facility(rule, event) == result
 
 

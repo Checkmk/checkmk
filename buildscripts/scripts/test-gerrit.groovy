@@ -257,7 +257,7 @@ void main() {
                                         checksName: item.NAME,
                                         tools: [
                                             Custom(
-                                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                                                customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
                                                 deleteOutputFiles: false,
                                                 failIfNotNew: false, // as they are copied from the single tests
                                                 pattern: item.RESULT_CHECK_FILE_PATTERN,

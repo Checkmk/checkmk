@@ -20,7 +20,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri
-from cmk.gui.wato import SimpleListMode, SimpleModeType
+from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -102,11 +102,17 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         table.cell(_("Title"), entry["title"])
 
 
-class ModeCreateOAuth2Connection(WatoMode[None]):
+class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     @classmethod
     @override
     def name(cls) -> str:
         return "edit_oauth2_connection"
+
+    def __init__(self) -> None:
+        super().__init__(
+            mode_type=OAuth2ModeType(),
+            store=OAuth2ConnectionsConfigFile(),
+        )
 
     @staticmethod
     @override
@@ -127,7 +133,7 @@ class ModeCreateOAuth2Connection(WatoMode[None]):
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, config: Config, form_name: str = "edit") -> None:
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
             data=asdict(get_oauth2_connection_config()),

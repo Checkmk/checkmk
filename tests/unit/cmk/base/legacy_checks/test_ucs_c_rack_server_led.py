@@ -10,11 +10,12 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
+from cmk.agent_based.v2 import Result, State
 from cmk.base.legacy_checks.ucs_c_rack_server_led import (
     check_ucs_c_rack_server_led,
     discover_ucs_c_rack_server_led,
+    parse_ucs_c_rack_server_led,
 )
-from cmk.plugins.collection.agent_based.ucs_c_rack_server_led import parse_ucs_c_rack_server_led
 
 
 def test_ucs_c_rack_server_led_discovery() -> None:
@@ -69,7 +70,7 @@ def test_ucs_c_rack_server_led_discovery() -> None:
         "Rack Unit 1 4",
         "Rack Unit 1 5",
     }
-    discovered_items = {item for item, _ in result}
+    discovered_items = {service.item for service in result}
     assert discovered_items == expected_items
 
 
@@ -94,21 +95,11 @@ def test_ucs_c_rack_server_led_check_green() -> None:
     }
 
     result = list(check_ucs_c_rack_server_led("Rack Unit 1 1", params, parsed))
-
-    # Should have 3 results: Color, Name, Operational state
-    assert len(result) == 3
-
-    # Check the color result (should be OK for green)
-    assert result[0][0] == 0  # OK state for green
-    assert "Color: green" in result[0][1]
-
-    # Check the name result (should be OK)
-    assert result[1][0] == 0  # OK state
-    assert "Name: LED_PSU_STATUS" in result[1][1]
-
-    # Check the operational state result (should be OK)
-    assert result[2][0] == 0  # OK state
-    assert "Operational state: on" in result[2][1]
+    assert result == [
+        Result(state=State.OK, summary="Color: green"),
+        Result(state=State.OK, summary="Name: LED_PSU_STATUS"),
+        Result(state=State.OK, summary="Operational state: on"),
+    ]
 
 
 def test_ucs_c_rack_server_led_check_amber() -> None:
@@ -132,21 +123,11 @@ def test_ucs_c_rack_server_led_check_amber() -> None:
     }
 
     result = list(check_ucs_c_rack_server_led("Rack Unit 1 3", params, parsed))
-
-    # Should have 3 results: Color, Name, Operational state
-    assert len(result) == 3
-
-    # Check the color result (should be WARNING for amber)
-    assert result[0][0] == 1  # WARNING state for amber
-    assert "Color: amber" in result[0][1]
-
-    # Check the name result (should be OK)
-    assert result[1][0] == 0  # OK state
-    assert "Name: LED_PSU_STATUS" in result[1][1]
-
-    # Check the operational state result (should be OK)
-    assert result[2][0] == 0  # OK state
-    assert "Operational state: on" in result[2][1]
+    assert result == [
+        Result(state=State.WARN, summary="Color: amber"),
+        Result(state=State.OK, summary="Name: LED_PSU_STATUS"),
+        Result(state=State.OK, summary="Operational state: on"),
+    ]
 
 
 def test_ucs_c_rack_server_led_check_red() -> None:
@@ -170,13 +151,11 @@ def test_ucs_c_rack_server_led_check_red() -> None:
     }
 
     result = list(check_ucs_c_rack_server_led("Rack Unit 1 4", params, parsed))
-
-    # Should have 3 results: Color, Name, Operational state
-    assert len(result) == 3
-
-    # Check the color result (should be CRITICAL for red)
-    assert result[0][0] == 2  # CRITICAL state for red
-    assert "Color: red" in result[0][1]
+    assert result == [
+        Result(state=State.CRIT, summary="Color: red"),
+        Result(state=State.OK, summary="Name: LED_PSU_STATUS"),
+        Result(state=State.OK, summary="Operational state: on"),
+    ]
 
 
 def test_ucs_c_rack_server_led_check_orange() -> None:
@@ -200,13 +179,11 @@ def test_ucs_c_rack_server_led_check_orange() -> None:
     }
 
     result = list(check_ucs_c_rack_server_led("Rack Unit 1 5", params, parsed))
-
-    # Should have 3 results: Color, Name, Operational state
-    assert len(result) == 3
-
-    # Check the color result (should be UNKNOWN for orange - not in params)
-    assert result[0][0] == 3  # UNKNOWN state for orange (default)
-    assert "Color: orange" in result[0][1]
+    assert result == [
+        Result(state=State.UNKNOWN, summary="Color: orange"),
+        Result(state=State.OK, summary="Name: LED_PSU_STATUS"),
+        Result(state=State.OK, summary="Operational state: on"),
+    ]
 
 
 def test_ucs_c_rack_server_led_parse_function() -> None:

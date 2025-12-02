@@ -154,7 +154,7 @@ def test_match_ip_network_ipv6(pattern: str, ip: str, expected: bool) -> None:
 @pytest.mark.parametrize(
     "ip",
     [
-        "0.0.0.0",
+        "0.0.0.0",  # nosec B104
         "192.31.196.172",
         "192.175.48.84",
         "192.0.2.167",

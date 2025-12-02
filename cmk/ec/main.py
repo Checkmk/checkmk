@@ -571,7 +571,7 @@ class EventServer(ECServerThread):
                     self._logger.info("Binding ipv6 failed. Falling back to ipv4 for syslog-udp")
                     self._syslog_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                     self._syslog_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._syslog_udp.bind(("0.0.0.0", endpoint.value))
+                    self._syslog_udp.bind(("0.0.0.0", endpoint.value))  # nosec B104
                 self._logger.info("Opened builtin syslog server on UDP port %d", endpoint.value)
         except Exception as e:
             raise Exception("Cannot start builtin syslog server") from e
@@ -613,7 +613,7 @@ class EventServer(ECServerThread):
                     self._logger.info("Binding ipv6 failed. Falling back to ipv4 for syslog-tcp")
                     self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._syslog_tcp.bind(("0.0.0.0", endpoint.value))
+                    self._syslog_tcp.bind(("0.0.0.0", endpoint.value))  # nosec B104
                 self._syslog_tcp.listen(20)
                 self._logger.info("Opened builtin syslog-tcp server on TCP port %d", endpoint.value)
         except Exception as e:
@@ -656,7 +656,7 @@ class EventServer(ECServerThread):
                     self._logger.info("Binding ipv6 failed. Falling back to ipv4 for snmptrap")
                     self._snmp_trap_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                     self._snmp_trap_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._snmp_trap_socket.bind(("0.0.0.0", endpoint.value))
+                    self._snmp_trap_socket.bind(("0.0.0.0", endpoint.value))  # nosec B104
                 self._logger.info("Opened builtin snmptrap server on UDP port %d", endpoint.value)
         except Exception as e:
             raise Exception("Cannot start builtin snmptrap server") from e
@@ -2091,7 +2091,7 @@ class StatusServer(ECServerThread):
                     )
                     self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._tcp_socket.bind(("0.0.0.0", self._tcp_port))
+                    self._tcp_socket.bind(("0.0.0.0", self._tcp_port))  # nosec B104
                 self._tcp_socket.listen(self._config["socket_queue_len"])
                 self._logger.info(
                     "Going to listen for status queries on TCP port %d", self._tcp_port

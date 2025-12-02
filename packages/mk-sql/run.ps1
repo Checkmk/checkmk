@@ -214,6 +214,9 @@ try {
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
         Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
         Invoke-Cargo-With-Explicit-Package "build" "--release" "--target" $cargo_target
+        $exe_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-json).target_directory "$cargo_target" "release"
+        Write-Host "Uploading artifacts: [ $exe_dir/$exe_name -> $arte_dir/$exe_name ] ..." -Foreground White
+        Copy-Item $exe_dir/$exe_name $arte_dir/$exe_name -Force -ErrorAction Stop
     }
     if ($packClippy) {
         Invoke-Cargo-With-Explicit-Package "clippy" "--release" "--target" $cargo_target "--tests" "--" "--deny" "warnings"
@@ -233,11 +236,6 @@ try {
         # TODO(timi): move it to CI
         .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.5.0
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
-    }
-    if ($packBuild -and $packTest -and $packClippy) {
-        $exe_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-json).target_directory "$cargo_target" "release"
-        Write-Host "Uploading artifacts: [ $exe_dir/$exe_name -> $arte_dir/$exe_name ] ..." -Foreground White
-        Copy-Item $exe_dir/$exe_name $arte_dir/$exe_name -Force -ErrorAction Stop
     }
     if ($packDoc) {
         Invoke-Cargo-With-Explicit-Package "doc"

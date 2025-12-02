@@ -15,10 +15,10 @@ if ((get-host).version.major -lt 7) {
 }
 
 $argAll = $false
+$argBuild = $false
 $argClean = $false
 $argCtl = $false
 $argBuild = $false
-$argTest = $false
 $argSign = $false
 $argMsi = $false
 $argOhm = $false
@@ -26,6 +26,7 @@ $argOracle = $false
 $argExt = $false
 $argSql = $false
 $argDetach = $false
+$argWin = $false
 $argSkipSqlTest = $false
 
 $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
@@ -62,18 +63,18 @@ function Write-Help() {
     Write-Host ""
     Write-Host "Available arguments:"
     Write-Host "  -?, -h, --help          display help and exit"
-    Write-Host "  -A, --all               shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql, mk-oracle"
+    Write-Host "  -A, --all               shortcut to -C -O -T -M -E -Q -o:  ctl, ohm, unit, msi, extensions, mk-sql, mk-oracle"
     Write-Host "  --clean-all             clean literally all, use with care"
     Write-Host "  --clean-artifacts       clean artifacts"
-    Write-Host "  -C, --ctl               build controller"
-    Write-Host "  -Q, --mk-sql            build mk-sql"
-    Write-Host "  -o, --mk-oracle         build mk-oracle"
-    Write-Host "  -B, --build             build agent"
-    Write-Host "  -M, --msi               build msi"
-    Write-Host "  -O, --ohm               build ohm"
-    Write-Host "  -E, --extensions        build extensions"
-    Write-Host "  -T, --test              run some agent tests"
-    Write-Host "  -S, --skip-mk-sql-test  skip sql test to be able to build msi in case sql is not configured"
+    Write-Host "  -C, --ctl               make controller"
+    Write-Host "  -Q, --mk-sql            make mk-sql"
+    Write-Host "  -o, --mk-oracle         make mk-oracle"
+    Write-Host "  -B, --build-only        do not test, just build"
+    Write-Host "  -W, --win-agent         make windows agent"
+    Write-Host "  -M, --msi               make msi"
+    Write-Host "  -O, --ohm               make ohm"
+    Write-Host "  -E, --extensions        make extensions"
+    Write-Host "  -S, --skip-sql-test     skip sql test to be able to build msi in case sql is not configured"
     Write-Host "  --detach                detach USB before running"
     Write-Host "  --sign                  sign controller using Yubikey based Code Certificate"
     Write-Host ""
@@ -98,12 +99,12 @@ else {
             { $("-A", "--all") -contains $_ } { $argAll = $true }
             { $("-C", "--controller") -contains $_ } { $argCtl = $true }
             { $("-B", "--build") -contains $_ } { $argBuild = $true }
+            { $("-W", "--win-agent") -contains $_ } { $argWin = $true }
             { $("-M", "--msi") -contains $_ } { $argMsi = $true }
             { $("-O", "--ohm") -contains $_ } { $argOhm = $true }
             { $("-o", "--mk-oracle") -contains $_ } { $argOracle = $true }
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
-            { $("-T", "--test") -contains $_ } { $argTest = $true }
             { $("-S", "--skip-sql-test") -contains $_ } { $argSkipSqlTest = $true }
             "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
@@ -118,16 +119,14 @@ else {
 
 
 if ($argAll) {
-    $argBuild = $true
     $argOhm = $true
     $argOracle = $true
     $argCtl = $true
-    $argTest = $true
     $argSql = $true
     $argExt = $true
     $argMsi = $true
+    $argWin = $true
 }
-
 
 # Example of setting environment variables (equivalent to SETLOCAL in batch)
 $env:LOGONSERVER = "YourLogonServerHere"
@@ -171,7 +170,7 @@ function Get-Version {
 }
 
 function Build-Agent {
-    if ($argBuild -ne $true) {
+    if ($argWin -ne $true) {
         Write-Host "Skipping Agent build..." -ForegroundColor Yellow
         return
     }
@@ -303,7 +302,7 @@ function Set-MSI-Version {
 }
 
 function Start-UnitTests {
-    if ($argTest -ne $true) {
+    if ($argBuild) {
         Write-Host "Skipping unit testing..." -ForegroundColor Yellow
         return
     }
@@ -714,10 +713,18 @@ try {
 
     # BUILDING
     Build-Agent
-    Build-Package $argCtl "cmk-agent-ctl" "Controller"
+    if ($argBuild){
+        $build_arg = "--build"
+    }
+    else
+    {
+        $build_arg = ""
+    }
+
+    Build-Package $argCtl "cmk-agent-ctl" "Controller" $build_arg
     if ($argSkipSqlTest -ne $true) {
-        Build-Package $argSql "mk-sql" "MK-SQL"
-        Build-Package $argOracle "mk-oracle" "mk-oracle"
+        Build-Package $argSql "mk-sql" "MK-SQL" $build_arg
+        Build-Package $argOracle "mk-oracle" "mk-oracle"  $build_arg
     }
     else {
         Build-Package $argSql "mk-sql" "MK-SQL" --build
@@ -725,6 +732,7 @@ try {
     }
     Build-Ohm
     Build-Ext
+
     Start-UnitTests
 
     # SIGNING

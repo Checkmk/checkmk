@@ -12,7 +12,7 @@ from tests.testlib.utils import get_services_with_status
 from tests.testlib.version import TypeCMKEdition, TypeCMKEditionOld
 from tests.update.helpers import (
     bulk_discover_and_schedule,
-    check_agent_receiver_error_log,
+    check_errors_in_log_files,
     check_services,
     get_target_package,
     update_site,
@@ -39,4 +39,4 @@ def test_update(test_setup: tuple[Site, TypeCMKEdition, bool, str]) -> None:
 
     check_services(target_site, hostname, base_data)
 
-    check_agent_receiver_error_log(target_site)
+    check_errors_in_log_files(target_site)

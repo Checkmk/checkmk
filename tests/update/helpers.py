@@ -196,14 +196,14 @@ def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
     pass
 
 
-def check_agent_receiver_error_log(site: Site) -> None:
-    """Assert that there are no unexpected errors in the agent receiver log."""
+def check_errors_in_log_files(site: Site) -> None:
+    """Assert that there are no unexpected errors in the site log-files"""
     # Default pattern should be "^.*error.*$"
     # TODO: Remove "sigterm" from pattern after CMK-24766 is done
     content_pattern = "^(?!.*(sigterm)).*error.*$"
 
     error_match_dict = parse_files(
-        path_name=site.logs_dir / "agent-receiver",
+        path_name=site.logs_dir,
         files_name_pattern="*log*",
         content_pattern=content_pattern,
         sudo=True,

@@ -290,7 +290,7 @@ void main() {
             }
         }
     }
-    }
+}
 
 void update_result_table(static_description, table_data) {
     currentBuild.description = ("""

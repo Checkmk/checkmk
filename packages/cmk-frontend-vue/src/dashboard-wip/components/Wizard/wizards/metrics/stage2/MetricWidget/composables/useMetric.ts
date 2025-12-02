@@ -55,7 +55,7 @@ export const useMetric = async (
     currentContent?.time_range === 'current' ? 'current' : 'window'
   )
   const currentTimerange: TimerangeModel | null =
-    currentContent?.time_range === 'current' ? null : currentContent?.time_range.window
+    currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(currentTimerange)
   const displayRangeLimits = ref<boolean>(currentContent?.show_display_range_limits ?? true)
   const showServiceStatus = ref<boolean>(true)

@@ -51,7 +51,7 @@ export const useGauge = async (
 
   const timeRangeType = ref<TimeRangeType>('current')
   const currentTimerange: TimerangeModel | null =
-    currentContent?.time_range === 'current' ? null : currentContent?.time_range.window
+    currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(currentTimerange)
 
   const {

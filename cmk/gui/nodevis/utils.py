@@ -17,6 +17,7 @@ from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.watolib.utils import multisite_dir
 from cmk.utils.servicename import ServiceName
 
@@ -72,7 +73,7 @@ class BILayoutManagement:
 def get_toggle_layout_designer_page_menu_entry():
     return PageMenuEntry(
         title=_("Layout configuration"),
-        icon_name="toggle_off",
+        icon_name=StaticIcon(IconNames.toggle_off),
         item=make_javascript_link(
             "const new_state = node_instance.toggle_layout_designer();"
             "cmk.d3.select('.suggestion.topology_layout_designer').select('img').classed('on', new_state);"
@@ -88,7 +89,7 @@ def get_toggle_layout_designer_page_menu_entry():
 def get_compare_history_page_menu_entry():
     return PageMenuEntry(
         title=_("Compare history"),
-        icon_name="toggle_off",
+        icon_name=StaticIcon(IconNames.toggle_off),
         item=make_javascript_link(
             "const new_state = node_instance.toggle_compare_history();"
             "cmk.d3.select('.suggestion.topology_compare_history').select('img').classed('on', new_state);"

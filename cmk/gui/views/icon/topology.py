@@ -8,7 +8,7 @@ from typing import Literal
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import DynamicIconName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.utils.tags import TagID
@@ -23,13 +23,13 @@ def _render_parent_child_topology_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str, str]:
+) -> tuple[DynamicIconName, str, str]:
     url = makeuri_contextless(
         request,
         [("host_regex", f"{row['host_name']}$"), ("topology_mesh_depth", 0)],
         filename="parent_child_topology.py",
     )
-    return "aggr", _("Host parent/child topology"), url
+    return DynamicIconName("aggr"), _("Host parent/child topology"), url
 
 
 ShowParentChildTopology = Icon(

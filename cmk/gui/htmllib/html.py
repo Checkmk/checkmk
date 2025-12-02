@@ -27,6 +27,7 @@ import cmk.utils.paths
 from cmk.gui import log, utils
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
+from cmk.gui.dynamic_icon import resolve_icon_name
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -40,16 +41,22 @@ from cmk.gui.type_defs import (
     ChoiceId,
     ChoiceText,
     CSSSpec,
+    DynamicIcon,
+    DynamicIconName,
     GroupedChoices,
-    Icon,
+    IconNames,
+    IconSizes,
+    StaticIcon,
 )
 from cmk.gui.utils import escaping
+from cmk.gui.utils.dataclasses import asdict_strip_none
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
+from cmk.shared_typing.icon import DynamicIconAppProps, StaticIconAppProps
 
 from .generator import HTMLWriter
 from .tag_rendering import (
@@ -172,7 +179,9 @@ class HTMLGenerator(HTMLWriter):
         help_text = HTML.without_escaping(self.resolve_help_text_macros(stripped))
 
         self.enable_help_toggle()
-        inner_html: HTML = HTMLWriter.render_div(self.render_icon("info"), class_="info_icon")
+        inner_html: HTML = HTMLWriter.render_div(
+            self.render_static_icon(StaticIcon(IconNames.info)), class_="info_icon"
+        )
         inner_html += HTMLWriter.render_div(help_text, class_="help_text")
         return HTMLWriter.render_div(inner_html, class_="help")
 
@@ -696,10 +705,14 @@ class HTMLGenerator(HTMLWriter):
         )
 
     def empty_icon_button(self) -> None:
-        self._write(HTMLGenerator.render_icon("trans", cssclass="iconbutton trans"))
+        self._write(
+            HTMLGenerator.render_static_icon(
+                StaticIcon(IconNames.trans), css_classes=["iconbutton trans"]
+            )
+        )
 
-    def disabled_icon_button(self, icon: str) -> None:
-        self._write(HTMLGenerator.render_icon(icon, cssclass="iconbutton"))
+    def disabled_icon_button(self, icon: StaticIcon) -> None:
+        self._write(HTMLGenerator.render_static_icon(icon, css_classes=["iconbutton"]))
 
     # TODO: Cleanup to use standard attributes etc.
     def jsbutton(
@@ -888,7 +901,7 @@ class HTMLGenerator(HTMLWriter):
         self.icon_button(
             url=href,
             title=help_txt,
-            icon="toggle_" + ("on" if enabled else "off"),
+            icon=StaticIcon(IconNames.toggle_on if enabled else IconNames.toggle_off),
             onclick=onclick,
             class_=class_,
         )
@@ -1210,7 +1223,7 @@ class HTMLGenerator(HTMLWriter):
 
     def icon(
         self,
-        icon: Icon,
+        icon: DynamicIcon | StaticIcon,
         title: str | None = None,
         id_: str | None = None,
         cssclass: str | None = None,
@@ -1226,12 +1239,9 @@ class HTMLGenerator(HTMLWriter):
             )
         )
 
-    def empty_icon(self) -> None:
-        self.write_html(HTMLGenerator.render_icon("trans"))
-
     @staticmethod
     def render_icon(
-        icon: Icon,
+        icon: DynamicIcon | StaticIcon,
         title: str | None = None,
         id_: str | None = None,
         cssclass: str | None = None,
@@ -1241,66 +1251,117 @@ class HTMLGenerator(HTMLWriter):
         # The first step was to only change call sites from painters.
         theme: Theme = theme,
     ) -> HTML:
-        classes = ["icon"] + ([] if cssclass is None else [cssclass])
+        classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
             classes.extend(class_)
         elif class_ is not None:
             classes.append(class_)
 
-        icon_name = icon["icon"] if isinstance(icon, dict) else icon
-        if icon_name is None:
-            icon_name = "empty"
-        src = icon_name if "/" in icon_name else theme.detect_icon_path(icon_name, prefix="icon_")
-        if src.endswith(".png"):
-            classes.append("png")
-        if src.endswith("/icon_missing.svg") and title:
-            title += " (%s)" % _("icon not found")
-
-        icon_element = render_start_tag(
-            "img",
-            close_tag=True,
-            title=title,
-            id_=id_,
-            class_=classes,
-            src=src,
-        )
-
-        if isinstance(icon, dict) and icon["emblem"] is not None:
-            return HTMLGenerator.render_emblem(icon["emblem"], title, id_, icon_element)
-
-        return icon_element
-
-    @staticmethod
-    def render_emblem(
-        emblem: str,
-        title: str | None,
-        id_: str | None,
-        icon_element: HTML | None = None,
-    ) -> HTML:
-        """Render emblem to corresponding icon (icon_element in function call)
-        or render emblem itself as icon image, used e.g. in view options."""
-
-        emblem_path = theme.detect_icon_path(emblem, prefix="emblem_")
-        if not icon_element:
-            return render_start_tag(
-                "img",
-                close_tag=True,
+        if isinstance(icon, StaticIcon):
+            return HTMLGenerator.render_static_icon(
+                icon,
                 title=title,
                 id_=id_,
-                class_="icon",
-                src=emblem_path,
+                css_classes=classes,
             )
 
-        return HTMLWriter.render_span(
-            icon_element + HTMLWriter.render_img(emblem_path, class_="emblem"),
-            class_="emblem",
+        return HTMLGenerator.render_dynamic_icon(
+            icon,
+            title=title,
+            id_=id_,
+            css_classes=classes,
+            theme=theme,
+        )
+
+    @classmethod
+    def render_static_icon(
+        cls,
+        icon: StaticIcon,
+        *,
+        size: IconSizes | None = None,
+        title: str | None = None,
+        id_: str | None = None,
+        css_classes: list[str] | None = None,
+    ) -> HTML:
+        if icon.emblem:
+            return HTMLGenerator.render_dynamic_icon(
+                icon={"icon": DynamicIconName(str(icon.icon)), "emblem": icon.emblem},
+                size=size,
+                title=title,
+                css_classes=css_classes,
+            )
+
+        return HTMLGenerator.render_vue_component(
+            component_name="cmk-static-icon",
+            data=asdict_strip_none(StaticIconAppProps(icon=icon.icon, title=title, size=size)),
+            class_=css_classes,
+        )
+
+    def static_icon(
+        self,
+        icon: StaticIcon,
+        *,
+        size: IconSizes | None = None,
+        title: str | None = None,
+        id_: str | None = None,
+        css_classes: list[str] | None = None,
+    ) -> None:
+        self.write_html(
+            HTMLGenerator.render_static_icon(
+                icon,
+                title=title,
+                size=size,
+                id_=id_,
+                css_classes=css_classes,
+            )
+        )
+
+    @staticmethod
+    def render_dynamic_icon(
+        icon: DynamicIcon,
+        size: IconSizes | None = None,
+        title: str | None = None,
+        theme: Theme = theme,
+        # don't use the following arguments unless you really have to:
+        id_: str | None = None,
+        css_classes: list[str] | None = None,
+    ) -> HTML:
+        return HTMLGenerator.render_vue_component(
+            component_name="cmk-dynamic-icon",
+            data=asdict_strip_none(
+                DynamicIconAppProps(spec=resolve_icon_name(icon, theme), size=size)
+            ),
+            class_=css_classes,
+        )
+
+    def dynamic_icon(
+        self,
+        icon: DynamicIcon,
+        size: IconSizes | None = None,
+        title: str | None = None,
+        id_: str | None = None,
+        css_classes: list[str] | None = None,
+        *,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
+    ) -> None:
+        self.write_html(
+            HTMLGenerator.render_dynamic_icon(
+                icon,
+                size=size,
+                title=title,
+                id_=id_,
+                css_classes=css_classes,
+                theme=theme,
+            )
         )
 
     @staticmethod
     def render_icon_button(
         url: None | str,
         title: str,
-        icon: Icon,
+        icon: DynamicIcon | StaticIcon,
         id_: str | None = None,
         onclick: HTMLTagAttributeValue | None = None,
         style: str | None = None,
@@ -1321,8 +1382,13 @@ class HTMLGenerator(HTMLWriter):
         href = url if not onclick else "javascript:void(0)"
         assert href is not None
 
+        if isinstance(icon, StaticIcon):
+            icon_content = HTMLGenerator.render_static_icon(icon, css_classes=["iconbutton"])
+        else:
+            icon_content = HTMLGenerator.render_dynamic_icon(icon, css_classes=["iconbutton"])
+
         return HTMLWriter.render_a(
-            content=HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme),
+            content=icon_content,
             href=href,
             title=title,
             id_=id_,
@@ -1334,7 +1400,9 @@ class HTMLGenerator(HTMLWriter):
             download=download,
         )
 
-    def icon_loading_button(self, url: str, title: str, icon: Icon, waiting_message: str) -> None:
+    def icon_loading_button(
+        self, url: str, title: str, icon: DynamicIcon | StaticIcon, waiting_message: str
+    ) -> None:
         self.icon_button(
             url=None,
             title=title,
@@ -1351,7 +1419,7 @@ class HTMLGenerator(HTMLWriter):
         self,
         url: str | None,
         title: str,
-        icon: Icon,
+        icon: DynamicIcon | StaticIcon,
         id_: str | None = None,
         onclick: HTMLTagAttributeValue | None = None,
         style: str | None = None,
@@ -1378,6 +1446,9 @@ class HTMLGenerator(HTMLWriter):
                 download=download,
             )
         )
+
+    def empty_icon(self) -> None:
+        self.static_icon(StaticIcon(IconNames.trans))
 
     def more_button(
         self, id_: str, dom_levels_up: int, additional_js: str = "", with_text: bool = False
@@ -1514,7 +1585,9 @@ class HTMLGenerator(HTMLWriter):
     @staticmethod
     def render_element_dragger(dragging_tag: str, drop_handler: str) -> HTML:
         return HTMLWriter.render_a(
-            HTMLGenerator.render_icon("drag", _("Move this entry")),
+            HTMLGenerator.render_static_icon(
+                StaticIcon(IconNames.drag), title=_("Move this entry")
+            ),
             href="javascript:void(0)",
             class_=["element_dragger"],
             onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",

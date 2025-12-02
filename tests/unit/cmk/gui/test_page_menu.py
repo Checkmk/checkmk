@@ -16,6 +16,7 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
+from cmk.gui.type_defs import DynamicIconName
 
 
 def test_make_simple_link() -> None:
@@ -64,7 +65,7 @@ def test_simple_page_menu() -> None:
                                 name="abc",
                                 title="Mach das",
                                 description="Ich beschreibe",
-                                icon_name="icon",
+                                icon_name=DynamicIconName("icon"),
                                 item=make_external_link("https://checkmk.com/"),
                             ),
                         ],

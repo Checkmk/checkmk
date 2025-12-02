@@ -25,7 +25,7 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
-from cmk.gui.type_defs import ColumnSpec, Row
+from cmk.gui.type_defs import ColumnSpec, DynamicIconName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
@@ -1012,7 +1012,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "title": "Test view",
             "topic": "overview",
             "sort_index": 20,
-            "icon": "folder",
+            "icon": DynamicIconName("folder"),
             "user_sortable": True,
             "single_infos": [],
             "context": {},

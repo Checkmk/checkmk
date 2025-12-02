@@ -25,7 +25,14 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualPublic, VisualTypeName
+from cmk.gui.type_defs import (
+    HTTPVariables,
+    IconNames,
+    StaticIcon,
+    VisualName,
+    VisualPublic,
+    VisualTypeName,
+)
 from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import UserPermissions
@@ -87,7 +94,7 @@ def page_list(
             [
                 PageMenuEntry(
                     title=_("Add dashboard"),
-                    icon_name="new",
+                    icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link("dashboard.py?create=1"),
                     is_shortcut=True,
                     is_suggested=True,
@@ -95,7 +102,7 @@ def page_list(
                 # TODO: should later be removed
                 PageMenuEntry(
                     title=_("Add %s (deprecated)") % visual_type.title,
-                    icon_name="new",
+                    icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link("create_%s.py" % what_s),
                     is_shortcut=False,
                     is_suggested=False,
@@ -106,7 +113,7 @@ def page_list(
         topic_entries.append(
             PageMenuEntry(
                 title=_("Add %s") % visual_type.title,
-                icon_name="new",
+                icon_name=StaticIcon(IconNames.new),
                 item=make_simple_link("create_%s.py" % what_s),
                 is_shortcut=True,
                 is_suggested=True,
@@ -196,7 +203,7 @@ def page_list(
                         edit_vars,
                         filename="edit_%s.py" % what_s,
                     )
-                    html.icon_button(edit_url, _("Edit"), "edit")
+                    html.icon_button(edit_url, _("Edit"), StaticIcon(IconNames.edit))
 
                 # Custom buttons - visual specific
                 if not is_packaged and render_custom_buttons:
@@ -214,7 +221,7 @@ def page_list(
                     ],
                     filename="edit_%s.py" % what_s,
                 )
-                html.icon_button(clone_url, buttontext, "clone")
+                html.icon_button(clone_url, buttontext, StaticIcon(IconNames.clone))
 
                 # Packaged visuals have built-in user as owner, so we have to
                 # make sure to not show packaged related icons for built-in
@@ -250,7 +257,7 @@ def page_list(
                             message=confirm_message,
                         ),
                         _("Delete"),
-                        "delete",
+                        StaticIcon(IconNames.delete),
                     )
 
                 # visual Name
@@ -340,15 +347,15 @@ def _render_extension_package_icons(
             cancel_button=_("Cancel"),
         )
 
-        clone_icon: Icon = {
-            "icon": "mkps",
-            "emblem": "add",
-        }
+        clone_icon: StaticIcon = StaticIcon(
+            IconNames.mkps,
+            emblem="add",
+        )
         if local_file_exists(what, visual_name):
-            html.icon(
+            html.static_icon(
+                clone_icon,
                 title=_("This %s is already available for packaging as extension package") % what_s,
-                icon=clone_icon,
-                cssclass="service_button disabled tooltip",
+                css_classes=["service_button", "disabled", "tooltip"],
             )
         else:
             html.icon_button(
@@ -378,28 +385,28 @@ def _render_extension_package_icons(
         html.icon_button(
             url=delete_url,
             title=_("Remove this %s from the extension packages module") % what_s,
-            icon="delete",
+            icon=StaticIcon(IconNames.delete),
         )
 
     html.icon_button(
         "wato.py?mode=mkps",
         _("Go to extension packages"),
-        {
-            "icon": "mkps",
-            "emblem": "more",
-        },
+        StaticIcon(
+            IconNames.mkps,
+            emblem="more",
+        ),
     )
 
     table.cell(_("State"), css=["buttons"])
     if mkp_name:
-        html.icon(
-            "mkps",
-            _("This %s is provided via the MKP '%s'") % (what_s, mkp_name),
+        html.static_icon(
+            StaticIcon(IconNames.mkps),
+            title=_("This %s is provided via the MKP '%s'") % (what_s, mkp_name),
         )
     else:
-        html.icon(
-            "mkps",
-            _("This %s can be packaged with the extension packages module") % what_s,
+        html.static_icon(
+            StaticIcon(IconNames.mkps),
+            title=_("This %s can be packaged with the extension packages module") % what_s,
         )
 
 

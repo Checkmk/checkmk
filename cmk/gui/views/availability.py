@@ -56,7 +56,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
+from cmk.gui.type_defs import FilterHeader, HTTPVariables, IconNames, Rows, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
@@ -379,7 +379,7 @@ def _page_menu_availability(
                         entries=[
                             PageMenuEntry(
                                 title=_("Change display options"),
-                                icon_name="painteroptions",
+                                icon_name=StaticIcon(IconNames.painteroptions),
                                 item=PageMenuSidePopup(
                                     _render_avoptions_form(
                                         "display",
@@ -392,7 +392,7 @@ def _page_menu_availability(
                             ),
                             PageMenuEntry(
                                 title=_("Change computation options"),
-                                icon_name="av_computation",
+                                icon_name=StaticIcon(IconNames.av_computation),
                                 item=PageMenuSidePopup(
                                     _render_avoptions_form(
                                         "computation",
@@ -453,7 +453,7 @@ def _page_menu_entries_av_mode(
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
             title=_("Table"),
-            icon_name="availability",
+            icon_name=StaticIcon(IconNames.availability),
             item=make_simple_link(
                 makeuri(request, [("av_mode", "availability")], delvars=["av_host", "av_aggr"])
             ),
@@ -465,7 +465,7 @@ def _page_menu_entries_av_mode(
     if what != "bi":
         yield PageMenuEntry(
             title=_("Timeline"),
-            icon_name="timeline",
+            icon_name=StaticIcon(IconNames.timeline),
             item=make_simple_link(makeuri(request, [("av_mode", "timeline")])),
             is_shortcut=True,
             shortcut_title=_("View timeline"),
@@ -479,7 +479,7 @@ def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
         title=_("Export CSV"),
-        icon_name="download_csv",
+        icon_name=StaticIcon(IconNames.download_csv),
         item=make_simple_link(makeuri(request, [("output_format", "csv_export")])),
     )
 
@@ -493,7 +493,7 @@ def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
         title=_("This view as PDF"),
-        icon_name="report",
+        icon_name=StaticIcon(IconNames.report),
         item=make_external_link(makeuri(request, [], filename="report_instant.py")),
     )
 
@@ -593,10 +593,12 @@ def _render_availability_timeline(
                 if request.var("timewarp") and request.get_integer_input_mandatory(
                     "timewarp"
                 ) == int(row["from"]):
-                    html.disabled_icon_button("timewarp_off")
+                    html.disabled_icon_button(StaticIcon(IconNames.timewarp_off))
                 else:
                     html.icon_button(
-                        url, _("Time warp - show BI aggregate during this time period"), "timewarp"
+                        url,
+                        _("Time warp - show BI aggregate during this time period"),
+                        StaticIcon(IconNames.timewarp),
                     )
             else:
                 url = makeuri(
@@ -609,7 +611,9 @@ def _render_availability_timeline(
                         ("anno_until", str(row["until"])),
                     ],
                 )
-                html.icon_button(url, _("Create an annotation for this period"), "annotation")
+                html.icon_button(
+                    url, _("Create an annotation for this period"), StaticIcon(IconNames.annotation)
+                )
 
             table.cell(_("From"), row["from_text"], css=["nobr narrow"])
             table.cell(_("Until"), row["until_text"], css=["nobr narrow"])
@@ -857,7 +861,7 @@ def show_bi_availability(
             dropdown.topics[-1].entries.append(
                 PageMenuEntry(
                     title=_("Timeline"),
-                    icon_name="timeline",
+                    icon_name=StaticIcon(IconNames.timeline),
                     item=make_simple_link(timeline_url),
                     is_shortcut=True,
                     shortcut_title=_("View timeline"),
@@ -939,7 +943,7 @@ def show_bi_availability(
                     button_back_shown = False
                     button_forth_shown = False
                     if int(these_spans[0]["from"]) == timewarp:
-                        html.disabled_icon_button("back_off")
+                        html.disabled_icon_button(StaticIcon(IconNames.back_off))
                         button_back_shown = True
 
                     previous_span = None
@@ -952,7 +956,7 @@ def show_bi_availability(
                             html.icon_button(
                                 makeuri(request, [("timewarp", str(int(previous_span["from"])))]),
                                 _("Jump one phase back"),
-                                "back",
+                                StaticIcon(IconNames.back),
                             )
                             button_back_shown = True
                         # Multiple followup spans can have the same "from" time
@@ -969,18 +973,18 @@ def show_bi_availability(
                                     [("timewarp", str(int(span["from"])))],
                                 ),
                                 _("Jump one phase forth"),
-                                "forth",
+                                StaticIcon(IconNames.forth),
                             )
                             button_forth_shown = True
                         previous_span = span
                     if not button_forth_shown:
-                        html.disabled_icon_button("forth_off")
+                        html.disabled_icon_button(StaticIcon(IconNames.forth_off))
 
                     html.write_text_permissive(" &nbsp; ")
                     html.icon_button(
                         makeuri(request, [], delvars=["timewarp"]),
                         _("Close timewarp"),
-                        "closetimewarp",
+                        StaticIcon(IconNames.closetimewarp),
                     )
                     html.write_text_permissive(
                         "%s %s"
@@ -1070,14 +1074,14 @@ def show_annotations(
                 ("anno_until", int(annotation["until"])),
             ]
             edit_url = makeuri(request, anno_vars)
-            html.icon_button(edit_url, _("Edit this annotation"), "edit")
+            html.icon_button(edit_url, _("Edit this annotation"), StaticIcon(IconNames.edit))
             del_anno: HTTPVariables = [("_delete_annotation", "1")]
             delete_url = make_confirm_delete_link(
                 url=makeactionuri(request, transactions, del_anno + anno_vars),
                 title=_("Delete annotation #%d") % nr,
                 message=_("Annotation: %s") % " ".join(annotation["text"].strip().split()),
             )
-            html.icon_button(delete_url, _("Delete this annotation"), "delete")
+            html.icon_button(delete_url, _("Delete this annotation"), StaticIcon(IconNames.delete))
 
             if not omit_service:
                 if "omit_host" not in avoptions["labelling"]:
@@ -1106,26 +1110,29 @@ def show_annotations(
             table.cell(_("Until"), render_date(annotation["until"]), css=["nobr narrow"])
             table.cell("", css=["buttons"])
             if annotation.get("downtime") is True:
-                html.icon(
-                    "downtime", _("This period has been reclassified as a scheduled downtime")
+                html.static_icon(
+                    StaticIcon(IconNames.downtime),
+                    title=_("This period has been reclassified as a scheduled downtime"),
                 )
             elif annotation.get("downtime") is False:
-                html.icon(
-                    "nodowntime",
-                    _("This period has been reclassified as a not being a scheduled downtime"),
+                html.static_icon(
+                    StaticIcon(IconNames.nodowntime),
+                    title=_(
+                        "This period has been reclassified as a not being a scheduled downtime"
+                    ),
                 )
             recl_host_state = annotation.get("host_state")
             if recl_host_state is not None:
-                html.icon(
-                    "status",
-                    _("This period has been reclassified in host state to state: %s")
+                html.static_icon(
+                    StaticIcon(IconNames.status),
+                    title=_("This period has been reclassified in host state to state: %s")
                     % host_state_name(recl_host_state),
                 )
             recl_svc_state = annotation.get("service_state")
             if recl_svc_state is not None:
-                html.icon(
-                    "status",
-                    _("This period has been reclassified in service state to state: %s")
+                html.static_icon(
+                    StaticIcon(IconNames.status),
+                    title=_("This period has been reclassified in service state to state: %s")
                     % service_state_name(recl_svc_state),
                 )
 

@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import page_menu_add_to_topics
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import Choices, VisualContext
+from cmk.gui.type_defs import Choices, IconNames, StaticIcon, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -70,7 +70,11 @@ def ajax_popup_add(ctx: PageContext) -> None:
                 onclick=entry.item.link.onclick,
                 target=entry.item.link.target,
             )
-            html.icon(entry.icon_name or "trans")
+            icon = entry.icon_name or StaticIcon(IconNames.trans)
+            if isinstance(icon, StaticIcon):
+                html.static_icon(icon)
+            else:
+                html.dynamic_icon(icon)
             html.write_text_permissive(entry.title)
             html.close_a()
             html.close_li()
@@ -114,12 +118,12 @@ def page_menu_dropdown_add_to_visual(
                 entries=[
                     PageMenuEntry(
                         title=_("Export as JSON"),
-                        icon_name="download",
+                        icon_name=StaticIcon(IconNames.download),
                         item=make_javascript_link("cmk.popup_menu.graph_export('graph_export')"),
                     ),
                     PageMenuEntry(
                         title=_("Export as PNG"),
-                        icon_name="download",
+                        icon_name=StaticIcon(IconNames.download),
                         item=make_javascript_link("cmk.popup_menu.graph_export('graph_image')"),
                     ),
                 ],
@@ -189,7 +193,7 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
             PageMenuEntry(
                 title=_("Add to dashboard"),
                 name="add_to_dashboard",
-                icon_name="dashboard",
+                icon_name=StaticIcon(IconNames.dashboard),
                 item=PageMenuPopup(
                     content=_render_add_to_popup(
                         add_to_type="dashboard",
@@ -204,7 +208,7 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
             PageMenuEntry(
                 title=_("Add to report"),
                 name="add_to_report",
-                icon_name="report",
+                icon_name=StaticIcon(IconNames.report),
                 item=PageMenuPopup(
                     content=_render_add_to_popup(
                         add_to_type="report",

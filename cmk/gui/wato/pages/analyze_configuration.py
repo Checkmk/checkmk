@@ -36,7 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
 from cmk.gui.utils.transaction_manager import transactions
@@ -91,7 +91,7 @@ class ModeAnalyzeConfig(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Support diagnostics"),
-                                    icon_name="diagnostics",
+                                    icon_name=StaticIcon(IconNames.diagnostics),
                                     item=make_simple_link("wato.py?mode=diagnostics"),
                                 ),
                             ],
@@ -198,7 +198,7 @@ class ModeAnalyzeConfig(WatoMode):
         html.icon_button(
             None,
             _("Toggle result details"),
-            "toggle_details",
+            StaticIcon(IconNames.toggle_details),
             onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id,
         )
 
@@ -215,7 +215,7 @@ class ModeAnalyzeConfig(WatoMode):
                     ],
                 ),
                 _("Reenable this test"),
-                "enable_test",
+                StaticIcon(IconNames.enable_test),
             )
         else:
             html.icon_button(
@@ -228,7 +228,7 @@ class ModeAnalyzeConfig(WatoMode):
                     ],
                 ),
                 _("Disable this test"),
-                "disable_test",
+                StaticIcon(IconNames.disable_test),
             )
 
         # assume all have the same test meta information (title, help, ...)
@@ -274,7 +274,7 @@ class ModeAnalyzeConfig(WatoMode):
                             ],
                         ),
                         _("Unacknowledge this test result for site %s") % site_id,
-                        "unacknowledge_test",
+                        StaticIcon(IconNames.unacknowledge_test),
                     )
                 else:
                     html.icon_button(
@@ -289,7 +289,7 @@ class ModeAnalyzeConfig(WatoMode):
                             ],
                         ),
                         _("Acknowledge this test result for site %s") % site_id,
-                        "acknowledge_test",
+                        StaticIcon(IconNames.acknowledge_test),
                     )
             else:
                 html.write_text_permissive("")

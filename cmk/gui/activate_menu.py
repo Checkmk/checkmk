@@ -17,6 +17,7 @@ from cmk.gui.main_menu_types import (
     MainMenuData,
     MainMenuVueApp,
 )
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import makeuri
 
 
@@ -53,7 +54,7 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
         MainMenu(
             name="changes",
             title=_l("Changes"),
-            icon="main_changes",
+            icon=StaticIcon(IconNames.main_changes),
             sort_index=17,
             topics=None,
             hide=_hide_menu,

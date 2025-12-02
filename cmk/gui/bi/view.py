@@ -43,7 +43,16 @@ from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, user
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
+from cmk.gui.type_defs import (
+    ColumnName,
+    DynamicIconName,
+    IconNames,
+    Row,
+    Rows,
+    SingleInfos,
+    StaticIcon,
+    VisualContext,
+)
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -454,30 +463,44 @@ class PainterAggrIcons(Painter):
                     html.icon_button(
                         bi_frozen_diff_url,
                         _("This aggregation is frozen. The live version has changes."),
-                        {"icon": "bi_freeze", "emblem": "warning"},
+                        StaticIcon(
+                            IconNames.bi_freeze,
+                            emblem="warning",
+                        ),
                     )
                 else:
                     html.icon_button(
-                        bi_frozen_diff_url, _("This aggregation is frozen"), "bi_freeze"
+                        bi_frozen_diff_url,
+                        _("This aggregation is frozen"),
+                        StaticIcon(IconNames.bi_freeze),
                     )
-            html.icon_button(bi_map_url, _("Visualize this aggregation"), "aggr")
-            html.icon_button(single_url, _("Show only this aggregation"), "showbi")
             html.icon_button(
-                avail_url, _("Analyse availability of this aggregation"), "availability"
+                bi_map_url, _("Visualize this aggregation"), StaticIcon(IconNames.aggr)
+            )
+            html.icon_button(
+                single_url, _("Show only this aggregation"), StaticIcon(IconNames.showbi)
+            )
+            html.icon_button(
+                avail_url,
+                _("Analyse availability of this aggregation"),
+                StaticIcon(IconNames.availability),
             )
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon("downtime", _("A service or host in this aggregation is in downtime."))
+                html.static_icon(
+                    StaticIcon(IconNames.downtime),
+                    title=_("A service or host in this aggregation is in downtime."),
+                )
             if row["aggr_effective_state"]["acknowledged"]:
-                html.icon(
-                    "ack",
-                    _(
+                html.static_icon(
+                    StaticIcon(IconNames.ack),
+                    title=_(
                         "The critical problems that make this aggregation non-OK have been acknowledged."
                     ),
                 )
             if not row["aggr_effective_state"]["in_service_period"]:
-                html.icon(
-                    "outof_serviceperiod",
-                    _("This aggregation is currently out of its service period."),
+                html.static_icon(
+                    StaticIcon(IconNames.outof_serviceperiod),
+                    title=_("This aggregation is currently out of its service period."),
                 )
             code = HTML.without_escaping(output_funnel.drain())
         return "buttons", code
@@ -1181,7 +1204,7 @@ CommandFreezeAggregation = Command(
     title=_l("Freeze aggregations"),
     confirm_title=_l("Freeze aggregation?"),
     confirm_button=_l("Freeze"),
-    icon_name="bi_freeze",
+    icon_name=DynamicIconName("bi_freeze"),
     is_shortcut=True,
     is_suggested=True,
     permission=PermissionFreezeAggregation,

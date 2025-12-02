@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
     search_form,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import DynamicIconName, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID, ValueSpec
@@ -130,7 +130,7 @@ class ModeCheckPlugins(WatoMode):
                         [("mode", "check_plugin_topic"), ("topic", topic)],
                     ),
                     title=title,
-                    icon="plugins_" + topic,
+                    icon=DynamicIconName("plugins_" + topic),  # TODO: this could be static icons
                     permission=None,
                     description=helptext,
                 )
@@ -298,7 +298,7 @@ class ModeCheckPluginTopic(WatoMode):
                     MenuItem(
                         mode_or_url=url,
                         title=title,
-                        icon="check_plugins",
+                        icon=StaticIcon(IconNames.check_plugins),
                         permission=None,
                         description=helptext,
                     )
@@ -589,7 +589,7 @@ class ModeCheckManPage(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Show services using this check"),
-                                    icon_name="status",
+                                    icon_name=StaticIcon(IconNames.status),
                                     item=make_simple_link(url),
                                 ),
                             ],
@@ -660,7 +660,11 @@ class ModeCheckManPage(WatoMode):
         html.open_tr()
         html.th(_("Parameter rule set"))
         html.open_td()
-        html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
+        html.icon_button(
+            url,
+            _("Edit parameter rule set for this check type"),
+            StaticIcon(IconNames.check_parameters),
+        )
         html.a(rulespec.title, url)
         html.close_td()
         html.close_tr()

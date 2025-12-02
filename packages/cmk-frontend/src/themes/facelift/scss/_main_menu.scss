@@ -12,23 +12,6 @@
   padding: 0;
   margin: 0;
 
-  cmk-dynamic-icon {
-    vertical-align: middle;
-    margin-left: -28px;
-    margin-right: 7px;
-  }
-
-  img {
-    &.icon {
-      width: 20px;
-      height: 20px;
-    }
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-
   #mk_side_search_monitoring,
   #mk_side_search_setup {
     width: 85%;
@@ -96,7 +79,9 @@
       border-left-color: $success;
     }
 
-    &:not(.active) a.popup_trigger img.active {
+    &:not(.active) a.popup_trigger img.active,
+    &:not(.active) a.popup_trigger cmk-dynamic-icon.active,
+    &:not(.active) a.popup_trigger cmk-static-icon.active {
       display: none;
     }
 
@@ -316,26 +301,24 @@
             font-weight: $font-weight-bold;
             color: $font-color;
 
-            span.emblem {
-              margin: 0 4px 2px 0;
-            }
-
-            img + span,
-            span + span {
+            cmk-dynamic-icon + span,
+            cmk-static-icon + span {
               display: inline-block;
               margin: 3px 0 0; /* No spacing if icons per entry are used */
             }
 
             a.collapse_topic,
             div.spacer {
-              img {
+              cmk-dynamic-icon,
+              cmk-static-icon {
                 display: none;
                 float: left;
                 filter: grayscale(85%);
                 transform: rotate(270deg);
               }
 
-              + img {
+              + cmk-dynamic-icon,
+              + cmk-static-icon {
                 margin: 0 4px 2px 0;
               }
             }
@@ -357,8 +340,8 @@
             a {
               display: block;
 
-              & > img,
-              & > span.emblem {
+              & > cmk-dynamic-icon,
+              & > cmk-static-icon {
                 margin-left: -28px; /* No spacing if icons per entry are used */
               }
 
@@ -371,14 +354,8 @@
               display: none;
             }
 
-            img.icon {
-              width: 14px;
-              height: 14px;
+            img.cmk-icon {
               margin-right: 7px;
-            }
-
-            img.emblem {
-              margin-right: 2px;
             }
 
             input.button {
@@ -446,7 +423,8 @@
                 margin-left: 0;
               }
 
-              a.collapse_topic img {
+              a.collapse_topic cmk-static-icon,
+              a.collapse_topic cmk-dynamic-icon {
                 display: block;
               }
             }

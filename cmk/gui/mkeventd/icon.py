@@ -13,7 +13,7 @@ from typing import Literal
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import DynamicIcon, DynamicIconName, Row, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconConfig
@@ -27,7 +27,7 @@ def _render_mkeventd_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | tuple[str, str, str]:
+) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
     if not icon_config.mkeventd_enabled:
         return None
 
@@ -83,7 +83,11 @@ def _render_mkeventd_icon(
         title = _('Events of Application "%s" on Host %s') % (app, host)
         url_vars.append(("event_application", app))
 
-    return "mkeventd", title, makeuri_contextless(request, url_vars, filename="view.py")
+    return (
+        DynamicIconName("mkeventd"),  # TODO: this should be a static icon!
+        title,
+        makeuri_contextless(request, url_vars, filename="view.py"),
+    )
 
 
 MkeventdIcon = Icon(

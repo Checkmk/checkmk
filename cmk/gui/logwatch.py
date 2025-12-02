@@ -42,7 +42,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
@@ -147,7 +147,7 @@ def _log_list_page_menu(request: Request, breadcrumb: Breadcrumb) -> PageMenu:
                         entries=[
                             PageMenuEntry(
                                 title=_("Analyze patterns"),
-                                icon_name="analyze",
+                                icon_name=StaticIcon(IconNames.analyze),
                                 item=make_simple_link(
                                     makeuri_contextless(
                                         request,
@@ -241,7 +241,7 @@ def _host_log_list_page_menu(
                         entries=[
                             PageMenuEntry(
                                 title=_("All log files"),
-                                icon_name="logwatch",
+                                icon_name=StaticIcon(IconNames.logwatch),
                                 item=make_simple_link(
                                     makeuri(
                                         request,
@@ -262,7 +262,7 @@ def _host_log_list_page_menu(
                         entries=[
                             PageMenuEntry(
                                 title=_("Services of host"),
-                                icon_name="services",
+                                icon_name=StaticIcon(IconNames.services),
                                 item=make_simple_link(services_url(request, site_id, host_name)),
                             ),
                         ],
@@ -272,7 +272,7 @@ def _host_log_list_page_menu(
                         entries=[
                             PageMenuEntry(
                                 title=_("Analyze host patterns"),
-                                icon_name="analyze",
+                                icon_name=StaticIcon(IconNames.analyze),
                                 item=make_simple_link(analyse_url(request, site_id, host_name)),
                             ),
                         ],
@@ -389,7 +389,7 @@ def show_file(
             html.icon_button(
                 analyse_url(request, site, host_name, int_filename, line["line"]),
                 _("Analyze this line"),
-                "analyze",
+                StaticIcon(IconNames.analyze),
             )
             html.write_text_permissive(line["line"].replace(" ", "&nbsp;").replace("\1", "<br>"))
             html.close_td()
@@ -439,12 +439,12 @@ def _show_file_page_menu(
                         entries=[
                             PageMenuEntry(
                                 title=_("Log files of host %s") % host_name,
-                                icon_name="logwatch",
+                                icon_name=StaticIcon(IconNames.logwatch),
                                 item=make_simple_link(makeuri(request, [("file", "")])),
                             ),
                             PageMenuEntry(
                                 title=_("All log files"),
-                                icon_name="logwatch",
+                                icon_name=StaticIcon(IconNames.logwatch),
                                 item=make_simple_link(
                                     makeuri(
                                         request,
@@ -465,7 +465,7 @@ def _show_file_page_menu(
                         entries=[
                             PageMenuEntry(
                                 title=_("Services of host"),
-                                icon_name="services",
+                                icon_name=StaticIcon(IconNames.services),
                                 item=make_simple_link(services_url(request, site_id, host_name)),
                             ),
                         ],
@@ -475,7 +475,7 @@ def _show_file_page_menu(
                         entries=[
                             PageMenuEntry(
                                 title=_("Analyze host patterns"),
-                                icon_name="analyze",
+                                icon_name=StaticIcon(IconNames.analyze),
                                 item=make_simple_link(analyse_url(request, site_id, host_name)),
                             ),
                         ],
@@ -499,7 +499,9 @@ def _extend_display_dropdown(request: Request, menu: PageMenu) -> None:
             entries=[
                 PageMenuEntry(
                     title=_("Show context"),
-                    icon_name="toggle_off" if context_hidden else "toggle_on",
+                    icon_name=StaticIcon(
+                        IconNames.toggle_off if context_hidden else IconNames.toggle_on
+                    ),
                     item=make_simple_link(
                         makeactionuri(
                             request,
@@ -554,7 +556,7 @@ def _page_menu_entry_acknowledge(
 
     yield PageMenuEntry(
         title=label,
-        icon_name="delete",
+        icon_name=StaticIcon(IconNames.delete),
         item=make_simple_link(
             make_confirm_delete_link(
                 url=makeactionuri(request, transactions, urivars),

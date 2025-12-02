@@ -10,7 +10,7 @@ from typing import Literal
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
+from cmk.gui.type_defs import BuiltinIconVisibility, DynamicIcon, IconSpec, Row, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.tags import TagID
 
@@ -61,7 +61,7 @@ def _make_render_function(
         UserPermissions,
         IconConfig,
     ],
-    tuple[str, str | None, tuple[str, str] | None],
+    tuple[StaticIcon | DynamicIcon, str | None, tuple[str, str] | None],
 ]:
     def _render(
         _what: Literal["host", "service"],
@@ -70,7 +70,7 @@ def _make_render_function(
         _custom_vars: Mapping[str, str],
         _user_permissions: UserPermissions,
         _icon_cfg: IconConfig,
-    ) -> tuple[str, str | None, tuple[str, str] | None]:
+    ) -> tuple[StaticIcon | DynamicIcon, str | None, tuple[str, str] | None]:
         return (
             icon_spec["icon"],
             icon_spec.get("title"),

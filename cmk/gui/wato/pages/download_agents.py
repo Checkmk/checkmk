@@ -27,7 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils import agent
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -82,7 +82,7 @@ class ABCModeDownloadAgents(WatoMode):
         if self.name() != "download_agents_windows":
             yield PageMenuEntry(
                 title=_("Windows files"),
-                icon_name="download_agents",
+                icon_name=StaticIcon(IconNames.download_agents),
                 item=make_simple_link(
                     folder_preserving_link([("mode", "download_agents_windows")])
                 ),
@@ -91,14 +91,14 @@ class ABCModeDownloadAgents(WatoMode):
         if self.name() != "download_agents_linux":
             yield PageMenuEntry(
                 title=_("Linux, Solaris, AIX files"),
-                icon_name="download_agents",
+                icon_name=StaticIcon(IconNames.download_agents),
                 item=make_simple_link(folder_preserving_link([("mode", "download_agents_linux")])),
             )
 
         if self.name() != "download_agents":
             yield PageMenuEntry(
                 title=_("Other operating systems"),
-                icon_name="download_agents",
+                icon_name=StaticIcon(IconNames.download_agents),
                 item=make_simple_link(folder_preserving_link([("mode", "download_agents")])),
             )
 

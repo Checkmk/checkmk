@@ -18,6 +18,7 @@ from cmk.gui.main_menu_types import (
     MainMenuTopicEntries,
     MainMenuTopicSegment,
 )
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
@@ -37,7 +38,7 @@ def register(
         MainMenu(
             name=main_menu_name,
             title=_l("Help"),
-            icon="main_help",
+            icon=StaticIcon(IconNames.main_help),
             sort_index=18,
             topics=_help_menu_topics(learning_entries, developer_entries, about_checkmk_entries),
             info_line=info_line,
@@ -57,7 +58,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
             title=_("Welcome page"),
             url="welcome.py",
             sort_index=10,
-            icon="learning_beginner",
+            icon=StaticIcon(IconNames.learning_beginner),
         ),
         MainMenuItem(
             name="beginners_guide",
@@ -65,7 +66,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
             url=doc_reference_url(DocReference.INTRO_SETUP),
             target="_blank",
             sort_index=20,
-            icon="learning_beginner",
+            icon=StaticIcon(IconNames.learning_beginner),
         ),
         MainMenuItem(
             name="user_manual",
@@ -73,7 +74,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
             url=doc_reference_url(),
             target="_blank",
             sort_index=30,
-            icon="learning_guide",
+            icon=StaticIcon(IconNames.learning_guide),
         ),
         MainMenuItem(
             name="video_tutorials",
@@ -81,7 +82,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
             url="https://www.youtube.com/playlist?list=PL8DfRO2DvOK1slgjfTu0hMOnepf1F7ssh",
             target="_blank",
             sort_index=40,
-            icon="learning_video_tutorials",
+            icon=StaticIcon(IconNames.learning_video_tutorials),
         ),
         MainMenuItem(
             name="community_forum",
@@ -89,7 +90,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
             url="https://forum.checkmk.com/",
             target="_blank",
             sort_index=50,
-            icon="learning_forum",
+            icon=StaticIcon(IconNames.learning_forum),
         ),
         MainMenuItem(
             name="ask_checkmk_ai",
@@ -97,7 +98,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
             url="https://chat.checkmk.com",
             target="_blank",
             sort_index=60,
-            icon="sparkle",
+            icon=StaticIcon(IconNames.sparkle),
         ),
     ]
 
@@ -110,10 +111,10 @@ def default_developer_entries() -> MainMenuTopicEntries:
             url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
             target="_blank",
             sort_index=10,
-            icon={
-                "icon": "services_green",
-                "emblem": "api",
-            },
+            icon=StaticIcon(
+                IconNames.services_green,
+                emblem="api",
+            ),
         ),
         MainMenuItem(
             name="plugin_api_reference",
@@ -121,10 +122,10 @@ def default_developer_entries() -> MainMenuTopicEntries:
             url="plugin-api/",
             target="_blank",
             sort_index=20,
-            icon={
-                "icon": "services_green",
-                "emblem": "api",
-            },
+            icon=StaticIcon(
+                IconNames.services_green,
+                emblem="api",
+            ),
         ),
         MainMenuTopicSegment(
             mode="multilevel",
@@ -138,10 +139,10 @@ def default_developer_entries() -> MainMenuTopicEntries:
                     url=doc_reference_url(DocReference.REST_API),
                     target="_blank",
                     sort_index=10,
-                    icon={
-                        "icon": "global_settings",
-                        "emblem": "api",
-                    },
+                    icon=StaticIcon(
+                        IconNames.global_settings,
+                        emblem="api",
+                    ),
                 ),
                 MainMenuTopicSegment(
                     mode="indented",
@@ -155,10 +156,10 @@ def default_developer_entries() -> MainMenuTopicEntries:
                             url="openapi/",
                             target="_blank",
                             sort_index=10,
-                            icon={
-                                "icon": "global_settings",
-                                "emblem": "api",
-                            },
+                            icon=StaticIcon(
+                                IconNames.global_settings,
+                                emblem="api",
+                            ),
                         ),
                         MainMenuItem(
                             name="rest_api_interactive_gui",
@@ -166,18 +167,18 @@ def default_developer_entries() -> MainMenuTopicEntries:
                             url="api/1.0/ui/",
                             target="_blank",
                             sort_index=20,
-                            icon={
-                                "icon": "global_settings",
-                                "emblem": "api",
-                            },
+                            icon=StaticIcon(
+                                IconNames.global_settings,
+                                emblem="api",
+                            ),
                         ),
                     ],
                 ),
             ],
-            icon={
-                "icon": "global_settings",
-                "emblem": "api",
-            },
+            icon=StaticIcon(
+                IconNames.global_settings,
+                emblem="api",
+            ),
         ),
     ]
 
@@ -189,7 +190,7 @@ def default_about_checkmk_entries() -> MainMenuTopicEntries:
             title=_("Change log (Werks)"),
             url="change_log.py",
             sort_index=30,
-            icon="checkmk_logo_min",
+            icon=StaticIcon(IconNames.checkmk_logo_min),
         ),
     ]
 
@@ -204,19 +205,19 @@ def _help_menu_topics(
             MainMenuTopic(
                 name="learning_checkmk",
                 title=_("Learning Checkmk"),
-                icon="learning_checkmk",
+                icon=StaticIcon(IconNames.learning_checkmk),
                 entries=learning_entries(),
             ),
             MainMenuTopic(
                 name="developer_resources",
                 title=_("Developer resources"),
-                icon="developer_resources",
+                icon=StaticIcon(IconNames.developer_resources),
                 entries=developer_entries(),
             ),
             MainMenuTopic(
                 name="ideas_portal",
                 title=_("Ideas Portal"),
-                icon="lightbulb",
+                icon=StaticIcon(IconNames.lightbulb),
                 entries=[
                     MainMenuItem(
                         name="suggest_product_improvement",
@@ -224,14 +225,14 @@ def _help_menu_topics(
                         url="https://ideas.checkmk.com",
                         target="_blank",
                         sort_index=10,
-                        icon="lightbulb_idea",
+                        icon=StaticIcon(IconNames.lightbulb_idea),
                     ),
                 ],
             ),
             MainMenuTopic(
                 name="about_checkmk",
                 title=_("About Checkmk"),
-                icon="about_checkmk",
+                icon=StaticIcon(IconNames.about_checkmk),
                 entries=about_checkmk_entries(),
             ),
         ]

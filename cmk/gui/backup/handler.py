@@ -74,7 +74,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Key, KeyId
+from cmk.gui.type_defs import ActionResult, IconNames, Key, KeyId, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -474,10 +474,10 @@ class PageBackup:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Restore"),
-                                    icon_name={
-                                        "icon": "backup",
-                                        "emblem": "refresh",
-                                    },
+                                    icon_name=StaticIcon(
+                                        IconNames.backup,
+                                        emblem="refresh",
+                                    ),
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", "backup_restore")])
                                     ),
@@ -497,21 +497,21 @@ class PageBackup:
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Backup targets"),
-            icon_name="backup_targets",
+            icon_name=StaticIcon(IconNames.backup_targets),
             item=make_simple_link(makeuri_contextless(request, [("mode", "backup_targets")])),
             is_shortcut=True,
             is_suggested=True,
         )
         yield PageMenuEntry(
             title=_("Backup encryption keys"),
-            icon_name="signature_key",
+            icon_name=StaticIcon(IconNames.signature_key),
             item=make_simple_link(makeuri_contextless(request, [("mode", "backup_keys")])),
             is_shortcut=True,
             is_suggested=True,
         )
         yield PageMenuEntry(
             title=_("Add job"),
-            icon_name="new",
+            icon_name=StaticIcon(IconNames.new),
             item=make_simple_link(makeuri_contextless(request, [("mode", "edit_backup_job")])),
             is_shortcut=True,
             is_suggested=True,
@@ -635,14 +635,18 @@ class PageBackup:
                 )
 
                 if not job.is_running():
-                    html.icon_button(edit_url, _("Edit this backup job"), "edit")
-                    html.icon_button(delete_url, _("Delete this backup job"), "delete")
+                    html.icon_button(
+                        edit_url, _("Edit this backup job"), StaticIcon(IconNames.edit)
+                    )
+                    html.icon_button(
+                        delete_url, _("Delete this backup job"), StaticIcon(IconNames.delete)
+                    )
 
                 if job_state is not None:
                     html.icon_button(
                         state_url,
                         _("Show current / last state of this backup job"),
-                        "backup_state",
+                        StaticIcon(IconNames.backup_state),
                     )
 
                 if not job.is_running():
@@ -656,7 +660,11 @@ class PageBackup:
                         ],
                     )
 
-                    html.icon_button(start_url, _("Manually start this backup"), "backup_start")
+                    html.icon_button(
+                        start_url,
+                        _("Manually start this backup"),
+                        StaticIcon(IconNames.backup_start),
+                    )
                 else:
                     stop_url = makeactionuri_contextless(
                         request,
@@ -668,7 +676,9 @@ class PageBackup:
                         ],
                     )
 
-                    html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
+                    html.icon_button(
+                        stop_url, _("Stop this backup job"), StaticIcon(IconNames.backup_stop)
+                    )
 
                 table.cell(_("ID"), job.ident)
                 table.cell(_("Name"), job.title)
@@ -1726,10 +1736,10 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
             html.icon_button(
                 restore_url,
                 _("Restore from this backup target"),
-                {
-                    "icon": "backup",
-                    "emblem": "refresh",
-                },
+                StaticIcon(
+                    IconNames.backup,
+                    emblem="refresh",
+                ),
             )
 
             if not targets_are_cma:
@@ -1748,8 +1758,10 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
                     [("mode", "edit_backup_target"), ("target", target.ident)],
                 )
 
-                html.icon_button(edit_url, _("Edit this backup target"), "edit")
-                html.icon_button(delete_url, _("Delete this backup target"), "delete")
+                html.icon_button(edit_url, _("Edit this backup target"), StaticIcon(IconNames.edit))
+                html.icon_button(
+                    delete_url, _("Delete this backup target"), StaticIcon(IconNames.delete)
+                )
 
             table.cell(_("ID"), target.ident, css=["narrow nowrap"])
             table.cell(_("Title"), target.title, css=["narrow nowrap"])
@@ -1773,7 +1785,7 @@ class PageBackupTargets:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add target"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,
@@ -2199,7 +2211,7 @@ class PageBackupRestore:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Stop"),
-                                    icon_name="backup_stop",
+                                    icon_name=StaticIcon(IconNames.backup_stop),
                                     item=make_simple_link(
                                         make_confirm_delete_link(
                                             url=makeactionuri(
@@ -2221,7 +2233,7 @@ class PageBackupRestore:
                                 ),
                                 PageMenuEntry(
                                     title=_("Complete the restore"),
-                                    icon_name="save",
+                                    icon_name=StaticIcon(IconNames.save),
                                     item=make_simple_link(
                                         makeactionuri(
                                             request,
@@ -2434,7 +2446,7 @@ class PageBackupRestore:
                     suffix=backup_ident,
                 )
 
-                html.icon_button(delete_url, _("Delete this backup"), "delete")
+                html.icon_button(delete_url, _("Delete this backup"), StaticIcon(IconNames.delete))
 
                 start_url = make_confirm_link(
                     url=makeactionuri(
@@ -2452,10 +2464,10 @@ class PageBackupRestore:
                 html.icon_button(
                     start_url,
                     _("Start restore of this backup"),
-                    {
-                        "icon": "backup",
-                        "emblem": "refresh",
-                    },
+                    StaticIcon(
+                        IconNames.backup,
+                        emblem="refresh",
+                    ),
                 )
 
                 table.cell(_("Backup-ID"), backup_ident)

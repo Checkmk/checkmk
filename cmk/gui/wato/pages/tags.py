@@ -38,7 +38,9 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import (
     ActionResult,
     CustomHostAttrSpec,
+    IconNames,
     PermissionName,
+    StaticIcon,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -142,7 +144,7 @@ class ModeTags(ABCTagMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add tag group"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "edit_tag")])
                                     ),
@@ -151,7 +153,7 @@ class ModeTags(ABCTagMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Add aux tag"),
-                                    icon_name={"icon": "tag", "emblem": "add"},
+                                    icon_name=StaticIcon(IconNames.tag, emblem="add"),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "edit_auxtag")])
                                     ),
@@ -165,10 +167,10 @@ class ModeTags(ABCTagMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Tag usage"),
-                                    icon_name={
-                                        "icon": "tag",
-                                        "emblem": "search",
-                                    },
+                                    icon_name=StaticIcon(
+                                        IconNames.tag,
+                                        emblem="search",
+                                    ),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "tag_usage")])
                                     ),
@@ -314,7 +316,7 @@ class ModeTags(ABCTagMode):
                     MenuItem(
                         "edit_tag",
                         _("Create new tag group"),
-                        "new",
+                        StaticIcon(IconNames.new),
                         "hosttags",
                         _(
                             "Each tag group will create one drop-down choice in the host configuration."
@@ -323,7 +325,7 @@ class ModeTags(ABCTagMode):
                     MenuItem(
                         "edit_auxtag",
                         _("Create new auxiliary tag"),
-                        "new",
+                        StaticIcon(IconNames.new),
                         "hosttags",
                         _(
                             "You can have these tags automatically added if certain primary tags are set."
@@ -410,7 +412,7 @@ class ModeTags(ABCTagMode):
             return
 
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
-        html.icon_button(edit_url, _("Edit this tag group"), "edit")
+        html.icon_button(edit_url, _("Edit this tag group"), StaticIcon(IconNames.edit))
 
         html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
 
@@ -420,7 +422,7 @@ class ModeTags(ABCTagMode):
             suffix=tag_group.title,
             message=_("ID: %s") % tag_group.id,
         )
-        html.icon_button(delete_url, _("Delete this tag group"), "delete")
+        html.icon_button(delete_url, _("Delete this tag group"), StaticIcon(IconNames.delete))
 
     def _render_aux_tag_list(self) -> None:
         with table_element(
@@ -467,8 +469,8 @@ class ModeTags(ABCTagMode):
             suffix=aux_tag.title,
             message=_("ID: %s") % aux_tag.id,
         )
-        html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
-        html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
+        html.icon_button(edit_url, _("Edit this auxiliary tag"), StaticIcon(IconNames.edit))
+        html.icon_button(delete_url, _("Delete this auxiliary tag"), StaticIcon(IconNames.delete))
 
 
 class ABCEditTagMode(ABCTagMode, abc.ABC):
@@ -629,7 +631,7 @@ class ModeTagUsage(ABCTagMode):
             return
 
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
-        html.icon_button(edit_url, _("Edit this tag group"), "edit")
+        html.icon_button(edit_url, _("Edit this tag group"), StaticIcon(IconNames.edit))
 
     def _show_aux_tag_list(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         with table_element("aux_tag_usage", _("Auxiliary tags")) as table:
@@ -686,7 +688,7 @@ class ModeTagUsage(ABCTagMode):
             return
 
         edit_url = folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
-        html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
+        html.icon_button(edit_url, _("Edit this auxiliary tag"), StaticIcon(IconNames.edit))
 
 
 class ModeEditAuxtag(ABCEditTagMode):

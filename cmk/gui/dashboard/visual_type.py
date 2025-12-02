@@ -21,7 +21,7 @@ from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import IconNames, StaticIcon, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
 
@@ -84,7 +84,7 @@ class VisualTypeDashboards(VisualType):
         for name, board in get_permitted_dashboards().items():
             yield PageMenuEntry(
                 title=str(board["title"]),
-                icon_name="dashboard",
+                icon_name=StaticIcon(IconNames.dashboard),
                 item=make_javascript_link(
                     "cmk.popup_menu.add_to_visual('dashboards', %s)" % json.dumps(name)
                 ),

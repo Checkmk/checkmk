@@ -12,32 +12,23 @@ defineProps<{
 </script>
 
 <template>
-  <div class="cmk-icon-emblem__root">
-    <div class="cmk-icon-emblem__wrapper">
-      <slot />
-      <div v-if="emblem">
-        <img :class="['cmk-icon-emblem__emblem', `cmk-icon-emblem__emblem--${emblem}`]" />
-      </div>
-    </div>
-  </div>
+  <span class="cmk-icon-emblem">
+    <slot />
+    <img v-if="emblem" :class="['cmk-icon-emblem__emblem', `cmk-icon-emblem__emblem--${emblem}`]" />
+  </span>
 </template>
 
 <style scoped>
-.cmk-icon-emblem__root {
-  display: flex;
-}
-
-.cmk-icon-emblem__wrapper {
+.cmk-icon-emblem {
   position: relative;
-  flex-shrink: 0;
 }
 
 .cmk-icon-emblem__emblem {
   width: 68%;
   height: 68%;
   position: absolute;
-  right: -15%;
-  bottom: -7%;
+  right: 5%;
+  bottom: -20%;
 }
 </style>
 

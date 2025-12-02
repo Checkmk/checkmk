@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_connection_config_types import ACTIVE_DIR, LDAPUserConnectionConfig
 from cmk.gui.userdb import (
     get_connection,
@@ -816,7 +816,7 @@ class ModeEditLDAPConnection(WatoMode):
             1,
             PageMenuEntry(
                 title=_("Save & test"),
-                icon_name="save",
+                icon_name=StaticIcon(IconNames.save),
                 item=make_form_submit_link(form_name="connection", button_name="_test"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -938,9 +938,15 @@ class ModeEditLDAPConnection(WatoMode):
                             logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:
-                            img = html.render_icon("checkmark", _("Success"))
+                            img = html.render_static_icon(
+                                StaticIcon(IconNames.checkmark),
+                                title=_("Success"),
+                            )
                         else:
-                            img = html.render_icon("cross", _("Failed"))
+                            img = html.render_static_icon(
+                                StaticIcon(IconNames.cross),
+                                title=_("Failed"),
+                            )
 
                         table.cell(_("Test"), title)
                         table.cell(_("State"), img)

@@ -11,7 +11,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Row, VisualLinkSpec
+from cmk.gui.type_defs import DynamicIcon, IconNames, Row, StaticIcon, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.gui.visual_link import url_to_visual
@@ -31,7 +31,7 @@ def _render_inventory_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | tuple[str, str, str]:
+) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
     if (
         what == "host"
         or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
@@ -48,7 +48,7 @@ def _render_inventory_icon(
         )
         assert v is not None
         return (
-            "inventory",
+            StaticIcon(IconNames.inventory),
             _("Show HW/SW Inventory tree"),
             v,
         )
@@ -84,7 +84,7 @@ def _render_inventory_history_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | tuple[str, str, str]:
+) -> None | tuple[StaticIcon | DynamicIcon, str, str]:
     if (
         what == "host"
         or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
@@ -101,7 +101,7 @@ def _render_inventory_history_icon(
         )
         assert v is not None
         return (
-            "inventory",
+            StaticIcon(IconNames.inventory),
             _("Show HW/SW Inventory history"),
             v,
         )

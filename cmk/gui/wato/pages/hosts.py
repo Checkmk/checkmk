@@ -45,7 +45,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.agent_commands import (
     agent_commands_registry,
 )
@@ -196,14 +196,14 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         yield PageMenuEntry(
             title=_("Save & edit"),
-            icon_name="save",
+            icon_name=StaticIcon(IconNames.save),
             item=make_form_submit_link(form_name="edit_host", button_name="save_and_edit"),
         )
 
         yield PageMenuEntry(
             title=_("Save & run service discovery"),
             shortcut_title=_("Save & run service discovery"),
-            icon_name="save_to_services",
+            icon_name=StaticIcon(IconNames.save_to_services),
             item=make_form_submit_link(form_name="edit_host", button_name="_save"),
             is_shortcut=True,
             is_suggested=True,
@@ -212,7 +212,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         yield PageMenuEntry(
             title=_("Save & view folder"),
-            icon_name="save_to_folder",
+            icon_name=StaticIcon(IconNames.save_to_folder),
             item=make_form_submit_link(form_name="edit_host", button_name="go_to_folder"),
             is_shortcut=True,
             is_suggested=True,
@@ -221,7 +221,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         if not self._is_cluster():
             yield PageMenuEntry(
                 title=_("Save & run connection tests"),
-                icon_name="connection_tests",
+                icon_name=StaticIcon(IconNames.connection_tests),
                 item=make_form_submit_link(form_name="edit_host", button_name="diag_host"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -320,7 +320,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             html.open_tr()
 
             html.open_td(class_="img")
-            html.icon("validation_error")
+            html.static_icon(StaticIcon(IconNames.validation_error))
             html.close_td()
 
             html.open_td()
@@ -694,7 +694,7 @@ def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenu
         yield PageMenuEntry(
             name=UpdateDnsCacheLoadingContainer.a_tag_id,
             title=_("Update DNS cache"),
-            icon_name="update",
+            icon_name=StaticIcon(IconNames.update),
             item=make_simple_link(
                 makeactionuri(request, transactions, [("_update_dns_cache", "1")])
             ),
@@ -713,7 +713,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     if mode_name != "edit_host":
         yield PageMenuEntry(
             title=_("Properties"),
-            icon_name="edit",
+            icon_name=StaticIcon(IconNames.edit),
             item=make_simple_link(
                 folder_preserving_link([("mode", "edit_host"), (ABCHostMode.VAR_HOST, host.name())])
             ),
@@ -722,7 +722,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     if mode_name != "inventory":
         yield PageMenuEntry(
             title=_("Run service discovery"),
-            icon_name="services",
+            icon_name=StaticIcon(IconNames.services),
             item=make_simple_link(
                 folder_preserving_link([("mode", "inventory"), (ABCHostMode.VAR_HOST, host.name())])
             ),
@@ -731,7 +731,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     if mode_name != "diag_host" and not host.is_cluster():
         yield PageMenuEntry(
             title=_("Test connection"),
-            icon_name="analysis",
+            icon_name=StaticIcon(IconNames.analysis),
             item=make_simple_link(
                 folder_preserving_link([("mode", "diag_host"), (ABCHostMode.VAR_HOST, host.name())])
             ),
@@ -739,7 +739,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
 
     yield PageMenuEntry(
         title=_("Test notifications"),
-        icon_name="analysis",
+        icon_name=StaticIcon(IconNames.analysis),
         item=make_simple_link(
             makeuri_contextless(
                 request,
@@ -755,7 +755,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     if mode_name != "object_parameters" and user.may("wato.rulesets"):
         yield PageMenuEntry(
             title=_("Effective parameters"),
-            icon_name="rulesets",
+            icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
                 folder_preserving_link(
                     [("mode", "object_parameters"), (ABCHostMode.VAR_HOST, host.name())]
@@ -767,7 +767,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     if mode_name == "object_parameters" or mode_name == "edit_host" and user.may("wato.rulesets"):
         yield PageMenuEntry(
             title=_("Rules"),
-            icon_name="rulesets",
+            icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -788,7 +788,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     if user.may("wato.rulesets") and host.is_cluster():
         yield PageMenuEntry(
             title=_("Clustered services"),
-            icon_name="rulesets",
+            icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
                 folder_preserving_link(
                     [("mode", "edit_ruleset"), ("varname", "clustered_services")]
@@ -803,7 +803,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
         if user.may("wato.rename_hosts") and not locked_by_quick_setup:
             yield PageMenuEntry(
                 title=_("Rename"),
-                icon_name="rename_host",
+                icon_name=StaticIcon(IconNames.rename_host),
                 item=make_simple_link(
                     folder_preserving_link(
                         [("mode", "rename_host"), (ABCHostMode.VAR_HOST, host.name())]
@@ -814,14 +814,14 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
         if user.may("wato.manage_hosts") and user.may("wato.clone_hosts"):
             yield PageMenuEntry(
                 title=_("Clone"),
-                icon_name="insert",
+                icon_name=StaticIcon(IconNames.insert),
                 item=make_simple_link(host.clone_url()),
             )
 
         if not locked_by_quick_setup:
             yield PageMenuEntry(
                 title=_("Delete"),
-                icon_name="delete",
+                icon_name=StaticIcon(IconNames.delete),
                 item=make_simple_link(
                     make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("delete", "1")]),
@@ -834,14 +834,14 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
         if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
-                icon_name="auditlog",
+                icon_name=StaticIcon(IconNames.auditlog),
                 item=make_simple_link(make_object_audit_log_url(host.object_ref())),
             )
 
         if user.may("wato.manage_hosts"):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name={"icon": "tls", "emblem": "remove"},
+                icon_name=StaticIcon(IconNames.tls, emblem="remove"),
                 item=make_simple_link(
                     make_confirm_delete_link(
                         url=makeactionuri(

@@ -18,7 +18,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.table import Table
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Alternative,
@@ -157,7 +157,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         html.icon_button(
             self._search_url(ident),
             _("Show rules using this %s") % self._mode_type.name_singular(),
-            "search",
+            StaticIcon(IconNames.search),  # TODO: new icon!
         )
 
     def _search_url(self, ident: str) -> str:

@@ -418,21 +418,27 @@ class HTMLWriter:
     def div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("div", content, **kwargs))
 
-    def vue_component(self, component_name: str, data: dict[str, Any]) -> None:
+    def vue_component(
+        self, component_name: str, data: dict[str, Any], **kwargs: HTMLTagAttributeValue
+    ) -> None:
         self.write_html(
             render_element(
                 component_name,
                 None,
                 data=_dump_standard_compliant_json(data),
+                **kwargs,
             )
         )
 
     @staticmethod
-    def render_vue_component(component_name: str, data: dict[str, Any]) -> HTML:
+    def render_vue_component(
+        component_name: str, data: dict[str, Any], **kwargs: HTMLTagAttributeValue
+    ) -> HTML:
         return render_element(
             component_name,
             None,
             data=_dump_standard_compliant_json(data),
+            **kwargs,
         )
 
     def legend(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:

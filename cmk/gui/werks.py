@@ -46,6 +46,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -207,7 +208,7 @@ def _page_menu_entries_ack_all_werks(request: Request) -> Iterator[PageMenuEntry
 
     yield PageMenuEntry(
         title=_("Acknowledge all"),
-        icon_name="werk_ack",
+        icon_name=StaticIcon(IconNames.werk_ack),
         is_shortcut=True,
         is_suggested=True,
         item=make_simple_link(
@@ -232,7 +233,7 @@ def _extend_display_dropdown(
             entries=[
                 PageMenuEntry(
                     title=_("Filter"),
-                    icon_name="filter",
+                    icon_name=StaticIcon(IconNames.filter),
                     item=PageMenuSidePopup(_render_werk_options_form(request, werk_table_options)),
                     name="filters",
                     is_shortcut=True,
@@ -361,7 +362,7 @@ def _page_menu_entries_ack_werk(request: Request, werk: Werk) -> Iterator[PageMe
     )
     yield PageMenuEntry(
         title=_("Acknowledge"),
-        icon_name="werk_ack",
+        icon_name=StaticIcon(IconNames.werk_ack),
         item=make_simple_link(ack_url),
         is_enabled=not is_acknowledged(werk, load_acknowledgements()),
         is_shortcut=True,

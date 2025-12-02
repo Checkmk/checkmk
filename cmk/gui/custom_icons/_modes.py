@@ -18,7 +18,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
@@ -153,7 +153,7 @@ class ModeIcons(WatoMode):
                     suffix=icon_name,
                     message=_("Category: %s") % category,
                 )
-                html.icon_button(delete_url, _("Delete this Icon"), "delete")
+                html.icon_button(delete_url, _("Delete this Icon"), StaticIcon(IconNames.delete))
 
                 table.cell(_("Icon"), html.render_icon(icon_name), css=["buttons"])
                 table.cell(_("Name"), icon_name)

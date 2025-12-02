@@ -16,7 +16,10 @@ from cmk.gui.painter.v0 import Painter, PainterRegistry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
+    DynamicIcon,
+    DynamicIconName,
     FilterName,
+    StaticIcon,
     VisualContext,
     VisualLinkSpec,
 )
@@ -191,6 +194,14 @@ def _register_views(
 
     # View for the items of one host
     host_view_name = make_table_view_name_of_host(table.name)
+    if isinstance(table.icon, StaticIcon):
+        main_icon: DynamicIconName = DynamicIconName(table.icon.icon.value)
+        if table.icon.emblem is not None:
+            icon: DynamicIcon = {"icon": main_icon, "emblem": table.icon.emblem}
+        else:
+            icon = main_icon
+    else:
+        icon = table.icon
     multisite_builtin_views[host_view_name] = {
         # General options
         "title": table.long_title,
@@ -206,7 +217,7 @@ def _register_views(
         "painters": painters,
         # Filters
         "context": context,
-        "icon": table.icon,
+        "icon": icon,
         "name": host_view_name,
         "single_infos": ["host"],
         "datasource": table.name,

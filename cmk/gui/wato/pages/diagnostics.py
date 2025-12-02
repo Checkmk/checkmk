@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
@@ -212,7 +212,7 @@ class ModeDiagnostics(WatoMode):
                         entries=[
                             PageMenuEntry(
                                 title=_("Analyze configuration"),
-                                icon_name="analyze_config",
+                                icon_name=StaticIcon(IconNames.analyze_config),
                                 item=make_simple_link("wato.py?mode=analyze_config"),
                             ),
                         ],
@@ -853,7 +853,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 % HTMLGenerator.render_icon_button(
                     url=download_url,
                     title=_("Download"),
-                    icon="diagnostics_dump_file",
+                    icon=StaticIcon(IconNames.diagnostics_dump_file),
                     theme=make_theme(validate_choices=False),
                 )
             )

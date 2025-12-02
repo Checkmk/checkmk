@@ -18,6 +18,7 @@ from cmk.gui.inventory.filters import (
     FilterInvText,
 )
 from cmk.gui.num_split import cmp_version
+from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
@@ -1768,7 +1769,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         SDNodeName("images"),
                     ),
                     long_title="Docker ➤ Images",
-                    icon="",
+                    icon=DynamicIconName(""),
                     is_show_more=True,
                 ),
             ),
@@ -2004,7 +2005,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         SDNodeName("containers"),
                     ),
                     long_title="Docker ➤ Containers",
-                    icon="",
+                    icon=DynamicIconName(""),
                     is_show_more=True,
                 ),
             ),

@@ -12,6 +12,7 @@ from typing import override
 import cmk.ccc.version as cmk_version
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.tag_rendering import render_start_tag
 from cmk.gui.i18n import _
 from cmk.gui.sidebar import (
     SidebarSnapin,
@@ -115,7 +116,12 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
     # Our version of iconlink -> the images are located elsewhere
     def _iconlink(self, text: str, url: str, icon: str) -> None:
         html.open_a(class_=["iconlink", "link"], target="main", href=url)
-        html.icon("/webconf/images/icon_%s.png" % icon, cssclass="inline")
+        render_start_tag(
+            "img",
+            close_tag=True,
+            src="/webconf/images/icon_%s.png" % icon,
+            class_=["inline"],
+        )
         html.write_text_permissive(text)
         html.close_a()
         html.br()

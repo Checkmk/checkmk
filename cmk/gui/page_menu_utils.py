@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
+from cmk.gui.type_defs import IconNames, InfoName, Rows, SingleInfos, StaticIcon, Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -287,7 +287,7 @@ def _make_page_menu_entry_for_visual(
     link: PageMenuLink = make_external_link(url) if external_link else make_simple_link(url)
     return PageMenuEntry(
         title=str(visual["title"]),
-        icon_name=visual.get("icon") or "trans",
+        icon_name=visual.get("icon") or StaticIcon(IconNames.trans),
         item=link,
         name="cb_" + visual["name"],
         is_show_more=visual.get("is_show_more", False),
@@ -320,7 +320,7 @@ def _get_availability_entry(
 
     return PageMenuEntry(
         title=_("Availability"),
-        icon_name="availability",
+        icon_name=StaticIcon(IconNames.availability),
         item=make_simple_link(
             makeuri(request, [("mode", "availability")], delvars=["show_checkboxes", "selection"])
         ),
@@ -357,7 +357,7 @@ def _get_combined_graphs_entry(
 
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
-        icon_name="graph",
+        icon_name=StaticIcon(IconNames.graph),
         item=make_simple_link(
             makeuri_contextless(
                 request,
@@ -434,7 +434,7 @@ def _page_menu_networking_topic(view: View) -> list[PageMenuTopic]:
             entries=[
                 PageMenuEntry(
                     title=_("Parent/child topology"),
-                    icon_name="aggr",
+                    icon_name=StaticIcon(IconNames.aggr),
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
@@ -510,19 +510,19 @@ def _link_to_host_by_name(host_name: str) -> str:
 def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Host configuration"),
-        icon_name={
-            "icon": "folder",
-            "emblem": "settings",
-        },
+        icon_name=StaticIcon(
+            IconNames.folder,
+            emblem="settings",
+        ),
         item=make_simple_link(_link_to_host_by_name(host_name)),
     )
 
     yield PageMenuEntry(
         title=_("Run service discovery"),
-        icon_name={
-            "icon": "services",
-            "emblem": "settings",
-        },
+        icon_name=StaticIcon(
+            IconNames.services,
+            emblem="settings",
+        ),
         item=make_simple_link(
             makeuri_contextless(
                 request,
@@ -536,7 +536,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
     if is_cluster:
         yield PageMenuEntry(
             title=_("Test connection"),
-            icon_name="analysis",
+            icon_name=StaticIcon(IconNames.analysis),
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -549,7 +549,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
     if user.may("wato.rulesets"):
         yield PageMenuEntry(
             title=_("Effective parameters"),
-            icon_name="rulesets",
+            icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -562,7 +562,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
 
         yield PageMenuEntry(
             title=_("Rules"),
-            icon_name="rulesets",
+            icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -579,7 +579,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
         )
     yield PageMenuEntry(
         title=_("Test notifications"),
-        icon_name="analysis",
+        icon_name=StaticIcon(IconNames.analysis),
         item=make_simple_link(
             makeuri_contextless(
                 request,
@@ -596,7 +596,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
 def page_menu_entries_service_setup(host_name: str, serivce_name: str) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Test notifications"),
-        icon_name="analysis",
+        icon_name=StaticIcon(IconNames.analysis),
         item=make_simple_link(
             makeuri_contextless(
                 request,

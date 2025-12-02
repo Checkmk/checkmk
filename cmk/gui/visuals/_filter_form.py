@@ -11,7 +11,7 @@ from typing import Any
 from cmk.gui import forms
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.gui.type_defs import IconNames, SingleInfos, StaticIcon, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 
@@ -85,7 +85,7 @@ def _show_filter_form_buttons(
         onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" % json.dumps(filter_list_id),
         class_="add",
     )
-    html.icon("add")
+    html.static_icon(StaticIcon(IconNames.add))
     html.div(_("Add filter"), class_="description")
     html.close_a()
 

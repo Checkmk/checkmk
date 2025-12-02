@@ -27,7 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -98,7 +98,7 @@ class ModeParentScan(WatoMode):
                         entries=[
                             PageMenuEntry(
                                 title=_("Start"),
-                                icon_name="background_jobs",
+                                icon_name=StaticIcon(IconNames.background_jobs),
                                 item=make_form_submit_link("parentscan", "_start"),
                                 is_shortcut=True,
                                 is_suggested=True,
@@ -236,7 +236,7 @@ class ModeParentScan(WatoMode):
         # Mode of action
         if not self._complete_folder:
             num_selected = len(get_hosts_from_checkboxes(self._folder))
-            html.icon("toggle_details")
+            html.static_icon(StaticIcon(IconNames.toggle_details))
             html.write_text_permissive(
                 _("You have selected <b>%d</b> hosts for parent scan. ") % num_selected
             )

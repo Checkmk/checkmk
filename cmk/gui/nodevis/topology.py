@@ -82,7 +82,17 @@ from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageRegistr
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
+from cmk.gui.type_defs import (
+    ColumnSpec,
+    DynamicIcon,
+    DynamicIconName,
+    IconNames,
+    PainterParameters,
+    Row,
+    StaticIcon,
+    Visual,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
@@ -132,7 +142,7 @@ def _render_network_topology_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str, str] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     # Only show this icon if topology data is available
     files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
     if not files:
@@ -143,7 +153,7 @@ def _render_network_topology_icon(
         [("host_regex", f"{row['host_name']}$")],
         filename="network_topology.py",
     )
-    return "aggr", _("Network topology"), url
+    return StaticIcon(IconNames.aggr), _("Network topology"), url
 
 
 NetworkTopologyIcon = Icon(
@@ -271,7 +281,7 @@ class ABCTopologyPage(Page):
                 entries=[
                     PageMenuEntry(
                         title=_("Filter"),
-                        icon_name="filter",
+                        icon_name=StaticIcon(IconNames.filter),
                         item=PageMenuSidePopup(
                             cmk.gui.visuals.render_filter_form(
                                 info_list=["host", "service"],
@@ -307,7 +317,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
             "name": "parent_child_topology",
             "sort_index": 50,
             "is_show_more": False,
-            "icon": "network_topology",
+            "icon": DynamicIconName("network_topology"),
             "hidden": False,
             "single_infos": [],
             "context": {},
@@ -349,7 +359,7 @@ class NetworkTopologyPage(ABCTopologyPage):
             "name": "network_topology",
             "sort_index": 50,
             "is_show_more": False,
-            "icon": "network_topology",
+            "icon": DynamicIconName("network_topology"),
             "hidden": False,
             "single_infos": [],
             "context": {},

@@ -31,7 +31,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.userdb import load_connection_config, UserConnectionConfigFile
 from cmk.gui.utils.transaction_manager import transactions
@@ -49,7 +49,7 @@ RealIndex = NewType("RealIndex", int)
 def _related_page_menu_entries() -> Iterable[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Users"),
-        icon_name="users",
+        icon_name=StaticIcon(IconNames.users),
         item=make_simple_link(
             makeuri_contextless(
                 request,
@@ -78,7 +78,7 @@ def add_connections_page_menu(
                         entries=[
                             PageMenuEntry(
                                 title=_("Add connection"),
-                                icon_name="new",
+                                icon_name=StaticIcon(IconNames.new),
                                 item=make_simple_link(
                                     folder_preserving_link(
                                         [
@@ -170,16 +170,18 @@ def render_connections_page(
                 [("mode", edit_mode_path), ("clone", connection["id"])]
             )
 
-            html.icon_button(edit_url, _("Edit this connection"), "edit")
-            html.icon_button(clone_url, _("Create a copy of this connection"), "clone")
+            html.icon_button(edit_url, _("Edit this connection"), StaticIcon(IconNames.edit))
+            html.icon_button(
+                clone_url, _("Create a copy of this connection"), StaticIcon(IconNames.clone)
+            )
             html.element_dragger_url("tr", base_url=drag_url)
-            html.icon_button(delete_url, _("Delete this connection"), "delete")
+            html.icon_button(delete_url, _("Delete this connection"), StaticIcon(IconNames.delete))
 
             table.cell("", css=["narrow"])
             if connection.get("disabled"):
-                html.icon(
-                    "disabled",
-                    _("This connection is currently not being used for synchronization."),
+                html.static_icon(
+                    StaticIcon(IconNames.disabled),
+                    title=_("This connection is currently not being used for synchronization."),
                 )
             else:
                 html.empty_icon_button()
@@ -195,7 +197,10 @@ def render_connections_page(
             url = connection.get("docu_url")
             if url:
                 html.icon_button(
-                    url, _("Context information about this connection"), "url", target="_blank"
+                    url,
+                    _("Context information about this connection"),
+                    StaticIcon(IconNames.url),
+                    target="_blank",
                 )
                 html.write_text_permissive("&nbsp;")
             html.write_text_permissive(connection["description"])

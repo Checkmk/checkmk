@@ -25,8 +25,10 @@ from cmk.gui.search import (
     TooManyRowsError,
 )
 from cmk.gui.type_defs import (
+    IconNames,
     SearchQuery,
     SearchResultsByTopic,
+    StaticIcon,
 )
 from cmk.gui.utils.roles import UserPermissions
 
@@ -69,7 +71,7 @@ class QuicksearchSnapin(SidebarSnapin):
         html.icon_button(
             "#",
             _("Search"),
-            "quicksearch",
+            StaticIcon(IconNames.quicksearch),
             onclick="cmk.quicksearch.on_search_click();",
         )
         html.close_div()

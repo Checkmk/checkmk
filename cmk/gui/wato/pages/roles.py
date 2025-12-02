@@ -47,7 +47,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName
+from cmk.gui.type_defs import ActionResult, Choices, IconNames, PermissionName, StaticIcon
 from cmk.gui.userdb import get_user_attributes, UserRole
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -96,7 +96,7 @@ class ModeRoles(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Permission matrix"),
-                                    icon_name="matrix",
+                                    icon_name=StaticIcon(IconNames.matrix),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "role_matrix")])
                                     ),
@@ -165,10 +165,12 @@ class ModeRoles(WatoMode):
                     suffix=role.alias,
                     message=("Name: %s") % role.name,
                 )
-                html.icon_button(edit_url, _("Properties"), "edit")
-                html.icon_button(clone_url, _("Clone"), "clone")
+                html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
+                html.icon_button(clone_url, _("Clone"), StaticIcon(IconNames.clone))
                 if not role.builtin:
-                    html.icon_button(delete_url, _("Delete this role"), "delete")
+                    html.icon_button(
+                        delete_url, _("Delete this role"), StaticIcon(IconNames.delete)
+                    )
 
                 # ID
                 table.cell(_("Name"), role.name)
@@ -541,14 +543,20 @@ class ModeRoleMatrix(WatoMode):
                         pvalue = role.permissions.get(perm.name)
                         if pvalue is None:
                             if base_on_id in perm.defaults:
-                                icon_name: str | None = "checkmark_bg_white"
+                                icon_name: StaticIcon | None = StaticIcon(
+                                    IconNames.checkmark_bg_white
+                                )
                             else:
                                 icon_name = None
                         else:
-                            icon_name = "checkmark" if pvalue else "cross_bg_white"
+                            icon_name = (
+                                StaticIcon(IconNames.checkmark)
+                                if pvalue
+                                else StaticIcon(IconNames.cross_bg_white)
+                            )
 
                         table.cell(role.name, css=["center"])
                         if icon_name:
-                            html.icon(icon_name)
+                            html.static_icon(icon_name)
 
         html.close_table()

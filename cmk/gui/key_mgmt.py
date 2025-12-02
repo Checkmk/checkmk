@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Key, KeyId
+from cmk.gui.type_defs import ActionResult, IconNames, Key, KeyId, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
@@ -81,7 +81,7 @@ class PageKeyManagement:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Generate key"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", self.edit_mode)])
                                     ),
@@ -90,7 +90,7 @@ class PageKeyManagement:
                                 ),
                                 PageMenuEntry(
                                     title=_("Upload key"),
-                                    icon_name="upload",
+                                    icon_name=StaticIcon(IconNames.upload),
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", self.upload_mode)])
                                     ),
@@ -175,12 +175,14 @@ class PageKeyManagement:
                         message=message,
                         warning=True,
                     )
-                    html.icon_button(delete_url, _("Delete this key"), "delete")
+                    html.icon_button(delete_url, _("Delete this key"), StaticIcon(IconNames.delete))
                 download_url = makeuri_contextless(
                     request,
                     [("mode", self.download_mode), ("key", key_id)],
                 )
-                html.icon_button(download_url, _("Download this key"), "download")
+                html.icon_button(
+                    download_url, _("Download this key"), StaticIcon(IconNames.download)
+                )
                 table.cell(_("Description"), key.alias)
                 table.cell(_("Created"), cmk.utils.render.date(key.date))
                 # We need the expire date and time only for agent signing keys.

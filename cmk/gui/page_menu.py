@@ -26,7 +26,14 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import HTTPVariables, Icon
+from cmk.gui.type_defs import (
+    DynamicIcon,
+    DynamicIconName,
+    HTTPVariables,
+    IconNames,
+    IconSizes,
+    StaticIcon,
+)
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
@@ -243,7 +250,7 @@ class PageMenuEntry:
     """Representing an entry in the menu, holding the ABCPageMenuItem to be displayed"""
 
     title: str
-    icon_name: Icon
+    icon_name: StaticIcon | DynamicIcon
     item: ABCPageMenuItem
     name: str | None = None
     description: str | None = None
@@ -360,7 +367,7 @@ class PageMenu:
         if has_suggestions:
             yield PageMenuEntry(
                 title=_("Toggle suggested actions"),
-                icon_name="suggestion",
+                icon_name=DynamicIconName("suggestion"),
                 item=make_javascript_link("cmk.page_menu.toggle_suggestions()"),
                 name="toggle_suggestions",
                 is_shortcut=True,
@@ -385,7 +392,9 @@ class PageMenu:
         help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
         help_dropdown.topics[1].entries.append(
             PageMenuEntry(
-                title=title, icon_name="manual", item=make_external_link(doc_reference_url(doc_ref))
+                title=title,
+                icon_name=DynamicIconName("manual"),
+                item=make_external_link(doc_reference_url(doc_ref)),
             )
         )
 
@@ -394,7 +403,7 @@ class PageMenu:
         help_dropdown.topics[2].entries.append(
             PageMenuEntry(
                 title=title,
-                icon_name="video",
+                icon_name=DynamicIconName("video"),
                 item=make_external_link(youtube_reference_url(youtube_ref)),
             )
         )
@@ -442,14 +451,14 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                     PageMenuEntry(
                         title=(_("Show page navigation")),
                         name="hide_navigation",
-                        icon_name="toggle_on",
+                        icon_name=DynamicIconName("toggle_on"),
                         item=PageMenuLink(_with_navigation(request)),
                         css_classes=["hidden"],
                     ),
                     PageMenuEntry(
                         title=(_("Show page navigation")),
                         name="show_navigation",
-                        icon_name="toggle_off",
+                        icon_name=DynamicIconName("toggle_off"),
                         item=PageMenuLink(_without_navigation(request)),
                     ),
                 ],
@@ -469,7 +478,9 @@ def make_help_dropdown() -> PageMenuDropdown:
                 entries=[
                     PageMenuEntry(
                         title=_("Show inline help"),
-                        icon_name="toggle_" + ("on" if user.inline_help_as_text else "off"),
+                        icon_name=DynamicIconName(
+                            "toggle_" + ("on" if user.inline_help_as_text else "off")
+                        ),
                         item=make_javascript_link("cmk.help.toggle()"),
                         name="inline_help",
                         is_enabled=False,
@@ -482,7 +493,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                 entries=[
                     PageMenuEntry(
                         title=_("The official Checkmk user guide"),
-                        icon_name="manual",
+                        icon_name=DynamicIconName("manual"),
                         item=make_external_link(doc_reference_url()),
                     ),
                 ],
@@ -507,7 +518,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
                 entries=[
                     PageMenuEntry(
                         title=str(parent_item.title),
-                        icon_name="up",
+                        icon_name=DynamicIconName("up"),
                         item=make_simple_link(parent_item.url),
                         name="up",
                         is_list_entry=False,
@@ -527,7 +538,7 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
             PageMenuEntry(
                 name="checkbox_selection",
                 title=_("Select all checkboxes"),
-                icon_name="toggle_on" if is_selected else "toggle_off",
+                icon_name=DynamicIconName("toggle_on" if is_selected else "toggle_off"),
                 item=make_javascript_link(
                     "cmk.selection.toggle_all_rows(cmk.utils.querySelectorID('main_page_content'));"
                 ),
@@ -543,7 +554,7 @@ def make_simple_form_page_menu(
     form_name: str | None = None,
     button_name: str | None = None,
     save_title: str | None = None,
-    save_icon: str = "save",
+    save_icon: DynamicIconName = DynamicIconName("save"),
     save_is_enabled: bool = True,
     add_cancel_link: bool = False,
     cancel_url: str | None = None,
@@ -582,7 +593,7 @@ def _make_form_save_link(
     form_name: str,
     button_name: str,
     save_title: str | None = None,
-    save_icon: str = "save",
+    save_icon: DynamicIconName = DynamicIconName("save"),
     save_is_enabled: bool = True,
 ) -> PageMenuEntry:
     return PageMenuEntry(
@@ -604,7 +615,7 @@ def _make_form_cancel_link(breadcrumb: Breadcrumb, cancel_url: str | None) -> Pa
 
     return PageMenuEntry(
         title=_("Cancel"),
-        icon_name="cancel",
+        icon_name=DynamicIconName("cancel"),
         item=make_simple_link(cancel_url),
         is_shortcut=True,
         is_suggested=True,
@@ -808,7 +819,12 @@ class SuggestedEntryRenderer:
             class_=class_ if class_ else ["suggestion_link"],
             id_=("menu_suggestion_%s" % entry.name if entry.name else None),
         )
-        html.icon(entry.icon_name or "trans")
+        if isinstance(entry.icon_name, StaticIcon):
+            html.static_icon(entry.icon_name)
+        elif not entry.icon_name:
+            html.static_icon(StaticIcon(IconNames.trans))
+        else:
+            html.dynamic_icon(entry.icon_name)
         html.span(entry.shortcut_title or entry.title)
         html.close_a()
 
@@ -891,7 +907,9 @@ class DropdownEntryRenderer:
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
-    def _show_vue_link_item(self, title: str, icon: Icon, item: PageMenuVue) -> None:
+    def _show_vue_link_item(
+        self, title: str, icon: StaticIcon | DynamicIcon, item: PageMenuVue
+    ) -> None:
         self._show_link(
             title=title,
             icon=icon,
@@ -900,7 +918,9 @@ class DropdownEntryRenderer:
             target=None,
         )
 
-    def _show_link_item(self, title: str, icon: Icon, item: PageMenuLink) -> None:
+    def _show_link_item(
+        self, title: str, icon: StaticIcon | DynamicIcon, item: PageMenuLink
+    ) -> None:
         if item.link.url is not None:
             url = item.link.url
             onclick = (
@@ -924,10 +944,20 @@ class DropdownEntryRenderer:
         )
 
     def _show_link(
-        self, url: str, onclick: str | None, target: str | None, icon: Icon, title: str
+        self,
+        url: str,
+        onclick: str | None,
+        target: str | None,
+        icon: StaticIcon | DynamicIcon,
+        title: str,
     ) -> None:
         html.open_a(href=url, onclick=onclick, target=target)
-        html.icon(icon or "trans")
+        if isinstance(icon, StaticIcon):
+            html.static_icon(icon, size=IconSizes.xlarge)
+        elif not icon:
+            html.static_icon(StaticIcon(IconNames.trans), size=IconSizes.xlarge)
+        else:
+            html.dynamic_icon(icon, size=IconSizes.xlarge)
         html.span(title)
         html.close_a()
 
@@ -1007,7 +1037,7 @@ class PageMenuPopupsRenderer:
         html.open_div(class_="head")
         html.h3(entry.title)
         html.a(
-            html.render_icon("close"),
+            html.render_static_icon(StaticIcon(IconNames.close)),
             class_="close_popup",
             href="javascript:void(0)",
             onclick="cmk.page_menu.close_popup(this)",

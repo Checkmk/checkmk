@@ -19,8 +19,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import paint_age, PainterOptions
-from cmk.gui.type_defs import Icon as IconSpec
-from cmk.gui.type_defs import Row, VisualLinkSpec
+from cmk.gui.type_defs import DynamicIcon, IconNames, Row, StaticIcon, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
@@ -51,7 +50,14 @@ def _render_action_menu_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     url_vars = [
         ("host", row["host_name"]),
     ]
@@ -69,7 +75,9 @@ def _render_action_menu_icon(
     url_vars.append(("_back_url", makeuri(request, [])))
 
     return html.render_popup_trigger(
-        html.render_icon("menu", _("Open the action menu"), cssclass="iconbutton"),
+        html.render_static_icon(
+            StaticIcon(IconNames.menu), title=_("Open the action menu"), css_classes=["iconbutton"]
+        ),
         "action_menu",
         MethodAjax(endpoint="action_menu", url_vars=url_vars),
     )
@@ -143,12 +151,16 @@ def _render_reschedule_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str] | tuple[str, str, tuple[str, str]] | None:
+) -> (
+    tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, tuple[str, str]]
+    | None
+):
     if what == "service" and row["service_cached_at"]:
         output = _("This service is based on cached agent data and cannot be rescheduled.")
         output += " %s" % render_cache_info(what, row)
 
-        return "cannot_reschedule", output
+        return StaticIcon(IconNames.cannot_reschedule), output
 
     # Reschedule button
     if row[what + "_check_type"] == 2:
@@ -160,7 +172,7 @@ def _render_reschedule_icon(
     ) and user.may("action.reschedule"):
         servicedesc = ""
         wait_svc = ""
-        icon = "reload"
+        icon = StaticIcon(IconNames.reload)
         txt = _("Reschedule check")
 
         if what == "service":
@@ -170,7 +182,7 @@ def _render_reschedule_icon(
             # Use 'Check_MK' service for cmk based services
             if row[what + "_check_command"].startswith("check_mk-"):
                 servicedesc = "Check_MK"
-                icon = "reload_cmk"
+                icon = StaticIcon(IconNames.reload_cmk)
                 txt = _("Reschedule 'Check_MK' service")
 
         url = "onclick:cmk.views.reschedule_check(this, {}, {}, {}, {});".format(
@@ -213,7 +225,14 @@ def _render_rule_editor_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if row[what + "_check_type"] == 2:
         return None  # shadow services have no parameters
 
@@ -233,7 +252,11 @@ def _render_rule_editor_icon(
         else:
             title = _("Parameters for this host")
 
-        return "rulesets", title, makeuri_contextless(request, urlvars, "wato.py")
+        return (
+            StaticIcon(IconNames.rulesets),
+            title,
+            makeuri_contextless(request, urlvars, "wato.py"),
+        )
     return None
 
 
@@ -267,7 +290,14 @@ def _render_manpage_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if what == "service" and icon_config.wato_enabled and user.may("wato.use"):
         command = row["service_check_command"]
         if command.startswith("check_mk-mgmt_"):
@@ -288,7 +318,7 @@ def _render_manpage_icon(
             return None
         urlvars = [("mode", "check_manpage"), ("check_type", check_type)]
         return (
-            "check_plugins",
+            StaticIcon(IconNames.check_plugins),
             _("Manual page for this check type"),
             makeuri_contextless(request, urlvars, "wato.py"),
         )
@@ -323,9 +353,16 @@ def _render_acknowledge_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if row[what + "_acknowledged"]:
-        return "ack", _("This problem has been acknowledged")
+        return StaticIcon(IconNames.ack), _("This problem has been acknowledged")
     return None
 
 
@@ -358,7 +395,14 @@ def _render_perfgraph_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if row[what + "_pnpgraph_present"] == 1:
         return _pnp_icon(row, what)
     return None
@@ -383,10 +427,14 @@ def _pnp_icon(row: Row, what: str) -> HTML | None:
     if is_mobile(request, response):
         return None
 
-    graph_icon_name = ("%s_graph" % what) if what in ["host", "service"] else "graph"
+    graph_icon_name = StaticIcon(IconNames.graph)
+    if what == "host":
+        graph_icon_name = StaticIcon(IconNames.host_graph)
+    elif what == "service":
+        graph_icon_name = StaticIcon(IconNames.service_graph)
 
     return HTMLWriter.render_a(
-        content=html.render_icon(graph_icon_name, ""),
+        content=html.render_static_icon(graph_icon_name),
         href=url,
         onmouseout="cmk.hover.hide()",
         onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);"
@@ -424,7 +472,14 @@ def _render_prediction_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     # TODO: At least for interfaces we have 2 predictive values. But this icon
     # only creates a link to the first one. Add multiple icons or add a navigation
     # element to the prediction page.
@@ -441,7 +496,7 @@ def _render_prediction_icon(
                     ("dsname", dsname),
                 ]
                 return (
-                    "prediction",
+                    StaticIcon(IconNames.prediction),
                     _("Analyse predictive monitoring for this service"),
                     makeuri_contextless(request, urlvars, "prediction_graph.py"),
                 )
@@ -477,13 +532,20 @@ def _render_custom_action_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if display_options.enabled(display_options.X):
         # action_url (only, if not a PNP-URL and pnp_graph is working!)
         action_url = row[what + "_action_url_expanded"]
         pnpgraph_present = row[what + "_pnpgraph_present"]
         if action_url and not ("/pnp4nagios/" in action_url and pnpgraph_present >= 0):
-            return "action", _("Custom Action"), action_url
+            return StaticIcon(IconNames.action), _("Custom Action"), action_url
     return None
 
 
@@ -515,7 +577,14 @@ def _render_logwatch_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if what != "service" or row[what + "_check_command"] not in [
         "check_mk-logwatch",
         "check_mk-logwatch_groups",
@@ -528,7 +597,7 @@ def _render_logwatch_icon(
         [("site", sitename), ("host", hostname), ("file", item)],
         filename="logwatch.py",
     )
-    return "logwatch", _("Open Log"), url
+    return StaticIcon(IconNames.logwatch), _("Open Log"), url
 
 
 LogwatchIcon = Icon(
@@ -559,14 +628,14 @@ def _render_notes_url_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str, tuple[str, str]] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, tuple[str, str]] | None:
     # Adds the url_prefix of the services site to the notes url configured in this site.
     # It also adds the master_url which will be used to link back to the source site
     # in multi site environments.
     if display_options.enabled(display_options.X):
         notes_url = row[what + "_notes_url_expanded"]
         if notes_url:
-            return "notes", _("Notes (URL)"), (notes_url, "_blank")
+            return StaticIcon(IconNames.notes), _("Notes (URL)"), (notes_url, "_blank")
     return None
 
 
@@ -598,7 +667,7 @@ def _render_downtimes_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[IconSpec, str, str | None] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str | None] | None:
     def detail_txt(
         downtimes_with_extra_info: Sequence[
             tuple[int, str, str, str, int, int, int, bool, int, bool, bool]
@@ -635,9 +704,9 @@ def _render_downtimes_icon(
     # for this host / service
     if row[what + "_scheduled_downtime_depth"] > 0:
         if what == "host":
-            icon = "downtime"
+            icon = StaticIcon(IconNames.downtime)
         else:
-            icon = "downtime"
+            icon = StaticIcon(IconNames.downtime)
 
         title = _("Currently in downtime")
         title += detail_txt(row[what + "_downtimes_with_extra_info"])
@@ -659,7 +728,7 @@ def _render_downtimes_icon(
         title += detail_txt(row["host_downtimes_with_extra_info"])
 
         return (
-            {"icon": "folder", "emblem": "downtime"},
+            StaticIcon(IconNames.folder, emblem="downtime"),
             title,
             url_to_visual(
                 row,
@@ -702,7 +771,7 @@ def _render_comments_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str, str | None] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str | None] | None:
     comments = row[what + "_comments_with_extra_info"]
     if len(comments) > 0:
         text = ""
@@ -722,7 +791,7 @@ def _render_comments_icon(
                 comment,
             )
         return (
-            "comment",
+            StaticIcon(IconNames.comment),
             text,
             url_to_visual(
                 row,
@@ -764,16 +833,29 @@ def _render_notifications_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     # Notifications disabled
     enabled = row[what + "_notifications_enabled"]
     modified = "notifications_enabled" in row[what + "_modified_attributes_list"]
     if modified and enabled:
-        return "notif_enabled", _("Notifications are manually enabled for this %s") % what
+        return StaticIcon(IconNames.notif_enabled), _(
+            "Notifications are manually enabled for this %s"
+        ) % what
     if modified and not enabled:
-        return "notif_man_disabled", _("Notifications are manually disabled for this %s") % what
+        return StaticIcon(IconNames.notif_man_disabled), _(
+            "Notifications are manually disabled for this %s"
+        ) % what
     if not enabled:
-        return "notif_disabled", _("Notifications are disabled for this %s") % what
+        return StaticIcon(IconNames.notif_disabled), _(
+            "Notifications are disabled for this %s"
+        ) % what
     return None
 
 
@@ -804,13 +886,13 @@ def _render_flapping_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | tuple[str, str]:
+) -> None | tuple[StaticIcon | DynamicIcon, str]:
     if row[what + "_is_flapping"]:
         if what == "host":
             title = _("This host is flapping")
         else:
             title = _("This service is flapping")
-        return "flapping", title
+        return StaticIcon(IconNames.flapping), title
     return None
 
 
@@ -841,7 +923,14 @@ def _render_staleness_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if is_stale(row, icon_config.staleness_threshold):
         if what == "host":
             title = _("This host is stale")
@@ -851,7 +940,7 @@ def _render_staleness_icon(
                 _(", no data has been received within the last %.1f check periods")
                 % icon_config.staleness_threshold
             )
-        return "stale", title
+        return StaticIcon(IconNames.stale), title
     return None
 
 
@@ -884,15 +973,24 @@ def _render_active_checks_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     # Setting of active checks modified by user
     if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
         if row[what + "_active_checks_enabled"] == 0:
             return (
-                "disabled",
+                StaticIcon(IconNames.disabled),
                 _("Active checks have been manually disabled for this %s!") % what,
             )
-        return "checkmark", _("Active checks have been manually enabled for this %s!") % what
+        return StaticIcon(IconNames.checkmark), _(
+            "Active checks have been manually enabled for this %s!"
+        ) % what
     return None
 
 
@@ -924,12 +1022,19 @@ def _render_passive_checks_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     # Passive checks disabled manually?
     if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
         if row[what + "_accept_passive_checks"] == 0:
             return (
-                "npassive",
+                StaticIcon(IconNames.npassive),
                 _("Passive checks have been manually disabled for this %s!") % what,
             )
     return None
@@ -962,9 +1067,16 @@ def _render_notification_period_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if not row[what + "_in_notification_period"]:
-        return "outofnot", _("Out of notification period")
+        return StaticIcon(IconNames.outofnot), _("Out of notification period")
     return None
 
 
@@ -994,9 +1106,16 @@ def _render_service_period_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     if not row[what + "_in_service_period"]:
-        return "outof_serviceperiod", _("Out of service period")
+        return StaticIcon(IconNames.outof_serviceperiod), _("Out of service period")
     return None
 
 
@@ -1027,7 +1146,14 @@ def _render_stars(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+) -> (
+    None
+    | StaticIcon
+    | DynamicIcon
+    | HTML
+    | tuple[StaticIcon | DynamicIcon, str]
+    | tuple[StaticIcon | DynamicIcon, str, str]
+):
     stars = _get_stars()
 
     if what == "host":
@@ -1039,7 +1165,7 @@ def _render_stars(
         title = _("service")
 
     if starred:
-        return "starred", _("This %s is one of your favorites") % title
+        return StaticIcon(IconNames.starred), _("This %s is one of your favorites") % title
     return None
 
 
@@ -1071,14 +1197,15 @@ def _render_crashed_check_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | tuple[str, str] | tuple[str, str, str]:
+) -> None | tuple[DynamicIcon | StaticIcon, str] | tuple[DynamicIcon | StaticIcon, str, str]:
+    # TODO: is this really a good idea to allow emblem icons here? will this really never be saved to disk? if no, why allow dynamic icons?
     if (
         what == "service"
         and row["service_state"] == 3
         and "check failed - please submit a crash report!" in row["service_plugin_output"]
     ):
         if not user.may("general.see_crash_reports"):
-            return "crash", _(
+            return StaticIcon(IconNames.crash), _(
                 "This check crashed. Please inform a Checkmk user that is allowed "
                 "to view and submit crash reports to the development team."
             )
@@ -1086,7 +1213,7 @@ def _render_crashed_check_icon(
         # Extract the crash ID produced by cmk/base/crash_reporting.py from output
         match = re.search(r"\(Crash-ID: ([^\)]+)\)", row["service_plugin_output"])
         if not match:
-            return "crash", _(
+            return StaticIcon(IconNames.crash), _(
                 "This check crashed, but no crash dump is available, please report this "
                 "to the development team."
             )
@@ -1101,7 +1228,7 @@ def _render_crashed_check_icon(
             filename="crash.py",
         )
         return (
-            "crash",
+            StaticIcon(IconNames.crash),
             _(
                 "This check crashed. Please click here for more information. You also can submit "
                 "a crash report to the development team if you like."
@@ -1140,13 +1267,13 @@ def _render_check_period_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> None | tuple[str, str]:
+) -> None | tuple[StaticIcon | DynamicIcon, str]:
     if what == "service":
         if row["%s_in_passive_check_period" % what] == 0 or row["%s_in_check_period" % what] == 0:
-            return "pause", _("This service is currently not being checked")
+            return StaticIcon(IconNames.pause), _("This service is currently not being checked")
     elif what == "host":
         if row["%s_in_check_period" % what] == 0:
-            return "pause", _("This host is currently not being checked")
+            return StaticIcon(IconNames.pause), _("This host is currently not being checked")
     return None
 
 

@@ -15,7 +15,7 @@ import socket
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from copy import deepcopy
-from typing import Any, assert_never, cast, Literal, overload, override
+from typing import Any, assert_never, cast, overload, override
 from urllib.parse import urlparse
 
 from livestatus import (
@@ -66,7 +66,7 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -882,7 +882,7 @@ class ModeDistributedMonitoring(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add connection"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", "edit_site")]),
                                     ),
@@ -891,7 +891,7 @@ class ModeDistributedMonitoring(WatoMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Add peer-to-peer message broker connection"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request, [("mode", "edit_broker_connection")]
@@ -1257,13 +1257,15 @@ class ModeDistributedMonitoring(WatoMode):
         edit_url = folder_preserving_link(
             [("mode", "edit_broker_connection"), ("edit_connection_id", connection_id)]
         )
-        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
 
         clone_url = folder_preserving_link(
             [("mode", "edit_broker_connection"), ("clone_connection_id", connection_id)]
         )
         html.icon_button(
-            clone_url, _("Clone this connection in order to create a new one"), "clone"
+            clone_url,
+            _("Clone this connection in order to create a new one"),
+            StaticIcon(IconNames.clone),
         )
 
         delete_url = make_confirm_delete_link(
@@ -1271,7 +1273,7 @@ class ModeDistributedMonitoring(WatoMode):
             title=_("Delete peer-to-peer connection to site"),
             message=_("ID: %s") % connection_id,
         )
-        html.icon_button(delete_url, _("Delete"), "delete")
+        html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
     def _show_buttons(
         self,
@@ -1282,11 +1284,13 @@ class ModeDistributedMonitoring(WatoMode):
     ) -> None:
         table.cell(_("Actions"), css=["buttons"])
         edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
-        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
 
         clone_url = folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
         html.icon_button(
-            clone_url, _("Clone this connection in order to create a new one"), "clone"
+            clone_url,
+            _("Clone this connection in order to create a new one"),
+            StaticIcon(IconNames.clone),
         )
 
         # Prevent deletion of the local site. This does not make sense, even on
@@ -1300,7 +1304,7 @@ class ModeDistributedMonitoring(WatoMode):
                 suffix=site.get("alias", ""),
                 message=_("ID: %s") % site_id,
             )
-            html.icon_button(delete_url, _("Delete"), "delete")
+            html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
         if site_globals_editable(site_configs, site):
             globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
@@ -1308,10 +1312,10 @@ class ModeDistributedMonitoring(WatoMode):
             has_site_globals = bool(site.get("globals"))
             title = _("Site specific global configuration")
             if has_site_globals:
-                icon = "site_globals_modified"
+                icon = StaticIcon(IconNames.site_globals_modified)
                 title += " (%s)" % (_("%d specific settings") % len(site.get("globals", {})))
             else:
-                icon = "site_globals"
+                icon = StaticIcon(IconNames.site_globals)
 
             html.icon_button(globals_url, title, icon)
 
@@ -1343,14 +1347,18 @@ class ModeDistributedMonitoring(WatoMode):
         encrypted_url = folder_preserving_link(
             [("mode", "site_livestatus_encryption"), ("site", site_id)]
         )
-        html.icon_button(encrypted_url, _("Show details about Livestatus encryption"), "encrypted")
+        html.icon_button(
+            encrypted_url,
+            _("Show details about Livestatus encryption"),
+            StaticIcon(IconNames.encrypted),
+        )
 
         # The status is fetched asynchronously for all sites. Show a temporary loading icon.
         html.open_div(id_="livestatus_status_%s" % site_id, class_="connection_status")
-        html.icon(
-            "reload",
-            _("Fetching Livestatus status"),
-            class_=["reloading", "replication_status_loading"],
+        html.static_icon(
+            StaticIcon(IconNames.reload),
+            title=_("Fetching Livestatus status"),
+            css_classes=["reloading", "replication_status_loading"],
         )
         html.close_div()
 
@@ -1385,18 +1393,18 @@ class ModeDistributedMonitoring(WatoMode):
                     message=_("ID: %s") % site_id,
                     confirm_button=_("Log out"),
                 )
-                html.icon_button(logout_url, _("Logout"), "autherr")
+                html.icon_button(logout_url, _("Logout"), StaticIcon(IconNames.autherr))
             else:
                 login_url = make_action_link([("mode", "sites"), ("_login", site_id)])
-                html.icon_button(login_url, _("Login"), "authok")
+                html.icon_button(login_url, _("Login"), StaticIcon(IconNames.authok))
 
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
         if is_replication_enabled(site):
             # The status is fetched asynchronously for all sites. Show a temporary loading icon.
-            html.icon(
-                "reload",
-                _("Fetching replication status"),
-                class_=["reloading", "replication_status_loading"],
+            html.static_icon(
+                StaticIcon(IconNames.reload),
+                title=_("Fetching replication status"),
+                css_classes=["reloading", "replication_status_loading"],
             )
         html.close_div()
 
@@ -1416,7 +1424,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.icon_button(
                 url="javascript:void(0)",
                 title=_("Recreate certificates"),
-                icon="recreate_broker_certificate",
+                icon=StaticIcon(IconNames.recreate_broker_certificate),
                 class_=["lockable"],
             )
             html.write_text_permissive(_("Recreate certificates"))
@@ -1425,10 +1433,10 @@ class ModeDistributedMonitoring(WatoMode):
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")
         if is_replication_enabled(site):
             # The status is fetched asynchronously for all sites. Show a temporary loading icon.
-            html.icon(
-                "reload",
-                _("Fetching message broker status"),
-                class_=["reloading", "replication_status_loading"],
+            html.static_icon(
+                StaticIcon(IconNames.reload),
+                title=_("Fetching message broker status"),
+                css_classes=["reloading", "replication_status_loading"],
             )
         html.close_div()
 
@@ -1483,7 +1491,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         status = replication_status[site_id]
         if status.success:
             assert not isinstance(status.response, Exception)
-            icon = "checkmark"
+            icon = StaticIcon(IconNames.checkmark)
             msg = _("Online (%s)") % make_site_version_info(
                 status.response.version,
                 status.response.edition,
@@ -1491,10 +1499,10 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             )
         else:
             assert isinstance(status.response, Exception)
-            icon = "cross"
+            icon = StaticIcon(IconNames.cross)
             msg = "%s" % status.response
 
-        return html.render_icon(icon, title=msg) + HTMLWriter.render_span(
+        return html.render_static_icon(icon, title=msg) + HTMLWriter.render_span(
             msg, style="vertical-align:middle"
         )
 
@@ -1510,8 +1518,8 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         else:
             message = status_msg.title()
 
-        icon = "checkmark" if status == "online" else "cross"
-        return html.render_icon(icon, title=message) + HTMLWriter.render_span(
+        icon = StaticIcon(IconNames.checkmark if status == "online" else IconNames.cross)
+        return html.render_static_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 
@@ -1529,7 +1537,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         icon, message = self._get_connection_status_icon_message(
             site_id, site, ping_response.omd_status
         )
-        return html.render_icon(icon, title=message) + HTMLWriter.render_span(
+        return html.render_static_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 
@@ -1538,12 +1546,12 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         remote_site_id: SiteId,
         site: SiteConfiguration,
         remote_omd_status: OMDStatus,
-    ) -> tuple[Literal["checkmark", "cross", "alert", "disabled"], str]:
+    ) -> tuple[StaticIcon, str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
-            return "cross", _("Offline: No valid multisite URL configured")
+            return StaticIcon(IconNames.cross), _("Offline: No valid multisite URL configured")
 
         if remote_omd_status["rabbitmq"] == 5:
-            return "disabled", _("Disabled")
+            return StaticIcon(IconNames.disabled), _("Disabled")
 
         remote_port = site["message_broker_port"]
         try:
@@ -1553,25 +1561,29 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
-            return "alert", _("Unkown error: %s") % (e,)
+            return StaticIcon(IconNames.alert), _("Unkown error: %s") % (e,)
 
         match connection_status:
             case ConnectionOK():
-                return "checkmark", _("Online")
+                return StaticIcon(IconNames.checkmark), _("Online")
             case ConnectionFailed(error):
-                return "cross", _("Failed to establish connection: %s") % (error,)
+                return StaticIcon(IconNames.cross), _("Failed to establish connection: %s") % (
+                    error,
+                )
             case ConnectionRefused.WRONG_SITE:
-                return "cross", _(
+                return StaticIcon(IconNames.cross), _(
                     "Connection to port %s refused. You are probably connecting to the wrong site."
                 ) % (remote_port,)
             case ConnectionRefused.SELF_SIGNED:
-                return "cross", _(
+                return StaticIcon(IconNames.cross), _(
                     "Connection to port %s refused. The site is using a self-signed certificate. Are you logged in?"
                 ) % (remote_port,)
             case ConnectionRefused.CERTIFICATE_VERIFY_FAILED:
-                return "cross", _("Connection to port %s refused: Invalid certificate")
+                return StaticIcon(IconNames.cross), _(
+                    "Connection to port %s refused: Invalid certificate"
+                )
             case ConnectionRefused.CLOSED:
-                return "cross", _("Not available")
+                return StaticIcon(IconNames.cross), _("Not available")
 
                 return "cross", _("Connection to port %s refused") % (remote_port,)
             case _:
@@ -1971,7 +1983,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
                             ("_digest", cert_detail.digest_sha256),
                         ],
                     )
-                    html.icon_button(url=url, title=_("Add to trusted CAs"), icon="trust")
+                    html.icon_button(
+                        url=url, title=_("Add to trusted CAs"), icon=StaticIcon(IconNames.trust)
+                    )
                 table.cell(_("Issued to"), cert_detail.issued_to)
                 table.cell(_("Issued by"), cert_detail.issued_by)
                 table.cell(_("Is CA"), _("Yes") if cert_detail.is_ca else _("No"))
@@ -2028,7 +2042,7 @@ def _page_menu_entries_site_details(
     if current_mode != "edit_site_globals" and site_globals_editable(site_configs, site):
         yield PageMenuEntry(
             title=_("Global settings"),
-            icon_name="configuration",
+            icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
                 makeuri_contextless(request, [("mode", "edit_site_globals"), ("site", site_id)]),
             ),
@@ -2037,7 +2051,7 @@ def _page_menu_entries_site_details(
     if current_mode != "edit_site":
         yield PageMenuEntry(
             title=_("Edit connection"),
-            icon_name="edit",
+            icon_name=StaticIcon(IconNames.edit),
             item=make_simple_link(
                 makeuri_contextless(request, [("mode", "edit_site"), ("site", site_id)]),
             ),
@@ -2046,7 +2060,7 @@ def _page_menu_entries_site_details(
     if current_mode != "site_livestatus_encryption":
         yield PageMenuEntry(
             title=_("Status encryption"),
-            icon_name="encrypted",
+            icon_name=StaticIcon(IconNames.encrypted),
             item=make_simple_link(
                 makeuri_contextless(
                     request,

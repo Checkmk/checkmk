@@ -29,7 +29,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
-from cmk.gui.type_defs import CSSSpec
+from cmk.gui.type_defs import CSSSpec, IconNames, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
@@ -693,17 +693,17 @@ class Table:
                     if actions_visible:
                         state = "0"
                         help_txt = _("Hide table actions")
-                        img = "table_actions_on"
+                        img = IconNames.table_actions_on
                     else:
                         state = "1"
                         help_txt = _("Display table actions")
-                        img = "table_actions_off"
+                        img = IconNames.table_actions_off
 
                     html.open_div(class_=["toggle_actions"])
                     html.icon_button(
                         makeuri(request, [("_%s_actions" % table_id, state)]),
                         help_txt,
-                        img,
+                        StaticIcon(img),
                         cssclass="toggle_actions",
                     )
                     html.span(header_title)

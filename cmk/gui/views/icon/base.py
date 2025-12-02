@@ -10,12 +10,13 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.gui.config import Config
-from cmk.gui.type_defs import ColumnName, Row
-from cmk.gui.type_defs import Icon as IconSpec
+from cmk.gui.type_defs import ColumnName, DynamicIcon, Row, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
 from cmk.utils.tags import TagID
+
+IconSpec = DynamicIcon | StaticIcon
 
 
 @dataclass
@@ -61,7 +62,7 @@ class Icon:
             | tuple[IconSpec, str, str]
             | tuple[IconSpec, str, str | None]
             | tuple[IconSpec, str, tuple[str, str]]
-            | tuple[str, str | None, tuple[str, str] | None],
+            | tuple[IconSpec, str | None, tuple[str, str] | None],
         ],
         columns: Sequence[ColumnName] = (),
         host_columns: Sequence[ColumnName] = (),
@@ -125,7 +126,7 @@ class Icon:
         | tuple[IconSpec, str, str]
         | tuple[IconSpec, str, str | None]
         | tuple[IconSpec, str, tuple[str, str]]
-        | tuple[str, str | None, tuple[str, str] | None]
+        | tuple[IconSpec, str | None, tuple[str, str] | None]
     ):
         return self._render_func(what, row, tags, custom_vars, user_permissions, icon_config)
 

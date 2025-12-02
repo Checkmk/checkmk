@@ -53,6 +53,7 @@ from cmk.gui.inventory.filters import (
     FilterInvTextWithSortKey,
 )
 from cmk.gui.log import logger
+from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.unit_formatter import AutoPrecision as AutoPrecisionFormatter
 from cmk.gui.unit_formatter import (
     DecimalFormatter,
@@ -664,7 +665,7 @@ def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
             name=table_view_name,
             path=path,
             long_title=_make_long_title(parent_title, _make_str(node.table.view.title)),
-            icon="",
+            icon=DynamicIconName(""),
             is_show_more=True,
         )
     return NodeDisplayHint(
@@ -1182,7 +1183,7 @@ class TableWithView:
     name: str
     path: SDPath
     long_title: str
-    icon: str
+    icon: DynamicIconName
     is_show_more: bool
 
     @property
@@ -1273,7 +1274,7 @@ def _parse_legacy_display_hints(
             inv_display_hints.get_node_hint(path[:-1]).title if path[:-1] else "",
             title,
         )
-        icon = node_or_table_hints.get("icon", "")
+        icon = node_or_table_hints.get("icon", DynamicIconName(""))
         table: Table | TableWithView
         if table_view_name := (
             "" if "*" in path else _parse_view_name(node_or_table_hints.get("view", ""))

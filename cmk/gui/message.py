@@ -50,7 +50,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import AnnotatedUserId, UserSpec
+from cmk.gui.type_defs import AnnotatedUserId, IconNames, StaticIcon, UserSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
@@ -313,7 +313,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
                     entries=[
                         PageMenuEntry(
                             title=_("Users"),
-                            icon_name="users",
+                            icon_name=StaticIcon(IconNames.users),
                             item=make_simple_link("wato.py?mode=users"),
                         )
                     ],

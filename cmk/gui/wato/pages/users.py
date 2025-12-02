@@ -44,7 +44,15 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import ActionResult, Choices, CustomUserAttrSpec, PermissionName, UserSpec
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
+    CustomUserAttrSpec,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+    UserSpec,
+)
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
@@ -156,7 +164,7 @@ class ModeUsers(WatoMode):
                     entries=[
                         PageMenuEntry(
                             title=_("Add user"),
-                            icon_name="new",
+                            icon_name=StaticIcon(IconNames.new),
                             item=make_simple_link(folder_preserving_link([("mode", "edit_user")])),
                             is_shortcut=True,
                             is_suggested=True,
@@ -214,7 +222,7 @@ class ModeUsers(WatoMode):
             yield PageMenuEntry(
                 title=_("Delete users"),
                 shortcut_title=_("Delete selected users"),
-                icon_name="delete",
+                icon_name=StaticIcon(IconNames.delete),
                 item=make_confirmed_form_submit_link(
                     form_name="bulk_delete_form",
                     button_name="_bulk_delete_users",
@@ -228,7 +236,7 @@ class ModeUsers(WatoMode):
             yield PageMenuEntry(
                 title=_("Migrate users"),
                 shortcut_title=_("Migrate selected users"),
-                icon_name="migrate_users",
+                icon_name=StaticIcon(IconNames.migrate_users),
                 item=make_simple_link(
                     makeuri_contextless(
                         request,
@@ -251,13 +259,13 @@ class ModeUsers(WatoMode):
             if not self._job_snapshot.is_active:
                 yield PageMenuEntry(
                     title=_("Synchronize users"),
-                    icon_name="replicate",
+                    icon_name=StaticIcon(IconNames.replicate),
                     item=make_simple_link(makeactionuri(request, transactions, [("_sync", 1)])),
                 )
 
                 yield PageMenuEntry(
                     title=_("Last synchronization result"),
-                    icon_name="background_job_details",
+                    icon_name=StaticIcon(IconNames.background_job_details),
                     item=make_simple_link(self._job.detail_url()),
                 )
 
@@ -265,7 +273,7 @@ class ModeUsers(WatoMode):
         if user.may("general.message"):
             yield PageMenuEntry(
                 title=_("Send user messages"),
-                icon_name="message",
+                icon_name=StaticIcon(IconNames.message),
                 item=make_simple_link("message.py"),
             )
 
@@ -273,14 +281,14 @@ class ModeUsers(WatoMode):
         if user.may("wato.custom_attributes"):
             yield PageMenuEntry(
                 title=_("Custom attributes"),
-                icon_name="custom_attr",
+                icon_name=StaticIcon(IconNames.custom_attr),
                 item=make_simple_link(folder_preserving_link([("mode", "user_attrs")])),
             )
 
         if ldap_connections_are_configurable():
             yield PageMenuEntry(
                 title=_("LDAP & Active Directory"),
-                icon_name="ldap",
+                icon_name=StaticIcon(IconNames.ldap),
                 item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
             )
 
@@ -288,7 +296,7 @@ class ModeUsers(WatoMode):
         if mode_registry.get("saml_config") is not None:
             yield PageMenuEntry(
                 title=_("SAML authentication"),
-                icon_name="saml",
+                icon_name=StaticIcon(IconNames.saml),
                 item=make_simple_link(folder_preserving_link([("mode", "saml_config")])),
             )
 
@@ -534,11 +542,13 @@ class ModeUsers(WatoMode):
                 table.cell(_("Actions"), css=["buttons"])
                 if connection:  # only show edit buttons when the connector is available and enabled
                     edit_url = folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
-                    html.icon_button(edit_url, _("Properties"), "edit")
+                    html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
 
                     if self._can_create_and_delete_users:
                         clone_url = folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
-                        html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+                        html.icon_button(
+                            clone_url, _("Create a copy of this user"), StaticIcon(IconNames.clone)
+                        )
 
                 user_alias = user_spec.get("alias", "")
                 if self._can_create_and_delete_users:
@@ -548,7 +558,7 @@ class ModeUsers(WatoMode):
                         suffix=user_alias,
                         message=_("ID: %s") % uid,
                     )
-                    html.icon_button(delete_url, _("Delete"), "delete")
+                    html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
                 notifications_url = folder_preserving_link(
                     [
@@ -559,7 +569,7 @@ class ModeUsers(WatoMode):
                 html.icon_button(
                     notifications_url,
                     _("Custom notification table of this user"),
-                    "notifications",
+                    StaticIcon(IconNames.notifications),
                 )
 
                 # ID
@@ -574,20 +584,20 @@ class ModeUsers(WatoMode):
                             render.time_of_day(last_seen),
                             auth_type,
                         )
-                        img_txt = "checkmark"
+                        img_txt = StaticIcon(IconNames.checkmark)
                     elif last_seen != 0:
                         title = _("Offline (%s %s via %s)") % (
                             render.date(last_seen),
                             render.time_of_day(last_seen),
                             auth_type,
                         )
-                        img_txt = "cross_grey"
+                        img_txt = StaticIcon(IconNames.cross_grey)
                     elif last_seen == 0:
                         title = _("Never")
-                        img_txt = "hyphen"
+                        img_txt = StaticIcon(IconNames.hyphen)
 
                     table.cell(_("Act."))
-                    html.icon(img_txt, title)
+                    html.static_icon(img_txt, title=title)
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
@@ -633,7 +643,9 @@ class ModeUsers(WatoMode):
 
                 table.cell(_("State"), sortable=False)
                 if user_spec["locked"]:
-                    html.icon("user_locked", _("The login is currently locked"))
+                    html.static_icon(
+                        StaticIcon(IconNames.user_locked), title=_("The login is currently locked")
+                    )
 
                 if "disable_notifications" in user_spec and isinstance(
                     user_spec["disable_notifications"], bool
@@ -643,7 +655,9 @@ class ModeUsers(WatoMode):
                     disable_notifications_opts = user_spec.get("disable_notifications", {})
 
                 if disable_notifications_opts.get("disable", False):
-                    html.icon("notif_disabled", _("Notifications are disabled"))
+                    html.static_icon(
+                        StaticIcon(IconNames.notif_disabled), title=_("Notifications are disabled")
+                    )
 
                 # Full name / Alias
                 table.cell(_("Alias"), user_alias)
@@ -836,7 +850,7 @@ class ModeEditUser(WatoMode):
         if not self._is_new_user:
             yield PageMenuEntry(
                 title=_("Notification rules"),
-                icon_name="topic_events",
+                icon_name=StaticIcon(IconNames.topic_events),
                 item=make_simple_link(
                     folder_preserving_link(
                         [
@@ -851,7 +865,7 @@ class ModeEditUser(WatoMode):
             assert self._user_id is not None
             yield PageMenuEntry(
                 title=_("Audit log"),
-                icon_name="auditlog",
+                icon_name=StaticIcon(IconNames.auditlog),
                 item=make_simple_link(
                     make_object_audit_log_url(make_user_object_ref(self._user_id))
                 ),
@@ -860,7 +874,7 @@ class ModeEditUser(WatoMode):
         if not self._is_new_user:
             yield PageMenuEntry(
                 title=_("Remove two-factor authentication"),
-                icon_name="2fa",
+                icon_name=StaticIcon(IconNames.twofa),
                 item=make_simple_link(
                     make_confirm_delete_link(
                         url=make_action_link(
@@ -1436,7 +1450,7 @@ class ModeEditUser(WatoMode):
                 "javascript:cmk.wato.randomize_secret('automation_secret', '16', '%s');"
                 % _("Copied secret to clipboard"),
                 _("Create random secret and copy secret to clipboard"),
-                "random",
+                StaticIcon(IconNames.random),
             )
             html.close_b()
             html.close_div()

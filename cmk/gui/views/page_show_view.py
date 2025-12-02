@@ -41,11 +41,13 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     ColumnName,
+    IconNames,
     PainterParameters,
     Row,
     Rows,
     SorterName,
     SorterSpec,
+    StaticIcon,
     ViewSpec,
 )
 from cmk.gui.utils.roles import UserPermissions
@@ -238,7 +240,7 @@ def _add_rest_api_menu_entries(view_renderer: ABCViewRenderer, queries: list[str
         entries.append(
             PageMenuEntry(
                 title=_("Query %s resource") % (table,),
-                icon_name="filter",
+                icon_name=StaticIcon(IconNames.filter),
                 item=make_external_link(url),
             )
         )

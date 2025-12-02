@@ -31,6 +31,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
@@ -243,7 +244,7 @@ class JobRenderer:
                     cancel_button=_("Cancel"),
                 ),
                 _("Stop this job"),
-                "disable_test",
+                StaticIcon(IconNames.disable_test),
             )
         if may_delete:
             html.icon_button(
@@ -256,7 +257,7 @@ class JobRenderer:
                     message=_("ID: %s") % job_id,
                 ),
                 _("Delete this job"),
-                "delete",
+                StaticIcon(IconNames.delete),
             )
         html.close_td()
         html.close_tr()
@@ -403,13 +404,13 @@ class JobRenderer:
             html.icon_button(
                 makeactionuri(request, transactions, [(ActionHandler.stop_job_var, job_id)]),
                 _("Stop this job"),
-                "disable_test",
+                StaticIcon(IconNames.disable_test),
             )
         if job_info.may_delete:
             html.icon_button(
                 makeactionuri(request, transactions, [(ActionHandler.delete_job_var, job_id)]),
                 _("Delete this job"),
-                "delete",
+                StaticIcon(IconNames.delete),
             )
         html.close_td()
 

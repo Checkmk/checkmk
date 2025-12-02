@@ -25,6 +25,7 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
     FilterInvText,
 )
+from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDValue
@@ -49,7 +50,7 @@ SortFunction = Callable[[InvValue, InvValue], int]
 class InventoryHintSpec(TypedDict, total=False):
     title: str | LazyString
     short: str | LazyString
-    icon: str
+    icon: DynamicIconName
     paint: str
     view: str
     keyorder: Sequence[str]

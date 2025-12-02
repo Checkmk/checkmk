@@ -15,7 +15,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
+from cmk.gui.type_defs import ActionResult, DynamicIconName, HTTPVariables, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
@@ -55,7 +55,7 @@ class ModeSearch(WatoMode):
             form_name="edit_host",
             button_name="_save",
             save_title=_("Submit"),
-            save_icon="search",
+            save_icon=DynamicIconName("search"),
             save_is_enabled=True,
         )
 

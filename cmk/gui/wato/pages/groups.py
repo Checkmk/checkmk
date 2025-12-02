@@ -33,7 +33,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -99,7 +99,7 @@ class ModeGroups(WatoMode, abc.ABC):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add group"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [("mode", "edit_%s_group" % self.type_name)]
@@ -115,7 +115,7 @@ class ModeGroups(WatoMode, abc.ABC):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Rules"),
-                                    icon_name="rulesets",
+                                    icon_name=StaticIcon(IconNames.rulesets),
                                     item=make_simple_link(self._rules_url()),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -197,9 +197,9 @@ class ModeGroups(WatoMode, abc.ABC):
         clone_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("clone", name)]
         )
-        html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(clone_url, _("Create a copy of this group"), "clone")
-        html.icon_button(delete_url, _("Delete"), "delete")
+        html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
+        html.icon_button(clone_url, _("Create a copy of this group"), StaticIcon(IconNames.clone))
+        html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
         table.cell(_("Name"), name)
         table.cell(_("Alias"), group["alias"])
@@ -353,7 +353,7 @@ class ModeHostgroups(ModeGroups):
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Service groups"),
-            icon_name="servicegroups",
+            icon_name=StaticIcon(IconNames.servicegroups),
             item=make_simple_link(folder_preserving_link([("mode", "service_groups")])),
         )
 
@@ -383,7 +383,7 @@ class ModeServicegroups(ModeGroups):
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Host groups"),
-            icon_name="hostgroups",
+            icon_name=StaticIcon(IconNames.hostgroups),
             item=make_simple_link(folder_preserving_link([("mode", "host_groups")])),
         )
 
@@ -415,7 +415,7 @@ class ModeContactgroups(ModeGroups):
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Users"),
-            icon_name="users",
+            icon_name=StaticIcon(IconNames.users),
             item=make_simple_link(folder_preserving_link([("mode", "users")])),
         )
 

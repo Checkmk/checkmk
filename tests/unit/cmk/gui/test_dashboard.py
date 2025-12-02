@@ -21,6 +21,7 @@ from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.htmllib.html import html
+from cmk.gui.type_defs import DynamicIconName
 from cmk.utils import paths
 from tests.testlib.unit.utils import reset_registries
 
@@ -151,7 +152,7 @@ TEST_DASHBOARD = DashboardConfig(
         "title": "Test",
         "topic": "problems",
         "sort_index": 5,
-        "icon": "dashboard_problems",
+        "icon": DynamicIconName("dashboard_problems"),
         "description": "",
         "dashlets": [],
         "owner": UserId.builtin(),

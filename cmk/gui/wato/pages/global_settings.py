@@ -50,7 +50,7 @@ from cmk.gui.search import (
     MatchItemGeneratorRegistry,
     MatchItems,
 )
-from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
+from cmk.gui.type_defs import ActionResult, GlobalSettings, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -178,7 +178,9 @@ class ABCGlobalSettingsMode(WatoMode):
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Show only modified settings"),
-            icon_name="toggle_on" if self._show_only_modified else "toggle_off",
+            icon_name=StaticIcon(IconNames.toggle_on)
+            if self._show_only_modified
+            else StaticIcon(IconNames.toggle_off),
             item=make_simple_link(
                 makeactionuri(
                     request,
@@ -365,7 +367,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         menu.dropdowns[0].topics[0].entries.append(
             PageMenuEntry(
                 title=_("Remove explicit setting") if value == defvalue else _("Reset to default"),
-                icon_name="reset",
+                icon_name=StaticIcon(IconNames.reset),
                 item=make_confirmed_form_submit_link(
                     form_name="value_editor",
                     button_name="_reset",
@@ -597,7 +599,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Sites"),
-            icon_name="sites",
+            icon_name=StaticIcon(IconNames.sites),
             item=make_simple_link("wato.py?mode=sites"),
         )
 

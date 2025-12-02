@@ -39,6 +39,8 @@ from cmk.crypto.secrets import Secret
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDPath
+from cmk.shared_typing.icon import IconNames as IconNames
+from cmk.shared_typing.icon import IconSizes as IconSizes
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
@@ -296,7 +298,7 @@ class Visual(TypedDict):
     topic: str
     sort_index: int
     is_show_more: bool
-    icon: Icon | None
+    icon: DynamicIcon | None
     hidden: bool
     hidebutton: bool
     public: VisualPublic
@@ -611,12 +613,21 @@ class SetOnceDict(dict[K, V]):
         raise NotImplementedError("Deleting items are not supported.")
 
 
+DynamicIconName = NewType("DynamicIconName", str)
+
+
 class _Icon(TypedDict):
-    icon: str
+    icon: DynamicIconName
     emblem: str | None
 
 
-Icon = str | _Icon
+DynamicIcon = DynamicIconName | _Icon
+
+
+@dataclass(frozen=True)
+class StaticIcon:
+    icon: IconNames
+    emblem: str | None = None
 
 
 SearchQuery = str
@@ -751,7 +762,7 @@ GlobalSettings = Mapping[str, Any]
 
 
 class IconSpec(TypedDict):
-    icon: str
+    icon: DynamicIconName
     title: NotRequired[str]
     url: NotRequired[tuple[str, str]]
     toplevel: NotRequired[bool]

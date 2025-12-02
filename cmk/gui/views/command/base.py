@@ -14,7 +14,7 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.page_menu import PageMenuVue
 from cmk.gui.permissions import Permission
-from cmk.gui.type_defs import Row, Rows
+from cmk.gui.type_defs import DynamicIconName, Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.livestatus_client import Command as LivestatusCommand
@@ -64,7 +64,7 @@ class Command(abc.ABC):
         deny_button: LazyString | None = None,
         deny_js_function: str | None = None,
         affected_output_cb: Callable[[int, Literal["HOST", "SVC"]], HTML] | None = None,
-        icon_name: str = "commands",
+        icon_name: DynamicIconName = DynamicIconName("commands"),
         is_show_more: bool = False,
         is_shortcut: bool = False,
         is_suggested: bool = False,

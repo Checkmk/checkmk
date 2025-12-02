@@ -22,7 +22,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import DynamicIconName, IconNames, Row, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
@@ -213,7 +213,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         html.icon_button(
             url=None,
             title=_("Assume another state for this item (reload page to activate)"),
-            icon="assume_%s" % current_state,
+            icon=DynamicIconName("assume_%s" % current_state),
             onclick="cmk.bi.toggle_assumption(this, '{}', '{}', '{}');".format(
                 site, host, service.replace("\\", "\\\\") if service else ""
             ),
@@ -271,7 +271,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                 html.icon_button(
                     tree[2]["docu_url"],
                     _("Context information about this rule"),
-                    "url",
+                    StaticIcon(IconNames.url),
                     target="_blank",
                 )
                 html.write_text_permissive("&nbsp;")
@@ -371,24 +371,24 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         # TODO: Check whehter tree[0]["in_downtime"] == 2 is possible at all. Seems like this is
         #       deprecated and that by now the "in_downtime" field holds a boolean value
         if tree[0]["in_downtime"] == 2:
-            icon_name = "downtime"
+            icon_name = StaticIcon(IconNames.downtime)
             icon_title = _("This element is currently in a scheduled downtime.")
 
         elif tree[0]["in_downtime"] == 1:
             # only display host downtime if the service has no own downtime
-            icon_name = "downtime"
+            icon_name = StaticIcon(IconNames.downtime)
             icon_title = _("One of the subelements is in a scheduled downtime.")
 
         if tree[0]["acknowledged"]:
-            icon_name = "ack"
+            icon_name = StaticIcon(IconNames.ack)
             icon_title = _("This problem has been acknowledged.")
 
         if not tree[0]["in_service_period"]:
-            icon_name = "outof_serviceperiod"
+            icon_name = StaticIcon(IconNames.outof_serviceperiod)
             icon_title = _("This element is currently not in its service period.")
 
         if icon_name and icon_title:
-            html.icon(icon_name, title=icon_title, class_=["icon", "bi"])
+            html.static_icon(icon_name, title=icon_title, css_classes=["icon", "bi"])
         try:
             yield
         finally:

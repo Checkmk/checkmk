@@ -19,7 +19,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.main_menu_types import MainMenuItem, MainMenuTopic
 from cmk.gui.sites import SiteStatus, states
-from cmk.gui.type_defs import Choices, Icon, Visual
+from cmk.gui.type_defs import Choices, DynamicIcon, IconNames, StaticIcon, Visual
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
@@ -83,9 +83,12 @@ def bulletlink(text: str, url: str, target: str = "main", onclick: str | None = 
     html.close_li()
 
 
-def iconlink(text: str, url: str, icon: Icon) -> None:
+def iconlink(text: str, url: str, icon: StaticIcon | DynamicIcon) -> None:
     html.open_a(class_=["iconlink", "link"], target="main", href=url)
-    html.icon(icon, cssclass="inline")
+    if isinstance(icon, StaticIcon):
+        html.static_icon(icon, css_classes=["inline"])
+    else:
+        html.dynamic_icon(icon, css_classes=["inline"])
     html.write_text_permissive(text)
     html.close_a()
     html.br()
@@ -262,7 +265,7 @@ def _show_topic(treename: str, topic: MainMenuTopic, show_item_icons: bool) -> N
         for item in get_main_menu_items_prefixed_by_segment(topic):
             if show_item_icons:
                 html.open_li(class_=["sidebar"] + (["show_more_mode"] if item.is_show_more else []))
-                iconlink(item.title, item.url, item.icon or "icon_missing")
+                iconlink(item.title, item.url, item.icon or StaticIcon(IconNames.missing))
                 html.close_li()
             else:
                 bulletlink(

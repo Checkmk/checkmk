@@ -20,7 +20,7 @@ from cmk.gui.token_auth import (
     get_token_store,
     TokenId,
 )
-from cmk.gui.type_defs import VisualName
+from cmk.gui.type_defs import IconNames, StaticIcon, VisualName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.visuals._store import TVisual
@@ -60,13 +60,13 @@ def _render_dashboard_buttons(request: Request) -> Callable[[DashboardName, Dash
                         "dashboard.py",
                     ),
                     title=_("Edit layout"),
-                    icon="dashboard",
+                    icon=StaticIcon(IconNames.dashboard),
                 )
             else:
-                html.icon(
-                    icon="dashboard",
+                html.static_icon(
+                    icon=StaticIcon(IconNames.dashboard),
                     title=_("Edit layout only available if header is enabled"),
-                    cssclass="colorless",
+                    css_classes=["colorless"],
                 )
 
     return render

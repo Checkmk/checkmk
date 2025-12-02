@@ -17,7 +17,13 @@ const props = defineProps<DynamicIconAppProps>()
 </template>
 
 <style scoped>
-.cmk-dynamic-icon-app__root {
-  display: inline-block;
+.cmk-dynamic-icon-app__root,
+/* We need to affect emblems which pass the inheritted class down */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+:deep(.cmk-dynamic-icon-app__root) {
+  /* this is to align with the old icon rendering */
+  display: inherit;
+  vertical-align: middle;
+  padding: 0 2px;
 }
 </style>

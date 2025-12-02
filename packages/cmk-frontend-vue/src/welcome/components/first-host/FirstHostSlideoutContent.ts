@@ -40,7 +40,7 @@ export const tabs: FirstHostTabs[] = [
   {
     id: 'deb',
     title: _t('DEB'),
-    icon: 'debian',
+    icon: 'linux-deb',
     steps: [
       {
         stepNumber: 1,
@@ -66,7 +66,7 @@ export const tabs: FirstHostTabs[] = [
   {
     id: 'rpm',
     title: _t('RPM'),
-    icon: 'redhat',
+    icon: 'linux-rpm',
     steps: [
       {
         stepNumber: 1,
@@ -95,7 +95,7 @@ export const tabs: FirstHostTabs[] = [
   {
     id: 'windows',
     title: _t('Windows'),
-    icon: 'windows',
+    icon: 'windows-msi',
     steps: [
       {
         stepNumber: 1,

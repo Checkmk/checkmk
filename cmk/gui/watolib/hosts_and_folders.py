@@ -64,7 +64,9 @@ from cmk.gui.type_defs import (
     CustomHostAttrSpec,
     GlobalSettings,
     HTTPVariables,
+    IconNames,
     SetOnceDict,
+    StaticIcon,
 )
 from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -3973,7 +3975,7 @@ def ajax_popup_host_action_menu(ctx: PageContext) -> None:
     # Clone host
     if request.get_str_input("show_clone_link"):
         html.open_a(href=host.clone_url())
-        html.icon("insert")
+        html.static_icon(StaticIcon(IconNames.insert))
         html.write_text_permissive(_("Clone host"))
         html.close_a()
 
@@ -3986,7 +3988,7 @@ def ajax_popup_host_action_menu(ctx: PageContext) -> None:
             onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.form_submit, %s);"
             % json.dumps([form_name, "_parentscan"]),
         )
-        html.icon("parentscan")
+        html.static_icon(StaticIcon(IconNames.parentscan))
         html.write_text_permissive(_("Detect network parents"))
         html.close_a()
 
@@ -4009,7 +4011,7 @@ def ajax_popup_host_action_menu(ctx: PageContext) -> None:
                 ]
             ),
         )
-        html.icon({"icon": "tls", "emblem": "remove"})
+        html.static_icon(StaticIcon(IconNames.tls, emblem="remove"))
         html.write_text_permissive(_("Remove TLS registration"))
         html.close_a()
 

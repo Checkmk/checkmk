@@ -43,7 +43,14 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
-from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, PermissionName
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
+    HTTPVariables,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+)
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -313,7 +320,7 @@ class ModeFolder(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Refine search"),
-                                    icon_name="search",
+                                    icon_name=StaticIcon(IconNames.search),  # TODO: new icon!
                                     item=make_simple_link(self._folder.url([("mode", "search")])),
                                     is_shortcut=True,
                                 ),
@@ -340,26 +347,26 @@ class ModeFolder(WatoMode):
         ):
             yield PageMenuEntry(
                 title=_("Add host"),
-                icon_name="new",
+                icon_name=StaticIcon(IconNames.new),
                 item=make_simple_link(self._folder.url([("mode", "newhost")])),
                 is_shortcut=True,
                 is_suggested=True,
             )
             yield PageMenuEntry(
                 title=_("Add cluster"),
-                icon_name="new_cluster",
+                icon_name=StaticIcon(IconNames.new_cluster),
                 item=make_simple_link(self._folder.url([("mode", "newcluster")])),
             )
             yield PageMenuEntry(
                 title=_("Import hosts via CSV file"),
-                icon_name="bulk_import",
+                icon_name=StaticIcon(IconNames.bulk_import),
                 item=make_simple_link(self._folder.url([("mode", "bulk_import")])),
             )
 
         if user.may("wato.services"):
             yield PageMenuEntry(
                 title=_("Run bulk service discovery"),
-                icon_name="services",
+                icon_name=StaticIcon(IconNames.services),
                 item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
                 disabled_tooltip=add_host_tooltip_text,
                 is_enabled=folder_or_subfolder_has_hosts,
@@ -368,7 +375,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.rename_hosts"):
             yield PageMenuEntry(
                 title=_("Rename multiple hosts"),
-                icon_name="rename_host",
+                icon_name=StaticIcon(IconNames.rename_host),
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
                 disabled_tooltip=add_host_tooltip_text,
                 is_enabled=folder_or_subfolder_has_hosts,
@@ -377,7 +384,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name={"icon": "tls", "emblem": "remove"},
+                icon_name=StaticIcon(IconNames.tls, emblem="remove"),
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_folder",
@@ -400,7 +407,7 @@ class ModeFolder(WatoMode):
         ):
             yield PageMenuEntry(
                 title=_("Detect network parent hosts"),
-                icon_name="parentscan",
+                icon_name=StaticIcon(IconNames.parentscan),
                 item=make_simple_link(self._folder.url([("mode", "parentscan"), ("all", "1")])),
                 disabled_tooltip=add_host_tooltip_text,
                 is_enabled=folder_or_subfolder_has_hosts,
@@ -409,7 +416,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.random_hosts"):
             yield PageMenuEntry(
                 title=_("Add random hosts"),
-                icon_name="random",
+                icon_name=StaticIcon(IconNames.random),
                 item=make_simple_link(self._folder.url([("mode", "random_hosts")])),
             )
 
@@ -425,7 +432,7 @@ class ModeFolder(WatoMode):
         if not self._folder.locked_hosts() and user.may("wato.edit_hosts"):
             yield PageMenuEntry(
                 title=_("Edit attributes"),
-                icon_name="edit",
+                icon_name=StaticIcon(IconNames.edit),
                 item=make_form_submit_link(
                     form_name="hosts",
                     button_name="_bulk_edit",
@@ -437,7 +444,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.services"):
             yield PageMenuEntry(
                 title=_("Run bulk service discovery"),
-                icon_name="services",
+                icon_name=StaticIcon(IconNames.services),
                 item=make_form_submit_link(
                     form_name="hosts",
                     button_name="_bulk_inventory",
@@ -450,7 +457,7 @@ class ModeFolder(WatoMode):
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
                 yield PageMenuEntry(
                     title=_("Move to other folder"),
-                    icon_name="move",
+                    icon_name=StaticIcon(IconNames.move),
                     name="move_rules",
                     item=PageMenuPopup(self._render_bulk_move_form()),
                     disabled_tooltip=add_host_or_subfolder_tooltip_text,
@@ -460,7 +467,7 @@ class ModeFolder(WatoMode):
             if user.may("wato.parentscan"):
                 yield PageMenuEntry(
                     title=_("Detect network parent hosts"),
-                    icon_name="parentscan",
+                    icon_name=StaticIcon(IconNames.parentscan),
                     item=make_form_submit_link(
                         form_name="hosts",
                         button_name="_parentscan",
@@ -472,7 +479,7 @@ class ModeFolder(WatoMode):
             if user.may("wato.edit_hosts"):
                 yield PageMenuEntry(
                     title=_("Remove explicit attribute settings"),
-                    icon_name="cleanup",
+                    icon_name=StaticIcon(IconNames.cleanup),
                     item=make_form_submit_link(
                         form_name="hosts",
                         button_name="_bulk_cleanup",
@@ -484,7 +491,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name={"icon": "tls", "emblem": "remove"},
+                icon_name=StaticIcon(IconNames.tls, emblem="remove"),
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_selection",
@@ -500,7 +507,7 @@ class ModeFolder(WatoMode):
         if not self._folder.locked_hosts() and user.may("wato.manage_hosts"):
             yield PageMenuEntry(
                 title=_("Delete hosts"),
-                icon_name="delete",
+                icon_name=StaticIcon(IconNames.delete),
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_bulk_delete",
@@ -517,7 +524,7 @@ class ModeFolder(WatoMode):
         if self._folder.permissions.may("read"):
             yield PageMenuEntry(
                 title=_("Properties"),
-                icon_name="edit",
+                icon_name=StaticIcon(IconNames.edit),
                 item=make_simple_link(self._folder.edit_url(backfolder=self._folder)),
             )
 
@@ -525,7 +532,7 @@ class ModeFolder(WatoMode):
             if self._folder.permissions.may("write") and user.may("wato.manage_folders"):
                 yield PageMenuEntry(
                     title=_("Add folder"),
-                    icon_name="newfolder",
+                    icon_name=StaticIcon(IconNames.newfolder),
                     item=make_simple_link(self._folder.url([("mode", "newfolder")])),
                     is_shortcut=True,
                     is_suggested=True,
@@ -536,7 +543,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.rulesets") or user.may("wato.seeall"):
             yield PageMenuEntry(
                 title=_("Rules"),
-                icon_name="rulesets",
+                icon_name=StaticIcon(IconNames.rulesets),
                 item=make_simple_link(
                     folder_preserving_link(
                         [
@@ -553,34 +560,34 @@ class ModeFolder(WatoMode):
         if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
-                icon_name="auditlog",
+                icon_name=StaticIcon(IconNames.auditlog),
                 item=make_simple_link(make_object_audit_log_url(self._folder.object_ref())),
             )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Tags"),
-            icon_name="tag",
+            icon_name=StaticIcon(IconNames.tag),
             item=make_simple_link(folder_preserving_link([("mode", "tags")])),
         )
 
         yield PageMenuEntry(
             title=_("Custom host attributes"),
-            icon_name="custom_attr",
+            icon_name=StaticIcon(IconNames.custom_attr),
             item=make_simple_link(folder_preserving_link([("mode", "host_attrs")])),
         )
 
         if user.may("wato.dcd_connections"):
             yield PageMenuEntry(
                 title=_("Dynamic host management"),
-                icon_name="dcd_connections",
+                icon_name=StaticIcon(IconNames.dcd_connections),
                 item=make_simple_link(folder_preserving_link([("mode", "dcd_connections")])),
             )
 
     def _page_menu_entries_search(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Search hosts"),
-            icon_name="search",
+            icon_name=StaticIcon(IconNames.search),  # TODO: new icon!
             item=make_simple_link(folder_preserving_link([("mode", "search")])),
         )
 
@@ -591,7 +598,7 @@ class ModeFolder(WatoMode):
         ]:
             yield PageMenuEntry(
                 title=_("Show %s") % title,
-                icon_name="toggle_on" if setting else "toggle_off",
+                icon_name=StaticIcon(IconNames.toggle_on if setting else IconNames.toggle_off),
                 item=make_simple_link(
                     makeuri(
                         request,
@@ -763,7 +770,7 @@ class ModeFolder(WatoMode):
             reason = self._folder.permissions.reason_why_may_not("read")
             if reason:
                 html.show_message(
-                    html.render_icon("autherr", cssclass="authicon")
+                    html.render_static_icon(StaticIcon(IconNames.autherr), css_classes=["authicon"])
                     + escape_to_html_permissive(reason)
                 )
 
@@ -789,7 +796,7 @@ class ModeFolder(WatoMode):
                             request, [("mode", "newhost"), ("folder", self._folder.path())]
                         ),
                         title=_("Add host to the monitoring"),
-                        icon="new",
+                        icon=StaticIcon(IconNames.new),
                         permission="hosts",
                         description=_(
                             "The host must have the Checkmk agent or SNMP or an API integration prepared."
@@ -800,7 +807,7 @@ class ModeFolder(WatoMode):
                             request, [("mode", "newcluster"), ("folder", self._folder.path())]
                         ),
                         title=_("Create cluster"),
-                        icon="new_cluster",
+                        icon=StaticIcon(IconNames.new_cluster),
                         permission="hosts",
                         description=_(
                             "Use Checkmk clusters if an item can move from one host "
@@ -818,7 +825,7 @@ class ModeFolder(WatoMode):
                             request, [("mode", "newfolder"), ("folder", self._folder.path())]
                         ),
                         title=_("Add folder"),
-                        icon="newfolder",
+                        icon=StaticIcon(IconNames.newfolder),
                         permission="hosts",
                         description=_(
                             "Folders group your hosts, can inherit attributes and can have permissions."
@@ -894,8 +901,10 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder, show_file_names=show_file_names)
             html.close_div()  # hoverarea
         else:
-            html.icon(
-                "autherr", subfolder.permissions.reason_why_may_not("read"), class_=["autherr"]
+            html.static_icon(
+                StaticIcon(IconNames.autherr),
+                title=subfolder.permissions.reason_why_may_not("read"),
+                css_classes=["autherr"],
             )
             html.div("", class_="hoverarea")
 
@@ -923,7 +932,7 @@ class ModeFolder(WatoMode):
         html.icon_button(
             subfolder.edit_url(subfolder.parent()),
             _("Edit the properties of this folder"),
-            "edit",
+            StaticIcon(IconNames.edit),
             id_="edit_" + subfolder.name(),
             cssclass="edit",
             style="display:none",
@@ -951,7 +960,7 @@ class ModeFolder(WatoMode):
                 message=confirm_message,
             ),
             _("Delete this folder"),
-            "delete",
+            StaticIcon(IconNames.delete),
             id_="delete_" + subfolder.name(),
             cssclass="delete",
             style="display:none",
@@ -964,7 +973,10 @@ class ModeFolder(WatoMode):
         permitted_groups, _folder_contact_groups, _use_for_services = subfolder.groups()
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {"alias": pg})["alias"]
-            html.icon("contactgroups", _("Contact groups that have permission on this folder"))
+            html.static_icon(
+                StaticIcon(IconNames.contactgroups),
+                title=_("Contact groups that have permission on this folder"),
+            )
             html.write_text_permissive(" %s" % cgalias)
             html.br()
             if num > 1 and len(permitted_groups) > 4:
@@ -998,10 +1010,10 @@ class ModeFolder(WatoMode):
             raise NotImplementedError()
 
         html.popup_trigger(
-            html.render_icon(
-                "move",
+            html.render_static_icon(
+                StaticIcon(IconNames.move),
                 title=_("Move this %s to another folder") % what_title,
-                cssclass="iconbutton",
+                css_classes=["iconbutton"],
             ),
             ident="move_" + obj.name(),
             method=MethodAjax(
@@ -1123,17 +1135,20 @@ class ModeFolder(WatoMode):
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
-            html.icon("validation_error", msg)
+            html.static_icon(StaticIcon(IconNames.validation_error), title=msg)
             html.nbsp()
 
         if host.is_offline():
-            html.icon("disabled", _("This host is disabled"))
+            html.static_icon(StaticIcon(IconNames.disabled), title=_("This host is disabled"))
             html.nbsp()
 
         if host.is_cluster():
             nodes = host.cluster_nodes()
             assert nodes is not None
-            html.icon("cluster", _("This host is a cluster of %s") % ", ".join(nodes))
+            html.static_icon(
+                StaticIcon(IconNames.cluster),
+                title=_("This host is a cluster of %s") % ", ".join(nodes),
+            )
             html.nbsp()
 
         html.a(
@@ -1157,13 +1172,15 @@ class ModeFolder(WatoMode):
         # Am I authorized?
         reason = host.permissions.reason_why_may_not("read")
         if not reason:
-            icon = "authok"
+            icon = StaticIcon(IconNames.authok)
             title = _("You have permission to this host.")
         else:
-            icon = "autherr"
+            icon = StaticIcon(IconNames.autherr)
             title = reason
 
-        table.cell(_("Auth"), html.render_icon(icon, title), css=["buttons"], sortable=False)
+        table.cell(
+            _("Auth"), html.render_static_icon(icon, title=title), css=["buttons"], sortable=False
+        )
 
         # Permissions and Contact groups - through complete recursion and inhertance
         permitted_groups, host_contact_groups, _use_for_services = host.groups()
@@ -1226,15 +1243,17 @@ class ModeFolder(WatoMode):
 
     def _show_host_actions(self, host: Host) -> None:
         if user.may("wato.edit_hosts") and host.permissions.may("write"):
-            html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
+            html.icon_button(
+                host.edit_url(), _("Edit the properties of this host"), StaticIcon(IconNames.edit)
+            )
         if host.permissions.may("read"):
             if user.may("wato.services"):
                 msg = _("Run service discovery")
             else:
                 msg = _("Display the services of this host")
-            image = "services"
+            image = StaticIcon(IconNames.services)
             if host.discovery_failed():
-                image = "inventory_failed"
+                image = StaticIcon(IconNames.inventory_failed)
                 msg += ". " + _(
                     "The service discovery of this host failed during a previous bulk service discovery."
                 )
@@ -1244,7 +1263,7 @@ class ModeFolder(WatoMode):
             html.icon_button(
                 host.params_url(),
                 _("View the rule based effective parameters of this host"),
-                "rulesets",
+                StaticIcon(IconNames.rulesets),
             )
 
         if not host.locked():
@@ -1280,7 +1299,7 @@ class ModeFolder(WatoMode):
                         ],
                     ),
                     title=_("Delete host"),
-                    icon="delete",
+                    icon=StaticIcon(IconNames.delete),
                 )
 
             self._show_host_actions_menu(host)
@@ -1306,7 +1325,11 @@ class ModeFolder(WatoMode):
                 *[(flag_name, True) for flag_name in action_menu_show_flags],
             ]
             html.popup_trigger(
-                html.render_icon("menu", _("Open the host action menu"), cssclass="iconbutton"),
+                html.render_static_icon(
+                    StaticIcon(IconNames.menu),
+                    title=_("Open the host action menu"),
+                    css_classes=["iconbutton"],
+                ),
                 f"host_action_menu_{host.name()}",
                 MethodAjax(endpoint="host_action_menu", url_vars=url_vars),
             )

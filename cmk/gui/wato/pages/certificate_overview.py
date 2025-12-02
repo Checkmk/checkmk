@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.messaging import get_cert_info
@@ -69,7 +69,7 @@ class CertificateView:
             _("Download"): html.render_icon_button(
                 url=f"data:text/plain;charset=utf-8,{urllib.parse.quote(self.certificate_dump)}",
                 title="download",
-                icon="download",
+                icon=StaticIcon(IconNames.download),
                 download=str(self.stored_location).rsplit("/", maxsplit=1)[-1]
                 if self.stored_location.exists()
                 else "certificate.pem",
@@ -167,7 +167,7 @@ class ModeCertificateOverview(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Trusted certificate authorities for SSL"),
-                                    icon_name="configuration",
+                                    icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
                                         "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities"
                                     ),

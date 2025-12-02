@@ -24,6 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
@@ -46,7 +47,7 @@ from ._helpers import begin_footnote_links, end_footnote_links, iconlink, link
 class BookmarkSpec(TypedDict):
     title: str
     url: str
-    icon: None | str
+    icon: None | DynamicIcon
     topic: None | str
 
 
@@ -95,8 +96,8 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
         return "bookmark_list"
 
     @classmethod
-    def type_icon(cls) -> str:
-        return "bookmark_list"
+    def type_icon(cls) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.bookmark_list)
 
     @classmethod
     def phrase(cls, phrase: pagetypes.PagetypePhrase) -> str:
@@ -116,12 +117,14 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         def bookmark_config_to_vs(
             v: BookmarkSpec | None,
-        ) -> tuple[str, str, str | None, str | None] | None:
+        ) -> tuple[str, str, DynamicIcon | None, str | None] | None:
             if v:
                 return (v["title"], v["url"], v["icon"], v["topic"])
             return v
 
-        def bookmark_vs_to_config(v: tuple[str, str, str | None, str | None]) -> BookmarkSpec:
+        def bookmark_vs_to_config(
+            v: tuple[str, str, DynamicIcon | None, str | None],
+        ) -> BookmarkSpec:
             return {
                 "title": v[0],
                 "url": v[1],
@@ -309,7 +312,7 @@ class Bookmarks(SidebarSnapin):
                 for bookmark in bookmarks:
                     icon = bookmark["icon"]
                     if not icon:
-                        icon = "bookmark_list"
+                        icon = DynamicIconName("bookmark_list")
 
                     iconlink(bookmark["title"], bookmark["url"], icon)
 

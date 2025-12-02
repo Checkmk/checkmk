@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Literal, NamedTuple, override
 
 from cmk.gui.http import Request
-from cmk.gui.type_defs import Icon
+from cmk.gui.type_defs import DynamicIcon, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
@@ -23,7 +23,7 @@ class _MainMenuEntry:
     title: str
     sort_index: int
     is_show_more: bool = False
-    icon: Icon | None = None
+    icon: StaticIcon | DynamicIcon | None = None
 
 
 @dataclass(kw_only=True, slots=True)
@@ -51,7 +51,7 @@ class MainMenuTopic(NamedTuple):
     title: str
     entries: MainMenuTopicEntries
     max_entries: int = 10
-    icon: Icon | None = None
+    icon: StaticIcon | DynamicIcon | None = None
     hide: bool = False
 
 
@@ -68,7 +68,7 @@ class MainMenuVueApp:
 class MainMenu(NamedTuple):
     name: str
     title: str | LazyString
-    icon: Icon
+    icon: StaticIcon | DynamicIcon
     sort_index: int
     topics: Callable[[UserPermissions], list[MainMenuTopic]] | None
     search: ABCMainMenuSearch | None = None

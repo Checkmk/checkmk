@@ -15,14 +15,14 @@ top right of the page.
 from dataclasses import dataclass, field
 
 from cmk.gui.htmllib.html import html
-from cmk.gui.type_defs import CSSSpec
+from cmk.gui.type_defs import CSSSpec, StaticIcon
 from cmk.gui.utils.html import HTML
 
 
 @dataclass
 class PageState:
     text: str | HTML
-    icon_name: str | None = None
+    icon_name: StaticIcon | None = None
     css_classes: CSSSpec = field(default_factory=list)
     url: str | None = None
     tooltip_text: str = ""
@@ -43,7 +43,7 @@ class PageStateRenderer:
         html.div(page_state.text, class_="text_container")
         if page_state.icon_name:
             html.div(
-                html.render_icon(page_state.icon_name, id_="page_state_icon"),
+                html.render_static_icon(page_state.icon_name, id_="page_state_icon"),
                 class_="icon_container",
             )
 

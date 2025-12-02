@@ -28,7 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import (
     connections_by_type,
@@ -86,7 +86,7 @@ class ModeUserMigrate(WatoMode):
                                 PageMenuEntry(
                                     title=_("Migrate users"),
                                     shortcut_title=_("Migrate selected users"),
-                                    icon_name="migrate_users",
+                                    icon_name=StaticIcon(IconNames.migrate_users),
                                     item=make_confirmed_form_submit_link(
                                         form_name="user_migrate",
                                         button_name="_migrate",
@@ -115,7 +115,7 @@ class ModeUserMigrate(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Users"),
-                                    icon_name="users",
+                                    icon_name=StaticIcon(IconNames.users),
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,

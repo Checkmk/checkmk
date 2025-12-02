@@ -17,7 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
 from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import Row, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.servicename import ServiceName
 
@@ -66,7 +66,10 @@ def ajax_popup_action_menu(ctx: PageContext) -> None:
                     url = "javascript:void(0);"
                 html.open_a(href=url, target=target_frame, onclick=onclick)
 
-            html.icon(icon.icon_name)
+            if isinstance(icon.icon_name, StaticIcon):
+                html.static_icon(icon.icon_name)
+            else:
+                html.dynamic_icon(icon.icon_name)
             if icon.title:
                 html.write_text_permissive(icon.title)
             else:

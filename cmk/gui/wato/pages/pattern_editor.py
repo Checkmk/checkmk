@@ -36,7 +36,7 @@ from cmk.gui.search import (
     MatchItems,
 )
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -148,7 +148,7 @@ class ModePatternEditor(WatoMode):
 
         yield PageMenuEntry(
             title=_("Host log files"),
-            icon_name="logwatch",
+            icon_name=StaticIcon(IconNames.logwatch),
             item=make_simple_link(
                 makeuri_contextless(request, [("host", self._hostname)], filename="logwatch.py")
             ),
@@ -157,7 +157,7 @@ class ModePatternEditor(WatoMode):
         if self._item:
             yield PageMenuEntry(
                 title=("Show log file"),
-                icon_name="logwatch",
+                icon_name=StaticIcon(IconNames.logwatch),
                 item=make_simple_link(
                     makeuri_contextless(
                         request,
@@ -277,7 +277,7 @@ class ModePatternEditor(WatoMode):
                     for state, pattern, comment in pattern_list:
                         match_class = ""
                         disp_match_txt = HTML.empty()
-                        match_img = ""
+                        match_img = StaticIcon(IconNames.trans)
                         if rule_matches:
                             # Applies to the given host/service
                             matched = re.search(pattern, self._match_txt)
@@ -296,7 +296,7 @@ class ModePatternEditor(WatoMode):
                                 if not already_matched:
                                     # First match
                                     match_class = "match first"
-                                    match_img = "checkmark"
+                                    match_img = StaticIcon(IconNames.checkmark)
                                     match_title = _(
                                         "This log file pattern matches first and will be used for "
                                         "defining the state of the given line."
@@ -305,25 +305,25 @@ class ModePatternEditor(WatoMode):
                                 else:
                                     # subsequent match
                                     match_class = "match"
-                                    match_img = "checkmark_orange"
+                                    match_img = StaticIcon(IconNames.checkmark_orange)
                                     match_title = _(
                                         "This log file pattern matches but another matched first."
                                     )
                             else:
-                                match_img = "hyphen"
+                                match_img = StaticIcon(IconNames.hyphen)
                                 match_title = _(
                                     "This log file pattern does not match the given string."
                                 )
                         else:
                             # rule does not match
-                            match_img = "hyphen"
+                            match_img = StaticIcon(IconNames.hyphen)
                             match_title = _("The rule conditions do not match.")
 
                         table.row()
                         table.cell("#", css=["narrow nowrap"])
                         html.write_text_permissive(rulenr)
                         table.cell(_("Match"))
-                        html.icon(match_img, match_title)
+                        html.static_icon(match_img, title=match_title)
 
                         cls = (
                             ["state%d" % logwatch.level_state(state), "fillbackground"]
@@ -357,7 +357,7 @@ class ModePatternEditor(WatoMode):
                             ("rule_id", rule.id),
                         ]
                     )
-                    html.icon_button(edit_url, _("Edit this rule"), "edit")
+                    html.icon_button(edit_url, _("Edit this rule"), StaticIcon(IconNames.edit))
 
     def _analyze_rule_matches(
         self,

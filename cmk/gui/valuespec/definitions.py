@@ -96,8 +96,11 @@ from cmk.gui.type_defs import (
     ChoiceId,
     Choices,
     ChoiceText,
+    DynamicIcon,
+    DynamicIconName,
     GroupedChoices,
-    Icon,
+    IconNames,
+    StaticIcon,
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
@@ -2318,7 +2321,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         empty_text: str | None = None,
         sort_by: int | None = None,
         first_element_vs: ValueSpec[T] | None = None,
-        add_icon: Icon | None = None,
+        add_icon: StaticIcon | None = None,
         ignore_complain: bool = False,
         # ValueSpec
         title: str | None = None,
@@ -2433,7 +2436,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
                 onclick=onclick,
                 target="",
             )
-            html.icon(self._add_icon)
+            html.static_icon(self._add_icon)
             html.span(self._add_label)
             html.close_a()
         else:
@@ -2559,7 +2562,9 @@ class ListOf(ValueSpec[ListOfModel[T]]):
 
     def _del_button(self, vp: str, nr: str) -> None:
         js = f"cmk.valuespecs.listof_delete({json.dumps(vp)}, {json.dumps(nr)})"
-        html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
+        html.icon_button(
+            "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
+        )
 
     def canonical_value(self) -> ListOfModel[T]:
         return []
@@ -2685,7 +2690,9 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
 
     def del_button(self, varprefix: str, ident: str) -> None:
         js = f"cmk.valuespecs.listofmultiple_del({json.dumps(varprefix)}, {json.dumps(ident)})"
-        html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
+        html.icon_button(
+            "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
+        )
 
     def render_input(self, varprefix: str, value: ListOfMultipleModel) -> None:
         # Beware: the 'value' is only the default value in case the form
@@ -7061,13 +7068,13 @@ class PasswordSpec(Password):
             html.icon_button(
                 "#",
                 _("Randomize password"),
-                "random",
+                StaticIcon(IconNames.random),
                 onclick=f"cmk.valuespecs.passwordspec_randomize(this, {self._pwlen});",
             )
         html.icon_button(
             "#",
             _("Show/hide password"),
-            "showhide",
+            StaticIcon(IconNames.showhide),
             onclick="cmk.valuespecs.toggle_hidden(this);",
         )
 
@@ -7595,7 +7602,7 @@ class LabelGroup(ListOf):
             magic=self._magic,
             add_label=add_label if add_label is not None else _("Add to query"),
             del_label=self.del_label,
-            add_icon="plus",
+            add_icon=StaticIcon(IconNames.plus),
             ignore_complain=True,
             movable=False,
             default_value=[("and", self._sub_vs.default_value())],
@@ -7625,7 +7632,9 @@ class LabelGroup(ListOf):
             f"cmk.valuespecs.label_group_delete({json.dumps(vp)}, {json.dumps(nr)},"
             f"{json.dumps(choices_or_label)}, {json.dumps(self._show_empty_group_by_default)});"
         )
-        html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
+        html.icon_button(
+            "#", self._del_label, StaticIcon(IconNames.close), onclick=js, class_=["delete_button"]
+        )
 
     def title(self) -> str | None:
         if self._title:
@@ -7687,14 +7696,14 @@ class LabelGroups(LabelGroup):
 
 
 # https://github.com/python/mypy/issues/12368
-IconSelectorModel = None | Icon
+IconSelectorModel = None | DynamicIcon
 
 
 class IconSelector(ValueSpec[IconSelectorModel]):
     def __init__(
         self,
         allow_empty: bool = True,
-        empty_img: str = "empty",
+        empty_img: IconNames = IconNames.empty,
         show_builtin_icons: bool = True,
         with_emblem: bool = True,
         # ValueSpec
@@ -7754,15 +7763,17 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
 
-    def _render_icon(self, icon: str, onclick: str = "", title: str = "", id_: str = "") -> HTML:
+    def _render_icon(
+        self, icon: str | None, onclick: str = "", title: str = "", id_: str = ""
+    ) -> HTML:
         if not icon:
             icon = self._empty_img
 
         if id_.endswith("_emblem_img"):
-            icon_tag = html.render_emblem(icon, title=title, id_=id_)
+            icon_tag = html.render_static_icon(StaticIcon(IconNames[icon]), title=title, id_=id_)
             html.write_text_permissive(" + ")
         else:
-            icon_tag = html.render_icon(icon, title=title, id_=id_)
+            icon_tag = html.render_icon(DynamicIconName(icon), title=title, id_=id_)
 
         if onclick:
             icon_tag = HTMLWriter.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
@@ -7772,7 +7783,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
     def _transform_icon_str(self, value: IconSelectorModel) -> _Icon:
         if isinstance(value, dict):
             return value
-        return {"icon": "empty" if value is None else value, "emblem": None}
+        return {"icon": DynamicIconName("empty") if value is None else value, "emblem": None}
 
     def render_input(self, varprefix: str, value: IconSelectorModel) -> None:
         icon_dict = self._transform_icon_str(value)
@@ -7895,7 +7906,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         return None
 
     def from_html_vars(self, varprefix: str) -> IconSelectorModel:
-        icon = self._from_html_vars(varprefix)
+        icon = DynamicIconName(i) if (i := self._from_html_vars(varprefix)) is not None else i
         if not self._with_emblem:
             return icon
 
@@ -7903,7 +7914,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         if not emblem:
             return icon
 
-        return {"icon": "empty" if icon is None else icon, "emblem": emblem}
+        return {"icon": DynamicIconName("empty") if icon is None else icon, "emblem": emblem}
 
     def _from_html_vars(self, varprefix: str) -> str | None:
         icon = request.var(varprefix + "_value")
@@ -8288,7 +8299,7 @@ class _CAInput(ValueSpec[_CAInputModel]):
         html.icon_button(
             url=None,
             title=_("Fetch certificate from server"),
-            icon="host",
+            icon=StaticIcon(IconNames.host),
             onclick="cmk.valuespecs.fetch_ca_from_server(%s)" % json.dumps(varprefix),
         )
         html.div(None, id_=varprefix + "_status")
@@ -8699,7 +8710,7 @@ class RuleComment(TextAreaUnicode):
         html.icon_button(
             None,
             title=_("Prefix the comment with the current date and your user name."),
-            icon="insertdate",
+            icon=StaticIcon(IconNames.insertdate),
             onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" % date_and_user,
         )
         html.close_div()
@@ -8731,7 +8742,7 @@ def DocumentationURL() -> TextInput:
                 "The link will be displayed as an icon in the description on the "
                 "overview page of the related rule set."
             )
-            % html.render_icon("url")
+            % html.render_static_icon(StaticIcon(IconNames.url))
         ),
         size=80,
         validate=_validate_documentation_url,

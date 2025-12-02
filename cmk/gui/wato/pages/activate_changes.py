@@ -49,7 +49,7 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName, ReadOnlySpec
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, ReadOnlySpec, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -106,9 +106,9 @@ def _show_activation_state_messages(title: str, message: str, state: ActivationS
     html.open_span()
     match state:
         case ActivationState.WARNING:
-            html.icon("host_svc_problems_dark")
+            html.static_icon(StaticIcon(IconNames.host_svc_problems_dark))
         case ActivationState.ERROR:
-            html.icon("host_svc_problems")
+            html.static_icon(StaticIcon(IconNames.host_svc_problems))
     html.close_span()
     html.close_div()  # activation_state
 
@@ -191,7 +191,7 @@ class ModeRevertChanges(WatoMode):
         if user.may("wato.sites"):
             yield PageMenuEntry(
                 title=_("Sites"),
-                icon_name="sites",
+                icon_name=StaticIcon(IconNames.sites),
                 item=make_simple_link(
                     makeuri_contextless(
                         request,
@@ -203,7 +203,7 @@ class ModeRevertChanges(WatoMode):
         if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
-                icon_name="auditlog",
+                icon_name=StaticIcon(IconNames.auditlog),
                 item=make_simple_link(folder_preserving_link([("mode", "auditlog")])),
             )
 
@@ -287,7 +287,7 @@ class ModeRevertChanges(WatoMode):
                     " This also includes any changes made since the last activation that did not "
                     "require manual activation (marked with "
                 )
-                + html.render_icon("info_circle")
+                + html.render_static_icon(StaticIcon(IconNames.info_circle))
                 + ")"
             ),
             class_="confirm_info",
@@ -335,18 +335,23 @@ def _change_table(
                 html.write_html(rendered)
 
             if has_been_activated(change):
-                html.icon("info_circle", _("This change is already activated"))
+                html.static_icon(
+                    StaticIcon(IconNames.info_circle), title=_("This change is already activated")
+                )
 
             table.cell(_("Time"), render.date_and_time(change["time"]), css=["narrow nobr"])
             table.cell(_("User"), css=["narrow nobr"])
             html.write_text_permissive(change["user_id"] if change["user_id"] else "")
             if is_foreign_change(change):
-                html.icon("foreign_changes", _("This change has been made by another user"))
+                html.static_icon(
+                    StaticIcon(IconNames.foreign_changes),
+                    title=_("This change has been made by another user"),
+                )
 
             icon_code = (
-                html.render_icon(
-                    "no_revert",
-                    _(
+                html.render_static_icon(
+                    StaticIcon(IconNames.no_revert),
+                    title=_(
                         "Change is not revertible. Activate this change to unblock the reverting of pending changes."
                     ),
                 )
@@ -440,7 +445,7 @@ class ModeActivateChanges(WatoMode):
         if user.may("wato.sites"):
             yield PageMenuEntry(
                 title=_("Sites"),
-                icon_name="sites",
+                icon_name=StaticIcon(IconNames.sites),
                 item=make_simple_link(
                     makeuri_contextless(
                         request,
@@ -452,7 +457,7 @@ class ModeActivateChanges(WatoMode):
         if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
-                icon_name="auditlog",
+                icon_name=StaticIcon(IconNames.auditlog),
                 item=make_simple_link(folder_preserving_link([("mode", "auditlog")])),
             )
 
@@ -483,7 +488,7 @@ class ModeActivateChanges(WatoMode):
 
         yield PageMenuEntry(
             title=_("Revert changes"),
-            icon_name="revert",
+            icon_name=StaticIcon(IconNames.revert),
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -503,10 +508,10 @@ class ModeActivateChanges(WatoMode):
 
         yield PageMenuEntry(
             title=_("Activate on selected sites"),
-            icon_name={
-                "icon": "save",
-                "emblem": "refresh",
-            },
+            icon_name=StaticIcon(
+                IconNames.save,
+                emblem="refresh",
+            ),
             item=make_javascript_link('cmk.activation.activate_changes("selected")'),
             name="activate_selected",
             is_shortcut=True,
@@ -763,7 +768,9 @@ class ModeActivateChanges(WatoMode):
 
                 if user.may("wato.sites"):
                     edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
-                    html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
+                    html.icon_button(
+                        edit_url, _("Edit the properties of this site"), StaticIcon(IconNames.edit)
+                    )
 
                 # State
                 if can_activate_all and need_sync:
@@ -772,7 +779,7 @@ class ModeActivateChanges(WatoMode):
                         id_="activate_%s" % site_id,
                         cssclass="activate_site",
                         title=_("This site is not update and needs a replication. Start it now."),
-                        icon="need_replicate",
+                        icon=StaticIcon(IconNames.need_replicate),
                         onclick='cmk.activation.activate_changes("site", "%s")' % site_id,
                     )
 
@@ -784,19 +791,21 @@ class ModeActivateChanges(WatoMode):
                         title=_(
                             "This site needs a restart for activating the changes. Start it now."
                         ),
-                        icon="need_restart",
+                        icon=StaticIcon(IconNames.need_restart),
                         onclick='cmk.activation.activate_changes("site", "%s")' % site_id,
                     )
 
                 if can_activate_all and not need_action:
-                    html.icon("checkmark", _("This site is up-to-date."))
+                    html.static_icon(
+                        StaticIcon(IconNames.checkmark), title=_("This site is up-to-date.")
+                    )
 
                 site_url = site.get("multisiteurl")
                 if site_url:
                     html.icon_button(
                         site_url,
                         _("Open this site's local web user interface"),
-                        "url",
+                        StaticIcon(IconNames.url),
                         target="_blank",
                     )
 
@@ -893,16 +902,16 @@ def render_object_ref_as_icon(object_ref: ObjectRef | None) -> HTML | None:
         return None
 
     icons = {
-        ObjectRefType.Host: "host",
-        ObjectRefType.Folder: "folder",
-        ObjectRefType.User: "users",
-        ObjectRefType.Rule: "rule",
-        ObjectRefType.Ruleset: "rulesets",
+        ObjectRefType.Host: StaticIcon(IconNames.host),
+        ObjectRefType.Folder: StaticIcon(IconNames.folder),
+        ObjectRefType.User: StaticIcon(IconNames.users),
+        ObjectRefType.Rule: StaticIcon(IconNames.rule),
+        ObjectRefType.Ruleset: StaticIcon(IconNames.rulesets),
     }
 
     return HTMLWriter.render_a(
-        content=html.render_icon(
-            icons.get(object_ref.object_type, "link"),
+        content=html.render_static_icon(
+            icons.get(object_ref.object_type, StaticIcon(IconNames.link)),
             title=f"{object_ref.object_type.name}: {title}" if title else None,
         ),
         href=url,

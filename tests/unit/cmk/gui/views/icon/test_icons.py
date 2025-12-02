@@ -12,7 +12,7 @@ import pytest
 import cmk.ccc.version as cmk_version
 import cmk.gui.views
 from cmk.gui.config import active_config
-from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
+from cmk.gui.type_defs import BuiltinIconVisibility, DynamicIconName, IconSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import (
     Icon,
@@ -173,7 +173,7 @@ def test_config_icon_registered(monkeypatch: pytest.MonkeyPatch) -> None:
             {
                 "config_icon": IconSpec(
                     {
-                        "icon": "icon",
+                        "icon": DynamicIconName("icon"),
                         "title": "Config Icon",
                         "sort_index": 10,
                         "toplevel": True,

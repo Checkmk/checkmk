@@ -19,7 +19,7 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
+from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, IconNames, Row, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
@@ -175,7 +175,7 @@ def _render_url(token: str, last_char: str) -> Iterator[str]:
         elif token.endswith("):"):
             url, rest = token[:-2], "):"
 
-    yield str(html.render_icon_button(url, url, "link", target="_blank"))
+    yield str(html.render_icon_button(url, url, StaticIcon(IconNames.link), target="_blank"))
     if rest is not None:
         yield escaping.escape_attribute(rest)
 
@@ -419,7 +419,7 @@ def render_community_upgrade_button() -> None:
     html.icon_button(
         url="https://checkmk.com/pricing?services=3000?utm_source=checkmk_product&utm_medium=referral&utm_campaign=commercial_editions_link",
         title=_("Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"),
-        icon="upgrade",
+        icon=StaticIcon(IconNames.upgrade),
         target="_blank",
         cssclass="upgrade",
     )

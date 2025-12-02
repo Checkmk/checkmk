@@ -28,8 +28,9 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.type_defs import (
     AnnotatedUserId,
     DashboardEmbeddedViewSpec,
+    DynamicIcon,
+    DynamicIconName,
     FilterName,
-    Icon,
     SingleInfos,
     VisualContext,
     VisualPublic,
@@ -63,7 +64,7 @@ class DashboardIcon:
     )
 
     @classmethod
-    def from_internal(cls, icon: Icon | None) -> Self | ApiOmitted:
+    def from_internal(cls, icon: DynamicIcon | None) -> Self | ApiOmitted:
         if icon is None:
             return ApiOmitted()
         if isinstance(icon, str):
@@ -71,12 +72,12 @@ class DashboardIcon:
         return cls(name=icon["icon"], emblem=icon.get("emblem") or ApiOmitted())
 
     @classmethod
-    def to_internal(cls, icon: Self | ApiOmitted) -> Icon | None:
+    def to_internal(cls, icon: Self | ApiOmitted) -> DynamicIcon | None:
         if isinstance(icon, ApiOmitted):
             return None
         if isinstance(icon.emblem, ApiOmitted):
-            return icon.name
-        return {"icon": icon.name, "emblem": icon.emblem}
+            return DynamicIconName(icon.name)
+        return {"icon": DynamicIconName(icon.name), "emblem": icon.emblem}
 
 
 @api_model

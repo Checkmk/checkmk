@@ -18,6 +18,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import requested_file_name
 from cmk.utils import paths
 
@@ -55,7 +56,7 @@ def _page_menu_entries_related(
     if page_name != "user_change_pw" and not is_cse_edition:
         yield PageMenuEntry(
             title=_("Change password"),
-            icon_name="topic_change_password",
+            icon_name=StaticIcon(IconNames.topic_change_password),
             item=make_simple_link("user_change_pw.py"),
             is_shortcut=show_shortcuts,
         )
@@ -68,7 +69,7 @@ def _page_menu_entries_related(
     ):
         yield PageMenuEntry(
             title=_("Edit two-factor authentication"),
-            icon_name="topic_2fa",
+            icon_name=StaticIcon(IconNames.topic_2fa),
             item=make_simple_link("user_two_factor_overview.py"),
             is_shortcut=show_shortcuts,
         )
@@ -80,7 +81,7 @@ def _page_menu_entries_related(
     ):
         yield PageMenuEntry(
             title=_("Edit profile"),
-            icon_name="topic_profile",
+            icon_name=StaticIcon(IconNames.topic_profile),
             item=make_simple_link("user_profile.py"),
             is_shortcut=show_shortcuts,
         )
@@ -92,7 +93,7 @@ def _page_menu_entries_related(
     ):
         yield PageMenuEntry(
             title=_("Notification rules"),
-            icon_name="topic_events",
+            icon_name=StaticIcon(IconNames.topic_events),
             item=make_simple_link("wato.py?mode=user_notifications_p"),
             is_shortcut=show_shortcuts,
         )

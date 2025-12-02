@@ -9,7 +9,7 @@ import { type IconNames } from 'cmk-shared-typing/typescript/icon'
 import type { emblems, oneColorIcons, twoColorIcons } from './icons.constants'
 import type { cmkIconVariants, cmkMultitoneIconVariants, iconSizes } from './icons.constants'
 
-export type SimpleIcons = IconNames[number]
+export type SimpleIcons = IconNames
 export type IconEmblems = (typeof emblems)[number]
 export type OneColorIcons = (typeof oneColorIcons)[number]
 export type TwoColorIcons = (typeof twoColorIcons)[number]

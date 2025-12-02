@@ -54,6 +54,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
@@ -228,7 +229,7 @@ class PageCrash(Page):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Download"),
-                                    icon_name="download",
+                                    icon_name=StaticIcon(IconNames.download),
                                     item=make_simple_link(
                                         makeuri(
                                             request,
@@ -595,7 +596,7 @@ class ReportRendererCheck(ABCReportRenderer):
         )
         yield PageMenuEntry(
             title=_("Host status"),
-            icon_name="status",
+            icon_name=StaticIcon(IconNames.status),
             item=make_simple_link(host_url),
         )
 
@@ -614,7 +615,7 @@ class ReportRendererCheck(ABCReportRenderer):
         )
         yield PageMenuEntry(
             title=_("Service status"),
-            icon_name="status",
+            icon_name=StaticIcon(IconNames.status),
             item=make_simple_link(service_url),
         )
 

@@ -6,7 +6,13 @@
 import cmk.ccc.version as cmk_version
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
+from cmk.gui.type_defs import (
+    ColumnSpec,
+    DashboardEmbeddedViewSpec,
+    DynamicIconName,
+    SorterSpec,
+    VisualLinkSpec,
+)
 from cmk.utils import paths
 
 from .builtin_dashboards import GROW, MAX
@@ -27,7 +33,7 @@ def register_builtin_dashboards(builtin: dict[DashboardName, DashboardConfig]) -
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         main_dashboard = builtin["main"] = builtin.pop("problems")
         main_dashboard["title"] = _l("Main dashboard")
-        main_dashboard["icon"] = "dashboard_main"
+        main_dashboard["icon"] = DynamicIconName("dashboard_main")
         main_dashboard["topic"] = "overview"
         main_dashboard["sort_index"] = 12
 
@@ -46,7 +52,7 @@ ProblemsDashboard = DashboardConfig(
         "title": _l("Problem dashboard"),
         "topic": "problems",
         "sort_index": 5,
-        "icon": "dashboard_problems",
+        "icon": DynamicIconName("dashboard_problems"),
         "description": _l(
             "This dashboard gives you a general overview on the state of your monitored devices."
         ),
@@ -258,7 +264,7 @@ SimpleProblemsDashboard = DashboardConfig(
         "show_title": True,
         "title": _l("Host & service problems"),
         "topic": "problems",
-        "icon": "host_svc_problems",
+        "icon": DynamicIconName("host_svc_problems"),
         "sort_index": 10,
         "description": _l(
             "A compact dashboard which lists your unhandled host and service problems."
@@ -428,7 +434,7 @@ CheckmkOverviewDashboard = DashboardConfig(
         ],
         "embedded_views": {},
         "single_infos": [],
-        "icon": "dashboard_system",
+        "icon": DynamicIconName("dashboard_system"),
         "owner": UserId.builtin(),
         "public": True,
         "name": "checkmk",

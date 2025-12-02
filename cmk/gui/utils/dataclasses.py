@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import Field
+from dataclasses import asdict, Field
 from typing import ClassVar, Protocol
 
 
 # copied from typeshed
 class DataclassInstance(Protocol):
     __dataclass_fields__: ClassVar[dict[str, Field[object]]]
+
+
+def asdict_strip_none(obj: "DataclassInstance") -> dict[str, object]:
+    return asdict(obj, dict_factory=lambda items: {k: v for k, v in items if v is not None})

@@ -5,6 +5,7 @@
 
 from pytest import MonkeyPatch
 
+from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.wato import MainModuleTopicExporter
 from cmk.gui.watolib import main_menu
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
@@ -18,7 +19,7 @@ def test_register_modules(monkeypatch: MonkeyPatch) -> None:
         permission="icons",
         title="Custom DING",
         sort_index=100,
-        icon="icons",
+        icon=DynamicIconName("icons"),
     )
     main_menu.register_modules(module)
 

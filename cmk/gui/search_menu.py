@@ -17,6 +17,7 @@ from cmk.gui.main_menu_types import (
     MainMenuVueApp,
     UnifiedSearch,
 )
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.wato._snapins import _hide_menu
 from cmk.shared_typing.unified_search import Edition, Provider, Providers, UnifiedSearchProps
 from cmk.utils import paths
@@ -43,7 +44,7 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
         MainMenu(
             name="search",
             title=_l("Search"),
-            icon="main_search",
+            icon=StaticIcon(IconNames.main_search),
             sort_index=1,
             topics=None,
             search=UnifiedSearch("unified_search", "unified-search-input"),

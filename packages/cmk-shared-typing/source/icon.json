@@ -6,11 +6,8 @@
     "dynamic_icon_app_props": {
       "$ref": "#/$defs/dynamic_icon_app_props"
     },
-    "icon": {
-      "$ref": "#/$defs/icon_names"
-    },
-    "size": {
-      "$ref": "#/$defs/icon_sizes"
+    "static_icon_app_props": {
+      "$ref": "#/$defs/static_icon_app_props"
     }
   },
   "$defs": {
@@ -20,6 +17,9 @@
       "properties": {
         "spec": {
           "$ref": "#/$defs/dynamic_icon"
+        },
+        "size": {
+          "$ref": "#/$defs/icon_sizes"
         }
       },
       "required": ["spec"]
@@ -102,8 +102,6 @@
     "icon_names": {
       "type": "string",
       "enum": [
-        "2fa",
-        "2fa-backup-codes",
         "abort",
         "about-checkmk",
         "accept",
@@ -339,6 +337,7 @@
         "globe",
         "graph",
         "graph-collection",
+        "graph-time",
         "graph-tuning",
         "gui-design",
         "guitest",
@@ -688,6 +687,8 @@
         "trans",
         "tree-closed",
         "trust",
+        "twofa",
+        "twofa-backup-codes",
         "unacknowledge-test",
         "undecided-service",
         "undo",
@@ -726,6 +727,22 @@
         "www",
         "zoom"
       ]
+    },
+    "static_icon_app_props": {
+      "title": "StaticIconAppProps",
+      "type": "object",
+      "properties": {
+        "icon": {
+          "$ref": "#/$defs/icon_names"
+        },
+        "size": {
+          "$ref": "#/$defs/icon_sizes"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": ["icon"]
     }
   }
 }

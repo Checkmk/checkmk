@@ -22,7 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import PageHandlers, SidebarSnapin
-from cmk.gui.type_defs import HTTPVariables, VirtualHostTreeSpec
+from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon, VirtualHostTreeSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import folder_tree, get_folder_title_path
@@ -109,7 +109,7 @@ class VirtualHostTree(SidebarSnapin):
                 upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(
                     self._current_tree_path[:-1]
                 )
-                html.icon_button(upurl, _("Go up one tree level"), "back")
+                html.icon_button(upurl, _("Go up one tree level"), StaticIcon(IconNames.back))
 
             html.br()
         html.final_javascript(self._javascript())
@@ -150,7 +150,7 @@ class VirtualHostTree(SidebarSnapin):
                 bullet += html.render_icon_button(
                     self._tag_tree_url(tree_spec, path, "svcproblems", tag_groups),
                     _("Show the service problems contained in this branch"),
-                    "svc_problems",
+                    StaticIcon(IconNames.svc_problems),
                     target="main",
                 )
 
@@ -182,7 +182,7 @@ class VirtualHostTree(SidebarSnapin):
                             html.icon_button(
                                 url,
                                 _("Show the service problems contained in this branch"),
-                                "svc_problems",
+                                StaticIcon(IconNames.svc_problems),
                                 target="main",
                             )
                         html.write_html(node_title)

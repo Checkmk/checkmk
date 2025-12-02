@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.utils.licensing.registry import get_licensing_user_effect
@@ -114,7 +115,7 @@ def _make_default_page_state(
 
     return PageState(
         text=writer.render_span("%d" % browser_reload),
-        icon_name="trans",
+        icon_name=StaticIcon(IconNames.trans),
         css_classes=["reload"],
         url="javascript:document.location.reload()",
         tooltip_text=_("Automatic page reload in %d seconds.") % browser_reload

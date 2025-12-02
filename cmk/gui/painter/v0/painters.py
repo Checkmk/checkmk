@@ -49,9 +49,11 @@ from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
+    IconNames,
     PainterParameters,
     Row,
     SorterName,
+    StaticIcon,
     VisualLinkSpec,
 )
 from cmk.gui.utils import escaping
@@ -802,11 +804,10 @@ class PainterSvcMetrics(Painter):
             if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
                 html.td(
                     html.render_popup_trigger(
-                        html.render_icon(
-                            "menu",
+                        html.render_static_icon(
+                            StaticIcon(IconNames.menu),
                             title=_("Add this metric to dedicated graph"),
-                            cssclass="iconbutton",
-                            theme=theme,
+                            css_classes=["iconbutton"],
                         ),
                         ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
                         method=MethodAjax(
@@ -3476,21 +3477,21 @@ def _paint_discovery_output(
                 "ignored": html.render_icon_button(
                     ruleset_url,
                     _("Disabled (configured away by admin)"),
-                    "rulesets",
+                    StaticIcon(IconNames.rulesets),
                     theme=theme,
                 )
                 + HTML.with_escaping(_("Disabled (configured away by admin)")),
                 "vanished": html.render_icon_button(
                     discovery_url,
                     _("Vanished (checked, but no longer exist)"),
-                    "services",
+                    StaticIcon(IconNames.services),
                     theme=theme,
                 )
                 + HTML.with_escaping(_("Vanished (checked, but no longer exist)")),
                 "unmonitored": html.render_icon_button(
                     discovery_url,
                     _("Available (missing)"),
-                    "services",
+                    StaticIcon(IconNames.services),
                     theme=theme,
                 )
                 + HTML.with_escaping(_("Available (missing)")),
@@ -4220,10 +4221,10 @@ class PainterCommentEntryType(Painter):
         t = row["comment_entry_type"]
         linkview = None
         if t == 1:
-            icon = "comment"
+            icon = StaticIcon(IconNames.comment)
             help_txt = _("Comment")
         elif t == 2:
-            icon = "downtime"
+            icon = StaticIcon(IconNames.downtime)
             help_txt = _("Downtime")
             if row["service_description"]:
                 linkview = "downtimes_of_service"
@@ -4231,14 +4232,14 @@ class PainterCommentEntryType(Painter):
                 linkview = "downtimes_of_host"
 
         elif t == 3:
-            icon = "flapping"
+            icon = StaticIcon(IconNames.flapping)
             help_txt = _("Flapping")
         elif t == 4:
-            icon = "ack"
+            icon = StaticIcon(IconNames.ack)
             help_txt = _("Acknowledgement")
         else:
             return "", ""
-        code: str | HTML = html.render_icon(icon, help_txt, theme=self.theme)
+        code: str | HTML = html.render_static_icon(icon, title=help_txt)
         if linkview:
             code = render_link_to_view(
                 code,
@@ -4850,88 +4851,97 @@ class PainterLogIcon(Painter):
         return ["log_type", "log_state", "log_state_type", "log_command_name"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        img = None
+        img: StaticIcon | None = None
         log_type = row["log_type"]
         log_state = row["log_state"]
 
         if log_type == "SERVICE ALERT":
-            img = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(row["log_state"])
+            img = {
+                0: StaticIcon(IconNames.alert_ok),
+                1: StaticIcon(IconNames.alert_warn),
+                2: StaticIcon(IconNames.alert_crit),
+                3: StaticIcon(IconNames.alert_unknown),
+            }.get(row["log_state"])
             title = _("Service alert")
 
         elif log_type == "HOST ALERT":
-            img = {0: "up", 1: "down", 2: "unreach"}.get(row["log_state"])
+            img = {
+                0: StaticIcon(IconNames.alert_up),
+                1: StaticIcon(IconNames.alert_down),
+                2: StaticIcon(IconNames.alert_unreach),
+            }.get(row["log_state"])
             title = _("Host alert")
 
         elif log_type.endswith("ALERT HANDLER STARTED"):
-            img = "alert_handler_started"
+            img = StaticIcon(IconNames.alert_alert_handler_started)
             title = _("Alert handler started")
 
         elif log_type.endswith("ALERT HANDLER STOPPED"):
             if log_state == 0:
-                img = "alert_handler_stopped"
+                img = StaticIcon(IconNames.alert_alert_handler_stopped)
                 title = _("Alert handler stopped")
             else:
-                img = "alert_handler_failed"
+                img = StaticIcon(IconNames.alert_alert_handler_failed)
                 title = _("Alert handler failed")
 
         elif "DOWNTIME" in log_type:
             if row["log_state_type"] in ["END", "STOPPED"]:
-                img = "downtimestop"
+                img = StaticIcon(IconNames.alert_downtimestop)
                 title = _("Downtime stopped")
             else:
-                img = "downtime"
+                img = StaticIcon(IconNames.alert_downtime)
                 title = _("Downtime")
 
         elif log_type.endswith("NOTIFICATION"):
             if row["log_command_name"] == "check-mk-notify":
-                img = "cmk_notify"
+                img = StaticIcon(IconNames.alert_cmk_notify)
                 title = _("Core produced a notification")
             else:
-                img = "notify"
+                img = StaticIcon(IconNames.alert_notify)
                 title = _("User notification")
 
         elif log_type.endswith("NOTIFICATION RESULT"):
-            img = "notify_result"
+            img = StaticIcon(IconNames.alert_notify_result)
             title = _("Final notification result")
 
         elif log_type.endswith("NOTIFICATION PROGRESS"):
-            img = "notify_progress"
+            img = StaticIcon(IconNames.alert_notify_progress)
             title = _("The notification is being processed")
 
         elif log_type == "EXTERNAL COMMAND":
-            img = "command"
+            img = StaticIcon(IconNames.alert_command)
             title = _("External command")
 
         elif "restarting..." in log_type:
-            img = "restart"
+            img = StaticIcon(IconNames.alert_restart)
             title = _("Core restarted")
 
         elif "Reloading configuration" in log_type:
-            img = "reload"
+            img = StaticIcon(IconNames.alert_reload)
             title = _("Core configuration reloaded")
 
         elif "starting..." in log_type:
-            img = "start"
+            img = StaticIcon(IconNames.alert_start)
             title = _("Core started")
 
         elif "shutdown..." in log_type or "shutting down" in log_type:
-            img = "stop"
+            img = StaticIcon(IconNames.alert_stop)
             title = _("Core stopped")
 
         elif " FLAPPING " in log_type:
-            img = "flapping"
+            img = StaticIcon(IconNames.alert_flapping)
             title = _("Flapping")
 
         elif "ACKNOWLEDGE ALERT" in log_type:
             if row["log_state_type"] == "STARTED":
-                img = "ack"
+                img = StaticIcon(IconNames.alert_ack)
                 title = _("Acknowledged")
             else:
-                img = "ackstop"
+                img = StaticIcon(IconNames.alert_ackstop)
                 title = _("Stopped acknowledgement")
 
         if img:
-            return "icon", html.render_icon("alert_" + img, title=title, theme=self.theme)
+            return "icon", html.render_static_icon(img, title=title)
         return "icon", ""
 
 

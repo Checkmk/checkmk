@@ -35,7 +35,7 @@ from cmk.gui.sidebar import (
     VisualItem,
     VisualMenuItem,
 )
-from cmk.gui.type_defs import Choices, RoleName, ViewSpec
+from cmk.gui.type_defs import Choices, IconNames, RoleName, StaticIcon, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -69,7 +69,7 @@ def render_wato(config: Config, mini: bool) -> None:
                     url=item.url,
                     class_=["show_more_mode"] if item.is_show_more else [],
                     title=item.title,
-                    icon=item.icon or "wato",
+                    icon=item.icon or StaticIcon(IconNames.wato),
                     target="main",
                 )
     else:
@@ -130,7 +130,7 @@ def _hide_menu() -> bool:
 MainMenuSetup = MainMenu(
     name="setup",
     title=_l("Setup"),
-    icon="main_setup",
+    icon=StaticIcon(IconNames.main_setup),
     sort_index=15,
     topics=get_wato_menu_items,
     hide=_hide_menu,

@@ -89,7 +89,14 @@ from cmk.gui.search import (
     MatchItems,
 )
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName, RenderMode
+from cmk.gui.type_defs import (
+    ActionResult,
+    HTTPVariables,
+    IconNames,
+    PermissionName,
+    RenderMode,
+    StaticIcon,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash
@@ -647,17 +654,20 @@ def _page_menu_entries_predefined_searches(
 
         yield PageMenuEntry(
             title=search_title,
-            icon_name={
-                "icon": "rulesets",
-                "emblem": search_emblem,
-            },
+            icon_name=StaticIcon(
+                IconNames.rulesets,
+                emblem=search_emblem,
+            ),
             is_shortcut=search_type != page_type,
             item=make_simple_link(folder_preserving_link(uri_params)),
         )
 
     yield PageMenuEntry(
         title=_("Unknown rule sets"),
-        icon_name={"icon": "rulesets", "emblem": "warning"},
+        icon_name=StaticIcon(
+            IconNames.rulesets,
+            emblem="warning",
+        ),
         item=make_simple_link(makeuri_contextless(request, [("mode", "unknown_rulesets")])),
         is_shortcut=True,
     )
@@ -760,7 +770,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             )
             yield PageMenuEntry(
                 title=_("Hosts in folder: %s") % current_folder.title(),
-                icon_name="folder",
+                icon_name=StaticIcon(IconNames.folder),
                 item=make_simple_link(current_folder.url()),
             )
 
@@ -768,7 +778,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                 host_name = request.get_ascii_input_mandatory("host")
                 yield PageMenuEntry(
                     title=_("Host properties of: %s") % host_name,
-                    icon_name="folder",
+                    icon_name=StaticIcon(IconNames.folder),
                     item=make_simple_link(
                         folder_preserving_link([("mode", "edit_host"), ("host", host_name)])
                     ),
@@ -788,7 +798,7 @@ class ModeRulesetGroup(ABCRulesetMode):
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Predefined conditions"),
-        icon_name="predefined_conditions",
+        icon_name=StaticIcon(IconNames.predefined_conditions),
         item=make_simple_link(
             folder_preserving_link(
                 [
@@ -823,7 +833,7 @@ def _page_menu_entry_search_rules(
 
     return PageMenuEntry(
         title=title,
-        icon_name="search",
+        icon_name=StaticIcon(IconNames.search),  # TODO: new icon
         item=make_simple_link(
             makeuri(
                 request,
@@ -864,7 +874,7 @@ class MatchState(TypedDict):
 
 class RuleMatchResult(NamedTuple):
     title: str
-    img: str
+    img: StaticIcon
 
 
 class ModeEditRuleset(WatoMode):
@@ -1065,7 +1075,7 @@ class ModeEditRuleset(WatoMode):
 
         yield PageMenuEntry(
             title=_("Rule search"),
-            icon_name="search",
+            icon_name=StaticIcon(IconNames.search),  # TODO: new icon
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -1077,7 +1087,7 @@ class ModeEditRuleset(WatoMode):
         if self._hostname:
             yield PageMenuEntry(
                 title=_("Services"),
-                icon_name="services",
+                icon_name=StaticIcon(IconNames.services),
                 item=make_simple_link(
                     folder_preserving_link([("mode", "inventory"), ("host", self._hostname)])
                 ),
@@ -1086,7 +1096,7 @@ class ModeEditRuleset(WatoMode):
             if user.may("wato.rulesets"):
                 yield PageMenuEntry(
                     title=_("Parameters"),
-                    icon_name="rulesets",
+                    icon_name=StaticIcon(IconNames.rulesets),
                     item=make_simple_link(
                         folder_preserving_link(
                             [
@@ -1104,7 +1114,7 @@ class ModeEditRuleset(WatoMode):
         if self._name == "logwatch_rules":
             yield PageMenuEntry(
                 title=_("Pattern analyzer"),
-                icon_name="logwatch",
+                icon_name=StaticIcon(IconNames.logwatch),
                 item=make_simple_link(
                     folder_preserving_link(
                         [
@@ -1120,7 +1130,7 @@ class ModeEditRuleset(WatoMode):
     def _page_menu_entries_rules(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Add rule"),
-            icon_name="new",
+            icon_name=StaticIcon(IconNames.new),
             item=make_form_submit_link(form_name="new_rule", button_name="_new_dflt_rule"),
             is_shortcut=True,
             is_suggested=True,
@@ -1136,7 +1146,10 @@ class ModeEditRuleset(WatoMode):
 
             yield PageMenuEntry(
                 title=title,
-                icon_name={"icon": "services_blue", "emblem": "rulesets"},
+                icon_name=StaticIcon(
+                    IconNames.services_blue,
+                    emblem="rulesets",
+                ),
                 item=make_form_submit_link(form_name="new_rule", button_name="_new_host_rule"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -1145,7 +1158,10 @@ class ModeEditRuleset(WatoMode):
         if not self._folder.is_root():
             yield PageMenuEntry(
                 title=_("Add rule in folder %s") % self._folder.title(),
-                icon_name={"icon": "folder_blue", "emblem": "rulesets"},
+                icon_name=StaticIcon(
+                    IconNames.folder_blue,
+                    emblem="rulesets",
+                ),
                 item=make_form_submit_link(form_name="new_rule", button_name="_new_rule"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -1222,7 +1238,7 @@ class ModeEditRuleset(WatoMode):
 
     def _explain_match_type(self, match_type: MatchType) -> None:
         html.open_div(class_="matching_message")
-        html.icon("toggle_details")
+        html.static_icon(StaticIcon(IconNames.toggle_details))
         html.b("%s: " % _("Matching"))
 
         match match_type:
@@ -1350,7 +1366,7 @@ class ModeEditRuleset(WatoMode):
         if rule_match_results:
             table.cell(_("Match host"), css=["narrow"])
             result = rule_match_results[rule.id]
-            html.icon(result.img, result.title)
+            html.static_icon(result.img, title=result.title)
 
         if rule.ruleset.has_rule_search_options(search_options):
             table.cell(_("Match search"), css=["narrow"])
@@ -1359,9 +1375,9 @@ class ModeEditRuleset(WatoMode):
                 or not rule.ruleset.matches_fulltext_search(search_options)
             ):
                 if _is_ineffective_rules_page(search_options):
-                    html.icon("hyphen", _("Ineffective rule"))
+                    html.static_icon(StaticIcon(IconNames.hyphen), title=_("Ineffective rule"))
                 else:
-                    html.icon("checkmark_plus", _("Matches"))
+                    html.static_icon(StaticIcon(IconNames.checkmark_plus), title=_("Matches"))
             else:
                 html.empty_icon()
 
@@ -1370,7 +1386,10 @@ class ModeEditRuleset(WatoMode):
 
         table.cell("", css=["buttons"])
         if rule.is_disabled():
-            html.icon("disabled", _("This rule is currently disabled and will not be applied"))
+            html.static_icon(
+                StaticIcon(IconNames.disabled),
+                title=_("This rule is currently disabled and will not be applied"),
+            )
         else:
             html.empty_icon()
 
@@ -1386,25 +1405,27 @@ class ModeEditRuleset(WatoMode):
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
         edit_url = folder_preserving_link([("mode", "edit_rule"), *folder_preserving_vars])
-        html.icon_button(edit_url, _("Edit this rule"), "edit")
+        html.icon_button(edit_url, _("Edit this rule"), StaticIcon(IconNames.edit))
 
         clone_url = folder_preserving_link([("mode", "clone_rule"), *folder_preserving_vars])
-        html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+        html.icon_button(clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone))
 
         export_url = folder_preserving_link([("mode", "export_rule"), *folder_preserving_vars])
-        html.icon_button(export_url, _("Export this rule for API"), "export_rule")
+        html.icon_button(
+            export_url, _("Export this rule for API"), StaticIcon(IconNames.export_rule)
+        )
 
         if is_locked_by_quick_setup(rule.locked_by):
             html.icon_button(
                 url="",
                 title=_("Rule cannot be moved, because it is managed by quick setup"),
-                icon="drag",
+                icon=StaticIcon(IconNames.drag),
                 class_=["disabled"],
             )
             html.icon_button(
                 url="",
                 title=_("Rule can only be deleted via quick setup"),
-                icon="delete",
+                icon=StaticIcon(IconNames.delete),
                 class_=["disabled"],
             )
 
@@ -1418,7 +1439,7 @@ class ModeEditRuleset(WatoMode):
                     message=_("Folder: %s") % folder.alias_path(),
                 ),
                 title=_("Delete this rule"),
-                icon="delete",
+                icon=StaticIcon(IconNames.delete),
             )
 
     def _analyze_rule_matching(
@@ -1500,12 +1521,14 @@ class ModeEditRuleset(WatoMode):
     ) -> RuleMatchResult:
         if rule.is_disabled():
             return RuleMatchResult(
-                _("This rule does not match: %s") % _("This rule is disabled"), "hyphen"
+                _("This rule does not match: %s") % _("This rule is disabled"),
+                StaticIcon(IconNames.hyphen),
             )
 
         if not rule_matches:
             return RuleMatchResult(
-                _("This rule does not match: %s") % _("The rule does not match"), "hyphen"
+                _("This rule does not match: %s") % _("The rule does not match"),
+                StaticIcon(IconNames.hyphen),
             )
 
         ruleset = rule.ruleset
@@ -1516,29 +1539,30 @@ class ModeEditRuleset(WatoMode):
             if not new_keys:
                 return RuleMatchResult(
                     _("This rule matches, but does not define any parameters."),
-                    "checkmark_orange",
+                    StaticIcon(IconNames.checkmark_orange),
                 )
             if not already_existing:
                 return RuleMatchResult(
-                    _("This rule matches and defines new parameters."), "checkmark"
+                    _("This rule matches and defines new parameters."),
+                    StaticIcon(IconNames.checkmark),
                 )
             if already_existing == new_keys:
                 return RuleMatchResult(
                     _(
                         "This rule matches, but all of its parameters are overridden by previous rules."
                     ),
-                    "checkmark_orange",
+                    StaticIcon(IconNames.checkmark_orange),
                 )
             return RuleMatchResult(
                 _(
                     "This rule matches, but some of its parameters are overridden by previous rules."
                 ),
-                "checkmark_plus",
+                StaticIcon(IconNames.checkmark_plus),
             )
         if match_state["matched"] and ruleset.match_type() != "all":
             return RuleMatchResult(
                 _("This rule matches, but is overridden by a previous rule."),
-                "checkmark_orange",
+                StaticIcon(IconNames.checkmark_orange),
             )
         match_state["matched"] = True
         return RuleMatchResult(
@@ -1546,7 +1570,7 @@ class ModeEditRuleset(WatoMode):
             + (
                 _(" and the %s '%s'.") % (ruleset.item_name(), item) if ruleset.item_type() else "."
             ),
-            "checkmark",
+            StaticIcon(IconNames.checkmark),
         )
 
     def _get_host_labels_from_remote_site(
@@ -1616,7 +1640,7 @@ class ModeEditRuleset(WatoMode):
                     reason = str(e2)
 
                 value_html = (
-                    html.render_icon("alert")
+                    html.render_static_icon(StaticIcon(IconNames.alert))
                     + HTML.with_escaping(_("The value of this rule is not valid. "))
                     + escape_to_html_permissive(reason)
                 )
@@ -1647,7 +1671,7 @@ class ModeEditRuleset(WatoMode):
             html.icon_button(
                 docu_url,
                 _("Context information about this rule"),
-                "url",
+                StaticIcon(IconNames.url),
                 target="_blank",
             )
             html.write_text_permissive("&nbsp;")
@@ -1737,7 +1761,7 @@ class ModeRuleSearchForm(WatoMode):
             1,
             PageMenuEntry(
                 title=_("Reset"),
-                icon_name="reset",
+                icon_name=StaticIcon(IconNames.reset),
                 item=make_form_submit_link("rule_search", "_reset_search"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -2242,7 +2266,7 @@ class ABCEditRuleMode(WatoMode):
                 entries=[
                     PageMenuEntry(
                         title=_("Audit log"),
-                        icon_name="auditlog",
+                        icon_name=StaticIcon(IconNames.auditlog),
                         item=make_simple_link(make_object_audit_log_url(self._rule.object_ref())),
                     ),
                 ],
@@ -3406,7 +3430,7 @@ class ModeExportRule(ABCEditRuleMode):
             html.icon_button(
                 url=None,
                 title=_("Copy rule value representation to clipboard"),
-                icon="clone",
+                icon=StaticIcon(IconNames.clone),
                 onclick=f"cmk.utils.copy_dom_element_content_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg)})",
             )
 
@@ -3505,7 +3529,7 @@ class ModeUnknownRulesets(WatoMode):
                                 PageMenuEntry(
                                     title=_("Delete selected rules"),
                                     shortcut_title=_("Delete selected rules"),
-                                    icon_name="delete",
+                                    icon_name=StaticIcon(IconNames.delete),
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_delete_selected_unknown_rulesets",
                                         button_name="_bulk_delete_selected_unknown_rulesets",
@@ -3527,7 +3551,7 @@ class ModeUnknownRulesets(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Service monitoring rules"),
-                                    icon_name="rulesets",
+                                    icon_name=StaticIcon(IconNames.rulesets),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -3601,7 +3625,7 @@ class ModeUnknownRulesets(WatoMode):
                 message=_("#%s of unknown ruleset %r") % (rule_nr, unknown_ruleset_name),
             ),
             _("Delete"),
-            "delete",
+            StaticIcon(IconNames.delete),
         )
 
         table.cell("#", css=["narrow nowrap"])
@@ -3655,7 +3679,7 @@ class ModeUnknownRulesets(WatoMode):
                 message=_("#%s of unknown ruleset %r") % (rule_nr, unknown_ruleset_name),
             ),
             _("Delete"),
-            "delete",
+            StaticIcon(IconNames.delete),
         )
 
         table.cell("#", css=["narrow nowrap"])

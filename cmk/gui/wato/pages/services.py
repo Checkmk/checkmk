@@ -55,7 +55,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import HTTPVariables, PermissionName
+from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.agent_commands import agent_commands_registry
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import MsgType
@@ -833,11 +833,11 @@ class DiscoveryPageRenderer:
             html.open_span()
             match overall_state:
                 case 0:
-                    html.icon("check")
+                    html.static_icon(StaticIcon(IconNames.check))
                 case 1:
-                    html.icon("host_svc_problems_dark")
+                    html.static_icon(StaticIcon(IconNames.host_svc_problems_dark))
                 case 2 | 3:
-                    html.icon("host_svc_problems")
+                    html.static_icon(StaticIcon(IconNames.host_svc_problems))
             html.close_span()
             html.close_div()
 
@@ -1459,14 +1459,14 @@ class DiscoveryPageRenderer:
                     len(changed_parameters),
                 )
                 % len(changed_parameters)
-                + html.render_icon(
-                    "search",
-                    _("Old: %r\nNew: %r")
+                + html.render_static_icon(
+                    StaticIcon(IconNames.search),  # TODO: new icon!
+                    title=_("Old: %r\nNew: %r")
                     % (
                         {k: v for k, v in old_parameters.items() if k in changed_parameters},
                         changed_parameters,
                     ),
-                    cssclass="iconbutton",
+                    css_classes=["iconbutton"],
                 )
             )
 
@@ -1478,10 +1478,10 @@ class DiscoveryPageRenderer:
                     len(added_parameters),
                 )
                 % len(added_parameters)
-                + html.render_icon(
-                    "search",
-                    _("New: %r") % added_parameters,
-                    cssclass="iconbutton",
+                + html.render_static_icon(
+                    StaticIcon(IconNames.search),
+                    title=_("New: %r") % added_parameters,
+                    css_classes=["iconbutton"],
                 )
             )
         if removed_parameters:
@@ -1492,10 +1492,10 @@ class DiscoveryPageRenderer:
                     len(removed_parameters),
                 )
                 % len(removed_parameters)
-                + html.render_icon(
-                    "search",
-                    _("Removed: %r") % removed_parameters,
-                    cssclass="iconbutton",
+                + html.render_static_icon(
+                    StaticIcon(IconNames.search),
+                    title=_("Removed: %r") % removed_parameters,
+                    css_classes=["iconbutton"],
                 )
             )
 
@@ -1520,7 +1520,10 @@ class DiscoveryPageRenderer:
             return
 
         div_id = f"activecheck_{entry.description}"
-        html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
+        html.div(
+            html.render_static_icon(StaticIcon(IconNames.reload), css_classes=["reloading"]),
+            id_=div_id,
+        )
         html.javascript(
             "cmk.service_discovery.register_delayed_active_check(%s, %s, %s, %s, %s, %s);"
             % (
@@ -1645,7 +1648,7 @@ class DiscoveryPageRenderer:
                     html.icon_button(
                         url="",
                         title=_("Accept service properties"),
-                        icon="accept",
+                        icon=StaticIcon(IconNames.accept),
                         class_=button_classes,
                         onclick=_start_js_call(
                             self._host,
@@ -1768,7 +1771,9 @@ class DiscoveryPageRenderer:
                 ("entry", json.dumps(dataclasses.astuple(entry))),
             ]
             html.popup_trigger(
-                html.render_icon("menu", _("More options"), cssclass="iconbutton"),
+                html.render_static_icon(
+                    StaticIcon(IconNames.menu), title=_("More options"), css_classes=["iconbutton"]
+                ),
                 f"service_action_menu_{checkbox_name}",
                 MethodAjax(endpoint="service_action_menu", url_vars=url_vars),
             )
@@ -1787,10 +1792,18 @@ class DiscoveryPageRenderer:
         button_classes: list[str],
     ) -> Literal[1]:
         options = self._options._replace(action=DiscoveryAction.SINGLE_UPDATE)
+        if descr_target == "undecided":
+            icon = StaticIcon(IconNames.service_to_undecided)
+        elif descr_target == "monitored":
+            icon = StaticIcon(IconNames.service_to_monitored)
+        elif descr_target == "disabled":
+            icon = StaticIcon(IconNames.service_to_disabled)
+        else:
+            raise ValueError(f"descr_target {descr_target} not known")
         html.icon_button(
             url="",
             title=_("Move to %s services") % descr_target,
-            icon="service_to_%s" % descr_target,
+            icon=icon,
             class_=button_classes,
             onclick=_start_js_call(
                 self._host,
@@ -1811,7 +1824,7 @@ class DiscoveryPageRenderer:
         html.icon_button(
             url="",
             title=_("Remove service"),
-            icon="service_to_removed",
+            icon=StaticIcon(IconNames.service_to_removed),
             class_=button_classes,
             onclick=_start_js_call(
                 self._host,
@@ -1831,7 +1844,7 @@ class DiscoveryPageRenderer:
         html.icon_button(
             cls.rulesets_button_link(descr, hostname),
             _("View and edit the parameters for this service"),
-            "rulesets",
+            StaticIcon(IconNames.rulesets),
         )
         return 1
 
@@ -1853,7 +1866,9 @@ class DiscoveryPageRenderer:
         if not url:
             return 0
         html.icon_button(
-            url, _("Edit and analyze the check parameters of this service"), "check_parameters"
+            url,
+            _("Edit and analyze the check parameters of this service"),
+            StaticIcon(IconNames.check_parameters),
         )
         return 1
 
@@ -1901,7 +1916,7 @@ class DiscoveryPageRenderer:
                 ]
             ),
             _("Edit and analyze the disabled services rules"),
-            "rulesets",
+            StaticIcon(IconNames.rulesets),
         )
         return 1
 
@@ -2178,7 +2193,7 @@ def service_page_menu(breadcrumb: Breadcrumb, host: Host, options: DiscoveryOpti
 def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Properties"),
-        icon_name="edit",
+        icon_name=StaticIcon(IconNames.edit),
         item=make_simple_link(
             folder_preserving_link([("mode", "edit_host"), ("host", host.name())])
         ),
@@ -2187,7 +2202,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
     if not host.is_cluster():
         yield PageMenuEntry(
             title=_("Test connection"),
-            icon_name="analysis",
+            icon_name=StaticIcon(IconNames.analysis),
             item=make_simple_link(
                 folder_preserving_link([("mode", "diag_host"), ("host", host.name())])
             ),
@@ -2196,7 +2211,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
     if user.may("wato.rulesets"):
         yield PageMenuEntry(
             title=_("Effective parameters"),
-            icon_name="rulesets",
+            icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
                 folder_preserving_link([("mode", "object_parameters"), ("host", host.name())]),
                 transition=LoadingTransition.catalog,
@@ -2208,7 +2223,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
     if user.may("wato.auditlog"):
         yield PageMenuEntry(
             title=_("Audit log"),
-            icon_name="auditlog",
+            icon_name=StaticIcon(IconNames.auditlog),
             item=make_simple_link(make_object_audit_log_url(host.object_ref())),
         )
 
@@ -2220,7 +2235,7 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
     if host.is_cluster():
         yield PageMenuEntry(
             title=_("Clustered services"),
-            icon_name="rulesets",
+            icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
                 folder_preserving_link(
                     [("mode", "edit_ruleset"), ("varname", "clustered_services")]
@@ -2230,10 +2245,10 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
         title=_("Disabled services"),
-        icon_name={
-            "icon": "services",
-            "emblem": "disable",
-        },
+        icon_name=StaticIcon(
+            IconNames.services,
+            emblem="disable",
+        ),
         item=make_simple_link(
             folder_preserving_link([("mode", "edit_ruleset"), ("varname", "ignored_services")])
         ),
@@ -2241,10 +2256,10 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
         title=_("Disabled checks"),
-        icon_name={
-            "icon": "check_plugins",
-            "emblem": "disable",
-        },
+        icon_name=StaticIcon(
+            IconNames.check_plugins,
+            emblem="disable",
+        ),
         item=make_simple_link(
             folder_preserving_link([("mode", "edit_ruleset"), ("varname", "ignored_checks")])
         ),
@@ -2275,7 +2290,9 @@ def _extend_help_dropdown(menu: PageMenu) -> None:
 def _page_menu_entry_show_parameters(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show check parameters"),
-        icon_name="toggle_on" if options.show_parameters else "toggle_off",
+        icon_name=StaticIcon(
+            IconNames.toggle_on if options.show_parameters else IconNames.toggle_off
+        ),
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -2290,7 +2307,9 @@ def _page_menu_entry_show_parameters(host: Host, options: DiscoveryOptions) -> P
 def _page_menu_entry_show_checkboxes(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show checkboxes"),
-        icon_name="toggle_on" if options.show_checkboxes else "toggle_off",
+        icon_name=StaticIcon(
+            IconNames.toggle_on if options.show_checkboxes else IconNames.toggle_off
+        ),
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -2309,7 +2328,9 @@ def _checkbox_js_url(host: Host, options: DiscoveryOptions) -> str:
 def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show active discovered service labels"),
-        icon_name="toggle_on" if options.show_discovered_labels else "toggle_off",
+        icon_name=StaticIcon(
+            IconNames.toggle_on if options.show_discovered_labels else IconNames.toggle_off
+        ),
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -2324,7 +2345,9 @@ def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOption
 def _page_menu_entry_show_plugin_names(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show plug-in names"),
-        icon_name="toggle_on" if options.show_plugin_names else "toggle_off",
+        icon_name=StaticIcon(
+            IconNames.toggle_on if options.show_plugin_names else IconNames.toggle_off
+        ),
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -2341,7 +2364,7 @@ def _page_menu_service_configuration_entries(
 ) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Accept all"),
-        icon_name="accept",
+        icon_name=StaticIcon(IconNames.accept),
         item=make_javascript_link(
             _start_js_call(
                 host,
@@ -2357,7 +2380,7 @@ def _page_menu_service_configuration_entries(
 
     yield PageMenuEntry(
         title=_("Remove all and find new"),
-        icon_name="services_tabula_rasa",
+        icon_name=StaticIcon(IconNames.services_tabula_rasa),
         item=make_javascript_link(
             _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
         ),
@@ -2368,7 +2391,7 @@ def _page_menu_service_configuration_entries(
 
     yield PageMenuEntry(
         title=_("Rescan"),
-        icon_name="services_refresh",
+        icon_name=StaticIcon(IconNames.services_refresh),
         item=make_javascript_link(
             _start_js_call(
                 host,
@@ -2384,7 +2407,7 @@ def _page_menu_service_configuration_entries(
 
     yield PageMenuEntry(
         title=_("Stop job"),
-        icon_name="services_stop",
+        icon_name=StaticIcon(IconNames.services_stop),
         item=make_javascript_link(
             _start_js_call(host, options._replace(action=DiscoveryAction.STOP))
         ),
@@ -2407,6 +2430,7 @@ class BulkEntry(NamedTuple):
     is_show_more: bool
     source: str
     target: str
+    icon: StaticIcon
     title: str
     explanation: str | None
 
@@ -2416,7 +2440,7 @@ def _page_menu_selected_services_entries(
 ) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Add missing, remove vanished"),
-        icon_name="services_fix_all",
+        icon_name=StaticIcon(IconNames.services_fix_all),
         item=make_javascript_link(
             _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))
         ),
@@ -2432,6 +2456,7 @@ def _page_menu_selected_services_entries(
             False,
             DiscoveryState.UNDECIDED,
             DiscoveryState.MONITORED,
+            StaticIcon(IconNames.service_to_monitored),
             _("Monitor undecided services"),
             _("Add all detected but not yet monitored services to the monitoring."),
         ),
@@ -2440,6 +2465,7 @@ def _page_menu_selected_services_entries(
             False,
             DiscoveryState.UNDECIDED,
             DiscoveryState.IGNORED,
+            StaticIcon(IconNames.service_to_ignored),
             _("Disable undecided services"),
             None,
         ),
@@ -2448,6 +2474,7 @@ def _page_menu_selected_services_entries(
             True,
             DiscoveryState.MONITORED,
             DiscoveryState.UNDECIDED,
+            StaticIcon(IconNames.service_to_undecided),
             _("Declare monitored, including changed, services as undecided"),
             None,
         ),
@@ -2456,6 +2483,7 @@ def _page_menu_selected_services_entries(
             True,
             DiscoveryState.MONITORED,
             DiscoveryState.IGNORED,
+            StaticIcon(IconNames.service_to_ignored),
             _("Disable monitored, including changed, services"),
             None,
         ),
@@ -2464,6 +2492,7 @@ def _page_menu_selected_services_entries(
             True,
             DiscoveryState.IGNORED,
             DiscoveryState.MONITORED,
+            StaticIcon(IconNames.service_to_monitored),
             _("Monitor disabled services"),
             None,
         ),
@@ -2472,6 +2501,7 @@ def _page_menu_selected_services_entries(
             True,
             DiscoveryState.IGNORED,
             DiscoveryState.UNDECIDED,
+            StaticIcon(IconNames.service_to_undecided),
             _("Declare disabled services as undecided"),
             None,
         ),
@@ -2480,6 +2510,7 @@ def _page_menu_selected_services_entries(
             False,
             DiscoveryState.VANISHED,
             DiscoveryState.REMOVED,
+            StaticIcon(IconNames.service_to_removed),
             _("Remove vanished services"),
             None,
         ),
@@ -2488,13 +2519,14 @@ def _page_menu_selected_services_entries(
             True,
             DiscoveryState.VANISHED,
             DiscoveryState.IGNORED,
+            StaticIcon(IconNames.service_to_ignored),
             _("Disable vanished services"),
             None,
         ),
     ]:
         yield PageMenuEntry(
             title=entry.title,
-            icon_name="service_to_%s" % entry.target,
+            icon_name=entry.icon,
             item=make_javascript_link(
                 _start_js_call(
                     host,
@@ -2513,7 +2545,7 @@ def _page_menu_selected_services_entries(
         )
     yield PageMenuEntry(
         title=_("Update service labels"),
-        icon_name="update_service_labels",
+        icon_name=StaticIcon(IconNames.update_service_labels),
         item=make_javascript_link(
             _start_js_call(
                 host,
@@ -2531,7 +2563,7 @@ def _page_menu_selected_services_entries(
     )
     yield PageMenuEntry(
         title=_("Update discovery parameters"),
-        icon_name="update_discovery_parameters",
+        icon_name=StaticIcon(IconNames.update_discovery_parameters),
         item=make_javascript_link(
             _start_js_call(
                 host,
@@ -2554,7 +2586,7 @@ def _page_menu_host_labels_entries(
 ) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Update host labels"),
-        icon_name="update_host_labels",
+        icon_name=StaticIcon(IconNames.update_host_labels),
         item=make_javascript_link(
             _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))
         ),
@@ -2595,7 +2627,7 @@ def ajax_popup_service_action_menu(ctx: PageContext) -> None:
         return
 
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))
-    html.icon("rulesets")
+    html.static_icon(StaticIcon(IconNames.rulesets))
     html.write_text_permissive(_("View and edit the parameters for this service"))
     html.close_a()
 
@@ -2603,6 +2635,6 @@ def ajax_popup_service_action_menu(ctx: PageContext) -> None:
     if not check_parameters_url:
         return
     html.open_a(href=check_parameters_url)
-    html.icon("check_parameters")
+    html.static_icon(StaticIcon(IconNames.check_parameters))
     html.write_text_permissive(_("Edit and analyse the check parameters for this service"))
     html.close_a()

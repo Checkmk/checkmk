@@ -34,7 +34,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.type_defs import Choices, Row, Rows
+from cmk.gui.type_defs import Choices, DynamicIconName, IconNames, Row, Rows, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.time import timezone_utc_offset_str
@@ -241,7 +241,7 @@ CommandReschedule = Command(
     permission=PermissionActionReschedule,
     group=CommandGroupVarious,
     tables=["host", "service"],
-    icon_name="service_duration",
+    icon_name=DynamicIconName("service_duration"),
     render=command_reschedule_render,
     action=command_reschedule_action,
     confirm_dialog_additions=command_reschedule_confirm_dialog_additions,
@@ -692,7 +692,7 @@ def _link_to_test_notifications() -> HTML:
 
 def _render_test_notification_tip() -> None:
     html.open_div(class_="info")
-    html.icon("toggle_details")
+    html.static_icon(StaticIcon(IconNames.toggle_details))
     html.write_text_permissive(
         " &nbsp; "
         + _(
@@ -757,7 +757,7 @@ CommandFakeCheckResult = Command(
     permission=PermissionActionFakeChecks,
     tables=["host", "service"],
     group=CommandGroupFakeCheck,
-    icon_name="fake_check_result",
+    icon_name=DynamicIconName("fake_check_result"),
     is_show_more=True,
     render=command_fake_check_result_render,
     action=command_fake_check_result_action,
@@ -859,7 +859,7 @@ CommandCustomNotification = Command(
     title=_l("Send custom notification"),
     confirm_title=_l("Send custom notification?"),
     confirm_button=_l("Send"),
-    icon_name="notifications",
+    icon_name=DynamicIconName("notifications"),
     permission=PermissionActionCustomNotification,
     group=CommandGroupVarious,
     tables=["host", "service"],
@@ -1163,7 +1163,7 @@ CommandAcknowledge = Command(
     cancel_button=_l("No, discard"),
     deny_button=_l("No, adjust settings"),
     deny_js_function='function () { cmk.page_menu.toggle_popup("popup_command_acknowledge"); }',
-    icon_name="ack",
+    icon_name=DynamicIconName("ack"),
     is_shortcut=True,
     is_suggested=True,
     permission=PermissionActionAcknowledge,
@@ -1269,7 +1269,7 @@ CommandRemoveAcknowledgments = Command(
     title=_l("Remove acknowledgments"),
     confirm_title=_l("Remove all acknowledgments?"),
     confirm_button=_l("Remove all"),
-    icon_name="ack",
+    icon_name=DynamicIconName("ack"),
     permission=PermissionActionAcknowledge,
     group=CommandGroupAcknowledge,
     tables=["host", "service", "aggr"],
@@ -1349,7 +1349,7 @@ CommandAddComment = Command(
     title=_l("Add comment"),
     confirm_title=_l("Add comment?"),
     confirm_button=_l("Add"),
-    icon_name="comment",
+    icon_name=DynamicIconName("comment"),
     permission=PermissionActionAddComment,
     tables=["host", "service"],
     group=CommandGroupVarious,
@@ -1450,7 +1450,7 @@ class CommandScheduleDowntimes(Command):
             cancel_button=_l("No, discard"),
             deny_button=_l("No, adjust settings"),
             deny_js_function='function() { cmk.page_menu.toggle_popup("popup_command_schedule_downtimes"); }',
-            icon_name="downtime",
+            icon_name=DynamicIconName("downtime"),
             is_shortcut=True,
             is_suggested=True,
             permission=PermissionActionDowntimes,

@@ -14,7 +14,7 @@ import cmk.ccc.plugin_registry
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Icon
+from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
@@ -25,7 +25,7 @@ class MenuItem:
         self,
         mode_or_url: str,
         title: str,
-        icon: Icon,
+        icon: StaticIcon | DynamicIcon,
         permission: str | None,
         description: str,
         sort_index: int = 20,
@@ -46,7 +46,7 @@ class MenuItem:
         return self._title
 
     @property
-    def icon(self) -> Icon:
+    def icon(self) -> StaticIcon | DynamicIcon:
         return self._icon
 
     @property
@@ -98,7 +98,7 @@ class MenuItem:
 class MainModuleTopic(NamedTuple):
     name: str
     title: str | LazyString
-    icon_name: str
+    icon_name: DynamicIconName
     sort_index: int
 
 
@@ -117,7 +117,7 @@ class ABCMainModule(MenuItem, abc.ABC):
         super().__init__(
             mode_or_url="",
             title="",
-            icon="menu",
+            icon=StaticIcon(IconNames.menu),
             permission=None,
             description="",
         )
@@ -142,7 +142,7 @@ class ABCMainModule(MenuItem, abc.ABC):
     @property
     @abc.abstractmethod
     @override
-    def icon(self) -> Icon:
+    def icon(self) -> StaticIcon | DynamicIcon:
         raise NotImplementedError()
 
     @property

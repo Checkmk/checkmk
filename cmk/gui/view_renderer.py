@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
+from cmk.gui.type_defs import HTTPVariables, IconNames, InfoName, Rows, StaticIcon, ViewSpec
 from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -255,7 +255,7 @@ class GUIViewRenderer(ABCViewRenderer):
         if not has_done_actions and not missing_single_infos:
             if self.view.spec.get("mustsearch") and len(rows) == 0:
                 html.open_div(class_="info")
-                html.icon("toggle_details")
+                html.static_icon(StaticIcon(IconNames.toggle_details))
                 html.span(
                     _(' To view content, click on "<b>Apply filters</b>" in the "Filters" panel.')
                 )
@@ -481,7 +481,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         yield PageMenuEntry(
             title=_("Export CSV"),
-            icon_name="download_csv",
+            icon_name=StaticIcon(IconNames.download_csv),
             item=make_simple_link(
                 makeuri(
                     request,
@@ -493,7 +493,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         yield PageMenuEntry(
             title=_("Export JSON"),
-            icon_name="download_json",
+            icon_name=StaticIcon(IconNames.download_json),
             item=make_simple_link(
                 makeuri(
                     request,
@@ -514,7 +514,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         yield PageMenuEntry(
             title=_("This view as PDF"),
-            icon_name="report",
+            icon_name=StaticIcon(IconNames.report),
             item=make_external_link(
                 makeuri(
                     request,
@@ -572,7 +572,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     entries=[
                         PageMenuEntry(
                             title=_("Set graph time"),
-                            icon_name="graph_time",
+                            icon_name=StaticIcon(IconNames.graph_time),
                             item=PageMenuPopup(
                                 self._render_painter_options_timerange_form(painter_options)
                             ),
@@ -591,7 +591,12 @@ class GUIViewRenderer(ABCViewRenderer):
         )
         yield PageMenuEntry(
             title=_("Filter"),
-            icon_name={"icon": "filter", "emblem": "warning"} if is_filter_set else "filter",
+            icon_name=StaticIcon(
+                IconNames.filter,
+                emblem="warning",
+            )
+            if is_filter_set
+            else StaticIcon(IconNames.filter),
             item=PageMenuSidePopup(self._render_filter_form(show_filters)),
             name="filters",
             is_shortcut=True,
@@ -603,7 +608,7 @@ class GUIViewRenderer(ABCViewRenderer):
         if display_options.enabled(display_options.D):
             yield PageMenuEntry(
                 title=_("Modify display options"),
-                icon_name="painteroptions",
+                icon_name=StaticIcon(IconNames.painteroptions),
                 item=PageMenuPopup(self._render_painter_options_form(painter_options)),
                 name="display_painter_options",
                 is_enabled=painter_options.painter_option_form_enabled(),
@@ -614,7 +619,9 @@ class GUIViewRenderer(ABCViewRenderer):
         )
         yield PageMenuEntry(
             title=_("Show checkboxes"),
-            icon_name="toggle_on" if self.view.checkboxes_displayed else "toggle_off",
+            icon_name=StaticIcon(IconNames.toggle_on)
+            if self.view.checkboxes_displayed
+            else StaticIcon(IconNames.toggle_off),
             item=make_simple_link(
                 makeuri(
                     request,
@@ -649,7 +656,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
                 yield PageMenuEntry(
                     title=title,
-                    icon_name="edit",
+                    icon_name=StaticIcon(IconNames.edit),
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
@@ -662,7 +669,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if is_builtin_view or not is_own_view:
                 yield PageMenuEntry(
                     title=_("Clone built-in view") if is_builtin_view else _("Clone view"),
-                    icon_name="clone",
+                    icon_name=StaticIcon(IconNames.clone),
                     item=make_simple_link(
                         makeuri_contextless(
                             request,

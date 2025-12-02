@@ -23,11 +23,13 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div>
-    <CmkIcon v-if="props.spec.type === 'default_icon'" :name="props.spec.id as SimpleIcons" />
-    <div v-else-if="props.spec.type === 'user_icon'">
-      <img :src="props.spec.path" :width="iconSize" :height="iconSize" />
-    </div>
-    <div v-else>{{ untranslated('ERROR') }}</div>
+  <CmkIcon
+    v-if="props.spec.type === 'default_icon'"
+    :name="props.spec.id as SimpleIcons"
+    :size="size"
+  />
+  <div v-else-if="props.spec.type === 'user_icon'">
+    <img :src="props.spec.path" :width="iconSize" :height="iconSize" />
   </div>
+  <div v-else>{{ untranslated('ERROR') }}</div>
 </template>

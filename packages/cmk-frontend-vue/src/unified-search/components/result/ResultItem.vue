@@ -12,7 +12,7 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
-import type { CmkIconProps } from '@/components/CmkIcon'
+import type { CmkIconProps, IconSizeNames } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon'
 import CmkZebra from '@/components/CmkZebra.vue'
 
@@ -167,7 +167,7 @@ onBeforeUnmount(() => {
         <div v-if="ib.icon" class="result-item-inner-start">
           <CmkIcon
             :name="ib.icon.name"
-            :size="ib.icon.size || undefined"
+            :size="(ib.icon.size as IconSizeNames) || undefined"
             class="result-item-icon"
           ></CmkIcon>
         </div>

@@ -26,7 +26,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import FilterHTTPVariables, SingleInfos, VisualContext
+from cmk.gui.type_defs import FilterHTTPVariables, IconNames, SingleInfos, StaticIcon, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
@@ -139,8 +139,9 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
         tb = sys.exc_info()[2]
         tbs = ["Traceback (most recent call last):\n"]
         tbs += traceback.format_tb(tb)
-        html.icon(
-            "alert", _("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs))
+        html.static_icon(
+            StaticIcon(IconNames.alert),
+            title=_("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs)),
         )
         html.write_text_permissive(_("This filter cannot be displayed"))
     html.close_div()

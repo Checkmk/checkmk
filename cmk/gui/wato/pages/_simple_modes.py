@@ -57,7 +57,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, RenderMode
+from cmk.gui.type_defs import ActionResult, IconNames, RenderMode, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
@@ -234,7 +234,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                             entries=[
                                 PageMenuEntry(
                                     title=self._new_button_label(),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,
@@ -336,7 +336,11 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                 ("ident", ident),
             ],
         )
-        html.icon_button(edit_url, _("Edit this %s") % self._mode_type.name_singular(), "edit")
+        html.icon_button(
+            edit_url,
+            _("Edit this %s") % self._mode_type.name_singular(),
+            StaticIcon(IconNames.edit),
+        )
 
         clone_url = makeuri_contextless(
             request,
@@ -345,7 +349,11 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                 ("clone", ident),
             ],
         )
-        html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
+        html.icon_button(
+            clone_url,
+            _("Clone this %s") % self._mode_type.name_singular(),
+            StaticIcon(IconNames.clone),
+        )
 
         self._show_delete_action(nr, ident, entry)
 
@@ -366,7 +374,9 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
             message=confirm_delete,
         )
         html.icon_button(
-            delete_url, _("Delete this %s") % self._mode_type.name_singular(), "delete"
+            delete_url,
+            _("Delete this %s") % self._mode_type.name_singular(),
+            StaticIcon(IconNames.delete),
         )
 
 

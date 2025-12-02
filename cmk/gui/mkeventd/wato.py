@@ -80,7 +80,14 @@ from cmk.gui.search import (
 )
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, Icon, PermissionName
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
+    DynamicIcon,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+)
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -1773,7 +1780,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             entries=[
                 PageMenuEntry(
                     title=_("Add rule pack"),
-                    icon_name="new",
+                    icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
@@ -1797,7 +1804,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             entries=[
                 PageMenuEntry(
                     title=_("Reset counters"),
-                    icon_name="reload_cmk",
+                    icon_name=StaticIcon(IconNames.reload_cmk),
                     item=make_simple_link(
                         make_confirm_delete_link(
                             url=make_action_link(
@@ -1980,7 +1987,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     "If you want you can copy the ruleset of "
                     "the central site into your local configuration: "
                 )
-                + html.render_icon_button(copy_url, _("Copy rules from central site"), "clone")
+                + html.render_icon_button(
+                    copy_url, _("Copy rules from central site"), StaticIcon(IconNames.clone)
+                )
             )
 
         elif rep_mode == "stopped":
@@ -2033,7 +2042,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     request,
                     [("mode", "mkeventd_edit_rule_pack"), ("edit", nr)],
                 )
-                html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
+                html.icon_button(
+                    edit_url, _("Edit properties of this rule pack"), StaticIcon(IconNames.edit)
+                )
 
                 # Cloning does not work until we have unique IDs
                 # clone_url  = makeuri_contextless(request, [("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
@@ -2051,15 +2062,21 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         + "<br>"
                         + _("Used rules: %d") % len(rule_pack["rules"]),
                     )
-                    html.icon_button(delete_url, _("Delete this rule pack"), "delete")
+                    html.icon_button(
+                        delete_url, _("Delete this rule pack"), StaticIcon(IconNames.delete)
+                    )
                 else:
-                    html.disabled_icon_button("trans")  # Invisible dummy button for icon spacing
+                    html.disabled_icon_button(
+                        StaticIcon(IconNames.trans)
+                    )  # Invisible dummy button for icon spacing
 
                 rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
                 if found_packs.get(id_):
                     rules_url_vars.append(("search", search_expression))
                 rules_url = makeuri_contextless(request, rules_url_vars)
-                html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
+                html.icon_button(
+                    rules_url, _("Edit the rules in this pack"), StaticIcon(IconNames.rules)
+                )
 
                 if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
                     # Icons for mkp export (Commercial editions only)
@@ -2070,10 +2087,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         html.icon_button(
                             export_url,
                             _("Make this rule pack available in the Extension Packages module"),
-                            {
-                                "icon": "mkps",
-                                "emblem": "add",
-                            },
+                            StaticIcon(
+                                IconNames.mkps,
+                                emblem="add",
+                            ),
                         )
                     elif type_ == ec.RulePackType.exported:
                         dissolve_url = make_action_link(
@@ -2082,10 +2099,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         html.icon_button(
                             dissolve_url,
                             _("Remove this rule pack from the Extension Packages module"),
-                            {
-                                "icon": "mkps",
-                                "emblem": "disable",
-                            },
+                            StaticIcon(
+                                IconNames.mkps,
+                                emblem="disable",
+                            ),
                         )
                     elif type_ == ec.RulePackType.modified_mkp:
                         reset_url = make_action_link(
@@ -2094,10 +2111,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         html.icon_button(
                             reset_url,
                             _("Reset rule pack to the MKP version"),
-                            {
-                                "icon": "mkps",
-                                "emblem": "disable",
-                            },
+                            StaticIcon(
+                                IconNames.mkps,
+                                emblem="disable",
+                            ),
                         )
                         sync_url = make_action_link(
                             [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)]
@@ -2105,38 +2122,41 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         html.icon_button(
                             sync_url,
                             _("Synchronize MKP with modified version"),
-                            {
-                                "icon": "mkps",
-                                "emblem": "refresh",
-                            },
+                            StaticIcon(
+                                IconNames.mkps,
+                                emblem="refresh",
+                            ),
                         )
 
                     table.cell(_("State"), css=["buttons"])
                     if type_ == ec.RulePackType.exported:
-                        html.icon(
-                            "mkps",
-                            _("This rule pack can be packaged with the Extension Packages module."),
+                        html.static_icon(
+                            StaticIcon(IconNames.mkps),
+                            title=_(
+                                "This rule pack can be packaged with the Extension Packages module."
+                            ),
                         )
                     elif type_ == ec.RulePackType.unmodified_mkp:
-                        html.icon(
-                            "mkps", _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_]
+                        html.static_icon(
+                            StaticIcon(IconNames.mkps),
+                            title=_("This rule pack is provided via the MKP %s.") % id_to_mkp[id_],
                         )
                     elif type_ == ec.RulePackType.modified_mkp:
-                        html.icon(
-                            {
-                                "icon": "mkps",
-                                "emblem": "warning",
-                            },
-                            _(
+                        html.static_icon(
+                            StaticIcon(
+                                IconNames.mkps,
+                                emblem="warning",
+                            ),
+                            title=_(
                                 "This rule pack is modified. Originally it was provided via the MKP %s."
                             )
                             % id_to_mkp[id_],
                         )
 
                 if rule_pack["disabled"]:
-                    html.icon(
-                        "disabled",
-                        _(
+                    html.static_icon(
+                        StaticIcon(IconNames.disabled),
+                        title=_(
                             "This rule pack is currently disabled. None of its rules will be applied."
                         ),
                     )
@@ -2166,12 +2186,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                     if matches == 0:
                         msg = _("None of the rules in this pack matches")
-                        icon = "hyphen"
+                        icon = StaticIcon(IconNames.hyphen)
                     else:
                         msg = _("Number of matching rules in this pack: %d") % matches
                         if skips:
                             msg += _(", the first match skips this rule pack")
-                            icon = "hyphen"
+                            icon = StaticIcon(IconNames.hyphen)
                         else:
                             if cancelling:
                                 msg += _(", first match is a cancelling match")
@@ -2183,11 +2203,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 msg += _(
                                     ", but it is overruled by a match in a previous rule pack."
                                 )
-                                icon = "checkmark_plus"
+                                icon = StaticIcon(IconNames.checkmark_plus)
                             else:
-                                icon = "checkmark"
+                                icon = StaticIcon(IconNames.checkmark)
                                 have_match = True
-                    html.icon(icon, msg)
+                    html.static_icon(icon, title=msg)
 
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), rule_pack["title"])
@@ -2306,7 +2326,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             entries=[
                 PageMenuEntry(
                     title=_("Add rule"),
-                    icon_name="new",
+                    icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
@@ -2324,7 +2344,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             entries=[
                 PageMenuEntry(
                     title=_("Edit properties"),
-                    icon_name="edit",
+                    icon_name=StaticIcon(IconNames.edit),
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
@@ -2505,15 +2525,18 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
-                html.icon_button(edit_url, _("Edit this rule"), "edit")
-                html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+                html.icon_button(edit_url, _("Edit this rule"), StaticIcon(IconNames.edit))
+                html.icon_button(
+                    clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone)
+                )
                 html.element_dragger_url("tr", base_url=drag_url)
-                html.icon_button(delete_url, _("Delete this rule"), "delete")
+                html.icon_button(delete_url, _("Delete this rule"), StaticIcon(IconNames.delete))
 
                 table.cell("", css=["buttons"])
                 if rule.get("disabled"):
-                    html.icon(
-                        "disabled", _("This rule is currently disabled and will not be applied")
+                    html.static_icon(
+                        StaticIcon(IconNames.disabled),
+                        title=_("This rule is currently disabled and will not be applied"),
                     )
                 elif event:
                     event["host"] = HostName(
@@ -2525,32 +2548,37 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         self._rule_pack, rule, event, site_configs[event["site"]]
                     )
                     if not isinstance(result, ec.MatchSuccess):
-                        html.icon("hyphen", _("Rule does not match: %s") % result.reason)
+                        html.static_icon(
+                            StaticIcon(IconNames.hyphen),
+                            title=_("Rule does not match: %s") % result.reason,
+                        )
                     else:
                         cancelling, groups = result.cancelling, result.match_groups
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
-                            icon = "checkmark_plus"
+                            icon = StaticIcon(IconNames.checkmark_plus)
                         else:
                             if cancelling:
                                 msg = _("This rule does a cancelling match.")
                             else:
                                 msg = _("This rule matches.")
-                            icon = "checkmark"
+                            icon = StaticIcon(IconNames.checkmark)
                             have_match = True
                         if groups:
                             msg += _(" Match groups: %s") % ",".join(
                                 [g or _("&lt;None&gt;") for g in groups]
                             )
-                        html.icon(icon, msg)
+                        html.static_icon(icon, title=msg)
 
                 if rule.get("invert_matching"):
-                    html.icon("inverted", _("Matching is inverted in this rule"))
+                    html.static_icon(
+                        StaticIcon(IconNames.inverted), title=_("Matching is inverted in this rule")
+                    )
 
                 if rule.get("contact_groups") is not None:
-                    html.icon(
-                        "contactgroups",
-                        _("This rule attaches contact group(s) to the events: %s")
+                    html.static_icon(
+                        StaticIcon(IconNames.contactgroups),
+                        title=_("This rule attaches contact group(s) to the events: %s")
                         % (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
                     )
 
@@ -2630,7 +2658,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 url = rule.get("docu_url")
                 if url:
                     html.icon_button(
-                        url, _("Context information about this rule"), "url", target="_blank"
+                        url,
+                        _("Context information about this rule"),
+                        StaticIcon(IconNames.url),
+                        target="_blank",
                     )
                     html.nbsp()
                 html.write_text_permissive(rule.get("description", ""))
@@ -3349,7 +3380,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add one or multiple MIBs"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,
@@ -3367,7 +3398,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                 PageMenuEntry(
                                     title=_("Delete MIBs"),
                                     shortcut_title=_("Delete selected MIBs"),
-                                    icon_name="delete",
+                                    icon_name=StaticIcon(IconNames.delete),
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_delete_form",
                                         button_name="_bulk_delete_custom_mibs",
@@ -3474,7 +3505,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                         message=_("Filename: %s") % str(filename),
                         suffix=mib.name,
                     )
-                    html.icon_button(delete_url, _("Delete this MIB"), "delete")
+                    html.icon_button(delete_url, _("Delete this MIB"), StaticIcon(IconNames.delete))
 
                 table.cell(_("Filename"), filename)
                 table.cell(_("MIB"), mib.name)
@@ -3712,7 +3743,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
     if mode_name != "mkeventd_rule_packs":
         yield PageMenuEntry(
             title=_("Rule packs"),
-            icon_name="event_console",
+            icon_name=StaticIcon(IconNames.event_console),
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -3737,7 +3768,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
 def _page_menu_entry_rulesets() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Rules"),
-        icon_name="rulesets",
+        icon_name=StaticIcon(IconNames.rulesets),
         item=make_simple_link(
             makeuri_contextless(request, [("mode", "rulesets"), ("group", "eventconsole")])
         ),
@@ -3747,7 +3778,7 @@ def _page_menu_entry_rulesets() -> PageMenuEntry:
 def _page_menu_entry_status() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Status"),
-        icon_name="event console_status",
+        icon_name=StaticIcon(IconNames.event_console_status),
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_status")])),
     )
 
@@ -3755,7 +3786,7 @@ def _page_menu_entry_status() -> PageMenuEntry:
 def _page_menu_entry_settings(is_suggested: bool) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Settings"),
-        icon_name="configuration",
+        icon_name=StaticIcon(IconNames.configuration),
         is_shortcut=is_suggested,
         is_suggested=is_suggested,
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_config")])),
@@ -3765,7 +3796,7 @@ def _page_menu_entry_settings(is_suggested: bool) -> PageMenuEntry:
 def _page_menu_entry_snmp_mibs() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("SNMP MIBs"),
-        icon_name="snmpmib",
+        icon_name=StaticIcon(IconNames.snmpmib),
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_mibs")])),
     )
 
@@ -3853,8 +3884,8 @@ class MainModuleEventConsole(ABCMainModule):
         return _("Event Console")
 
     @property
-    def icon(self) -> Icon:
-        return "event_console"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.event_console)
 
     @property
     def permission(self) -> None | str:
@@ -4882,8 +4913,11 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return _("Event Console rules")
 
     @property
-    def icon(self) -> Icon:
-        return {"icon": "event_console", "emblem": "settings"}
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(
+            IconNames.event_console,
+            emblem="settings",
+        )
 
     @property
     def permission(self) -> None | str:

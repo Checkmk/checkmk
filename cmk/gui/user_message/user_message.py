@@ -28,6 +28,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
 from cmk.gui.token_auth import AuthToken, DashboardToken
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -104,7 +105,7 @@ def _handle_ack_all() -> None:
 def _page_menu_entries_ack_all_messages() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Acknowledge all"),
-        icon_name="werk_ack",
+        icon_name=StaticIcon(IconNames.werk_ack),
         is_shortcut=True,
         is_suggested=True,
         item=make_simple_link(
@@ -121,20 +122,20 @@ def _page_menu_entries_ack_all_messages() -> Iterator[PageMenuEntry]:
 def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Change password"),
-        icon_name="topic_change_password",
+        icon_name=StaticIcon(IconNames.topic_change_password),
         item=make_simple_link("user_change_pw.py"),
     )
 
     yield PageMenuEntry(
         title=_("Edit profile"),
-        icon_name="topic_profile",
+        icon_name=StaticIcon(IconNames.topic_profile),
         item=make_simple_link("user_profile.py"),
     )
 
     if user.may("general.edit_notifications"):
         yield PageMenuEntry(
             title=_("Notification rules"),
-            icon_name="topic_events",
+            icon_name=StaticIcon(IconNames.topic_events),
             item=make_simple_link("wato.py?mode=user_notifications_p"),
         )
 
@@ -200,18 +201,22 @@ def show_message_actions(
     must_expire: bool,
 ) -> None:
     if is_acknowledged:
-        html.icon("checkmark", _("Acknowledged"))
+        html.static_icon(StaticIcon(IconNames.checkmark), title=_("Acknowledged"))
     else:
         html.icon_button(
             "",
             _("Acknowledge message"),
-            "werk_ack",
+            StaticIcon(IconNames.werk_ack),
             onclick="cmk.utils.acknowledge_user_message('%s');cmk.utils.reload_whole_page();"
             % msg_id,
         )
 
     if must_expire:
-        html.icon("delete", _("Cannot be deleted manually, must expire"), cssclass="colorless")
+        html.static_icon(
+            StaticIcon(IconNames.delete),
+            title=_("Cannot be deleted manually, must expire"),
+            css_classes=["colorless"],
+        )
     else:
         onclick = (
             "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();" % msg_id
@@ -221,7 +226,7 @@ def show_message_actions(
         html.icon_button(
             "",
             _("Delete"),
-            "delete",
+            StaticIcon(IconNames.delete),
             onclick=onclick,
         )
 

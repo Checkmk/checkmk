@@ -36,7 +36,9 @@ from cmk.gui.type_defs import (
     CustomAttrSpec,
     CustomHostAttrSpec,
     CustomUserAttrSpec,
+    IconNames,
     PermissionName,
+    StaticIcon,
 )
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.transaction_manager import transactions
@@ -476,7 +478,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add attribute"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [("mode", "edit_%s_attr" % self._type)]
@@ -558,8 +560,8 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                     suffix=custom_attr["title"],
                     message=_("Name: %s") % custom_attr["name"],
                 )
-                html.icon_button(edit_url, _("Properties"), "edit")
-                html.icon_button(delete_url, _("Delete"), "delete")
+                html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
+                html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
                 table.cell(_("Name"), custom_attr["name"])
                 table.cell(_("Title"), custom_attr["title"])
@@ -594,7 +596,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs[CustomUserAttrSpec]):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Users"),
-            icon_name="users",
+            icon_name=StaticIcon(IconNames.users),
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -636,7 +638,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Hosts"),
-            icon_name="folder",
+            icon_name=StaticIcon(IconNames.folder),
             item=make_simple_link(
                 makeuri_contextless(
                     request,

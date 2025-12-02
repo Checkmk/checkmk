@@ -15,7 +15,14 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
+from cmk.gui.type_defs import (
+    ColumnSpec,
+    DynamicIconName,
+    Rows,
+    SorterSpec,
+    ViewSpec,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
@@ -331,7 +338,7 @@ multisite_builtin_views.update(
             "play_sounds": False,
             "mustsearch": False,
             "hidden": True,
-            "icon": "status",
+            "icon": DynamicIconName("status"),
             "datasource": "hosts",
             "group_painters": [],
             "layout": "mobiledataset",
@@ -576,7 +583,7 @@ multisite_builtin_views.update(
             "user_sortable": False,
             "play_sounds": False,
             "mustsearch": False,
-            "icon": "notifications",
+            "icon": DynamicIconName("notifications"),
             "topic": "history",
             "datasource": "log",
             "group_painters": [ColumnSpec(name="log_date")],
@@ -640,7 +647,7 @@ multisite_builtin_views.update(
             "play_sounds": False,
             "mustsearch": False,
             "hidden": True,
-            "icon": "history",
+            "icon": DynamicIconName("history"),
             "datasource": "log_events",
             "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
@@ -690,7 +697,7 @@ multisite_builtin_views.update(
             "play_sounds": False,
             "mustsearch": False,
             "hidden": True,
-            "icon": "history",
+            "icon": DynamicIconName("history"),
             "datasource": "log_events",
             "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
@@ -733,7 +740,7 @@ multisite_builtin_views.update(
             "play_sounds": False,
             "mustsearch": False,
             "hidden": True,
-            "icon": "notifications",
+            "icon": DynamicIconName("notifications"),
             "topic": "history",
             "datasource": "log",
             "group_painters": [ColumnSpec(name="log_date")],
@@ -795,7 +802,7 @@ multisite_builtin_views.update(
             "play_sounds": False,
             "mustsearch": False,
             "hidden": True,
-            "icon": "notifications",
+            "icon": DynamicIconName("notifications"),
             "topic": "history",
             "datasource": "log",
             "group_painters": [ColumnSpec(name="log_date")],
@@ -858,7 +865,7 @@ multisite_builtin_views.update(
             "play_sounds": False,
             "mustsearch": False,
             "hidden": True,
-            "icon": "notifications",
+            "icon": DynamicIconName("notifications"),
             "topic": "history",
             "datasource": "log",
             "group_painters": [ColumnSpec(name="log_date")],

@@ -38,6 +38,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -411,7 +412,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
                         % HTMLGenerator.render_icon_button(
                             url=url,
                             title=_("Global setting '%s'") % global_setting_name,
-                            icon="configuration",
+                            icon=StaticIcon(IconNames.configuration),
                             theme=make_theme(validate_choices=False),
                         )
                     )
@@ -442,7 +443,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             % HTMLGenerator.render_icon_button(
                 url=download_url,
                 title=_("Download"),
-                icon="agent_output",
+                icon=StaticIcon(IconNames.agent_output),
                 theme=make_theme(validate_choices=False),
             )
         )

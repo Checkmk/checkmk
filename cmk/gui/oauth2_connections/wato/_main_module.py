@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import Icon
+from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.wato import MainModuleTopicGeneral
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 
@@ -26,8 +26,8 @@ class MainModuleOAuth2Connection(ABCMainModule):
         return _("OAuth2 connections")
 
     @property
-    def icon(self) -> Icon:
-        return "passwords"  # TODD: add proper icon
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.passwords)  # TODD: add proper icon
 
     @property
     def permission(self) -> None | str:

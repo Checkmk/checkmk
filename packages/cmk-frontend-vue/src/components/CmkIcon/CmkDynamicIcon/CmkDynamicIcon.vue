@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 This icon variant should be used if the icon can be changed by the user and is
 saved in the backend. An example for this would be a dashboard: The user can
-chose which icon should be used. If you want to render such this icon you
+choose which icon should be used. If you want to render such this icon you
 should use CmkDynamicIcon.
 
 If you know at buildtime which icon should be shown, use the classic CmkIcon.
@@ -21,20 +21,18 @@ import { type IconEmblems, type IconSizeNames } from '../types'
 import CmkDynamicIconUserOrDefault from './CmkDynamicIconUserOrDefault.vue'
 
 interface CmkDynamicIconProps {
-  size?: IconSizeNames | undefined
   spec: DynamicIcon
+  size?: IconSizeNames | undefined
 }
+
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps<CmkDynamicIconProps>()
 </script>
 
 <template>
-  <div>
-    <CmkIconEmblem
-      v-if="props.spec.type === 'emblem_icon'"
-      :emblem="props.spec.emblem as IconEmblems"
-      ><CmkDynamicIconUserOrDefault :spec="props.spec.icon" :size="props.size"
-    /></CmkIconEmblem>
-    <CmkDynamicIconUserOrDefault v-else :spec="props.spec" :size="props.size" />
-  </div>
+  <CmkIconEmblem v-if="props.spec.type === 'emblem_icon'" :emblem="props.spec.emblem as IconEmblems"
+    ><CmkDynamicIconUserOrDefault :spec="props.spec.icon" :size="props.size" v-bind="$attrs"
+  /></CmkIconEmblem>
+  <CmkDynamicIconUserOrDefault v-else :spec="props.spec" :size="props.size" v-bind="$attrs" />
 </template>

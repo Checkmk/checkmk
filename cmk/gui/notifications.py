@@ -36,6 +36,7 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
@@ -276,7 +277,7 @@ class ClearFailedNotificationPage(Page):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Acknowledge"),
-                                    icon_name="save",
+                                    icon_name=StaticIcon(IconNames.save),
                                     item=confirm_url,
                                     is_shortcut=True,
                                     is_suggested=True,

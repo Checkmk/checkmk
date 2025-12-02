@@ -39,7 +39,7 @@ export default function defineCmkComponent(
         if (options.pure === undefined || options.pure === false) {
           return h(CmkApp, options.appprops, () => h(component, this.appData))
         } else {
-          return h(component, this.appData)
+          return h(component, { ...this.appData, ...this.$attrs })
         }
       }
     },

@@ -58,7 +58,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.userdb.store import load_users
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -215,7 +215,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         if user.may("wato.sites"):
             yield PageMenuEntry(
                 title=_("Activate pending changes"),
-                icon_name="activate",
+                icon_name=StaticIcon(IconNames.activate),
                 item=make_simple_link(folder_preserving_link([("mode", "changelog")])),
             )
 
@@ -233,7 +233,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         ):
             yield PageMenuEntry(
                 title=_("Archive log"),
-                icon_name="delete",
+                icon_name=StaticIcon(IconNames.delete),
                 item=make_simple_link(
                     make_confirm_delete_link(
                         url=makeactionuri(
@@ -265,7 +265,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         if self._request_data.is_ok() and self._request_data.ok.selected_filename:
             yield PageMenuEntry(
                 title=_("Export CSV"),
-                icon_name="download_csv",
+                icon_name=StaticIcon(IconNames.download_csv),
                 item=make_simple_link(
                     makeactionuri(
                         request,
@@ -288,7 +288,11 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                 entries=[
                     PageMenuEntry(
                         title=_("Filter view"),
-                        icon_name="filters_set" if html.form_submitted("options") else "filter",
+                        icon_name=StaticIcon(
+                            IconNames.filters_set
+                            if html.form_submitted("options")
+                            else IconNames.filter
+                        ),
                         item=PageMenuSidePopup(self._render_filter_form()),
                         name="filters",
                         is_shortcut=True,
@@ -304,7 +308,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                 entries=[
                     PageMenuEntry(
                         title=_("Show details"),
-                        icon_name="toggle_on" if self._show_details else "toggle_off",
+                        icon_name=StaticIcon(
+                            IconNames.toggle_on if self._show_details else IconNames.toggle_off
+                        ),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -319,7 +325,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     ),
                     PageMenuEntry(
                         title=_("Show object type"),
-                        icon_name="toggle_on" if self._show_object_type else "toggle_off",
+                        icon_name=StaticIcon(
+                            IconNames.toggle_on if self._show_object_type else IconNames.toggle_off
+                        ),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -334,7 +342,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     ),
                     PageMenuEntry(
                         title=_("Show object"),
-                        icon_name="toggle_on" if self._show_object else "toggle_off",
+                        icon_name=StaticIcon(
+                            IconNames.toggle_on if self._show_object else IconNames.toggle_off
+                        ),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -601,7 +611,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     ],
                 ),
                 _("Most recent events"),
-                "start",
+                StaticIcon(IconNames.start),
             )
 
             html.icon_button(
@@ -611,7 +621,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     time_url_args(next_log_time),
                 ),
                 "{}: {}".format(_("Newer events"), render.date(next_log_time)),
-                "back",
+                StaticIcon(IconNames.back),
             )
         else:
             html.empty_icon_button()
@@ -625,7 +635,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     time_url_args(previous_log_time),
                 ),
                 "{}: {}".format(_("Older events"), render.date(previous_log_time)),
-                "forth",
+                StaticIcon(IconNames.forth),
             )
         else:
             html.empty_icon_button()

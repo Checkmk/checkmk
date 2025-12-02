@@ -42,7 +42,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import ActionResult, CustomUserAttrSpec, PermissionName
+from cmk.gui.type_defs import (
+    ActionResult,
+    CustomUserAttrSpec,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+)
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -133,7 +139,7 @@ class ModeBulkRenameHost(WatoMode):
                 entries=[
                     PageMenuEntry(
                         title=_("Show last rename result"),
-                        icon_name="background_job_details",
+                        icon_name=StaticIcon(IconNames.background_job_details),
                         item=make_simple_link(host_renaming_job.detail_url()),
                         is_enabled=host_renaming_job.is_available(),
                     ),
@@ -545,7 +551,7 @@ class ModeRenameHost(WatoMode):
                 entries=[
                     PageMenuEntry(
                         title=_("Show last rename result"),
-                        icon_name="background_job_details",
+                        icon_name=StaticIcon(IconNames.background_job_details),
                         item=make_simple_link(host_renaming_job.detail_url()),
                         is_enabled=host_renaming_job.is_available(),
                     ),

@@ -10,15 +10,19 @@ import re
 from unittest.mock import MagicMock, patch
 
 import cmk.gui.valuespec as vs
+from cmk.gui.type_defs import DynamicIconName
 
 from .utils import expect_validate_failure, expect_validate_success
 
 # A few types below are plain lies...
-ICON: vs.IconSelectorModel = {"icon": "crash", "emblem": None}
+ICON: vs.IconSelectorModel = {"icon": DynamicIconName("crash"), "emblem": None}
 ICON_WRONG_TYPE: vs.IconSelectorModel = {"icon": 123, "emblem": None}  # type: ignore[assignment]
-ICON_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "asd", "emblem": None}
-ICON_EMBLEM: vs.IconSelectorModel = {"icon": "graph", "emblem": "add"}
-ICON_EMBLEM_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "graph", "emblem": "xxx123xxx"}
+ICON_NOT_EXISTANT: vs.IconSelectorModel = {"icon": DynamicIconName("asd"), "emblem": None}
+ICON_EMBLEM: vs.IconSelectorModel = {"icon": DynamicIconName("graph"), "emblem": "add"}
+ICON_EMBLEM_NOT_EXISTANT: vs.IconSelectorModel = {
+    "icon": DynamicIconName("graph"),
+    "emblem": "xxx123xxx",
+}
 ICON_EMBLEM_WRONG_TYPE: vs.IconSelectorModel = {"icon": "graph", "emblem": 123}  # type: ignore[assignment]
 ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore[assignment]
 

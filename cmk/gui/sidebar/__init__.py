@@ -37,6 +37,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
 from cmk.gui.theme.current_theme import theme
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import load_custom_attr
 from cmk.gui.utils import load_web_plugins
@@ -559,7 +560,7 @@ class SidebarRenderer:
             href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"),
             target="main",
         )
-        html.icon("add", title=_("Add elements to your sidebar"))
+        html.static_icon(StaticIcon(IconNames.add), title=_("Add elements to your sidebar"))
         html.close_a()
         html.close_div()
 
@@ -667,7 +668,7 @@ class SidebarRenderer:
             html.icon_button(
                 url=None,
                 title=_("Remove this element"),
-                icon="delete",
+                icon=StaticIcon(IconNames.delete),
                 onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url,
             )
             html.close_div()
@@ -707,8 +708,8 @@ class SidebarRenderer:
             title=_("Toggle the sidebar"),
             onclick="cmk.sidebar.toggle_sidebar()",
         )
-        html.icon("sidebar_folded", class_=["folded"])
-        html.icon("sidebar")
+        html.static_icon(StaticIcon(IconNames.sidebar_folded), css_classes=["folded"])
+        html.static_icon(StaticIcon(IconNames.sidebar))
         if not user.get_attribute("nav_hide_icons_title"):
             html.div(_("Sidebar"))
         html.close_div()
@@ -718,7 +719,11 @@ def _render_header_icon() -> None:
     if theme.has_custom_logo("navbar_logo"):
         html.img(theme.detect_icon_path(icon_name="navbar_logo", prefix=""), class_="custom")
     else:
-        html.icon("checkmk_logo" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""))
+        html.static_icon(
+            StaticIcon(IconNames.checkmk_logo_min)
+            if user.get_attribute("nav_hide_icons_title")
+            else StaticIcon(IconNames.checkmk_logo)
+        )
 
 
 def page_side(ctx: PageContext) -> None:

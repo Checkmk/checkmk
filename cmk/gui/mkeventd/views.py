@@ -35,12 +35,15 @@ from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
+    DynamicIconName,
     HTTPVariables,
+    IconNames,
     Row,
     Rows,
     SingleInfos,
     SorterName,
     SorterSpec,
+    StaticIcon,
     ViewSpec,
     VisualContext,
     VisualLinkSpec,
@@ -958,10 +961,9 @@ def paint_event_icons(
         htmlcode += render_delete_event_icons(row, request=request)
 
     if row["event_host_in_downtime"]:
-        htmlcode += html.render_icon(
-            "downtime",
-            _("Host in downtime during event creation"),
-            theme=theme,
+        htmlcode += html.render_static_icon(
+            StaticIcon(IconNames.downtime),
+            title=_("Host in downtime during event creation"),
         )
 
     if htmlcode:
@@ -1014,7 +1016,9 @@ def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
     url = makeactionuri(
         request, transactions, urlvars, filename=filename, delvars=["selection", "show_checkboxes"]
     )
-    return html.render_icon_button(url, _("Archive this event"), "archive_event")
+    return html.render_icon_button(
+        url, _("Archive this event"), StaticIcon(IconNames.archive_event)
+    )
 
 
 def _is_rendered_from_view_dashlet(request: Request) -> bool:
@@ -1682,7 +1686,7 @@ _EC_VIEW_DEFAULTS = ViewSpec(
         "topic": "events",
         "browser_reload": 60,
         "column_headers": "pergroup",
-        "icon": "event_console",
+        "icon": DynamicIconName("event_console"),
         "mobile": False,
         "hidden": False,
         "mustsearch": False,
@@ -1934,7 +1938,10 @@ EC_EVENT = ViewSpec(
 EC_HISTORY_RECENT = ViewSpec(
     {
         **_EC_VIEW_DEFAULTS,
-        "icon": {"icon": "event_console", "emblem": "time"},
+        "icon": {
+            "icon": DynamicIconName("event_console"),
+            "emblem": "time",
+        },
         "group_painters": [],
         "sorters": [
             SorterSpec(sorter="history_time", negate=True),
@@ -2184,7 +2191,7 @@ EC_EVENT_MOBILE: ViewSpec = {
     "group_painters": [],
     "hidden": True,
     "hidebutton": False,
-    "icon": "event",
+    "icon": DynamicIconName("event"),
     "layout": "mobiledataset",
     "mobile": True,
     "name": "ec_event_mobile",
@@ -2291,7 +2298,7 @@ EC_EVENTS_MOBILE: ViewSpec = {
     "group_painters": [],
     "hidden": False,
     "hidebutton": False,
-    "icon": "event",
+    "icon": DynamicIconName("event"),
     "layout": "mobilelist",
     "mobile": True,
     "name": "ec_events_mobile",

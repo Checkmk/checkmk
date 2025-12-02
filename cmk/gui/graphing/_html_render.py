@@ -37,7 +37,7 @@ from cmk.gui.logged_in import (
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import GraphTimerange, SizePT
+from cmk.gui.type_defs import GraphTimerange, IconNames, SizePT, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -332,7 +332,7 @@ def _show_graph_html_content(
         # argument report_name --> provided by popup system
         # further arguments:
         html.popup_trigger(
-            content=html.render_icon("menu", _("Add to ...")),
+            content=html.render_static_icon(StaticIcon(IconNames.menu), title=_("Add to ...")),
             ident="add_visual",
             method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", "pnpgraph")]),
             data=[

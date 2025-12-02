@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import Icon
+from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.wato import MainModuleTopicGeneral
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleTopic
 
@@ -23,8 +23,8 @@ class MainModuleIcons(ABCMainModule):
         return _("Custom icons")
 
     @property
-    def icon(self) -> Icon:
-        return "icons"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.icons)
 
     @property
     def permission(self) -> None | str:

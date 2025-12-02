@@ -25,7 +25,7 @@ from cmk.gui.quick_setup.html import (
     quick_setup_source_cell,
 )
 from cmk.gui.table import Table
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.valuespec import (
     Alternative,
     DictionaryEntry,
@@ -128,7 +128,7 @@ class ModePasswords(SimpleListMode[Password]):
                 url="",
                 title=_("%s can only be deleted via quick setup")
                 % self._mode_type.name_singular().title(),
-                icon="delete",
+                icon=StaticIcon(IconNames.delete),
                 class_=["disabled"],
             )
         elif is_locked_by_oauth2_connection(entry.get("locked_by")):
@@ -136,7 +136,7 @@ class ModePasswords(SimpleListMode[Password]):
                 url="",
                 title=_("%s can only be deleted via OAuth2 connection")
                 % self._mode_type.name_singular().title(),
-                icon="delete",
+                icon=StaticIcon(IconNames.delete),
                 class_=["disabled"],
             )
         else:

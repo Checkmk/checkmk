@@ -14,7 +14,7 @@ import cmk.ccc.version as cmk_version
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import Icon
+from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
@@ -93,8 +93,8 @@ class MainModuleFolder(ABCMainModule):
         return _("Hosts")
 
     @property
-    def icon(self) -> Icon:
-        return "folder"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.folder)
 
     @property
     def permission(self) -> None | str:
@@ -127,8 +127,8 @@ class MainModuleTags(ABCMainModule):
         return _("Tags")
 
     @property
-    def icon(self) -> Icon:
-        return "tag"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.tag)
 
     @property
     def permission(self) -> None | str:
@@ -163,8 +163,8 @@ class MainModuleGlobalSettings(ABCMainModule):
         return _("Global settings")
 
     @property
-    def icon(self) -> Icon:
-        return "configuration"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.configuration)
 
     @property
     def permission(self) -> None | str:
@@ -203,8 +203,8 @@ class MainModuleReadOnly(ABCMainModule):
         return _("Read only mode")
 
     @property
-    def icon(self) -> Icon:
-        return "read_only"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.read_only)
 
     @property
     def permission(self) -> None | str:
@@ -237,8 +237,8 @@ class MainModuleRuleSearch(ABCMainModule):
         return _("Rule search")
 
     @property
-    def icon(self) -> Icon:
-        return "search"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.search)  # TODO: this is a new icon!
 
     @property
     def permission(self) -> None | str:
@@ -271,8 +271,8 @@ class MainModulePredefinedConditions(ABCMainModule):
         return _("Predefined conditions")
 
     @property
-    def icon(self) -> Icon:
-        return "predefined_conditions"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.predefined_conditions)
 
     @property
     def permission(self) -> None | str:
@@ -305,8 +305,11 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
         return _("Host monitoring rules")
 
     @property
-    def icon(self) -> Icon:
-        return {"icon": "folder", "emblem": "rulesets"}
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(
+            IconNames.folder,
+            emblem="rulesets",
+        )
 
     @property
     def permission(self) -> None | str:
@@ -343,8 +346,8 @@ class MainModuleHWSWInventory(ABCMainModule):
         return _("HW/SW Inventory rules")
 
     @property
-    def icon(self) -> Icon:
-        return "inventory"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.inventory)
 
     @property
     def permission(self) -> None | str:
@@ -381,8 +384,8 @@ class MainModuleNetworkingServices(ABCMainModule):
         return _("HTTP, TCP, email, ...")
 
     @property
-    def icon(self) -> Icon:
-        return "network_services"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.network_services)
 
     @property
     def permission(self) -> None | str:
@@ -418,8 +421,8 @@ class MainModuleOtherServices(ABCMainModule):
         return _("Other services")
 
     @property
-    def icon(self) -> Icon:
-        return "nagios"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.nagios)
 
     @property
     def permission(self) -> None | str:
@@ -455,8 +458,8 @@ class MainModuleCheckPlugins(ABCMainModule):
         return _("Catalog of check plug-ins")
 
     @property
-    def icon(self) -> Icon:
-        return "check_plugins"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.check_plugins)
 
     @property
     def permission(self) -> None | str:
@@ -489,8 +492,8 @@ class MainModuleHostGroups(ABCMainModule):
         return _("Host groups")
 
     @property
-    def icon(self) -> Icon:
-        return "hostgroups"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.hostgroups)
 
     @property
     def permission(self) -> None | str:
@@ -523,8 +526,8 @@ class MainModuleHostCustomAttributes(ABCMainModule):
         return _("Custom host attributes")
 
     @property
-    def icon(self) -> Icon:
-        return "custom_attr"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.custom_attr)
 
     @property
     def permission(self) -> None | str:
@@ -557,8 +560,8 @@ class MainModuleServiceGroups(ABCMainModule):
         return _("Service groups")
 
     @property
-    def icon(self) -> Icon:
-        return "servicegroups"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.servicegroups)
 
     @property
     def permission(self) -> None | str:
@@ -591,8 +594,8 @@ class MainModuleUsers(ABCMainModule):
         return _("Users")
 
     @property
-    def icon(self) -> Icon:
-        return "users"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.users)
 
     @property
     def permission(self) -> None | str:
@@ -625,8 +628,8 @@ class MainModuleRoles(ABCMainModule):
         return _("Roles & permissions")
 
     @property
-    def icon(self) -> Icon:
-        return "roles"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.roles)
 
     @property
     def permission(self) -> None | str:
@@ -659,8 +662,8 @@ class MainModuleLDAP(ABCMainModule):
         return _("LDAP & Active Directory")
 
     @property
-    def icon(self) -> Icon:
-        return "ldap"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.ldap)
 
     @property
     def permission(self) -> None | str:
@@ -693,8 +696,8 @@ class MainModuleUserCustomAttributes(ABCMainModule):
         return _("Custom user attributes")
 
     @property
-    def icon(self) -> Icon:
-        return "custom_attr"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.custom_attr)
 
     @property
     def permission(self) -> None | str:
@@ -727,8 +730,8 @@ class MainModuleContactGroups(ABCMainModule):
         return _("Contact groups")
 
     @property
-    def icon(self) -> Icon:
-        return "contactgroups"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.contactgroups)
 
     @property
     def permission(self) -> None | str:
@@ -761,8 +764,8 @@ class MainModuleNotifications(ABCMainModule):
         return _("Notifications")
 
     @property
-    def icon(self) -> Icon:
-        return "notifications"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.notifications)
 
     @property
     def permission(self) -> None | str:
@@ -795,8 +798,8 @@ class MainModuleAnalyzeNotifications(ABCMainModule):
         return _("Analyze recent notifications")
 
     @property
-    def icon(self) -> Icon:
-        return "analyze"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.analyze)
 
     @property
     def permission(self) -> None | str:
@@ -829,8 +832,8 @@ class MainModuleTestNotifications(ABCMainModule):
         return _("Test notifications")
 
     @property
-    def icon(self) -> Icon:
-        return "analysis"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.analysis)
 
     @property
     def permission(self) -> None | str:
@@ -863,8 +866,8 @@ class MainModuleTimeperiods(ABCMainModule):
         return _("Time periods")
 
     @property
-    def icon(self) -> Icon:
-        return "timeperiods"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.timeperiods)
 
     @property
     def permission(self) -> None | str:
@@ -899,8 +902,8 @@ class MainModuleSites(ABCMainModule):
         return _("Distributed monitoring")
 
     @property
-    def icon(self) -> Icon:
-        return "sites"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.sites)
 
     @property
     def permission(self) -> None | str:
@@ -933,8 +936,8 @@ class MainModulePasswords(ABCMainModule):
         return _("Passwords")
 
     @property
-    def icon(self) -> Icon:
-        return "passwords"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.passwords)
 
     @property
     def permission(self) -> None | str:
@@ -967,8 +970,8 @@ class MainModuleAuditLog(ABCMainModule):
         return _("Audit log")
 
     @property
-    def icon(self) -> Icon:
-        return "auditlog"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.auditlog)
 
     @property
     def permission(self) -> None | str:
@@ -1005,8 +1008,8 @@ class MainModuleAnalyzeConfig(ABCMainModule):
         return _("Analyze configuration")
 
     @property
-    def icon(self) -> Icon:
-        return "analyze_config"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.analyze_config)
 
     @property
     def permission(self) -> None | str:
@@ -1039,8 +1042,8 @@ class MainModuleCertificateOverview(ABCMainModule):
         return _("Certificate overview")
 
     @property
-    def icon(self) -> Icon:
-        return "certificate"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.certificate)
 
     @property
     def permission(self) -> None | str:
@@ -1073,11 +1076,11 @@ class MainModuleDiagnostics(ABCMainModule):
         return _("Support diagnostics")
 
     @property
-    def icon(self) -> Icon:
+    def icon(self) -> StaticIcon | DynamicIcon:
         loc_time = time.localtime()
         if loc_time.tm_hour == 13 and loc_time.tm_min == 37:
-            return "d146n0571c5"
-        return "diagnostics"
+            return StaticIcon(IconNames.d146n0571c5)
+        return StaticIcon(IconNames.diagnostics)
 
     @property
     def permission(self) -> None | str:
@@ -1110,8 +1113,11 @@ class MainModuleMonitoringRules(ABCMainModule):
         return _("Service monitoring rules")
 
     @property
-    def icon(self) -> Icon:
-        return {"icon": "services", "emblem": "rulesets"}
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(
+            IconNames.services,
+            emblem="rulesets",
+        )
 
     @property
     def permission(self) -> None | str:
@@ -1148,8 +1154,8 @@ class MainModuleDiscoveryRules(ABCMainModule):
         return _("Discovery rules")
 
     @property
-    def icon(self) -> Icon:
-        return "service_discovery"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.service_discovery)
 
     @property
     def permission(self) -> None | str:
@@ -1182,8 +1188,8 @@ class MainModuleEnforcedServices(ABCMainModule):
         return _("Enforced services")
 
     @property
-    def icon(self) -> Icon:
-        return "static_checks"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.static_checks)
 
     @property
     def permission(self) -> None | str:
@@ -1216,8 +1222,8 @@ class MainModuleAgentsWindows(ABCMainModule):
         return _("Windows")
 
     @property
-    def icon(self) -> Icon:
-        return "download_agents"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.download_agents)
 
     @property
     def permission(self) -> None | str:
@@ -1250,8 +1256,8 @@ class MainModuleAgentsLinux(ABCMainModule):
         return _("Linux")
 
     @property
-    def icon(self) -> Icon:
-        return "download_agents"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.download_agents)
 
     @property
     def permission(self) -> None | str:
@@ -1288,8 +1294,11 @@ class MainModuleAgentRules(ABCMainModule):
         return _("Agent rules")
 
     @property
-    def icon(self) -> Icon:
-        return {"icon": "agents", "emblem": "rulesets"}
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(
+            IconNames.agents,
+            emblem="rulesets",
+        )
 
     @property
     def permission(self) -> None | str:
@@ -1333,8 +1342,8 @@ class MainModuleOtherAgents(ABCMainModule):
         return _("Other operating systems")
 
     @property
-    def icon(self) -> Icon:
-        return "os_other"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.os_other)
 
     @property
     def permission(self) -> None | str:
@@ -1367,8 +1376,11 @@ class MainModuleAgentAccessRules(ABCMainModule):
         return _("Agent access rules")
 
     @property
-    def icon(self) -> Icon:
-        return {"icon": "agents", "emblem": "rulesets"}
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(
+            IconNames.agents,
+            emblem="rulesets",
+        )
 
     @property
     def permission(self) -> None | str:
@@ -1401,8 +1413,8 @@ class MainModuleSNMPRules(ABCMainModule):
         return _("SNMP rules")
 
     @property
-    def icon(self) -> Icon:
-        return "snmp"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.snmp)
 
     @property
     def permission(self) -> None | str:
@@ -1435,8 +1447,8 @@ class MainModuleVMCloudContainer(ABCMainModule):
         return _("VM, cloud, container")
 
     @property
-    def icon(self) -> Icon:
-        return "cloud"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.cloud)
 
     @property
     def permission(self) -> None | str:
@@ -1469,8 +1481,8 @@ class MainModuleOtherIntegrations(ABCMainModule):
         return _("Other integrations")
 
     @property
-    def icon(self) -> Icon:
-        return "integrations_other"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.integrations_other)
 
     @property
     def permission(self) -> None | str:

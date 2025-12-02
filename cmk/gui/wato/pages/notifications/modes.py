@@ -81,7 +81,14 @@ from cmk.gui.site_config import (
     site_is_local,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName, Users
+from cmk.gui.type_defs import (
+    ActionResult,
+    HTTPVariables,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+    Users,
+)
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
@@ -462,9 +469,14 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     table.cell(css=["buttons"])
                     what, _anarule, reason = analyse_rules[nr + start_nr]
                     if what == "match":
-                        html.icon("checkmark", _("This rule matches"))
+                        html.static_icon(
+                            StaticIcon(IconNames.checkmark), title=_("This rule matches")
+                        )
                     elif what == "miss":
-                        html.icon("hyphen", _("This rule does not match: %s") % reason)
+                        html.static_icon(
+                            StaticIcon(IconNames.hyphen),
+                            title=_("This rule does not match: %s") % reason,
+                        )
 
                 table.cell("#", css=["narrow nowrap"])
 
@@ -472,13 +484,19 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     html.write_text_permissive(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     links = self._rule_links(rule, nr, profilemode, userid)
-                    html.icon_button(links.edit, _("Edit this notification rule"), "edit")
+                    html.icon_button(
+                        links.edit, _("Edit this notification rule"), StaticIcon(IconNames.edit)
+                    )
                     html.icon_button(
                         links.clone,
                         _("Create a copy of this notification rule"),
-                        "clone",
+                        StaticIcon(IconNames.clone),
                     )
-                    html.icon_button(links.delete, _("Delete this notification rule"), "delete")
+                    html.icon_button(
+                        links.delete,
+                        _("Delete this notification rule"),
+                        StaticIcon(IconNames.delete),
+                    )
                     html.element_dragger_url("tr", base_url=links.drag)
                 else:
                     table.cell("", css=["buttons"])
@@ -487,9 +505,9 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
                 table.cell("", css=["narrow"])
                 if rule.get("disabled"):
-                    html.icon(
-                        "cross",
-                        _("This rule is currently disabled and will not be applied"),
+                    html.static_icon(
+                        StaticIcon(IconNames.cross),
+                        title=_("This rule is currently disabled and will not be applied"),
                     )
                 else:
                     html.empty_icon_button()
@@ -517,22 +535,22 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
                 table.cell(_("Effect"), css=["narrow"])
                 if notify_method is None:
-                    html.icon(
-                        "cancel_notifications",
-                        _("Cancel notifications for this plug-in type"),
+                    html.static_icon(
+                        StaticIcon(IconNames.cancel_notifications),
+                        title=_("Cancel notifications for this plug-in type"),
                     )
                 else:
-                    html.icon(
-                        {
-                            "icon": "notifications",
-                            "emblem": "enable",
-                        },
-                        _("Create a notification"),
+                    html.static_icon(
+                        StaticIcon(IconNames.notifications, emblem="enable"),
+                        title=_("Create a notification"),
                     )
 
                 table.cell(_("Bulk"), css=["narrow"])
                 if "bulk" in rule or "bulk_period" in rule:
-                    html.icon("bulk", _("This rule configures bulk notifications."))
+                    html.static_icon(
+                        StaticIcon(IconNames.bulk),
+                        title=_("This rule configures bulk notifications."),
+                    )
 
                 table.cell(_("Description"))
                 url = rule.get("docu_url")
@@ -540,7 +558,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     html.icon_button(
                         url,
                         _("Context information about this rule"),
-                        "url",
+                        StaticIcon(IconNames.url),
                         target="_blank",
                     )
                     html.write_text_permissive("&nbsp;")
@@ -623,7 +641,9 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             return _("Notification rules")
         if userid:
             url = makeuri(request, [("mode", "user_notifications"), ("user", userid)])
-            code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
+            code = html.render_icon_button(
+                url, _("Edit this user's notifications"), StaticIcon(IconNames.edit)
+            )
             return code + _("Notification rules of user %s") % userid
         return _("Global notification rules")
 
@@ -642,7 +662,10 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 len(contact_users_list) == 1
                 and (explicit_user := contact_users_list[0]) not in all_users
             ):
-                info += html.render_icon("warning", _("User %s does not exist.") % explicit_user)
+                info += html.render_static_icon(
+                    StaticIcon(IconNames.warning),
+                    title=_("User %s does not exist.") % explicit_user,
+                )
             info += HTML.with_escaping(", ".join(rule["contact_users"]))
             infos.append(info)
         if rule.get("contact_groups"):
@@ -764,7 +787,7 @@ class ModeNotifications(ABCNotificationsMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add notification rule"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [("mode", "notification_rule_quick_setup")]
@@ -775,7 +798,7 @@ class ModeNotifications(ABCNotificationsMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Parameters for notification methods"),
-                                    icon_name="clipboard",
+                                    icon_name=StaticIcon(IconNames.clipboard),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -797,7 +820,7 @@ class ModeNotifications(ABCNotificationsMode):
                                 PageMenuEntry(
                                     title=_("Test notifications"),
                                     name="test_notifications",
-                                    icon_name="analysis",
+                                    icon_name=StaticIcon(IconNames.analysis),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "test_notifications")])
                                     ),
@@ -806,7 +829,7 @@ class ModeNotifications(ABCNotificationsMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Analyze recent notifications"),
-                                    icon_name="analyze",
+                                    icon_name=StaticIcon(IconNames.analyze),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "analyze_notifications")])
                                     ),
@@ -838,7 +861,7 @@ class ModeNotifications(ABCNotificationsMode):
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Fallback email address for notifications"),
-            icon_name="configuration",
+            icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
                 folder_preserving_link(
                     [
@@ -851,7 +874,7 @@ class ModeNotifications(ABCNotificationsMode):
 
         yield PageMenuEntry(
             title=_("Failed notification horizon"),
-            icon_name="configuration",
+            icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
                 folder_preserving_link(
                     [
@@ -864,7 +887,7 @@ class ModeNotifications(ABCNotificationsMode):
 
         yield PageMenuEntry(
             title=_("Notification log level"),
-            icon_name="configuration",
+            icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
                 folder_preserving_link(
                     [
@@ -877,7 +900,7 @@ class ModeNotifications(ABCNotificationsMode):
 
         yield PageMenuEntryCEEOnly(
             title=_("Logging of the notification mechanics"),
-            icon_name="configuration",
+            icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
                 folder_preserving_link(
                     [
@@ -897,7 +920,9 @@ class ModeNotifications(ABCNotificationsMode):
                 entries=[
                     PageMenuEntry(
                         title=_("Show user rules"),
-                        icon_name=("toggle_on" if self._show_user_rules else "toggle_off"),
+                        icon_name=StaticIcon(
+                            IconNames.toggle_on if self._show_user_rules else IconNames.toggle_off
+                        ),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -977,13 +1002,13 @@ class ModeNotifications(ABCNotificationsMode):
     def _add_state_cells(self, table: Table, nottype: str) -> None:
         if nottype.startswith("DOWNTIME"):
             table.cell(_("State"))
-            html.icon("downtime", _("Downtime"))
+            html.static_icon(StaticIcon(IconNames.downtime), title=_("Downtime"))
         elif nottype.startswith("ACK"):
             table.cell(_("State"))
-            html.icon("ack", _("Acknowledgment"))
+            html.static_icon(StaticIcon(IconNames.ack), title=_("Acknowledgment"))
         elif nottype.startswith("FLAP"):
             table.cell(_("State"))
-            html.icon("flapping", _("Flapping"))
+            html.static_icon(StaticIcon(IconNames.flapping), title=_("Flapping"))
         else:
             table.cell(_("State"), "")
 
@@ -1270,7 +1295,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add notification rule"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [("mode", "notification_rule_quick_setup")]
@@ -1287,7 +1312,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                 PageMenuEntry(
                                     title=_("Test notifications"),
                                     name="test_notifications",
-                                    icon_name="analysis",
+                                    icon_name=StaticIcon(IconNames.analysis),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "test_notifications")])
                                     ),
@@ -1307,7 +1332,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Store notifications for rule analysis"),
-                                    icon_name="configuration",
+                                    icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -1319,7 +1344,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                 ),
                                 PageMenuEntry(
                                     title=_("Notification log level"),
-                                    icon_name="configuration",
+                                    icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -1331,7 +1356,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                 ),
                                 PageMenuEntryCEEOnly(
                                     title=_("Logging of the notification mechanics"),
-                                    icon_name="configuration",
+                                    icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -1369,7 +1394,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                             if self._show_bulks
                             else _("Show notification bulks")
                         ),
-                        icon_name="toggle_" + ("on" if self._show_bulks else "off"),
+                        icon_name=StaticIcon(
+                            IconNames.toggle_on if self._show_bulks else IconNames.toggle_off
+                        ),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -1384,7 +1411,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     ),
                     PageMenuEntry(
                         title=_("Show user rules"),
-                        icon_name=("toggle_on" if self._show_user_rules else "toggle_off"),
+                        icon_name=StaticIcon(
+                            IconNames.toggle_on if self._show_user_rules else IconNames.toggle_off
+                        ),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -1445,14 +1474,17 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 table.cell(_("Max. Age (sec)"), str(interval), css=["number"])
                 table.cell(_("Age (sec)"), str(age), css=["number"])
                 if interval and interval != "n.a." and age >= float(interval):
-                    html.icon("warning", _("Age of oldest notification is over maximum age"))
+                    html.static_icon(
+                        StaticIcon(IconNames.warning),
+                        title=_("Age of oldest notification is over maximum age"),
+                    )
                 table.cell(_("Time Period"), str(timeperiod))
                 table.cell(_("Max. Count"), str(maxcount), css=["number"])
                 table.cell(_("Count"), str(len(uuids)), css=["number"])
                 if len(uuids) >= maxcount:
-                    html.icon(
-                        "warning",
-                        _("Number of notifications exceeds maximum allowed number"),
+                    html.static_icon(
+                        StaticIcon(IconNames.warning),
+                        title=_("Number of notifications exceeds maximum allowed number"),
                     )
         return True
 
@@ -1476,13 +1508,15 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
                 analyse_url = makeuri(request, [("analyse", str(nr))])
                 html.icon_button(
-                    analyse_url, _("Analyze rule set with this notification"), "analyze"
+                    analyse_url,
+                    _("Analyze rule set with this notification"),
+                    StaticIcon(IconNames.analyze),
                 )
 
                 html.icon_button(
                     None,
                     _("Show / hide notification context"),
-                    "toggle_context",
+                    StaticIcon(IconNames.toggle_context),
                     onclick="cmk.wato.toggle_container('notification_context_%d')" % nr,
                 )
 
@@ -1490,11 +1524,14 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 html.icon_button(
                     replay_url,
                     _("Replay this notification, send it again!"),
-                    "reload_cmk",
+                    StaticIcon(IconNames.reload_cmk),
                 )
 
                 if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
-                    html.icon("checkmark", _("You are analysing this notification"))
+                    html.static_icon(
+                        StaticIcon(IconNames.checkmark),
+                        title=_("You are analysing this notification"),
+                    )
 
                 table.cell(_("Nr."), str(nr + 1), css=["number"])
 
@@ -1635,7 +1672,7 @@ class ModeTestNotifications(ModeNotifications):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add notification rule"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [("mode", "notification_rule_quick_setup")]
@@ -1652,7 +1689,7 @@ class ModeTestNotifications(ModeNotifications):
                                 PageMenuEntry(
                                     title=_("Analyze recent notifications"),
                                     name="analyze_notifications",
-                                    icon_name="analyze",
+                                    icon_name=StaticIcon(IconNames.analyze),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "analyze_notifications")])
                                     ),
@@ -1672,7 +1709,7 @@ class ModeTestNotifications(ModeNotifications):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Notifications"),
-                                    icon_name="notifications",
+                                    icon_name=StaticIcon(IconNames.notifications),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "notifications")])
                                     ),
@@ -1686,7 +1723,7 @@ class ModeTestNotifications(ModeNotifications):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Notification log level"),
-                                    icon_name="configuration",
+                                    icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -1698,7 +1735,7 @@ class ModeTestNotifications(ModeNotifications):
                                 ),
                                 PageMenuEntryCEEOnly(
                                     title=_("Logging of the notification mechanics"),
-                                    icon_name="configuration",
+                                    icon_name=StaticIcon(IconNames.configuration),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -1836,7 +1873,7 @@ class ModeTestNotifications(ModeNotifications):
         html.open_div(id_="notification_analysis_container")
         html.open_div(class_="state_bar state0")
         html.open_span()
-        html.icon("check")
+        html.static_icon(StaticIcon(IconNames.check))
         html.close_span()
         html.close_div()
 
@@ -1935,7 +1972,7 @@ class ModeTestNotifications(ModeNotifications):
             html.icon_button(
                 None,
                 _("Show / hide notification context"),
-                "toggle_context",
+                StaticIcon(IconNames.toggle_context),
                 onclick="cmk.wato.toggle_container('notification_context_test')",
             )
 
@@ -1943,11 +1980,13 @@ class ModeTestNotifications(ModeNotifications):
                 table.cell(css=["buttons"])
                 analyse_rules, _analyse_plugins = analyse
                 if any("match" in entry for entry in analyse_rules):
-                    html.icon("checkmark", _("This notification matches"))
+                    html.static_icon(
+                        StaticIcon(IconNames.checkmark), title=_("This notification matches")
+                    )
                 else:
-                    html.icon(
-                        "hyphen",
-                        _(
+                    html.static_icon(
+                        StaticIcon(IconNames.hyphen),
+                        title=_(
                             "This notification does not match. See reasons in "
                             "global notification rule list."
                         ),
@@ -2638,7 +2677,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add notification rule"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -2673,7 +2712,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Users"),
-            icon_name="users",
+            icon_name=StaticIcon(IconNames.users),
             item=make_simple_link(folder_preserving_link([("mode", "users")])),
         )
 
@@ -2706,7 +2745,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add rule"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "notification_rule_p")])
                                     ),
@@ -3592,7 +3631,7 @@ class ModeNotificationParametersOverview(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Define parameters for HTML mail"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -3908,7 +3947,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add parameter"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
@@ -3999,14 +4038,20 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 links = self._parameter_links(parameter, parameter_id, nr)
-                html.icon_button(links.edit, _("Edit this notification parameter"), "edit")
+                html.icon_button(
+                    links.edit, _("Edit this notification parameter"), StaticIcon(IconNames.edit)
+                )
                 html.icon_button(
                     links.clone,
                     _("Create a copy of this notification parameter"),
-                    "clone",
+                    StaticIcon(IconNames.clone),
                 )
                 html.element_dragger_url("tr", base_url=links.drag)
-                html.icon_button(links.delete, _("Delete this notification parameter"), "delete")
+                html.icon_button(
+                    links.delete,
+                    _("Delete this notification parameter"),
+                    StaticIcon(IconNames.delete),
+                )
 
                 table.cell(_("Method"), method_name)
 
@@ -4016,7 +4061,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                     html.icon_button(
                         url,
                         _("Context information about this parameter"),
-                        "url",
+                        StaticIcon(IconNames.url),
                         target="_blank",
                     )
                     html.write_text_permissive("&nbsp;")

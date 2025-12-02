@@ -26,7 +26,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.type_defs import ActionResult, Icon, PermissionName
+from cmk.gui.type_defs import ActionResult, DynamicIcon, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato import MainModuleTopicMaintenance
@@ -65,8 +65,8 @@ class MainModuleBackgroundJobs(ABCMainModule):
 
     @property
     @override
-    def icon(self) -> Icon:
-        return "background_jobs"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.background_jobs)
 
     @property
     @override
@@ -163,7 +163,7 @@ class ModeBackgroundJobDetails(WatoMode):
         if back_url and "mode=background_jobs_overview" not in back_url:
             yield PageMenuEntry(
                 title=_("Back"),
-                icon_name="back",
+                icon_name=StaticIcon(IconNames.back),
                 item=make_simple_link(back_url),
                 is_shortcut=True,
                 is_suggested=True,

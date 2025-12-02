@@ -20,7 +20,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import IconNames, StaticIcon, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput, ValueSpec
 
@@ -499,7 +499,12 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.open_div(class_="tacticalalert")
 
         confirm_url = makeuri_contextless(request, [], filename="clear_failed_notifications.py")
-        html.icon_button(confirm_url, _("Confirm failed notifications"), "delete", target="main")
+        html.icon_button(
+            confirm_url,
+            _("Confirm failed notifications"),
+            StaticIcon(IconNames.delete),
+            target="main",
+        )
 
         view_url = makeuri_contextless(
             request,
@@ -546,10 +551,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
         if user.may("wato.sites"):
             url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")
-            html.icon_button(url, tooltip, "sites", target="main")
+            html.icon_button(url, tooltip, StaticIcon(IconNames.sites), target="main")
             html.a(message, target="main", href=url)
         else:
-            html.icon("sites", tooltip)
+            html.static_icon(StaticIcon(IconNames.sites), title=tooltip)
             html.write_text_permissive(message)
         html.close_div()
         html.close_div()

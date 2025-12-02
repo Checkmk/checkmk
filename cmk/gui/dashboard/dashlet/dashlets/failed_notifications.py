@@ -10,6 +10,7 @@ from cmk.gui.dashboard.type_defs import DashletConfig, DashletRefreshInterval
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -76,7 +77,10 @@ class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
 
         confirm_url = makeuri_contextless(request, [], filename="clear_failed_notifications.py")
         html.icon_button(
-            confirm_url, _("Clear failed notifications"), "closetimewarp", target="main"
+            confirm_url,
+            _("Clear failed notifications"),
+            StaticIcon(IconNames.closetimewarp),
+            target="main",
         )
 
         view_url = makeuri_contextless(

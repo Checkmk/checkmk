@@ -42,7 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
@@ -234,7 +234,7 @@ class ModeTimeperiods(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add time period"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "edit_timeperiod")])
                                     ),
@@ -243,7 +243,7 @@ class ModeTimeperiods(WatoMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Import iCalendar"),
-                                    icon_name="ical",
+                                    icon_name=StaticIcon(IconNames.ical),
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "import_ical")])
                                     ),
@@ -335,9 +335,9 @@ class ModeTimeperiods(WatoMode):
             message=_("Name: %s") % name,
         )
 
-        html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(clone_url, _("Create a copy"), "clone")
-        html.icon_button(delete_url, _("Delete"), "delete")
+        html.icon_button(edit_url, _("Properties"), StaticIcon(IconNames.edit))
+        html.icon_button(clone_url, _("Create a copy"), StaticIcon(IconNames.clone))
+        html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
 
 # Displays a dialog for uploading an ical file which will then

@@ -16,6 +16,7 @@ from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainM
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -36,7 +37,7 @@ def register(
         MainMenu(
             name="user",
             title=_l("User"),
-            icon="main_user",
+            icon=StaticIcon(IconNames.main_user),
             sort_index=20,
             topics=user_menu_topics,
             info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
@@ -79,7 +80,7 @@ def default_user_menu_topics(
             url='javascript:cmk.sidebar.toggle_user_attribute("ajax_ui_theme.py")',
             target="",
             sort_index=10,
-            icon="color_mode",
+            icon=StaticIcon(IconNames.color_mode),
             button_title=_get_current_theme_title(),
         ),
         MainMenuItem(
@@ -88,7 +89,7 @@ def default_user_menu_topics(
             url='javascript:cmk.sidebar.toggle_user_attribute("ajax_sidebar_position.py")',
             target="",
             sort_index=20,
-            icon="sidebar_position",
+            icon=StaticIcon(IconNames.sidebar_position),
             button_title=_sidebar_position_title(_get_sidebar_position()),
         ),
     ]
@@ -100,7 +101,7 @@ def default_user_menu_topics(
                 title=_("Edit profile"),
                 url="user_profile.py",
                 sort_index=10,
-                icon="topic_profile",
+                icon=StaticIcon(IconNames.topic_profile),
             ),
         ]
         if user.may("general.edit_profile")
@@ -114,7 +115,7 @@ def default_user_menu_topics(
                 title=_("Change password"),
                 url="user_change_pw.py",
                 sort_index=30,
-                icon="topic_change_password",
+                icon=StaticIcon(IconNames.topic_change_password),
             )
         )
 
@@ -125,7 +126,7 @@ def default_user_menu_topics(
                 title=_("Two-factor authentication"),
                 url="user_two_factor_overview.py",
                 sort_index=30,
-                icon="topic_2fa",
+                icon=StaticIcon(IconNames.topic_two_factor),
             ),
         )
 
@@ -135,7 +136,7 @@ def default_user_menu_topics(
             title=_("Logout"),
             url="logout.py",
             sort_index=40,
-            icon="sidebar_logout",
+            icon=StaticIcon(IconNames.sidebar_logout),
             target="_self",
         )
     )
@@ -148,7 +149,7 @@ def default_user_menu_topics(
                 title=_("Notification rules"),
                 url="wato.py?mode=user_notifications_p",
                 sort_index=20,
-                icon="topic_events",
+                icon=StaticIcon(IconNames.topic_events),
             ),
         )
 
@@ -156,27 +157,27 @@ def default_user_menu_topics(
         MainMenuTopic(
             name="user_interface",
             title=_("User interface"),
-            icon="topic_user_interface",
+            icon=StaticIcon(IconNames.topic_user_interface),
             entries=quick_entries,
         ),
         MainMenuTopic(
             name="user_messages",
             title=_("User messages"),
-            icon="topic_events",
+            icon=StaticIcon(IconNames.topic_events),
             entries=[
                 MainMenuItem(
                     name="user_messages",
                     title=_("Received messages"),
                     url="user_message.py",
                     sort_index=1,
-                    icon="topic_events",
+                    icon=StaticIcon(IconNames.topic_events),
                 )
             ],
         ),
         MainMenuTopic(
             name="user_profile",
             title=_("User profile"),
-            icon="topic_profile",
+            icon=StaticIcon(IconNames.topic_profile),
             entries=entries,
         ),
     ]

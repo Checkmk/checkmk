@@ -51,7 +51,16 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import wato_site_ids
 from cmk.gui.table import init_rowselect, table_element
-from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, Icon, PermissionName
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
+    DynamicIcon,
+    DynamicIconName,
+    HTTPVariables,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+)
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -167,7 +176,7 @@ def register(
 MainModuleTopicBI = MainModuleTopic(
     name="bi",
     title=_l("Business Intelligence"),
-    icon_name="topic_bi",
+    icon_name=DynamicIconName("topic_bi"),
     sort_index=30,
 )
 
@@ -186,8 +195,8 @@ class MainModuleBI(ABCMainModule):
         return _("Business Intelligence")
 
     @property
-    def icon(self) -> Icon:
-        return "aggr"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.aggr)
 
     @property
     def permission(self) -> None | str:
@@ -503,7 +512,7 @@ class ModeBIPacks(ABCBIMode):
             bi_config_entries.append(
                 PageMenuEntry(
                     title=_("Add BI pack"),
-                    icon_name="new",
+                    icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link(makeuri_contextless(request, [("mode", "bi_edit_pack")])),
                     is_shortcut=True,
                     is_suggested=True,
@@ -531,7 +540,7 @@ class ModeBIPacks(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("BI Aggregations"),
-                                    icon_name="rulesets",
+                                    icon_name=StaticIcon(IconNames.rulesets),
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,
@@ -544,7 +553,7 @@ class ModeBIPacks(ABCBIMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Check State of BI Aggregation"),
-                                    icon_name="rulesets",
+                                    icon_name=StaticIcon(IconNames.rulesets),
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,
@@ -611,19 +620,23 @@ class ModeBIPacks(ABCBIMode):
                         request,
                         [("mode", target_mode), ("pack", pack.id)],
                     )
-                    html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
+                    html.icon_button(
+                        edit_url, _("Edit properties of this BI pack"), StaticIcon(IconNames.edit)
+                    )
                     delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_delete", pack.id)]),
                         title=_("Delete BI pack #%d") % nr,
                         suffix=pack.title,
                         message=_get_pack_confirm_message(pack),
                     )
-                    html.icon_button(delete_url, _("Delete this BI pack"), "delete")
+                    html.icon_button(
+                        delete_url, _("Delete this BI pack"), StaticIcon(IconNames.delete)
+                    )
                 rules_url = makeuri_contextless(request, [("mode", "bi_rules"), ("pack", pack.id)])
                 html.icon_button(
                     rules_url,
                     _("View and edit the rules and aggregations in this BI pack"),
-                    "rules",
+                    StaticIcon(IconNames.rules),
                 )
                 table.cell(_("ID"), pack.id)
                 table.cell(_("Title"), pack.title)
@@ -714,7 +727,7 @@ class ModeBIRules(ABCBIMode):
             rules_entries.append(
                 PageMenuEntry(
                     title=_("Add rule"),
-                    icon_name="new",
+                    icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link(
                         self.url_to_pack([("mode", "bi_edit_rule")], self.bi_pack)
                     ),
@@ -749,7 +762,7 @@ class ModeBIRules(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Delete rules"),
-                                    icon_name="delete",
+                                    icon_name=StaticIcon(IconNames.delete),
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_action_form",
                                         button_name="_bulk_delete_bi_rules",
@@ -759,7 +772,7 @@ class ModeBIRules(ABCBIMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Move rules"),
-                                    icon_name="move",
+                                    icon_name=StaticIcon(IconNames.move),
                                     name="move_rules",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
@@ -781,7 +794,7 @@ class ModeBIRules(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Aggregations"),
-                                    icon_name="aggr",
+                                    icon_name=StaticIcon(IconNames.aggr),
                                     item=make_simple_link(
                                         self.url_to_pack(
                                             [("mode", "bi_aggregations")], self.bi_pack
@@ -803,7 +816,10 @@ class ModeBIRules(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=unused_rules_title,
-                                    icon_name={"icon": "rules", "emblem": unused_rules_emblem},
+                                    icon_name=StaticIcon(
+                                        IconNames.rules,
+                                        emblem=unused_rules_emblem,
+                                    ),
                                     item=make_simple_link(unused_rules_url),
                                 ),
                             ],
@@ -903,7 +919,7 @@ class ModeBIRules(ABCBIMode):
                 MenuItem(
                     mode_or_url=self.url_to_pack([("mode", "bi_edit_rule")], self.bi_pack),
                     title=_("Add BI rule"),
-                    icon="new",
+                    icon=StaticIcon(IconNames.new),
                     permission="bi_rules",
                     description=_(
                         "Rules are the nodes in BI aggregations. "
@@ -996,12 +1012,14 @@ class ModeBIRules(ABCBIMode):
                     edit_url = self.url_to_pack(
                         [("mode", "bi_edit_rule"), ("id", rule_id)], self.bi_pack
                     )
-                    html.icon_button(edit_url, _("Edit this rule"), "edit")
+                    html.icon_button(edit_url, _("Edit this rule"), StaticIcon(IconNames.edit))
 
                     clone_url = self.url_to_pack(
                         [("mode", "bi_edit_rule"), ("clone", rule_id)], self.bi_pack
                     )
-                    html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+                    html.icon_button(
+                        clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone)
+                    )
 
                     if rule_refs == 0:
                         tree_url = makeuri_contextless(
@@ -1013,7 +1031,9 @@ class ModeBIRules(ABCBIMode):
                             ],
                         )
                         html.icon_button(
-                            tree_url, _("This is a top-level rule. Show rule tree"), "aggr"
+                            tree_url,
+                            _("This is a top-level rule. Show rule tree"),
+                            StaticIcon(IconNames.aggr),
                         )
 
                     if refs == 0:
@@ -1031,12 +1051,15 @@ class ModeBIRules(ABCBIMode):
                             suffix=bi_rule.properties.title,
                             message=_("ID: %s") % rule_id,
                         )
-                        html.icon_button(delete_url, _("Delete this rule"), "delete")
+                        html.icon_button(
+                            delete_url, _("Delete this rule"), StaticIcon(IconNames.delete)
+                        )
 
                     table.cell("", css=["narrow"])
                     if bi_rule.computation_options.disabled:
-                        html.icon(
-                            "disabled", _("This rule is currently disabled and will not be applied")
+                        html.static_icon(
+                            StaticIcon(IconNames.disabled),
+                            title=_("This rule is currently disabled and will not be applied"),
                         )
                     else:
                         html.empty_icon_button()
@@ -1363,7 +1386,7 @@ class ModeBIEditRule(ABCBIMode):
                             "<tt>http://</tt>), absolute local URLs (beginning with <tt>/</tt>) or relative "
                             "URLs (that are relative to <tt>check_mk/</tt>)."
                         )
-                        % html.render_icon("url")
+                        % html.render_static_icon(StaticIcon(IconNames.url))
                     ),
                     size=80,
                 ),
@@ -2142,7 +2165,7 @@ class BIModeAggregations(ABCBIMode):
             aggr_entries.append(
                 PageMenuEntry(
                     title=_("Add aggregation"),
-                    icon_name="new",
+                    icon_name=StaticIcon(IconNames.new),
                     item=make_simple_link(
                         self.url_to_pack([("mode", "bi_edit_aggregation")], self.bi_pack)
                     ),
@@ -2166,7 +2189,7 @@ class BIModeAggregations(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Delete aggregations"),
-                                    icon_name="delete",
+                                    icon_name=StaticIcon(IconNames.delete),
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_action_form",
                                         button_name="_bulk_delete_bi_aggregations",
@@ -2176,7 +2199,7 @@ class BIModeAggregations(ABCBIMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Move aggregations"),
-                                    icon_name="move",
+                                    icon_name=StaticIcon(IconNames.move),
                                     name="move_aggregations",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
@@ -2198,7 +2221,7 @@ class BIModeAggregations(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Rules"),
-                                    icon_name="rules",
+                                    icon_name=StaticIcon(IconNames.rules),
                                     item=make_simple_link(
                                         self.url_to_pack([("mode", "bi_rules")], self.bi_pack),
                                     ),
@@ -2292,12 +2315,14 @@ class BIModeAggregations(ABCBIMode):
                         ("pack", self.bi_pack.id),
                     ],
                 )
-                html.icon_button(edit_url, _("Edit this aggregation"), "edit")
+                html.icon_button(edit_url, _("Edit this aggregation"), StaticIcon(IconNames.edit))
 
                 clone_url = self.url_to_pack(
                     [("mode", "bi_edit_aggregation"), ("clone", bi_aggregation.id)], self.bi_pack
                 )
-                html.icon_button(clone_url, _("Create a copy of this aggregation"), "clone")
+                html.icon_button(
+                    clone_url, _("Create a copy of this aggregation"), StaticIcon(IconNames.clone)
+                )
 
                 if is_contact_for_pack(self.bi_pack):
                     delete_url = make_confirm_delete_link(
@@ -2305,7 +2330,9 @@ class BIModeAggregations(ABCBIMode):
                         title=_("Delete BI aggregation #%s") % nr,
                         suffix=aggregation_id,
                     )
-                    html.icon_button(delete_url, _("Delete this aggregation"), "delete")
+                    html.icon_button(
+                        delete_url, _("Delete this aggregation"), StaticIcon(IconNames.delete)
+                    )
 
                 table.cell(_("ID"), aggregation_id)
 
@@ -2319,19 +2346,37 @@ class BIModeAggregations(ABCBIMode):
                 table.cell(_("Options"), css=["buttons"])
 
                 if bi_aggregation.computation_options.disabled:
-                    html.icon("disabled", _("This aggregation is currently disabled."))
+                    html.static_icon(
+                        StaticIcon(IconNames.disabled),
+                        title=_("This aggregation is currently disabled."),
+                    )
                 else:
-                    html.icon("checkmark", _("This aggregation is currently enabled."))
+                    html.static_icon(
+                        StaticIcon(IconNames.checkmark),
+                        title=_("This aggregation is currently enabled."),
+                    )
 
                 if bi_aggregation.computation_options.use_hard_states:
-                    html.icon("hard_states", _("Base state computation on hard states"))
+                    html.static_icon(
+                        StaticIcon(IconNames.hard_states),
+                        title=_("Base state computation on hard states"),
+                    )
                 else:
-                    html.icon("all_states", _("Base state computation on soft and hard states"))
+                    html.static_icon(
+                        StaticIcon(IconNames.all_states),
+                        title=_("Base state computation on soft and hard states"),
+                    )
 
                 if bi_aggregation.computation_options.escalate_downtimes_as_warn:
-                    html.icon("warning", _("Escalate downtimes based on aggregated WARN state"))
+                    html.static_icon(
+                        StaticIcon(IconNames.warning),
+                        title=_("Escalate downtimes based on aggregated WARN state"),
+                    )
                 else:
-                    html.icon("critical", _("Escalate downtimes based on aggregated CRIT state"))
+                    html.static_icon(
+                        StaticIcon(IconNames.critical),
+                        title=_("Escalate downtimes based on aggregated CRIT state"),
+                    )
 
                 table.cell(_("Groups"), ", ".join(bi_aggregation.groups.names))
                 table.cell(

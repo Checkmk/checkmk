@@ -7,6 +7,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     ColumnSpec,
+    DynamicIconName,
     SorterSpec,
     ViewSpec,
     VisualLinkSpec,
@@ -34,7 +35,7 @@ _INV_VIEW_HOST = ViewSpec(
         "topic": "inventory",
         "title": _("Inventory of host"),
         "description": _("The complete hardware- and software inventory of a host"),
-        "icon": "inventory",
+        "icon": DynamicIconName("inventory"),
         "hidebutton": False,
         "public": True,
         "hidden": True,
@@ -201,7 +202,7 @@ _INV_VIEW_HOST_HISTORY = ViewSpec(
         "title": _("Inventory history of host"),
         "description": _("The history for changes in hardware- and software inventory of a host"),
         "icon": {
-            "icon": "inventory",
+            "icon": DynamicIconName("inventory"),
             "emblem": "time",
         },
         "hidebutton": False,

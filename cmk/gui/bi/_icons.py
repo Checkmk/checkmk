@@ -10,8 +10,7 @@ from typing import Literal
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Icon as IconSpec
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import DynamicIcon, IconNames, Row, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -19,6 +18,8 @@ from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
 from cmk.utils.tags import TagID
 
 from ._compiler import is_part_of_aggregation
+
+IconSpec = StaticIcon | DynamicIcon
 
 
 def register(
@@ -54,7 +55,7 @@ def _render_aggregations_icon(
             urivars += [("aggr_service_service", row["service_description"])]
         url = makeuri_contextless(request, urivars, filename="view.py")
         return (
-            "aggr",
+            StaticIcon(IconNames.aggr),
             _("BI Aggregations containing this %s")
             % (what == "host" and _("Host") or _("Service")),
             url,
@@ -94,7 +95,7 @@ def _render_aggregation_icon(
     aggr_name = raw_aggr_name.replace("$HOSTADDRESS$", address).replace("$HOSTNAME$", name)
 
     return (
-        "aggr",
+        StaticIcon(IconNames.aggr),
         _("Open this Aggregation"),
         makeuri_contextless(
             request,

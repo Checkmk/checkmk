@@ -31,7 +31,15 @@ from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, Icon, PermissionName
+from cmk.gui.type_defs import (
+    ActionResult,
+    DynamicIcon,
+    DynamicIconName,
+    HTTPVariables,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
@@ -228,7 +236,7 @@ class ModeEditConfigurationBundles(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add configuration"),
-                                    icon_name="new",
+                                    icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         mode_url(
                                             ModeQuickSetupSpecialAgent.name(),
@@ -306,7 +314,7 @@ class ModeEditConfigurationBundles(WatoMode):
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             subtype = self._name.split(":", maxsplit=1)[1]
             html.div(
-                html.render_icon(f"qs_{subtype}")
+                html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}"))
                 + html.render_b(_("No %s configuration yet") % self.title())
                 + html.render_p(
                     _(
@@ -404,7 +412,7 @@ class ModeEditConfigurationBundles(WatoMode):
                         reason = str(e2)
 
                     value_html = (
-                        html.render_icon("alert")
+                        html.render_static_icon(StaticIcon(IconNames.alert))
                         + HTML.with_escaping(_("The value of this rule is not valid. "))
                         + escape_to_html_permissive(reason)
                     )
@@ -416,7 +424,9 @@ class ModeEditConfigurationBundles(WatoMode):
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
         edit_url = mode_url(ModeConfigurationBundle.name(), bundle_id=bundle_id)
-        html.icon_button(url=edit_url, title=_("Edit this configuration"), icon="edit")
+        html.icon_button(
+            url=edit_url, title=_("Edit this configuration"), icon=StaticIcon(IconNames.edit)
+        )
 
         html.icon_button(
             url=make_confirm_delete_link(
@@ -424,7 +434,7 @@ class ModeEditConfigurationBundles(WatoMode):
                 title=_("Delete configuration %s") % bundle_id,
             ),
             title=_("Delete this configuration"),
-            icon="delete",
+            icon=StaticIcon(IconNames.delete),
         )
 
 
@@ -488,8 +498,8 @@ class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
 
     @property
     @override
-    def icon(self) -> Icon:
-        return "quick_setup_aws"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.quick_setup_aws)
 
     @property
     @override
@@ -529,8 +539,8 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
 
     @property
     @override
-    def icon(self) -> Icon:
-        return "azure_vms"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.azure_vms)
 
     @property
     @override
@@ -574,8 +584,8 @@ class MainModuleQuickSetupAzureV2(ABCMainModuleQuickSetup):
 
     @property
     @override
-    def icon(self) -> Icon:
-        return "azure_vms"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.azure_vms)
 
     @property
     @override
@@ -614,8 +624,8 @@ class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
 
     @property
     @override
-    def icon(self) -> Icon:
-        return "gcp"
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.gcp)
 
     @property
     @override
@@ -774,7 +784,7 @@ class ModeConfigurationBundle(WatoMode):
                     rule_id=rule.id,
                 ),
                 title=_("Rule"),
-                icon="cloud",
+                icon=StaticIcon(IconNames.cloud),
                 permission="rulesets",
                 description=_(
                     'The rule set "{rule_title}" contains the special agent configuration. Credentials and other agent-specific data can be edited here'
@@ -783,7 +793,7 @@ class ModeConfigurationBundle(WatoMode):
             MenuItem(
                 mode_or_url=ModeEditHost.mode_url(host=host.name()),
                 title=_("Host"),
-                icon="folder",
+                icon=StaticIcon(IconNames.folder),
                 permission="hosts",
                 description=_(
                     'The host "{host_name}" contains all configuration like general properties and the folder location. Adjust to modify labels, tags or similar customization.'
@@ -797,7 +807,7 @@ class ModeConfigurationBundle(WatoMode):
                 MenuItem(
                     mode_or_url=mode_url("edit_dcd_connection", ident=dcd_config_id),
                     title=_("Dynamic host management"),
-                    icon="dcd_connections",
+                    icon=StaticIcon(IconNames.dcd_connections),
                     permission="dcd_connections",
                     description=_(
                         'Additional hosts are created automatically if they do not yet exist. Adjust the connection "{dcd_title}" to modify the folder or properties.'
@@ -811,7 +821,7 @@ class ModeConfigurationBundle(WatoMode):
                 MenuItem(
                     mode_or_url=ModeEditPassword.mode_url(ident=password_id),
                     title=_("Password"),
-                    icon="passwords",
+                    icon=StaticIcon(IconNames.passwords),
                     permission="passwords",
                     description=_(
                         'All passwords, secrets and other sensitive data are stored in the Password Store. Changes to the entry "{password_title}" can be made here.'

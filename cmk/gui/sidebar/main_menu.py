@@ -17,7 +17,6 @@ from typing import NamedTuple, override, TypedDict
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import message
 from cmk.gui.config import active_config
-from cmk.gui.dynamic_icon import render_dynamic_icon
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -29,7 +28,7 @@ from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainM
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.product_telemetry_popup import render_product_telemetry_popup
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import Icon
+from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import loading_transition
 from cmk.gui.utils.output_funnel import output_funnel
@@ -43,7 +42,7 @@ from cmk.shared_typing.unified_search import UnifiedSearchProps
 class MainMenuPopupTrigger(NamedTuple):
     name: str
     title: str
-    icon: Icon
+    icon: DynamicIcon
     onopen: str | None
 
 
@@ -87,13 +86,14 @@ class MainMenuRenderer:
 
     def _show_main_menu_content(self, user_permissions: UserPermissions) -> None:
         for popup_trigger in self._get_main_menu_popup_triggers(user_permissions):
+            # TODO: those active icons should be defined explicitly in the MainMenuPopupTrigger
             if isinstance(popup_trigger.icon, dict):
-                active_icon: Icon = {
-                    "icon": popup_trigger.icon["icon"] + "_active",
+                active_icon: DynamicIcon = {
+                    "icon": DynamicIconName(popup_trigger.icon["icon"] + "_active"),
                     "emblem": popup_trigger.icon["emblem"],
                 }
             else:
-                active_icon = popup_trigger.icon + "_active"
+                active_icon = DynamicIconName(popup_trigger.icon + "_active")
 
             html.open_li()
             html.popup_trigger(
@@ -114,11 +114,11 @@ class MainMenuRenderer:
             html.close_li()
 
     def _get_popup_trigger_content(
-        self, active_icon: Icon, popup_trigger: MainMenuPopupTrigger
+        self, active_icon: DynamicIcon, popup_trigger: MainMenuPopupTrigger
     ) -> HTML:
-        content = html.render_icon(popup_trigger.icon) + html.render_icon(
-            active_icon, class_=["active"]
-        )
+        content = html.render_dynamic_icon(
+            popup_trigger.icon, size=IconSizes.xlarge
+        ) + html.render_dynamic_icon(active_icon, size=IconSizes.xlarge, css_classes=["active"])
 
         if not user.get_attribute("nav_hide_icons_title"):
             content += HTMLWriter.render_div(popup_trigger.title)
@@ -141,11 +141,18 @@ class MainMenuRenderer:
                 if any([menu.onopen, menu.search])
                 else None
             )
+
+            if isinstance(menu.icon, StaticIcon):
+                dynamic_icon = DynamicIconName(menu.icon.icon.value)
+                if menu.icon.emblem is not None:
+                    icon: DynamicIcon = {"icon": dynamic_icon, "emblem": menu.icon.emblem}
+                else:
+                    icon = dynamic_icon
             items.append(
                 MainMenuPopupTrigger(
                     name=menu.name,
                     title=str(menu.title),
-                    icon=menu.icon,
+                    icon=icon,
                     onopen=onopen,
                 )
             )
@@ -349,8 +356,9 @@ class MainMenuPopupRenderer:
             href=None,
             onclick="cmk.popup_menu.main_menu_collapse_topic('%s')" % topic_id,
         )
-        html.icon(
-            icon="collapse_arrow",
+        html.static_icon(
+            icon=StaticIcon(IconNames.collapse_arrow),
+            size=IconSizes.xlarge,
             title=(
                 _("Show all %s topics") % menu_id
                 if isinstance(topic, MainMenuTopic)
@@ -359,7 +367,10 @@ class MainMenuPopupRenderer:
         )
         html.close_a()
         if not user.get_attribute("icons_per_item") and topic.icon:
-            html.icon(topic.icon)
+            if isinstance(topic.icon, StaticIcon):
+                html.static_icon(topic.icon, size=IconSizes.xlarge)
+            else:
+                html.dynamic_icon(topic.icon, size=IconSizes.xlarge, theme=theme)
         html.span(topic.title)
         html.close_h2()
 
@@ -387,7 +398,7 @@ class MainMenuPopupRenderer:
             onclick="cmk.popup_menu.main_menu_show_all_items('%s')" % topic_id,
         )
         if user.get_attribute("icons_per_item"):
-            html.icon("trans")
+            html.static_icon(StaticIcon(IconNames.trans))
         html.write_text_permissive(_("Show all"))
         html.close_a()
         html.close_li()
@@ -407,7 +418,11 @@ oncontextmenu = e => e.preventDefault();"""
             title=_("Show entries for %s") % multilevel_topic.title,
         )
         if user.get_attribute("icons_per_item"):
-            html.icon(multilevel_topic.icon or "dash")
+            icon = multilevel_topic.icon or StaticIcon(IconNames.dash)
+            if isinstance(icon, StaticIcon):
+                html.static_icon(icon)
+            else:
+                html.dynamic_icon(icon)
         html.open_span()
         self._show_item_title(multilevel_topic)
         html.close_span()
@@ -442,7 +457,11 @@ oncontextmenu = e => e.preventDefault();"""
                 onclick="cmk.popup_menu.close_popup()",
             )
             if user.get_attribute("icons_per_item"):
-                render_dynamic_icon(item.icon or "dash", theme)
+                icon = item.icon or StaticIcon(IconNames.dash)
+                if isinstance(icon, StaticIcon):
+                    html.static_icon(icon)
+                else:
+                    html.dynamic_icon(icon, theme=theme)
             self._show_item_title(item)
             html.close_a()
             html.close_li()

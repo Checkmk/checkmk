@@ -72,6 +72,8 @@ from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distribut
 from cmk.gui.table import Table, table_element
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
+    IconNames,
+    StaticIcon,
     TotpCredential,
     TwoFactorCredentials,
     WebAuthnActionState,
@@ -382,7 +384,7 @@ class UserTwoFactorOverview(Page):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Register authenticator app"),
-                                    icon_name="2fa",
+                                    icon_name=StaticIcon(IconNames.twofa),
                                     item=make_simple_link("user_totp_register.py"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -392,7 +394,7 @@ class UserTwoFactorOverview(Page):
                                 ),
                                 PageMenuEntry(
                                     title=_("Register security token"),
-                                    icon_name="2fa",
+                                    icon_name=StaticIcon(IconNames.twofa),
                                     item=make_javascript_link("cmk.webauthn.register()"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -408,7 +410,7 @@ class UserTwoFactorOverview(Page):
                                         if backup_codes_given
                                         else _("Generate backup codes")
                                     ),
-                                    icon_name="2fa_backup_codes",
+                                    icon_name=StaticIcon(IconNames.twofa_backup_codes),
                                     item=backup_codes_item,
                                     is_enabled=enable_backup_codes,
                                     is_shortcut=True,
@@ -595,7 +597,7 @@ class UserTwoFactorOverview(Page):
                     filename="user_two_factor_edit_credential.py",
                 ),
                 _("Edit this credential"),
-                "edit",
+                StaticIcon(IconNames.edit),
             )
 
             delete_title = (
@@ -613,7 +615,7 @@ class UserTwoFactorOverview(Page):
                 message=_("Registered at ")
                 + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(credential["registered_at"])),
             )
-            html.icon_button(delete_url, delete_title, "delete")
+            html.icon_button(delete_url, delete_title, StaticIcon(IconNames.delete))
 
             table.cell(_("Alias"), credential["alias"])
             table.cell(
@@ -643,7 +645,7 @@ class UserTwoFactorEnforce(Page):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Register authenticator app"),
-                                    icon_name="2fa",
+                                    icon_name=StaticIcon(IconNames.twofa),
                                     item=make_simple_link("user_totp_register.py"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -653,7 +655,7 @@ class UserTwoFactorEnforce(Page):
                                 ),
                                 PageMenuEntry(
                                     title=_("Register security token"),
-                                    icon_name="2fa",
+                                    icon_name=StaticIcon(IconNames.twofa),
                                     item=make_javascript_link("cmk.webauthn.register()"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -859,7 +861,8 @@ class RegisterTotpSecret(Page):
             html.open_div()
             html.span("Secret: ")
             html.a(
-                html.render_span(base32_secret) + html.render_icon("insert"),
+                html.render_span(base32_secret)
+                + html.render_static_icon(StaticIcon(IconNames.insert)),
                 href="javascript:void(0)",
                 onclick="cmk.utils.copy_to_clipboard(%s, %s);"
                 % (

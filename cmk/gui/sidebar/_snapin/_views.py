@@ -18,6 +18,7 @@ from cmk.gui.main_menu_types import MainMenu, MainMenuTopic, UnifiedSearch
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 
@@ -46,7 +47,7 @@ def register(
         MainMenu(
             name="monitoring",
             title=_l("Monitor"),
-            icon="main_monitoring",
+            icon=StaticIcon(IconNames.main_monitoring),
             sort_index=5,
             topics=view_menu_topics,
             search=UnifiedSearch("monitoring_search", "unified-search-input-monitoring"),

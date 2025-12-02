@@ -17,7 +17,7 @@ from cmk.gui import pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import Icon, PermissionName
+from cmk.gui.type_defs import DynamicIcon, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 
@@ -163,8 +163,8 @@ class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
         return "custom_snapin"
 
     @classmethod
-    def type_icon(cls) -> Icon:
-        return "custom_snapin"
+    def type_icon(cls) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.custom_snapin)
 
     @classmethod
     def type_is_show_more(cls) -> bool:

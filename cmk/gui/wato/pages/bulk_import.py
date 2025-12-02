@@ -44,7 +44,9 @@ from cmk.gui.type_defs import (
     ActionResult,
     Choices,
     CustomHostAttrSpec,
+    IconNames,
     PermissionName,
+    StaticIcon,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -403,14 +405,14 @@ class ModeBulkImport(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Update preview"),
-                                    icon_name="update",
+                                    icon_name=StaticIcon(IconNames.update),
                                     item=make_form_submit_link("preview", "_do_preview"),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
                                 PageMenuEntry(
                                     title=_("Import"),
-                                    icon_name="save",
+                                    icon_name=StaticIcon(IconNames.save),
                                     item=make_form_submit_link("preview", "_do_import"),
                                     is_shortcut=True,
                                     is_suggested=True,

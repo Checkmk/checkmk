@@ -12,7 +12,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.type_defs import DynamicIcon, HTTPVariables, IconNames, Row, StaticIcon
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -27,7 +27,7 @@ def _render_wato_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str, str] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     def may_see_hosts() -> bool:
         return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
@@ -60,7 +60,7 @@ WatoIcon = Icon(
 
 def _wato_link(
     folder: str, hostname: str, where: Literal["edithost", "inventory"]
-) -> tuple[str, str, str] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     if display_options.enabled(display_options.X):
         vars: HTTPVariables = [
             ("folder", folder),
@@ -69,11 +69,11 @@ def _wato_link(
         if where == "inventory":
             vars.append(("mode", "inventory"))
             help_txt = _("Run service discovery")
-            icon = "services"
+            icon = StaticIcon(IconNames.services)
         else:
             vars.append(("mode", "edit_host"))
             help_txt = _("Edit this host")
-            icon = "wato"
+            icon = StaticIcon(IconNames.wato)
         return icon, help_txt, makeuri_contextless(request, vars, filename="wato.py")
 
     return None
@@ -86,7 +86,7 @@ def _render_download_agent_output_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str, str] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
 
 
@@ -106,7 +106,7 @@ def _render_download_snmp_walk_icon(
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
     icon_config: IconConfig,
-) -> tuple[str, str, str] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
 
 
@@ -125,7 +125,7 @@ def _paint_download_host_info(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     ty: Literal["agent", "walk"],
-) -> tuple[str, str, str] | None:
+) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     if (
         (what == "host" or (what == "service" and row["service_description"] == "Check_MK"))
         and user.may("wato.download_agent_output")
@@ -161,7 +161,7 @@ def _paint_download_host_info(
             title = _("Download SNMP walk")
 
         url = makeuri_contextless(request, params, filename="fetch_agent_output.py")
-        return "agents", title, url
+        return StaticIcon(IconNames.agents), title, url
     return None
 
 

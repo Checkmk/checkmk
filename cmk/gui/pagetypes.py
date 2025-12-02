@@ -84,9 +84,12 @@ from cmk.gui.permissions import (
 from cmk.gui.table import init_rowselect, Table, table_element
 from cmk.gui.type_defs import (
     AnnotatedUserId,
+    DynamicIcon,
+    DynamicIconName,
     HTTPVariables,
-    Icon,
+    IconNames,
     PermissionName,
+    StaticIcon,
     Visual,
     VisualPublic,
 )
@@ -117,7 +120,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-SubPagesSpec = list[tuple[str, str, str]]
+SubPagesSpec = list[tuple[str, str, StaticIcon]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]
 # Three possible modes:
 # "create" -> create completely new page
@@ -180,7 +183,7 @@ class PageRendererConfig(OverridableContainerConfig):
 
 
 class PagetypeTopicModel(OverridableModel):
-    icon_name: str
+    icon_name: StaticIcon  # TODO: are we sure about this?
     sort_index: int
     max_entries: int = 10
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
@@ -188,7 +191,7 @@ class PagetypeTopicModel(OverridableModel):
 
 @dataclass(kw_only=True)
 class PagetypeTopicConfig(OverridableConfig):
-    icon_name: str
+    icon_name: StaticIcon  # TODO: are we sure about this?
     sort_index: int
     max_entries: int = 10
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
@@ -199,7 +202,7 @@ def register(main_menu_registry_: MainMenuRegistry) -> None:
         MainMenu(
             name="customize",
             title=_l("Customize"),
-            icon="main_customize",
+            icon=StaticIcon(IconNames.main_customize),
             sort_index=10,
             topics=_customize_menu_topics,
             hide=hide_customize_menu,
@@ -343,7 +346,7 @@ class Base(abc.ABC, Generic[_T_BaseConfig]):
 
     @classmethod
     @abc.abstractmethod
-    def type_icon(cls) -> Icon: ...
+    def type_icon(cls) -> StaticIcon | DynamicIcon: ...
 
 
 # .
@@ -710,7 +713,7 @@ class Overridable(Base[_T_OverridableConfig]):
     def page_menu_entry_list(cls) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=cls.phrase("title_plural"),
-            icon_name=cls.type_name(),
+            icon_name=cls.type_icon(),
             item=make_simple_link(cls.list_url()),
         )
 
@@ -720,7 +723,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         yield PageMenuEntry(
             title=_("Edit properties"),
-            icon_name="edit",
+            icon_name=StaticIcon(IconNames.edit),
             item=make_simple_link(self.edit_url()),
         )
 
@@ -995,7 +998,7 @@ class ListPage(Page, Generic[_T]):
                     entries=[
                         PageMenuEntry(
                             title=self._type.phrase("new"),
-                            icon_name="new",
+                            icon_name=StaticIcon(IconNames.new),
                             item=make_simple_link(self._type.create_url()),
                             is_shortcut=True,
                             is_suggested=True,
@@ -1003,7 +1006,7 @@ class ListPage(Page, Generic[_T]):
                         PageMenuEntry(
                             title=_("Delete selected"),
                             name="delete",
-                            icon_name="delete",
+                            icon_name=StaticIcon(IconNames.delete),
                             item=make_confirmed_form_submit_link(
                                 form_name="bulk_delete",
                                 button_name="_bulk_delete",
@@ -1165,20 +1168,26 @@ class ListPage(Page, Generic[_T]):
 
                 # View
                 if isinstance(instance, PageRenderer):
-                    html.icon_button(instance.view_url(), _("View"), self._type.type_name())
+                    html.icon_button(instance.view_url(), _("View"), self._type.type_icon())
 
                 # Edit
                 if instance.may_edit():
-                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
+                    html.icon_button(instance.edit_url(), _("Edit"), StaticIcon(IconNames.edit))
 
                 self._type.custom_list_buttons(instance)
 
                 # Clone / Customize
-                html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
+                html.icon_button(
+                    instance.clone_url(),
+                    _("Create a private copy of this"),
+                    StaticIcon(IconNames.clone),
+                )
 
                 # Delete
                 if instance.may_delete():
-                    html.icon_button(instance.delete_url(), _("Delete"), "delete")
+                    html.icon_button(
+                        instance.delete_url(), _("Delete"), StaticIcon(IconNames.delete)
+                    )
 
                 # Internal ID of instance (we call that 'name')
                 table.cell(_("ID"), instance.name(), css=["narrow"])
@@ -1432,21 +1441,21 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
     if current_type_name != "views":
         yield PageMenuEntry(
             title=_("Views"),
-            icon_name="view",
+            icon_name=StaticIcon(IconNames.view),
             item=make_simple_link("edit_views.py"),
         )
 
     if current_type_name != "dashboards":
         yield PageMenuEntry(
             title=_("Dashboards"),
-            icon_name="dashboard",
+            icon_name=StaticIcon(IconNames.dashboard),
             item=make_simple_link("edit_dashboards.py"),
         )
 
     if _has_reporting() and current_type_name != "reports":
         yield PageMenuEntry(
             title=_("Reports"),
-            icon_name="report",
+            icon_name=StaticIcon(IconNames.report),
             item=make_simple_link("edit_reports.py"),
         )
 
@@ -1454,7 +1463,9 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
         if current_type_name != other_type_name:
             yield PageMenuEntry(
                 title=other_pagetype.phrase("title_plural"),
-                icon_name=other_type_name,
+                icon_name=DynamicIconName(
+                    other_type_name
+                ),  # TODO: not 100% sure if this is a good idea
                 item=make_simple_link("%ss.py" % other_type_name),
             )
 
@@ -1564,18 +1575,18 @@ def make_edit_form_page_menu(
     )
 
 
-_save_pagetype_icons: dict[str, Icon] = {
-    "custom_graph": {
-        "icon": "save_graph",
-        "emblem": "add",
-    },
-    "dashboard": "save_dashboard",
-    "forecast_graph": {
-        "icon": "save_graph",
-        "emblem": "time",
-    },
-    "graph_collection": "save_graph",
-    "view": "save_view",
+_save_pagetype_icons: dict[str, StaticIcon] = {
+    "custom_graph": StaticIcon(
+        IconNames.save_graph,
+        emblem="add",
+    ),
+    "dashboard": StaticIcon(IconNames.save_dashboard),
+    "forecast_graph": StaticIcon(
+        IconNames.save_graph,
+        emblem="time",
+    ),
+    "graph_collection": StaticIcon(IconNames.save_graph),
+    "view": StaticIcon(IconNames.save_view),
 }
 
 
@@ -1590,7 +1601,7 @@ def _page_menu_entries_save(
     """Provide the different "save" buttons"""
     yield PageMenuEntry(
         title=_("Save & view list"),
-        icon_name="save",
+        icon_name=StaticIcon(IconNames.save),
         item=make_form_submit_link(form_name, "_save"),
         is_list_entry=True,
         is_shortcut=True,
@@ -1615,7 +1626,7 @@ def _page_menu_entries_save(
     assert parent_item.url is not None
     yield PageMenuEntry(
         title=_("Cancel"),
-        icon_name="cancel",
+        icon_name=StaticIcon(IconNames.cancel),
         item=make_simple_link(parent_item.url),
         is_list_entry=True,
         is_shortcut=True,
@@ -1625,7 +1636,7 @@ def _page_menu_entries_save(
     for nr, (title, _pagename, _icon) in enumerate(sub_pages):
         yield PageMenuEntry(
             title=title,
-            icon_name="save",
+            icon_name=StaticIcon(IconNames.save),
             item=make_form_submit_link(form_name, "save%d" % nr),
         )
 
@@ -1716,7 +1727,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
         for page in pages:
             yield PageMenuEntry(
                 title=page.title(),
-                icon_name=cls.type_name(),
+                icon_name=cls.type_icon(),
                 item=make_javascript_link(
                     f"cmk.popup_menu.pagetype_add_to_container({json.dumps(cls.type_name())}, {json.dumps(page.name())});"
                 ),
@@ -2114,8 +2125,8 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
 
     @override
     @classmethod
-    def type_icon(cls) -> Icon:
-        return "pagetype_topic"
+    def type_icon(cls) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.pagetype_topic)
 
     @override
     @classmethod
@@ -2185,7 +2196,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     @override
     def render_extra_columns(self, table: Table) -> None:
         """Show some specific useful columns in the list view"""
-        table.cell(_("Icon"), html.render_icon(self.config.icon_name))
+        table.cell(_("Icon"), html.render_static_icon(self.config.icon_name))
         table.cell(_("Nr. of items"), str(self.max_entries()))
         table.cell(_("Sort index"), str(self.config.sort_index))
 
@@ -2196,7 +2207,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "overview": PagetypeTopicConfig(
                 name="overview",
                 title=_("Overview"),
-                icon_name="topic_overview",
+                icon_name=StaticIcon(IconNames.topic_overview),
                 public=True,
                 sort_index=20,
                 owner=UserId.builtin(),
@@ -2204,7 +2215,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "monitoring": PagetypeTopicConfig(
                 name="monitoring",
                 title=_("Monitoring"),
-                icon_name="topic_monitoring",
+                icon_name=StaticIcon(IconNames.topic_monitoring),
                 public=True,
                 sort_index=30,
                 owner=UserId.builtin(),
@@ -2212,7 +2223,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "problems": PagetypeTopicConfig(
                 name="problems",
                 title=_("Problems"),
-                icon_name="topic_problems",
+                icon_name=StaticIcon(IconNames.topic_problems),
                 public=True,
                 sort_index=40,
                 owner=UserId.builtin(),
@@ -2220,7 +2231,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "history": PagetypeTopicConfig(
                 name="history",
                 title=_("History"),
-                icon_name="topic_history",
+                icon_name=StaticIcon(IconNames.topic_history),
                 public=True,
                 sort_index=50,
                 owner=UserId.builtin(),
@@ -2228,7 +2239,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "analyze": PagetypeTopicConfig(
                 name="analyze",
                 title=_("System"),
-                icon_name="topic_checkmk",
+                icon_name=StaticIcon(IconNames.topic_checkmk),
                 public=True,
                 sort_index=60,
                 owner=UserId.builtin(),
@@ -2236,7 +2247,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "cloud": PagetypeTopicConfig(
                 name="cloud",
                 title=_("Cloud"),
-                icon_name="plugins_cloud",
+                icon_name=StaticIcon(IconNames.plugins_cloud),
                 public=True,
                 sort_index=75,
                 owner=UserId.builtin(),
@@ -2244,7 +2255,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "bi": PagetypeTopicConfig(
                 name="bi",
                 title=_("Business Intelligence"),
-                icon_name="topic_bi",
+                icon_name=StaticIcon(IconNames.topic_bi),
                 sort_index=80,
                 public=True,
                 hide=_no_bi_aggregate_active(),
@@ -2253,7 +2264,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "applications": PagetypeTopicConfig(
                 name="applications",
                 title=_("Applications"),
-                icon_name="topic_applications",
+                icon_name=StaticIcon(IconNames.topic_applications),
                 public=True,
                 sort_index=85,
                 owner=UserId.builtin(),
@@ -2261,7 +2272,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "inventory": PagetypeTopicConfig(
                 name="inventory",
                 title=_("HW/SW Inventory"),
-                icon_name="topic_inventory",
+                icon_name=StaticIcon(IconNames.topic_inventory),
                 public=True,
                 sort_index=90,
                 owner=UserId.builtin(),
@@ -2269,7 +2280,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "network_statistics": PagetypeTopicConfig(
                 name="network_statistics",
                 title=_("Network statistics"),
-                icon_name="topic_network",
+                icon_name=StaticIcon(IconNames.topic_network),
                 sort_index=95,
                 public=True,
                 hide=not is_ntop_configured(),
@@ -2278,7 +2289,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "it_efficiency": PagetypeTopicConfig(
                 name="it_efficiency",
                 title=_("IT infrastructure efficiency"),
-                icon_name="topic_analyze",
+                icon_name=StaticIcon(IconNames.topic_analyze),
                 description=_("Analyze the utilization of your IT infrastructure data center."),
                 public=True,
                 sort_index=100,
@@ -2287,7 +2298,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "synthetic_monitoring": PagetypeTopicConfig(
                 name="synthetic_monitoring",
                 title=_("Synthetic Monitoring"),
-                icon_name="synthetic_monitoring_topic",
+                icon_name=StaticIcon(IconNames.synthetic_monitoring_topic),
                 public=True,
                 sort_index=105,
                 owner=UserId.builtin(),
@@ -2295,7 +2306,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "my_workplace": PagetypeTopicConfig(
                 name="my_workplace",
                 title=_("Workplace"),
-                icon_name="topic_my_workplace",
+                icon_name=StaticIcon(IconNames.topic_my_workplace),
                 public=True,
                 sort_index=110,
                 owner=UserId.builtin(),
@@ -2304,7 +2315,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "other": PagetypeTopicConfig(
                 name="other",
                 title=_("Other"),
-                icon_name="topic_other",
+                icon_name=StaticIcon(IconNames.topic_other),
                 public=True,
                 sort_index=115,
                 owner=UserId.builtin(),
@@ -2316,7 +2327,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
                     "events": PagetypeTopicConfig(
                         name="events",
                         title=_("Event Console"),
-                        icon_name="topic_events",
+                        icon_name=StaticIcon(IconNames.topic_events),
                         public=True,
                         sort_index=70,
                         owner=UserId.builtin(),
@@ -2332,7 +2343,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     def sort_index(self) -> int:
         return self.config.sort_index
 
-    def icon_name(self) -> str:
+    def icon_name(self) -> StaticIcon:
         return self.config.icon_name
 
     def hide(self) -> bool:
@@ -2401,7 +2412,7 @@ def _customize_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTo
                 url="edit_views.py",
                 sort_index=10,
                 is_show_more=False,
-                icon="view",
+                icon=StaticIcon(IconNames.view),
             ),
         )
 
@@ -2413,7 +2424,7 @@ def _customize_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTo
                 url="edit_dashboards.py",
                 sort_index=20,
                 is_show_more=False,
-                icon="dashboard",
+                icon=StaticIcon(IconNames.dashboard),
             ),
         )
 
@@ -2425,7 +2436,7 @@ def _customize_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTo
                 url="edit_reports.py",
                 sort_index=10,
                 is_show_more=False,
-                icon="report",
+                icon=StaticIcon(IconNames.report),
             )
         )
 
@@ -2459,19 +2470,19 @@ def _customize_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTo
         MainMenuTopic(
             name="general",
             title=_("General"),
-            icon="topic_general",
+            icon=StaticIcon(IconNames.topic_general),
             entries=general_entries,
         ),
         MainMenuTopic(
             name="visualization",
             title=_("Visualization"),
-            icon="topic_visualization",
+            icon=StaticIcon(IconNames.topic_visualization),
             entries=monitoring_entries,
         ),
         MainMenuTopic(
             name="graphs",
             title=_("Graphs"),
-            icon="topic_graphs",
+            icon=StaticIcon(IconNames.topic_graphs),
             entries=graph_entries,
         ),
     ]
@@ -2481,7 +2492,7 @@ def _customize_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTo
             MainMenuTopic(
                 name="business_reporting",
                 title=_("Business reporting"),
-                icon="topic_reporting",
+                icon=StaticIcon(IconNames.topic_reporting),
                 entries=business_reporting_entries,
             )
         )

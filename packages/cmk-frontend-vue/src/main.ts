@@ -14,6 +14,7 @@ import NotificationParametersOverviewApp from '@/notification/NotificationParame
 
 import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
 import DynamicIconApp from './components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
+import IconApp from './components/CmkIcon/IconApp.vue'
 import Dashboard from './dashboard-wip/DashboardApp.vue'
 import SharedDashboard from './dashboard-wip/DashboardSharedApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
@@ -56,4 +57,6 @@ defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fu
 defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)
 defineCmkComponent('cmk-dialog', DialogApp)
 defineCmkComponent('cmk-dynamic-icon', DynamicIconApp, { pure: true })
+defineCmkComponent('cmk-icon', IconApp, { pure: true })
+defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-product-telemetry', ProductTelemetryApp)

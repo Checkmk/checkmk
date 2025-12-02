@@ -32,7 +32,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.flashed_messages import flash
@@ -117,7 +117,7 @@ class ModeDiagHost(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Run tests"),
-                                    icon_name="connection_tests",
+                                    icon_name=StaticIcon(IconNames.connection_tests),
                                     item=make_form_submit_link("diag_host", "_save"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -129,7 +129,7 @@ class ModeDiagHost(WatoMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Save & go to host properties"),
-                                    icon_name="save",
+                                    icon_name=StaticIcon(IconNames.save),
                                     item=make_form_submit_link("diag_host", "go_to_properties"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -335,10 +335,13 @@ class ModeDiagHost(WatoMode):
 
             html.open_td(class_="icons")
             html.open_div()
-            html.icon("reload", id_="%s_img" % ident)
+            html.static_icon(StaticIcon(IconNames.reload), id_="%s_img" % ident)
             html.open_a(href="")
-            html.icon(
-                "reload", title=_("Retry this test"), cssclass="retry", id_="%s_retry" % ident
+            html.static_icon(
+                StaticIcon(IconNames.reload),
+                title=_("Retry this test"),
+                css_classes=["retry"],
+                id_="%s_retry" % ident,
             )
             html.close_a()
             html.close_div()

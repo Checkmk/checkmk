@@ -18,6 +18,7 @@ import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 import ObjectTypeFilterConfiguration from '../ObjectTypeFilterConfiguration/ObjectTypeFilterConfiguration.vue'
 import type { FilterEmits } from '../types.ts'
 import type { FilterConfigState } from '../utils.ts'
+import { getStrings } from '../utils.ts'
 import DisplayContextFilters from './DisplayContextFilters.vue'
 
 const { _t } = usei18n()
@@ -34,6 +35,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   showContextFiltersSection: true
 })
+
+const { filterName } = getStrings(props.objectType)
 
 const filterDefinitions = useFilterDefinitions()
 const toggleContextFiltersSection = ref(false)
@@ -74,8 +77,8 @@ const relevantContextFilters = computed<ContextFilters>(() => {
 const displayLabels = computed(() => {
   if (props.objectSelectionMode === ElementSelection.SPECIFIC) {
     return {
-      contextFilterTitle: _t('Applied %{n} targeted filter', {
-        n: props.objectType
+      contextFilterTitle: _t('Applied %{n} filter', {
+        n: filterName
       }),
       contextFilterTooltip: _t(
         'Relevant %{n} targeted filter set on dashboard level via dashboard or runtime filters.',
@@ -83,15 +86,9 @@ const displayLabels = computed(() => {
           n: props.objectType
         }
       ),
-      emptyContextTitle: _t('No %{n} targeted filter applied', {
-        n: props.objectType
-      }),
-      emptyContextMessage: _t(
-        'A %{n} targeted filter selected as dashboard or runtime filter appears here and applies to this widget. You can override the value by setting a widget specific filter.',
-        {
-          n: props.objectType
-        }
-      )
+      emptyContextTitle: _t('No %{n} filter applied', {
+        n: filterName
+      })
     }
   }
   return {
@@ -100,17 +97,13 @@ const displayLabels = computed(() => {
       'Relevant %{n} filters set on dashboard level via dashboard or runtime filters.',
       { n: props.objectType }
     ),
-    emptyContextTitle: _t('No %{n} filters applied', { n: props.objectType }),
-    emptyContextMessage: _t(
-      'Dashboard or runtime %{n} filters selected on dashboard level appear and apply to this widget. You can override the values by setting widget specific filters. ',
-      { n: props.objectType }
-    )
+    emptyContextTitle: _t('No %{n} filters applied', { n: props.objectType })
   }
 })
 </script>
 
 <template>
-  <div v-if="showContextFiltersSection">
+  <div v-if="showContextFiltersSection" class="db-widget-object-filter-configuration__group">
     <CollapsibleTitle
       :title="displayLabels.contextFilterTitle"
       :help_text="displayLabels.contextFilterTooltip"
@@ -124,7 +117,6 @@ const displayLabels = computed(() => {
         :object-configured-filters="objectConfiguredFilters"
         :context-filters="relevantContextFilters"
         :empty-filters-title="displayLabels.emptyContextTitle"
-        :empty-filters-message="displayLabels.emptyContextMessage"
       />
     </CollapsibleContent>
   </div>
@@ -142,3 +134,9 @@ const displayLabels = computed(() => {
     @remove-filter="(filterId) => emit('remove-filter', filterId)"
   />
 </template>
+
+<style scoped>
+.db-widget-object-filter-configuration__group {
+  padding-bottom: var(--dimension-4);
+}
+</style>

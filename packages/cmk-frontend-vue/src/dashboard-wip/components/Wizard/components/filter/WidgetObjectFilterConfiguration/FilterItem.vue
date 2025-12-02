@@ -6,11 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkIcon from '@/components/CmkIcon'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import FilterDisplayItem from '@/dashboard-wip/components/filter/FilterDisplayItem/FilterDisplayItem.vue'
 import type { ConfiguredValues } from '@/dashboard-wip/components/filter/types'
 import type { FilterOrigin } from '@/dashboard-wip/types/filter'
+
+import ContentSpacer from '../../ContentSpacer.vue'
 
 const { _t } = usei18n()
 
@@ -35,7 +37,12 @@ withDefaults(defineProps<FilterItemProp>(), {
 <template>
   <div class="db-filter-item__item" :class="overridden ? 'db-filter-item--disabled' : ''">
     <div class="db-filter-item__component">
-      <CmkIcon :name="overridden ? 'disabled' : 'enabled'" size="xsmall" />
+      <CmkMultitoneIcon
+        :name="overridden ? 'broken-chain' : 'chain'"
+        primary-color="font"
+        size="small"
+        :class="{ 'db-filter-item__disabled-icon': overridden }"
+      />
     </div>
 
     <div class="db-filter-item__component">
@@ -50,6 +57,7 @@ withDefaults(defineProps<FilterItemProp>(), {
       {{ origin === 'DASHBOARD' ? LABEL_ORIGIN_DASHBOARD : LABEL_ORIGIN_QUICK_FILTER }}
     </div>
   </div>
+  <ContentSpacer :dimension="5" />
 </template>
 
 <style scoped>
@@ -62,7 +70,7 @@ withDefaults(defineProps<FilterItemProp>(), {
   flex-flow: row nowrap;
   place-content: normal;
   align-content: normal;
-  gap: var(--spacing);
+  gap: var(--dimension-4);
 }
 
 .db-filter-item__component:nth-child(1) {
@@ -96,5 +104,9 @@ withDefaults(defineProps<FilterItemProp>(), {
   align-self: auto;
   order: 0;
   padding-right: var(--spacing);
+}
+
+.db-filter-item__disabled-icon {
+  --icon-primary-color: var(--font-color-dimmed);
 }
 </style>

@@ -8,7 +8,7 @@ import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkDialog from '@/components/CmkDialog.vue'
+import CmkLabel from '@/components/CmkLabel.vue'
 
 import type { FilterConfigState } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import { type ContextFilters, FilterOrigin } from '@/dashboard-wip/types/filter'
@@ -22,7 +22,6 @@ const props = defineProps<{
   objectConfiguredFilters: FilterConfigState
 
   emptyFiltersTitle: TranslatedString
-  emptyFiltersMessage: TranslatedString
 }>()
 
 const isOverridden = (name: string): boolean => {
@@ -83,8 +82,9 @@ const countInheritedFilters = computed(() => {
       />
     </li>
   </ul>
-
-  <CmkDialog v-else :title="props.emptyFiltersTitle" :message="props.emptyFiltersMessage" />
+  <CmkLabel v-else class="db-display-context-filters__no-filters">{{
+    props.emptyFiltersTitle
+  }}</CmkLabel>
 </template>
 
 <style scoped>
@@ -92,5 +92,9 @@ const countInheritedFilters = computed(() => {
   list-style-type: none;
   padding: 0;
   margin: 0;
+}
+
+.db-display-context-filters__no-filters {
+  font-size: 12px;
 }
 </style>

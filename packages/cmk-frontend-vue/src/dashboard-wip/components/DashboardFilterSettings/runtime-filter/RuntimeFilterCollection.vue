@@ -103,7 +103,9 @@ const countDashboardFilters = computed(() => {
           />
         </div>
         <div v-if="additionalItemLabel" class="dashboard-filter__item-placeholder">
-          {{ additionalItemLabel }}
+          <div class="db-runtime-filter-collection__item-placeholder-inner">
+            {{ additionalItemLabel }}
+          </div>
         </div>
       </CollapsibleContent>
     </div>
@@ -130,7 +132,7 @@ const countDashboardFilters = computed(() => {
 .filter-item__container {
   background-color: var(--ux-theme-3);
   margin-bottom: var(--dimension-4);
-  border: 1px solid var(--ux-theme-5);
+  border: 1px solid var(--ux-theme-8);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -141,8 +143,14 @@ const countDashboardFilters = computed(() => {
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .dashboard-filter__item-placeholder {
   padding: var(--dimension-5) var(--dimension-7);
-  border: 1px dashed var(--ux-theme-7);
+  border: 1px solid var(--ux-theme-8);
   color: var(--color-white-50);
+}
+
+.db-runtime-filter-collection__item-placeholder-inner {
+  border: var(--color-midnight-grey-40) var(--dimension-1) dashed;
+  background-color: var(--color-midnight-grey-80);
+  padding: var(--dimension-3);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

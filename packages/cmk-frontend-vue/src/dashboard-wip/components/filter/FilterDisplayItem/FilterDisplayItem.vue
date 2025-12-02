@@ -50,6 +50,7 @@ const components = computed(() => {
 .filter-title {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-normal);
+  margin-bottom: var(--dimension-4);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

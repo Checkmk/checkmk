@@ -201,7 +201,7 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
         :enabled-widgets="enabledWidgets"
       />
 
-      <ContentSpacer />
+      <ContentSpacer :dimension="6" />
 
       <SelectableWidgets
         v-model:selected-widget="selectedWidget as Graph"

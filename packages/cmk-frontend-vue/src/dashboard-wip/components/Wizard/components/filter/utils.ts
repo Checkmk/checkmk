@@ -6,6 +6,12 @@
 import type { ConfiguredValues, FilterDefinitions } from '@/dashboard-wip/components/filter/types'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
+interface GetStrings {
+  singular: string
+  plural: string
+  filterName: string
+}
+
 export type MaybeConfiguredValues = ConfiguredValues | null
 export interface FilterConfigState {
   [filterId: string]: MaybeConfiguredValues
@@ -33,4 +39,12 @@ export const parseFilters = (
   }
 
   return grouped
+}
+
+export const getStrings = (objectType: string): GetStrings => {
+  return {
+    singular: objectType,
+    plural: `${objectType}s`,
+    filterName: `${objectType} name`
+  }
 }

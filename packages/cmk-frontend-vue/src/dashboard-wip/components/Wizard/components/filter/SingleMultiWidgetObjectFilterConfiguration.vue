@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -16,6 +18,7 @@ import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
 import WidgetObjectFilterConfiguration from './WidgetObjectFilterConfiguration/WidgetObjectFilterConfiguration.vue'
+import { getStrings } from './utils'
 
 const { _t } = usei18n()
 
@@ -32,6 +35,8 @@ const props = withDefaults(defineProps<Props>(), {
   singleOnly: false,
   availableFilterTypes: () => [ElementSelection.SPECIFIC, ElementSelection.MULTIPLE]
 })
+
+const strings = computed(() => getStrings(props.objectType))
 
 interface Emits {
   (e: 'set-focus', target: ObjectType): void
@@ -53,12 +58,12 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
       :model-value="modeSelection"
       :options="[
         {
-          label: _t('Single %{n}', { n: props.objectType }),
+          label: _t('Single %{n}', { n: strings.singular }),
           value: ElementSelection.SPECIFIC,
           disabled: !props.availableFilterTypes?.includes(ElementSelection.SPECIFIC)
         },
         {
-          label: _t('Multiple %{n}', { n: props.objectType }),
+          label: _t('Multiple %{n}', { n: strings.plural }),
           value: ElementSelection.MULTIPLE,
           disabled: !props.availableFilterTypes?.includes(ElementSelection.MULTIPLE)
         }

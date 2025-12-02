@@ -7,8 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
+import FormButton from '@/form/private/FormButton.vue'
+
 import type { FilterConfigState } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import FilterInputItem from '@/dashboard-wip/components/filter/FilterInputItem/FilterInputItem.vue'
 import type { ConfiguredValues } from '@/dashboard-wip/components/filter/types.ts'
@@ -57,22 +59,22 @@ const filterDefinitions = useFilterDefinitions()
       <CmkIcon :aria-label="_t('Remove filter')" name="close" size="xxsmall" />
     </button>
   </div>
-  <ActionButton
-    v-if="!inFocus"
-    :label="_t('Add filter')"
-    :icon="{ name: 'plus', side: 'left' }"
-    variant="secondary"
-    :action="
-      () => {
-        emit('set-focus', objectType)
-      }
-    "
-  />
+  <div v-if="!inFocus">
+    <CmkParagraph style="padding-bottom: var(--dimension-4)">{{
+      _t('Add optional filters to refine this widget')
+    }}</CmkParagraph>
+    <FormButton
+      class="db-multi-filter__add-filter-button"
+      icon="plus"
+      @click="emit('set-focus', objectType)"
+      >{{ _t('Add filter') }}</FormButton
+    >
+  </div>
   <AddFilterMessage v-else />
 </template>
 <style scoped>
 .db-multi-filter__item-container {
-  border: var(--ux-theme-8) 1px dashed;
+  border: var(--ux-theme-8) var(--dimension-1) solid;
   margin: var(--spacing);
   padding: var(--spacing-double);
   position: relative;

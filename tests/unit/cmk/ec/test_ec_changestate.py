@@ -10,7 +10,8 @@ import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ec.main import EventStatus, StatusServer
 from cmk.ec.query import MKClientError
-from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
+
+from .helpers import FakeStatusSocket, new_event
 
 
 def test_changestate_of_nonexistent_event(status_server: StatusServer) -> None:

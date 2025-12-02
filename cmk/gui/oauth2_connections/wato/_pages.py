@@ -9,8 +9,8 @@ from typing import override
 import requests
 
 from cmk.ccc.site import omd_site
+from cmk.gui.oauth2_connections.watolib.store import OAuthConnection, save_oauth_connection
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.watolib.oauth_connections import OAuthConnection, save_oauth_connection
 from cmk.gui.watolib.passwords import load_passwords, save_password
 from cmk.shared_typing.mode_oauth2_connection import MsGraphApi
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH

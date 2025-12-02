@@ -13,6 +13,7 @@ from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.oauth2_connections.watolib.store import OAuthConnection, OAuthConnectionsConfigFile
 from cmk.gui.page_menu import (
     PageMenu,
 )
@@ -23,7 +24,6 @@ from cmk.gui.wato import SimpleListMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
-from cmk.gui.watolib.oauth_connections import OAuthConnection, OAuthConnectionsConfigFile
 from cmk.shared_typing.mode_oauth2_connection import (
     AuthorityUrls,
     MsGraphApi,

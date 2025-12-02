@@ -5,64 +5,44 @@
 
 from pathlib import Path
 
-import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils.notify
-from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.notify import NotificationHostConfig, read_notify_host_file, write_notify_host_file
-from cmk.utils.paths import omd_root
+from cmk.utils.notify import create_notify_host_files, NotificationHostConfig, read_notify_host_file
 from cmk.utils.tags import TagGroupID, TagID
 
-
-@pytest.mark.parametrize(
-    "versioned_config_path, host_name, config, expected",
-    [
-        pytest.param(
-            Path(VersionedConfigPath(omd_root, 1)),
-            "horsthost",
-            NotificationHostConfig(
-                host_labels={"owe": "owe"},
-                service_labels={
-                    "svc": {"lbl": "blub"},
-                    "svc2": {},
-                },
-                tags={
-                    TagGroupID("criticality"): TagID("prod"),
-                },
-            ),
-            NotificationHostConfig(
-                host_labels={"owe": "owe"},
-                service_labels={"svc": {"lbl": "blub"}},
-                tags={
-                    TagGroupID("criticality"): TagID("prod"),
-                },
-            ),
-        )
-    ],
+NHC = NotificationHostConfig(
+    host_labels={"owe": "owe"},
+    service_labels={
+        "svc": {"lbl": "blub"},
+        "svc2": {},
+    },
+    tags={
+        TagGroupID("criticality"): TagID("prod"),
+    },
 )
-def test_write_and_read_notify_host_file(
-    versioned_config_path: Path,
-    host_name: HostName,
-    config: NotificationHostConfig,
-    expected: NotificationHostConfig,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    notify_labels_path: Path = versioned_config_path / "notify" / "host_config"
+
+NHC_EXPECTED = NotificationHostConfig(
+    host_labels={"owe": "owe"},
+    service_labels={"svc": {"lbl": "blub"}},
+    tags={
+        TagGroupID("criticality"): TagID("prod"),
+    },
+)
+
+
+def test_create_notify_host_files(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    host_name = HostName("horsthost")
+    files = create_notify_host_files({host_name: NHC})
+    assert files
+
+    test_file = tmp_path / "file"
+    test_file.write_bytes(files[host_name])
+
     monkeypatch.setattr(
         cmk.utils.notify,
-        "_get_host_file_path",
-        lambda *args, **kw: notify_labels_path,
+        "make_notify_host_file_path",
+        lambda config_path, host_name: test_file,
     )
-
-    write_notify_host_file(versioned_config_path, {host_name: config})
-
-    assert notify_labels_path.exists()
-
-    monkeypatch.setattr(
-        cmk.utils.notify,
-        "_get_host_file_path",
-        lambda *args, **kw: notify_labels_path / host_name,
-    )
-    assert read_notify_host_file(host_name) == expected
+    assert read_notify_host_file(host_name) == NHC_EXPECTED

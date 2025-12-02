@@ -63,7 +63,12 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
+from cmk.utils.notify import (
+    create_notify_host_files,
+    make_notify_host_file_path,
+    NotificationHostConfig,
+    NotifyHostFiles,
+)
 from cmk.utils.notify_types import Contact
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -200,9 +205,8 @@ class NagiosCore(MonitoringCore):
 
         config_buffer = StringIO()
         hosts_config = self._config_cache.hosts_config
-        create_config(
+        notify_host_files = create_config(
             config_buffer,
-            config_path,
             self._config_cache,
             final_service_name_config,
             passive_service_name_config,
@@ -225,6 +229,8 @@ class NagiosCore(MonitoringCore):
         )
 
         store.save_text_to_file(self.objects_file_path, config_buffer.getvalue())
+        for host, content in notify_host_files.items():
+            store.save_bytes_to_file(make_notify_host_file_path(config_path, host), content)
 
     def _precompile_hostchecks(
         self,
@@ -306,7 +312,6 @@ def _validate_licensing(
 
 def create_config(
     outfile: IO[str],
-    config_path: Path,
     config_cache: ConfigCache,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -326,7 +331,7 @@ def create_config(
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     timeperiods: TimeperiodSpecs,
-) -> None:
+) -> NotifyHostFiles:
     cfg = NagiosConfig(outfile, hostnames, timeperiods)
 
     _output_conf_header(cfg)
@@ -352,7 +357,7 @@ def create_config(
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
 
-    write_notify_host_file(config_path, all_notify_host_configs)
+    notify_host_files = create_notify_host_files(all_notify_host_configs)
 
     _create_nagios_config_contacts(cfg)
     if hostnames:
@@ -366,6 +371,8 @@ def create_config(
     if config.extra_nagios_conf:
         cfg.write_str("\n# extra_nagios_conf\n\n")
         cfg.write_str(config.extra_nagios_conf)
+
+    return notify_host_files
 
 
 def _output_conf_header(cfg: NagiosConfig) -> None:

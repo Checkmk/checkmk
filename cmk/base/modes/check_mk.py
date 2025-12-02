@@ -1503,7 +1503,6 @@ modes.register(
 
 def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     from cmk.base.core.nagios import create_config
-    from cmk.ccc.config_path import VersionedConfigPath
 
     plugins = load_checks()
     loading_result = load_config(plugins)
@@ -1540,9 +1539,8 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
 
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
-    create_config(
+    _notify_host_files = create_config(
         sys.stdout,
-        Path(VersionedConfigPath.next(cmk.utils.paths.omd_root)),
         config_cache,
         final_service_name_config,
         service_name_config,

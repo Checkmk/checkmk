@@ -2062,9 +2062,9 @@ class ABCEditRuleMode(WatoMode):
     VAR_RULE_ID: Final = "rule_id"
 
     def __init__(self) -> None:
+        super().__init__()
         self._do_validate_on_render = False
         self._failed_frontend_data: RawFrontendData | None = None
-        super().__init__()
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:

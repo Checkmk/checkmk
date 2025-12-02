@@ -10,7 +10,7 @@ import pytest
 from tests.testlib.site import Site
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def message_broker_running(
     central_site: Site,
     remote_site: Site,

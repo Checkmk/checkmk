@@ -164,10 +164,10 @@ def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
     """
     Host label function
     Labels:
-        nvdct/l3v4_topology:
+        cmk/l3v4_topology:
             "host" is set for all devices with one IPv4 address
             "router" is set for all devices with more than one IPv4 address.
-        nvdct/l3v6_topology:
+        cmk/l3v6_topology:
             "host" is set for all devices with one IPv6 address
             "router" is set for all devices with more than one IPv6 address.
 

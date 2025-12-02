@@ -1717,7 +1717,7 @@ class EventServer(ECServerThread):
             self._config["event_limit"]["by_host"]["action"],
         )
 
-    def _get_rule_by_id(self, rule_id: str) -> Rule | None:
+    def get_rule_by_id(self, rule_id: str) -> Rule | None:
         return self._rule_by_id.get(rule_id)
 
     def _create_overflow_event(self, ty: LimitKind, event: Event, limit: int) -> Event:
@@ -2297,7 +2297,7 @@ class StatusServer(ECServerThread):
         event_ids, user = arguments
         ids = {int(event_id) for event_id in event_ids.split(",")}
         self._event_status.delete_events_by(
-            lambda event: event["id"] in ids, user, self._event_server._get_rule_by_id
+            lambda event: event["id"] in ids, user, self._event_server.get_rule_by_id
         )
 
     def handle_command_delete_events_of_host(self, arguments: list[str]) -> None:
@@ -2305,7 +2305,7 @@ class StatusServer(ECServerThread):
             raise MKClientError("Wrong number of arguments for DELETE_EVENTS_OF_HOST")
         hostname, user = arguments
         self._event_status.delete_events_by(
-            lambda event: event["host"] == hostname, user, self._event_server._get_rule_by_id
+            lambda event: event["host"] == hostname, user, self._event_server.get_rule_by_id
         )
 
     def handle_command_update(self, arguments: list[str]) -> None:

@@ -710,7 +710,7 @@ def create_metric_dict(
     metric: Mapping[str, Any],
     aggregation: Aggregations,
     interval_id: Intervals,
-    cmk_metric_alias: str,
+    metric_definition: AzureMetric,
 ) -> Sequence[Mapping[str, Any]]:
     name = metric["name"]["value"]
     metriclist: list[Mapping[str, Any]] = []
@@ -732,7 +732,7 @@ def create_metric_dict(
             "timestamp": None,
             "interval_id": interval_id,
             "interval": None,
-            "cmk_metric_alias": cmk_metric_alias,
+            "cmk_metric_alias": metric_definition.cmk_metric_alias,
             "metadata_mapping": None,
         }
 
@@ -747,10 +747,15 @@ def create_metric_dict(
         except (IndexError, TypeError):
             pass
 
+        data_point_discard = metric_definition.data_point_discard
         for data in reversed(dataset):
             LOGGER.debug("data: %s", data)
             metric_dict["value"] = data.get(aggregation)
             if metric_dict["value"] is not None:
+                if data_point_discard > 0:
+                    data_point_discard -= 1
+                    continue
+
                 metric_dict["timestamp"] = data["timeStamp"]
                 metriclist.append(metric_dict)
                 break
@@ -1290,7 +1295,7 @@ def _collect_async_metrics_tasks(
         # we don't want something too long here
         for definitions_chunk in _chunks(definitions, 4):
             cache = MetricCache(
-                metrics_definition=CacheMetricsGroupDefinition(
+                group_metrics_definition=CacheMetricsGroupDefinition(
                     interval=interval,
                     aggregation=aggregation,
                     dimension_filters=dimension_filters,
@@ -1601,25 +1606,30 @@ class MetricCache(AzureAsyncCache):
     def __init__(
         self,
         *,
-        metrics_definition: CacheMetricsGroupDefinition,
+        group_metrics_definition: CacheMetricsGroupDefinition,
         subscription: str,
         cache_id: str,
         ref_time: datetime.datetime,
         debug: bool = False,
     ) -> None:
-        self.metrics_definitions = metrics_definition
-        self.metric_aliases = {  # metric_name: metric_alias
-            metric.name: metric.cmk_metric_alias for metric in metrics_definition.metrics
+        self.group_metrics_definitions = group_metrics_definition
+        self.metrics_definitions = {
+            metric.name: metric for metric in group_metrics_definition.metrics
         }
 
         key_prefix = self.get_cache_key_prefix(
-            self.metrics_definitions.resource_type,
-            self.metrics_definitions.region,
+            self.group_metrics_definitions.resource_type,
+            self.group_metrics_definitions.region,
             subscription,
         )
 
-        # 'replace' to not create random directories
-        key_suffix = ".".join([alias.replace("/", "") for alias in self.metric_aliases.values()])
+        # 'replace' to not create random directories, use metric aliases
+        key_suffix = ".".join(
+            [
+                metric.cmk_metric_alias.replace("/", "")
+                for metric in self.metrics_definitions.values()
+            ]
+        )
         super().__init__(
             host_name=cache_id,  # we have no host name
             agent=f"agent_{AGENT}",
@@ -1631,7 +1641,7 @@ class MetricCache(AzureAsyncCache):
             "PT1M": datetime.timedelta(minutes=1),
             "PT5M": datetime.timedelta(minutes=5),
             "PT1H": datetime.timedelta(hours=1),
-        }[metrics_definition.interval]
+        }[group_metrics_definition.interval]
         # For 1-min metrics, the start time should be at least 4 minutes before because of the
         # ingestion time of Azure metrics (we had to change from 3 minutes to 5 minutes because we
         # were missing some metrics with 3 minutes).
@@ -1705,17 +1715,18 @@ class MetricCache(AzureAsyncCache):
         params = {
             "starttime": self.start_time,
             "endtime": self.end_time,
-            "interval": self.metrics_definitions.interval,
+            "interval": self.group_metrics_definitions.interval,
             # NB: Azure API won't have requests with more than 20 metric names at once
-            "metricnames": ",".join(self.metric_aliases),
+            "metricnames": ",".join(self.metrics_definitions),
             "metricnamespace": resource_type,
-            "aggregation": self.metrics_definitions.aggregation,
+            "aggregation": self.group_metrics_definitions.aggregation,
         }
 
-        if self.metrics_definitions.dimension_filters:
+        if self.group_metrics_definitions.dimension_filters:
             # build the filter for the azure getBatch api
             filter = " and ".join(
-                f"{df.name} eq '{df.value}'" for df in self.metrics_definitions.dimension_filters
+                f"{df.name} eq '{df.value}'"
+                for df in self.group_metrics_definitions.dimension_filters
             )
             params["filter"] = filter
 
@@ -1729,7 +1740,9 @@ class MetricCache(AzureAsyncCache):
             resource_id = resource_metrics["resourceid"]
 
             for raw_metric in resource_metrics["value"]:
-                if not (cmk_metric_alias := self.metric_aliases.get(raw_metric["name"]["value"])):
+                if not (
+                    metric_definition := self.metrics_definitions.get(raw_metric["name"]["value"])
+                ):
                     LOGGER.error(
                         "Skipping unexpected metric %s for resource %s",
                         raw_metric["name"]["value"],
@@ -1739,9 +1752,9 @@ class MetricCache(AzureAsyncCache):
 
                 parsed_metric = create_metric_dict(
                     raw_metric,
-                    self.metrics_definitions.aggregation,
-                    self.metrics_definitions.interval,
-                    cmk_metric_alias,
+                    self.group_metrics_definitions.aggregation,
+                    self.group_metrics_definitions.interval,
+                    metric_definition,
                 )
                 if parsed_metric:
                     metrics[resource_id].extend(parsed_metric)
@@ -1750,7 +1763,7 @@ class MetricCache(AzureAsyncCache):
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):
                         continue
 
-                    msg = f"metric not found: {metric_name} ({self.metrics_definitions.aggregation}), ({self.metrics_definitions.dimension_filters})"
+                    msg = f"metric not found: {metric_name} ({self.group_metrics_definitions.aggregation}), ({self.group_metrics_definitions.dimension_filters})"
                     err.add("info", resource_id, msg)
                     LOGGER.info(msg)
 

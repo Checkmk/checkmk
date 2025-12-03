@@ -24,9 +24,17 @@ class AzureMetric:
     aggregation: Aggregations
     dimension_filters: tuple[DimensionFilter, ...] | None = None
     # The metric alias serves different purposes: allowing the creation of unique names for metrics
-    # that are the same metric but have different dimension filters, providing more readable names for developers,
+    # that are the same metric but have different dimension filters,
+    # providing more readable names for developers,
     # and enabling the creation of metric cache files with shorter names.
     explicit_metric_alias: str | None = None
+    # Azure emits partial data for some metrics, (e.g. Cosmos DB partitions)
+    # as soon as it is available.
+    # This causes the most recent data point to appear near zero until all partitions report
+    # or until the value is finalized and computed.
+    # (see https://learn.microsoft.com/en-us/azure/azure-monitor/metrics/metrics-troubleshoot#chart-shows-unexpected-drop-in-values)
+    # Here you can discard the latest points (usually the last one). See also CMK-28860
+    data_point_discard: int = 0
 
     def __post_init__(self) -> None:
         if self.dimension_filters is not None and self.explicit_metric_alias is None:
@@ -87,9 +95,9 @@ cosmos_accounts_metrics = [
     ),
     AzureMetric(name="TotalRequestUnitsPreview", interval="PT1M", aggregation="total"),
     AzureMetric(name="NormalizedRUConsumption", interval="PT1M", aggregation="maximum"),
-    AzureMetric(name="DataUsage", interval="PT5M", aggregation="maximum"),
-    AzureMetric(name="IndexUsage", interval="PT5M", aggregation="maximum"),
-    AzureMetric(name="DocumentCount", interval="PT5M", aggregation="average"),
+    AzureMetric(name="DataUsage", interval="PT5M", aggregation="maximum", data_point_discard=1),
+    AzureMetric(name="IndexUsage", interval="PT5M", aggregation="maximum", data_point_discard=1),
+    AzureMetric(name="DocumentCount", interval="PT5M", aggregation="average", data_point_discard=1),
 ]
 
 COSMOS_DATABASE_METRICS = [

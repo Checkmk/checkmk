@@ -322,7 +322,7 @@ const getSearchInputPlaceholder = computed(() => {
 }
 
 .unified-search-info-item {
-  color: var(--help-text-font-color);
+  color: var(--dropdown-chevron-indicator-color);
   opacity: 0.5;
   position: absolute;
   right: 0;

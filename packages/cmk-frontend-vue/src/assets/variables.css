@@ -108,6 +108,7 @@
     --default-component-bg-color: rgb(240 240 240);
     --help-text-bg-color: var(--ux-theme-5);
     --help-text-font-color: var(--color-conference-grey-100);
+    --dropdown-chevron-indicator-color: var(--color-conference-grey-100);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-daylight-grey-50);
@@ -213,6 +214,7 @@
     --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
     --default-component-bg-color: rgb(46 44 44);
     --help-text-font-color: var(--color-conference-grey-100);
+    --dropdown-chevron-indicator-color: var(--color-white-100);
     --default-dialog-bg-color: var(--ux-theme-5);
     --default-dialog-font-color: var(--color-white-100);
     --form-element-required-color: var(--success);

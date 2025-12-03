@@ -3236,6 +3236,9 @@ msgstr "Accepteer elke SSH Host Sleutel"
 msgid "Accept incoming TCP connections"
 msgstr "Accepteer inkomende TCP verbindingen"
 
+msgid "Accept only one neighbor per local port"
+msgstr ""
+
 #, fuzzy
 msgid "Accept service properties"
 msgstr "Basiseigenschappen"
@@ -9222,6 +9225,10 @@ msgid "Azure Firewall SNAT Utilization"
 msgstr "GCP/Redis CPU-gebruik"
 
 #, fuzzy
+msgid "Azure Firewall Throughput"
+msgstr "Lees doorvoer"
+
+#, fuzzy
 msgid "Azure Firewalls"
 msgstr "Zorp firewall"
 
@@ -9402,6 +9409,10 @@ msgstr "Databaseverbindingen"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure firewall health"
+msgstr "Zorp firewall"
 
 #, fuzzy
 msgid "Azure resource group"
@@ -10181,6 +10192,10 @@ msgstr "Helderheid"
 
 msgid "Brightness Levels"
 msgstr "Helderheidsniveaus"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "uitzending"
 
 msgid "Broadcast packet rates"
 msgstr "Uitzending pakket tarieven"
@@ -12340,6 +12355,18 @@ msgstr "Kan bestand \"%s\" niet schrijven: %s"
 
 #, fuzzy
 msgid "Capabilities"
+msgstr "Verenigbaarheid"
+
+#, fuzzy
+msgid "Capabilities enabled"
+msgstr "Verenigbaarheid"
+
+#, fuzzy
+msgid "Capabilities map supported"
+msgstr "Verenigbaarheid"
+
+#, fuzzy
+msgid "Capabilities supported"
 msgstr "Verenigbaarheid"
 
 msgid "Capacity filled"
@@ -16145,10 +16172,6 @@ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "Fase 1.1: Afhalen van site \"%s\""
 
 #, python-format
-msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
-msgstr ""
-
-#, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
@@ -17002,6 +17025,10 @@ msgstr "Maak %s"
 
 msgid "Create Conference Latency"
 msgstr "Conferentie Latency creëren"
+
+#, fuzzy
+msgid "Create OAuth2 connections."
+msgstr "Aansluiting toevoegen"
 
 msgid "Create SLA"
 msgstr "Maak SLA"
@@ -33736,6 +33763,12 @@ msgstr ""
 "Als de automatische detectie van de verbindingssnelheid niet werkt, kunt u "
 "de verbindingssnelheid hier instellen."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -38210,6 +38243,13 @@ msgid "LISTEN"
 msgstr "LUISTEREN"
 
 #, fuzzy
+msgid "LLDP cache"
+msgstr "Cached"
+
+msgid "LLDP neighbours"
+msgstr ""
+
+#, fuzzy
 msgid "LPAR statistics for AIX"
 msgstr "RMON statistieken"
 
@@ -41529,9 +41569,6 @@ msgstr "Beheer en creëer Checkmk-uitbreidingspakketten (MKP's)."
 
 msgid "Manage background jobs"
 msgstr "Beheer van achtergrondtaken"
-
-msgid "Manage configuration read only mode"
-msgstr "Beheer configuratie alleen-lezen modus"
 
 msgid "Manage custom attributes"
 msgstr "Aangepaste kenmerken beheren"
@@ -45282,6 +45319,10 @@ msgid "Neighbor address"
 msgstr "Netwerkadres"
 
 #, fuzzy
+msgid "Neighbor description"
+msgstr "Toon beschrijving"
+
+#, fuzzy
 msgid "Neighbor name"
 msgstr "Naam sensor"
 
@@ -45295,6 +45336,10 @@ msgstr "Klik hier voor details."
 #, fuzzy
 msgid "Neighbor port"
 msgstr "Bericht voor hostwaarschuwingen"
+
+#, fuzzy
+msgid "Neighbor port description"
+msgstr "De Haven Beschrijving"
 
 msgid "Neither"
 msgstr "Noch"
@@ -48171,6 +48216,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Aansluiting toevoegen"
+
+#, fuzzy
+msgid "OAuth2 connections"
 msgstr "Aansluiting toevoegen"
 
 msgid "OEM data interpretation"
@@ -53772,6 +53821,10 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Voorvoegsel voor piggyback hostname"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "Voorvoegsel tekst"
+
 msgid "Prefix match"
 msgstr "Voorvoegsel match"
 
@@ -55285,6 +55338,14 @@ msgstr "Minimum wachttijd lezen"
 
 msgid "Read wait time"
 msgstr "Wachttijd lezen"
+
+#, fuzzy
+msgid "Read-only mode"
+msgstr "Alleen lezen"
+
+#, fuzzy
+msgid "Read-only mode for configuration"
+msgstr "Configuratie op afstand"
 
 msgid "Reading connections"
 msgstr "Aansluitingen lezen"
@@ -58814,7 +58875,8 @@ msgstr "Save"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Opgeslagen controleconfiguratie van host '%s' met %d diensten"
 
-msgid "Saved read only settings"
+#, fuzzy
+msgid "Saved read-only settings"
 msgstr "Opgeslagen alleen-lezen instellingen"
 
 msgid "Saved space"
@@ -58935,6 +58997,10 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
+
+#, fuzzy
+msgid "Scope ID"
+msgstr "Knooppunt-ID"
 
 #, fuzzy
 msgid "Scope attribute"
@@ -60604,6 +60670,10 @@ msgstr "Leeftijd dienststaat"
 msgid "Service state for Differing Service States"
 msgstr "Dienststaat percentage"
 
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Dienst staat vertaling"
+
 msgid "Service state if no map rule matches"
 msgstr "Dienst status als er geen kaart regel overeenkomt"
 
@@ -61161,6 +61231,17 @@ msgid ""
 msgstr ""
 "Stel het hostadres van de LDAP-server in. Kan een IP-adres of een oplosbare "
 "hostnaam zijn."
+
+msgid ""
+"Set the host names or IP addresses of the site. The entries will be added as "
+"additional subject alternative names (SANs) to the site certificate, "
+"alongside the default SANs. Configuring this allows proper server name "
+"identification when connecting to the site via TLS, for example for "
+"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
+"Changing this setting will trigger re-issuance of the site certificate by "
+"the site CA. In distributed setups, configure SANs separately for each site "
+"in the distributed monitoring configuration."
+msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Stel het logging niveau in voor Windows Agent"
@@ -62439,6 +62520,10 @@ msgstr "Plaats back-up"
 
 msgid "Site backup targets"
 msgstr "Site back-updoelen"
+
+#, fuzzy
+msgid "Site certificate subject alternative names"
+msgstr "Verkeerd certificaat's onderwerp alt naam"
 
 msgid "Site certificate validity"
 msgstr "Geldigheid van het site-certificaat"
@@ -75947,6 +76032,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Firewall throughput "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "connections monitoring"
 msgstr ""
@@ -77366,6 +77459,10 @@ msgid "Throughput (FC)"
 msgstr "Doorvoer"
 
 msgid "Throughput levels"
+msgstr "Doorvoerniveaus"
+
+#, fuzzy
+msgid "Throughput levels (/sec)"
 msgstr "Doorvoerniveaus"
 
 #, fuzzy
@@ -92868,6 +92965,9 @@ msgstr "alias gebruiken"
 msgid "use port name"
 msgstr "naam van de poort gebruiken"
 
+msgid "use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
+msgstr ""
+
 msgid "used"
 msgstr "gebruikt"
 
@@ -94135,10 +94235,6 @@ msgid "Select a custom graph"
 msgstr "Kloon aangepaste grafiek"
 
 #, fuzzy
-msgid "Widget visualization"
-msgstr "BI-visualisatie"
-
-#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "Gerelateerde dashboards"
 
@@ -94337,6 +94433,11 @@ msgstr "Dienst Metriek"
 msgid "Filter service metric by"
 msgstr "Dienst Metriek"
 
+msgid ""
+"Use these fields to narrow down the list of available service metrics.<br /"
+">Click the Host name or Service label to clear the filter."
+msgstr ""
+
 #, fuzzy
 msgid "Must select an option"
 msgstr "Afgewezen verbindingen"
@@ -94494,19 +94595,19 @@ msgid "Preview of matches:"
 msgstr "Deze regel komt overeen met"
 
 #, fuzzy
+msgid "Apply rate (sums)"
+msgstr "Latency"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
+
+#, fuzzy
 msgid "Auto"
 msgstr "Automatisch"
 
 #, fuzzy
 msgid "Strict"
 msgstr "Metrisch"
-
-#, fuzzy
-msgid "Apply rate (sums)"
-msgstr "Latency"
-
-msgid "Apply percentile (histograms)"
-msgstr ""
 
 msgid "Area"
 msgstr "Gebied"
@@ -95583,6 +95684,13 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Manage configuration read only mode"
+#~ msgstr "Beheer configuratie alleen-lezen modus"
+
+#, fuzzy
+#~ msgid "Widget visualization"
+#~ msgstr "BI-visualisatie"
+
 #, fuzzy
 #~ msgid "Explicit condition"
 #~ msgstr "Expliciete voorwaarden"
@@ -95703,10 +95811,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Select at least one column."
 #~ msgstr "Selecteer ten minste één element"
-
-#, fuzzy
-#~ msgid "Site certificate subject alternative names"
-#~ msgstr "Verkeerd certificaat's onderwerp alt naam"
 
 #, fuzzy
 #~ msgid ""

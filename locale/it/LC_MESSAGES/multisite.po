@@ -3222,6 +3222,9 @@ msgstr "Accettare qualsiasi chiave host SSH"
 msgid "Accept incoming TCP connections"
 msgstr "Accettare le connessioni TCP in entrata"
 
+msgid "Accept only one neighbor per local port"
+msgstr ""
+
 #, fuzzy
 msgid "Accept service properties"
 msgstr "Proprietà di base"
@@ -9157,6 +9160,10 @@ msgid "Azure Firewall SNAT Utilization"
 msgstr "Utilizzo della CPU di GCP/Redis"
 
 #, fuzzy
+msgid "Azure Firewall Throughput"
+msgstr "Capacità di lettura"
+
+#, fuzzy
 msgid "Azure Firewalls"
 msgstr "Firewall Zorp"
 
@@ -9337,6 +9344,10 @@ msgstr "Connessioni al database"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Connessioni al database"
+
+#, fuzzy
+msgid "Azure firewall health"
+msgstr "Firewall Zorp"
 
 #, fuzzy
 msgid "Azure resource group"
@@ -10110,6 +10121,10 @@ msgstr "Luminosità"
 
 msgid "Brightness Levels"
 msgstr "Livelli di luminosità"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "trasmissione"
 
 msgid "Broadcast packet rates"
 msgstr "Velocità di trasmissione dei pacchetti"
@@ -12249,6 +12264,18 @@ msgstr "Impossibile scrivere il file \"%s\": %s"
 
 #, fuzzy
 msgid "Capabilities"
+msgstr "Compatibilità"
+
+#, fuzzy
+msgid "Capabilities enabled"
+msgstr "Compatibilità"
+
+#, fuzzy
+msgid "Capabilities map supported"
+msgstr "Compatibilità"
+
+#, fuzzy
+msgid "Capabilities supported"
 msgstr "Compatibilità"
 
 msgid "Capacity filled"
@@ -16016,10 +16043,6 @@ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "Fase 1.1: Recupero dal sito \"%s\""
 
 #, python-format
-msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
-msgstr ""
-
-#, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
@@ -16854,6 +16877,10 @@ msgstr "Creare %s"
 
 msgid "Create Conference Latency"
 msgstr "Creare la latenza della conferenza"
+
+#, fuzzy
+msgid "Create OAuth2 connections."
+msgstr "Aggiungere la connessione"
 
 msgid "Create SLA"
 msgstr "Creare SLA"
@@ -33491,6 +33518,12 @@ msgstr ""
 "Se il rilevamento automatico della velocità di collegamento non funziona, "
 "potete impostare qui la velocità di collegamento."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -37932,6 +37965,13 @@ msgid "LISTEN"
 msgstr "ASCOLTA"
 
 #, fuzzy
+msgid "LLDP cache"
+msgstr "Cached"
+
+msgid "LLDP neighbours"
+msgstr ""
+
+#, fuzzy
 msgid "LPAR statistics for AIX"
 msgstr "Statistiche RMON"
 
@@ -41215,9 +41255,6 @@ msgstr "Gestire e creare pacchetti di estensioni Checkmk (MKP)."
 
 msgid "Manage background jobs"
 msgstr "Gestire i lavori in background"
-
-msgid "Manage configuration read only mode"
-msgstr "Gestire la configurazione in sola lettura"
 
 msgid "Manage custom attributes"
 msgstr "Gestire gli attributi personalizzati"
@@ -44934,6 +44971,10 @@ msgid "Neighbor address"
 msgstr "Indirizzo di rete"
 
 #, fuzzy
+msgid "Neighbor description"
+msgstr "Mostra la descrizione"
+
+#, fuzzy
 msgid "Neighbor name"
 msgstr "Nome del sensore"
 
@@ -44947,6 +44988,10 @@ msgstr "Fare clic qui per i dettagli."
 #, fuzzy
 msgid "Neighbor port"
 msgstr "Messaggio per gli avvisi dell'host"
+
+#, fuzzy
+msgid "Neighbor port description"
+msgstr "La descrizione del porto"
 
 msgid "Neither"
 msgstr "Né"
@@ -47786,6 +47831,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Aggiungere la connessione"
+
+#, fuzzy
+msgid "OAuth2 connections"
 msgstr "Aggiungere la connessione"
 
 msgid "OEM data interpretation"
@@ -53357,6 +53406,10 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Prefisso per l'hostname piggyback"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "Testo del prefisso"
+
 msgid "Prefix match"
 msgstr "Corrispondenza del prefisso"
 
@@ -54861,6 +54914,14 @@ msgstr "Minimo di attesa di lettura"
 
 msgid "Read wait time"
 msgstr "Leggere il tempo di attesa"
+
+#, fuzzy
+msgid "Read-only mode"
+msgstr "Modalità di sola lettura"
+
+#, fuzzy
+msgid "Read-only mode for configuration"
+msgstr "Configurazione remota"
 
 msgid "Reading connections"
 msgstr "Connessioni di lettura"
@@ -58379,7 +58440,8 @@ msgstr "Salva"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Salvata la configurazione di controllo dell'host '%s' con %d servizi"
 
-msgid "Saved read only settings"
+#, fuzzy
+msgid "Saved read-only settings"
 msgstr "Impostazioni salvate di sola lettura"
 
 msgid "Saved space"
@@ -58498,6 +58560,10 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
+
+#, fuzzy
+msgid "Scope ID"
+msgstr "ID del nodo"
 
 #, fuzzy
 msgid "Scope attribute"
@@ -60144,6 +60210,10 @@ msgstr "Età dello stato di servizio"
 msgid "Service state for Differing Service States"
 msgstr "Percentuale dello stato di servizio"
 
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Traduzione dello stato del servizio"
+
 msgid "Service state if no map rule matches"
 msgstr "Stato del servizio se nessuna regola della mappa corrisponde"
 
@@ -60697,6 +60767,17 @@ msgid ""
 msgstr ""
 "Imposta l'indirizzo dell'host del server LDAP. Potrebbe essere un indirizzo "
 "IP o un hostname risolvibile."
+
+msgid ""
+"Set the host names or IP addresses of the site. The entries will be added as "
+"additional subject alternative names (SANs) to the site certificate, "
+"alongside the default SANs. Configuring this allows proper server name "
+"identification when connecting to the site via TLS, for example for "
+"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
+"Changing this setting will trigger re-issuance of the site certificate by "
+"the site CA. In distributed setups, configure SANs separately for each site "
+"in the distributed monitoring configuration."
+msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Impostare il livello di registrazione per Windows Agent"
@@ -61971,6 +62052,10 @@ msgstr "Backup del sito"
 
 msgid "Site backup targets"
 msgstr "Obiettivi di backup del sito"
+
+#, fuzzy
+msgid "Site certificate subject alternative names"
+msgstr "Nome alternativo del soggetto del certificato"
 
 msgid "Site certificate validity"
 msgstr "Validità del certificato del sito"
@@ -75399,6 +75484,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Firewall throughput "
+"monitoring"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "connections monitoring"
 msgstr ""
@@ -76821,6 +76914,10 @@ msgid "Throughput (FC)"
 msgstr "Throughput"
 
 msgid "Throughput levels"
+msgstr "Livelli di rendimento"
+
+#, fuzzy
+msgid "Throughput levels (/sec)"
 msgstr "Livelli di rendimento"
 
 msgid "Throughput optimized HDD space"
@@ -92134,6 +92231,9 @@ msgstr "usa l'alias"
 msgid "use port name"
 msgstr "usa il nome della porta"
 
+msgid "use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
+msgstr ""
+
 msgid "used"
 msgstr "usato"
 
@@ -93400,10 +93500,6 @@ msgid "Select a custom graph"
 msgstr "Clonare un grafico personalizzato"
 
 #, fuzzy
-msgid "Widget visualization"
-msgstr "Visualizzazione della BI"
-
-#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "Cruscotti correlati"
 
@@ -93601,6 +93697,11 @@ msgstr "Metriche di servizio"
 msgid "Filter service metric by"
 msgstr "Metriche di servizio"
 
+msgid ""
+"Use these fields to narrow down the list of available service metrics.<br /"
+">Click the Host name or Service label to clear the filter."
+msgstr ""
+
 #, fuzzy
 msgid "Must select an option"
 msgstr "Connessioni rifiutate"
@@ -93758,19 +93859,19 @@ msgid "Preview of matches:"
 msgstr "Questa regola corrisponde a"
 
 #, fuzzy
+msgid "Apply rate (sums)"
+msgstr "Latenza"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
+
+#, fuzzy
 msgid "Auto"
 msgstr "Automatico"
 
 #, fuzzy
 msgid "Strict"
 msgstr "Metrico"
-
-#, fuzzy
-msgid "Apply rate (sums)"
-msgstr "Latenza"
-
-msgid "Apply percentile (histograms)"
-msgstr ""
 
 msgid "Area"
 msgstr "Area"
@@ -94848,6 +94949,13 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Manage configuration read only mode"
+#~ msgstr "Gestire la configurazione in sola lettura"
+
+#, fuzzy
+#~ msgid "Widget visualization"
+#~ msgstr "Visualizzazione della BI"
+
 #, fuzzy
 #~ msgid "Explicit condition"
 #~ msgstr "Condizioni esplicite"
@@ -94966,10 +95074,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Select at least one column."
 #~ msgstr "Seleziona almeno un elemento"
-
-#, fuzzy
-#~ msgid "Site certificate subject alternative names"
-#~ msgstr "Nome alternativo del soggetto del certificato"
 
 #, fuzzy
 #~ msgid ""

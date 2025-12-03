@@ -3106,6 +3106,9 @@ msgstr "SSHホストキーを受け入れる"
 msgid "Accept incoming TCP connections"
 msgstr "受信TCP接続を受け入れる"
 
+msgid "Accept only one neighbor per local port"
+msgstr ""
+
 msgid "Accept service properties"
 msgstr "サービスプロパティを受け入れる"
 
@@ -8618,6 +8621,10 @@ msgid "Azure Firewall SNAT Utilization"
 msgstr "GCP/Redis CPU使用率"
 
 #, fuzzy
+msgid "Azure Firewall Throughput"
+msgstr "読み取りスループット"
+
+#, fuzzy
 msgid "Azure Firewalls"
 msgstr "Zorpファイアウォール"
 
@@ -8798,6 +8805,10 @@ msgstr "Azure データベース接続"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure firewall health"
+msgstr "Zorpファイアウォール"
 
 #, fuzzy
 msgid "Azure resource group"
@@ -9534,6 +9545,10 @@ msgstr "明るさ"
 
 msgid "Brightness Levels"
 msgstr "明るさのレベル"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "ブロードキャスト"
 
 msgid "Broadcast packet rates"
 msgstr "ブロードキャストパケットレート"
@@ -11614,6 +11629,18 @@ msgstr "ファイル \"%s\"を書き込めません: %s"
 
 #, fuzzy
 msgid "Capabilities"
+msgstr "互換性"
+
+#, fuzzy
+msgid "Capabilities enabled"
+msgstr "互換性"
+
+#, fuzzy
+msgid "Capabilities map supported"
+msgstr "互換性"
+
+#, fuzzy
+msgid "Capabilities supported"
 msgstr "互換性"
 
 msgid "Capacity filled"
@@ -15227,10 +15254,6 @@ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
 #, python-format
-msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
-msgstr "コネクター：サイト \"%s\"で開いているtelemetry ホストを収集しています"
-
-#, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
@@ -16046,6 +16069,10 @@ msgstr "%sを作成"
 
 msgid "Create Conference Latency"
 msgstr "会議の遅延を作成する"
+
+#, fuzzy
+msgid "Create OAuth2 connections."
+msgstr "接続を追加"
 
 msgid "Create SLA"
 msgstr "SLAを作成する"
@@ -31675,6 +31702,12 @@ msgstr ""
 "リンク速度の自動検出が機能しない場合は、ここでリンク速度を設定できます。"
 
 msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
+msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
 "between the monitoring site and the host. Enable this flag for compatibility "
 "reasons or if you experience problems with the controller related to TLS or "
@@ -35918,6 +35951,13 @@ msgstr "LIST リクエスト"
 msgid "LISTEN"
 msgstr "聴く"
 
+#, fuzzy
+msgid "LLDP cache"
+msgstr "キャッシュされた"
+
+msgid "LLDP neighbours"
+msgstr ""
+
 msgid "LPAR statistics for AIX"
 msgstr "LPAR 統計for AIX"
 
@@ -39082,9 +39122,6 @@ msgstr "Checkmk拡張パッケージ(MKP)を管理および作成します。"
 
 msgid "Manage background jobs"
 msgstr "バックグラウンドジョブとして管理"
-
-msgid "Manage configuration read only mode"
-msgstr "構成の読み取り専用モードを管理する"
 
 msgid "Manage custom attributes"
 msgstr "カスタム属性の管理"
@@ -42620,6 +42657,10 @@ msgid "Neighbor address"
 msgstr "ネットワークアドレス"
 
 #, fuzzy
+msgid "Neighbor description"
+msgstr "説明を表示"
+
+#, fuzzy
 msgid "Neighbor name"
 msgstr "センサー名"
 
@@ -42633,6 +42674,10 @@ msgstr "詳細はこちらをクリックしてください。"
 #, fuzzy
 msgid "Neighbor port"
 msgstr "ブローカーポートのメッセージ"
+
+#, fuzzy
+msgid "Neighbor port description"
+msgstr "ポートの説明"
 
 msgid "Neither"
 msgstr "どちらでもない"
@@ -45305,6 +45350,10 @@ msgstr "OAuth2（クライアントID/テナントID）"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "接続を追加"
+
+#, fuzzy
+msgid "OAuth2 connections"
 msgstr "接続を追加"
 
 msgid "OEM data interpretation"
@@ -50402,6 +50451,10 @@ msgstr "GCEピギーバックホスト名のプレフィックス。デフォル
 msgid "Prefix for piggyback host name"
 msgstr "ピギーバックホスト名のプレフィックス"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "プレフィックスのテキスト"
+
 msgid "Prefix match"
 msgstr "プレフィックス一致"
 
@@ -51827,6 +51880,14 @@ msgstr "最小待機時間を読み取る"
 
 msgid "Read wait time"
 msgstr "読み込み待機時間"
+
+#, fuzzy
+msgid "Read-only mode"
+msgstr "読み取り専用モード"
+
+#, fuzzy
+msgid "Read-only mode for configuration"
+msgstr "リモート設定"
 
 msgid "Reading connections"
 msgstr "接続の読み取り"
@@ -55171,7 +55232,8 @@ msgstr "保存する"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "ホスト '%s'のチェック構成を %d サービスで保存しました"
 
-msgid "Saved read only settings"
+#, fuzzy
+msgid "Saved read-only settings"
 msgstr "保存された読み取り専用設定"
 
 msgid "Saved space"
@@ -55287,6 +55349,10 @@ msgid "Scientific (standard) with symbol %s"
 msgstr "科学的（標準）シンボル%s"
 
 msgid "Scope"
+msgstr "スコープ"
+
+#, fuzzy
+msgid "Scope ID"
 msgstr "スコープ"
 
 #, fuzzy
@@ -56883,6 +56949,10 @@ msgstr "サービス状態経過日数"
 msgid "Service state for Differing Service States"
 msgstr "サービス状態のパーセンテージ"
 
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "サービス状態の変換"
+
 msgid "Service state if no map rule matches"
 msgstr "一致するマップルールがない場合のサービス状態"
 
@@ -57396,6 +57466,17 @@ msgid ""
 msgstr ""
 "LDAPサーバーのホストアドレスを設定します。IPアドレスまたは解決可能なホスト名"
 "である可能性があります。"
+
+msgid ""
+"Set the host names or IP addresses of the site. The entries will be added as "
+"additional subject alternative names (SANs) to the site certificate, "
+"alongside the default SANs. Configuring this allows proper server name "
+"identification when connecting to the site via TLS, for example for "
+"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
+"Changing this setting will trigger re-issuance of the site certificate by "
+"the site CA. In distributed setups, configure SANs separately for each site "
+"in the distributed monitoring configuration."
+msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Windowsエージェントのログレベルを設定します"
@@ -58621,6 +58702,10 @@ msgstr "サイトのバックアップ"
 
 msgid "Site backup targets"
 msgstr "サイトのバックアップターゲット"
+
+#, fuzzy
+msgid "Site certificate subject alternative names"
+msgstr "証明書サブジェクトの別名"
 
 msgid "Site certificate validity"
 msgstr "サイト証明書の有効性"
@@ -71566,6 +71651,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Firewall throughput "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "connections monitoring"
 msgstr ""
@@ -72901,6 +72994,10 @@ msgid "Throughput (FC)"
 msgstr "スループット"
 
 msgid "Throughput levels"
+msgstr "スループットレベル"
+
+#, fuzzy
+msgid "Throughput levels (/sec)"
 msgstr "スループットレベル"
 
 msgid "Throughput optimized HDD space"
@@ -87118,6 +87215,9 @@ msgstr "エイリアスを使用"
 msgid "use port name"
 msgstr "ポート名を使用する"
 
+msgid "use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
+msgstr ""
+
 msgid "used"
 msgstr "使用中"
 
@@ -88361,10 +88461,6 @@ msgid "Select a custom graph"
 msgstr "カスタムグラフのクローンを作成する"
 
 #, fuzzy
-msgid "Widget visualization"
-msgstr "BIの視覚化"
-
-#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "関連ダッシュボード"
 
@@ -88563,6 +88659,11 @@ msgstr "サービスメトリクス"
 msgid "Filter service metric by"
 msgstr "サービスメトリクス"
 
+msgid ""
+"Use these fields to narrow down the list of available service metrics.<br /"
+">Click the Host name or Service label to clear the filter."
+msgstr ""
+
 #, fuzzy
 msgid "Must select an option"
 msgstr "オプション選択"
@@ -88717,18 +88818,18 @@ msgstr "もっと表示"
 msgid "Preview of matches:"
 msgstr "ルール一致"
 
-msgid "Auto"
-msgstr "自動"
-
-msgid "Strict"
-msgstr "制限"
-
 #, fuzzy
 msgid "Apply rate (sums)"
 msgstr "レイテンシーの適用"
 
 msgid "Apply percentile (histograms)"
 msgstr ""
+
+msgid "Auto"
+msgstr "自動"
+
+msgid "Strict"
+msgstr "制限"
 
 msgid "Area"
 msgstr "範囲"
@@ -89770,6 +89871,18 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
+#~ msgstr ""
+#~ "コネクター：サイト \"%s\"で開いているtelemetry ホストを収集しています"
+
+#~ msgid "Manage configuration read only mode"
+#~ msgstr "構成の読み取り専用モードを管理する"
+
+#, fuzzy
+#~ msgid "Widget visualization"
+#~ msgstr "BIの視覚化"
+
 #~ msgid "Explicit condition"
 #~ msgstr "明示的な条件"
 
@@ -89877,10 +89990,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Select at least one column."
 #~ msgstr "少なくとも1つの要素を選択してください"
-
-#, fuzzy
-#~ msgid "Site certificate subject alternative names"
-#~ msgstr "証明書サブジェクトの別名"
 
 #~ msgid ""
 #~ "The OpenTelemetry collector is an experimental beta feature, and not "

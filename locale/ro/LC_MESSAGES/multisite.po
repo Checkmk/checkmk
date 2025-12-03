@@ -3260,6 +3260,9 @@ msgstr "Accept orice cheie SSH Host Key"
 msgid "Accept incoming TCP connections"
 msgstr "Acceptarea conexiunilor TCP primite"
 
+msgid "Accept only one neighbor per local port"
+msgstr ""
+
 #, fuzzy
 msgid "Accept service properties"
 msgstr "Proprietăți de bază"
@@ -9223,6 +9226,10 @@ msgid "Azure Firewall SNAT Utilization"
 msgstr "GCP/Redis Utilizare CPU"
 
 #, fuzzy
+msgid "Azure Firewall Throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
 msgid "Azure Firewalls"
 msgstr "Zorp firewall"
 
@@ -9403,6 +9410,10 @@ msgstr "Conexiuni la baza de date"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure firewall health"
+msgstr "Zorp firewall"
 
 #, fuzzy
 msgid "Azure resource group"
@@ -10178,6 +10189,10 @@ msgstr "Luminozitate"
 
 msgid "Brightness Levels"
 msgstr "Niveluri de luminozitate"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "difuzare"
 
 msgid "Broadcast packet rates"
 msgstr "Ratele pachetelor de difuzare"
@@ -12390,6 +12405,18 @@ msgstr "Nu se poate scrie fișierul \"%s\": %s."
 
 #, fuzzy
 msgid "Capabilities"
+msgstr "Compatibilitate"
+
+#, fuzzy
+msgid "Capabilities enabled"
+msgstr "Compatibilitate"
+
+#, fuzzy
+msgid "Capabilities map supported"
+msgstr "Compatibilitate"
+
+#, fuzzy
+msgid "Capabilities supported"
 msgstr "Compatibilitate"
 
 msgid "Capacity filled"
@@ -16181,10 +16208,6 @@ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
 #, python-format
-msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
-msgstr ""
-
-#, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
@@ -17031,6 +17054,10 @@ msgstr "Creați %s"
 
 msgid "Create Conference Latency"
 msgstr "Creați o latență de conferință"
+
+#, fuzzy
+msgid "Create OAuth2 connections."
+msgstr "Adăugați o conexiune"
 
 msgid "Create SLA"
 msgstr "Creați SLA"
@@ -33821,6 +33848,12 @@ msgstr ""
 "Dacă detectarea automată a vitezei de legătură nu funcționează, puteți seta "
 "viteza de legătură aici."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -38337,6 +38370,13 @@ msgid "LISTEN"
 msgstr "ASCULTĂ"
 
 #, fuzzy
+msgid "LLDP cache"
+msgstr "În cache"
+
+msgid "LLDP neighbours"
+msgstr ""
+
+#, fuzzy
 msgid "LPAR statistics for AIX"
 msgstr "Statistici RMON"
 
@@ -41638,9 +41678,6 @@ msgstr "Gestionați și creați pachete de extensii Checkmk (MKP)."
 
 msgid "Manage background jobs"
 msgstr "Gestionați lucrările de fundal"
-
-msgid "Manage configuration read only mode"
-msgstr "Gestionarea configurației în modul numai pentru citire"
 
 msgid "Manage custom attributes"
 msgstr "Gestionați atributele personalizate"
@@ -45402,6 +45439,10 @@ msgid "Neighbor address"
 msgstr "Adresa de rețea"
 
 #, fuzzy
+msgid "Neighbor description"
+msgstr "Arată descrierea"
+
+#, fuzzy
 msgid "Neighbor name"
 msgstr "Numele senzorului"
 
@@ -45415,6 +45456,10 @@ msgstr "Click aici pentru detalii."
 #, fuzzy
 msgid "Neighbor port"
 msgstr "Mesaj pentru alertele gazdelor"
+
+#, fuzzy
+msgid "Neighbor port description"
+msgstr "Descrierea portului"
 
 msgid "Neither"
 msgstr "Nici"
@@ -48271,6 +48316,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Adăugați o conexiune"
+
+#, fuzzy
+msgid "OAuth2 connections"
 msgstr "Adăugați o conexiune"
 
 msgid "OEM data interpretation"
@@ -53882,6 +53931,10 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Prefix pentru numele de gazdă piggyback"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "Prefix text"
+
 msgid "Prefix match"
 msgstr "Prefixul se potrivește"
 
@@ -55399,6 +55452,14 @@ msgstr "Minimum de așteptare pentru citire"
 
 msgid "Read wait time"
 msgstr "Timp de așteptare pentru citire"
+
+#, fuzzy
+msgid "Read-only mode"
+msgstr "Mod de numai citire"
+
+#, fuzzy
+msgid "Read-only mode for configuration"
+msgstr "Configurație la distanță"
 
 msgid "Reading connections"
 msgstr "Conexiuni de lectură"
@@ -58933,7 +58994,8 @@ msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
 "Salvat verificarea configurației de verificare a gazdei '%s' cu servicii %d."
 
-msgid "Saved read only settings"
+#, fuzzy
+msgid "Saved read-only settings"
 msgstr "Setări salvate numai pentru citire"
 
 msgid "Saved space"
@@ -59053,6 +59115,10 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
+
+#, fuzzy
+msgid "Scope ID"
+msgstr "ID-ul nodului"
 
 #, fuzzy
 msgid "Scope attribute"
@@ -60758,6 +60824,10 @@ msgstr "Vârsta statului de serviciu"
 msgid "Service state for Differing Service States"
 msgstr "Procentul de stare de serviciu"
 
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Traducerea stării serviciului"
+
 msgid "Service state if no map rule matches"
 msgstr ""
 "Starea serviciului în cazul în care nicio regulă de hartă nu corespunde"
@@ -61324,6 +61394,17 @@ msgid ""
 msgstr ""
 "Setați adresa gazdă a serverului LDAP. Poate fi o adresă IP sau un nume de "
 "gazdă rezolvabil."
+
+msgid ""
+"Set the host names or IP addresses of the site. The entries will be added as "
+"additional subject alternative names (SANs) to the site certificate, "
+"alongside the default SANs. Configuring this allows proper server name "
+"identification when connecting to the site via TLS, for example for "
+"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
+"Changing this setting will trigger re-issuance of the site certificate by "
+"the site CA. In distributed setups, configure SANs separately for each site "
+"in the distributed monitoring configuration."
+msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Setați nivelul de jurnalizare pentru Windows Agent"
@@ -62619,6 +62700,10 @@ msgstr "Copie de rezervă a site-ului"
 
 msgid "Site backup targets"
 msgstr "Ținte de backup pentru site"
+
+#, fuzzy
+msgid "Site certificate subject alternative names"
+msgstr "Denumirea alternativă a subiectului certificatului"
 
 msgid "Site certificate validity"
 msgstr "Valabilitatea certificatului site-ului"
@@ -76245,6 +76330,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Firewall throughput "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways "
 "connections monitoring"
 msgstr ""
@@ -77675,6 +77768,10 @@ msgid "Throughput (FC)"
 msgstr "Randament"
 
 msgid "Throughput levels"
+msgstr "Niveluri de randament"
+
+#, fuzzy
+msgid "Throughput levels (/sec)"
 msgstr "Niveluri de randament"
 
 msgid "Throughput optimized HDD space"
@@ -93126,6 +93223,9 @@ msgstr "foloseste alias"
 msgid "use port name"
 msgstr "foloseste numele portului"
 
+msgid "use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
+msgstr ""
+
 msgid "used"
 msgstr "folosit"
 
@@ -94404,10 +94504,6 @@ msgid "Select a custom graph"
 msgstr "Clonarea graficului personalizat"
 
 #, fuzzy
-msgid "Widget visualization"
-msgstr "Vizualizare BI"
-
-#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "Tablouri de bord conexe"
 
@@ -94610,6 +94706,11 @@ msgstr "Metrici de servicii"
 msgid "Filter service metric by"
 msgstr "Metrici de servicii"
 
+msgid ""
+"Use these fields to narrow down the list of available service metrics.<br /"
+">Click the Host name or Service label to clear the filter."
+msgstr ""
+
 #, fuzzy
 msgid "Must select an option"
 msgstr "Conexiuni respinse"
@@ -94769,19 +94870,19 @@ msgid "Preview of matches:"
 msgstr "Această regulă se potrivește cu"
 
 #, fuzzy
+msgid "Apply rate (sums)"
+msgstr "Latență"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
+
+#, fuzzy
 msgid "Auto"
 msgstr "Automat"
 
 #, fuzzy
 msgid "Strict"
 msgstr "Metric"
-
-#, fuzzy
-msgid "Apply rate (sums)"
-msgstr "Latență"
-
-msgid "Apply percentile (histograms)"
-msgstr ""
 
 msgid "Area"
 msgstr "Zona"
@@ -95867,6 +95968,13 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Manage configuration read only mode"
+#~ msgstr "Gestionarea configurației în modul numai pentru citire"
+
+#, fuzzy
+#~ msgid "Widget visualization"
+#~ msgstr "Vizualizare BI"
+
 #, fuzzy
 #~ msgid "Explicit condition"
 #~ msgstr "Condiții explicite"
@@ -95984,10 +96092,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Select at least one column."
 #~ msgstr "Vă rugăm să selectați cel puțin un element"
-
-#, fuzzy
-#~ msgid "Site certificate subject alternative names"
-#~ msgstr "Denumirea alternativă a subiectului certificatului"
 
 #, fuzzy
 #~ msgid ""

@@ -71,7 +71,7 @@ void main() {
 
         // Can be removed once ci-artifacts doesn't fail anymore on empty files
         def is_empty = sh(script:"[[ -s ${output_file} ]]", returnStatus:true)
-        def artifacts = "${FILE_ARCHIVING_PATTERN}" + (is_empty ? "": ", ${output_file}")
+        def artifacts = "${FILE_ARCHIVING_PATTERN}" + (is_empty ? "" : ", ${output_file}")
 
         archiveArtifacts(
             artifacts: artifacts,

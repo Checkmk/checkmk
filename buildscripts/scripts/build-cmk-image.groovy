@@ -46,8 +46,8 @@ void main() {
     def package_dir = "${checkout_dir}/download";
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
 
-    def push_to_registry = PUSH_TO_REGISTRY=='true';
-    def build_image = PUSH_TO_REGISTRY_ONLY!='true';
+    def push_to_registry = PUSH_TO_REGISTRY == 'true';
+    def build_image = PUSH_TO_REGISTRY_ONLY != 'true';
 
     print(
         """

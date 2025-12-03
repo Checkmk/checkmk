@@ -34,7 +34,7 @@ void main() {
     def vers_tag = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD ?: versioning.get_docker_tag(checkout_dir);
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def publish_images = PUBLISH_IMAGES=='true';  // FIXME should be case sensitive
+    def publish_images = PUBLISH_IMAGES == 'true';  // FIXME should be case sensitive
     def publish_special_images = params.PUBLISH_SPECIAL_IMAGES_WITH_CUSTOM_GIT_REF;
     if ("${params.CUSTOM_GIT_REF}" == "") {
         // if the build is started without a specific CUSTOM_GIT_REF (default case) publish the special images

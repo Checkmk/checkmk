@@ -45,8 +45,8 @@ void main() {
     ) {
         artifacts_helper.update_bom_symlinks(
             cmk_version_rc_aware,
-            branch_latest=params.UPDATE_BRANCH_LATEST_BOM_SYMLINKS,
-            latest=params.UPDATE_LATEST_BOM_SYMLINKS
+            branch_latest = params.UPDATE_BRANCH_LATEST_BOM_SYMLINKS,
+            latest = params.UPDATE_LATEST_BOM_SYMLINKS
         );
     }
 

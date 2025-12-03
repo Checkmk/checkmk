@@ -352,7 +352,7 @@ String job_result_row(Map args) {
     }
 
     def totalSeconds = args.duration.days * 86400 + args.duration.hours * 3600 + args.duration.minutes * 60 + args.duration.seconds;
-    def dur_dot_count = 1 + ((totalSeconds > 120) ? (3 + Math.log(totalSeconds-120) * 0.7).toInteger() : totalSeconds.intdiv(30));
+    def dur_dot_count = 1 + ((totalSeconds > 120) ? (3 + Math.log(totalSeconds - 120) * 0.7).toInteger() : totalSeconds.intdiv(30));
     // groovylint-disable-next-line LineLength
     def dur_str = "${String.format('%02d', totalSeconds.intdiv(60))}m:${String.format('%02d', totalSeconds % 60)}s ${"•" * Math.min(10, dur_dot_count)}${" " * (10 - Math.min(10, dur_dot_count))}";
     // groovylint-disable LineLength

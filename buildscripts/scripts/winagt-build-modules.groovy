@@ -28,7 +28,7 @@ void main() {
                     usernameVariable: 'NEXUS_USERNAME')]) {
                 windows.build(
                     TARGET: 'cached',
-                    CREDS: NEXUS_USERNAME+':'+NEXUS_PASSWORD,
+                    CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
                     CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/',
                     DISABLE_CACHE: params.DISABLE_CACHE
                 );

@@ -67,7 +67,7 @@ def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
     )
     parser_freeipmi.add_argument(
         "--cipher_suite_id",
-        type=int,
+        type=str,
         metavar="CIPHER-SUITE-ID",
         help="Cipher suite ID",
     )

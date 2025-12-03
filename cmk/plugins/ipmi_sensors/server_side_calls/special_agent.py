@@ -80,7 +80,7 @@ def _freeipmi_args(options: _FreeIPMIParams) -> Iterable[str]:
             ("--driver", "ipmi_driver"),
             ("--driver_type", "driver_type"),
             ("--key", "BMC_key"),
-            ("--cipher-suite-id", "cipher_suite_id"),
+            ("--cipher_suite_id", "cipher_suite_id"),
         ]
         if (value := getattr(options, parameter)) is not None
     )

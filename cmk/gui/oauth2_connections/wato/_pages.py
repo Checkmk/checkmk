@@ -8,11 +8,13 @@ from typing import Literal, override
 import requests
 
 from cmk.ccc.site import omd_site
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import (
     parse_and_validate_frontend_data,
     RawFrontendData,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.wato._modes import get_oauth_2_connection_form_spec
 from cmk.gui.oauth2_connections.watolib.store import (
     load_oauth2_connections,
@@ -138,6 +140,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             client_secret=client_secret,
             access_token=access_token,
             refresh_token=refresh_token,
+            config=ctx.config,
         )
 
         self._save_reference_to_config_file(
@@ -146,6 +149,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             client_id=client_id,
             tenant_id=tenant_id,
             authority=authority,
+            config=ctx.config,
         )
 
         return {"status": "success"}
@@ -158,6 +162,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         client_secret: str,
         access_token: str,
         refresh_token: str,
+        config: Config,
     ) -> None:
         # TODO Think site_id should be in data above
         site_id = omd_site()
@@ -184,9 +189,9 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
                     ),
                 ),
                 new_password=password_ident not in password_entries,
-                user_id=None,
-                pprint_value=True,
-                use_git=True,
+                user_id=user.id,
+                pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
 
     def _save_reference_to_config_file(
@@ -197,6 +202,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         client_id: str,
         tenant_id: str,
         authority: str,
+        config: Config,
     ) -> None:
         details = OAuth2Connection(
             title=title,
@@ -211,11 +217,11 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             update_oauth2_connection(
                 ident=ident,
                 details=details,
-                pprint_value=True,
+                pprint_value=config.wato_pprint_config,
             )
             return
         save_oauth2_connection(
             ident=ident,
             details=details,
-            pprint_value=True,
+            pprint_value=config.wato_pprint_config,
         )

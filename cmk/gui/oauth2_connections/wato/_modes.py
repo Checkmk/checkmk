@@ -21,6 +21,7 @@ from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import (
     delete_oauth2_connection,
     load_oauth2_connections,
@@ -206,20 +207,23 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
 
         remove_password(
             entries[ident]["client_secret_reference"],
-            user_id=None,
-            pprint_value=False,
-            use_git=True,
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
         )
         remove_password(
-            entries[ident]["access_token_reference"], user_id=None, pprint_value=False, use_git=True
+            entries[ident]["access_token_reference"],
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
         )
         remove_password(
             entries[ident]["refresh_token_reference"],
-            user_id=None,
-            pprint_value=False,
-            use_git=True,
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
         )
-        delete_oauth2_connection(ident, pprint_value=False)
+        delete_oauth2_connection(ident, pprint_value=config.wato_pprint_config)
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
 

@@ -6,15 +6,14 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.base.legacy_checks.ucs_bladecenter_fans import (
     check_ucs_bladecenter_fans,
-    inventory_ucs_bladecenter_fans,
+    discover_ucs_bladecenter_fans,
     parse_ucs_bladecenter_fans,
 )
 
@@ -46,25 +45,24 @@ from cmk.base.legacy_checks.ucs_bladecenter_fans import (
                     "SpeedAvg 3652",
                 ],
             ],
-            [("Chassis 2", None), ("Switch A", None)],
+            [Service(item="Chassis 2"), Service(item="Switch A")],
         ),
     ],
 )
 def test_inventory_ucs_bladecenter_fans(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for ucs_bladecenter_fans check."""
     parsed = parse_ucs_bladecenter_fans(string_table)
-    result = list(inventory_ucs_bladecenter_fans(parsed))
+    result = list(discover_ucs_bladecenter_fans(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_results",
     [
         (
             "Chassis 2",
-            {},
             [
                 [
                     "equipmentNetworkElementFanStats",
@@ -88,11 +86,10 @@ def test_inventory_ucs_bladecenter_fans(
                     "SpeedAvg 3652",
                 ],
             ],
-            [(3, "Fan statistics not available")],
+            [Result(state=State.UNKNOWN, summary="Fan statistics not available")],
         ),
         (
             "Switch A",
-            {},
             [
                 [
                     "equipmentNetworkElementFanStats",
@@ -116,14 +113,14 @@ def test_inventory_ucs_bladecenter_fans(
                     "SpeedAvg 3652",
                 ],
             ],
-            [(3, "Fan statistics not available")],
+            [Result(state=State.UNKNOWN, summary="Fan statistics not available")],
         ),
     ],
 )
 def test_check_ucs_bladecenter_fans(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str, string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
     """Test check function for ucs_bladecenter_fans check."""
     parsed = parse_ucs_bladecenter_fans(string_table)
-    result = list(check_ucs_bladecenter_fans(item, params, parsed))
+    result = list(check_ucs_bladecenter_fans(item, parsed))
     assert result == expected_results

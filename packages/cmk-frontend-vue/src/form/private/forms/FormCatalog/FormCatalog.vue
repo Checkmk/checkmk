@@ -15,6 +15,7 @@ import { ref } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
@@ -74,7 +75,9 @@ function isGroupedTopic(topic: Topic): boolean {
         />
       </div>
       <div v-else>
-        {{ topic.locked.message }}
+        <CmkAlertBox variant="warning">
+          {{ topic.locked.message }}
+        </CmkAlertBox>
       </div>
     </CmkCatalogPanel>
   </div>

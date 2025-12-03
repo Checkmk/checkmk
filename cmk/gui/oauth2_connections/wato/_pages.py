@@ -128,27 +128,28 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             return {"status": "error", "message": f"Access or refresh token missing: {res.text}"}
 
         self._save_token_to_passwordstore(
-            ident,
-            title,
-            access_token,
-            refresh_token,
-            client_secret,
+            ident=ident,
+            title=title,
+            client_secret=client_secret,
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         self._save_reference_to_config_file(
-            ident,
-            title,
-            client_id,
-            tenant_id,
-            authority,
+            ident=ident,
+            title=title,
+            client_id=client_id,
+            tenant_id=tenant_id,
+            authority=authority,
         )
 
         return {"status": "success"}
 
     def _save_token_to_passwordstore(
         self,
+        *,
         ident: str,
-        description: str,
+        title: str,
         client_secret: str,
         access_token: str,
         refresh_token: str,
@@ -156,7 +157,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         # TODO Think site_id should be in data above
         site_id = omd_site()
         password_entries = load_passwords()
-        for title, entry, password in [
+        for pw_title, entry, password in [
             ("Client secret", "client_secret", client_secret),
             ("Access token", "access_token", access_token),
             ("Refresh token", "refresh_token", refresh_token),
@@ -165,8 +166,8 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             save_password(
                 ident=password_ident,
                 details=Password(
-                    title=title,
-                    comment=description,
+                    title=pw_title,
+                    comment=title,
                     docu_url="",
                     password=password,
                     owned_by=None,
@@ -185,6 +186,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
 
     def _save_reference_to_config_file(
         self,
+        *,
         ident: str,
         title: str,
         client_id: str,

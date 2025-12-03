@@ -102,13 +102,14 @@ def create(base: Path, *, is_cmc: bool) -> Iterator[ConfigCreationContext]:
         _cleanup_old_configs(base, current_config_path)
 
     under_construction_path.mkdir(parents=True, exist_ok=True)
-    yield ConfigCreationContext(
-        path_active=current_config_path,
-        path_created=under_construction_path,
-        serial_created=serial,
-    )
-    # TODO(ml) We should probably remove the files that were created
-    #          previously and not update `serial.mk` on error.
-    # TODO: Should this be in a "finally" or not? Unclear...
-    latest_link_path.unlink(missing_ok=True)
-    latest_link_path.symlink_to(under_construction_path.name)
+    try:
+        yield ConfigCreationContext(
+            path_active=current_config_path,
+            path_created=under_construction_path,
+            serial_created=serial,
+        )
+    except Exception:
+        raise
+    else:
+        latest_link_path.unlink(missing_ok=True)
+        latest_link_path.symlink_to(under_construction_path.name)

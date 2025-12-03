@@ -8,7 +8,7 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.base.legacy_checks.ucs_bladecenter_faultinst import (
+from cmk.plugins.collection.agent_based.ucs_bladecenter_faultinst import (
     check_ucs_bladecenter_faultinst,
     discover_ucs_bladecenter_faultinst,
 )

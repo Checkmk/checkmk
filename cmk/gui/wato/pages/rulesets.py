@@ -56,6 +56,7 @@ from cmk.gui.form_specs import (
     validate_value_from_frontend,
     VisitorOptions,
 )
+from cmk.gui.form_specs.unstable.catalog import Catalog
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -2051,6 +2052,27 @@ def _parse_explicit_hosts_or_services_for_vue(
 
 
 @dataclass(frozen=True)
+class _RuleValueBackend:
+    title: str | None
+    has_show_more: bool
+
+    @property
+    def render_mode(self) -> RenderMode:
+        return RenderMode.BACKEND
+
+
+@dataclass(frozen=True)
+class _RuleValueFrontend:
+    title: str | None
+    parameter_form: FormSpec
+    catalog: Catalog
+
+    @property
+    def render_mode(self) -> RenderMode:
+        return RenderMode.FRONTEND
+
+
+@dataclass(frozen=True)
 class _RuleValuesFromVars:
     options: RuleOptions
     value: object
@@ -2075,6 +2097,7 @@ class ABCEditRuleMode(WatoMode):
             rule_identifier=RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name),
             is_locked=self._is_locked,
         )
+        self._value_type = self._init_value_type()
         self._conditions_catalog = create_rule_conditions_catalog(
             tree=folder_tree(),
             rule_spec_name=self._rulespec.name,
@@ -2086,6 +2109,33 @@ class ABCEditRuleMode(WatoMode):
         )
         self._do_validate_on_render = False
         self._failed_frontend_data: RawFrontendData | None = None
+
+    def _init_value_type(self) -> _RuleValueBackend | _RuleValueFrontend:
+        try:
+            title: str | None = localize_or_none(
+                self._ruleset.rulespec.form_spec.title, translate_to_current_language
+            )
+            has_show_more = False
+        except FormSpecNotImplementedError:
+            valuespec = self._ruleset.rulespec.valuespec
+            title = valuespec.title()
+            has_show_more = valuespec.has_show_more()
+
+        render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
+        match render_mode:
+            case RenderMode.BACKEND:
+                return _RuleValueBackend(title, has_show_more)
+            case RenderMode.FRONTEND:
+                assert registered_form_spec is not None
+                return _RuleValueFrontend(
+                    title,
+                    registered_form_spec,
+                    create_rule_value_catalog(
+                        title=title, value_parameter_form=registered_form_spec
+                    ),
+                )
+            case _:
+                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
@@ -2239,7 +2289,17 @@ class ABCEditRuleMode(WatoMode):
             return redirect(self._back_url())
 
         self._do_validate_on_render = True
-        rule_values = self._validate_and_get_rule_values_from_vars()
+        match self._value_type:
+            case _RuleValueBackend():
+                rule_values = self._validate_and_get_rule_values_from_vars_backend()
+            case _RuleValueFrontend():
+                rule_values = self._validate_and_get_rule_values_from_vars_frontend(
+                    parameter_form=self._value_type.parameter_form,
+                    catalog=self._value_type.catalog,
+                )
+            case _:
+                raise MKGeneralException(_("Unknown render mode %s") % self._value_type.render_mode)
+
         self._rule.rule_options = rule_values.options
         self._rule.value = rule_values.value
 
@@ -2391,37 +2451,35 @@ class ABCEditRuleMode(WatoMode):
             raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
-    def _validate_and_get_rule_values_from_vars(self) -> _RuleValuesFromVars:
-        render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
-        value: object | RawFrontendData
-        match render_mode:
-            case RenderMode.BACKEND:
-                value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
-                self._ruleset.rulespec.valuespec.validate_value(value, "ve")
-            case RenderMode.FRONTEND:
-                assert registered_form_spec is not None
-                catalog_value = read_data_from_frontend("_vue_edit_rule_value")
-                if validation_errors := validate_value_from_frontend(
-                    create_rule_value_catalog(
-                        title=None, value_parameter_form=registered_form_spec
-                    ),
-                    catalog_value,
-                ):
-                    # Persist data to re-populate the form on early out
-                    self._failed_frontend_data = catalog_value
-                    process_validation_errors(list(validation_errors))
-                value = get_visitor(
-                    registered_form_spec,
-                    VisitorOptions(migrate_values=False, mask_values=False),
-                ).to_disk(self._extract_rule_value_from_catalog_value(catalog_value))
-            case _:
-                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
-
+    def _validate_and_get_rule_values_from_vars_backend(self) -> _RuleValuesFromVars:
+        value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
+        self._ruleset.rulespec.valuespec.validate_value(value, "ve")
         return _RuleValuesFromVars(
             self._get_rule_options_from_catalog_value(
                 parse_data_from_field_id(self._properties_catalog, "_vue_edit_rule_properties")
             ),
             value,
+            self._get_rule_conditions_from_catalog_value(
+                parse_data_from_field_id(self._conditions_catalog, "_vue_edit_rule_conditions")
+            ),
+        )
+
+    def _validate_and_get_rule_values_from_vars_frontend(
+        self, *, parameter_form: FormSpec, catalog: Catalog
+    ) -> _RuleValuesFromVars:
+        catalog_value = read_data_from_frontend("_vue_edit_rule_value")
+        if validation_errors := validate_value_from_frontend(catalog, catalog_value):
+            # Persist data to re-populate the form on early out
+            self._failed_frontend_data = catalog_value
+            process_validation_errors(list(validation_errors))
+        return _RuleValuesFromVars(
+            self._get_rule_options_from_catalog_value(
+                parse_data_from_field_id(self._properties_catalog, "_vue_edit_rule_properties")
+            ),
+            get_visitor(
+                parameter_form,
+                VisitorOptions(migrate_values=False, mask_values=False),
+            ).to_disk(self._extract_rule_value_from_catalog_value(catalog_value)),
             self._get_rule_conditions_from_catalog_value(
                 parse_data_from_field_id(self._conditions_catalog, "_vue_edit_rule_conditions")
             ),
@@ -2478,13 +2536,7 @@ class ABCEditRuleMode(WatoMode):
     def _should_validate_on_render(self) -> bool:
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
-    def _page_form_backend(
-        self,
-        *,
-        title: str | None,
-        has_show_more: bool,
-        debug: bool,
-    ) -> None:
+    def _page_form_backend(self, *, title: str | None, has_show_more: bool, debug: bool) -> None:
         render_form_spec(
             self._properties_catalog,
             "_vue_edit_rule_properties",
@@ -2529,13 +2581,7 @@ class ABCEditRuleMode(WatoMode):
             self._should_validate_on_render(),
         )
 
-    def _page_form_frontend(
-        self,
-        *,
-        title: str | None,
-        value_parameter_form: FormSpec | None,
-        debug: bool,
-    ) -> None:
+    def _page_form_frontend(self, *, value_catalog: Catalog, debug: bool) -> None:
         render_form_spec(
             self._properties_catalog,
             "_vue_edit_rule_properties",
@@ -2543,10 +2589,9 @@ class ABCEditRuleMode(WatoMode):
             self._should_validate_on_render(),
         )
 
-        assert value_parameter_form is not None
         try:
             render_form_spec(
-                create_rule_value_catalog(title=title, value_parameter_form=value_parameter_form),
+                value_catalog,
                 "_vue_edit_rule_value",
                 self._get_rule_value_from_rule()
                 if self._failed_frontend_data is None
@@ -2565,7 +2610,7 @@ class ABCEditRuleMode(WatoMode):
                 % e
             )
             render_form_spec(
-                create_rule_value_catalog(title=title, value_parameter_form=value_parameter_form),
+                value_catalog,
                 "_vue_edit_rule_value",
                 DEFAULT_VALUE,
                 False,
@@ -2590,32 +2635,17 @@ class ABCEditRuleMode(WatoMode):
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
 
-        try:
-            title: str | None = localize_or_none(
-                self._ruleset.rulespec.form_spec.title, translate_to_current_language
-            )
-            has_show_more: bool = False
-        except FormSpecNotImplementedError:
-            valuespec = self._ruleset.rulespec.valuespec
-            title = valuespec.title()
-            has_show_more = valuespec.has_show_more()
-
-        render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
-        match render_mode:
-            case RenderMode.BACKEND:
+        match self._value_type:
+            case _RuleValueBackend():
                 self._page_form_backend(
-                    title=title,
-                    has_show_more=has_show_more,
+                    title=self._value_type.title,
+                    has_show_more=self._value_type.has_show_more,
                     debug=debug,
                 )
-            case RenderMode.FRONTEND:
-                self._page_form_frontend(
-                    title=title,
-                    value_parameter_form=registered_form_spec,
-                    debug=debug,
-                )
+            case _RuleValueFrontend():
+                self._page_form_frontend(value_catalog=self._value_type.catalog, debug=debug)
             case _:
-                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
+                raise MKGeneralException(_("Unknown render mode %s") % self._value_type.render_mode)
 
         html.hidden_fields()
 

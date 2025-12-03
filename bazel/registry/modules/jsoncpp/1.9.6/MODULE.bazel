@@ -1,5 +1,0 @@
-module(
-    name = "jsoncpp",
-    version = "1.9.6",
-    compatibility_level = 1,
-)

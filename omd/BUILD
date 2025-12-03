@@ -185,12 +185,14 @@ pkg_tar(
 pkg_files(
     name = "agents_scripts",
     srcs = ["//agents:srcs"],
+    attributes = pkg_attributes(mode = "0755"),
     prefix = "share/check_mk/agents/scripts",
 )
 
 pkg_tar(
     name = "agents_scripts_super_server",
     srcs = ["//agents:super-server"],
+    mode = "0755",
     package_dir = "share/check_mk",
     strip_prefix = "scripts",
 )

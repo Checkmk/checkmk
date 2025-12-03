@@ -30,7 +30,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, cast, NotRequired, override, TypedDict
 
-from cmk.ccc import store
+from cmk.ccc import store, version
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.i18n import _
@@ -71,6 +71,7 @@ from cmk.gui.watolib.simple_config_file import (
 )
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
+from cmk.utils import paths
 from cmk.utils.notify_types import (
     EventRule,
     NotificationParameterGeneralInfos,
@@ -317,12 +318,14 @@ class ContactSelection:
     all_users_with_an_email_address: CheckboxWithBoolValue
     the_following_users: CheckboxWithListOfStrValues
     members_of_contact_groups: CheckboxWithListOfStrValues
-    explicit_email_addresses: CheckboxWithListOfStrValues
+    explicit_email_addresses: CheckboxWithListOfStrValues | None
     restrict_by_contact_groups: CheckboxWithListOfStrValues
     restrict_by_custom_macros: ContactMatchMacros
 
     @classmethod
     def from_mk_file_format(cls, config: EventRule) -> ContactSelection:
+        is_cloud_edition = version.edition(paths.omd_root) == version.Edition.CLOUD
+
         return cls(
             all_contacts_of_the_notified_object=CheckboxWithBoolValue.from_mk_file_format(
                 config.get("contact_object")
@@ -337,8 +340,10 @@ class ContactSelection:
             members_of_contact_groups=CheckboxWithListOfStrValues.from_mk_file_format(
                 config.get("contact_groups")
             ),
-            explicit_email_addresses=CheckboxWithListOfStrValues.from_mk_file_format(
-                config.get("contact_emails")
+            explicit_email_addresses=(
+                None
+                if is_cloud_edition
+                else CheckboxWithListOfStrValues.from_mk_file_format(config.get("contact_emails"))
             ),
             restrict_by_contact_groups=CheckboxWithListOfStrValues.from_mk_file_format(
                 config.get("contact_match_groups")
@@ -364,8 +369,10 @@ class ContactSelection:
             members_of_contact_groups=CheckboxWithListOfStrValues.from_api_request(
                 incoming["members_of_contact_groups"]
             ),
-            explicit_email_addresses=CheckboxWithListOfStrValues.from_api_request(
-                incoming["explicit_email_addresses"]
+            explicit_email_addresses=(
+                CheckboxWithListOfStrValues.from_api_request(incoming["explicit_email_addresses"])
+                if "explicit_email_addresses" in incoming
+                else None
             ),
             restrict_by_contact_groups=CheckboxWithListOfStrValues.from_api_request(
                 incoming["restrict_by_contact_groups"]
@@ -382,10 +389,11 @@ class ContactSelection:
             "all_users_with_an_email_address": self.all_users_with_an_email_address.api_response(),
             "the_following_users": self.the_following_users.api_response(),
             "members_of_contact_groups": self.members_of_contact_groups.api_response(),
-            "explicit_email_addresses": self.explicit_email_addresses.api_response(),
             "restrict_by_custom_macros": self.restrict_by_custom_macros.api_response(),
             "restrict_by_contact_groups": self.restrict_by_contact_groups.api_response(),
         }
+        if self.explicit_email_addresses is not None:
+            r["explicit_email_addresses"] = self.explicit_email_addresses.api_response()
         return r
 
     def to_mk_file_format(self) -> dict[str, Any]:
@@ -395,7 +403,11 @@ class ContactSelection:
             "contact_all_with_email": self.all_users_with_an_email_address.to_mk_file_format(),
             "contact_users": self.the_following_users.to_mk_file_format(),
             "contact_groups": self.members_of_contact_groups.to_mk_file_format(),
-            "contact_emails": self.explicit_email_addresses.to_mk_file_format(),
+            "contact_emails": (
+                self.explicit_email_addresses.to_mk_file_format()
+                if self.explicit_email_addresses is not None
+                else None
+            ),
             "contact_match_macros": self.restrict_by_custom_macros.to_mk_file_format(),
             "contact_match_groups": self.restrict_by_contact_groups.to_mk_file_format(),
         }

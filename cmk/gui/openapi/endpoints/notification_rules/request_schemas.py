@@ -13,6 +13,7 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 from urllib3.util import parse_url
 
 from cmk import fields
+from cmk.ccc import version
 from cmk.gui.fields import (
     AuxTagIDField,
     ContactGroupField,
@@ -39,6 +40,7 @@ from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.rulesets.v1.rule_specs import NotificationParameters
+from cmk.utils import paths
 from cmk.utils.notify_types import (
     CaseStateStr,
     EmailBodyElementsType,
@@ -2547,9 +2549,39 @@ class ContactSelection(BaseSchema):
     all_users_with_an_email_address = fields.Nested(Checkbox, required=True)
     the_following_users = fields.Nested(TheFollowingUsers, required=True)
     members_of_contact_groups = fields.Nested(ListOfContactGroupsCheckbox, required=True)
-    explicit_email_addresses = fields.Nested(ExplicitEmailAddressesCheckbox, required=True)
+    explicit_email_addresses = fields.Nested(
+        ExplicitEmailAddressesCheckbox,
+        required=False,  # Required in non-CSE editions. See pre_load/post_load.
+    )
     restrict_by_contact_groups = fields.Nested(ListOfContactGroupsCheckbox, required=True)
     restrict_by_custom_macros = fields.Nested(CustomMacrosCheckbox, required=True)
+
+    @pre_load
+    def _require_explicit_email_addresses_when_allowed(
+        self, data: dict[str, Any], **_kwargs: Any
+    ) -> dict[str, Any]:
+        if version.edition(paths.omd_root) != version.Edition.CLOUD:
+            if "explicit_email_addresses" not in data:
+                raise ValidationError(
+                    {"explicit_email_addresses": ["Missing data for required field."]}
+                )
+        return data
+
+    @post_load
+    def _validate_explicit_email_addresses_not_in_cse(
+        self, data: dict[str, Any], **_kwargs: Any
+    ) -> dict[str, Any]:
+        """Forbid explicit_email_addresses in CSE edition"""
+        if version.edition(paths.omd_root) == version.Edition.CLOUD:
+            if (
+                "explicit_email_addresses" in data
+                and data["explicit_email_addresses"].get("state") == "enabled"
+            ):
+                raise ValidationError(
+                    "The field 'explicit_email_addresses' is not allowed in CSE edition.",
+                    field_name="explicit_email_addresses",
+                )
+        return data
 
 
 class RuleConditions(BaseSchema):

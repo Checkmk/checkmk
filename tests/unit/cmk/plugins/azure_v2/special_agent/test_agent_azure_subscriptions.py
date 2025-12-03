@@ -27,7 +27,7 @@ Args = argparse.Namespace
 
 
 @pytest.mark.parametrize(
-    "azure_subscription, expected_hostname, expected_piggytarget",
+    "azure_subscription, expected_piggytarget",
     [
         pytest.param(
             AzureSubscription(
@@ -37,8 +37,7 @@ Args = argparse.Namespace
                 use_safe_names=False,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
-            "subscription_name",
-            "subscription_name",
+            "subscription name",
             id="Subscription without safe names",
         ),
         pytest.param(
@@ -49,8 +48,7 @@ Args = argparse.Namespace
                 use_safe_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
-            "subscription_name",
-            "subscription_name-8df88c96",
+            "subscription:name-8df88c96",
             id="Subscription with safe names",
         ),
         pytest.param(
@@ -61,8 +59,7 @@ Args = argparse.Namespace
                 use_safe_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
-            "My_Subscription",
-            "My_Subscription-1f5867a9",
+            "My Subscription-1f5867a9",
             id="Subscription with safe names, different tenant",
         ),
         pytest.param(
@@ -73,8 +70,7 @@ Args = argparse.Namespace
                 use_safe_names=True,
                 tenant_id="different-tenant-id-12345",
             ),
-            "My_Subscription",
-            "My_Subscription-dc8ce3d7",
+            "My Subscription-dc8ce3d7",
             id="Subscription with safe names, different tenant, ensures uniqueness",
         ),
         pytest.param(
@@ -85,16 +81,14 @@ Args = argparse.Namespace
                 use_safe_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
-            "My_Subscription",
-            "My_Subscription-71981702",
+            "My Subscription-71981702",
             id="Subscription with safe names, same subscription name, ensures uniqueness",
         ),
     ],
 )
 def test_azuresubscription_hostname(
-    azure_subscription: AzureSubscription, expected_hostname: str, expected_piggytarget: str
+    azure_subscription: AzureSubscription, expected_piggytarget: str
 ) -> None:
-    assert azure_subscription.hostname == expected_hostname
     assert azure_subscription.piggytarget == expected_piggytarget
 
 

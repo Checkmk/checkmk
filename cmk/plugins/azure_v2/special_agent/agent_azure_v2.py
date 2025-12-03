@@ -39,7 +39,6 @@ from typing import Any, Final, Literal, Required, TypedDict, TypeVar
 import requests
 from pydantic import BaseModel, RootModel
 
-from cmk.ccc.hostaddress import HostAddress
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     ApiError,
@@ -187,10 +186,7 @@ class AzureSubscription(_AzureEntity):
         use_safe_names: bool,
         tenant_id: str,
     ) -> None:
-        self.hostname: Final[str] = HostAddress.project_valid(name)
-        super().__init__(
-            entity_name=self.hostname, section="subscription", use_safe_names=use_safe_names
-        )
+        super().__init__(entity_name=name, section="subscription", use_safe_names=use_safe_names)
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str]] = tags
         self.name: Final[str] = name
@@ -1872,7 +1868,7 @@ def get_resource_host_labels_section(
         "resource_group": resource.group,
         "resource": resource.section,
         "entity": "resource",
-        "subscription_name": subscription.hostname,
+        "subscription_name": subscription.name,
         "subscription": subscription.id,
         **resource.labels,
     }
@@ -1928,7 +1924,7 @@ def write_group_info(
             group.piggytarget,
             labels={
                 "resource_group": group_name,
-                "subscription_name": subscription.hostname,
+                "subscription_name": subscription.name,
                 "subscription": subscription.id,
                 "entity": "resource_group",
                 **({"region": region} if (region := group.info.get("location")) else {}),
@@ -1955,7 +1951,7 @@ def write_subscription_info(subscription: AzureSubscription) -> None:
     AzureLabelsSection(
         subscription.piggytarget,
         labels={
-            "subscription_name": subscription.hostname,
+            "subscription_name": subscription.name,
             "subscription": subscription.id,
             "entity": "subscription",
         },

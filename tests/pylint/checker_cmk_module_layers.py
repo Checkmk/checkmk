@@ -198,7 +198,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     ),
     "azure_v2": (
         "cmk.agent_based.v1",  # FIXME
-        "cmk.ccc.hostaddress",  # FormSpec validation
         "cmk.plugins.lib",  # ?
         "cmk.utils.http_proxy_config",
     ),

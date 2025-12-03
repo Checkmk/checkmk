@@ -69,10 +69,12 @@ def test_get_site_connections(clients: ClientRegistry) -> None:
     assert resp.json["value"][0]["id"] == "NO_SITE"
 
 
-def test_login(
+def test_login_replication_enabled(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
+    config, remote_site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
@@ -82,9 +84,13 @@ def test_login(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
         lambda site_id, settings, force, debug: None,
     )
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.distribute_license_to_remotes",
+        lambda logger, remote_automation_configs: None,
+    )
 
     clients.SiteManagement.login(
-        site_id="NO_SITE",
+        site_id=remote_site_id,
         username="cmkadmin",
         password="cmk",
     )

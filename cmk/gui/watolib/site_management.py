@@ -18,15 +18,17 @@ from livestatus import (
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
-from cmk.gui.watolib.automations import do_site_login
+from cmk.gui.watolib.automations import do_site_login, remote_automation_config_from_site_config
 from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import site_management_registry
+from cmk.utils.licensing.license_distribution_registry import distribute_license_to_remotes
 
 DEFAULT_MESSAGE_BROKER_PORT = 5672
 
@@ -66,6 +68,10 @@ class SitesApiMgr:
 
         self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
         trigger_remote_certs_creation(site_id, site, force=False, debug=debug)
+        distribute_license_to_remotes(
+            logger,
+            remote_automation_configs=[remote_automation_config_from_site_config(site)],
+        )
 
     def logout_of_site(self, site_id: SiteId, *, pprint_value: bool) -> None:
         site = self.get_a_site(site_id)

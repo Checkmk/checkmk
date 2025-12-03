@@ -2455,56 +2455,6 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _get_rule_properties_from_rule(self) -> RawDiskData:
-        return RawDiskData(
-            {
-                "properties": {
-                    "description": self._rule.rule_options.description,
-                    "comment": self._rule.rule_options.comment,
-                    "docu_url": self._rule.rule_options.docu_url,
-                    "disabled": self._rule.rule_options.disabled or False,
-                    "id": self._rule.id,
-                    "_name": self._rule.ruleset.name,
-                }
-            }
-        )
-
-    def _get_rule_conditions_from_rule(self) -> RawDiskData:
-        if self._rule.rule_options.predefined_condition_id:
-            return RawDiskData(
-                {
-                    "conditions": {
-                        "type": ("predefined", self._rule.rule_options.predefined_condition_id)
-                    }
-                }
-            )
-
-        raw_explicit: dict[str, object] = {"folder_path": self._rule.conditions.host_folder}
-        if self._rule.conditions.host_tags:
-            raw_explicit["host_tags"] = self._rule.conditions.host_tags
-        if self._rule.conditions.host_label_groups:
-            raw_explicit["host_label_groups"] = self._rule.conditions.host_label_groups
-        if self._rule.conditions.host_name:
-            raw_explicit["explicit_hosts"] = _parse_explicit_hosts_or_services_for_vue(
-                self._rule.conditions.host_name
-            )
-        if self._rule.conditions.service_description is not None:
-            raw_explicit["explicit_services"] = _parse_explicit_hosts_or_services_for_vue(
-                self._rule.conditions.service_description
-            )
-        if self._rule.conditions.service_label_groups:
-            raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
-        return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
-
-    def _get_rule_values_from_rule(self) -> RawDiskData:
-        if not isinstance(rule_properties := self._get_rule_properties_from_rule().value, dict):
-            raise TypeError(rule_properties)
-        if not isinstance(rule_conditions := self._get_rule_conditions_from_rule().value, dict):
-            raise TypeError(rule_conditions)
-        return RawDiskData(
-            {**rule_properties, **{"value": {"value": self._rule.value}}, **rule_conditions}
-        )
-
     @abc.abstractmethod
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None: ...
 
@@ -2556,6 +2506,47 @@ class ABCEditRuleMode(WatoMode):
     def _should_validate_on_render(self) -> bool:
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
+    def _get_rule_properties_from_rule(self) -> RawDiskData:
+        return RawDiskData(
+            {
+                "properties": {
+                    "description": self._rule.rule_options.description,
+                    "comment": self._rule.rule_options.comment,
+                    "docu_url": self._rule.rule_options.docu_url,
+                    "disabled": self._rule.rule_options.disabled or False,
+                    "id": self._rule.id,
+                    "_name": self._rule.ruleset.name,
+                }
+            }
+        )
+
+    def _get_rule_conditions_from_rule(self) -> RawDiskData:
+        if self._rule.rule_options.predefined_condition_id:
+            return RawDiskData(
+                {
+                    "conditions": {
+                        "type": ("predefined", self._rule.rule_options.predefined_condition_id)
+                    }
+                }
+            )
+
+        raw_explicit: dict[str, object] = {"folder_path": self._rule.conditions.host_folder}
+        if self._rule.conditions.host_tags:
+            raw_explicit["host_tags"] = self._rule.conditions.host_tags
+        if self._rule.conditions.host_label_groups:
+            raw_explicit["host_label_groups"] = self._rule.conditions.host_label_groups
+        if self._rule.conditions.host_name:
+            raw_explicit["explicit_hosts"] = _parse_explicit_hosts_or_services_for_vue(
+                self._rule.conditions.host_name
+            )
+        if self._rule.conditions.service_description is not None:
+            raw_explicit["explicit_services"] = _parse_explicit_hosts_or_services_for_vue(
+                self._rule.conditions.service_description
+            )
+        if self._rule.conditions.service_label_groups:
+            raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
+        return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
+
     def _page_form_backend(
         self,
         *,
@@ -2605,6 +2596,15 @@ class ABCEditRuleMode(WatoMode):
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
+        )
+
+    def _get_rule_values_from_rule(self) -> RawDiskData:
+        if not isinstance(rule_properties := self._get_rule_properties_from_rule().value, dict):
+            raise TypeError(rule_properties)
+        if not isinstance(rule_conditions := self._get_rule_conditions_from_rule().value, dict):
+            raise TypeError(rule_conditions)
+        return RawDiskData(
+            {**rule_properties, **{"value": {"value": self._rule.value}}, **rule_conditions}
         )
 
     def _page_form_frontend(self, *, catalog: Catalog, debug: bool) -> None:

@@ -591,7 +591,7 @@ class RelaysCA:
 
     @staticmethod
     def _ca_file(certificate_directory: Path) -> Path:
-        return certificate_directory / "ca.pem"
+        return certificate_directory / "relays" / "ca.pem"
 
 
 class MessagingTrustedCAs:

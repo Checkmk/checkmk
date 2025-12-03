@@ -96,6 +96,31 @@ def test_login_replication_enabled(
     )
 
 
+def test_login_replication_disabled(
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    config, remote_site_id = _no_replication_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.do_site_login",
+        lambda site_id, username, password, debug: "watosecret",
+    )
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
+        lambda site_id, settings, force, debug: None,
+    )
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.distribute_license_to_remotes",
+        lambda logger, remote_automation_configs: None,
+    )
+
+    clients.SiteManagement.login(
+        site_id=remote_site_id, username="cmkadmin", password="cmk", expect_ok=False
+    ).assert_status_code(500)
+
+
 def test_login_site_doesnt_exist(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,

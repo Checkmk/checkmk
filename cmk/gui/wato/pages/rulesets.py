@@ -2063,6 +2063,18 @@ class ABCEditRuleMode(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
+        self._is_locked = (
+            IsLocked(
+                self._rule.locked_by["instance_id"],
+                quick_setup_render_link(self._rule.locked_by),
+            )
+            if is_locked_by_quick_setup(self._rule.locked_by)
+            else None
+        )
+        self._properties_catalog = create_rule_properties_catalog(
+            rule_identifier=RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name),
+            is_locked=self._is_locked,
+        )
         self._conditions_catalog = create_rule_conditions_catalog(
             tree=folder_tree(),
             rule_spec_name=self._rulespec.name,
@@ -2227,25 +2239,11 @@ class ABCEditRuleMode(WatoMode):
             return redirect(self._back_url())
 
         self._do_validate_on_render = True
-
-        is_locked = (
-            IsLocked(
-                self._rule.locked_by["instance_id"],
-                quick_setup_render_link(self._rule.locked_by),
-            )
-            if is_locked_by_quick_setup(self._rule.locked_by)
-            else None
-        )
-        tree = folder_tree()
-        rule_values = self._validate_and_get_rule_values_from_vars(
-            rule_identifier=RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name),
-            is_locked=is_locked,
-        )
-
+        rule_values = self._validate_and_get_rule_values_from_vars()
         self._rule.rule_options = rule_values.options
         self._rule.value = rule_values.value
 
-        if is_locked and self._rule.conditions != rule_values.conditions:
+        if self._is_locked and self._rule.conditions != rule_values.conditions:
             flash(
                 _("Cannot change rule conditions for rules managed by Quick setup."),
                 msg_type="error",
@@ -2255,7 +2253,7 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(rule_values.conditions)
 
         # Check permissions on folders
-        new_rule_folder = tree.folder(rule_values.conditions.host_folder)
+        new_rule_folder = folder_tree().folder(rule_values.conditions.host_folder)
         self._check_folder_permissions()
         new_rule_folder.permissions.need_permission("write")
 
@@ -2269,7 +2267,7 @@ class ABCEditRuleMode(WatoMode):
             flash(self._success_message())
             return redirect(self._back_url())
 
-        if is_locked:
+        if self._is_locked:
             flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
             return redirect(self._back_url())
 
@@ -2393,9 +2391,7 @@ class ABCEditRuleMode(WatoMode):
             raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
-    def _validate_and_get_rule_values_from_vars(
-        self, *, rule_identifier: RuleIdentifier, is_locked: IsLocked | None
-    ) -> _RuleValuesFromVars:
+    def _validate_and_get_rule_values_from_vars(self) -> _RuleValuesFromVars:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         value: object | RawFrontendData
         match render_mode:
@@ -2423,12 +2419,7 @@ class ABCEditRuleMode(WatoMode):
 
         return _RuleValuesFromVars(
             self._get_rule_options_from_catalog_value(
-                parse_data_from_field_id(
-                    create_rule_properties_catalog(
-                        rule_identifier=rule_identifier, is_locked=is_locked
-                    ),
-                    "_vue_edit_rule_properties",
-                )
+                parse_data_from_field_id(self._properties_catalog, "_vue_edit_rule_properties")
             ),
             value,
             self._get_rule_conditions_from_catalog_value(
@@ -2490,14 +2481,12 @@ class ABCEditRuleMode(WatoMode):
     def _page_form_backend(
         self,
         *,
-        rule_identifier: RuleIdentifier,
-        is_locked: IsLocked | None,
         title: str | None,
         has_show_more: bool,
         debug: bool,
     ) -> None:
         render_form_spec(
-            create_rule_properties_catalog(rule_identifier=rule_identifier, is_locked=is_locked),
+            self._properties_catalog,
             "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),
@@ -2527,7 +2516,7 @@ class ABCEditRuleMode(WatoMode):
 
         forms.end()
 
-        if is_locked:
+        if self._is_locked:
             forms.warning_message(
                 _("Conditions of rules managed by Quick setup cannot be changed.")
             )
@@ -2543,14 +2532,12 @@ class ABCEditRuleMode(WatoMode):
     def _page_form_frontend(
         self,
         *,
-        rule_identifier: RuleIdentifier,
-        is_locked: IsLocked | None,
         title: str | None,
         value_parameter_form: FormSpec | None,
         debug: bool,
     ) -> None:
         render_form_spec(
-            create_rule_properties_catalog(rule_identifier=rule_identifier, is_locked=is_locked),
+            self._properties_catalog,
             "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),
@@ -2584,7 +2571,7 @@ class ABCEditRuleMode(WatoMode):
                 False,
             )
 
-        if is_locked:
+        if self._is_locked:
             forms.warning_message(
                 _("Conditions of rules managed by Quick setup cannot be changed.")
             )
@@ -2603,16 +2590,6 @@ class ABCEditRuleMode(WatoMode):
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
 
-        rule_identifier = RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name)
-        is_locked = (
-            IsLocked(
-                self._rule.locked_by["instance_id"],
-                quick_setup_render_link(self._rule.locked_by),
-            )
-            if is_locked_by_quick_setup(self._rule.locked_by)
-            else None
-        )
-
         try:
             title: str | None = localize_or_none(
                 self._ruleset.rulespec.form_spec.title, translate_to_current_language
@@ -2627,16 +2604,12 @@ class ABCEditRuleMode(WatoMode):
         match render_mode:
             case RenderMode.BACKEND:
                 self._page_form_backend(
-                    rule_identifier=rule_identifier,
-                    is_locked=is_locked,
                     title=title,
                     has_show_more=has_show_more,
                     debug=debug,
                 )
             case RenderMode.FRONTEND:
                 self._page_form_frontend(
-                    rule_identifier=rule_identifier,
-                    is_locked=is_locked,
                     title=title,
                     value_parameter_form=registered_form_spec,
                     debug=debug,

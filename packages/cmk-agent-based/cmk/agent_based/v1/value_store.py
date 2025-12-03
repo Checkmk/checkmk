@@ -54,7 +54,7 @@ class _ValueStoreManagerProtocol(Protocol):
     def save(self) -> None: ...
 
 
-_active_host_value_store: _ValueStoreManagerProtocol | None = None
+_active_host_value_store: _ValueStoreManagerProtocol | None = None  # pylint: disable=invalid-name
 
 
 def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[misc]

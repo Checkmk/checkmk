@@ -1706,9 +1706,6 @@ def rbn_match_service_event(
                 return "This is a host notification, but the rule just matches service events"
             return None  # Let this be handled by match_host_event
 
-        if "EC_ID" in context:
-            return None  # handled by rbn_match_event_console
-
         allowed_events = rule["match_service_event"]
         state = context["SERVICESTATE"]
         last_state = context["PREVIOUSSERVICEHARDSTATE"]
@@ -1900,21 +1897,35 @@ def rbn_match_event_console(
     empty dict -> match on all Event Console notifications
     dict with keys -> match on specific Event Console notifications
     """
-    is_ec_notification = "EC_ID" in context
-    match_ec = (
+    # "Triggering events" - "All events"
+    match_all_events = (
         "match_ec" not in rule
         and "match_host_event" not in rule
         and "match_service_event" not in rule
-    ) or "match_ec" in rule
+    )
+    # "Triggering events" - "Event console alerts"
+    match_ec_alerts_explicit = "match_ec" in rule
+
+    # "Triggering events" - "Host events" or "Service events"
+    match_host_or_service_events_explicit = (
+        "match_host_event" in rule or "match_service_event" in rule
+    )
+
+    is_ec_notification = "EC_ID" in context
+    match_ec = match_all_events or match_ec_alerts_explicit
     if not match_ec and is_ec_notification:
         return "Notification has been created by the Event Console."
 
-    if match_ec:
-        match_ec_options = rule.get("match_ec")
-        if match_ec_options and not is_ec_notification:
-            return "Notification has not been created by the Event Console."
+    match_ec_options = rule.get("match_ec", False)
 
-        if match_ec_options:
+    match_only_ec_events = match_ec_options or (
+        not match_all_events and not match_host_or_service_events_explicit
+    )
+    if not is_ec_notification and match_only_ec_events:
+        return "Notification has not been created by the Event Console."
+
+    if match_ec:
+        if match_ec_options and is_ec_notification:
             # Match Event Console rule ID
             if (
                 "match_rule_id" in match_ec_options

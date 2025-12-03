@@ -155,7 +155,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             {
                 "PARAMETER_FROM_ADDRESS": "from@lala.com",
             },
-            None,
+            "Notification has not been created by the Event Console.",
             id="Match only Event Console alerts, no notification from Event Console",
         ),
         pytest.param(
@@ -423,6 +423,46 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             },
             "Wrong syslog facility 0, required is 3",
             id="Match on all events (all checked, not via All events), no match on Event Console alert filter",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("16"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 15",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_service_event=["?c", "?w", "?r"],
+                match_ec={},
+            ),
+            {
+                "SERVICESTATE": "w",
+                "PREVIOUSSERVICEHARDSTATE": "r",
+            },
+            None,
+            id="Match on service events and all event console alerts",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("17"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 15",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_service_event=["?c", "?w", "?r"],
+                match_ec={"match_comment": "some test comment"},
+            ),
+            {
+                "SERVICESTATE": "w",
+                "PREVIOUSSERVICEHARDSTATE": "r",
+            },
+            "Notification has not been created by the Event Console.",
+            id="Match on service events and event console alerts with filter",
         ),
     ],
 )

@@ -151,6 +151,7 @@ pkg_files(
 pkg_files(
     name = "agents_plugins",
     srcs = ["//agents/plugins:srcs"],
+    attributes = pkg_attributes(mode = "0755"),
     prefix = "share/check_mk/agents/plugins",
 )
 

@@ -150,9 +150,9 @@ from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
+    create_rule_catalog,
     create_rule_conditions_catalog,
     create_rule_properties_catalog,
-    create_rule_value_catalog,
     FolderPath,
     FolderRulesets,
     IsLocked,
@@ -2051,10 +2051,12 @@ def _parse_explicit_hosts_or_services_for_vue(
     raise TypeError(value)
 
 
-@dataclass(frozen=True)
-class _RuleValueBackend:
+@dataclass(frozen=True, kw_only=True)
+class _BackendForm:
     title: str | None
     has_show_more: bool
+    properties_catalog: Catalog
+    conditions_catalog: Catalog
 
     @property
     def render_mode(self) -> RenderMode:
@@ -2062,9 +2064,8 @@ class _RuleValueBackend:
 
 
 @dataclass(frozen=True)
-class _RuleValueFrontend:
+class _FrontendForm:
     title: str | None
-    parameter_form: FormSpec
     catalog: Catalog
 
     @property
@@ -2087,30 +2088,18 @@ class ABCEditRuleMode(WatoMode):
         super().__init__()
         self._is_locked = (
             IsLocked(
-                self._rule.locked_by["instance_id"],
-                quick_setup_render_link(self._rule.locked_by),
+                instance_id=self._rule.locked_by["instance_id"],
+                render_link=quick_setup_render_link(self._rule.locked_by),
+                message=_("Cannot change rule conditions for rules managed by Quick setup."),
             )
             if is_locked_by_quick_setup(self._rule.locked_by)
             else None
         )
-        self._properties_catalog = create_rule_properties_catalog(
-            rule_identifier=RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name),
-            is_locked=self._is_locked,
-        )
-        self._value_type = self._init_value_type()
-        self._conditions_catalog = create_rule_conditions_catalog(
-            tree=folder_tree(),
-            rule_spec_name=self._rulespec.name,
-            rule_spec_item=(
-                RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
-                if (self._rulespec.item_type and self._rulespec.item_name is not None)
-                else None
-            ),
-        )
+        self._form_type = self._init_form_type()
         self._do_validate_on_render = False
         self._failed_frontend_data: RawFrontendData | None = None
 
-    def _init_value_type(self) -> _RuleValueBackend | _RuleValueFrontend:
+    def _init_form_type(self) -> _BackendForm | _FrontendForm:
         try:
             title: str | None = localize_or_none(
                 self._ruleset.rulespec.form_spec.title, translate_to_current_language
@@ -2124,18 +2113,50 @@ class ABCEditRuleMode(WatoMode):
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
             case RenderMode.BACKEND:
-                return _RuleValueBackend(title, has_show_more)
-            case RenderMode.FRONTEND:
-                assert registered_form_spec is not None
-                return _RuleValueFrontend(
-                    title,
-                    registered_form_spec,
-                    create_rule_value_catalog(
-                        title=title, value_parameter_form=registered_form_spec
+                return _BackendForm(
+                    title=title,
+                    has_show_more=has_show_more,
+                    properties_catalog=create_rule_properties_catalog(
+                        rule_identifier=RuleIdentifier(
+                            id=self._rule.id, name=self._rule.ruleset.name
+                        ),
+                        is_locked=self._is_locked,
+                    ),
+                    conditions_catalog=create_rule_conditions_catalog(
+                        is_locked=self._is_locked,
+                        tree=folder_tree(),
+                        rule_spec_name=self._rulespec.name,
+                        rule_spec_item=(
+                            RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
+                            if (self._rulespec.item_type and self._rulespec.item_name is not None)
+                            else None
+                        ),
                     ),
                 )
-            case _:
-                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
+
+            case RenderMode.FRONTEND:
+                assert registered_form_spec is not None
+                return _FrontendForm(
+                    title,
+                    create_rule_catalog(
+                        rule_identifier=RuleIdentifier(
+                            id=self._rule.id, name=self._rule.ruleset.name
+                        ),
+                        is_locked=self._is_locked,
+                        title=title,
+                        value_parameter_form=registered_form_spec,
+                        tree=folder_tree(),
+                        rule_spec_name=self._rulespec.name,
+                        rule_spec_item=(
+                            RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
+                            if (self._rulespec.item_type and self._rulespec.item_name is not None)
+                            else None
+                        ),
+                    ),
+                )
+
+            case other:
+                raise MKGeneralException(_("Unknown render mode %s") % other)
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
@@ -2289,25 +2310,24 @@ class ABCEditRuleMode(WatoMode):
             return redirect(self._back_url())
 
         self._do_validate_on_render = True
-        match self._value_type:
-            case _RuleValueBackend():
-                rule_values = self._validate_and_get_rule_values_from_vars_backend()
-            case _RuleValueFrontend():
-                rule_values = self._validate_and_get_rule_values_from_vars_frontend(
-                    parameter_form=self._value_type.parameter_form,
-                    catalog=self._value_type.catalog,
+        match self._form_type:
+            case _BackendForm():
+                rule_values = self._validate_and_get_rule_values_from_vars_backend(
+                    properties_catalog=self._form_type.properties_catalog,
+                    conditions_catalog=self._form_type.conditions_catalog,
                 )
-            case _:
-                raise MKGeneralException(_("Unknown render mode %s") % self._value_type.render_mode)
+            case _FrontendForm():
+                rule_values = self._validate_and_get_rule_values_from_vars_frontend(
+                    catalog=self._form_type.catalog,
+                )
+            case other:
+                raise MKGeneralException(_("Unknown form type %s") % other)
 
         self._rule.rule_options = rule_values.options
         self._rule.value = rule_values.value
 
         if self._is_locked and self._rule.conditions != rule_values.conditions:
-            flash(
-                _("Cannot change rule conditions for rules managed by Quick setup."),
-                msg_type="error",
-            )
+            flash(self._is_locked.message, msg_type="error")
             return redirect(self._back_url())
 
         self._rule.update_conditions(rule_values.conditions)
@@ -2328,7 +2348,7 @@ class ABCEditRuleMode(WatoMode):
             return redirect(self._back_url())
 
         if self._is_locked:
-            flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
+            flash(self._is_locked.message, msg_type="error")
             return redirect(self._back_url())
 
         # Move rule to new folder during editing
@@ -2372,10 +2392,10 @@ class ABCEditRuleMode(WatoMode):
             disabled=raw_properties["disabled"],
         )
 
-    def _extract_rule_value_from_catalog_value(self, raw_value: RawFrontendData) -> RawFrontendData:
-        if not isinstance(raw_value.value, dict):
-            raise TypeError(raw_value.value)
-        return RawFrontendData(raw_value.value["value"]["value"])
+    def _get_rule_value_from_catalog_value(self, raw_value: object) -> object:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+        return raw_value["value"]["value"]
 
     def _get_rule_conditions_from_catalog_value(self, raw_value: object) -> RuleConditions:
         if not isinstance(raw_value, dict):
@@ -2417,13 +2437,6 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
-    def _get_rule_value_from_rule(self) -> DefaultValue | RawDiskData:
-        return (
-            self._rule.value
-            if isinstance(self._rule.value, DefaultValue)
-            else RawDiskData({"value": {"value": self._rule.value}})
-        )
-
     def _get_rule_conditions_from_rule(self) -> RawDiskData:
         if self._rule.rule_options.predefined_condition_id:
             return RawDiskData(
@@ -2451,38 +2464,45 @@ class ABCEditRuleMode(WatoMode):
             raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
-    def _validate_and_get_rule_values_from_vars_backend(self) -> _RuleValuesFromVars:
+    def _get_rule_values_from_rule(self) -> RawDiskData:
+        if not isinstance(rule_properties := self._get_rule_properties_from_rule().value, dict):
+            raise TypeError(rule_properties)
+        if not isinstance(rule_conditions := self._get_rule_conditions_from_rule().value, dict):
+            raise TypeError(rule_conditions)
+        return RawDiskData(
+            {**rule_properties, **{"value": {"value": self._rule.value}}, **rule_conditions}
+        )
+
+    def _validate_and_get_rule_values_from_vars_backend(
+        self, *, properties_catalog: Catalog, conditions_catalog: Catalog
+    ) -> _RuleValuesFromVars:
         value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
         self._ruleset.rulespec.valuespec.validate_value(value, "ve")
         return _RuleValuesFromVars(
             self._get_rule_options_from_catalog_value(
-                parse_data_from_field_id(self._properties_catalog, "_vue_edit_rule_properties")
+                parse_data_from_field_id(properties_catalog, "_vue_edit_rule_properties")
             ),
             value,
             self._get_rule_conditions_from_catalog_value(
-                parse_data_from_field_id(self._conditions_catalog, "_vue_edit_rule_conditions")
+                parse_data_from_field_id(conditions_catalog, "_vue_edit_rule_conditions")
             ),
         )
 
     def _validate_and_get_rule_values_from_vars_frontend(
-        self, *, parameter_form: FormSpec, catalog: Catalog
+        self, *, catalog: Catalog
     ) -> _RuleValuesFromVars:
-        catalog_value = read_data_from_frontend("_vue_edit_rule_value")
+        catalog_value = read_data_from_frontend("_vue_edit_rule")
         if validation_errors := validate_value_from_frontend(catalog, catalog_value):
             # Persist data to re-populate the form on early out
             self._failed_frontend_data = catalog_value
             process_validation_errors(list(validation_errors))
+        disk_value = get_visitor(
+            catalog, VisitorOptions(migrate_values=False, mask_values=False)
+        ).to_disk(catalog_value)
         return _RuleValuesFromVars(
-            self._get_rule_options_from_catalog_value(
-                parse_data_from_field_id(self._properties_catalog, "_vue_edit_rule_properties")
-            ),
-            get_visitor(
-                parameter_form,
-                VisitorOptions(migrate_values=False, mask_values=False),
-            ).to_disk(self._extract_rule_value_from_catalog_value(catalog_value)),
-            self._get_rule_conditions_from_catalog_value(
-                parse_data_from_field_id(self._conditions_catalog, "_vue_edit_rule_conditions")
-            ),
+            self._get_rule_options_from_catalog_value(disk_value),
+            self._get_rule_value_from_catalog_value(disk_value),
+            self._get_rule_conditions_from_catalog_value(disk_value),
         )
 
     @abc.abstractmethod
@@ -2536,9 +2556,17 @@ class ABCEditRuleMode(WatoMode):
     def _should_validate_on_render(self) -> bool:
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
-    def _page_form_backend(self, *, title: str | None, has_show_more: bool, debug: bool) -> None:
+    def _page_form_backend(
+        self,
+        *,
+        title: str | None,
+        has_show_more: bool,
+        properties_catalog: Catalog,
+        conditions_catalog: Catalog,
+        debug: bool,
+    ) -> None:
         render_form_spec(
-            self._properties_catalog,
+            properties_catalog,
             "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),
@@ -2569,33 +2597,26 @@ class ABCEditRuleMode(WatoMode):
         forms.end()
 
         if self._is_locked:
-            forms.warning_message(
-                _("Conditions of rules managed by Quick setup cannot be changed.")
-            )
+            forms.warning_message(self._is_locked.message)
             return
 
         render_form_spec(
-            self._conditions_catalog,
+            conditions_catalog,
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
         )
 
-    def _page_form_frontend(self, *, value_catalog: Catalog, debug: bool) -> None:
-        render_form_spec(
-            self._properties_catalog,
-            "_vue_edit_rule_properties",
-            self._get_rule_properties_from_rule(),
-            self._should_validate_on_render(),
-        )
-
+    def _page_form_frontend(self, *, catalog: Catalog, debug: bool) -> None:
         try:
             render_form_spec(
-                value_catalog,
-                "_vue_edit_rule_value",
-                self._get_rule_value_from_rule()
-                if self._failed_frontend_data is None
-                else self._failed_frontend_data,
+                catalog,
+                "_vue_edit_rule",
+                (
+                    self._get_rule_values_from_rule()
+                    if self._failed_frontend_data is None
+                    else self._failed_frontend_data
+                ),
                 self._should_validate_on_render(),
             )
         except Exception as e:
@@ -2610,24 +2631,11 @@ class ABCEditRuleMode(WatoMode):
                 % e
             )
             render_form_spec(
-                value_catalog,
-                "_vue_edit_rule_value",
+                catalog,
+                "_vue_edit_rule",
                 DEFAULT_VALUE,
                 False,
             )
-
-        if self._is_locked:
-            forms.warning_message(
-                _("Conditions of rules managed by Quick setup cannot be changed.")
-            )
-            return
-
-        render_form_spec(
-            self._conditions_catalog,
-            "_vue_edit_rule_conditions",
-            self._get_rule_conditions_from_rule(),
-            self._should_validate_on_render(),
-        )
 
     def _page_form(self, *, debug: bool) -> None:
         self._page_form_quick_setup_warning()
@@ -2635,17 +2643,19 @@ class ABCEditRuleMode(WatoMode):
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
 
-        match self._value_type:
-            case _RuleValueBackend():
+        match self._form_type:
+            case _BackendForm():
                 self._page_form_backend(
-                    title=self._value_type.title,
-                    has_show_more=self._value_type.has_show_more,
+                    title=self._form_type.title,
+                    has_show_more=self._form_type.has_show_more,
+                    properties_catalog=self._form_type.properties_catalog,
+                    conditions_catalog=self._form_type.conditions_catalog,
                     debug=debug,
                 )
-            case _RuleValueFrontend():
-                self._page_form_frontend(value_catalog=self._value_type.catalog, debug=debug)
-            case _:
-                raise MKGeneralException(_("Unknown render mode %s") % self._value_type.render_mode)
+            case _FrontendForm():
+                self._page_form_frontend(catalog=self._form_type.catalog, debug=debug)
+            case other:
+                raise MKGeneralException(_("Unknown form type %s") % other)
 
         html.hidden_fields()
 
@@ -3328,20 +3338,49 @@ class ModeNewRule(ABCEditRuleMode):
                 self._folder = tree.folder(folder)
 
     def _get_folder_path_from_vars(self, *, tree: FolderTree) -> str:
-        return self._get_rule_conditions_from_catalog_value(
-            parse_data_from_field_id(
-                create_rule_conditions_catalog(
-                    tree=tree,
-                    rule_spec_name=self._rulespec.name,
-                    rule_spec_item=(
-                        RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
-                        if (self._rulespec.item_type and self._rulespec.item_name is not None)
-                        else None
-                    ),
-                ),
-                "_vue_edit_rule_conditions",
-            )
-        ).host_folder
+        render_mode, registered_form_spec = _get_render_mode(self._rulespec)
+        rule_spec_name = self._rulespec.name
+        rule_spec_item = (
+            RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
+            if (self._rulespec.item_type and self._rulespec.item_name is not None)
+            else None
+        )
+        match render_mode:
+            case RenderMode.BACKEND:
+                return self._get_rule_conditions_from_catalog_value(
+                    parse_data_from_field_id(
+                        create_rule_conditions_catalog(
+                            # 'is_locked' does not matter here because we only want to get the folder.
+                            is_locked=None,
+                            tree=tree,
+                            rule_spec_name=rule_spec_name,
+                            rule_spec_item=rule_spec_item,
+                        ),
+                        "_vue_edit_rule_conditions",
+                    )
+                ).host_folder
+
+            case RenderMode.FRONTEND:
+                assert registered_form_spec is not None
+                return self._get_rule_conditions_from_catalog_value(
+                    parse_data_from_field_id(
+                        create_rule_catalog(
+                            # 'rule_identifier', 'is_locked' and 'title' do not matter here
+                            # because we only want to get the folder.
+                            rule_identifier=RuleIdentifier(id="", name=""),
+                            is_locked=None,
+                            title=None,
+                            value_parameter_form=registered_form_spec,
+                            tree=tree,
+                            rule_spec_name=rule_spec_name,
+                            rule_spec_item=rule_spec_item,
+                        ),
+                        "_vue_edit_rule",
+                    )
+                ).host_folder
+
+            case _:
+                raise MKGeneralException(_("Unknown render mode %s") % render_mode)
 
     def _set_rule(self) -> None:
         host_name_conditions: HostOrServiceConditions | None = None

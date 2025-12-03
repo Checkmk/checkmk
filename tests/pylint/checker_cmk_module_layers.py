@@ -646,6 +646,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.config_warnings",
         "cmk.utils.dateutils",
         "cmk.utils.global_ident_type",
+        "cmk.utils.http_proxy_config",
         "cmk.utils.images",
         "cmk.utils.licensing",
         "cmk.utils.local_secrets",

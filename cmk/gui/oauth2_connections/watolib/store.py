@@ -42,3 +42,22 @@ def save_oauth2_connection(
     entries = oauth2_connections_config_file.load_for_modification()
     entries[ident] = details
     oauth2_connections_config_file.save(entries, pprint_value)
+
+
+def load_oauth2_connections() -> dict[str, OAuth2Connection]:
+    oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
+    return oauth2_connections_config_file.load_for_reading()
+
+
+def update_oauth2_connection(
+    ident: str,
+    details: OAuth2Connection,
+    *,
+    pprint_value: bool,
+) -> None:
+    oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
+    entries = oauth2_connections_config_file.load_for_modification()
+    if ident not in entries:
+        raise KeyError(f"OAuth2 connection with ident '{ident}' does not exist")
+    entries[ident] = details
+    oauth2_connections_config_file.save(entries, pprint_value)

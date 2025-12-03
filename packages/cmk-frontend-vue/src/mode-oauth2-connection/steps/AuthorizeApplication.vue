@@ -33,6 +33,7 @@ const props = defineProps<
     urls: Oauth2Urls
     authorityMapping: Record<string, string>
     oAuth2Type: 'ms_graph_api'
+    ident: string | undefined
   }
 >()
 
@@ -113,7 +114,7 @@ async function requestAndSaveAccessToken(): Promise<boolean> {
     if (props.oAuth2Type === 'ms_graph_api' && resultCode.value) {
       const res = await api.requestAndSaveAccessToken({
         type: 'ms_graph_api',
-        id: uuid(),
+        id: props.ident ? props.ident : uuid(),
         redirect_uri: buildRedirectUri(),
         data: dataRef.value,
         code: resultCode.value

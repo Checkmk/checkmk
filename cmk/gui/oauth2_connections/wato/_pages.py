@@ -14,7 +14,12 @@ from cmk.gui.form_specs import (
     RawFrontendData,
 )
 from cmk.gui.oauth2_connections.wato._modes import get_oauth_2_connection_form_spec
-from cmk.gui.oauth2_connections.watolib.store import OAuth2Connection, save_oauth2_connection
+from cmk.gui.oauth2_connections.watolib.store import (
+    load_oauth2_connections,
+    OAuth2Connection,
+    save_oauth2_connection,
+    update_oauth2_connection,
+)
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.watolib.passwords import load_passwords, save_password
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
@@ -193,16 +198,24 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         tenant_id: str,
         authority: str,
     ) -> None:
+        details = OAuth2Connection(
+            title=title,
+            access_token_reference=f"{ident}_access_token",
+            client_id=client_id,
+            client_secret_reference=f"{ident}_client_secret",
+            refresh_token_reference=f"{ident}_refresh_token",
+            tenant_id=tenant_id,
+            authority=authority,
+        )
+        if ident in load_oauth2_connections():
+            update_oauth2_connection(
+                ident=ident,
+                details=details,
+                pprint_value=True,
+            )
+            return
         save_oauth2_connection(
             ident=ident,
-            details=OAuth2Connection(
-                title=title,
-                access_token_reference=f"{ident}_access_token",
-                client_id=client_id,
-                client_secret_reference=f"{ident}_client_secret",
-                refresh_token_reference=f"{ident}_refresh_token",
-                tenant_id=tenant_id,
-                authority=authority,
-            ),
+            details=details,
             pprint_value=True,
         )

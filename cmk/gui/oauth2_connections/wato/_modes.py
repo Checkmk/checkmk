@@ -10,7 +10,7 @@ from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.form_specs import serialize_data_for_frontend
+from cmk.gui.form_specs import RawDiskData, serialize_data_for_frontend
 from cmk.gui.form_specs.unstable import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
@@ -201,15 +201,58 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
         return ModeOAuth2Connections
 
     @override
-    def title(self) -> str:
-        return _("Add OAuth2 connection")
-
-    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
     @override
     def page(self, config: Config, form_name: str = "edit") -> None:
+        if self._clone:
+            html.vue_component(
+                "cmk-mode-create-oauth2-connection",
+                data={
+                    "config": asdict(get_oauth2_connection_config()),
+                    "form_spec": asdict(
+                        serialize_data_for_frontend(
+                            form_spec=get_oauth_2_connection_form_spec(),
+                            value=RawDiskData(
+                                value={
+                                    "title": self._entry["title"] + " (Clone)",
+                                    "authority": self._entry["authority"],
+                                    "tenant_id": self._entry["tenant_id"],
+                                    "client_id": self._entry["client_id"],
+                                    "client_secret": (
+                                        "cmk_postprocessed",
+                                        "stored_password",
+                                        (self._entry["client_secret_reference"], ""),
+                                    ),
+                                }
+                            ),
+                            field_id=form_name,
+                            do_validate=False,
+                        )
+                    ),
+                    "authority_mapping": get_authority_mapping(),
+                },
+            )
+            return
+
+        if self._new:
+            html.vue_component(
+                "cmk-mode-create-oauth2-connection",
+                data={
+                    "config": asdict(get_oauth2_connection_config()),
+                    "form_spec": asdict(
+                        serialize_data_for_frontend(
+                            form_spec=get_oauth_2_connection_form_spec(),
+                            field_id=form_name,
+                            do_validate=False,
+                        )
+                    ),
+                    "authority_mapping": get_authority_mapping(),
+                },
+            )
+            return
+
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
             data={
@@ -217,10 +260,24 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                 "form_spec": asdict(
                     serialize_data_for_frontend(
                         form_spec=get_oauth_2_connection_form_spec(),
+                        value=RawDiskData(
+                            value={
+                                "title": self._entry["title"],
+                                "authority": self._entry["authority"],
+                                "tenant_id": self._entry["tenant_id"],
+                                "client_id": self._entry["client_id"],
+                                "client_secret": (
+                                    "cmk_postprocessed",
+                                    "stored_password",
+                                    (self._entry["client_secret_reference"], ""),
+                                ),
+                            }
+                        ),
                         field_id=form_name,
                         do_validate=False,
                     )
                 ),
+                "ident": self._ident,
                 "authority_mapping": get_authority_mapping(),
             },
         )

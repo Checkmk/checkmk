@@ -217,11 +217,15 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             update_oauth2_connection(
                 ident=ident,
                 details=details,
+                user_id=user.id,
                 pprint_value=config.wato_pprint_config,
+                use_git=config.wato_use_git,
             )
             return
         save_oauth2_connection(
             ident=ident,
             details=details,
+            user_id=user.id,
             pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
         )

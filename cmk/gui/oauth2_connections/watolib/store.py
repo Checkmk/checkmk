@@ -5,6 +5,9 @@
 
 from typing import TypedDict
 
+from cmk.ccc.user import UserId
+from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
@@ -36,11 +39,21 @@ def save_oauth2_connection(
     ident: str,
     details: OAuth2Connection,
     *,
+    user_id: UserId | None,
     pprint_value: bool,
+    use_git: bool,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_modification()
     entries[ident] = details
+    add_change(
+        action_name="add-oauth2-connection",
+        text=f"Added the OAuth2 connection '{ident}'",
+        user_id=user_id,
+        domains=[ConfigDomainGUI()],
+        sites=None,
+        use_git=use_git,
+    )
     oauth2_connections_config_file.save(entries, pprint_value)
 
 
@@ -53,24 +66,45 @@ def update_oauth2_connection(
     ident: str,
     details: OAuth2Connection,
     *,
+    user_id: UserId | None,
     pprint_value: bool,
+    use_git: bool,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_modification()
     if ident not in entries:
         raise KeyError(f"OAuth2 connection with ident '{ident}' does not exist")
     entries[ident] = details
+
+    add_change(
+        action_name="update-oauth2-connection",
+        text=f"Updated the OAuth2 connection '{ident}'",
+        user_id=user_id,
+        domains=[ConfigDomainGUI()],
+        sites=None,
+        use_git=use_git,
+    )
     oauth2_connections_config_file.save(entries, pprint_value)
 
 
 def delete_oauth2_connection(
     ident: str,
     *,
+    user_id: UserId | None,
     pprint_value: bool,
+    use_git: bool,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_modification()
     if ident not in entries:
         raise KeyError(f"OAuth2 connection with ident '{ident}' does not exist")
     del entries[ident]
+    add_change(
+        action_name="deleted-oauth2-connection",
+        text=f"Deleted the OAuth2 connection '{ident}'",
+        user_id=user_id,
+        domains=[ConfigDomainGUI()],
+        sites=None,
+        use_git=use_git,
+    )
     oauth2_connections_config_file.save(entries, pprint_value)

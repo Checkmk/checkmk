@@ -223,7 +223,12 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             pprint_value=config.wato_pprint_config,
             use_git=config.wato_use_git,
         )
-        delete_oauth2_connection(ident, pprint_value=config.wato_pprint_config)
+        delete_oauth2_connection(
+            ident,
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
 

@@ -639,7 +639,6 @@ LEGACY_CHECKS = [
     "ucd_mem",
     "ucd_processes",
     "ucs_bladecenter_fans",
-    "ucs_bladecenter_faultinst",
     "ucs_bladecenter_topsystem",
     "ucs_c_rack_server_fans",
     "ucs_c_rack_server_health",

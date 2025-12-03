@@ -2063,6 +2063,15 @@ class ABCEditRuleMode(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
+        self._conditions_catalog = create_rule_conditions_catalog(
+            tree=folder_tree(),
+            rule_spec_name=self._rulespec.name,
+            rule_spec_item=(
+                RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
+                if (self._rulespec.item_type and self._rulespec.item_name is not None)
+                else None
+            ),
+        )
         self._do_validate_on_render = False
         self._failed_frontend_data: RawFrontendData | None = None
 
@@ -2231,13 +2240,6 @@ class ABCEditRuleMode(WatoMode):
         rule_values = self._validate_and_get_rule_values_from_vars(
             rule_identifier=RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name),
             is_locked=is_locked,
-            tree=tree,
-            rule_spec_name=self._rulespec.name,
-            rule_spec_item=(
-                RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
-                if (self._rulespec.item_type and self._rulespec.item_name is not None)
-                else None
-            ),
         )
 
         self._rule.rule_options = rule_values.options
@@ -2392,13 +2394,7 @@ class ABCEditRuleMode(WatoMode):
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
     def _validate_and_get_rule_values_from_vars(
-        self,
-        *,
-        rule_identifier: RuleIdentifier,
-        is_locked: IsLocked | None,
-        tree: FolderTree,
-        rule_spec_name: str,
-        rule_spec_item: RuleSpecItem | None,
+        self, *, rule_identifier: RuleIdentifier, is_locked: IsLocked | None
     ) -> _RuleValuesFromVars:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         value: object | RawFrontendData
@@ -2436,12 +2432,7 @@ class ABCEditRuleMode(WatoMode):
             ),
             value,
             self._get_rule_conditions_from_catalog_value(
-                parse_data_from_field_id(
-                    create_rule_conditions_catalog(
-                        tree=tree, rule_spec_name=rule_spec_name, rule_spec_item=rule_spec_item
-                    ),
-                    "_vue_edit_rule_conditions",
-                )
+                parse_data_from_field_id(self._conditions_catalog, "_vue_edit_rule_conditions")
             ),
         )
 
@@ -2503,9 +2494,6 @@ class ABCEditRuleMode(WatoMode):
         is_locked: IsLocked | None,
         title: str | None,
         has_show_more: bool,
-        tree: FolderTree,
-        rule_spec_name: str,
-        rule_spec_item: RuleSpecItem | None,
         debug: bool,
     ) -> None:
         render_form_spec(
@@ -2546,9 +2534,7 @@ class ABCEditRuleMode(WatoMode):
             return
 
         render_form_spec(
-            create_rule_conditions_catalog(
-                tree=tree, rule_spec_name=rule_spec_name, rule_spec_item=rule_spec_item
-            ),
+            self._conditions_catalog,
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
@@ -2561,9 +2547,6 @@ class ABCEditRuleMode(WatoMode):
         is_locked: IsLocked | None,
         title: str | None,
         value_parameter_form: FormSpec | None,
-        tree: FolderTree,
-        rule_spec_name: str,
-        rule_spec_item: RuleSpecItem | None,
         debug: bool,
     ) -> None:
         render_form_spec(
@@ -2608,11 +2591,7 @@ class ABCEditRuleMode(WatoMode):
             return
 
         render_form_spec(
-            create_rule_conditions_catalog(
-                tree=tree,
-                rule_spec_name=rule_spec_name,
-                rule_spec_item=rule_spec_item,
-            ),
+            self._conditions_catalog,
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
@@ -2631,13 +2610,6 @@ class ABCEditRuleMode(WatoMode):
                 quick_setup_render_link(self._rule.locked_by),
             )
             if is_locked_by_quick_setup(self._rule.locked_by)
-            else None
-        )
-        tree = folder_tree()
-        rule_spec_name = self._rulespec.name
-        rule_spec_item = (
-            RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
-            if (self._rulespec.item_type and self._rulespec.item_name is not None)
             else None
         )
 
@@ -2659,9 +2631,6 @@ class ABCEditRuleMode(WatoMode):
                     is_locked=is_locked,
                     title=title,
                     has_show_more=has_show_more,
-                    tree=tree,
-                    rule_spec_name=rule_spec_name,
-                    rule_spec_item=rule_spec_item,
                     debug=debug,
                 )
             case RenderMode.FRONTEND:
@@ -2670,9 +2639,6 @@ class ABCEditRuleMode(WatoMode):
                     is_locked=is_locked,
                     title=title,
                     value_parameter_form=registered_form_spec,
-                    tree=tree,
-                    rule_spec_name=rule_spec_name,
-                    rule_spec_item=rule_spec_item,
                     debug=debug,
                 )
             case _:

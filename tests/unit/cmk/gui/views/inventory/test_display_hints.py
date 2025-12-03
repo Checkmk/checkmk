@@ -955,16 +955,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "size",
         "path",
     ],
-    ("networking", "addresses"): [
-        "address",
-        "device",
-        "type",
-        "network",
-        "netmask",
-        "cidr",
-        "broadcast",
-        "scope_id",
-    ],
+    ("networking", "addresses"): ["address", "device", "type"],
     ("networking", "cdp_cache", "neighbors"): [
         "neighbor_name",
         "neighbor_port",

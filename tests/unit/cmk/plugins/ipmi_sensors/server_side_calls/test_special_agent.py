@@ -39,7 +39,7 @@ HOST_CONFIG = HostConfig(
                     Secret(23).unsafe(),
                     "freeipmi",
                     "user",
-                    "--cipher-suite-id",
+                    "--cipher_suite_id",
                     "3",
                     "--output_sensor_state",
                 ]
@@ -71,7 +71,7 @@ HOST_CONFIG = HostConfig(
                     "user",
                     "--driver",
                     "driver",
-                    "--cipher-suite-id",
+                    "--cipher_suite_id",
                     "17",
                     "--sdr_cache_recreate",
                     "--interpret_oem_data",

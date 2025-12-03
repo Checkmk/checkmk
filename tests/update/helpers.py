@@ -167,14 +167,18 @@ def inject_rules(site: Site) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
 
-def check_agent_receiver_error_log(site: Site) -> None:
-    """Assert that there are no unexpected errors in the agent receiver log."""
-    error_match_dict = parse_files(pathname=site.logs_dir / "**/*log*", pattern="error")
+def check_errors_in_log_files(site: Site) -> None:
+    """Assert that there are no unexpected errors in the site log-files"""
+    # Default pattern should be "^.*error.*$"
+    # TODO: Remove negative lookahead '(?!.*(sigterm))' from pattern after CMK-18520 is done
+    content_pattern = "^(?!.*(sigterm)).*error.*$"
 
-    # TODO: Remove the following block after CMK-18520 is done
-    agent_receiver_error_log = str(site.logs_dir / "agent-receiver/error.log")
-    if agent_receiver_error_log in error_match_dict:
-        error_match_dict.pop(agent_receiver_error_log)
+    error_match_dict = parse_files(
+        path_name=site.logs_dir,
+        files_name_pattern="*log*",
+        content_pattern=content_pattern,
+        sudo=True,
+    )
 
     assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"
 

@@ -35,7 +35,9 @@ def check_ucs_bladecenter_faultinst(_item, params, parsed):
         return
 
     for sev, instances in severities.items():
-        sev_state = params.get(sev, ucs_bladecenter.UCS_FAULTINST_SEVERITY_TO_STATE.get(sev, 3))
+        sev_state = params.get(
+            sev, int(ucs_bladecenter.UCS_FAULTINST_SEVERITY_TO_STATE.get(sev, 3))
+        )
 
         # Right now, OK instances are also reported in detail
         # If required we can increase the state level here, so that only WARN+ messages are shown

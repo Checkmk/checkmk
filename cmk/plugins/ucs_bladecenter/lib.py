@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import State, StringTable
 
 GenericSection = dict[str, dict[str, dict[str, str]]]
 
@@ -38,11 +38,11 @@ def generic_parse(string_table: StringTable) -> GenericSection:
 
 
 UCS_FAULTINST_SEVERITY_TO_STATE = {
-    "critical": 2,
-    "major": 1,
-    "warning": 1,
-    "minor": 1,
-    "info": 0,
-    "condition": 0,
-    "cleared": 0,
+    "critical": State.CRIT,
+    "major": State.WARN,
+    "warning": State.WARN,
+    "minor": State.WARN,
+    "info": State.OK,
+    "condition": State.OK,
+    "cleared": State.OK,
 }

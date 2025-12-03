@@ -643,7 +643,6 @@ LEGACY_CHECKS = [
     "ucs_bladecenter_psu",
     "ucs_bladecenter_topsystem",
     "ucs_c_rack_server_fans",
-    "ucs_c_rack_server_faultinst",
     "ucs_c_rack_server_health",
     "ucs_c_rack_server_led",
     "ucs_c_rack_server_power",

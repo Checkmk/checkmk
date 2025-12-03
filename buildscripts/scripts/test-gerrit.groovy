@@ -251,26 +251,36 @@ void main() {
                                 unstable: false,
                             ]],
                         );
-                        if (item.RESULT_CHECK_TYPE == "JUNIT") {
-                            dir("${checkout_dir}") {
-                                try {
-                                    xunit(
-                                        checksName: item.NAME,
-                                        tools: [
-                                            Custom(
-                                                customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
-                                                deleteOutputFiles: false,
-                                                failIfNotNew: false, // as they are copied from the single tests
-                                                pattern: item.RESULT_CHECK_FILE_PATTERN,
-                                                skipNoTestFiles: true,
-                                                stopProcessingIfError: true,
-                                            )
-                                        ]
-                                    );
-                                } catch (Exception exc) {
-                                    print("ERROR: ran into exception while running xunit() for ${item.NAME}: ${exc}");
-                                }
-                            }
+                    }
+                    if (item.RESULT_CHECK_TYPE == "JUNIT") {
+                        try {
+                            xunit(
+                                checksName: item.NAME,
+                                tools: [
+                                    Custom(
+                                        customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
+                                        deleteOutputFiles: false,
+                                        failIfNotNew: false, // as they are copied from the single tests
+                                        /* groovylint-disable LineLength */
+                                        // not working: no found with the pattern
+                                        // '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit/checkout/results/python3-file-content-junit.xml'
+                                        // relative to '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit'
+                                        // pattern: "${checkout_dir}/${item.RESULT_CHECK_FILE_PATTERN}",
+                                        // not working: no found with the pattern 'results/python3-file-content-junit.xml'
+                                        // relative to '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit'
+                                        // pattern: "${item.RESULT_CHECK_FILE_PATTERN}",
+                                        // works best, only picks that single specific file
+                                        pattern: "checkout/${item.RESULT_CHECK_FILE_PATTERN}",
+                                        // works as well, but finds also files in sub sub directories
+                                        // pattern: "**/${item.RESULT_CHECK_FILE_PATTERN}",
+                                        /* groovylint-enable LineLength */
+                                        skipNoTestFiles: true,
+                                        stopProcessingIfError: true,
+                                    )
+                                ]
+                            );
+                        } catch (Exception exc) {
+                            print("ERROR: ran into exception while running xunit() for ${item.NAME}: ${exc}");
                         }
                     }
                 }

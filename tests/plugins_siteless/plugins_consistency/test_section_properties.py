@@ -180,6 +180,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
     }
 
     known_offenders = {
+        ".1.0.8802.1.1.2.1.4.1.1.4.": {"inv_lldp_cache"},
         ".1.3.6.1.2.1.2.2.1.*": {"if", "inv_if"},
         ".1.3.6.1.2.1.25.1.1.0": {"hr_cpu", "hr_fs", "hr_ps"},
         ".1.3.6.1.2.1.31.1.1.1.6.*": {"if64", "if64adm"},

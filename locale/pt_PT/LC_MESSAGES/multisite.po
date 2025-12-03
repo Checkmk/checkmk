@@ -22774,6 +22774,10 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Activar a remoção automática do anfitrião"
 
+#, fuzzy
+msgid "Enable compatibility mode"
+msgstr "Compatibilidade"
+
 msgid "Enable controller"
 msgstr "Activar o controlador"
 
@@ -22894,6 +22898,14 @@ msgstr ""
 
 msgid "Enable this ntopng instance"
 msgstr "Habilite esta instância superior"
+
+msgid ""
+"Enable this option if you encounter TLS connection failures with this check "
+"while other tools like cURL or the legacy check_http succeed. The default "
+"TLS backend (rustls) is more restrictive and strictly adheres to TLS "
+"standards. Enabling compatibility mode switches to a less restrictive TLS "
+"backend (native-tls) that behaves similarly to cURL and other common tools."
+msgstr ""
 
 msgid ""
 "Enable this option if you want to uninstall the legacy agent after the new "
@@ -23140,6 +23152,11 @@ msgstr "Aplicar a versão Python 2"
 
 msgid "Enforce Python 3 version"
 msgstr "Aplicar a versão Python 3"
+
+msgid ""
+"Enforce TLS 1.3 is not supported in compatibility mode. Please select a "
+"lower minimum TLS version or disable compatibility mode."
+msgstr ""
 
 #, fuzzy
 msgid "Enforce TLS v1.2"

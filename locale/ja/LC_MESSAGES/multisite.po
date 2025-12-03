@@ -21444,6 +21444,10 @@ msgstr "自動ホストキー受け入れを有効にする (OpenSSH version >= 
 msgid "Enable automatic host removal"
 msgstr "ホストの自動削除を有効化"
 
+#, fuzzy
+msgid "Enable compatibility mode"
+msgstr "互換性"
+
 msgid "Enable controller"
 msgstr "コントローラを有効化"
 
@@ -21557,6 +21561,14 @@ msgstr ""
 
 msgid "Enable this ntopng instance"
 msgstr "このntopngインスタンスを有効にします"
+
+msgid ""
+"Enable this option if you encounter TLS connection failures with this check "
+"while other tools like cURL or the legacy check_http succeed. The default "
+"TLS backend (rustls) is more restrictive and strictly adheres to TLS "
+"standards. Enabling compatibility mode switches to a less restrictive TLS "
+"backend (native-tls) that behaves similarly to cURL and other common tools."
+msgstr ""
 
 msgid ""
 "Enable this option if you want to uninstall the legacy agent after the new "
@@ -21794,6 +21806,11 @@ msgstr "Python2バージョンを適用する"
 
 msgid "Enforce Python 3 version"
 msgstr "Python3バージョンを適用する"
+
+msgid ""
+"Enforce TLS 1.3 is not supported in compatibility mode. Please select a "
+"lower minimum TLS version or disable compatibility mode."
+msgstr ""
 
 msgid "Enforce TLS v1.2"
 msgstr "TLS v1.2の施行"

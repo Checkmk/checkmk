@@ -10,7 +10,6 @@
 from collections.abc import Mapping, Sequence
 from typing import Final
 
-from cmk.ccc.version import Edition, edition
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -34,11 +33,10 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils.paths import omd_root
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_METRICS
 # in the azure special agent
-RAW_AZURE_SERVICES: Final = [
+_AZURE_SERVICES: Final = [
     ("users_count", Title("Users in Entra ID")),
     ("ad_connect", Title("Entra Connect Sync")),
     ("app_registrations", Title("App Registrations")),
@@ -66,29 +64,22 @@ RAW_AZURE_SERVICES: Final = [
     ("Microsoft.Network/azureFirewalls", Title("Azure Firewalls")),
 ]
 
-NONFREEED_AZURE_SERVICES: Final = [
-    ("Microsoft.RecoveryServices/vaults", Title("Recovery Services Vault")),
-    ("Microsoft.Network/applicationGateways", Title("Application Gateway")),
-    ("Microsoft.Cache/Redis", Title("Redis Caches")),
-    ("Microsoft.Network/natGateways", Title("NAT Gateways")),
-    ("Microsoft.DocumentDB/databaseAccounts", Title("CosmosDb")),
-]
+try:
+    from .nonfree.ultimate.azure_services import NONFREEED_AZURE_SERVICES
+
+    _AZURE_SERVICES.extend(NONFREEED_AZURE_SERVICES)
+except ImportError:
+    pass
 
 
 def _azure_service_name_to_valid_formspec(azure_service_name: str) -> str:
     return azure_service_name.replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
 
 
-def get_azure_services() -> Sequence[tuple[str, Title]]:
-    if edition(omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD):
-        return RAW_AZURE_SERVICES + NONFREEED_AZURE_SERVICES
-    return RAW_AZURE_SERVICES
-
-
 def get_azure_service_prefill() -> list[str]:
     return [
         _azure_service_name_to_valid_formspec(s[0])
-        for s in get_azure_services()
+        for s in _AZURE_SERVICES
         if s[0] not in {"users_count", "ad_connect", "app_registrations"}
     ]
 
@@ -99,7 +90,7 @@ def get_azure_services_elements() -> Sequence[MultipleChoiceElement]:
             name=_azure_service_name_to_valid_formspec(service_id),
             title=service_name,
         )
-        for service_id, service_name in get_azure_services()
+        for service_id, service_name in _AZURE_SERVICES
     ]
 
 

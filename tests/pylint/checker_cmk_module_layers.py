@@ -198,11 +198,9 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     ),
     "azure_v2": (
         "cmk.agent_based.v1",  # FIXME
-        "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation
         "cmk.plugins.lib",  # ?
         "cmk.utils.http_proxy_config",
-        "cmk.utils.paths",  # edition detection
     ),
     "checkmk": (
         "cmk.agent_based.v1",  # FIXME
@@ -389,7 +387,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.servicename",
         "cmk.utils.unixsocket_http",
     ),
-    Component("cmk.bakery"): _allow(),  # only allow itself, this is the future :-)
+    # only allow itself, this is the future :-)
+    Component("cmk.bakery"): _allow(),
     Component("cmk.base.api.bakery"): _allow(
         "cmk.bakery",
         "cmk.ccc",
@@ -812,7 +811,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             "cmk.gui.nonfree.ultimatemt",
         ),
     ),
-    Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),  # should become a package
+    # should become a package
+    Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),
     Component("cmk.inventory"): _allow(
         *PACKAGE_CCC,
     ),

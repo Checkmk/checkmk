@@ -5,10 +5,6 @@
 /// distro-package as well as source-package jobs need agent updater binaries
 /// built the same way.
 /// This file gathers the magic to accomplish this, in orde to make it re-usable
-///
-/// Please note that the content in here badly written and full of hard-coded
-/// values which should not be here. If that gets on `master`, it should be gotten
-/// rid of as soon as possible
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 

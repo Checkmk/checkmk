@@ -20,6 +20,7 @@ import {
   type UnifiedSearchResultResponse
 } from '@/unified-search/lib/providers/unified'
 import { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import type { UnifiedSearchError } from '@/unified-search/lib/unified-search'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
 import UnifiedSearchEmptyResults from './UnifiedSearchEmptyResults.vue'
@@ -86,6 +87,7 @@ const isFocused = (i: number): boolean => currentlySelected.value === i
 
 const props = defineProps<{
   result?: UnifiedSearchResultResponse | undefined
+  error?: UnifiedSearchError | undefined
 }>()
 
 immediateWatch(
@@ -103,7 +105,7 @@ onBeforeUnmount(() => {
 })
 
 function searchResultNotEmpty(): boolean {
-  return results.value.length > 0
+  return results.value && results.value.length > 0
 }
 </script>
 
@@ -143,7 +145,10 @@ function searchResultNotEmpty(): boolean {
       </ResultList>
     </CmkScrollContainer>
   </div>
-  <UnifiedSearchEmptyResults v-if="inited && !searchResultNotEmpty()"></UnifiedSearchEmptyResults>
+  <UnifiedSearchEmptyResults
+    v-if="(inited && !searchResultNotEmpty()) || error"
+    :error="error"
+  ></UnifiedSearchEmptyResults>
 </template>
 
 <style scoped>

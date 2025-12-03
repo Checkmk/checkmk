@@ -15,6 +15,7 @@ import ResultItem from '@/unified-search/components/result/ResultItem.vue'
 import ResultList from '@/unified-search/components/result/ResultList.vue'
 import type { SearchHistorySearchResult } from '@/unified-search/lib/providers/history'
 import type { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import { UnifiedSearchError } from '@/unified-search/lib/unified-search'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
@@ -89,7 +90,7 @@ immediateWatch(
   async ({ newHistoryResult }) => {
     if (newHistoryResult) {
       const res = await newHistoryResult.result
-      if (res) {
+      if (!(res instanceof UnifiedSearchError)) {
         recentlyViewed.value = res.entries.slice(0, maxRecentlyViewed)
         recentlySearches.value = res.queries.slice(0, maxRecentlySearched)
         return

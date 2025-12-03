@@ -17,7 +17,7 @@ export interface LegacySearchResult {
 
 export interface SearchProviderResult<T> {
   provider: string
-  result: Promise<T>
+  result: Promise<UnifiedSearchError | T>
 }
 
 export class UnifiedSearchResult {
@@ -35,6 +35,16 @@ export class UnifiedSearchResult {
 
   public getAll(): SearchProviderResult<unknown>[] {
     return this.results
+  }
+}
+
+export class UnifiedSearchError extends Error {
+  constructor(
+    public provider: string,
+    message: string
+  ) {
+    super(message)
+    this.name = 'UnifiedSearchError'
   }
 }
 
@@ -73,20 +83,14 @@ export abstract class SearchProvider {
 
   public initSearch<T>(
     query: UnifiedSearchQueryLike,
-    callback: (query: UnifiedSearchQueryLike) => Promise<T | Error>
-  ): Promise<T> {
+    callback: (query: UnifiedSearchQueryLike) => Promise<T | UnifiedSearchError>
+  ): Promise<T | UnifiedSearchError> {
     this.searchActive.value = true
     return new Promise((resolve) => {
       void callback(query)
-        .catch((e) => {
-          resolve(e)
-        })
-        .then((result) => {
-          resolve(result as T)
-        })
-        .finally(() => {
-          this.searchActive.value = false
-        })
+        .catch((e) => resolve(new UnifiedSearchError(this.id, (e as Error).message)))
+        .then((result) => resolve(result as T))
+        .finally(() => (this.searchActive.value = false))
     })
   }
 }

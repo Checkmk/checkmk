@@ -23,6 +23,7 @@ import { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import {
   type SearchProviderResult,
   UnifiedSearch,
+  UnifiedSearchError,
   type UnifiedSearchResult
 } from '@/unified-search/lib/unified-search'
 
@@ -81,9 +82,14 @@ search.onSearch((result?: UnifiedSearchResult) => {
   async function setSearchResults(uspr: SearchProviderResult<UnifiedSearchResultResponse>) {
     if (uspr) {
       waitForSearchResults.value = true
-      const usprRes = (await uspr.result) as UnifiedSearchResultResponse
-
-      searchResult.value = usprRes
+      const usprRes = await uspr.result
+      if (usprRes instanceof UnifiedSearchError) {
+        searchError.value = usprRes
+        searchResult.value = undefined
+      } else {
+        searchError.value = undefined
+        searchResult.value = usprRes as UnifiedSearchResultResponse
+      }
       waitForSearchResults.value = false
     } else {
       searchResult.value = undefined
@@ -105,6 +111,7 @@ search.onSearch((result?: UnifiedSearchResult) => {
 })
 
 const searchResult = ref<UnifiedSearchResultResponse>()
+const searchError = ref<UnifiedSearchError>()
 const historyResult = ref<SearchHistorySearchResult>()
 const waitForSearchResults = ref<boolean>(true)
 const searchUtils = initSearchUtils()
@@ -142,10 +149,11 @@ searchUtils.shortCuts.onEscape(() => {
 
 function showTabResults(): boolean {
   return (
-    typeof searchResult.value !== 'undefined' &&
-    (search.get('unified') as UnifiedSearchProvider).shouldExecuteSearch(
-      searchUtils.query.toQueryLike()
-    )
+    typeof searchError.value !== 'undefined' ||
+    (typeof searchResult.value !== 'undefined' &&
+      (search.get('unified') as UnifiedSearchProvider).shouldExecuteSearch(
+        searchUtils.query.toQueryLike()
+      ))
   )
 }
 
@@ -164,6 +172,7 @@ onMounted(() => {
     <UnifiedSearchTabResults
       v-if="!waitForSearchResults && showTabResults()"
       :result="searchResult"
+      :error="searchError"
     >
     </UnifiedSearchTabResults>
   </DefaultPopup>

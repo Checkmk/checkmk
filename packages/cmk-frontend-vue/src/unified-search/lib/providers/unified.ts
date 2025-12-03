@@ -6,7 +6,11 @@
 import type { CmkIconProps, SimpleIcons } from '@/components/CmkIcon'
 
 import type { LoadingTransition } from '@/loading-transition/loadingTransition'
-import { SearchProvider, type SearchProviderResult } from '@/unified-search/lib/unified-search'
+import {
+  SearchProvider,
+  type SearchProviderResult,
+  type UnifiedSearchError
+} from '@/unified-search/lib/unified-search'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchResultResponse>
@@ -60,12 +64,14 @@ export class UnifiedSearchProvider extends SearchProvider {
     return q.length >= this.minInputlength
   }
 
-  public async search(query: UnifiedSearchQueryLike): Promise<UnifiedSearchResultResponse> {
+  public async search(
+    query: UnifiedSearchQueryLike
+  ): Promise<UnifiedSearchResultResponse | UnifiedSearchError> {
     const { q, provider, sort } = this.renderQuery(query)
 
-    return this.getApi().get(
-      'ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort)
-    ) as Promise<UnifiedSearchResultResponse>
+    return this.getApi().get('ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort), {
+      exceptOnNonZeroResultCode: true
+    }) as Promise<UnifiedSearchResultResponse | UnifiedSearchError>
   }
 
   protected renderQuery(query: UnifiedSearchQueryLike): {

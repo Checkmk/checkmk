@@ -8,10 +8,12 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 
 import type { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import type { UnifiedSearchError } from '@/unified-search/lib/unified-search'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
 import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
@@ -19,6 +21,9 @@ import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 const maxRecentlyViewed = 5
 
 const { _t } = usei18n()
+
+defineProps<{ error?: UnifiedSearchError | undefined }>()
+
 const searchUtils = getSearchUtils()
 const recentlyViewed = ref<HistoryEntry[]>(
   searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []
@@ -81,10 +86,17 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="unified-search-empty-results">
-    <div class="shruggy">{{ _t('¯\\_(ツ)_/¯') }}</div>
-    <div>
-      {{ _t('No results found for your search') }}
-    </div>
+    <CmkAlertBox v-if="error" class="unified-search-empty-results__error" variant="error">
+      <!-- eslint-disable-next-line vue/no-v-html -->
+      <div v-html="error.message"></div>
+    </CmkAlertBox>
+    <template v-else>
+      <div class="shruggy">{{ _t('¯\\_(ツ)_/¯') }}</div>
+      <div>
+        {{ _t('No results found for your search') }}
+      </div>
+    </template>
+
     <CmkButton ref="reset-button" class="reset-button" @click.stop="searchUtils.resetSearch()">
       <CmkIcon name="reload"></CmkIcon>
       {{ _t('Reset search') }}
@@ -101,6 +113,10 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  .unified-search-empty-results__error {
+    margin: var(--spacing-double);
+  }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .shruggy {

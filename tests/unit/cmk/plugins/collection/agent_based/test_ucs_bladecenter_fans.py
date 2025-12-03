@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.base.legacy_checks.ucs_bladecenter_fans import (
+from cmk.plugins.collection.agent_based.ucs_bladecenter_fans import (
     check_ucs_bladecenter_fans,
     discover_ucs_bladecenter_fans,
     parse_ucs_bladecenter_fans,

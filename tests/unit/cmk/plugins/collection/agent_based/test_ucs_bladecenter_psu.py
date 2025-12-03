@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.base.legacy_checks.ucs_bladecenter_psu import (
+from cmk.plugins.collection.agent_based.ucs_bladecenter_psu import (
     check_ucs_bladecenter_psu,
     discover_ucs_bladecenter_psu,
     parse_ucs_bladecenter_psu,

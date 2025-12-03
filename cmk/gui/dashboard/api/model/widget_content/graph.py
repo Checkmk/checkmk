@@ -242,7 +242,8 @@ def _validate_graph_template(value: str) -> str:
         original_exception = exc
 
     if (metric := value.removeprefix("METRIC_")) != value:
-        return RegistryConverter(metrics_from_api).validate(metric)
+        RegistryConverter(metrics_from_api).validate(metric)
+        return value
 
     raise original_exception
 

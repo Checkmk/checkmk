@@ -6,7 +6,7 @@
 import abc
 import collections
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from typing import override
 
 import cmk.ccc.version as cmk_version
@@ -34,9 +34,11 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuLink,
     PageMenuPopup,
     PageMenuSidePopup,
     PageMenuTopic,
+    PageMenuVue,
 )
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
@@ -377,7 +379,7 @@ class GUIViewRenderer(ABCViewRenderer):
         ]
 
         page_menu_dropdowns = (
-            self._page_menu_dropdown_commands()
+            self._page_menu_dropdown_commands(rows=rows)
             + self._page_menu_dropdowns_context(rows, user_permissions)
             + export_dropdown
         )
@@ -398,9 +400,11 @@ class GUIViewRenderer(ABCViewRenderer):
         if should_show_command_form(self.view.datasource):
             _add_command_doc_references(menu)
 
+        menu = self._extend_dropdown_with_teleported_commands(menu, rows)
+
         return menu
 
-    def _page_menu_dropdown_commands(self) -> list[PageMenuDropdown]:
+    def _page_menu_dropdown_commands(self, rows: Rows) -> list[PageMenuDropdown]:
         if not display_options.enabled(display_options.C):
             return []
 
@@ -411,7 +415,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 topics=[
                     PageMenuTopic(
                         title=_("On selected objects"),
-                        entries=list(self._page_menu_entries_selected_objects()),
+                        entries=list(self._page_menu_entries_selected_objects(rows=rows)),
                     ),
                     make_checkbox_selection_topic(
                         "view-%s" % self.view.spec["name"],
@@ -421,36 +425,50 @@ class GUIViewRenderer(ABCViewRenderer):
             )
         ]
 
-    def _page_menu_entries_selected_objects(self) -> Iterator[PageMenuEntry]:
+    def _get_page_menu_entry_by_command(
+        self, info_name: InfoName, command: Command, rows: Rows
+    ) -> PageMenuEntry:
+        item: PageMenuPopup | PageMenuVue | PageMenuLink
+        if vue_item := command.get_vue_page_menu(user=user, rows=rows):
+            item = vue_item
+        else:
+            item = (
+                PageMenuPopup(self._render_command_form(info_name, command))
+                if command.show_command_form
+                else make_simple_link(
+                    makeuri(
+                        request,
+                        [
+                            ("_transid", str(transactions.get())),
+                            ("_do_actions", "yes"),
+                            (f"_{command.ident}", True),
+                        ],
+                    )
+                )
+            )
+
+        return PageMenuEntry(
+            title=str(command.title),
+            icon_name=command.icon_name,
+            item=item,
+            name="command_%s" % command.ident,
+            is_enabled=should_show_command_form(self.view.datasource),
+            is_show_more=command.is_show_more,
+            is_shortcut=command.is_shortcut,
+            is_suggested=command.is_suggested,
+            css_classes=["command"],
+        )
+
+    def _page_menu_entries_selected_objects(self, rows: Rows) -> Iterator[PageMenuEntry]:
         info_name: InfoName = self.view.datasource.infos[0]
         by_group = get_command_groups(info_name)
 
         for _group_class, commands in sorted(by_group.items(), key=lambda x: x[0]().sort_index):
+            if _group_class().teleport_to_menu:
+                continue
+
             for command in commands:
-                yield PageMenuEntry(
-                    title=str(command.title),
-                    icon_name=command.icon_name,
-                    item=(
-                        PageMenuPopup(self._render_command_form(info_name, command))
-                        if command.show_command_form
-                        else make_simple_link(
-                            makeuri(
-                                request,
-                                [
-                                    ("_transid", str(transactions.get())),
-                                    ("_do_actions", "yes"),
-                                    (f"_{command.ident}", True),
-                                ],
-                            )
-                        )
-                    ),
-                    name="command_%s" % command.ident,
-                    is_enabled=should_show_command_form(self.view.datasource),
-                    is_show_more=command.is_show_more,
-                    is_shortcut=command.is_shortcut,
-                    is_suggested=command.is_suggested,
-                    css_classes=["command"],
-                )
+                yield self._get_page_menu_entry_by_command(info_name, command, rows)
 
     def _page_menu_dropdowns_context(
         self, rows: Rows, user_permissions: UserPermissions
@@ -701,6 +719,37 @@ class GUIViewRenderer(ABCViewRenderer):
         # menu.add_youtube_reference(title=_("Episode 4: Monitoring Windows in Checkmk"),
         #                           youtube_ref=YouTubeReference.MONITORING_WINDOWS)
         pass
+
+    def _extend_dropdown_with_teleported_commands(self, menu: PageMenu, rows: Rows) -> PageMenu:
+        info_name: InfoName = self.view.datasource.infos[0]
+        by_group = get_command_groups(info_name)
+
+        for _group_class, commands in sorted(by_group.items(), key=lambda x: x[0]().sort_index):
+            group = _group_class()
+
+            if not group.teleport_to_menu:
+                continue
+
+            dropdown = menu[group.teleport_to_menu]
+
+            dropdown.topics.insert(
+                group.teleport_menu_index,
+                PageMenuTopic(
+                    title=group.title,
+                    entries=list(self._get_teleported_command_items(info_name, commands, rows)),
+                ),
+            )
+
+        return menu
+
+    def _get_teleported_command_items(
+        self,
+        info_name: InfoName,
+        commands: Iterable[Command],
+        rows: Rows,
+    ) -> Iterator[PageMenuEntry]:
+        for command in commands:
+            yield self._get_page_menu_entry_by_command(info_name, command, rows)
 
 
 def _add_command_doc_references(menu: PageMenu) -> None:

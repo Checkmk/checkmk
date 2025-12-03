@@ -26,6 +26,18 @@ class CommandGroup(abc.ABC):
     def sort_index(self) -> int:
         raise NotImplementedError()
 
+    @property
+    def teleport_to_menu(self) -> str | None:
+        return None
+
+    @property
+    def teleport_menu_index(self) -> int:
+        return 0
+
+    @property
+    def teleport_menu_fallback_title(self) -> str | None:
+        return None
+
 
 class CommandGroupRegistry(Registry[type[CommandGroup]]):
     def plugin_name(self, instance: type[CommandGroup]) -> str:

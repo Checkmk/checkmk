@@ -61,3 +61,16 @@ def update_oauth2_connection(
         raise KeyError(f"OAuth2 connection with ident '{ident}' does not exist")
     entries[ident] = details
     oauth2_connections_config_file.save(entries, pprint_value)
+
+
+def delete_oauth2_connection(
+    ident: str,
+    *,
+    pprint_value: bool,
+) -> None:
+    oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
+    entries = oauth2_connections_config_file.load_for_modification()
+    if ident not in entries:
+        raise KeyError(f"OAuth2 connection with ident '{ident}' does not exist")
+    del entries[ident]
+    oauth2_connections_config_file.save(entries, pprint_value)

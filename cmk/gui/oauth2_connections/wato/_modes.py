@@ -10,6 +10,7 @@ from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import RawDiskData, serialize_data_for_frontend
 from cmk.gui.form_specs.unstable import (
     SingleChoiceElementExtended,
@@ -20,17 +21,24 @@ from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.oauth2_connections.watolib.store import OAuth2Connection, OAuth2ConnectionsConfigFile
+from cmk.gui.oauth2_connections.watolib.store import (
+    delete_oauth2_connection,
+    load_oauth2_connections,
+    OAuth2Connection,
+    OAuth2ConnectionsConfigFile,
+)
 from cmk.gui.page_menu import (
     PageMenu,
 )
 from cmk.gui.table import Table
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.passwords import remove_password
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -176,6 +184,43 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     def _show_entry_cells(self, table: Table, ident: str, entry: OAuth2Connection) -> None:
         table.cell(_("ID"), ident)
         table.cell(_("Title"), entry["title"])
+
+    @override
+    def action(self, config: Config) -> ActionResult:
+        if not transactions.transaction_valid():
+            return None
+
+        action_var = request.get_str_input("_action")
+        if action_var is None:
+            return None
+
+        if not transactions.check_transaction():
+            return redirect(mode_url(self._mode_type.list_mode_name()))
+
+        ident = request.get_ascii_input("_delete")
+        entries = load_oauth2_connections()
+        if ident not in entries:
+            raise MKUserError(
+                "_delete", _("This %s does not exist.") % self._mode_type.name_singular()
+            )
+
+        remove_password(
+            entries[ident]["client_secret_reference"],
+            user_id=None,
+            pprint_value=False,
+            use_git=True,
+        )
+        remove_password(
+            entries[ident]["access_token_reference"], user_id=None, pprint_value=False, use_git=True
+        )
+        remove_password(
+            entries[ident]["refresh_token_reference"],
+            user_id=None,
+            pprint_value=False,
+            use_git=True,
+        )
+        delete_oauth2_connection(ident, pprint_value=False)
+        return redirect(mode_url(self._mode_type.list_mode_name()))
 
 
 class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):

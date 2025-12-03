@@ -2303,6 +2303,80 @@ class ABCEditRuleMode(WatoMode):
             [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))]
         )
 
+    def _get_rule_options_from_catalog_value(self, raw_value: object) -> RuleOptions:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+        raw_properties = raw_value["properties"]
+        return RuleOptions(
+            description=raw_properties["description"],
+            comment=raw_properties["comment"],
+            docu_url=raw_properties["docu_url"],
+            disabled=raw_properties["disabled"],
+        )
+
+    def _get_rule_conditions_from_catalog_value(self, raw_value: object) -> RuleConditions:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+
+        cond_type, raw_conditions = raw_value["conditions"]["type"]
+        match cond_type:
+            case "predefined":
+                store = PredefinedConditionStore()
+                store_entries = store.filter_usable_entries(store.load_for_reading())
+                return RuleConditions(**store_entries[raw_conditions]["conditions"])
+            case "explicit":
+                return RuleConditions(
+                    host_folder=raw_conditions["folder_path"],
+                    host_tags=raw_conditions.get("host_tags"),
+                    host_label_groups=raw_conditions.get("host_label_groups"),
+                    host_name=_parse_explicit_hosts_or_services_for_conditions(
+                        raw_conditions.get("explicit_hosts")
+                    ),
+                    service_description=_parse_explicit_hosts_or_services_for_conditions(
+                        raw_conditions.get("explicit_services")
+                    ),
+                    service_label_groups=raw_conditions.get("service_label_groups"),
+                )
+            case _:
+                raise ValueError(cond_type)
+
+    def _validate_and_get_rule_values_from_vars_backend(
+        self, *, properties_catalog: Catalog, conditions_catalog: Catalog
+    ) -> _RuleValuesFromVars:
+        value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
+        self._ruleset.rulespec.valuespec.validate_value(value, "ve")
+        return _RuleValuesFromVars(
+            self._get_rule_options_from_catalog_value(
+                parse_data_from_field_id(properties_catalog, "_vue_edit_rule_properties")
+            ),
+            value,
+            self._get_rule_conditions_from_catalog_value(
+                parse_data_from_field_id(conditions_catalog, "_vue_edit_rule_conditions")
+            ),
+        )
+
+    def _get_rule_value_from_catalog_value(self, raw_value: object) -> object:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+        return raw_value["value"]["value"]
+
+    def _validate_and_get_rule_values_from_vars_frontend(
+        self, *, catalog: Catalog
+    ) -> _RuleValuesFromVars:
+        catalog_value = read_data_from_frontend("_vue_edit_rule")
+        if validation_errors := validate_value_from_frontend(catalog, catalog_value):
+            # Persist data to re-populate the form on early out
+            self._failed_frontend_data = catalog_value
+            process_validation_errors(list(validation_errors))
+        disk_value = get_visitor(
+            catalog, VisitorOptions(migrate_values=False, mask_values=False)
+        ).to_disk(catalog_value)
+        return _RuleValuesFromVars(
+            self._get_rule_options_from_catalog_value(disk_value),
+            self._get_rule_value_from_catalog_value(disk_value),
+            self._get_rule_conditions_from_catalog_value(disk_value),
+        )
+
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
 
@@ -2381,48 +2455,6 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _get_rule_options_from_catalog_value(self, raw_value: object) -> RuleOptions:
-        if not isinstance(raw_value, dict):
-            raise TypeError(raw_value)
-        raw_properties = raw_value["properties"]
-        return RuleOptions(
-            description=raw_properties["description"],
-            comment=raw_properties["comment"],
-            docu_url=raw_properties["docu_url"],
-            disabled=raw_properties["disabled"],
-        )
-
-    def _get_rule_value_from_catalog_value(self, raw_value: object) -> object:
-        if not isinstance(raw_value, dict):
-            raise TypeError(raw_value)
-        return raw_value["value"]["value"]
-
-    def _get_rule_conditions_from_catalog_value(self, raw_value: object) -> RuleConditions:
-        if not isinstance(raw_value, dict):
-            raise TypeError(raw_value)
-
-        cond_type, raw_conditions = raw_value["conditions"]["type"]
-        match cond_type:
-            case "predefined":
-                store = PredefinedConditionStore()
-                store_entries = store.filter_usable_entries(store.load_for_reading())
-                return RuleConditions(**store_entries[raw_conditions]["conditions"])
-            case "explicit":
-                return RuleConditions(
-                    host_folder=raw_conditions["folder_path"],
-                    host_tags=raw_conditions.get("host_tags"),
-                    host_label_groups=raw_conditions.get("host_label_groups"),
-                    host_name=_parse_explicit_hosts_or_services_for_conditions(
-                        raw_conditions.get("explicit_hosts")
-                    ),
-                    service_description=_parse_explicit_hosts_or_services_for_conditions(
-                        raw_conditions.get("explicit_services")
-                    ),
-                    service_label_groups=raw_conditions.get("service_label_groups"),
-                )
-            case _:
-                raise ValueError(cond_type)
-
     def _get_rule_properties_from_rule(self) -> RawDiskData:
         return RawDiskData(
             {
@@ -2471,38 +2503,6 @@ class ABCEditRuleMode(WatoMode):
             raise TypeError(rule_conditions)
         return RawDiskData(
             {**rule_properties, **{"value": {"value": self._rule.value}}, **rule_conditions}
-        )
-
-    def _validate_and_get_rule_values_from_vars_backend(
-        self, *, properties_catalog: Catalog, conditions_catalog: Catalog
-    ) -> _RuleValuesFromVars:
-        value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
-        self._ruleset.rulespec.valuespec.validate_value(value, "ve")
-        return _RuleValuesFromVars(
-            self._get_rule_options_from_catalog_value(
-                parse_data_from_field_id(properties_catalog, "_vue_edit_rule_properties")
-            ),
-            value,
-            self._get_rule_conditions_from_catalog_value(
-                parse_data_from_field_id(conditions_catalog, "_vue_edit_rule_conditions")
-            ),
-        )
-
-    def _validate_and_get_rule_values_from_vars_frontend(
-        self, *, catalog: Catalog
-    ) -> _RuleValuesFromVars:
-        catalog_value = read_data_from_frontend("_vue_edit_rule")
-        if validation_errors := validate_value_from_frontend(catalog, catalog_value):
-            # Persist data to re-populate the form on early out
-            self._failed_frontend_data = catalog_value
-            process_validation_errors(list(validation_errors))
-        disk_value = get_visitor(
-            catalog, VisitorOptions(migrate_values=False, mask_values=False)
-        ).to_disk(catalog_value)
-        return _RuleValuesFromVars(
-            self._get_rule_options_from_catalog_value(disk_value),
-            self._get_rule_value_from_catalog_value(disk_value),
-            self._get_rule_conditions_from_catalog_value(disk_value),
         )
 
     @abc.abstractmethod

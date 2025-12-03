@@ -225,25 +225,6 @@ def _special_agents_azure_tag_based_config_subscriptions() -> List:
     )
 
 
-def _migrate_services_to_monitor(values: object) -> list[str]:
-    if isinstance(values, list):
-        valid_choices = {_azure_service_name_to_valid_formspec(s[0]) for s in get_azure_services()}
-        # migrate from names that contain / and . to valid formspec names
-        values_migrated = [_azure_service_name_to_valid_formspec(value) for value in values]
-        # silently drop values that are only valid in CCE if we're CEE now.
-        result = [value for value in valid_choices if value in values_migrated]
-        return result
-    raise TypeError(values)
-
-
-def _migrate_authority(value: object) -> str:
-    if value == "global":
-        return "global_"
-    if isinstance(value, str):
-        return value
-    raise TypeError(value)
-
-
 def configuration_authentication() -> Mapping[str, DictElement]:
     return {
         "subscription": DictElement(
@@ -305,7 +286,6 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         "authority": DictElement(
             parameter_form=SingleChoice(
                 title=Title("Authority"),
-                migrate=_migrate_authority,
                 elements=[
                     SingleChoiceElement(name="global_", title=Title("Global")),
                     SingleChoiceElement(name="china", title=Title("China")),
@@ -336,7 +316,6 @@ def configuration_services() -> Mapping[str, DictElement]:
         "services": DictElement(
             parameter_form=MultipleChoice(
                 title=Title("Azure services to monitor"),
-                migrate=_migrate_services_to_monitor,
                 elements=get_azure_services_elements(),
                 # users_count, ad_connect and app_registration are disabled by default because they
                 # require special permissions on the Azure app (Graph API permissions + admin consent).

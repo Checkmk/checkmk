@@ -127,6 +127,8 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	tar -c -C $(REPO_PATH)/agents \
 	    $(CHECK_MK_TAROPTS) \
 	    --exclude __init__.py \
+	    --exclude BUILD \
+	    --exclude *.bazel \
 	    --exclude check_mk_agent.spec \
 	    --exclude special/lib \
 	    --exclude plugins/Makefile \

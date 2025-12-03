@@ -47,6 +47,15 @@ const refId = randomId()
 const dataRef = defineModel<OAuth2FormData>({ required: true })
 const resultCode = ref<string | null>(null)
 
+function buildRedirectUri(): string {
+  const baseUri = location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect
+
+  const url = new URL(baseUri)
+  url.searchParams.delete('clone')
+  url.searchParams.delete('ident')
+  return url.toString()
+}
+
 async function authorize(): Promise<string | null> {
   return new Promise((resolve) => {
     const authorityKey = dataRef.value.authority as keyof typeof props.authorityMapping
@@ -61,10 +70,7 @@ async function authorize(): Promise<string | null> {
       )
 
       url.searchParams.append('client_id', dataRef.value.client_id as string)
-      url.searchParams.append(
-        'redirect_uri',
-        location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect
-      )
+      url.searchParams.append('redirect_uri', buildRedirectUri())
       url.searchParams.append('response_type', 'code')
       url.searchParams.append('response_mode', 'query')
       url.searchParams.append('scope', '.default')
@@ -108,8 +114,7 @@ async function requestAndSaveAccessToken(): Promise<boolean> {
       const res = await api.requestAndSaveAccessToken({
         type: 'ms_graph_api',
         id: uuid(),
-        redirect_uri:
-          location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect,
+        redirect_uri: buildRedirectUri(),
         data: dataRef.value,
         code: resultCode.value
       })

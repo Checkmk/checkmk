@@ -163,7 +163,7 @@ class _AzureEntity(ABC):
         HASH_CHARS_TO_KEEP = 8
 
         unique_string = f"azure{''.join(uniqueness_keys)}"
-        hashed = hashlib.sha1(unique_string.encode("utf-8"), usedforsecurity=False).hexdigest()[
+        hashed = hashlib.sha256(unique_string.encode("utf-8"), usedforsecurity=False).hexdigest()[
             -HASH_CHARS_TO_KEEP:
         ]
         return f"{self._entity_name}-{hashed}"

@@ -82,7 +82,9 @@ class RelayField(fields.String):
 
         # FYI: The pylint suppression was chosen to keep the logic of this method clear.
         # pylint: disable=cmk-module-layer-violation
-        from cmk.gui.nonfree.ultimate.relay.watolib.relay_config import validate_relay_id
+        from cmk.gui.nonfree.ultimate.relay.watolib.relay_config import (  # type: ignore[import-not-found,unused-ignore]
+            validate_relay_id,
+        )
 
         if not validate_relay_id(value):
             raise self.make_error("no_such_relay")

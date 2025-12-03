@@ -72,6 +72,9 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         if not (tenant_id := data.get("tenant_id")):
             return {"status": "error", "message": f"Tenant ID missing in request data: {data}"}
 
+        if not (authority := data.get("authority")):
+            return {"status": "error", "message": f"Authority missing in request data: {data}"}
+
         client_secret = _parse_client_secret(client_secret_raw)
         post_data = data | {
             "scope": ".default offline_access",
@@ -81,7 +84,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             "client_secret": client_secret,
         }
         try:
-            match data.get("authority"):
+            match authority:
                 case "china":
                     res = requests.post(
                         url=f"https://login.chinacloudapi.cn/{tenant_id}/oauth2/v2.0/token",
@@ -137,6 +140,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             title,
             client_id,
             tenant_id,
+            authority,
         )
 
         return {"status": "success"}
@@ -185,6 +189,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         title: str,
         client_id: str,
         tenant_id: str,
+        authority: str,
     ) -> None:
         save_oauth2_connection(
             ident=ident,
@@ -195,6 +200,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
                 client_secret_reference=f"{ident}_client_secret",
                 refresh_token_reference=f"{ident}_refresh_token",
                 tenant_id=tenant_id,
+                authority=authority,
             ),
             pprint_value=True,
         )

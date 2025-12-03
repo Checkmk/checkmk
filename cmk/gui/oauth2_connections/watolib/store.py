@@ -20,6 +20,7 @@ class OAuth2Connection(TypedDict):
     refresh_token_reference: str
     client_id: str
     tenant_id: str
+    authority: str
 
 
 class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):

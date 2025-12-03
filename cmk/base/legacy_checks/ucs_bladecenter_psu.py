@@ -3,28 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
+from cmk.plugins.lib.temperature import (
+    aggregate_temperature_results,
+    check_temperature,
+    TemperatureSensor,
+    TempParamDict,
+)
 from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
-
-check_info = {}
 
 # <<<ucs_bladecenter_psu:sep(9)>>>
 # equipmentPsuInputStats  Dn sys/switch-A/psu-2/input-stats       Current 0.656250        PowerAvg 153.335938     Voltage 231.500000
 # equipmentPsuStats       Dn sys/chassis-1/psu-1/stats    AmbientTemp 17.000000   Output12vAvg 12.008000  Output3v3Avg 3.336000
 
+type Section = MutableMapping[str, MutableMapping[str, str]]
 
-def ucs_bladecenter_psu_parse(string_table):
+
+def parse_ucs_bladecenter_psu(string_table: StringTable) -> Section:
     data = ucs_bladecenter.generic_parse(string_table)
-    psu: dict[str, dict] = {}
+    psu: Section = {}
 
-    def get_item_name(key):
+    def get_item_name(key: str) -> str:
         tokens = key.split("/")
         tokens[1] = tokens[1].replace("psu-", " Module ")
         tokens = [x[0].upper() + x[1:] for x in tokens]
@@ -42,6 +56,12 @@ def ucs_bladecenter_psu_parse(string_table):
     return psu
 
 
+agent_section_ucs_bladecenter_psu = AgentSection(
+    name="ucs_bladecenter_psu",
+    parse_function=parse_ucs_bladecenter_psu,
+)
+
+
 # .
 #   .--Chassis Volt.-------------------------------------------------------.
 #   |         ____ _                   _      __     __    _ _             |
@@ -53,47 +73,47 @@ def ucs_bladecenter_psu_parse(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ucs_bladecenter_psu(parsed):
-    for key in parsed:
+def discover_ucs_bladecenter_psu(section: Section) -> DiscoveryResult:
+    for key in section:
         if key.startswith("Chassis"):
-            yield key, {}
+            yield Service(item=key)
 
 
-def check_ucs_bladecenter_psu(item, params, parsed):
-    if not (psu := parsed.get(item)):
+def check_ucs_bladecenter_psu(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (psu := section.get(item)):
         return
     value_3v = float(psu["Output3v3Avg"])
     value_12v = float(psu["Output12vAvg"])
 
-    levels_3v = params["levels_3v_upper"] + params["levels_3v_lower"]
-    levels_12v = params["levels_12v_upper"] + params["levels_12v_lower"]
-
     power_save_mode = value_3v == 0.0 and value_12v == 0.0
 
-    yield check_levels(
+    yield from check_levels_v1(
         value_3v,
-        "3_3v",
-        None if power_save_mode else levels_3v,
-        human_readable_func=lambda v: "%.2f V" % v,
-        infoname="Output 3.3V-Average",
+        metric_name="3_3v",
+        levels_upper=None if power_save_mode else params["levels_3v_upper"],
+        levels_lower=None if power_save_mode else params["levels_3v_lower"],
+        render_func=lambda v: "%.2f V" % v,
+        label="Output 3.3V-Average",
     )
-    yield check_levels(
+    yield from check_levels_v1(
         value_12v,
-        "12v",
-        None if power_save_mode else levels_12v,
-        human_readable_func=lambda v: "%.2f V" % v,
-        infoname="Output 12V-Average",
+        metric_name="12v",
+        levels_upper=None if power_save_mode else params["levels_12v_upper"],
+        levels_lower=None if power_save_mode else params["levels_12v_lower"],
+        render_func=lambda v: "%.2f V" % v,
+        label="Output 12V-Average",
     )
 
     if power_save_mode:
-        yield 0, "Assuming 'Power Save Mode'"
+        yield Result(state=State.OK, summary="Assuming 'Power Save Mode'")
 
 
-check_info["ucs_bladecenter_psu"] = LegacyCheckDefinition(
+check_plugin_ucs_bladecenter_psu = CheckPlugin(
     name="ucs_bladecenter_psu",
-    parse_function=ucs_bladecenter_psu_parse,
     service_name="Voltage %s",
-    discovery_function=inventory_ucs_bladecenter_psu,
+    discovery_function=discover_ucs_bladecenter_psu,
     check_function=check_ucs_bladecenter_psu,
     check_ruleset_name="ucs_bladecenter_chassis_voltage",
     check_default_parameters={
@@ -115,34 +135,34 @@ check_info["ucs_bladecenter_psu"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ucs_bladecenter_psu_switch_power(parsed):
-    for key in parsed:
+def discover_ucs_bladecenter_psu_switch_power(section: Section) -> DiscoveryResult:
+    for key in section:
         if key.startswith("Switch"):
-            yield key, {}
+            yield Service(item=key)
 
 
-def check_ucs_bladecenter_psu_switch_power(item, params, parsed):
-    if not (psu := parsed.get(item)):
+def check_ucs_bladecenter_psu_switch_power(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (psu := section.get(item)):
         return
-    # Convert fields
-    KEY_MAP = {"Current": "current", "PowerAvg": "power", "Voltage": "voltage"}
 
-    psu_new = {}
-    for k, v in psu.items():
-        if k in KEY_MAP:
-            k, v = KEY_MAP[k], (float(v), None)
-        psu_new[k] = v
+    current = ReadingWithState(value=float(current)) if (current := psu.get("Current")) else None
+    power = ReadingWithState(value=float(power)) if (power := psu.get("PowerAvg")) else None
+    voltage = ReadingWithState(value=float(voltage)) if (voltage := psu.get("Voltage")) else None
 
-    yield from check_elphase(item, params, {item: psu_new})
+    if all(x is not None for x in (current, power, voltage)):
+        yield from check_elphase(params, ElPhase(current=current, power=power, voltage=voltage))
 
 
-check_info["ucs_bladecenter_psu.switch_power"] = LegacyCheckDefinition(
+check_plugin_ucs_bladecenter_psu_switch_power = CheckPlugin(
     name="ucs_bladecenter_psu_switch_power",
     service_name="Power Supply %s",
     sections=["ucs_bladecenter_psu"],
-    discovery_function=inventory_ucs_bladecenter_psu_switch_power,
+    discovery_function=discover_ucs_bladecenter_psu_switch_power,
     check_function=check_ucs_bladecenter_psu_switch_power,
     check_ruleset_name="el_inphase",
+    check_default_parameters={},
 )
 
 # .
@@ -156,27 +176,44 @@ check_info["ucs_bladecenter_psu.switch_power"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ucs_bladecenter_psu_chassis_temp(parsed):
-    for key, values in parsed.items():
+def discover_ucs_bladecenter_psu_chassis_temp(section: Section) -> DiscoveryResult:
+    for key, values in section.items():
         if key.startswith("Chassis") and values.get("AmbientTemp"):
-            yield "Ambient " + " ".join(key.split()[:2]), {}
+            yield Service(item="Ambient " + " ".join(key.split()[:2]))
 
 
-def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
+def _check_ucs_bladecenter_psu_chassis_temp(
+    item: str,
+    params: TempParamDict,
+    section: Section,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
     sensor_item = item[8:]  # drop "Ambient "
-    sensor_list: list[tuple[str, float, CheckTempKwargs]] = [
-        ("Module %s" % key.split()[-1], float(values.get("AmbientTemp")), {})
-        for key, values in sorted(parsed.items())
-        if key.startswith(sensor_item) and "AmbientTemp" in values
-    ]
-    yield from check_temperature_list(sensor_list, params)
+    sensor_list: list[TemperatureSensor] = []
+    for key, values in sorted(section.items()):
+        if not key.startswith(sensor_item) or "AmbientTemp" not in values:
+            continue
+        temp = float(values["AmbientTemp"])
+        sensor = TemperatureSensor(
+            id=f"Module {key.split()[-1]}",
+            temp=temp,
+            result=check_temperature(temp, params).reading,
+        )
+        sensor_list.append(sensor)
+    yield from aggregate_temperature_results(sensor_list, params, value_store)
 
 
-check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(
+def check_ucs_bladecenter_psu_chassis_temp(
+    item: str, params: TempParamDict, section: Section
+) -> CheckResult:
+    yield from _check_ucs_bladecenter_psu_chassis_temp(item, params, section, get_value_store())
+
+
+check_plugin_ucs_bladecenter_psu_chassis_temp = CheckPlugin(
     name="ucs_bladecenter_psu_chassis_temp",
     service_name="Temperature %s",
     sections=["ucs_bladecenter_psu"],
-    discovery_function=inventory_ucs_bladecenter_psu_chassis_temp,
+    discovery_function=discover_ucs_bladecenter_psu_chassis_temp,
     check_function=check_ucs_bladecenter_psu_chassis_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

@@ -11,11 +11,11 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.base.legacy_checks.ucs_bladecenter_psu import (
     check_ucs_bladecenter_psu,
-    inventory_ucs_bladecenter_psu,
-    ucs_bladecenter_psu_parse,
+    discover_ucs_bladecenter_psu,
+    parse_ucs_bladecenter_psu,
 )
 
 
@@ -53,16 +53,16 @@ from cmk.base.legacy_checks.ucs_bladecenter_psu import (
                     "Output3v3Avg 3.336000",
                 ],
             ],
-            [("Chassis 1 Module 1", {})],
+            [Service(item="Chassis 1 Module 1")],
         ),
     ],
 )
 def test_inventory_ucs_bladecenter_psu(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    info: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for ucs_bladecenter_psu check."""
-    parsed = ucs_bladecenter_psu_parse(info)
-    result = list(inventory_ucs_bladecenter_psu(parsed))
+    parsed = parse_ucs_bladecenter_psu(info)
+    result = list(discover_ucs_bladecenter_psu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 
@@ -108,8 +108,10 @@ def test_inventory_ucs_bladecenter_psu(
                 ],
             ],
             [
-                (0, "Output 3.3V-Average: 3.34 V", [("3_3v", 3.336, 3.4, 3.45)]),
-                (0, "Output 12V-Average: 12.01 V", [("12v", 12.008, 12.1, 12.2)]),
+                Result(state=State.OK, summary="Output 3.3V-Average: 3.34 V"),
+                Metric("3_3v", 3.336, levels=(3.4, 3.45)),
+                Result(state=State.OK, summary="Output 12V-Average: 12.01 V"),
+                Metric("12v", 12.008, levels=(12.1, 12.2)),
             ],
         ),
     ],
@@ -118,6 +120,6 @@ def test_check_ucs_bladecenter_psu(
     item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
 ) -> None:
     """Test check function for ucs_bladecenter_psu check."""
-    parsed = ucs_bladecenter_psu_parse(info)
+    parsed = parse_ucs_bladecenter_psu(info)
     result = list(check_ucs_bladecenter_psu(item, params, parsed))
     assert result == expected_results

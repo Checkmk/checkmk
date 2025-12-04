@@ -1835,7 +1835,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "1daa6242a14327f0285b7aa4a84542cb1fc4f3198a344f2920b7372f26801b59",
+          "@@//requirements_all_lock.txt": "4f5b1edeb00a32d09ddd84a3d526cc24ca48ae483d57c1c14590f2e7413eec14",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -5990,7 +5990,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "types-awscrt==0.29.1     --hash=sha256:545f100e17d7633aa1791f92a8a4716f8ee1fc7cc9ee98dd31676d6c5e07e733     --hash=sha256:f583bef3d42a307b3f3c02ef8d5d49fbec04e02bf3aacd3ada3953213c9150a7"
+              "requirement": "types-awscrt==0.29.2     --hash=sha256:3f5d1e6c99b0b551af6365f9c04d8ce2effbcfe18bb719a34501efea279ae7bb     --hash=sha256:41e01e14d646877bd310e7e3c49ff193f8361480b9568e97b1639775009bbefa"
             }
           },
           "cmk_requirements_312_types_pillow": {

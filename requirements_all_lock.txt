@@ -4544,9 +4544,9 @@ twine==6.0.1 \
     --hash=sha256:36158b09df5406e1c9c1fb8edb24fc2be387709443e7376689b938531582ee27 \
     --hash=sha256:9c6025b203b51521d53e200f4a08b116dee7500a38591668c6a6033117bdc218
     # via -r requirements_dev.txt
-types-awscrt==0.29.1 \
-    --hash=sha256:545f100e17d7633aa1791f92a8a4716f8ee1fc7cc9ee98dd31676d6c5e07e733 \
-    --hash=sha256:f583bef3d42a307b3f3c02ef8d5d49fbec04e02bf3aacd3ada3953213c9150a7
+types-awscrt==0.29.2 \
+    --hash=sha256:3f5d1e6c99b0b551af6365f9c04d8ce2effbcfe18bb719a34501efea279ae7bb \
+    --hash=sha256:41e01e14d646877bd310e7e3c49ff193f8361480b9568e97b1639775009bbefa
     # via botocore-stubs
 types-beautifulsoup4==4.12.0.20241020 \
     --hash=sha256:158370d08d0cd448bd11b132a50ff5279237a5d4b5837beba074de152a513059 \

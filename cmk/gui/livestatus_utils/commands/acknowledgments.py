@@ -21,10 +21,10 @@ from cmk.livestatus_client import (
     LivestatusClient,
     RemoveHostAcknowledgement,
     RemoveServiceAcknowledgement,
+    tables,
 )
-from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
-from cmk.utils.livestatus_helpers.tables import Hosts
+from cmk.livestatus_client.queries import detailed_connection, Query
+from cmk.livestatus_client.tables import Hosts
 
 
 def _acknowledge_problem(

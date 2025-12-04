@@ -11,13 +11,13 @@ from uuid import UUID, uuid4
 
 import cmk.ccc.version as cmk_version
 from cmk.livestatus_client import LocalConnection
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables import Status
 from cmk.product_telemetry.exceptions import (
     SiteInfoInvalidError,
     SiteInfoItemsInvalidError,
 )
 from cmk.product_telemetry.schema import SiteInfo, TelemetrySiteId
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Status
 
 
 def collect(cmk_config_dir: Path, var_dir: Path, omd_root: Path) -> SiteInfo:

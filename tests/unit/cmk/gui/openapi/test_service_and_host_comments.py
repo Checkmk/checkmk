@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 from faker import Faker
 
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 DOMAIN_TYPE = "comment"

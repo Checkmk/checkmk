@@ -17,7 +17,7 @@ from cmk.gui.config import load_config
 from cmk.gui.livestatus_utils.commands import force_schedule
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="check_time")

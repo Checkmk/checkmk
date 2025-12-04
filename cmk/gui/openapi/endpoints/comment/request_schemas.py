@@ -10,7 +10,7 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.utils.livestatus_helpers import tables
+from cmk.livestatus_client import tables
 
 
 class CreateCommentBase(BaseSchema):

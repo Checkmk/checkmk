@@ -46,7 +46,7 @@ from cmk.gui.wato._omd_configuration import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(scope="function")

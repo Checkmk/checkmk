@@ -27,8 +27,8 @@ from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host, strip_hostname_whitespace_chars
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.userroles import role_exists, RoleID
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables import Hostgroups, Servicegroups
 from cmk.utils.tags import TagGroupID, TagID
 
 

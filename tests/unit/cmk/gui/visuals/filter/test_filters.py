@@ -24,8 +24,8 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
 from cmk.gui.visuals.filter import filter_registry
 from cmk.inventory.structured_data import deserialize_tree
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.unit.cmk.web_test_app import SetConfig
 
 

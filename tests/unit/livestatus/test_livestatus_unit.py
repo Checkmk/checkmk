@@ -18,8 +18,8 @@ import livestatus
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.certs import SiteCA
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 # Override top level fixture to make livestatus connects possible here

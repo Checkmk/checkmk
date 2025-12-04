@@ -106,9 +106,9 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils.labels import Labels
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.tags import TagGroupID, TagID
 
 from ._bulk_actions import get_hostnames_from_checkboxes

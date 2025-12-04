@@ -17,7 +17,7 @@ from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.common.repo import (
     is_cloud_repo,
     is_pro_repo,

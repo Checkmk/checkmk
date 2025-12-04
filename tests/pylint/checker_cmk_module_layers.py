@@ -277,6 +277,8 @@ PACKAGE_TRACE = ("cmk.trace",)
 
 PACKAGE_METRIC_BACKEND = ("cmk.metric_backend",)
 
+PACKAGE_LIVESTATUS_CLIENT = ("cmk.livestatus_client",)
+
 PACKAGE_RELAY_PROTOCOLS = ("cmk.relay_protocols",)
 
 CLEAN_UTILS_MODULES = (
@@ -1285,6 +1287,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_WERKS,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CRYPTO,
+        *PACKAGE_LIVESTATUS_CLIENT,
         "cmk.piggyback",
         "cmk.utils",
     ),
@@ -1350,6 +1353,7 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
         "cmk.utils",
     ),
     ModulePath("bin/cmk-piggyback"): _allow(
+        *PACKAGE_LIVESTATUS_CLIENT,
         "cmk.piggyback",
         "cmk.utils",
     ),

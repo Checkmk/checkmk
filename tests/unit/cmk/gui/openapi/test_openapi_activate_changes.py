@@ -10,8 +10,8 @@ from pytest_mock import MockerFixture
 import cmk.ccc.resulttype as result
 from cmk.ccc.version import edition
 from cmk.gui.watolib import activate_changes
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.testlib.unit.utils import reset_registries
 

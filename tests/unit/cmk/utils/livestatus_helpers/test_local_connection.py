@@ -5,7 +5,7 @@
 
 import livestatus
 
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def test_local_table_assoc(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:

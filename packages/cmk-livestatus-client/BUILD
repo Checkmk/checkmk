@@ -30,11 +30,18 @@ py_library(
         "cmk/livestatus_client/_api/__init__.py",
         "cmk/livestatus_client/_api/client.py",
         "cmk/livestatus_client/_api/commands.py",
-    ],
+        "cmk/livestatus_client/expressions.py",
+        "cmk/livestatus_client/queries.py",
+        "cmk/livestatus_client/testing.py",
+        "cmk/livestatus_client/types.py",
+    ] + glob([
+        "cmk/livestatus_client/tables/*.py",
+    ]),
     imports = ["."],
     deps = [
         ":livestatus-connection",
         "//packages/cmk-ccc:hostaddress",
+        requirement("jinja2"),
     ],
 )
 

@@ -2,20 +2,20 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.livestatus_client.types import Column, Table
 
 # fmt: off
 
 
-class Downtimes(Table):
-    __tablename__ = 'downtimes'
+class Comments(Table):
+    __tablename__ = 'comments'
 
     author = Column(
         'author',
         col_type='string',
-        description='The contact that scheduled the downtime',
+        description='The contact that entered the comment',
     )
-    """The contact that scheduled the downtime"""
+    """The contact that entered the comment"""
 
     comment = Column(
         'comment',
@@ -24,20 +24,6 @@ class Downtimes(Table):
     )
     """A comment text"""
 
-    duration = Column(
-        'duration',
-        col_type='int',
-        description='The duration of the downtime in seconds',
-    )
-    """The duration of the downtime in seconds"""
-
-    end_time = Column(
-        'end_time',
-        col_type='time',
-        description='The end time of the downtime as UNIX timestamp',
-    )
-    """The end time of the downtime as UNIX timestamp"""
-
     entry_time = Column(
         'entry_time',
         col_type='time',
@@ -45,12 +31,26 @@ class Downtimes(Table):
     )
     """The time the entry was made as UNIX timestamp"""
 
-    fixed = Column(
-        'fixed',
+    entry_type = Column(
+        'entry_type',
         col_type='int',
-        description='A 1 if the downtime is fixed, a 0 if it is flexible',
+        description='The type of the comment: 1 is user, 2 is downtime, 3 is flapping and 4 is acknowledgement',
     )
-    """A 1 if the downtime is fixed, a 0 if it is flexible"""
+    """The type of the comment: 1 is user, 2 is downtime, 3 is flapping and 4 is acknowledgement"""
+
+    expire_time = Column(
+        'expire_time',
+        col_type='time',
+        description='Time of expiry of this comment as a UNIX timestamp',
+    )
+    """Time of expiry of this comment as a UNIX timestamp"""
+
+    expires = Column(
+        'expires',
+        col_type='int',
+        description='Whether this comment expires',
+    )
+    """Whether this comment expires"""
 
     host_accept_passive_checks = Column(
         'host_accept_passive_checks',
@@ -993,16 +993,9 @@ class Downtimes(Table):
     id = Column(
         'id',
         col_type='int',
-        description='The id of the downtime',
+        description='The id of the comment',
     )
-    """The id of the downtime"""
-
-    is_pending = Column(
-        'is_pending',
-        col_type='int',
-        description='1 if the downtime is currently pending (not active), 0 if it is active',
-    )
-    """1 if the downtime is currently pending (not active), 0 if it is active"""
+    """The id of the comment"""
 
     is_service = Column(
         'is_service',
@@ -1011,19 +1004,12 @@ class Downtimes(Table):
     )
     """0, if this entry is for a host, 1 if it is for a service"""
 
-    origin = Column(
-        'origin',
+    persistent = Column(
+        'persistent',
         col_type='int',
-        description='A 0 if the downtime has been set by a command, a 1 if it has been configured by a rule',
+        description='Whether this comment is persistent (0/1)',
     )
-    """A 0 if the downtime has been set by a command, a 1 if it has been configured by a rule"""
-
-    recurring = Column(
-        'recurring',
-        col_type='int',
-        description='For recurring downtimes: 1: hourly, 2: daily, 3: weekly, 4: two-weekly, 5: four-weekly. Otherwise 0',
-    )
-    """For recurring downtimes: 1: hourly, 2: daily, 3: weekly, 4: two-weekly, 5: four-weekly. Otherwise 0"""
+    """Whether this comment is persistent (0/1)"""
 
     service_accept_passive_checks = Column(
         'service_accept_passive_checks',
@@ -1795,23 +1781,16 @@ class Downtimes(Table):
     )
     """A dictionary of the tags"""
 
-    start_time = Column(
-        'start_time',
-        col_type='time',
-        description='The start time of the downtime as UNIX timestamp',
-    )
-    """The start time of the downtime as UNIX timestamp"""
-
-    triggered_by = Column(
-        'triggered_by',
+    source = Column(
+        'source',
         col_type='int',
-        description='The ID of the downtime triggering this downtime or 0 if there is none',
+        description='The source of the comment (0 is internal and 1 is external)',
     )
-    """The ID of the downtime triggering this downtime or 0 if there is none"""
+    """The source of the comment (0 is internal and 1 is external)"""
 
     type = Column(
         'type',
         col_type='int',
-        description='1 for a service downtime, 2 for a host downtime',
+        description='The type of the comment: 1 is host, 2 is service',
     )
-    """1 for a service downtime, 2 for a host downtime"""
+    """The type of the comment: 1 is host, 2 is service"""

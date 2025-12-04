@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import SetConfig
 

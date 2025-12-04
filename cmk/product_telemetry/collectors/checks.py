@@ -8,12 +8,12 @@ import re
 from collections import defaultdict
 
 from cmk.livestatus_client import LocalConnection
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables import Services
 from cmk.product_telemetry.exceptions import (
     ServicesInfoLengthError,
 )
 from cmk.product_telemetry.schema import CheckData, Checks
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Services
 
 
 def collect() -> Checks:

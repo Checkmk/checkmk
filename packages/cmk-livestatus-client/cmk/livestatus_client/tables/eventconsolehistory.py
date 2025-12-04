@@ -2,947 +2,1157 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.livestatus_client.types import Column, Table
 
 # fmt: off
 
 
-class Hosts(Table):
-    __tablename__ = 'hosts'
+class Eventconsolehistory(Table):
+    __tablename__ = 'eventconsolehistory'
 
-    accept_passive_checks = Column(
-        'accept_passive_checks',
+    event_application = Column(
+        'event_application',
+        col_type='string',
+        description='Syslog tag/application',
+    )
+    """Syslog tag/application"""
+
+    event_comment = Column(
+        'event_comment',
+        col_type='string',
+        description='Event comment',
+    )
+    """Event comment"""
+
+    event_contact = Column(
+        'event_contact',
+        col_type='string',
+        description='Contact information',
+    )
+    """Contact information"""
+
+    event_contact_groups = Column(
+        'event_contact_groups',
+        col_type='list',
+        description='Contact groups',
+    )
+    """Contact groups"""
+
+    event_contact_groups_precedence = Column(
+        'event_contact_groups_precedence',
+        col_type='string',
+        description='Whether or not the host- or rule groups have precedence',
+    )
+    """Whether or not the host- or rule groups have precedence"""
+
+    event_core_host = Column(
+        'event_core_host',
+        col_type='string',
+        description='The canonical name of the host for this event as known in the monitoring',
+    )
+    """The canonical name of the host for this event as known in the monitoring"""
+
+    event_count = Column(
+        'event_count',
+        col_type='int',
+        description='The number of occurrences of this event within period',
+    )
+    """The number of occurrences of this event within period"""
+
+    event_facility = Column(
+        'event_facility',
+        col_type='int',
+        description='Syslog facility',
+    )
+    """Syslog facility"""
+
+    event_first = Column(
+        'event_first',
+        col_type='time',
+        description='Time of the first occurrence of the event (Unix timestamp)',
+    )
+    """Time of the first occurrence of the event (Unix timestamp)"""
+
+    event_host = Column(
+        'event_host',
+        col_type='string',
+        description='The host name for this event, potentially rewritten',
+    )
+    """The host name for this event, potentially rewritten"""
+
+    event_host_in_downtime = Column(
+        'event_host_in_downtime',
+        col_type='int',
+        description='Whether or not the host (if found in core) was in downtime during event creation (0/1)',
+    )
+    """Whether or not the host (if found in core) was in downtime during event creation (0/1)"""
+
+    event_id = Column(
+        'event_id',
+        col_type='int',
+        description='The unique ID for this event',
+    )
+    """The unique ID for this event"""
+
+    event_ipaddress = Column(
+        'event_ipaddress',
+        col_type='string',
+        description='The IP address where the event originated',
+    )
+    """The IP address where the event originated"""
+
+    event_last = Column(
+        'event_last',
+        col_type='time',
+        description='Time of the last occurrence of this event (Unix timestamp)',
+    )
+    """Time of the last occurrence of this event (Unix timestamp)"""
+
+    event_match_groups = Column(
+        'event_match_groups',
+        col_type='list',
+        description='Text groups from regular expression match',
+    )
+    """Text groups from regular expression match"""
+
+    event_match_groups_syslog_application = Column(
+        'event_match_groups_syslog_application',
+        col_type='list',
+        description='The syslog application match groups',
+    )
+    """The syslog application match groups"""
+
+    event_orig_host = Column(
+        'event_orig_host',
+        col_type='string',
+        description='The original host name for this event',
+    )
+    """The original host name for this event"""
+
+    event_owner = Column(
+        'event_owner',
+        col_type='string',
+        description='The owner of the event',
+    )
+    """The owner of the event"""
+
+    event_phase = Column(
+        'event_phase',
+        col_type='string',
+        description='The phase the event is currently in (one of open/closed/delayed/counting/ack)',
+    )
+    """The phase the event is currently in (one of open/closed/delayed/counting/ack)"""
+
+    event_pid = Column(
+        'event_pid',
+        col_type='int',
+        description='The process ID of the originating process',
+    )
+    """The process ID of the originating process"""
+
+    event_priority = Column(
+        'event_priority',
+        col_type='int',
+        description='Syslog priority',
+    )
+    """Syslog priority"""
+
+    event_rule_id = Column(
+        'event_rule_id',
+        col_type='string',
+        description='The ID of the rule',
+    )
+    """The ID of the rule"""
+
+    event_sl = Column(
+        'event_sl',
+        col_type='int',
+        description='The service level for this event',
+    )
+    """The service level for this event"""
+
+    event_state = Column(
+        'event_state',
+        col_type='int',
+        description='The state of the event (0/1/2/3)',
+    )
+    """The state of the event (0/1/2/3)"""
+
+    event_text = Column(
+        'event_text',
+        col_type='string',
+        description='The textual description of the event',
+    )
+    """The textual description of the event"""
+
+    history_addinfo = Column(
+        'history_addinfo',
+        col_type='string',
+        description='Additional information, like email recipient/subject or action ID',
+    )
+    """Additional information, like email recipient/subject or action ID"""
+
+    history_line = Column(
+        'history_line',
+        col_type='int',
+        description='The line number of the event in the history file',
+    )
+    """The line number of the event in the history file"""
+
+    history_time = Column(
+        'history_time',
+        col_type='time',
+        description='Time when the event was written into the history file (Unix timestamp)',
+    )
+    """Time when the event was written into the history file (Unix timestamp)"""
+
+    history_what = Column(
+        'history_what',
+        col_type='string',
+        description='What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)',
+    )
+    """What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)"""
+
+    history_who = Column(
+        'history_who',
+        col_type='string',
+        description='The user who triggered the command',
+    )
+    """The user who triggered the command"""
+
+    host_accept_passive_checks = Column(
+        'host_accept_passive_checks',
         col_type='int',
         description='Whether passive host checks are accepted (0/1)',
     )
     """Whether passive host checks are accepted (0/1)"""
 
-    acknowledged = Column(
-        'acknowledged',
+    host_acknowledged = Column(
+        'host_acknowledged',
         col_type='int',
         description='Whether the current problem has been acknowledged (0/1)',
     )
     """Whether the current problem has been acknowledged (0/1)"""
 
-    acknowledgement_type = Column(
-        'acknowledgement_type',
+    host_acknowledgement_type = Column(
+        'host_acknowledgement_type',
         col_type='int',
         description='Type of acknowledgement (0: none, 1: normal, 2: sticky)',
     )
     """Type of acknowledgement (0: none, 1: normal, 2: sticky)"""
 
-    action_url = Column(
-        'action_url',
+    host_action_url = Column(
+        'host_action_url',
         col_type='string',
         description='An optional URL to custom actions or information about this host',
     )
     """An optional URL to custom actions or information about this host"""
 
-    action_url_expanded = Column(
-        'action_url_expanded',
+    host_action_url_expanded = Column(
+        'host_action_url_expanded',
         col_type='string',
         description='The same as action_url, but with the most important macros expanded',
     )
     """The same as action_url, but with the most important macros expanded"""
 
-    active_checks_enabled = Column(
-        'active_checks_enabled',
+    host_active_checks_enabled = Column(
+        'host_active_checks_enabled',
         col_type='int',
         description='Whether active checks of the object are enabled (0/1)',
     )
     """Whether active checks of the object are enabled (0/1)"""
 
-    address = Column(
-        'address',
+    host_address = Column(
+        'host_address',
         col_type='string',
         description='IP address',
     )
     """IP address"""
 
-    alias = Column(
-        'alias',
+    host_alias = Column(
+        'host_alias',
         col_type='string',
         description='An alias name for the host',
     )
     """An alias name for the host"""
 
-    check_command = Column(
-        'check_command',
+    host_check_command = Column(
+        'host_check_command',
         col_type='string',
         description='Logical command name for active checks',
     )
     """Logical command name for active checks"""
 
-    check_command_expanded = Column(
-        'check_command_expanded',
+    host_check_command_expanded = Column(
+        'host_check_command_expanded',
         col_type='string',
         description='Logical command name for active checks, with macros expanded',
     )
     """Logical command name for active checks, with macros expanded"""
 
-    check_flapping_recovery_notification = Column(
-        'check_flapping_recovery_notification',
+    host_check_flapping_recovery_notification = Column(
+        'host_check_flapping_recovery_notification',
         col_type='int',
         description='Whether to check to send a recovery notification when flapping stops (0/1)',
     )
     """Whether to check to send a recovery notification when flapping stops (0/1)"""
 
-    check_freshness = Column(
-        'check_freshness',
+    host_check_freshness = Column(
+        'host_check_freshness',
         col_type='int',
         description='Whether freshness checks are enabled (0/1)',
     )
     """Whether freshness checks are enabled (0/1)"""
 
-    check_interval = Column(
-        'check_interval',
+    host_check_interval = Column(
+        'host_check_interval',
         col_type='float',
         description='Number of basic interval lengths between two scheduled checks',
     )
     """Number of basic interval lengths between two scheduled checks"""
 
-    check_options = Column(
-        'check_options',
+    host_check_options = Column(
+        'host_check_options',
         col_type='int',
         description='The current check option, forced, normal, freshness (0-2)',
     )
     """The current check option, forced, normal, freshness (0-2)"""
 
-    check_period = Column(
-        'check_period',
+    host_check_period = Column(
+        'host_check_period',
         col_type='string',
         description='Time period in which this object will be checked. If empty then the check will always be executed.',
     )
     """Time period in which this object will be checked. If empty then the check will always be executed."""
 
-    check_type = Column(
-        'check_type',
+    host_check_type = Column(
+        'host_check_type',
         col_type='int',
         description='Type of check (0: active, 1: passive)',
     )
     """Type of check (0: active, 1: passive)"""
 
-    checks_enabled = Column(
-        'checks_enabled',
+    host_checks_enabled = Column(
+        'host_checks_enabled',
         col_type='int',
         description='Whether checks of the object are enabled (0/1)',
     )
     """Whether checks of the object are enabled (0/1)"""
 
-    childs = Column(
-        'childs',
+    host_childs = Column(
+        'host_childs',
         col_type='list',
         description='A list of all direct children of the host',
     )
     """A list of all direct children of the host"""
 
-    comments = Column(
-        'comments',
+    host_comments = Column(
+        'host_comments',
         col_type='list',
         description='A list of the ids of all comments',
     )
     """A list of the ids of all comments"""
 
-    comments_with_extra_info = Column(
-        'comments_with_extra_info',
+    host_comments_with_extra_info = Column(
+        'host_comments_with_extra_info',
         col_type='list',
         description='A list of all comments with id, author, comment, entry type and entry time',
     )
     """A list of all comments with id, author, comment, entry type and entry time"""
 
-    comments_with_info = Column(
-        'comments_with_info',
+    host_comments_with_info = Column(
+        'host_comments_with_info',
         col_type='list',
         description='A list of all comments with id, author and comment',
     )
     """A list of all comments with id, author and comment"""
 
-    contact_groups = Column(
-        'contact_groups',
+    host_contact_groups = Column(
+        'host_contact_groups',
         col_type='list',
         description='A list of all contact groups this object is in',
     )
     """A list of all contact groups this object is in"""
 
-    contacts = Column(
-        'contacts',
+    host_contacts = Column(
+        'host_contacts',
         col_type='list',
         description='A list of all contacts of this object',
     )
     """A list of all contacts of this object"""
 
-    current_attempt = Column(
-        'current_attempt',
+    host_current_attempt = Column(
+        'host_current_attempt',
         col_type='int',
         description='Number of the current check attempts',
     )
     """Number of the current check attempts"""
 
-    current_notification_number = Column(
-        'current_notification_number',
+    host_current_notification_number = Column(
+        'host_current_notification_number',
         col_type='int',
         description='Number of the current notification',
     )
     """Number of the current notification"""
 
-    custom_variable_names = Column(
-        'custom_variable_names',
+    host_custom_variable_names = Column(
+        'host_custom_variable_names',
         col_type='list',
         description='A list of the names of the custom variables',
     )
     """A list of the names of the custom variables"""
 
-    custom_variable_values = Column(
-        'custom_variable_values',
+    host_custom_variable_values = Column(
+        'host_custom_variable_values',
         col_type='list',
         description='A list of the values of the custom variables',
     )
     """A list of the values of the custom variables"""
 
-    custom_variables = Column(
-        'custom_variables',
+    host_custom_variables = Column(
+        'host_custom_variables',
         col_type='dict',
         description='A dictionary of the custom variables',
     )
     """A dictionary of the custom variables"""
 
-    display_name = Column(
-        'display_name',
+    host_display_name = Column(
+        'host_display_name',
         col_type='string',
         description='Optional display name',
     )
     """Optional display name"""
 
-    downtimes = Column(
-        'downtimes',
+    host_downtimes = Column(
+        'host_downtimes',
         col_type='list',
         description='A list of the ids of all scheduled downtimes of this object',
     )
     """A list of the ids of all scheduled downtimes of this object"""
 
-    downtimes_with_extra_info = Column(
-        'downtimes_with_extra_info',
+    host_downtimes_with_extra_info = Column(
+        'host_downtimes_with_extra_info',
         col_type='list',
         description='A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending',
     )
     """A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending"""
 
-    downtimes_with_info = Column(
-        'downtimes_with_info',
+    host_downtimes_with_info = Column(
+        'host_downtimes_with_info',
         col_type='list',
         description='A list of the scheduled downtimes with id, author and comment',
     )
     """A list of the scheduled downtimes with id, author and comment"""
 
-    event_handler = Column(
-        'event_handler',
+    host_event_handler = Column(
+        'host_event_handler',
         col_type='string',
         description='Command used as event handler',
     )
     """Command used as event handler"""
 
-    event_handler_enabled = Column(
-        'event_handler_enabled',
+    host_event_handler_enabled = Column(
+        'host_event_handler_enabled',
         col_type='int',
         description='Whether event handling is enabled (0/1)',
     )
     """Whether event handling is enabled (0/1)"""
 
-    execution_time = Column(
-        'execution_time',
+    host_execution_time = Column(
+        'host_execution_time',
         col_type='float',
         description='Time the check needed for execution',
     )
     """Time the check needed for execution"""
 
-    filename = Column(
-        'filename',
+    host_filename = Column(
+        'host_filename',
         col_type='string',
         description='The value of the custom variable FILENAME',
     )
     """The value of the custom variable FILENAME"""
 
-    first_notification_delay = Column(
-        'first_notification_delay',
+    host_first_notification_delay = Column(
+        'host_first_notification_delay',
         col_type='float',
         description='Delay before the first notification',
     )
     """Delay before the first notification"""
 
-    flap_detection_enabled = Column(
-        'flap_detection_enabled',
+    host_flap_detection_enabled = Column(
+        'host_flap_detection_enabled',
         col_type='int',
         description='Whether flap detection is enabled (0/1)',
     )
     """Whether flap detection is enabled (0/1)"""
 
-    flappiness = Column(
-        'flappiness',
+    host_flappiness = Column(
+        'host_flappiness',
         col_type='float',
         description='The current level of flappiness, this corresponds with the recent frequency of state changes',
     )
     """The current level of flappiness, this corresponds with the recent frequency of state changes"""
 
-    groups = Column(
-        'groups',
+    host_groups = Column(
+        'host_groups',
         col_type='list',
         description='A list of all host groups this object is in',
     )
     """A list of all host groups this object is in"""
 
-    hard_state = Column(
-        'hard_state',
+    host_hard_state = Column(
+        'host_hard_state',
         col_type='int',
         description='The effective hard state of this object',
     )
     """The effective hard state of this object"""
 
-    has_been_checked = Column(
-        'has_been_checked',
+    host_has_been_checked = Column(
+        'host_has_been_checked',
         col_type='int',
         description='Whether a check has already been executed (0/1)',
     )
     """Whether a check has already been executed (0/1)"""
 
-    high_flap_threshold = Column(
-        'high_flap_threshold',
+    host_high_flap_threshold = Column(
+        'host_high_flap_threshold',
         col_type='float',
         description='High threshold of flap detection',
     )
     """High threshold of flap detection"""
 
-    icon_image = Column(
-        'icon_image',
+    host_icon_image = Column(
+        'host_icon_image',
         col_type='string',
         description='The name of an image file to be used in the web pages',
     )
     """The name of an image file to be used in the web pages"""
 
-    icon_image_alt = Column(
-        'icon_image_alt',
+    host_icon_image_alt = Column(
+        'host_icon_image_alt',
         col_type='string',
         description='Alternative text for the icon_image',
     )
     """Alternative text for the icon_image"""
 
-    icon_image_expanded = Column(
-        'icon_image_expanded',
+    host_icon_image_expanded = Column(
+        'host_icon_image_expanded',
         col_type='string',
         description='The same as icon_image, but with the most important macros expanded',
     )
     """The same as icon_image, but with the most important macros expanded"""
 
-    in_check_period = Column(
-        'in_check_period',
+    host_in_check_period = Column(
+        'host_in_check_period',
         col_type='int',
         description='Whether this object is currently in its check period (0/1)',
     )
     """Whether this object is currently in its check period (0/1)"""
 
-    in_notification_period = Column(
-        'in_notification_period',
+    host_in_notification_period = Column(
+        'host_in_notification_period',
         col_type='int',
         description='Whether this object is currently in its notification period (0/1)',
     )
     """Whether this object is currently in its notification period (0/1)"""
 
-    in_service_period = Column(
-        'in_service_period',
+    host_in_service_period = Column(
+        'host_in_service_period',
         col_type='int',
         description='Whether this object is currently in its service period (0/1)',
     )
     """Whether this object is currently in its service period (0/1)"""
 
-    initial_state = Column(
-        'initial_state',
+    host_initial_state = Column(
+        'host_initial_state',
         col_type='int',
         description='Initial state',
     )
     """Initial state"""
 
-    is_executing = Column(
-        'is_executing',
+    host_is_executing = Column(
+        'host_is_executing',
         col_type='int',
         description='is there a check currently running (0/1)',
     )
     """is there a check currently running (0/1)"""
 
-    is_flapping = Column(
-        'is_flapping',
+    host_is_flapping = Column(
+        'host_is_flapping',
         col_type='int',
         description='Whether the state is flapping (0/1)',
     )
     """Whether the state is flapping (0/1)"""
 
-    label_names = Column(
-        'label_names',
+    host_label_names = Column(
+        'host_label_names',
         col_type='list',
         description='A list of the names of the labels',
     )
     """A list of the names of the labels"""
 
-    label_source_names = Column(
-        'label_source_names',
+    host_label_source_names = Column(
+        'host_label_source_names',
         col_type='list',
         description='A list of the names of the label sources',
     )
     """A list of the names of the label sources"""
 
-    label_source_values = Column(
-        'label_source_values',
+    host_label_source_values = Column(
+        'host_label_source_values',
         col_type='list',
         description='A list of the values of the label sources',
     )
     """A list of the values of the label sources"""
 
-    label_sources = Column(
-        'label_sources',
+    host_label_sources = Column(
+        'host_label_sources',
         col_type='dict',
         description='A dictionary of the label sources',
     )
     """A dictionary of the label sources"""
 
-    label_values = Column(
-        'label_values',
+    host_label_values = Column(
+        'host_label_values',
         col_type='list',
         description='A list of the values of the labels',
     )
     """A list of the values of the labels"""
 
-    labels = Column(
-        'labels',
+    host_labels = Column(
+        'host_labels',
         col_type='dict',
         description='A dictionary of the labels',
     )
     """A dictionary of the labels"""
 
-    last_check = Column(
-        'last_check',
+    host_last_check = Column(
+        'host_last_check',
         col_type='time',
         description='Time of the last check (Unix timestamp)',
     )
     """Time of the last check (Unix timestamp)"""
 
-    last_hard_state = Column(
-        'last_hard_state',
+    host_last_hard_state = Column(
+        'host_last_hard_state',
         col_type='int',
         description='Last hard state',
     )
     """Last hard state"""
 
-    last_hard_state_change = Column(
-        'last_hard_state_change',
+    host_last_hard_state_change = Column(
+        'host_last_hard_state_change',
         col_type='time',
         description='Time of the last hard state change - soft or hard (Unix timestamp)',
     )
     """Time of the last hard state change - soft or hard (Unix timestamp)"""
 
-    last_notification = Column(
-        'last_notification',
+    host_last_notification = Column(
+        'host_last_notification',
         col_type='time',
         description='Time of the last notification (Unix timestamp)',
     )
     """Time of the last notification (Unix timestamp)"""
 
-    last_state = Column(
-        'last_state',
+    host_last_state = Column(
+        'host_last_state',
         col_type='int',
         description='State before last state change',
     )
     """State before last state change"""
 
-    last_state_change = Column(
-        'last_state_change',
+    host_last_state_change = Column(
+        'host_last_state_change',
         col_type='time',
         description='Time of the last state change - soft or hard (Unix timestamp)',
     )
     """Time of the last state change - soft or hard (Unix timestamp)"""
 
-    last_time_down = Column(
-        'last_time_down',
+    host_last_time_down = Column(
+        'host_last_time_down',
         col_type='time',
         description='Last time the host was DOWN (Unix timestamp)',
     )
     """Last time the host was DOWN (Unix timestamp)"""
 
-    last_time_unreachable = Column(
-        'last_time_unreachable',
+    host_last_time_unreachable = Column(
+        'host_last_time_unreachable',
         col_type='time',
         description='Last time the host was UNREACHABLE (Unix timestamp)',
     )
     """Last time the host was UNREACHABLE (Unix timestamp)"""
 
-    last_time_up = Column(
-        'last_time_up',
+    host_last_time_up = Column(
+        'host_last_time_up',
         col_type='time',
         description='Last time the host was UP (Unix timestamp)',
     )
     """Last time the host was UP (Unix timestamp)"""
 
-    latency = Column(
-        'latency',
+    host_latency = Column(
+        'host_latency',
         col_type='float',
         description='Time difference between scheduled check time and actual check time',
     )
     """Time difference between scheduled check time and actual check time"""
 
-    long_plugin_output = Column(
-        'long_plugin_output',
+    host_long_plugin_output = Column(
+        'host_long_plugin_output',
         col_type='string',
         description='Long (extra) output of the last check',
     )
     """Long (extra) output of the last check"""
 
-    low_flap_threshold = Column(
-        'low_flap_threshold',
+    host_low_flap_threshold = Column(
+        'host_low_flap_threshold',
         col_type='float',
         description='Low threshold of flap detection',
     )
     """Low threshold of flap detection"""
 
-    max_check_attempts = Column(
-        'max_check_attempts',
+    host_max_check_attempts = Column(
+        'host_max_check_attempts',
         col_type='int',
         description='Maximum attempts for active checks before a hard state',
     )
     """Maximum attempts for active checks before a hard state"""
 
-    metrics = Column(
-        'metrics',
+    host_metrics = Column(
+        'host_metrics',
         col_type='list',
         description='A list of all metrics of this object that historically existed',
     )
     """A list of all metrics of this object that historically existed"""
 
-    mk_inventory = Column(
-        'mk_inventory',
+    host_mk_inventory = Column(
+        'host_mk_inventory',
         col_type='blob',
         description='The file content of the Check_MK HW/SW Inventory',
     )
     """The file content of the Check_MK HW/SW Inventory"""
 
-    mk_inventory_gz = Column(
-        'mk_inventory_gz',
+    host_mk_inventory_gz = Column(
+        'host_mk_inventory_gz',
         col_type='blob',
         description='The gzipped file content of the Check_MK HW/SW Inventory',
     )
     """The gzipped file content of the Check_MK HW/SW Inventory"""
 
-    mk_inventory_last = Column(
-        'mk_inventory_last',
+    host_mk_inventory_last = Column(
+        'host_mk_inventory_last',
         col_type='time',
         description='The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present',
     )
     """The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present"""
 
-    mk_logwatch_files = Column(
-        'mk_logwatch_files',
+    host_mk_logwatch_files = Column(
+        'host_mk_logwatch_files',
         col_type='list',
         description='This list of logfiles with problems fetched via mk_logwatch',
     )
     """This list of logfiles with problems fetched via mk_logwatch"""
 
-    modified_attributes = Column(
-        'modified_attributes',
+    host_modified_attributes = Column(
+        'host_modified_attributes',
         col_type='int',
         description='A bitmask specifying which attributes have been modified',
     )
     """A bitmask specifying which attributes have been modified"""
 
-    modified_attributes_list = Column(
-        'modified_attributes_list',
+    host_modified_attributes_list = Column(
+        'host_modified_attributes_list',
         col_type='list',
         description='A list of all modified attributes',
     )
     """A list of all modified attributes"""
 
-    name = Column(
-        'name',
+    host_name = Column(
+        'host_name',
         col_type='string',
         description='Host name',
     )
     """Host name"""
 
-    next_check = Column(
-        'next_check',
+    host_next_check = Column(
+        'host_next_check',
         col_type='time',
         description='Scheduled time for the next check (Unix timestamp)',
     )
     """Scheduled time for the next check (Unix timestamp)"""
 
-    next_notification = Column(
-        'next_notification',
+    host_next_notification = Column(
+        'host_next_notification',
         col_type='time',
         description='Time of the next notification (Unix timestamp)',
     )
     """Time of the next notification (Unix timestamp)"""
 
-    no_more_notifications = Column(
-        'no_more_notifications',
+    host_no_more_notifications = Column(
+        'host_no_more_notifications',
         col_type='int',
         description='Whether to stop sending notifications (0/1)',
     )
     """Whether to stop sending notifications (0/1)"""
 
-    notes = Column(
-        'notes',
+    host_notes = Column(
+        'host_notes',
         col_type='string',
         description='Optional notes for this object, with macros not expanded',
     )
     """Optional notes for this object, with macros not expanded"""
 
-    notes_expanded = Column(
-        'notes_expanded',
+    host_notes_expanded = Column(
+        'host_notes_expanded',
         col_type='string',
         description='The same as notes, but with the most important macros expanded',
     )
     """The same as notes, but with the most important macros expanded"""
 
-    notes_url = Column(
-        'notes_url',
+    host_notes_url = Column(
+        'host_notes_url',
         col_type='string',
         description='An optional URL with further information about the object',
     )
     """An optional URL with further information about the object"""
 
-    notes_url_expanded = Column(
-        'notes_url_expanded',
+    host_notes_url_expanded = Column(
+        'host_notes_url_expanded',
         col_type='string',
         description='Same es notes_url, but with the most important macros expanded',
     )
     """Same es notes_url, but with the most important macros expanded"""
 
-    notification_interval = Column(
-        'notification_interval',
+    host_notification_interval = Column(
+        'host_notification_interval',
         col_type='float',
         description='Interval of periodic notification in minutes or 0 if its off',
     )
     """Interval of periodic notification in minutes or 0 if its off"""
 
-    notification_period = Column(
-        'notification_period',
+    host_notification_period = Column(
+        'host_notification_period',
         col_type='string',
         description='Time period in which problems of this object will be notified. If empty then notification will be always',
     )
     """Time period in which problems of this object will be notified. If empty then notification will be always"""
 
-    notification_postponement_reason = Column(
-        'notification_postponement_reason',
+    host_notification_postponement_reason = Column(
+        'host_notification_postponement_reason',
         col_type='string',
         description='reason for postponing the pending notification, empty if nothing is postponed',
     )
     """reason for postponing the pending notification, empty if nothing is postponed"""
 
-    notifications_enabled = Column(
-        'notifications_enabled',
+    host_notifications_enabled = Column(
+        'host_notifications_enabled',
         col_type='int',
         description='Whether notifications of the host are enabled (0/1)',
     )
     """Whether notifications of the host are enabled (0/1)"""
 
-    num_services = Column(
-        'num_services',
+    host_num_services = Column(
+        'host_num_services',
         col_type='int',
         description='The total number of services of the host',
     )
     """The total number of services of the host"""
 
-    num_services_crit = Column(
-        'num_services_crit',
+    host_num_services_crit = Column(
+        'host_num_services_crit',
         col_type='int',
         description='The number of the host\'s services with the soft state CRIT',
     )
     """The number of the host's services with the soft state CRIT"""
 
-    num_services_handled_problems = Column(
-        'num_services_handled_problems',
+    host_num_services_handled_problems = Column(
+        'host_num_services_handled_problems',
         col_type='int',
         description='The number of the host\'s services which have handled problems',
     )
     """The number of the host's services which have handled problems"""
 
-    num_services_hard_crit = Column(
-        'num_services_hard_crit',
+    host_num_services_hard_crit = Column(
+        'host_num_services_hard_crit',
         col_type='int',
         description='The number of the host\'s services with the hard state CRIT',
     )
     """The number of the host's services with the hard state CRIT"""
 
-    num_services_hard_ok = Column(
-        'num_services_hard_ok',
+    host_num_services_hard_ok = Column(
+        'host_num_services_hard_ok',
         col_type='int',
         description='The number of the host\'s services with the hard state OK',
     )
     """The number of the host's services with the hard state OK"""
 
-    num_services_hard_unknown = Column(
-        'num_services_hard_unknown',
+    host_num_services_hard_unknown = Column(
+        'host_num_services_hard_unknown',
         col_type='int',
         description='The number of the host\'s services with the hard state UNKNOWN',
     )
     """The number of the host's services with the hard state UNKNOWN"""
 
-    num_services_hard_warn = Column(
-        'num_services_hard_warn',
+    host_num_services_hard_warn = Column(
+        'host_num_services_hard_warn',
         col_type='int',
         description='The number of the host\'s services with the hard state WARN',
     )
     """The number of the host's services with the hard state WARN"""
 
-    num_services_ok = Column(
-        'num_services_ok',
+    host_num_services_ok = Column(
+        'host_num_services_ok',
         col_type='int',
         description='The number of the host\'s services with the soft state OK',
     )
     """The number of the host's services with the soft state OK"""
 
-    num_services_pending = Column(
-        'num_services_pending',
+    host_num_services_pending = Column(
+        'host_num_services_pending',
         col_type='int',
         description='The number of the host\'s services which have not been checked yet (pending)',
     )
     """The number of the host's services which have not been checked yet (pending)"""
 
-    num_services_unhandled_problems = Column(
-        'num_services_unhandled_problems',
+    host_num_services_unhandled_problems = Column(
+        'host_num_services_unhandled_problems',
         col_type='int',
         description='The number of the host\'s services which have unhandled problems',
     )
     """The number of the host's services which have unhandled problems"""
 
-    num_services_unknown = Column(
-        'num_services_unknown',
+    host_num_services_unknown = Column(
+        'host_num_services_unknown',
         col_type='int',
         description='The number of the host\'s services with the soft state UNKNOWN',
     )
     """The number of the host's services with the soft state UNKNOWN"""
 
-    num_services_warn = Column(
-        'num_services_warn',
+    host_num_services_warn = Column(
+        'host_num_services_warn',
         col_type='int',
         description='The number of the host\'s services with the soft state WARN',
     )
     """The number of the host's services with the soft state WARN"""
 
-    obsess_over_host = Column(
-        'obsess_over_host',
+    host_obsess_over_host = Column(
+        'host_obsess_over_host',
         col_type='int',
         description='The current obsess_over_host setting (0/1)',
     )
     """The current obsess_over_host setting (0/1)"""
 
-    parents = Column(
-        'parents',
+    host_parents = Column(
+        'host_parents',
         col_type='list',
         description='A list of all direct parents of the host',
     )
     """A list of all direct parents of the host"""
 
-    pending_flex_downtime = Column(
-        'pending_flex_downtime',
+    host_pending_flex_downtime = Column(
+        'host_pending_flex_downtime',
         col_type='int',
         description='Number of pending flexible downtimes',
     )
     """Number of pending flexible downtimes"""
 
-    percent_state_change = Column(
-        'percent_state_change',
+    host_percent_state_change = Column(
+        'host_percent_state_change',
         col_type='float',
         description='Percent state change',
     )
     """Percent state change"""
 
-    perf_data = Column(
-        'perf_data',
+    host_perf_data = Column(
+        'host_perf_data',
         col_type='string',
         description='Optional performance data of the last check',
     )
     """Optional performance data of the last check"""
 
-    performance_data = Column(
-        'performance_data',
+    host_performance_data = Column(
+        'host_performance_data',
         col_type='dictdouble',
         description='Optional performance data as a dict',
     )
     """Optional performance data as a dict"""
 
-    plugin_output = Column(
-        'plugin_output',
+    host_plugin_output = Column(
+        'host_plugin_output',
         col_type='string',
         description='Output of the last check',
     )
     """Output of the last check"""
 
-    pnpgraph_present = Column(
-        'pnpgraph_present',
+    host_pnpgraph_present = Column(
+        'host_pnpgraph_present',
         col_type='int',
         description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
     """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
 
-    previous_hard_state = Column(
-        'previous_hard_state',
+    host_previous_hard_state = Column(
+        'host_previous_hard_state',
         col_type='int',
         description='Previous hard state (that hard state before the current/last hard state)',
     )
     """Previous hard state (that hard state before the current/last hard state)"""
 
-    process_performance_data = Column(
-        'process_performance_data',
+    host_process_performance_data = Column(
+        'host_process_performance_data',
         col_type='int',
         description='Whether processing of performance data is enabled (0/1)',
     )
     """Whether processing of performance data is enabled (0/1)"""
 
-    retry_interval = Column(
-        'retry_interval',
+    host_retry_interval = Column(
+        'host_retry_interval',
         col_type='float',
         description='Number of basic interval lengths between checks when retrying after a soft error',
     )
     """Number of basic interval lengths between checks when retrying after a soft error"""
 
-    scheduled_downtime_depth = Column(
-        'scheduled_downtime_depth',
+    host_scheduled_downtime_depth = Column(
+        'host_scheduled_downtime_depth',
         col_type='int',
         description='The number of downtimes this object is currently in',
     )
     """The number of downtimes this object is currently in"""
 
-    service_period = Column(
-        'service_period',
+    host_service_period = Column(
+        'host_service_period',
         col_type='string',
         description='Time period during which the object is expected to be available',
     )
     """Time period during which the object is expected to be available"""
 
-    services = Column(
-        'services',
+    host_services = Column(
+        'host_services',
         col_type='list',
         description='A list of all services of the host',
     )
     """A list of all services of the host"""
 
-    services_with_fullstate = Column(
-        'services_with_fullstate',
+    host_services_with_fullstate = Column(
+        'host_services_with_fullstate',
         col_type='list',
         description='A list of all services including full state information. The list of entries can grow in future versions.',
     )
     """A list of all services including full state information. The list of entries can grow in future versions."""
 
-    services_with_info = Column(
-        'services_with_info',
+    host_services_with_info = Column(
+        'host_services_with_info',
         col_type='list',
         description='A list of all services including detailed information about each service',
     )
     """A list of all services including detailed information about each service"""
 
-    services_with_state = Column(
-        'services_with_state',
+    host_services_with_state = Column(
+        'host_services_with_state',
         col_type='list',
         description='A list of all services of the host together with state and has_been_checked',
     )
     """A list of all services of the host together with state and has_been_checked"""
 
-    smartping_timeout = Column(
-        'smartping_timeout',
+    host_smartping_timeout = Column(
+        'host_smartping_timeout',
         col_type='int',
         description='Maximum expected time between two received packets in ms',
     )
     """Maximum expected time between two received packets in ms"""
 
-    staleness = Column(
-        'staleness',
+    host_staleness = Column(
+        'host_staleness',
         col_type='float',
         description='The staleness of this object',
     )
     """The staleness of this object"""
 
-    state = Column(
-        'state',
+    host_state = Column(
+        'host_state',
         col_type='int',
         description='The current state of the object, for hosts: 0/1/2 for UP/DOWN/UNREACH, for services: 0/1/2/3 for OK/WARN/CRIT/UNKNOWN',
     )
     """The current state of the object, for hosts: 0/1/2 for UP/DOWN/UNREACH, for services: 0/1/2/3 for OK/WARN/CRIT/UNKNOWN"""
 
-    state_type = Column(
-        'state_type',
+    host_state_type = Column(
+        'host_state_type',
         col_type='int',
         description='Type of the current state (0: soft, 1: hard)',
     )
     """Type of the current state (0: soft, 1: hard)"""
 
-    statusmap_image = Column(
-        'statusmap_image',
+    host_statusmap_image = Column(
+        'host_statusmap_image',
         col_type='string',
         description='The name of in image file for the status map',
     )
     """The name of in image file for the status map"""
 
-    structured_status = Column(
-        'structured_status',
+    host_structured_status = Column(
+        'host_structured_status',
         col_type='blob',
         description='The file content of the structured status of the Check_MK HW/SW Inventory',
     )
     """The file content of the structured status of the Check_MK HW/SW Inventory"""
 
-    tag_names = Column(
-        'tag_names',
+    host_tag_names = Column(
+        'host_tag_names',
         col_type='list',
         description='A list of the names of the tags',
     )
     """A list of the names of the tags"""
 
-    tag_values = Column(
-        'tag_values',
+    host_tag_values = Column(
+        'host_tag_values',
         col_type='list',
         description='A list of the values of the tags',
     )
     """A list of the values of the tags"""
 
-    tags = Column(
-        'tags',
+    host_tags = Column(
+        'host_tags',
         col_type='dict',
         description='A dictionary of the tags',
     )
     """A dictionary of the tags"""
 
-    total_services = Column(
-        'total_services',
+    host_total_services = Column(
+        'host_total_services',
         col_type='int',
         description='The total number of services of the host',
     )
     """The total number of services of the host"""
 
-    worst_service_hard_state = Column(
-        'worst_service_hard_state',
+    host_worst_service_hard_state = Column(
+        'host_worst_service_hard_state',
         col_type='int',
         description='The worst hard state of all of the host\'s services (OK <= WARN <= UNKNOWN <= CRIT)',
     )
     """The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)"""
 
-    worst_service_state = Column(
-        'worst_service_state',
+    host_worst_service_state = Column(
+        'host_worst_service_state',
         col_type='int',
         description='The worst soft state of all of the host\'s services (OK <= WARN <= UNKNOWN <= CRIT)',
     )
     """The worst soft state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)"""
 
-    x_3d = Column(
-        'x_3d',
+    host_x_3d = Column(
+        'host_x_3d',
         col_type='float',
         description='3D-Coordinates: X',
     )
     """3D-Coordinates: X"""
 
-    y_3d = Column(
-        'y_3d',
+    host_y_3d = Column(
+        'host_y_3d',
         col_type='float',
         description='3D-Coordinates: Y',
     )
     """3D-Coordinates: Y"""
 
-    z_3d = Column(
-        'z_3d',
+    host_z_3d = Column(
+        'host_z_3d',
         col_type='float',
         description='3D-Coordinates: Z',
     )

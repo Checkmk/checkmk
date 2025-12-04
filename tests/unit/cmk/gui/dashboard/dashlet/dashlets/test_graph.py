@@ -11,7 +11,7 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
     _graph_templates_autocompleter_testable,
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def test_graph_templates_autocompleter_testable_unconstrained() -> None:

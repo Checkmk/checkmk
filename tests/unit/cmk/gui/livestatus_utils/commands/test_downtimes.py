@@ -15,7 +15,7 @@ import pytest
 from cmk.gui import sites
 from cmk.gui.livestatus_utils.commands import downtimes
 from cmk.gui.session import SuperUserContext
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 @pytest.fixture(name="dates")

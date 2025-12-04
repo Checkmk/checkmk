@@ -36,11 +36,11 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
 )
-from cmk.utils import redis
-from cmk.utils.livestatus_helpers.testing import (
+from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
+from cmk.utils import redis
 from tests.unit.mocks_and_helpers import DummyLicensingHandler, FixPluginLegacy
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?

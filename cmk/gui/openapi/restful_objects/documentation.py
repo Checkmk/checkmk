@@ -7,8 +7,8 @@ import re
 
 import jinja2
 
-from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.types import Column
+from cmk.livestatus_client import tables
+from cmk.livestatus_client.types import Column
 
 TEMPLATES = {
     "table": """## {{ table.__tablename__.title() }} Table

@@ -29,7 +29,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from tests.unit.cmk.gui.users import create_and_destroy_user
 

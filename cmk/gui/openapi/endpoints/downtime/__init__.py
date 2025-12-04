@@ -56,10 +56,10 @@ from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainOb
 from cmk.gui.openapi.spec.utils import LIVESTATUS_GENERIC_EXPLANATION
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query, ResultRow
-from cmk.utils.livestatus_helpers.tables import Hosts
-from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
+from cmk.livestatus_client.expressions import And, Or, QueryExpression
+from cmk.livestatus_client.queries import detailed_connection, Query, ResultRow
+from cmk.livestatus_client.tables import Hosts
+from cmk.livestatus_client.tables.downtimes import Downtimes
 
 DowntimeType = Literal[
     "host", "service", "hostgroup", "servicegroup", "host_by_query", "service_by_query"

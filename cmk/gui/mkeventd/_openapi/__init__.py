@@ -48,7 +48,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
+from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
 
 from .common_fields import ApplicationField, EventIDField, HostNameField, PhaseField, StateField
 from .request_schemas import (

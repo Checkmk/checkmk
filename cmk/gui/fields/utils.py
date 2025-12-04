@@ -12,8 +12,8 @@ from typing import Any
 
 from cmk.ccc.version import Edition
 from cmk.gui.fields.base import BaseSchema as BaseSchema
-from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.expressions import (
+from cmk.livestatus_client import tables
+from cmk.livestatus_client.expressions import (
     And,
     BinaryExpression,
     LiteralExpression,
@@ -23,7 +23,7 @@ from cmk.utils.livestatus_helpers.expressions import (
     QueryExpression,
     UnaryExpression,
 )
-from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.livestatus_client.types import Column, Table
 
 
 def tree_to_expr(
@@ -63,7 +63,7 @@ def tree_to_expr(
                                             'right': 'example.com'}}})
         Not(Not(Filter(name = example.com)))
 
-        >>> from cmk.utils.livestatus_helpers.tables import Hosts
+        >>> from cmk.livestatus_client.tables import Hosts
         >>> tree_to_expr({'op': 'not', 'expr': Hosts.name == 'example.com'})
         Not(Filter(name = example.com))
 

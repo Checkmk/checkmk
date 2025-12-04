@@ -55,11 +55,11 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
+from cmk.livestatus_client.expressions import NothingExpression, QueryExpression
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
+from cmk.livestatus_client.types import Column, Table
 from cmk.utils import paths
-from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
-from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.utils.tags import TagConfig, TagGroup, TagGroupID
 
 _logger = logging.getLogger(__name__)
@@ -272,7 +272,7 @@ class NotExprSchema(BaseSchema):
 
     Examples:
 
-        >>> from cmk.utils.livestatus_helpers.tables import Hosts
+        >>> from cmk.livestatus_client.tables import Hosts
         >>> input_expr = {'op': '=', 'left': 'hosts.name', 'right': 'foo'}
         >>> q = {'op': 'not', 'expr': input_expr}
         >>> result = NotExprSchema(context={'table': Hosts}).load(q)
@@ -343,7 +343,7 @@ class ExprSchema(CmkOneOfSchema):
         ...         },
         ...     ]}
 
-        >>> from cmk.utils.livestatus_helpers.tables import Hosts
+        >>> from cmk.livestatus_client.tables import Hosts
         >>> schema = ExprSchema(context={'table': Hosts})
         >>> assert schema.load(q) == schema.load(json.dumps(q))
 
@@ -509,7 +509,7 @@ class _ListOfColumns(base.List):
 
     Examples:
 
-        >>> from cmk.utils.livestatus_helpers.tables import Hosts
+        >>> from cmk.livestatus_client.tables import Hosts
         >>> cols = _ListOfColumns(
         ...     _LiveStatusColumn(table=Hosts),
         ...     table=Hosts,
@@ -578,7 +578,7 @@ class _LiveStatusColumn(base.String):
 
     Examples:
 
-        >>> from cmk.utils.livestatus_helpers.tables import Hosts
+        >>> from cmk.livestatus_client.tables import Hosts
         >>> _LiveStatusColumn(table=Hosts).deserialize('name')
         'name'
 

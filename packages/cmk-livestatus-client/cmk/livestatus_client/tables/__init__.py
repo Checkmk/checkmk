@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.livestatus_helpers.tables.comments import Comments
-from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
-from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
-from cmk.utils.livestatus_helpers.tables.hostgroups import Hostgroups
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.livestatus_helpers.tables.servicegroups import Servicegroups
-from cmk.utils.livestatus_helpers.tables.services import Services
-from cmk.utils.livestatus_helpers.tables.status import Status
+from cmk.livestatus_client.tables.comments import Comments
+from cmk.livestatus_client.tables.downtimes import Downtimes
+from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
+from cmk.livestatus_client.tables.hostgroups import Hostgroups
+from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.livestatus_client.tables.servicegroups import Servicegroups
+from cmk.livestatus_client.tables.services import Services
+from cmk.livestatus_client.tables.status import Status
 
 REST_API_DOC_TABLES = [
     "Downtimes",

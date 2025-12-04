@@ -15,7 +15,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACSingleResult,
     compute_deprecation_result,
 )
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def test_local_connection_mocked(

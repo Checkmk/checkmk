@@ -25,13 +25,13 @@ from cmk.livestatus_client import (
     ModifyServiceDowntime,
     ScheduleHostDowntime,
     ScheduleServiceDowntime,
+    tables,
 )
-from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
-from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.livestatus_helpers.tables.services import Services
+from cmk.livestatus_client.expressions import And, Or, QueryExpression
+from cmk.livestatus_client.queries import detailed_connection, Query
+from cmk.livestatus_client.tables.downtimes import Downtimes
+from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.livestatus_client.tables.services import Services
 
 # TODO: Test duration option
 

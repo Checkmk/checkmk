@@ -11,7 +11,7 @@ from typing import Any
 import cmk.ccc.store
 import cmk.utils.paths
 from cmk.gui.http import HTTPMethod
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import RequestHandler, Response, RestApiException
 from tests.unit.cmk.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
 

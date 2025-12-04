@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.livestatus_helpers.expressions import ScalarExpression
+from cmk.livestatus_client.expressions import ScalarExpression
 
 
 def test_no_lq_injection() -> None:

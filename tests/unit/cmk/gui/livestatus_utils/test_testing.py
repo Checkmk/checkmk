@@ -6,7 +6,7 @@
 import livestatus
 
 from cmk.gui import sites
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def test_intercept_queries(

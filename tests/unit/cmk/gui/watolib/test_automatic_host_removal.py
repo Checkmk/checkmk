@@ -28,7 +28,7 @@ from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfiguration
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir, omd_root
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario

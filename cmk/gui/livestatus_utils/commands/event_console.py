@@ -16,9 +16,9 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
 from cmk.livestatus_client import ECChangeState, ECDelete, ECUpdate, LivestatusClient
-from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
+from cmk.livestatus_client.expressions import Or, QueryExpression
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
 from cmk.utils.statename import core_state_names
 
 

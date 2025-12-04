@@ -79,9 +79,9 @@ from cmk.livestatus_client import (
     SendCustomServiceNotification,
 )
 from cmk.livestatus_client import Command as LivestatusCommand
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.servicename import ServiceName
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec

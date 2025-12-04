@@ -43,8 +43,8 @@ from cmk.gui.views.command import registry as registry_module
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 

@@ -60,7 +60,7 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
 )
 from cmk.gui.visuals.filter import Filter
-from cmk.utils.livestatus_helpers.queries import Query
+from cmk.livestatus_client.queries import Query
 
 from . import availability
 from .row_post_processing import post_process_rows

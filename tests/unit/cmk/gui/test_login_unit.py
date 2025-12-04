@@ -26,7 +26,7 @@ from cmk.gui.type_defs import UserSpec, WebAuthnCredential
 from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.unit.cmk.gui.users import create_and_destroy_user
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 

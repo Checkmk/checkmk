@@ -30,14 +30,14 @@ from types import TracebackType
 from typing import Any, Literal, override
 from unittest import mock
 
-from livestatus import (
+from cmk.ccc.site import SiteId
+
+from ._connection import (
     LivestatusTestingError,
     MultiSiteConnection,
     SiteConfiguration,
     SiteConfigurations,
 )
-
-from cmk.ccc.site import SiteId
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
@@ -283,7 +283,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
                 self._connections[site_name] = MockSingleSiteConnection(site_name, self)
         return self._connections
 
-    def create_socket(self, family: object, site_name: SiteName | None) -> FakeSocket:
+    def create_socket(self, family: object, site_name: SiteName | None) -> FakeSocket:  # noqa: ARG002
         if site_name is None:  # plain SingleConnection instantiated by hand
             site_name = self.sites[0]
         return self.connections[site_name].socket
@@ -308,7 +308,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
 
         return result, output_format
 
-    def enabled_and_disabled_sites(self, user_id: object) -> tuple[dict, dict]:
+    def enabled_and_disabled_sites(self, user_id: object) -> tuple[dict, dict]:  # noqa: ARG002
         """This method is used to inject the currently configured sites into livestatus.py"""
         return {site_name: {"socket": "unix:"} for site_name in self.sites}, {}
 

@@ -54,8 +54,8 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.utils.livestatus_helpers.queries import Query, ResultRow
-from cmk.utils.livestatus_helpers.tables import Hosts
+from cmk.livestatus_client.queries import Query, ResultRow
+from cmk.livestatus_client.tables import Hosts
 
 
 class HostParameters(BaseSchema):

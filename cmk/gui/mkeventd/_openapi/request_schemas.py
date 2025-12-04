@@ -15,7 +15,7 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
+from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
 
 from .common_fields import ApplicationField, HostNameField, PhaseField, StateField
 

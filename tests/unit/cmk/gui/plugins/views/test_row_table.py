@@ -8,7 +8,7 @@ from cmk.gui.data_source import RowTableLivestatus
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("request_context")

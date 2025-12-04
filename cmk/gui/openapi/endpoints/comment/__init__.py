@@ -53,8 +53,8 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
-from cmk.utils.livestatus_helpers.tables.comments import Comments
+from cmk.livestatus_client.expressions import And, Or, QueryExpression
+from cmk.livestatus_client.tables.comments import Comments
 
 PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(

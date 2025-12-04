@@ -38,9 +38,9 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils import permission_verification as permissions
-from cmk.utils.livestatus_helpers.expressions import And, QueryExpression
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hosts, Services
+from cmk.livestatus_client.expressions import And, QueryExpression
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables import Hosts, Services
 
 SERVICE_DESCRIPTION = {
     "service_description": fields.String(

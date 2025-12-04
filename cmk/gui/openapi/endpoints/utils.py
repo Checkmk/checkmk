@@ -31,9 +31,9 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.watolib.groups import edit_group
 from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.livestatus_client.queries import detailed_connection, Query
+from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 
 GroupDomainType = Literal[
     "host_group_config", "contact_group_config", "service_group_config", "agent"

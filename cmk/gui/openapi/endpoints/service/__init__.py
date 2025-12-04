@@ -34,9 +34,9 @@ from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.utils.livestatus_helpers.expressions import And
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Services
+from cmk.livestatus_client.expressions import And
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables import Services
 
 
 class _BaseParameters(BaseSchema):

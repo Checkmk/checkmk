@@ -5,8 +5,8 @@
 
 import pytest
 
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
 from tests.unit.cmk.web_test_app import SetConfig
 

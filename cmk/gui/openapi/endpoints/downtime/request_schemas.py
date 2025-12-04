@@ -24,7 +24,7 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
 )
 from cmk.gui.livestatus_utils.commands.utils import to_timestamp
 from cmk.gui.openapi.utils import param_description
-from cmk.utils.livestatus_helpers import tables
+from cmk.livestatus_client import tables
 
 MONITORED_HOST = gui_fields.HostField(
     description="The host name or IP address itself.",

@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.gui.http import Request
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 

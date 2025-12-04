@@ -25,11 +25,11 @@ from cmk.livestatus_client import (
     DeleteServiceComment,
     LivestatusClient,
 )
-from cmk.utils.livestatus_helpers.expressions import QueryExpression
-from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
-from cmk.utils.livestatus_helpers.tables.comments import Comments
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.livestatus_helpers.tables.services import Services
+from cmk.livestatus_client.expressions import QueryExpression
+from cmk.livestatus_client.queries import detailed_connection, Query
+from cmk.livestatus_client.tables.comments import Comments
+from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.livestatus_client.tables.services import Services
 
 SHORT_COLUMNS = [Comments.id, Comments.is_service]
 

@@ -11,8 +11,8 @@ import pytest
 
 from cmk.ccc import version
 from cmk.gui.openapi.endpoints.downtime import _with_defaulted_timezone
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import SetConfig
 

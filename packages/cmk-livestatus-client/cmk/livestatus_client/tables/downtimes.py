@@ -2,307 +2,55 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.livestatus_client.types import Column, Table
 
 # fmt: off
 
 
-class Servicesbygroup(Table):
-    __tablename__ = 'servicesbygroup'
+class Downtimes(Table):
+    __tablename__ = 'downtimes'
 
-    accept_passive_checks = Column(
-        'accept_passive_checks',
-        col_type='int',
-        description='Whether passive host checks are accepted (0/1)',
-    )
-    """Whether passive host checks are accepted (0/1)"""
-
-    acknowledged = Column(
-        'acknowledged',
-        col_type='int',
-        description='Whether the current problem has been acknowledged (0/1)',
-    )
-    """Whether the current problem has been acknowledged (0/1)"""
-
-    acknowledgement_type = Column(
-        'acknowledgement_type',
-        col_type='int',
-        description='Type of acknowledgement (0: none, 1: normal, 2: sticky)',
-    )
-    """Type of acknowledgement (0: none, 1: normal, 2: sticky)"""
-
-    action_url = Column(
-        'action_url',
+    author = Column(
+        'author',
         col_type='string',
-        description='An optional URL to custom actions or information about this host',
+        description='The contact that scheduled the downtime',
     )
-    """An optional URL to custom actions or information about this host"""
+    """The contact that scheduled the downtime"""
 
-    action_url_expanded = Column(
-        'action_url_expanded',
+    comment = Column(
+        'comment',
         col_type='string',
-        description='The same as action_url, but with the most important macros expanded',
+        description='A comment text',
     )
-    """The same as action_url, but with the most important macros expanded"""
+    """A comment text"""
 
-    active_checks_enabled = Column(
-        'active_checks_enabled',
+    duration = Column(
+        'duration',
         col_type='int',
-        description='Whether active checks of the object are enabled (0/1)',
+        description='The duration of the downtime in seconds',
     )
-    """Whether active checks of the object are enabled (0/1)"""
+    """The duration of the downtime in seconds"""
 
-    cache_interval = Column(
-        'cache_interval',
-        col_type='int',
-        description='For checks that base on cached agent data the interval in that this cache is recreated. 0 for other services.',
-    )
-    """For checks that base on cached agent data the interval in that this cache is recreated. 0 for other services."""
-
-    cached_at = Column(
-        'cached_at',
+    end_time = Column(
+        'end_time',
         col_type='time',
-        description='For checks that base on cached agent data the time when this data was created. 0 for other services.',
+        description='The end time of the downtime as UNIX timestamp',
     )
-    """For checks that base on cached agent data the time when this data was created. 0 for other services."""
+    """The end time of the downtime as UNIX timestamp"""
 
-    check_command = Column(
-        'check_command',
-        col_type='string',
-        description='Logical command name for active checks',
+    entry_time = Column(
+        'entry_time',
+        col_type='time',
+        description='The time the entry was made as UNIX timestamp',
     )
-    """Logical command name for active checks"""
+    """The time the entry was made as UNIX timestamp"""
 
-    check_command_expanded = Column(
-        'check_command_expanded',
-        col_type='string',
-        description='Logical command name for active checks, with macros expanded',
-    )
-    """Logical command name for active checks, with macros expanded"""
-
-    check_flapping_recovery_notification = Column(
-        'check_flapping_recovery_notification',
+    fixed = Column(
+        'fixed',
         col_type='int',
-        description='Whether to check to send a recovery notification when flapping stops (0/1)',
+        description='A 1 if the downtime is fixed, a 0 if it is flexible',
     )
-    """Whether to check to send a recovery notification when flapping stops (0/1)"""
-
-    check_freshness = Column(
-        'check_freshness',
-        col_type='int',
-        description='Whether freshness checks are enabled (0/1)',
-    )
-    """Whether freshness checks are enabled (0/1)"""
-
-    check_interval = Column(
-        'check_interval',
-        col_type='float',
-        description='Number of basic interval lengths between two scheduled checks',
-    )
-    """Number of basic interval lengths between two scheduled checks"""
-
-    check_options = Column(
-        'check_options',
-        col_type='int',
-        description='The current check option, forced, normal, freshness (0-2)',
-    )
-    """The current check option, forced, normal, freshness (0-2)"""
-
-    check_period = Column(
-        'check_period',
-        col_type='string',
-        description='Time period in which this object will be checked. If empty then the check will always be executed.',
-    )
-    """Time period in which this object will be checked. If empty then the check will always be executed."""
-
-    check_type = Column(
-        'check_type',
-        col_type='int',
-        description='Type of check (0: active, 1: passive)',
-    )
-    """Type of check (0: active, 1: passive)"""
-
-    checks_enabled = Column(
-        'checks_enabled',
-        col_type='int',
-        description='Whether checks of the object are enabled (0/1)',
-    )
-    """Whether checks of the object are enabled (0/1)"""
-
-    comments = Column(
-        'comments',
-        col_type='list',
-        description='A list of the ids of all comments',
-    )
-    """A list of the ids of all comments"""
-
-    comments_with_extra_info = Column(
-        'comments_with_extra_info',
-        col_type='list',
-        description='A list of all comments with id, author, comment, entry type and entry time',
-    )
-    """A list of all comments with id, author, comment, entry type and entry time"""
-
-    comments_with_info = Column(
-        'comments_with_info',
-        col_type='list',
-        description='A list of all comments with id, author and comment',
-    )
-    """A list of all comments with id, author and comment"""
-
-    contact_groups = Column(
-        'contact_groups',
-        col_type='list',
-        description='A list of all contact groups this object is in',
-    )
-    """A list of all contact groups this object is in"""
-
-    contacts = Column(
-        'contacts',
-        col_type='list',
-        description='A list of all contacts of this object',
-    )
-    """A list of all contacts of this object"""
-
-    current_attempt = Column(
-        'current_attempt',
-        col_type='int',
-        description='Number of the current check attempts',
-    )
-    """Number of the current check attempts"""
-
-    current_notification_number = Column(
-        'current_notification_number',
-        col_type='int',
-        description='Number of the current notification',
-    )
-    """Number of the current notification"""
-
-    custom_variable_names = Column(
-        'custom_variable_names',
-        col_type='list',
-        description='A list of the names of the custom variables',
-    )
-    """A list of the names of the custom variables"""
-
-    custom_variable_values = Column(
-        'custom_variable_values',
-        col_type='list',
-        description='A list of the values of the custom variables',
-    )
-    """A list of the values of the custom variables"""
-
-    custom_variables = Column(
-        'custom_variables',
-        col_type='dict',
-        description='A dictionary of the custom variables',
-    )
-    """A dictionary of the custom variables"""
-
-    description = Column(
-        'description',
-        col_type='string',
-        description='Service name',
-    )
-    """Service name"""
-
-    display_name = Column(
-        'display_name',
-        col_type='string',
-        description='Optional display name',
-    )
-    """Optional display name"""
-
-    downtimes = Column(
-        'downtimes',
-        col_type='list',
-        description='A list of the ids of all scheduled downtimes of this object',
-    )
-    """A list of the ids of all scheduled downtimes of this object"""
-
-    downtimes_with_extra_info = Column(
-        'downtimes_with_extra_info',
-        col_type='list',
-        description='A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending',
-    )
-    """A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending"""
-
-    downtimes_with_info = Column(
-        'downtimes_with_info',
-        col_type='list',
-        description='A list of the scheduled downtimes with id, author and comment',
-    )
-    """A list of the scheduled downtimes with id, author and comment"""
-
-    event_handler = Column(
-        'event_handler',
-        col_type='string',
-        description='Command used as event handler',
-    )
-    """Command used as event handler"""
-
-    event_handler_enabled = Column(
-        'event_handler_enabled',
-        col_type='int',
-        description='Whether event handling is enabled (0/1)',
-    )
-    """Whether event handling is enabled (0/1)"""
-
-    execution_time = Column(
-        'execution_time',
-        col_type='float',
-        description='Time the check needed for execution',
-    )
-    """Time the check needed for execution"""
-
-    first_notification_delay = Column(
-        'first_notification_delay',
-        col_type='float',
-        description='Delay before the first notification',
-    )
-    """Delay before the first notification"""
-
-    flap_detection_enabled = Column(
-        'flap_detection_enabled',
-        col_type='int',
-        description='Whether flap detection is enabled (0/1)',
-    )
-    """Whether flap detection is enabled (0/1)"""
-
-    flappiness = Column(
-        'flappiness',
-        col_type='float',
-        description='The current level of flappiness, this corresponds with the recent frequency of state changes',
-    )
-    """The current level of flappiness, this corresponds with the recent frequency of state changes"""
-
-    groups = Column(
-        'groups',
-        col_type='list',
-        description='A list of all service groups this object is in',
-    )
-    """A list of all service groups this object is in"""
-
-    hard_state = Column(
-        'hard_state',
-        col_type='int',
-        description='The effective hard state of this object',
-    )
-    """The effective hard state of this object"""
-
-    has_been_checked = Column(
-        'has_been_checked',
-        col_type='int',
-        description='Whether a check has already been executed (0/1)',
-    )
-    """Whether a check has already been executed (0/1)"""
-
-    high_flap_threshold = Column(
-        'high_flap_threshold',
-        col_type='float',
-        description='High threshold of flap detection',
-    )
-    """High threshold of flap detection"""
+    """A 1 if the downtime is fixed, a 0 if it is flexible"""
 
     host_accept_passive_checks = Column(
         'host_accept_passive_checks',
@@ -1242,618 +990,828 @@ class Servicesbygroup(Table):
     )
     """3D-Coordinates: Z"""
 
-    icon_image = Column(
-        'icon_image',
+    id = Column(
+        'id',
+        col_type='int',
+        description='The id of the downtime',
+    )
+    """The id of the downtime"""
+
+    is_pending = Column(
+        'is_pending',
+        col_type='int',
+        description='1 if the downtime is currently pending (not active), 0 if it is active',
+    )
+    """1 if the downtime is currently pending (not active), 0 if it is active"""
+
+    is_service = Column(
+        'is_service',
+        col_type='int',
+        description='0, if this entry is for a host, 1 if it is for a service',
+    )
+    """0, if this entry is for a host, 1 if it is for a service"""
+
+    origin = Column(
+        'origin',
+        col_type='int',
+        description='A 0 if the downtime has been set by a command, a 1 if it has been configured by a rule',
+    )
+    """A 0 if the downtime has been set by a command, a 1 if it has been configured by a rule"""
+
+    recurring = Column(
+        'recurring',
+        col_type='int',
+        description='For recurring downtimes: 1: hourly, 2: daily, 3: weekly, 4: two-weekly, 5: four-weekly. Otherwise 0',
+    )
+    """For recurring downtimes: 1: hourly, 2: daily, 3: weekly, 4: two-weekly, 5: four-weekly. Otherwise 0"""
+
+    service_accept_passive_checks = Column(
+        'service_accept_passive_checks',
+        col_type='int',
+        description='Whether passive host checks are accepted (0/1)',
+    )
+    """Whether passive host checks are accepted (0/1)"""
+
+    service_acknowledged = Column(
+        'service_acknowledged',
+        col_type='int',
+        description='Whether the current problem has been acknowledged (0/1)',
+    )
+    """Whether the current problem has been acknowledged (0/1)"""
+
+    service_acknowledgement_type = Column(
+        'service_acknowledgement_type',
+        col_type='int',
+        description='Type of acknowledgement (0: none, 1: normal, 2: sticky)',
+    )
+    """Type of acknowledgement (0: none, 1: normal, 2: sticky)"""
+
+    service_action_url = Column(
+        'service_action_url',
+        col_type='string',
+        description='An optional URL to custom actions or information about this host',
+    )
+    """An optional URL to custom actions or information about this host"""
+
+    service_action_url_expanded = Column(
+        'service_action_url_expanded',
+        col_type='string',
+        description='The same as action_url, but with the most important macros expanded',
+    )
+    """The same as action_url, but with the most important macros expanded"""
+
+    service_active_checks_enabled = Column(
+        'service_active_checks_enabled',
+        col_type='int',
+        description='Whether active checks of the object are enabled (0/1)',
+    )
+    """Whether active checks of the object are enabled (0/1)"""
+
+    service_cache_interval = Column(
+        'service_cache_interval',
+        col_type='int',
+        description='For checks that base on cached agent data the interval in that this cache is recreated. 0 for other services.',
+    )
+    """For checks that base on cached agent data the interval in that this cache is recreated. 0 for other services."""
+
+    service_cached_at = Column(
+        'service_cached_at',
+        col_type='time',
+        description='For checks that base on cached agent data the time when this data was created. 0 for other services.',
+    )
+    """For checks that base on cached agent data the time when this data was created. 0 for other services."""
+
+    service_check_command = Column(
+        'service_check_command',
+        col_type='string',
+        description='Logical command name for active checks',
+    )
+    """Logical command name for active checks"""
+
+    service_check_command_expanded = Column(
+        'service_check_command_expanded',
+        col_type='string',
+        description='Logical command name for active checks, with macros expanded',
+    )
+    """Logical command name for active checks, with macros expanded"""
+
+    service_check_flapping_recovery_notification = Column(
+        'service_check_flapping_recovery_notification',
+        col_type='int',
+        description='Whether to check to send a recovery notification when flapping stops (0/1)',
+    )
+    """Whether to check to send a recovery notification when flapping stops (0/1)"""
+
+    service_check_freshness = Column(
+        'service_check_freshness',
+        col_type='int',
+        description='Whether freshness checks are enabled (0/1)',
+    )
+    """Whether freshness checks are enabled (0/1)"""
+
+    service_check_interval = Column(
+        'service_check_interval',
+        col_type='float',
+        description='Number of basic interval lengths between two scheduled checks',
+    )
+    """Number of basic interval lengths between two scheduled checks"""
+
+    service_check_options = Column(
+        'service_check_options',
+        col_type='int',
+        description='The current check option, forced, normal, freshness (0-2)',
+    )
+    """The current check option, forced, normal, freshness (0-2)"""
+
+    service_check_period = Column(
+        'service_check_period',
+        col_type='string',
+        description='Time period in which this object will be checked. If empty then the check will always be executed.',
+    )
+    """Time period in which this object will be checked. If empty then the check will always be executed."""
+
+    service_check_type = Column(
+        'service_check_type',
+        col_type='int',
+        description='Type of check (0: active, 1: passive)',
+    )
+    """Type of check (0: active, 1: passive)"""
+
+    service_checks_enabled = Column(
+        'service_checks_enabled',
+        col_type='int',
+        description='Whether checks of the object are enabled (0/1)',
+    )
+    """Whether checks of the object are enabled (0/1)"""
+
+    service_comments = Column(
+        'service_comments',
+        col_type='list',
+        description='A list of the ids of all comments',
+    )
+    """A list of the ids of all comments"""
+
+    service_comments_with_extra_info = Column(
+        'service_comments_with_extra_info',
+        col_type='list',
+        description='A list of all comments with id, author, comment, entry type and entry time',
+    )
+    """A list of all comments with id, author, comment, entry type and entry time"""
+
+    service_comments_with_info = Column(
+        'service_comments_with_info',
+        col_type='list',
+        description='A list of all comments with id, author and comment',
+    )
+    """A list of all comments with id, author and comment"""
+
+    service_contact_groups = Column(
+        'service_contact_groups',
+        col_type='list',
+        description='A list of all contact groups this object is in',
+    )
+    """A list of all contact groups this object is in"""
+
+    service_contacts = Column(
+        'service_contacts',
+        col_type='list',
+        description='A list of all contacts of this object',
+    )
+    """A list of all contacts of this object"""
+
+    service_current_attempt = Column(
+        'service_current_attempt',
+        col_type='int',
+        description='Number of the current check attempts',
+    )
+    """Number of the current check attempts"""
+
+    service_current_notification_number = Column(
+        'service_current_notification_number',
+        col_type='int',
+        description='Number of the current notification',
+    )
+    """Number of the current notification"""
+
+    service_custom_variable_names = Column(
+        'service_custom_variable_names',
+        col_type='list',
+        description='A list of the names of the custom variables',
+    )
+    """A list of the names of the custom variables"""
+
+    service_custom_variable_values = Column(
+        'service_custom_variable_values',
+        col_type='list',
+        description='A list of the values of the custom variables',
+    )
+    """A list of the values of the custom variables"""
+
+    service_custom_variables = Column(
+        'service_custom_variables',
+        col_type='dict',
+        description='A dictionary of the custom variables',
+    )
+    """A dictionary of the custom variables"""
+
+    service_description = Column(
+        'service_description',
+        col_type='string',
+        description='Service name',
+    )
+    """Service name"""
+
+    service_display_name = Column(
+        'service_display_name',
+        col_type='string',
+        description='Optional display name',
+    )
+    """Optional display name"""
+
+    service_downtimes = Column(
+        'service_downtimes',
+        col_type='list',
+        description='A list of the ids of all scheduled downtimes of this object',
+    )
+    """A list of the ids of all scheduled downtimes of this object"""
+
+    service_downtimes_with_extra_info = Column(
+        'service_downtimes_with_extra_info',
+        col_type='list',
+        description='A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending',
+    )
+    """A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending"""
+
+    service_downtimes_with_info = Column(
+        'service_downtimes_with_info',
+        col_type='list',
+        description='A list of the scheduled downtimes with id, author and comment',
+    )
+    """A list of the scheduled downtimes with id, author and comment"""
+
+    service_event_handler = Column(
+        'service_event_handler',
+        col_type='string',
+        description='Command used as event handler',
+    )
+    """Command used as event handler"""
+
+    service_event_handler_enabled = Column(
+        'service_event_handler_enabled',
+        col_type='int',
+        description='Whether event handling is enabled (0/1)',
+    )
+    """Whether event handling is enabled (0/1)"""
+
+    service_execution_time = Column(
+        'service_execution_time',
+        col_type='float',
+        description='Time the check needed for execution',
+    )
+    """Time the check needed for execution"""
+
+    service_first_notification_delay = Column(
+        'service_first_notification_delay',
+        col_type='float',
+        description='Delay before the first notification',
+    )
+    """Delay before the first notification"""
+
+    service_flap_detection_enabled = Column(
+        'service_flap_detection_enabled',
+        col_type='int',
+        description='Whether flap detection is enabled (0/1)',
+    )
+    """Whether flap detection is enabled (0/1)"""
+
+    service_flappiness = Column(
+        'service_flappiness',
+        col_type='float',
+        description='The current level of flappiness, this corresponds with the recent frequency of state changes',
+    )
+    """The current level of flappiness, this corresponds with the recent frequency of state changes"""
+
+    service_groups = Column(
+        'service_groups',
+        col_type='list',
+        description='A list of all service groups this object is in',
+    )
+    """A list of all service groups this object is in"""
+
+    service_hard_state = Column(
+        'service_hard_state',
+        col_type='int',
+        description='The effective hard state of this object',
+    )
+    """The effective hard state of this object"""
+
+    service_has_been_checked = Column(
+        'service_has_been_checked',
+        col_type='int',
+        description='Whether a check has already been executed (0/1)',
+    )
+    """Whether a check has already been executed (0/1)"""
+
+    service_high_flap_threshold = Column(
+        'service_high_flap_threshold',
+        col_type='float',
+        description='High threshold of flap detection',
+    )
+    """High threshold of flap detection"""
+
+    service_icon_image = Column(
+        'service_icon_image',
         col_type='string',
         description='The name of an image file to be used in the web pages',
     )
     """The name of an image file to be used in the web pages"""
 
-    icon_image_alt = Column(
-        'icon_image_alt',
+    service_icon_image_alt = Column(
+        'service_icon_image_alt',
         col_type='string',
         description='Alternative text for the icon_image',
     )
     """Alternative text for the icon_image"""
 
-    icon_image_expanded = Column(
-        'icon_image_expanded',
+    service_icon_image_expanded = Column(
+        'service_icon_image_expanded',
         col_type='string',
         description='The same as icon_image, but with the most important macros expanded',
     )
     """The same as icon_image, but with the most important macros expanded"""
 
-    in_check_period = Column(
-        'in_check_period',
+    service_in_check_period = Column(
+        'service_in_check_period',
         col_type='int',
         description='Whether this object is currently in its check period (0/1)',
     )
     """Whether this object is currently in its check period (0/1)"""
 
-    in_notification_period = Column(
-        'in_notification_period',
+    service_in_notification_period = Column(
+        'service_in_notification_period',
         col_type='int',
         description='Whether this object is currently in its notification period (0/1)',
     )
     """Whether this object is currently in its notification period (0/1)"""
 
-    in_passive_check_period = Column(
-        'in_passive_check_period',
+    service_in_passive_check_period = Column(
+        'service_in_passive_check_period',
         col_type='int',
         description='Whether this service is currently in its passive check period (0/1)',
     )
     """Whether this service is currently in its passive check period (0/1)"""
 
-    in_service_period = Column(
-        'in_service_period',
+    service_in_service_period = Column(
+        'service_in_service_period',
         col_type='int',
         description='Whether this object is currently in its service period (0/1)',
     )
     """Whether this object is currently in its service period (0/1)"""
 
-    initial_state = Column(
-        'initial_state',
+    service_initial_state = Column(
+        'service_initial_state',
         col_type='int',
         description='Initial state',
     )
     """Initial state"""
 
-    is_executing = Column(
-        'is_executing',
+    service_is_executing = Column(
+        'service_is_executing',
         col_type='int',
         description='is there a check currently running (0/1)',
     )
     """is there a check currently running (0/1)"""
 
-    is_flapping = Column(
-        'is_flapping',
+    service_is_flapping = Column(
+        'service_is_flapping',
         col_type='int',
         description='Whether the state is flapping (0/1)',
     )
     """Whether the state is flapping (0/1)"""
 
-    label_names = Column(
-        'label_names',
+    service_label_names = Column(
+        'service_label_names',
         col_type='list',
         description='A list of the names of the labels',
     )
     """A list of the names of the labels"""
 
-    label_source_names = Column(
-        'label_source_names',
+    service_label_source_names = Column(
+        'service_label_source_names',
         col_type='list',
         description='A list of the names of the label sources',
     )
     """A list of the names of the label sources"""
 
-    label_source_values = Column(
-        'label_source_values',
+    service_label_source_values = Column(
+        'service_label_source_values',
         col_type='list',
         description='A list of the values of the label sources',
     )
     """A list of the values of the label sources"""
 
-    label_sources = Column(
-        'label_sources',
+    service_label_sources = Column(
+        'service_label_sources',
         col_type='dict',
         description='A dictionary of the label sources',
     )
     """A dictionary of the label sources"""
 
-    label_values = Column(
-        'label_values',
+    service_label_values = Column(
+        'service_label_values',
         col_type='list',
         description='A list of the values of the labels',
     )
     """A list of the values of the labels"""
 
-    labels = Column(
-        'labels',
+    service_labels = Column(
+        'service_labels',
         col_type='dict',
         description='A dictionary of the labels',
     )
     """A dictionary of the labels"""
 
-    last_check = Column(
-        'last_check',
+    service_last_check = Column(
+        'service_last_check',
         col_type='time',
         description='Time of the last check (Unix timestamp)',
     )
     """Time of the last check (Unix timestamp)"""
 
-    last_hard_state = Column(
-        'last_hard_state',
+    service_last_hard_state = Column(
+        'service_last_hard_state',
         col_type='int',
         description='Last hard state',
     )
     """Last hard state"""
 
-    last_hard_state_change = Column(
-        'last_hard_state_change',
+    service_last_hard_state_change = Column(
+        'service_last_hard_state_change',
         col_type='time',
         description='Time of the last hard state change - soft or hard (Unix timestamp)',
     )
     """Time of the last hard state change - soft or hard (Unix timestamp)"""
 
-    last_notification = Column(
-        'last_notification',
+    service_last_notification = Column(
+        'service_last_notification',
         col_type='time',
         description='Time of the last notification (Unix timestamp)',
     )
     """Time of the last notification (Unix timestamp)"""
 
-    last_state = Column(
-        'last_state',
+    service_last_state = Column(
+        'service_last_state',
         col_type='int',
         description='State before last state change',
     )
     """State before last state change"""
 
-    last_state_change = Column(
-        'last_state_change',
+    service_last_state_change = Column(
+        'service_last_state_change',
         col_type='time',
         description='Time of the last state change - soft or hard (Unix timestamp)',
     )
     """Time of the last state change - soft or hard (Unix timestamp)"""
 
-    last_time_critical = Column(
-        'last_time_critical',
+    service_last_time_critical = Column(
+        'service_last_time_critical',
         col_type='time',
         description='Last time the service was CRIT (Unix timestamp)',
     )
     """Last time the service was CRIT (Unix timestamp)"""
 
-    last_time_ok = Column(
-        'last_time_ok',
+    service_last_time_ok = Column(
+        'service_last_time_ok',
         col_type='time',
         description='Last time the service was OK (Unix timestamp)',
     )
     """Last time the service was OK (Unix timestamp)"""
 
-    last_time_unknown = Column(
-        'last_time_unknown',
+    service_last_time_unknown = Column(
+        'service_last_time_unknown',
         col_type='time',
         description='Last time the service was UNKNOWN (Unix timestamp)',
     )
     """Last time the service was UNKNOWN (Unix timestamp)"""
 
-    last_time_warning = Column(
-        'last_time_warning',
+    service_last_time_warning = Column(
+        'service_last_time_warning',
         col_type='time',
         description='Last time the service was WARN (Unix timestamp)',
     )
     """Last time the service was WARN (Unix timestamp)"""
 
-    latency = Column(
-        'latency',
+    service_latency = Column(
+        'service_latency',
         col_type='float',
         description='Time difference between scheduled check time and actual check time',
     )
     """Time difference between scheduled check time and actual check time"""
 
-    long_plugin_output = Column(
-        'long_plugin_output',
+    service_long_plugin_output = Column(
+        'service_long_plugin_output',
         col_type='string',
         description='Long (extra) output of the last check',
     )
     """Long (extra) output of the last check"""
 
-    low_flap_threshold = Column(
-        'low_flap_threshold',
+    service_low_flap_threshold = Column(
+        'service_low_flap_threshold',
         col_type='float',
         description='Low threshold of flap detection',
     )
     """Low threshold of flap detection"""
 
-    max_check_attempts = Column(
-        'max_check_attempts',
+    service_max_check_attempts = Column(
+        'service_max_check_attempts',
         col_type='int',
         description='Maximum attempts for active checks before a hard state',
     )
     """Maximum attempts for active checks before a hard state"""
 
-    metrics = Column(
-        'metrics',
+    service_metrics = Column(
+        'service_metrics',
         col_type='list',
         description='A list of all metrics of this object that historically existed',
     )
     """A list of all metrics of this object that historically existed"""
 
-    modified_attributes = Column(
-        'modified_attributes',
+    service_modified_attributes = Column(
+        'service_modified_attributes',
         col_type='int',
         description='A bitmask specifying which attributes have been modified',
     )
     """A bitmask specifying which attributes have been modified"""
 
-    modified_attributes_list = Column(
-        'modified_attributes_list',
+    service_modified_attributes_list = Column(
+        'service_modified_attributes_list',
         col_type='list',
         description='A list of all modified attributes',
     )
     """A list of all modified attributes"""
 
-    next_check = Column(
-        'next_check',
+    service_next_check = Column(
+        'service_next_check',
         col_type='time',
         description='Scheduled time for the next check (Unix timestamp)',
     )
     """Scheduled time for the next check (Unix timestamp)"""
 
-    next_notification = Column(
-        'next_notification',
+    service_next_notification = Column(
+        'service_next_notification',
         col_type='time',
         description='Time of the next notification (Unix timestamp)',
     )
     """Time of the next notification (Unix timestamp)"""
 
-    no_more_notifications = Column(
-        'no_more_notifications',
+    service_no_more_notifications = Column(
+        'service_no_more_notifications',
         col_type='int',
         description='Whether to stop sending notifications (0/1)',
     )
     """Whether to stop sending notifications (0/1)"""
 
-    notes = Column(
-        'notes',
+    service_notes = Column(
+        'service_notes',
         col_type='string',
         description='Optional notes for this object, with macros not expanded',
     )
     """Optional notes for this object, with macros not expanded"""
 
-    notes_expanded = Column(
-        'notes_expanded',
+    service_notes_expanded = Column(
+        'service_notes_expanded',
         col_type='string',
         description='The same as notes, but with the most important macros expanded',
     )
     """The same as notes, but with the most important macros expanded"""
 
-    notes_url = Column(
-        'notes_url',
+    service_notes_url = Column(
+        'service_notes_url',
         col_type='string',
         description='An optional URL with further information about the object',
     )
     """An optional URL with further information about the object"""
 
-    notes_url_expanded = Column(
-        'notes_url_expanded',
+    service_notes_url_expanded = Column(
+        'service_notes_url_expanded',
         col_type='string',
         description='Same es notes_url, but with the most important macros expanded',
     )
     """Same es notes_url, but with the most important macros expanded"""
 
-    notification_interval = Column(
-        'notification_interval',
+    service_notification_interval = Column(
+        'service_notification_interval',
         col_type='float',
         description='Interval of periodic notification in minutes or 0 if its off',
     )
     """Interval of periodic notification in minutes or 0 if its off"""
 
-    notification_period = Column(
-        'notification_period',
+    service_notification_period = Column(
+        'service_notification_period',
         col_type='string',
         description='Time period in which problems of this object will be notified. If empty then notification will be always',
     )
     """Time period in which problems of this object will be notified. If empty then notification will be always"""
 
-    notification_postponement_reason = Column(
-        'notification_postponement_reason',
+    service_notification_postponement_reason = Column(
+        'service_notification_postponement_reason',
         col_type='string',
         description='reason for postponing the pending notification, empty if nothing is postponed',
     )
     """reason for postponing the pending notification, empty if nothing is postponed"""
 
-    notifications_enabled = Column(
-        'notifications_enabled',
+    service_notifications_enabled = Column(
+        'service_notifications_enabled',
         col_type='int',
         description='Whether notifications of the host are enabled (0/1)',
     )
     """Whether notifications of the host are enabled (0/1)"""
 
-    obsess_over_service = Column(
-        'obsess_over_service',
+    service_obsess_over_service = Column(
+        'service_obsess_over_service',
         col_type='int',
         description='The current obsess_over_service setting (0/1)',
     )
     """The current obsess_over_service setting (0/1)"""
 
-    passive_check_period = Column(
-        'passive_check_period',
+    service_passive_check_period = Column(
+        'service_passive_check_period',
         col_type='string',
         description='Time period in which this (passive) service will be checked.',
     )
     """Time period in which this (passive) service will be checked."""
 
-    pending_flex_downtime = Column(
-        'pending_flex_downtime',
+    service_pending_flex_downtime = Column(
+        'service_pending_flex_downtime',
         col_type='int',
         description='Number of pending flexible downtimes',
     )
     """Number of pending flexible downtimes"""
 
-    percent_state_change = Column(
-        'percent_state_change',
+    service_percent_state_change = Column(
+        'service_percent_state_change',
         col_type='float',
         description='Percent state change',
     )
     """Percent state change"""
 
-    perf_data = Column(
-        'perf_data',
+    service_perf_data = Column(
+        'service_perf_data',
         col_type='string',
         description='Optional performance data of the last check',
     )
     """Optional performance data of the last check"""
 
-    performance_data = Column(
-        'performance_data',
+    service_performance_data = Column(
+        'service_performance_data',
         col_type='dictdouble',
         description='Optional performance data as a dict',
     )
     """Optional performance data as a dict"""
 
-    plugin_output = Column(
-        'plugin_output',
+    service_plugin_output = Column(
+        'service_plugin_output',
         col_type='string',
         description='Output of the last check',
     )
     """Output of the last check"""
 
-    pnpgraph_present = Column(
-        'pnpgraph_present',
+    service_pnpgraph_present = Column(
+        'service_pnpgraph_present',
         col_type='int',
         description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
     """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
 
-    prediction_files = Column(
-        'prediction_files',
+    service_prediction_files = Column(
+        'service_prediction_files',
         col_type='list',
         description='List currently available predictions',
     )
     """List currently available predictions"""
 
-    previous_hard_state = Column(
-        'previous_hard_state',
+    service_previous_hard_state = Column(
+        'service_previous_hard_state',
         col_type='int',
         description='Previous hard state (that hard state before the current/last hard state)',
     )
     """Previous hard state (that hard state before the current/last hard state)"""
 
-    process_performance_data = Column(
-        'process_performance_data',
+    service_process_performance_data = Column(
+        'service_process_performance_data',
         col_type='int',
         description='Whether processing of performance data is enabled (0/1)',
     )
     """Whether processing of performance data is enabled (0/1)"""
 
-    retry_interval = Column(
-        'retry_interval',
+    service_retry_interval = Column(
+        'service_retry_interval',
         col_type='float',
         description='Number of basic interval lengths between checks when retrying after a soft error',
     )
     """Number of basic interval lengths between checks when retrying after a soft error"""
 
-    robotmk_last_error_log = Column(
-        'robotmk_last_error_log',
+    service_robotmk_last_error_log = Column(
+        'service_robotmk_last_error_log',
         col_type='blob',
         description='The file content of the Robotmk error log',
     )
     """The file content of the Robotmk error log"""
 
-    robotmk_last_error_log_gz = Column(
-        'robotmk_last_error_log_gz',
+    service_robotmk_last_error_log_gz = Column(
+        'service_robotmk_last_error_log_gz',
         col_type='blob',
         description='The gzipped file content of the Robotmk error log',
     )
     """The gzipped file content of the Robotmk error log"""
 
-    robotmk_last_log = Column(
-        'robotmk_last_log',
+    service_robotmk_last_log = Column(
+        'service_robotmk_last_log',
         col_type='blob',
         description='The file content of the Robotmk log',
     )
     """The file content of the Robotmk log"""
 
-    robotmk_last_log_gz = Column(
-        'robotmk_last_log_gz',
+    service_robotmk_last_log_gz = Column(
+        'service_robotmk_last_log_gz',
         col_type='blob',
         description='The gzipped file content of the Robotmk log',
     )
     """The gzipped file content of the Robotmk log"""
 
-    scheduled_downtime_depth = Column(
-        'scheduled_downtime_depth',
+    service_scheduled_downtime_depth = Column(
+        'service_scheduled_downtime_depth',
         col_type='int',
         description='The number of downtimes this object is currently in',
     )
     """The number of downtimes this object is currently in"""
 
-    service_period = Column(
-        'service_period',
+    service_service_period = Column(
+        'service_service_period',
         col_type='string',
         description='Time period during which the object is expected to be available',
     )
     """Time period during which the object is expected to be available"""
 
-    servicegroup_action_url = Column(
-        'servicegroup_action_url',
-        col_type='string',
-        description='An optional URL to custom notes or actions on the service group',
-    )
-    """An optional URL to custom notes or actions on the service group"""
-
-    servicegroup_alias = Column(
-        'servicegroup_alias',
-        col_type='string',
-        description='An alias of the servicegroup',
-    )
-    """An alias of the servicegroup"""
-
-    servicegroup_members = Column(
-        'servicegroup_members',
-        col_type='list',
-        description='A list of all members of the service group as host/service pairs',
-    )
-    """A list of all members of the service group as host/service pairs"""
-
-    servicegroup_members_with_state = Column(
-        'servicegroup_members_with_state',
-        col_type='list',
-        description='A list of all members of the service group with state and has_been_checked',
-    )
-    """A list of all members of the service group with state and has_been_checked"""
-
-    servicegroup_name = Column(
-        'servicegroup_name',
-        col_type='string',
-        description='Name of the servicegroup',
-    )
-    """Name of the servicegroup"""
-
-    servicegroup_notes = Column(
-        'servicegroup_notes',
-        col_type='string',
-        description='Optional additional notes about the service group',
-    )
-    """Optional additional notes about the service group"""
-
-    servicegroup_notes_url = Column(
-        'servicegroup_notes_url',
-        col_type='string',
-        description='An optional URL to further notes on the service group',
-    )
-    """An optional URL to further notes on the service group"""
-
-    servicegroup_num_services = Column(
-        'servicegroup_num_services',
-        col_type='int',
-        description='The total number of services in the group',
-    )
-    """The total number of services in the group"""
-
-    servicegroup_num_services_crit = Column(
-        'servicegroup_num_services_crit',
-        col_type='int',
-        description='The number of services in the group that are CRIT',
-    )
-    """The number of services in the group that are CRIT"""
-
-    servicegroup_num_services_handled_problems = Column(
-        'servicegroup_num_services_handled_problems',
-        col_type='int',
-        description='The number of services in the group that have handled problems',
-    )
-    """The number of services in the group that have handled problems"""
-
-    servicegroup_num_services_hard_crit = Column(
-        'servicegroup_num_services_hard_crit',
-        col_type='int',
-        description='The number of services in the group that are CRIT',
-    )
-    """The number of services in the group that are CRIT"""
-
-    servicegroup_num_services_hard_ok = Column(
-        'servicegroup_num_services_hard_ok',
-        col_type='int',
-        description='The number of services in the group that are OK',
-    )
-    """The number of services in the group that are OK"""
-
-    servicegroup_num_services_hard_unknown = Column(
-        'servicegroup_num_services_hard_unknown',
-        col_type='int',
-        description='The number of services in the group that are UNKNOWN',
-    )
-    """The number of services in the group that are UNKNOWN"""
-
-    servicegroup_num_services_hard_warn = Column(
-        'servicegroup_num_services_hard_warn',
-        col_type='int',
-        description='The number of services in the group that are WARN',
-    )
-    """The number of services in the group that are WARN"""
-
-    servicegroup_num_services_ok = Column(
-        'servicegroup_num_services_ok',
-        col_type='int',
-        description='The number of services in the group that are OK',
-    )
-    """The number of services in the group that are OK"""
-
-    servicegroup_num_services_pending = Column(
-        'servicegroup_num_services_pending',
-        col_type='int',
-        description='The number of services in the group that are PENDING',
-    )
-    """The number of services in the group that are PENDING"""
-
-    servicegroup_num_services_unhandled_problems = Column(
-        'servicegroup_num_services_unhandled_problems',
-        col_type='int',
-        description='The number of services in the group that have unhandled problems',
-    )
-    """The number of services in the group that have unhandled problems"""
-
-    servicegroup_num_services_unknown = Column(
-        'servicegroup_num_services_unknown',
-        col_type='int',
-        description='The number of services in the group that are UNKNOWN',
-    )
-    """The number of services in the group that are UNKNOWN"""
-
-    servicegroup_num_services_warn = Column(
-        'servicegroup_num_services_warn',
-        col_type='int',
-        description='The number of services in the group that are WARN',
-    )
-    """The number of services in the group that are WARN"""
-
-    servicegroup_worst_service_state = Column(
-        'servicegroup_worst_service_state',
-        col_type='int',
-        description='The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)',
-    )
-    """The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)"""
-
-    staleness = Column(
-        'staleness',
+    service_staleness = Column(
+        'service_staleness',
         col_type='float',
         description='The staleness of this object',
     )
     """The staleness of this object"""
 
-    state = Column(
-        'state',
+    service_state = Column(
+        'service_state',
         col_type='int',
         description='The current state of the object, for hosts: 0/1/2 for UP/DOWN/UNREACH, for services: 0/1/2/3 for OK/WARN/CRIT/UNKNOWN',
     )
     """The current state of the object, for hosts: 0/1/2 for UP/DOWN/UNREACH, for services: 0/1/2/3 for OK/WARN/CRIT/UNKNOWN"""
 
-    state_type = Column(
-        'state_type',
+    service_state_type = Column(
+        'service_state_type',
         col_type='int',
         description='Type of the current state (0: soft, 1: hard)',
     )
     """Type of the current state (0: soft, 1: hard)"""
 
-    tag_names = Column(
-        'tag_names',
+    service_tag_names = Column(
+        'service_tag_names',
         col_type='list',
         description='A list of the names of the tags',
     )
     """A list of the names of the tags"""
 
-    tag_values = Column(
-        'tag_values',
+    service_tag_values = Column(
+        'service_tag_values',
         col_type='list',
         description='A list of the values of the tags',
     )
     """A list of the values of the tags"""
 
-    tags = Column(
-        'tags',
+    service_tags = Column(
+        'service_tags',
         col_type='dict',
         description='A dictionary of the tags',
     )
     """A dictionary of the tags"""
+
+    start_time = Column(
+        'start_time',
+        col_type='time',
+        description='The start time of the downtime as UNIX timestamp',
+    )
+    """The start time of the downtime as UNIX timestamp"""
+
+    triggered_by = Column(
+        'triggered_by',
+        col_type='int',
+        description='The ID of the downtime triggering this downtime or 0 if there is none',
+    )
+    """The ID of the downtime triggering this downtime or 0 if there is none"""
+
+    type = Column(
+        'type',
+        col_type='int',
+        description='1 for a service downtime, 2 for a host downtime',
+    )
+    """1 for a service downtime, 2 for a host downtime"""

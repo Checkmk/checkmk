@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 from typing import Any, Literal, override
 
-from cmk.utils.livestatus_helpers.expressions import (
+from .expressions import (
     BinaryExpression,
     BoolExpression,
     ListExpression,
@@ -211,8 +211,8 @@ def expr_to_tree(
 
     Examples:
 
-        >>> from cmk.utils.livestatus_helpers.expressions import And
-        >>> from cmk.utils.livestatus_helpers.tables import Hosts
+        >>> from cmk.livestatus_client.expressions import And
+        >>> from cmk.livestatus_client.tables import Hosts
         >>> expr_to_tree(Hosts, Not(And(Hosts.name == 'heute', Hosts.alias == 'heute')))
         {'op': 'not', 'expr': {'op': 'and', 'expr': [\
 {'op': '=', 'left': 'hosts.name', 'right': 'heute'}, \

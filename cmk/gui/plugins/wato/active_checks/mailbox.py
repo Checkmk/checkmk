@@ -23,7 +23,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     EmailAddress,
     FixedValue,
-    HostAddress,
     Integer,
     ListOfStrings,
     Migrate,
@@ -151,25 +150,13 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
         elements=[
             (
                 "server",
-                Alternative(
+                TextInput(
                     title=f"{protocol} server",
-                    elements=[
-                        HostAddress(
-                            title=f"{protocol} server",
-                            allow_empty=False,
-                            help=_(
-                                "You can specify a host name or IP address different from the IP "
-                                "address of the host this check will be assigned to."
-                            ),
-                        ),
-                        TextInput(
-                            title=("Unvalidated string (for use with makros)"),
-                            help=_(
-                                "Use a makro as (part of) server name. "
-                                "Macros must be in capital letters and start and end with '$'."
-                            ),
-                        ),
-                    ],
+                    allow_empty=False,
+                    help=_(
+                        "You can specify a host name or IP address different from the IP "
+                        "address of the host this check will be assigned to."
+                    ),
                 ),
             ),
             (

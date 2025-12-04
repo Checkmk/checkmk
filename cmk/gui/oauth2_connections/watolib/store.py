@@ -5,6 +5,7 @@
 
 from typing import TypedDict
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -42,6 +43,7 @@ def save_oauth2_connection(
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
+    affected_sites: list[SiteId] | None = None,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_modification()
@@ -51,7 +53,7 @@ def save_oauth2_connection(
         text=f"Added the OAuth2 connection '{ident}'",
         user_id=user_id,
         domains=[ConfigDomainGUI()],
-        sites=None,
+        sites=affected_sites,
         use_git=use_git,
     )
     oauth2_connections_config_file.save(entries, pprint_value)
@@ -69,6 +71,7 @@ def update_oauth2_connection(
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
+    affected_sites: list[SiteId] | None = None,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_modification()
@@ -81,7 +84,7 @@ def update_oauth2_connection(
         text=f"Updated the OAuth2 connection '{ident}'",
         user_id=user_id,
         domains=[ConfigDomainGUI()],
-        sites=None,
+        sites=affected_sites,
         use_git=use_git,
     )
     oauth2_connections_config_file.save(entries, pprint_value)
@@ -93,6 +96,7 @@ def delete_oauth2_connection(
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
+    affected_sites: list[SiteId] | None = None,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_modification()
@@ -104,7 +108,7 @@ def delete_oauth2_connection(
         text=f"Deleted the OAuth2 connection '{ident}'",
         user_id=user_id,
         domains=[ConfigDomainGUI()],
-        sites=None,
+        sites=affected_sites,
         use_git=use_git,
     )
     oauth2_connections_config_file.save(entries, pprint_value)

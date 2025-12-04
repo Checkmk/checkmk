@@ -189,7 +189,8 @@ const getSearchInputPlaceholder = computed(() => {
   flex-direction: column;
   justify-content: flex-start;
   padding: 0 var(--spacing-double);
-  border-bottom: 1px solid var(--ux-theme-3);
+  border-top: 1px solid var(--default-nav-border-color);
+  border-bottom: 1px solid var(--default-nav-border-color);
 }
 
 /* stylelint-disable checkmk/vue-bem-naming-convention */

@@ -428,6 +428,7 @@ onMounted(() => {
   padding: 32px;
   flex-direction: column;
   align-items: flex-start;
+  border-top: 1px solid var(--default-nav-border-color);
   gap: 12px;
 }
 

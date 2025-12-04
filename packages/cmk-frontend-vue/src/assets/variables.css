@@ -90,6 +90,7 @@
 
     /* Colors */
     --default-nav-bg-color: var(--ux-theme-0);
+    --default-nav-border-color: var(--ux-theme-6);
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
     --default-bg-color: var(--ux-theme-2);
@@ -198,6 +199,7 @@
 
     /* Colors */
     --default-nav-bg-color: rgb(17 24 29);
+    --default-nav-border-color: var(--ux-theme-4);
     --default-border-color: rgb(38 45 52);
     --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);

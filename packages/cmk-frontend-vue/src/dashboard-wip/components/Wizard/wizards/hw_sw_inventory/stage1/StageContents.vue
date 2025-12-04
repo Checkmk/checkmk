@@ -6,16 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
 import type { ContextFilters } from '@/dashboard-wip/types/filter'
 import type { ObjectType } from '@/dashboard-wip/types/shared'
 
-import ActionBar from '../../../components/ActionBar.vue'
-import ActionButton from '../../../components/ActionButton.vue'
-import ContentSpacer from '../../../components/ContentSpacer.vue'
+import SectionBlock from '../../../components/SectionBlock.vue'
+import Stage1Header from '../../../components/Stage1Header.vue'
 import SingleMultiWidgetObjectFilterConfiguration from '../../../components/filter/SingleMultiWidgetObjectFilterConfiguration.vue'
 import type { ElementSelection } from '../../../types'
 
@@ -46,43 +42,20 @@ const hostObjectType = 'host'
 </script>
 
 <template>
-  <CmkHeading type="h1">
-    {{ _t('Data selection') }}
-  </CmkHeading>
+  <Stage1Header @click="gotoNextStage" />
 
-  <ContentSpacer />
-
-  <ActionBar align-items="left">
-    <ActionButton
-      :label="_t('Next step: Visualization')"
-      :icon="{ name: 'continue', side: 'right' }"
-      :action="gotoNextStage"
-      variant="secondary"
+  <SectionBlock :title="_t('Host selection')">
+    <SingleMultiWidgetObjectFilterConfiguration
+      v-model:mode-selection="hostFilterType"
+      :object-type="hostObjectType"
+      :configured-filters-of-object-type="props.widgetConfiguredFilters"
+      :context-filters="contextFilters"
+      :in-selection-menu-focus="isInFilterSelectionMenuFocus(hostObjectType)"
+      :single-only="true"
+      @set-focus="emit('set-focus', $event)"
+      @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+      @reset-object-type-filters="emit('reset-object-type-filters', $event)"
+      @remove-filter="(filterId) => emit('remove-filter', filterId)"
     />
-  </ActionBar>
-
-  <ContentSpacer />
-
-  <CmkParagraph>
-    {{ _t('Select the data you want to analyze') }} <br />
-    {{ _t("Dashboard filters apply here and don't have to be selected again") }}
-  </CmkParagraph>
-
-  <ContentSpacer />
-
-  <CmkHeading type="h2">
-    {{ _t('Host selection') }}
-  </CmkHeading>
-  <SingleMultiWidgetObjectFilterConfiguration
-    v-model:mode-selection="hostFilterType"
-    :object-type="hostObjectType"
-    :configured-filters-of-object-type="props.widgetConfiguredFilters"
-    :context-filters="contextFilters"
-    :in-selection-menu-focus="isInFilterSelectionMenuFocus(hostObjectType)"
-    :single-only="true"
-    @set-focus="emit('set-focus', $event)"
-    @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
-    @reset-object-type-filters="emit('reset-object-type-filters', $event)"
-    @remove-filter="(filterId) => emit('remove-filter', filterId)"
-  />
+  </SectionBlock>
 </template>

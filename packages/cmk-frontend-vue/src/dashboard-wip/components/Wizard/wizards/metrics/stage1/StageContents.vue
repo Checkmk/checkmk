@@ -8,12 +8,6 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-
-import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
-import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
-import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import SingleMultiWidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/SingleMultiWidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
@@ -24,6 +18,7 @@ import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
 import SectionBlock from '../../../components/SectionBlock.vue'
+import Stage1Header from '../../../components/Stage1Header.vue'
 import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { Graph, MetricSelection, useSelectGraphTypes } from '../composables/useSelectGraphTypes'
@@ -120,27 +115,7 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
 </script>
 
 <template>
-  <CmkHeading type="h1">
-    {{ _t('Data selection') }}
-  </CmkHeading>
-
-  <ContentSpacer />
-
-  <ActionBar align-items="left">
-    <ActionButton
-      :label="_t('Next step: Visualization')"
-      :icon="{ name: 'continue', side: 'right' }"
-      :action="gotoNextStage"
-      variant="secondary"
-    />
-  </ActionBar>
-
-  <ContentSpacer :dimension="11" />
-
-  <CmkParagraph>
-    {{ _t('Select the data you want to analyze') }} <br />
-    {{ _t("Dashboard filters apply here and don't have to be selected again") }}
-  </CmkParagraph>
+  <Stage1Header @click="gotoNextStage" />
 
   <SectionBlock :title="_t('Host selection')">
     <SingleMultiWidgetObjectFilterConfiguration

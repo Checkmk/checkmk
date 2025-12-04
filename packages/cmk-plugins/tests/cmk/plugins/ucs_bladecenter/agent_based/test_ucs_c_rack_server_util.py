@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.ucs_c_rack_server_util import (
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_c_rack_server_util import (
     check_ucs_c_rack_server_util,
     check_ucs_c_rack_server_util_cpu_,
     check_ucs_c_rack_server_util_mem,

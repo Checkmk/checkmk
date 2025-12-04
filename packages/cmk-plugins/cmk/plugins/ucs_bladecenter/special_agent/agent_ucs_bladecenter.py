@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Mapping, Sequence
 from typing import Any, Final
 
+import defusedxml.ElementTree as DET
 import requests
 import urllib3
 
@@ -533,7 +534,8 @@ class Server:
             "Server._communicate: Got response content: '%s' (%s)", content, response.status_code
         )
 
-        root = ET.fromstring(content)
+        root = DET.fromstring(content)
+        assert isinstance(root, ET.Element)
 
         errors = root.attrib.get("errorDescr")
         if errors:

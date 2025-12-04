@@ -11,7 +11,7 @@
 # test by something more appropriate.
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based.ucs_c_rack_server_led import (
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_c_rack_server_led import (
     check_ucs_c_rack_server_led,
     discover_ucs_c_rack_server_led,
     parse_ucs_c_rack_server_led,

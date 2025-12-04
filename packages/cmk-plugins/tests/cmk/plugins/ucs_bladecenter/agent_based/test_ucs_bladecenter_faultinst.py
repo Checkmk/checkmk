@@ -8,11 +8,11 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.ucs_bladecenter_faultinst import (
+from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_bladecenter_faultinst import (
     check_ucs_bladecenter_faultinst,
     discover_ucs_bladecenter_faultinst,
 )
-from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 
 # Some real output to work with would be nice here instead of reverse engineering what it looks like
 TABLE = [

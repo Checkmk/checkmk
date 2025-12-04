@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.ucs_bladecenter_if import parse_ucs_bladecenter_if
 from cmk.plugins.lib import interfaces
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_bladecenter_if import parse_ucs_bladecenter_if
 
 
 def test_parse_ucs_bladecenter_if() -> None:

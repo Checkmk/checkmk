@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.ucs_c_rack_server_faultinst import (
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_c_rack_server_faultinst import (
     check_ucs_c_rack_server_faultinst,
     discover_ucs_c_rack_server_faultinst,
     parse_ucs_c_rack_server_faultinst,

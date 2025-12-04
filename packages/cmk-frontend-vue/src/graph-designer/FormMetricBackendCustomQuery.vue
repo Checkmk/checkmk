@@ -120,63 +120,119 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
   }
 }))
 
+enum AttributeType {
+  RESOURCE,
+  SCOPE,
+  DATA_POINT
+}
+
 const attributeAutoCompleter = (
   ident: string,
   key: string | null,
-  isForKey: boolean
+  isForKey: boolean,
+  ignoreExisting: { attributeType: AttributeType; index: number } | null
 ): Autocompleter => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
     ident,
     params: {
       strict: true,
-      context: getAutoCompleterContext(isForKey ? null : key)
+      context: getAutoCompleterContext(isForKey ? null : key, ignoreExisting)
     }
   }
 })
 
-const resourceAttributesAutocompleter = (key: string | null, isForKey: boolean): Autocompleter =>
-  attributeAutoCompleter(
+const resourceAttributesAutocompleter = (
+  key: string | null,
+  isForKey: boolean,
+  ignoreExistingIndex: number | null = null
+): Autocompleter => {
+  return attributeAutoCompleter(
     isForKey
       ? 'monitored_resource_attributes_keys_backend'
       : 'monitored_resource_attributes_values_backend',
     key,
-    isForKey
+    isForKey,
+    ignoreExistingIndex !== null
+      ? { attributeType: AttributeType.RESOURCE, index: ignoreExistingIndex }
+      : null
   )
+}
 
-const scopeAttributesAutocompleter = (key: string | null, isForKey: boolean): Autocompleter =>
+const scopeAttributesAutocompleter = (
+  key: string | null,
+  isForKey: boolean,
+  ignoreExistingIndex: number | null = null
+): Autocompleter =>
   attributeAutoCompleter(
     isForKey
       ? 'monitored_scope_attributes_keys_backend'
       : 'monitored_scope_attributes_values_backend',
     key,
-    isForKey
+    isForKey,
+    ignoreExistingIndex !== null
+      ? { attributeType: AttributeType.SCOPE, index: ignoreExistingIndex }
+      : null
   )
 
-const dataPointAttributesAutocompleter = (key: string | null, isForKey: boolean): Autocompleter =>
+const dataPointAttributesAutocompleter = (
+  key: string | null,
+  isForKey: boolean,
+  ignoreExistingIndex: number | null = null
+): Autocompleter =>
   attributeAutoCompleter(
     isForKey
       ? 'monitored_data_point_attributes_keys_backend'
       : 'monitored_data_point_attributes_values_backend',
     key,
-    isForKey
+    isForKey,
+    ignoreExistingIndex !== null
+      ? { attributeType: AttributeType.DATA_POINT, index: ignoreExistingIndex }
+      : null
   )
 
 // actions
 
-function getAutoCompleterContext(key: string | null = null) {
+function getAutoCompleterContext(
+  key: string | null = null,
+  ignoreExisting: { attributeType: AttributeType; index: number } | null = null
+): AutoCompleteContext {
   const context: AutoCompleteContext = {}
   if (metricName.value) {
     context.metric_name = metricName.value
   }
   if (resourceAttributes.value.length > 0) {
-    context.resource_attributes = resourceAttributes.value
+    context.resource_attributes = resourceAttributes.value.filter(
+      (attribute: Attribute, index: number) =>
+        attribute.value !== null &&
+        !(
+          ignoreExisting &&
+          ignoreExisting.attributeType === AttributeType.RESOURCE &&
+          ignoreExisting.index === index
+        )
+    )
   }
   if (scopeAttributes.value.length > 0) {
-    context.scope_attributes = scopeAttributes.value
+    context.scope_attributes = scopeAttributes.value.filter(
+      (attribute: Attribute, index: number) =>
+        attribute.value !== null &&
+        !(
+          ignoreExisting &&
+          ignoreExisting.attributeType === AttributeType.SCOPE &&
+          ignoreExisting.index === index
+        )
+    )
   }
   if (dataPointAttributes.value.length > 0) {
-    context.data_point_attributes = dataPointAttributes.value
+    context.data_point_attributes = dataPointAttributes.value.filter(
+      (attribute: Attribute, index: number) =>
+        attribute.value !== null &&
+        !(
+          ignoreExisting &&
+          ignoreExisting.attributeType === AttributeType.DATA_POINT &&
+          ignoreExisting.index === index
+        )
+    )
   }
   if (key !== '' && key !== null) {
     context.attribute_key = key
@@ -267,8 +323,15 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
             orientation="horizontal"
             :try-delete="deleteResourceAttribute"
           >
-            <template #item-props="{ itemData }">
-              {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
+            <template #item-props="{ index, itemData }">
+              <FormMetricBackendCustomQueryAttribute
+                :model-value="itemData"
+                :autocompleter-getter="
+                  (key: string | null, isForKey: boolean) =>
+                    resourceAttributesAutocompleter(key, isForKey, index)
+                "
+                @update:model-value="addResourceAttribute"
+              />
             </template>
           </CmkList>
           <FormMetricBackendCustomQueryAttribute
@@ -286,8 +349,15 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
             orientation="horizontal"
             :try-delete="deleteScopeAttribute"
           >
-            <template #item-props="{ itemData }">
-              {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
+            <template #item-props="{ index, itemData }">
+              <FormMetricBackendCustomQueryAttribute
+                :model-value="itemData"
+                :autocompleter-getter="
+                  (key: string | null, isForKey: boolean) =>
+                    scopeAttributesAutocompleter(key, isForKey, index)
+                "
+                @update:model-value="addScopeAttribute"
+              />
             </template>
           </CmkList>
           <FormMetricBackendCustomQueryAttribute
@@ -305,8 +375,15 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
             orientation="horizontal"
             :try-delete="deleteDataPointAttribute"
           >
-            <template #item-props="{ itemData }">
-              {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
+            <template #item-props="{ index, itemData }">
+              <FormMetricBackendCustomQueryAttribute
+                :model-value="itemData"
+                :autocompleter-getter="
+                  (key: string | null, isForKey: boolean) =>
+                    dataPointAttributesAutocompleter(key, isForKey, index)
+                "
+                @update:model-value="addDataPointAttribute"
+              />
             </template>
           </CmkList>
           <FormMetricBackendCustomQueryAttribute

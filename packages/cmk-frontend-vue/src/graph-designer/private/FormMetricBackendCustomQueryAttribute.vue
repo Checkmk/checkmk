@@ -15,19 +15,22 @@ const { _t } = usei18n()
 
 export type Attribute = { key: string | null; value: string | null }
 
-export interface AttributeAutoCompleter {
-  attribute: Attribute
-  autocompleterGetter: (key: string | null, isForKey: boolean) => Autocompleter
-}
-
-const attribute = defineModel<Attribute>({
-  required: true
-})
 const props = defineProps<{
   autocompleterGetter: (key: string | null, isForKey: boolean) => Autocompleter
 }>()
 
-function updateValue(newValue: string | null) {
+const attribute = defineModel<Attribute>({
+  required: true
+})
+
+let previousValue: string | null = attribute.value.value
+
+function onValueUpdate(newValue: string | null) {
+  if (attribute.value.value === null) {
+    attribute.value.value = previousValue
+    return
+  }
+  previousValue = attribute.value.value
   attribute.value = { key: attribute.value.key, value: newValue }
 }
 </script>
@@ -39,14 +42,15 @@ function updateValue(newValue: string | null) {
         v-model="attribute.key"
         :autocompleter="props.autocompleterGetter(attribute.key, true)"
         :placeholder="_t('Attribute key')"
+        @update:model-value="attribute.value = null"
       />
     </div>
     <div>
       <FormAutocompleter
-        :model-value="attribute.value"
+        v-model="attribute.value"
         :autocompleter="props.autocompleterGetter(attribute.key, false)"
         :placeholder="_t('Attribute value')"
-        @update:model-value="updateValue"
+        @update:model-value="onValueUpdate"
       />
     </div>
   </div>

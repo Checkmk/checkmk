@@ -21,7 +21,6 @@ from tests.update.helpers import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip("CMK-28228: scenario; fix in progress")
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8", reason="Fails on almalinux-8 due to dependency issue."
 )

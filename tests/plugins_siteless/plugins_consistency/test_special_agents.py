@@ -50,10 +50,10 @@ from cmk.plugins.splunk.special_agent import agent_splunk
 from cmk.plugins.storeonce4x.special_agent import agent_storeonce4x
 from cmk.server_side_calls_backend import load_special_agents
 
-agent_metric_backend_custom_query: ModuleType | None = None
+custom_query: ModuleType | None = None
 try:
     from cmk.plugins.metric_backend.special_agents.nonfree.ultimate import (  # type: ignore[import-untyped,no-redef,unused-ignore]
-        agent_metric_backend_custom_query,
+        custom_query,
     )
 except ImportError:
     pass
@@ -96,11 +96,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
     "netapp_ontap": agent_netapp_ontap,
-    **(
-        {}
-        if agent_metric_backend_custom_query is None
-        else {"metric_backend_custom_query": agent_metric_backend_custom_query}
-    ),
+    **({} if custom_query is None else {"metric_backend_custom_query": custom_query}),
     "prism": None,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,

@@ -36,6 +36,7 @@ SOURCES_COMMON = [
     "welcome.json",
     "agent_slideout.json",
     "product_telemetry.json",
+    "two_factor_auth.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [

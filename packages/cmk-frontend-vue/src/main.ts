@@ -30,6 +30,7 @@ import ProductTelemetryApp from './product-telemetry/ProductTelemetryApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
 import SidebarApp from './sidebar/SidebarApp.vue'
+import TwoFactorAuthApp from './two-factor-auth/TwoFactorAuthApp.vue'
 import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
 import WelcomeApp from './welcome/WelcomeApp.vue'
 import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
@@ -59,4 +60,5 @@ defineCmkComponent('cmk-dialog', DialogApp)
 defineCmkComponent('cmk-dynamic-icon', DynamicIconApp, { pure: true })
 defineCmkComponent('cmk-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
+defineCmkComponent('cmk-two-factor-authentication', TwoFactorAuthApp)
 defineCmkComponent('cmk-product-telemetry', ProductTelemetryApp)

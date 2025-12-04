@@ -41,6 +41,7 @@ import DemoCmkTooltip from './DemoCmkTooltip.vue'
 import DemoCmkZebra from './DemoCmkZebra.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
 import DemoHelp from './DemoHelp.vue'
+import DemoTwoFactorAuth from './DemoTwoFactorAuthentication.vue'
 import { pages as typographyPages } from './typography'
 import { pages as userInputPages } from './user-input'
 
@@ -81,5 +82,6 @@ export const pages = [
   new Page('CmkZebra', DemoCmkZebra),
   new Page('CmkScrollContainer', DemoCmkScrollContainer),
   new Page('CmkSlideIn', DemoCmkSlideIn),
-  new Page('CmkTooltip', DemoCmkTooltip)
+  new Page('CmkTooltip', DemoCmkTooltip),
+  new Page('TwoFactorAuth', DemoTwoFactorAuth)
 ]

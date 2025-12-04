@@ -219,6 +219,10 @@ body.login {
   }
 
   &.two_factor {
+    #login_window {
+      background: transparent;
+    }
+
     h1 {
       margin-left: 0;
       text-align: left;

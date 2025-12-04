@@ -48,7 +48,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_brea
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
@@ -70,7 +70,6 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.table import Table, table_element
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     IconNames,
     StaticIcon,
@@ -100,7 +99,6 @@ from cmk.gui.utils.urls import (
     DocReference,
     make_confirm_delete_link,
     makeactionuri,
-    makeuri,
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
@@ -1188,138 +1186,51 @@ class UserWebAuthnRegisterComplete(JsonPage):
 
 
 class UserLoginTwoFactor(Page):
-    @classmethod
-    def _render_backup_link(cls, request: Request, origtarget: str) -> None:
-        html.open_div(class_="button_text")
-        html.a(
-            _("Use backup code"),
-            href=makeuri(request, [("_mode", "backup"), ("_origtarget", origtarget)]),
-        )
-        html.close_div()
+    def handle_page(self, ctx: PageContext) -> None:
+        """Override to handle both HTML and JSON responses"""
+        if ctx.request.has_var("_totp_code") or ctx.request.has_var("_backup_code"):
+            self._handle_json_verification(ctx)
+        else:
+            self.page(ctx)
 
-    @classmethod
-    def _render_totp_link(cls, request: Request, origtarget: str) -> None:
-        html.open_div(class_="button_text")
-        html.a(
-            _("Use authenticator app"),
-            href=makeuri(request, [("_mode", "totp"), ("_origtarget", origtarget)]),
-        )
-        html.close_div()
+    def _set_json_response(self, status_code: int, data: dict) -> None:
+        response.status_code = status_code
+        response.set_data(json.dumps(data))
 
-    @classmethod
-    def _render_totp(cls, request: Request, available_methods: set[str]) -> None:
-        html.p(_("Enter the six-digit code from your authenticator app to log in."))
-        with html.form_context(
-            "totp_login",
-            method="POST",
-            add_transid=False,
-            action="user_login_two_factor.py",
-        ):
-            html.prevent_password_auto_completion()
-            html.hidden_field(
-                "_origtarget",
-                origtarget := request.get_url_input("_origtarget", "index.py"),
+    def _handle_json_verification(self, ctx: PageContext) -> None:
+        """Handle JSON API request for code verification"""
+        response.set_content_type("application/json")
+        try:
+            credentials = self._get_credentials()
+            self._check_totp_and_backup(
+                ctx.request,
+                self._get_available_methods(credentials),
+                credentials,
+                ctx.config.sites,
+                get_user_attributes(ctx.config.wato_user_attrs),
+                ctx.config.lock_on_logon_failures,
+                ctx.config.log_logon_failures,
             )
-
-            html.open_div(id_="code_input")
-            html.label("%s:" % _("Two-factor code"), for_="_totp_code")
-            html.password_input("_totp_code", size=None)
-            html.close_div()
-
-            html.open_div(class_="button_text")
-            html.button("_use_totp_code", _("Submit"), cssclass="hot")
-            html.close_div()
-
-            if "backup_codes" in available_methods:
-                cls._render_backup_link(request, origtarget)
-
-            html.hidden_fields()
-
-    @classmethod
-    def _render_backup(cls, request: Request, available_methods: set[str]) -> None:
-        html.p(_("Use one of your backup codes to sign in."))
-        with html.form_context(
-            "backup_code_login",
-            method="POST",
-            add_transid=False,
-            action="user_login_two_factor.py",
-        ):
-            html.prevent_password_auto_completion()
-            html.hidden_field(
-                "_origtarget",
-                origtarget := request.get_url_input("_origtarget", "index.py"),
+            self._set_json_response(
+                http_client.UNAUTHORIZED,
+                {"message": _("Invalid code provided")},
             )
+        except HTTPRedirect as e:
+            self._set_json_response(http_client.OK, {"status": "OK", "redirect": e.url})
+        except MKUserError as e:
+            status_code = getattr(e, "status", http_client.BAD_REQUEST)
+            self._set_json_response(status_code, {"message": str(e)})
+        except Exception as e:
+            self._set_json_response(http_client.INTERNAL_SERVER_ERROR, {"message": str(e)})
 
-            html.open_div(id_="code_input")
-            html.label("%s:" % _("Backup code"), for_="_backup_code")
-            html.password_input("_backup_code", size=None)
-            html.close_div()
+    def _get_credentials(self) -> TwoFactorCredentials:
+        assert user.id is not None
+        return load_two_factor_credentials(user.id)
 
-            html.open_div(class_="button_text")
-            html.button("_use_backup_code", _("Use backup code"), cssclass="hot")
-            html.close_div()
-
-            if "totp_credentials" in available_methods:
-                cls._render_totp_link(request, origtarget)
-
-            html.hidden_fields()
-
-    @classmethod
-    def _render_webauthn(cls, request: Request, available_methods: set[str]) -> None:
-        html.p(_("Please follow your browser's instructions for authentication."))
-        html.prevent_password_auto_completion()
-        html.hidden_field(
-            "_origtarget",
-            origtarget := request.get_url_input("_origtarget", "index.py"),
-        )
-        html.div("", id_="webauthn_message")
-        html.javascript("cmk.webauthn.login()")
-
-        if "backup_codes" in available_methods:
-            html.open_div(class_="button_text")
-            html.buttonlink(
-                text=_("Use backup code"),
-                href=makeuri(request, [("_mode", "backup"), ("_origtarget", origtarget)]),
-                class_=["mode_button"],
-            )
-            html.close_div()
-        if "totp_credentials" in available_methods:
-            cls._render_totp_link(request, origtarget)
-
-        html.hidden_fields()
-
-    @classmethod
-    def _render_multiple_methods(cls, request: Request, available_methods: set[str]) -> None:
-        html.p(
-            _(
-                "You have multiple methods enabled. Please select the security method you want "
-                "to use to log in."
-            )
-        )
-        html.hidden_field(
-            "_origtarget",
-            origtarget := request.get_url_input("_origtarget", "index.py"),
-        )
-        if "totp_credentials" in available_methods:
-            html.open_div(class_="button_text")
-            html.buttonlink(
-                text=_("Authenticator app"),
-                href=makeuri(request, [("_mode", "totp"), ("_origtarget", origtarget)]),
-                class_=["mode_button"],
-            )
-            html.close_div()
-        if "webauthn_credentials" in available_methods:
-            html.open_div(class_="button_text")
-            html.buttonlink(
-                text=_("Security token"),
-                href=makeuri(request, [("_mode", "webauthn"), ("_origtarget", origtarget)]),
-                class_=["mode_button"],
-            )
-            html.close_div()
-        if "backup_codes" in available_methods:
-            cls._render_backup_link(request, origtarget)
-
-        html.hidden_fields()
+    def _get_available_methods(self, credentials: TwoFactorCredentials | None = None) -> set[str]:
+        if credentials is None:
+            credentials = self._get_credentials()
+        return {method_name for method_name, m in credentials.items() if m}
 
     @classmethod
     def _check_totp_and_backup(
@@ -1387,44 +1298,31 @@ class UserLoginTwoFactor(Page):
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
         make_header(html, _("Two-factor authentication"), Breadcrumb())
-        mode = ctx.request.get_url_input("_mode", "")
-
-        html.open_div(id_="login")
-
-        html.open_div(id_="login_window")
-
-        html.open_a(href="https://checkmk.com", class_="login_window_logo_link")
-        html.img(
-            src=theme.detect_icon_path(
-                icon_name=("login_logo" if theme.has_custom_logo("login_logo") else "checkmk_logo"),
-                prefix="",
-            ),
-            id_="logo",
-        )
-        html.close_a()
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
 
         credentials = load_two_factor_credentials(user.id)
         available_methods = {method_name for method_name, m in credentials.items() if m}
-        html.h1(_("Two-factor authentication"))
-        if (
-            "webauthn_credentials" in available_methods
-            and "totp_credentials" in available_methods
-            and not mode
-        ):
-            self._render_multiple_methods(ctx.request, available_methods)
-        # TOTP
-        elif "totp_credentials" in available_methods and (mode == "totp" or not mode):
-            self._render_totp(ctx.request, available_methods)
-        # WebAuthn
-        elif "webauthn_credentials" in available_methods and (mode == "webauthn" or not mode):
-            self._render_webauthn(ctx.request, available_methods)
-        # Backup
-        elif "backup_codes" in available_methods and (mode == "backup" or not mode):
-            self._render_backup(ctx.request, available_methods)
 
+        available_methods_data = {
+            "totp_credentials": "totp_credentials" in available_methods,
+            "webauthn_credentials": "webauthn_credentials" in available_methods,
+            "backup_codes": "backup_codes" in available_methods,
+        }
+
+        html.open_div(id_="login")
+        html.open_div(id_="login_window")
+
+        html.vue_component(
+            "cmk-two-factor-authentication",
+            data={"availableMethods": available_methods_data},
+        )
+
+        html.close_div()
+        html.close_div()
+
+        # Handle authentication attempts
         self._check_totp_and_backup(
             ctx.request,
             available_methods,
@@ -1435,13 +1333,6 @@ class UserLoginTwoFactor(Page):
             ctx.config.log_logon_failures,
         )
 
-        if user_errors:
-            html.open_div(id_="login_error")
-            html.show_user_errors()
-            html.close_div()
-
-        html.close_div()
-        html.close_div()
         html.footer()
 
 

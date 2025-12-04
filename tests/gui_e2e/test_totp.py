@@ -41,6 +41,7 @@ def test_totp(test_site: Site, dashboard_page: MainDashboard, credentials: CmkCr
     authenticator = TOTP(b32decode(secret))
     current_time = authenticator.calculate_generation(datetime.now())
     otp_value = authenticator.generate_totp(current_time)
+
     dashboard_page.main_area.get_input("auth_code").fill(otp_value)
     dashboard_page.main_area.get_suggestion("Save").click()
 
@@ -50,13 +51,17 @@ def test_totp(test_site: Site, dashboard_page: MainDashboard, credentials: CmkCr
     login_page.login(credentials)
     expect(login_page.page).to_have_url(re.compile("user_login_two_factor.py"))
 
-    dashboard_page.get_input("_totp_code").fill("1")
-    dashboard_page.get_input("_use_totp_code").click()
+    dashboard_page.page.get_by_role("spinbutton", name="OTP Digit 1").fill("1")
+    dashboard_page.page.get_by_role("spinbutton", name="OTP Digit 2").fill("1")
+    dashboard_page.page.get_by_role("spinbutton", name="OTP Digit 3").fill("1")
+    dashboard_page.page.get_by_role("spinbutton", name="OTP Digit 4").fill("1")
+    dashboard_page.page.get_by_role("spinbutton", name="OTP Digit 5").fill("1")
+    dashboard_page.page.get_by_role("spinbutton", name="OTP Digit 6").fill("1")
 
     assert test_site.read_file("var/check_mk/web/cmkadmin/num_failed_logins.mk") == "1\n"
 
-    dashboard_page.get_input("_totp_code").fill(otp_value)
-    dashboard_page.get_input("_use_totp_code").click()
+    for x, i in enumerate(otp_value):
+        dashboard_page.page.get_by_role("spinbutton", name=f"OTP Digit {x + 1}").fill(i)
 
     # Removing the two factor mechanism
     dashboard_page.main_menu.user_two_factor_authentication.click()

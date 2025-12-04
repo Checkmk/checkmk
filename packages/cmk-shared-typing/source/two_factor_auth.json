@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TwoFactorAuth",
+  "type": "object",
+  "properties": {
+    "totp_credentials": {
+      "type": "boolean"
+    },
+    "webauthn_credentials": {
+      "type": "boolean"
+    },
+    "backup_codes": {
+      "type": "boolean"
+    }
+  },
+  "required": ["totp_credentials", "webauthn_credentials", "backup_codes"]
+}

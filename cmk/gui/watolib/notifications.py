@@ -688,7 +688,18 @@ def make_parameter_hashable(obj: object) -> object:
     if isinstance(obj, dict):
         return tuple(sorted((k, make_parameter_hashable(v)) for k, v in obj.items()))
     elif isinstance(obj, list):
-        return tuple(make_parameter_hashable(x) for x in sorted(obj))
+        return tuple(
+            [
+                make_parameter_hashable(x)
+                for x in sorted(
+                    [tuple(sorted(e.items())) if isinstance(e, dict) else e for e in obj],
+                    key=lambda x: (
+                        {tuple: 1, bool: 2, int: 3, float: 4, str: 5}.get(type(x), 6),
+                        str(x),
+                    ),
+                )
+            ]
+        )
     elif isinstance(obj, tuple):
         return tuple(make_parameter_hashable(x) for x in obj)
     else:

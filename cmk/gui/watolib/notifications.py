@@ -626,14 +626,26 @@ def _get_parameters_for_rule_with_id(
     return (notify_plugin_name, parameters_for_method[params_id]["parameter_properties"])
 
 
+def _sort_list_of_any_type(lst: list[Any]) -> list[Any]:
+    """Sort a list containing any types in a stable way, so that it can be hashed.
+    dicts are converted to sorted tuples of their items"""
+
+    return sorted(
+        [tuple(sorted(e.items())) if isinstance(e, dict) else e for e in lst],
+        key=lambda x: (
+            {tuple: 1, bool: 2, int: 3, float: 4, str: 5}.get(type(x), 6),
+            str(x),
+        ),
+    )
+
+
 def make_parameter_hashable(obj: object) -> object:
-    """Used for notification parameters where there are no other unhashable
-    types expected.  e.g. sets, bytearrays or custom objects"""
+    """Used to hash notification parameters in order to avoid duplicates"""
 
     if isinstance(obj, dict):
         return tuple(sorted((k, make_parameter_hashable(v)) for k, v in obj.items()))
     elif isinstance(obj, list):
-        return tuple(make_parameter_hashable(x) for x in sorted(obj))
+        return tuple([make_parameter_hashable(x) for x in _sort_list_of_any_type(obj)])
     elif isinstance(obj, tuple):
         return tuple(make_parameter_hashable(x) for x in obj)
     else:

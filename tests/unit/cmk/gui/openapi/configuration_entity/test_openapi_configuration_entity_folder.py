@@ -69,7 +69,7 @@ def test_list_folders(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    titles = set(entry["title"] for entry in resp.json["value"])
+    titles = {entry["title"] for entry in resp.json["value"]}
     assert titles == {"Main", SUB_FOLDER_TITLE, PROTECTED_FOLDER_TITLE}
 
 
@@ -91,7 +91,7 @@ def test_list_folders_without_perm(clients: ClientRegistry, set_config: SetConfi
         )
 
         # THEN
-        titles = set(entry["title"] for entry in resp.json["value"])
+        titles = {entry["title"] for entry in resp.json["value"]}
         assert titles == {"Main"}
 
 
@@ -109,7 +109,7 @@ def test_list_folders_as_admin(
         )
 
         # THEN
-        titles = set(entry["title"] for entry in resp.json["value"])
+        titles = {entry["title"] for entry in resp.json["value"]}
         assert titles == {"Main", SUB_FOLDER_TITLE, PROTECTED_FOLDER_TITLE}
 
 

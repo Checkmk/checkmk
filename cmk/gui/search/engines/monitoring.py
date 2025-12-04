@@ -1385,9 +1385,21 @@ class MonitoringSearchEngine:
         self._user_permissions = user_permissions
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
+        if self._is_invalid_regex(query):
+            return []
+
         return itertools.chain.from_iterable(
             transform_legacy_results_to_unified(results, topic, provider="monitoring")
             for topic, results in self._legacy_engine.generate_results(
                 query, self._user_permissions
             )
         )
+
+    @staticmethod
+    def _is_invalid_regex(query: str) -> bool:
+        try:
+            re.compile(query)
+        except re.error:
+            return True
+        else:
+            return False

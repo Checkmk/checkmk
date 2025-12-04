@@ -54,6 +54,7 @@ edition_deps = {
         "//omd/non-free/packages/reporting:pkg_tar",
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
+        "//omd/non-free/relay:relay_install_pkg",
     ],
     # NOTES:
     # * jaeger should be added to all editions EXCEPT cloud - cloud has its own tracing collector
@@ -103,6 +104,7 @@ edition_deps = {
         "//omd/non-free/packages/reporting:pkg_tar",
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
+        "//omd/non-free/relay:relay_install_pkg",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
         "//non-free/packages/otel-collector",
@@ -130,6 +132,7 @@ edition_deps = {
         "//omd/non-free/packages/reporting:pkg_tar",
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
+        "//omd/non-free/relay:relay_install_pkg",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
         "//non-free/packages/otel-collector",

@@ -536,6 +536,16 @@ def test_python_agent_plugins(package_path: str, cmk_version: str) -> None:
         ), f"File {filename} is missing in {package_path}"
 
 
+def test_relay_install_script_file(package_path: str, cmk_version: str) -> None:
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("Skipping test for source package.")
+
+    if _edition_from_pkg_path(package_path) == "ultimate":
+        assert _file_exists_in_package(
+            package_path, cmk_version, "share/check_mk/relays/install_relay.sh"
+        ), f"File share/check_mk/relays/install_relay.sh is missing in {package_path}"
+
+
 class UnwantedDependency(NamedTuple):
     dependency: str
     reason: str

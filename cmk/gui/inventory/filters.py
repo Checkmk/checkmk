@@ -7,7 +7,8 @@
 # mypy: disable-error-code="type-arg"
 
 import re
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from functools import partial
 
 from cmk.gui import query_filters
@@ -34,6 +35,7 @@ from cmk.gui.visuals.filter import (
 )
 from cmk.gui.visuals.filter.components import (
     Checkbox,
+    Dropdown,
     FilterComponent,
     HorizontalGroup,
     RadioButton,
@@ -78,10 +80,19 @@ class FilterInvBool(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
+@dataclass(frozen=True)
+class FilterInvFloatChoice:
+    unit: str
+    factor: int
+
+
+_MaybeBounds = tuple[int | float | None, int | float | None]
+
+
 def _make_filter_row_float(
     inventory_path: InventoryPath,
-) -> Callable[[Row, str, query_filters.MaybeBounds], bool]:
-    def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
+) -> Callable[[Row, str, _MaybeBounds], bool]:
+    def row_filter(row: Row, column: str, bounds: _MaybeBounds) -> bool:
         if not isinstance(
             invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
             int | float,
@@ -92,34 +103,142 @@ def _make_filter_row_float(
     return row_filter
 
 
-class FilterInvFloat(FilterNumberRange):
+class FilterInvFloat(Filter):
     def __init__(
         self,
         *,
         ident: str,
         title: str,
         inventory_path: InventoryPath,
-        unit: str | LazyString,
-        scale: float | None,
-        is_show_more: bool = True,
+        unit_choices: Mapping[str, FilterInvFloatChoice],
     ) -> None:
+        self._filter_row = _make_filter_row_float(inventory_path)
+        self._unit_choices = unit_choices
+
+        self._html_var_from = f"{ident}_from"
+        self._html_var_from_prefix = f"{ident}_from_prefix"
+        self._html_var_until = f"{ident}_until"
+        self._html_var_until_prefix = f"{ident}_until_prefix"
         super().__init__(
+            ident=ident,
             title=title,
             sort_index=800,
             info="host",
-            query_filter=query_filters.NumberRangeQuery(
-                ident=ident,
-                filter_livestatus=False,
-                filter_row=_make_filter_row_float(inventory_path),
-                request_var_suffix="",
-                bound_rescaling=scale if scale is not None else 1.0,
+            htmlvars=[
+                self._html_var_from,
+                self._html_var_from_prefix,
+                self._html_var_until,
+                self._html_var_until_prefix,
+            ],
+            link_columns=[],
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
+        unit_choices = [(n, c.unit) for n, c in self._unit_choices.items()]
+
+        html.open_table()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text_permissive(_("From:") + "&nbsp;")
+        html.close_td()
+
+        html.open_td()
+        html.text_input(
+            self._html_var_from,
+            default_value=value.get(self._html_var_from, ""),
+            style="width: 80px;",
+        )
+        html.close_td()
+
+        if unit_choices:
+            html.open_td()
+            html.dropdown(self._html_var_from_prefix, unit_choices)
+            html.close_td()
+            html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text_permissive(_("To:") + "&nbsp;")
+        html.close_td()
+
+        html.open_td()
+        html.text_input(
+            self._html_var_until,
+            default_value=value.get(self._html_var_until, ""),
+            style="width: 80px;",
+        )
+        html.close_td()
+
+        if unit_choices:
+            html.open_td()
+            html.dropdown(self._html_var_until_prefix, unit_choices)
+            html.close_td()
+            html.close_tr()
+
+        html.close_table()
+
+    def components(self) -> Iterable[FilterComponent]:
+        unit_choices = {n: c.unit for n, c in self._unit_choices.items()}
+
+        def _components() -> Iterator[TextInput | Dropdown]:
+            yield TextInput(
+                id=self._html_var_from,
+                label=_("From:"),
+            )
+            if unit_choices:
+                yield Dropdown(
+                    id=self._html_var_from_prefix,
+                    choices=unit_choices,
+                )
+            yield TextInput(
+                id=self._html_var_until,
+                label=_("To:"),
+            )
+            if unit_choices:
+                yield Dropdown(
+                    id=self._html_var_until_prefix,
+                    choices=unit_choices,
+                )
+
+        yield HorizontalGroup(components=list(_components()))
+
+    def _get_bound(self, var: str, var_prefix: str | None) -> int | float | None:
+        if var_prefix is not None and (choice := self._unit_choices.get(var_prefix)):
+            factor = choice.factor
+        else:
+            factor = 1
+        try:
+            return float(var) * factor
+        except ValueError:
+            return None
+
+    def _get_bounds(self, filter_vars: FilterHTTPVariables) -> _MaybeBounds:
+        return (
+            (
+                None
+                if (var := filter_vars.get(self._html_var_from)) is None
+                else self._get_bound(var, filter_vars.get(self._html_var_from_prefix))
             ),
-            unit=unit,
-            is_show_more=is_show_more,
+            (
+                None
+                if (var := filter_vars.get(self._html_var_until)) is None
+                else self._get_bound(var, filter_vars.get(self._html_var_until_prefix))
+            ),
+        )
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        from_var, until_var = self._get_bounds(context.get(self.ident, {}))
+        return (
+            rows
+            if from_var is None and until_var is None
+            else [row for row in rows if self._filter_row(row, self.ident, (from_var, until_var))]
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
-        return any(self.query_filter.extractor(value))
+        return any(b is not None for b in self._get_bounds(value))
 
 
 def _make_filter_row_text(

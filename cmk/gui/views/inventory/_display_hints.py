@@ -36,6 +36,7 @@ from cmk.gui.inventory.filters import (
     FilterInvBool,
     FilterInvChoice,
     FilterInvFloat,
+    FilterInvFloatChoice,
     FilterInvtableAdminStatus,
     FilterInvtableAgeRange,
     FilterInvtableAvailable,
@@ -385,6 +386,63 @@ def _get_unit_from_number_field(number_field: NumberFieldFromAPI) -> str:
     )
 
 
+def _get_unit_choices_from_number_field(
+    number_field: NumberFieldFromAPI,
+) -> Mapping[str, FilterInvFloatChoice]:
+    if not isinstance(number_field.render, UnitFromAPI):
+        return {}
+    match number_field.render.notation:
+        case (
+            DecimalNotationFromAPI()
+            | StandardScientificNotationFromAPI()
+            | EngineeringScientificNotationFromAPI()
+        ):
+            return {}
+        case SINotationFromAPI():
+            return {
+                prefix: FilterInvFloatChoice(
+                    f"{prefix}{number_field.render.notation.symbol}", factor
+                )
+                for prefix, factor in (
+                    ("", 1),
+                    ("k", 1000),
+                    ("M", 1000**2),
+                    ("G", 1000**3),
+                    ("T", 1000**4),
+                    ("P", 1000**5),
+                    ("E", 1000**6),
+                    ("Z", 1000**7),
+                    ("Y", 1000**8),
+                )
+            }
+        case IECNotationFromAPI():
+            return {
+                prefix: FilterInvFloatChoice(
+                    f"{prefix}{number_field.render.notation.symbol}", factor
+                )
+                for prefix, factor in (
+                    ("", 1),
+                    ("Ki", 1024),
+                    ("Mi", 1024**2),
+                    ("Gi", 1024**3),
+                    ("Ti", 1024**4),
+                    ("Pi", 1024**5),
+                    ("Ei", 1024**6),
+                    ("Zi", 1024**7),
+                    ("Yi", 1024**8),
+                )
+            }
+        case TimeNotationFromAPI() | AgeNotationFromAPI():
+            return {
+                "": FilterInvFloatChoice("s", 1),
+                "min": FilterInvFloatChoice("min", 60),
+                "h": FilterInvFloatChoice("h", 3600),
+                "d": FilterInvFloatChoice("d", 86400),
+            }
+        case other:
+            raise TypeError(other)
+
+
 def _make_attribute_filter(
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
     *,
@@ -409,9 +467,7 @@ def _make_attribute_filter(
                 ident=filter_ident,
                 title=long_title,
                 inventory_path=inventory_path,
-                unit=_get_unit_from_number_field(field_from_api),
-                scale=1,
-                is_show_more=True,
+                unit_choices=_get_unit_choices_from_number_field(field_from_api),
             )
         case TextFieldFromAPI():
             if field_from_api.sort_key:
@@ -789,24 +845,68 @@ def _make_attribute_filter_from_legacy_hint(
                 ],
                 is_show_more=True,
             )
-        case "bytes" | "bytes_rounded":
-            unit = _("B")
+        case "bytes" | "bytes_rounded" | "size":
+            unit_choices = {
+                prefix: FilterInvFloatChoice(f"{prefix}B", factor)
+                for prefix, factor in (
+                    ("", 1),
+                    ("k", 1000),
+                    ("M", 1000**2),
+                    ("G", 1000**3),
+                    ("T", 1000**4),
+                    ("P", 1000**5),
+                    ("E", 1000**6),
+                    ("Z", 1000**7),
+                    ("Y", 1000**8),
+                )
+            }
         case "hz":
-            unit = _("Hz")
+            unit_choices = {
+                prefix: FilterInvFloatChoice(f"{prefix}Hz", factor)
+                for prefix, factor in (
+                    ("", 1),
+                    ("k", 1000),
+                    ("M", 1000**2),
+                    ("G", 1000**3),
+                    ("T", 1000**4),
+                    ("P", 1000**5),
+                    ("E", 1000**6),
+                    ("Z", 1000**7),
+                    ("Y", 1000**8),
+                )
+            }
         case "volt":
-            unit = _("V")
-        case "timestamp":
-            unit = _("s")
+            unit_choices = {"": FilterInvFloatChoice("V", 1)}
+        case "age" | "timestamp_as_age" | "timestamp_as_age_days":
+            unit_choices = {
+                "": FilterInvFloatChoice("s", 1),
+                "min": FilterInvFloatChoice("min", 60),
+                "h": FilterInvFloatChoice("h", 3600),
+                "d": FilterInvFloatChoice("d", 86400),
+            }
+        case "nic_speed":
+            unit_choices = {
+                prefix: FilterInvFloatChoice(f"{prefix}bits/s", factor)
+                for prefix, factor in (
+                    ("", 1),
+                    ("k", 1000),
+                    ("M", 1000**2),
+                    ("G", 1000**3),
+                    ("T", 1000**4),
+                    ("P", 1000**5),
+                    ("E", 1000**6),
+                    ("Z", 1000**7),
+                    ("Y", 1000**8),
+                )
+            }
         case _:
-            unit = ""
+            unit_choices = {}
 
     return FilterInvFloat(
         ident=filter_ident,
         title=title,
         inventory_path=inventory_path,
-        unit=unit,
-        scale=1,
-        is_show_more=is_show_more,
+        unit_choices=unit_choices,
     )
 
 

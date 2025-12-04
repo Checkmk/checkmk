@@ -8,8 +8,10 @@ import pytest
 
 from tests.testlib.repo import current_base_branch_name
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status, parse_files
+from tests.testlib.utils import get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
+
+from tests.update.helpers import check_errors_in_log_files
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
@@ -101,29 +103,4 @@ def test_update(  # pylint: disable=too-many-branches
     )
     assert base_ok_services.issubset(target_ok_services), err_msg
 
-    error_match_dict = parse_files(pathname=target_site.logs_dir / "**/*log*", pattern="error")
-
-    # TODO: Remove the following block after CMK-18603 is done
-    cmc_log = str(target_site.logs_dir / "cmc.log")
-    if cmc_log in error_match_dict:
-        error_match_dict.pop(cmc_log)
-
-    # TODO: Remove the following block after CMK-18520 is done
-    agent_receiver_error_log = str(target_site.logs_dir / "agent-receiver/error.log")
-    if agent_receiver_error_log in error_match_dict:
-        error_match_dict.pop(agent_receiver_error_log)
-
-    # TODO: Remove the following block after CMK-27248 is done
-    apache_error_log = str(target_site.logs_dir / "apache/error_log")
-    if apache_error_log in error_match_dict:
-        error_match_dict.pop(apache_error_log)
-
-    # using OPENSSL version > 3.4.0 in test-containers leads to an error in web.log when starting a
-    # cmk site with version <= 2.3.0p40
-    # Error reported:
-    # > '... Error building RPM packet'
-    web_log = str(target_site.logs_dir / "web.log")
-    if web_log in error_match_dict:
-        error_match_dict.pop(web_log)
-
-    assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"
+    check_errors_in_log_files(target_site)

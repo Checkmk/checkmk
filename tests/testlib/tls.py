@@ -3,78 +3,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
 import ssl
-import subprocess
+import warnings
 from pathlib import Path
 
 
 class CMKTLSError(RuntimeError): ...
 
 
-def tls_connect(
-    openssl_path: Path, host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion
-) -> None:
+def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion) -> None:
     """connect to a socket with a specific tls version"""
     if tls_version == ssl.TLSVersion.SSLv3:
         raise CMKTLSError("Not even openssl supports that")
 
-    tls_flag = {
-        ssl.TLSVersion.TLSv1: "-tls1",
-        ssl.TLSVersion.TLSv1_1: "-tls1_1",
-        ssl.TLSVersion.TLSv1_2: "-tls1_2",
-        ssl.TLSVersion.TLSv1_3: "-tls1_3",
-    }[tls_version]
+    context = ssl.create_default_context()
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="ssl.TLSVersion..* is deprecated",
+            category=DeprecationWarning,
+        )
+        context.minimum_version = tls_version
+        context.maximum_version = tls_version
+    context.set_ciphers("DEFAULT@SECLEVEL=0")
+    context.load_verify_locations(cafile=str(ca_path))
+    context.check_hostname = False
 
-    openssl_call = subprocess.run(
-        [
-            str(openssl_path),
-            "s_client",
-            "-connect",
-            f"{host}:{port}",
-            "-CAfile",
-            str(ca_path),
-            tls_flag,
-            "-cipher",
-            "DEFAULT@SECLEVEL=0",
-            "-servername",
-            host,
-        ],
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if openssl_call.returncode == 0:
-        return
-
-    assert openssl_call.returncode == 1
-
-    try:
-        (
-            _some_number,
-            _error,
-            _some_hex_value,
-            literal_ssl_routines,
-            error_0,
-            error_1,
-            _origin,
-            _some_other_number,
-            msg,
-        ) = openssl_call.stderr.splitlines()[-1].split(":")
-    except ValueError as e:
-        raise ValueError(f"Cannot understand error message {openssl_call.stderr}") from e
-
-    assert literal_ssl_routines == "SSL routines"
-
-    if error_1 in ("unexpected eof while reading", "no protocols available"):
-        raise CMKTLSError(f"{error_0}:{error_1}")
-    if (
-        error_1 in ("sslv3 alert handshake failure", "ssl/tls alert handshake failure")
-        and msg == "SSL alert number 40"
-    ):
-        # I think this is due to a client cert required
-        return
-    if error_1 == "tlsv1 alert protocol version" and msg == "SSL alert number 70":
-        raise CMKTLSError(msg)
-
-    raise RuntimeError(f"Unknown openssl error: {openssl_call.stderr=}")
+    with socket.create_connection((host, port)) as sock:
+        try:
+            with context.wrap_socket(sock, server_hostname=host):
+                pass
+        except ssl.SSLError as e:
+            if str(e).startswith(
+                "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] ssl/tls alert handshake failure"
+            ):
+                # Probably a client cert is required
+                return
+            raise CMKTLSError(str(e)) from e

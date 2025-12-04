@@ -5,9 +5,11 @@
 
 
 import os
+import typing
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import cmk.ccc.version as cmk_version
 from cmk.livestatus_client import LocalConnection
 from cmk.product_telemetry.exceptions import (
     SiteInfoInvalidError,
@@ -18,32 +20,22 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Status
 
 
-def collect(cmk_config_dir: Path, var_dir: Path) -> SiteInfo:
+def collect(cmk_config_dir: Path, var_dir: Path, omd_root: Path) -> SiteInfo:
     telemetry_id_fp = telemetry_id_file_path(var_dir)
     site_id = get_or_create_telemetry_id(telemetry_id_fp)
 
-    query = Query(
-        [Status.num_hosts, Status.num_services, Status.edition, Status.program_version]
-    ).compile()
-
-    connection = LocalConnection()
-    response = connection.query(query)
-
-    if len(response) != 1:
-        raise SiteInfoInvalidError
-
-    if len(response[0]) != 4:
-        raise SiteInfoItemsInvalidError
+    checkmk_info = get_checkmk_info(omd_root)
+    site_status = get_site_status()
 
     wato_path = Path(cmk_config_dir / "wato")
 
     response_dict = dict(
         id=str(site_id),
-        count_hosts=response[0][0],
-        count_services=response[0][1],
+        count_hosts=site_status.count_hosts,
+        count_services=site_status.count_services,
         count_folders=get_number_of_folders(str(wato_path)),
-        edition=response[0][2],
-        cmk_version=response[0][3],
+        edition=checkmk_info.edition,
+        cmk_version=checkmk_info.version,
     )
 
     return SiteInfo.model_validate(response_dict)
@@ -82,3 +74,38 @@ def get_or_create_telemetry_id(file_path: Path) -> TelemetrySiteId:
         telemetry_id = TelemetrySiteId(uuid4())
         store_telemetry_id(file_path, telemetry_id)
     return telemetry_id
+
+
+class SiteStatus(typing.NamedTuple):
+    count_hosts: int
+    count_services: int
+
+
+def get_site_status() -> SiteStatus:
+    query = Query([Status.num_hosts, Status.num_services]).compile()
+
+    connection = LocalConnection()
+    response = connection.query(query)
+
+    if len(response) != 1:
+        raise SiteInfoInvalidError
+
+    if len(response[0]) != 2:
+        raise SiteInfoItemsInvalidError
+
+    return SiteStatus(
+        count_hosts=response[0][0],
+        count_services=response[0][1],
+    )
+
+
+class CheckmkInfo(typing.NamedTuple):
+    version: str
+    edition: str
+
+
+def get_checkmk_info(omd_root: Path) -> CheckmkInfo:
+    general_version_infos = cmk_version.get_general_version_infos(omd_root)
+    return CheckmkInfo(
+        version=general_version_infos["version"], edition=general_version_infos["edition"]
+    )

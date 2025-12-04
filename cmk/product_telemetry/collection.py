@@ -12,8 +12,10 @@ import cmk.product_telemetry.collectors.site_info as site_info_collector
 from cmk.product_telemetry.schema import ProductTelemetryPayload
 
 
-def collect_telemetry_data(var_dir: Path, cmk_config_dir: Path) -> ProductTelemetryPayload:
-    site_info = site_info_collector.collect(cmk_config_dir, var_dir)
+def collect_telemetry_data(
+    var_dir: Path, cmk_config_dir: Path, omd_root: Path
+) -> ProductTelemetryPayload:
+    site_info = site_info_collector.collect(cmk_config_dir, var_dir, omd_root)
 
     return ProductTelemetryPayload(
         timestamp=int(time.time()),

@@ -846,6 +846,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_PLUGIN_APIS,
     ),
     Component("cmk.product_telemetry"): _allow(
+        "cmk.ccc.version",
         "cmk.livestatus_client",
         "cmk.utils.licensing.helper",
         "cmk.utils.livestatus_helpers",

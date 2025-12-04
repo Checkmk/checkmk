@@ -25,7 +25,7 @@ def main(args: Sequence[str]) -> int:
 
     try:
         if request.collect:
-            data = collect_telemetry_data(paths.var_dir, paths.check_mk_config_dir)
+            data = collect_telemetry_data(paths.var_dir, paths.check_mk_config_dir, paths.omd_root)
             sys.stdout.write(data.model_dump_with_metadata_json().decode("utf-8") + "\n")
             sys.stdout.flush()
 

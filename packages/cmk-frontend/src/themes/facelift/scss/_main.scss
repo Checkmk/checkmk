@@ -466,6 +466,20 @@ div.waiting {
     margin-top: 0;
     margin-bottom: 0;
   }
+
+  input.button.primary {
+    color: $font-color-black;
+    background-color: $new-success;
+    border: 1px solid $new-success-dimmed;
+    display: block;
+    height: 32px;
+    margin: $spacing-half 0;
+    padding: 0 8px;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: unset;
+    border-radius: $theme-border-radius;
+  }
 }
 
 div.really {

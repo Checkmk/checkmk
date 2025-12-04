@@ -15,10 +15,9 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import { getWelcomeStageInformation } from '@/welcome/components/steps/utils.ts'
-
 import StepsProgressBar from '../StepsProgressBar.vue'
 import { totalSteps } from '../steps/stepComponents'
+import WelcomeSnapinSlideout from './WelcomeSnapinSlideout.vue'
 
 const { _t } = usei18n()
 
@@ -27,24 +26,13 @@ const props = defineProps<{
   stage_information: StageInformation
 }>()
 
-interface CmkWindow extends Window {
-  main: Window
-}
-
 const currentStageInformation = ref(props.stage_information)
 const completedSteps = computed(() => currentStageInformation.value.finished.length)
 const completed = computed(() => completedSteps.value === totalSteps)
+const slideoutOpen = ref<boolean>(false)
 
 async function openSlideIn() {
-  currentStageInformation.value =
-    (await getWelcomeStageInformation(props.cards.get_stage_information)) || props.stage_information
-  const event = new CustomEvent('open-welcome-slide-in', {
-    detail: {
-      cards: props.cards,
-      stage_information: currentStageInformation.value
-    }
-  })
-  ;(top!.frames as CmkWindow).main.dispatchEvent(event)
+  slideoutOpen.value = true
 }
 </script>
 
@@ -76,6 +64,11 @@ async function openSlideIn() {
   <CmkButton v-else variant="secondary" class="welcome-snapin__continue" @click="openSlideIn">
     {{ _t("What's next") }}
   </CmkButton>
+  <WelcomeSnapinSlideout
+    v-model="slideoutOpen"
+    :cards="cards"
+    :stage_information="stage_information"
+  ></WelcomeSnapinSlideout>
 </template>
 
 <style scoped>

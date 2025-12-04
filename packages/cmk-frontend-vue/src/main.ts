@@ -11,7 +11,6 @@ import '@/assets/variables.css'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
-import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlideout.vue'
 
 import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
 import DynamicIconApp from './components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
@@ -50,7 +49,6 @@ defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
-defineCmkComponent('cmk-welcome-snapin-slideout', WelcomeSnapinSlideout)
 defineCmkComponent('cmk-main-menu', MainMenuApp)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)
 defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fullPage: true } })

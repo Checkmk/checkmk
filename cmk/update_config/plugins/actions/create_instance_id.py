@@ -12,7 +12,7 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.licensing.helper import get_instance_id_file_path
 from cmk.utils.log import VERBOSE
-from cmk.utils.paths import omd_root
+from cmk.utils.paths import omd_root as _omd_root
 
 
 class UpdateInstanceID(UpdateAction):
@@ -22,7 +22,10 @@ class UpdateInstanceID(UpdateAction):
     has never been started since the 2.2 to lack these."""
 
     @override
-    def __call__(self, logger: Logger, omd_root: Path = Path(omd_root)) -> None:
+    def __call__(self, logger: Logger, omd_root: Path | None = None) -> None:
+        if omd_root is None:
+            omd_root = Path(_omd_root)
+
         if not (instance_id_file_path := get_instance_id_file_path(omd_root)).exists():
             logger.log(VERBOSE, "Creating instance ID.")
             instance_id_file_path.parent.mkdir(parents=True, exist_ok=True)

@@ -61,17 +61,18 @@ class SitesApiMgr:
         self, site_id: SiteId, username: str, password: str, *, pprint_value: bool, debug: bool
     ) -> None:
         site = self.get_a_site(site_id)
-        try:
-            site["secret"] = do_site_login(site, UserId(username), password, debug=debug)
-        except Exception as exc:
-            raise LoginException(str(exc))
+        if "secret" not in site:  # when login is not already done
+            try:
+                site["secret"] = do_site_login(site, UserId(username), password, debug=debug)
+            except Exception as exc:
+                raise LoginException(str(exc))
 
-        self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
-        trigger_remote_certs_creation(site_id, site, force=False, debug=debug)
-        distribute_license_to_remotes(
-            logger,
-            remote_automation_configs=[remote_automation_config_from_site_config(site)],
-        )
+            self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
+            trigger_remote_certs_creation(site_id, site, force=False, debug=debug)
+            distribute_license_to_remotes(
+                logger,
+                remote_automation_configs=[remote_automation_config_from_site_config(site)],
+            )
 
     def logout_of_site(self, site_id: SiteId, *, pprint_value: bool) -> None:
         site = self.get_a_site(site_id)

@@ -2,10 +2,10 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from unittest.mock import MagicMock
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
-
 import pytest
 from pytest import MonkeyPatch
 
@@ -94,6 +94,41 @@ def test_login_replication_enabled(
         username="cmkadmin",
         password="cmk",
     )
+
+
+def test_login_double_call_no_effect(
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    config, remote_site_id = _default_config_with_site_id()
+    site_login_mock = MagicMock()
+    site_login_mock.return_value = "watosecret"
+    trigger_remote_certs_mock = MagicMock()
+    distribute_license_mock = MagicMock()
+    clients.SiteManagement.create(site_config=config)
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
+    monkeypatch.setattr("cmk.gui.watolib.site_management.do_site_login", site_login_mock)
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.trigger_remote_certs_creation", trigger_remote_certs_mock
+    )
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.distribute_license_to_remotes", distribute_license_mock
+    )
+
+    clients.SiteManagement.login(
+        site_id=remote_site_id,
+        username="cmkadmin",
+        password="cmk",
+    )
+    clients.SiteManagement.login(
+        site_id=remote_site_id,
+        username="cmkadmin",
+        password="cmk",
+    )
+
+    site_login_mock.assert_called_once()
+    trigger_remote_certs_mock.assert_called_once()
+    distribute_license_mock.assert_called_once()
 
 
 def test_login_replication_disabled(

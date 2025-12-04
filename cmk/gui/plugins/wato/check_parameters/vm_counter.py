@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,8 +15,8 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate
 
 
-def _item_spec_vm_counter():
-    return DropdownChoice(
+def _item_spec_vm_counter() -> DropdownChoice[str]:
+    return DropdownChoice[str](
         title=_("kernel counter"),
         choices=[
             ("Context Switches", _("Context Switches")),
@@ -26,8 +26,8 @@ def _item_spec_vm_counter():
     )
 
 
-def _parameter_valuespec_vm_counter():
-    return Migrate(
+def _parameter_valuespec_vm_counter() -> Migrate[dict[str, Any]]:
+    return Migrate[dict[str, Any]](
         valuespec=Dictionary(
             elements=[
                 (

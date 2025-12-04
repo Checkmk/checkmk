@@ -155,13 +155,12 @@ SUPPORTED_VERSIONS = (
 )
 
 
-@pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS)
+@pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS, ids=lambda v: v.name)
 def test_unsupported_tls_versions(
     central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
     with pytest.raises(CMKTLSError):
         tls_connect(
-            Path(central_site.package.version_path()) / "bin/openssl",
             central_site.http_address,
             central_site.message_broker_port,
             broker_ca,
@@ -169,12 +168,11 @@ def test_unsupported_tls_versions(
         )
 
 
-@pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS)
+@pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS, ids=lambda v: v.name)
 def test_supported_tls_versions(
     central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
     tls_connect(
-        Path(central_site.package.version_path()) / "bin/openssl",
         central_site.http_address,
         central_site.message_broker_port,
         broker_ca,

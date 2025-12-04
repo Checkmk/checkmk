@@ -243,7 +243,7 @@ SUPPORTED_VERSIONS = (ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3)
 
 
 @pytest.mark.medium_test_chain
-@pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS)
+@pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS, ids=lambda v: v.name)
 def test_unsupported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
@@ -251,7 +251,6 @@ def test_unsupported_tls_versions(
 
     with pytest.raises(CMKTLSError):
         tls_connect(
-            Path(site.package.version_path()) / "bin/openssl",
             site.http_address,
             agent_receiver_port,
             site_ca,
@@ -260,13 +259,12 @@ def test_unsupported_tls_versions(
 
 
 @pytest.mark.medium_test_chain
-@pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS)
+@pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS, ids=lambda v: v.name)
 def test_supported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
     """Test that the receiver accepts supported TLS versions."""
     tls_connect(
-        Path(site.package.version_path()) / "bin/openssl",
         site.http_address,
         agent_receiver_port,
         site_ca,

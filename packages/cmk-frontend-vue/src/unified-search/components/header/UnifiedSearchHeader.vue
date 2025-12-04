@@ -39,9 +39,11 @@ searchUtils.onResetSearch(() => {
 searchUtils.input?.onSetFocus(setFocus)
 function setFocus() {
   if (searchInput.value) {
-    searchInput.value.focus()
-    searchInput.value.selectionStart = searchInput.value.selectionEnd =
-      searchUtils.query.input.value.length
+    if (document.activeElement !== searchInput.value) {
+      searchInput.value.focus()
+      searchInput.value.selectionStart = searchInput.value.selectionEnd =
+        searchUtils.query.input.value.length
+    }
   }
 }
 

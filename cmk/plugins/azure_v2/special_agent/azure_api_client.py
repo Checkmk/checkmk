@@ -4,19 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import asyncio
 import logging
-import os
 from collections.abc import Callable, Mapping
-from pathlib import Path
 from typing import Literal, NamedTuple
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-
-# workaround - can be removed when CMK-25281 is resolved
-os.environ["SSL_CERT_FILE"] = str(Path(os.getenv("OMD_ROOT", "")) / "var/ssl/ca-certificates.crt")
-
 import aiohttp
 import msal
 

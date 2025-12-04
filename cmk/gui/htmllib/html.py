@@ -611,10 +611,12 @@ class HTMLGenerator(HTMLWriter):
         )
 
     def render_loading_button(
-        self, name: str, url: str, label: str, class_: str, waiting_message: str
+        self, name: str, url: str, label: str, class_: str = "", waiting_message: str | None = None
     ) -> HTML:
         before_redirect_action = (
-            f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');"
+            (f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');")
+            if waiting_message
+            else ""
         )
         return self.render_input(
             name=name,

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
@@ -13,6 +15,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DropdownChoice,
+    Migrate,
     TextInput,
 )
 from cmk.gui.wato import (
@@ -41,105 +44,120 @@ def _special_agents_ipmi_sensors_vs_ipmi_common_elements() -> DictionaryElements
     ]
 
 
-def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
-    return Dictionary(
-        elements=[
-            *_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
-            (
-                "privilege_lvl",
-                DropdownChoice(
-                    title=_("Privilege Level"),
-                    choices=[
-                        ("user", "USER"),
-                        ("operator", "OPERATOR"),
-                        ("admin", "ADMIN"),
-                    ],
-                    default_value="operator",
-                ),
-            ),
-            (
-                "ipmi_driver",
-                TextInput(
-                    title=_("IPMI driver"),
-                ),
-            ),
-            (
-                "driver_type",
-                TextInput(
-                    title=_("IPMI driver type"),
-                    help=_("Driver type to use instead of doing an auto selection"),
-                ),
-            ),
-            (
-                "BMC_key",
-                TextInput(
-                    title=_("BMC key"),
-                    help=_(
-                        "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
+def _special_agents_ipmi_sensors_vs_freeipmi() -> Migrate:
+    return Migrate(
+        migrate=_migrate,
+        valuespec=Dictionary(
+            elements=[
+                *_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
+                (
+                    "privilege_lvl",
+                    DropdownChoice(
+                        title=_("Privilege Level"),
+                        choices=[
+                            ("user", "USER"),
+                            ("operator", "OPERATOR"),
+                            ("admin", "ADMIN"),
+                        ],
+                        default_value="operator",
                     ),
                 ),
-            ),
-            (
+                (
+                    "ipmi_driver",
+                    TextInput(
+                        title=_("IPMI driver"),
+                    ),
+                ),
+                (
+                    "driver_type",
+                    TextInput(
+                        title=_("IPMI driver type"),
+                        help=_("Driver type to use instead of doing an auto selection"),
+                    ),
+                ),
+                (
+                    "BMC_key",
+                    TextInput(
+                        title=_("BMC key"),
+                        help=_(
+                            "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
+                        ),
+                    ),
+                ),
+                (
+                    "cipher_suite_id",
+                    DropdownChoice(
+                        title=_("Privilege Level"),
+                        choices=[
+                            ("suite_3", "3"),
+                            ("suite_17", "17"),
+                        ],
+                        default_value="suite_17",
+                    ),
+                ),
+                (
+                    "quiet_cache",
+                    Checkbox(
+                        title=_("Quiet cache"),
+                        label=_("Enable"),
+                        help=("Do not output information about cache creation/deletion"),
+                    ),
+                ),
+                (
+                    "sdr_cache_recreate",
+                    Checkbox(
+                        title=_("SDR cache recreate"),
+                        label=_("Enable"),
+                        help=_("Automatically recreate the sensor data repository (SDR) cache"),
+                    ),
+                ),
+                (
+                    "interpret_oem_data",
+                    Checkbox(
+                        title=_("OEM data interpretation"),
+                        label=_("Enable"),
+                        help=_("Attempt to interpret OEM data"),
+                    ),
+                ),
+                (
+                    "output_sensor_state",
+                    Checkbox(
+                        title=_("Sensor state"),
+                        label=_("Enable"),
+                        default_value=True,
+                        help=_("Output sensor state"),
+                    ),
+                ),
+                (
+                    "output_sensor_thresholds",
+                    Checkbox(
+                        title=_("Sensor threshold"),
+                        label=_("Enable"),
+                        help=_("Output sensor thresholds"),
+                    ),
+                ),
+                (
+                    "ignore_not_available_sensors",
+                    Checkbox(
+                        title=_("Suppress not available sensors"),
+                        label=_("Enable"),
+                        help=_("Ignore not-available (i.e. N/A) sensors in output"),
+                    ),
+                ),
+            ],
+            optional_keys=[
+                "ipmi_driver",
+                "driver_type",
+                "cipher_suite_id",
                 "quiet_cache",
-                Checkbox(
-                    title=_("Quiet cache"),
-                    label=_("Enable"),
-                    help=("Do not output information about cache creation/deletion"),
-                ),
-            ),
-            (
                 "sdr_cache_recreate",
-                Checkbox(
-                    title=_("SDR cache recreate"),
-                    label=_("Enable"),
-                    help=_("Automatically recreate the sensor data repository (SDR) cache"),
-                ),
-            ),
-            (
                 "interpret_oem_data",
-                Checkbox(
-                    title=_("OEM data interpretation"),
-                    label=_("Enable"),
-                    help=_("Attempt to interpret OEM data"),
-                ),
-            ),
-            (
                 "output_sensor_state",
-                Checkbox(
-                    title=_("Sensor state"),
-                    label=_("Enable"),
-                    default_value=True,
-                    help=_("Output sensor state"),
-                ),
-            ),
-            (
                 "output_sensor_thresholds",
-                Checkbox(
-                    title=_("Sensor threshold"),
-                    label=_("Enable"),
-                    help=_("Output sensor thresholds"),
-                ),
-            ),
-            (
                 "ignore_not_available_sensors",
-                Checkbox(
-                    title=_("Suppress not available sensors"),
-                    label=_("Enable"),
-                    help=_("Ignore not-available (i.e. N/A) sensors in output"),
-                ),
-            ),
-        ],
-        optional_keys=[
-            "ipmi_driver",
-            "driver_type",
-            "quiet_cache",
-            "sdr_cache_recreate",
-            "interpret_oem_data",
-            "output_sensor_state",
-            "output_sensor_thresholds",
-            "ignore_not_available_sensors",
-            "BMC_key",
-        ],
+                "BMC_key",
+            ],
+        ),
     )
 
 
@@ -195,6 +213,14 @@ def _valuespec_special_agents_ipmi_sensors() -> CascadingDropdown:
             "which collects the data through the FreeIPMI resp. IPMItool command"
         ),
     )
+
+
+def _migrate(value: object) -> Mapping[str, object]:
+    assert isinstance(value, dict)
+    if "cipher_suite_id" not in value:
+        value["cipher_suite_id"] = "suite_3"
+        return value
+    return value
 
 
 rulespec_registry.register(

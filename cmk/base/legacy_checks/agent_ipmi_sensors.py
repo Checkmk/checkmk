@@ -5,12 +5,13 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Any
+from typing import Any, Literal
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
 
 _DEFAULT_OPTIONS = {
+    "cipher_suite_id": "suite_17",
     "quiet_cache": False,
     "sdr_cache_recreate": False,
     "interpret_oem_data": False,
@@ -40,16 +41,21 @@ def _ipmitool_args(options: Mapping[str, Any]) -> Iterable[str]:
     yield from ("--intf", value)
 
 
+def _cipher_suite_id_to_value(suite_id: Literal["suite_3", "suite_17"]) -> str:
+    return "3" if suite_id == "suite_3" else "17"
+
+
 def _freeipmi_args(options: Mapping[str, Any]) -> Iterable[str]:
     yield from chain.from_iterable(
         (
             opt,
-            value,
+            value if parameter != "cipher_suite_id" else _cipher_suite_id_to_value(value),
         )
         for opt, parameter in [
             ("--driver", "ipmi_driver"),
             ("--driver_type", "driver_type"),
             ("--key", "BMC_key"),
+            ("--cipher_suite_id", "cipher_suite_id"),
         ]
         if (value := options.get(parameter))
     )

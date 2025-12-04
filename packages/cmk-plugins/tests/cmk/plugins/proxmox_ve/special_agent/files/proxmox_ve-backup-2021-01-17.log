@@ -11,7 +11,7 @@ INFO: ionice priority: 7
 INFO: create storage snapshot 'vzdump'
 INFO: creating vzdump archive '/mnt/pve/StorageBox-219063/dump/vzdump-lxc-119-2021_01_17-02_30_02.tar.zst'
 INFO: Total bytes written: 62757529600 (59GiB, 79MiB/s)
-INFO: zstd: /*stdout*\: Input/output error 
+INFO: zstd: /*stdout*\: Input/output error
 INFO: remove vzdump snapshot
 ERROR: Backup of VM 119 failed - command 'set -o pipefail && lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- tar cpf - --totals --one-file-system -p --sparse --numeric-owner --acls --xattrs '--xattrs-include=user.*' '--xattrs-include=security.capability' '--warning=no-file-ignored' '--warning=no-xattr-write' --one-file-system '--warning=no-file-ignored' '--directory=/var/tmp/vzdumptmp112226_119' ./etc/vzdump/pct.conf ./etc/vzdump/pct.fw '--directory=/mnt/vzsnap0' --no-anchored '--exclude=lost+found' --anchored '--exclude=./tmp/?*' '--exclude=./var/tmp/?*' '--exclude=./var/run/?*.pid' ./ | zstd --rsyncable '--threads=1' >/mnt/pve/StorageBox-219063/dump/vzdump-lxc-119-2021_01_17-02_30_02.tar.dat' failed: exit code 1
 INFO: Failed at 2021-01-17 02:45:52
@@ -30,7 +30,7 @@ INFO: resume vm
 INFO: guest is online again after <1 seconds
 INFO: creating vzdump archive '/mnt/pve/StorageBox-219063/dump/vzdump-lxc-120-2021_01_17-02_45_53.tar.zst'
 INFO: Total bytes written: 399821598720 (373GiB, 54MiB/s)
-INFO: zstd: /*stdout*\: Input/output error 
+INFO: zstd: /*stdout*\: Input/output error
 INFO: remove vzdump snapshot
 ERROR: Backup of VM 120 failed - command 'set -o pipefail && lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- tar cpf - --totals --one-file-system -p --sparse --numeric-owner --acls --xattrs '--xattrs-include=user.*' '--xattrs-include=security.capability' '--warning=no-file-ignored' '--warning=no-xattr-write' --one-file-system '--warning=no-file-ignored' '--directory=/var/tmp/vzdumptmp112226_120' ./etc/vzdump/pct.conf ./etc/vzdump/pct.fw '--directory=/mnt/vzsnap0' --no-anchored '--exclude=lost+found' --anchored '--exclude=./tmp/?*' '--exclude=./var/tmp/?*' '--exclude=./var/run/?*.pid' ./ ./opt/sonatype/sonatype-work/ | zstd --rsyncable '--threads=1' >/mnt/pve/StorageBox-219063/dump/vzdump-lxc-120-2021_01_17-02_45_53.tar.dat' failed: exit code 1
 INFO: Failed at 2021-01-17 04:47:37

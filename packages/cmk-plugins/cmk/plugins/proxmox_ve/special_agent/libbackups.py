@@ -422,7 +422,7 @@ def fetch_backup_data(
     with JsonCachedData(
         storage=storage,
         storage_key="upid.log.cache.json",
-        cutoff_condition=lambda k, v: bool(v[0] < cutoff_date),
+        cutoff_condition=lambda _, v: bool(v[0] < cutoff_date),
     ) as cached:
 
         def fetch_backup_log(task: TaskInfo, node: str) -> tuple[str, LogData]:

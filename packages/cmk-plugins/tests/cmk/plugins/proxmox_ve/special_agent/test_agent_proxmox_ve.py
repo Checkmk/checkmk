@@ -530,17 +530,3 @@ def test_parsing_backuped_log_formats(
     assert backup_task.backup_data["1"]["backup_amount"] == expected_backup_amount
     assert backup_task.backup_data["1"]["backup_total"] == expected_backup_total
     assert backup_task.backup_data["1"]["backup_time"] == expected_backup_time
-
-
-if __name__ == "__main__":
-    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
-    # Just run this file from your IDE and dive into the code.
-    from tests.testlib.common.repo import repo_path
-
-    assert not pytest.main(
-        [
-            "--doctest-modules",
-            os.path.join(repo_path(), "cmk/plugins/proxmox/special_agent/agent_proxmox_ve.py"),
-        ]
-    )
-    pytest.main(["-vvsx", __file__])

@@ -9,8 +9,11 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_info as pvvi
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_info import (
+    _check_proxmox_ve_vm_info_testable,
+    Params,
+)
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
 
 VM_DATA = SectionVMInfo(
@@ -137,24 +140,17 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
     ],
 )
 def test_check_proxmox_ve_vm_info(
-    params: pvvi.Params,
+    params: Params,
     section: SectionVMInfo,
     value_store: MutableMapping[str, object],
     expected_results: CheckResult,
 ) -> None:
     with time_machine.travel(datetime.datetime(2025, 2, 4, 16, 16, 50, tzinfo=ZoneInfo("CET"))):
         results = tuple(
-            pvvi._check_proxmox_ve_vm_info_testable(
+            _check_proxmox_ve_vm_info_testable(
                 params,
                 section,
                 value_store,
             )
         )
         assert results == expected_results
-
-
-if __name__ == "__main__":
-    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
-    # Just run this file from your IDE and dive into the code.
-    assert not pytest.main(["--doctest-modules", pvvi.__file__])
-    pytest.main(["-vvsx", __file__])

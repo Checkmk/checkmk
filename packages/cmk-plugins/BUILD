@@ -218,6 +218,42 @@ py_test(
 )
 
 py_library(
+    name = "proxmox_ve",
+    srcs = glob(["cmk/plugins/proxmox_ve/**/*.py"]),
+    data = glob([
+        "cmk/plugins/proxmox_ve/checkman/*",
+        "cmk/plugins/proxmox_ve/libexec/*",
+    ]) + ["cmk/plugins/proxmox_ve/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("requests"),
+        requirement("pydantic"),
+    ],
+)
+
+py_test(
+    name = "proxmox_ve-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/proxmox_ve/**/*.py"]) + [":__test__.py"],
+    data = glob(["tests/cmk/plugins/proxmox_ve/**/files/**"]),
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":proxmox_ve",
+        requirement("pytest"),
+        requirement("time-machine"),
+    ],
+)
+
+py_library(
     name = "randomds",
     srcs = glob(
         [

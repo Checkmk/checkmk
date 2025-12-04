@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 RELAY_FETCHER_BASE_PATH: Final = Path(".")
 
+
 # The name of the folder in the tar archive that contains the relay config files
 CONFIG_ARCHIVE_ROOT_FOLDER_NAME: Final = "config"
 CONFIG_ARCHIVE_RELATIVE_PATH_ENGINE_CONFIG: Final = "engine/config.json"

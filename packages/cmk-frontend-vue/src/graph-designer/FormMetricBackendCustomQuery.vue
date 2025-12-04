@@ -24,6 +24,10 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
+import FormMetricBackendCustomQueryAttribute, {
+  type Attribute
+} from './private/FormMetricBackendCustomQueryAttribute.vue'
+
 const { _t } = usei18n()
 
 export interface Query {
@@ -86,12 +90,12 @@ watch(
 
 // Some internal vars
 
-const resourceAttribute = ref<{ key: string | null; value: string | null }>({
+const resourceAttribute = ref<Attribute>({
   key: null,
   value: null
 })
-const scopeAttribute = ref<{ key: string | null; value: string | null }>({ key: null, value: null })
-const dataPointAttribute = ref<{ key: string | null; value: string | null }>({
+const scopeAttribute = ref<Attribute>({ key: null, value: null })
+const dataPointAttribute = ref<Attribute>({
   key: null,
   value: null
 })
@@ -116,44 +120,47 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
   }
 }))
 
-const resourceAttributesAutocompleter = (key: boolean = true): Autocompleter => ({
+const attributeAutoCompleter = (
+  ident: string,
+  key: string | null,
+  isForKey: boolean
+): Autocompleter => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
-    ident: key
+    ident,
+    params: {
+      strict: true,
+      context: getAutoCompleterContext(isForKey ? null : key)
+    }
+  }
+})
+
+const resourceAttributesAutocompleter = (key: string | null, isForKey: boolean): Autocompleter =>
+  attributeAutoCompleter(
+    isForKey
       ? 'monitored_resource_attributes_keys_backend'
       : 'monitored_resource_attributes_values_backend',
-    params: {
-      strict: true,
-      context: getAutoCompleterContext(resourceAttribute.value.key)
-    }
-  }
-})
+    key,
+    isForKey
+  )
 
-const scopeAttributesAutocompleter = (key: boolean = true): Autocompleter => ({
-  fetch_method: 'ajax_vs_autocomplete',
-  data: {
-    ident: key
+const scopeAttributesAutocompleter = (key: string | null, isForKey: boolean): Autocompleter =>
+  attributeAutoCompleter(
+    isForKey
       ? 'monitored_scope_attributes_keys_backend'
       : 'monitored_scope_attributes_values_backend',
-    params: {
-      strict: true,
-      context: getAutoCompleterContext(scopeAttribute.value.key)
-    }
-  }
-})
+    key,
+    isForKey
+  )
 
-const dataPointAttributesAutocompleter = (key: boolean = true): Autocompleter => ({
-  fetch_method: 'ajax_vs_autocomplete',
-  data: {
-    ident: key
+const dataPointAttributesAutocompleter = (key: string | null, isForKey: boolean): Autocompleter =>
+  attributeAutoCompleter(
+    isForKey
       ? 'monitored_data_point_attributes_keys_backend'
       : 'monitored_data_point_attributes_values_backend',
-    params: {
-      strict: true,
-      context: getAutoCompleterContext(dataPointAttribute.value.key)
-    }
-  }
-})
+    key,
+    isForKey
+  )
 
 // actions
 
@@ -264,22 +271,11 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
               {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
             </template>
           </CmkList>
-          <div>
-            <FormAutocompleter
-              v-model="resourceAttribute.key"
-              :autocompleter="resourceAttributesAutocompleter()"
-              :placeholder="_t('Attribute key')"
-              @update:model-value="addResourceAttribute"
-            />
-          </div>
-          <div>
-            <FormAutocompleter
-              v-model="resourceAttribute.value"
-              :autocompleter="resourceAttributesAutocompleter(false)"
-              :placeholder="_t('Attribute value')"
-              @update:model-value="addResourceAttribute"
-            />
-          </div>
+          <FormMetricBackendCustomQueryAttribute
+            v-model="resourceAttribute"
+            :autocompleter-getter="resourceAttributesAutocompleter"
+            @update:model-value="addResourceAttribute"
+          />
         </td>
       </tr>
       <tr>
@@ -294,22 +290,11 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
               {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
             </template>
           </CmkList>
-          <div>
-            <FormAutocompleter
-              v-model="scopeAttribute.key"
-              :autocompleter="scopeAttributesAutocompleter()"
-              :placeholder="_t('Attribute key')"
-              @update:model-value="addScopeAttribute"
-            />
-          </div>
-          <div>
-            <FormAutocompleter
-              v-model="scopeAttribute.value"
-              :autocompleter="scopeAttributesAutocompleter(false)"
-              :placeholder="_t('Attribute value')"
-              @update:model-value="addScopeAttribute"
-            />
-          </div>
+          <FormMetricBackendCustomQueryAttribute
+            v-model="scopeAttribute"
+            :autocompleter-getter="scopeAttributesAutocompleter"
+            @update:model-value="addScopeAttribute"
+          />
         </td>
       </tr>
       <tr>
@@ -324,22 +309,11 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
               {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
             </template>
           </CmkList>
-          <div>
-            <FormAutocompleter
-              v-model="dataPointAttribute.key"
-              :autocompleter="dataPointAttributesAutocompleter()"
-              :placeholder="_t('Attribute key')"
-              @update:model-value="addDataPointAttribute"
-            />
-          </div>
-          <div>
-            <FormAutocompleter
-              v-model="dataPointAttribute.value"
-              :autocompleter="dataPointAttributesAutocompleter(false)"
-              :placeholder="_t('Attribute value')"
-              @update:model-value="addDataPointAttribute"
-            />
-          </div>
+          <FormMetricBackendCustomQueryAttribute
+            v-model="dataPointAttribute"
+            :autocompleter-getter="dataPointAttributesAutocompleter"
+            @update:model-value="addDataPointAttribute"
+          />
         </td>
       </tr>
       <tr>
@@ -371,10 +345,5 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
 table {
   border-collapse: separate;
   border-spacing: 5px;
-}
-
-div {
-  display: inline-block;
-  margin-right: 1px;
 }
 </style>

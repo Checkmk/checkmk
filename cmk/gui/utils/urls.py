@@ -295,6 +295,7 @@ def make_confirm_delete_link(
     confirm_button: str | None = None,
     cancel_button: str | None = None,
     warning: bool = False,
+    post_confirm_waiting_text: str | None = None,
 ) -> str:
     return _make_customized_confirm_link(
         url=url,
@@ -307,6 +308,7 @@ def make_confirm_delete_link(
             "confirmButton": "confirm_warning" if warning else "confirm_question",
             "icon": "confirm_icon" + (" confirm_warning" if warning else " confirm_question"),
         },
+        post_confirm_waiting_text=post_confirm_waiting_text,
     )
 
 
@@ -319,8 +321,9 @@ def _make_customized_confirm_link(
     message: str | None = None,
     icon: str | None = None,
     custom_class_options: dict[str, str] | None = None,
+    post_confirm_waiting_text: str | None = None,
 ) -> str:
-    return "javascript:cmk.forms.confirm_link({}, {}, {}),cmk.popup_menu.close_popup()".format(
+    return "javascript:cmk.forms.confirm_link({}, {}, {}, {}),cmk.popup_menu.close_popup()".format(
         json.dumps(quote_plus(url)),
         json.dumps(escape_text(message, escape_links=True)),
         json.dumps(
@@ -332,6 +335,7 @@ def _make_customized_confirm_link(
                 "customClass": custom_class_options if custom_class_options else {},
             }
         ),
+        json.dumps(post_confirm_waiting_text),
     )
 
 

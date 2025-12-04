@@ -462,23 +462,31 @@ export function add_confirm_on_submit(
 }
 
 // Used as onclick handler on links to confirm following the link or not
-export function confirm_link(url: string, message: string, custom_args: ConfirmLinkCustomArgs) {
-  confirm_dialog({ ...custom_args, html: message }, () => {
-    const form = Object.assign(document.createElement('form'), {
-      method: 'POST',
-      action: url
-    })
-    const csrf_token_input = Object.assign(document.createElement('input'), {
-      type: 'hidden',
-      name: '_csrf_token',
-      value: global_csrf_token
-    })
+export function confirm_link(
+  url: string,
+  message: string,
+  custom_args: ConfirmLinkCustomArgs,
+  post_confirm_waiting_text: string | null = null
+) {
+  confirm_dialog(
+    { ...custom_args, html: message, post_confirm_waiting_text: post_confirm_waiting_text },
+    () => {
+      const form = Object.assign(document.createElement('form'), {
+        method: 'POST',
+        action: url
+      })
+      const csrf_token_input = Object.assign(document.createElement('input'), {
+        type: 'hidden',
+        name: '_csrf_token',
+        value: global_csrf_token
+      })
 
-    form.appendChild(csrf_token_input)
-    document.body.appendChild(form)
+      form.appendChild(csrf_token_input)
+      document.body.appendChild(form)
 
-    form.submit()
-  })
+      form.submit()
+    }
+  )
 }
 
 // On submit of the filter form (filter popup), remove unnecessary HTTP variables

@@ -189,7 +189,7 @@ onMounted(() => {
   z-index: +1;
   left: 0;
   top: 58px;
-  border-right: 4px solid var(--success);
+  border-right: 4px solid var(--default-nav-popup-border-color);
   border-top-width: 0;
   width: 750px;
   max-width: 750px;

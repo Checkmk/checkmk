@@ -305,10 +305,10 @@ onMounted(() => {
 
 <template>
   <DefaultPopup class="cmk-default-popup-mainmenu">
+    <div class="cmk-default-popup-mainmenu__header">
+      <h1>{{ _t('Activate pending changes') }}</h1>
+    </div>
     <div class="cmk-div-mainmenu-container">
-      <div class="cmk-div-popup-title-container">
-        <h1>{{ _t('Activate pending changes') }}</h1>
-      </div>
       <div class="cmk-div-buttons-container">
         <CmkButtonSubmit
           class="cmk-button-submit"
@@ -423,30 +423,39 @@ onMounted(() => {
 /* stylelint-disable checkmk/vue-bem-naming-convention */
 .cmk-default-popup-mainmenu {
   display: flex;
-  width: 484px;
+  width: 500px;
   height: calc(100vh - 64px);
-  padding: 32px;
   flex-direction: column;
   align-items: flex-start;
   border-top: 1px solid var(--default-nav-border-color);
   gap: 12px;
+
+  .cmk-default-popup-mainmenu__header {
+    height: 60px;
+    min-height: 60px;
+    z-index: +1;
+    width: calc(100% - 2 * var(--spacing-double));
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 var(--spacing-double);
+    border-top: 1px solid var(--ux-theme-3);
+    border-bottom: 1px solid var(--ux-theme-3);
+
+    h1 {
+      margin: 0;
+    }
+  }
 }
 
 .cmk-div-mainmenu-container {
   display: flex;
-  width: 484px;
+  width: calc(100% - 2 * var(--spacing-double));
   height: 943px;
   flex-direction: column;
   align-items: flex-start;
   flex-shrink: 0;
-}
-
-.cmk-div-popup-title-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  align-self: stretch;
-  margin-bottom: 19px;
+  margin: var(--spacing-double);
 }
 
 .cmk-div-buttons-container {

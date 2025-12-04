@@ -38,7 +38,9 @@ RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
 
 # Rulesets that have been removed without previous deprecation
-REMOVED_RULESETS: Iterable[RulesetName] = {}
+REMOVED_RULESETS: Iterable[RulesetName] = {
+    "special_agents:otel"  #  2.4 -> 2.5
+}
 
 SKIP_ACTION: Final = {
     # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can

@@ -9,6 +9,8 @@
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import run
 from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
@@ -131,6 +133,7 @@ def test_run_omd_reload(site: Site) -> None:
     )
 
 
+@pytest.mark.xfail(reason="CMK-28232")
 def test_run_omd_reload_service(site: Site) -> None:
     """
     Test the 'omd reload <service>' command for the current site.

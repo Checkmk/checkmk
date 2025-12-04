@@ -40,7 +40,7 @@ class RelaysRepository:
         # FIXME async client
         client = httpx.Client(
             base_url=site_url,
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", "user-agent": "agent-receiver/jose"},
         )
         return cls(client, site_name, helper_config_dir)
 

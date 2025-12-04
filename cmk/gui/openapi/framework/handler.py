@@ -15,6 +15,7 @@ from werkzeug.http import parse_accept_header
 from cmk import trace
 from cmk.ccc import store
 from cmk.gui.fields.fields_filter import FieldsFilter
+from cmk.gui.http import FILE_EXTENSIONS as CONTENT_TYPE_FILE_EXTENSIONS
 from cmk.gui.http import HTTPMethod, Response
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import (
@@ -101,11 +102,17 @@ def _validate_direct_response(response: Response) -> None:
     if not response.data:
         return
 
-    if response.headers.get("Content-Type") == "application/problem+json":
+    content_type = response.headers.get("Content-Type")
+    if content_type == "application/problem+json":
         ResponseValidator.validate_problem_json(response)
         return
 
-    # TODO: we should probably allow other response types. maybe use special response classes that handle serialization?
+    # TODO: maybe use special response classes that handle serialization?
+
+    # Allow raw responses for non-JSON content types (e.g. file downloads)
+    if content_type in CONTENT_TYPE_FILE_EXTENSIONS:
+        return
+
     if response.status_code < 300:
         raise RestAPIResponseException(
             title="Server was about to send an invalid response.",

@@ -69,6 +69,7 @@ FILE_EXTENSIONS = {
     "text/csv": [".csv"],
     "text/plain": [".txt"],
     "application/x-pem-file": [".pem"],
+    "application/x-shellscript": [".sh"],
 }
 
 

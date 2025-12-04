@@ -353,7 +353,11 @@ class EndpointValidator:
             EndpointValidator._validate_parameters(endpoint.handler)
 
         model = EndpointModel.build(endpoint.handler)
-        EndpointValidator._validate_response_schema(endpoint, model)
+
+        # Only validate response schema for JSON endpoints
+        if endpoint.content_type == "application/json":
+            EndpointValidator._validate_response_schema(endpoint, model)
+
         EndpointValidator._validate_request_schema(endpoint, model)
         EndpointValidator._validate_error_schemas(
             endpoint, endpoint_definition.handler.error_schemas

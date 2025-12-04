@@ -124,6 +124,7 @@ CmkEndpointName = Literal[
     "cmk/download",
     "cmk/download_by_hash",
     "cmk/download_by_host",
+    "cmk/relay/install_script",
     "cmk/download_license_request",
     "cmk/edit_dashboard_relative_grid",
     "cmk/edit_dashboard_responsive_grid",

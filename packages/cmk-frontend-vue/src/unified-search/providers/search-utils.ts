@@ -266,15 +266,9 @@ function highlightQuery(s: string): string {
   if (!query.input.value) {
     return s
   }
-
-  try {
-    return s.replace(
-      new RegExp(query.input.value.trimEnd(), 'ig'),
-      `<span class="highlight-query">$&</span>`
-    )
-  } catch {
-    return s
-  }
+  const sanitized = query.input.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trimEnd()
+  const regex = new RegExp(sanitized, 'ig')
+  return s.replace(regex, `<span class="highlight-query">$&</span>`)
 }
 
 function breadcrumb(provider: UnifiedSearchProviderIdentifier, topic: string): string[] {

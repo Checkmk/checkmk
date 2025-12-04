@@ -202,6 +202,7 @@ const pageNavigation = parsePageNavigation()
             {
               label: _t('Show page navigation'),
               url: pageNavigation.redirectLink,
+              target: '_top',
               icon: pageNavigation.toggle === 'on' ? 'toggle-on' : 'toggle-off'
             }
           ]"

@@ -27,6 +27,6 @@ defineProps<CollapsibleContent>()
 }
 
 .db-collapsible-content__inner {
-  padding: 10px;
+  padding: var(--dimension-7);
 }
 </style>

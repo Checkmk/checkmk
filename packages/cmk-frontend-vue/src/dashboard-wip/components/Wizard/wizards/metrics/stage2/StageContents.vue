@@ -206,7 +206,11 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
       :action="gotoPrevStage"
       variant="secondary"
     />
-    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="primary" />
+    <ActionButton
+      :label="!!editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
+      :action="gotoNextStage"
+      variant="primary"
+    />
   </ActionBar>
 
   <ContentSpacer :dimension="11" />

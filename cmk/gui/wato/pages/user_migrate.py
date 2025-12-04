@@ -86,7 +86,7 @@ class ModeUserMigrate(WatoMode):
                                 PageMenuEntry(
                                     title=_("Migrate users"),
                                     shortcut_title=_("Migrate selected users"),
-                                    icon_name="migrate",
+                                    icon_name="migrate_users",
                                     item=make_confirmed_form_submit_link(
                                         form_name="user_migrate",
                                         button_name="_migrate",

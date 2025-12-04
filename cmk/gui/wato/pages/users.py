@@ -228,7 +228,7 @@ class ModeUsers(WatoMode):
             yield PageMenuEntry(
                 title=_("Migrate users"),
                 shortcut_title=_("Migrate selected users"),
-                icon_name="migrate",
+                icon_name="migrate_users",
                 item=make_simple_link(
                     makeuri_contextless(
                         request,

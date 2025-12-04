@@ -125,7 +125,7 @@ def default_user_menu_topics(
                 title=_("Two-factor authentication"),
                 url="user_two_factor_overview.py",
                 sort_index=30,
-                icon="topic_two_factor",
+                icon="topic_2fa",
             ),
         )
 

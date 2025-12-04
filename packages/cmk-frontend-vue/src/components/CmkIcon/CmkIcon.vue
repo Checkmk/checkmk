@@ -81,18 +81,12 @@ const getTransformRotate = () => {
 
 <style lang="scss">
 body[data-theme='modern-dark'] {
-  .cmk-icon__icon--select-arrow {
-    content: url('~cmk-frontend/themes/modern-dark/images/select_arrow.png');
-  }
   .cmk-icon__icon--search {
     content: url('~cmk-frontend/themes/modern-dark/images/icon_search.svg');
   }
 }
 
 body[data-theme='facelift'] {
-  .cmk-icon__icon--select-arrow {
-    content: url('~cmk-frontend/themes/facelift/images/select_arrow.png');
-  }
   .cmk-icon__icon--search {
     content: url('~cmk-frontend/themes/facelift/images/icon_search.png');
   }
@@ -194,6 +188,7 @@ $unthemed-icons: (
   'cached': 'icon_cached.png',
   'cancel': 'icon_cancel.svg',
   'cannot-reschedule': 'icon_cannot_reschedule.png',
+  'certificate': 'icon_certificate.svg',
   'checkbox-hover-bg': 'checkbox_hover_bg.png',
   'checkbox': 'icon_checkbox.svg',
   'check': 'icon_check.svg',
@@ -334,6 +329,7 @@ $unthemed-icons: (
   'icons': 'icon_icons.svg',
   'ignore': 'icon_ignore.png',
   'inactive': 'icon_inactive.png',
+  'influxdb-connections': 'icon_influxdb_connections.svg',
   'info': 'icon_info.svg',
   'inline-error': 'icon_inline_error.svg',
   'insertdate': 'icon_insertdate.svg',
@@ -384,6 +380,7 @@ $unthemed-icons: (
   'menu-item-checked': 'icon_menu_item_checked.png',
   'menu-item-unchecked': 'icon_menu_item_unchecked.png',
   'message': 'icon_message.svg',
+  'migrate-users': 'icon_migrate_users.svg',
   'missing': 'icon_missing.svg',
   'mkeventd-rules': 'icon_mkeventd_rules.png',
   'mkps': 'icon_mkps.svg',
@@ -415,8 +412,10 @@ $unthemed-icons: (
   'npassive': 'icon_npassive.png',
   'ntop': 'icon_ntop.svg',
   'ooservice': 'ooservice.png',
+  'open-telemetry': 'icon_open_telemetry.svg',
   'opentelemetry': 'icon_opentelemetry.svg',
   'os-other': 'icon_os_other.svg',
+  'otel-collector': 'icon_otel_collector.svg',
   'outofnot': 'icon_outofnot.png',
   'outof-serviceperiod': 'icon_outof_serviceperiod.png',
   'packages': 'icon_packages.svg',
@@ -581,6 +580,7 @@ $unthemed-icons: (
   'toggle-context': 'icon_toggle_context.png',
   'toggle-details': 'icon_toggle_details.png',
   'toggle-on': 'icon_toggle_on.svg',
+  'topic-2fa': 'icon_topic_2fa.svg',
   'topic-administration': 'icon_topic_administration.png',
   'topic-agents': 'icon_topic_agents.png',
   'topic-analyze': 'icon_topic_analyze.png',
@@ -609,7 +609,6 @@ $unthemed-icons: (
   'topic-services': 'icon_topic_services.png',
   'topic-site': 'icon_topic_site.png',
   'topic-system': 'icon_topic_system.svg',
-  'topic-two-factor': 'icon_topic_two_factor.png',
   'topic-user-interface': 'icon_topic_user_interface.svg',
   'topic-users': 'icon_topic_users.png',
   'topic-visualization': 'icon_topic_visualization.png',
@@ -655,6 +654,7 @@ $unthemed-icons: (
   'zoom': 'icon_zoom.png'
 );
 $themed-icons: (
+  'agent-registration': 'icon_agent_registration.svg',
   'analyze': 'icon_analyze.svg',
   'assign': 'icon_assign.svg',
   'aws': 'icon_aws.svg',
@@ -666,6 +666,7 @@ $themed-icons: (
   'comment': 'icon_comment.svg',
   'configuration': 'icon_configuration.svg',
   'cross-bg-white': 'icon_cross_bg_white.svg',
+  'dashboard-grid': 'icon_dashboard_grid.svg',
   'dashboard-menuarrow': 'icon_dashboard_menuarrow.svg',
   'dashlet-clone': 'dashlet_clone.svg',
   'dashlet-delete': 'dashlet_delete.svg',
@@ -704,6 +705,7 @@ $themed-icons: (
   'main-user': 'icon_main_user.svg',
   'manual': 'icon_manual.svg',
   'nagios': 'icon_nagios.svg',
+  'network': 'icon_network.svg',
   'performance-data': 'icon_performance_data.svg',
   'release-automated': 'release_automated.svg',
   'reload-cmk': 'icon_reload_cmk.svg',
@@ -711,6 +713,8 @@ $themed-icons: (
   'saas': 'icon_saas.svg',
   'search-action-button': 'icon_search_action_button.svg',
   'search-action': 'icon_search_action.svg',
+  'search': 'icon_search.svg',
+  'select-arrow': 'icon_select_arrow.svg',
   'services-blue': 'icon_services_blue.svg',
   'show-less': 'icon_show_less.svg',
   'show-more': 'icon_show_more.svg',

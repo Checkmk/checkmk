@@ -1040,7 +1040,7 @@ class MainModuleCertificateOverview(ABCMainModule):
 
     @property
     def icon(self) -> Icon:
-        return "certificate_overview"
+        return "certificate"
 
     @property
     def permission(self) -> None | str:

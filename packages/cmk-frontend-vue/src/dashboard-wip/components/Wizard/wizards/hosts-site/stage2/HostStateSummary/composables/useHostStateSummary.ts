@@ -21,6 +21,7 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'host_state_summary'
 export interface UseHostStateSummary extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data
   selectedState: Ref<string>
@@ -43,7 +44,10 @@ export const useHostStateSummary = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as HostStateSummaryContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as HostStateSummaryContent)
+      : null
 
   const selectedState = ref<string>(currentContent?.state || 'UP')
   const widgetProps = ref<WidgetProps>()
@@ -54,7 +58,7 @@ export const useHostStateSummary = async (
 
   const _generateContent = (): HostStateSummaryContent => {
     return {
-      type: 'host_state_summary',
+      type: CONTENT_TYPE,
       state: selectedState.value as HostState
     }
   }

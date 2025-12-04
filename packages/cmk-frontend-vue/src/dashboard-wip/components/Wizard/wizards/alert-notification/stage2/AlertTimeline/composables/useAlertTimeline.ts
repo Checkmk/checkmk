@@ -34,6 +34,8 @@ export interface UseAlertTimeline extends UseWidgetHandler, UseWidgetVisualizati
 
 type TimeRangeType = 'current' | 'window'
 
+const CONTENT_TYPE = 'alert_timeline'
+
 export const useAlertTimeline = async (
   filters: ConfiguredFilters,
   dashboardConstants: DashboardConstants,
@@ -57,7 +59,10 @@ export const useAlertTimeline = async (
   const visualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
   const widgetProps = ref<WidgetProps>()
 
-  const currentContent = currentSpec?.content as AlertTimelineContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as AlertTimelineContent)
+      : null
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
     currentContent?.render_mode?.time_range ?? null
   )
@@ -69,7 +74,7 @@ export const useAlertTimeline = async (
   const _generateContent = (): AlertTimelineContent => {
     if (visualizationType.value === VisualizationTimelineType.METRIC) {
       return {
-        type: 'alert_timeline',
+        type: CONTENT_TYPE,
         log_target: 'both',
         render_mode: {
           type: 'simple_number',
@@ -78,7 +83,7 @@ export const useAlertTimeline = async (
       }
     }
     return {
-      type: 'alert_timeline',
+      type: CONTENT_TYPE,
       log_target: 'both',
       render_mode: {
         type: 'bar_chart',

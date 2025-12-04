@@ -27,6 +27,7 @@ import {
   useGraphRenderOptions
 } from '../../../../../components/GraphRenderOptions/useGraphRenderOptions.ts'
 
+const CONTENT_TYPE = 'performance_graph'
 export interface UsePerformanceGraph
   extends UseWidgetHandler,
     UseGraphRenderOptions,
@@ -42,7 +43,10 @@ export const usePerformanceGraph = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UsePerformanceGraph> => {
-  const currentContent = currentSpec?.content as PerformanceGraphContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as PerformanceGraphContent)
+      : null
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
     currentContent?.timerange ?? null
@@ -83,7 +87,7 @@ export const usePerformanceGraph = async (
 
   const _generateContent = (): PerformanceGraphContent => {
     return {
-      type: 'performance_graph',
+      type: CONTENT_TYPE,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
       source: currentContent?.source ?? metric

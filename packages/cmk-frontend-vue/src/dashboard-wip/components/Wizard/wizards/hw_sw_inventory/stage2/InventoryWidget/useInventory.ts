@@ -27,6 +27,7 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 type ToggleFunction = (value: boolean) => void
 
+const CONTENT_TYPE = 'inventory'
 export interface UseInventory
   extends UseWidgetHandler,
     UseWidgetVisualizationOptions,
@@ -46,7 +47,10 @@ export const useInventory = async (
   dashboardConstants: DashboardConstants,
   editWidget: WidgetProps | null = null
 ): Promise<UseInventory> => {
-  const content = editWidget?.content as InventoryContent | undefined
+  const content =
+    editWidget?.content?.type === CONTENT_TYPE
+      ? (editWidget?.content as InventoryContent)
+      : undefined
   const {
     title,
     showTitle,
@@ -82,7 +86,7 @@ export const useInventory = async (
 
   const _generateContent = (): InventoryContent => {
     const content: InventoryContent = {
-      type: 'inventory',
+      type: CONTENT_TYPE,
       path: inventoryPath.value ?? ''
     }
 

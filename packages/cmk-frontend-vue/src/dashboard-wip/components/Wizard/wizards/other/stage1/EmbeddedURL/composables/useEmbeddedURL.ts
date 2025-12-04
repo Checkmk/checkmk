@@ -19,6 +19,7 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'url'
 export interface UseEmbeddedURL extends UseWidgetHandler, UseWidgetVisualizationOptions {
   url: Ref<string>
 }
@@ -39,12 +40,14 @@ export function useEmbeddedURL(
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as URLContent | undefined
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as URLContent) : undefined
+
   const url = ref(currentContent?.url || '')
 
   const content = computed<URLContent>(() => {
     return {
-      type: 'url',
+      type: CONTENT_TYPE,
       url: url.value
     }
   })

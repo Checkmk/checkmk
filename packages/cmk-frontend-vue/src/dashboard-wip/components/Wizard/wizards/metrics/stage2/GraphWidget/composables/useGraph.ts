@@ -28,7 +28,7 @@ import {
 } from '../../../../../components/GraphRenderOptions/useGraphRenderOptions.ts'
 
 const DEFAULT_COLOR_SCHEMAS = ['default_metric', 'default_theme']
-
+const CONTENT_TYPE = 'single_timeseries'
 export interface UseGraph
   extends UseWidgetHandler,
     UseGraphRenderOptions,
@@ -43,7 +43,8 @@ export const useGraph = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseGraph> => {
-  const currentContent = currentSpec?.content as GraphContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as GraphContent) : null
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
     currentContent?.timerange ?? null
@@ -86,7 +87,7 @@ export const useGraph = async (
 
   const _generateContent = (): GraphContent => {
     return {
-      type: 'single_timeseries',
+      type: CONTENT_TYPE,
       metric,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,

@@ -28,6 +28,7 @@ import {
   useGraphRenderOptions
 } from '../../../../../components/GraphRenderOptions/useGraphRenderOptions.ts'
 
+const CONTENT_TYPE = 'combined_graph'
 export interface UseCombinedGraph
   extends UseWidgetHandler,
     UseGraphRenderOptions,
@@ -44,7 +45,10 @@ export const useCombinedGraph = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseCombinedGraph> => {
-  const currentContent = currentSpec?.content as CombinedGraphContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as CombinedGraphContent)
+      : null
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
     currentContent?.timerange ?? null
@@ -89,7 +93,7 @@ export const useCombinedGraph = async (
 
   const _generateContent = (): CombinedGraphContent => {
     return {
-      type: 'combined_graph',
+      type: CONTENT_TYPE,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
 

@@ -30,6 +30,7 @@ const { _t } = usei18n()
 
 const MAX_ENTRIES = 50
 
+const CONTENT_TYPE = 'top_list'
 export interface UseTopList extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
   dataRangeType: Ref<DataRangeType>
@@ -54,7 +55,8 @@ export const useTopList = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseTopList> => {
-  const currentContent = currentSpec?.content as TopListContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as TopListContent) : null
 
   const {
     type: dataRangeType,
@@ -100,7 +102,7 @@ export const useTopList = async (
 
   const _generateContent = (): TopListContent => {
     return {
-      type: 'top_list',
+      type: CONTENT_TYPE,
       metric: metric,
       columns: {
         show_bar_visualization: showBarVisualizaton.value,

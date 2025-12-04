@@ -20,6 +20,7 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'host_state'
 export interface UseHostState extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
   showBackgroundInStatusColorAndLabel: Ref<boolean>
@@ -44,7 +45,8 @@ export const useHostState = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as HostStateContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as HostStateContent) : null
 
   const showBackgroundInStatusColorAndLabel = ref<boolean>(!!currentContent?.status_display)
   const colorizeStates = ref<string>(currentContent?.status_display?.for_states ?? 'all')
@@ -58,7 +60,7 @@ export const useHostState = async (
 
   const _generateContent = (): HostStateContent => {
     const content: HostStateContent = {
-      type: 'host_state'
+      type: CONTENT_TYPE
     }
 
     if (showSummaryForNonUpStates.value) {

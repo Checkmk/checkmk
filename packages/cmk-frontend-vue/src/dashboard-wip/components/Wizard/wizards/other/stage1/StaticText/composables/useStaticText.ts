@@ -15,6 +15,8 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { StaticTextContent, WidgetSpec } from '@/dashboard-wip/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'static_text'
+
 export interface UseStaticText extends UseWidgetHandler, UseWidgetVisualizationOptions {
   text: Ref<string>
 }
@@ -35,12 +37,15 @@ export function useStaticText(
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as StaticTextContent | undefined
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as StaticTextContent)
+      : undefined
   const text = ref(currentContent?.text || '')
 
   const content = computed<StaticTextContent>(() => {
     return {
-      type: 'static_text',
+      type: CONTENT_TYPE,
       text: text.value
     }
   })

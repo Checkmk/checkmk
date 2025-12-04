@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import TypedDict
+from typing import TypedDict, TypeGuard
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -11,6 +11,7 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
+from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
@@ -112,3 +113,18 @@ def delete_oauth2_connection(
         use_git=use_git,
     )
     oauth2_connections_config_file.save(entries, pprint_value)
+
+
+def is_locked_by_oauth2_connection(
+    ident: GlobalIdent | None, *, check_reference_exists: bool = True
+) -> TypeGuard[GlobalIdent]:
+    if ident is None:
+        return False
+
+    if ident["program_id"] != PROGRAM_ID_OAUTH:
+        return False
+
+    if check_reference_exists and ident["instance_id"] not in load_oauth2_connections():
+        return False
+
+    return True

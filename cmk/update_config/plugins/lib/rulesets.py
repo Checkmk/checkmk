@@ -37,6 +37,9 @@ RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 
 DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
 
+# Rulesets that have been removed without previous deprecation
+REMOVED_RULESETS: Iterable[RulesetName] = {}
+
 SKIP_ACTION: Final = {
     # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
     # see all of them
@@ -72,6 +75,11 @@ def load_and_transform(logger: Logger, *, use_git: bool) -> AllRulesets:
         all_rulesets,
         DEPRECATED_RULESET_PATTERNS,
     )
+    _delete_removed_wato_rulesets(
+        logger,
+        all_rulesets,
+        REMOVED_RULESETS,
+    )
     _transform_rulesets_loosing_item(
         logger,
         all_rulesets,
@@ -106,6 +114,18 @@ def _delete_deprecated_wato_rulesets(
             logger.log(VERBOSE, f"Removing ruleset {ruleset_name}")
             all_rulesets.delete(ruleset_name)
             continue
+
+
+def _delete_removed_wato_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    removed_rulesets: Iterable[RulesetName],
+) -> None:
+    for folder_path, removed_ruleset_config in all_rulesets.get_unknown_rulesets().items():
+        for ruleset_name in list(removed_ruleset_config.keys()):
+            if ruleset_name in removed_rulesets:
+                logger.log(VERBOSE, f"Deleting removed ruleset {ruleset_name}")
+                all_rulesets.delete_unknown(folder_path, ruleset_name)
 
 
 def _transform_rulesets_loosing_item(

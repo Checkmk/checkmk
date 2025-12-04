@@ -371,7 +371,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--explicit-config",
         default=[],
-        nargs="*",
+        action="append",
         help="""list of arguments providing the configuration in <key>=<value> format.
              If omitted, all groups and all resources of the services specified in --services are
              fetched.
@@ -379,10 +379,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
              and every 'resource=<name>' arguments specifies a resource.""",
     )
     parser.add_argument(
-        "--services",
+        "--service",
         default=[],
-        nargs="*",
-        help="List of services to monitor",
+        action="append",
+        help="The services to monitor",
+        dest="services",
     )
     parser.add_argument(
         "--safe-hostnames",

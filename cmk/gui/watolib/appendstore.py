@@ -7,7 +7,7 @@ import abc
 import ast
 import os
 from collections.abc import Iterator, Sequence
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -86,20 +86,15 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
             return self.__read()
 
     def append(self, entry: _VT) -> None:
-        try:
-            with (
-                store.locked(self._path),
-                _append_transaction(self._path),
-                self._path.open("ab+") as f,
-            ):
-                f.write(repr(self._serialize(entry)).encode("utf-8") + self.separator)
-                f.flush()
-                os.fsync(f.fileno())
+        with store.locked(self._path):
+            try:
+                with self._path.open("ab+") as f:
+                    f.write(repr(self._serialize(entry)).encode("utf-8") + self.separator)
+                    f.flush()
+                    os.fsync(f.fileno())
                 self._path.chmod(0o660)
-        except Exception as e:
-            # The _append_transaction context manager re-raises the original exception
-            # after attempting to truncate. We catch it here and wrap it.
-            raise MKGeneralException(_('Cannot write file "%s": %s') % (self._path, e)) from e
+            except Exception as e:
+                raise MKGeneralException(_('Cannot write file "%s": %s') % (self._path, e))
 
     @contextmanager
     def mutable_view(self) -> Iterator[list[_VT]]:
@@ -112,19 +107,3 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
                     pass
                 for entry in entries:
                     self.append(entry)
-
-
-@contextmanager
-def _append_transaction(path: Path) -> Iterator[None]:
-    """Truncates the file to its original size on any error."""
-    try:
-        original_size = path.stat().st_size
-    except FileNotFoundError:
-        original_size = 0
-
-    try:
-        yield
-    except Exception:
-        with suppress(OSError):
-            os.truncate(path, original_size)
-        raise

@@ -1136,6 +1136,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_METRIC_BACKEND,
         "cmk.gui",
+        "cmk.plugins",
+        "cmk.utils",
     ),
     Component("tests.integration.nonfree.ultimate.otel"): _allow(
         *PACKAGE_CCC,

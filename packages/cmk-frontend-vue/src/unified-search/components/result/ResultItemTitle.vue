@@ -10,10 +10,14 @@ type HtmlString = string
 
 export default defineComponent({
   props: {
-    title: { type: String as PropType<HtmlString>, required: true }
+    title: { type: String as PropType<HtmlString>, required: true },
+    context: { type: String, required: true }
   },
   render() {
-    return h('span', { innerHTML: this.title })
+    return h('div', [
+      h('span', { innerHTML: this.title }),
+      h('span', { class: 'context' }, this.context)
+    ])
   }
 })
 </script>
@@ -32,5 +36,11 @@ span {
   &::first-letter {
     text-transform: capitalize;
   }
+}
+
+.context {
+  padding-left: var(--spacing-half);
+  font-size: var(--font-size-small);
+  color: var(--font-color-dimmed);
 }
 </style>

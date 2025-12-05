@@ -128,7 +128,10 @@ onBeforeUnmount(() => {
             class="result-item-breadcrumb"
             >{{ props.breadcrumb.join(' > ') }}</span
           >
-          <ResultItemTitle :title="props.html ? props.html : props.title"></ResultItemTitle>
+          <ResultItemTitle
+            :title="props.html ? props.html : props.title"
+            :context="props.context ? props.context : ''"
+          ></ResultItemTitle>
         </div>
       </a>
       <button v-else ref="item-focus" class="result-item-handler" :class="{ focus: props.focus }">
@@ -146,7 +149,10 @@ onBeforeUnmount(() => {
             class="result-item-breadcrumb"
             >{{ props.breadcrumb.join(' > ') }}</span
           >
-          <ResultItemTitle :title="props.html ? props.html : props.title"></ResultItemTitle>
+          <ResultItemTitle
+            :title="props.html ? props.html : props.title"
+            :context="props.context ? props.context : ''"
+          ></ResultItemTitle>
         </div>
       </button>
       <a
@@ -162,7 +168,10 @@ onBeforeUnmount(() => {
           <CmkIcon :name="ib.icon.name" :size="ib.icon.size" class="result-item-icon"></CmkIcon>
         </div>
         <div class="result-item-inner-end">
-          <ResultItemTitle :title="ib.title"></ResultItemTitle>
+          <ResultItemTitle
+            :title="props.html ? props.html : props.title"
+            :context="props.context ? props.context : ''"
+          ></ResultItemTitle>
         </div>
       </a>
     </CmkZebra>

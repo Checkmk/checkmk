@@ -12,10 +12,12 @@
 of the dashboard to render is given in the HTML variable 'name'.
 """
 
+import json
 from typing import Any
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Response, response
 from cmk.gui.i18n import _
@@ -81,10 +83,16 @@ def page_shared_dashboard(
         "title": title,
     }
 
+    # Make sure ifid is valid JSON to avoid XSS
+    try:
+        ifid = json.loads(ctx.request.get_ascii_input("ifid") or "")
+    except ValueError as e:
+        raise MKUserError("ifid", _("Invalid ifid parameter")) from e
+
     page_properties = {
         "dashboard": dashboard_properties,
         "dashboard_constants": DashboardConstants.dict_output(),
-        "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
+        "url_params": {"ifid": ifid},
         "token_value": token_id,
     }
     SharedDashboardPageComponents.html_section(page_properties)

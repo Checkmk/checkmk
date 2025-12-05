@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
+
+from polyfactory.factories import DataclassFactory
+
 from cmk.gui.search.sorting import get_sorter
 from cmk.shared_typing.unified_search import (
     IconNames,
@@ -11,6 +15,10 @@ from cmk.shared_typing.unified_search import (
     UnifiedSearchResultItem,
     UnifiedSearchResultTarget,
 )
+
+
+class UnifiedSearchResultItemFactory(DataclassFactory[UnifiedSearchResultItem]):
+    __check_model__ = False
 
 
 def get_unsorted_results() -> list[UnifiedSearchResultItem]:
@@ -169,3 +177,18 @@ def test_exact_match_in_parenthesis_ranks_higher_than_starts_with_query() -> Non
     ]
 
     assert results == expected
+
+
+def test_weighted_sorter_takes_into_account_context() -> None:
+    sample_result = UnifiedSearchResultItemFactory.build()
+    results = [
+        dataclasses.replace(sample_result, context="banana"),
+        dataclasses.replace(sample_result, context="apple"),
+        dataclasses.replace(sample_result, context="cookie"),
+    ]
+    get_sorter(SortType.weighted_index, query="beta")(results)
+
+    value = [result.context for result in results]
+    expected = ["apple", "banana", "cookie"]
+
+    assert value == expected

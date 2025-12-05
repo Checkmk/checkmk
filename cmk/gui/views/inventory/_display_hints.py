@@ -1515,10 +1515,7 @@ def find_non_canonical_filters(
                 )
 
             elif isinstance(field_from_api, BoolFieldFromAPI):
-                filters.setdefault(
-                    name,
-                    FilterMigrationBool(name=name),
-                )
+                filters.setdefault(name, FilterMigrationBool(name=name))
 
     for raw_path, legacy_hint in legacy_hints.items():
         inv_path = inventory.parse_internal_raw_path(raw_path)
@@ -1538,10 +1535,7 @@ def find_non_canonical_filters(
                         scale=1000 * 1000,
                     )
                 case "bool":
-                    filters.setdefault(
-                        name,
-                        FilterMigrationBoolIs(name=name),
-                    )
+                    filters.setdefault(name, FilterMigrationBoolIs(name=name))
         if (
             inv_path.source == inventory.TreeSource.table
             and (view_name := legacy_hint.get("view"))
@@ -1566,10 +1560,7 @@ def find_non_canonical_filters(
                         ),
                     )
                 case "FilterInvtableAvailable":
-                    filters.setdefault(
-                        name,
-                        FilterMigrationBool(name=name),
-                    )
+                    filters.setdefault(name, FilterMigrationBool(name=name))
                 case "FilterInvtableTimestampAsAge":
                     filters.setdefault(
                         name,

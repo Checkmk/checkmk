@@ -19,13 +19,14 @@ class ForwardMonitoringDataHandler:
         self._socket_timeout: Final = socket_timeout
 
     def process(self, *, payload: bytes, host: str, config_serial: str, timestamp: int) -> None:
-        # TODO: Are we sure host and config_serial cannot contain illegal characters like ';'?
         header = (
             "payload_type:fetcher;"
             f"payload_size:{len(payload)};"
             f"config_serial:{config_serial};"
             f"start_timestamp:{timestamp};"
-            f"host_by_name:{host};\n"
+            f"host_by_name:{host};"
+            f"service_description:Check_MK;"
+            f"\n"
         )
         self._send_to_cmc(header.encode("utf-8") + payload)
 

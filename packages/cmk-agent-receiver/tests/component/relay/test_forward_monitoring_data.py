@@ -48,6 +48,7 @@ def test_forward_monitoring_data(
         f"config_serial:{serial};"
         f"start_timestamp:{timestamp};"
         f"host_by_name:{HOST};"
+        f"service_description:Check_MK;"
     )
     saved_socket: MockSocket  # assigned in with-block
     with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:

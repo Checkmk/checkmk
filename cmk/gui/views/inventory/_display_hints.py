@@ -581,14 +581,13 @@ def _make_column_filter(
                     ident=filter_ident,
                     row_ident=row_ident,
                     title=long_title,
-                    unit=_get_unit_from_number_field(field_from_api),
+                    unit_choices=_get_unit_choices_from_number_field(field_from_api),
                 )
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
                 ident=filter_ident,
                 title=long_title,
-                unit=_get_unit_from_number_field(field_from_api),
-                scale=1,
+                unit_choices=_get_unit_choices_from_number_field(field_from_api),
             )
         case TextFieldFromAPI():
             if field_from_api.sort_key:
@@ -1048,8 +1047,7 @@ def _parse_col_filter_from_legacy(
                 inv_info=table_view_name,
                 ident=filter_ident,
                 title=title,
-                unit="",
-                scale=1,
+                unit_choices={},
             )
         case "FilterInvtableInterfaceType":
             return FilterInvtableDualChoice(
@@ -1087,7 +1085,12 @@ def _parse_col_filter_from_legacy(
                 ident=filter_ident,
                 row_ident=row_ident,
                 title=title,
-                unit="s",
+                unit_choices={
+                    "": FilterInvFloatChoice("s", 1),
+                    "min": FilterInvFloatChoice("min", 60),
+                    "h": FilterInvFloatChoice("h", 3600),
+                    "d": FilterInvFloatChoice("d", 86400),
+                },
             )
         case "FilterInvtableVersion":
             return FilterInvtableVersion(

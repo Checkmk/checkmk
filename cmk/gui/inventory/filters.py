@@ -89,31 +89,22 @@ class FilterInvFloatChoice:
 _MaybeBounds = tuple[int | float | None, int | float | None]
 
 
-def _make_filter_row_float(
-    inventory_path: InventoryPath,
-) -> Callable[[Row, str, _MaybeBounds], bool]:
-    def row_filter(row: Row, column: str, bounds: _MaybeBounds) -> bool:
-        if not isinstance(
-            invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
-            int | float,
-        ):
-            return False
-        return query_filters.value_in_range(invdata, bounds)
+class _FilterNumberRange(Filter):
+    """Filter for choosing a range in which a certain integer lies"""
 
-    return row_filter
-
-
-class FilterInvFloat(Filter):
     def __init__(
         self,
         *,
+        inv_info: str,
         ident: str,
+        row_ident: str,
         title: str,
-        inventory_path: InventoryPath,
         unit_choices: Mapping[str, FilterInvFloatChoice],
+        filter_row: Callable[[Row, str, _MaybeBounds], bool],
     ) -> None:
-        self._filter_row = _make_filter_row_float(inventory_path)
+        self._row_ident = row_ident
         self._unit_choices = unit_choices
+        self._filter_row = filter_row
 
         self._html_var_from = f"{ident}_from"
         self._html_var_from_prefix = f"{ident}_from_prefix"
@@ -123,7 +114,7 @@ class FilterInvFloat(Filter):
             ident=ident,
             title=title,
             sort_index=800,
-            info="host",
+            info=inv_info,
             htmlvars=[
                 self._html_var_from,
                 self._html_var_from_prefix,
@@ -234,11 +225,46 @@ class FilterInvFloat(Filter):
         return (
             rows
             if from_var is None and until_var is None
-            else [row for row in rows if self._filter_row(row, self.ident, (from_var, until_var))]
+            else [
+                row for row in rows if self._filter_row(row, self._row_ident, (from_var, until_var))
+            ]
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return any(b is not None for b in self._get_bounds(value))
+
+
+def _make_filter_row_float(
+    inventory_path: InventoryPath,
+) -> Callable[[Row, str, _MaybeBounds], bool]:
+    def row_filter(row: Row, column: str, bounds: _MaybeBounds) -> bool:
+        if not isinstance(
+            invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
+            int | float,
+        ):
+            return False
+        return query_filters.value_in_range(invdata, bounds)
+
+    return row_filter
+
+
+class FilterInvFloat(_FilterNumberRange):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inventory_path: InventoryPath,
+        unit_choices: Mapping[str, FilterInvFloatChoice],
+    ) -> None:
+        super().__init__(
+            inv_info="host",
+            ident=ident,
+            row_ident=ident,
+            title=title,
+            unit_choices=unit_choices,
+            filter_row=_make_filter_row_float(inventory_path),
+        )
 
 
 def _make_filter_row_text(
@@ -453,37 +479,26 @@ class FilterInvtableChoice(CheckboxRowFilter):
         )
 
 
-class FilterInvtableIntegerRange(FilterNumberRange):
-    """Filter for choosing a range in which a certain integer lies"""
-
+class FilterInvtableIntegerRange(_FilterNumberRange):
     def __init__(
         self,
         *,
         inv_info: str,
         ident: str,
         title: str,
-        unit: str | LazyString,
-        scale: float | None,
+        unit_choices: Mapping[str, FilterInvFloatChoice],
     ) -> None:
         super().__init__(
+            inv_info=inv_info,
+            ident=ident,
+            row_ident=ident,
             title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.NumberRangeQuery(
-                ident=ident,
-                filter_livestatus=False,
-                filter_row=query_filters.column_value_in_range,
-                request_var_suffix="",
-                bound_rescaling=scale if scale is not None else 1.0,
-            ),
-            unit=unit,
-            is_show_more=True,
+            unit_choices=unit_choices,
+            filter_row=query_filters.column_value_in_range,
         )
 
 
-class FilterInvtableAgeRange(FilterNumberRange):
-    """Filter for choosing a range in which a certain integer lies"""
-
+class FilterInvtableAgeRange(_FilterNumberRange):
     def __init__(
         self,
         *,
@@ -491,21 +506,15 @@ class FilterInvtableAgeRange(FilterNumberRange):
         ident: str,
         row_ident: str,
         title: str,
-        unit: str | LazyString,
+        unit_choices: Mapping[str, FilterInvFloatChoice],
     ) -> None:
         super().__init__(
+            inv_info=inv_info,
+            ident=ident,
+            row_ident=row_ident,
             title=title,
-            sort_index=800,
-            info=inv_info,
-            query_filter=query_filters.NumberRangeQuery(
-                ident=ident,
-                filter_livestatus=False,
-                filter_row=lambda r, c, b: query_filters.column_age_in_range(r, row_ident, b),
-                request_var_suffix="",
-                bound_rescaling=1.0,
-            ),
-            unit=unit,
-            is_show_more=True,
+            unit_choices=unit_choices,
+            filter_row=query_filters.column_age_in_range,
         )
 
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, ListOf, Migrate, MonitoringState, TextInput
 
 
-def _parameter_valuespec_hostsystem_sensors():
+def _parameter_valuespec_hostsystem_sensors() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

@@ -524,8 +524,7 @@ class PostgresWin(PostgresBase):
     @classmethod
     def _logical_drives(cls):
         # type: () -> Iterable[str]
-        for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
-            yield drive
+        yield from cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk())
 
     def get_psql_binary_path(self):
         # type: () -> str

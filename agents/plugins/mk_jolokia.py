@@ -631,8 +631,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):  # type: ignore
 def _process_queries(inst, queries):
     for mbean_path, title, itemspec in queries:
         try:
-            for instance_out, title_out, value in fetch_metric(inst, mbean_path, title, itemspec):
-                yield instance_out, title_out, value
+            yield from fetch_metric(inst, mbean_path, title, itemspec)
         except (OSError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:

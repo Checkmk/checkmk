@@ -118,7 +118,7 @@ WINDOWS_PROCESS_MATCH_PATTERNS = [
 if sys.version_info[0] >= 3:
     UTF_8_NEWLINE_CHARS = re.compile(r"[\n\r\u2028\u000B\u0085\u2028\u2029]+")
 else:
-    UTF_8_NEWLINE_CHARS = re.compile(u"[\u000A\u000D\u2028\u000B\u0085\u2028\u2029]+")  # fmt: skip
+    UTF_8_NEWLINE_CHARS = re.compile("[\u000A\u000D\u2028\u000B\u0085\u2028\u2029]+")  # fmt: skip
 
 
 class OSNotImplementedError(NotImplementedError):

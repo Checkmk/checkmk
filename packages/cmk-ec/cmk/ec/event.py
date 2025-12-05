@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from logging import Logger
@@ -285,7 +283,7 @@ def parse_syslog_message_into_event(line: str, ipaddress: str) -> Event:
 
     # The event simulator ships the simulated original IP address in the
     # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
-    if isinstance(event["host"], str) and "|" in event["host"]:
+    if "|" in event["host"]:
         host, ipaddress = event["host"].split("|", 1)
         event["host"] = HostName(host)
         event["ipaddress"] = str(ipaddress)

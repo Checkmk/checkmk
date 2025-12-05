@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
 import datetime
 import time
 from abc import ABC, abstractmethod
@@ -12,7 +10,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from logging import Logger
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 from .config import Config
 from .event import Event
@@ -99,7 +97,7 @@ def _log_event(
         logger.info("Event %d: %s/%s/%s - %s", event["id"], what, who, addinfo, event["text"])
 
 
-def quote_tab(col: Any) -> bytes:
+def quote_tab(col: object) -> bytes:
     if isinstance(col, bool):
         return b"1" if col else b"0"
     if isinstance(col, float | int):
@@ -110,7 +108,7 @@ def quote_tab(col: Any) -> bytes:
         return b"\2"
     if isinstance(col, str):
         col = col.encode("utf-8")
-
+    assert isinstance(col, bytes)
     return col.replace(b"\t", b" ")
 
 

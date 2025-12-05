@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
 import contextlib
 import datetime
 import os
@@ -194,7 +192,7 @@ def _get_mongodb_max_history_age(mongodb: MongoDB) -> int:
     result = mongodb.db.ec_archive.index_information()
     if "dt_-1" not in result or "expireAfterSeconds" not in result["dt_-1"]:
         return -1
-    return result["dt_-1"]["expireAfterSeconds"]
+    return result["dt_-1"]["expireAfterSeconds"]  # type: ignore[no-any-return]
 
 
 def _update_mongodb_indexes(settings: Settings, mongodb: MongoDB) -> None:
@@ -233,4 +231,4 @@ def _mongodb_next_id(mongodb: MongoDB, name: str, first_id: int = 0) -> int:
         # Initialize the index!
         mongodb.db.counters.insert_one({"_id": name, "seq": first_id})
         return first_id
-    return ret["seq"]
+    return ret["seq"]  # type: ignore[no-any-return]

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
-
 import os
 import subprocess
 import time
@@ -164,7 +162,8 @@ def do_event_action(
             _do_script_action(history, logger, event_columns, act[1], action_id, event, user)
         else:
             # TODO: Really parse the config, then this can't happen
-            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])
+            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])  # type: ignore[unreachable]
+
     except Exception:
         if settings.options.debug:
             raise

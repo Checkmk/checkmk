@@ -3,13 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="mutable-override"
-# mypy: disable-error-code="unreachable"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
-
 # TODO: Refactor/document locking. It is not clear when and how to apply
 # locks or when they are held by which component.
 
@@ -40,7 +33,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from logging import DEBUG, getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, assert_never, IO, Literal, TypedDict
+from typing import Any, assert_never, ClassVar, IO, Literal, TypedDict
 
 from setproctitle import setthreadtitle
 
@@ -265,19 +258,10 @@ def unmap_ipv4_address(ip_address: str) -> str:
     >>> unmap_ipv4_address('::FFFF:192.0.2.128')
     '192.0.2.128'
     """
-    try:
+    with contextlib.suppress(ValueError):  # in case address[0] is a hostname
         host = ipaddress.ip_address(ip_address)
-    except ValueError:
-        # in case address[0] is a hostname
-        return ip_address
-
-    if host.version == 4:
-        return ip_address
-
-    # If IPv6 is mapped to IPv4
-    if host.version == 6 and host.ipv4_mapped:
-        return str(host.ipv4_mapped)
-
+        if host.version == 6 and host.ipv4_mapped:
+            return str(host.ipv4_mapped)
     return ip_address
 
 
@@ -1075,7 +1059,7 @@ class EventServer(ECServerThread):
 
         # Changed "acked" to ("acked", bool) with 1.6.0p20
         if isinstance(merge, tuple):  # TODO: Move this to upgrade time
-            merge, reset_ack = merge
+            merge, reset_ack = merge  # type: ignore[unreachable]
 
         if merge != "never":
             for event in self._event_status.events():
@@ -1880,7 +1864,7 @@ class Queries:
 class StatusTableEvents(StatusTable):
     name = "events"
     prefix = "event"
-    columns: Columns = [
+    columns: ClassVar[Columns] = [
         ("event_id", 1),
         ("event_count", 1),
         ("event_text", ""),
@@ -1928,7 +1912,7 @@ class StatusTableEvents(StatusTable):
 class StatusTableHistory(StatusTable):
     name = "history"
     prefix = "history"
-    columns: Columns = list(
+    columns: ClassVar[Columns] = list(
         itertools.chain(
             [
                 ("history_line", 0),  # Line number in event history file
@@ -1952,7 +1936,7 @@ class StatusTableHistory(StatusTable):
 class StatusTableRules(StatusTable):
     name = "rules"
     prefix = "rule"
-    columns: Columns = [
+    columns: ClassVar[Columns] = [
         ("rule_id", ""),
         ("rule_hits", 0),
     ]
@@ -1968,7 +1952,7 @@ class StatusTableRules(StatusTable):
 class StatusTableStatus(StatusTable):
     name = "status"
     prefix = "status"
-    columns: Columns = EventServer.status_columns()
+    columns: ClassVar[Columns] = EventServer.status_columns()
 
     def __init__(self, logger: Logger, event_server: EventServer) -> None:
         super().__init__(logger)
@@ -2137,10 +2121,9 @@ class StatusServer(ECServerThread):
 
     def serve(self) -> None:
         while not self._terminate_event.is_set():
+            client_socket = None
+            addr_info = None
             try:
-                client_socket = None
-                addr_info = None
-
                 if self._reopen_sockets:
                     self.reopen_sockets()
                     self._reopen_sockets = False
@@ -2824,16 +2807,20 @@ class EventStatus:
 
     # protected by self.lock
     def remove_oldest_event(self, ty: LimitKind, event: Event) -> None:
-        if ty == "overall":
-            self._logger.log(VERBOSE, "  Removing oldest event")
-            oldest_event = self._events[0]
-            self.remove_event(oldest_event, "AUTODELETE")
-        elif ty == "by_rule" and event["rule_id"] is not None:
-            self._logger.log(VERBOSE, '  Removing oldest event of rule "%s"', event["rule_id"])
-            self._remove_oldest_event_of_rule(event["rule_id"])
-        elif ty == "by_host" and event["host"] is not None:
-            self._logger.log(VERBOSE, '  Removing oldest event of host "%s"', event["host"])
-            self._remove_oldest_event_of_host(event["host"])
+        match ty:
+            case "overall":
+                self._logger.log(VERBOSE, "  Removing oldest event")
+                oldest_event = self._events[0]
+                self.remove_event(oldest_event, "AUTODELETE")
+            case "by_rule":
+                if event["rule_id"] is not None:
+                    self._logger.log(
+                        VERBOSE, '  Removing oldest event of rule "%s"', event["rule_id"]
+                    )
+                    self._remove_oldest_event_of_rule(event["rule_id"])
+            case "by_host":
+                self._logger.log(VERBOSE, '  Removing oldest event of host "%s"', event["host"])
+                self._remove_oldest_event_of_host(event["host"])
 
     # protected by self.lock
     def _remove_oldest_event_of_rule(self, rule_id: str) -> None:
@@ -3103,7 +3090,8 @@ class EventStatus:
             found = event
 
         # Did we just count the event that was just one too much?
-        if found["phase"] == "counting" and found["count"] >= count["count"]:
+        # NOTE: Suppression not needed anymore when https://github.com/python/mypy/pull/19696 has been merged.
+        if found["phase"] == "counting" and found["count"] >= count["count"]:  # type: ignore[possibly-undefined]
             found["phase"] = "open"
             return found  # do event action, return found copy of event
         return None  # do not do event action

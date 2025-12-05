@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
+# NOTE: We *really* need type stubs or a typed version of the SNMP libraries...
 # mypy: disable-error-code="no-untyped-call"
 
 import traceback
@@ -370,7 +370,7 @@ def compile_mib(
     destination_dir: Path,
 ) -> Mapping[str, MibStatus]:
     # Compile the uploaded SNMP MIB but also resolving dependencies and compiling dependents
-    return (
+    return (  # type: ignore[no-any-return]
         MibCompiler(
             SmiV1CompatParser(),
             PySnmpCodeGen(),

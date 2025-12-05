@@ -8,8 +8,6 @@ of Check_MK. The GUI is e.g. accessing this module for gathering the default
 configuration.
 """
 
-# mypy: disable-error-code="unreachable"
-
 import contextlib
 import copy
 import logging
@@ -129,7 +127,7 @@ def _load_config(
         if "livetime" in rule:
             livetime = rule["livetime"]
             if not isinstance(livetime, tuple):  # TODO: Move this to upgrade time
-                rule["livetime"] = (livetime, ["open"])
+                rule["livetime"] = (livetime, ["open"])  # type: ignore[unreachable]
 
     # Convert legacy rules into a default rule pack. Note that we completely
     # ignore legacy rules if there are rule packs already. It's a bit unclear
@@ -154,7 +152,7 @@ def _load_config(
     # Convert old logging configurations
     levels: LogConfig = config["log_level"]
     if isinstance(levels, int):  # TODO: Move this to upgrade time
-        level = logging.INFO if levels == 0 else VERBOSE
+        level = logging.INFO if levels == 0 else VERBOSE  # type: ignore[unreachable]
         levels = {
             "cmk.mkeventd": level,
             "cmk.mkeventd.EventServer": level,
@@ -163,7 +161,7 @@ def _load_config(
             "cmk.mkeventd.lock": level,
         }
     if "cmk.mkeventd.lock" not in levels:  # TODO: Move this to upgrade time
-        levels["cmk.mkeventd.lock"] = levels["cmk.mkeventd"]
+        levels["cmk.mkeventd.lock"] = levels["cmk.mkeventd"]  # type: ignore[unreachable]
     config["log_level"] = levels
 
     # TODO: Move this up to avoid the need for casting?

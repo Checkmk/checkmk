@@ -11,7 +11,7 @@ import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from cmk.ccc.exceptions import MKException
 
@@ -52,9 +52,9 @@ Columns = Sequence[tuple[str, float | int | str | Sequence[object]]]
 class StatusTable:
     """Common functionality for the event/history/rule/status tables."""
 
-    name: str
-    prefix: str | None = None
-    columns: Columns = []
+    name: ClassVar[str]
+    prefix: ClassVar[str]
+    columns: ClassVar[Columns]
 
     @abc.abstractmethod
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:

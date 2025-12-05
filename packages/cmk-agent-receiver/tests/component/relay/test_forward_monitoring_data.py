@@ -56,6 +56,7 @@ def test_forward_monitoring_data(
         monitoring_data = MonitoringData(
             serial=serial,
             host=HOST,
+            service="Check_MK",
             timestamp=timestamp,
             payload=base64.b64encode(payload),
         )
@@ -92,6 +93,7 @@ def test_forward_monitoring_data_with_delay(
         monitoring_data = MonitoringData(
             serial=serial,
             host=HOST,
+            service="Check_MK",
             timestamp=int(time.time()),
             payload=base64.b64encode(payload),
         )
@@ -123,6 +125,7 @@ def test_socket_busy_but_not_timeout(
     monitoring_data = MonitoringData(
         serial=serial,
         host=HOST,
+        service="Check_MK",
         timestamp=int(time.time()),
         payload=base64.b64encode(regular_payload),
     )
@@ -217,6 +220,7 @@ def test_socket_busy_slow_send(
     monitoring_data = MonitoringData(
         serial=serial,
         host=HOST,
+        service="Check_MK",
         timestamp=int(time.time()),
         payload=base64.b64encode(regular_payload),
     )
@@ -289,6 +293,7 @@ def test_socket_busy_slow_close(
     monitoring_data = MonitoringData(
         serial=serial,
         host=HOST,
+        service="Check_MK",
         timestamp=int(time.time()),
         payload=base64.b64encode(regular_payload),
     )
@@ -359,6 +364,7 @@ def test_socket_busy_interlaced_send(
     monitoring_data = MonitoringData(
         serial=serial,
         host=HOST,
+        service="Check_MK",
         timestamp=int(time.time()),
         payload=base64.b64encode(regular_payload),
     )
@@ -422,6 +428,7 @@ def test_socket_busy_interlaced_send_with_timeout(
     monitoring_data = MonitoringData(
         serial=serial,
         host=HOST,
+        service="Check_MK",
         timestamp=int(time.time()),
         payload=base64.b64encode(regular_payload),
     )
@@ -493,6 +500,7 @@ def test_connection_refused(
         monitoring_data = MonitoringData(
             serial=serial,
             host=HOST,
+            service="Check_MK",
             timestamp=int(time.time()),
             payload=base64.b64encode(payload),
         )

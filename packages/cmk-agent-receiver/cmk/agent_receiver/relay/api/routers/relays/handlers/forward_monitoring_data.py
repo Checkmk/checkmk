@@ -18,14 +18,16 @@ class ForwardMonitoringDataHandler:
         self._data_socket: Path = data_socket
         self._socket_timeout: Final = socket_timeout
 
-    def process(self, *, payload: bytes, host: str, config_serial: str, timestamp: int) -> None:
+    def process(
+        self, *, payload: bytes, host: str, config_serial: str, timestamp: int, service: str
+    ) -> None:
         header = (
             "payload_type:fetcher;"
             f"payload_size:{len(payload)};"
             f"config_serial:{config_serial};"
             f"start_timestamp:{timestamp};"
             f"host_by_name:{host};"
-            f"service_description:Check_MK;"
+            f"service_description:{service};"
             f"\n"
         )
         self._send_to_cmc(header.encode("utf-8") + payload)

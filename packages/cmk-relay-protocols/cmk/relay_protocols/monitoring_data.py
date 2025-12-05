@@ -16,4 +16,5 @@ class MonitoringData(BaseModel):
     host: Host
     timestamp: int
     payload: Base64Bytes
+    service: str
     version: int = 1

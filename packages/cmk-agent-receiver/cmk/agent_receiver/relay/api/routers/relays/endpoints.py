@@ -77,6 +77,7 @@ async def forward_monitoring_data(
             host=monitoring_data.host,
             config_serial=monitoring_data.serial,
             timestamp=monitoring_data.timestamp,
+            service=monitoring_data.service,
         )
     except FailedToSendMonitoringDataError as e:
         return fastapi.Response(

@@ -16,8 +16,6 @@ from typing import NotRequired, TypedDict
 from pydantic import BaseModel
 
 from cmk.agent_based.v2 import (
-    all_of,
-    any_of,
     Attributes,
     exists,
     HostLabel,
@@ -31,7 +29,7 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     TableRow,
 )
-from cmk.plugins.network.agent_based.lib import DETECT_CISCO, DETECT_MERAKI, get_short_if_name
+from cmk.plugins.network.agent_based.lib import get_short_if_name
 
 
 class InventoryParams(TypedDict):
@@ -472,10 +470,7 @@ snmp_section_inv_cdp_cache = SNMPSection(
             ],
         ),
     ],
-    detect=all_of(
-        any_of(DETECT_MERAKI, DETECT_CISCO),
-        exists(".1.3.6.1.4.1.9.9.23.1.2.1.1.*"),  # CISCO-CDP-MIB::cdpCacheEntry
-    ),
+    detect=exists(".1.3.6.1.4.1.9.9.23.1.2.1.1.*"),
 )
 
 inventory_plugin_inv_cdp_cache = InventoryPlugin(

@@ -78,7 +78,6 @@ ignore = [
 "tests/agent-plugin-unit/*" = [
   "UP006", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
-  "UP026", # `mock` is deprecated, use `unittest.mock`
   "UP035", # Import from `FOO` instead: `BAR`
   "UP036", # Version block is outdated for minimum Python version
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`

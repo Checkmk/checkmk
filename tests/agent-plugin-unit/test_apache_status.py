@@ -16,8 +16,9 @@ from _pytest.capture import CaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
 
 if sys.version_info[0] == 2:
+    from unittest.mock import Mock
+
     import agents.plugins.apache_status_2 as apache_status
-    from mock import Mock
 else:
     from unittest.mock import Mock
 

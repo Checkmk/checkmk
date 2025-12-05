@@ -97,12 +97,10 @@ class _FilterNumberRange(Filter):
         *,
         inv_info: str,
         ident: str,
-        row_ident: str,
         title: str,
         unit_choices: Mapping[str, FilterInvFloatChoice],
         filter_row: Callable[[Row, str, _MaybeBounds], bool],
     ) -> None:
-        self._row_ident = row_ident
         self._unit_choices = unit_choices
         self._filter_row = filter_row
 
@@ -225,9 +223,7 @@ class _FilterNumberRange(Filter):
         return (
             rows
             if from_var is None and until_var is None
-            else [
-                row for row in rows if self._filter_row(row, self._row_ident, (from_var, until_var))
-            ]
+            else [row for row in rows if self._filter_row(row, self.ident, (from_var, until_var))]
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
@@ -260,7 +256,6 @@ class FilterInvFloat(_FilterNumberRange):
         super().__init__(
             inv_info="host",
             ident=ident,
-            row_ident=ident,
             title=title,
             unit_choices=unit_choices,
             filter_row=_make_filter_row_float(inventory_path),
@@ -441,14 +436,12 @@ class FilterInvChoice(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-def _filter_rows_table_choice(
-    ident: str, row_ident: str, context: VisualContext, rows: Rows
-) -> Rows:
+def _filter_rows_table_choice(ident: str, context: VisualContext, rows: Rows) -> Rows:
     filter_vars = context.get(ident, {})
 
     def _add_row(row: Row) -> bool:
         # Apply filter if and only if a filter value is set
-        if (value := row.get(row_ident)) is not None and (
+        if (value := row.get(ident)) is not None and (
             filter_key := f"{ident}_{value}"
         ) in filter_vars:
             return filter_vars[filter_key] == "on"
@@ -463,7 +456,6 @@ class FilterInvtableChoice(CheckboxRowFilter):
         *,
         inv_info: str,
         ident: str,
-        row_ident: str,
         title: str,
         options: Sequence[tuple[str, str]],
     ) -> None:
@@ -474,7 +466,7 @@ class FilterInvtableChoice(CheckboxRowFilter):
             query_filter=query_filters.MultipleOptionsQuery(
                 ident=ident,
                 options=[(f"{ident}_{k}", v) for k, v in options],
-                rows_filter=partial(_filter_rows_table_choice, ident, row_ident),
+                rows_filter=partial(_filter_rows_table_choice, ident),
             ),
         )
 
@@ -491,7 +483,6 @@ class FilterInvtableIntegerRange(_FilterNumberRange):
         super().__init__(
             inv_info=inv_info,
             ident=ident,
-            row_ident=ident,
             title=title,
             unit_choices=unit_choices,
             filter_row=query_filters.column_value_in_range,
@@ -504,14 +495,12 @@ class FilterInvtableAgeRange(_FilterNumberRange):
         *,
         inv_info: str,
         ident: str,
-        row_ident: str,
         title: str,
         unit_choices: Mapping[str, FilterInvFloatChoice],
     ) -> None:
         super().__init__(
             inv_info=inv_info,
             ident=ident,
-            row_ident=row_ident,
             title=title,
             unit_choices=unit_choices,
             filter_row=query_filters.column_age_in_range,

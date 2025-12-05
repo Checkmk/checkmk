@@ -502,13 +502,12 @@ def _parse_attr_field_from_api(
     node_title: str,
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
-    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> AttributeDisplayHint:
-    names = _make_attr_names(node_ident, key, non_canonical_filters)
+    name = _make_attr_name(node_ident, key)
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        name=names.object_ident,
+        name=name,
         title=title,
         short_title=title,
         long_title=long_title,
@@ -516,7 +515,7 @@ def _parse_attr_field_from_api(
         sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
         filter=_make_attribute_filter(
             field_from_api,
-            filter_ident=names.filter_ident,
+            filter_ident=name,
             long_title=long_title,
             inventory_path=inventory.InventoryPath(
                 path=path,
@@ -550,7 +549,6 @@ def _make_column_filter(
     *,
     table_view_name: str,
     filter_ident: str,
-    row_ident: str,
     long_title: str,
 ) -> (
     FilterInvtableAgeRange
@@ -565,7 +563,6 @@ def _make_column_filter(
             return FilterInvtableChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                row_ident=row_ident,
                 title=long_title,
                 options=[
                     ("True", _make_str(field_from_api.render_true)),
@@ -579,7 +576,6 @@ def _make_column_filter(
                 return FilterInvtableAgeRange(
                     inv_info=table_view_name,
                     ident=filter_ident,
-                    row_ident=row_ident,
                     title=long_title,
                     unit_choices=_get_unit_choices_from_number_field(field_from_api),
                 )
@@ -607,7 +603,6 @@ def _make_column_filter(
                 return FilterInvtableChoice(
                     inv_info=table_view_name,
                     ident=filter_ident,
-                    row_ident=row_ident,
                     title=long_title,
                     options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
                 )
@@ -626,13 +621,12 @@ def _parse_col_field_of_view_from_api(
     node_title: str,
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
-    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> ColumnDisplayHintOfView:
-    names = _make_col_names(table_view_name, key, non_canonical_filters)
+    name = _make_col_name(table_view_name, key)
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
     return ColumnDisplayHintOfView(
-        name=names.object_ident,
+        name=name,
         title=title,
         short_title=title,
         long_title=long_title,
@@ -641,16 +635,13 @@ def _parse_col_field_of_view_from_api(
         filter=_make_column_filter(
             field_from_api,
             table_view_name=table_view_name,
-            filter_ident=names.filter_ident,
-            row_ident=names.row_ident,
+            filter_ident=name,
             long_title=long_title,
         ),
     )
 
 
-def _parse_node_from_api(
-    node: NodeFromAPI, non_canonical_filters: Mapping[str, FilterMigration]
-) -> NodeDisplayHint:
+def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
     path = tuple(SDNodeName(e) for e in node.path)
     parent_title = inv_display_hints.get_node_hint(path[:-1]).title if path[:-1] else ""
     name = _make_node_name(path)
@@ -667,9 +658,7 @@ def _parse_node_from_api(
         table_view_name = _parse_view_name(node.table.view.name)
         table = TableWithView(
             columns={
-                SDKey(k): _parse_col_field_of_view_from_api(
-                    table_view_name, title, k, v, non_canonical_filters
-                )
+                SDKey(k): _parse_col_field_of_view_from_api(table_view_name, title, k, v)
                 for k, v in node.table.columns.items()
             },
             name=table_view_name,
@@ -686,7 +675,7 @@ def _parse_node_from_api(
         long_title=_make_long_title(parent_title, title),
         icon=_find_icon(path),
         attributes={
-            SDKey(k): _parse_attr_field_from_api(path, name, title, k, v, non_canonical_filters)
+            SDKey(k): _parse_attr_field_from_api(path, name, title, k, v)
             for k, v in node.attributes.items()
         },
         table=table,
@@ -782,39 +771,72 @@ def _make_node_name(path: SDPath) -> str:
     return "_".join(["inv"] + list(path))
 
 
-@dataclass(frozen=True, kw_only=True)
-class _Names:
-    object_ident: str
-    filter_ident: str
-    row_ident: str
+def _make_attr_name(node_name: str, key: SDKey | str) -> str:
+    return f"{node_name}_{key}"
 
 
-def _make_attr_names(
-    node_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, FilterMigration]
-) -> _Names:
-    name = f"{node_name}_{key}"
-    return _Names(
-        object_ident=name,
-        filter_ident=(
-            migration.filter_name if (migration := non_canonical_filters.get(name)) else name
-        ),
-        row_ident=name,
-    )
+def _make_col_name(table_view_name: str, key: SDKey | str) -> str:
+    return f"{table_view_name}_{key}" if table_view_name else ""
 
 
-def _make_col_names(
-    table_view_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, FilterMigration]
-) -> _Names:
-    if not table_view_name:
-        return _Names(object_ident="", filter_ident="", row_ident="")
-    name = f"{table_view_name}_{key}"
-    return _Names(
-        object_ident=name,
-        filter_ident=(
-            migration.filter_name if (migration := non_canonical_filters.get(name)) else name
-        ),
-        row_ident=name,
-    )
+def _get_unit_choices_from_legacy_data_type(data_type: str) -> Mapping[str, FilterInvFloatChoice]:
+    match data_type:
+        case "bytes" | "bytes_rounded" | "size":
+            return {
+                prefix: FilterInvFloatChoice(f"{prefix}B", factor)
+                for prefix, factor in (
+                    ("", 1),
+                    ("k", 1000),
+                    ("M", 1000**2),
+                    ("G", 1000**3),
+                    ("T", 1000**4),
+                    ("P", 1000**5),
+                    ("E", 1000**6),
+                    ("Z", 1000**7),
+                    ("Y", 1000**8),
+                )
+            }
+        case "hz":
+            return {
+                prefix: FilterInvFloatChoice(f"{prefix}Hz", factor)
+                for prefix, factor in (
+                    ("", 1),
+                    ("k", 1000),
+                    ("M", 1000**2),
+                    ("G", 1000**3),
+                    ("T", 1000**4),
+                    ("P", 1000**5),
+                    ("E", 1000**6),
+                    ("Z", 1000**7),
+                    ("Y", 1000**8),
+                )
+            }
+        case "volt":
+            return {"": FilterInvFloatChoice("V", 1)}
+        case "age" | "timestamp_as_age" | "timestamp_as_age_days":
+            return {
+                "": FilterInvFloatChoice("s", 1),
+                "min": FilterInvFloatChoice("min", 60),
+                "h": FilterInvFloatChoice("h", 3600),
+                "d": FilterInvFloatChoice("d", 86400),
+            }
+        case "nic_speed":
+            return {
+                prefix: FilterInvFloatChoice(f"{prefix}bits/s", factor)
+                for prefix, factor in (
+                    ("", 1),
+                    ("k", 1000),
+                    ("M", 1000**2),
+                    ("G", 1000**3),
+                    ("T", 1000**4),
+                    ("P", 1000**5),
+                    ("E", 1000**6),
+                    ("Z", 1000**7),
+                    ("Y", 1000**8),
+                )
+            }
+        case _:
+            return {}
 
 
 def _make_attribute_filter_from_legacy_hint(
@@ -844,69 +866,13 @@ def _make_attribute_filter_from_legacy_hint(
                 ],
                 is_show_more=True,
             )
-        case "bytes" | "bytes_rounded" | "size":
-            unit_choices = {
-                prefix: FilterInvFloatChoice(f"{prefix}B", factor)
-                for prefix, factor in (
-                    ("", 1),
-                    ("k", 1000),
-                    ("M", 1000**2),
-                    ("G", 1000**3),
-                    ("T", 1000**4),
-                    ("P", 1000**5),
-                    ("E", 1000**6),
-                    ("Z", 1000**7),
-                    ("Y", 1000**8),
-                )
-            }
-        case "hz":
-            unit_choices = {
-                prefix: FilterInvFloatChoice(f"{prefix}Hz", factor)
-                for prefix, factor in (
-                    ("", 1),
-                    ("k", 1000),
-                    ("M", 1000**2),
-                    ("G", 1000**3),
-                    ("T", 1000**4),
-                    ("P", 1000**5),
-                    ("E", 1000**6),
-                    ("Z", 1000**7),
-                    ("Y", 1000**8),
-                )
-            }
-        case "volt":
-            unit_choices = {"": FilterInvFloatChoice("V", 1)}
-        case "age" | "timestamp_as_age" | "timestamp_as_age_days":
-            unit_choices = {
-                "": FilterInvFloatChoice("s", 1),
-                "min": FilterInvFloatChoice("min", 60),
-                "h": FilterInvFloatChoice("h", 3600),
-                "d": FilterInvFloatChoice("d", 86400),
-            }
-        case "nic_speed":
-            unit_choices = {
-                prefix: FilterInvFloatChoice(f"{prefix}bits/s", factor)
-                for prefix, factor in (
-                    ("", 1),
-                    ("k", 1000),
-                    ("M", 1000**2),
-                    ("G", 1000**3),
-                    ("T", 1000**4),
-                    ("P", 1000**5),
-                    ("E", 1000**6),
-                    ("Z", 1000**7),
-                    ("Y", 1000**8),
-                )
-            }
         case _:
-            unit_choices = {}
-
-    return FilterInvFloat(
-        ident=filter_ident,
-        title=title,
-        inventory_path=inventory_path,
-        unit_choices=unit_choices,
-    )
+            return FilterInvFloat(
+                ident=filter_ident,
+                title=title,
+                inventory_path=inventory_path,
+                unit_choices=_get_unit_choices_from_legacy_data_type(data_type),
+            )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -931,14 +897,13 @@ def _parse_attr_field_from_legacy(
     node_title: str,
     key: str,
     legacy_hint: InventoryHintSpec,
-    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> AttributeDisplayHint:
     data_type, paint_function = _get_paint_function(legacy_hint)
-    names = _make_attr_names(node_name, key, non_canonical_filters)
+    name = _make_attr_name(node_name, key)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        name=names.object_ident,
+        name=name,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -950,7 +915,7 @@ def _parse_attr_field_from_legacy(
             path=path,
             key=key,
             data_type=data_type,
-            filter_ident=names.filter_ident,
+            filter_ident=name,
             title=long_title,
             is_show_more=legacy_hint.get("is_show_more", True),
         ),
@@ -988,7 +953,6 @@ def _parse_col_filter_from_legacy(
     *,
     table_view_name: str,
     filter_ident: str,
-    row_ident: str,
     title: str,
     filter_class: (
         None
@@ -1004,6 +968,7 @@ def _parse_col_filter_from_legacy(
         | type[FilterInvtableTimestampAsAge]
         | type[FilterInvtableVersion]
     ),
+    data_type: str,
 ) -> (
     FilterInvtableAgeRange
     | FilterInvtableChoice
@@ -1014,6 +979,13 @@ def _parse_col_filter_from_legacy(
     | FilterInvtableVersion
 ):
     if not filter_class:
+        if unit_choices := _get_unit_choices_from_legacy_data_type(data_type):
+            return FilterInvtableIntegerRange(
+                inv_info=table_view_name,
+                ident=filter_ident,
+                title=title,
+                unit_choices=unit_choices,
+            )
         return FilterInvtableText(
             inv_info=table_view_name,
             ident=filter_ident,
@@ -1024,7 +996,6 @@ def _parse_col_filter_from_legacy(
             return FilterInvtableChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                row_ident=row_ident,
                 title=title,
                 options=[
                     ("1", _("up")),
@@ -1035,7 +1006,6 @@ def _parse_col_filter_from_legacy(
             return FilterInvtableChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                row_ident=row_ident,
                 title=title,
                 options=[
                     ("True", _("free")),
@@ -1047,7 +1017,7 @@ def _parse_col_filter_from_legacy(
                 inv_info=table_view_name,
                 ident=filter_ident,
                 title=title,
-                unit_choices={},
+                unit_choices=_get_unit_choices_from_legacy_data_type(data_type),
             )
         case "FilterInvtableInterfaceType":
             return FilterInvtableDualChoice(
@@ -1063,7 +1033,6 @@ def _parse_col_filter_from_legacy(
             return FilterInvtableChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                row_ident=row_ident,
                 title=title,
                 options=[
                     (str(state), title)
@@ -1083,7 +1052,6 @@ def _parse_col_filter_from_legacy(
             return FilterInvtableAgeRange(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                row_ident=row_ident,
                 title=title,
                 unit_choices={
                     "": FilterInvFloatChoice("s", 1),
@@ -1131,14 +1099,13 @@ def _parse_col_field_from_legacy_of_view(
     node_title: str,
     key: str,
     legacy_hint: InventoryHintSpec,
-    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> ColumnDisplayHintOfView:
     _data_type, paint_function = _get_paint_function(legacy_hint)
-    names = _make_col_names(table_view_name, key, non_canonical_filters)
+    name = _make_col_name(table_view_name, key)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return ColumnDisplayHintOfView(
-        name=names.object_ident,
+        name=name,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -1148,10 +1115,10 @@ def _parse_col_field_from_legacy_of_view(
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_parse_col_filter_from_legacy(
             table_view_name=table_view_name,
-            filter_ident=names.filter_ident,
-            row_ident=names.row_ident,
+            filter_ident=name,
             title=long_title,
             filter_class=legacy_hint.get("filter"),
+            data_type=legacy_hint.get("paint", ""),
         ),
     )
 
@@ -1240,11 +1207,11 @@ class NodeDisplayHint:
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         def _default() -> AttributeDisplayHint:
-            names = _make_attr_names(self.name, key, {})
+            name = _make_attr_name(self.name, key)
             title = key.replace("_", " ").title()
             long_title = _make_long_title(self.title if self.path else "", title)
             return AttributeDisplayHint(
-                name=names.object_ident,
+                name=name,
                 title=title,
                 short_title=title,
                 long_title=long_title,
@@ -1256,7 +1223,7 @@ class NodeDisplayHint:
                     path=self.path,
                     key=key,
                     data_type="str",
-                    filter_ident=names.filter_ident,
+                    filter_ident=name,
                     title=long_title,
                     is_show_more=True,
                 ),
@@ -1281,7 +1248,6 @@ class NodeDisplayHint:
 
 def _parse_legacy_display_hints(
     legacy_hints: Mapping[str, InventoryHintSpec],
-    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> Iterator[NodeDisplayHint]:
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
@@ -1319,7 +1285,6 @@ def _parse_legacy_display_hints(
                         node_title=title,
                         key=key,
                         legacy_hint=related_legacy_hints.by_column.get(key, {}),
-                        non_canonical_filters=non_canonical_filters,
                     )
                     for key in _complete_key_order(
                         related_legacy_hints.for_table.get("keyorder", []),
@@ -1360,7 +1325,6 @@ def _parse_legacy_display_hints(
                     node_title=title,
                     key=key,
                     legacy_hint=related_legacy_hints.by_key.get(key, {}),
-                    non_canonical_filters=non_canonical_filters,
                 )
                 for key in _complete_key_order(
                     related_legacy_hints.for_node.get("keyorder", []),
@@ -1437,40 +1401,32 @@ class FilterMigration(abc.ABC):
     @abc.abstractmethod
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]: ...
 
-    @property
-    @abc.abstractmethod
-    def filter_name(self) -> str: ...
-
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationScale(FilterMigration):
-    scale: int
-
-    @property
-    def filter_name(self) -> str:
-        return f"{self.name}_canonical"
+    prefix: Literal["M"]
 
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
             if filter_value := filter_vars.get(f"{self.name}_{direction}"):
-                migrated[f"{self.filter_name}_{direction}"] = str(int(filter_value) * self.scale)
+                migrated[f"{self.name}_{direction}"] = filter_value
+                migrated[f"{self.name}_{direction}_prefix"] = self.prefix
         return migrated
 
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationTime(FilterMigration):
-    scale: int
-
-    @property
-    def filter_name(self) -> str:
-        return f"{self.name}_canonical"
+    prefix: Literal["d"]
 
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
-            if filter_value := filter_vars.get(f"{self.name}_{direction}_days"):
-                migrated[f"{self.filter_name}_{direction}"] = str(int(filter_value) * self.scale)
+            if (filter_value := filter_vars.get(f"{self.name}_{direction}_days")) is None:
+                filter_value = filter_vars.get(f"{self.name}_{direction}")
+            if filter_value:
+                migrated[f"{self.name}_{direction}"] = filter_value
+                migrated[f"{self.name}_{direction}_prefix"] = self.prefix
         return migrated
 
 
@@ -1478,74 +1434,62 @@ class FilterMigrationTime(FilterMigration):
 class FilterMigrationChoice(FilterMigration):
     choices: Sequence[int | float | str]
 
-    @property
-    def filter_name(self) -> str:
-        return self.name
-
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAdminStatus
         match filter_vars.get(self.name):
             case "1":
-                migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
-                migrated[f"{self.filter_name}_1"] = "on"
+                migrated = {f"{self.name}_{c}": "" for c in self.choices}
+                migrated[f"{self.name}_1"] = "on"
                 return migrated
             case "2":
-                migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
-                migrated[f"{self.filter_name}_2"] = "on"
+                migrated = {f"{self.name}_{c}": "" for c in self.choices}
+                migrated[f"{self.name}_2"] = "on"
                 return migrated
             case "-1":
                 # legacy ignore
-                return {f"{self.filter_name}_{c}": "on" for c in self.choices}
+                return {f"{self.name}_{c}": "on" for c in self.choices}
             case _:
                 # FilterInvtableOperStatus
                 return {
-                    f"{self.filter_name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
+                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
                     for c in self.choices
                 }
 
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBool(FilterMigration):
-    @property
-    def filter_name(self) -> str:
-        return self.name
-
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAvailable
         match filter_vars.get(self.name):
             case "yes":
-                return {f"{self.filter_name}_True": "on", f"{self.filter_name}_False": ""}
+                return {f"{self.name}_True": "on", f"{self.name}_False": ""}
             case "no":
-                return {f"{self.filter_name}_True": "", f"{self.filter_name}_False": "on"}
+                return {f"{self.name}_True": "", f"{self.name}_False": "on"}
             case "":
                 # legacy ignore
-                return {f"{self.filter_name}_{c}": "on" for c in (True, False)}
+                return {f"{self.name}_{c}": "on" for c in (True, False)}
             case _:
                 return {
-                    f"{self.filter_name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
+                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
                     for c in (True, False)
                 }
 
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBoolIs(FilterMigration):
-    @property
-    def filter_name(self) -> str:
-        return self.name
-
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvBool
         match filter_vars.get(f"is_{self.name}"):
             case "1":
-                return {f"{self.filter_name}_True": "on", f"{self.filter_name}_False": ""}
+                return {f"{self.name}_True": "on", f"{self.name}_False": ""}
             case "0":
-                return {f"{self.filter_name}_True": "", f"{self.filter_name}_False": "on"}
+                return {f"{self.name}_True": "", f"{self.name}_False": "on"}
             case "-1":
                 # legacy ignore
-                return {f"{self.filter_name}_{c}": "on" for c in (True, False)}
+                return {f"{self.name}_{c}": "on" for c in (True, False)}
             case _:
                 return {
-                    f"{self.filter_name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
+                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
                     for c in (True, False)
                 }
 
@@ -1556,35 +1500,28 @@ def find_non_canonical_filters(
     filters: dict[str, FilterMigration] = {
         # "bytes"
         "inv_hardware_cpu_cache_size": FilterMigrationScale(
-            name="inv_hardware_cpu_cache_size",
-            scale=1024 * 1024,
+            name="inv_hardware_cpu_cache_size", prefix="M"
         ),
         # "bytes_rounded"
         "inv_hardware_memory_total_ram_usable": FilterMigrationScale(
-            name="inv_hardware_memory_total_ram_usable",
-            scale=1024 * 1024,
+            name="inv_hardware_memory_total_ram_usable", prefix="M"
         ),
         "inv_hardware_memory_total_swap": FilterMigrationScale(
-            name="inv_hardware_memory_total_swap",
-            scale=1024 * 1024,
+            name="inv_hardware_memory_total_swap", prefix="M"
         ),
         "inv_hardware_memory_total_vmalloc": FilterMigrationScale(
-            name="inv_hardware_memory_total_vmalloc",
-            scale=1024 * 1024,
+            name="inv_hardware_memory_total_vmalloc", prefix="M"
         ),
         # "hz"
         "inv_hardware_cpu_bus_speed": FilterMigrationScale(
-            name="inv_hardware_cpu_bus_speed",
-            scale=1000 * 1000,
+            name="inv_hardware_cpu_bus_speed", prefix="M"
         ),
         "inv_hardware_cpu_max_speed": FilterMigrationScale(
-            name="inv_hardware_cpu_max_speed",
-            scale=1000 * 1000,
+            name="inv_hardware_cpu_max_speed", prefix="M"
         ),
         #
         "invinterface_last_change": FilterMigrationTime(
-            name="invinterface_last_change",
-            scale=24 * 60 * 60,
+            name="invinterface_last_change", prefix="d"
         ),
     }
 
@@ -1598,13 +1535,7 @@ def find_non_canonical_filters(
                 and isinstance(field_from_api.render, UnitFromAPI)
                 and isinstance(field_from_api.render.notation, AgeNotationFromAPI)
             ):
-                filters.setdefault(
-                    name,
-                    FilterMigrationTime(
-                        name=name,
-                        scale=24 * 60 * 60,
-                    ),
-                )
+                filters.setdefault(name, FilterMigrationTime(name=name, prefix="d"))
 
             elif isinstance(field_from_api, ChoiceFieldFromAPI) and _is_choice(
                 len(field_from_api.mapping)
@@ -1628,15 +1559,9 @@ def find_non_canonical_filters(
             name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
             match legacy_hint.get("paint"):
                 case "bytes" | "bytes_rounded":
-                    filters[name] = FilterMigrationScale(
-                        name=name,
-                        scale=1024 * 1024,
-                    )
+                    filters[name] = FilterMigrationScale(name=name, prefix="M")
                 case "hz":
-                    filters[name] = FilterMigrationScale(
-                        name=name,
-                        scale=1000 * 1000,
-                    )
+                    filters[name] = FilterMigrationScale(name=name, prefix="M")
                 case "bool":
                     filters.setdefault(name, FilterMigrationBoolIs(name=name))
         if (
@@ -1665,23 +1590,15 @@ def find_non_canonical_filters(
                 case "FilterInvtableAvailable":
                     filters.setdefault(name, FilterMigrationBool(name=name))
                 case "FilterInvtableTimestampAsAge":
-                    filters.setdefault(
-                        name,
-                        FilterMigrationTime(
-                            name=name,
-                            scale=24 * 60 * 60,
-                        ),
-                    )
+                    filters.setdefault(name, FilterMigrationTime(name=name, prefix="d"))
     return filters
 
 
 def register_display_hints(
     plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
 ) -> None:
-    non_canonical_filters = find_non_canonical_filters(plugins, legacy_hints)
-
-    for hint in _parse_legacy_display_hints(legacy_hints, non_canonical_filters):
+    for hint in _parse_legacy_display_hints(legacy_hints):
         inv_display_hints.add(hint)
 
     for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
-        inv_display_hints.add(_parse_node_from_api(node, non_canonical_filters))
+        inv_display_hints.add(_parse_node_from_api(node))

@@ -38,7 +38,7 @@ class Migration:
         migrated = {}
         for filter_ident, filter_vars in context.items():
             if filter_migration := non_canonical_filters.get(filter_ident):
-                migrated[filter_migration.filter_name] = filter_migration(filter_vars)
+                migrated[filter_migration.name] = filter_migration(filter_vars)
             else:
                 migrated[filter_ident] = filter_vars
 

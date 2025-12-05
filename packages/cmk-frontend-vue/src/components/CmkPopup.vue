@@ -99,6 +99,7 @@ watch(
   inset: 0;
   animation: cmk-popup__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
   background: var(--color-popup-backdrop);
+  z-index: var(--z-index-modal);
 }
 
 @keyframes cmk-popup__overlay-show {

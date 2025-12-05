@@ -25,6 +25,7 @@ import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRe
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
+import ProductTelemetryApp from './product-telemetry/ProductTelemetryApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
 import SidebarApp from './sidebar/SidebarApp.vue'
@@ -55,3 +56,4 @@ defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fu
 defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)
 defineCmkComponent('cmk-dialog', DialogApp)
 defineCmkComponent('cmk-dynamic-icon', DynamicIconApp, { pure: true })
+defineCmkComponent('cmk-product-telemetry', ProductTelemetryApp)

@@ -5,6 +5,7 @@
 
 import typing
 from dataclasses import dataclass
+from typing import Literal
 
 from cmk.base.config import load
 from cmk.base.default_config.telemetry import ProxySetting
@@ -14,6 +15,7 @@ from cmk.utils import http_proxy_config
 @dataclass(frozen=True)
 class TelemetryConfig:
     enabled: bool
+    state: Literal["not_decided", "enabled", "disabled"]
     proxy_config: http_proxy_config.HTTPProxyConfig
 
 
@@ -27,6 +29,7 @@ def load_telemetry_config() -> TelemetryConfig:
 
     return TelemetryConfig(
         enabled=config.loaded_config.product_telemetry.get("enable_telemetry")[0] == "enabled",
+        state=config.loaded_config.product_telemetry.get("enable_telemetry")[0],
         proxy_config=proxy_config,
     )
 

@@ -16,6 +16,7 @@ from typing import NamedTuple, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import message
+from cmk.gui.config import active_config
 from cmk.gui.dynamic_icon import render_dynamic_icon
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -26,6 +27,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, main_menu_registry
 from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
+from cmk.gui.product_telemetry_popup import render_product_telemetry_popup
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
@@ -52,6 +54,9 @@ class MainMenuRenderer:
         html.open_ul(id_="main_menu")
         self._modify_unified_search_config()
         self._show_main_menu_content(user_permissions)
+        render_product_telemetry_popup(
+            active_config=active_config, user=user, request=request, response=response
+        )
         html.close_ul()
 
     def _modify_unified_search_config(

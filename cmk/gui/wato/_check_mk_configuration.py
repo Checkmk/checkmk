@@ -1860,17 +1860,18 @@ ConfigVariableProductTelemetry = ConfigVariable(
             (
                 "enable_telemetry",
                 CascadingDropdown(
+                    title=_("Enable Product Telemetry"),
                     help=_(
-                        "Enable or disable product telemetry. When disabled, you can configure "
-                        "whether to show a popup asking for consent on login."
+                        "Enable or disable product telemetry data collection. "
+                        "If not decided, the user will be asked for consent via a popup."
                     ),
                     choices=[
                         (
                             "enabled",
                             _("Enabled"),
                             FixedValue(
-                                value=None,
-                                totext=_("Telemetry is enabled"),
+                                value=True,
+                                totext=_("Allow sending telemetry data"),
                             ),
                         ),
                         (
@@ -1878,11 +1879,19 @@ ConfigVariableProductTelemetry = ConfigVariable(
                             _("Disabled"),
                             FixedValue(
                                 value=False,
-                                totext=_("Telemetry is disabled"),
+                                totext=_("Do not send telemetry data"),
+                            ),
+                        ),
+                        (
+                            "not_decided",
+                            _("Not decided"),
+                            FixedValue(
+                                value=None,
+                                totext=_("Ask user for consent via popup"),
                             ),
                         ),
                     ],
-                    default_value="disabled",
+                    default_value=("not_decided", None),
                 ),
             ),
             (

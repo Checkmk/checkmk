@@ -21,11 +21,11 @@ type ProxySetting = (
 
 
 class ProductTelemetrySettings(TypedDict):
-    enable_telemetry: tuple[Literal["enabled", "disabled"], None]
+    enable_telemetry: tuple[Literal["enabled", "disabled", "not_decided"], None]
     proxy_setting: ProxySetting
 
 
 product_telemetry: ProductTelemetrySettings = {
-    "enable_telemetry": ("disabled", None),
+    "enable_telemetry": ("not_decided", None),
     "proxy_setting": ("environment", "environment"),
 }

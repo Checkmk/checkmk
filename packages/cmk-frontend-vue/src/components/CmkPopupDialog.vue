@@ -22,8 +22,9 @@ export interface CmkPopupDialogProps {
   open: boolean
   icon?: SimpleIcons | undefined
   title: TranslatedString
-  text: TranslatedString
-  okButtonText?: TranslatedString
+  text?: TranslatedString
+  okButtonText?: TranslatedString | undefined
+  stayOpenOverlayClick?: boolean
 }
 defineProps<CmkPopupDialogProps>()
 
@@ -31,13 +32,22 @@ const emit = defineEmits(['close'])
 </script>
 
 <template>
-  <CmkPopup :open="open" @close="emit('close')">
-    <CmkIcon class="cmk-popup-dialog__icon" :name="icon ?? 'info-circle'" size="xxxlarge"></CmkIcon>
+  <CmkPopup :open="open" @close="!stayOpenOverlayClick && emit('close')">
+    <CmkIcon
+      v-if="icon !== undefined"
+      class="cmk-popup-dialog__icon"
+      :name="icon ?? 'info-circle'"
+      size="xxxlarge"
+    ></CmkIcon>
     <DialogTitle>
       <CmkHeading type="h2" class="cmk-popup-dialog__title">{{ title }}</CmkHeading>
     </DialogTitle>
-    <CmkParagraph class="cmk-popup-dialog__text">{{ text }}</CmkParagraph>
-    <CmkButton variant="primary" @click="emit('close')">{{ okButtonText ?? _t('OK') }}</CmkButton>
+    <slot> </slot>
+    <CmkParagraph v-if="text" class="cmk-popup-dialog__text">{{ text }}</CmkParagraph>
+
+    <CmkButton v-if="okButtonText !== undefined" variant="primary" @click="emit('close')">{{
+      okButtonText ?? _t('OK')
+    }}</CmkButton>
   </CmkPopup>
 </template>
 

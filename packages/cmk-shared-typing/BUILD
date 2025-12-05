@@ -35,6 +35,7 @@ SOURCES_COMMON = [
     "vue_formspec_components.json",
     "welcome.json",
     "agent_slideout.json",
+    "product_telemetry.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [

@@ -598,6 +598,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "physical_volume_free_partitions",
     ],
     ("hardware", "video"): [
+        "slot",
         "name",
         "subsystem",
         "driver",

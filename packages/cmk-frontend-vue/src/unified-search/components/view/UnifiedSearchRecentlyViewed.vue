@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type UnifiedSearchResultItem } from 'cmk-shared-typing/typescript/unified_search'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -14,7 +15,6 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ResultItem from '@/unified-search/components/result/ResultItem.vue'
 import ResultList from '@/unified-search/components/result/ResultList.vue'
-import { type UnifiedSearchResultElement } from '@/unified-search/lib/providers/unified'
 import { HistoryEntry } from '@/unified-search/lib/searchHistory'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
@@ -24,7 +24,7 @@ const recentlyViewed = ref<HistoryEntry[]>([])
 
 const searchUtils = getSearchUtils()
 
-function handleItemClick(item: UnifiedSearchResultElement) {
+function handleItemClick(item: UnifiedSearchResultItem) {
   searchUtils.history?.add(new HistoryEntry(searchUtils.query.toQueryLike(), item))
   searchUtils.closeSearch()
 }
@@ -72,7 +72,7 @@ immediateWatch(
         :title="item.element.title"
         :context="item.element.context"
         :icon="{ name: item.element.icon as SimpleIcons }"
-        :inline-buttons="item.element.inlineButtons"
+        :inline-buttons="item.element.inline_buttons"
         :target="item.element.target"
         :html="searchUtils.highlightQuery(item.element.title)"
         :breadcrumb="searchUtils.breadcrumb(item.element.provider, item.element.topic)"

@@ -4,12 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { ProviderName } from 'cmk-shared-typing/typescript/unified_search'
 import { type InjectionKey, inject, provide, ref } from 'vue'
 
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { randomId } from '@/lib/randomId'
 
-import type { UnifiedSearchProviderIdentifier } from '@/unified-search/lib/providers/unified'
 import type { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import type { UnifiedSearch } from '@/unified-search/lib/unified-search'
 
@@ -271,7 +271,7 @@ function highlightQuery(s: string): string {
   return s.replace(regex, `<span class="highlight-query">$&</span>`)
 }
 
-function breadcrumb(provider: UnifiedSearchProviderIdentifier, topic: string): string[] {
+function breadcrumb(provider: ProviderName, topic: string): string[] {
   const breadcrumb: string[] = [provider]
   if (provider.toLowerCase() !== topic.toLowerCase()) {
     breadcrumb.push(topic)

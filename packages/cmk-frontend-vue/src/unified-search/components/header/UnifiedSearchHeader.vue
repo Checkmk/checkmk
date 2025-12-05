@@ -100,7 +100,7 @@ function onInputEnter() {
           topic: 'Host/service search',
           provider: 'monitoring',
           context: '',
-          icon: 'topic-search'
+          icon: 'main-search'
         })
       )
       ;(top!.frames as CmkWindow).main.location.href = url

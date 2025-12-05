@@ -4,11 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { ProviderName } from 'cmk-shared-typing/typescript/unified_search'
+
 import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
-
-import type { UnifiedSearchProviderIdentifier } from '@/unified-search/lib/providers/unified'
 
 import { getSearchUtils } from '../providers/search-utils'
 import type { SearchProviderKeys } from '../providers/search-utils.types'
@@ -22,7 +22,7 @@ const props = defineProps<{
   providers: SearchProviderKeys[]
 }>()
 
-function goToSearch(e: Event, provider: UnifiedSearchProviderIdentifier) {
+function goToSearch(e: Event, provider: ProviderName) {
   const input = e.target
 
   if (input instanceof HTMLInputElement) {

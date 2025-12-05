@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.search.sorting import get_sorter
-from cmk.gui.search.type_defs import UnifiedSearchResultItem, UnifiedSearchResultTarget
+from cmk.shared_typing.unified_search import (
+    IconNames,
+    ProviderName,
+    SortType,
+    UnifiedSearchResultItem,
+    UnifiedSearchResultTarget,
+)
 
 
 def get_unsorted_results() -> list[UnifiedSearchResultItem]:
@@ -12,23 +18,23 @@ def get_unsorted_results() -> list[UnifiedSearchResultItem]:
         UnifiedSearchResultItem(
             title="Beta",
             target=UnifiedSearchResultTarget(url="/beta"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Charlie",
             target=UnifiedSearchResultTarget(url="/charlie"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Alpha",
             target=UnifiedSearchResultTarget(url="/alpha"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
     ]
 
@@ -41,23 +47,23 @@ def test_no_op_sorter() -> None:
         UnifiedSearchResultItem(
             title="Beta",
             target=UnifiedSearchResultTarget(url="/beta"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Charlie",
             target=UnifiedSearchResultTarget(url="/charlie"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Alpha",
             target=UnifiedSearchResultTarget(url="/alpha"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
     ]
 
@@ -66,29 +72,29 @@ def test_no_op_sorter() -> None:
 
 def test_alphabetical_sorter() -> None:
     results = get_unsorted_results()
-    get_sorter("alphabetic")(results)
+    get_sorter(SortType.alphabetic)(results)
 
     expected = [
         UnifiedSearchResultItem(
             title="Alpha",
             target=UnifiedSearchResultTarget(url="/alpha"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Beta",
             target=UnifiedSearchResultTarget(url="/beta"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Charlie",
             target=UnifiedSearchResultTarget(url="/charlie"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
     ]
 
@@ -97,29 +103,29 @@ def test_alphabetical_sorter() -> None:
 
 def test_weighted_sorter() -> None:
     results = get_unsorted_results()
-    get_sorter("weighted_index", query="beta")(results)
+    get_sorter(SortType.weighted_index, query="beta")(results)
 
     expected = [
         UnifiedSearchResultItem(
             title="Beta",
             target=UnifiedSearchResultTarget(url="/beta"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Alpha",
             target=UnifiedSearchResultTarget(url="/alpha"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Charlie",
             target=UnifiedSearchResultTarget(url="/charlie"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
     ]
 
@@ -131,34 +137,34 @@ def test_exact_match_in_parenthesis_ranks_higher_than_starts_with_query() -> Non
         UnifiedSearchResultItem(
             title="Beta",
             target=UnifiedSearchResultTarget(url="/beta"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Alpha(bet)",
             target=UnifiedSearchResultTarget(url="/alpha"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
     ]
-    get_sorter("weighted_index", query="bet")(results)
+    get_sorter(SortType.weighted_index, query="bet")(results)
 
     expected = [
         UnifiedSearchResultItem(
             title="Alpha(bet)",
             target=UnifiedSearchResultTarget(url="/alpha"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
         UnifiedSearchResultItem(
             title="Beta",
             target=UnifiedSearchResultTarget(url="/beta"),
-            provider="setup",
+            provider=ProviderName.setup,
             topic="Code",
-            icon="",
+            icon=IconNames.main_setup_active,
         ),
     ]
 

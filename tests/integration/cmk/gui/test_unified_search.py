@@ -9,7 +9,7 @@ from collections.abc import Generator
 import pytest
 from requests import Response
 
-from cmk.gui.search.type_defs import Provider
+from cmk.shared_typing.unified_search import ProviderName
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
@@ -42,7 +42,7 @@ def test_result_counts_of_different_search_queries(session: CMKWebSession) -> No
     assert host_groups_result_count and host_groups_result_count < host_result_count
 
     # Specifying a provider i.e. "monitoring" leads to fewer results
-    host_with_provider_query_resp = client.search("host", provider="monitoring")
+    host_with_provider_query_resp = client.search("host", provider=ProviderName.monitoring)
     host_with_provider_result_count = _get_result_count(host_with_provider_query_resp)
     assert host_with_provider_result_count and host_with_provider_result_count < host_result_count
 
@@ -68,7 +68,7 @@ def test_result_payload_shape_and_metadata(session: CMKWebSession) -> None:
 class _SearchClient:
     _session: CMKWebSession
 
-    def search(self, query: str, provider: Provider | None = None) -> Response:
+    def search(self, query: str, provider: ProviderName | None = None) -> Response:
         return self._session.get(f"ajax_unified_search.py?q={query}&provider={provider or 'all'}")
 
 

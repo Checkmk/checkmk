@@ -1,14 +1,26 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "title": "unified_search_config",
+  "title": "unified_search",
   "properties": {
-    "providers": { "$ref": "#/$defs/providers" },
-    "user_id": { "type": "string" },
-    "edition": { "type": "string" }
+    "unified_search_props": { "$ref": "#/$defs/unified_search_props" },
+    "unified_search_api_request": {
+      "$ref": "#/$defs/unified_search_api_request"
+    },
+    "unified_search_api_response": {
+      "$ref": "#/$defs/unified_search_api_response"
+    }
   },
-  "required": ["providers", "user_id", "edition"],
   "$defs": {
+    "unified_search_props": {
+      "type": "object",
+      "properties": {
+        "providers": { "$ref": "#/$defs/providers" },
+        "user_id": { "type": "string" },
+        "edition": { "$ref": "#/$defs/edition" }
+      },
+      "required": ["providers", "user_id", "edition"]
+    },
     "providers": {
       "type": "object",
       "properties": {
@@ -26,8 +38,115 @@
       },
       "required": ["active", "sort"]
     },
-    "editions": {
+    "edition": {
+      "type": "string",
       "enum": ["community", "pro", "ultimate", "ultimatemt", "cloud"]
+    },
+
+    "unified_search_api_request": {
+      "type": "object",
+      "properties": {
+        "query": { "type": "string" },
+        "provider_name": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/provider_name"
+            },
+            { "const": "all" }
+          ]
+        },
+        "sort": { "$ref": "#/$defs/sort_type" }
+      },
+      "required": ["query"]
+    },
+    "provider_name": {
+      "type": "string",
+      "enum": ["monitoring", "setup", "customize"]
+    },
+    "sort_type": {
+      "type": "string",
+      "enum": ["alphabetic", "weighted_index"]
+    },
+
+    "unified_search_api_response": {
+      "type": "object",
+      "allOf": [{ "$ref": "#/$defs/unified_search_result" }],
+      "properties": {
+        "url": { "type": "string" },
+        "query": { "type": "string" }
+      },
+      "required": ["url", "query", "counts", "results"]
+    },
+    "unified_search_result": {
+      "type": "object",
+      "properties": {
+        "counts": { "$ref": "#/$defs/unified_search_result_counts" },
+        "results": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/unified_search_result_item" }
+        }
+      },
+      "required": ["url", "query", "counts", "results"]
+    },
+    "unified_search_result_counts": {
+      "type": "object",
+      "properties": {
+        "total": { "type": "integer" },
+        "setup": { "type": "integer" },
+        "monitoring": { "type": "integer" },
+        "customize": { "type": "integer" }
+      },
+      "required": ["total", "setup", "monitoring", "customize"]
+    },
+    "unified_search_result_item": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "target": { "$ref": "#/$defs/unified_search_result_target" },
+        "inline_buttons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unified_search_result_item_inline_button"
+          }
+        },
+        "topic": { "type": "string" },
+        "provider": {
+          "$ref": "#/$defs/provider_name"
+        },
+        "context": { "type": "string" },
+        "icon": { "$ref": "icon.json#/$defs/icon_names" }
+      },
+      "required": ["title", "target", "topic", "provider", "icon"]
+    },
+    "unified_search_result_target": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "transition": {
+          "anyOf": [{ "$ref": "loading_transition.json#" }, { "type": "null" }]
+        }
+      },
+      "required": ["url"]
+    },
+    "unified_search_result_item_inline_button": {
+      "type": "object",
+      "properties": {
+        "icon": {
+          "oneOf": [{ "$ref": "#/$defs/cmk_icon_props" }, { "type": "null" }]
+        },
+        "title": { "type": "string" },
+        "target": { "$ref": "#/$defs/unified_search_result_target" }
+      },
+      "required": ["title", "target"]
+    },
+
+    "cmk_icon_props": {
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "icon.json#/$defs/icon_names" },
+        "size": { "type": "string" }
+      },
+      "required": ["name"]
     }
   }
 }

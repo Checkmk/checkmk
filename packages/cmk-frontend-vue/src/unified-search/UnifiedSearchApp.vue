@@ -4,7 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type UnifiedSearchConfig } from 'cmk-shared-typing/typescript/unified_search'
+import { type UnifiedSearchProps } from 'cmk-shared-typing/typescript/unified_search'
+import type {
+  ProviderName,
+  UnifiedSearchApiResponse
+} from 'cmk-shared-typing/typescript/unified_search'
 import { onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
@@ -14,11 +18,7 @@ import {
   SearchHistorySearchProvider,
   type SearchHistorySearchResult
 } from '@/unified-search/lib/providers/history'
-import {
-  UnifiedSearchProvider,
-  type UnifiedSearchProviderIdentifier,
-  type UnifiedSearchResultResponse
-} from '@/unified-search/lib/providers/unified'
+import { UnifiedSearchProvider } from '@/unified-search/lib/providers/unified'
 import { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import {
   type SearchProviderResult,
@@ -38,7 +38,7 @@ import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
-const props = defineProps<UnifiedSearchConfig>()
+const props = defineProps<UnifiedSearchProps>()
 
 const searchId = `unified-search-${props.user_id}-${props.edition}`
 
@@ -47,7 +47,7 @@ const api = new Api()
 const searchHistoryService = new SearchHistoryService(searchId)
 
 const searchProviderIdentifiers: {
-  id: UnifiedSearchProviderIdentifier
+  id: ProviderName
   sort: number
 }[] = []
 if (props.providers.setup.active) {
@@ -79,7 +79,7 @@ const search = new UnifiedSearch(searchId, api, [
   searchHistorySearchProvider
 ])
 search.onSearch((result?: UnifiedSearchResult) => {
-  async function setSearchResults(uspr: SearchProviderResult<UnifiedSearchResultResponse>) {
+  async function setSearchResults(uspr: SearchProviderResult<UnifiedSearchApiResponse>) {
     if (uspr) {
       waitForSearchResults.value = true
       const usprRes = await uspr.result
@@ -88,7 +88,7 @@ search.onSearch((result?: UnifiedSearchResult) => {
         searchResult.value = undefined
       } else {
         searchError.value = undefined
-        searchResult.value = usprRes as UnifiedSearchResultResponse
+        searchResult.value = usprRes as UnifiedSearchApiResponse
       }
       waitForSearchResults.value = false
     } else {
@@ -107,10 +107,10 @@ search.onSearch((result?: UnifiedSearchResult) => {
   void setHistoryResults(
     result?.get('search-history') as SearchProviderResult<SearchHistorySearchResult>
   )
-  void setSearchResults(result?.get('unified') as SearchProviderResult<UnifiedSearchResultResponse>)
+  void setSearchResults(result?.get('unified') as SearchProviderResult<UnifiedSearchApiResponse>)
 })
 
-const searchResult = ref<UnifiedSearchResultResponse>()
+const searchResult = ref<UnifiedSearchApiResponse>()
 const searchError = ref<UnifiedSearchError>()
 const historyResult = ref<SearchHistorySearchResult>()
 const waitForSearchResults = ref<boolean>(true)

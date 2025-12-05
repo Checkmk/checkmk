@@ -3,13 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { UnifiedSearchResultItem } from 'cmk-shared-typing/typescript/unified_search'
 import type { Ref } from 'vue'
 
 import usePersistentRef from '@/lib/usePersistentRef'
 
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
-
-import type { UnifiedSearchResultElement } from './providers/unified'
 
 export class HistoryEntry {
   public hitCount = 1
@@ -17,7 +16,7 @@ export class HistoryEntry {
 
   constructor(
     public query: UnifiedSearchQueryLike,
-    public element: UnifiedSearchResultElement
+    public element: UnifiedSearchResultItem
   ) {}
 }
 

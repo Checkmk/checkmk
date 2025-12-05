@@ -49,6 +49,10 @@ from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfi
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.rulesets import may_edit_ruleset
+from cmk.shared_typing.unified_search import (
+    ProviderName,
+    UnifiedSearchResultItem,
+)
 from cmk.utils import paths
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.setup_search_index import (
@@ -58,7 +62,6 @@ from cmk.utils.setup_search_index import (
 )
 
 from ..legacy_helpers import transform_legacy_results_to_unified
-from ..type_defs import UnifiedSearchResultItem
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -736,6 +739,6 @@ class SetupSearchEngine:
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
         return itertools.chain.from_iterable(
-            transform_legacy_results_to_unified(results, topic, provider="setup")
+            transform_legacy_results_to_unified(results, topic, provider=ProviderName.setup)
             for topic, results in self._legacy_engine.search(query, self._config)
         )

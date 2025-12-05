@@ -90,7 +90,7 @@ immediateWatch(
   async ({ newHistoryResult }) => {
     if (newHistoryResult) {
       const res = await newHistoryResult.result
-      if (!(res instanceof UnifiedSearchError)) {
+      if (res && !(res instanceof UnifiedSearchError)) {
         recentlyViewed.value = res.entries.slice(0, maxRecentlyViewed)
         recentlySearches.value = res.queries.slice(0, maxRecentlySearched)
         return

@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .sorting import get_sorter
-from .type_defs import (
-    Provider,
-    SearchEngine,
+from cmk.shared_typing.unified_search import (
+    ProviderName,
     SortType,
     UnifiedSearchResult,
     UnifiedSearchResultCounts,
     UnifiedSearchResultItem,
 )
+
+from .sorting import get_sorter
+from .type_defs import SearchEngine
 
 
 class UnifiedSearch:
@@ -30,7 +31,7 @@ class UnifiedSearch:
         self,
         query: str,
         *,
-        provider: Provider | None = None,
+        provider: ProviderName | None = None,
         sort_type: SortType | None = None,
     ) -> UnifiedSearchResult:
         setup_results: list[UnifiedSearchResultItem] = []

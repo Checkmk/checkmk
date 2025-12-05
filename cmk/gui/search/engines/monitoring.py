@@ -40,10 +40,13 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
+from cmk.shared_typing.unified_search import (
+    ProviderName,
+    UnifiedSearchResultItem,
+)
 from cmk.utils.tags import TagGroupID, TagID
 
 from ..legacy_helpers import transform_legacy_results_to_unified
-from ..type_defs import UnifiedSearchResultItem
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -1389,7 +1392,7 @@ class MonitoringSearchEngine:
             return []
 
         return itertools.chain.from_iterable(
-            transform_legacy_results_to_unified(results, topic, provider="monitoring")
+            transform_legacy_results_to_unified(results, topic, provider=ProviderName.monitoring)
             for topic, results in self._legacy_engine.generate_results(
                 query, self._user_permissions
             )

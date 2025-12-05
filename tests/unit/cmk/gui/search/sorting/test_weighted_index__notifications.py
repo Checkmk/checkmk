@@ -6,10 +6,19 @@
 import functools
 
 from cmk.gui.search.sorting import get_sorter
-from cmk.gui.search.type_defs import UnifiedSearchResultItem, UnifiedSearchResultTarget
+from cmk.shared_typing.unified_search import (
+    IconNames,
+    ProviderName,
+    SortType,
+    UnifiedSearchResultItem,
+    UnifiedSearchResultTarget,
+)
 
 I = functools.partial(
-    UnifiedSearchResultItem, target=UnifiedSearchResultTarget(url=""), provider="setup", icon=""
+    UnifiedSearchResultItem,
+    target=UnifiedSearchResultTarget(url=""),
+    provider=ProviderName.setup,
+    icon=IconNames.main_setup_active,
 )
 
 
@@ -20,11 +29,15 @@ def get_results_alphabetically() -> list[UnifiedSearchResultItem]:
         I(title="Delay service notifications", topic="Service monitoring rules"),
         I(title="Enable/disable notifications for hosts", topic="Host monitoring rules"),
         I(title="Enable/disable notifications for services", topic="Service monitoring rules"),
-        I(title="Failed notifications", topic="Monitor", provider="monitoring"),
+        I(title="Failed notifications", topic="Monitor", provider=ProviderName.monitoring),
         I(title="Fallback email address for notifications", topic="Global settings"),
         I(title="Interval for checking for ripe bulk notifications", topic="Global settings"),
         I(title="Logging of the notification mechanics", topic="Global settings"),
-        I(title="Notifications of host & services", topic="Monitor", provider="monitoring"),
+        I(
+            title="Notifications of host & services",
+            topic="Monitor",
+            provider=ProviderName.monitoring,
+        ),
         I(title="Notifications", topic="Setup"),
         I(title="Periodic notifications during host problems", topic="Host monitoring rules"),
         I(title="Periodic notifications during service problems", topic="Service monitoring rules"),
@@ -40,7 +53,7 @@ def get_results_alphabetically() -> list[UnifiedSearchResultItem]:
 
 def test_weighted_index_sorting_with_notifications_query() -> None:
     results = get_results_alphabetically()
-    get_sorter("weighted_index", query="notifications")(results)
+    get_sorter(SortType.weighted_index, query="notifications")(results)
 
     value = [(result.title, result.topic) for result in results]
     expected = [

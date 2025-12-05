@@ -1102,6 +1102,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         "cmk.bi",
         "cmk.gui",
+        "cmk.shared_typing",
         "cmk.utils",
     ),
     Component("tests.integration.cmk.post_rename_site"): _allow(

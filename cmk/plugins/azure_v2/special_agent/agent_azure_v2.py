@@ -1441,7 +1441,10 @@ class AzureAsyncCache(DataCache):
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
                 LOGGER.debug("Reading data from cache: %s", self._key)
-                return await self.get_cached_data()
+                if cached_data := await self.get_cached_data():
+                    # if not empty
+                    return cached_data
+                LOGGER.debug("Cache file is empty, getting live data from cache: %s", self._key)
             except (OSError, ValueError) as exc:
                 LOGGER.error("Getting live data (failed to read from cache: %s).", exc)
                 if self.debug:
@@ -1592,6 +1595,9 @@ class CacheMetricsGroupDefinition:
 
 
 class MetricCache(AzureAsyncCache):
+    def get_validity_from_args(self, *args: Any) -> bool:
+        return True
+
     def __init__(
         self,
         *,

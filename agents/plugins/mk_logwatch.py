@@ -24,8 +24,6 @@ You should find an example configuration file at
 '../cfg_examples/logwatch.cfg' relative to this file.
 """
 
-from __future__ import with_statement
-
 __version__ = "2.5.0b1"
 
 import sys

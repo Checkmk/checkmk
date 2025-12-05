@@ -25,8 +25,6 @@ Installation options:
 This plugin it will be called by the agent without any arguments.
 """
 
-from __future__ import with_statement
-
 __version__ = "2.5.0b1"
 
 # NOTE: docker is available for python versions from 2.6 / 3.3

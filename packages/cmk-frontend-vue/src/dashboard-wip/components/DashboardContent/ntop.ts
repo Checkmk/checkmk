@@ -19,13 +19,20 @@ import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
 
 import type { NtopType } from './types.ts'
 
-export const getIfid = async (): Promise<string> => {
+export const getIfid = async (cmkToken: string | undefined): Promise<string> => {
   const urlParams = inject(urlParamsKey) as FilterHTTPVars
   if ('ifid' in urlParams && urlParams.ifid) {
     return urlParams.ifid
   } else {
     try {
-      const response = await axios.get('ajax_ntop_ifid.py')
+      let ifidEndpointUrl: string
+      if (cmkToken === undefined) {
+        ifidEndpointUrl = 'ajax_ntop_ifid.py'
+      } else {
+        const httpVarsString: string = new URLSearchParams({ 'cmk-token': cmkToken }).toString()
+        ifidEndpointUrl = `ntop_ifid_token_auth.py?${httpVarsString}`
+      }
+      const response = await axios.get(ifidEndpointUrl)
 
       if (response.data.result_code !== 0) {
         throw new Error(`DashboardContentNtop: Error fetching ifid: ${response.data.result}`)
@@ -43,15 +50,21 @@ class NtopQuickStatsInterface {
   qsInstance
   _vlanid = '0'
 
-  constructor(interfaceDivId: string, ifid: string) {
+  constructor(interfaceDivId: string, ifid: string, cmkToken: string | undefined) {
     // @ts-expect-error comes from different javascript file
     const cmkToolkit = window['cmk']
 
-    const httpVarsString: string = new URLSearchParams({
+    const httpVars: FilterHTTPVars = {
       ifid: ifid,
       vlanid: this._vlanid
-    }).toString()
-    const postUrl: string = `ajax_ntop_interface_quickstats.py?${httpVarsString}`
+    }
+    let baseUrl: string = 'ajax_ntop_interface_quickstats.py'
+    if (cmkToken !== undefined) {
+      httpVars['cmk-token'] = cmkToken
+      baseUrl = 'ntop_interface_quickstats_token_auth.py'
+    }
+    const httpVarsString: string = new URLSearchParams(httpVars).toString()
+    const postUrl = `${baseUrl}?${httpVarsString}`
 
     const qsInstance = new cmkToolkit.ntop.utils.interface_table(`#${interfaceDivId}`)
     qsInstance.set_host_address('')
@@ -79,9 +92,15 @@ export class NtopBase {
   _quickStatsInterface: NtopQuickStatsInterface
   _type: NtopType
 
-  constructor(type: NtopType, interfaceDivId: string, divSelectorId: string, ifid: string) {
+  constructor(
+    type: NtopType,
+    interfaceDivId: string,
+    divSelectorId: string,
+    ifid: string,
+    cmkToken: string | undefined
+  ) {
     // Set up quickstats interface
-    this._quickStatsInterface = new NtopQuickStatsInterface(interfaceDivId, ifid)
+    this._quickStatsInterface = new NtopQuickStatsInterface(interfaceDivId, ifid, cmkToken)
 
     // @ts-expect-error comes from different javascript file
     const cmkToolkit = window['cmk']
@@ -89,13 +108,16 @@ export class NtopBase {
     // Set up type-specific ntop figure
     switch (type) {
       case 'ntop_alerts':
-        this.instance = new cmkToolkit.ntop.alerts.NtopAlertsTabBar(`#${divSelectorId}`)
+        this.instance = new cmkToolkit.ntop.alerts.NtopAlertsTabBar(`#${divSelectorId}`, cmkToken)
         break
       case 'ntop_flows':
-        this.instance = new cmkToolkit.ntop.flows.FlowsDashlet(`#${divSelectorId}`)
+        this.instance = new cmkToolkit.ntop.flows.FlowsDashlet(`#${divSelectorId}`, cmkToken)
         break
       case 'ntop_top_talkers':
-        this.instance = new cmkToolkit.ntop.top_talkers.TopTalkersDashlet(`#${divSelectorId}`)
+        this.instance = new cmkToolkit.ntop.top_talkers.TopTalkersDashlet(
+          `#${divSelectorId}`,
+          cmkToken
+        )
         break
       default:
         throw new Error(`DashboardContentNtop: invalid type "${type}"`)

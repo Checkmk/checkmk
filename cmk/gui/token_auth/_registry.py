@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import urllib.parse
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
@@ -81,8 +82,9 @@ def parse_token_and_validate(
 
 
 def handle_token_page(ident: str, request: Request) -> Callable[[PageContext], Response]:
+    user_provided_token = urllib.parse.unquote(request.var("cmk-token", ""))
     token = parse_token_and_validate(
-        request.var("cmk-token", ""),
+        user_provided_token,
         request.remote_addr,
         datetime.datetime.now(datetime.UTC),
     )

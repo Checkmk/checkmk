@@ -20,9 +20,14 @@ export class TopTalkersDashlet extends TableFigure {
   //the class in cmk/gui/cee/plugins/dashboard/ntop_dashlets.py:215
   _ifid!: string
   _vlanid!: string
-  constructor(tabs_bar: string) {
+  constructor(tabs_bar: string, cmk_token: string | undefined | null = null) {
     super(tabs_bar)
-    this._post_url = 'ajax_ntop_top_talkers.py'
+    if (cmk_token) {
+      const http_var_string: string = new URLSearchParams({ 'cmk-token': cmk_token }).toString()
+      this._post_url = `ntop_top_talkers_token_auth.py?${http_var_string}`
+    } else {
+      this._post_url = 'ajax_ntop_top_talkers.py'
+    }
     this._default_params = {}
     this.scheduler.enable()
     this.scheduler.set_update_interval(60)

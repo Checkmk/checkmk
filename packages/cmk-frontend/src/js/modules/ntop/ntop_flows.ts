@@ -67,9 +67,14 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
   _pagination!: Selection<HTMLDivElement, any, BaseType, any>
   _table_div!: Selection<HTMLDivElement, any, BaseType, any>
   _indexDim!: Dimension<any, any>
-  constructor(div_selector: string) {
+  constructor(div_selector: string, cmk_token: string | undefined | null = null) {
     super(div_selector)
-    this._post_url = 'ajax_ntop_flows.py'
+    if (cmk_token) {
+      const http_var_string: string = new URLSearchParams({ 'cmk-token': cmk_token }).toString()
+      this._post_url = `ntop_flows_token_auth.py?${http_var_string}`
+    } else {
+      this._post_url = 'ajax_ntop_flows.py'
+    }
     this._default_params_dict = {}
   }
 

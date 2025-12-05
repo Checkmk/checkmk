@@ -4,12 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { inject, onBeforeUnmount, onMounted, ref } from 'vue'
+
+import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
 
 import { NtopBase, getIfid } from './ntop.ts'
 import type { ContentProps, NtopType } from './types.ts'
 
 const props = defineProps<ContentProps>()
+const cmkToken = inject(cmkTokenKey) as string | undefined
 
 let ntop: NtopBase | undefined = undefined
 const interfaceDivId: string = 'ntop_interface_quickstats'
@@ -19,8 +22,14 @@ const errorMessage = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    ifid = await getIfid()
-    ntop = new NtopBase(props.content.type as NtopType, interfaceDivId, contentDivId, ifid)
+    ifid = await getIfid(cmkToken)
+    ntop = new NtopBase(
+      props.content.type as NtopType,
+      interfaceDivId,
+      contentDivId,
+      ifid,
+      cmkToken
+    )
   } catch (error) {
     // Cant let the site crash as this causes XSS crawler to fail
     console.error('Error initializing ntop content:', error)

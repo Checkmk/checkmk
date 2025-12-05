@@ -52,7 +52,10 @@ export class TabsBar {
 
   _register_tabs() {
     this._get_tab_entries().forEach((tab_class) => {
-      const new_tab = new tab_class(this)
+      const new_tab = new tab_class(
+        this,
+        typeof this._cmk_token !== 'undefined' ? this._cmk_token : null
+      )
       new_tab.initialize()
       this._tabs_by_id[new_tab.tab_id()] = new_tab
       this._tabs_list.push(new_tab)

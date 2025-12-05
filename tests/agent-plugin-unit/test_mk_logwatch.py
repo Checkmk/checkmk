@@ -674,7 +674,7 @@ def _path_to_testfile(filename):
     return _linux_dataset_path(filename)
 
 
-class MockStdout(object):
+class MockStdout:
     def isatty(self):
         return False
 

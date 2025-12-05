@@ -81,7 +81,6 @@ ignore = [
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
 "tests/agent-plugin-unit/*" = [
-  "UP004", # Class `_MockHttpResponse` inherits from `object`
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
   "UP009", # UTF-8 encoding declaration is unnecessary

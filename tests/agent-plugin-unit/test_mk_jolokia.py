@@ -118,7 +118,7 @@ def test_jolokia_yield_configured_instances() -> None:
     assert next(yci) == {"server": "s2", "port": 1234}
 
 
-class _MockHttpResponse(object):
+class _MockHttpResponse:
     def __init__(self, http_status: int, **kwargs: object) -> None:
         self.status_code = http_status
         self.headers = {}  # type: dict

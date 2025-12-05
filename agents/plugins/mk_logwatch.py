@@ -303,7 +303,7 @@ def iter_config_lines(files):
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
                     sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
-        except IOError:
+        except OSError:
             pass
 
 
@@ -378,7 +378,7 @@ def read_config(config_lines, files, debug=False):
     if debug and not config_lines:
         # We need at least one config file *with* content in one of the places:
         # logwatch.d or MK_CONFDIR
-        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
+        raise OSError("Did not find any content in config files: %s" % ", ".join(files))
 
     logfiles_configs = []
     cluster_configs = []
@@ -1065,7 +1065,7 @@ def _ip_to_integer(ip_address):
     for version in (socket.AF_INET, socket.AF_INET6):
         try:
             ip_hex = socket.inet_pton(version, ip_address)
-        except socket.error:
+        except OSError:
             continue
         ip_integer = int(binascii.hexlify(ip_hex), 16)
         return (ip_integer, 4 if version == socket.AF_INET else 6)
@@ -1086,7 +1086,7 @@ def _subnetwork_to_ip_range(subnetwork):
     for version, ip_len in ((socket.AF_INET, 32), (socket.AF_INET6, 128)):
         try:
             ip_hex = socket.inet_pton(version, network_prefix)
-        except socket.error:
+        except OSError:
             continue
         try:
             suffix_mask = (1 << (ip_len - int(netmask_len))) - 1
@@ -1225,7 +1225,7 @@ def process_batches(current_batch, current_batch_id, remote, retention_period, n
                 with open(batch_file, encoding="utf-8", errors="replace") as fh:
                     sys.stdout.writelines([ensure_str(l) for l in fh])
                 continue
-        except EnvironmentError:
+        except OSError:
             pass
 
 

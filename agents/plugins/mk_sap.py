@@ -151,7 +151,7 @@ else:
 try:
     with open(STATE_FILE) as opened_file:
         states = ast.literal_eval(opened_file.read())
-except IOError:
+except OSError:
     states = {}
 
 # index of all logfiles which have been found in a run. This is used to

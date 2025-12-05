@@ -633,7 +633,7 @@ def _process_queries(inst, queries):
         try:
             for instance_out, title_out, value in fetch_metric(inst, mbean_path, title, itemspec):
                 yield instance_out, title_out, value
-        except (IOError, socket.timeout):
+        except (OSError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:
             continue
@@ -714,7 +714,7 @@ def generate_json(inst, mbeans):
             data = inst.get_post_data(mbean, "read", use_target=True)
             obj = inst.post(data)
             yield inst.name, mbean, json.dumps(obj["value"])
-        except (IOError, socket.timeout):
+        except (OSError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:
             pass

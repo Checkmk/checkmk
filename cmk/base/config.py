@@ -2430,12 +2430,6 @@ class ConfigCache:
     def special_agents(self, host_name: HostName) -> Sequence[SSCRules]:
         def special_agents_impl() -> Sequence[SSCRules]:
             matched: list[tuple[str, Sequence[Mapping[str, object]]]] = []
-            # Previous to 1.5.0 it was not defined in which order the special agent
-            # rules overwrite each other. When multiple special agents were configured
-            # for a single host a "random" one was picked (depending on the iteration
-            # over config.special_agents.
-            # We now sort the matching special agents by their name to at least get
-            # a deterministic order of the special agents.
             for agentname, ruleset in sorted(special_agents.items()):
                 params = self.ruleset_matcher.get_host_values_all(
                     host_name, ruleset, self.label_manager.labels_of_host

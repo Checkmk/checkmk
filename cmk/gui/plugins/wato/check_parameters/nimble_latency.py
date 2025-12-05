@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,11 +13,11 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Percentage, TextInput, Tuple
 
 
-def _item_spec_nimble_latency():
+def _item_spec_nimble_latency() -> TextInput:
     return TextInput(title=_("Volume"), help=_("Specify the name of the Nimble volume."))
 
 
-def _parameter_valuespec_nimble_latency():
+def _parameter_valuespec_nimble_latency() -> Dictionary:
     return Dictionary(
         help=_(
             # xgettext: no-python-format

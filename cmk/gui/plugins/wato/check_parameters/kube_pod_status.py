@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
@@ -21,7 +21,7 @@ DESIRED_PHASE = [
 ]
 
 
-def __element():
+def __element() -> Tuple:
     return Tuple(
         elements=[
             age_levels_dropdown(),
@@ -40,7 +40,7 @@ def __element():
     )
 
 
-def _parameter_valuespec_kube_pod_status():
+def _parameter_valuespec_kube_pod_status() -> Dictionary:
     return Dictionary(
         title=_("Interpretation of pod status"),
         help=_(

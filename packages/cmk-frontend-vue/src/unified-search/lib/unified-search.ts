@@ -88,7 +88,14 @@ export abstract class SearchProvider {
     this.searchActive.value = true
     return new Promise((resolve) => {
       void callback(query)
-        .catch((e) => resolve(new UnifiedSearchError(this.id, (e as Error).message)))
+        .catch((e) =>
+          resolve(
+            new UnifiedSearchError(
+              this.id,
+              (e as Error).message || 'Unknown error. Are all Checkmk services running?'
+            )
+          )
+        )
         .then((result) => resolve(result as T))
         .finally(() => (this.searchActive.value = false))
     })

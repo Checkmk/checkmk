@@ -258,6 +258,7 @@ pkg_files(
                "//notifications",
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
+               "//omd/packages/apache-omd",
                "//omd/packages/changelog",
                "//omd/packages/check-cert",
                "//omd/packages/check_mk",

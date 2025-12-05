@@ -149,6 +149,7 @@ edition_skel_permissions = {
         "//omd/non-free/packages/metric-backend:skel.permissions",
         "//omd/non-free/packages/reporting:skel.permissions",
         "//omd/non-free/packages/saml2:skel.permissions",
+        "//omd/packages/apache-omd:skel.permissions",
         "//omd/packages/check_mk:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
@@ -159,6 +160,7 @@ edition_skel_permissions = {
         "//omd/packages/stunnel:skel.permissions",
     ],
     "community": [
+        "//omd/packages/apache-omd:skel.permissions",
         "//omd/packages/check_mk:skel.permissions",
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
@@ -171,6 +173,7 @@ edition_skel_permissions = {
         "//omd/packages/stunnel:skel.permissions",
     ],
     "pro": [
+        "//omd/packages/apache-omd:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -188,6 +191,7 @@ edition_skel_permissions = {
         "//omd/packages/stunnel:skel.permissions",
     ],
     "ultimate": [
+        "//omd/packages/apache-omd:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//non-free/packages/otel-collector:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
@@ -209,6 +213,7 @@ edition_skel_permissions = {
         "//omd/packages/stunnel:skel.permissions",
     ],
     "ultimatemt": [
+        "//omd/packages/apache-omd:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//non-free/packages/otel-collector:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",

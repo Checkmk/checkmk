@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from pathlib import Path
+
+import pytest
 
 from tests.testlib.agent import (
     controller_connection_json,
@@ -69,6 +72,10 @@ def test_rename_preserves_registration_central(
     )
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO", "").startswith("sles"),
+    reason="Flaky test - will be re-enabled with CMK-28283",
+)
 @skip_if_not_containerized
 def test_rename_preserves_registration_remote(
     central_site: Site,

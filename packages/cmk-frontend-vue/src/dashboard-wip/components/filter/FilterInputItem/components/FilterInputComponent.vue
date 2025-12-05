@@ -12,6 +12,7 @@ import type { ComponentConfig, ConfiguredValues } from '../../types.ts'
 import CheckboxComponent from './CheckboxComponent.vue'
 import CheckboxGroupComponent from './CheckboxGroupComponent.vue'
 import DropdownComponent from './DropdownComponent.vue'
+import DualListComponent from './DualListComponent.vue'
 import DynamicDropdownComponent from './DynamicDropdownComponent.vue'
 import HiddenComponent from './HiddenComponent.vue'
 import LabelQueryBuilder from './LabelGroups/LabelQueryBuilder.vue'
@@ -161,6 +162,14 @@ const onTagComponentUpdate = (values: TagMatchItem[]): void => {
     <!-- Slider Component -->
     <SliderComponent
       v-else-if="component.component_type === 'slider'"
+      :component="component"
+      :configured-values="configuredFilterValues"
+      @update-component-values="handleUpdate"
+    />
+
+    <!-- Dual List Component -->
+    <DualListComponent
+      v-else-if="component.component_type === 'dual_list'"
       :component="component"
       :configured-values="configuredFilterValues"
       @update-component-values="handleUpdate"

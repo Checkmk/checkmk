@@ -595,7 +595,7 @@ def _latin_1_encoding():
             "utf-8" if os.name == "nt" else None,
             [
                 b"abc1",
-                u"äbc2".encode("utf-8"),
+                u"äbc2".encode(),
                 b"abc3",
             ],
             [

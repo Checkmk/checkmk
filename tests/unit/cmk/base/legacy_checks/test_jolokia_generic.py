@@ -18,15 +18,15 @@ info = [
 
 
 @pytest.mark.parametrize(
-    "type,lines,expected_result",
+    "type_,lines,expected_result",
     [
         ("number", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
         ("rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
     ],
 )
 def test_jolokia_generic_discovery(
-    type: Literal["number", "rate"],
+    type_: Literal["number", "rate"],
     lines: StringTable,
     expected_result: Sequence[tuple[str, dict[str, object]]],
 ) -> None:
-    assert list(discover_type(type)(parse_jolokia_generic(lines))) == expected_result
+    assert list(discover_type(type_)(parse_jolokia_generic(lines))) == expected_result

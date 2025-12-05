@@ -17,10 +17,10 @@ from cmk.werks.models import Class, Compatibility, Edition, Level, Werk
 
 
 def generate_werk(
-    version: str, id: int, compatible: Compatibility = Compatibility.COMPATIBLE
+    version: str, id_: int, compatible: Compatibility = Compatibility.COMPATIBLE
 ) -> dict[int, Werk]:
     werk = Werk(
-        id=id,
+        id=id_,
         class_=Class.FIX,
         compatible=compatible,
         component="component",

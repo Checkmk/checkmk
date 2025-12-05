@@ -160,11 +160,11 @@ def get_system_uptime() -> str:
     return f"{int(uptime_days)}d {int(uptime_hours % 24)}h {int(uptime_minutes % 60)}m {int(uptime_seconds % 60)}s"
 
 
-def get_statistics(timestamp: str, all: bool = False) -> perf_dict:
+def get_statistics(timestamp: str, all_stats: bool = False) -> perf_dict:
     statistics = (
         perf_dict({"time": timestamp}) | get_cpu_info() | get_memory_info() | get_disk_io_counters()
     )
-    if not all:
+    if not all_stats:
         return statistics
 
     return (
@@ -177,13 +177,13 @@ def get_statistics(timestamp: str, all: bool = False) -> perf_dict:
     )
 
 
-def write_statistics(file: IO, all: bool = False, close: bool = False) -> None:
+def write_statistics(file: IO, all_stats: bool = False, close: bool = False) -> None:
     if close:
         file.write("[]" if file.tell() == 0 else "\n]")
         return
 
     timestamp = datetime.datetime.now().astimezone().isoformat()
-    statistics = get_statistics(timestamp, all=all)
+    statistics = get_statistics(timestamp, all_stats=all_stats)
     separator = "[\n" if file.tell() == 0 else ",\n"
     file.write(separator)
     json.dump(statistics, file, separators=(",", ":"))

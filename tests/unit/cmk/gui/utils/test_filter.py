@@ -9,7 +9,7 @@ import cmk.gui.utils.filter
 
 
 def test_requested_filter_is_not_default__empty_request(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars={}))
+    monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars_={}))
 
     value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({})
     expected = False
@@ -27,7 +27,7 @@ def test_requested_filter_is_not_default__empty_request(monkeypatch: pytest.Monk
 def test_requested_filter_is_not_default__request_args(
     args: list[str], expected: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    stub = _RequestStub(args=args, vars={"filled_in": "filter", "_active": "foo;bar"})
+    stub = _RequestStub(args=args, vars_={"filled_in": "filter", "_active": "foo;bar"})
     monkeypatch.setattr(cmk.gui.utils.filter, "request", stub)
 
     value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({})
@@ -36,16 +36,16 @@ def test_requested_filter_is_not_default__request_args(
 
 
 @pytest.mark.parametrize(
-    "vars, expected",
+    "vars_, expected",
     [
         pytest.param({"filled_in": "filter"}, True, id="_active not present in vars"),
         pytest.param({"filled_in": "filter", "_active": "foo;"}, True, id="_active set and found"),
     ],
 )
 def test_requested_filter_is_not_default__request_vars_with_static_ctx(
-    vars: dict[str, str], expected: bool, monkeypatch: pytest.MonkeyPatch
+    vars_: dict[str, str], expected: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    stub = _RequestStub(args=[], vars=vars)
+    stub = _RequestStub(args=[], vars_=vars_)
     monkeypatch.setattr(cmk.gui.utils.filter, "request", stub)
 
     value = cmk.gui.utils.filter.check_if_non_default_filter_in_request({"foo": {"hello": "world"}})
@@ -54,7 +54,7 @@ def test_requested_filter_is_not_default__request_vars_with_static_ctx(
 
 
 @pytest.mark.parametrize(
-    "vars, ctx, expected",
+    "vars_, ctx, expected",
     [
         pytest.param(
             {"filled_in": "filter", "_active": "foo;"},
@@ -190,12 +190,12 @@ def test_requested_filter_is_not_default__request_vars_with_static_ctx(
     ],
 )
 def test_requested_filter_is_not_default__request_vars_with_dynamic_ctx(
-    vars: dict[str, str],
+    vars_: dict[str, str],
     ctx: dict[str, dict[str, str]],
     expected: bool,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars=vars))
+    monkeypatch.setattr(cmk.gui.utils.filter, "request", _RequestStub(args=[], vars_=vars_))
 
     value = cmk.gui.utils.filter.check_if_non_default_filter_in_request(ctx)
 
@@ -205,9 +205,9 @@ def test_requested_filter_is_not_default__request_vars_with_dynamic_ctx(
 class _RequestStub:
     """Stub meant for mocking out the Flask request singleton."""
 
-    def __init__(self, *, args: list[str], vars: dict[str, str]) -> None:
+    def __init__(self, *, args: list[str], vars_: dict[str, str]) -> None:
         self.args = {k: "" for k in args}
-        self._vars = vars
+        self._vars = vars_
 
     def var(self, key: str) -> str | None:
         return self._vars.get(key, None)

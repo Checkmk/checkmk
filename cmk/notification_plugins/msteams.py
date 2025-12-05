@@ -30,11 +30,28 @@ MAP_TYPES: dict[str, str] = {
     "ACKNOWLEDGEMENT": "Problem acknowledged",
 }
 
+EMOJIS: dict[str, str] = {
+    "OK": "🟢",
+    "UP": "🟢",
+    "WARNING": "🟡",
+    "CRITICAL": "🔴",
+    "DOWN": "🔴",
+    "UNKNOWN": "⚪",
+    "ACKNOWLEDGEMENT": "✅",
+    "DOWNTIMESTART": "🕒",
+    "DOWNTIMEEND": "🕒",
+    "DOWNTIMECANCELLED": "🕒",
+}
 
 def _msteams_msg(
     context: PluginNotificationContext,
 ) -> dict[str, object]:
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
+
+    state = context.get("SERVICESTATE", context.get("HOSTSTATE", ""))
+    emoji = EMOJIS.get(state, "")
+    title_with_emoji = f"{emoji} {substitute_context(title, context)}"
+
     actions = []
     if info_url := (
         service_url_from_context(context)
@@ -63,7 +80,7 @@ def _msteams_msg(
                     "body": [
                         {
                             "type": "TextBlock",
-                            "text": substitute_context(title, context),
+                            "text": title_with_emoji,
                             "weight": "bolder",
                             "size": "large",
                             "style": "heading",
@@ -171,6 +188,13 @@ def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str,
 
 
 def main() -> int:
-    # 200: old webhooks (deprecated)
-    # 202: workflows
-    return process_by_status_code(post_request(_msteams_msg), (200, 202))
+    try:
+        response = post_request(_msteams_msg)
+        if response.status_code in (200, 201, 202):
+            return 0
+        else:
+            print(f"Error: Status {response.status_code} - Response: {response.text}")
+            return 1
+    except Exception as e:
+        print(f"Exception while sending notification: {e}")
+        return 2

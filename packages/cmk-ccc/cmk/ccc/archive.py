@@ -194,9 +194,9 @@ class CheckmkTarArchive:
     Indexed mode - loads the archive fully into the RAM.
     """
 
-    RAW_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3  # 1024 MB
-    ARCHIVE_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3  # 1024 MB
-    ARCHIVE_MAX_SIZE_LIMIT_BYTES_PER_FILE: Final[int] = 1024**2 * 128  # 128 MB
+    RAW_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3 * 1  # 1 GB
+    ARCHIVE_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3 * 10  # 10 GB
+    ARCHIVE_MAX_SIZE_LIMIT_BYTES_PER_FILE: Final[int] = 1024**3 * 2  # 2 GB
     ARCHIVE_MAX_TOTAL_FILES: Final[int] = 100_000
 
     def __init__(

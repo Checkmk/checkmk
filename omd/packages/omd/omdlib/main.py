@@ -3053,7 +3053,7 @@ def main_restore(
     source_descr = "stdin" if source == "-" else source
     new_site_name = args[0] if len(args) == 2 else None
 
-    archive_settings = ArchiveSettings(compression="*", size_limit_bytes=1024**3 * 3)  # 3 GB
+    archive_settings = ArchiveSettings(compression="*", bypass_size_validation=True)
     if source == "-":
         tar_reader = CheckmkTarArchive.from_buffer(
             sys.stdin.buffer, streaming=False, **archive_settings

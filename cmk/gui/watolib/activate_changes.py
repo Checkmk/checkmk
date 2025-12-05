@@ -3719,6 +3719,90 @@ def _raise_for_license_block() -> None:
         raise MKLicensingError(block_effect.message_raw)
 
 
+def _check_sites_that_cannot_be_activated(
+    site_configurations: SiteConfigurations,
+) -> None:
+    """Run checks on the given site configurations these sites cannot be activated.
+    They may have a status that is not 'online' or they could be remote sites that
+    are not logged in.
+    """
+    sites_that_cannot_be_activated = SiteConfigurations(
+        {
+            site_id: site
+            for site_id, site in site_configurations.items()
+            if (
+                not (site_is_local(site) or "secret" in site)
+                or sites_states().get(site_id, SiteStatus({})).get("state", "unknown") != "online"
+            )
+        }
+    )
+
+    manager = ActivateChangesManager()
+    manager.changes.load(list(sites_that_cannot_be_activated))
+
+    if dirty_sites := manager.changes.dirty_sites(activation_sites(sites_that_cannot_be_activated)):
+        """There are changes to activate, but sites cannot currently be activated."""
+        err_msg = (
+            "sites %s have" % ", ".join(site_id for site_id, _site in dirty_sites)
+            if len(dirty_sites) > 1
+            else "site %s has" % dirty_sites[0][0]
+        )
+
+        raise MKUserError(
+            None,
+            _(
+                "There are changes to activate, but no site can be "
+                "activated (The %s changes, but may be "
+                "offline or not logged in)."
+            )
+            % err_msg,
+            status=409,
+        )
+
+
+def _check_sites_that_can_be_activated(
+    site_configurations: SiteConfigurations,
+    force_foreign_changes: bool,
+) -> tuple[ActivateChangesManager, list[SiteId]]:
+    """Run checks on the given site configurations These sites are either remote sites that
+    are logged in or the local site and they will have an online status ."""
+    sites_that_can_be_activated = SiteConfigurations(
+        {
+            site_id: site
+            for site_id, site in site_configurations.items()
+            if (
+                (site_is_local(site) or "secret" in site)
+                and sites_states().get(site_id, SiteStatus({})).get("state", "unknown") == "online"
+            )
+        }
+    )
+
+    manager = ActivateChangesManager()
+    manager.changes.load(list(sites_that_can_be_activated))
+
+    if manager.changes.has_foreign_changes():
+        if not user.may("wato.activateforeign"):
+            raise MKAuthException(_("You are not allowed to activate changes of other users."))
+        if not force_foreign_changes:
+            raise MKAuthException(
+                _(
+                    "There are changes from other users and foreign changes are "
+                    "not allowed in this API call."
+                )
+            )
+
+    if manager.is_running():
+        raise MKUserError(None, _("There is an activation already running."), status=423)
+
+    if not manager.changes.has_pending_changes():
+        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
+
+    if not manager.changes.dirty_sites(activation_sites(sites_that_can_be_activated)):
+        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
+
+    return manager, list(sites_that_can_be_activated)
+
+
 def activate_changes_start(
     *,
     sites: Sequence[SiteId],
@@ -3751,6 +3835,8 @@ def activate_changes_start(
 
     """
 
+    _raise_for_license_block()
+
     for site_id in sites:
         if site_id not in all_site_configs:
             raise MKUserError(
@@ -3764,56 +3850,13 @@ def activate_changes_start(
             if not sites or site_id in sites
         }
     )
-
-    changes = ActivateChanges()
-    changes.load(list(sites_to_activate))
-
-    _raise_for_license_block()
-
-    if changes.has_foreign_changes():
-        if not user.may("wato.activateforeign"):
-            raise MKAuthException(_("You are not allowed to activate changes of other users."))
-        if not force_foreign_changes:
-            raise MKAuthException(
-                _(
-                    "There are changes from other users and foreign changes are "
-                    "not allowed in this API call."
-                )
-            )
-
-    manager = ActivateChangesManager()
-    manager.changes.load(list(sites_to_activate))
-
-    if manager.is_running():
-        raise MKUserError(None, _("There is an activation already running."), status=423)
-
-    if not manager.changes.has_pending_changes():
-        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
-
-    if not (dirty_sites := manager.changes.dirty_sites(activation_sites(sites_to_activate))):
-        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
-
-    sites_that_can_be_activated = manager.changes.filter_not_activatable_sites(dirty_sites)
-    if not sites_that_can_be_activated:
-        err_msg = (
-            "sites %s have" % ", ".join(site_id for site_id, _site in dirty_sites)
-            if len(dirty_sites) > 1
-            else "site %s has" % dirty_sites[0][0]
-        )
-
-        raise MKUserError(
-            None,
-            _(
-                "There are changes to activate, but no site can be "
-                "activated (The %s changes, but may be "
-                "offline or not logged in)."
-            )
-            % err_msg,
-            status=409,
-        )
+    _check_sites_that_cannot_be_activated(sites_to_activate)
+    manager, site_ids_that_can_be_activated = _check_sites_that_can_be_activated(
+        sites_to_activate, force_foreign_changes
+    )
 
     manager.start(
-        sites=sites_that_can_be_activated,
+        sites=site_ids_that_can_be_activated,
         comment=comment,
         activate_foreign=force_foreign_changes,
         source=source,

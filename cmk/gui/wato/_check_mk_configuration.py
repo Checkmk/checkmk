@@ -1852,7 +1852,7 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
 
 ConfigVariableProductTelemetry = ConfigVariable(
     group=ConfigVariableGroupProductTelemetry,
-    primary_domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainCore,
     ident="product_telemetry",
     valuespec=lambda context: Dictionary(
         title=_("Product Telemetry"),

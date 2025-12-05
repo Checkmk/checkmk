@@ -15,6 +15,7 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.tags
+from cmk.base.default_config import ProductTelemetrySettings
 from cmk.base.default_config.cmc import RealTimeChecks
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd.config import RRDObjectConfig
@@ -111,3 +112,4 @@ class LoadedConfigFragment:
     timeperiods: object  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]]
     relays: object  # see above
+    product_telemetry: ProductTelemetrySettings

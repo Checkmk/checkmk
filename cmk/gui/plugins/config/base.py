@@ -24,7 +24,6 @@ from cmk.gui.type_defs import (
     GroupSpec,
     IconSpec,
     PasswordPolicy,
-    ProductTelemetrySettings,
     ReadOnlySpec,
     TrustedCertificateAuthorities,
     UserSpec,
@@ -549,15 +548,6 @@ class CREConfig:
     )
 
     site_subject_alternative_names: list[str] = field(default_factory=list)
-
-    product_telemetry: ProductTelemetrySettings = field(
-        default_factory=lambda: ProductTelemetrySettings(
-            {
-                "enable_telemetry": "disabled",
-                "proxy_config": ("no_proxy", None),
-            }
-        )
-    )
 
     # .
     #   .--EC------------------------------------------------------------------.

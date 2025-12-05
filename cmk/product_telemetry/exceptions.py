@@ -22,3 +22,7 @@ class ServicesInfoLengthError(Exception):
 
 class InvalidTelemetryEndpointError(Exception):
     pass
+
+
+class InvalidTimestampError(Exception):
+    pass

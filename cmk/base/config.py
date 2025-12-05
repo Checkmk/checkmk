@@ -710,6 +710,7 @@ def _perform_post_config_loading_actions(
         timeperiods=timeperiods,
         check_periods=check_periods,
         relays=relays,
+        product_telemetry=product_telemetry,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()

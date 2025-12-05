@@ -331,6 +331,7 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
         # in cmk.nonfree.pro.robotmk, the module layout of the metric etc. defintions is correct
         "cmk.plugins.robotmk.graphing.nonfree",
         "cmk.plugins.azure_v2.graphing.nonfree.ultimate",
+        "cmk.plugins.otel.graphing.nonfree.ultimate",
     }
     if is_non_free_repo()
     else set()

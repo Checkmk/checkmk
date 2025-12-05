@@ -69,7 +69,6 @@ ignore = [
 # Agent plugins still need to support Python 3.4
 "agents/plugins/*" = [
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
-  "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP015", # Unnecessary open mode parameters
   "UP024", # Replace aliased errors with `OSError`
@@ -83,7 +82,6 @@ ignore = [
 "tests/agent-plugin-unit/*" = [
   "UP006", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
-  "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP012", # Unnecessary call to `encode` as UTF-8
   "UP025", # Remove unicode literals from strings

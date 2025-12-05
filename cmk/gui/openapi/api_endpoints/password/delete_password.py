@@ -7,6 +7,7 @@ from typing import Annotated
 from pydantic import AfterValidator
 
 from cmk.gui.logged_in import user
+from cmk.gui.oauth2_connections.watolib.store import is_locked_by_oauth2_connection
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -50,6 +51,13 @@ def delete_password_v1(
         raise RestAPIRequestGeneralException(
             status=400,
             title=f'The password "{name}" is locked by Quick setup.',
+            detail="Locked passwords cannot be removed.",
+        )
+
+    if is_locked_by_oauth2_connection(password.get("locked_by")):
+        raise RestAPIRequestGeneralException(
+            status=400,
+            title=f'The password "{name}" is locked by an OAuth2 connection.',
             detail="Locked passwords cannot be removed.",
         )
 

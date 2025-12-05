@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -26,11 +25,11 @@ from cmk.gui.valuespec import (
 )
 
 
-def _item_spec_sap_hana_backup():
+def _item_spec_sap_hana_backup() -> TextInput:
     return TextInput(title=_("The instance name and backup type"))
 
 
-def _parameter_valuespec_sap_hana_backup():
+def _parameter_valuespec_sap_hana_backup() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -71,11 +70,11 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_sap_hana_license():
+def _item_spec_sap_hana_license() -> TextInput:
     return TextInput(title=_("The instance name"))
 
 
-def _parameter_valuespec_sap_hana_license():
+def _parameter_valuespec_sap_hana_license() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -138,7 +137,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_sap_hana_memory():
+def _parameter_valuespec_sap_hana_memory() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -195,7 +194,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_sap_hana_proc():
+def _parameter_valuespec_sap_hana_proc() -> Dictionary:
     return Dictionary(
         required_keys=["coordin"],
         elements=[

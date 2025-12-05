@@ -2418,7 +2418,7 @@ class ConfigCache:
             ExecutableFinder(
                 cmk.utils.paths.local_nagios_plugins_dir,
                 cmk.utils.paths.nagios_plugins_dir,
-                strip_prefix=None,
+                prefix_map=(),  # no relay support yet.
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
         )

@@ -768,7 +768,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     # NOTE: we can't ignore these, they're an API promise.
                     cmk.utils.paths.local_special_agents_dir,
                     cmk.utils.paths.special_agents_dir,
-                    strip_prefix=None if relay_id is None else cmk.utils.paths.omd_root,
+                    prefix_map=(() if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)),
                 ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),

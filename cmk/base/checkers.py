@@ -489,9 +489,11 @@ class CMKFetcher:
                             # NOTE: we can't ignore these, they're an API promise.
                             cmk.utils.paths.local_special_agents_dir,
                             cmk.utils.paths.special_agents_dir,
-                            strip_prefix=None
-                            if current_relay_id is None
-                            else cmk.utils.paths.omd_root,
+                            prefix_map=(
+                                ()
+                                if current_relay_id is None
+                                else ((cmk.utils.paths.omd_root, Path()),)
+                            ),
                         ),
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(

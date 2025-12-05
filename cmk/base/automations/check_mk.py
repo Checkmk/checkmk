@@ -3076,7 +3076,9 @@ def get_special_agent_commandline(
             # NOTE: we can't ignore these, they're an API promise.
             cmk.utils.paths.local_special_agents_dir,
             cmk.utils.paths.special_agents_dir,
-            strip_prefix=None if host_config.relay_id is None else cmk.utils.paths.omd_root,
+            prefix_map=(
+                () if host_config.relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
+            ),
         ),
     )
 
@@ -3565,7 +3567,9 @@ class AutomationDiagHost(Automation):
                     # NOTE: we can't ignore these, they're an API promise.
                     cmk.utils.paths.local_special_agents_dir,
                     cmk.utils.paths.special_agents_dir,
-                    strip_prefix=None if host_relay_id is None else cmk.utils.paths.omd_root,
+                    prefix_map=(
+                        () if host_relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
+                    ),
                 ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
@@ -4160,7 +4164,9 @@ class AutomationGetAgentOutput(Automation):
                             # NOTE: we can't ignore these, they're an API promise.
                             cmk.utils.paths.local_special_agents_dir,
                             cmk.utils.paths.special_agents_dir,
-                            strip_prefix=None if relay_id is None else cmk.utils.paths.omd_root,
+                            prefix_map=(
+                                () if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
+                            ),
                         ),
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),

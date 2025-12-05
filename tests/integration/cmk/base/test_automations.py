@@ -14,6 +14,7 @@ from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.paths import autochecks_dir
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
 
@@ -21,7 +22,7 @@ from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import DiscoveryResult
+from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer, AutocheckEntry
 
 logger = logging.getLogger(__name__)
@@ -198,6 +199,114 @@ def test_automation_discovery_single_host(site: Site) -> None:
     assert isinstance(result, results.ServiceDiscoveryResult)
     assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
     assert result.hosts[HostName("modes-test-host")].error_text is None
+
+
+@pytest.mark.usefixtures("test_cfg")
+class TestAutomationDiscovery:
+    hostname = "modes-test-host"
+    old_params = "{'foo': 'bar'}"
+    old_labels = "{'hello': 'world'}"
+    autochecks_file = autochecks_dir + f"/{hostname}.mk"
+
+    def autochecks_content(self, site: Site) -> str:
+        return site.read_file(self.autochecks_file)
+
+    def make_outtdated_autochecks_file(self, site: Site) -> None:
+        site.write_file(
+            self.autochecks_file,
+            self.autochecks_content(site)
+            .replace("""'parameters': {}""", f"""'parameters': {self.old_params}""", 1)
+            .replace("""'service_labels': {}""", f"""'service_labels': {self.old_labels}""", 1),
+        )
+
+    def execute(self, settings: DiscoverySettings, site: Site) -> results.ServiceDiscoveryResult:
+        result = _execute_automation(
+            site,
+            "service-discovery",
+            args=["@raiseerrors", settings.to_json(), self.hostname],
+        )
+        assert isinstance(result, results.ServiceDiscoveryResult)
+        return result
+
+    @staticmethod
+    def extract_unique_service_ids(autochecks_content: str) -> set[str]:
+        return {
+            f"{s['check_plugin_name']}:{s['item']}" for s in ast.literal_eval(autochecks_content)
+        }
+
+    def assert_all_services_present(self, site: Site, expected_services: set[str]) -> None:
+        assert self.extract_unique_service_ids(self.autochecks_content(site)) == expected_services
+
+    def test_update_parameters_and_labels(self, site: Site) -> None:
+        autochecks_content = self.autochecks_content(site)
+        self.make_outtdated_autochecks_file(site)
+
+        settings = DiscoverySettings(
+            update_host_labels=False,
+            add_new_services=False,
+            remove_vanished_services=False,
+            update_changed_service_parameters=True,
+            update_changed_service_labels=True,
+        )
+        self.execute(settings, site)
+        new_autochecks_content = self.autochecks_content(site)
+        assert new_autochecks_content == autochecks_content
+        assert self.old_params not in new_autochecks_content
+        assert self.old_labels not in new_autochecks_content
+
+    def test_update_parameters(self, site: Site) -> None:
+        autochecks_content = self.autochecks_content(site)
+        self.make_outtdated_autochecks_file(site)
+
+        settings = DiscoverySettings(
+            update_host_labels=False,
+            add_new_services=False,
+            remove_vanished_services=False,
+            update_changed_service_parameters=True,
+            update_changed_service_labels=False,
+        )
+        self.execute(settings, site)
+
+        self.assert_all_services_present(site, self.extract_unique_service_ids(autochecks_content))
+        new_autochecks_content = self.autochecks_content(site)
+        assert self.old_params not in new_autochecks_content
+        assert self.old_labels in new_autochecks_content
+
+    def test_update_labels(self, site: Site) -> None:
+        autochecks_content = self.autochecks_content(site)
+        self.make_outtdated_autochecks_file(site)
+
+        settings = DiscoverySettings(
+            update_host_labels=False,
+            add_new_services=False,
+            remove_vanished_services=False,
+            update_changed_service_parameters=False,
+            update_changed_service_labels=True,
+        )
+        self.execute(settings, site)
+
+        self.assert_all_services_present(site, self.extract_unique_service_ids(autochecks_content))
+        new_autochecks_content = self.autochecks_content(site)
+        assert self.old_params in new_autochecks_content
+        assert self.old_labels not in new_autochecks_content
+
+    def test_no_updates(self, site: Site) -> None:
+        autochecks_content = self.autochecks_content(site)
+        self.make_outtdated_autochecks_file(site)
+
+        settings = DiscoverySettings(
+            update_host_labels=False,
+            add_new_services=False,
+            remove_vanished_services=False,
+            update_changed_service_parameters=False,
+            update_changed_service_labels=False,
+        )
+        self.execute(settings, site)
+
+        self.assert_all_services_present(site, self.extract_unique_service_ids(autochecks_content))
+        new_autochecks_content = self.autochecks_content(site)
+        assert self.old_params in new_autochecks_content
+        assert self.old_labels in new_autochecks_content
 
 
 # old alias, drop after 2.2 release

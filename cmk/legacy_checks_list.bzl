@@ -442,6 +442,7 @@ LEGACY_CHECKS = [
     "lgp_pdu_info",
     "libelle_business_shadow",
     "logins",
+    "lvm_vgs",
     "mailman_lists",
     "mbg_lantime_ng_fan",
     "mbg_lantime_ng_power",

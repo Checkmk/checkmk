@@ -67,8 +67,12 @@ const widgetFilterManager = useWidgetFilterManager({}, filterDefinitions)
 
 const addFilters = useAddFilter()
 
-const hostFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
-const serviceFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
+const hostFilterType = ref<ElementSelection>(
+  props.editWidgetSpec ? ElementSelection.MULTIPLE : ElementSelection.SPECIFIC
+)
+const serviceFilterType = ref<ElementSelection>(
+  props.editWidgetSpec ? ElementSelection.MULTIPLE : ElementSelection.SPECIFIC
+)
 
 const wizardHandler = useWizard(2)
 const wizardStages: QuickSetupStageSpec[] = [

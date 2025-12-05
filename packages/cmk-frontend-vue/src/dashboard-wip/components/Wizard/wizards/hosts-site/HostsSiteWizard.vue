@@ -34,7 +34,8 @@ import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
-import { ElementSelection } from '../../types'
+import type { ElementSelection } from '../../types'
+import { getDefaultsFromGraph } from './composables/useSelectGraphTypes'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -68,7 +69,9 @@ const widgetFilterManager = useWidgetFilterManager(
 
 const addFilters = useAddFilter()
 
-const hostFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
+const hostFilterType = ref<ElementSelection>(
+  getDefaultsFromGraph(props?.editWidgetSpec?.content?.type)
+)
 
 const wizardHandler = useWizard(2)
 const wizardStages: QuickSetupStageSpec[] = [

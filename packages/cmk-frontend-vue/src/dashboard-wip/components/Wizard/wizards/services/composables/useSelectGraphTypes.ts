@@ -68,3 +68,22 @@ export const getAvailableGraphs = (
   }
   return [...graphSelector[hostSelection][serviceSelection]]
 }
+
+interface GetDefaultsFromGraph {
+  hostSelection: ElementSelection
+  serviceSelection: ElementSelection
+}
+
+export const getDefaultsFromGraph = (graph?: Graph | string): GetDefaultsFromGraph => {
+  if (!graph || graph === Graph.SERVICE_STATE) {
+    return {
+      hostSelection: ElementSelection.SPECIFIC,
+      serviceSelection: ElementSelection.SPECIFIC
+    }
+  }
+
+  return {
+    hostSelection: ElementSelection.MULTIPLE,
+    serviceSelection: ElementSelection.MULTIPLE
+  }
+}

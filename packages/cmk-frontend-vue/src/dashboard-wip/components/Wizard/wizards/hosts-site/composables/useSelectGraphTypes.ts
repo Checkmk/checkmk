@@ -53,3 +53,11 @@ export const getAvailableGraphs = (
 
   return [...graphSelector[hostSelection]]
 }
+
+export const getDefaultsFromGraph = (graph?: Graph | string): ElementSelection => {
+  if (!graph || graph === Graph.HOST_STATE) {
+    return ElementSelection.SPECIFIC
+  }
+
+  return ElementSelection.MULTIPLE
+}

@@ -51,6 +51,8 @@ class GraphApiClient:
         self._pw_store = pw_store
         self._pw_store_file = pw_store_file
         self._storage = storage
+        # Needed to initialize the storage directory
+        self._storage.write("created", "true")
 
         self._headers: dict[str, str | bytes] = {}
         self._session: requests.Session | None = None

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import vs_filesystem
 from cmk.gui.plugins.wato.utils import (
@@ -12,10 +10,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Percentage, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
-def _parameter_valuespec_ibm_svc_mdiskgrp():
+def _parameter_valuespec_ibm_svc_mdiskgrp() -> Dictionary:
     return vs_filesystem(
         extra_elements=[
             (

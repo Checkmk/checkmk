@@ -1,4 +1,4 @@
-# Component Check and Discovery Engine, Notifications, UI - Setup
+# Component Check and Discovery Engine
 #
 # Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
@@ -8,9 +8,4 @@
 
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/ui_setup/OWNERS_DEFINITION
-
-per-file notifications.py=file:/component_owners/notifications/OWNERS_DEFINITION
-per-file notifications.py=set noparent
-per-file services.py=file:/component_owners/check_and_discovery_engine/OWNERS_DEFINITION
-per-file services.py=set noparent
+file:/component_owners/check_and_discovery_engine/OWNERS_DEFINITION

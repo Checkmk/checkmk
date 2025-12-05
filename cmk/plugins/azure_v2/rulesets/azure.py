@@ -65,7 +65,9 @@ _AZURE_SERVICES: Final = [
 ]
 
 try:
-    from .nonfree.ultimate.azure_services import NONFREEED_AZURE_SERVICES
+    from .nonfree.ultimate.azure_services import (  # type: ignore[import-not-found, unused-ignore]
+        NONFREEED_AZURE_SERVICES,
+    )
 
     _AZURE_SERVICES.extend(NONFREEED_AZURE_SERVICES)
 except ImportError:

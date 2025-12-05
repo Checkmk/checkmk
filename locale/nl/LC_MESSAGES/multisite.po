@@ -2277,6 +2277,10 @@ msgstr ""
 "vertonen. U kunt een tijd instellen voor hoe lang een conditie in een "
 "bepaalde toestand mag zijn voordat de controle waarschuwt."
 
+#, fuzzy
+msgid "A descriptive name for this OAuth2 connection."
+msgstr "Een beschrijvende titel van deze actie."
+
 msgid "A descriptive title for this rule pack"
 msgstr "Een beschrijvende titel voor dit regelpakket"
 
@@ -2747,6 +2751,14 @@ msgstr "AES-256"
 
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
+
+#, fuzzy
+msgid "AI"
+msgstr "AIX"
+
+#, fuzzy
+msgid "AI Assistance"
+msgstr "Instantie"
 
 msgid "AIX"
 msgstr "AIX"
@@ -4040,10 +4052,6 @@ msgstr "Filter toevoegen"
 
 msgid "Add NGINX instance"
 msgstr "NGINX instantie toevoegen"
-
-#, fuzzy
-msgid "Add OAuth2 connection"
-msgstr "LDAP-verbinding toevoegen"
 
 msgid "Add OID descriptions"
 msgstr "OID-beschrijvingen toevoegen"
@@ -6572,6 +6580,9 @@ msgstr ""
 "Maakt het uploaden, installeren, de-installeren, aanmaken en wijzigen van "
 "uitbreidingspakketten (MKP's) mogelijk. Opmerking: MKP's bevatten "
 "uitvoerbare code."
+
+msgid "Allows to use the 'Explain with AI' button."
+msgstr ""
 
 #, python-format
 msgid "Allows to view and edit %s created by other users."
@@ -9221,6 +9232,10 @@ msgid "Azure Firewall Health"
 msgstr "Zorp firewall"
 
 #, fuzzy
+msgid "Azure Firewall Latency"
+msgstr "Zorp firewall"
+
+#, fuzzy
 msgid "Azure Firewall SNAT Utilization"
 msgstr "GCP/Redis CPU-gebruik"
 
@@ -9412,6 +9427,10 @@ msgstr "Databaseverbindingen"
 
 #, fuzzy
 msgid "Azure firewall health"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure firewall latency"
 msgstr "Zorp firewall"
 
 #, fuzzy
@@ -10192,10 +10211,6 @@ msgstr "Helderheid"
 
 msgid "Brightness Levels"
 msgstr "Helderheidsniveaus"
-
-#, fuzzy
-msgid "Broadcast"
-msgstr "uitzending"
 
 msgid "Broadcast packet rates"
 msgstr "Uitzending pakket tarieven"
@@ -12070,9 +12085,6 @@ msgstr "Kan grafiekrecepten niet berekenen"
 #, python-format
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Kan grafiekrecepten niet berekenen: %s"
-
-msgid "Cannot change folder of rules managed by Quick setup."
-msgstr ""
 
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
@@ -15203,9 +15215,6 @@ msgstr "Voorwaarden"
 
 msgid "Conditions for this rule to apply"
 msgstr "Voorwaarden voor de toepassing van deze regel"
-
-msgid "Conditions of rules managed by Quick setup cannot be changed."
-msgstr ""
 
 msgid "Conference Allocation Latency"
 msgstr "Conferentie Toewijzingslatentie"
@@ -19240,6 +19249,10 @@ msgstr "Uitgestelde bestanden Leeftijd"
 
 msgid "Deferred files in Spool"
 msgstr "Uitgestelde bestanden in Spool"
+
+#, fuzzy
+msgid "Define OAuth parameters"
+msgstr "Modelparameters"
 
 msgid ""
 "Define Oracle database instances to monitor to overwrite default settings."
@@ -23953,6 +23966,11 @@ msgstr "Meldingen loggen inschakelen"
 msgid "Enable notifications?"
 msgstr "meldingen inschakelen"
 
+msgid ""
+"Enable or disable product telemetry. When disabled, you can configure "
+"whether to show a popup asking for consent on login."
+msgstr ""
+
 #, fuzzy
 msgid "Enable passive checks"
 msgstr "Actieve controles inschakelen"
@@ -25612,6 +25630,14 @@ msgstr "Verloopt op"
 #, fuzzy
 msgid "Expires on"
 msgstr "Verloopt op"
+
+#, python-format
+msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
+msgstr ""
+
+#, fuzzy
+msgid "Explain with AI"
+msgstr "Zoek verder"
 
 msgid "Explanation for event action"
 msgstr "Verklaring van de gebeurtenis"
@@ -38580,6 +38606,10 @@ msgstr "Wachttijden (99e percentiel)"
 msgid "Latency"
 msgstr "Latency"
 
+#, fuzzy
+msgid "Latency (ms)"
+msgstr "Latency"
+
 msgid "Latency of GetItem requests"
 msgstr "Latency van GetItem-verzoeken"
 
@@ -43669,6 +43699,10 @@ msgstr "Ontbrekende voorwaarde"
 msgid "Missing request variable '%s'"
 msgstr "Ontbrekende variabele siteid"
 
+#, fuzzy
+msgid "Missing request variable 'widget_id'"
+msgstr "Ontbrekende variabele siteid"
+
 msgid "Missing required \"Host name\" selection."
 msgstr "De vereiste \"Host name\" selectie ontbreekt."
 
@@ -45934,6 +45968,9 @@ msgstr "Geen contactgroepen toegewezen."
 
 msgid "No custom attributes are defined yet."
 msgstr "Er zijn nog geen aangepaste attributen gedefinieerd."
+
+msgid "No dashboard found for the given dashboard name and/or dashboard owner"
+msgstr ""
 
 msgid "No data"
 msgstr "Geen gegevens"
@@ -53821,10 +53858,6 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Voorvoegsel voor piggyback hostname"
 
-#, fuzzy
-msgid "Prefix length"
-msgstr "Voorvoegsel tekst"
-
 msgid "Prefix match"
 msgstr "Voorvoegsel match"
 
@@ -54179,6 +54212,10 @@ msgstr "Processor Max. Capaciteit"
 
 msgid "Product"
 msgstr "Product"
+
+#, fuzzy
+msgid "Product Telemetry"
+msgstr "rapportelement"
 
 msgid "Profile"
 msgstr "Profiel"
@@ -58999,10 +59036,6 @@ msgid "Scope"
 msgstr ""
 
 #, fuzzy
-msgid "Scope ID"
-msgstr "Knooppunt-ID"
-
-#, fuzzy
 msgid "Scope attribute"
 msgstr "Rolkenmerk"
 
@@ -59680,6 +59713,10 @@ msgid ""
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
+
+#, fuzzy
+msgid "Select the authority for the OAuth2 connection."
+msgstr "Aansluiting toevoegen"
 
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
@@ -66777,6 +66814,14 @@ msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Totale duur"
 
 #, fuzzy
+msgid "Telemetry is disabled"
+msgstr "Setup is uitgeschakeld."
+
+#, fuzzy
+msgid "Telemetry is enabled"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -67389,6 +67434,13 @@ msgid ""
 "The Checkmk server URL should be the FQDN (see inline help for details)."
 msgstr ""
 
+msgid "The Client ID (Application ID) of your registered application."
+msgstr ""
+
+#, fuzzy
+msgid "The Client secret of your registered application."
+msgstr "Toestand in geval van geen systeemreplicatie"
+
 msgid ""
 "The Conda environment file specifies all dependencies that will be installed "
 "in the environment."
@@ -67841,6 +67893,9 @@ msgid ""
 msgstr ""
 "De TCP-poort waarop de SMTP-server luistert. De standaardinstelling is "
 "<tt>25</tt>."
+
+msgid "The Tenant ID of your Azure AD instance."
+msgstr ""
 
 msgid ""
 "The URI of the request. This should start with '/' and not include the "
@@ -69352,6 +69407,9 @@ msgid ""
 msgstr ""
 "De opgegeven waarde is niet toegestaan. U mag alleen relatieve URL's "
 "configureren, zoals <tt>dashboard.py?name=my_dashboard</tt>."
+
+msgid "The given widget id does not match any of this dashboard's widgets"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -71263,6 +71321,10 @@ msgid ""
 "Credentials and other agent-specific data can be edited here"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The rule specification %r does not exist."
+msgstr "De regelset \"%s\" bestaat niet."
+
 msgid "The rule you are trying to edit does not exist."
 msgstr "De regel die u probeert te bewerken bestaat niet."
 
@@ -71289,6 +71351,10 @@ msgstr ""
 
 #, python-format
 msgid "The ruleset \"%s\" does not exist."
+msgstr "De regelset \"%s\" bestaat niet."
+
+#, fuzzy, python-format
+msgid "The ruleset \"%s\" uses legacy valuespecs."
 msgstr "De regelset \"%s\" bestaat niet."
 
 msgid ""
@@ -76025,6 +76091,14 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall latency "
 "monitoring"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
@@ -82078,6 +82152,10 @@ msgstr "Onbekende datum"
 
 msgid "Unknown entities"
 msgstr "Onbekende entiteiten"
+
+#, fuzzy, python-format
+msgid "Unknown form type %s"
+msgstr "Onbekend metriek type %s"
 
 #, python-format
 msgid "Unknown group: %s"
@@ -88779,6 +88857,10 @@ msgstr "Het is niet toegestaan om configuratiewijzigingen te activeren."
 msgid "You are not permitted to edit this global setting."
 msgstr "Het is niet toegestaan deze globale instelling te bewerken."
 
+#, fuzzy
+msgid "You are not permitted to edit this rule."
+msgstr "U hebt geen toegang tot deze regelset."
+
 msgid "You are not permitted to perform this action."
 msgstr "Het is u niet toegestaan deze actie uit te voeren."
 
@@ -92638,6 +92720,10 @@ msgid_plural "rules"
 msgstr[0] "regel"
 msgstr[1] "regels"
 
+#, fuzzy, python-format
+msgid "rule %s"
+msgstr "Regel %s bewerken"
+
 #, fuzzy
 msgid "rule matches"
 msgid_plural "rules are matching"
@@ -94056,6 +94142,21 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Visualisatie"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Selecteer het type inhoudselement"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
 msgid "Link content to"
 msgstr "Link van titel"
 
@@ -94092,10 +94193,6 @@ msgid "Show widget background"
 msgstr "Titel tonen zonder achtergrond"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Map Selectie"
-
-#, fuzzy
 msgid "Alert & Notification"
 msgstr "laatste mededeling"
 
@@ -94116,21 +94213,6 @@ msgstr "Regel inzake kennisgeving"
 
 msgid "Percentage of service problems"
 msgstr "Percentage dienstverleningsproblemen"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Filter toevoegen"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Visualisatie"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Selecteer het type inhoudselement"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
 
 #, fuzzy
 msgid "Host selection"
@@ -94175,6 +94257,10 @@ msgstr "Meldingen opslaan voor regelanalyse"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Extra opties"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Filter toevoegen"
 
 #, fuzzy
 msgid "Save widget"
@@ -94362,6 +94448,10 @@ msgstr "Is veranderd"
 #, fuzzy
 msgid "Event selection"
 msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Available visualization type"
+msgstr "Beschikbare opties"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -94663,6 +94753,28 @@ msgstr "Selecteer ten minste één element"
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "Selecteer ten minste één element"
+
+#, fuzzy
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Oracle gevallen"
+
+#, fuzzy
+msgid "Edit rule: Metric backend (Custom query)"
+msgstr "Oracle gevallen"
+
+#, fuzzy
+msgid "Validation error"
+msgstr "Configuratiefout"
+
+#, fuzzy
+msgid "Fatal error"
+msgstr "Interne fout"
+
+msgid "When you save this rule a new rule will be created."
+msgstr ""
+
+msgid "Dismiss"
+msgstr ""
 
 #, fuzzy
 msgid "Graph metrics with all zero values"
@@ -95077,26 +95189,6 @@ msgstr "Kan geen authenticatieverzoek aanmaken"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "Modelparameters"
-
-#, fuzzy
-msgid "Description:"
-msgstr "Beschrijving"
-
-#, fuzzy
-msgid "Authority:"
-msgstr "Auteur"
-
-#, fuzzy
-msgid "Tenant ID:"
-msgstr "TenantID"
-
-#, fuzzy
-msgid "Client ID:"
-msgstr "Klant ID"
-
-#, fuzzy
-msgid "Client secret:"
-msgstr "Geheim van de klant"
 
 #, fuzzy
 msgid "Start authorization"
@@ -95684,6 +95776,42 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Add OAuth2 connection"
+#~ msgstr "LDAP-verbinding toevoegen"
+
+#, fuzzy
+#~ msgid "Broadcast"
+#~ msgstr "uitzending"
+
+#, fuzzy
+#~ msgid "Prefix length"
+#~ msgstr "Voorvoegsel tekst"
+
+#, fuzzy
+#~ msgid "Scope ID"
+#~ msgstr "Knooppunt-ID"
+
+#, fuzzy
+#~ msgid "Description:"
+#~ msgstr "Beschrijving"
+
+#, fuzzy
+#~ msgid "Authority:"
+#~ msgstr "Auteur"
+
+#, fuzzy
+#~ msgid "Tenant ID:"
+#~ msgstr "TenantID"
+
+#, fuzzy
+#~ msgid "Client ID:"
+#~ msgstr "Klant ID"
+
+#, fuzzy
+#~ msgid "Client secret:"
+#~ msgstr "Geheim van de klant"
+
 #~ msgid "Manage configuration read only mode"
 #~ msgstr "Beheer configuratie alleen-lezen modus"
 
@@ -95917,10 +96045,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service state for Stopped VMs"
 #~ msgstr "Type dienststaat"
-
-#, fuzzy
-#~ msgid "Continue with AI?"
-#~ msgstr "Zoek verder"
 
 #, fuzzy
 #~ msgid "Do not ask again"
@@ -97013,10 +97137,6 @@ msgstr ""
 
 #~ msgid "Transformation on selected metric"
 #~ msgstr "Transformatie op geselecteerde metriek"
-
-#, python-format
-#~ msgid "Unknown metric type %s"
-#~ msgstr "Onbekend metriek type %s"
 
 #~ msgid "Update transform"
 #~ msgstr "Transformatie bijwerken"

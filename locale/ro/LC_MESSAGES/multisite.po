@@ -2301,6 +2301,10 @@ msgstr ""
 "seta o perioadă de timp pentru cât timp este permis ca o condiție să fie "
 "într-o anumită stare înainte ca verificarea să se alerteze."
 
+#, fuzzy
+msgid "A descriptive name for this OAuth2 connection."
+msgstr "Un titlu descriptiv despre această acțiune."
+
 msgid "A descriptive title for this rule pack"
 msgstr "Un titlu descriptiv pentru acest pachet de reguli"
 
@@ -2778,6 +2782,14 @@ msgstr "AES-256"
 
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
+
+#, fuzzy
+msgid "AI"
+msgstr "AIX"
+
+#, fuzzy
+msgid "AI Assistance"
+msgstr "Instanța"
 
 msgid "AIX"
 msgstr "AIX"
@@ -4057,10 +4069,6 @@ msgstr "Adaugă filtre"
 
 msgid "Add NGINX instance"
 msgstr "Adăugați instanța NGINX"
-
-#, fuzzy
-msgid "Add OAuth2 connection"
-msgstr "Adăugați conexiunea LDAP"
 
 msgid "Add OID descriptions"
 msgstr "Adăugați descrieri OID"
@@ -6586,6 +6594,9 @@ msgid ""
 msgstr ""
 "Permite încărcarea, instalarea, dezinstalarea, crearea și modificarea "
 "pachetelor de extensii (MKP). Notă: MKP-urile conțin cod executabil."
+
+msgid "Allows to use the 'Explain with AI' button."
+msgstr ""
 
 #, python-format
 msgid "Allows to view and edit %s created by other users."
@@ -9222,6 +9233,10 @@ msgid "Azure Firewall Health"
 msgstr "Zorp firewall"
 
 #, fuzzy
+msgid "Azure Firewall Latency"
+msgstr "Zorp firewall"
+
+#, fuzzy
 msgid "Azure Firewall SNAT Utilization"
 msgstr "GCP/Redis Utilizare CPU"
 
@@ -9413,6 +9428,10 @@ msgstr "Conexiuni la baza de date"
 
 #, fuzzy
 msgid "Azure firewall health"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure firewall latency"
 msgstr "Zorp firewall"
 
 #, fuzzy
@@ -10189,10 +10208,6 @@ msgstr "Luminozitate"
 
 msgid "Brightness Levels"
 msgstr "Niveluri de luminozitate"
-
-#, fuzzy
-msgid "Broadcast"
-msgstr "difuzare"
 
 msgid "Broadcast packet rates"
 msgstr "Ratele pachetelor de difuzare"
@@ -12119,9 +12134,6 @@ msgstr "Nu se pot calcula rețete grafice"
 #, python-format
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Nu se pot calcula rețete grafice: %s."
-
-msgid "Cannot change folder of rules managed by Quick setup."
-msgstr ""
 
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
@@ -15239,9 +15251,6 @@ msgstr "Condiții"
 
 msgid "Conditions for this rule to apply"
 msgstr "Condiții de aplicare a acestei reguli"
-
-msgid "Conditions of rules managed by Quick setup cannot be changed."
-msgstr ""
 
 msgid "Conference Allocation Latency"
 msgstr "Latența de alocare a conferinței"
@@ -19268,6 +19277,10 @@ msgstr "Dosare amânate Vârsta"
 
 msgid "Deferred files in Spool"
 msgstr "Fișiere amânate în Spool"
+
+#, fuzzy
+msgid "Define OAuth parameters"
+msgstr "Parametrii impliciți"
 
 msgid ""
 "Define Oracle database instances to monitor to overwrite default settings."
@@ -24017,6 +24030,11 @@ msgstr "Activați jurnalizarea notificărilor"
 msgid "Enable notifications?"
 msgstr "Activați notificările?"
 
+msgid ""
+"Enable or disable product telemetry. When disabled, you can configure "
+"whether to show a popup asking for consent on login."
+msgstr ""
+
 msgid "Enable passive checks"
 msgstr "Activați verificările pasive"
 
@@ -25702,6 +25720,14 @@ msgstr "Expiră"
 #, fuzzy
 msgid "Expires on"
 msgstr "Expiră la"
+
+#, python-format
+msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
+msgstr ""
+
+#, fuzzy
+msgid "Explain with AI"
+msgstr "Continuați creșterea aici"
 
 msgid "Explanation for event action"
 msgstr "Explicație pentru acțiunea evenimentului"
@@ -38707,6 +38733,10 @@ msgstr "Latențe (percentila 99)"
 msgid "Latency"
 msgstr "Latență"
 
+#, fuzzy
+msgid "Latency (ms)"
+msgstr "Latență"
+
 msgid "Latency of GetItem requests"
 msgstr "Latența cererilor GetItem"
 
@@ -43763,6 +43793,10 @@ msgstr "Precondiții lipsă"
 msgid "Missing request variable '%s'"
 msgstr "Variabila lipsă siteid"
 
+#, fuzzy
+msgid "Missing request variable 'widget_id'"
+msgstr "Variabila lipsă siteid"
+
 msgid "Missing required \"Host name\" selection."
 msgstr "Lipsește selecția necesară \"Host name\"."
 
@@ -46050,6 +46084,9 @@ msgstr "Nu sunt alocate grupuri de contact."
 
 msgid "No custom attributes are defined yet."
 msgstr "Nu sunt definite încă atribute personalizate."
+
+msgid "No dashboard found for the given dashboard name and/or dashboard owner"
+msgstr ""
 
 msgid "No data"
 msgstr "Nu există date"
@@ -53931,10 +53968,6 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Prefix pentru numele de gazdă piggyback"
 
-#, fuzzy
-msgid "Prefix length"
-msgstr "Prefix text"
-
 msgid "Prefix match"
 msgstr "Prefixul se potrivește"
 
@@ -54294,6 +54327,10 @@ msgstr "Procesor Max. Capacitate"
 
 msgid "Product"
 msgstr "Produs"
+
+#, fuzzy
+msgid "Product Telemetry"
+msgstr "element de raport"
 
 msgid "Profile"
 msgstr "Profil"
@@ -59117,10 +59154,6 @@ msgid "Scope"
 msgstr ""
 
 #, fuzzy
-msgid "Scope ID"
-msgstr "ID-ul nodului"
-
-#, fuzzy
 msgid "Scope attribute"
 msgstr "Atributul rolului"
 
@@ -59819,6 +59852,10 @@ msgid ""
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
+
+#, fuzzy
+msgid "Select the authority for the OAuth2 connection."
+msgstr "Adăugați o conexiune"
 
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
@@ -66979,6 +67016,14 @@ msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Durata totală"
 
 #, fuzzy
+msgid "Telemetry is disabled"
+msgstr "Configurarea este dezactivată."
+
+#, fuzzy
+msgid "Telemetry is enabled"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -67588,6 +67633,13 @@ msgstr ""
 "URL-ul serverului Checkmk trebuie să fie FQDN (consultați ajutorul în linie "
 "pentru detalii)."
 
+msgid "The Client ID (Application ID) of your registered application."
+msgstr ""
+
+#, fuzzy
+msgid "The Client secret of your registered application."
+msgstr "Starea în cazul în care nu există replicare a sistemului"
+
 msgid ""
 "The Conda environment file specifies all dependencies that will be installed "
 "in the environment."
@@ -68037,6 +68089,9 @@ msgid ""
 msgstr ""
 "Portul TCP pe care ascultă serverul SMTP. Valoarea implicită este <tt>25</"
 "tt>."
+
+msgid "The Tenant ID of your Azure AD instance."
+msgstr ""
 
 msgid ""
 "The URI of the request. This should start with '/' and not include the "
@@ -69554,6 +69609,9 @@ msgid ""
 msgstr ""
 "Valoarea dată nu este permisă. Puteți configura numai URL-uri relative, cum "
 "ar fi <tt>dashboard.py?name=my_dashboard</tt>."
+
+msgid "The given widget id does not match any of this dashboard's widgets"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -71485,6 +71543,10 @@ msgid ""
 "Credentials and other agent-specific data can be edited here"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The rule specification %r does not exist."
+msgstr "Setul de reguli \"%s\" nu există."
+
 msgid "The rule you are trying to edit does not exist."
 msgstr "Regula pe care încercați să o modificați nu există."
 
@@ -71511,6 +71573,10 @@ msgstr ""
 
 #, python-format
 msgid "The ruleset \"%s\" does not exist."
+msgstr "Setul de reguli \"%s\" nu există."
+
+#, fuzzy, python-format
+msgid "The ruleset \"%s\" uses legacy valuespecs."
 msgstr "Setul de reguli \"%s\" nu există."
 
 msgid ""
@@ -76323,6 +76389,14 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall latency "
 "monitoring"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
@@ -82311,6 +82385,10 @@ msgstr "Data necunoscută"
 
 msgid "Unknown entities"
 msgstr "Entități necunoscute"
+
+#, fuzzy, python-format
+msgid "Unknown form type %s"
+msgstr "Tip metric necunoscut %s"
 
 #, python-format
 msgid "Unknown group: %s"
@@ -89021,6 +89099,10 @@ msgstr "Nu vi se permite să activați modificările de configurare."
 msgid "You are not permitted to edit this global setting."
 msgstr "Nu vi se permite să modificați această setare globală."
 
+#, fuzzy
+msgid "You are not permitted to edit this rule."
+msgstr "Nu aveți permisiunea de a accesa acest set de reguli."
+
 msgid "You are not permitted to perform this action."
 msgstr "Nu vă este permis să efectuați această acțiune."
 
@@ -92896,6 +92978,10 @@ msgstr[0] "regula"
 msgstr[1] ""
 msgstr[2] ""
 
+#, fuzzy, python-format
+msgid "rule %s"
+msgstr "Editați regula %s."
+
 #, fuzzy
 msgid "rule matches"
 msgid_plural "rules are matching"
@@ -94325,6 +94411,21 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Vizualizare"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Selectați tipul de element de conținut"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
 msgid "Link content to"
 msgstr "Legătura cu titlul"
 
@@ -94361,10 +94462,6 @@ msgid "Show widget background"
 msgstr "Afișați titlul fără fundal"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Selecția fișierelor"
-
-#, fuzzy
 msgid "Alert & Notification"
 msgstr "Notificări de testare"
 
@@ -94385,21 +94482,6 @@ msgstr "Regula de notificare"
 
 msgid "Percentage of service problems"
 msgstr "Procentul de probleme de serviciu"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Adaugă filtre"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Vizualizare"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Selectați tipul de element de conținut"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
 
 #, fuzzy
 msgid "Host selection"
@@ -94444,6 +94526,10 @@ msgstr "Stocarea notificărilor pentru analiza regulilor"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Adaugă filtre"
 
 #, fuzzy
 msgid "Save widget"
@@ -94632,6 +94718,10 @@ msgstr "Schimbare de stare"
 #, fuzzy
 msgid "Event selection"
 msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Available visualization type"
+msgstr "Opțiuni disponibile"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -94938,6 +95028,28 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "Vă rugăm să selectați cel puțin un element"
+
+#, fuzzy
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Edit rule: Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Validation error"
+msgstr "Eroare de configurare"
+
+#, fuzzy
+msgid "Fatal error"
+msgstr "Eroare internă"
+
+msgid "When you save this rule a new rule will be created."
+msgstr ""
+
+msgid "Dismiss"
+msgstr ""
 
 #, fuzzy
 msgid "Graph metrics with all zero values"
@@ -95357,26 +95469,6 @@ msgstr "Nu se poate crea o cerere de autentificare"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "Parametrii impliciți"
-
-#, fuzzy
-msgid "Description:"
-msgstr "Descriere"
-
-#, fuzzy
-msgid "Authority:"
-msgstr "Autoritatea"
-
-#, fuzzy
-msgid "Tenant ID:"
-msgstr "TenantID"
-
-#, fuzzy
-msgid "Client ID:"
-msgstr "ID client"
-
-#, fuzzy
-msgid "Client secret:"
-msgstr "Secretul clientului"
 
 #, fuzzy
 msgid "Start authorization"
@@ -95968,6 +96060,42 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Add OAuth2 connection"
+#~ msgstr "Adăugați conexiunea LDAP"
+
+#, fuzzy
+#~ msgid "Broadcast"
+#~ msgstr "difuzare"
+
+#, fuzzy
+#~ msgid "Prefix length"
+#~ msgstr "Prefix text"
+
+#, fuzzy
+#~ msgid "Scope ID"
+#~ msgstr "ID-ul nodului"
+
+#, fuzzy
+#~ msgid "Description:"
+#~ msgstr "Descriere"
+
+#, fuzzy
+#~ msgid "Authority:"
+#~ msgstr "Autoritatea"
+
+#, fuzzy
+#~ msgid "Tenant ID:"
+#~ msgstr "TenantID"
+
+#, fuzzy
+#~ msgid "Client ID:"
+#~ msgstr "ID client"
+
+#, fuzzy
+#~ msgid "Client secret:"
+#~ msgstr "Secretul clientului"
+
 #~ msgid "Manage configuration read only mode"
 #~ msgstr "Gestionarea configurației în modul numai pentru citire"
 
@@ -96195,10 +96323,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service state for Stopped VMs"
 #~ msgstr "Tipul de stare a serviciului"
-
-#, fuzzy
-#~ msgid "Continue with AI?"
-#~ msgstr "Continuați creșterea aici"
 
 #, fuzzy
 #~ msgid "Do not ask again"
@@ -97305,10 +97429,6 @@ msgstr ""
 
 #~ msgid "Transformation on selected metric"
 #~ msgstr "Transformare pe metrica selectată"
-
-#, python-format
-#~ msgid "Unknown metric type %s"
-#~ msgstr "Tip metric necunoscut %s"
 
 #~ msgid "Update transform"
 #~ msgstr "Actualizarea transformării"

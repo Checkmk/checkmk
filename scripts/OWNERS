@@ -1,14 +1,29 @@
-# CI platform
+# Component CI Platform
+#
+# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-set noparent
 
 per-file check-merge-conflicts=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file check-merge-conflicts=set noparent
 per-file decent-output=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file decent-output=set noparent
 per-file fake-artifacts=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file fake-artifacts=set noparent
 per-file find-python-files=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file find-python-files=set noparent
 per-file find-shell-files=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file find-shell-files=set noparent
 per-file run-buildifier=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-buildifier=set noparent
 per-file run-groovy-lint=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-groovy-lint=set noparent
 per-file run-in-docker.sh=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-in-docker.sh=set noparent
 per-file run-mypy=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-mypy=set noparent
 per-file run-uvenv=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file run-uvenv=set noparent

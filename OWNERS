@@ -1,4 +1,4 @@
-# Root directory
+# Component AI Tools, CI Platform
 #
 # Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
@@ -8,16 +8,28 @@
 
 
 per-file .bazelignore=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazelignore=set noparent
 per-file .bazeliskrc=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazeliskrc=set noparent
 per-file .bazelrc=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazelrc=set noparent
 per-file .dockerignore=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .dockerignore=set noparent
 per-file AGENTS.md=file:/component_owners/ai_tools/OWNERS_DEFINITION
 per-file AGENTS.md=set noparent
-per-file artifacts.make=file:/component_owners/ci_platform/OWNERS_DEFINITION
-per-file bazel_variables.bzl=file:/component_owners/ci_platform/OWNERS_DEFINITION
-per-file defines.make=file:/component_owners/ci_platform/OWNERS_DEFINITION
-per-file editions.yml=file:/component_owners/ci_platform/OWNERS_DEFINITION
-per-file MODULE.bazel=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file MODULE.bazel.lock=file:/component_owners/ci_platform/OWNERS_DEFINITION
-per-file package_versions.bzl=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file MODULE.bazel.lock=set noparent
+per-file MODULE.bazel=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file MODULE.bazel=set noparent
 per-file WORKSPACE=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file WORKSPACE=set noparent
+per-file artifacts.make=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file artifacts.make=set noparent
+per-file bazel_variables.bzl=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file bazel_variables.bzl=set noparent
+per-file defines.make=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file defines.make=set noparent
+per-file editions.yml=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file editions.yml=set noparent
+per-file package_versions.bzl=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file package_versions.bzl=set noparent

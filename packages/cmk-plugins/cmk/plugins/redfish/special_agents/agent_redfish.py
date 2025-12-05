@@ -13,7 +13,6 @@ Checkmk special agent for monitoring Redfish management interfaces.
 
 import argparse
 import json
-import logging
 import sys
 import time
 from collections.abc import Collection, Container, Iterable, Mapping, Sequence
@@ -21,7 +20,6 @@ from dataclasses import dataclass, field
 from typing import Any, Final, Literal, Self
 
 import urllib3
-from redfish import redfish_logger
 from redfish.rest.v1 import (
     HttpClient,
     JsonDecodingError,
@@ -755,13 +753,6 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
 
     if not args.verify_ssl:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    if args.debug:
-        # Config logger used by Restful library
-        logger_file = "RedfishApi.log"
-        logger_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        logger = redfish_logger(logger_file, logger_format, logging.INFO)
-        logger.info("Redfish API")
 
     # Start Redfish Session Object
     redfishobj = get_session(args)

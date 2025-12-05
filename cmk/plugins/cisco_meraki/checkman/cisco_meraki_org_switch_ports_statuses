@@ -1,0 +1,9 @@
+title: Cisco Meraki: Switch ports statuses
+agents: cisco_meraki
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check plug-in monitors switch ports statuses.
+discovery:
+ One service per organisation ID is created.

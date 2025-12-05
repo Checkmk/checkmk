@@ -40,6 +40,7 @@ class Params(BaseModel):
     orgs: Sequence[str] | None = None
     org_id_as_prefix: bool | None = None
     no_cache: bool | None = None
+    timespan: int | None = None
     cache_per_section: CachePerSection | None = None
 
 
@@ -77,6 +78,9 @@ def agent_cisco_meraki_arguments(
 
     if params.no_cache:
         args.append("--no-cache")
+
+    if params.timespan:
+        args.append("--timespan")
 
     if not params.no_cache and (cache_per_section := params.cache_per_section):
         if cache_per_section.appliance_uplinks:

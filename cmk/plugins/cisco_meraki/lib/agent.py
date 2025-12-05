@@ -193,6 +193,18 @@ class MerakiOrganisation:
                                 piggyback=piggyback,
                             )
 
+        if devices_by_type.get("switch"):
+            if self.config.required.switch_port_statuses:
+                for switch in devices_by_type["switch"]:
+                    serial = switch["serial"]
+                    for switch_port_status in self.client.get_switch_port_statuses(serial):
+                        if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                            yield Section(
+                                name="cisco_meraki_org_switch_port_statuses",
+                                data=switch_port_status,
+                                piggyback=piggyback,
+                            )
+
     def _get_device_piggyback(
         self, serial: str, devices_by_serial: Mapping[str, Device]
     ) -> str | None:
@@ -305,6 +317,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         action="store_const",
         const=True,
         help="Always fetch data from Meraki API.",
+    )
+
+    parser.add_argument(
+        "--timespan",
+        default=900,  # 15 minutes
+        help="The interval for which the information will be fetched in seconds.",
     )
 
     parser.add_argument("--cache-appliance-uplinks", type=float, default=3600.0)  # 1 hour

@@ -117,9 +117,15 @@ class _FakeOrganisationsSDK:
                 factories.RawDeviceFactory.build(
                     serial="S123-2", name="dev2", productType="appliance"
                 ),
+                factories.RawDeviceFactory.build(
+                    serial="S123-sw", name="sw1", productType="switch"
+                ),
             ],
             "456": [
                 factories.RawDeviceFactory.build(serial="S456", name="dev3", productType="sensor"),
+                factories.RawDeviceFactory.build(
+                    serial="S456-sw", name="sw2", productType="switch"
+                ),
             ],
         }
         return devices.get(organizationId, [])
@@ -155,11 +161,23 @@ class _FakeSensorSDK:
         return sensor_readings.get(organizationId, [])
 
 
+class _FakeSwitchSDK:
+    def getDeviceSwitchPortsStatuses(
+        self, serial: str, timespan: int
+    ) -> Sequence[schema.RawSwitchPortStatus]:
+        switch_port_statuses = {
+            "S123-sw": [factories.RawSwitchPortStatusFactory.build()],
+            "S456-sw": [factories.RawSwitchPortStatusFactory.build()],
+        }
+        return switch_port_statuses.get(serial, [])
+
+
 class FakeMerakiSDK:
     def __init__(self) -> None:
         self._appliance = _FakeApplianceSDK()
         self._organizations = _FakeOrganisationsSDK()
         self._sensor = _FakeSensorSDK()
+        self._switch = _FakeSwitchSDK()
 
     @property
     def appliance(self) -> _FakeApplianceSDK:
@@ -172,3 +190,7 @@ class FakeMerakiSDK:
     @property
     def sensor(self) -> _FakeSensorSDK:
         return self._sensor
+
+    @property
+    def switch(self) -> _FakeSwitchSDK:
+        return self._switch

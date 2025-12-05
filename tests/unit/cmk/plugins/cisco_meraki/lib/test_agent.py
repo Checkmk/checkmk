@@ -57,7 +57,11 @@ class TestMerakiAgentOutput:
         assert value == expected
 
     def test_non_default_sections(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
-        updated_ctx = _update_section_names(ctx, sections={"appliance-performance"})
+        non_default_sections = {
+            "appliance-performance",
+            "switch-port-statuses",
+        }
+        updated_ctx = _update_section_names(ctx, sections=non_default_sections)
         agent.run(updated_ctx)
 
         # NOTE: testing on a set here because there could be duplicate matches with multiple orgs.
@@ -67,6 +71,7 @@ class TestMerakiAgentOutput:
             "device_info",
             "networks",
             "organisations",
+            "switch_port_statuses",
         }
 
         assert value == expected
@@ -75,7 +80,14 @@ class TestMerakiAgentOutput:
         agent.run(ctx)
 
         value = set(re.findall(r"<<<<(\w+-\w+)>>>>", capsys.readouterr().out))
-        expected = {"123-dev1", "123-dev2", "456-dev3"}  # prefixed with org ID
+        # prefixed with org ID
+        expected = {
+            "123-dev1",
+            "123-dev2",
+            "123-sw1",
+            "456-dev3",
+            "456-sw2",
+        }
 
         assert value == expected
 

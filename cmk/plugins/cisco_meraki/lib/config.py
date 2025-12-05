@@ -23,6 +23,7 @@ class MerakiConfig:
     org_ids: Sequence[str]
     org_id_as_prefix: bool
     no_cache: bool
+    timespan: int
     cache: _CacheConfig
     required: _RequiredSections
 
@@ -33,6 +34,7 @@ class MerakiConfig:
             org_ids=args.orgs,
             org_id_as_prefix=args.org_id_as_prefix,
             no_cache=args.no_cache,
+            timespan=args.timespan,
             cache=_CacheConfig.build(args),
             required=_RequiredSections.build(set(args.sections)),
         )
@@ -117,6 +119,7 @@ class _RequiredSections:
     device_statuses: bool
     licenses_overview: bool
     sensor_readings: bool
+    switch_port_statuses: bool
 
     @classmethod
     def build(cls, sections: set[str]) -> Self:
@@ -127,6 +130,7 @@ class _RequiredSections:
             device_statuses=constants.SEC_NAME_DEVICE_STATUSES in sections,
             licenses_overview=constants.SEC_NAME_LICENSES_OVERVIEW in sections,
             sensor_readings=constants.SEC_NAME_SENSOR_READINGS in sections,
+            switch_port_statuses=constants.SEC_NAME_SWITCH_PORT_STATUSES in sections,
         )
 
     @property
@@ -137,4 +141,5 @@ class _RequiredSections:
             or self.appliance_uplinks
             or self.appliance_vpns
             or self.appliance_performance
+            or self.switch_port_statuses
         )

@@ -8,175 +8,70 @@ import dataclasses
 from polyfactory.factories import DataclassFactory
 
 from cmk.gui.search.sorting import get_sorter
-from cmk.shared_typing.unified_search import (
-    IconNames,
-    ProviderName,
-    SortType,
-    UnifiedSearchResultItem,
-    UnifiedSearchResultTarget,
-)
+from cmk.shared_typing.unified_search import SortType, UnifiedSearchResultItem
 
 
 class UnifiedSearchResultItemFactory(DataclassFactory[UnifiedSearchResultItem]):
     __check_model__ = False
 
 
-def get_unsorted_results() -> list[UnifiedSearchResultItem]:
-    return [
-        UnifiedSearchResultItem(
-            title="Beta",
-            target=UnifiedSearchResultTarget(url="/beta"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Charlie",
-            target=UnifiedSearchResultTarget(url="/charlie"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Alpha",
-            target=UnifiedSearchResultTarget(url="/alpha"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-    ]
-
-
 def test_no_op_sorter() -> None:
-    results = get_unsorted_results()
+    sample_result = UnifiedSearchResultItemFactory.build()
+    results = [
+        dataclasses.replace(sample_result, title="Charlie"),
+        dataclasses.replace(sample_result, title="Beta"),
+        dataclasses.replace(sample_result, title="Alpha"),
+    ]
     get_sorter(None)(results)
 
-    expected = [
-        UnifiedSearchResultItem(
-            title="Beta",
-            target=UnifiedSearchResultTarget(url="/beta"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Charlie",
-            target=UnifiedSearchResultTarget(url="/charlie"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Alpha",
-            target=UnifiedSearchResultTarget(url="/alpha"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-    ]
+    value = [result.title for result in results]
+    expected = ["Charlie", "Beta", "Alpha"]
 
-    assert results == expected
+    assert value == expected
 
 
 def test_alphabetical_sorter() -> None:
-    results = get_unsorted_results()
+    sample_result = UnifiedSearchResultItemFactory.build()
+    results = [
+        dataclasses.replace(sample_result, title="Charlie"),
+        dataclasses.replace(sample_result, title="Beta"),
+        dataclasses.replace(sample_result, title="Alpha"),
+    ]
     get_sorter(SortType.alphabetic)(results)
 
-    expected = [
-        UnifiedSearchResultItem(
-            title="Alpha",
-            target=UnifiedSearchResultTarget(url="/alpha"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Beta",
-            target=UnifiedSearchResultTarget(url="/beta"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Charlie",
-            target=UnifiedSearchResultTarget(url="/charlie"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-    ]
+    value = [result.title for result in results]
+    expected = ["Alpha", "Beta", "Charlie"]
 
-    assert results == expected
+    assert value == expected
 
 
 def test_weighted_sorter() -> None:
-    results = get_unsorted_results()
+    sample_result = UnifiedSearchResultItemFactory.build()
+    results = [
+        dataclasses.replace(sample_result, title="Charlie"),
+        dataclasses.replace(sample_result, title="Beta"),
+        dataclasses.replace(sample_result, title="Alpha"),
+    ]
     get_sorter(SortType.weighted_index, query="beta")(results)
 
-    expected = [
-        UnifiedSearchResultItem(
-            title="Beta",
-            target=UnifiedSearchResultTarget(url="/beta"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Alpha",
-            target=UnifiedSearchResultTarget(url="/alpha"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Charlie",
-            target=UnifiedSearchResultTarget(url="/charlie"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-    ]
+    value = [result.title for result in results]
+    expected = ["Beta", "Alpha", "Charlie"]
 
-    assert results == expected
+    assert value == expected
 
 
 def test_exact_match_in_parenthesis_ranks_higher_than_starts_with_query() -> None:
+    sample_result = UnifiedSearchResultItemFactory.build()
     results = [
-        UnifiedSearchResultItem(
-            title="Beta",
-            target=UnifiedSearchResultTarget(url="/beta"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Alpha(bet)",
-            target=UnifiedSearchResultTarget(url="/alpha"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
+        dataclasses.replace(sample_result, title="Beta"),
+        dataclasses.replace(sample_result, title="Alpha(bet)"),
     ]
     get_sorter(SortType.weighted_index, query="bet")(results)
 
-    expected = [
-        UnifiedSearchResultItem(
-            title="Alpha(bet)",
-            target=UnifiedSearchResultTarget(url="/alpha"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-        UnifiedSearchResultItem(
-            title="Beta",
-            target=UnifiedSearchResultTarget(url="/beta"),
-            provider=ProviderName.setup,
-            topic="Code",
-            icon=IconNames.main_setup_active,
-        ),
-    ]
+    value = [result.title for result in results]
+    expected = ["Alpha(bet)", "Beta"]
 
-    assert results == expected
+    assert value == expected
 
 
 def test_weighted_sorter_takes_into_account_context() -> None:

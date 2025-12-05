@@ -7,7 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from cmk.ccc.version import Edition
 from cmk.gui.http import HTTPMethod
@@ -33,6 +33,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     TagGroup,
 )
 from cmk.gui.openapi.restful_objects.utils import endpoint_ident, format_to_routing_path
+from cmk.gui.token_auth import TokenType
 from cmk.gui.utils.permission_verification import BasePerm
 
 
@@ -81,6 +82,7 @@ class EndpointDefinition:
     handler: EndpointHandler
     behavior: EndpointBehavior
     removed_in_version: APIVersion | None
+    allowed_tokens: set[TokenType] = field(default_factory=set)
 
     @property
     def ident(self) -> str:
@@ -152,6 +154,7 @@ class VersionedEndpointRegistry:
             handler=handler,
             behavior=endpoint.behavior,
             removed_in_version=endpoint.removed_in_version,
+            allowed_tokens=endpoint.allowed_tokens,
         )
 
     @staticmethod

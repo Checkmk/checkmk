@@ -53,18 +53,19 @@ class TokenAuthenticatedPageRegistry(cmk.ccc.plugin_registry.Registry[TokenAuthe
 token_authenticated_page_registry = TokenAuthenticatedPageRegistry()
 
 
-def handle_token_page(ident: str, request: Request) -> Callable[[PageContext], Response]:
-    user_provided_token = request.var("cmk-token", "")
+def parse_token_and_validate(
+    user_provided_token: str, remote_addr: str | None, now: datetime.datetime
+) -> AuthToken:
     token_store = get_token_store()
     try:
-        token = token_store.verify(user_provided_token, datetime.datetime.now(tz=datetime.UTC))
+        return token_store.verify(user_provided_token, now)
     except InvalidToken as e:
         log_security_event(
             AuthenticationFailureEvent(
                 user_error=str(e),
                 auth_method="token",
                 username=None,
-                remote_ip=request.remote_addr,
+                remote_ip=remote_addr,
             )
         )
         raise MKUnauthenticatedException("Token invalid") from e
@@ -75,13 +76,20 @@ def handle_token_page(ident: str, request: Request) -> Callable[[PageContext], R
                 user_error=str(e),
                 auth_method="token",
                 username=None,
-                remote_ip=request.remote_addr,
+                remote_ip=remote_addr,
             )
         )
         raise MKTokenExpiredOrRevokedException(
             "Token expired or revoked", token_type=e.token_type
         ) from e
 
+
+def handle_token_page(ident: str, request: Request) -> Callable[[PageContext], Response]:
+    token = parse_token_and_validate(
+        request.var("cmk-token", ""),
+        request.remote_addr,
+        datetime.datetime.now(datetime.UTC),
+    )
     if (endpoint := token_authenticated_page_registry.get(ident)) is None:
         raise MKNotFound(f"Could not find token authenticated page {ident}")
     # I refrain from logging successful authentications here because every Ajax call would result in

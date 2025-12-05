@@ -17,6 +17,7 @@ from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
+from cmk.gui.token_auth import AuthToken
 from cmk.gui.type_defs import (
     AgentControllerCertificates,
     CustomUserAttrSpec,
@@ -129,9 +130,12 @@ class ApiContext:
     config: ApiConfig
     version: APIVersion
     etag: ApiETagHandler
+    token: AuthToken | None
 
     @classmethod
-    def new(cls, config: Config, version: APIVersion, etag_if_match: ETags) -> Self:
+    def new(
+        cls, config: Config, version: APIVersion, etag_if_match: ETags, token: AuthToken | None
+    ) -> Self:
         return cls(
             config=ApiConfig.from_config(config),
             version=version,
@@ -139,4 +143,5 @@ class ApiContext:
                 enabled=config.rest_api_etag_locking,
                 if_match=etag_if_match,
             ),
+            token=token,
         )

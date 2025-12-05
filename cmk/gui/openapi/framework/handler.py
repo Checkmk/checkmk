@@ -190,6 +190,7 @@ def handle_endpoint_request(
 
     # Step 4: Validate the request parameters and call the handler function
     # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
+    # We probably don't want permission tracking for tokens, do we?
     with (
         permission_validator.track_permissions(),
         _optional_config_lock(endpoint.skip_locking, endpoint.method),

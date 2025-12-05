@@ -24,6 +24,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     StatusCodeInt,
     TagGroup,
 )
+from cmk.gui.token_auth import TokenType
 from cmk.gui.utils import permission_verification as permissions
 
 # the generic argument T will currently not be used, but this is the only way to specify a bound
@@ -199,4 +200,9 @@ class VersionedEndpoint:
     removed_in_version: APIVersion | None = None
     """The starting (inclusive) version from which the endpoint will be no longer available
     in the REST-API. All subsequent REST API versions will also not include this
+    endpoint."""
+
+    allowed_tokens: set[TokenType] = field(default_factory=set)
+    """If an endpoint should be accessible via token authentication, the allowed token types
+    need to be specified here. If empty, token authentication is not allowed for this
     endpoint."""

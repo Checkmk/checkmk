@@ -132,6 +132,7 @@ def install_multi_accept_endpoint(fresh_app_instance):
     endpoint_registry.unregister(multiaccept_test)
 
 
+# This looks like a good template for a test
 @pytest.fixture(name="test_internal_endpoint")
 def install_reserved_endpoint(fresh_app_instance):
     @Endpoint(

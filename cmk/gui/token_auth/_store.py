@@ -56,6 +56,8 @@ class DashboardToken(BaseModel):
 
 TokenId = NewType("TokenId", str)
 
+type TokenDetails = DashboardToken
+
 
 class AuthToken(BaseModel):
     """The general token
@@ -70,7 +72,7 @@ class AuthToken(BaseModel):
     issuer: AnnotatedUserId
     issued_at: datetime
     valid_until: datetime | None
-    details: DashboardToken = Field(discriminator="type_")
+    details: TokenDetails = Field(discriminator="type_")
     token_id: TokenId
     revoked: bool = False
     last_successful_verification: datetime | None = None

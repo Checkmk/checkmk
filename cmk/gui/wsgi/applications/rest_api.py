@@ -17,7 +17,7 @@ import logging
 import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping
-from datetime import datetime
+from datetime import datetime, UTC
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Literal, NotRequired, TYPE_CHECKING, TypedDict
@@ -67,6 +67,7 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseGeneralException,
 )
 from cmk.gui.site_config import enabled_sites
+from cmk.gui.token_auth import AuthToken, parse_token_and_validate
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 from cmk.utils import paths
@@ -212,6 +213,11 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         return {key: query_args.getlist(key) for key in query_args}
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+        return self._handle_request(environ, start_response, None)
+
+    def _handle_request(
+        self, environ: WSGIEnvironment, start_response: StartResponse, token: AuthToken | None
+    ) -> WSGIResponse:
         path_args = environ[ARGS_KEY]
         request_data: RawRequestData = {
             "body": request.data,
@@ -223,8 +229,10 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
             config=active_config,
             version=self.requested_version,
             etag_if_match=request.if_match,
+            token=token,
         )
 
+        # Can we set this in the request? -> Follow up
         is_testing = str(request.environ.get("paste.testing", "False")).lower() == "true"
 
         # Create the response
@@ -246,6 +254,18 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
 
         # Serve the response
         return response(environ, start_response)
+
+    def handle_token_request(
+        self, token: AuthToken, environ: WSGIEnvironment, start_response: StartResponse
+    ) -> WSGIResponse:
+        """Handle a request authenticated with a token.
+
+        This class inherits from AbstractWSGIApp. The wsgi_app therefore has no token attribute.
+        Looking at the other instances this wouldn't make sense either. I think this class is not
+        really a WSGI App... Having a dedicated methid for token auth is probably not too bad
+        anyways."""
+        assert token.details.type_ in self.endpoint.allowed_tokens
+        return self._handle_request(environ, start_response, token)
 
 
 class LegacyEndpointAdapter(AbstractWSGIApp):
@@ -490,6 +510,19 @@ type RulesByVersion = dict[APIVersion, list[Rule]]
 type MapByVersion = dict[APIVersion, Map]
 
 
+def _get_cmk_token(environ: WSGIEnvironment) -> AuthToken | None:
+    if not (
+        (auth_header := environ.get("HTTP_AUTHORIZATION", ""))
+        and auth_header.startswith("CMK-TOKEN ")
+    ):
+        return None
+    return parse_token_and_validate(
+        auth_header.removeprefix("CMK-TOKEN ").strip(),
+        request.remote_addr,
+        datetime.now(tz=UTC),
+    )
+
+
 class CheckmkRESTAPI(AbstractWSGIApp):
     __slots__ = ("_versioned_url_map", "_versioned_endpoints", "_versioned_rules", "testing")
 
@@ -662,6 +695,13 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # This is an implicit dependency, as we only know the args at runtime, but the
             # function at setup-time.
             environ[ARGS_KEY] = path_args
+
+            if (
+                (token := _get_cmk_token(environ))
+                and isinstance(wsgi_endpoint, VersionedEndpointAdapter)
+                and token.details.type_ in wsgi_endpoint.endpoint.allowed_tokens
+            ):
+                wsgi_endpoint.handle_token_request(token, environ, start_response)
 
             # Only the GUI will persist sessions. You can log into the REST API using GUI
             # credentials, but accessing the REST API will never touch the session store. We also

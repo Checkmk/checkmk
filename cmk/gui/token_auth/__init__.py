@@ -8,6 +8,7 @@ from cmk.gui.token_auth._exceptions import (
 )
 from cmk.gui.token_auth._registry import (
     handle_token_page,
+    parse_token_and_validate,
     token_authenticated_page_registry,
     TokenAuthenticatedEndpoint,
     TokenAuthenticatedPage,
@@ -17,8 +18,10 @@ from cmk.gui.token_auth._store import (
     AuthToken,
     DashboardToken,
     get_token_store,
+    TokenDetails,
     TokenId,
     TokenStore,
+    TokenType,
 )
 
 __all__ = [
@@ -28,9 +31,12 @@ __all__ = [
     "TokenAuthenticatedEndpoint",
     "TokenAuthenticatedPage",
     "TokenAuthenticatedPageRegistry",
+    "TokenDetails",
     "TokenId",
     "TokenStore",
+    "TokenType",
     "get_token_store",
     "handle_token_page",
     "token_authenticated_page_registry",
+    "parse_token_and_validate",
 ]

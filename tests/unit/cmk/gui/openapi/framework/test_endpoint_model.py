@@ -270,6 +270,7 @@ def _api_context() -> ApiContext:
         config=Config(),
         version=APIVersion.UNSTABLE,
         etag_if_match=ETags(),
+        token=None,
     )
 
 

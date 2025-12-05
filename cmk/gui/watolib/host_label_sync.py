@@ -129,10 +129,8 @@ def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
 def execute_host_label_sync_job() -> None:
     """This function is called by the GUI cron job once a minute.
     Errors are logged to var/log/web.log."""
-    if not has_wato_slave_sites():
-        return
-
-    DiscoveredHostLabelSyncJob().do_sync()
+    if has_wato_slave_sites():
+        DiscoveredHostLabelSyncJob().do_sync()
 
     now = time.time()
     if (

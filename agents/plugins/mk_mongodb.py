@@ -797,7 +797,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
         if not os.path.exists(filename):
             LOGGER.warning("config file %s does not exist!", filename)
         else:
-            with open(filename, "r") as cfg:
+            with open(filename) as cfg:
                 if sys.version_info[0] == 2:
                     self.readfp(cfg)
                 else:

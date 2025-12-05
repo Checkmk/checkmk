@@ -69,7 +69,6 @@ ignore = [
 # Agent plugins still need to support Python 3.4
 "agents/plugins/*" = [
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
-  "UP015", # Unnecessary open mode parameters
   "UP024", # Replace aliased errors with `OSError`
   "UP025", # Remove unicode literals from strings
   "UP028", # Replace `yield` over `for` loop with `yield from`

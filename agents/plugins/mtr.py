@@ -205,7 +205,7 @@ def parse_report(host, status):
     if os.path.exists(reportfile + ".pid"):
         # See if it's running
         try:
-            with open(reportfile + ".pid", "r") as opened_file:
+            with open(reportfile + ".pid") as opened_file:
                 pid = int(opened_file.readline().rstrip())
             if check_mtr_pid(pid):
                 # Still running, we're done.

@@ -36,7 +36,7 @@ export interface LoadedDashboardProperties {
 export interface DashboardPageProperties {
   initial_breadcrumb: BreadcrumbItem[]
   dashboard: LoadedDashboardProperties | null
-  mode: 'display' | 'create'
+  mode: 'display' | 'create' | 'settings' | 'clone'
   can_edit_dashboards: boolean
   url_params: FilterHTTPVars
   links: {

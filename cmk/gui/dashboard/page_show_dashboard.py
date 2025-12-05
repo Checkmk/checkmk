@@ -69,19 +69,35 @@ __all__ = ["ajax_dashlet", "AjaxInitialDashboardFilters"]
 
 
 def page_dashboard_app(ctx: PageContext) -> None:
-    mode: Literal["display", "create"] = "display"  # edit mode lives within the page
+    mode: Literal["display", "create", "clone", "settings"] = (
+        "display"  # edit mode lives within the page
+    )
+
     if ctx.request.var("create") == "1":
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to create dashboards."))
         mode = "create"
 
-    name = ctx.request.get_ascii_input_mandatory("name", "")
+    elif ctx.request.var("mode") == "edit":
+        if not user.may("general.edit_dashboards"):
+            raise MKAuthException(_("You are not allowed to edit dashboards."))
+        mode = "settings"
+
+    elif ctx.request.var("mode") == "clone":
+        if not user.may("general.edit_dashboards"):
+            raise MKAuthException(_("You are not allowed to clone dashboards."))
+        mode = "clone"
+
+    name = ctx.request.get_ascii_input_mandatory(
+        "name", ctx.request.get_ascii_input_mandatory("load_name", "")
+    )
+
     if not name:
         name = _get_default_dashboard_name()
         ctx.request.set_var("name", name)  # TODO: this must be done on the frontend side
 
     loaded_dashboard_properties = None
-    if mode == "display":
+    if mode in {"display", "settings", "clone"}:
         permitted_dashboards = get_permitted_dashboards()
         board = load_dashboard(permitted_dashboards, name)
         requested_context = requested_context_from_request(["host", "service"])

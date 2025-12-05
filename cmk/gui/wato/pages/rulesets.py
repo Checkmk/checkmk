@@ -3407,7 +3407,11 @@ class ModeNewRule(ABCEditRuleMode):
             # instead of an auto-generated valuespec:default_value()
             if _get_rule_render_mode() == RenderMode.FRONTEND:
                 _tmp = self._ruleset.rulespec.form_spec
-                default_value = DEFAULT_VALUE
+                v = get_visitor(
+                    self._ruleset.rulespec.form_spec,
+                    VisitorOptions(migrate_values=False, mask_values=False),
+                )
+                default_value = v.to_disk(RawFrontendData(v.to_vue(DEFAULT_VALUE)[1]))
             else:
                 # Using legacy render mode
                 default_value = self._ruleset.rulespec.valuespec.default_value()

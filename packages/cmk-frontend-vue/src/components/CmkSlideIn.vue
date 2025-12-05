@@ -26,6 +26,7 @@ export interface CmkSlideInProps {
   open: boolean
   size?: SlideInVariants['size']
   isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
+  ariaLabel?: string | undefined
 }
 
 const props = defineProps<CmkSlideInProps>()
@@ -64,6 +65,7 @@ watch(
         class="cmk-vue-app cmk-slide-in__container"
         :class="slideInVariants({ size: size })"
         :aria-describedby="undefined"
+        :aria-label="props.ariaLabel"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
         @close-auto-focus.prevent

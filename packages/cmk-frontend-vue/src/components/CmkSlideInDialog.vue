@@ -31,7 +31,13 @@ const emit = defineEmits(['close'])
 </script>
 
 <template>
-  <CmkSlideIn :open="open" :is-index-page="isIndexPage" :size="size" @close="emit('close')">
+  <CmkSlideIn
+    :aria-label="header?.title"
+    :open="open"
+    :is-index-page="isIndexPage"
+    :size="size"
+    @close="emit('close')"
+  >
     <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
       <CmkHeading type="h1" class="cmk-slide-in-dialog__title-header">
         <CmkIcon v-if="header.icon" v-bind="header.icon" />

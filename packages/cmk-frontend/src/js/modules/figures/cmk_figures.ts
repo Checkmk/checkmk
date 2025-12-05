@@ -265,6 +265,7 @@ export abstract class FigureBase<
       .data(renderedTitle)
       .join('g')
       .classed('title', true)
+      .attr('role', 'heading')
 
     title_component
       .selectAll<SVGRectElement, unknown>('rect')

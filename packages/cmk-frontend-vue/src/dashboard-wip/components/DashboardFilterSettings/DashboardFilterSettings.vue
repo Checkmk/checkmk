@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import FilterSettings from '@/dashboard-wip/components/DashboardFilterSettings/FilterSettings.vue'
@@ -17,11 +19,17 @@ interface Props extends FilterSettingsProps {
 }
 
 defineProps<Props>()
+const { _t } = usei18n()
 const emit = defineEmits<FilterSettingsEmits>()
 </script>
 
 <template>
-  <CmkSlideIn :open="open" class="db-filter-settings__slide-in" @close="emit('close')">
+  <CmkSlideIn
+    :open="open"
+    class="db-filter-settings__slide-in"
+    :aria-label="_t('Dashboard filter')"
+    @close="emit('close')"
+  >
     <FilterSettings
       :can-edit="canEdit"
       :applied-runtime-filters="appliedRuntimeFilters"

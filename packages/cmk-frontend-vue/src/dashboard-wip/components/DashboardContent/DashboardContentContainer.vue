@@ -29,6 +29,7 @@ if (
       v-if="generalSettings.title && generalSettings.title.render_mode !== 'hidden'"
       class="db-content-container__title"
       :class="titleRenderClass"
+      role="heading"
     >
       <a v-if="generalSettings.title.url" :href="generalSettings.title.url">{{
         generalSettings.title.text

@@ -48,7 +48,12 @@ const modifierClass = computed(() => {
 </script>
 
 <template>
-  <div class="db-selectable-widget__item" :class="modifierClass" @click="updateSelectedWidget">
+  <div
+    class="db-selectable-widget__item"
+    :class="modifierClass"
+    role="button"
+    @click="updateSelectedWidget"
+  >
     <div class="db-selectable-widget__item-icon">
       <CmkIcon :name="icon" size="xxlarge" :colored="!disabled" :class="modifierClass" />
     </div>

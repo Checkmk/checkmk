@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import OtherWizard from '@/dashboard-wip/components/Wizard/wizards/other/OtherWizard.vue'
@@ -36,6 +38,8 @@ interface AllWizardsProps {
   editWidgetId: string | null
   availableFeatures: DashboardFeatures
 }
+
+const { _t } = usei18n()
 
 const emit = defineEmits<{
   'back-button': []
@@ -74,7 +78,7 @@ const handleAddEditWidget = (
 <template>
   <div v-if="!selectedWizard"></div>
   <div v-else>
-    <CmkSlideIn :open="isOpen">
+    <CmkSlideIn :open="isOpen" :aria-label="_t('Add widget to dashboard')">
       <AlertsAndNotificationsWizard
         v-if="selectedWizard === 'alerts_notifications'"
         :dashboard-name="dashboardName"

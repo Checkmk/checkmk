@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -16,7 +15,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Filesize, Migrate, TextInput
 
 
-def _item_spec_mysql_db_size():
+def _item_spec_mysql_db_size() -> TextInput:
     return TextInput(
         title=_("Name of the database"),
         help=_("Don't forget the instance: instance:dbname"),
@@ -31,7 +30,7 @@ def _migrate(params: dict | tuple[float, float]) -> dict[str, tuple[float, float
     return {"levels": params}
 
 
-def _parameter_valuespec_mysql_db_size():
+def _parameter_valuespec_mysql_db_size() -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             elements=[

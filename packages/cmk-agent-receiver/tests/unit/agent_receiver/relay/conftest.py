@@ -72,16 +72,6 @@ def create_relay_mock_transport() -> httpx.MockTransport:
     return httpx.MockTransport(handler)
 
 
-def create_test_relays_repository(helper_config_dir: Path) -> RelaysRepository:
-    """Create a RelaysRepository configured with mock transport for testing."""
-    client = httpx.Client(
-        base_url="http://test.com/test/check_mk/api/1.0",
-        headers={"Content-Type": "application/json"},
-        transport=create_relay_mock_transport(),
-    )
-    return RelaysRepository(client, siteid="test-site", helper_config_dir=helper_config_dir)
-
-
 @pytest.fixture
 def site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Config:
     site_id = "NO_SITE"
@@ -101,9 +91,25 @@ def test_user() -> UserAuth:
 
 
 @pytest.fixture()
-def relays_repository(site_context: Config) -> Iterator[RelaysRepository]:
+def site_api_client() -> Iterator[httpx.Client]:
+    """Provides an httpx.Client configured for the site API."""
+    client = httpx.Client(
+        base_url="http://test.com/test/check_mk/api/1.0",
+        headers={"Content-Type": "application/json"},
+        transport=create_relay_mock_transport(),
+    )
+    yield client
+    client.close()
+
+
+@pytest.fixture()
+def relays_repository(
+    site_api_client: httpx.Client, site_context: Config
+) -> Iterator[RelaysRepository]:
     """Provides a RelaysRepository with mock transport for testing."""
-    repository = create_test_relays_repository(site_context.helper_config_dir)
+    repository = RelaysRepository(
+        site_api_client, siteid="test-site", helper_config_dir=site_context.helper_config_dir
+    )
     yield repository
 
 

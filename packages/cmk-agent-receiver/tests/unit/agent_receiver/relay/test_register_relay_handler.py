@@ -5,6 +5,7 @@
 
 from uuid import uuid4
 
+import httpx
 import pytest
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
@@ -20,12 +21,13 @@ from cmk.testlib.agent_receiver.certs import (
     generate_csr_pair,
     read_certificate,
 )
-from cmk.testlib.agent_receiver.relay import random_relay_id
+from cmk.testlib.agent_receiver.relay import random_relay_id, site_has_relay
 
 
 def test_process_adds_new_relay_id_to_registry(
     register_relay_handler: RegisterRelayHandler,
     test_user: UserAuth,
+    site_api_client: httpx.Client,
 ) -> None:
     relay_id = RelayID(str(uuid4()))
     response = register_relay_handler.process(
@@ -37,7 +39,7 @@ def test_process_adds_new_relay_id_to_registry(
         ),
     )
     assert relay_id == response.relay_id
-    assert register_relay_handler.relays_repository.has_relay(RelayID(response.relay_id), test_user)
+    assert site_has_relay(site_api_client, RelayID(response.relay_id), test_user)
 
 
 def test_process_creates_valid_certificate(
@@ -79,6 +81,7 @@ def test_process_validates_csr(
 def test_process_creates_multiple_relays(
     register_relay_handler: RegisterRelayHandler,
     test_user: UserAuth,
+    site_api_client: httpx.Client,
 ) -> None:
     aliases = ["relay1", "relay2", "relay3"]
     relay_ids = []
@@ -95,8 +98,8 @@ def test_process_creates_multiple_relays(
         )
         relay_ids.append(relay_id)
         assert relay_id == response.relay_id
-        assert register_relay_handler.relays_repository.has_relay(relay_id, test_user)
+        assert site_has_relay(site_api_client, relay_id, test_user)
 
     # Verify all relays are still registered
     for relay_id in relay_ids:
-        assert register_relay_handler.relays_repository.has_relay(relay_id, test_user)
+        assert site_has_relay(site_api_client, relay_id, test_user)

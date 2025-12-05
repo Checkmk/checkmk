@@ -66,15 +66,6 @@ class RelaysRepository:
         assert relay_id == resp.json()["id"]
         return relay_id
 
-    def has_relay(self, relay_id: RelayID, auth: SiteAuth) -> bool:
-        resp = self.client.get(url=f"objects/relay/{relay_id}", auth=auth)
-        if resp.status_code == HTTPStatus.NOT_FOUND:
-            return False
-        if resp.status_code == HTTPStatus.OK:
-            return True
-        logger.error("could not check if relay exists %s : %s", resp.status_code, resp.text)
-        raise CheckmkAPIError(resp.text)
-
     def get_all_relay_ids(self) -> list[RelayID]:
         latest = self.helper_config_dir / "latest/relays"
         try:

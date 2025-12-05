@@ -72,13 +72,23 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     assert len(tasks_B.tasks) == 0
 
 
-def test_store_fetching_task_non_existent_relay(agent_receiver: AgentReceiverClient) -> None:
+def test_store_fetching_task_non_existent_relay(
+    agent_receiver: AgentReceiverClient,
+    site: SiteMock,
+    site_context: Config,
+) -> None:
     relay_id = str(uuid.uuid4())
+    site.set_scenario(relay_id)
+    cf = create_config_folder(root=site_context.omd_root, relays=[])
+    agent_receiver.set_serial(cf.serial)
 
     response = agent_receiver.push_task(
         relay_id=relay_id,
         spec=FetchAdHocTask(payload=".."),
     )
 
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json()["detail"] == f"Relay with ID '{relay_id}' not found"
+    assert response.status_code == HTTPStatus.OK
+    tasks = get_relay_tasks(agent_receiver, relay_id)
+    assert len(tasks.tasks) == 1
+    assert isinstance(tasks.tasks[0].spec, FetchAdHocTask)
+    assert tasks.tasks[0].spec.payload == ".."

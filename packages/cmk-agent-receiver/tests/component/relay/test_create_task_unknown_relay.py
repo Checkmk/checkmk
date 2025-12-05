@@ -27,5 +27,5 @@ def test_create_task_unknown_relay(
     agent_receiver.set_serial(cf.serial)
 
     response = agent_receiver.push_task(relay_id="bad_relay_id", spec=FetchAdHocTask(payload=".."))
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert "bad_relay_id" in response.json()["detail"]
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["task_id"] is not None

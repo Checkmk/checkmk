@@ -340,7 +340,7 @@ class RGB:
     blue: int
 
 
-def color_to_rgb(
+def _color_to_rgb(
     color: metrics_api.Color | inventory_ui_api.BackgroundColor | inventory_ui_api.LabelColor,
 ) -> RGB:
     match color:
@@ -552,5 +552,5 @@ def color_to_rgb(
 def parse_color_from_api(
     color: metrics_api.Color | inventory_ui_api.BackgroundColor | inventory_ui_api.LabelColor,
 ) -> str:
-    rgb = color_to_rgb(color)
+    rgb = _color_to_rgb(color)
     return f"#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}"

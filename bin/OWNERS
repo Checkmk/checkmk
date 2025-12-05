@@ -6,7 +6,7 @@
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-
+per-file check_mk=file:/component_owners/command_line_cmk/OWNERS_DEFINITION
 per-file cmk-monitor-mknotifyd=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file cmk-monitor-mknotifyd=set noparent
 per-file cmk-monitor-otel-collector=file:/component_owners/opentelemetry_integration/OWNERS_DEFINITION

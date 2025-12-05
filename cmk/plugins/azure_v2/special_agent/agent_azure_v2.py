@@ -71,7 +71,7 @@ type ResourceId = str
 
 __version__ = "2.5.0b1"
 
-AGENT = "auzure_v2"
+AGENT = "azure_v2"
 
 LOGGER = logging.getLogger(f"agent_{AGENT}")
 

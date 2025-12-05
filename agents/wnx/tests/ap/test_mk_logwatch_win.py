@@ -102,30 +102,18 @@ def _get_parsed_config() -> (
     return lw.read_config(_TEST_CONFIG.split("\n"), files=[], debug=False)
 
 
-def text_type():
-    if sys.version_info[0] == 2:
-        return unicode  # noqa: F821
-    return str
-
-
-def binary_type():
-    if sys.version_info[0] == 2:
-        return str
-    return bytes
-
-
 def ensure_text(s, encoding='utf-8', errors='strict'):
-    if isinstance(s, binary_type()):
+    if isinstance(s, bytes):
         return s.decode(encoding, errors)
-    if isinstance(s, text_type()):
+    if isinstance(s, str):
         return s
     raise TypeError("not expecting type '%s'" % type(s))
 
 
 def ensure_binary(s, encoding='utf-8', errors='strict'):
-    if isinstance(s, text_type()):
+    if isinstance(s, str):
         return s.encode(encoding, errors)
-    if isinstance(s, binary_type()):
+    if isinstance(s, bytes):
         return s
     raise TypeError("not expecting type '%s'" % type(s))
 
@@ -527,7 +515,7 @@ def test_find_matching_logfiles(
     for actual, expected in zip(sorted(files), fake_fs_file_suffixes):
         assert _end_with(actual[0], expected=_cvt(expected[0]))
 
-        assert isinstance(actual[1], text_type())
+        assert isinstance(actual[1], str)
         assert actual[1].startswith(fake_fs_path_u)
         assert actual[1] == expected[1]
 
@@ -572,7 +560,7 @@ def test_log_lines_iter() -> None:
         assert log_iter.get_position() == 101
 
         line = log_iter.next_line()
-        assert isinstance(line, text_type())
+        assert isinstance(line, str)
         assert (
             line
             == "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"

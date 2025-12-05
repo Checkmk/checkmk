@@ -115,7 +115,7 @@ def _raise_appropriate_type_error(
 
 # Note: The concrete union type parameters below don't matter, we are just interested in the type
 # constructors of the new & old-skool unions.
-_UNION_TYPES: Final = (type(int | str), type(Union[int, str]))
+_UNION_TYPES: Final = (type(int | str), type(Union[int, str]))  # noqa: UP007
 
 
 # Poor man's pattern matching on generic types ahead! Note that we see Optional as a union at

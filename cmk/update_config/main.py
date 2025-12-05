@@ -191,7 +191,7 @@ def _load_plugins(logger: logging.Logger) -> None:
         ),
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.actions")
-            if edition(paths.omd_root) in (Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD)
+            if edition(paths.omd_root) in (Edition.ULTIMATE, Edition.ULTIMATEMT)
             else []
         ),
         (

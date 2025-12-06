@@ -130,7 +130,7 @@ from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
-from cmk.ccc import tty, version
+from cmk.ccc import config_path, tty, version
 from cmk.ccc.exceptions import (
     MKBailOut,
     MKGeneralException,
@@ -4010,6 +4010,15 @@ automations.register(AutomationUpdateDNSCache())
 class AutomationGetAgentOutput(Automation):
     cmd = "get-agent-output"
 
+    # TODO: This is inconsistent.
+    # On one hand we are loading the penging config,
+    # # on the other hand we are using the activated secrets.
+    # It is not clear if this should be using the pending or the actice config.
+    # If it is the active config (I think so), then we should just
+    # read the latest fetcher config and run that fetcher.
+    # Also clarify: Are we running any datasource, or just the (push/pull) agent fetcher?
+    # Seems we are also running the special agents here.
+    # For SNMP we are not getting the output we would get during checking, but a walk.
     def execute(
         self,
         args: list[str],
@@ -4021,6 +4030,7 @@ class AutomationGetAgentOutput(Automation):
         ty = args[1]
 
         plugins = plugins or load_plugins()  # do we really still need this?
+        # This loads the pending config:
         loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
         loaded_config = loading_result.loaded_config
         ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -4074,12 +4084,16 @@ class AutomationGetAgentOutput(Automation):
                 if hostname in hosts_config.clusters:
                     return GetAgentOutputResult(success, output, AgentRawData(info))
 
-                secrets_file_option = (
-                    cmk.utils.password_store.active_secrets_path_site()
-                    if relay_id is None
-                    else cmk.utils.password_store.active_secrets_path_relay()
+                active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
+                active_secrets_path = cmk.utils.password_store.active_secrets_path_site(
+                    active_config_path
                 )
-                secrets = load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+                secrets_file_option = (
+                    active_secrets_path
+                    if relay_id is None
+                    else cmk.utils.password_store.active_secrets_path_relay(active_config_path)
+                )
+                secrets = load_secrets_file(active_secrets_path)
 
                 for source in sources.make_sources(
                     plugins,

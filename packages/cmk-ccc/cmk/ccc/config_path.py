@@ -28,6 +28,16 @@ class ConfigCreationContext:
     serial_created: int
 
 
+def detect_latest_config_path(base: Path) -> Path:
+    """Resolve the 'latest' symlink to the latest config path.
+
+    Using this probably subject to a race condition, as the
+    CMC might choose to remove that config.
+    """
+    latest_link_path = VersionedConfigPath.make_latest_path(base)
+    return latest_link_path.resolve()
+
+
 class VersionedConfigPath:
     @classmethod
     def make_root_path(cls, base: Path) -> Path:

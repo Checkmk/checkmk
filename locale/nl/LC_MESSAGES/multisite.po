@@ -652,6 +652,10 @@ msgstr "%s Ophalen heeft een dump bestand gemaakt"
 msgid "%s by host"
 msgstr "%s door host"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via OAuth2 connection"
+msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
+
 #, python-format
 msgid "%s can only be deleted via Quick setup"
 msgstr ""
@@ -5571,14 +5575,6 @@ msgstr "Aggregatietoewijzing"
 
 msgid "Aggregation checks"
 msgstr "Aggregatiecontroles"
-
-#, fuzzy
-msgid "Aggregation for histograms"
-msgstr "Aggregatiegroepen"
-
-#, fuzzy
-msgid "Aggregation for sums"
-msgstr "Aggregatiegroepen"
 
 msgid "Aggregation function"
 msgstr "Aggregatiefunctie"
@@ -12135,6 +12131,11 @@ msgstr ""
 "\"CUSTOMER_NAME\" overschrijven"
 
 #, fuzzy, python-format
+msgid ""
+"Cannot delete %s because it is managed by an existing OAuth2 connection."
+msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
+
+#, fuzzy, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
 msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
 
@@ -18628,14 +18629,6 @@ msgstr "Beschikbaarheid gegevenspad lagere niveaus"
 #, fuzzy
 msgid "Data point"
 msgstr "Verzonden gegevens"
-
-#, fuzzy
-msgid "Data point attribute"
-msgstr "Gewijzigde attributen"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Gewijzigde attributen"
 
 msgid "Data range"
 msgstr "Gegevensbereik"
@@ -26168,6 +26161,10 @@ msgid "Failed to create sync archive [%d]: %s"
 msgstr "Kan geen sync-archief aanmaken [%d]: %s"
 
 msgid "Failed to decode certificate data"
+msgstr "Het decoderen van certificaatgegevens is mislukt"
+
+#, fuzzy
+msgid "Failed to decode filter context"
 msgstr "Het decoderen van certificaatgegevens is mislukt"
 
 #, python-format
@@ -36951,10 +36948,6 @@ msgid ""
 msgstr ""
 "Ongeldige mapnaam. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
 
-#, fuzzy, python-format
-msgid "Invalid graph content: %s"
-msgstr "Ongeldig grafiektype: %s"
-
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Ongeldig grafiektype '%s'"
@@ -36999,6 +36992,10 @@ msgstr "Ongeldige ident"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Ongeldige ident: %s"
+
+#, fuzzy
+msgid "Invalid ifid parameter"
+msgstr "Ongeldige controleparameter"
 
 msgid "Invalid login credentials."
 msgstr "Ongeldige inloggegevens."
@@ -37386,6 +37383,10 @@ msgstr "Is niet ingelogd."
 
 msgid "Is not using persistent connections."
 msgstr "Maakt geen gebruik van persistente verbindingen."
+
+#, fuzzy
+msgid "Is show more"
+msgstr "meer laten zien"
 
 msgid "Is unlicensed"
 msgstr "Heeft geen vergunning"
@@ -43325,10 +43326,6 @@ msgid "Metric levels"
 msgstr "Metrische niveaus"
 
 #, fuzzy
-msgid "Metric name"
-msgstr "Metrisch etiket"
-
-#, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Hostnaam (exacte match)"
 
@@ -45899,10 +45896,6 @@ msgstr ""
 
 msgid "No agent labels present."
 msgstr "Geen agent labels aanwezig."
-
-#, fuzzy
-msgid "No aggregation"
-msgstr "aggregatie"
 
 msgid "No appropriate request ID"
 msgstr ""
@@ -55145,9 +55138,6 @@ msgstr "Raritan EMX Rack: Temperatuur"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: Ingangsfasen"
 
-msgid "Rate"
-msgstr ""
-
 #, fuzzy
 msgid "Rate computation"
 msgstr "Trendberekening"
@@ -55214,6 +55204,14 @@ msgstr "Lees IO operaties per seconde"
 
 msgid "Read Latency"
 msgstr "Lees latentie"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations (experimental)"
+msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations."
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
 msgid "Read access to all hosts and folders"
 msgstr "Leestoegang tot alle hosts en mappen"
@@ -57194,16 +57192,8 @@ msgid "Resource Name"
 msgstr "Bronnaam"
 
 #, fuzzy
-msgid "Resource attribute"
-msgstr "Rolkenmerk"
-
-#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Hostname berekening"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Rolkenmerk"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -59034,14 +59024,6 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
-
-#, fuzzy
-msgid "Scope attribute"
-msgstr "Rolkenmerk"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Rolkenmerk"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -90945,6 +90927,10 @@ msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normaal en beveiligingsupdates (Linux)"
 
 #, fuzzy, python-format
+msgid "[%s] - OAuth2 connection"
+msgstr "Aansluiting toevoegen"
+
+#, fuzzy, python-format
 msgid "[%s] - Quick setup"
 msgstr "Snelle installatie"
 
@@ -93428,8 +93414,12 @@ msgid "Remove row"
 msgstr "Verwijderd: %s"
 
 #, fuzzy
-msgid "Dashboard filter"
-msgstr "Dashboard-element"
+msgid "Filter configuration"
+msgstr "Iptables filter configuratie"
+
+#, fuzzy
+msgid "Runtime filters"
+msgstr "Verwijder filter"
 
 #, fuzzy
 msgid "Close filter configuration"
@@ -93439,46 +93429,50 @@ msgstr "Iptables filter configuratie"
 msgid "Clear search"
 msgstr "Regel zoeken"
 
-msgid "Filters included by dashboard owner"
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values are temporary and can be overridden by widget filters."
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a runtime filter"
-msgstr "U kunt de ingebouwde tag groep \"%s\" niet overschrijven."
+msgid "Set filters for all widgets."
+msgstr "Standaardwaarden instellen voor alle secties"
 
 #, fuzzy
-msgid "Host filter"
-msgstr "Logbestanden van hosts"
+msgid "Values can be overriden by runtime or widget filters."
+msgstr "U kunt de ingebouwde tag groep \"%s\" niet overschrijven."
+
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
+
+msgid "Values are temporary and can be overriden by widget filters."
+msgstr ""
 
 #, fuzzy
 msgid "Select from list"
 msgstr "Selecteer individuele bestanden uit de lijst"
 
 #, fuzzy
-msgid "Service filter"
-msgstr "Service Filters"
+msgid "%{n} filters"
+msgstr "Toegepaste filters:"
 
 #, fuzzy
-msgid "Reset to saved filters"
-msgstr "Verwijder filter"
+msgid "Applied filters"
+msgstr "Toegepaste filters:"
 
 #, fuzzy
-msgid "Success! Your new dashboard filters have been saved"
-msgstr "Uw wijzigingen zijn opgeslagen."
+msgid "No %{n} dashboard filters applied"
+msgstr "Ntop gastheer"
 
-msgid "Runtime filters are required to load data."
+msgid ""
+"%{n} filters selected on dashboard level appear and apply to all widgets. "
+"You can override the values by setting widget specific or runtime filters. "
 msgstr ""
 
-msgid "Values apply across all widgets."
-msgstr ""
-
 #, fuzzy
-msgid "Apply to dashboard"
-msgstr "Link naar dashboard"
-
-#, fuzzy
-msgid "Edit required runtime filters"
-msgstr "Vereiste context filters"
+msgid "Edit filter configuration"
+msgstr "Host configuratie"
 
 #, fuzzy
 msgid "Override dashboard filters"
@@ -93905,6 +93899,10 @@ msgstr "Geërfd van "
 #, fuzzy
 msgid "Overriden"
 msgstr "Overzicht"
+
+#, fuzzy
+msgid "Dashboard filter"
+msgstr "Dashboard-element"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -94683,6 +94681,22 @@ msgstr "meer laten zien"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Deze regel komt overeen met"
+
+#, fuzzy
+msgid "Metric name"
+msgstr "Metrisch etiket"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Gewijzigde attributen"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -95775,6 +95789,58 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Aggregation for histograms"
+#~ msgstr "Aggregatiegroepen"
+
+#, fuzzy
+#~ msgid "Aggregation for sums"
+#~ msgstr "Aggregatiegroepen"
+
+#, fuzzy
+#~ msgid "Data point attribute"
+#~ msgstr "Gewijzigde attributen"
+
+#, fuzzy, python-format
+#~ msgid "Invalid graph content: %s"
+#~ msgstr "Ongeldig grafiektype: %s"
+
+#, fuzzy
+#~ msgid "No aggregation"
+#~ msgstr "aggregatie"
+
+#, fuzzy
+#~ msgid "Resource attribute"
+#~ msgstr "Rolkenmerk"
+
+#, fuzzy
+#~ msgid "Scope attribute"
+#~ msgstr "Rolkenmerk"
+
+#, fuzzy
+#~ msgid "Host filter"
+#~ msgstr "Logbestanden van hosts"
+
+#, fuzzy
+#~ msgid "Service filter"
+#~ msgstr "Service Filters"
+
+#, fuzzy
+#~ msgid "Reset to saved filters"
+#~ msgstr "Verwijder filter"
+
+#, fuzzy
+#~ msgid "Success! Your new dashboard filters have been saved"
+#~ msgstr "Uw wijzigingen zijn opgeslagen."
+
+#, fuzzy
+#~ msgid "Apply to dashboard"
+#~ msgstr "Link naar dashboard"
+
+#, fuzzy
+#~ msgid "Edit required runtime filters"
+#~ msgstr "Vereiste context filters"
 
 #, fuzzy
 #~ msgid "Add OAuth2 connection"

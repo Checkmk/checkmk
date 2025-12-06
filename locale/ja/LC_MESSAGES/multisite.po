@@ -634,6 +634,10 @@ msgstr "%s 作成されたダンプファイルを取得します"
 msgid "%s by host"
 msgstr "ホスト別の %s"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via OAuth2 connection"
+msgstr "%s はクイックセットアップでのみ削除可能"
+
 #, python-format
 msgid "%s can only be deleted via Quick setup"
 msgstr "%s はクイックセットアップでのみ削除可能"
@@ -5274,14 +5278,6 @@ msgstr "集計の割り当て"
 
 msgid "Aggregation checks"
 msgstr "集約チェック"
-
-#, fuzzy
-msgid "Aggregation for histograms"
-msgstr "集約グループ"
-
-#, fuzzy
-msgid "Aggregation for sums"
-msgstr "集約グループ"
 
 msgid "Aggregation function"
 msgstr "集計関数"
@@ -11411,6 +11407,12 @@ msgid ""
 msgstr ""
 "デフォルトの\"CUSTOMER_ID\" または \"CUSTOMER_NAME\"を上書きするマクロを定義"
 "できません"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete %s because it is managed by an existing OAuth2 connection."
+msgstr ""
+"クイックセットアップで管理されているためこの %s を削除することはできません。"
 
 #, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
@@ -17605,14 +17607,6 @@ msgstr "データパスの可用性下位レベル"
 #, fuzzy
 msgid "Data point"
 msgstr "送信データ"
-
-#, fuzzy
-msgid "Data point attribute"
-msgstr "ダウンタイム属性:"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "ダウンタイム属性:"
 
 msgid "Data range"
 msgstr "データ範囲"
@@ -24730,6 +24724,10 @@ msgid "Failed to create sync archive [%d]: %s"
 msgstr "同期アーカイブの作成に失敗しました [%d]: %s"
 
 msgid "Failed to decode certificate data"
+msgstr "証明書データのデコードに失敗しました"
+
+#, fuzzy
+msgid "Failed to decode filter context"
 msgstr "証明書データのデコードに失敗しました"
 
 #, python-format
@@ -34758,10 +34756,6 @@ msgid ""
 msgstr ""
 "フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
-#, fuzzy, python-format
-msgid "Invalid graph content: %s"
-msgstr "無効なグラフタイプ: %s"
-
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "無効なグラフタイプ '%s'"
@@ -34803,6 +34797,10 @@ msgstr "無効なID"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "無効なID: %s"
+
+#, fuzzy
+msgid "Invalid ifid parameter"
+msgstr "チェックパラメータが無効です"
 
 msgid "Invalid login credentials."
 msgstr "ログイン資格情報が無効です。"
@@ -35167,6 +35165,10 @@ msgstr "ログインしていません。"
 
 msgid "Is not using persistent connections."
 msgstr "持続的接続を使用していません。"
+
+#, fuzzy
+msgid "Is show more"
+msgstr "もっと表示"
 
 msgid "Is unlicensed"
 msgstr "ライセンスがありません"
@@ -40785,9 +40787,6 @@ msgstr "メトリックのラベル"
 msgid "Metric levels"
 msgstr "メートリックレベル"
 
-msgid "Metric name"
-msgstr "メトリック名"
-
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
 
@@ -43198,10 +43197,6 @@ msgstr "このメソッドには追加の設定オプションはありません
 
 msgid "No agent labels present."
 msgstr "エージェントラベルはありません。"
-
-#, fuzzy
-msgid "No aggregation"
-msgstr "集約"
 
 msgid "No appropriate request ID"
 msgstr "適切なリクエストIDがない"
@@ -51710,9 +51705,6 @@ msgstr "Raritan EMXラック: 温度"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: 入力フェーズ"
 
-msgid "Rate"
-msgstr ""
-
 msgid "Rate computation"
 msgstr "料金計算"
 
@@ -51775,6 +51767,14 @@ msgstr "1秒あたりのIO操作の読み取り"
 
 msgid "Read Latency"
 msgstr "読み取りレイテンシ"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations (experimental)"
+msgstr "OpenTelemetry の設定を管理する（実験的機能）"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations."
+msgstr "OpenTelemetryコレクターの設定を追加する"
 
 msgid "Read access to all hosts and folders"
 msgstr "すべてのホストとフォルダへの読み取りアクセス"
@@ -53655,16 +53655,8 @@ msgid "Resource Name"
 msgstr "リソース名"
 
 #, fuzzy
-msgid "Resource attribute"
-msgstr "属性をリセット"
-
-#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "カスタムホスト名算出"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "属性をリセット"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Windowsプロセスのリソース消費"
@@ -55387,14 +55379,6 @@ msgstr "科学的（標準）シンボル%s"
 
 msgid "Scope"
 msgstr "スコープ"
-
-#, fuzzy
-msgid "Scope attribute"
-msgstr "役割属性"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "役割属性"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -85283,6 +85267,10 @@ msgstr "Zypperの更新"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "通常のZypperアップデートとセキュリティアップデート(Linux)"
 
+#, fuzzy, python-format
+msgid "[%s] - OAuth2 connection"
+msgstr "接続を追加"
+
 #, python-format
 msgid "[%s] - Quick setup"
 msgstr "[%s] - クイックセットアップ"
@@ -87674,8 +87662,12 @@ msgid "Remove row"
 msgstr "削除：%r"
 
 #, fuzzy
-msgid "Dashboard filter"
-msgstr "ダッシュボード要素"
+msgid "Filter configuration"
+msgstr "Iptablesフィルター構成"
+
+#, fuzzy
+msgid "Runtime filters"
+msgstr "フィルタを取り外します"
 
 #, fuzzy
 msgid "Close filter configuration"
@@ -87685,45 +87677,50 @@ msgstr "Iptablesフィルター構成"
 msgid "Clear search"
 msgstr "ルール検索"
 
-msgid "Filters included by dashboard owner"
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values are temporary and can be overridden by widget filters."
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a runtime filter"
-msgstr "クイックフィルターを追加することでこれらを上書きできます"
+msgid "Set filters for all widgets."
+msgstr "すべてのセクションにデフォルト値を設定する"
 
 #, fuzzy
-msgid "Host filter"
-msgstr "ホストフィルター"
+msgid "Values can be overriden by runtime or widget filters."
+msgstr "クイックフィルターを追加することでこれらを上書きできます"
+
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
+
+msgid "Values are temporary and can be overriden by widget filters."
+msgstr ""
 
 #, fuzzy
 msgid "Select from list"
 msgstr "リストからタイプを選択"
 
 #, fuzzy
-msgid "Service filter"
-msgstr "サービスフィルター"
+msgid "%{n} filters"
+msgstr "適用されたフィルター:"
 
 #, fuzzy
-msgid "Reset to saved filters"
-msgstr "フィルタを取り外します"
+msgid "Applied filters"
+msgstr "適用されたフィルター:"
 
-msgid "Success! Your new dashboard filters have been saved"
-msgstr "成功！新しいダッシュボードのフィルターが保存されました"
+#, fuzzy
+msgid "No %{n} dashboard filters applied"
+msgstr "%{n} 対象フィルターは適用されていません"
 
-msgid "Runtime filters are required to load data."
+msgid ""
+"%{n} filters selected on dashboard level appear and apply to all widgets. "
+"You can override the values by setting widget specific or runtime filters. "
 msgstr ""
 
-msgid "Values apply across all widgets."
-msgstr ""
-
 #, fuzzy
-msgid "Apply to dashboard"
-msgstr "ダッシュボードに追加"
-
-#, fuzzy
-msgid "Edit required runtime filters"
-msgstr "必要なコンテキストフィルター"
+msgid "Edit filter configuration"
+msgstr "この接続を編集する"
 
 #, fuzzy
 msgid "Override dashboard filters"
@@ -88136,6 +88133,10 @@ msgstr "継承された"
 #, fuzzy
 msgid "Overriden"
 msgstr "概要"
+
+#, fuzzy
+msgid "Dashboard filter"
+msgstr "ダッシュボード要素"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -88907,6 +88908,21 @@ msgstr "もっと表示"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "ルール一致"
+
+msgid "Metric name"
+msgstr "メトリック名"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "属性をリセット"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "役割属性"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "ダウンタイム属性:"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -89962,6 +89978,57 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Aggregation for histograms"
+#~ msgstr "集約グループ"
+
+#, fuzzy
+#~ msgid "Aggregation for sums"
+#~ msgstr "集約グループ"
+
+#, fuzzy
+#~ msgid "Data point attribute"
+#~ msgstr "ダウンタイム属性:"
+
+#, fuzzy, python-format
+#~ msgid "Invalid graph content: %s"
+#~ msgstr "無効なグラフタイプ: %s"
+
+#, fuzzy
+#~ msgid "No aggregation"
+#~ msgstr "集約"
+
+#, fuzzy
+#~ msgid "Resource attribute"
+#~ msgstr "属性をリセット"
+
+#, fuzzy
+#~ msgid "Scope attribute"
+#~ msgstr "役割属性"
+
+#, fuzzy
+#~ msgid "Host filter"
+#~ msgstr "ホストフィルター"
+
+#, fuzzy
+#~ msgid "Service filter"
+#~ msgstr "サービスフィルター"
+
+#, fuzzy
+#~ msgid "Reset to saved filters"
+#~ msgstr "フィルタを取り外します"
+
+#~ msgid "Success! Your new dashboard filters have been saved"
+#~ msgstr "成功！新しいダッシュボードのフィルターが保存されました"
+
+#, fuzzy
+#~ msgid "Apply to dashboard"
+#~ msgstr "ダッシュボードに追加"
+
+#, fuzzy
+#~ msgid "Edit required runtime filters"
+#~ msgstr "必要なコンテキストフィルター"
 
 #~ msgid "Cannot change folder of rules managed by Quick setup."
 #~ msgstr ""

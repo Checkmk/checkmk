@@ -642,6 +642,10 @@ msgstr "%s Récupérer le fichier de vidage créé"
 msgid "%s by host"
 msgstr "%s par hôte"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via OAuth2 connection"
+msgstr "Vous ne pouvez pas supprimer cette connexion."
+
 #, python-format
 msgid "%s can only be deleted via Quick setup"
 msgstr ""
@@ -5603,14 +5607,6 @@ msgstr "Affectation des agrégats"
 
 msgid "Aggregation checks"
 msgstr "Contrôles d'agrégation"
-
-#, fuzzy
-msgid "Aggregation for histograms"
-msgstr "Groupes d'agrégation"
-
-#, fuzzy
-msgid "Aggregation for sums"
-msgstr "Groupes d'agrégation"
 
 msgid "Aggregation function"
 msgstr "Fonction d'agrégation"
@@ -12193,6 +12189,11 @@ msgstr ""
 "\"CUSTOMER_ID\" ou \"CUSTOMER_NAME\""
 
 #, python-format
+msgid ""
+"Cannot delete %s because it is managed by an existing OAuth2 connection."
+msgstr ""
+
+#, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
 msgstr ""
 
@@ -18752,14 +18753,6 @@ msgstr "Disponibilité du chemin de données niveaux inférieurs"
 #, fuzzy
 msgid "Data point"
 msgstr "Données envoyées"
-
-#, fuzzy
-msgid "Data point attribute"
-msgstr "Modifier les attributs"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Modifier les attributs"
 
 msgid "Data range"
 msgstr "Plage de données"
@@ -26364,6 +26357,10 @@ msgid "Failed to create sync archive [%d]: %s"
 msgstr "Échec de la création de l'archive de synchronisation [%d] : %s"
 
 msgid "Failed to decode certificate data"
+msgstr "Échec du décodage des données du certificat"
+
+#, fuzzy
+msgid "Failed to decode filter context"
 msgstr "Échec du décodage des données du certificat"
 
 #, python-format
@@ -37242,10 +37239,6 @@ msgstr ""
 "Nom de dossier non valide. Seuls les caractères a-z, A-Z, 0-9, _ et - sont "
 "autorisés."
 
-#, fuzzy, python-format
-msgid "Invalid graph content: %s"
-msgstr "Type de graphique non valide : %s"
-
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Type de graphique '%s' non valide"
@@ -37292,6 +37285,10 @@ msgstr "Identité non valide"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Identifiant non valide : %s"
+
+#, fuzzy
+msgid "Invalid ifid parameter"
+msgstr "Paramètre de contrôle non valide"
 
 msgid "Invalid login credentials."
 msgstr "Identifiants de connexion non valides."
@@ -37683,6 +37680,10 @@ msgstr "N'est pas connecté."
 
 msgid "Is not using persistent connections."
 msgstr "N'utilise pas de connexions persistantes."
+
+#, fuzzy
+msgid "Is show more"
+msgstr "afficher plus"
 
 msgid "Is unlicensed"
 msgstr "n'est pas titulaire d'une licence"
@@ -43646,10 +43647,6 @@ msgid "Metric levels"
 msgstr "Niveaux métriques"
 
 #, fuzzy
-msgid "Metric name"
-msgstr "Étiquette métrique"
-
-#, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Nom d'hôte (correspondance exacte)"
 
@@ -46239,10 +46236,6 @@ msgstr ""
 
 msgid "No agent labels present."
 msgstr "Aucune étiquette d'agent n'est présente."
-
-#, fuzzy
-msgid "No aggregation"
-msgstr "agrégation"
 
 msgid "No appropriate request ID"
 msgstr ""
@@ -55565,9 +55558,6 @@ msgstr "Raritan EMX Rack : Température"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU : Phases d'entrée"
 
-msgid "Rate"
-msgstr ""
-
 #, fuzzy
 msgid "Rate computation"
 msgstr "Calcul de la tendance"
@@ -55634,6 +55624,14 @@ msgstr "Opérations d'E/S de lecture par seconde"
 
 msgid "Read Latency"
 msgstr "Latence de lecture"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations (experimental)"
+msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations."
+msgstr "Ajouter une nouvelle configuration utilisateur"
 
 msgid "Read access to all hosts and folders"
 msgstr "Accès en lecture à tous les hôtes et dossiers"
@@ -57652,16 +57650,8 @@ msgid "Resource Name"
 msgstr "Nom de la ressource"
 
 #, fuzzy
-msgid "Resource attribute"
-msgstr "Attribut du rôle"
-
-#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Calcul du nom d'hôte"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Attribut du rôle"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -59508,14 +59498,6 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
-
-#, fuzzy
-msgid "Scope attribute"
-msgstr "Attribut du rôle"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Attribut du rôle"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -91769,6 +91751,10 @@ msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal et mises à jour de sécurité (Linux)"
 
 #, fuzzy, python-format
+msgid "[%s] - OAuth2 connection"
+msgstr "Ajouter une connexion"
+
+#, fuzzy, python-format
 msgid "[%s] - Quick setup"
 msgstr "Installation rapide"
 
@@ -94250,8 +94236,12 @@ msgid "Remove row"
 msgstr "Supprimé : %s"
 
 #, fuzzy
-msgid "Dashboard filter"
-msgstr "Élément du tableau de bord"
+msgid "Filter configuration"
+msgstr "Configuration du filtre Iptables"
+
+#, fuzzy
+msgid "Runtime filters"
+msgstr "Supprimer le filtre"
 
 #, fuzzy
 msgid "Close filter configuration"
@@ -94261,46 +94251,50 @@ msgstr "Configuration du filtre Iptables"
 msgid "Clear search"
 msgstr "Recherche de règles"
 
-msgid "Filters included by dashboard owner"
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values are temporary and can be overridden by widget filters."
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a runtime filter"
-msgstr "Vous ne pouvez pas remplacer le groupe de balises intégré \"%s\" ;."
+msgid "Set filters for all widgets."
+msgstr "Définir les valeurs par défaut pour toutes les sections"
 
 #, fuzzy
-msgid "Host filter"
-msgstr "Fichiers journaux des hôtes"
+msgid "Values can be overriden by runtime or widget filters."
+msgstr "Vous ne pouvez pas remplacer le groupe de balises intégré \"%s\" ;."
+
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
+
+msgid "Values are temporary and can be overriden by widget filters."
+msgstr ""
 
 #, fuzzy
 msgid "Select from list"
 msgstr "Sélectionner des fichiers individuels dans la liste"
 
 #, fuzzy
-msgid "Service filter"
-msgstr "Filtres de service"
+msgid "%{n} filters"
+msgstr "Filtres appliqués :"
 
 #, fuzzy
-msgid "Reset to saved filters"
-msgstr "Supprimer le filtre"
+msgid "Applied filters"
+msgstr "Filtres appliqués :"
 
 #, fuzzy
-msgid "Success! Your new dashboard filters have been saved"
-msgstr "Vos modifications ont été enregistrées."
+msgid "No %{n} dashboard filters applied"
+msgstr "Hôte Ntop"
 
-msgid "Runtime filters are required to load data."
+msgid ""
+"%{n} filters selected on dashboard level appear and apply to all widgets. "
+"You can override the values by setting widget specific or runtime filters. "
 msgstr ""
 
-msgid "Values apply across all widgets."
-msgstr ""
-
 #, fuzzy
-msgid "Apply to dashboard"
-msgstr "Lien vers le tableau de bord"
-
-#, fuzzy
-msgid "Edit required runtime filters"
-msgstr "Filtres contextuels requis"
+msgid "Edit filter configuration"
+msgstr "Configuration de l'hôte"
 
 #, fuzzy
 msgid "Override dashboard filters"
@@ -94727,6 +94721,10 @@ msgstr "Hérité de "
 #, fuzzy
 msgid "Overriden"
 msgstr "Vue d'ensemble"
+
+#, fuzzy
+msgid "Dashboard filter"
+msgstr "Élément du tableau de bord"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -95508,6 +95506,22 @@ msgstr "afficher plus"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Cette règle correspond à"
+
+#, fuzzy
+msgid "Metric name"
+msgstr "Étiquette métrique"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Attribut du rôle"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Attribut du rôle"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Modifier les attributs"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -96604,6 +96618,58 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Aggregation for histograms"
+#~ msgstr "Groupes d'agrégation"
+
+#, fuzzy
+#~ msgid "Aggregation for sums"
+#~ msgstr "Groupes d'agrégation"
+
+#, fuzzy
+#~ msgid "Data point attribute"
+#~ msgstr "Modifier les attributs"
+
+#, fuzzy, python-format
+#~ msgid "Invalid graph content: %s"
+#~ msgstr "Type de graphique non valide : %s"
+
+#, fuzzy
+#~ msgid "No aggregation"
+#~ msgstr "agrégation"
+
+#, fuzzy
+#~ msgid "Resource attribute"
+#~ msgstr "Attribut du rôle"
+
+#, fuzzy
+#~ msgid "Scope attribute"
+#~ msgstr "Attribut du rôle"
+
+#, fuzzy
+#~ msgid "Host filter"
+#~ msgstr "Fichiers journaux des hôtes"
+
+#, fuzzy
+#~ msgid "Service filter"
+#~ msgstr "Filtres de service"
+
+#, fuzzy
+#~ msgid "Reset to saved filters"
+#~ msgstr "Supprimer le filtre"
+
+#, fuzzy
+#~ msgid "Success! Your new dashboard filters have been saved"
+#~ msgstr "Vos modifications ont été enregistrées."
+
+#, fuzzy
+#~ msgid "Apply to dashboard"
+#~ msgstr "Lien vers le tableau de bord"
+
+#, fuzzy
+#~ msgid "Edit required runtime filters"
+#~ msgstr "Filtres contextuels requis"
 
 #, fuzzy
 #~ msgid "Add OAuth2 connection"

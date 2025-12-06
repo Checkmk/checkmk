@@ -648,6 +648,10 @@ msgstr "%s erstellte Dump-Datei abrufen"
 msgid "%s by host"
 msgstr "%s pro Host"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via OAuth2 connection"
+msgstr "%s kann nur durch Quick Setup gelöscht werden"
+
 #, python-format
 msgid "%s can only be deleted via Quick setup"
 msgstr "%s kann nur durch Quick Setup gelöscht werden"
@@ -5441,12 +5445,6 @@ msgstr "Aggregationszuordnung"
 
 msgid "Aggregation checks"
 msgstr "Aggregierte Checks"
-
-msgid "Aggregation for histograms"
-msgstr "Aggregation der Histogramme"
-
-msgid "Aggregation for sums"
-msgstr "Aggregation der Summen"
 
 msgid "Aggregation function"
 msgstr "Aggregationsfunktion"
@@ -11655,6 +11653,11 @@ msgid ""
 msgstr ""
 "Man kann keine Makros definieren, die Standard Einträge \"CUSTOMER_ID\" oder "
 "\"CUSTOMER_NAME\" überschreiben"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete %s because it is managed by an existing OAuth2 connection."
+msgstr "%s kann nicht gelöscht werden, da es von Quick Setup verwaltet wird."
 
 #, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
@@ -17961,12 +17964,6 @@ msgstr "Untergrenzen für Datenpfadverfügbarkeit"
 
 msgid "Data point"
 msgstr "Datenpunkt"
-
-msgid "Data point attribute"
-msgstr "Attribut des Datenpunkts"
-
-msgid "Data point attributes"
-msgstr "Attribute des Datenpunkts"
 
 msgid "Data range"
 msgstr "Datenbereich"
@@ -25202,6 +25199,10 @@ msgid "Failed to create sync archive [%d]: %s"
 msgstr "Sync-Archiv [%d] konnte nicht erstellt werden: %s"
 
 msgid "Failed to decode certificate data"
+msgstr "Zertifikat konnte nicht verarbeitet werden"
+
+#, fuzzy
+msgid "Failed to decode filter context"
 msgstr "Zertifikat konnte nicht verarbeitet werden"
 
 #, python-format
@@ -35504,10 +35505,6 @@ msgstr ""
 "<tt>_</tt>."
 
 #, python-format
-msgid "Invalid graph content: %s"
-msgstr "Ungültiger Graph-Inhalt: %s"
-
-#, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Ungültiger Graphentyp '%s'"
 
@@ -35550,6 +35547,10 @@ msgstr "Ungültiger Schlüssel"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Ungültiger Schlüssel: %s"
+
+#, fuzzy
+msgid "Invalid ifid parameter"
+msgstr "Ungültiger Check-Parameter"
 
 msgid "Invalid login credentials."
 msgstr "Login-Daten sind ungültig."
@@ -35920,6 +35921,10 @@ msgstr "Nicht angemeldet."
 
 msgid "Is not using persistent connections."
 msgstr "Benutzt keine persistente Verbindungen."
+
+#, fuzzy
+msgid "Is show more"
+msgstr "mehr anzeigen"
 
 msgid "Is unlicensed"
 msgstr "Ist unlizenziert"
@@ -41613,9 +41618,6 @@ msgstr "Metrik-Bezeichnung"
 msgid "Metric levels"
 msgstr "Metrik-Levels"
 
-msgid "Metric name"
-msgstr "Metrik-Name"
-
 msgid "Metric name (exact match)"
 msgstr "Metrikname (exakter Match)"
 
@@ -44032,9 +44034,6 @@ msgstr "Keine zusätzlichen Konfigurationsoptionen für diese Methode."
 
 msgid "No agent labels present."
 msgstr "Keine Agentenlabels vorhanden."
-
-msgid "No aggregation"
-msgstr "Keine Aggregation"
 
 msgid "No appropriate request ID"
 msgstr "Keine passende Anfrage-ID"
@@ -52709,9 +52708,6 @@ msgstr "Raritan EMX Rack: Temperatur"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: Eingabephasen"
 
-msgid "Rate"
-msgstr "Rate"
-
 msgid "Rate computation"
 msgstr "Berechnung der Rate"
 
@@ -52775,6 +52771,14 @@ msgstr "Lesende E/A-Operationen pro Sekunde"
 
 msgid "Read Latency"
 msgstr "Leselatenz"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations (experimental)"
+msgstr "Verwalte die OpenTelemetry-Konfigurationen (experimentell)"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations."
+msgstr "OpenTelemetry-Konfiguration hinzufügen"
 
 msgid "Read access to all hosts and folders"
 msgstr "Lesezugriff auf alle Hosts/Ordner"
@@ -54650,14 +54654,8 @@ msgstr "Ressourcengruppe"
 msgid "Resource Name"
 msgstr "Ressourcenname"
 
-msgid "Resource attribute"
-msgstr "Ressource-Attribut"
-
 msgid "Resource attribute for hostname computation"
 msgstr "Ressource-Attribut für die Erstellung von Host-Namen"
-
-msgid "Resource attributes"
-msgstr "Ressource-Attribute"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Ressourcenverbrauch von Windows-Prozessen"
@@ -56390,12 +56388,6 @@ msgstr "Wissenschaftlich (Standard) mit Symbol %s"
 
 msgid "Scope"
 msgstr "Umfang"
-
-msgid "Scope attribute"
-msgstr "Umfang-Attribut"
-
-msgid "Scope attributes"
-msgstr "Umfang-Attribute"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -87539,6 +87531,10 @@ msgstr "Zypper-Updates"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Normale und Sicherheitsupdates für Zypper (Linux)"
 
+#, fuzzy, python-format
+msgid "[%s] - OAuth2 connection"
+msgstr "OAuth2-Verbindung"
+
 #, python-format
 msgid "[%s] - Quick setup"
 msgstr "[%s] - Quick Setup"
@@ -89941,8 +89937,13 @@ msgstr "Lädt Inhalt der Topliste"
 msgid "Remove row"
 msgstr "Zeile entfernen"
 
-msgid "Dashboard filter"
-msgstr "Dashboard-Filter"
+#, fuzzy
+msgid "Filter configuration"
+msgstr "Schließe Filterkonfiguration"
+
+#, fuzzy
+msgid "Runtime filters"
+msgstr "Laufzeit-Filter"
 
 msgid "Close filter configuration"
 msgstr "Schließe Filterkonfiguration"
@@ -89950,38 +89951,53 @@ msgstr "Schließe Filterkonfiguration"
 msgid "Clear search"
 msgstr "Suche leeren"
 
-msgid "Filters included by dashboard owner"
-msgstr "Vom Dashboard-Besitzer hinzugefügte Filter"
+msgid "Runtime filters are required to load data."
+msgstr "Zum Laden von Daten sind Laufzeitfilter erforderlich."
 
-msgid "You can override these by adding a runtime filter"
+msgid "Values are temporary and can be overridden by widget filters."
+msgstr ""
+
+#, fuzzy
+msgid "Set filters for all widgets."
+msgstr "Standardwerte für alle Sektionen festlegen"
+
+#, fuzzy
+msgid "Values can be overriden by runtime or widget filters."
 msgstr "Sie können diese durch Hinzufügen eines Laufzeitfilters überschreiben"
 
-msgid "Host filter"
-msgstr "Host-Filter"
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
+
+msgid "Values are temporary and can be overriden by widget filters."
+msgstr ""
 
 msgid "Select from list"
 msgstr "Aus der Liste auswählen"
 
-msgid "Service filter"
-msgstr "Service-Filter"
+#, fuzzy
+msgid "%{n} filters"
+msgstr "%{n} Filter angewendet"
 
-msgid "Reset to saved filters"
-msgstr "Auf gespeicherte Filter zurücksetzen"
+#, fuzzy
+msgid "Applied filters"
+msgstr "%{n} Filter angewendet"
 
-msgid "Success! Your new dashboard filters have been saved"
-msgstr "Erfolg! Ihre neuen Dashboard-Filter wurden gespeichert"
+#, fuzzy
+msgid "No %{n} dashboard filters applied"
+msgstr "Keine %{n} Filter angewendet"
 
-msgid "Runtime filters are required to load data."
-msgstr "Zum Laden von Daten sind Laufzeitfilter erforderlich."
+#, fuzzy
+msgid ""
+"%{n} filters selected on dashboard level appear and apply to all widgets. "
+"You can override the values by setting widget specific or runtime filters. "
+msgstr ""
+"Dashboard- oder Laufzeitfilter %{n}, die auf Dashboard-Ebene ausgewählt "
+"wurden, werden angezeigt und gelten für dieses Widget. Sie können die Werte "
+"überschreiben, indem Sie widgetspezifische Filter festlegen. "
 
-msgid "Values apply across all widgets."
-msgstr "Werte gelten für alle Widgets."
-
-msgid "Apply to dashboard"
-msgstr "Auf das Dashboard anwenden"
-
-msgid "Edit required runtime filters"
-msgstr "Erforderliche Laufzeitfilter bearbeiten"
+#, fuzzy
+msgid "Edit filter configuration"
+msgstr "Diese Konfiguration bearbeiten"
 
 msgid "Override dashboard filters"
 msgstr "Dashboard-Filter überschreiben"
@@ -90328,6 +90344,9 @@ msgstr "Geerbt"
 
 msgid "Overriden"
 msgstr "Überschrieben"
+
+msgid "Dashboard filter"
+msgstr "Dashboard-Filter"
 
 msgid "Runtime filter"
 msgstr "Laufzeit-Filter"
@@ -91001,6 +91020,18 @@ msgstr "Vorschau anzeigen"
 
 msgid "Preview of matches:"
 msgstr "Vorschau der Matches:"
+
+msgid "Metric name"
+msgstr "Metrik-Name"
+
+msgid "Resource attributes"
+msgstr "Ressource-Attribute"
+
+msgid "Scope attributes"
+msgstr "Umfang-Attribute"
+
+msgid "Data point attributes"
+msgstr "Attribute des Datenpunkts"
 
 msgid "Apply rate (sums)"
 msgstr "Rate anwenden (sums)"
@@ -92089,6 +92120,55 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Aggregation for histograms"
+#~ msgstr "Aggregation der Histogramme"
+
+#~ msgid "Aggregation for sums"
+#~ msgstr "Aggregation der Summen"
+
+#~ msgid "Data point attribute"
+#~ msgstr "Attribut des Datenpunkts"
+
+#, python-format
+#~ msgid "Invalid graph content: %s"
+#~ msgstr "Ungültiger Graph-Inhalt: %s"
+
+#~ msgid "No aggregation"
+#~ msgstr "Keine Aggregation"
+
+#~ msgid "Rate"
+#~ msgstr "Rate"
+
+#~ msgid "Resource attribute"
+#~ msgstr "Ressource-Attribut"
+
+#~ msgid "Scope attribute"
+#~ msgstr "Umfang-Attribut"
+
+#~ msgid "Filters included by dashboard owner"
+#~ msgstr "Vom Dashboard-Besitzer hinzugefügte Filter"
+
+#~ msgid "Host filter"
+#~ msgstr "Host-Filter"
+
+#~ msgid "Service filter"
+#~ msgstr "Service-Filter"
+
+#~ msgid "Reset to saved filters"
+#~ msgstr "Auf gespeicherte Filter zurücksetzen"
+
+#~ msgid "Success! Your new dashboard filters have been saved"
+#~ msgstr "Erfolg! Ihre neuen Dashboard-Filter wurden gespeichert"
+
+#~ msgid "Values apply across all widgets."
+#~ msgstr "Werte gelten für alle Widgets."
+
+#~ msgid "Apply to dashboard"
+#~ msgstr "Auf das Dashboard anwenden"
+
+#~ msgid "Edit required runtime filters"
+#~ msgstr "Erforderliche Laufzeitfilter bearbeiten"
 
 #~ msgid "Cannot change folder of rules managed by Quick setup."
 #~ msgstr ""

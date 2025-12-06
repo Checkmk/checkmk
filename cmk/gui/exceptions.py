@@ -6,13 +6,11 @@
 # mypy: disable-error-code="mutable-override"
 
 import http.client
-from typing import Literal, override
+from typing import override
 
 from werkzeug.http import HTTP_STATUS_CODES
 
 from cmk.ccc.exceptions import MKException, MKTimeout
-
-TokenType = Literal["dashboard"]
 
 
 class RequestTimeout(MKTimeout):
@@ -49,14 +47,6 @@ class MKAuthException(MKHTTPException):
 
 class MKUnauthenticatedException(MKAuthException):
     pass
-
-
-class MKTokenExpiredOrRevokedException(MKUnauthenticatedException):
-    token_type: TokenType
-
-    def __init__(self, *args: object, token_type: TokenType) -> None:
-        super().__init__(*args)
-        self.token_type: TokenType = token_type
 
 
 class MKConfigError(MKHTTPException):

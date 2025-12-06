@@ -35,7 +35,6 @@ from cmk.gui.exceptions import (
     MKConfigError,
     MKMethodNotAllowed,
     MKNotFound,
-    MKTokenExpiredOrRevokedException,
     MKUnauthenticatedException,
     MKUserError,
 )
@@ -44,7 +43,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.token_auth import handle_token_page
+from cmk.gui.token_auth import handle_token_page, MKTokenExpiredOrRevokedException
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,

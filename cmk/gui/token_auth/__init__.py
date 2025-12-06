@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.token_auth._exceptions import (
+    MKTokenExpiredOrRevokedException,
+)
 from cmk.gui.token_auth._registry import (
     handle_token_page,
     token_authenticated_page_registry,
@@ -21,6 +24,7 @@ from cmk.gui.token_auth._store import (
 __all__ = [
     "AuthToken",
     "DashboardToken",
+    "MKTokenExpiredOrRevokedException",
     "TokenAuthenticatedEndpoint",
     "TokenAuthenticatedPage",
     "TokenAuthenticatedPageRegistry",

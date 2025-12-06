@@ -12,11 +12,11 @@ import cmk.ccc.plugin_registry
 from cmk.gui.exceptions import (
     MKMethodNotAllowed,
     MKNotFound,
-    MKTokenExpiredOrRevokedException,
     MKUnauthenticatedException,
 )
 from cmk.gui.http import Request, Response, response
 from cmk.gui.pages import PageContext, PageResult
+from cmk.gui.token_auth._exceptions import MKTokenExpiredOrRevokedException
 from cmk.gui.token_auth._store import (
     AuthToken,
     get_token_store,

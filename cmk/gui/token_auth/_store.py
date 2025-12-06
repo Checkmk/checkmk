@@ -8,16 +8,17 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Final, NewType
+from typing import Final, Literal, NewType
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel, Field, RootModel
 
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
-from cmk.gui.exceptions import TokenType
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.utils import paths
+
+TokenType = Literal["dashboard"]
 
 
 class InvalidToken(ValueError):

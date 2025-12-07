@@ -18,8 +18,8 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.oracle.agent_based.oracle_recovery_area import (
+    check_plugin_oracle_recovery_area,
     inventory_oracle_recovery_area,
 )
 
@@ -40,12 +40,13 @@ _AGENT_OUTPUT = [
     ],
 )
 def test_discover_oracle_recovery_area(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     expected_result: Sequence[Service],
 ) -> None:
-    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_recovery_area")]
-    assert sorted(check_plugin.discovery_function(string_table)) == expected_result
+    assert (
+        sorted(check_plugin_oracle_recovery_area.discovery_function(string_table))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -66,15 +67,13 @@ def test_discover_oracle_recovery_area(
     ],
 )
 def test_check_oracle_recovery_area(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     item: str,
     expected_result: CheckResult,
 ) -> None:
-    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_recovery_area")]
     assert (
         list(
-            check_plugin.check_function(
+            check_plugin_oracle_recovery_area.check_function(
                 item=item,
                 params={
                     "levels": (70.0, 90.0),

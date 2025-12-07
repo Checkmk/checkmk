@@ -17,7 +17,10 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
+from cmk.plugins.collection.agent_based.sap_hana_ess import (
+    check_plugin_sap_hana_ess,
+    parse_sap_hana_ess,
+)
 
 
 @pytest.mark.parametrize(
@@ -49,11 +52,8 @@ from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionN
         ),
     ],
 )
-def test_parse_sap_hana_ess(
-    agent_based_plugins: AgentBasedPlugins, info: StringTable, expected_result: Mapping[str, object]
-) -> None:
-    section_plugin = agent_based_plugins.agent_sections[SectionName("sap_hana_ess")]
-    result = section_plugin.parse_function(info)
+def test_parse_sap_hana_ess(info: StringTable, expected_result: Mapping[str, object]) -> None:
+    result = parse_sap_hana_ess(info)
     assert result == expected_result
 
 
@@ -70,12 +70,9 @@ def test_parse_sap_hana_ess(
         ),
     ],
 )
-def test_inventory_sap_hana_ess(
-    agent_based_plugins: AgentBasedPlugins, info: StringTable, expected_result: DiscoveryResult
-) -> None:
-    section = agent_based_plugins.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_ess")]
-    assert list(plugin.discovery_function(section)) == expected_result
+def test_inventory_sap_hana_ess(info: StringTable, expected_result: DiscoveryResult) -> None:
+    section = parse_sap_hana_ess(info)
+    assert list(check_plugin_sap_hana_ess.discovery_function(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -123,14 +120,12 @@ def test_inventory_sap_hana_ess(
     ],
 )
 def test_check_sap_hana_ess(
-    agent_based_plugins: AgentBasedPlugins,
     item: str,
     info: StringTable,
     expected_result: CheckResult,
 ) -> None:
-    section = agent_based_plugins.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_ess")]
-    assert list(plugin.check_function(item, section)) == expected_result
+    section = parse_sap_hana_ess(info)
+    assert list(check_plugin_sap_hana_ess.check_function(item, section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -144,10 +139,7 @@ def test_check_sap_hana_ess(
         ),
     ],
 )
-def test_check_sap_hana_ess_stale(
-    agent_based_plugins: AgentBasedPlugins, item: str, info: StringTable
-) -> None:
-    section = agent_based_plugins.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_ess")]
+def test_check_sap_hana_ess_stale(item: str, info: StringTable) -> None:
+    section = parse_sap_hana_ess(info)
     with pytest.raises(IgnoreResultsError):
-        list(plugin.check_function(item, section))
+        list(check_plugin_sap_hana_ess.check_function(item, section))

@@ -5,13 +5,14 @@
 from collections.abc import Mapping
 from concurrent.futures.thread import ThreadPoolExecutor
 from http import HTTPStatus
-from typing import Any, Literal
+from typing import Any, cast, Literal
 
 from livestatus import SiteConfigurations
 
 import cmk.gui.utils.permission_verification as permissions
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.dashlet import dashlet_registry
+from cmk.gui.dashboard.type_defs import DashboardConfig, LinkedViewDashletConfig
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
@@ -20,6 +21,7 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
 from cmk.gui.userdb import load_user
+from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
 from cmk.gui.watolib.automations import (
     remote_automation_config_from_site_config,
@@ -29,7 +31,6 @@ from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 from cmk.utils.automation_config import RemoteAutomationConfig
 
 from ..store import DashboardStore, get_all_dashboards, save_all_dashboards
-from ..type_defs import DashboardConfig
 from .model.constants import (
     DashboardConstantsResponse,
     FilterContextConstants,
@@ -222,6 +223,26 @@ def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId) -> None:
 
     with ThreadPoolExecutor(max_workers=len(remote_configs)) as executor:
         executor.map(push, remote_configs)
+
+
+def get_view_owners(dashboard_config: DashboardConfig) -> dict[str, UserId]:
+    """Get the owners of all views used in linked view widgets of the dashboard.
+
+    This is relative to the current user and their permissions."""
+    widget_id_to_view_name = {
+        f"{dashboard_config['name']}-{idx}": cast(LinkedViewDashletConfig, widget)["name"]
+        for idx, widget in enumerate(dashboard_config["dashlets"])
+        if widget["type"] == "linked_view"
+    }
+    view_owners: dict[str, UserId] = {}
+    if widget_id_to_view_name:
+        views = get_permitted_views()
+        for widget_id, view_name in widget_id_to_view_name.items():
+            if view_name in views:
+                view_owners[widget_id] = views[view_name]["owner"]
+            # else: a not found message should be displayed in the widget itself (on access)
+
+    return view_owners
 
 
 def convert_internal_relative_dashboard_to_api_model_dict(

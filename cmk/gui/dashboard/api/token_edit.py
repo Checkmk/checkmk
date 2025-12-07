@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime as dt
+
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -15,7 +17,12 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import get_dashboard_for_edit, PERMISSIONS_DASHBOARD_EDIT, save_dashboard_to_file
+from ._utils import (
+    get_dashboard_for_edit,
+    get_view_owners,
+    PERMISSIONS_DASHBOARD_EDIT,
+    save_dashboard_to_file,
+)
 from .model.token import (
     DashboardTokenMetadata,
     DashboardTokenObjectModel,
@@ -32,9 +39,11 @@ def edit_dashboard_token_v1(
 
     with edit_dashboard_auth_token(dashboard) as token:
         if token:
+            token.valid_until = body.expires_at
             token.details.comment = body.comment
             token.details.disabled = body.is_disabled
-            token.valid_until = body.expires_at
+            token.details.view_owners = get_view_owners(dashboard)
+            token.details.synced_at = dt.datetime.now(dt.UTC)
         else:
             if dashboard.get("public_token_id") is not None:
                 # remove invalid token reference

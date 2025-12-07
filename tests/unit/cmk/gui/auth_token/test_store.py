@@ -22,6 +22,7 @@ def test_successful_verification(tmp_path: Path) -> None:
         token_details=DashboardToken(
             owner=UserId("owner"),
             dashboard_name="unit-dashboard",
+            synced_at=some_time,
         ),
         issuer=UserId("issuer"),
         now=some_time,
@@ -36,6 +37,7 @@ def test_revokation(tmp_path: Path) -> None:
         token_details=DashboardToken(
             owner=UserId("owner"),
             dashboard_name="unit-dashboard",
+            synced_at=some_time,
         ),
         issuer=UserId("issuer"),
         now=some_time,
@@ -53,6 +55,7 @@ def test_expired_w_expiration(tmp_path: Path) -> None:
         token_details=DashboardToken(
             owner=UserId("owner"),
             dashboard_name="unit-dashboard",
+            synced_at=some_time,
         ),
         issuer=UserId("issuer"),
         now=some_time,
@@ -69,6 +72,7 @@ def test_expired_wo_expiration(tmp_path: Path) -> None:
         token_details=DashboardToken(
             owner=UserId("owner"),
             dashboard_name="unit-dashboard",
+            synced_at=some_time,
         ),
         issuer=UserId("issuer"),
         now=some_time,
@@ -96,6 +100,7 @@ def test_issued_at(tmp_path: Path) -> None:
         token_details=DashboardToken(
             owner=UserId("owner"),
             dashboard_name="unit-dashboard",
+            synced_at=some_time,
         ),
         issuer=UserId("issuer"),
         now=some_time,
@@ -110,6 +115,7 @@ def test_delete_token(tmp_path: Path) -> None:
         token_details=DashboardToken(
             owner=UserId("owner"),
             dashboard_name="unit-dashboard",
+            synced_at=some_time,
         ),
         issuer=UserId("issuer"),
         now=some_time,
@@ -128,6 +134,7 @@ def test_last_successful_verification(tmp_path: Path) -> None:
         token_details=DashboardToken(
             owner=UserId("owner"),
             dashboard_name="unit-dashboard",
+            synced_at=some_time,
         ),
         issuer=UserId("issuer"),
         now=some_time,

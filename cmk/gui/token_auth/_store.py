@@ -43,11 +43,14 @@ class TokenRevoked(TokenTypeError):
 
 
 class DashboardToken(BaseModel):
+    type_: TokenType = "dashboard"
     owner: AnnotatedUserId
     dashboard_name: str
-    type_: TokenType = "dashboard"
     comment: str = ""
     disabled: bool = False
+    # widget_id (for linked view widget) -> view owner id
+    view_owners: dict[str, AnnotatedUserId] = Field(default_factory=dict)
+    synced_at: datetime  # last time the token was modified/synced with the dashboard config
 
 
 TokenId = NewType("TokenId", str)

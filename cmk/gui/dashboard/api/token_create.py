@@ -22,7 +22,12 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import DashboardToken, get_token_store
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import get_dashboard_for_edit, PERMISSIONS_DASHBOARD_EDIT, save_dashboard_to_file
+from ._utils import (
+    get_dashboard_for_edit,
+    get_view_owners,
+    PERMISSIONS_DASHBOARD_EDIT,
+    save_dashboard_to_file,
+)
 from .model.token import CreateDashboardToken, DashboardTokenMetadata, DashboardTokenObjectModel
 
 
@@ -57,6 +62,8 @@ def create_dashboard_token_v1(
             dashboard_name=body.dashboard_id,
             comment=body.comment,
             disabled=False,
+            view_owners=get_view_owners(dashboard),
+            synced_at=now,
         ),
         issuer=user.ident,
         now=now,

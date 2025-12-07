@@ -17,6 +17,7 @@ import time_machine
 from pytest_mock import MockerFixture
 
 from cmk.automations.results import AnalyzeHostRuleMatchesResult
+from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleMatches
 from cmk.ccc.hostaddress import HostName
@@ -224,7 +225,8 @@ def fixture_mock_analyze_host_rule_matches_automation(
         with mocker.patch("sys.stdin", StringIO(repr(r))):
             return AutomationAnalyzeHostRuleMatches().execute(
                 AutomationContext(
-                    edition=edition(omd_root),
+                    edition=(app := make_app(edition(omd_root))).edition,
+                    make_bake_on_restart=app.make_bake_on_restart,
                 ),
                 [h],
                 None,

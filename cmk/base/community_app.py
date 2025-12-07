@@ -17,6 +17,7 @@ def make_app() -> CheckmkBaseApp:
         edition=Edition.COMMUNITY,
         modes=_modes(),
         automations=_automations(),
+        make_bake_on_restart=lambda *args: lambda: None,
     )
 
 

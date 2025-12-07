@@ -251,10 +251,10 @@ def _execute_automation_endpoint(
             clear_caches_before_each_call(state.loading_result.config_cache)
         try:
             automation_start_time = time.time()
-            app = make_app(cmk_version.edition(paths.omd_root))
             result_or_error_code: ABCAutomationResult | int = engine.execute(
                 AutomationContext(
-                    edition=app.edition,
+                    edition=(app := make_app(cmk_version.edition(paths.omd_root))).edition,
+                    make_bake_on_restart=app.make_bake_on_restart,
                 ),
                 payload.name,
                 list(payload.args),

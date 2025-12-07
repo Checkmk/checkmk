@@ -1573,27 +1573,6 @@ _NAGIOS_CONFIG_MODE = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _make_configured_bake_on_restart(
-    loading_result: config.LoadingResult,
-    hosts: Sequence[HostAddress],
-) -> Callable[[], None]:
-    # TODO: consider passing the edition here, instead of "detecting" it (and thus
-    # silently failing if the bakery is missing unexpectedly)
-    try:
-        from cmk.base.configlib.nonfree.pro.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            make_configured_bake_on_restart_callback,
-        )
-    except ImportError:
-        return lambda: None
-
-    return make_configured_bake_on_restart_callback(  # type: ignore[no-any-return, unused-ignore]
-        loading_result,
-        hosts,
-        agents_dir=cmk.utils.paths.agents_dir,
-        local_agents_dir=cmk.utils.paths.local_agents_dir,
-    )
-
-
 def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
     noop = lambda: None
 
@@ -1624,7 +1603,7 @@ def mode_update(app: CheckmkBaseApp) -> None:
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    bake_on_restart = _make_configured_bake_on_restart(loading_result, hosts_config.hosts)
+    bake_on_restart = app.make_bake_on_restart(loading_result, hosts_config.hosts)
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     service_name_config = loading_result.config_cache.make_passive_service_name_config(
         final_service_name_config
@@ -1779,7 +1758,7 @@ def mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             )
         ),
-        bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
+        bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
     )
     for warning in ip_address_of.error_handler.format_errors():
@@ -1876,7 +1855,7 @@ def mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             ),
         ),
-        bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
+        bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
     )
     for warning in ip_address_of.error_handler.format_errors():
@@ -2037,6 +2016,7 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
             app.automations.execute_and_write_serialized_result_to_stdout(
                 AutomationContext(
                     edition=app.edition,
+                    make_bake_on_restart=app.make_bake_on_restart,
                 ),
                 name,
                 automation_args,

@@ -107,7 +107,8 @@ class TestAutomationDiagHost:
 
         assert check_mk.AutomationDiagHost().execute(
             AutomationContext(
-                edition=(make_app(edition(paths.omd_root))).edition,
+                edition=(app := make_app(edition(paths.omd_root))).edition,
+                make_bake_on_restart=app.make_bake_on_restart,
             ),
             args,
             AgentBasedPlugins.empty(),
@@ -250,7 +251,8 @@ def test_automation_active_check(
     assert (
         active_check.execute(
             AutomationContext(
-                edition=(make_app(edition(paths.omd_root))).edition,
+                edition=(app := make_app(edition(paths.omd_root))).edition,
+                make_bake_on_restart=app.make_bake_on_restart,
             ),
             active_check_args,
             AgentBasedPlugins.empty(),
@@ -322,7 +324,8 @@ def test_automation_active_check_invalid_args(
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(
         AutomationContext(
-            edition=edition(paths.omd_root),
+            edition=(app := make_app(edition(paths.omd_root))).edition,
+            make_bake_on_restart=app.make_bake_on_restart,
         ),
         active_check_args,
         AgentBasedPlugins.empty(),

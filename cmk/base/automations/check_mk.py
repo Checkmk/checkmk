@@ -1026,26 +1026,6 @@ class AutomationAutodiscovery(DiscoveryAutomation):
         return AutodiscoveryResult(*result)
 
 
-def _make_configured_bake_on_restart_callback(
-    edition: cmk_version.Edition,
-    loading_result: config.LoadingResult,
-    hosts: Sequence[HostAddress],
-) -> Callable[[], None]:
-    if edition is cmk_version.Edition.COMMUNITY:
-        return lambda: None
-
-    from cmk.base.configlib.nonfree.pro.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-        make_configured_bake_on_restart_callback,
-    )
-
-    return make_configured_bake_on_restart_callback(  # type: ignore[no-any-return, unused-ignore]
-        loading_result,
-        hosts,
-        agents_dir=cmk.utils.paths.agents_dir,
-        local_agents_dir=cmk.utils.paths.local_agents_dir,
-    )
-
-
 def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
     noop = lambda: None
 
@@ -1313,9 +1293,7 @@ def _execute_autodiscovery(
             cache_manager.clear_all()
             config_cache.initialize()
             hosts_config = config.make_hosts_config(loaded_config)
-            bake_on_restart = _make_configured_bake_on_restart_callback(
-                ctx.edition, loading_result, hosts_config.hosts
-            )
+            bake_on_restart = ctx.make_bake_on_restart(loading_result, hosts_config.hosts)
             notify_relay = _make_configured_notify_relay(bool(loaded_config.relays))
 
             # reset these to their original value to create a correct config
@@ -1629,9 +1607,7 @@ class AutomationRenameHosts(Automation):
                         tag_list=config_cache.host_tags.tag_list,
                         service_dependencies=loaded_config.service_dependencies,
                     ),
-                    bake_on_restart=_make_configured_bake_on_restart_callback(
-                        ctx.edition, loading_result, hosts_config.hosts
-                    ),
+                    bake_on_restart=ctx.make_bake_on_restart(loading_result, hosts_config.hosts),
                     notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
                 )
 
@@ -2683,9 +2659,7 @@ class AutomationRestart(Automation):
                 tag_list=loading_result.config_cache.host_tags.tag_list,
                 service_dependencies=loaded_config.service_dependencies,
             ),
-            bake_on_restart=_make_configured_bake_on_restart_callback(
-                ctx.edition, loading_result, hosts_config.hosts
-            ),
+            bake_on_restart=ctx.make_bake_on_restart(loading_result, hosts_config.hosts),
             notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
         )
 

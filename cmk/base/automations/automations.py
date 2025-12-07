@@ -7,7 +7,7 @@ import abc
 import enum
 import os
 import sys
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Sequence
 from contextlib import nullcontext, redirect_stdout, suppress
 from dataclasses import dataclass
 from typing import assert_never
@@ -18,6 +18,7 @@ from cmk.automations.results import ABCAutomationResult
 from cmk.base import config, profiling
 from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
+from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import log, paths
@@ -39,6 +40,9 @@ class AutomationError(enum.IntEnum):
 @dataclass(frozen=True, kw_only=True)
 class AutomationContext:
     edition: cmk_version.Edition
+    make_bake_on_restart: Callable[
+        [config.LoadingResult, Sequence[HostAddress]], Callable[[], None]
+    ]
 
 
 class Automations:

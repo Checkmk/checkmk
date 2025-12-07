@@ -473,7 +473,6 @@ LEGACY_CHECKS = [
     "msexch_replhealth",
     "msoffice_licenses",
     "msoffice_serviceplans",
-    "mssql_instance",
     "mysql_ping",
     "mysql",
     "netapp_cluster",

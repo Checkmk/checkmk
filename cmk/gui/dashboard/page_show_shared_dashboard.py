@@ -19,25 +19,24 @@ from cmk.gui import visuals
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Response, response
 from cmk.gui.i18n import _
-from cmk.gui.pages import PageContext
+from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.token_auth import AuthToken, TokenAuthenticatedPage, TokenId
+from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 
-from .api import convert_internal_relative_dashboard_to_api_model_dict
-from .api._utils import DashboardConstants
-from .store import (
-    get_all_dashboards,
-)
+from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
+from .store import get_all_dashboards
+from .token_util import DashboardTokenAuthenticatedPage
 from .type_defs import DashboardConfig, DashboardName
 
 
-class SharedDashboardPage(TokenAuthenticatedPage):
-    def get(self, token: AuthToken, ctx: PageContext) -> None:
-        details = token.details
-        if details.type_ != "dashboard":
-            raise ValueError("Invalid token type for shared dashboard page")
+class SharedDashboardPage(DashboardTokenAuthenticatedPage):
+    def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
+        page_shared_dashboard(
+            token_details.owner, token_details.dashboard_name, token.token_id, ctx
+        )
 
-        page_shared_dashboard(details.owner, details.dashboard_name, token.token_id, ctx)
+    def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
+        return page_dashboard_token_invalid(_("Token invalid"))
 
 
 class SharedDashboardPageComponents:

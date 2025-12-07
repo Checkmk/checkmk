@@ -17,7 +17,12 @@ from cmk.gui.dashboard.api import (
 )
 from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
-from cmk.gui.dashboard.dashlet.utils import get_dashlet_config_via_token
+from cmk.gui.dashboard.token_util import (
+    DashboardTokenAuthenticatedPage,
+    get_dashboard_widget_by_id,
+    impersonate_dashboard_token_issuer,
+    InvalidWidgetError,
+)
 from cmk.gui.dashboard.type_defs import DashboardConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
@@ -33,9 +38,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
-from cmk.gui.session import UserContext
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.token_auth import AuthToken, TokenAuthenticatedPage
+from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils import paths
 
@@ -128,30 +132,33 @@ class GraphWidgetPage(cmk.gui.pages.Page):
             html.write_html(html.render_message(str(e)))
 
 
-class GraphWidgetTokenAuthPage(TokenAuthenticatedPage):
+class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
     @classmethod
     def ident(cls) -> str:
         return "widget_graph_token_auth"
 
-    def post(self, token: AuthToken, ctx: PageContext) -> None:
-        try:
-            if token.details.disabled or (token.details.type_ != "dashboard"):
-                raise MKUserError(
-                    "invalid_token",
-                    _("The provided token is not valid for the requested page."),
-                )
+    def _post(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
+        if (widget_id := ctx.request.get_str_input("widget_id")) is None:
+            raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
 
-            if (widget_id := ctx.request.get_str_input("widget_id")) is None:
-                raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
-
-            dashlet_config = cast(
-                GraphDashletConfig, get_dashlet_config_via_token(ctx, token, widget_id)
-            )
-
-            with UserContext(
-                token.issuer,
-                UserPermissions.from_config(ctx.config, permission_registry),
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        with impersonate_dashboard_token_issuer(
+            token.issuer, token_details, user_permissions
+        ) as issuer:
+            dashboard = issuer.load_dashboard()
+            widget_config = get_dashboard_widget_by_id(dashboard, widget_id)
+            if widget_config["type"] not in (
+                "combined_graph",
+                "custom_graph",
+                "performance_graph",
+                "problem_graph",
+                "single_timeseries",
             ):
-                render_graph_widget_content(ctx, dashlet_config, widget_id)
-        except Exception as e:
-            html.write_html(html.render_message(str(e)))
+                raise InvalidWidgetError()
+
+            try:
+                # this also requires the impersonation context
+                render_graph_widget_content(ctx, cast(GraphDashletConfig, widget_config), widget_id)
+            except KeyError:
+                # likely an edition downgrade where the graph type is not available anymore
+                raise InvalidWidgetError(disable_token=True) from None

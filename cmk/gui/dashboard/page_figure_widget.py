@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 import json
 from collections.abc import Callable, Mapping
 from typing import override
 
-from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.gui.dashboard.api import (
     FigureDashletConfig,
     FigureRequestInternal,
@@ -19,18 +17,24 @@ from cmk.gui.dashboard.dashlet.dashlets.stats import (
     HostStatsDashletDataGenerator,
     ServiceStatsDashletDataGenerator,
 )
-from cmk.gui.dashboard.dashlet.utils import get_dashlet_config_via_token
+from cmk.gui.dashboard.token_util import (
+    DashboardTokenAuthenticatedPage,
+    get_dashboard_widget_by_id,
+    impersonate_dashboard_token_issuer,
+    InvalidWidgetError,
+)
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.http import response
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.token_auth import AuthToken, TokenAuthenticatedPage
+from cmk.gui.permissions import permission_registry
+from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 
 __all__ = ["FigureWidgetPage", "FigureWidgetTokenAuthPage"]
 
+from cmk.gui.utils.roles import UserPermissions
 
 GENERATOR_BY_FIGURE_TYPE: Mapping[
     str,
@@ -83,7 +87,7 @@ class FigureWidgetPage(AjaxPage):
         )
 
 
-class FigureWidgetTokenAuthPage(TokenAuthenticatedPage):
+class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
     @classmethod
     def ident(cls) -> str:
         return "widget_figure_token_auth"
@@ -92,41 +96,48 @@ class FigureWidgetTokenAuthPage(TokenAuthenticatedPage):
     def get_data_generator(cls, figure_type_name: str) -> Callable[..., FigureResponseData]:
         return FigureWidgetPage.get_data_generator(figure_type_name)
 
-    def post(self, token: AuthToken, ctx: PageContext) -> PageResult:
+    @staticmethod
+    def _set_response_data(data: dict[str, object]) -> None:
+        response.set_data(json.dumps(data, cls=CustomObjectJSONEncoder))
+
+    def _before_method_handler(self, ctx: PageContext) -> None:
         response.set_content_type("application/json")
+
+    def _handle_exception(self, exception: Exception, ctx: PageContext) -> None:
+        if ctx.config.debug:
+            raise exception
+
+        self._set_response_data({"result_code": 1, "result": str(exception), "severity": "error"})
+
+    def _post(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
+        if (widget_id := ctx.request.get_str_input("widget_id")) is None:
+            raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
+
+        with impersonate_dashboard_token_issuer(
+            token.issuer,
+            token_details,
+            UserPermissions.from_config(ctx.config, permission_registry),
+        ) as issuer:
+            dashboard = issuer.load_dashboard()
+
+        widget_config = get_dashboard_widget_by_id(dashboard, widget_id)
         try:
-            if token.details.disabled or (token.details.type_ != "dashboard"):
-                raise MKUserError(
-                    "invalid_token",
-                    _("The provided token is not valid for the requested page."),
-                )
+            data_generator = self.get_data_generator(widget_config["type"])
+        except KeyError:
+            # likely an edition downgrade where the figure type is not available anymore
+            raise InvalidWidgetError(disable_token=True) from None
 
-            if (widget_id := ctx.request.get_str_input("widget_id")) is None:
-                raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
-
-            dashlet_config = get_dashlet_config_via_token(ctx, token, widget_id)
-
+        try:
             action_response = create_figures_response(
-                self.get_data_generator(dashlet_config["type"])(
-                    dashlet_config,
-                    dashlet_config["context"],
-                    dashlet_config["single_infos"],
+                data_generator(
+                    widget_config,
+                    widget_config["context"],
+                    widget_config["single_infos"],
                 )
             )
 
             resp = {"result_code": 0, "result": action_response, "severity": "success"}
         except MKMissingDataError as e:
             resp = {"result_code": 1, "result": str(e), "severity": "success"}
-        # I added MKGeneralException during a refactoring, but I did not check if it is needed.
-        except (MKException, MKGeneralException, MKUserError) as e:
-            resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
-        except Exception as e:
-            if ctx.config.debug:
-                raise
-            logger.exception("error calling token authenticated page handler")
-            resp = {"result_code": 1, "result": str(e), "severity": "error"}
-
-        response.set_data(json.dumps(resp, cls=CustomObjectJSONEncoder))
-
-        return resp
+        self._set_response_data(resp)

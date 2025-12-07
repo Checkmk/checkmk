@@ -42,6 +42,7 @@ from .model.constants import (
 )
 from .model.dashboard import RelativeGridDashboardResponse
 from .model.response_model import RelativeGridDashboardDomainObject
+from .model.token import edit_dashboard_auth_token
 from .model.widget import WidgetRelativeGridPosition, WidgetRelativeGridSize
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
@@ -243,6 +244,15 @@ def get_view_owners(dashboard_config: DashboardConfig) -> dict[str, UserId]:
             # else: a not found message should be displayed in the widget itself (on access)
 
     return view_owners
+
+
+def disable_dashboard_token(dashboard_config: DashboardConfig) -> None:
+    """Disable the auth token of a dashboard.
+
+    This should be done whenever the dashboard is edited."""
+    with edit_dashboard_auth_token(dashboard_config) as token:
+        if token is not None:
+            token.details.disabled = True
 
 
 def convert_internal_relative_dashboard_to_api_model_dict(

@@ -20,20 +20,19 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Response, response
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext, PageResult
+from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
+from cmk.gui.utils.roles import UserPermissions
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
-from .store import get_all_dashboards
-from .token_util import DashboardTokenAuthenticatedPage
-from .type_defs import DashboardConfig, DashboardName
+from .token_util import DashboardTokenAuthenticatedPage, impersonate_dashboard_token_issuer
+from .type_defs import DashboardConfig
 
 
 class SharedDashboardPage(DashboardTokenAuthenticatedPage):
     def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
-        page_shared_dashboard(
-            token_details.owner, token_details.dashboard_name, token.token_id, ctx
-        )
+        page_shared_dashboard(token.token_id, token.issuer, token_details, ctx)
 
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
         return page_dashboard_token_invalid(_("Token invalid"))
@@ -48,19 +47,6 @@ class SharedDashboardPageComponents:
             raise ValueError("Referenced invalid dashboard token")
 
     @staticmethod
-    def dashboard_details(
-        owner: UserId, dashboard_name: DashboardName
-    ) -> tuple[str, DashboardConfig]:
-        all_dashboards = get_all_dashboards()
-        board = all_dashboards[(owner, dashboard_name)]
-
-        # TODO: keep the request lookup for now (potentially to be removed afterwards)
-        board_context = visuals.active_context_from_request(["host", "service"], board["context"])
-        board["context"] = board_context
-        title = visuals.visual_title("dashboard", board, board_context)
-        return title, board
-
-    @staticmethod
     def html_section(page_properties: dict[str, Any]) -> None:
         html.body_start()
         html.begin_page_content(enable_scrollbar=True)
@@ -68,15 +54,22 @@ class SharedDashboardPageComponents:
 
 
 def page_shared_dashboard(
-    owner: UserId, dashboard_name: DashboardName, token_id: TokenId, ctx: PageContext
+    token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
-    title, board = SharedDashboardPageComponents.dashboard_details(owner, dashboard_name)
+    with impersonate_dashboard_token_issuer(
+        token_issuer, token_details, UserPermissions.from_config(ctx.config, permission_registry)
+    ) as issuer:
+        board = issuer.load_dashboard()
+        SharedDashboardPageComponents.verify_dashboard_referenced_token(board, token_id)
 
-    SharedDashboardPageComponents.verify_dashboard_referenced_token(board, token_id)
+        # this can end up loading views when computing the used infos,
+        # so it needs the impersonation context
+        internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
 
+    title = visuals.visual_title("dashboard", board, board["context"])
     dashboard_properties = {
-        "spec": convert_internal_relative_dashboard_to_api_model_dict(board),
-        "name": dashboard_name,
+        "spec": internal_spec,
+        "name": token_details.dashboard_name,
         "title": title,
     }
 

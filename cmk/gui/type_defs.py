@@ -548,6 +548,7 @@ class ViewSpec(Visual):
     user_sortable: NotRequired[bool]
     play_sounds: NotRequired[bool]
     inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
+    modified_at: NotRequired[str]  # timestamp in ISO format
 
 
 # NOTE: keep in sync with `ViewSpec`
@@ -573,6 +574,7 @@ class DashboardEmbeddedViewSpec(TypedDict):
     user_sortable: NotRequired[bool]
     play_sounds: NotRequired[bool]
     inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
+    modified_at: NotRequired[str]  # timestamp in ISO format
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]

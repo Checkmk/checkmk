@@ -9172,6 +9172,10 @@ msgid "Azure Agent Info (deprecated)"
 msgstr "Informații despre Azure Agent"
 
 #, fuzzy
+msgid "Azure App Registration"
+msgstr "Înregistrări de aplicații"
+
+#, fuzzy
 msgid "Azure Application Gateway"
 msgstr "Poarta de aplicații"
 
@@ -9429,6 +9433,10 @@ msgstr "Zorp firewall"
 #, fuzzy
 msgid "Azure firewall latency"
 msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure recovery services vault backup"
+msgstr "Servicii de recuperare Vault"
 
 #, fuzzy
 msgid "Azure resource group"

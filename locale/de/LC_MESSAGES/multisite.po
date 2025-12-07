@@ -8816,6 +8816,10 @@ msgstr "Azure Agent-Info"
 msgid "Azure Agent Info (deprecated)"
 msgstr "Azure Agent-Info (veraltet)"
 
+#, fuzzy
+msgid "Azure App Registration"
+msgstr "App-Registrierung"
+
 msgid "Azure Application Gateway"
 msgstr "Azure Applikations-Gateway"
 
@@ -9013,6 +9017,10 @@ msgstr "Gesundheit des Azure Firewalls"
 
 msgid "Azure firewall latency"
 msgstr "Latenz des Azure Firewalls"
+
+#, fuzzy
+msgid "Azure recovery services vault backup"
+msgstr "Recovery Services-Tresor"
 
 msgid "Azure resource group"
 msgstr "Azure Ressourcengruppe"

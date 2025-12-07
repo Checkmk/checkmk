@@ -8567,6 +8567,10 @@ msgstr "Azureエージェント情報"
 msgid "Azure Agent Info (deprecated)"
 msgstr "Azureエージェント情報"
 
+#, fuzzy
+msgid "Azure App Registration"
+msgstr "App登録"
+
 msgid "Azure Application Gateway"
 msgstr "Azureアプリケーションゲートウェイ"
 
@@ -8824,6 +8828,10 @@ msgstr "Zorpファイアウォール"
 #, fuzzy
 msgid "Azure firewall latency"
 msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Azure recovery services vault backup"
+msgstr "Recovery Services Vault"
 
 #, fuzzy
 msgid "Azure resource group"

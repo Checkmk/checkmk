@@ -9223,6 +9223,10 @@ msgid "Azure Agent Info (deprecated)"
 msgstr "Informations sur l'agent Azure"
 
 #, fuzzy
+msgid "Azure App Registration"
+msgstr "Enregistrements d'applications"
+
+#, fuzzy
 msgid "Azure Application Gateway"
 msgstr "Passerelle d'application"
 
@@ -9480,6 +9484,10 @@ msgstr "Pare-feu Zorp"
 #, fuzzy
 msgid "Azure firewall latency"
 msgstr "Pare-feu Zorp"
+
+#, fuzzy
+msgid "Azure recovery services vault backup"
+msgstr "Chambre forte des services de recouvrement"
 
 #, fuzzy
 msgid "Azure resource group"

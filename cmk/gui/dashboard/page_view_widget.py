@@ -4,27 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import dataclasses
-import json
 from collections.abc import Generator
-from typing import cast, get_args, Literal, override
+from typing import Annotated, cast, get_args, Literal, override, Self
+
+from pydantic import BaseModel, Json, model_validator, ValidationError
 
 from cmk.ccc.user import UserId
-from cmk.gui.dashboard import DashboardConfig
-from cmk.gui.dashboard.store import (
-    get_all_dashboards,
-    get_permitted_dashboards,
-    save_all_dashboards,
+from cmk.gui.dashboard import DashboardConfig, get_all_dashboards
+from cmk.gui.dashboard.page_show_shared_dashboard import SharedDashboardPageComponents
+from cmk.gui.dashboard.store import get_permitted_dashboards, save_all_dashboards
+from cmk.gui.dashboard.token_util import (
+    DashboardTokenAuthenticatedPage,
+    get_dashboard_widget_by_id,
+    get_shared_dashboard_url,
+    impersonate_dashboard_token_issuer,
+    ImpersonatedDashboardTokenIssuer,
+    InvalidWidgetError,
 )
+from cmk.gui.dashboard.type_defs import EmbeddedViewDashletConfig, LinkedViewDashletConfig
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import Page, PageContext
+from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
+from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec, SingleInfos, ViewSpec, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
@@ -35,7 +43,7 @@ from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
 
-__all__ = ["ViewWidgetIFramePage", "ViewWidgetEditPage"]
+__all__ = ["ViewWidgetIFramePage", "ViewWidgetIFrameTokenPage", "ViewWidgetEditPage"]
 
 
 class EmbeddedViewSpecManager:
@@ -125,48 +133,30 @@ class EmbeddedViewSpecManager:
             target["inventory_join_macros"] = inventory_join_macros
 
 
-class ViewWidgetIFramePage(Page):
-    @override
-    def page(self, ctx: PageContext) -> None:
-        """Render a single view for use in an iframe.
-
-        This needs to support two modes:
-            1. Render an existing linked view, identified by its name
-            2. Render a view that's embedded in the dashboard config, identified by its internal ID
-        """
-        dashboard_name = ctx.request.get_ascii_input_mandatory("dashboard")
-        widget_id = ctx.request.get_ascii_input_mandatory("widget_id")
-        is_reload = (
-            ctx.request.var("display_options", ctx.request.var("_display_options")) is not None
-        )
-        is_debug = ctx.request.var("debug") == "1"
-        view_spec = self._get_view_spec(request, dashboard_name)
-        context = self._get_context(request)
-        widget_unique_name = f"{dashboard_name}_{widget_id}"
-        self._setup_display_and_painter_options(request, widget_unique_name, is_reload)
-
-        # filled_in needs to be set in order for rows to be fetched, so we set it to a default here
-        if ctx.request.var("filled_in") is None:
-            ctx.request.set_var("filled_in", "filter")
-
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+class ViewWidgetIFramePageHelper:
+    @classmethod
+    def render_iframe_content(
+        cls,
+        widget_name: str,
+        view_spec: ViewSpec,
+        row_limit: int | None,
+        context: VisualContext,
+        user_permissions: UserPermissions,
+        *,
+        is_reload: bool,
+        is_debug: bool,
+    ) -> None:
+        view_spec = cls._prepare_view_spec(view_spec)
         view = View(
-            widget_unique_name,
+            widget_name,
             view_spec,
             context,
             user_permissions=user_permissions,
         )
-        view.row_limit = get_limit(
-            request_limit_mode=ctx.request.get_ascii_input_mandatory("limit", "soft"),
-            soft_query_limit=ctx.config.soft_query_limit,
-            may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
-            hard_query_limit=ctx.config.hard_query_limit,
-            may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
-        )
+        view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
-
-        with self._wrapper_context(is_reload):
+        with cls._wrapper_context(is_reload):
             process_view(
                 GUIViewRenderer(
                     view,
@@ -177,9 +167,42 @@ class ViewWidgetIFramePage(Page):
                 debug=is_debug,
             )
 
-    def _wrapper_context(self, is_reload: bool) -> contextlib.AbstractContextManager[None]:
+    @staticmethod
+    def setup_display_and_painter_options(
+        request: Request, widget_name: str, is_reload: bool
+    ) -> None:
+        """Setup display options and painter options for the view widget iframe page."""
         if not is_reload:
-            return self._content_wrapper()
+            view_display_options = "HRSIXLW"
+
+            request.set_var("display_options", view_display_options)
+            request.set_var("_display_options", view_display_options)
+
+        # Need to be loaded before processing the painter_options below.
+        # TODO: Make this dependency explicit
+        display_options.load_from_html(request, html)
+
+        painter_options = PainterOptions.get_instance()
+        painter_options.load(widget_name)
+
+    @staticmethod
+    def setup_filled_in(request: Request) -> None:
+        """The `filled_in` query parameter needs to be set in order for rows to be fetched,
+        this method sets a default value."""
+        if request.var("filled_in") is None:
+            request.set_var("filled_in", "filter")
+
+    @staticmethod
+    def _prepare_view_spec(view_spec: ViewSpec) -> ViewSpec:
+        """Override some view widget specific options."""
+        view_spec = view_spec.copy()
+        view_spec["user_sortable"] = False
+        return view_spec
+
+    @classmethod
+    def _wrapper_context(cls, is_reload: bool) -> contextlib.AbstractContextManager[None]:
+        if not is_reload:
+            return cls._content_wrapper()
 
         return contextlib.nullcontext()
 
@@ -195,68 +218,111 @@ class ViewWidgetIFramePage(Page):
             html.close_div()
             html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
-    def _get_view_spec(self, request: Request, dashboard_name: str) -> ViewSpec:
-        """Return the requested view spec, either embedded in the dashboard or a normal view."""
-        if embedded_id := request.get_str_input("embedded_id"):
-            view_spec = self._get_embedded_view_spec(dashboard_name, embedded_id)
-        else:
-            view_spec = self._get_linked_view_spec(request)
 
-        # Override some view widget specific options
-        view_spec = view_spec.copy()
-        view_spec["user_sortable"] = False
+class _ViewWidgetIFrameAuthTokenRequestParameters(BaseModel):
+    widget_id: str
+    display_options: str | None
 
-        return view_spec
+    @classmethod
+    def from_request(cls, request: Request) -> Self:
+        try:
+            return cls.model_validate(
+                dict(
+                    widget_id=request.get_str_input("widget_id"),
+                    display_options=request.get_str_input(
+                        "display_options", request.get_str_input("_display_options")
+                    ),
+                )
+            )
+        except ValidationError as e:
+            raise MKUserError("request", _("Invalid request parameters.")) from e
 
-    @staticmethod
-    def _get_linked_view_spec(request: Request) -> ViewSpec:
-        view_name = request.get_ascii_input_mandatory("view_name")
-        view_spec = get_permitted_views().get(view_name)
+    def is_reload(self) -> bool:
+        return self.display_options is not None
+
+
+class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParameters):
+    dashboard_name: str
+    view_name: str | None
+    embedded_id: str | None
+    raw_context: Annotated[VisualContext, Json]
+    limit: Literal["soft", "hard", "none"]
+    raw_debug: str | None
+
+    @classmethod
+    def from_request(cls, request: Request) -> Self:
+        try:
+            return cls.model_validate(
+                dict(
+                    dashboard_name=request.get_str_input("dashboard"),
+                    widget_id=request.get_str_input("widget_id"),
+                    view_name=request.get_str_input("view_name"),
+                    embedded_id=request.get_str_input("embedded_id"),
+                    raw_context=request.get_str_input("context", "{}"),
+                    limit=request.get_str_input("limit", "soft"),
+                    display_options=request.get_str_input(
+                        "display_options", request.get_str_input("_display_options")
+                    ),
+                    raw_debug=request.get_str_input("debug"),
+                )
+            )
+        except ValidationError as e:
+            raise MKUserError("request", _("Invalid request parameters.")) from e
+
+    @model_validator(mode="after")
+    def _validate(self) -> Self:
+        if self.embedded_id and self.view_name:
+            raise MKUserError(
+                "view_name",
+                _("Cannot specify both 'view_name' and 'embedded_id' parameters."),
+            )
+        return self
+
+    def is_debug(self) -> bool:
+        return self.raw_debug == "1"
+
+    def unique_widget_name(self) -> str:
+        return f"{self.dashboard_name}_{self.widget_id}"
+
+    def load_view_spec(self) -> ViewSpec:
+        """Load the requested view spec, either embedded in the dashboard or a normal view."""
+        if self.embedded_id:
+            return self._get_embedded_view_spec(self.embedded_id)
+
+        return self._get_linked_view_spec()
+
+    def _get_linked_view_spec(self) -> ViewSpec:
+        if not self.view_name:
+            raise MKUserError("view_name", _("No view name provided."))
+
+        view_spec = get_permitted_views().get(self.view_name)
         if not view_spec:
-            raise MKUserError("name", _("No view defined with the name '%s'.") % view_name)
+            raise MKUserError("name", _("No view defined with the name '%s'.") % self.view_name)
 
         return view_spec
 
-    @staticmethod
-    def _get_embedded_view_spec(dashboard_name: str, embedded_id: str) -> ViewSpec:
+    def _get_embedded_view_spec(self, embedded_id: str) -> ViewSpec:
+        if not self.dashboard_name:
+            raise MKUserError("dashboard", _("No dashboard name provided."))
+
         dashboards = get_permitted_dashboards()
-        if dashboard_name not in dashboards:
+        if self.dashboard_name not in dashboards:
             raise MKUserError(
                 "dashboard",
                 _("The dashboard '%s' does not exist or you do not have permission to view it.")
-                % dashboard_name,
+                % self.dashboard_name,
             )
 
         return EmbeddedViewSpecManager.get_embedded_view_spec(
-            dashboards[dashboard_name], embedded_id, f"{dashboard_name}_{embedded_id}"
+            dashboards[self.dashboard_name],
+            embedded_id,
+            f"{self.dashboard_name}_{embedded_id}",
         )
 
-    @staticmethod
-    def _setup_display_and_painter_options(
-        request: Request, dashlet_name: str, is_reload: bool
-    ) -> None:
-        if not is_reload:
-            view_display_options = "HRSIXLW"
-
-            request.set_var("display_options", view_display_options)
-            request.set_var("_display_options", view_display_options)
-
-        # Need to be loaded before processing the painter_options below.
-        # TODO: Make this dependency explicit
-        display_options.load_from_html(request, html)
-
-        painter_options = PainterOptions.get_instance()
-        painter_options.load(dashlet_name)
-
-    @staticmethod
-    def _get_context(request: Request) -> VisualContext:
-        try:
-            context = json.loads(request.get_ascii_input_mandatory("context"))
-        except ValueError as e:
-            raise MKUserError("context", _("Failed to decode filter context")) from e
+    def get_context(self) -> VisualContext:
         return {
             filter_name: filter_values
-            for filter_name, filter_values in context.items()
+            for filter_name, filter_values in self.raw_context.items()
             # only include filters which have at least one set value
             if {
                 var: value
@@ -268,6 +334,165 @@ class ViewWidgetIFramePage(Page):
                 or (not var.startswith("is_") and value)  # Rest of filters with some value
             }
         }
+
+
+class ViewWidgetIFramePage(Page):
+    @override
+    def page(self, ctx: PageContext) -> None:
+        """Render a single view for use in an iframe.
+
+        This needs to support two modes:
+            1. Render an existing linked view, identified by its name
+            2. Render a view that's embedded in the dashboard config, identified by its internal ID
+        """
+        parameters = _ViewWidgetIFrameRequestParameters.from_request(ctx.request)
+        view_spec = parameters.load_view_spec()
+        ViewWidgetIFramePageHelper.setup_display_and_painter_options(
+            ctx.request, parameters.unique_widget_name(), parameters.is_reload()
+        )
+        ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
+
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        row_limit = get_limit(
+            request_limit_mode=parameters.limit,
+            soft_query_limit=ctx.config.soft_query_limit,
+            may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
+            hard_query_limit=ctx.config.hard_query_limit,
+            may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+        )
+        ViewWidgetIFramePageHelper.render_iframe_content(
+            parameters.unique_widget_name(),
+            view_spec,
+            row_limit,
+            parameters.get_context(),
+            user_permissions,
+            is_reload=parameters.is_reload(),
+            is_debug=parameters.is_debug(),
+        )
+
+
+class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
+    def _get_view_spec_by_widget_id(
+        self,
+        issuer: ImpersonatedDashboardTokenIssuer,
+        token_details: DashboardToken,
+        dashboard: DashboardConfig,
+        widget_id: str,
+        unique_widget_name: str,
+    ) -> ViewSpec:
+        widget = get_dashboard_widget_by_id(dashboard, widget_id)
+        if widget["type"] == "linked_view":
+            return self._get_linked_view_spec(
+                token_details, widget_id, cast(LinkedViewDashletConfig, widget), issuer
+            )
+        if widget["type"] == "embedded_view":
+            return self._get_embedded_view_spec(
+                dashboard, cast(EmbeddedViewDashletConfig, widget), unique_widget_name
+            )
+
+        raise InvalidWidgetError()
+
+    @staticmethod
+    def _get_linked_view_spec(
+        token_details: DashboardToken,
+        widget_id: str,
+        widget: LinkedViewDashletConfig,
+        issuer: ImpersonatedDashboardTokenIssuer,
+    ) -> ViewSpec:
+        if widget_id not in token_details.view_owners:
+            # this means that the person sharing the dashboard wasn't permitted to see this view
+            raise MKAuthException(_("The token owner did not have access to this view."))
+
+        expected_view_owner = token_details.view_owners[widget_id]
+
+        view_spec = issuer.load_linked_view(widget["name"])
+        if view_spec["owner"] != expected_view_owner or (
+            view_spec["owner"] != UserId.builtin()  # modified_at is only set for custom views
+            and "modified_at" in view_spec  # modified_at is only set on views updated since 2.5
+            and view_spec["modified_at"] > token_details.synced_at.isoformat()
+        ):
+            # disable the token here, because the view owner does not match the expected owner
+            # or the view has been modified since the token was last updated
+            raise InvalidWidgetError(disable_token=True)
+
+        return view_spec
+
+    @staticmethod
+    def _get_embedded_view_spec(
+        dashboard: DashboardConfig, widget: EmbeddedViewDashletConfig, unique_widget_name: str
+    ) -> ViewSpec:
+        embedded_id = widget["name"]
+        if embedded_id not in dashboard.get("embedded_views", {}):
+            # disable the token here, because we know the widget ID is valid for an embedded view,
+            # but the dashboard does not contain an embedded view with the expected ID
+            raise InvalidWidgetError(disable_token=True)
+
+        return EmbeddedViewSpecManager.embedded_to_normal_view_spec(
+            dashboard["embedded_views"][embedded_id],
+            dashboard["owner"],
+            name=unique_widget_name,
+        )
+
+    def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
+        parameters = _ViewWidgetIFrameAuthTokenRequestParameters.from_request(ctx.request)
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+
+        with impersonate_dashboard_token_issuer(
+            token.issuer, token_details, user_permissions
+        ) as issuer:
+            dashboard = issuer.load_dashboard()
+            unique_widget_name = f"{dashboard['name']}_{parameters.widget_id}"
+            view_spec = self._get_view_spec_by_widget_id(
+                issuer, token_details, dashboard, parameters.widget_id, unique_widget_name
+            )
+
+        ViewWidgetIFramePageHelper.setup_display_and_painter_options(
+            ctx.request, unique_widget_name, parameters.is_reload()
+        )
+        ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
+
+        ViewWidgetIFramePageHelper.render_iframe_content(
+            unique_widget_name,
+            view_spec,
+            row_limit=ctx.config.soft_query_limit,
+            context={},
+            user_permissions=user_permissions,
+            is_reload=parameters.is_reload(),
+            is_debug=False,
+        )
+
+    def _redirect_to_shared_dashboard_page(self, token: AuthToken) -> PageResult:
+        # Since we're in an iframe we cannot just return a redirect response.
+        # We also shouldn't just update `window.top`, since we expect shared dashboards to be used
+        # within iframes as well.
+        # Instead of assuming the depth level we're in, the better approach is to walk up the stack
+        # until we find the right page (shared_dashboard.py), falling back to the current window.
+        search_name = f"{SharedDashboardPageComponents.page_name}.py"
+        target_url = get_shared_dashboard_url(token.token_id)
+        # we cannot use &, as that will currently be escaped by the html.javascript function
+        # thankfully we can convert it using de morgans law: A && B -> !(!A || !B)
+        html.javascript(
+            f"""
+            let win = window;
+            let found = false;
+            try {{
+                while (!(!win.parent || win.parent === win)) {{
+                    if (!(!win.parent.location || !win.parent.location.href.includes({search_name!r}))) {{
+                        win.parent.location.href = {target_url!r};
+                        found = true;
+                        break;
+                    }}
+                    win = win.parent;
+                }}
+            }} catch (e) {{
+                // Cross-origin access error, stop walking up
+            }}
+            if (!found) {{
+                window.location.href = {target_url!r};
+            }}
+            """
+        )
+        return None
 
 
 class ViewWidgetEditPage(Page):

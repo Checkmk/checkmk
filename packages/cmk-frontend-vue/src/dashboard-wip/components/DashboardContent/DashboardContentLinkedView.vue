@@ -4,16 +4,27 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 
+import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys'
 import type { IFrameContent, LinkedViewContent } from '@/dashboard-wip/types/widget.ts'
 
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
+const cmkToken = inject(cmkTokenKey) as string | undefined
 
-const iFrameProps = computed(() => {
+const iFrameUrl = computed(() => {
+  if (cmkToken !== undefined) {
+    const urlParams = new URLSearchParams({
+      widget_id: props.widget_id,
+      context: JSON.stringify(props.effective_filter_context.filters),
+      'cmk-token': cmkToken
+    }).toString()
+    return `widget_iframe_view_token_auth.py?${urlParams}`
+  }
+
   const content = props.content as LinkedViewContent
   const urlParams = new URLSearchParams({
     dashboard: props.dashboardName,
@@ -21,9 +32,13 @@ const iFrameProps = computed(() => {
     view_name: content.view_name,
     context: JSON.stringify(props.effective_filter_context.filters)
   }).toString()
+  return `widget_iframe_view.py?${urlParams}`
+})
+
+const iFrameProps = computed(() => {
   const iFrameContent: IFrameContent = {
     type: 'url',
-    url: `widget_iframe_view.py?${urlParams}`
+    url: iFrameUrl.value
   }
   return {
     ...props,

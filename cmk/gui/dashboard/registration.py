@@ -31,7 +31,11 @@ from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
 from .page_graph_widget import GraphWidgetPage, GraphWidgetTokenAuthPage
 from .page_show_dashboard import ajax_dashlet, AjaxInitialDashboardFilters, page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
-from .page_view_widget import ViewWidgetEditPage, ViewWidgetIFramePage
+from .page_view_widget import (
+    ViewWidgetEditPage,
+    ViewWidgetIFramePage,
+    ViewWidgetIFrameTokenPage,
+)
 from .visual_type import VisualTypeDashboards
 
 
@@ -82,6 +86,9 @@ def register(
     )
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint(GraphWidgetTokenAuthPage.ident(), GraphWidgetTokenAuthPage())
+    )
+    token_authenticated_page_registry.register(
+        TokenAuthenticatedEndpoint("widget_iframe_view_token_auth", ViewWidgetIFrameTokenPage())
     )
 
     register_dashlets(dashlet_registry_, autocompleter_registry)

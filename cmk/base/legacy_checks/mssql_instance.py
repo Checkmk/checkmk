@@ -22,38 +22,56 @@
 # ERROR: Failed to gather SQL server instances
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
 
 
-def inventory_mssql_instance(parsed):
-    for instance_id in parsed:
-        yield instance_id, {}
+def inventory_mssql_instance(section: Any) -> DiscoveryResult:
+    for instance_id in section:
+        yield Service(item=instance_id)
 
 
-def check_mssql_instance(item, params, parsed):
-    instance = parsed.get(item)
+def check_mssql_instance(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+    instance = section.get(item)
     if not instance:
-        yield 2, "Database or necessary processes not running or login failed"
+        yield Result(
+            state=State.CRIT, summary="Database or necessary processes not running or login failed"
+        )
         return
 
-    state = 2
-    if params is not None and params.get("map_connection_state") is not None:
-        state = params["map_connection_state"]
+    state = State.CRIT
+    if params.get("map_connection_state") is not None:
+        state = State(params["map_connection_state"])
 
     if instance["state"] == "0":
-        yield state, "Failed to connect to database (%s)" % instance["error_msg"]
+        yield Result(
+            state=state, summary="Failed to connect to database (%s)" % instance["error_msg"]
+        )
 
-    yield 0, "Version: %s" % instance.get("prod_version_info", instance["version_info"])
+    yield Result(
+        state=State.OK,
+        summary="Version: %s" % instance.get("prod_version_info", instance["version_info"]),
+    )
     if instance["cluster_name"] != "":
-        yield 0, "Clustered as %s" % instance["cluster_name"]
+        yield Result(state=State.OK, summary="Clustered as %s" % instance["cluster_name"])
 
 
-check_info["mssql_instance"] = LegacyCheckDefinition(
+check_plugin_mssql_instance = CheckPlugin(
     name="mssql_instance",
     service_name="MSSQL %s Instance",
     discovery_function=inventory_mssql_instance,
     check_function=check_mssql_instance,
     check_ruleset_name="mssql_instance",
+    check_default_parameters={
+        "map_connection_state": 2,
+    },
 )

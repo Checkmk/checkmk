@@ -18,6 +18,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
     Dictionary,
+    DictionaryElements,
     DictionaryEntry,
     DropdownChoice,
     EmailAddress,
@@ -124,6 +125,26 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
         ),
     )
 
+    additional_valuespec_ews: DictionaryElements = (
+        [
+            (
+                "email_address",
+                EmailAddress(
+                    title=_("Email address used for account identification"),
+                    label=_("(overrides <b>username</b>)"),
+                    help=_(
+                        "Used to specify the account to be contacted"
+                        " (aka. 'PrimarySmtpAddress') in case it's different from the"
+                        " username. If not specified the credentials username is used."
+                    ),
+                    allow_empty=False,
+                ),
+            )
+        ]
+        if protocol == "EWS"
+        else []
+    )
+
     return Dictionary(
         title=protocol,
         optional_keys=["server", "email_address"],
@@ -189,26 +210,8 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
                     + ([credentials_oauth2] if protocol == "EWS" else []),
                 ),
             ),
-        ]
-        + (
-            [
-                (
-                    "email_address",
-                    EmailAddress(
-                        title=_("Email address used for account identification"),
-                        label=_("(overrides <b>username</b>)"),
-                        help=_(
-                            "Used to specify the account to be contacted"
-                            " (aka. 'PrimarySmtpAddress') in case it's different from the"
-                            " username. If not specified the credentials username is used."
-                        ),
-                        allow_empty=False,
-                    ),
-                )
-            ]
-            if protocol == "EWS"
-            else []
-        ),
+            *additional_valuespec_ews,
+        ],
         validate=validate_common_email_parameters,
     )
 

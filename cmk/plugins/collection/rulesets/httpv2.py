@@ -182,7 +182,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 required=True,
             ),
             "invert": DictElement(
-                parameter_form=BooleanChoice(label=Label("return CRITICAL if found, OK if not")),
+                parameter_form=BooleanChoice(label=Label("return WARN if found, OK if not")),
                 required=True,
             ),
         },

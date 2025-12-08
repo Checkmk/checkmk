@@ -69,6 +69,7 @@ const id = useId()
   vertical-align: middle;
   text-align: left;
   border-radius: 4px 4px 0 0;
+  border: none;
 
   /* Reset global style from global css */
   button&:active {

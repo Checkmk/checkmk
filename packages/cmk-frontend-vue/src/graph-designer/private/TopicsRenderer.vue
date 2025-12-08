@@ -86,10 +86,10 @@ function getClass(ident: string) {
 .gd-topics-renderer__icon {
   margin-right: 10px;
   transition: transform 0.2s ease-in-out;
-  transform: rotate(90deg);
+  transform: rotate(0deg);
 }
 
 .gd-topics-renderer__icon--open {
-  transform: rotate(0deg);
+  transform: rotate(90deg);
 }
 </style>

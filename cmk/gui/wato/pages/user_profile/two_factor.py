@@ -1498,5 +1498,5 @@ class UserWebAuthnLoginComplete(JsonPage):
 
         session.session_info.webauthn_action_state = None
         session.session_info.two_factor_completed = True
-
+        save_custom_attr(user.id, "num_failed_logins", 0)
         return {"status": "OK"}

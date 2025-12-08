@@ -45,7 +45,7 @@ export interface ActivatePendingChangesResponse {
 }
 
 // Site information as returned by the ajax call
-// The lastActivationStatus is added when activating changes
+// The lastActivationStatus is provided by the backend from persisted state
 export interface Site {
   siteId: string
   siteName: string

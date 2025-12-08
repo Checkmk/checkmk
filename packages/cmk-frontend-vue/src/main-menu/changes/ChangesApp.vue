@@ -46,7 +46,6 @@ const activationStatusCollapsible = ref<boolean>(true)
 const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
-const activationStartAndEndTimes = ref<string>('')
 const alreadyMadeAjaxCall = ref<boolean>(false)
 
 const sitesAndChanges = ref<SitesAndChanges>({
@@ -60,48 +59,7 @@ const { hasSitesWithChangesOrErrors } = useSiteStatus(sitesRef)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
-function storeLastActivationStatus() {
-  sitesAndChanges.value.sites.forEach((site) => {
-    if (site.lastActivationStatus) {
-      localStorage.setItem(
-        `lastActivationStatus-${site.siteId}`,
-        JSON.stringify(site.lastActivationStatus)
-      )
-    }
-  })
-}
-
-function loadLastActivationStatus(sites: Array<Site>): Array<Site> {
-  return sites.map((site: Site) => {
-    const lastActivationStatus = localStorage.getItem(`lastActivationStatus-${site.siteId}`)
-    if (lastActivationStatus) {
-      return {
-        ...site,
-        lastActivationStatus: JSON.parse(lastActivationStatus)
-      }
-    }
-    return {
-      ...site,
-      lastActivationStatus: undefined // No activation status available
-    }
-  })
-}
-
-function activateChangesComplete(starttime: number): void {
-  activateChangesInProgress.value = false
-  // Fetches pending changes & preserve the current activation status
-  void fetchPendingChangesAjax()
-
-  // We are currently using the time from the activation status response but
-  // This doesn't take into account the browser time zone.
-  const starttimeFormatted = new Date(starttime).toLocaleTimeString('en-GB', {
-    hour12: false
-  })
-  activationStartAndEndTimes.value = `Start: ${starttimeFormatted} | End: ${new Date().toLocaleTimeString('en-GB', { hour12: false })}`
-  storeLastActivationStatus()
-}
-
-async function getActivationStatus(activationId: string) {
+async function pollActivationStatusUntilComplete(activationId: string) {
   const response = (await restAPI.get(
     `objects/activation_run/${activationId}`
   )) as ActivationStatusResponse
@@ -117,10 +75,12 @@ async function getActivationStatus(activationId: string) {
 
   if (response.extensions.is_running) {
     setTimeout(() => {
-      void getActivationStatus(activationId)
+      void pollActivationStatusUntilComplete(activationId)
     }, 100)
   } else {
     numberOfChangesLastActivation.value = response.extensions.changes.length
+    await fetchPendingChangesAjax()
+    activateChangesInProgress.value = false
   }
 }
 
@@ -134,7 +94,6 @@ async function activateAllChanges() {
   activateChangesInProgress.value = true
   recentlyActivatedSites.value = []
 
-  const starttime = Date.now()
   try {
     const activateChangesResponse = (await restAPI.post(
       `domain-types/activation_run/actions/activate-changes/invoke`,
@@ -152,17 +111,12 @@ async function activateAllChanges() {
       },
       { headers: [['If-Match', '*']] }
     )) as ActivatePendingChangesResponse
-    void getActivationStatus(activateChangesResponse.id)
+    void pollActivationStatusUntilComplete(activateChangesResponse.id)
     return
   } catch (error) {
+    await fetchPendingChangesAjax()
+    activateChangesInProgress.value = false
     throw new Error(`Activation failed: ${error}`)
-  } finally {
-    // Sometimes the API call is too quick. When we fetch the pending changes
-    // with the ajax call, the sites are still in the process of activating
-    // and the variables don't get updated accordingly. Hence this delay.
-    setTimeout(() => {
-      void activateChangesComplete(starttime)
-    }, 3000)
   }
 }
 
@@ -177,14 +131,6 @@ function setSelectedSites() {
     .filter((site: Site) => site.changes > 0 && ['online', 'disabled'].includes(site.onlineStatus))
     .filter((site: Site) => site.loggedIn)
     .map((site: Site) => site.siteId)
-}
-
-function clearCacheForRemovedSites(sites: Site[]): void {
-  /** Remove cached activation status for sites that no longer exist.*/
-  const siteids = sites.map((site) => site.siteId)
-  Object.keys(localStorage)
-    .filter((key) => key.startsWith('lastActivationStatus-') && !siteids.includes(key.slice(21)))
-    .forEach((key) => localStorage.removeItem(key))
 }
 
 async function fetchPendingChangesAjax(): Promise<void> {
@@ -202,24 +148,9 @@ async function fetchPendingChangesAjax(): Promise<void> {
         }))
     }
 
-    dataAsJson.sites = loadLastActivationStatus(dataAsJson.sites)
-
-    const currentSites = sitesAndChanges.value.sites
-    sitesAndChanges.value = {
-      ...dataAsJson,
-      sites: dataAsJson.sites.map((newSite) => {
-        const oldSite = currentSites.find((s) => s.siteId === newSite.siteId)
-        return oldSite && oldSite.lastActivationStatus
-          ? {
-              ...newSite,
-              lastActivationStatus: oldSite.lastActivationStatus
-            }
-          : newSite
-      })
-    }
+    sitesAndChanges.value = dataAsJson
 
     setSelectedSites()
-    clearCacheForRemovedSites(dataAsJson.sites)
   } catch (error) {
     throw new Error(`fetchPendingChangesAjax failed: ${error}`)
   }
@@ -234,9 +165,9 @@ function openActivateChangesPage() {
 async function checkIfMenuActive(): Promise<void> {
   if (cmk.popup_menu.is_open('main_menu_changes')) {
     if (!alreadyMadeAjaxCall.value) {
+      recentlyActivatedSites.value = []
       await fetchPendingChangesAjax()
       alreadyMadeAjaxCall.value = true
-      recentlyActivatedSites.value = []
     }
   } else {
     alreadyMadeAjaxCall.value = false
@@ -298,7 +229,11 @@ function calcChangesHeight(): number {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch once on mount, then again when popup is opened to refresh data.
+  // This avoids showing no changes when opening the menu for the first time,
+  // while the ajax call is in progress.
+  await fetchPendingChangesAjax()
   void checkIfMenuActive()
 })
 </script>

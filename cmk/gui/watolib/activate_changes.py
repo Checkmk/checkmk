@@ -43,7 +43,7 @@ from html import unescape
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, assert_never, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypedDict
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
@@ -1104,6 +1104,12 @@ class ActivationSitesSummary(TypedDict):
         "unknown",
     ]
     loggedIn: bool
+    # We can't easily use the StatusPerSite dataclass instead of dict[str, Any] as the type for
+    # lastActivationStatus because that causes a serialization error when converting to JSON
+    # in the ajax_sidebar_get_sites_and_changes call.
+    # TODO: Use either TypedDict or dataclass types all over to easily combine them, and
+    #   share these types with the frontend with cmk-shared-typing: CMK-28459
+    lastActivationStatus: NotRequired[dict[str, Any]]
 
 
 class PendingChangesSummary(TypedDict):
@@ -1359,6 +1365,47 @@ class ActivateChanges:
                 site_version = site_version.split("-", 1)[0]
             return site_version
 
+        def _get_last_activation_status(site_id: SiteId) -> StatusPerSite | None:
+            """Get the last persisted activation status for a site, if any"""
+            last_state = self.last_activation_state(site_id)
+            if last_state and "_state" in last_state and "_phase" in last_state:
+                raw_status_details = last_state.get("_status_details")
+                # Apply the same HTML stripping and unescaping as
+                # in activation_attributes_for_rest_api_response:
+                clean_status_details = (
+                    re.sub(r"<.*?>", "", unescape(raw_status_details))
+                    if raw_status_details is not None
+                    else ""
+                )
+
+                return StatusPerSite(
+                    site=site_id,
+                    phase=last_state["_phase"],
+                    state=last_state["_state"],
+                    status_text=last_state.get("_status_text", ""),
+                    status_details=clean_status_details,
+                    start_time=last_state.get("_time_started", 0),
+                    end_time=last_state.get("_time_ended", 0),
+                )
+            return None
+
+        def _build_site_summary(site_id: SiteId, site: SiteConfiguration) -> ActivationSitesSummary:
+            base_summary = ActivationSitesSummary(
+                siteId=site["id"],
+                siteName=site["alias"],
+                version=_get_site_version(site_id),
+                changes=0
+                if site["id"] not in site_change_counter
+                else site_change_counter[site["id"]],
+                onlineStatus="disabled"
+                if site.get("disabled")
+                else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
+                loggedIn=self.site_is_logged_in(site_id, site),
+            )
+            if last_status := _get_last_activation_status(site_id):
+                base_summary["lastActivationStatus"] = asdict(last_status)
+            return base_summary
+
         site_change_counter: Counter = Counter()
         pending_changes: list[PendingChangesSummary] = []
         for _changeid, change in self._all_changes:
@@ -1380,18 +1427,7 @@ class ActivateChanges:
 
         return ActivationChangesSummary(
             sites=[
-                ActivationSitesSummary(
-                    siteId=site["id"],
-                    siteName=site["alias"],
-                    version=_get_site_version(site_id),
-                    changes=0
-                    if site["id"] not in site_change_counter
-                    else site_change_counter[site["id"]],
-                    onlineStatus="disabled"
-                    if site.get("disabled")
-                    else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
-                    loggedIn=self.site_is_logged_in(site_id, site),
-                )
+                _build_site_summary(site_id, site)
                 for site_id, site in activation_sites(sites).items()
             ],
             pendingChanges=pending_changes,

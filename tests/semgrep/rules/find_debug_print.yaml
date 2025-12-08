@@ -20,3 +20,4 @@ rules:
               - "agents/plugins"
           exclude:
               - "doc/treasures"
+              - "packages/cmk-livestatus-client/example*.py"

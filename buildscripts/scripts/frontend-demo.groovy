@@ -12,6 +12,7 @@ void main() {
             stage("Build") {
                 sh("""
                     bazel build @@//packages/cmk-frontend-vue:dist-demo-hosted
+                    # all files are "-r-xr-xr-x" aka "555"
                 """);
             }
 
@@ -19,18 +20,12 @@ void main() {
                 // groovylint-disable-next-line DuplicateMapLiteral
                 withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
                     sh("""
+                        # "666" is not working, blank page otherwise
+                        chmod -R 777 ${output_artifacts}/
+
                         scp -rs -o StrictHostKeyChecking=accept-new -i ${RELEASE_KEY} \
                         ${output_artifacts}/* ${DEV_DOCS_URL}/frontend-demo
                     """);
-                }
-            }
-
-            stage("Archive stuff") {
-                show_duration("archiveArtifacts") {
-                    archiveArtifacts(
-                        artifacts: "${output_artifacts}/**/*",
-                        fingerprint: true,
-                    );
                 }
             }
         }

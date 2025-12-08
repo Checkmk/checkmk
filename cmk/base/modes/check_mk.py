@@ -36,6 +36,7 @@ from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.automations.automation_helper import HelperExecutor
 from cmk.base import config, profiling, sources
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
     CheckerConfig,
     CheckerPluginMapper,
@@ -58,7 +59,6 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
-from cmk.base.modes import Mode, modes, Option
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
 from cmk.base.utils import register_sigint_handler
@@ -161,6 +161,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagID
 
 from ._localize import do_localize
+from .modes import Mode, Option
 
 tracer = trace.get_tracer()
 
@@ -225,13 +226,11 @@ def option_verbosity() -> None:
     log.logger.setLevel(log.verbosity_to_log_level(_verbosity))
 
 
-modes.register_general_option(
-    Option(
-        long_option="verbose",
-        short_option="v",
-        short_help="Enable verbose output (Use twice for more)",
-        handler_function=option_verbosity,
-    )
+_VERBOSE_OPTION = Option(
+    long_option="verbose",
+    short_option="v",
+    short_help="Enable verbose output (Use twice for more)",
+    handler_function=option_verbosity,
 )
 
 
@@ -239,12 +238,10 @@ def option_debug() -> None:
     cmk.ccc.debug.enable()
 
 
-modes.register_general_option(
-    Option(
-        long_option="debug",
-        short_help="Let most Python exceptions raise through",
-        handler_function=option_debug,
-    )
+_DEBUG_OPTION = Option(
+    long_option="debug",
+    short_help="Let most Python exceptions raise through",
+    handler_function=option_debug,
 )
 
 
@@ -252,12 +249,10 @@ def option_profile() -> None:
     profiling.enable()
 
 
-modes.register_general_option(
-    Option(
-        long_option="profile",
-        short_help="Enable profiling mode",
-        handler_function=option_profile,
-    )
+_PROFILE_OPTION = Option(
+    long_option="profile",
+    short_help="Enable profiling mode",
+    handler_function=option_profile,
 )
 
 
@@ -266,14 +261,12 @@ def option_fake_dns(a: HostAddress) -> None:
     _fake_dns = a
 
 
-modes.register_general_option(
-    Option(
-        long_option="fake-dns",
-        short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-        handler_function=option_fake_dns,
-        argument=True,
-        argument_descr="IP",
-    )
+_FAKE_DNS_OPTION = Option(
+    long_option="fake-dns",
+    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
+    handler_function=option_fake_dns,
+    argument=True,
+    argument_descr="IP",
 )
 
 
@@ -283,6 +276,15 @@ def _forced_ip_lookup() -> ip_lookup.IPLookup | None:
     if _enforce_localhost:
         return ip_lookup.local_ip_for
     return None
+
+
+def general_options() -> list[Option]:
+    return [
+        _VERBOSE_OPTION,
+        _DEBUG_OPTION,
+        _PROFILE_OPTION,
+        _FAKE_DNS_OPTION,
+    ]
 
 
 # .
@@ -373,7 +375,7 @@ _SNMP_BACKEND_OPTION: Final = Option(
 #   '----------------------------------------------------------------------'
 
 
-def mode_list_hosts(options: dict, args: list[str]) -> None:
+def mode_list_hosts(app: CheckmkBaseApp, options: dict, args: list[str]) -> None:
     config_cache = config.load(discovery_rulesets=()).config_cache
     hosts = _list_all_hosts(
         config_cache,
@@ -422,31 +424,29 @@ def _list_all_hosts(
     return hostlist
 
 
-modes.register(
-    Mode(
-        long_option="list-hosts",
-        short_option="l",
-        handler_function=mode_list_hosts,
-        argument=True,
-        argument_descr="G1 G2...",
-        argument_optional=True,
-        short_help="Print list of all hosts or members of host groups",
-        long_help=[
-            "Called without argument lists all hosts. You may "
-            "specify one or more host groups to restrict the output to hosts "
-            "that are in at least one of those groups.",
-        ],
-        sub_options=[
-            Option(
-                long_option="all-sites",
-                short_help="Include hosts of foreign sites",
-            ),
-            Option(
-                long_option="include-offline",
-                short_help="Include offline hosts",
-            ),
-        ],
-    )
+_LIST_HOSTS_MODE = Mode(
+    long_option="list-hosts",
+    short_option="l",
+    handler_function=mode_list_hosts,
+    argument=True,
+    argument_descr="G1 G2...",
+    argument_optional=True,
+    short_help="Print list of all hosts or members of host groups",
+    long_help=[
+        "Called without argument lists all hosts. You may "
+        "specify one or more host groups to restrict the output to hosts "
+        "that are in at least one of those groups.",
+    ],
+    sub_options=[
+        Option(
+            long_option="all-sites",
+            short_help="Include hosts of foreign sites",
+        ),
+        Option(
+            long_option="include-offline",
+            short_help="Include offline hosts",
+        ),
+    ],
 )
 
 # .
@@ -460,7 +460,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_list_tag(args: list[str]) -> None:
+def mode_list_tag(app: CheckmkBaseApp, args: list[str]) -> None:
     config_cache = config.load(discovery_rulesets=()).config_cache
     hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args), config_cache)
     print_("\n".join(sorted(hosts)))
@@ -491,16 +491,14 @@ def _list_all_hosts_with_tags(
     return hosts
 
 
-modes.register(
-    Mode(
-        long_option="list-tag",
-        handler_function=mode_list_tag,
-        argument=True,
-        argument_descr="TAG1 TAG2...",
-        argument_optional=True,
-        short_help="List hosts having certain tags",
-        long_help=["Prints all hosts that have all of the specified tags at once."],
-    )
+_LIST_TAGS_MODE = Mode(
+    long_option="list-tag",
+    handler_function=mode_list_tag,
+    argument=True,
+    argument_descr="TAG1 TAG2...",
+    argument_optional=True,
+    short_help="List hosts having certain tags",
+    long_help=["Prints all hosts that have all of the specified tags at once."],
 )
 
 # .
@@ -565,7 +563,7 @@ def _get_ds_type(
     return _DSType.AGENT_SNMP
 
 
-def mode_list_checks() -> None:
+def mode_list_checks(app: CheckmkBaseApp) -> None:
     from cmk.utils import man_pages
 
     plugins = load_checks()
@@ -611,13 +609,11 @@ def mode_list_checks() -> None:
         print_(f"{e.render_tty()}\n")
 
 
-modes.register(
-    Mode(
-        long_option="list-checks",
-        short_option="L",
-        handler_function=mode_list_checks,
-        short_help="List all available Check_MK checks",
-    )
+_LIST_CHECKS_MODE = Mode(
+    long_option="list-checks",
+    short_option="L",
+    handler_function=mode_list_checks,
+    short_help="List all available Check_MK checks",
 )
 
 # .
@@ -631,9 +627,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
-
+def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname: HostName) -> None:
     file_cache_options = _handle_fetcher_options(options)
 
     try:
@@ -667,7 +661,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
 
     host_labels = label_manager.labels_of_host(hostname)
     relay_id = config.get_relay_id(host_labels)
-    fetcher_trigger = config.make_fetcher_trigger(edition, relay_id)
+    fetcher_trigger = config.make_fetcher_trigger(app.edition, relay_id)
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
@@ -838,21 +832,19 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         raise MKBailOut("Unhandled exception: %s" % e)
 
 
-modes.register(
-    Mode(
-        long_option="dump-agent",
-        short_option="d",
-        handler_function=mode_dump_agent,
-        argument=True,
-        argument_descr="HOSTNAME|ADDRESS",
-        short_help="Show raw information from agent",
-        long_help=[
-            "Shows the raw information received from the given host. For regular "
-            "hosts it shows the agent output plus possible piggyback information. "
-            "Does not work on clusters but only on real hosts. "
-        ],
-        sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
-    )
+_DUMP_AGENT_MODE = Mode(
+    long_option="dump-agent",
+    short_option="d",
+    handler_function=mode_dump_agent,
+    argument=True,
+    argument_descr="HOSTNAME|ADDRESS",
+    short_help="Show raw information from agent",
+    long_help=[
+        "Shows the raw information received from the given host. For regular "
+        "hosts it shows the agent output plus possible piggyback information. "
+        "Does not work on clusters but only on real hosts. "
+    ],
+    sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
 )
 
 # .
@@ -866,7 +858,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
+def mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
     loading_result = load_config(plugins)
@@ -929,21 +921,19 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
         )
 
 
-modes.register(
-    Mode(
-        long_option="dump",
-        short_option="D",
-        handler_function=mode_dump_hosts,
-        argument=True,
-        argument_descr="H1 H2...",
-        argument_optional=True,
-        short_help="Dump info about all or some hosts",
-        long_help=[
-            "Dumps out the complete configuration and information "
-            "about one, several or all hosts. It shows all services, hostgroups, "
-            "contacts and other information about that host.",
-        ],
-    )
+_DUMP_MODE = Mode(
+    long_option="dump",
+    short_option="D",
+    handler_function=mode_dump_hosts,
+    argument=True,
+    argument_descr="H1 H2...",
+    argument_optional=True,
+    short_help="Dump info about all or some hosts",
+    long_help=[
+        "Dumps out the complete configuration and information "
+        "about one, several or all hosts. It shows all services, hostgroups, "
+        "contacts and other information about that host.",
+    ],
 )
 
 
@@ -966,17 +956,15 @@ def _fail_with_deprecation_msg(argv: list[str]) -> Literal[1]:
     return 1
 
 
-modes.register(
-    Mode(
-        long_option="package",
-        short_option="P",
-        handler_function=_fail_with_deprecation_msg,
-        argument=True,
-        argument_descr="COMMAND",
-        argument_optional=True,
-        short_help="DEPRECATED: Do package operations",
-        long_help=[_DEPRECATION_MSG % ""],
-    )
+_PACKAGE_MODE = Mode(
+    long_option="package",
+    short_option="P",
+    handler_function=_fail_with_deprecation_msg,
+    argument=True,
+    argument_descr="COMMAND",
+    argument_optional=True,
+    short_help="DEPRECATED: Do package operations",
+    long_help=[_DEPRECATION_MSG % ""],
 )
 
 # .
@@ -990,24 +978,22 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_localize(args: list[str]) -> None:
+def mode_localize(app: CheckmkBaseApp, args: list[str]) -> None:
     do_localize(args)
 
 
-modes.register(
-    Mode(
-        long_option="localize",
-        handler_function=mode_localize,
-        argument=True,
-        argument_descr="COMMAND",
-        argument_optional=True,
-        short_help="Do localization operations",
-        long_help=[
-            "Brings you into localization mode. You can create "
-            "and/or improve the localization of Check_MKs GUI. "
-            "Call without arguments for a help on localization."
-        ],
-    )
+_LOCALIZE_MODE = Mode(
+    long_option="localize",
+    handler_function=mode_localize,
+    argument=True,
+    argument_descr="COMMAND",
+    argument_optional=True,
+    short_help="Do localization operations",
+    long_help=[
+        "Brings you into localization mode. You can create "
+        "and/or improve the localization of Check_MKs GUI. "
+        "Call without arguments for a help on localization."
+    ],
 )
 
 # .
@@ -1021,7 +1007,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_update_dns_cache() -> None:
+def mode_update_dns_cache(app: CheckmkBaseApp) -> None:
     config_cache = config.load(discovery_rulesets=()).config_cache
     hosts_config = config_cache.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
@@ -1039,12 +1025,10 @@ def mode_update_dns_cache() -> None:
     )
 
 
-modes.register(
-    Mode(
-        long_option="update-dns-cache",
-        handler_function=mode_update_dns_cache,
-        short_help="Update IP address lookup cache",
-    )
+_UPDATE_DNS_CACHE_MODE = Mode(
+    long_option="update-dns-cache",
+    handler_function=mode_update_dns_cache,
+    short_help="Update IP address lookup cache",
 )
 
 # .
@@ -1058,7 +1042,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_cleanup_piggyback() -> None:
+def mode_cleanup_piggyback(app: CheckmkBaseApp) -> None:
     loaded_config = config.load(discovery_rulesets=()).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         loaded_config.piggyback_max_cachefile_age,
@@ -1067,12 +1051,10 @@ def mode_cleanup_piggyback() -> None:
     )
 
 
-modes.register(
-    Mode(
-        long_option="cleanup-piggyback",
-        handler_function=mode_cleanup_piggyback,
-        short_help="Cleanup outdated piggyback files",
-    )
+_CLEANUP_PIGGYBACK_MODE = Mode(
+    long_option="cleanup-piggyback",
+    handler_function=mode_cleanup_piggyback,
+    short_help="Cleanup outdated piggyback files",
 )
 
 # .
@@ -1086,7 +1068,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_snmptranslate(walk_filename: str) -> None:
+def mode_snmptranslate(app: CheckmkBaseApp, walk_filename: str) -> None:
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
 
@@ -1136,19 +1118,17 @@ def mode_snmptranslate(walk_filename: str) -> None:
         sys.stdout.buffer.write(b"\n")
 
 
-modes.register(
-    Mode(
-        long_option="snmptranslate",
-        handler_function=mode_snmptranslate,
-        argument=True,
-        argument_descr="HOST",
-        short_help="Do snmptranslate on walk",
-        long_help=[
-            "Does not contact the host again, but reuses the hosts walk from the directory "
-            f"{cmk.utils.paths.snmpwalks_dir}. You can add further MIBs to the directory "
-            f"{ec.create_paths(cmk.utils.paths.omd_root).local_mibs_dir.value}."
-        ],
-    )
+_SNMPTRANSLATE_MODE = Mode(
+    long_option="snmptranslate",
+    handler_function=mode_snmptranslate,
+    argument=True,
+    argument_descr="HOST",
+    short_help="Do snmptranslate on walk",
+    long_help=[
+        "Does not contact the host again, but reuses the hosts walk from the directory "
+        f"{cmk.utils.paths.snmpwalks_dir}. You can add further MIBs to the directory "
+        f"{ec.create_paths(cmk.utils.paths.omd_root).local_mibs_dir.value}."
+    ],
 )
 
 # .
@@ -1210,7 +1190,7 @@ def _execute_walks_for_dump(
                 raise
 
 
-def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
+def mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> None:
     if _oids:
         options["oids"] = _oids
     if _extra_oids:
@@ -1250,44 +1230,42 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         )
 
 
-modes.register(
-    Mode(
-        long_option="snmpwalk",
-        handler_function=mode_snmpwalk,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Do snmpwalk on one or more hosts",
-        long_help=[
-            "Does a complete snmpwalk for the specified hosts both "
-            "on the standard MIB and the enterprises MIB and stores the "
-            "result in the directory '%s'. Use the option --oid one or several "
-            "times in order to specify alternative OIDs to walk. You need to "
-            "specify numeric OIDs. If you want to keep the two standard OIDS "
-            ".1.3.6.1.2.1 and .1.3.6.1.4.1 then use --extraoid for just adding "
-            "additional OIDs to walk." % cmk.utils.paths.snmpwalks_dir,
-        ],
-        sub_options=[
-            _SNMP_BACKEND_OPTION,
-            Option(
-                long_option="extraoid",
-                argument=True,
-                argument_descr="A",
-                argument_conv=_extra_oids.append,
-                short_help="Walk also on this OID, in addition to mib-2 and "
-                "enterprises. You can specify this option multiple "
-                "times.",
-            ),
-            Option(
-                long_option="oid",
-                argument=True,
-                argument_descr="A",
-                argument_conv=_oids.append,
-                short_help="Walk on this OID instead of mib-2 and enterprises. "
-                "You can specify this option multiple times.",
-            ),
-        ],
-    )
+_SNMPWALK_MODE = Mode(
+    long_option="snmpwalk",
+    handler_function=mode_snmpwalk,
+    argument=True,
+    argument_descr="HOST1 HOST2...",
+    argument_optional=True,
+    short_help="Do snmpwalk on one or more hosts",
+    long_help=[
+        "Does a complete snmpwalk for the specified hosts both "
+        "on the standard MIB and the enterprises MIB and stores the "
+        "result in the directory '%s'. Use the option --oid one or several "
+        "times in order to specify alternative OIDs to walk. You need to "
+        "specify numeric OIDs. If you want to keep the two standard OIDS "
+        ".1.3.6.1.2.1 and .1.3.6.1.4.1 then use --extraoid for just adding "
+        "additional OIDs to walk." % cmk.utils.paths.snmpwalks_dir,
+    ],
+    sub_options=[
+        _SNMP_BACKEND_OPTION,
+        Option(
+            long_option="extraoid",
+            argument=True,
+            argument_descr="A",
+            argument_conv=_extra_oids.append,
+            short_help="Walk also on this OID, in addition to mib-2 and "
+            "enterprises. You can specify this option multiple "
+            "times.",
+        ),
+        Option(
+            long_option="oid",
+            argument=True,
+            argument_descr="A",
+            argument_conv=_oids.append,
+            short_help="Walk on this OID instead of mib-2 and enterprises. "
+            "You can specify this option multiple times.",
+        ),
+    ],
 )
 
 # .
@@ -1301,7 +1279,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
+def mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Sequence[str]) -> None:
     if not args:
         raise MKBailOut("You need to specify an OID.")
     try:
@@ -1350,20 +1328,18 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 
 
-modes.register(
-    Mode(
-        long_option="snmpget",
-        handler_function=mode_snmpget,
-        argument=True,
-        argument_descr="OID [HOST1 HOST2...]",
-        argument_optional=True,
-        short_help="Fetch single OID from one or multiple hosts",
-        long_help=[
-            "Does a snmpget on the given OID on one or multiple hosts. In case "
-            "no host is given, all known SNMP hosts are queried."
-        ],
-        sub_options=[_SNMP_BACKEND_OPTION],
-    )
+_SNMPGET_MODE = Mode(
+    long_option="snmpget",
+    handler_function=mode_snmpget,
+    argument=True,
+    argument_descr="OID [HOST1 HOST2...]",
+    argument_optional=True,
+    short_help="Fetch single OID from one or multiple hosts",
+    long_help=[
+        "Does a snmpget on the given OID on one or multiple hosts. In case "
+        "no host is given, all known SNMP hosts are queried."
+    ],
+    sub_options=[_SNMP_BACKEND_OPTION],
 )
 
 # .
@@ -1377,7 +1353,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_flush(hosts: list[HostName]) -> None:
+def mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -1474,21 +1450,19 @@ def mode_flush(hosts: list[HostName]) -> None:
         print_(tty.normal + "\n")
 
 
-modes.register(
-    Mode(
-        long_option="flush",
-        handler_function=mode_flush,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Flush all data of some or all hosts",
-        long_help=[
-            "Deletes all runtime data belonging to a host. This includes "
-            "the inventorized checks, the state of performance counters, "
-            "cached agent output, and logfiles. Precompiled host checks "
-            "are not deleted.",
-        ],
-    )
+_FLUSH_MODE = Mode(
+    long_option="flush",
+    handler_function=mode_flush,
+    argument=True,
+    argument_descr="HOST1 HOST2...",
+    argument_optional=True,
+    short_help="Flush all data of some or all hosts",
+    long_help=[
+        "Deletes all runtime data belonging to a host. This includes "
+        "the inventorized checks, the state of performance counters, "
+        "cached agent output, and logfiles. Precompiled host checks "
+        "are not deleted.",
+    ],
 )
 
 # .
@@ -1502,7 +1476,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
+def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     from cmk.base.core.nagios import create_config
 
     plugins = load_checks()
@@ -1573,21 +1547,19 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     )
 
 
-modes.register(
-    Mode(
-        long_option="nagios-config",
-        short_option="N",
-        handler_function=mode_dump_nagios_config,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Output Nagios configuration",
-        long_help=[
-            "Outputs the Nagios configuration. You may optionally add a list "
-            "of hosts. In that case the configuration is generated only for "
-            "that hosts (useful for debugging).",
-        ],
-    )
+_NAGIOS_CONFIG_MODE = Mode(
+    long_option="nagios-config",
+    short_option="N",
+    handler_function=mode_dump_nagios_config,
+    argument=True,
+    argument_descr="HOST1 HOST2...",
+    argument_optional=True,
+    short_help="Output Nagios configuration",
+    long_help=[
+        "Outputs the Nagios configuration. You may optionally add a list "
+        "of hosts. In that case the configuration is generated only for "
+        "that hosts (useful for debugging).",
+    ],
 )
 
 # .
@@ -1638,8 +1610,7 @@ def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
     return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config  # type: ignore[no-any-return, unused-ignore]
 
 
-def mode_update() -> None:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+def mode_update(app: CheckmkBaseApp) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -1674,7 +1645,7 @@ def mode_update() -> None:
         ):
             core_interface.do_create_config(
                 core=create_core(
-                    edition,
+                    app.edition,
                     ruleset_matcher,
                     label_manager,
                     loaded_config,
@@ -1718,21 +1689,19 @@ def mode_update() -> None:
         console.warning(tty.format_warning(f"\n{warning}"))
 
 
-modes.register(
-    Mode(
-        long_option="update",
-        short_option="U",
-        handler_function=mode_update,
-        short_help="Create core config",
-        long_help=[
-            "Updates the core configuration based on the current Checkmk "
-            "configuration. When using the Nagios core, the precompiled host "
-            "checks are created and the nagios configuration is updated. "
-            "When using the CheckMK Micro Core, the core configuration is created "
-            "and the configuration for the Core helper processes is being created.",
-            "The Agent Bakery is updating the agents.",
-        ],
-    )
+_UPDATE_MODE = Mode(
+    long_option="update",
+    short_option="U",
+    handler_function=mode_update,
+    short_help="Create core config",
+    long_help=[
+        "Updates the core configuration based on the current Checkmk "
+        "configuration. When using the Nagios core, the precompiled host "
+        "checks are created and the nagios configuration is updated. "
+        "When using the CheckMK Micro Core, the core configuration is created "
+        "and the configuration for the Core helper processes is being created.",
+        "The Agent Bakery is updating the agents.",
+    ],
 )
 
 # .
@@ -1746,8 +1715,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_restart(args: Sequence[HostName]) -> None:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+def mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -1789,7 +1757,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         ip_address_of,
         ip_address_of_mgmt,
         create_core(
-            edition,
+            app.edition,
             ruleset_matcher,
             label_manager,
             loaded_config,
@@ -1818,21 +1786,19 @@ def mode_restart(args: Sequence[HostName]) -> None:
         console.warning(tty.format_warning(f"\n{warning}"))
 
 
-modes.register(
-    Mode(
-        long_option="restart",
-        short_option="R",
-        argument=True,
-        argument_optional=True,
-        argument_descr="[HostA, HostB]",
-        long_help=[
-            "You may add host names as additional arguments. This enables the incremental "
-            "activate mechanism, only compiling these host names and using cached data for all "
-            "other hosts. Only supported with Checkmk Micro Core."
-        ],
-        handler_function=mode_restart,
-        short_help="Create core config + core restart",
-    )
+_RESTART_MODE = Mode(
+    long_option="restart",
+    short_option="R",
+    argument=True,
+    argument_optional=True,
+    argument_descr="[HostA, HostB]",
+    long_help=[
+        "You may add host names as additional arguments. This enables the incremental "
+        "activate mechanism, only compiling these host names and using cached data for all "
+        "other hosts. Only supported with Checkmk Micro Core."
+    ],
+    handler_function=mode_restart,
+    short_help="Create core config + core restart",
 )
 
 # .
@@ -1846,8 +1812,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_reload(args: Sequence[HostName]) -> None:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+def mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -1889,7 +1854,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         ip_address_of,
         ip_address_of_mgmt,
         create_core(
-            edition,
+            app.edition,
             ruleset_matcher,
             label_manager,
             loaded_config,
@@ -1918,21 +1883,19 @@ def mode_reload(args: Sequence[HostName]) -> None:
         console.warning(tty.format_warning(f"\n{warning}"))
 
 
-modes.register(
-    Mode(
-        long_option="reload",
-        short_option="O",
-        argument=True,
-        argument_optional=True,
-        argument_descr="[HostA, HostB]",
-        long_help=[
-            "You may add host names as additional arguments. This enables the incremental "
-            "activate mechanism, only compiling these host names and using cached data for all "
-            "other hosts. Only supported with Checkmk Micro Core."
-        ],
-        handler_function=mode_reload,
-        short_help="Create core config + core reload",
-    )
+_RELOAD_MODE = Mode(
+    long_option="reload",
+    short_option="O",
+    argument=True,
+    argument_optional=True,
+    argument_descr="[HostA, HostB]",
+    long_help=[
+        "You may add host names as additional arguments. This enables the incremental "
+        "activate mechanism, only compiling these host names and using cached data for all "
+        "other hosts. Only supported with Checkmk Micro Core."
+    ],
+    handler_function=mode_reload,
+    short_help="Create core config + core reload",
 )
 
 # .
@@ -1946,7 +1909,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_man(options: Mapping[str, str], args: list[str]) -> None:
+def mode_man(app: CheckmkBaseApp, options: Mapping[str, str], args: list[str]) -> None:
     from cmk.utils import man_pages
 
     man_page_path_map = man_pages.make_man_page_path_map(
@@ -1978,30 +1941,28 @@ def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     man_pages.write_output(rendered)
 
 
-modes.register(
-    Mode(
-        long_option="man",
-        short_option="M",
-        handler_function=mode_man,
-        argument=True,
-        argument_descr="CHECKTYPE",
-        argument_optional=True,
-        short_help="Show manpage for check CHECKTYPE",
-        long_help=[
-            "Shows documentation about a check type. If /usr/bin/less is "
-            "available it is used as pager. Exit by pressing Q. "
-            "Use -M without an argument to show a list of all manual pages."
-        ],
-        sub_options=[
-            Option(
-                long_option="renderer",
-                short_option="r",
-                argument=True,
-                argument_descr="RENDERER",
-                short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
-            ),
-        ],
-    )
+_MAN_MODE = Mode(
+    long_option="man",
+    short_option="M",
+    handler_function=mode_man,
+    argument=True,
+    argument_descr="CHECKTYPE",
+    argument_optional=True,
+    short_help="Show manpage for check CHECKTYPE",
+    long_help=[
+        "Shows documentation about a check type. If /usr/bin/less is "
+        "available it is used as pager. Exit by pressing Q. "
+        "Use -M without an argument to show a list of all manual pages."
+    ],
+    sub_options=[
+        Option(
+            long_option="renderer",
+            short_option="r",
+            argument=True,
+            argument_descr="RENDERER",
+            short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
+        ),
+    ],
 )
 
 # .
@@ -2015,7 +1976,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_browse_man() -> None:
+def mode_browse_man(app: CheckmkBaseApp) -> None:
     from cmk.utils import man_pages
 
     man_pages.print_man_page_browser(
@@ -2026,13 +1987,11 @@ def mode_browse_man() -> None:
     )
 
 
-modes.register(
-    Mode(
-        long_option="browse-man",
-        short_option="m",
-        handler_function=mode_browse_man,
-        short_help="Open interactive manpage browser",
-    )
+_BROWSE_MAN_MODE = Mode(
+    long_option="browse-man",
+    short_option="m",
+    handler_function=mode_browse_man,
+    short_help="Open interactive manpage browser",
 )
 
 # .
@@ -2046,7 +2005,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_automation(args: list[str]) -> None:
+def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
     from cmk.base import automations
 
     if not args:
@@ -2081,15 +2040,13 @@ def mode_automation(args: list[str]) -> None:
         )
 
 
-modes.register(
-    Mode(
-        long_option="automation",
-        handler_function=mode_automation,
-        argument=True,
-        argument_descr="COMMAND...",
-        argument_optional=True,
-        short_help="Internal helper to invoke Check_MK actions",
-    )
+_AUTOMATION_MODE = Mode(
+    long_option="automation",
+    handler_function=mode_automation,
+    argument=True,
+    argument_descr="COMMAND...",
+    argument_optional=True,
+    short_help="Internal helper to invoke Check_MK actions",
 )
 
 # .
@@ -2103,10 +2060,8 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_notify(options: dict, args: list[str]) -> int | None:
-    community_edition = (
-        cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY
-    )
+def mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:
+    community_edition = app.edition is cmk_version.Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
         return _do_notify_via_automation(
             options=options,
@@ -2191,26 +2146,24 @@ def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
     return 2
 
 
-modes.register(
-    Mode(
-        long_option="notify",
-        handler_function=mode_notify,
-        argument=True,
-        argument_descr="MODE",
-        argument_optional=True,
-        short_help="Used to send notifications from core",
-        # TODO: Write long help
-        sub_options=[
-            Option(
-                long_option="log-to-stdout",
-                short_help="Also write log messages to console",
-            ),
-            Option(
-                long_option="keepalive",
-                short_help="Execute in keepalive mode (Commercial editions only)",
-            ),
-        ],
-    )
+_NOTIFY_MODE = Mode(
+    long_option="notify",
+    handler_function=mode_notify,
+    argument=True,
+    argument_descr="MODE",
+    argument_optional=True,
+    short_help="Used to send notifications from core",
+    # TODO: Write long help
+    sub_options=[
+        Option(
+            long_option="log-to-stdout",
+            short_help="Also write log messages to console",
+        ),
+        Option(
+            long_option="keepalive",
+            short_help="Execute in keepalive mode (Commercial editions only)",
+        ),
+    ],
 )
 
 
@@ -2225,8 +2178,9 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> int:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+def mode_check_discovery(
+    app: CheckmkBaseApp, options: Mapping[str, object], hostname: HostName
+) -> int:
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -2273,7 +2227,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2395,21 +2349,19 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     return check_result.state
 
 
-modes.register(
-    Mode(
-        long_option="check-discovery",
-        handler_function=mode_check_discovery,
-        argument=True,
-        argument_descr="HOSTNAME",
-        short_help="Check for not yet monitored services",
-        long_help=[
-            "Make Check_MK behave as monitoring plug-ins that checks if an "
-            "inventory would find new or vanished services for the host. "
-            "If configured to do so, this will queue those hosts for automatic "
-            "autodiscovery"
-        ],
-        sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
-    )
+_CHECK_DISCOVERY_MODE = Mode(
+    long_option="check-discovery",
+    handler_function=mode_check_discovery,
+    argument=True,
+    argument_descr="HOSTNAME",
+    short_help="Check for not yet monitored services",
+    long_help=[
+        "Make Check_MK behave as monitoring plug-ins that checks if an "
+        "inventory would find new or vanished services for the host. "
+        "If configured to do so, this will queue those hosts for automatic "
+        "autodiscovery"
+    ],
+    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
 )
 
 
@@ -2574,8 +2526,7 @@ def _preprocess_hostnames(
     return node_names
 
 
-def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[str]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -2641,7 +2592,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2739,47 +2690,44 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         )
 
 
-modes.register(
-    Mode(
-        long_option="discover",
-        short_option="I",
-        handler_function=mode_discover,
-        argument=True,
-        argument_descr="[-I] HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Find new services",
-        long_help=[
-            "Make Check_MK behave as monitoring plug-ins that checks if an "
-            "inventory would find new or vanished services for the host. "
-            "If configured to do so, this will queue those hosts for automatic "
-            "autodiscovery",
-            "Can be restricted to certain check types. Write '--checks df -I' if "
-            "you just want to look for new filesystems. Use 'cmk -L' for a "
-            "list of all check types.",
-            "Can also be restricted to only discovering new host labels. "
-            "Use: '--only-host-labels' or '-L' ",
-            "-II does the same as -I but deletes all existing checks of the "
-            "specified types and hosts.",
-        ],
-        sub_options=[
-            *_FETCHER_OPTIONS,
-            _SNMP_BACKEND_OPTION,
-            Option(
-                long_option="discover",
-                short_option="I",
-                short_help="Delete existing services before starting discovery",
-                count=True,
-            ),
-            _option_sections,
-            _get_plugins_option(CheckPluginName),
-            _option_detect_plugins,
-            Option(
-                long_option="only-host-labels",
-                short_option="L",
-                short_help="Restrict discovery to host labels only",
-            ),
-        ],
-    )
+_DISCOVER_MODE = Mode(
+    long_option="discover",
+    short_option="I",
+    handler_function=mode_discover,
+    argument=True,
+    argument_descr="[-I] HOST1 HOST2...",
+    argument_optional=True,
+    short_help="Find new services",
+    long_help=[
+        "Make Check_MK behave as monitoring plug-ins that checks if an "
+        "inventory would find new or vanished services for the host. "
+        "If configured to do so, this will queue those hosts for automatic "
+        "autodiscovery",
+        "Can be restricted to certain check types. Write '--checks df -I' if "
+        "you just want to look for new filesystems. Use 'cmk -L' for a "
+        "list of all check types.",
+        "Can also be restricted to only discovering new host labels. "
+        "Use: '--only-host-labels' or '-L' ",
+        "-II does the same as -I but deletes all existing checks of the specified types and hosts.",
+    ],
+    sub_options=[
+        *_FETCHER_OPTIONS,
+        _SNMP_BACKEND_OPTION,
+        Option(
+            long_option="discover",
+            short_option="I",
+            short_help="Delete existing services before starting discovery",
+            count=True,
+        ),
+        _option_sections,
+        _get_plugins_option(CheckPluginName),
+        _option_detect_plugins,
+        Option(
+            long_option="only-host-labels",
+            short_option="L",
+            short_help="Restrict discovery to host labels only",
+        ),
+    ],
 )
 
 # .
@@ -2809,7 +2757,7 @@ _CheckingOptions = TypedDict(
 )
 
 
-def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
+def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) -> ServiceState:
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -2817,6 +2765,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
     label_manager = loading_result.config_cache.label_manager
 
     return run_checking(
+        app.edition,
         loaded_config,
         ruleset_matcher,
         label_manager,
@@ -2838,6 +2787,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
 
 # also used in precompiled host checks!
 def run_checking(
+    edition: cmk_version.Edition,
     loaded_config: LoadedConfigFragment,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
@@ -2853,7 +2803,6 @@ def run_checking(
     secrets_file_option_site: Path,
     secrets: Mapping[str, Secret],
 ) -> ServiceState:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -3069,46 +3018,44 @@ def run_checking(
     return check_result.state
 
 
-modes.register(
-    Mode(
-        long_option="check",
-        handler_function=mode_check,
-        argument=True,
-        argument_descr="HOST [IPADDRESS]",
-        argument_optional=True,
-        short_help="Check all services on the given HOST",
-        long_help=[
-            "Execute all checks on the given HOST. Optionally you can specify "
-            "a second argument, the IPADDRESS. If you don't set this, the "
-            "configured IP address of the HOST is used.",
-            "By default the check results are sent to the core. If you provide "
-            "the option '-n', the results will not be sent to the core and the "
-            "counters of the check will not be stored.",
-            "You can use '-v' to see the results of the checks. Add '-p' to "
-            "also see the performance data of the checks. "
-            "Can be restricted to certain check types. Write '--checks df -I' if "
-            "you just want to look for new filesystems. Use 'check_mk -L' for a "
-            "list of all check types. Use 'tcp' for all TCP based checks and "
-            "'snmp' for all SNMP based checks.",
-        ],
-        sub_options=[
-            *_FETCHER_OPTIONS,
-            _SNMP_BACKEND_OPTION,
-            Option(
-                long_option="no-submit",
-                short_option="n",
-                short_help="Do not submit results to core, do not save counters",
-            ),
-            Option(
-                long_option="perfdata",
-                short_option="p",
-                short_help="Also show performance data (use with -v)",
-            ),
-            _option_sections,
-            _get_plugins_option(CheckPluginName),
-            _option_detect_plugins,
-        ],
-    )
+_CHECK_MODE = Mode(
+    long_option="check",
+    handler_function=mode_check,
+    argument=True,
+    argument_descr="HOST [IPADDRESS]",
+    argument_optional=True,
+    short_help="Check all services on the given HOST",
+    long_help=[
+        "Execute all checks on the given HOST. Optionally you can specify "
+        "a second argument, the IPADDRESS. If you don't set this, the "
+        "configured IP address of the HOST is used.",
+        "By default the check results are sent to the core. If you provide "
+        "the option '-n', the results will not be sent to the core and the "
+        "counters of the check will not be stored.",
+        "You can use '-v' to see the results of the checks. Add '-p' to "
+        "also see the performance data of the checks. "
+        "Can be restricted to certain check types. Write '--checks df -I' if "
+        "you just want to look for new filesystems. Use 'check_mk -L' for a "
+        "list of all check types. Use 'tcp' for all TCP based checks and "
+        "'snmp' for all SNMP based checks.",
+    ],
+    sub_options=[
+        *_FETCHER_OPTIONS,
+        _SNMP_BACKEND_OPTION,
+        Option(
+            long_option="no-submit",
+            short_option="n",
+            short_help="Do not submit results to core, do not save counters",
+        ),
+        Option(
+            long_option="perfdata",
+            short_option="p",
+            short_help="Also show performance data (use with -v)",
+        ),
+        _option_sections,
+        _get_plugins_option(CheckPluginName),
+        _option_detect_plugins,
+    ],
 )
 
 # .
@@ -3137,8 +3084,7 @@ _InventoryOptions = TypedDict(
 )
 
 
-def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[str]) -> None:
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -3199,7 +3145,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -3324,33 +3270,31 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             cmk.ccc.cleanup.cleanup_globals()
 
 
-modes.register(
-    Mode(
-        long_option="inventory",
-        short_option="i",
-        handler_function=mode_inventory,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Do a HW/SW Inventory on some or all hosts",
-        long_help=[
-            "Does a HW/SW Inventory for all, one or several "
-            "hosts. If you add the option -f, --force then persisted sections "
-            "will be used even if they are outdated."
-        ],
-        sub_options=[
-            *_FETCHER_OPTIONS,
-            _SNMP_BACKEND_OPTION,
-            Option(
-                long_option="force",
-                short_option="f",
-                short_help="Use cached agent data even if it's outdated.",
-            ),
-            _option_sections,
-            _get_plugins_option(InventoryPluginName),
-            _option_detect_plugins,
-        ],
-    )
+_INVENTORY_MODE = Mode(
+    long_option="inventory",
+    short_option="i",
+    handler_function=mode_inventory,
+    argument=True,
+    argument_descr="HOST1 HOST2...",
+    argument_optional=True,
+    short_help="Do a HW/SW Inventory on some or all hosts",
+    long_help=[
+        "Does a HW/SW Inventory for all, one or several "
+        "hosts. If you add the option -f, --force then persisted sections "
+        "will be used even if they are outdated."
+    ],
+    sub_options=[
+        *_FETCHER_OPTIONS,
+        _SNMP_BACKEND_OPTION,
+        Option(
+            long_option="force",
+            short_option="f",
+            short_help="Use cached agent data even if it's outdated.",
+        ),
+        _option_sections,
+        _get_plugins_option(InventoryPluginName),
+        _option_detect_plugins,
+    ],
 )
 
 
@@ -3466,8 +3410,7 @@ def _get_save_tree_actions(
     )
 
 
-def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, object]) -> None:
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -3513,7 +3456,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -3617,17 +3560,15 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         console.verbose_no_lf(str(exc))
 
 
-modes.register(
-    Mode(
-        long_option="inventorize-marked-hosts",
-        handler_function=mode_inventorize_marked_hosts,
-        short_help="Run inventory for hosts which previously had no tree data",
-        long_help=[
-            "Run actual service HW/SW Inventory on all hosts that had no tree data",
-            "in the previous run",
-        ],
-        sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
-    )
+_INVENTORIZE_MARKED_HOSTS_MODE = Mode(
+    long_option="inventorize-marked-hosts",
+    handler_function=mode_inventorize_marked_hosts,
+    short_help="Run inventory for hosts which previously had no tree data",
+    long_help=[
+        "Run actual service HW/SW Inventory on all hosts that had no tree data",
+        "in the previous run",
+    ],
+    sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
 )
 
 # .
@@ -3641,7 +3582,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_version() -> None:
+def mode_version(app: CheckmkBaseApp) -> None:
     print_(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
@@ -3663,19 +3604,17 @@ Copyright (C) 2009 Checkmk GmbH
 
 """
         % (
-            cmk_version.edition(cmk.utils.paths.omd_root).title,
+            app.edition.title,
             cmk_version.__version__,
         )
     )
 
 
-modes.register(
-    Mode(
-        long_option="version",
-        short_option="V",
-        handler_function=mode_version,
-        short_help="Print the version of Checkmk",
-    )
+_VERSION_MODE = Mode(
+    long_option="version",
+    short_option="V",
+    handler_function=mode_version,
+    short_help="Print the version of Checkmk",
 )
 
 # .
@@ -3689,7 +3628,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_help() -> None:
+def mode_help(app: CheckmkBaseApp) -> None:
     print_(
         """WAYS TO CALL:
 %s
@@ -3702,20 +3641,18 @@ NOTES:
 
 """
         % (
-            modes.short_help(),
-            modes.general_option_help(),
-            modes.long_help(),
+            app.modes.short_help(),
+            app.modes.general_option_help(),
+            app.modes.long_help(),
         )
     )
 
 
-modes.register(
-    Mode(
-        long_option="help",
-        short_option="h",
-        handler_function=mode_help,
-        short_help="Print this help",
-    )
+_HELP_MODE = Mode(
+    long_option="help",
+    short_option="h",
+    handler_function=mode_help,
+    short_help="Print this help",
 )
 
 # .
@@ -3729,7 +3666,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
+def mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     log.logger.setLevel(logging.INFO)
     cmk.base.diagnostics.create_diagnostics_dump(
@@ -3793,15 +3730,47 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
     return sub_options
 
 
-modes.register(
-    Mode(
-        long_option="create-diagnostics-dump",
-        handler_function=mode_create_diagnostics_dump,
-        short_help="Create diagnostics dump",
-        long_help=[
-            "Create a dump containing information for diagnostic analysis "
-            "in the folder var/check_mk/diagnostics."
-        ],
-        sub_options=_get_diagnostics_dump_sub_options(),
-    )
+_CREATE_DIAGNOSTICS_DUMP_MODE = Mode(
+    long_option="create-diagnostics-dump",
+    handler_function=mode_create_diagnostics_dump,
+    short_help="Create diagnostics dump",
+    long_help=[
+        "Create a dump containing information for diagnostic analysis "
+        "in the folder var/check_mk/diagnostics."
+    ],
+    sub_options=_get_diagnostics_dump_sub_options(),
 )
+
+
+def common_modes() -> list[Mode]:
+    return [
+        _HELP_MODE,
+        _LIST_HOSTS_MODE,
+        _LIST_TAGS_MODE,
+        _LIST_CHECKS_MODE,
+        _DUMP_AGENT_MODE,
+        _DUMP_MODE,
+        _PACKAGE_MODE,
+        _LOCALIZE_MODE,
+        _UPDATE_DNS_CACHE_MODE,
+        _CLEANUP_PIGGYBACK_MODE,
+        _SNMPTRANSLATE_MODE,
+        _SNMPWALK_MODE,
+        _SNMPGET_MODE,
+        _FLUSH_MODE,
+        _NAGIOS_CONFIG_MODE,
+        _UPDATE_MODE,
+        _RESTART_MODE,
+        _RELOAD_MODE,
+        _MAN_MODE,
+        _BROWSE_MAN_MODE,
+        _AUTOMATION_MODE,
+        _NOTIFY_MODE,
+        _CHECK_DISCOVERY_MODE,
+        _DISCOVER_MODE,
+        _CHECK_MODE,
+        _INVENTORY_MODE,
+        _INVENTORIZE_MARKED_HOSTS_MODE,
+        _VERSION_MODE,
+        _CREATE_DIAGNOSTICS_DUMP_MODE,
+    ]

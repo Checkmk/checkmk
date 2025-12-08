@@ -13,8 +13,10 @@ import pytest
 
 import cmk.ccc.resulttype as result
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.modes import check_mk
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.version import Edition
 from cmk.fetchers import AdHocSecrets, Fetcher, Mode, PiggybackFetcher, PlainFetcherTrigger
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -98,5 +100,5 @@ class TestModeDumpAgent:
     def test_success(
         self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        check_mk.mode_dump_agent({}, hostname)
+        check_mk.mode_dump_agent(make_app(Edition.COMMUNITY), {}, hostname)
         assert capsys.readouterr().out == raw_data.decode()

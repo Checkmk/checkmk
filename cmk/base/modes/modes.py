@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 # mypy: disable-error-code="comparison-overlap"
 
 # mypy: disable-error-code="no-any-return"
@@ -13,12 +14,15 @@ from __future__ import annotations
 
 import textwrap
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from cmk import trace
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.plugin_loader import import_plugins
+
+if TYPE_CHECKING:
+    pass
 
 OptionSpec = str
 Argument = str
@@ -388,12 +392,3 @@ class Mode(Option):
                 options[option.name()] = val
 
         return options
-
-
-#
-# Initialize the modes object and load all available modes
-#
-
-modes = Modes()
-
-import_plugins(__file__, __package__)

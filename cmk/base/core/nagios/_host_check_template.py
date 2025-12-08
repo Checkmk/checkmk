@@ -10,6 +10,7 @@ import sys
 from contextlib import suppress
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
@@ -98,6 +99,7 @@ def main() -> int:
         config.ipv6addresses = CONFIG.ipv6addresses
 
         return run_checking(
+            cmk_version.edition(omd_root),
             loading_result.loaded_config,
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager,

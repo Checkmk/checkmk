@@ -29,12 +29,12 @@ if not os.environ.get("OMD_SITE"):
 import cmk.base.utils
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.utils.caching
 import cmk.utils.log
 import cmk.utils.paths
 from cmk import trace
 from cmk.base import profiling
-from cmk.base.modes import call, modes
+from cmk.base.app import make_app
+from cmk.base.modes.call import call
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     BaseDetails,
@@ -52,7 +52,9 @@ logger = logging.getLogger("cmk.base")
 
 cmk.base.utils.register_sigint_handler()
 
-help_function = modes.get("help").handler_function
+app = make_app(cmk_version.edition(cmk.utils.paths.omd_root))
+
+help_function = app.modes.get("help").handler_function
 
 init_span_processor(
     trace.init_tracing(
@@ -92,46 +94,47 @@ class CrashReport(ABCCrashReport[BaseDetails]):
 
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
+    opts, args = getopt.getopt(
+        sys.argv[1:], app.modes.short_getopt_specs(), app.modes.long_getopt_specs()
+    )
 except getopt.GetoptError as err:
     console.error(f"ERROR: {err}\n", file=sys.stderr)
     if help_function is None:
         raise TypeError()
-    help_function()
+    help_function(app)
     sys.exit(1)
 
 # First load the general modifying options
-modes.process_general_options(opts)
+app.modes.process_general_options(opts)
 
 try:
     # Now find the requested mode and execute it
     mode_name, mode_args = None, None
     for o, a in opts:
-        if modes.exists(o := o.lstrip("-")):
+        if app.modes.exists(o := o.lstrip("-")):
             mode_name, mode_args = o, a
             break
 
     if not opts and not args:
         if help_function is None:
             raise TypeError()
-        help_function()
+        help_function(app)
         sys.exit(0)
 
     done, exit_status = False, 0
     trace_context = trace.extract_context_from_environment(dict(os.environ))
     if mode_name is not None and mode_args is not None:
-        exit_status = call(modes.get(mode_name), mode_args, opts, args, trace_context)
+        exit_status = call(app, app.modes.get(mode_name), mode_args, opts, args, trace_context)
         done = True
 
     # When no mode was found, Checkmk is running the "check" mode
     if not done:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-            exit_status = call(modes.get("check"), None, opts, args, trace_context)
+            exit_status = call(app, app.modes.get("check"), None, opts, args, trace_context)
         else:
-            help_function = modes.get("help").handler_function
             if help_function is None:
                 raise TypeError()
-            help_function()
+            help_function(app)
             exit_status = 0
 
     sys.exit(exit_status)

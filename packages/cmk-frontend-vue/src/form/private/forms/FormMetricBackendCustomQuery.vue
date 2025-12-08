@@ -8,7 +8,7 @@ import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_
 
 import useId from '@/lib/useId'
 
-import { type ValidationMessages, useValidation } from '@/form/private/validation'
+import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendCustomQuery from '@/graph-designer/FormMetricBackendCustomQuery.vue'
 
@@ -18,11 +18,6 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<MetricBackendCustomQuery>('data', { required: true })
-const [_validation, value] = useValidation<MetricBackendCustomQuery>(
-  data,
-  props.spec.validators,
-  () => props.backendValidation
-)
 
 const componentId = useId()
 </script>
@@ -30,11 +25,12 @@ const componentId = useId()
 <template>
   <FormMetricBackendCustomQuery
     :id="componentId"
-    v-model:metric-name="value.metric_name"
-    v-model:resource-attributes="value.resource_attributes"
-    v-model:scope-attributes="value.scope_attributes"
-    v-model:data-point-attributes="value.data_point_attributes"
-    v-model:aggregation-lookback="value.aggregation_lookback"
-    v-model:aggregation-histogram-percentile="value.aggregation_histogram_percentile"
+    v-model:metric-name="data.metric_name"
+    v-model:resource-attributes="data.resource_attributes"
+    v-model:scope-attributes="data.scope_attributes"
+    v-model:data-point-attributes="data.data_point_attributes"
+    v-model:aggregation-lookback="data.aggregation_lookback"
+    v-model:aggregation-histogram-percentile="data.aggregation_histogram_percentile"
+    :backend-validation="props.backendValidation"
   />
 </template>

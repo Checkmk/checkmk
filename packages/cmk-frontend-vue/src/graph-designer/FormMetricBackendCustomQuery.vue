@@ -9,16 +9,24 @@ import {
   type GraphLineQueryAttribute,
   type GraphLineQueryAttributes
 } from 'cmk-shared-typing/typescript/graph_designer'
-import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type {
+  Autocompleter,
+  MetricBackendCustomQuery
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
 import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import { immediateWatch } from '@/lib/watch'
 
+import CmkLabel from '@/components/CmkLabel.vue'
 import CmkList from '@/components/CmkList'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
+import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
+import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendCustomQueryAttribute, {
   type Attribute
@@ -34,6 +42,24 @@ export interface Query {
   aggregationLookback: number
   aggregationHistogramPercentile: number
 }
+
+const props = defineProps<{
+  backendValidation?: ValidationMessages
+}>()
+
+const validation = ref<string[]>([])
+
+immediateWatch(
+  () => props.backendValidation,
+  (newValidation: ValidationMessages | undefined) => {
+    if (newValidation && newValidation.length > 0) {
+      validation.value = newValidation.map((m) => m.message)
+      newValidation.forEach((message) => {
+        metricName.value = (message.replacement_value as MetricBackendCustomQuery).metric_name
+      })
+    }
+  }
+)
 
 const metricName = defineModel<string | null>('metricName', { default: null })
 const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
@@ -292,12 +318,18 @@ function deleteDataPointAttribute(index: number) {
   <table>
     <tbody>
       <tr>
-        <td>{{ _t('Metric') }}</td>
         <td>
+          <CmkLabel>{{ _t('Metric') }}</CmkLabel
+          ><CmkLabelRequired />
+        </td>
+        <td>
+          <FormValidation :validation="validation"></FormValidation>
           <FormAutocompleter
             v-model="metricName"
             :autocompleter="metricNameAutocompleter"
             :placeholder="_t('Metric name')"
+            :has-error="validation.length > 0"
+            @update:model-value="validation = []"
           />
         </td>
       </tr>

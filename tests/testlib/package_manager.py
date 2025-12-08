@@ -382,16 +382,27 @@ def version_from_path(package_path: Path) -> CMKVersion:
         edition = pkg_manager.get_edition(package_path)
         version_str = pkg_manager.get_version(package_path)
     else:
+        # Match both Docker and source tar.gz formats:
+        # check-mk-{edition}-docker-{version}.tar.gz or check-mk-{edition}-{version}.{edition_suffix}.tar.gz
+        # Version may contain dates like: 2.4.0-2025.12.15
         match = re.match(
-            r"check-mk-(raw|enterprise|managed|cloud|saas|free)-([^_]+).(cme|cee|cre|cce).tar.gz$",
+            r"check-mk-(raw|enterprise|managed|cloud|saas|free)(?:-docker)?-(.+)\.tar\.gz$",
             package_path.name,
         )
         if not match:
             raise ValueError(
                 f"Could not extract edition and version from package: {package_path.name}"
             )
-        edition_text, version_str, _ = match.groups()
+        edition_text, version_str = match.groups()
         edition = parse_raw_edition(edition_text)
+
+        # Remove edition suffix from version string if present (for source packages)
+        # e.g., "2.4.0-2025.12.15.cee" -> "2.4.0-2025.12.15"
+        edition_suffixes = {".cre", ".cee", ".cme", ".cce"}
+        for suffix in edition_suffixes:
+            if version_str.endswith(suffix):
+                version_str = version_str[: -len(suffix)]
+                break
     version = CMKVersion(version_str, edition)
 
     return version

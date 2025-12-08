@@ -914,18 +914,23 @@
         }
       ]
     },
-    "metric_backend_custom_query_metric_name": {
-      "oneOf": [
-        {
-          "type": "null"
+    "metric_backend_custom_query_attribute": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
         },
-        {
-          "$ref": "../graph_designer.json#/$defs/graph_line_metric_name"
+        "value": {
+          "type": "string"
         }
-      ]
+      },
+      "required": ["key", "value"]
     },
     "metric_backend_custom_query_attributes": {
-      "$ref": "../graph_designer.json#/$defs/graph_line_query_attributes"
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/metric_backend_custom_query_attribute"
+      }
     },
     "metric_backend_custom_query_aggregation_lookback_unit": {
       "type": "string",
@@ -954,7 +959,7 @@
               "default": "metric_backend_custom_query"
             },
             "metric_name": {
-              "$ref": "#/$defs/metric_backend_custom_query_metric_name"
+              "oneOf": [{ "type": "null" }, { "type": "string" }]
             },
             "resource_attributes": {
               "$ref": "#/$defs/metric_backend_custom_query_attributes"

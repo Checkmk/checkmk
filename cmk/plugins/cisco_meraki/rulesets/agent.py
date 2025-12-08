@@ -115,6 +115,10 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                         MultipleChoiceElement(
                             name="switch_port_statuses", title=Title("Switch port statuses")
                         ),
+                        MultipleChoiceElement(
+                            name="wireless_ethernet_statuses",
+                            title=Title("Wireless ethernet statuses"),
+                        ),
                     ],
                     prefill=DefaultValue(
                         [
@@ -125,6 +129,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                             "device_uplinks_info",
                             "licenses_overview",
                             "sensor_readings",
+                            "wireless_ethernet_statuses",
                         ]
                     ),
                     migrate=_migrate_to_valid_ident,
@@ -274,6 +279,17 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                                     TimeMagnitude.MINUTE,
                                 ),
                                 prefill=DefaultValue(36000.0),  # 10 hours
+                                custom_validate=[NumberInRange(min_value=0.0)],
+                            )
+                        ),
+                        "wireless_ethernet_statuses": DictElement(
+                            parameter_form=TimeSpan(
+                                title=Title("Wireless ethernet statuses"),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(1800.0),  # 30 minutes
                                 custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),

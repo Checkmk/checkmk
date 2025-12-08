@@ -54,3 +54,7 @@ class RawUplinkVpnStatusesFactory(TypedDictFactory[schema.RawUplinkVpnStatuses])
 
 class RawUplinkUsageFactory(TypedDictFactory[schema.RawUplinkUsage]):
     __check_model__ = False
+
+
+class RawWirelessEthernetStatusFactory(TypedDictFactory[schema.RawWirelessEthernetStatus]):
+    __check_model__ = False

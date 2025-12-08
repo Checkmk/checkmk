@@ -120,11 +120,17 @@ class _FakeOrganisationsSDK:
                 factories.RawDeviceFactory.build(
                     serial="S123-sw", name="sw1", productType="switch"
                 ),
+                factories.RawDeviceFactory.build(
+                    serial="S123-wes", name="wes1", productType="wireless"
+                ),
             ],
             "456": [
                 factories.RawDeviceFactory.build(serial="S456", name="dev3", productType="sensor"),
                 factories.RawDeviceFactory.build(
                     serial="S456-sw", name="sw2", productType="switch"
+                ),
+                factories.RawDeviceFactory.build(
+                    serial="S456-wes", name="wes2", productType="wireless"
                 ),
             ],
         }
@@ -199,12 +205,28 @@ class _FakeSwitchSDK:
         return switch_port_statuses.get(serial, [])
 
 
+class _FakeWirelessSDK:
+    def getOrganizationWirelessDevicesEthernetStatuses(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawWirelessEthernetStatus]:
+        wireless_statuses = {
+            "123": [
+                factories.RawWirelessEthernetStatusFactory.build(serial="S123-wes", name="wes1"),
+            ],
+            "456": [
+                factories.RawWirelessEthernetStatusFactory.build(serial="S456-wes", name="wes2"),
+            ],
+        }
+        return wireless_statuses.get(organizationId, [])
+
+
 class FakeMerakiSDK:
     def __init__(self) -> None:
         self._appliance = _FakeApplianceSDK()
         self._organizations = _FakeOrganisationsSDK()
         self._sensor = _FakeSensorSDK()
         self._switch = _FakeSwitchSDK()
+        self._wireless = _FakeWirelessSDK()
 
     @property
     def appliance(self) -> _FakeApplianceSDK:
@@ -221,3 +243,7 @@ class FakeMerakiSDK:
     @property
     def switch(self) -> _FakeSwitchSDK:
         return self._switch
+
+    @property
+    def wireless(self) -> _FakeWirelessSDK:
+        return self._wireless

@@ -16,6 +16,7 @@ from ._switch_port_statuses import RawSwitchPortStatus
 from ._uplink_statuses import RawUplinkStatuses, UplinkStatuses, UplinkUsageByInterface
 from ._uplink_usage import RawUplinkUsage
 from ._uplink_vpn_statuses import RawUplinkVpnStatuses
+from ._wireless_ethernet_statuses import RawWirelessEthernetStatus
 
 __all__ = [
     "ApiResponseCodes",
@@ -35,6 +36,7 @@ __all__ = [
     "RawUplinkStatuses",
     "RawUplinkUsage",
     "RawUplinkVpnStatuses",
+    "RawWirelessEthernetStatus",
     "UplinkStatuses",
     "UplinkUsageByInterface",
 ]

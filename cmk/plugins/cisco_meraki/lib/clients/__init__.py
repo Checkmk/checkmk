@@ -13,6 +13,7 @@ from ._appliance import ApplianceClient, ApplianceSDK
 from ._organizations import OrganizationsClient, OrganizationsSDK
 from ._sensor import SensorClient, SensorSDK
 from ._switch import SwitchClient, SwitchSDK
+from ._wireless import WirelessClient, WirelessSDK
 
 
 class MerakiSDK(Protocol):
@@ -24,6 +25,8 @@ class MerakiSDK(Protocol):
     def sensor(self) -> SensorSDK: ...
     @property
     def switch(self) -> SwitchSDK: ...
+    @property
+    def wireless(self) -> WirelessSDK: ...
 
 
 class MerakiClient:
@@ -46,6 +49,7 @@ class MerakiClient:
         self._org_client = OrganizationsClient(sdk.organizations)
         self._sensor_client = SensorClient(sdk.sensor)
         self._switch_client = SwitchClient(sdk.switch)
+        self._wireless_client = WirelessClient(sdk.wireless)
 
     def get_api_response_codes(self, id: str) -> Sequence[schema.RawApiResponseCodes]:
         return self._org_client.get_api_response_codes(id)
@@ -101,6 +105,11 @@ class MerakiClient:
 
     def get_uplink_usage(self, id: str) -> Sequence[schema.RawUplinkUsage]:
         return self._appliance_client.get_uplink_usage(id)
+
+    def get_wireless_ethernet_statuses(self, id: str) -> Sequence[schema.RawWirelessEthernetStatus]:
+        fn = self._wireless_client.get_ethernet_statuses
+        fetch = fn if self._no_cache else self._cache.wireless_ethernet_statuses(fn)
+        return fetch(id)
 
 
 __all__ = ["MerakiClient"]

@@ -218,6 +218,17 @@ class MerakiOrganisation:
                                 piggyback=piggyback,
                             )
 
+        if devices_by_type.get("wireless"):
+            if self.config.required.wireless_ethernet_statuses:
+                for wireless_status in self.client.get_wireless_ethernet_statuses(self.id):
+                    serial = wireless_status["serial"]
+                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                        yield Section(
+                            name="cisco_meraki_org_wireless_ethernet_statuses",
+                            data=wireless_status,
+                            piggyback=piggyback,
+                        )
+
         if devices_by_type.get("switch"):
             if self.config.required.switch_port_statuses:
                 for switch in devices_by_type["switch"]:
@@ -358,6 +369,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--cache-licenses-overview", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-networks", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-organizations", type=float, default=36000.0)  # 10 hours
+    parser.add_argument("--cache-wireless-ethernet-statuses", type=float, default=1800.0)  # 30 mins
 
     parser.add_argument(
         "--sections",

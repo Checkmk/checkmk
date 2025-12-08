@@ -54,6 +54,7 @@ class TestMerakiAgentOutput:
             "networks",
             "organisations",
             "sensor_readings",
+            "wireless_ethernet_statuses",
         }
 
         assert value == expected
@@ -87,8 +88,10 @@ class TestMerakiAgentOutput:
             "123-dev1",
             "123-dev2",
             "123-sw1",
+            "123-wes1",
             "456-dev3",
             "456-sw2",
+            "456-wes2",
         }
 
         assert value == expected

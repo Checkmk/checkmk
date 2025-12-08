@@ -195,7 +195,6 @@ LEGACY_CHECKS = [
     "eltek_battery",
     "eltek_fans",
     "eltek_outdoor_temp",
-    "eltek_systemstatus",
     "emc_datadomain_disks",
     "emc_datadomain_fans",
     "emc_datadomain_fs",

@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from cmk.product_telemetry.collection import collect_telemetry_data, store_telemetry_data
+from cmk.product_telemetry.logger import init_logging
 from cmk.product_telemetry.transmission import transmit_telemetry_data
 from cmk.utils import paths
 
@@ -22,6 +23,7 @@ class ProductTelemetryRequest:
 
 def main(args: Sequence[str]) -> int:
     request = parse_args(args)
+    logger = init_logging(paths.log_dir)
 
     try:
         if request.collect:
@@ -37,6 +39,7 @@ def main(args: Sequence[str]) -> int:
 
     except Exception as e:
         sys.stderr.write(f"cmk-telemetry: {e}\n")
+        logger.error(str(e))
         return -1
 
     return 0

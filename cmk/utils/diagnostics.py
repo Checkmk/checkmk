@@ -861,4 +861,10 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="This log file contains all errors that occur when requests are sent to the automation helper server.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "telemetry.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="This log files contains all activity and errors of the product telemetry module.",
+        encryption=CheckmkFileEncryption.none,
+    ),
 }

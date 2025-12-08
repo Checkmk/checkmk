@@ -4,13 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, computed, onBeforeMount, ref } from 'vue'
+import { type Ref, computed, inject, onBeforeMount, ref } from 'vue'
 
+import { cmkAjax } from '@/lib/ajax'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
+import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type {
   ComputedTopList,
   TopListContent,
@@ -24,16 +26,33 @@ import type { ContentProps } from './types.ts'
 
 const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()
+const cmkToken = inject(cmkTokenKey) as string | undefined
 const isLoading = ref(false)
 const data = ref<ComputedTopList | undefined>(undefined)
+const fetchingErrorMessage = ref<string | null>(null)
 
 const fetchData = async () => {
   isLoading.value = true
-  const response = await dashboardAPI.computeTopListData(
-    props.content,
-    props.effective_filter_context.filters
-  )
-  data.value = response.value
+
+  if (cmkToken === undefined) {
+    const response = await dashboardAPI.computeTopListData(
+      props.content,
+      props.effective_filter_context.filters
+    )
+    data.value = response.value
+  } else {
+    try {
+      const httpVarsString: string = new URLSearchParams({
+        widget_id: props.widget_id,
+        'cmk-token': cmkToken
+      }).toString()
+      data.value = await cmkAjax(`compute_top_list_data_token_auth.py?${httpVarsString}`, {})
+    } catch (error) {
+      isLoading.value = false
+      console.error('Error initializing top list content:', error)
+      fetchingErrorMessage.value = (error as Error).message
+    }
+  }
   isLoading.value = false
 }
 
@@ -96,7 +115,10 @@ const percentage = (metricValue: number) => {
 
 <template>
   <DashboardContentContainer :general_settings="general_settings">
-    <div v-if="isLoading" class="db-content-top-list__loading">
+    <div v-if="fetchingErrorMessage" class="db-content-ntop__error error">
+      {{ fetchingErrorMessage }}
+    </div>
+    <div v-else-if="isLoading" class="db-content-top-list__loading">
       {{ _t('Loading Top list content') }}...
     </div>
     <div v-else>

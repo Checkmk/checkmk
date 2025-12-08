@@ -48,7 +48,14 @@ const expiresAt = ref<Date>(
   props.publicToken?.expires_at ? new Date(props.publicToken.expires_at) : new Date()
 )
 
+const waitAPICall = ref<boolean>(false)
+const waitDeleteAPICall = ref<boolean>(false)
+
 const handleEnableAccess = () => {
+  if (waitAPICall.value) {
+    return
+  }
+
   dialogData.title = _t('Enable public link?')
   dialogData.message = [_t('Anyone with the link can view this dashboard.')]
 
@@ -65,6 +72,7 @@ const handleEnableAccess = () => {
       variant: 'warning',
       onclick: () => {
         dialogData.open = false
+        waitAPICall.value = true
         void updateToken(
           props.dashboardName,
           props.dashboardOwner,
@@ -72,6 +80,7 @@ const handleEnableAccess = () => {
           expiresAt.value ?? new Date(),
           comment.value
         ).then(() => {
+          waitAPICall.value = false
           emit('refreshDashboardSettings')
         })
       }
@@ -82,6 +91,10 @@ const handleEnableAccess = () => {
 }
 
 const handleDisableAccess = () => {
+  if (waitAPICall.value) {
+    return
+  }
+
   dialogData.title = _t('Stop sharing public link?')
   dialogData.message = _t('This will disable the link and revoke access for all viewers.')
 
@@ -91,6 +104,7 @@ const handleDisableAccess = () => {
       variant: 'warning',
       onclick: () => {
         dialogData.open = false
+        waitAPICall.value = true
         void updateToken(
           props.dashboardName,
           props.dashboardOwner,
@@ -99,6 +113,7 @@ const handleDisableAccess = () => {
           comment.value
         ).then(() => {
           emit('refreshDashboardSettings')
+          waitAPICall.value = false
         })
       }
     }
@@ -108,6 +123,10 @@ const handleDisableAccess = () => {
 }
 
 const handleUpdate = async (callback?: () => void) => {
+  if (waitAPICall.value) {
+    return
+  }
+  waitAPICall.value = true
   void updateToken(
     props.dashboardName,
     props.dashboardOwner,
@@ -116,28 +135,31 @@ const handleUpdate = async (callback?: () => void) => {
     comment.value
   ).then(() => {
     emit('refreshDashboardSettings')
+    waitAPICall.value = false
     if (callback) {
       callback()
     }
   })
 }
 
-const waitGenerateLink = ref<boolean>(false)
-
 const handleCreate = async () => {
-  if (waitGenerateLink.value) {
+  if (waitAPICall.value) {
     return
   }
 
-  waitGenerateLink.value = true
+  waitAPICall.value = true
 
   await createToken(props.dashboardName!, props.dashboardOwner).then(() => {
     emit('refreshDashboardSettings')
-    waitGenerateLink.value = false
+    waitAPICall.value = false
   })
 }
 
 const handleDelete = () => {
+  if (waitDeleteAPICall.value) {
+    return
+  }
+
   dialogData.title = _t('Delete public link?')
   dialogData.message = _t('This will delete the link and revoke access for all viewers.')
 
@@ -147,8 +169,12 @@ const handleDelete = () => {
       variant: 'warning',
       onclick: async () => {
         dialogData.open = false
+
+        waitDeleteAPICall.value = true
+
         await deleteToken(props.dashboardName!, props.dashboardOwner).then(() => {
           emit('refreshDashboardSettings')
+          waitDeleteAPICall.value = false
         })
       }
     }
@@ -175,9 +201,12 @@ const handleDelete = () => {
       @close="dialogData.open = false"
     />
 
-    <CmkButton v-if="!publicToken" @click="handleCreate">{{
-      _t('Generate public link')
-    }}</CmkButton>
+    <CmkButton
+      v-if="!publicToken"
+      :class="{ 'shimmer-input-button': waitAPICall }"
+      @click="handleCreate"
+      >{{ _t('Generate public link') }}</CmkButton
+    >
 
     <template v-else>
       <CmkLabel>{{ _t('Public dashboard URL') }}</CmkLabel>
@@ -187,11 +216,19 @@ const handleDelete = () => {
         </div>
 
         <div class="db-public-access__cell">
-          <CmkButton v-if="publicToken.is_disabled" @click="handleEnableAccess">{{
-            _t('Enable access')
-          }}</CmkButton>
+          <CmkButton
+            v-if="publicToken.is_disabled"
+            :class="{ 'shimmer-input-button': waitAPICall }"
+            @click="handleEnableAccess"
+            >{{ _t('Enable access') }}</CmkButton
+          >
 
-          <CmkButton v-else @click="handleDisableAccess">{{ _t('Disable access') }}</CmkButton>
+          <CmkButton
+            v-else
+            :class="{ 'shimmer-input-button': waitAPICall }"
+            @click="handleDisableAccess"
+            >{{ _t('Disable access') }}</CmkButton
+          >
         </div>
 
         <div class="db-public-access__cell">

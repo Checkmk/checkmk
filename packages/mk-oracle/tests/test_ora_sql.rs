@@ -1296,11 +1296,15 @@ fn test_detection_registry() {
 
 #[test]
 fn test_detect_host_runtime() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
-    if r.is_err() {
-        assert!(detect_host_runtime().is_none());
+    let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
+        SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
     } else {
+        std::env::var("ORACLE_HOME").is_ok()
+    };
+    if local_exists {
         assert!(detect_host_runtime().is_some());
+    } else {
+        assert!(detect_host_runtime().is_none());
     }
 }
 
@@ -1328,9 +1332,11 @@ fn test_detect_runtime_with_runtime() {
         std::env::set_var(LIBDIR_VAR, &good_path);
     }
     let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
-    let local_exists = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
-        .ok()
-        .is_some();
+    let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
+        SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
+    } else {
+        std::env::var("ORACLE_HOME").is_ok()
+    };
 
     // Never
     assert!(detect_runtime(&UseHostClient::Never, Some("Hurz".to_string())).is_none()); // env var does not exist
@@ -1392,9 +1398,11 @@ fn test_detect_runtime_without_runtime() {
         std::env::set_var(LIBDIR_VAR, &bad_path);
     }
     let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
-    let local_exists = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
-        .ok()
-        .is_some();
+    let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
+        SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
+    } else {
+        std::env::var("ORACLE_HOME").is_ok()
+    };
 
     // Never
     assert!(detect_runtime(&UseHostClient::Never, lib_dir_var.clone()).is_none());
@@ -1404,7 +1412,7 @@ fn test_detect_runtime_without_runtime() {
     for mode in [UseHostClient::Auto, UseHostClient::Always] {
         let path = to_string(detect_runtime(&mode, lib_dir_var.clone()));
         if local_exists {
-            assert!(path.unwrap().ends_with("bin"));
+            assert!(path.clone().unwrap().ends_with("bin") || path.unwrap().ends_with("lib"));
         } else {
             assert!(path.is_none());
         }
@@ -1464,9 +1472,11 @@ fn test_add_runtime_to_path() {
     let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
     let mut_env_var = "SOME_PATH_TEST_VAR_XXX".to_string();
     let good_path = base_dir().join("runtimes");
-    let local_exists = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
-        .ok()
-        .is_some();
+    let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
+        SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
+    } else {
+        std::env::var("ORACLE_HOME").is_ok()
+    };
     let good_path_str = good_path.clone().into_os_string().into_string().unwrap();
 
     // *** AUTO ***

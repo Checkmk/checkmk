@@ -5,13 +5,15 @@
 
 from pathlib import Path
 from typing import TypedDict
+from unittest import mock
 from unittest.mock import patch
 
 import pytest
 from pytest_mock import MockerFixture
 
 from cmk.product_telemetry.exceptions import InvalidTelemetryEndpointError
-from cmk.product_telemetry.transmission import _get_api_url, transmit_telemetry_data
+from cmk.product_telemetry.transmission import _get_api_url, DEFAULT_PROXY, transmit_telemetry_data
+from cmk.utils import http_proxy_config
 
 
 class FileInfo(TypedDict):
@@ -71,6 +73,34 @@ def test_transmission(
             assert file_path.exists()
 
     assert (mocked_telemetry_dir / "grafana_usage.json").exists() != grafana_info_deleted
+
+
+@pytest.mark.parametrize(
+    ("proxy_config", "expected_requests_proxies"),
+    [
+        (DEFAULT_PROXY, None),
+        (http_proxy_config.NoProxyConfig(), {"http": "", "https": ""}),
+        (http_proxy_config.EnvironmentProxyConfig(), None),
+        (http_proxy_config.ExplicitProxyConfig("hello"), {"http": "hello", "https": "hello"}),
+    ],
+)
+def test_transmission_with_proxy(
+    proxy_config: http_proxy_config.HTTPProxyConfig,
+    expected_requests_proxies: dict[str, str] | None,
+    tmp_path: Path,
+) -> None:
+    mocked_telemetry_dir = tmp_path / "telemetry"
+    mocked_telemetry_dir.mkdir(parents=True, exist_ok=True)
+    (mocked_telemetry_dir / "telemetry_1.json").write_text("{}")
+
+    mock_response = mock.Mock()
+    mock_response.ok = True
+
+    with patch("requests.post", return_value=mock_response) as mock_post:
+        transmit_telemetry_data(tmp_path, proxy_config=proxy_config)
+
+    assert mock_post.call_count == 1
+    assert mock_post.call_args.kwargs["proxies"] == expected_requests_proxies
 
 
 @pytest.mark.parametrize(

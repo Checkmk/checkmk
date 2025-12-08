@@ -13,9 +13,12 @@ import requests
 
 from cmk.product_telemetry.collectors.grafana import remove_grafana_usage_data
 from cmk.product_telemetry.exceptions import InvalidTelemetryEndpointError
+from cmk.utils.http_proxy_config import EnvironmentProxyConfig, HTTPProxyConfig
+
+DEFAULT_PROXY = EnvironmentProxyConfig()
 
 
-def transmit_telemetry_data(var_dir: Path) -> None:
+def transmit_telemetry_data(var_dir: Path, proxy_config: HTTPProxyConfig = DEFAULT_PROXY) -> None:
     # TODO: Logging for failed transmissions. E.g. timestamp, filename, success/failure, status code?
     directory = var_dir / "telemetry"
 
@@ -27,7 +30,7 @@ def transmit_telemetry_data(var_dir: Path) -> None:
 
     transmission_results: dict[str, bool] = {}
     for file_path in files:
-        successful_response = _transmit_single_telemetry_file(file_path)
+        successful_response = _transmit_single_telemetry_file(file_path, proxy_config)
         transmission_results[file_path.name] = successful_response
         if successful_response:
             file_path.unlink()
@@ -40,11 +43,16 @@ def transmit_telemetry_data(var_dir: Path) -> None:
             remove_grafana_usage_data(var_dir)
 
 
-def _transmit_single_telemetry_file(file_path: Path) -> bool:
+def _transmit_single_telemetry_file(file_path: Path, proxy_config: HTTPProxyConfig) -> bool:
     with file_path.open("r", encoding="utf-8") as f:
         json_data = json.load(f)
 
-    response = requests.post(_get_api_url(), json=json_data, timeout=30)
+    response = requests.post(
+        _get_api_url(),
+        json=json_data,
+        timeout=30,
+        proxies=proxy_config.to_requests_proxies(),
+    )
     return response.ok
 
 

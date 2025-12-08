@@ -58,7 +58,7 @@ pub struct Env {
 
 impl Env {
     pub fn new(args: &Args) -> Self {
-        let log_dir = Env::build_dir(&args.log_dir, &constants::ENV_LOG_DIR.as_deref());
+        let log_dir = Env::make_dir(&args.log_dir, &constants::ENV_LOG_DIR.as_deref());
         let temp_dir = Env::build_dir(&args.temp_dir, &constants::ENV_TEMP_DIR.as_deref());
         #[cfg(windows)]
         let state_dir = Env::build_dir(&args.state_dir, &constants::ENV_STATE_DIR.as_deref());
@@ -76,17 +76,14 @@ impl Env {
         }
     }
 
-    /// guaranteed to return temp dir or None
     pub fn temp_dir(&self) -> Option<&Path> {
         self.temp_dir.as_deref()
     }
 
-    /// guaranteed to return log dir or None
     pub fn log_dir(&self) -> Option<&Path> {
         self.log_dir.as_deref()
     }
 
-    /// guaranteed to return log dir or None
     pub fn state_dir(&self) -> Option<&Path> {
         self.state_dir.as_deref()
     }
@@ -119,6 +116,16 @@ impl Env {
         }
         .map(PathBuf::from)
         .filter(|p| Path::is_dir(p))
+    }
+
+    fn make_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
+        let path = dir.as_deref().or(fallback.as_deref())?;
+
+        if !path.exists() {
+            std::fs::create_dir_all(path).ok()?;
+        }
+
+        path.is_dir().then(|| path.to_path_buf())
     }
 }
 
@@ -651,15 +658,23 @@ mod tests {
         assert_eq!(e.temp_dir(), Some(Path::new(".")));
     }
     #[test]
-    fn test_env_dir_absent() {
+    fn test_temp_dir_absent() {
         let args = Args {
-            log_dir: Some(PathBuf::from("weird-dir")),
             temp_dir: Some(PathBuf::from("burr-dir")),
             ..Default::default()
         };
         let e = Env::new(&args);
-        assert!(e.log_dir().is_none());
         assert!(e.temp_dir().is_none());
+    }
+    #[test]
+    fn test_log_dir_exists() {
+        // we do not want to create dirs during tests, so we use "."
+        let args = Args {
+            log_dir: Some(PathBuf::from(".")),
+            ..Default::default()
+        };
+        let e = Env::new(&args);
+        assert!(e.log_dir().is_some());
     }
     #[test]
     fn test_create_info_text() {

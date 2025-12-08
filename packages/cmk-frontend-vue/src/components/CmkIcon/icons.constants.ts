@@ -43,7 +43,9 @@ export const oneColorIcons = [
   'success',
   'user',
   'warning',
-  'back'
+  'back',
+  'chain',
+  'broken-chain'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

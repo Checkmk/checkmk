@@ -285,6 +285,7 @@ def register(
     notifications.register(page_registry, permission_section_registry)
     user_message.register(
         page_registry,
+        token_authenticated_page_registry,
         versioned_endpoint_registry,
         endpoint_family_registry,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,

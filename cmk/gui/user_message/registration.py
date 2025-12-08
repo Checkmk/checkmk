@@ -6,6 +6,10 @@
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.token_auth import (
+    TokenAuthenticatedEndpoint,
+    TokenAuthenticatedPageRegistry,
+)
 
 from .api import register_endpoints
 from .user_message import (
@@ -13,12 +17,14 @@ from .user_message import (
     ajax_delete_user_message,
     AjaxGetUserMessages,
     AjaxUserMessageAction,
+    GetUserMessagesTokenAuthPage,
     PageUserMessage,
 )
 
 
 def register(
     page_registry: PageRegistry,
+    token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     *,
@@ -35,4 +41,9 @@ def register(
         endpoint_family_registry,
         versioned_endpoint_registry,
         ignore_duplicates=ignore_duplicate_endpoints,
+    )
+    token_authenticated_page_registry.register(
+        TokenAuthenticatedEndpoint(
+            GetUserMessagesTokenAuthPage.ident(), GetUserMessagesTokenAuthPage()
+        )
     )

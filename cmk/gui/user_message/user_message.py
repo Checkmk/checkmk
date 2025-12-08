@@ -10,6 +10,9 @@ from typing import override
 
 from cmk.gui import forms, message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.dashboard.token_util import (
+    DashboardTokenAuthenticatedJsonPage,
+)
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -24,6 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
+from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -260,4 +264,15 @@ class AjaxGetUserMessages(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
+        return sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True)
+
+
+class GetUserMessagesTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
+    @classmethod
+    def ident(cls) -> str:
+        return "get_user_messages_token_auth"
+
+    def _post(
+        self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
+    ) -> PageResult:
         return sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True)

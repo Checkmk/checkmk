@@ -18,7 +18,6 @@ from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
 from .community_dashboards import register_builtin_dashboards
 from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
-from .dashlet.dashlets.view import ViewWidgetEditPage, ViewWidgetIFramePage
 from .page_create_dashboard import page_create_dashboard
 from .page_create_view_dashlet import (
     page_create_link_view_dashlet,
@@ -32,6 +31,7 @@ from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
 from .page_graph_widget import GraphWidgetPage, GraphWidgetTokenAuthPage
 from .page_show_dashboard import ajax_dashlet, AjaxInitialDashboardFilters, page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
+from .page_view_widget import ViewWidgetEditPage, ViewWidgetIFramePage
 from .visual_type import VisualTypeDashboards
 
 

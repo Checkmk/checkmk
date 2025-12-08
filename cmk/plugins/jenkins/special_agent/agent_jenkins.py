@@ -25,7 +25,7 @@ __version__ = "2.5.0b1"
 
 AGENT = "jenkins"
 
-PASSWORD_OPTION = "password"
+PASSWORD_OPTION = "secret"
 
 
 class Section(NamedTuple):

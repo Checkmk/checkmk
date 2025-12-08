@@ -49,7 +49,7 @@ export async function fetchData(
       delete body.params[k as keyof typeof body.params]
     }
   })
-  const request = `request=${JSON.stringify({ ...body, value: query })}`
+  const request = `request=${encodeURIComponent(JSON.stringify({ ...body, value: query }))}`
 
   const response = await cmkFetch('ajax_vs_autocomplete.py', {
     method: 'POST',

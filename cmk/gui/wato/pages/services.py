@@ -18,6 +18,7 @@ import dataclasses
 import json
 import pprint
 import traceback
+from collections import Counter
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict
 from typing import Any, Literal, NamedTuple, override
@@ -140,10 +141,17 @@ class TableGroupEntry(NamedTuple):
     help_text: str
 
 
-class ChangedEntry(NamedTuple):
+@dataclasses.dataclass
+class ChangedEntry:
     initial_table: str
     intended_table: UpdateType
-    current_table: str
+    current_tables_with_count: Mapping[str, int]
+
+    def all_ok(self) -> bool:
+        return (
+            len(self.current_tables_with_count) == 1
+            and self.intended_table.value in self.current_tables_with_count
+        )
 
 
 def register(
@@ -417,25 +425,22 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             api_request.discovery_options,
         )
         if (
-            len(api_request.update_services) == 1
-            and api_request.update_source is not None
+            api_request.update_source is not None
             and api_request.update_target is not None
             and (
-                target_check := next(
-                    (
-                        check
-                        for check in discovery_result.check_table
-                        if checkbox_id(check.check_plugin_name, check.item)
-                        == api_request.update_services[0]
-                    ),
-                    None,
-                )
+                target_checks := [
+                    check
+                    for check in discovery_result.check_table
+                    if checkbox_id(check.check_plugin_name, check.item)
+                    in api_request.update_services
+                ]
             )
         ):
+            tables_with_count = Counter(check.check_source for check in target_checks)
             changed_entry = ChangedEntry(
                 initial_table=api_request.update_source,
                 intended_table=api_request.update_target,
-                current_table=target_check.check_source,
+                current_tables_with_count=tables_with_count,
             )
         else:
             changed_entry = None
@@ -978,26 +983,57 @@ class DiscoveryPageRenderer:
         if changed_entry is None or changed_entry.initial_table != table_group:
             return None, message_type
 
-        if changed_entry.current_table != changed_entry.intended_table.value:
+        if not changed_entry.all_ok():
             message_type = "warning"
 
-        message = None
-        match changed_entry.current_table:
-            case DiscoveryState.UNDECIDED:
-                message = _("Service moved to undecided services table. Monitoring is disabled.")
-            case DiscoveryState.MONITORED:
-                message = _("Service moved to monitored services table. Monitoring is enabled.")
-            case DiscoveryState.VANISHED:
-                message = _(
-                    "Service moved to vanished services table. "
-                    "Monitoring is enabled, but service is unknown."
-                )
-            case DiscoveryState.IGNORED:
-                message = _("Service moved to disabled services table. Monitoring is disabled.")
-            case DiscoveryState.REMOVED:
-                message = _("Service removed. Monitoring is disabled.")
+        messages = []
+        for current_table, num in changed_entry.current_tables_with_count.items():
+            use_plural = num > 1 or len(changed_entry.current_tables_with_count) > 1
+            match current_table:
+                case DiscoveryState.UNDECIDED:
+                    messages.append(
+                        _(
+                            "%d service(s) moved to undecided services table. Monitoring is disabled."
+                        )
+                        % num
+                        if use_plural
+                        else _("Service moved to undecided services table. Monitoring is disabled.")
+                    )
+                case DiscoveryState.MONITORED:
+                    messages.append(
+                        _("%d service(s) moved to monitored services table. Monitoring is enabled.")
+                        % num
+                        if use_plural
+                        else _("Service moved to monitored services table. Monitoring is enabled.")
+                    )
+                case DiscoveryState.VANISHED:
+                    messages.append(
+                        _(
+                            "%d service(s) moved to vanished services table. "
+                            "Monitoring is enabled, but service is unknown."
+                        )
+                        % num
+                        if use_plural
+                        else _(
+                            "Service moved to vanished services table. "
+                            "Monitoring is enabled, but service is unknown."
+                        )
+                    )
+                case DiscoveryState.IGNORED:
+                    messages.append(
+                        _("%d service(s) moved to disabled services table. Monitoring is disabled.")
+                        % num
+                        if use_plural
+                        else _("Service moved to disabled services table. Monitoring is disabled.")
+                    )
+                case DiscoveryState.REMOVED:
+                    messages.append(
+                        _("%d service(s) removed. Monitoring is disabled.") % num
+                        if use_plural
+                        else _("Service removed. Monitoring is disabled.")
+                    )
 
-        return message, message_type
+        return "\n".join(messages) or None, message_type
 
     def _show_discovery_details(
         self,

@@ -5,12 +5,8 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import sys
 
-if sys.version_info[0] == 2:
-    import agents.plugins.nginx_status_2 as nginx_status
-else:
-    from agents.plugins import nginx_status
+from agents.plugins import nginx_status
 
 
 class TestExtractStatsFromNetstat:

@@ -66,11 +66,8 @@ def install():
         sys.stdout.write("already installed\n")
         return 1
 
-    if sys.version_info[0] >= 3:
-        from io import BytesIO
-    else:
-        from cStringIO import StringIO as BytesIO
     import shutil
+    from io import BytesIO
     from zipfile import ZipFile
 
     url = "https://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_2_1_30.zip"

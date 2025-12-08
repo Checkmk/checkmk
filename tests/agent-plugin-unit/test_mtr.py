@@ -5,14 +5,10 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-import sys
 
 import pytest
 
-if sys.version_info[0] == 2:
-    import agents.plugins.mtr_2 as mtr
-else:
-    from agents.plugins import mtr
+from agents.plugins import mtr
 
 
 @pytest.mark.parametrize(

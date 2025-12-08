@@ -10,19 +10,12 @@
 
 import copy
 import sys
+from unittest.mock import Mock, patch
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-if sys.version_info[0] == 2:
-    from unittest.mock import Mock, patch
-
-    import agents.plugins.mk_postgres_2 as mk_postgres
-else:
-    from unittest.mock import Mock, patch
-
-    from agents.plugins import mk_postgres
-
+from agents.plugins import mk_postgres
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |

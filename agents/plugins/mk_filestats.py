@@ -107,19 +107,13 @@ import time
 
 
 def ensure_str(s):
-    if sys.version_info[0] >= 3:
-        if isinstance(s, bytes):
-            return s.decode("utf-8")
-    elif isinstance(s, unicode):  # noqa: F821
-        return s.encode("utf-8")
+    if isinstance(s, bytes):
+        return s.decode("utf-8")
     return s
 
 
 def ensure_text(s):
-    if sys.version_info[0] >= 3:
-        if isinstance(s, bytes):
-            return s.decode("utf-8")
-    elif isinstance(s, str):
+    if isinstance(s, bytes):
         return s.decode("utf-8")
     return s
 
@@ -231,8 +225,7 @@ def _sanitize_path(raw_file_path):
     # * if the path is not utf-8 decodable, python2: str
     # * python3: str, possibly with surrogates aka it can only be encoded again like so:
     #   str_with_surrogates.encode('utf-8', 'surrogateescape')
-    if sys.version_info[0] >= 3:
-        return raw_file_path.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
+    return raw_file_path.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
     if isinstance(raw_file_path, unicode):  # type: ignore[name-defined,unreachable] # noqa: F821
         return raw_file_path
     return raw_file_path.decode("utf-8", "replace")

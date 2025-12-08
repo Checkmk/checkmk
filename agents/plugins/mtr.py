@@ -50,11 +50,8 @@ debug = "-d" in sys.argv[2:] or "--debug" in sys.argv[1:]
 
 
 def ensure_str(s):
-    if sys.version_info[0] >= 3:
-        if isinstance(s, bytes):
-            return s.decode("utf-8")
-    elif isinstance(s, unicode):  # noqa: F821
-        return s.encode("utf-8")
+    if isinstance(s, bytes):
+        return s.decode("utf-8")
     return s
 
 

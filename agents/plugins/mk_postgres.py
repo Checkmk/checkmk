@@ -85,11 +85,10 @@ except ImportError:
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
-if sys.version_info[0] >= 3:
-    new_stdout = io.TextIOWrapper(
-        sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
-    )
-    old_stdout, sys.stdout = sys.stdout, new_stdout
+new_stdout = io.TextIOWrapper(
+    sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
+)
+old_stdout, sys.stdout = sys.stdout, new_stdout
 
 OS = platform.system()
 IS_LINUX = OS == "Linux"
@@ -115,10 +114,7 @@ WINDOWS_PROCESS_MATCH_PATTERNS = [
     ]
 ]
 
-if sys.version_info[0] >= 3:
-    UTF_8_NEWLINE_CHARS = re.compile(r"[\n\r\u2028\u000B\u0085\u2028\u2029]+")
-else:
-    UTF_8_NEWLINE_CHARS = re.compile("[\u000A\u000D\u2028\u000B\u0085\u2028\u2029]+")  # fmt: skip
+UTF_8_NEWLINE_CHARS = re.compile(r"[\n\r\u2028\u000B\u0085\u2028\u2029]+")  # fmt: skip
 
 
 class OSNotImplementedError(NotImplementedError):
@@ -142,11 +138,8 @@ def subprocess_check_output(args):
 
 # Borrowed from six
 def ensure_str(s):
-    if sys.version_info[0] >= 3:
-        if isinstance(s, bytes):
-            return s.decode("utf-8")
-    elif isinstance(s, unicode):  # noqa: F821
-        return s.encode("utf-8")
+    if isinstance(s, bytes):
+        return s.decode("utf-8")
     return s
 
 

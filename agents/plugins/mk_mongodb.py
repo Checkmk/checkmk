@@ -798,10 +798,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
             LOGGER.warning("config file %s does not exist!", filename)
         else:
             with open(filename) as cfg:
-                if sys.version_info[0] == 2:
-                    self.readfp(cfg)
-                else:
-                    self.read_file(cfg)
+                self.read_file(cfg)
             LOGGER.info("read configuration file %r", filename)
 
     def get_mongodb_bool(self, option, *, default=None):

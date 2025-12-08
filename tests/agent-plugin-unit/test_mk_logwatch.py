@@ -20,12 +20,9 @@ from typing import Iterable, Mapping, Optional, Sequence, Tuple, Union
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-if sys.version_info[0] == 2:
-    import agents.plugins.mk_logwatch_2 as lw
-else:
-    import agents.plugins.mk_logwatch as lw
+import agents.plugins.mk_logwatch as lw
 
-    unicode = str
+unicode = str
 
 _SEP = os.sep.encode()
 _SEP_U = _SEP.decode("utf-8")

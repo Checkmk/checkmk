@@ -30,18 +30,10 @@ __version__ = "2.5.0b1"
 
 USER_AGENT = "checkmk-agent-nginx_status-" + __version__
 
-if sys.version_info < (2, 6):
-    sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
-    sys.exit(1)
 
-if sys.version_info[0] == 2:
-    import urllib2
+import urllib  # noqa: E402
 
-    urllib2.getproxies = lambda: {}
-else:
-    import urllib
-
-    urllib.getproxies = lambda: {}  # type: ignore[attr-defined]
+urllib.getproxies = lambda: {}  # type: ignore[attr-defined]
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3

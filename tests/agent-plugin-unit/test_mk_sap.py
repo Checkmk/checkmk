@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-import sys
 from collections import namedtuple
 
 import pytest
@@ -28,14 +27,10 @@ class FakeConnectionTree:
 
     @property
     def TREE_NODES(self):
-        if sys.version_info[0] == 2:
-            return Value(self.tree_data)
         return self.tree_data
 
     @property
     def RETURN(self):
-        if sys.version_info[0] == 2:
-            return Value({"TYPE": "NOT_E"})
         return {"TYPE": "NOT_E"}
 
     def invoke(self):
@@ -56,13 +51,9 @@ class FakeConnectionTree:
 
 def test_empty_tree(monkeypatch):
     fake_connection_tree = FakeConnectionTree({})
-    if sys.version_info[0] == 2:
-        monkeypatch.setattr(mk_sap, "conn", fake_connection_tree)
-        result = mk_sap.mon_tree({"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
-    else:
-        result = mk_sap.mon_tree(
-            fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
-        )
+    result = mk_sap.mon_tree(
+        fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
+    )
     assert result == {}
 
 
@@ -74,13 +65,9 @@ def test_simple_tree(monkeypatch):
             {"MTNAMESHRT": "01", "ALPARINTRE": 1},
         ]
     )
-    if sys.version_info[0] == 2:
-        monkeypatch.setattr(mk_sap, "conn", fake_connection_tree)
-        result = mk_sap.mon_tree({"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
-    else:
-        result = mk_sap.mon_tree(
-            fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
-        )
+    result = mk_sap.mon_tree(
+        fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
+    )
 
     assert result == [
         {"ALPARINTRE": 0, "MTNAMESHRT": "root", "PATH": "apu_ms_name/root"},
@@ -97,15 +84,8 @@ def test_recursion_simple(monkeypatch):
             {"MTNAMESHRT": "root", "ALPARINTRE": 1},
         ]
     )
-    if sys.version_info[0] == 2:
-        monkeypatch.setattr(mk_sap, "conn", fake_connection_tree)
-        with pytest.raises(mk_sap.SapError):
-            mk_sap.mon_tree({"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
-    else:
-        with pytest.raises(mk_sap.SapError):
-            mk_sap.mon_tree(
-                fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
-            )
+    with pytest.raises(mk_sap.SapError):
+        mk_sap.mon_tree(fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
 
 
 def test_recursion(monkeypatch):
@@ -118,12 +98,6 @@ def test_recursion(monkeypatch):
             {"MTNAMESHRT": "03", "ALPARINTRE": 2},
         ]
     )
-    if sys.version_info[0] == 2:
-        monkeypatch.setattr(mk_sap, "conn", fake_connection_tree)
-        with pytest.raises(mk_sap.SapError) as exception:
-            mk_sap.mon_tree({"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
-        assert "01" in str(exception.value)
-        return
     with pytest.raises(mk_sap.SapError) as exception:
         mk_sap.mon_tree(fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
         assert "01" in str(exception.value)

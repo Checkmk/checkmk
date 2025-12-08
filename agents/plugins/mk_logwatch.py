@@ -26,12 +26,6 @@ You should find an example configuration file at
 
 __version__ = "2.5.0b1"
 
-import sys
-
-if sys.version_info < (3, 4):
-    sys.stderr.write("ERROR: Python <3.4 is not supported. Please use Python 3.4 or newer.\n")
-    sys.exit(1)
-
 import ast
 import binascii
 import codecs
@@ -46,6 +40,7 @@ import re
 import shlex
 import shutil
 import socket
+import sys
 import time
 
 try:
@@ -269,9 +264,6 @@ def parse_filenames(line):
         _processed_line = os.path.normpath(_processed_line)
         _processed_line = _processed_line.replace("\\", "\\\\")
         return shlex.split(_processed_line)
-
-    if sys.version_info[0] < 3:
-        return [x.decode("utf-8") for x in shlex.split(line.encode("utf-8"))]
 
     return shlex.split(line)
 

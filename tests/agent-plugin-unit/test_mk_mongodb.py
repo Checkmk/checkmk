@@ -6,19 +6,14 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-
 import json
 import os
-import sys
 from typing import Dict, Mapping, Tuple, Union
 
 import pymongo
 import pytest
 
-if sys.version_info[0] == 2:
-    import agents.plugins.mk_mongodb_2 as mk_mongodb
-else:
-    from agents.plugins import mk_mongodb
+from agents.plugins import mk_mongodb
 
 
 def read_dataset(filename):

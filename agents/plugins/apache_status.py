@@ -34,16 +34,9 @@ __version__ = "2.5.0b1"
 
 USER_AGENT = "checkmk-agent-apache_status-" + __version__
 
-if sys.version_info < (2, 6):
-    sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
-    sys.exit(1)
-
 
 def urlopen_(request, timeout=5, context=None):
-    if sys.version_info[0] == 2:
-        scheme = request.get_type()
-    else:
-        scheme = request.type
+    scheme = request.type
     if scheme not in ["http", "https"]:
         raise ValueError("Scheme '%s' is not allowed" % scheme)
     return urlopen(  # nosec B310 # BNS:6b61d9
@@ -259,10 +252,7 @@ def get_response(proto, cafile, address, portspec, page):
 
 
 def get_response_charset(response):
-    if sys.version_info[0] == 2:
-        charset = response.headers.getparam("charset")
-    else:
-        charset = response.info().get_content_charset()
+    charset = response.info().get_content_charset()
     return charset or "utf-8"
 
 

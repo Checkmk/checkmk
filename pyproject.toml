@@ -70,7 +70,6 @@ ignore = [
 "agents/plugins/*" = [
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
   "UP032", # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
-  "UP036", # Version block is outdated for minimum Python version
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
@@ -78,7 +77,6 @@ ignore = [
   "UP006", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
   "UP035", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
-  "UP036", # Version block is outdated for minimum Python version
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP045", # Use `X | None` for type annotations
 ]

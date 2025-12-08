@@ -8,11 +8,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import {
   type GraphLine,
+  type GraphLineQueryAggregationLookback,
   type GraphLineQueryAttributes,
   type GraphLines,
   type GraphOptions,
   type Operation,
-  type QueryAggregationSumRate,
   type Transformation
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -51,10 +51,7 @@ import {
   convertToExplicitVerticalRange,
   convertToUnit
 } from '@/graph-designer/private/converters'
-import {
-  fetchMetricColor,
-  fetchMetricTypes
-} from '@/graph-designer/private/fetch_metric_properties'
+import { fetchMetricColor } from '@/graph-designer/private/fetch_metric_properties'
 import { type GraphRenderer } from '@/graph-designer/private/graph'
 
 import type { Topic } from './type_defs'
@@ -195,13 +192,17 @@ function formulaOf(graphLine: GraphLine): string {
   }
 }
 
+const dataQueryAggregationLookbackDefault: GraphLineQueryAggregationLookback = {
+  value: 2,
+  unit: 'min'
+}
 const dataQueryAggregationHistogramPercentile = 90
 const dataQuery = ref<Query>({
   metricName: null,
   resourceAttributes: [],
   scopeAttributes: [],
   dataPointAttributes: [],
-  aggregationSum: null,
+  aggregationLookback: dataQueryAggregationLookbackDefault,
   aggregationHistogramPercentile: dataQueryAggregationHistogramPercentile
 })
 const dataMetric = ref<Metric>({
@@ -313,7 +314,7 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         resource_attributes: graphLine.resource_attributes,
         scope_attributes: graphLine.scope_attributes,
         data_point_attributes: graphLine.data_point_attributes,
-        aggregation_sum: graphLine.aggregation_sum,
+        aggregation_lookback: graphLine.aggregation_lookback,
         aggregation_histogram_percentile: graphLine.aggregation_histogram_percentile
       }
     case 'metric':
@@ -426,23 +427,6 @@ function isOperation(graphLine: GraphLine) {
 
 async function addQuery() {
   if (dataQuery.value.metricName !== '' && dataQuery.value.metricName !== null) {
-    const metricTypes: string[] = await fetchMetricTypes(
-      dataQuery.value.metricName,
-      dataQuery.value.resourceAttributes,
-      dataQuery.value.scopeAttributes,
-      dataQuery.value.dataPointAttributes
-    )
-    let aggregationSum: QueryAggregationSumRate | null
-    if (metricTypes.includes('sum')) {
-      aggregationSum = {
-        type: 'rate',
-        enabled: false,
-        value: 1,
-        unit: 'min'
-      }
-    } else {
-      aggregationSum = null
-    }
     graphLines.value.push({
       id: nextIndex(),
       type: 'query',
@@ -456,7 +440,7 @@ async function addQuery() {
       resource_attributes: dataQuery.value.resourceAttributes,
       scope_attributes: dataQuery.value.scopeAttributes,
       data_point_attributes: dataQuery.value.dataPointAttributes,
-      aggregation_sum: aggregationSum,
+      aggregation_lookback: dataQuery.value.aggregationLookback,
       aggregation_histogram_percentile: dataQuery.value.aggregationHistogramPercentile
     })
     dataQuery.value = {
@@ -464,7 +448,7 @@ async function addQuery() {
       resourceAttributes: [],
       scopeAttributes: [],
       dataPointAttributes: [],
-      aggregationSum: null,
+      aggregationLookback: dataQueryAggregationLookbackDefault,
       aggregationHistogramPercentile: dataQueryAggregationHistogramPercentile
     }
   }
@@ -808,21 +792,10 @@ function transformQueryAttributes(attributes: GraphLineQueryAttributes) {
   })
 }
 
-function transformQueryAggregationSum(aggregationSum: QueryAggregationSumRate | null) {
-  if (aggregationSum === null) {
-    return {
-      type: 'rate',
-      enabled: false,
-      value: 2,
-      unit: 'min'
-    }
-  } else {
-    return {
-      type: 'rate',
-      enabled: aggregationSum.enabled,
-      value: aggregationSum.value,
-      unit: aggregationSum.unit
-    }
+function transformQueryAggregationLookback(aggregationLookback: GraphLineQueryAggregationLookback) {
+  return {
+    value: aggregationLookback.value,
+    unit: aggregationLookback.unit
   }
 }
 
@@ -851,7 +824,9 @@ const slideInAPI = {
           data_point_attributes: transformQueryAttributes(
             graphLineQuery.value.data_point_attributes
           ),
-          aggregation_sum: transformQueryAggregationSum(graphLineQuery.value.aggregation_sum),
+          aggregation_lookback: transformQueryAggregationLookback(
+            graphLineQuery.value.aggregation_lookback
+          ),
           aggregation_histogram_percentile: graphLineQuery.value.aggregation_histogram_percentile
         }
         values.value = {
@@ -993,7 +968,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:resource-attributes="graphLine.resource_attributes"
               v-model:scope-attributes="graphLine.scope_attributes"
               v-model:data-point-attributes="graphLine.data_point_attributes"
-              v-model:aggregation-sum="graphLine.aggregation_sum"
+              v-model:aggregation-lookback="graphLine.aggregation_lookback"
               v-model:aggregation-histogram-percentile="graphLine.aggregation_histogram_percentile"
               @update:metric-name="updateGraphLineAutoTitle(graphLine)"
             />
@@ -1094,7 +1069,7 @@ const graphDesignerContentAsJson = computed(() => {
           v-model:resource-attributes="dataQuery.resourceAttributes"
           v-model:scope-attributes="dataQuery.scopeAttributes"
           v-model:data-point-attributes="dataQuery.dataPointAttributes"
-          v-model:aggregation-sum="dataQuery.aggregationSum"
+          v-model:aggregation-lookback="dataQuery.aggregationLookback"
           v-model:aggregation-histogram-percentile="dataQuery.aggregationHistogramPercentile"
         />
         <CmkButton @click="addQuery">

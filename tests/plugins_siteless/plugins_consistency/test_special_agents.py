@@ -278,7 +278,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
                 "resource_attributes": ["a"],
                 "scope_attributes": ["a"],
                 "data_point_attributes": ["a"],
-                "aggregation_sum": ["none", None],
+                "aggregation_lookback": {"value": 2, "unit": "min"},
                 "aggregation_histogram_percentile": 90,
                 "host_name": "v250",
             }

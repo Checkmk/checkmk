@@ -7,9 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import {
   type GraphLineQueryAttribute,
-  type GraphLineQueryAttributes,
-  type QueryAggregationSumRate
+  type GraphLineQueryAttributes
 } from 'cmk-shared-typing/typescript/graph_designer'
+import { type MetricBackendCustomQueryAggregationLookback } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
 import { computed } from 'vue'
@@ -20,7 +20,6 @@ import usei18n from '@/lib/i18n'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkList from '@/components/CmkList'
 import { type Suggestion } from '@/components/CmkSuggestions'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
@@ -32,7 +31,7 @@ export interface Query {
   resourceAttributes: GraphLineQueryAttributes
   scopeAttributes: GraphLineQueryAttributes
   dataPointAttributes: GraphLineQueryAttributes
-  aggregationSum: QueryAggregationSumRate | null
+  aggregationLookback: MetricBackendCustomQueryAggregationLookback
   aggregationHistogramPercentile: number
 }
 
@@ -46,9 +45,12 @@ const scopeAttributes = defineModel<GraphLineQueryAttributes>('scopeAttributes',
 const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttributes', {
   default: []
 })
-const aggregationSum = defineModel<QueryAggregationSumRate | null>('aggregationSum', {
-  default: null
-})
+const aggregationLookback = defineModel<MetricBackendCustomQueryAggregationLookback>(
+  'aggregationLookback',
+  {
+    required: true
+  }
+)
 const aggregationHistogramPercentile = defineModel<number>('aggregationHistogramPercentile', {
   required: true
 })
@@ -228,10 +230,9 @@ function deleteDataPointAttribute(index: number) {
 
 // Unit for interval/time frame of aggregation sum rate
 
-const aggregationSumRateUnitSuggestions: Suggestion[] = [
+const aggregationLookbackUnitSuggestions: Suggestion[] = [
   { name: 's', title: untranslated('s') },
-  { name: 'min', title: untranslated('min') },
-  { name: 'h', title: untranslated('h') }
+  { name: 'min', title: untranslated('min') }
 ]
 </script>
 
@@ -338,17 +339,19 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
           </div>
         </td>
       </tr>
-      <tr v-if="aggregationSum !== null && aggregationSum.type === 'rate'">
+      <tr>
+        <td>{{ _t('Aggregation lookback') }}</td>
         <td>
-          <CmkCheckbox v-model="aggregationSum.enabled" :label="_t('Apply rate (sums)')" />
-        </td>
-        <td>
-          <CmkInput v-model="aggregationSum.value" type="number" />
-          <CmkDropdown
-            v-model:selected-option="aggregationSum.unit"
-            :options="{ type: 'fixed', suggestions: aggregationSumRateUnitSuggestions }"
-            :label="_t('Time range')"
-          />
+          <div>
+            <CmkInput v-model="aggregationLookback.value" type="number" />
+          </div>
+          <div>
+            <CmkDropdown
+              v-model:selected-option="aggregationLookback.unit"
+              :options="{ type: 'fixed', suggestions: aggregationLookbackUnitSuggestions }"
+              :label="_t('Time range')"
+            />
+          </div>
         </td>
       </tr>
       <tr>

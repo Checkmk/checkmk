@@ -927,8 +927,17 @@
     "metric_backend_custom_query_attributes": {
       "$ref": "../graph_designer.json#/$defs/graph_line_query_attributes"
     },
-    "metric_backend_custom_query_aggregation_sum": {
-      "$ref": "../graph_designer.json#/$defs/query_aggregation_sum_rate"
+    "metric_backend_custom_query_aggregation_lookback_unit": {
+      "type": "string",
+      "enum": ["s", "min"]
+    },
+    "metric_backend_custom_query_aggregation_lookback": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "number" },
+        "unit": { "$ref": "#/$defs/metric_backend_custom_query_aggregation_lookback_unit" }
+      },
+      "required": ["value", "unit"]
     },
     "metric_backend_custom_query": {
       "id": "metric_backend_custom_query",
@@ -956,8 +965,8 @@
             "data_point_attributes": {
               "$ref": "#/$defs/metric_backend_custom_query_attributes"
             },
-            "aggregation_sum": {
-              "$ref": "#/$defs/metric_backend_custom_query_aggregation_sum"
+            "aggregation_lookback": {
+              "$ref": "#/$defs/metric_backend_custom_query_aggregation_lookback"
             },
             "aggregation_histogram_percentile": {
               "type": "number"
@@ -969,7 +978,7 @@
             "resource_attributes",
             "scope_attributes",
             "data_point_attributes",
-            "aggregation_sum",
+            "aggregation_lookback",
             "aggregation_histogram_percentile"
           ]
         }

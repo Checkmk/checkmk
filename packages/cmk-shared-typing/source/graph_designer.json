@@ -76,15 +76,17 @@
         "$ref": "#/$defs/graph_line_query_attribute"
       }
     },
-    "query_aggregation_sum_rate": {
+    "graph_line_query_aggregation_lookback_unit": {
+      "type": "string",
+      "enum": ["s", "min"]
+    },
+    "graph_line_query_aggregation_lookback": {
       "type": "object",
       "properties": {
-        "type": { "type": "string", "enum": ["rate"] },
-        "enabled": { "type": "boolean" },
         "value": { "type": "number" },
-        "unit": { "type": "string", "enum": ["s", "min", "h"] }
+        "unit": { "$ref": "#/$defs/graph_line_query_aggregation_lookback_unit" }
       },
-      "required": ["type", "enabled", "value", "unit"]
+      "required": ["value", "unit"]
     },
     "graph_line_query": {
       "type": "object",
@@ -114,8 +116,8 @@
         "data_point_attributes": {
           "$ref": "#/$defs/graph_line_query_attributes"
         },
-        "aggregation_sum": {
-          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/query_aggregation_sum_rate" }]
+        "aggregation_lookback": {
+          "$ref": "#/$defs/graph_line_query_aggregation_lookback"
         },
         "aggregation_histogram_percentile": {
           "type": "number"
@@ -134,7 +136,7 @@
         "resource_attributes",
         "scope_attributes",
         "data_point_attributes",
-        "aggregation_sum",
+        "aggregation_lookback",
         "aggregation_histogram_percentile"
       ]
     },

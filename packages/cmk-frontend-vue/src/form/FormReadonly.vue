@@ -199,12 +199,12 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     rows.push(dataPointRow)
   }
 
-  if (value.aggregation_sum && value.aggregation_sum.enabled) {
-    const rateText = `${value.aggregation_sum.value} ${value.aggregation_sum.unit}`
-    rows.push(
-      h('tr', [h('td', { class: 'dict_title' }, ['Aggregation Sum Rate:']), h('td', [rateText])])
-    )
-  }
+  rows.push(
+    h('tr', [
+      h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
+      h('td', [`${value.aggregation_lookback.value} ${value.aggregation_lookback.unit}`])
+    ])
+  )
 
   rows.push(
     h('tr', [

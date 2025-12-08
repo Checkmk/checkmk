@@ -96,9 +96,9 @@ class RRDDataKey:
 
 
 @dataclass(frozen=True)
-class QueryAggregationSumRate:
+class QueryAggregationLookback:
     value: float
-    unit: Literal["s", "min", "h"]
+    unit: Literal["s", "min"]
 
 
 @dataclass(frozen=True)
@@ -113,7 +113,7 @@ class QueryDataKey:
     resource_attributes: tuple[GraphLineQueryAttribute, ...]
     scope_attributes: tuple[GraphLineQueryAttribute, ...]
     data_point_attributes: tuple[GraphLineQueryAttribute, ...]
-    aggregation_sum: QueryAggregationSumRate | None
+    aggregation_lookback: QueryAggregationLookback
     aggregation_histogram_percentile: float
 
 

@@ -47,7 +47,10 @@ def test_detect_icon_path(th: Theme) -> None:
 
 
 def test_url(th: Theme) -> None:
-    assert th.url("asd/eee") == "themes/modern-dark/asd/eee"
+    # default theme is modern dark, but asd/eee does not exist, so it falls back to facelift.
+    assert th._url("asd/eee") == "themes/facelift/asd/eee"
+    # when the file exists in the current theme, then the correct url is returned:
+    assert th._url("images/icon_aws.svg") == "themes/modern-dark/images/icon_aws.svg"
 
 
 def test_base_dir(th: Theme) -> None:

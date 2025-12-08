@@ -214,7 +214,7 @@ class HTMLGenerator(HTMLWriter):
             render_start_tag(
                 "link",
                 rel="shortcut icon",
-                href=theme.url("images/favicon.ico"),
+                href=theme.favicon(),
                 type_="image/ico",
                 close_tag=True,
             )
@@ -237,7 +237,7 @@ class HTMLGenerator(HTMLWriter):
             self.base(target=self.link_target)
 
         font_css_filepath = "themes/facelift/fonts_inter.css"
-        css_filepath = theme.url("theme.css")
+        css_filepath = theme.css()
 
         if current_app.debug and not current_app.testing:
             HTMLGenerator._verify_file_exists_in_web_dirs(css_filepath)

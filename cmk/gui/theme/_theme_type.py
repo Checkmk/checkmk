@@ -108,8 +108,20 @@ class Theme:
 
         return None
 
-    def url(self, rel_url: str) -> str:
-        return f"themes/{self._theme}/{rel_url}"
+    def favicon(self) -> str:
+        return self._url("images/favicon.ico")
+
+    def css(self) -> str:
+        return self._url("theme.css")
+
+    def _url(self, rel_url: str) -> str:
+        # find out which theme holds the file:
+        for theme in [self._theme, "facelift"]:
+            path = self._web_dir / "htdocs/themes" / theme / rel_url
+            if path.exists():
+                break
+        # still return the url even if the file does not exist
+        return f"themes/{theme}/{rel_url}"
 
     def base_dir(self) -> Path:
         return self._local_web_dir / "htdocs" / "themes" / self._theme

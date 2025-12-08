@@ -5,9 +5,11 @@
 import json
 import logging
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
+from tests.testlib.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,7 @@ logger = logging.getLogger(__name__)
 EXPECTED_FOLDER_COUNT = 5
 EXPECTED_HOST_COUNT = 3
 TELEMETRY_DATA_PATH = "var/check_mk/telemetry"
+TELEMETRY_URL_ENV_VAR = "CMK_TELEMETRY_URL"
 
 
 @pytest.fixture(scope="module")
@@ -39,6 +42,32 @@ def cleanup_telemetry_data(site: Site) -> Iterator[None]:
         site.delete_dir(TELEMETRY_DATA_PATH)
 
 
+@pytest.fixture
+def mock_https_server(site: Site, tmp_path: Path) -> Iterator[MockServer]:
+    """Provides a mock HTTPS server with proper SSL certificate configuration.
+
+    This fixture creates a mock HTTPS server with a self-signed certificate and ensures
+    the site can successfully verify SSL connections to it. The mock server's certificate
+    is added to the site's CA bundle before the test runs, allowing the requests library
+    to validate the SSL connection. After the test completes, the CA bundle is restored
+    to its original state.
+    """
+    # Read the current CA bundle content path inside the site
+    ca_bundle_path = "var/ssl/ca-certificates.crt"
+    original_ca_bundle = site.read_file(ca_bundle_path) if site.file_exists(ca_bundle_path) else ""
+
+    with MockServer(https=True, cert_dir=tmp_path) as mock_server:
+        # Read the mock server's self-signed certificate and append it to the site's CA bundle.
+        mock_cert = mock_server.cert_file.read_text() if mock_server.cert_file else ""
+        site.write_file(ca_bundle_path, original_ca_bundle + "\n" + mock_cert)
+
+        try:
+            yield mock_server
+        finally:
+            # Restore the original CA bundle.
+            site.write_file(ca_bundle_path, original_ca_bundle)
+
+
 def run_telemetry_collection(site: Site) -> None:
     """Run telemetry collection."""
     result = site.execute(["cmk-telemetry", "--collection"])
@@ -46,14 +75,37 @@ def run_telemetry_collection(site: Site) -> None:
     assert site.is_dir(TELEMETRY_DATA_PATH), f"Telemetry directory not found: {TELEMETRY_DATA_PATH}"
 
 
+def get_telemetry_json_files(site: Site) -> list[str]:
+    """Return the list of JSON files in the telemetry data directory."""
+    files = site.listdir(TELEMETRY_DATA_PATH)
+    return [f for f in files if f.endswith(".json")]
+
+
 def get_telemetry_json_content(site: Site) -> str:
     """Return the single telemetry JSON filename (and assert there is exactly one)."""
-    files = site.listdir(TELEMETRY_DATA_PATH)
-    json_files = [f for f in files if f.endswith(".json")]
+    json_files = get_telemetry_json_files(site)
     assert len(json_files) == 1, f"Expected 1 JSON file, found {len(json_files)}: {json_files}"
     json_content = site.read_file(f"{TELEMETRY_DATA_PATH}/{json_files[0]}")
     logger.info(f"Telemetry JSON content: {json_content}")
     return json_content
+
+
+def run_telemetry_upload(site: Site, mock_url: str) -> None:
+    """Set CMK_TELEMETRY_URL to the mock server URL and run telemetry upload."""
+    result = site.execute(
+        ["env", f"{TELEMETRY_URL_ENV_VAR}={mock_url}", "cmk-telemetry", "--upload"]
+    )
+    assert result.wait() == 0, f"Telemetry upload failed: {result.stderr}"
+
+
+def validate_telemetry_request(headers: dict[str, str], body: bytes) -> bool:
+    """Validate that the telemetry request contains required metadata and data."""
+    data = json.loads(body)
+    assert "metadata" in data, "Missing metadata in request"
+    assert "data" in data, "Missing data in request"
+    assert data["metadata"]["name"] == "telemetry"
+    assert data["metadata"]["namespace"] == "checkmk"
+    return True
 
 
 @pytest.mark.usefixtures("default_cfg")
@@ -123,3 +175,26 @@ def test_telemetry_json_counts_and_version(site: Site) -> None:
     assert telemetry_data["count_folders"] == EXPECTED_FOLDER_COUNT
     assert telemetry_data["edition"] == site.edition.short
     assert telemetry_data["cmk_version"] == f"{site.version.version_data}"
+
+
+@pytest.mark.usefixtures("default_cfg")
+def test_successful_https_telemetry_data_transmission(
+    site: Site, mock_https_server: MockServer
+) -> None:
+    """Test successful HTTPS transmission of telemetry data."""
+    run_telemetry_collection(site)
+
+    mock_https_server.add_endpoint(
+        MockEndpoint(method=MockMethod.POST, path="/upload"),
+        MockResponse(
+            status=200, body=b'{"status": "ok"}', request_validator=validate_telemetry_request
+        ),
+    )
+
+    run_telemetry_upload(site, f"{mock_https_server.url}/upload")
+
+    # Verify telemetry JSON files were deleted after successful transmission
+    json_files = get_telemetry_json_files(site)
+    assert len(json_files) == 0, (
+        f"Expected 0 JSON files after transmission, found {len(json_files)}: {json_files}"
+    )

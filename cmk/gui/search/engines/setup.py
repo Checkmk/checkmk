@@ -49,10 +49,7 @@ from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfi
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.rulesets import may_edit_ruleset
-from cmk.shared_typing.unified_search import (
-    ProviderName,
-    UnifiedSearchResultItem,
-)
+from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchResultItem
 from cmk.utils import paths
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.setup_search_index import (

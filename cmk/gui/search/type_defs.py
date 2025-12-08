@@ -6,9 +6,7 @@
 from collections.abc import Iterable
 from typing import Protocol
 
-from cmk.shared_typing.unified_search import (
-    UnifiedSearchResultItem,
-)
+from cmk.shared_typing.unified_search import UnifiedSearchResultItem
 
 
 class SearchEngine(Protocol):

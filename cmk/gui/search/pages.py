@@ -10,11 +10,7 @@ from cmk.gui.http import request
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.shared_typing.unified_search import (
-    ProviderName,
-    SortType,
-    UnifiedSearchApiResponse,
-)
+from cmk.shared_typing.unified_search import ProviderName, SortType, UnifiedSearchApiResponse
 
 from .engines.customize import CustomizeSearchEngine
 from .engines.monitoring import MonitoringSearchEngine

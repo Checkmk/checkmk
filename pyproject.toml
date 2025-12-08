@@ -70,13 +70,13 @@ ignore = [
 "agents/plugins/*" = [
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
   "UP032", # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
-  "UP041", # Replace aliased errors with `TimeoutError`
+  "UP041", # socket.timeout is an alias of TimeoutError only for Python >= 3.10
 ]
 "tests/agent-plugin-unit/*" = [
   "UP006", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
   "UP035", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
-  "UP045", # Use `X | None` for type annotations
+  "UP045", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 ]
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
 "packages/cmk-plugin-apis/cmk/agent_based/v1/type_defs.py" = [

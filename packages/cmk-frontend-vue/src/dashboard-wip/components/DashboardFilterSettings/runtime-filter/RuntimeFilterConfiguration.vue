@@ -40,6 +40,7 @@ const emit = defineEmits<{
   'apply-runtime-filters': []
   'open-configuration': []
   'update:runtime-filters-mode': [mode: RuntimeFilterMode]
+  'reset-runtime-filters': []
 }>()
 
 const showAppliedConfirmation = ref(false)
@@ -87,6 +88,10 @@ const applyRuntimeFilters = () => {
   showAppliedConfirmation.value = true
 }
 
+const resetRuntimeFilters = () => {
+  emit('reset-runtime-filters')
+}
+
 const openConfiguration = () => {
   emit('open-configuration')
 }
@@ -112,9 +117,14 @@ watch(
 <template>
   <div>
     <div class="filter-configuration__apply">
-      <CmkButton variant="primary" @click="applyRuntimeFilters">
-        {{ _t('Apply') }}
-      </CmkButton>
+      <div class="filter-configuration__apply-actions">
+        <CmkButton variant="primary" @click="applyRuntimeFilters">
+          {{ _t('Apply') }}
+        </CmkButton>
+        <CmkButton variant="secondary" @click="resetRuntimeFilters">
+          {{ _t('Reset to pre-defined filters') }}
+        </CmkButton>
+      </div>
       <CmkButton v-if="canEdit" variant="secondary" @click="openConfiguration">
         {{ _t('Edit filter configuration') }}
       </CmkButton>
@@ -191,6 +201,12 @@ watch(
   align-items: center;
   margin-bottom: var(--dimension-5);
   justify-content: space-between;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-configuration__apply-actions {
+  display: flex;
+  gap: var(--dimension-4);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

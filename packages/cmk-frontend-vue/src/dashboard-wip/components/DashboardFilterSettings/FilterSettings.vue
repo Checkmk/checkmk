@@ -19,6 +19,7 @@ import type {
 import FilterSelection from '@/dashboard-wip/components/filter/FilterSelection/FilterSelection.vue'
 import { CATEGORY_DEFINITIONS } from '@/dashboard-wip/components/filter/FilterSelection/utils.ts'
 import { useFilters } from '@/dashboard-wip/components/filter/composables/useFilters.ts'
+import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import { parseFilterTypes, useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import type { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
 
@@ -60,6 +61,9 @@ const nonMandatoryApplied = appliedRuntimeFilterIds.filter(
 const mergedRuntimeFilterIds = [...props.configuredMandatoryRuntimeFilters, ...nonMandatoryApplied]
 
 const runtimeFilters = useFilters(props.appliedRuntimeFilters, mergedRuntimeFilterIds)
+const initialRuntimeFilters = ref<ConfiguredFilters>(
+  JSON.parse(JSON.stringify(runtimeFilters.getFilters()))
+)
 const mandatoryRuntimeFilters = useFilters(undefined, props.configuredMandatoryRuntimeFilters)
 
 // Track whether the configuration sub-window is open
@@ -103,6 +107,10 @@ const handleUpdateRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
   runtimeFiltersMode.value = mode
 }
 
+const handleResetRuntimeFilters = () => {
+  runtimeFilters.setFilters(JSON.parse(JSON.stringify(initialRuntimeFilters.value)))
+}
+
 const handleSaveConfiguration = () => {
   const mandatorySelectedFilters = mandatoryRuntimeFilters.getSelectedFilters()
   emit('save-filter-settings', {
@@ -116,6 +124,8 @@ const handleSaveConfiguration = () => {
   const allRequiredFilters = new Set([...currentRuntimeFilters, ...mandatoryFilters])
   runtimeFilters.resetThroughSelectedFilters([...allRequiredFilters])
 
+  initialRuntimeFilters.value = JSON.parse(JSON.stringify(runtimeFilters.getFilters()))
+
   isConfigurationWindowOpen.value = false
 }
 
@@ -123,6 +133,7 @@ const handleCancelConfiguration = () => {
   // Restore from props
   mandatoryRuntimeFilters.resetThroughSelectedFilters([...props.configuredMandatoryRuntimeFilters])
   dashboardFilters.setFilters(JSON.parse(JSON.stringify(props.configuredDashboardFilters)))
+  runtimeFilters.setFilters(JSON.parse(JSON.stringify(initialRuntimeFilters.value)))
   isConfigurationWindowOpen.value = false
 }
 
@@ -227,6 +238,7 @@ const serviceMandatoryFilters = computed(() => {
             @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
             @apply-runtime-filters="applyRuntimeFilters"
             @open-configuration="openConfigurationWindow"
+            @reset-runtime-filters="handleResetRuntimeFilters"
           />
         </div>
 

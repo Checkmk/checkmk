@@ -275,9 +275,15 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         json.dumps(
             {
                 "metric_name": "Dummy",
-                "resource_attributes": ["a"],
-                "scope_attributes": ["a"],
-                "data_point_attributes": ["a"],
+                "resource_attributes": [
+                    {"key": "resource_attributes_key_1", "value": "resource_attributes_value_1"}
+                ],
+                "scope_attributes": [
+                    {"key": "scope_attributes_key_1", "value": "scope_attributes_value_1"}
+                ],
+                "data_point_attributes": [
+                    {"key": "data_point_attributes_key_1", "value": "data_point_attributes_value_1"}
+                ],
                 "aggregation_lookback": {"value": 2, "unit": "min"},
                 "aggregation_histogram_percentile": 90,
                 "host_name": "v250",

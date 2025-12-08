@@ -75,7 +75,7 @@ def migrate_visuals(
     return migration
 
 
-class MigrateVisualsInvAttrFilter(UpdateAction):
+class MigrateVisualsInventoryFilters(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         non_canonical_filters = find_non_canonical_filters(
@@ -94,9 +94,9 @@ class MigrateVisualsInvAttrFilter(UpdateAction):
 
 
 update_action_registry.register(
-    MigrateVisualsInvAttrFilter(
-        name="migrate_visuals_inv_attr_filter",
-        title="Migrate attribute filters of HW/SW Inventory based views or dashboards",
+    MigrateVisualsInventoryFilters(
+        name="migrate_visuals_inventory_filters",
+        title="Migrate filters of HW/SW Inventory based views or dashboards",
         sort_index=100,  # don't care
         expiry_version=ExpiryVersion.CMK_260,
     )

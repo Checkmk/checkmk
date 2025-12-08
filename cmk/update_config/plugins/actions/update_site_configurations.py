@@ -49,7 +49,8 @@ class UpdateSiteConfigurations(UpdateAction):
         - We trust sites with config sync enabled (if they are not customer sites (MSE))
         """
 
-        if site_config.get("is_trusted") is None:
+        # mypy trusts the typing, I'm not so confident
+        if site_config.get("is_trusted") is None:  # type: ignore[comparison-overlap]
             site_config["is_trusted"] = site_config["socket"] == ("local", None) or (
                 site_config["replication"] == "slave"
                 and site_config.get("customer", "provider") == "provider"

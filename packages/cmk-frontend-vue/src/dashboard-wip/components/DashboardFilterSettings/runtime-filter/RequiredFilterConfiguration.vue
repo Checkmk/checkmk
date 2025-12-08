@@ -70,13 +70,13 @@ const cancelConfiguration = () => {
 
     <div class="runtime-filters-content__body">
       <FilterSelectionCollection
-        :title="_t('Host filter')"
+        :title="_t('Host filters')"
         :filters="hostRuntimeFilters"
         :filter-definitions="filterDefinitions"
         @remove-filter="runtimeFilters.removeFilter"
       />
       <FilterSelectionCollection
-        :title="_t('Service filter')"
+        :title="_t('Service filters')"
         :filters="serviceRuntimeFilters"
         :filter-definitions="filterDefinitions"
         @remove-filter="runtimeFilters.removeFilter"

@@ -57,6 +57,34 @@ py_test(
 )
 
 py_library(
+    name = "ipmi",
+    srcs = glob([
+        "cmk/plugins/ipmi/**/*.py",
+    ]),
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+    ],
+)
+
+py_test(
+    name = "ipmi-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/ipmi/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":ipmi",
+        requirement("pytest"),
+    ],
+)
+
+py_library(
     name = "kube",
     srcs = glob([
         "cmk/plugins/kube/**/*.py",
@@ -247,6 +275,37 @@ py_test(
     deps = [
         ":__test__",
         ":redfish",
+        requirement("pytest"),
+    ],
+)
+
+py_library(
+    name = "ucs_bladecenter",
+    srcs = glob(["cmk/plugins/ucs_bladecenter/**/*.py"]),
+    data = ["cmk/plugins/kube/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("defusedxml"),
+        requirement("requests"),
+        requirement("urllib3"),
+    ],
+)
+
+py_test(
+    name = "ucs_bladecenter-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/ucs_bladecenter/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":ucs_bladecenter",
         requirement("pytest"),
     ],
 )

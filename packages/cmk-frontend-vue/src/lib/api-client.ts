@@ -10,6 +10,7 @@ export type ApiResponseBody<T> = T
 export interface ApiOptions {
   headers?: [string, string][]
   credentials?: RequestCredentials
+  exceptOnNonZeroResultCode?: boolean
 }
 
 export class Api {
@@ -23,7 +24,7 @@ export class Api {
       method: 'OPTION'
     })
 
-    return this.fetch(url, params)
+    return this.fetch(url, params, options.exceptOnNonZeroResultCode)
   }
 
   public async get(url: string, options: ApiOptions = {}): Promise<ApiResponseBody<unknown>> {
@@ -31,7 +32,7 @@ export class Api {
       method: 'GET'
     })
 
-    return this.fetch(url, params)
+    return this.fetch(url, params, options.exceptOnNonZeroResultCode)
   }
 
   public async post(
@@ -46,7 +47,7 @@ export class Api {
       opts.body = JSON.stringify(body)
     }
     const params = this.prepareOptions(options, opts)
-    return this.fetch(url, params)
+    return this.fetch(url, params, options.exceptOnNonZeroResultCode)
   }
 
   public async put(
@@ -61,7 +62,7 @@ export class Api {
       opts.body = JSON.stringify(body)
     }
     const params = this.prepareOptions(options, opts)
-    return this.fetch(url, params)
+    return this.fetch(url, params, options.exceptOnNonZeroResultCode)
   }
 
   public async delete(url: string, options: ApiOptions = {}): Promise<ApiResponseBody<unknown>> {
@@ -69,7 +70,7 @@ export class Api {
       method: 'DELETE'
     })
 
-    return this.fetch(url, params)
+    return this.fetch(url, params, options.exceptOnNonZeroResultCode)
   }
 
   public async getRaw(url: string, options: ApiOptions = {}): Promise<ApiResponseBody<unknown>> {
@@ -113,7 +114,11 @@ export class Api {
     }
   }
 
-  private async fetch(url: string, params: RequestInit): Promise<ApiResponseBody<unknown> | null> {
+  private async fetch(
+    url: string,
+    params: RequestInit,
+    exceptOnNonZeroResultCode: boolean = false
+  ): Promise<ApiResponseBody<unknown> | null> {
     if (this.baseUrl) {
       url = this.baseUrl + url
     }
@@ -129,6 +134,9 @@ export class Api {
     if (!('result' in json)) {
       return json
     } else {
+      if (exceptOnNonZeroResultCode && 'result_code' in json && json.result_code !== 0) {
+        throw new Error(json.result)
+      }
       return json.result // only ajax call have this result field
     }
   }

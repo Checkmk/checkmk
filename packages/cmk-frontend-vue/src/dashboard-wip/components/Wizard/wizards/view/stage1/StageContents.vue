@@ -9,11 +9,7 @@ import { computed, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
-import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import WidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/WidgetObjectFilterConfiguration/WidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
@@ -29,13 +25,15 @@ import { useInjectVisualInfos } from '@/dashboard-wip/composables/useProvideVisu
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
-import { ViewSelectionMode } from '../types'
+import SectionBlock from '../../../components/SectionBlock.vue'
+import Stage1Header from '../../../components/Stage1Header.vue'
 import type {
   CopyExistingViewSelection,
   LinkExistingViewSelection,
   NewViewSelection,
   ViewSelection
 } from '../types'
+import { ViewSelectionMode } from '../types'
 
 const { _t } = usei18n()
 
@@ -161,94 +159,68 @@ const sortedContextInfos = computed(() => {
 
 <template>
   <div>
-    <CmkHeading type="h1">
-      {{ _t('Data selection') }}
-    </CmkHeading>
+    <Stage1Header :button-title="_t('Next step: Data configuration')" @click="goToNextStage" />
 
-    <ContentSpacer />
-
-    <ActionBar align-items="left">
-      <ActionButton
-        :label="_t('Next step: Data configuration')"
-        :icon="{ name: 'continue', side: 'right' }"
-        :action="goToNextStage"
-        variant="secondary"
+    <SectionBlock :title="_t('View selection')">
+      <CmkToggleButtonGroup
+        v-model="modeSelection as string"
+        :options="[
+          { label: _t('New view'), value: ViewSelectionMode.NEW },
+          {
+            label: _t('Copy view'),
+            value: ViewSelectionMode.COPY
+          },
+          {
+            label: _t('Link to existing view'),
+            value: ViewSelectionMode.LINK
+          }
+        ]"
       />
-    </ActionBar>
-
-    <ContentSpacer />
-
-    <CmkParagraph>
-      {{ _t('Select the data you want to analyze') }} <br />
-      {{ _t("Dashboard filters apply here and don't have to be selected again") }}
-    </CmkParagraph>
-
-    <ContentSpacer />
-    <CmkHeading type="h2">
-      {{ _t('View selection') }}
-    </CmkHeading>
-    <ContentSpacer />
-    <CmkToggleButtonGroup
-      v-model="modeSelection"
-      :options="[
-        { label: _t('New view'), value: ViewSelectionMode.NEW },
-        {
-          label: _t('Copy view'),
-          value: ViewSelectionMode.COPY
-        },
-        {
-          label: _t('Link to existing view'),
-          value: ViewSelectionMode.LINK
-        }
-      ]"
-    />
-    <div v-if="modeSelection === ViewSelectionMode.NEW">
-      <NewView
-        v-model:selected-datasource="selectedDatasource"
-        v-model:context-infos="contextInfos"
-        v-model:restricted-to-single-infos="restrictedToSingleInfos"
-      />
-    </div>
-    <div v-else-if="modeSelection === ViewSelectionMode.COPY">
-      <ReferenceView
-        v-model:referenced-view="originalViewName"
-        v-model:context-infos="contextInfos"
-      />
-    </div>
-    <div v-else-if="modeSelection === ViewSelectionMode.LINK">
-      <ReferenceView
-        v-model:referenced-view="referencedViewName"
-        v-model:context-infos="contextInfos"
-      />
-    </div>
-    <ContentSpacer />
-    <div v-for="objectType in sortedContextInfos" :key="objectType">
-      <h2>
-        {{
-          getVisual(objectType)?.title || _t('Unknown object type: %{objectType}', { objectType })
-        }}
-      </h2>
-      <WidgetObjectFilterConfiguration
-        :object-type="objectType"
-        :object-selection-mode="
-          restrictedToSingleInfos.includes(objectType)
-            ? ElementSelection.SPECIFIC
-            : ElementSelection.MULTIPLE
-        "
-        :object-configured-filters="configuredFiltersByObjectType[objectType]!"
-        :in-focus="currentFilterSelectionMenuFocus === objectType"
-        :context-filters="contextFilters"
-        :show-context-filters-section="objectType in ['host', 'service']"
-        @set-focus="emit('set-focus', $event)"
-        @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
-        @remove-filter="(filterId) => emit('remove-filter', filterId)"
-      />
-      <ContentSpacer :height="10" />
-    </div>
+      <div v-if="modeSelection === ViewSelectionMode.NEW">
+        <NewView
+          v-model:selected-datasource="selectedDatasource"
+          v-model:context-infos="contextInfos"
+          v-model:restricted-to-single-infos="restrictedToSingleInfos"
+        />
+      </div>
+      <div v-else-if="modeSelection === ViewSelectionMode.COPY">
+        <ReferenceView
+          v-model:referenced-view="originalViewName"
+          v-model:context-infos="contextInfos"
+        />
+      </div>
+      <div v-else-if="modeSelection === ViewSelectionMode.LINK">
+        <ReferenceView
+          v-model:referenced-view="referencedViewName"
+          v-model:context-infos="contextInfos"
+        />
+      </div>
+      <ContentSpacer />
+      <div v-for="objectType in sortedContextInfos" :key="objectType">
+        <h2>
+          {{
+            getVisual(objectType)?.title || _t('Unknown object type: %{objectType}', { objectType })
+          }}
+        </h2>
+        <WidgetObjectFilterConfiguration
+          :object-type="objectType"
+          :object-selection-mode="
+            restrictedToSingleInfos.includes(objectType)
+              ? ElementSelection.SPECIFIC
+              : ElementSelection.MULTIPLE
+          "
+          :object-configured-filters="configuredFiltersByObjectType[objectType]!"
+          :in-focus="currentFilterSelectionMenuFocus === objectType"
+          :context-filters="contextFilters"
+          :show-context-filters-section="objectType in ['host', 'service']"
+          @set-focus="emit('set-focus', $event)"
+          @update-filter-values="
+            (filterId, values) => emit('update-filter-values', filterId, values)
+          "
+          @remove-filter="(filterId) => emit('remove-filter', filterId)"
+        />
+        <ContentSpacer :height="10" />
+      </div>
+    </SectionBlock>
   </div>
 </template>
-<style scoped>
-h2 {
-  font-size: var(--font-size-large);
-}
-</style>

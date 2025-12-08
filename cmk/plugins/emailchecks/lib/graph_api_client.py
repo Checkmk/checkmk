@@ -22,6 +22,9 @@ class AuthorityURLs(NamedTuple):
     base: str
 
 
+ONE_DAY_IN_SECONDS = 24 * 60 * 60
+
+
 class GraphApiClient:
     EXPIRY_OVERLAP = 300  # seconds
 
@@ -48,6 +51,8 @@ class GraphApiClient:
         self._pw_store = pw_store
         self._pw_store_file = pw_store_file
         self._storage = storage
+        # Needed to initialize the storage directory
+        self._storage.write("created", "true")
 
         self._headers: dict[str, str | bytes] = {}
         self._session: requests.Session | None = None
@@ -174,7 +179,34 @@ class GraphApiClient:
                     }
                 )
                 return
+        if refresh_token_expiry := self._storage.read("refresh_token_expiry", None):
+            if int(refresh_token_expiry) > int(time.time()) + self.EXPIRY_OVERLAP:
+                if self._try_refresh_via_initial_token(client_app):
+                    return
+                raise RuntimeError(
+                    "Refresh token has expired, re-login required. "
+                    "Please re-connect to your mailbox via the UI."
+                )
         self._refresh_token(client_app)
+
+    def _try_refresh_via_initial_token(
+        self,
+        client_app: msal.ConfidentialClientApplication,  # type: ignore[name-defined]
+    ) -> bool:
+        token = client_app.acquire_token_by_refresh_token(
+            refresh_token=self._initial_refresh_token.reveal(),
+            scopes=[self._resource_url + "/.default"],
+        )
+
+        if token.get("error"):
+            return False
+
+        self._update_tokens_after_refresh(
+            access_token=token["access_token"],
+            refresh_token=token["refresh_token"],
+            access_token_expires_in=token["expires_in"],
+        )
+        return True
 
     def _refresh_token(self, client_app: msal.ConfidentialClientApplication) -> None:  # type: ignore[name-defined]
         token = client_app.acquire_token_by_refresh_token(
@@ -186,10 +218,19 @@ class GraphApiClient:
             if error_description := token.get("error_description"):
                 error = f"{error}. {error_description}"
             raise RuntimeError(error)
+        self._update_tokens_after_refresh(
+            access_token=token["access_token"],
+            refresh_token=token["refresh_token"],
+            access_token_expires_in=token["expires_in"],
+        )
 
-        self.refresh_token = Secret(token["refresh_token"])
-        self.access_token = Secret(token["access_token"])
-        self._storage.write("access_token_expiry", str(token["expires_in"] + int(time.time())))
+    def _update_tokens_after_refresh(
+        self, access_token: str, refresh_token: str, access_token_expires_in: int
+    ) -> None:
+        self.refresh_token = Secret(access_token)
+        self.access_token = Secret(refresh_token)
+        self._storage.write("access_token_expiry", str(access_token_expires_in + int(time.time())))
+        self._storage.write("refresh_token_expiry", str(ONE_DAY_IN_SECONDS + int(time.time())))
         self._headers.update(
             {
                 "Authorization": "Bearer %s" % self.access_token,

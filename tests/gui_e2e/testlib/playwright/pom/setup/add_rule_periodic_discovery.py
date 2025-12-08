@@ -49,7 +49,7 @@ class AddRulePeriodicServiceDiscovery(CmkPage):
 
     @property
     def description_text_field(self) -> Locator:
-        return self.main_area.get_input_by_id("cmk-vue-app-0-2")
+        return self.main_area.locator().get_by_role("textbox", name="Description")
 
     @property
     def hours_text_field(self) -> Locator:

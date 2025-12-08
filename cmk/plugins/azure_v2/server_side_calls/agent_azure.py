@@ -77,10 +77,12 @@ def _tag_based_args(tag_based: list[TagBased], is_subscription: bool = False) ->
 
 
 def _explicit_args(explicit: list[Explicit]) -> list[str]:
-    args = ["--explicit-config"]
+    args = []
     for group_dict in explicit:
+        args.append("--explicit-config")
         args.append("group=%s" % group_dict.group_name)
         if group_dict.resources:
+            args.append("--explicit-config")
             args.append("resources=%s" % ",".join(group_dict.resources))
     return args
 
@@ -131,14 +133,8 @@ def agent_azure_arguments(
         yield SpecialAgentCommand(command_arguments=args)
         return
 
-    if params.services:
-        args += [
-            "--services",
-            *[
-                p.replace("Microsoft_", "Microsoft.").replace("_slash_", "/")
-                for p in params.services
-            ],
-        ]
+    for p in params.services:
+        args.extend(["--service", p.replace("Microsoft_", "Microsoft.").replace("_slash_", "/")])
 
     if params.safe_hostnames:
         args += ["--safe-hostnames"]

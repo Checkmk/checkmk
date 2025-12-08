@@ -35,6 +35,5 @@ defineEmits<CollapsibleTitleEmit>()
 <style scoped>
 .db-collapsible-title {
   background-color: var(--ux-theme-6);
-  padding-left: 10px;
 }
 </style>

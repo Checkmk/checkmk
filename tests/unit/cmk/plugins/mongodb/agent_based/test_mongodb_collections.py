@@ -7,15 +7,15 @@
 # mypy: disable-error-code="no-any-return"
 
 import datetime
-from collections.abc import Mapping
-from typing import Any
 from zoneinfo import ZoneInfo
 
-import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName, SectionName
+from cmk.plugins.mongodb.agent_based.mongodb_collections import (
+    check_plugin_mongodb_collections,
+    parse_mongodb_collections,
+)
 
 _STRING_TABLE = [
     [
@@ -24,23 +24,9 @@ _STRING_TABLE = [
 ]
 
 
-@pytest.fixture(name="check_plugin", scope="module")
-def check_plugin_fixture(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
-    return agent_based_plugins.check_plugins[CheckPluginName("mongodb_collections")]
-
-
-@pytest.fixture(name="section", scope="module")
-def section_fixture(agent_based_plugins: AgentBasedPlugins) -> Mapping[str, Any]:
-    return agent_based_plugins.agent_sections[SectionName("mongodb_collections")].parse_function(
-        _STRING_TABLE
-    )
-
-
-def test_discover_mongodb_collections(
-    check_plugin: CheckPlugin,
-    section: Mapping[str, Any],
-) -> None:
-    assert list(check_plugin.discovery_function(section)) == [
+def test_discover_mongodb_collections() -> None:
+    section = parse_mongodb_collections(_STRING_TABLE)
+    assert list(check_plugin_mongodb_collections.discovery_function(section)) == [
         Service(item="admin.system.users"),
         Service(item="admin.system.version"),
         Service(item="admin.system.keys"),
@@ -49,15 +35,13 @@ def test_discover_mongodb_collections(
     ]
 
 
-def test_check_mongodb_collections(
-    check_plugin: CheckPlugin,
-    section: Mapping[str, Any],
-) -> None:
+def test_check_mongodb_collections() -> None:
+    section = parse_mongodb_collections(_STRING_TABLE)
     with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("UTC"))):
         assert list(
-            check_plugin.check_function(
+            check_plugin_mongodb_collections.check_function(
                 item="config.system.sessions",
-                params=check_plugin.check_default_parameters,
+                params=check_plugin_mongodb_collections.check_default_parameters,
                 section=section,
             )
         ) == [

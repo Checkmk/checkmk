@@ -8,6 +8,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import { copyToClipboard as copyToClipboardUtil } from '@/lib/utils'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
@@ -41,7 +42,7 @@ async function copyToClipboard() {
   }
 
   try {
-    await navigator.clipboard.writeText(props.code_txt)
+    await copyToClipboardUtil(props.code_txt)
     errorMessage.value = ''
     showMessage.value = true
     tooltipTimeoutId = setTimeout(() => {

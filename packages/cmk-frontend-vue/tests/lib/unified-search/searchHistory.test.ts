@@ -21,7 +21,7 @@ test('Add hist entry on search history service', async () => {
       context: 'test-context',
       provider: 'monitoring',
       topic: 'testTopic',
-      icon: 'topic-search'
+      icon: 'main-search'
     }
   )
   searchHistory.add(histE)
@@ -39,7 +39,7 @@ test('Add hist entry twice on search history service', async () => {
       context: 'test-context',
       provider: 'monitoring',
       topic: 'testTopic',
-      icon: 'topic-search'
+      icon: 'main-search'
     }
   )
   searchHistory.add(histE)
@@ -59,7 +59,7 @@ test('Test SearchHistorySearchProvider', async () => {
       context: 'test-context',
       provider: 'monitoring',
       topic: 'testTopic',
-      icon: 'topic-search'
+      icon: 'main-search'
     }
   )
 
@@ -71,7 +71,7 @@ test('Test SearchHistorySearchProvider', async () => {
       context: 'abc-context',
       provider: 'setup',
       topic: 'testTopic',
-      icon: 'topic-search'
+      icon: 'main-search'
     }
   )
   searchHistory.add(histE1)

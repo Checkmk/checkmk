@@ -33,6 +33,8 @@ export interface UseAlertOverview extends UseWidgetHandler, UseWidgetVisualizati
 
 type TimeRangeType = 'current' | 'window'
 
+const CONTENT_TYPE = 'alert_overview'
+
 export const useAlertOverview = async (
   filters: ConfiguredFilters,
   dashboardConstants: DashboardConstants,
@@ -51,7 +53,10 @@ export const useAlertOverview = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as AlertOverviewContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as AlertOverviewContent)
+      : null
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
     currentContent?.time_range ?? null
   )
@@ -67,7 +72,7 @@ export const useAlertOverview = async (
 
   const _generateContent = (): AlertOverviewContent => {
     const content: AlertOverviewContent = {
-      type: 'alert_overview',
+      type: CONTENT_TYPE,
       time_range: generateTimeRangeProps(),
       ...(objectsLimit.value !== undefined ? { limit_objects: objectsLimit.value } : {})
     }

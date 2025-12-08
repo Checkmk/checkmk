@@ -39,7 +39,6 @@ from typing import Any, Final, Literal, Required, TypedDict, TypeVar
 import requests
 from pydantic import BaseModel, RootModel
 
-from cmk.ccc.hostaddress import HostAddress
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     ApiError,
@@ -72,7 +71,7 @@ type ResourceId = str
 
 __version__ = "2.5.0b1"
 
-AGENT = "auzure_v2"
+AGENT = "azure_v2"
 
 LOGGER = logging.getLogger(f"agent_{AGENT}")
 
@@ -163,7 +162,7 @@ class _AzureEntity(ABC):
         HASH_CHARS_TO_KEEP = 8
 
         unique_string = f"azure{''.join(uniqueness_keys)}"
-        hashed = hashlib.sha1(unique_string.encode("utf-8"), usedforsecurity=False).hexdigest()[
+        hashed = hashlib.sha256(unique_string.encode("utf-8"), usedforsecurity=False).hexdigest()[
             -HASH_CHARS_TO_KEEP:
         ]
         return f"{self._entity_name}-{hashed}"
@@ -187,10 +186,7 @@ class AzureSubscription(_AzureEntity):
         use_safe_names: bool,
         tenant_id: str,
     ) -> None:
-        self.hostname: Final[str] = HostAddress.project_valid(name)
-        super().__init__(
-            entity_name=self.hostname, section="subscription", use_safe_names=use_safe_names
-        )
+        super().__init__(entity_name=name, section="subscription", use_safe_names=use_safe_names)
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str]] = tags
         self.name: Final[str] = name
@@ -371,7 +367,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--explicit-config",
         default=[],
-        nargs="*",
+        action="append",
         help="""list of arguments providing the configuration in <key>=<value> format.
              If omitted, all groups and all resources of the services specified in --services are
              fetched.
@@ -379,10 +375,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
              and every 'resource=<name>' arguments specifies a resource.""",
     )
     parser.add_argument(
-        "--services",
+        "--service",
         default=[],
-        nargs="*",
-        help="List of services to monitor",
+        action="append",
+        help="The services to monitor",
+        dest="services",
     )
     parser.add_argument(
         "--safe-hostnames",
@@ -1444,7 +1441,10 @@ class AzureAsyncCache(DataCache):
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
                 LOGGER.debug("Reading data from cache: %s", self._key)
-                return await self.get_cached_data()
+                if cached_data := await self.get_cached_data():
+                    # if not empty
+                    return cached_data
+                LOGGER.debug("Cache file is empty, getting live data from cache: %s", self._key)
             except (OSError, ValueError) as exc:
                 LOGGER.error("Getting live data (failed to read from cache: %s).", exc)
                 if self.debug:
@@ -1595,6 +1595,9 @@ class CacheMetricsGroupDefinition:
 
 
 class MetricCache(AzureAsyncCache):
+    def get_validity_from_args(self, *args: Any) -> bool:
+        return True
+
     def __init__(
         self,
         *,
@@ -1871,7 +1874,7 @@ def get_resource_host_labels_section(
         "resource_group": resource.group,
         "resource": resource.section,
         "entity": "resource",
-        "subscription_name": subscription.hostname,
+        "subscription_name": subscription.name,
         "subscription": subscription.id,
         **resource.labels,
     }
@@ -1927,7 +1930,7 @@ def write_group_info(
             group.piggytarget,
             labels={
                 "resource_group": group_name,
-                "subscription_name": subscription.hostname,
+                "subscription_name": subscription.name,
                 "subscription": subscription.id,
                 "entity": "resource_group",
                 **({"region": region} if (region := group.info.get("location")) else {}),
@@ -1954,7 +1957,7 @@ def write_subscription_info(subscription: AzureSubscription) -> None:
     AzureLabelsSection(
         subscription.piggytarget,
         labels={
-            "subscription_name": subscription.hostname,
+            "subscription_name": subscription.name,
             "subscription": subscription.id,
             "entity": "subscription",
         },

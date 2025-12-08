@@ -88,6 +88,7 @@ const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)
               type="text"
               :external-errors="nameValidationErrors"
               required
+              field-size="LARGE"
             />
           </div>
           <div v-if="displaySuffixInput" class="db-general-properties__item">
@@ -121,6 +122,7 @@ const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)
                 :aria-label="_t('Add unique ID')"
                 type="text"
                 required
+                field-size="LARGE"
                 :external-errors="uniqueIdValidationErrors"
                 @update:model-value="(val: string | undefined) => (uniqueId = val ?? uniqueId)"
               />

@@ -33,7 +33,8 @@ from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.graylog.special_agent import agent_graylog
 from cmk.plugins.hivemanager_ng.special_agent import agent_hivemanager_ng
 from cmk.plugins.innovaphone.special_agent import agent_innovaphone
-from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
+from cmk.plugins.ipmi.special_agent import agent_ipmi_sensors
+from cmk.plugins.jenkins.special_agent import agent_jenkins
 from cmk.plugins.jira.special_agent import agent_jira
 from cmk.plugins.kube.special_agents import agent_kube
 from cmk.plugins.mobileiron.special_agent import agent_mobileiron
@@ -88,7 +89,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "hp_msa": None,
     "ibmsvc": None,
     "innovaphone": agent_innovaphone,
-    "ipmi_sensors": None,
+    "ipmi_sensors": agent_ipmi_sensors,
     "jenkins": agent_jenkins,
     "jira": agent_jira,
     "jolokia": None,
@@ -182,7 +183,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "REDIRECT_URL",
     ],
     "ibmsvc": ["HOSTNAME"],
-    "jenkins": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
+    "jenkins": ["--user", "USER", "--secret", "PASSWORD", "HOSTNAME"],
     "jira": ["-P", "PROTOCOL", "-u", "USER", "--password", "PASSWORD", "--hostname", "HOSTNAME"],
     "kube": [
         "--cluster",
@@ -282,6 +283,18 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
                 "host_name": "v250",
             }
         )
+    ],
+    "ipmi_sensors": [
+        "1.2.3.4",
+        "--user",
+        "user",
+        "--password-id",
+        "password-id",
+        "freeipmi",  # IPMI type
+        "user",  # privilege-level
+        "--cipher_suite_id",
+        "3",
+        "--output_sensor_state",
     ],
 }
 

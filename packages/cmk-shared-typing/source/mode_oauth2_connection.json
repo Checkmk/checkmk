@@ -3,9 +3,6 @@
   "type": "object",
   "title": "oauth2_connection_config",
   "properties": {
-    "connection": {
-      "anyOf": [{ "$ref": "#/$connection_object/ms_graph_api" }]
-    },
     "urls": { "$ref": "#/$def/oauth2_urls" }
   },
   "required": ["urls"],
@@ -43,29 +40,5 @@
       }
     },
     "required": ["base_url"]
-  },
-  "$connection_object": {
-    "base_connection_object": {
-      "type": "object",
-      "properties": {
-        "type": { "enum": ["ms_graph_api"] },
-        "id": { "type": "string" },
-        "redirect_uri": { "type": "string" },
-        "title": { "type": "string" },
-        "access_token": { "type": "string" },
-        "refresh_token": { "type": "string" }
-      },
-      "required": ["type", "id", "redirect_uri"]
-    },
-    "ms_graph_api": {
-      "allOf": [{ "$ref": "#/$connection_object/base_connection_object" }],
-      "properties": {
-        "authority": { "enum": ["global_", "china"] },
-        "tenant_id": { "type": "string" },
-        "client_id": { "type": "string" },
-        "client_secret": { "type": "string" },
-        "code": { "type": "string" }
-      }
-    }
   }
 }

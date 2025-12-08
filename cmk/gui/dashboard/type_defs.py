@@ -200,7 +200,7 @@ class EmbeddedViewDashletConfig(ABCViewDashletConfig):
     datasource: str
 
 
-class _ViewDashletConfigMandatory(ABCViewDashletConfig):
+class ViewDashletConfig(ABCViewDashletConfig):
     # These fields are redundant between DashletConfig and Visual
     # name: str
     # context: VisualContext
@@ -218,19 +218,16 @@ class _ViewDashletConfigMandatory(ABCViewDashletConfig):
     num_columns: int
     column_headers: Literal["off", "pergroup"]
     sorters: Sequence[SorterSpec]
-
-
-class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
-    # From: ViewSpec
-    add_headers: str
+    add_headers: NotRequired[str]
     # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
-    mobile: bool
-    mustsearch: bool
-    force_checkboxes: bool
-    play_sounds: bool
-    user_sortable: bool
-    inventory_join_macros: InventoryJoinMacrosSpec
+    mobile: NotRequired[bool]
+    mustsearch: NotRequired[bool]
+    force_checkboxes: NotRequired[bool]
+    play_sounds: NotRequired[bool]
+    user_sortable: NotRequired[bool]
+    inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
+    modified_at: NotRequired[str]  # timestamp in ISO format
 
 
 class NtopAlertsDashletConfig(DashletConfig): ...

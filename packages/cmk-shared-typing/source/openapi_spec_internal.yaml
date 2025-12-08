@@ -1444,6 +1444,7 @@ x-tagGroups:
   - Configuration entities / Notification Parameter
   - Configuration entities / Folder
   - Configuration entities / Passwordstore Password
+  - Configuration entities / Rule form spec
   - Hosts (internal)
   - Quick setup
   - Broker Connection
@@ -8164,6 +8165,7 @@ paths:
           - notification_parameter
           - folder
           - passwordstore_password
+          - rule_form_spec
           example: notification_parameter
         required: true
       responses:
@@ -8900,6 +8902,196 @@ paths:
           automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
           n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
           \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/passwordstore_password/collections/mail\""
+  /domain-types/rule_form_spec/collections/{entity_type_specifier}:
+    get:
+      tags:
+      - Configuration entities / Rule form spec
+      description: 'Available in the following editions: all'
+      summary: List existing rules
+      operationId: cmk.gui.openapi.endpoints.configuration_entity.rule_form_spec._list_rule_form_specs
+      parameters:
+      - in: path
+        name: entity_type_specifier
+        description: Entity type specifier of the configuration entity
+        schema:
+          type: string
+          example: mail
+        required: true
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultError'
+        '404':
+          description: 'Not Found: The requested object has not be found.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api404DefaultError'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleFormSpecResponseCollection'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/rule_form_spec/collections/mail\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/rule_form_spec/collections/mail\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n        \n    },\n)\n# Will\
+          \ raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/domain-types/rule_form_spec/collections/mail\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/rule_form_spec/collections/mail\""
+  /objects/rule_form_spec/{entity_id}:
+    get:
+      tags:
+      - Configuration entities / Rule form spec
+      description: 'Available in the following editions: all'
+      summary: Get a rule form spec parameter
+      operationId: cmk.gui.openapi.endpoints.configuration_entity.rule_form_spec._get_rule_form_spec
+      parameters:
+      - in: path
+        name: entity_id
+        description: Object id of the configuration entity
+        schema:
+          type: string
+          example: b43b060b-3b8c-41cf-8405-dddc6dd02575
+        required: true
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultError'
+        '404':
+          description: 'Not Found: The requested object has not be found.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api404DefaultError'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/rule_form_spec/b43b060b-3b8c-41cf-8405-dddc6dd02575\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/rule_form_spec/b43b060b-3b8c-41cf-8405-dddc6dd02575\"\
+          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \n    },\n)\n# Will raise an HTTPError if status code is >= 400\n\
+          resp = urllib.request.urlopen(request)\nif resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/objects/rule_form_spec/b43b060b-3b8c-41cf-8405-dddc6dd02575\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/objects/rule_form_spec/b43b060b-3b8c-41cf-8405-dddc6dd02575\""
   /domain-types/contact_group_config/collections/all:
     get:
       tags:
@@ -35456,6 +35648,12 @@ tags:
     configuration entity API, for more information see "Configuration entities"
 
     endpoints.'
+- name: Configuration entities / Rule form spec
+  x-displayName: Configuration entities / Rule form spec
+  description: 'These endpoints can be used to manipulate rules via the configuration
+    entity
+
+    API, for more information see "Configuration entities" endpoints.'
 - name: Host status
   x-displayName: Host status
   description: "The host status provides the host's \"health\" information.\n\n###\
@@ -39438,6 +39636,7 @@ components:
           - folder
           - notification_parameter
           - passwordstore_password
+          - rule_form_spec
           example: notification_parameter
         entity_type_specifier:
           type: string
@@ -39552,6 +39751,7 @@ components:
           - folder
           - notification_parameter
           - passwordstore_password
+          - rule_form_spec
           example: notification_parameter
         entity_type_specifier:
           type: string
@@ -39749,6 +39949,69 @@ components:
           description: A list of password store passwords.
           items:
             $ref: '#/components/schemas/PasswordStorePasswordResponse'
+        extensions:
+          type: object
+          description: Additional attributes alongside the collection.
+          additionalProperties: {}
+      required:
+      - links
+      additionalProperties: false
+    RuleFormSpecResponse:
+      type: object
+      properties:
+        links:
+          type: array
+          description: list of links to other resources.
+          example: null
+          items:
+            $ref: '#/components/schemas/Link'
+        domainType:
+          default: rule_form_spec
+          description: The domain type of the object.
+        id:
+          type: string
+          description: The unique identifier for this domain-object type.
+        title:
+          type: string
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+        members:
+          type: object
+          description: The container for external resources, like linked foreign objects
+            or actions.
+          additionalProperties: {}
+        extensions:
+          type: object
+          description: All the attributes of the domain object.
+          additionalProperties: {}
+      required:
+      - links
+      additionalProperties: false
+    RuleFormSpecResponseCollection:
+      type: object
+      properties:
+        links:
+          type: array
+          description: list of links to other resources.
+          example: null
+          items:
+            $ref: '#/components/schemas/Link'
+        id:
+          type: string
+          default: all
+          description: The name of this collection.
+        domainType:
+          default: rule_form_spec
+          description: The domain type of the objects in the collection.
+        title:
+          type: string
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+        value:
+          type: array
+          description: A list of rules.
+          items:
+            $ref: '#/components/schemas/RuleFormSpecResponse'
         extensions:
           type: object
           description: Additional attributes alongside the collection.

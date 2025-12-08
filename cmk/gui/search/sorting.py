@@ -6,7 +6,7 @@
 import enum
 from collections.abc import Callable
 
-from .type_defs import SortType, UnifiedSearchResultItem
+from cmk.shared_typing.unified_search import SortType, UnifiedSearchResultItem
 
 type Sorter = Callable[[list[UnifiedSearchResultItem]], None]
 

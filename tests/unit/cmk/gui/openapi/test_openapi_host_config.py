@@ -43,14 +43,20 @@ from tests.testlib.common.repo import is_ultimate_repo
 from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
+EDITIONS_ULTIMATE_PLUS = {
+    version.Edition.ULTIMATEMT,
+    version.Edition.ULTIMATE,
+    version.Edition.CLOUD,
+}
+
+
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT, reason="see #7213"
 )
 
 
 ultamate_plus_test = pytest.mark.skipif(
-    version.edition(paths.omd_root)
-    not in {version.Edition.ULTIMATEMT, version.Edition.ULTIMATE, version.Edition.CLOUD},
+    version.edition(paths.omd_root) not in EDITIONS_ULTIMATE_PLUS,
     reason="not available for other editions",
 )
 
@@ -1966,3 +1972,29 @@ def test_create_host_with_invalid_metrics_association(  # type: ignore[misc]
     # 4. Verify the error message matches the expected validation error
     # We look at the JSON body of the response contained in the exception
     assert expected_error_snippet in str(exception.response.json)
+
+
+@pytest.mark.skipif(
+    version.edition(paths.omd_root) in EDITIONS_ULTIMATE_PLUS,
+    reason="The relay attribute is available to Ultimate+ editions.",
+)
+class TestHostConfigWithRelayAttribute:
+    """Test that the 'relay' host attribute is not available for other editions"""
+
+    def test_create_host_with_relay_attribute(self, clients: ClientRegistry) -> None:
+        with pytest.raises(RestApiException) as excinfo:
+            clients.HostConfig.create(
+                host_name="host_with_relay",
+                attributes={"relay": "relay1"},
+            )
+        assert excinfo.value.response.status_code == 400
+
+    def test_update_host_relay_attribute(self, clients: ClientRegistry) -> None:
+        clients.HostConfig.create(host_name="host_to_update_relay")
+        with pytest.raises(RestApiException) as excinfo:
+            clients.HostConfig.edit(
+                host_name="host_to_update_relay",
+                attributes={"relay": "relay1"},
+                etag=None,
+            )
+        assert excinfo.value.response.status_code == 400

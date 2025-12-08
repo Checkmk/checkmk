@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -11,7 +10,6 @@
 
 # fmt: off
 
-from __future__ import print_function
 
 import locale
 import os
@@ -597,7 +595,7 @@ def _latin_1_encoding():
             "utf-8" if os.name == "nt" else None,
             [
                 b"abc1",
-                u"äbc2".encode("utf-8"),
+                u"äbc2".encode(),
                 b"abc3",
             ],
             [
@@ -674,7 +672,7 @@ def _path_to_testfile(filename):
     return _linux_dataset_path(filename)
 
 
-class MockStdout(object):
+class MockStdout:
     def isatty(self):
         return False
 

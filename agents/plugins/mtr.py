@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -206,7 +205,7 @@ def parse_report(host, status):
     if os.path.exists(reportfile + ".pid"):
         # See if it's running
         try:
-            with open(reportfile + ".pid", "r") as opened_file:
+            with open(reportfile + ".pid") as opened_file:
                 pid = int(opened_file.readline().rstrip())
             if check_mtr_pid(pid):
                 # Still running, we're done.

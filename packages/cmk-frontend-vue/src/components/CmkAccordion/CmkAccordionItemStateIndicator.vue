@@ -29,7 +29,7 @@ defineProps<{
   height: 16px;
 
   &::after {
-    border-color: var(--help-text-font-color);
+    border-color: var(--dropdown-chevron-indicator-color);
     border-style: solid;
     border-width: 2px 2px 0 0;
     content: '';

@@ -35,7 +35,7 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
-from cmk.shared_typing.unified_search import UnifiedSearchConfig
+from cmk.shared_typing.unified_search import UnifiedSearchProps
 
 
 class MainMenuPopupTrigger(NamedTuple):
@@ -58,7 +58,7 @@ class MainMenuRenderer:
         self,
     ) -> None:
         if search_item := main_menu_registry.get("search"):
-            if search_item.vue_app and isinstance(search_item.vue_app.data, UnifiedSearchConfig):
+            if search_item.vue_app and isinstance(search_item.vue_app.data, UnifiedSearchProps):
                 if mon_item := main_menu_registry.get("monitoring"):
                     search_item.vue_app.data.providers.monitoring.active = bool(
                         mon_item.topics and mon_item.topics()

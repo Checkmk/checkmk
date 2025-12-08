@@ -4,7 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type UnifiedSearchConfig } from 'cmk-shared-typing/typescript/unified_search'
+import { type UnifiedSearchProps } from 'cmk-shared-typing/typescript/unified_search'
+import type {
+  ProviderName,
+  UnifiedSearchApiResponse
+} from 'cmk-shared-typing/typescript/unified_search'
 import { onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
@@ -14,15 +18,12 @@ import {
   SearchHistorySearchProvider,
   type SearchHistorySearchResult
 } from '@/unified-search/lib/providers/history'
-import {
-  UnifiedSearchProvider,
-  type UnifiedSearchProviderIdentifier,
-  type UnifiedSearchResultResponse
-} from '@/unified-search/lib/providers/unified'
+import { UnifiedSearchProvider } from '@/unified-search/lib/providers/unified'
 import { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import {
   type SearchProviderResult,
   UnifiedSearch,
+  UnifiedSearchError,
   type UnifiedSearchResult
 } from '@/unified-search/lib/unified-search'
 
@@ -37,7 +38,7 @@ import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
-const props = defineProps<UnifiedSearchConfig>()
+const props = defineProps<UnifiedSearchProps>()
 
 const searchId = `unified-search-${props.user_id}-${props.edition}`
 
@@ -46,7 +47,7 @@ const api = new Api()
 const searchHistoryService = new SearchHistoryService(searchId)
 
 const searchProviderIdentifiers: {
-  id: UnifiedSearchProviderIdentifier
+  id: ProviderName
   sort: number
 }[] = []
 if (props.providers.setup.active) {
@@ -78,12 +79,17 @@ const search = new UnifiedSearch(searchId, api, [
   searchHistorySearchProvider
 ])
 search.onSearch((result?: UnifiedSearchResult) => {
-  async function setSearchResults(uspr: SearchProviderResult<UnifiedSearchResultResponse>) {
+  async function setSearchResults(uspr: SearchProviderResult<UnifiedSearchApiResponse>) {
     if (uspr) {
       waitForSearchResults.value = true
-      const usprRes = (await uspr.result) as UnifiedSearchResultResponse
-
-      searchResult.value = usprRes
+      const usprRes = await uspr.result
+      if (usprRes instanceof UnifiedSearchError) {
+        searchError.value = usprRes
+        searchResult.value = undefined
+      } else {
+        searchError.value = undefined
+        searchResult.value = usprRes as UnifiedSearchApiResponse
+      }
       waitForSearchResults.value = false
     } else {
       searchResult.value = undefined
@@ -101,10 +107,11 @@ search.onSearch((result?: UnifiedSearchResult) => {
   void setHistoryResults(
     result?.get('search-history') as SearchProviderResult<SearchHistorySearchResult>
   )
-  void setSearchResults(result?.get('unified') as SearchProviderResult<UnifiedSearchResultResponse>)
+  void setSearchResults(result?.get('unified') as SearchProviderResult<UnifiedSearchApiResponse>)
 })
 
-const searchResult = ref<UnifiedSearchResultResponse>()
+const searchResult = ref<UnifiedSearchApiResponse>()
+const searchError = ref<UnifiedSearchError>()
 const historyResult = ref<SearchHistorySearchResult>()
 const waitForSearchResults = ref<boolean>(true)
 const searchUtils = initSearchUtils()
@@ -142,10 +149,11 @@ searchUtils.shortCuts.onEscape(() => {
 
 function showTabResults(): boolean {
   return (
-    typeof searchResult.value !== 'undefined' &&
-    (search.get('unified') as UnifiedSearchProvider).shouldExecuteSearch(
-      searchUtils.query.toQueryLike()
-    )
+    typeof searchError.value !== 'undefined' ||
+    (typeof searchResult.value !== 'undefined' &&
+      (search.get('unified') as UnifiedSearchProvider).shouldExecuteSearch(
+        searchUtils.query.toQueryLike()
+      ))
   )
 }
 
@@ -164,6 +172,7 @@ onMounted(() => {
     <UnifiedSearchTabResults
       v-if="!waitForSearchResults && showTabResults()"
       :result="searchResult"
+      :error="searchError"
     >
     </UnifiedSearchTabResults>
   </DefaultPopup>
@@ -180,7 +189,7 @@ onMounted(() => {
   z-index: +1;
   left: 0;
   top: 58px;
-  border-right: 4px solid var(--success);
+  border-right: 4px solid var(--default-nav-popup-border-color);
   border-top-width: 0;
   width: 750px;
   max-width: 750px;

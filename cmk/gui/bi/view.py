@@ -59,7 +59,7 @@ from cmk.gui.views.command import (
 )
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
-from cmk.livestatus_client.commands import Dummy
+from cmk.livestatus_client import Dummy
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
 

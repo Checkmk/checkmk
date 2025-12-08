@@ -18,7 +18,7 @@ import TableFormRow from '@/dashboard-wip/components/Wizard/components/TableForm
 import {
   type DashboardGeneralSettings,
   DashboardLayout,
-  DashboardOwnerType
+  type DashboardOwnerType
 } from '@/dashboard-wip/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
@@ -90,13 +90,11 @@ const {
   validateGeneralSettings,
   addFilterSuffix,
   buildSettings
-} = useDashboardGeneralSettings(props.referenceDashboardGeneralSettings)
-
-if (props.referenceDashboardType === DashboardOwnerType.BUILT_IN) {
-  name.value = props.referenceDashboardId
-} else {
-  name.value = `${props.referenceDashboardId}_clone`
-}
+} = useDashboardGeneralSettings(
+  props.referenceDashboardGeneralSettings,
+  `${props.referenceDashboardId}_clone`
+)
+createUniqueId.value = false
 
 const dashboardLayout = ref<DashboardLayout>(props.referenceDashboardLayoutType)
 

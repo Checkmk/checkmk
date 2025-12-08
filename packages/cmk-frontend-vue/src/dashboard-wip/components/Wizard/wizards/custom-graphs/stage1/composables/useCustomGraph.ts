@@ -29,6 +29,8 @@ import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 const { _t } = usei18n()
+
+const CONTENT_TYPE = 'custom_graph'
 export interface UseCustomGraph
   extends UseValidate,
     UseGraphRenderOptions,
@@ -45,7 +47,10 @@ export const useCustomGraph = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseCustomGraph> => {
-  const currentContent = currentSpec?.content as CustomGraphContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as CustomGraphContent)
+      : null
 
   const customGraph = ref<string | null>(currentContent?.custom_graph || null)
   const customGraphValidationErrors = ref<string[]>([])
@@ -101,7 +106,7 @@ export const useCustomGraph = async (
 
   const _generateContent = (): CustomGraphContent => {
     return {
-      type: 'custom_graph',
+      type: CONTENT_TYPE,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
       custom_graph: customGraph.value || ''

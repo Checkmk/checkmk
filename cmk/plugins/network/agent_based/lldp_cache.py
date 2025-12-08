@@ -20,21 +20,7 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     TableRow,
 )
-
-_interface_displayhints = {
-    "ethernet": "eth",
-    "fastethernet": "Fa",
-    "gigabitethernet": "Gi",
-    "tengigabitethernet": "Te",
-    "fortygigabitethernet": "Fo",
-    "hundredgigabitethernet": "Hu",
-    "port-channel": "Po",
-    "tunnel": "Tu",
-    "loopback": "Lo",
-    "cellular": "Cel",
-    "vlan": "Vlan",
-    "management": "Ma",
-}
+from cmk.plugins.network.agent_based.lib import DETECT_FORTINET, get_short_if_name
 
 
 class InventoryParams(TypedDict):
@@ -90,21 +76,6 @@ class LldpNeighbor(BaseModel, frozen=True):
 class Lldp(BaseModel, frozen=True):
     lldp_global: LldpGlobal | None
     lldp_neighbors: list[LldpNeighbor]
-
-
-def _get_short_if_name(ifname: str) -> str | None:
-    """
-    returns short interface name from long interface name
-    ifname: is the long interface name
-    :type ifname: str
-    """
-    if not ifname:
-        return ifname
-    for ifname_prefix in _interface_displayhints.keys():  # noqa: PLC0206
-        if ifname.lower().startswith(ifname_prefix.lower()):
-            ifname_short = _interface_displayhints[ifname_prefix]
-            return ifname.lower().replace(ifname_prefix.lower(), ifname_short, 1)
-    return ifname
 
 
 def _get_interface_name(if_type: str, raw_interface: Sequence[int] | str) -> str | None:
@@ -393,8 +364,8 @@ def inventory_lldp_cache(params: InventoryParams, section: Lldp) -> InventoryRes
         neighbor_port = neighbor.neighbor_port
         local_port = neighbor.local_port
         if params.get("use_short_if_name"):
-            neighbor_port = _get_short_if_name(neighbor_port) or neighbor_port
-            local_port = _get_short_if_name(str(local_port)) or str(local_port)
+            neighbor_port = get_short_if_name(neighbor_port) or neighbor_port
+            local_port = get_short_if_name(str(local_port)) or str(local_port)
 
         key_columns = {
             # 'neighbor_id': neighbor.neighbor_id,
@@ -498,7 +469,11 @@ def parse_lldp_cache_fortinet(string_table: Sequence[StringByteTable]) -> Lldp |
     map_if_name2idx = {name: idx for idx, name in if_name}
     map_if_idx2name = {idx: name for idx, name in if_name}
 
-    list_trunks = [trunk for trunk in str(trunk_member[0][0]).split("::") if trunk]
+    if trunk_member:
+        list_trunks = [trunk for trunk in str(trunk_member[0][0]).split("::") if trunk]
+    else:
+        list_trunks = []
+
     map_trunk2member = {}
     for list_trunk in list_trunks:
         trunk_id, members_str = list_trunk.split(":")
@@ -584,6 +559,7 @@ snmp_section_inv_lldp_cache_fortinet = SNMPSection(
         fortinet_trunk_member,
     ],
     detect=all_of(
+        DETECT_FORTINET,
         exists(".1.0.8802.1.1.2.1.4.1.1.4.*"),
         exists(".1.3.6.1.4.1.12356.106.3.1.*"),
         exists(".1.3.6.1.2.1.31.1.1.1.1.*"),

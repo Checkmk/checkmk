@@ -25,7 +25,6 @@ PYTHON3_PATHS=(
     base
     bi
     checkengine
-    ec
     fields
     gui
     notification_plugins

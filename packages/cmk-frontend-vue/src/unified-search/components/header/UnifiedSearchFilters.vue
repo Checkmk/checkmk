@@ -196,7 +196,7 @@ searchUtils.input.onEmptyBackspace(() => {
   border-top: 0;
   margin: 0;
   font-style: italic;
-  color: var(--help-text-font-color);
+  color: var(--dropdown-chevron-indicator-color);
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 

@@ -4,23 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
-
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-
 import DashboardPreviewContent from '@/dashboard-wip/components/DashboardPreviewContent.vue'
 import type { WidgetProps } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings } from '@/dashboard-wip/types/widget'
 
-import ActionBar from '../../../components/ActionBar.vue'
-import ActionButton from '../../../components/ActionButton.vue'
 import ContentSpacer from '../../../components/ContentSpacer.vue'
+import Stage2Header from '../../../components/Stage2Header.vue'
 import InventoryWidget from './InventoryWidget/InventoryWidget.vue'
 import { useInventory } from './InventoryWidget/useInventory'
-
-const { _t } = usei18n()
 
 interface Stage2Props {
   filters: ConfiguredFilters
@@ -69,27 +62,7 @@ const inventoryHandler = await useInventory(
 </script>
 
 <template>
-  <CmkHeading type="h1">
-    {{ _t('Widget data') }}
-  </CmkHeading>
-
-  <ContentSpacer />
-
-  <ActionBar align-items="left">
-    <ActionButton
-      :label="_t('Previous step')"
-      :icon="{ name: 'back', side: 'left' }"
-      :action="gotoPrevStage"
-      variant="secondary"
-    />
-    <ActionButton
-      :label="editWidget ? _t('Save widget') : _t('Add & place widget')"
-      :action="gotoNextStage"
-      variant="primary"
-    />
-  </ActionBar>
-
-  <ContentSpacer />
+  <Stage2Header :edit="!!editWidget" @back="gotoPrevStage" @save="gotoNextStage" />
 
   <DashboardPreviewContent
     v-if="inventoryHandler.widgetProps.value"

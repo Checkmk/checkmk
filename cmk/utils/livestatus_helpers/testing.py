@@ -57,45 +57,6 @@ TableName = str  # NewType("TableName", str)
 Tables = dict[TableName, dict[SiteName, ResultList]]
 
 
-def repr2(obj: object) -> str:
-    """Create a string representation of an object like in Python2
-
-    Examples:
-
-        >>> repr2({b"Hallo": "Welt"})
-        "{'Hallo': u'Welt'}"
-
-        >>> repr2(b"Hallo Welt")
-        "'Hallo Welt'"
-
-        >>> repr2("Hallo Welt")
-        "u'Hallo Welt'"
-
-        >>> repr2({"1": "a", "2": "b"})
-        "{u'1': u'a', u'2': u'b'}"
-
-        >>> repr2([1, 2, 3])
-        '[1, 2, 3]'
-
-    Args:
-        obj:
-            The object to be serialized.
-
-    Returns:
-        A string representation of the object, like Python2 would do.
-
-    """
-    if isinstance(obj, dict):
-        return "{" + ", ".join(f"{repr2(k)}: {repr2(v)}" for k, v in obj.items()) + "}"
-    if isinstance(obj, list | tuple):
-        return "[" + ", ".join(repr2(x) for x in obj) + "]"
-    if isinstance(obj, str):
-        return f"u'{obj}'"
-    if isinstance(obj, bytes):
-        return f"'{obj.decode('utf-8')}'"
-    return repr(obj)
-
-
 class FakeSocket:
     def __init__(self, mock_live: MockSingleSiteConnection) -> None:
         self.mock_live = mock_live
@@ -137,9 +98,6 @@ def _make_livestatus_response(response: Response, output_format: str) -> str:
     >>> _make_livestatus_response(resp, "json")
     '200          25\\n[["foo", "bar"], [1, {}]]'
 
-    >>> _make_livestatus_response(resp, "python")
-    "200          26\\n[[u'foo', 'bar'], [1, {}]]"
-
     >>> _make_livestatus_response(resp, "python3")
     "200          26\\n[['foo', b'bar'], [1, {}]]"
 
@@ -162,8 +120,6 @@ def _make_livestatus_response(response: Response, output_format: str) -> str:
             [x.decode("utf-8") if isinstance(x, bytes) else x for x in row] for row in response
         ]
         data = json.dumps(response)
-    elif output_format == "python":
-        data = repr2(response)
     elif output_format == "python3":
         data = repr(response)
     else:

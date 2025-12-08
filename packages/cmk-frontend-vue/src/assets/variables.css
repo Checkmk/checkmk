@@ -25,6 +25,7 @@
   --tag-ruleset-color: rgb(222 67 131);
   --default-help-icon-bg-color: rgb(6 103 193);
   --default-help-icon-bg-color-hover: rgb(56 133 205);
+  --default-nav-popup-border-color: rgb(19 211 137);
   --scrollbar-color: rgb(78 93 105);
   --popup-dialog-success: var(--color-corporate-green-50);
   --popup-dialog-warning: var(--color-yellow-50);
@@ -90,6 +91,7 @@
 
     /* Colors */
     --default-nav-bg-color: var(--ux-theme-0);
+    --default-nav-border-color: var(--ux-theme-6);
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
     --default-bg-color: var(--ux-theme-2);
@@ -108,11 +110,12 @@
     --default-component-bg-color: rgb(240 240 240);
     --help-text-bg-color: var(--ux-theme-5);
     --help-text-font-color: var(--color-conference-grey-100);
+    --dropdown-chevron-indicator-color: var(--color-conference-grey-100);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
-    --wizard-progress-bar-background-badge-color: var(--color-daylight-grey-60);
+    --wizard-progress-bar-background-badge-color: var(--color-midnight-grey-100);
     --headline-color: var(--ux-theme-4);
     --db-content-bg-color: var(--ux-theme-1);
     --even-tr-bg-color: var(--ux-theme-3);
@@ -197,6 +200,7 @@
 
     /* Colors */
     --default-nav-bg-color: rgb(17 24 29);
+    --default-nav-border-color: var(--ux-theme-4);
     --default-border-color: rgb(38 45 52);
     --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
@@ -213,13 +217,14 @@
     --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
     --default-component-bg-color: rgb(46 44 44);
     --help-text-font-color: var(--color-conference-grey-100);
+    --dropdown-chevron-indicator-color: var(--color-white-100);
     --default-dialog-bg-color: var(--ux-theme-5);
     --default-dialog-font-color: var(--color-white-100);
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--ux-theme-0);
     --wizard-progress-bar-background-color: var(--white);
-    --wizard-progress-bar-background-badge-color: var(--ux-theme-0);
+    --wizard-progress-bar-background-badge-color: var(--color-white-100);
     --headline-color: var(--ux-theme-3);
     --db-content-bg-color: var(--ux-theme-2);
     --even-tr-bg-color: var(--ux-theme-3);

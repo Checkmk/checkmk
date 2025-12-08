@@ -407,7 +407,7 @@ class GraphApi(_Connection):
                         json={"destinationId": folder},
                     )
         except Exception as exc:
-            raise CleanupMailboxError("Failed to copy mail to %s: %r" % (folder, exc)) from exc
+            raise CleanupMailboxError(f"Failed to copy mail to {folder}: {exc!r}") from exc
 
 
 def _make_account(

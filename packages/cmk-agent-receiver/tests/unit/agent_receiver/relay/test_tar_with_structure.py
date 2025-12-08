@@ -53,6 +53,35 @@ def test_create_tar_with_single_file(common_parent: Path) -> None:
         assert content == test_content
 
 
+def test_create_tar_with_symlink(common_parent: Path) -> None:
+    """Test creating tar archive with a symlink in it."""
+    # Create destination file and link to it
+    test_file_dst = common_parent / ".." / "text.txt"
+    test_content = "Hello, World!"
+    test_file_dst.write_text(test_content)
+    test_file = common_parent / "link.txt"
+    test_file.symlink_to("../text.txt")
+
+    # Create tar archive
+    result = create_tar(common_parent)
+
+    # verify tar contents
+    tar_buffer = io.BytesIO(result)
+
+    with tarfile.open(fileobj=tar_buffer, mode="r") as tar:
+        assert len(tar.getmembers()) == 2
+
+        assert tar.getmember(ROOT).isdir()
+
+        member = tar.getmember(f"{ROOT}/link.txt")
+
+        # Verify file content
+        file_obj = tar.extractfile(member)
+        assert file_obj is not None
+        content = file_obj.read().decode("utf-8")
+        assert content == test_content
+
+
 def test_create_tar_with_multiple_files(common_parent: Path) -> None:
     """Test creating tar archive with multiple files."""
     # Create test files

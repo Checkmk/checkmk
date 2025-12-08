@@ -54,7 +54,17 @@ def live_query_to_choices(
     selected_sites = get_only_sites_from_context(params.get("context", {}))
     with sites.only_sites(selected_sites), sites.set_limit(limit):
         query_result = query_callback(sites.live())
-        choices = [(h, h) for h in sorted(query_result, key=lambda h: h.lower())]
+        sorted_results = sorted(
+            query_result,
+            key=lambda h: (
+                h.lower() != value.lower(),  # Exact matches first
+                not h.lower().startswith(
+                    value.lower()
+                ),  # Then choices starting with the input value
+                h.lower(),  # Then alphabetically
+            ),
+        )
+        choices = [(h, h) for h in sorted_results]
 
     if params.get("escape_regex"):
         choices = [(re.escape(val), display) for (val, display) in choices]

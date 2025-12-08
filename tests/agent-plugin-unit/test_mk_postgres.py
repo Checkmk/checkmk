@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -164,7 +163,7 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
-                ("postgres\x00db1".encode("utf-8"), None),
+                (b"postgres\x00db1", None),
                 ("12.3", None),
             ],
             "returncode": 0,
@@ -207,7 +206,7 @@ class TestLinux:
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
-                ("postgres\x00db1".encode("utf-8"), None),
+                (b"postgres\x00db1", None),
                 ("12.3.6", None),
             ],
             "returncode": 0,
@@ -245,7 +244,7 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
-                ("postgres\x00db1".encode("utf-8"), None),
+                (b"postgres\x00db1", None),
                 ("12.3.6", None),
             ],
             "returncode": 0,
@@ -423,7 +422,7 @@ class TestWindows:
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
-                ("postgres\x00db1\x00".encode("utf-8"), b"ok"),
+                (b"postgres\x00db1\x00", b"ok"),
                 (b"12.1", b"ok"),
             ],
             "returncode": 0,
@@ -587,11 +586,9 @@ def test_parse_env_file(tmp_path):
     path = tmp_path / ".env"
     with open(str(path), "wb") as fo:
         fo.write(
-            (
-                "export PGDATABASE='ut_pg_database'\n"
-                "PGPORT=ut_pg_port  # missing export, but still parsed... \n"
-                'export PGVERSION="some version"   \n'
-            ).encode("utf-8")
+            b"export PGDATABASE='ut_pg_database'\n"
+            b"PGPORT=ut_pg_port  # missing export, but still parsed... \n"
+            b'export PGVERSION="some version"   \n'
         )
     assert mk_postgres.parse_env_file(str(path)) == (
         "'ut_pg_database'",  # this double quoting seems to be funny.
@@ -606,12 +603,10 @@ def test_parse_env_file_comments(tmp_path):
     path = tmp_path / ".env"
     with open(str(path), "wb") as fo:
         fo.write(
-            (
-                "export PGDATABASE=ut_pg_database\n"
-                "# export PGDATABASE=ut_some_other_database\n"
-                "PGPORT=123\n"
-                "#PGPORT=345\n"
-            ).encode("utf-8")
+            b"export PGDATABASE=ut_pg_database\n"
+            b"# export PGDATABASE=ut_some_other_database\n"
+            b"PGPORT=123\n"
+            b"#PGPORT=345\n"
         )
     assert mk_postgres.parse_env_file(str(path)) == (
         "ut_pg_database",
@@ -624,14 +619,12 @@ def test_parse_env_file_parser(tmp_path):
     path = tmp_path / ".env"
     with open(str(path), "wb") as fo:
         fo.write(
-            (
-                "# this is a comment\n"
-                " # t = is a comment\n"
-                "\t#\tt =s a comment\n"
-                "\n"  # empty line
-                "export PGDATABASE=ut_pg_database\n"
-                "PGPORT=123\n"
-            ).encode("utf-8")
+            b"# this is a comment\n"
+            b" # t = is a comment\n"
+            b"\t#\tt =s a comment\n"
+            b"\n"  # empty line
+            b"export PGDATABASE=ut_pg_database\n"
+            b"PGPORT=123\n"
         )
     assert mk_postgres.parse_env_file(str(path)) == (
         "ut_pg_database",

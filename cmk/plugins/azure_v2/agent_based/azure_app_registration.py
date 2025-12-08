@@ -9,12 +9,13 @@ from datetime import datetime, UTC
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    FixedLevelsT,
     render,
     Result,
     Service,
@@ -67,7 +68,7 @@ def discover_app_registration(section: Section) -> DiscoveryResult:
 
 
 def check_app_registration(
-    item: str, params: Mapping[str, tuple[float, float]], section: Section
+    item: str, params: Mapping[str, FixedLevelsT[float]], section: Section
 ) -> CheckResult:
     if (secret := section.get(item)) is None:
         return
@@ -82,7 +83,7 @@ def check_app_registration(
         )
 
     else:
-        yield from check_levels_v1(
+        yield from check_levels(
             age,
             levels_lower=params.get("expiration_time"),
             label="Remaining time",
@@ -95,6 +96,6 @@ check_plugin_azure_app_registration = CheckPlugin(
     service_name="Azure/App Registration Secret %s",
     discovery_function=discover_app_registration,
     check_function=check_app_registration,
-    check_ruleset_name="credentials_expiration",
-    check_default_parameters={"expiration_time": (THIRTY_DAYS, SEVEN_DAYS)},
+    check_ruleset_name="azure_v2_app_registration",
+    check_default_parameters={"expiration_time": ("fixed", (THIRTY_DAYS, SEVEN_DAYS))},
 )

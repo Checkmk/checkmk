@@ -27,6 +27,7 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'single_metric'
 export interface UseMetric extends UseWidgetHandler, UseWidgetVisualizationOptions {
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
@@ -49,13 +50,13 @@ export const useMetric = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseMetric> => {
-  const currentContent = currentSpec?.content as SingleMetricContent
+  const currentContent = currentSpec?.content?.type === CONTENT_TYPE ? currentSpec?.content : null
 
   const timeRangeType = ref<TimeRangeType>(
     currentContent?.time_range === 'current' ? 'current' : 'window'
   )
   const currentTimerange: TimerangeModel | null =
-    currentContent?.time_range === 'current' ? null : currentContent?.time_range.window
+    currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(currentTimerange)
   const displayRangeLimits = ref<boolean>(currentContent?.show_display_range_limits ?? true)
   const showServiceStatus = ref<boolean>(true)
@@ -88,7 +89,7 @@ export const useMetric = async (
 
   const _generateContent = (): SingleMetricContent => {
     return {
-      type: 'single_metric',
+      type: CONTENT_TYPE,
       metric: metric,
       display_range: dataRangeProps.value,
       show_display_range_limits: displayRangeLimits.value,

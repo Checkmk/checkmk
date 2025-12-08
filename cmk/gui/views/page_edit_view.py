@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import ast
+import datetime as dt
 import string
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, override, TypedDict
@@ -947,6 +948,8 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, vi
                 [h.table.columns for h in inv_display_hints if isinstance(h.table, TableWithView)],
             ),
         )
+
+    view["modified_at"] = dt.datetime.now(dt.UTC).isoformat()
 
     return view
 

@@ -10,6 +10,7 @@ from fastapi import HTTPException
 RelayID = NewType("RelayID", str)
 TaskID = NewType("TaskID", str)
 Serial = NewType("Serial", str)
+Version = NewType("Version", str)
 
 
 class RelayNotFoundError(HTTPException):

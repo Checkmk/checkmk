@@ -5,16 +5,20 @@
  */
 import { Api } from '@/lib/api-client'
 
+export interface OAuth2FormData {
+  title: string
+  authority: string
+  tenant_id: string
+  client_id: string
+  client_secret: unknown
+}
+
 export interface MsGraphApiAccessTokenRequestObject {
   id: string
   type: 'ms_graph_api'
-  tenant_id: string
-  code: string
-  client_id: string
-  client_secret: string
   redirect_uri: string
-  title: string
-  authority: string
+  code: string
+  data: OAuth2FormData
 }
 
 export interface MsGraphAjaxResponse {

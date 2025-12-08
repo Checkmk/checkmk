@@ -14,17 +14,20 @@ import { isIdInUse, isValidSnakeCase } from '../utils'
 
 const { _t } = usei18n()
 
-export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSettings) {
+export function useDashboardGeneralSettings(
+  initialSettings?: DashboardGeneralSettings,
+  dashboardId?: string
+) {
   // shorthand
   const s = initialSettings
 
-  const name = ref<string>('')
+  const name = ref<string>(s?.title?.text ?? '')
   const nameErrors = ref<string[]>([])
 
   const createUniqueId = ref<boolean>(true)
-  const uniqueId = ref<string>('')
+  const uniqueId = ref<string>(dashboardId ?? '')
   const uniqueIdErrors = ref<string[]>([])
-  const addFilterSuffix = ref<boolean>(false)
+  const addFilterSuffix = ref<boolean>(s?.title?.include_context ?? false)
 
   const dashboardIcon = ref<string | null>(s?.menu.icon?.name ?? null)
   const dashboardEmblem = ref<string | null>(s?.menu.icon?.emblem ?? null)

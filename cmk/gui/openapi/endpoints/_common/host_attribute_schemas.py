@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from typing import Any, override
 
 from marshmallow.fields import Tuple as TupleField
@@ -50,11 +51,15 @@ def _get_valid_tag_ids(built_in_tag_group_id: TagGroupID) -> list[str | None]:
     return [None if tag_id is None else str(tag_id) for tag_id in tag_group.get_tag_ids()]
 
 
+RelayIDValidator = Callable[[str], bool]
+
+
 class RelayField(fields.String):
     """A field representing the relay address."""
 
     default_error_messages = {
         "edition_not_supported": "Relay field not supported in this edition.",
+        "no_such_relay": "The specified relay does not exist.",
     }
 
     def __init__(self, **kwargs: Any):
@@ -74,6 +79,15 @@ class RelayField(fields.String):
         if version.edition(paths.omd_root) not in self._supported_editions:
             raise self.make_error("edition_not_supported")
         super()._validate(value)
+
+        # FYI: The pylint suppression was chosen to keep the logic of this method clear.
+        # pylint: disable=cmk-module-layer-violation
+        from cmk.gui.nonfree.ultimate.relay.watolib.relay_config import (  # type: ignore[import-not-found,unused-ignore]
+            validate_relay_id,
+        )
+
+        if not validate_relay_id(value):
+            raise self.make_error("no_such_relay")
 
 
 class BaseHostTagGroup(BaseSchema):

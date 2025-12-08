@@ -20,6 +20,7 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'service_state'
 export interface UseServiceState extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
   showBackgroundInStatusColorAndLabel: Ref<boolean>
@@ -44,7 +45,10 @@ export const useServiceState = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as ServiceStateContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as ServiceStateContent)
+      : undefined
 
   const showBackgroundInStatusColorAndLabel = ref<boolean>(!!currentContent?.status_display)
   const colorizeStates = ref<string>(currentContent?.status_display?.for_states ?? 'all')
@@ -58,7 +62,7 @@ export const useServiceState = async (
 
   const _generateContent = (): ServiceStateContent => {
     const content: ServiceStateContent = {
-      type: 'service_state'
+      type: CONTENT_TYPE
     }
 
     if (showSummaryForNotOKStates.value) {

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import NamedTuple, Self, TypeAlias
 from urllib.parse import urlparse
 
-import docker  # type: ignore[import-untyped]
+import docker
 import requests
 
 from cmk.ccc.version import BuildDate, ReleaseType, Version
@@ -130,7 +130,7 @@ class Registry:
 
         return False
 
-    def get_all_image_tags(self, image: DockerImage) -> tuple[DockerTag]:
+    def get_all_image_tags(self, image: DockerImage) -> tuple[DockerTag, ...]:
         "Get all tags applied to an image"
 
         image_from_registry = self.client.images.pull(image.image_name, tag=image.tag)
@@ -311,8 +311,11 @@ class Registry:
             print(line)
 
     def __post_init__(self) -> None:
-        kwargs = {"timeout": self.timeout} if self.timeout else {}
-        self.client = docker.client.from_env(**kwargs)
+        self.client = (
+            docker.client.from_env(timeout=self.timeout)
+            if self.timeout
+            else docker.client.from_env()
+        )
         self.credentials = get_credentials()
 
         # Since self.editions is a list, we have to match the complete list contents

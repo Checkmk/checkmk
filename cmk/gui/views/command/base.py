@@ -11,11 +11,14 @@ from typing import Literal
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.page_menu import PageMenuVue
 from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.livestatus_client.commands import Command as LivestatusCommand
+from cmk.livestatus_client import Command as LivestatusCommand
+from cmk.livestatus_client import LivestatusClient
 
 from .group import CommandGroup
 
@@ -68,6 +71,7 @@ class Command(abc.ABC):
         only_view: str | None = None,
         show_command_form: bool = True,
         executor: CommandExecutor | None = None,
+        vue_props: Callable[[LoggedInUser, Rows], PageMenuVue] | None = None,
     ) -> None:
         self.ident = ident
         self.title = title
@@ -91,6 +95,7 @@ class Command(abc.ABC):
         self._confirm_dialog_icon_class = confirm_dialog_icon_class
         self._affected_output_cb = affected_output_cb
         self._executor = executor
+        self._vue_props = vue_props
 
     @property
     def confirm_title(self) -> str:
@@ -102,6 +107,12 @@ class Command(abc.ABC):
             self.confirm_button() if callable(self.confirm_button) else self.confirm_button,
             str(self.title).lower(),
         )
+
+    def is_vue(self) -> bool:
+        return self._vue_props is not None
+
+    def get_vue_page_menu(self, user: LoggedInUser, rows: Rows) -> PageMenuVue | None:
+        return self._vue_props(user, rows) if self._vue_props else None
 
     def confirm_dialog_options(
         self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
@@ -170,4 +181,4 @@ class Command(abc.ABC):
         if self._executor:
             self._executor(command, site)
             return
-        sites.live().command_obj(command, site)
+        LivestatusClient(sites.live()).command(command, site)

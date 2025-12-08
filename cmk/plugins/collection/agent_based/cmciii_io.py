@@ -21,21 +21,16 @@ def discover_cmciii_io(params: DiscoveryParams, section: Section) -> DiscoveryRe
 
 def state(entry: Sensor) -> State:
     state_readable = entry["Status"]
-    if state_readable == "Open":
-        # Some door sensors have been mapped to Input instead of Access
-        # by the vendor
-        return State.WARN
-    if state_readable == "Closed":
-        return State.OK
-    if "Relay" in entry:
-        if state_readable == "OK":
-            return State.OK
-        return State.CRIT
-    if state_readable in ["OK", "Off"]:
-        return State.OK
-    if state_readable == "On":
-        return State.WARN
-    return State.CRIT
+
+    state_mapping = {
+        "OK": State.OK,
+        "Off": State.OK,
+        "On": State.WARN,
+        "Open": State.WARN,
+        "Closed": State.OK,
+    }
+
+    return state_mapping.get(state_readable, State.WARN)
 
 
 def check_cmciii_io(item: str, params: CheckParams, section: Section) -> CheckResult:

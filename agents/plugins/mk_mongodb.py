@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -58,7 +57,7 @@ except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
         "error\tpymongo library is not installed. Please install it on the monitored system "
-        "(for Python 3 use: 'pip3 install pymongo', for Python 2 use 'pip install pymongo')\n"
+        "('pip3 install pymongo')\n"
     )
     sys.exit(1)
 
@@ -695,7 +694,7 @@ def read_statefile(state_file):
     try:
         with open(state_file) as state_fd:
             last_timestamp = int(state_fd.read())
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         return None, True
 
     if time.localtime(last_timestamp).tm_year >= 2015:
@@ -717,7 +716,7 @@ def update_statefile(state_file, startup_warnings):
     try:
         with open(state_file, "w") as state_fd:
             state_fd.write("%d" % timestamp)
-    except (IOError, TypeError):
+    except (OSError, TypeError):
         # TypeError: timestamp was None, but at least ctime is updated.
         pass
 
@@ -798,7 +797,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
         if not os.path.exists(filename):
             LOGGER.warning("config file %s does not exist!", filename)
         else:
-            with open(filename, "r") as cfg:
+            with open(filename) as cfg:
                 if sys.version_info[0] == 2:
                     self.readfp(cfg)
                 else:

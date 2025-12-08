@@ -97,6 +97,11 @@ const props = defineProps<Props>()
         {{ configuredFilterValues[component.id] }}
       </CmkLabel>
     </div>
+    <div v-else-if="component.component_type === 'dual_list'">
+      <CmkLabel>
+        {{ (configuredFilterValues[component.id] || '').split('|').join(', ') }}
+      </CmkLabel>
+    </div>
     <LabelQueryBuilder
       v-else-if="component.component_type === 'label_group'"
       :component="component"

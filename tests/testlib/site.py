@@ -1452,6 +1452,9 @@ class Site:
                 is_automation_user=True,
             )
         self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
+        self.openapi_agent_receiver.set_authentication_header(
+            user=username, password=self._automation_secret.raw
+        )
 
     @tracer.instrument("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:
@@ -2500,10 +2503,22 @@ class SiteFactory:
         site_name: str,
         central_site: Site,
         site_description: str = "",
+        enable_replication: bool | None = None,
     ) -> Iterator[Site]:
         """Use a dynamically created, connected a remote site.
 
-        Clean up site and connection during teardown."""
+        Clean up site and connection during teardown.
+
+        Args:
+            site_name: The name of the remote site to be created.
+            central_site: The central site to connect the new remote site to.
+            site_description: The description text for the remote site.
+            enable_replication: Specifies if replication will be enabled or not.
+                By default, replication will be enabled for sites with matching editions.
+
+        Yields:
+            Site object for the connected remote site.
+        """
         with self.get_test_site_ctx(
             site_name,
             description=site_description,
@@ -2513,6 +2528,7 @@ class SiteFactory:
             with connection(
                 central_site=central_site,
                 remote_site=remote_site,
+                enable_replication=enable_replication,
             ):
                 yield remote_site
 
@@ -2706,18 +2722,25 @@ def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
 
 @contextmanager
 def connection(
-    *,
-    central_site: Site,
-    remote_site: Site,
+    *, central_site: Site, remote_site: Site, enable_replication: bool | None = None
 ) -> Iterator[None]:
-    """Set up the site connection between central and remote site for a distributed setup"""
+    """Set up the site connection between central and remote site for a distributed setup
+
+    Args:
+        central_site: The central site of the distributed setup.
+        remote_site: The remote site to connect to.
+        enable_replication: Specifies if replication will be enabled or not.
+            By default, replication will be enabled for sites with matching editions.
+    """
     basic_settings = {
         "alias": "Remote Testsite",
         "site_id": remote_site.id,
     }
     if central_site.edition.is_ultimatemt_edition():
         basic_settings["customer"] = "provider"
-    if central_site.edition == remote_site.edition:
+    if enable_replication is None:
+        enable_replication = central_site.edition == remote_site.edition
+    if enable_replication:
         configuration_connection = {
             "enable_replication": True,
             "url_of_remote_site": remote_site.internal_url,

@@ -35,9 +35,10 @@ void main() {
             usernamePassword(
                 credentialsId: 'nexus',
                 passwordVariable: 'DOCKER_PASSPHRASE',
-                usernameVariable: 'DOCKER_USERNAME')]) {
+                usernameVariable: 'DOCKER_USERNAME')
+        ]) {
             sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
-                }
+        }
     }
 
     def current_description = currentBuild.description;
@@ -250,33 +251,48 @@ void main() {
                                 unstable: false,
                             ]],
                         );
-                        if (item.RESULT_CHECK_TYPE == "JUNIT") {
-                            dir("${checkout_dir}") {
-                                try {
-                                    xunit(
-                                        checksName: item.NAME,
-                                        tools: [
-                                            Custom(
-                                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                                                deleteOutputFiles: false,
-                                                failIfNotNew: false, // as they are copied from the single tests
-                                                pattern: item.RESULT_CHECK_FILE_PATTERN,
-                                                skipNoTestFiles: true,
-                                                stopProcessingIfError: true,
-                                            )
-                                        ]
-                                    );
-                                } catch (Exception exc) {
-                                    print("ERROR: ran into exception while running xunit() for ${item.NAME}: ${exc}");
-                                }
-                            }
+                    }
+                    if (item.RESULT_CHECK_TYPE == "JUNIT") {
+                        try {
+                            xunit(
+                                checksName: item.NAME,
+                                tools: [
+                                    Custom(
+                                        customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
+                                        deleteOutputFiles: false,
+                                        failIfNotNew: false, // as they are copied from the single tests
+                                        /* groovylint-disable LineLength */
+                                        // not working: no found with the pattern
+                                        // '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit/checkout/results/python3-file-content-junit.xml'
+                                        // relative to '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit'
+                                        // pattern: "${checkout_dir}/${item.RESULT_CHECK_FILE_PATTERN}",
+                                        // not working: no found with the pattern 'results/python3-file-content-junit.xml'
+                                        // relative to '/home/jenkins/agent/workspace/checkmk/master/cv/test-gerrit'
+                                        // pattern: "${item.RESULT_CHECK_FILE_PATTERN}",
+                                        // works best, only picks that single specific file
+                                        pattern: "checkout/${item.RESULT_CHECK_FILE_PATTERN}",
+                                        // works as well, but finds also files in sub sub directories
+                                        // pattern: "**/${item.RESULT_CHECK_FILE_PATTERN}",
+                                        /* groovylint-enable LineLength */
+                                        skipNoTestFiles: true,
+                                        stopProcessingIfError: true,
+                                    )
+                                ]
+                            );
+                        } catch (Exception exc) {
+                            print("ERROR: ran into exception while running xunit() for ${item.NAME}: ${exc}");
                         }
                     }
                 }
             }
         }]
     /// add a dummy step which populates the result table before the first real step has finished
-    } + ["CV internal: initial result table population": { sleep(2); update_result_table(current_description, analyse_mapping);}]
+    } + [
+        ("CV internal: initial result table population"): {
+            sleep(2);
+            update_result_table(current_description, analyse_mapping);
+        }
+    ]
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         def results_of_parallel = parallel(stepsForParallel);

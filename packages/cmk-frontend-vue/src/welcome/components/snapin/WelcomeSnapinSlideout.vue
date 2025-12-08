@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { StageInformation, WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -22,22 +22,20 @@ import { type StepId, totalSteps } from '../steps/stepComponents'
 
 const { _t } = usei18n()
 
-const cards = ref<WelcomeCards>()
-const stageInformation = ref<StageInformation>()
-const slideInOpen = ref(false)
+const props = defineProps<{
+  cards: WelcomeCards
+  stage_information: StageInformation
+}>()
+
+const cards = ref<WelcomeCards>(props.cards)
+const stageInformation = ref<StageInformation>(props.stage_information)
+const slideInOpen = defineModel<boolean>({ required: true })
 const nextStepsTitle = _t('Next steps with Checkmk')
 const firstStepsTitle = _t('First steps with Checkmk')
-const slideInTitle = ref(nextStepsTitle)
 
 const completedSteps = computed(() => stageInformation.value?.finished.length || 0)
 const completed = computed(() => completedSteps.value === totalSteps)
-
-function slideInEventListener(event: CustomEvent): void {
-  cards.value = event.detail.cards
-  stageInformation.value = event.detail.stage_information
-  slideInTitle.value = completed.value ? nextStepsTitle : firstStepsTitle
-  openSlideIn()
-}
+const slideInTitle = computed(() => (completed.value ? nextStepsTitle : firstStepsTitle))
 
 async function stepCompleted(stepId: StepId): Promise<void> {
   if (cards.value) {
@@ -51,11 +49,6 @@ async function stepCompleted(stepId: StepId): Promise<void> {
   }
 }
 
-onMounted(() => {
-  // TODO: remove as unknown as EventListener once https://github.com/Microsoft/TypeScript/issues/28357 is fixed
-  window.addEventListener('open-welcome-slide-in', slideInEventListener as unknown as EventListener)
-})
-
 function openFullView() {
   window.open('welcome.py', 'main')
   closeSlideIn()
@@ -64,16 +57,13 @@ function openFullView() {
 function closeSlideIn() {
   slideInOpen.value = false
 }
-
-function openSlideIn() {
-  slideInOpen.value = true
-}
 </script>
 
 <template>
   <CmkSlideInDialog
     :open="slideInOpen"
     :header="{ title: slideInTitle, closeButton: true }"
+    :is-index-page="true"
     @close="closeSlideIn"
   >
     <CmkButton variant="secondary" class="full-view-button" @click="() => openFullView()">

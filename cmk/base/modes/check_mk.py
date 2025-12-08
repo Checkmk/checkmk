@@ -1503,7 +1503,6 @@ modes.register(
 
 def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     from cmk.base.core.nagios import create_config
-    from cmk.ccc.config_path import VersionedConfigPath
 
     plugins = load_checks()
     loading_result = load_config(plugins)
@@ -1540,9 +1539,8 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
 
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
-    create_config(
+    _notify_host_files = create_config(
         sys.stdout,
-        Path(VersionedConfigPath.next(cmk.utils.paths.omd_root)),
         config_cache,
         final_service_name_config,
         service_name_config,
@@ -2609,7 +2607,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         error_handler=config.handle_ip_lookup_failure,
     )
 
-    hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
+    hostnames = config.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
@@ -3174,7 +3172,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
 
     if args:
-        hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
+        hostnames = config.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose(f"Doing HW/SW Inventory on: {', '.join(hostnames)}")
     else:

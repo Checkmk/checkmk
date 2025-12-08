@@ -5,79 +5,79 @@
 import re
 from typing import assert_never
 
-from .type_defs import Provider
+from cmk.shared_typing.unified_search import IconNames, ProviderName
 
-_MONITORING_ICONS: dict[str, str] = {
-    "applications": "topic-applications",
-    "event_console": "topic-events",
-    "history": "topic-history",
-    "host_name": "topic-host",
-    "host_group": "main-monitoring-active",
-    "hostalias": "topic-host",
-    "hwsw_inventory": "topic-inventory",
-    "it_infrastructure_efficiency": "topic-analyze",
-    "monitor": "main-monitoring-active",
-    "other": "topic-other",
-    "overview": "topic-overview",
-    "problems": "topic-problems",
-    "hostservice_search": "topic-search",
-    "service_description": "topic-services",
-    "synthetic_monitoring": "topic-synthetic-monitoring",
-    "system": "topic-system",
+_MONITORING_ICONS: dict[str, IconNames] = {
+    "applications": IconNames.topic_applications,
+    "event_console": IconNames.topic_events,
+    "history": IconNames.topic_history,
+    "host_name": IconNames.topic_hosts,
+    "host_group": IconNames.main_monitoring_active,
+    "hostalias": IconNames.topic_hosts,
+    "hwsw_inventory": IconNames.topic_inventory,
+    "it_infrastructure_efficiency": IconNames.topic_analyze,
+    "monitor": IconNames.main_monitoring_active,
+    "other": IconNames.topic_other,
+    "overview": IconNames.topic_overview,
+    "problems": IconNames.topic_problems,
+    "hostservice_search": IconNames.main_search,
+    "service_description": IconNames.topic_services,
+    "synthetic_monitoring": IconNames.synthetic_monitoring_topic,
+    "system": IconNames.topic_system,
 }
 
-_CUSTOMIZE_ICONS: dict[str, str] = {
-    "business_reporting": "topic-reporting",
-    "general": "topic-general",
-    "graphs": "topic-graphs",
-    "visualization": "topic-visualization",
+_CUSTOMIZE_ICONS: dict[str, IconNames] = {
+    "business_reporting": IconNames.topic_reporting,
+    "general": IconNames.topic_general,
+    "graphs": IconNames.topic_graphs,
+    "visualization": IconNames.topic_visualization,
 }
 
-_SETUP_ICONS: dict[str, str] = {
-    "access_to_agents": "main-setup-active",
-    "agents": "topic-agents",
-    "agent_rules": "topic-agents",
-    "business_inteligence": "topic-bi",
-    "deprecated_rulesets": "main-setup-active",
-    "enforced_services": "topic-services",
-    "event_console_rule_packs": "main-setup-active",
-    "event_console_rules": "topic-events",
-    "event_console_settings": "main-setup-active",
-    "events": "topic-events",
-    "exporter": "topic-exporter",
-    "general": "topic-general",
-    "global_settings": "topic-general",
-    "host_monitoring_rules": "topic-host",
-    "hosts": "topic-host",
-    "http_tcp_email_": "topic-services",
-    "hwsw_inventory": "topic-inventory",
-    "maintenance": "topic-maintenance",
-    "miscellaneous": "main-setup-active",
-    "notification_parameter": "main-setup-active",
-    "other_integrations": "topic-agents",
-    "other_services": "topic-services",
-    "quick_setup": "topic-quick-setups",
-    "services": "topic-services",
-    "service_discovery_rules": "main-setup-active",
-    "service_monitoring_rules": "topic-services",
-    "setup": "main-setup-active",
-    "snmp_rules": "topic-agents",
-    "synthetic_monitoring": "topic-synthetic-monitoring",
-    "users": "topic-users",
-    "vm_cloud_container": "topic-agents",
+_SETUP_ICONS: dict[str, IconNames] = {
+    "access_to_agents": IconNames.main_setup_active,
+    "agents": IconNames.topic_agents,
+    "agent_rules": IconNames.topic_agents,
+    "business_inteligence": IconNames.topic_bi,
+    "deprecated_rulesets": IconNames.main_setup_active,
+    "enforced_services": IconNames.topic_services,
+    "event_console_rule_packs": IconNames.main_setup_active,
+    "event_console_rules": IconNames.topic_events,
+    "event_console_settings": IconNames.main_setup_active,
+    "events": IconNames.topic_events,
+    "exporter": IconNames.topic_exporter,
+    "general": IconNames.topic_general,
+    "global_settings": IconNames.topic_general,
+    "host_monitoring_rules": IconNames.topic_hosts,
+    "hosts": IconNames.topic_hosts,
+    "http_tcp_email_": IconNames.topic_services,
+    "hwsw_inventory": IconNames.topic_inventory,
+    "maintenance": IconNames.topic_maintenance,
+    "miscellaneous": IconNames.main_setup_active,
+    "notification_parameter": IconNames.main_setup_active,
+    "other_integrations": IconNames.topic_agents,
+    "other_services": IconNames.topic_services,
+    "quick_setup": IconNames.topic_quick_setups,
+    "services": IconNames.topic_services,
+    "service_discovery_rules": IconNames.main_setup_active,
+    "service_monitoring_rules": IconNames.topic_services,
+    "setup": IconNames.main_setup_active,
+    "snmp_rules": IconNames.topic_agents,
+    "synthetic_monitoring": IconNames.synthetic_monitoring_topic,
+    "users": IconNames.topic_users,
+    "vm_cloud_container": IconNames.topic_agents,
 }
 
-_HELP_ICONS: dict[str, str] = {
-    "learning_checkmk": "learning-checkmk",
-    "developer_resources": "developer-resources",
-    "ideas_portal": "lightbulb",
-    "about_checkmk": "about-checkmk",
+_HELP_ICONS: dict[str, IconNames] = {
+    "learning_checkmk": IconNames.learning_checkmk,
+    "developer_resources": IconNames.developer_resources,
+    "ideas_portal": IconNames.lightbulb,
+    "about_checkmk": IconNames.about_checkmk,
 }
 
-_USER_ICONS: dict[str, str] = {
-    "user_interface": "topic-user-interface",
-    "user_messages": "topic-events",
-    "user_profile": "topic-profile",
+_USER_ICONS: dict[str, IconNames] = {
+    "user_interface": IconNames.topic_user_interface,
+    "user_messages": IconNames.topic_events,
+    "user_profile": IconNames.topic_profile,
 }
 
 
@@ -88,21 +88,21 @@ def _normalize_topic(topic: str) -> str:
     return topic_normalized
 
 
-def get_icon_for_topic(topic: str, provider: Provider) -> str:
+def get_icon_for_topic(topic: str, provider: ProviderName) -> IconNames:
     normalized_topic = _normalize_topic(topic)
 
-    mapping: dict[str, str]
-    default_icon: str
+    mapping: dict[str, IconNames]
+    default_icon: IconNames
 
-    if provider == "monitoring":
+    if provider == ProviderName.monitoring:
         mapping = _MONITORING_ICONS
-        default_icon = "main-monitoring-active"
-    elif provider == "setup":
+        default_icon = IconNames.main_monitoring_active
+    elif provider == ProviderName.setup:
         mapping = _SETUP_ICONS
-        default_icon = "main-setup-active"
-    elif provider == "customize":
+        default_icon = IconNames.main_setup_active
+    elif provider == ProviderName.customize:
         mapping = _CUSTOMIZE_ICONS
-        default_icon = "main-customize-active"
+        default_icon = IconNames.main_customize_active
     else:
         assert_never(provider)
 

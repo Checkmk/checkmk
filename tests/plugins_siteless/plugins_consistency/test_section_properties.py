@@ -182,6 +182,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
     known_offenders = {
         ".1.3.6.1.2.1.2.2.1.*": {"if", "inv_if"},
         ".1.3.6.1.2.1.25.1.1.0": {"hr_cpu", "hr_fs", "hr_ps"},
+        ".1.3.6.1.2.1.31.1.1.1.1.*": {"inv_if_name"},
         ".1.3.6.1.2.1.31.1.1.1.6.*": {"if64", "if64adm"},
         ".1.3.6.1.2.1.47.1.1.1.1.*": {"snmp_extended_info"},
         ".1.3.6.1.2.1.105.1.3.1.1.*": {"pse_poe"},
@@ -210,6 +211,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
             "dell_hw_info",
         },
         ".1.3.6.1.4.1.47196.4.1.1.3.11.3.1.1.*": {"aruba_sw_temp"},
+        ".1.0.8802.1.1.2.1.4.1.1.4.*": {"inv_lldp_cache"},
     }
 
     current_offenders: dict[str, set[str]] = defaultdict(set)

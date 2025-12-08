@@ -642,6 +642,10 @@ msgstr "%s Récupérer le fichier de vidage créé"
 msgid "%s by host"
 msgstr "%s par hôte"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via OAuth2 connection"
+msgstr "Vous ne pouvez pas supprimer cette connexion."
+
 #, python-format
 msgid "%s can only be deleted via Quick setup"
 msgstr ""
@@ -2309,6 +2313,10 @@ msgstr ""
 "pouvez définir une durée pendant laquelle une condition est autorisée à "
 "rester dans un certain état avant que le contrôle n'alerte."
 
+#, fuzzy
+msgid "A descriptive name for this OAuth2 connection."
+msgstr "Un titre descriptif de cette action."
+
 msgid "A descriptive title for this rule pack"
 msgstr "Un titre descriptif pour ce pack de règles"
 
@@ -2378,7 +2386,7 @@ msgid "A host with this name already exists in this folder."
 msgstr "Un hôte portant ce nom existe déjà dans ce dossier."
 
 #, fuzzy
-msgid "A human-readable name for this relay configuration."
+msgid "A human-readable alias for this relay configuration."
 msgstr "Créer une nouvelle configuration d'arborescence d'hôtes virtuels"
 
 #, fuzzy
@@ -2787,6 +2795,14 @@ msgstr "AES-256"
 
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
+
+#, fuzzy
+msgid "AI"
+msgstr "AIX"
+
+#, fuzzy
+msgid "AI Assistance"
+msgstr "Instance"
 
 msgid "AIX"
 msgstr "AIX"
@@ -3270,6 +3286,9 @@ msgstr "Accepter toute clé d'hôte SSH"
 
 msgid "Accept incoming TCP connections"
 msgstr "Accepter les connexions TCP entrantes"
+
+msgid "Accept only one neighbor per local port"
+msgstr ""
 
 #, fuzzy
 msgid "Accept service properties"
@@ -4064,10 +4083,6 @@ msgstr "Ajouter un filtre"
 
 msgid "Add NGINX instance"
 msgstr "Ajouter l'instance NGINX"
-
-#, fuzzy
-msgid "Add OAuth2 connection"
-msgstr "Ajouter une connexion LDAP"
 
 msgid "Add OID descriptions"
 msgstr "Ajouter des descriptions d'OID"
@@ -5593,14 +5608,6 @@ msgstr "Affectation des agrégats"
 msgid "Aggregation checks"
 msgstr "Contrôles d'agrégation"
 
-#, fuzzy
-msgid "Aggregation for histograms"
-msgstr "Groupes d'agrégation"
-
-#, fuzzy
-msgid "Aggregation for sums"
-msgstr "Groupes d'agrégation"
-
 msgid "Aggregation function"
 msgstr "Fonction d'agrégation"
 
@@ -6610,6 +6617,9 @@ msgstr ""
 "Permet de télécharger, d'installer, de désinstaller, de créer et de modifier "
 "des paquets d'extension (MKP). Remarque : les MKP contiennent du code "
 "exécutable."
+
+msgid "Allows to use the 'Explain with AI' button."
+msgstr ""
 
 #, python-format
 msgid "Allows to view and edit %s created by other users."
@@ -9213,6 +9223,10 @@ msgid "Azure Agent Info (deprecated)"
 msgstr "Informations sur l'agent Azure"
 
 #, fuzzy
+msgid "Azure App Registration"
+msgstr "Enregistrements d'applications"
+
+#, fuzzy
 msgid "Azure Application Gateway"
 msgstr "Passerelle d'application"
 
@@ -9264,6 +9278,22 @@ msgstr "Stockage Azure DB"
 
 msgid "Azure Databases"
 msgstr "Bases de données Azure"
+
+#, fuzzy
+msgid "Azure Firewall Health"
+msgstr "Pare-feu Zorp"
+
+#, fuzzy
+msgid "Azure Firewall Latency"
+msgstr "Pare-feu Zorp"
+
+#, fuzzy
+msgid "Azure Firewall SNAT Utilization"
+msgstr "Utilisation de l'unité centrale de GCP/Redis"
+
+#, fuzzy
+msgid "Azure Firewall Throughput"
+msgstr "Débit de lecture"
 
 #, fuzzy
 msgid "Azure Firewalls"
@@ -9446,6 +9476,18 @@ msgstr "Connexions à la base de données"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Connexions à la base de données"
+
+#, fuzzy
+msgid "Azure firewall health"
+msgstr "Pare-feu Zorp"
+
+#, fuzzy
+msgid "Azure firewall latency"
+msgstr "Pare-feu Zorp"
+
+#, fuzzy
+msgid "Azure recovery services vault backup"
+msgstr "Chambre forte des services de recouvrement"
 
 #, fuzzy
 msgid "Azure resource group"
@@ -12105,9 +12147,6 @@ msgstr "Impossible de calculer les recettes des graphiques"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Impossible de calculer les recettes du graphique : %s"
 
-msgid "Cannot change folder of rules managed by Quick setup."
-msgstr ""
-
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
@@ -12156,6 +12195,11 @@ msgid ""
 msgstr ""
 "Impossible de définir des macros qui écrasent les valeurs par défaut "
 "\"CUSTOMER_ID\" ou \"CUSTOMER_NAME\""
+
+#, python-format
+msgid ""
+"Cannot delete %s because it is managed by an existing OAuth2 connection."
+msgstr ""
 
 #, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
@@ -12397,6 +12441,18 @@ msgstr "Impossible d'écrire le fichier \"%s\" : %s"
 
 #, fuzzy
 msgid "Capabilities"
+msgstr "Compatibilité"
+
+#, fuzzy
+msgid "Capabilities enabled"
+msgstr "Compatibilité"
+
+#, fuzzy
+msgid "Capabilities map supported"
+msgstr "Compatibilité"
+
+#, fuzzy
+msgid "Capabilities supported"
 msgstr "Compatibilité"
 
 msgid "Capacity filled"
@@ -15262,9 +15318,6 @@ msgstr "Conditions"
 msgid "Conditions for this rule to apply"
 msgstr "Conditions d'application de cette règle"
 
-msgid "Conditions of rules managed by Quick setup cannot be changed."
-msgstr ""
-
 msgid "Conference Allocation Latency"
 msgstr "Latence d'allocation des conférences"
 
@@ -16235,10 +16288,6 @@ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "Phase 1.1 : Récupération du site \"%s\""
 
 #, python-format
-msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
-msgstr ""
-
-#, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
@@ -17101,6 +17150,10 @@ msgstr "Créer %s"
 msgid "Create Conference Latency"
 msgstr "Créer une latence de conférence"
 
+#, fuzzy
+msgid "Create OAuth2 connections."
+msgstr "Ajouter une connexion"
+
 msgid "Create SLA"
 msgstr "Créer un SLA"
 
@@ -17390,6 +17443,10 @@ msgstr "Créer un rapport stocké"
 
 msgid "Create the following interface groups"
 msgstr "Créez les groupes d'interface suivants"
+
+#, fuzzy
+msgid "Create the rule in the configured folder"
+msgstr "Créer une nouvelle configuration d'arborescence d'hôtes virtuels"
 
 msgid "Create topic"
 msgstr "Créer un sujet"
@@ -18705,14 +18762,6 @@ msgstr "Disponibilité du chemin de données niveaux inférieurs"
 msgid "Data point"
 msgstr "Données envoyées"
 
-#, fuzzy
-msgid "Data point attribute"
-msgstr "Modifier les attributs"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Modifier les attributs"
-
 msgid "Data range"
 msgstr "Plage de données"
 
@@ -19330,6 +19379,10 @@ msgstr "Âge des dossiers différés"
 
 msgid "Deferred files in Spool"
 msgstr "Fichiers différés dans le Spool"
+
+#, fuzzy
+msgid "Define OAuth parameters"
+msgstr "Paramètres du modèle"
 
 msgid ""
 "Define Oracle database instances to monitor to overwrite default settings."
@@ -24091,6 +24144,11 @@ msgstr "Activer l'enregistrement des notifications"
 msgid "Enable notifications?"
 msgstr "Activer les notifications ?"
 
+msgid ""
+"Enable or disable product telemetry. When disabled, you can configure "
+"whether to show a popup asking for consent on login."
+msgstr ""
+
 #, fuzzy
 msgid "Enable passive checks"
 msgstr "Activer les contrôles actifs"
@@ -25765,6 +25823,14 @@ msgstr "Expiration"
 msgid "Expires on"
 msgstr "Expiration"
 
+#, python-format
+msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
+msgstr ""
+
+#, fuzzy
+msgid "Explain with AI"
+msgstr "Continuer la recherche"
+
 msgid "Explanation for event action"
 msgstr "Explication de l'action de l'événement"
 
@@ -25773,10 +25839,6 @@ msgstr "Explicite"
 
 msgid "Explicit Queue Names"
 msgstr "Noms explicites des files d'attente"
-
-#, fuzzy
-msgid "Explicit condition"
-msgstr "Conditions explicites"
 
 msgid "Explicit conditions"
 msgstr "Conditions explicites"
@@ -26303,6 +26365,10 @@ msgid "Failed to create sync archive [%d]: %s"
 msgstr "Échec de la création de l'archive de synchronisation [%d] : %s"
 
 msgid "Failed to decode certificate data"
+msgstr "Échec du décodage des données du certificat"
+
+#, fuzzy
+msgid "Failed to decode filter context"
 msgstr "Échec du décodage des données du certificat"
 
 #, python-format
@@ -33985,6 +34051,12 @@ msgstr ""
 "Si la détection automatique de la vitesse de la liaison ne fonctionne pas, "
 "vous pouvez régler la vitesse de la liaison ici."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -37149,10 +37221,6 @@ msgstr "Appelable attendu non valide pour %s à idx %d : %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Type de perfomètre non valide : %s"
 
-#, fuzzy, python-format
-msgid "Invalid figure content: %s"
-msgstr "Connexion utilisateur non valide : %s"
-
 msgid "Invalid file name"
 msgstr "Nom de fichier non valide"
 
@@ -37178,10 +37246,6 @@ msgid ""
 msgstr ""
 "Nom de dossier non valide. Seuls les caractères a-z, A-Z, 0-9, _ et - sont "
 "autorisés."
-
-#, fuzzy, python-format
-msgid "Invalid graph content: %s"
-msgstr "Type de graphique non valide : %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -37229,6 +37293,10 @@ msgstr "Identité non valide"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Identifiant non valide : %s"
+
+#, fuzzy
+msgid "Invalid ifid parameter"
+msgstr "Paramètre de contrôle non valide"
 
 msgid "Invalid login credentials."
 msgstr "Identifiants de connexion non valides."
@@ -37620,6 +37688,10 @@ msgstr "N'est pas connecté."
 
 msgid "Is not using persistent connections."
 msgstr "N'utilise pas de connexions persistantes."
+
+#, fuzzy
+msgid "Is show more"
+msgstr "afficher plus"
 
 msgid "Is unlicensed"
 msgstr "n'est pas titulaire d'une licence"
@@ -38504,6 +38576,13 @@ msgid "LISTEN"
 msgstr "ÉCOUTEZ"
 
 #, fuzzy
+msgid "LLDP cache"
+msgstr "En cachette"
+
+msgid "LLDP neighbours"
+msgstr ""
+
+#, fuzzy
 msgid "LPAR statistics for AIX"
 msgstr "Statistiques RMON"
 
@@ -38834,6 +38913,10 @@ msgid "Latencies (99th percentile)"
 msgstr "Temps de latence (99e percentile)"
 
 msgid "Latency"
+msgstr "Latence"
+
+#, fuzzy
+msgid "Latency (ms)"
 msgstr "Latence"
 
 msgid "Latency of GetItem requests"
@@ -41833,9 +41916,6 @@ msgstr "Gérer et créer des paquets d'extension Checkmk (MKP)."
 msgid "Manage background jobs"
 msgstr "Gérer les travaux en arrière-plan"
 
-msgid "Manage configuration read only mode"
-msgstr "Gestion de la configuration en mode lecture seule"
-
 msgid "Manage custom attributes"
 msgstr "Gérer les attributs personnalisés"
 
@@ -43575,10 +43655,6 @@ msgid "Metric levels"
 msgstr "Niveaux métriques"
 
 #, fuzzy
-msgid "Metric name"
-msgstr "Étiquette métrique"
-
-#, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Nom d'hôte (correspondance exacte)"
 
@@ -43949,6 +44025,10 @@ msgstr "Prérequis manquant"
 
 #, fuzzy, python-format
 msgid "Missing request variable '%s'"
+msgstr "Variable manquante siteid"
+
+#, fuzzy
+msgid "Missing request variable 'widget_id'"
 msgstr "Variable manquante siteid"
 
 msgid "Missing required \"Host name\" selection."
@@ -45580,6 +45660,12 @@ msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate : trouver les hôtes <b>non</b> ayant ce paquet"
 
 #, fuzzy
+msgid "Negate: make rule apply for all but the above entries"
+msgstr ""
+"<b>Négation : </b> faire en sorte que la règle s'applique pour <b>toutes les "
+"entrées sauf</b> les entrées ci-dessus"
+
+#, fuzzy
 msgid "Negative age tolerance"
 msgstr "Une valeur vide n'est pas autorisée ici"
 
@@ -45608,6 +45694,10 @@ msgid "Neighbor address"
 msgstr "Adresse du réseau"
 
 #, fuzzy
+msgid "Neighbor description"
+msgstr "Afficher la description"
+
+#, fuzzy
 msgid "Neighbor name"
 msgstr "Nom du capteur"
 
@@ -45621,6 +45711,10 @@ msgstr "Cliquez ici pour plus de détails."
 #, fuzzy
 msgid "Neighbor port"
 msgstr "Message pour les alertes d'hôtes"
+
+#, fuzzy
+msgid "Neighbor port description"
+msgstr "La description du port"
 
 msgid "Neither"
 msgstr "Ni l'un ni l'autre"
@@ -46151,10 +46245,6 @@ msgstr ""
 msgid "No agent labels present."
 msgstr "Aucune étiquette d'agent n'est présente."
 
-#, fuzzy
-msgid "No aggregation"
-msgstr "agrégation"
-
 msgid "No appropriate request ID"
 msgstr ""
 
@@ -46220,6 +46310,9 @@ msgstr "Aucun groupe de contact n'a été attribué."
 msgid "No custom attributes are defined yet."
 msgstr "Aucun attribut personnalisé n'est encore défini."
 
+msgid "No dashboard found for the given dashboard name and/or dashboard owner"
+msgstr ""
+
 msgid "No data"
 msgstr "Pas de données"
 
@@ -46250,6 +46343,10 @@ msgstr "Aucune source de données définie."
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
+msgstr "Définir les valeurs par défaut pour toutes les sections"
+
+#, fuzzy
+msgid "No default values can be set."
 msgstr "Définir les valeurs par défaut pour toutes les sections"
 
 #, fuzzy
@@ -48508,6 +48605,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Ajouter une connexion"
+
+#, fuzzy
+msgid "OAuth2 connections"
 msgstr "Ajouter une connexion"
 
 msgid "OEM data interpretation"
@@ -52960,6 +53061,10 @@ msgid "Please add at least one service group."
 msgstr "Veuillez ajouter au moins un nœud enfant."
 
 #, fuzzy
+msgid "Please add at least one service item."
+msgstr "Veuillez ajouter au moins un nœud enfant."
+
+#, fuzzy
 msgid "Please add at least one service label."
 msgstr "Veuillez ajouter au moins un nœud enfant."
 
@@ -54091,12 +54196,6 @@ msgid "Predefined condition"
 msgstr "Condition prédéfinie"
 
 #, python-format
-msgid "Predefined condition '%s' does not exist or using not permitted"
-msgstr ""
-"La condition prédéfinie '%s' n'existe pas ou son utilisation n'est pas "
-"autorisée"
-
-#, python-format
 msgid "Predefined condition: '%s' does not exist or using not permitted"
 msgstr ""
 "La condition prédéfinie '%s' n'existe pas ou son utilisation n'est pas "
@@ -54530,6 +54629,10 @@ msgstr "Processeur Capacité max. Capacité"
 
 msgid "Product"
 msgstr "Produit"
+
+#, fuzzy
+msgid "Product Telemetry"
+msgstr "élément de rapport"
 
 msgid "Profile"
 msgstr "Profil"
@@ -55463,9 +55566,6 @@ msgstr "Raritan EMX Rack : Température"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU : Phases d'entrée"
 
-msgid "Rate"
-msgstr ""
-
 #, fuzzy
 msgid "Rate computation"
 msgstr "Calcul de la tendance"
@@ -55532,6 +55632,14 @@ msgstr "Opérations d'E/S de lecture par seconde"
 
 msgid "Read Latency"
 msgstr "Latence de lecture"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations (experimental)"
+msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations."
+msgstr "Ajouter une nouvelle configuration utilisateur"
 
 msgid "Read access to all hosts and folders"
 msgstr "Accès en lecture à tous les hôtes et dossiers"
@@ -55693,6 +55801,14 @@ msgstr "Temps d'attente minimum pour la lecture"
 
 msgid "Read wait time"
 msgstr "Temps d'attente de lecture"
+
+#, fuzzy
+msgid "Read-only mode"
+msgstr "Mode lecture seule"
+
+#, fuzzy
+msgid "Read-only mode for configuration"
+msgstr "Configuration à distance"
 
 msgid "Reading connections"
 msgstr "Liens de lecture"
@@ -56372,6 +56488,10 @@ msgid "Relay ID"
 msgstr ""
 
 #, fuzzy
+msgid "Relay alias"
+msgstr "Retard :"
+
+#, fuzzy
 msgid "Relay configuration"
 msgstr "configuration"
 
@@ -56380,16 +56500,12 @@ msgid "Relay configurations"
 msgstr "configuration"
 
 #, fuzzy
-msgid "Relay display name"
+msgid "Relay display alias"
 msgstr "Nom d'affichage"
 
 #, fuzzy
 msgid "Relay log size"
 msgstr "Taille du journal du relais"
-
-#, fuzzy
-msgid "Relay name"
-msgstr "Renommer"
 
 #, fuzzy
 msgid "Relay properties"
@@ -57542,16 +57658,8 @@ msgid "Resource Name"
 msgstr "Nom de la ressource"
 
 #, fuzzy
-msgid "Resource attribute"
-msgstr "Attribut du rôle"
-
-#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Calcul du nom d'hôte"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Attribut du rôle"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -58945,6 +59053,18 @@ msgstr "Utilisation du SNAT"
 msgid "SNAT Usage (Deprecated)"
 msgstr "Stockage Azure"
 
+#, fuzzy
+msgid "SNAT port utilization"
+msgstr "Utilisation des nœuds"
+
+#, fuzzy
+msgid "SNAT port utilization %"
+msgstr "Utilisation des nœuds"
+
+#, fuzzy
+msgid "SNAT port utilization levels"
+msgstr "Utilisation du CPU"
+
 msgid "SNAT usage"
 msgstr "Utilisation du SNAT"
 
@@ -59265,7 +59385,8 @@ msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
 "Vérification sauvegardée de la configuration de l'hôte '%s' avec %d services"
 
-msgid "Saved read only settings"
+#, fuzzy
+msgid "Saved read-only settings"
 msgstr "Sauvegarde des paramètres en lecture seule"
 
 msgid "Saved space"
@@ -59385,14 +59506,6 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
-
-#, fuzzy
-msgid "Scope attribute"
-msgstr "Attribut du rôle"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Attribut du rôle"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -60071,6 +60184,10 @@ msgid ""
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
+
+#, fuzzy
+msgid "Select the authority for the OAuth2 connection."
+msgstr "Ajouter une connexion"
 
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
@@ -61063,6 +61180,10 @@ msgstr "Âge de l'état de service"
 msgid "Service state for Differing Service States"
 msgstr "Pourcentage de l'état de service"
 
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Traduction de l'état du service"
+
 msgid "Service state if no map rule matches"
 msgstr "État du service si aucune règle de carte ne correspond"
 
@@ -61631,6 +61752,17 @@ msgid ""
 msgstr ""
 "Définit l'adresse de l'hôte du serveur LDAP. Il peut s'agir d'une adresse IP "
 "ou d'un nom d'hôte résoluble."
+
+msgid ""
+"Set the host names or IP addresses of the site. The entries will be added as "
+"additional subject alternative names (SANs) to the site certificate, "
+"alongside the default SANs. Configuring this allows proper server name "
+"identification when connecting to the site via TLS, for example for "
+"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
+"Changing this setting will trigger re-issuance of the site certificate by "
+"the site CA. In distributed setups, configure SANs separately for each site "
+"in the distributed monitoring configuration."
+msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Définir le niveau de journalisation de l'agent Windows"
@@ -62682,6 +62814,10 @@ msgid "Signing agents' client certificates"
 msgstr "Certificats SSL de Citrix Netscaler"
 
 #, fuzzy
+msgid "Signing relay client certificates"
+msgstr "Certificats SSL de Citrix Netscaler"
+
+#, fuzzy
 msgid "Signing the site certificate"
 msgstr "Vérifier le certificat"
 
@@ -62924,6 +63060,10 @@ msgstr "Sauvegarde du site"
 
 msgid "Site backup targets"
 msgstr "Cibles de sauvegarde du site"
+
+#, fuzzy
+msgid "Site certificate subject alternative names"
+msgstr "Mauvais certificat's subject alt name"
 
 msgid "Site certificate validity"
 msgstr "Validité du certificat de site"
@@ -67213,6 +67353,14 @@ msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Durée totale : "
 
 #, fuzzy
+msgid "Telemetry is disabled"
+msgstr "La configuration est désactivée."
+
+#, fuzzy
+msgid "Telemetry is enabled"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -67835,6 +67983,13 @@ msgstr ""
 "L'URL du serveur Checkmk doit être le FQDN (voir l'aide en ligne pour plus "
 "de détails)."
 
+msgid "The Client ID (Application ID) of your registered application."
+msgstr ""
+
+#, fuzzy
+msgid "The Client secret of your registered application."
+msgstr "État en cas d'absence de réplication du système"
+
 msgid ""
 "The Conda environment file specifies all dependencies that will be installed "
 "in the environment."
@@ -68287,6 +68442,9 @@ msgid ""
 msgstr ""
 "Le port TCP sur lequel le serveur SMTP est en train d'écouter. La valeur par "
 "défaut est <tt>25</tt>."
+
+msgid "The Tenant ID of your Azure AD instance."
+msgstr ""
 
 msgid ""
 "The URI of the request. This should start with '/' and not include the "
@@ -68999,13 +69157,6 @@ msgid ""
 msgstr ""
 "Le mot de passe configuré doit être supprimé ou vous n'êtes pas autorisé à "
 "utiliser ce mot de passe. Veuillez en choisir un autre."
-
-msgid ""
-"The configured predefined condition has either be removed or you are not "
-"permitted to use it. Please choose another one."
-msgstr ""
-"La condition prédéfinie configurée doit être supprimée ou vous n'êtes pas "
-"autorisé à l'utiliser. Veuillez en choisir une autre."
 
 msgid "The configured site is not known to this site."
 msgstr "Le site configuré n'est pas connu de ce site."
@@ -69818,6 +69969,9 @@ msgid ""
 msgstr ""
 "La valeur donnée n'est pas autorisée. Vous pouvez uniquement configurer des "
 "URL relatives comme <tt>dashboard.py?name=my_dashboard</tt>."
+
+msgid "The given widget id does not match any of this dashboard's widgets"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -71437,6 +71591,10 @@ msgid ""
 "This is also true for searching in a regular expression."
 msgstr ""
 
+#, fuzzy
+msgid "The provided token is not valid for the requested page."
+msgstr "Le fichier ne ressemble pas à un fichier clé valide."
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Le système ESX interrogé (vCenter / Host)"
 
@@ -71744,6 +71902,10 @@ msgid ""
 "Credentials and other agent-specific data can be edited here"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The rule specification %r does not exist."
+msgstr "Le jeu de règles \"%s\" n'existe pas."
+
 msgid "The rule you are trying to edit does not exist."
 msgstr "La règle que vous essayez de modifier n'existe pas."
 
@@ -71770,6 +71932,10 @@ msgstr ""
 
 #, python-format
 msgid "The ruleset \"%s\" does not exist."
+msgstr "Le jeu de règles \"%s\" n'existe pas."
+
+#, fuzzy, python-format
+msgid "The ruleset \"%s\" uses legacy valuespecs."
 msgstr "Le jeu de règles \"%s\" n'existe pas."
 
 msgid ""
@@ -75482,14 +75648,6 @@ msgstr ""
 "disques durs attachés. Vous pouvez télécharger cet outil à partir de <a "
 "href='http://www.lsi.com/'>LSI</a>."
 
-msgid ""
-"This predefined condition can not be used with the current ruleset, because "
-"it defines the same label conditions as set by this rule."
-msgstr ""
-"Cette condition prédéfinie ne peut pas être utilisée avec le jeu de règles "
-"actuel, car elle définit les mêmes conditions d'étiquette que celles "
-"définies par cette règle."
-
 msgid "This problem has been acknowledged"
 msgstr "Ce problème a été reconnu"
 
@@ -76559,6 +76717,38 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall SNAT port "
+"utilization monitoring"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall latency "
+"monitoring"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall throughput "
+"monitoring"
 msgstr ""
 "Cette règle vous permet de configurer les niveaux de bloat pour un "
 "tablespace et un index de bases de données."
@@ -78010,6 +78200,10 @@ msgid "Throughput (FC)"
 msgstr "Débit"
 
 msgid "Throughput levels"
+msgstr "Niveaux de débit"
+
+#, fuzzy
+msgid "Throughput levels (/sec)"
 msgstr "Niveaux de débit"
 
 #, fuzzy
@@ -82339,21 +82533,6 @@ msgstr "Impossible de traiter la demande"
 
 #, fuzzy, python-format
 msgid ""
-"Unable to read current conditions of this rule. Falling back to default "
-"values. When saving this rule now, your previous settings will be "
-"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
-"issue may be caused by an inconsistent configuration, e.g. when rules refer "
-"to tag groups or tags that do not exist anymore."
-msgstr ""
-"Impossible de lire les conditions actuelles de cette règle. Retour aux "
-"valeurs par défaut. Si vous enregistrez cette règle maintenant, vos "
-"paramètres précédents seront écrasés. Le problème était : %s, Conditions "
-"précédentes : <pre>%s</pre>Un tel problème peut être causé par une "
-"configuration incohérente, par exemple lorsque les règles font référence à "
-"des groupes de balises ou à des balises qui n'existent plus."
-
-#, fuzzy, python-format
-msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
 "When saving this rule now, your previous settings will be overwritten. The "
 "problem was: %s."
@@ -82648,6 +82827,10 @@ msgstr "Date inconnue"
 
 msgid "Unknown entities"
 msgstr "Entités inconnues"
+
+#, fuzzy, python-format
+msgid "Unknown form type %s"
+msgstr "Type de métrique inconnu %s"
 
 #, python-format
 msgid "Unknown group: %s"
@@ -89442,6 +89625,10 @@ msgstr "Vous n'êtes pas autorisé à activer les changements de configuration."
 msgid "You are not permitted to edit this global setting."
 msgstr "Vous n'êtes pas autorisé à modifier ce paramètre global."
 
+#, fuzzy
+msgid "You are not permitted to edit this rule."
+msgstr "Vous n'êtes pas autorisé à accéder à ce jeu de règles."
+
 msgid "You are not permitted to perform this action."
 msgstr "Vous n'êtes pas autorisé à effectuer cette action."
 
@@ -89690,10 +89877,6 @@ msgstr ""
 "Vous pouvez copier et utiliser la structure de données ci-dessous dans vos "
 "demandes d'API REST."
 
-#, python-format
-msgid "You can create predefined conditions <a href=\"%s\">here</a>."
-msgstr "Vous pouvez créer des conditions prédéfinies <a href=\"%s\">ici</a>."
-
 msgid ""
 "You can customize the list of icon categories to be able to assign your <a "
 "href=\"wato.py?mode=icons\">custom icons</a> to these categories. They will "
@@ -89770,16 +89953,6 @@ msgstr ""
 
 msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
-
-msgid ""
-"You can either specify individual conditions for this rule, or use a set of "
-"predefined conditions, which may be handy if you have to configure the same "
-"conditions in different rulesets."
-msgstr ""
-"Vous pouvez soit spécifier des conditions individuelles pour cette règle, "
-"soit utiliser un ensemble de conditions prédéfinies, ce qui peut être "
-"pratique si vous devez configurer les mêmes conditions dans différents "
-"ensembles de règles."
 
 msgid ""
 "You can enter a text here that will be displayed in the element when viewing "
@@ -91586,6 +91759,10 @@ msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal et mises à jour de sécurité (Linux)"
 
 #, fuzzy, python-format
+msgid "[%s] - OAuth2 connection"
+msgstr "Ajouter une connexion"
+
+#, fuzzy, python-format
 msgid "[%s] - Quick setup"
 msgstr "Installation rapide"
 
@@ -93358,6 +93535,10 @@ msgid_plural "rules"
 msgstr[0] "règle"
 msgstr[1] "règles"
 
+#, fuzzy, python-format
+msgid "rule %s"
+msgstr "Modifier la règle %s"
+
 msgid "rule matches"
 msgid_plural "rules are matching"
 msgstr[0] "Cette règle correspond à"
@@ -93683,6 +93864,9 @@ msgstr "utiliser un alias"
 msgid "use port name"
 msgstr "utiliser le nom du port"
 
+msgid "use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
+msgstr ""
+
 msgid "used"
 msgstr "utilisé"
 
@@ -93914,6 +94098,11 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 msgstr[1] ""
 
+#, fuzzy
+msgid "Error retrieving AI service information. Please try again later."
+msgstr ""
+"Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
+
 msgid "Checkmk AI feature documentation & privacy policy"
 msgstr ""
 
@@ -93949,6 +94138,11 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Non trouvé"
+
+#, fuzzy
+msgid "Error retrieving available AI actions. Please try again later."
+msgstr ""
+"Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
 
 msgid "The following feature uses a Large Language Model (LLM)."
 msgstr ""
@@ -94050,8 +94244,12 @@ msgid "Remove row"
 msgstr "Supprimé : %s"
 
 #, fuzzy
-msgid "Dashboard filter"
-msgstr "Élément du tableau de bord"
+msgid "Filter configuration"
+msgstr "Configuration du filtre Iptables"
+
+#, fuzzy
+msgid "Runtime filters"
+msgstr "Supprimer le filtre"
 
 #, fuzzy
 msgid "Close filter configuration"
@@ -94061,46 +94259,50 @@ msgstr "Configuration du filtre Iptables"
 msgid "Clear search"
 msgstr "Recherche de règles"
 
-msgid "Filters included by dashboard owner"
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values are temporary and can be overridden by widget filters."
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a runtime filter"
-msgstr "Vous ne pouvez pas remplacer le groupe de balises intégré \"%s\" ;."
+msgid "Set filters for all widgets."
+msgstr "Définir les valeurs par défaut pour toutes les sections"
 
 #, fuzzy
-msgid "Host filter"
-msgstr "Fichiers journaux des hôtes"
+msgid "Values can be overriden by runtime or widget filters."
+msgstr "Vous ne pouvez pas remplacer le groupe de balises intégré \"%s\" ;."
+
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
+
+msgid "Values are temporary and can be overriden by widget filters."
+msgstr ""
 
 #, fuzzy
 msgid "Select from list"
 msgstr "Sélectionner des fichiers individuels dans la liste"
 
 #, fuzzy
-msgid "Service filter"
-msgstr "Filtres de service"
+msgid "%{n} filters"
+msgstr "Filtres appliqués :"
 
 #, fuzzy
-msgid "Reset to saved filters"
-msgstr "Supprimer le filtre"
+msgid "Applied filters"
+msgstr "Filtres appliqués :"
 
 #, fuzzy
-msgid "Success! Your new dashboard filters have been saved"
-msgstr "Vos modifications ont été enregistrées."
+msgid "No %{n} dashboard filters applied"
+msgstr "Hôte Ntop"
 
-msgid "Runtime filters are required to load data."
+msgid ""
+"%{n} filters selected on dashboard level appear and apply to all widgets. "
+"You can override the values by setting widget specific or runtime filters. "
 msgstr ""
 
-msgid "Values apply across all widgets."
-msgstr ""
-
 #, fuzzy
-msgid "Apply to dashboard"
-msgstr "Lien vers le tableau de bord"
-
-#, fuzzy
-msgid "Edit required runtime filters"
-msgstr "Filtres contextuels requis"
+msgid "Edit filter configuration"
+msgstr "Configuration de l'hôte"
 
 #, fuzzy
 msgid "Override dashboard filters"
@@ -94529,6 +94731,10 @@ msgid "Overriden"
 msgstr "Vue d'ensemble"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Élément du tableau de bord"
+
+#, fuzzy
 msgid "Runtime filter"
 msgstr "Supprimer le filtre"
 
@@ -94764,6 +94970,21 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Sélection des dossiers"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Visualisation"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Sélectionnez le type d'élément de contenu"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
 msgid "Link content to"
 msgstr "Lien du titre"
 
@@ -94800,10 +95021,6 @@ msgid "Show widget background"
 msgstr "Afficher le titre sans arrière-plan"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Sélection des dossiers"
-
-#, fuzzy
 msgid "Alert & Notification"
 msgstr "dernière notification"
 
@@ -94824,21 +95041,6 @@ msgstr "Règle de notification"
 
 msgid "Percentage of service problems"
 msgstr "Pourcentage de problèmes de service"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Ajouter un filtre"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Visualisation"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Sélectionnez le type d'élément de contenu"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
 
 #, fuzzy
 msgid "Host selection"
@@ -94883,6 +95085,10 @@ msgstr "Stocker les notifications pour l'analyse des règles"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Options supplémentaires"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Ajouter un filtre"
 
 #, fuzzy
 msgid "Save widget"
@@ -94941,10 +95147,6 @@ msgstr "Cloner un graphique personnalisé"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Cloner un graphique personnalisé"
-
-#, fuzzy
-msgid "Widget visualization"
-msgstr "Visualisation de la BI"
 
 #, fuzzy
 msgid "Clone & review dashboard filters"
@@ -95079,6 +95281,10 @@ msgid "Event selection"
 msgstr "Sélection des dossiers"
 
 #, fuzzy
+msgid "Available visualization type"
+msgstr "Options disponibles"
+
+#, fuzzy
 msgid "Show background in status color and label"
 msgstr "Fond d'écran en couleur d'état et étiquette"
 
@@ -95143,6 +95349,15 @@ msgstr "Options graphiques"
 #, fuzzy
 msgid "Service metric"
 msgstr "Mesures du service"
+
+#, fuzzy
+msgid "Filter service metric by"
+msgstr "Mesures du service"
+
+msgid ""
+"Use these fields to narrow down the list of available service metrics.<br /"
+">Click the Host name or Service label to clear the filter."
+msgstr ""
 
 #, fuzzy
 msgid "Must select an option"
@@ -95262,6 +95477,26 @@ msgid "Copy existing view: %{viewName}"
 msgstr "Copier la vue existante"
 
 #, fuzzy
+msgid "Select operator"
+msgstr "Connexions rejetées"
+
+#, fuzzy
+msgid "Select label"
+msgstr "Sélectionnez le fichier"
+
+#, fuzzy
+msgid "Remove item"
+msgstr "Supprimer le filtre"
+
+#, fuzzy
+msgid "Remove group"
+msgstr "Supprimé : %s"
+
+#, fuzzy
+msgid "and not"
+msgstr "n'est pas"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Nouveau mot de passe"
 
@@ -95281,12 +95516,20 @@ msgid "Preview of matches:"
 msgstr "Cette règle correspond à"
 
 #, fuzzy
-msgid "Auto"
-msgstr "Automatique"
+msgid "Metric name"
+msgstr "Étiquette métrique"
 
 #, fuzzy
-msgid "Strict"
-msgstr "Métrique"
+msgid "Resource attributes"
+msgstr "Attribut du rôle"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Attribut du rôle"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Modifier les attributs"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -95294,6 +95537,14 @@ msgstr "Latence"
 
 msgid "Apply percentile (histograms)"
 msgstr ""
+
+#, fuzzy
+msgid "Auto"
+msgstr "Automatique"
+
+#, fuzzy
+msgid "Strict"
+msgstr "Métrique"
 
 msgid "Area"
 msgstr "Zone"
@@ -95349,6 +95600,28 @@ msgstr "Veuillez sélectionner au moins un élément"
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "Veuillez sélectionner au moins un élément"
+
+#, fuzzy
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Instances Oracle"
+
+#, fuzzy
+msgid "Edit rule: Metric backend (Custom query)"
+msgstr "Instances Oracle"
+
+#, fuzzy
+msgid "Validation error"
+msgstr "Erreur de configuration"
+
+#, fuzzy
+msgid "Fatal error"
+msgstr "Erreur interne"
+
+msgid "When you save this rule a new rule will be created."
+msgstr ""
+
+msgid "Dismiss"
+msgstr ""
 
 #, fuzzy
 msgid "Graph metrics with all zero values"
@@ -95766,26 +96039,6 @@ msgid "Define OAuth2 parameter"
 msgstr "Paramètres du modèle"
 
 #, fuzzy
-msgid "Description:"
-msgstr "Description"
-
-#, fuzzy
-msgid "Authority:"
-msgstr "Authorité"
-
-#, fuzzy
-msgid "Tenant ID:"
-msgstr "ID du locataire"
-
-#, fuzzy
-msgid "Client ID:"
-msgstr "ID du client"
-
-#, fuzzy
-msgid "Client secret:"
-msgstr "Secret du client"
-
-#, fuzzy
 msgid "Start authorization"
 msgstr "Autorisation de base"
 
@@ -95834,11 +96087,11 @@ msgid "Name the relay"
 msgstr "Nom du mandataire"
 
 #, fuzzy
-msgid "Provide a display name for your Relay."
+msgid "Provide a display alias for your Relay."
 msgstr "Nom d'affichage alternatif pour les services"
 
 msgid ""
-"The name you enter here will be automatically inserted into the terminal "
+"The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
 
@@ -96375,6 +96628,164 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Aggregation for histograms"
+#~ msgstr "Groupes d'agrégation"
+
+#, fuzzy
+#~ msgid "Aggregation for sums"
+#~ msgstr "Groupes d'agrégation"
+
+#, fuzzy
+#~ msgid "Data point attribute"
+#~ msgstr "Modifier les attributs"
+
+#, fuzzy, python-format
+#~ msgid "Invalid graph content: %s"
+#~ msgstr "Type de graphique non valide : %s"
+
+#, fuzzy
+#~ msgid "No aggregation"
+#~ msgstr "agrégation"
+
+#, fuzzy
+#~ msgid "Resource attribute"
+#~ msgstr "Attribut du rôle"
+
+#, fuzzy
+#~ msgid "Scope attribute"
+#~ msgstr "Attribut du rôle"
+
+#, fuzzy
+#~ msgid "Host filter"
+#~ msgstr "Fichiers journaux des hôtes"
+
+#, fuzzy
+#~ msgid "Service filter"
+#~ msgstr "Filtres de service"
+
+#, fuzzy
+#~ msgid "Reset to saved filters"
+#~ msgstr "Supprimer le filtre"
+
+#, fuzzy
+#~ msgid "Success! Your new dashboard filters have been saved"
+#~ msgstr "Vos modifications ont été enregistrées."
+
+#, fuzzy
+#~ msgid "Apply to dashboard"
+#~ msgstr "Lien vers le tableau de bord"
+
+#, fuzzy
+#~ msgid "Edit required runtime filters"
+#~ msgstr "Filtres contextuels requis"
+
+#, fuzzy
+#~ msgid "Add OAuth2 connection"
+#~ msgstr "Ajouter une connexion LDAP"
+
+#, fuzzy
+#~ msgid "Broadcast"
+#~ msgstr "diffuser"
+
+#, fuzzy
+#~ msgid "Prefix length"
+#~ msgstr "Texte du préfixe"
+
+#, fuzzy
+#~ msgid "Scope ID"
+#~ msgstr "ID du nœud"
+
+#, fuzzy
+#~ msgid "Description:"
+#~ msgstr "Description"
+
+#, fuzzy
+#~ msgid "Authority:"
+#~ msgstr "Authorité"
+
+#, fuzzy
+#~ msgid "Tenant ID:"
+#~ msgstr "ID du locataire"
+
+#, fuzzy
+#~ msgid "Client ID:"
+#~ msgstr "ID du client"
+
+#, fuzzy
+#~ msgid "Client secret:"
+#~ msgstr "Secret du client"
+
+#~ msgid "Manage configuration read only mode"
+#~ msgstr "Gestion de la configuration en mode lecture seule"
+
+#, fuzzy
+#~ msgid "Widget visualization"
+#~ msgstr "Visualisation de la BI"
+
+#, fuzzy
+#~ msgid "Explicit condition"
+#~ msgstr "Conditions explicites"
+
+#, fuzzy, python-format
+#~ msgid "Invalid figure content: %s"
+#~ msgstr "Connexion utilisateur non valide : %s"
+
+#, python-format
+#~ msgid "Predefined condition '%s' does not exist or using not permitted"
+#~ msgstr ""
+#~ "La condition prédéfinie '%s' n'existe pas ou son utilisation n'est pas "
+#~ "autorisée"
+
+#, fuzzy
+#~ msgid "Relay name"
+#~ msgstr "Renommer"
+
+#~ msgid ""
+#~ "The configured predefined condition has either be removed or you are not "
+#~ "permitted to use it. Please choose another one."
+#~ msgstr ""
+#~ "La condition prédéfinie configurée doit être supprimée ou vous n'êtes pas "
+#~ "autorisé à l'utiliser. Veuillez en choisir une autre."
+
+#~ msgid ""
+#~ "This predefined condition can not be used with the current ruleset, "
+#~ "because it defines the same label conditions as set by this rule."
+#~ msgstr ""
+#~ "Cette condition prédéfinie ne peut pas être utilisée avec le jeu de "
+#~ "règles actuel, car elle définit les mêmes conditions d'étiquette que "
+#~ "celles définies par cette règle."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Unable to read current conditions of this rule. Falling back to default "
+#~ "values. When saving this rule now, your previous settings will be "
+#~ "overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such "
+#~ "an issue may be caused by an inconsistent configuration, e.g. when rules "
+#~ "refer to tag groups or tags that do not exist anymore."
+#~ msgstr ""
+#~ "Impossible de lire les conditions actuelles de cette règle. Retour aux "
+#~ "valeurs par défaut. Si vous enregistrez cette règle maintenant, vos "
+#~ "paramètres précédents seront écrasés. Le problème était : %s, Conditions "
+#~ "précédentes : <pre>%s</pre>Un tel problème peut être causé par une "
+#~ "configuration incohérente, par exemple lorsque les règles font référence "
+#~ "à des groupes de balises ou à des balises qui n'existent plus."
+
+#, python-format
+#~ msgid "You can create predefined conditions <a href=\"%s\">here</a>."
+#~ msgstr ""
+#~ "Vous pouvez créer des conditions prédéfinies <a href=\"%s\">ici</a>."
+
+#~ msgid ""
+#~ "You can either specify individual conditions for this rule, or use a set "
+#~ "of predefined conditions, which may be handy if you have to configure the "
+#~ "same conditions in different rulesets."
+#~ msgstr ""
+#~ "Vous pouvez soit spécifier des conditions individuelles pour cette règle, "
+#~ "soit utiliser un ensemble de conditions prédéfinies, ce qui peut être "
+#~ "pratique si vous devez configurer les mêmes conditions dans différents "
+#~ "ensembles de règles."
+
+#, fuzzy
 #~ msgid "Add new field"
 #~ msgstr "Ajouter une nouvelle heure"
 
@@ -96432,10 +96843,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Select at least one column."
 #~ msgstr "Veuillez sélectionner au moins un élément"
-
-#, fuzzy
-#~ msgid "Site certificate subject alternative names"
-#~ msgstr "Mauvais certificat's subject alt name"
 
 #, fuzzy
 #~ msgid ""
@@ -96541,10 +96948,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service state for Stopped VMs"
 #~ msgstr "Type d'état de service"
-
-#, fuzzy
-#~ msgid "Continue with AI?"
-#~ msgstr "Continuer la recherche"
 
 #, fuzzy
 #~ msgid "Do not ask again"
@@ -97618,10 +98021,6 @@ msgstr ""
 
 #~ msgid "Transformation on selected metric"
 #~ msgstr "Transformation sur la métrique sélectionnée"
-
-#, python-format
-#~ msgid "Unknown metric type %s"
-#~ msgstr "Type de métrique inconnu %s"
 
 #~ msgid "Update transform"
 #~ msgstr "Mise à jour de la transformation"

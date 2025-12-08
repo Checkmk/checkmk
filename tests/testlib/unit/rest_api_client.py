@@ -442,7 +442,7 @@ class RestApiClient:
 class LicensingClient(RestApiClient):
     domain: DomainType = "licensing"
 
-    def call_online_verification(self, expect_ok: bool = False) -> Response:
+    def call_online_verification(self, expect_ok: bool = True) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/verify/invoke",
@@ -450,7 +450,7 @@ class LicensingClient(RestApiClient):
         )
 
     def call_configure_licensing_settings(
-        self, settings: Mapping[str, str | Mapping[str, str]], expect_ok: bool = False
+        self, settings: Mapping[str, str | Mapping[str, str]], expect_ok: bool = True
     ) -> Response:
         body = {"settings": settings} if settings else {}
         return self.request(
@@ -460,7 +460,7 @@ class LicensingClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def call_download_license_request(self, expect_ok: bool = False) -> Response:
+    def call_download_license_request(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url="/domain-types/license_request/actions/download/invoke",
@@ -468,7 +468,7 @@ class LicensingClient(RestApiClient):
         )
 
     def call_verify_offline(
-        self, verification_response: dict[str, Any], expect_ok: bool = False
+        self, verification_response: dict[str, Any], expect_ok: bool = True
     ) -> Response:
         return self.request(
             "post",

@@ -39,9 +39,11 @@ searchUtils.onResetSearch(() => {
 searchUtils.input?.onSetFocus(setFocus)
 function setFocus() {
   if (searchInput.value) {
-    searchInput.value.focus()
-    searchInput.value.selectionStart = searchInput.value.selectionEnd =
-      searchUtils.query.input.value.length
+    if (document.activeElement !== searchInput.value) {
+      searchInput.value.focus()
+      searchInput.value.selectionStart = searchInput.value.selectionEnd =
+        searchUtils.query.input.value.length
+    }
   }
 }
 
@@ -98,7 +100,7 @@ function onInputEnter() {
           topic: 'Host/service search',
           provider: 'monitoring',
           context: '',
-          icon: 'topic-search'
+          icon: 'main-search'
         })
       )
       ;(top!.frames as CmkWindow).main.location.href = url
@@ -187,7 +189,8 @@ const getSearchInputPlaceholder = computed(() => {
   flex-direction: column;
   justify-content: flex-start;
   padding: 0 var(--spacing-double);
-  border-bottom: 1px solid var(--ux-theme-3);
+  border-top: 1px solid var(--default-nav-border-color);
+  border-bottom: 1px solid var(--default-nav-border-color);
 }
 
 /* stylelint-disable checkmk/vue-bem-naming-convention */
@@ -322,7 +325,7 @@ const getSearchInputPlaceholder = computed(() => {
 }
 
 .unified-search-info-item {
-  color: var(--help-text-font-color);
+  color: var(--dropdown-chevron-indicator-color);
   opacity: 0.5;
   position: absolute;
   right: 0;

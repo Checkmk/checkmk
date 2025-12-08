@@ -65,6 +65,7 @@ svglib  # license csv pdf generating
 telnetlib3  # used by Windows Agent tests
 time-machine # used by various unit tests. Substitute for freezegun
 twine # used to upload packages to internal PyPi mirror
+types-docker # used for type checking
 types-docutils  # used for type checking
 types-jsonschema  # used for type checking
 types-lxml  # used for type checking

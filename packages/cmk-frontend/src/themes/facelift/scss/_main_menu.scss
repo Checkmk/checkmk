@@ -231,6 +231,7 @@
       div.navigation_bar {
         display: flex;
         height: $mainmenu-navbar-height;
+        border-top: 1px solid $headline-color;
         border-bottom: 1px solid $headline-color;
 
         div.search_bar {

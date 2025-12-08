@@ -17,7 +17,7 @@ The hierarchy here is:
 import abc
 import json
 from collections.abc import Iterator
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 
 import cmk.ccc.version as cmk_version
 from cmk.gui.breadcrumb import Breadcrumb
@@ -199,6 +199,19 @@ def confirmed_form_submit_options(
             "icon": "confirm_icon" + (" confirm_warning" if warning else " confirm_question"),
         },
     }
+
+
+@dataclass()
+class PageMenuData: ...
+
+
+@dataclass
+class PageMenuVue(ABCPageMenuItem):
+    """A link opening rendering a VUE component"""
+
+    component_name: str
+    data: PageMenuData
+    class_: str | None = None
 
 
 @dataclass
@@ -750,12 +763,26 @@ class SuggestedEntryRenderer:
             self._show_link_item(entry, entry.item)
         elif isinstance(entry.item, PageMenuPopup):
             self._show_popup_link_item(entry, entry.item)
+        elif isinstance(entry.item, PageMenuVue):
+            self._show_vue_link_item(entry, entry.item)
         else:
             raise NotImplementedError("Suggestion rendering not implemented for %s" % entry.item)
 
+    def _show_vue_link_item(self, entry: PageMenuEntry, item: PageMenuVue) -> None:
+        self._show_link(
+            entry,
+            url="javascript:void(0)",
+            class_=item.class_ if item.class_ else None,
+            onclick=f"document.dispatchEvent(new CustomEvent('{item.component_name}'));",
+            target=None,
+        )
+
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         self._show_link(
-            entry, url=item.link.url, onclick=item.link.onclick, target=item.link.target
+            entry,
+            url=item.link.url,
+            onclick=item.link.onclick,
+            target=item.link.target,
         )
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
@@ -772,11 +799,13 @@ class SuggestedEntryRenderer:
         url: str | None,
         onclick: str | None,
         target: str | None,
+        class_: str | None = None,
     ) -> None:
         html.open_a(
             href=url,
             onclick=onclick,
             target=target,
+            class_=class_ if class_ else ["suggestion_link"],
             id_=("menu_suggestion_%s" % entry.name if entry.name else None),
         )
         html.icon(entry.icon_name or "trans")
@@ -792,12 +821,26 @@ class ShortcutRenderer:
             self._show_link_item(entry, entry.item)
         elif isinstance(entry.item, PageMenuPopup):
             self._show_popup_link_item(entry, entry.item)
+        elif isinstance(entry.item, PageMenuVue):
+            self._show_vue_link_item(entry, entry.item)
         else:
             raise NotImplementedError("Shortcut rendering not implemented for %s" % entry.item)
 
+    def _show_vue_link_item(self, entry: PageMenuEntry, item: PageMenuVue) -> None:
+        self._show_link(
+            entry,
+            url="javascript:void(0)",
+            class_=item.class_ if item.class_ else None,
+            onclick=f"document.dispatchEvent(new CustomEvent('{item.component_name}'));",
+            target=None,
+        )
+
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         self._show_link(
-            entry=entry, url=item.link.url, onclick=item.link.onclick, target=item.link.target
+            entry=entry,
+            url=item.link.url,
+            onclick=item.link.onclick,
+            target=item.link.target,
         )
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
@@ -814,6 +857,7 @@ class ShortcutRenderer:
         url: str | None,
         onclick: str | None,
         target: str | None,
+        class_: str | None = None,
     ) -> None:
         classes = ["link", "enabled" if entry.is_enabled else "disabled"]
         if entry.is_suggested:
@@ -825,7 +869,7 @@ class ShortcutRenderer:
             title=entry.shortcut_title or entry.title,
             icon=entry.icon_name,
             target=target,
-            class_=[" ".join(classes)],
+            class_=[" ".join(classes + ([class_] if class_ else []))],
             id_=("menu_shortcut_%s" % entry.name if entry.name else None),
         )
 
@@ -838,8 +882,23 @@ class DropdownEntryRenderer:
             self._show_link_item(entry.title, entry.icon_name, entry.item)
         elif isinstance(entry.item, PageMenuPopup):
             self._show_popup_link_item(entry, entry.item)
+        elif isinstance(entry.item, PageMenuVue):
+            self._show_vue_link_item(entry.title, entry.icon_name, entry.item)
+            html.vue_component(
+                component_name=entry.item.component_name,
+                data=asdict(entry.item.data),
+            )
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
+
+    def _show_vue_link_item(self, title: str, icon: Icon, item: PageMenuVue) -> None:
+        self._show_link(
+            title=title,
+            icon=icon,
+            url="javascript:void(0)",
+            onclick=f"document.dispatchEvent(new CustomEvent('{item.component_name}'));",
+            target=None,
+        )
 
     def _show_link_item(self, title: str, icon: Icon, item: PageMenuLink) -> None:
         if item.link.url is not None:

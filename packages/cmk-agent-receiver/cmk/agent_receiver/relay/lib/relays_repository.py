@@ -40,7 +40,11 @@ class RelaysRepository:
         # FIXME async client
         client = httpx.Client(
             base_url=site_url,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Checkmk Agent Receiver",
+            },
+            timeout=20,  # FIXME: increased timeout due to flacky test test_tasks.py::test_max_tasks_per_relay
         )
         return cls(client, site_name, helper_config_dir)
 

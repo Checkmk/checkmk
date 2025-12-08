@@ -634,6 +634,10 @@ msgstr "%s 作成されたダンプファイルを取得します"
 msgid "%s by host"
 msgstr "ホスト別の %s"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via OAuth2 connection"
+msgstr "%s はクイックセットアップでのみ削除可能"
+
 #, python-format
 msgid "%s can only be deleted via Quick setup"
 msgstr "%s はクイックセットアップでのみ削除可能"
@@ -2196,6 +2200,10 @@ msgstr ""
 "に応じて、デプロイはさまざまな状態を示すことがあります。チェックアラートが発"
 "生する前に、特定の状態にあることを許容する時間を設定することができます。"
 
+#, fuzzy
+msgid "A descriptive name for this OAuth2 connection."
+msgstr "このアクションの説明的なタイトル。"
+
 msgid "A descriptive title for this rule pack"
 msgstr "このルールパックの説明的なタイトル"
 
@@ -2263,7 +2271,8 @@ msgstr ""
 msgid "A host with this name already exists in this folder."
 msgstr "この名前のホストは、このフォルダーに既に存在します。"
 
-msgid "A human-readable name for this relay configuration."
+#, fuzzy
+msgid "A human-readable alias for this relay configuration."
 msgstr "このリレー構成の可読性の良い名前。"
 
 msgid ""
@@ -2644,6 +2653,14 @@ msgstr "AES-256"
 
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
+
+#, fuzzy
+msgid "AI"
+msgstr "AIX"
+
+#, fuzzy
+msgid "AI Assistance"
+msgstr "インスタンス"
 
 msgid "AIX"
 msgstr "AIX"
@@ -3104,6 +3121,9 @@ msgstr "SSHホストキーを受け入れる"
 
 msgid "Accept incoming TCP connections"
 msgstr "受信TCP接続を受け入れる"
+
+msgid "Accept only one neighbor per local port"
+msgstr ""
 
 msgid "Accept service properties"
 msgstr "サービスプロパティを受け入れる"
@@ -3843,10 +3863,6 @@ msgstr "フィルタを追加"
 
 msgid "Add NGINX instance"
 msgstr "NGINXインスタンスを追加します"
-
-#, fuzzy
-msgid "Add OAuth2 connection"
-msgstr "LDAP接続を追加します"
 
 msgid "Add OID descriptions"
 msgstr "OIDの説明を追加する"
@@ -5263,14 +5279,6 @@ msgstr "集計の割り当て"
 msgid "Aggregation checks"
 msgstr "集約チェック"
 
-#, fuzzy
-msgid "Aggregation for histograms"
-msgstr "集約グループ"
-
-#, fuzzy
-msgid "Aggregation for sums"
-msgstr "集約グループ"
-
 msgid "Aggregation function"
 msgstr "集計関数"
 
@@ -6211,6 +6219,9 @@ msgid ""
 msgstr ""
 "拡張パッケージ(MKP)のアップロード、インストール、アンインストール、作成、変更"
 "を許可します。注意:MKPには実行可能コードが含まれています。"
+
+msgid "Allows to use the 'Explain with AI' button."
+msgstr ""
 
 #, python-format
 msgid "Allows to view and edit %s created by other users."
@@ -8556,6 +8567,10 @@ msgstr "Azureエージェント情報"
 msgid "Azure Agent Info (deprecated)"
 msgstr "Azureエージェント情報"
 
+#, fuzzy
+msgid "Azure App Registration"
+msgstr "App登録"
+
 msgid "Azure Application Gateway"
 msgstr "Azureアプリケーションゲートウェイ"
 
@@ -8607,6 +8622,22 @@ msgstr "Azure DB ストレージ"
 
 msgid "Azure Databases"
 msgstr "Azureデータベース"
+
+#, fuzzy
+msgid "Azure Firewall Health"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Azure Firewall Latency"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Azure Firewall SNAT Utilization"
+msgstr "GCP/Redis CPU使用率"
+
+#, fuzzy
+msgid "Azure Firewall Throughput"
+msgstr "読み取りスループット"
 
 #, fuzzy
 msgid "Azure Firewalls"
@@ -8789,6 +8820,18 @@ msgstr "Azure データベース接続"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure firewall health"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Azure firewall latency"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Azure recovery services vault backup"
+msgstr "Recovery Services Vault"
 
 #, fuzzy
 msgid "Azure resource group"
@@ -11324,9 +11367,6 @@ msgstr "グラフレシピを計算できません"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "グラフレシピを計算できません: %s"
 
-msgid "Cannot change folder of rules managed by Quick setup."
-msgstr "クイックセットアップで管理されているルールのフォルダを変更できません。"
-
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr "クイックセットアップで管理されているルールの条件を変更できません。"
 
@@ -11375,6 +11415,12 @@ msgid ""
 msgstr ""
 "デフォルトの\"CUSTOMER_ID\" または \"CUSTOMER_NAME\"を上書きするマクロを定義"
 "できません"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete %s because it is managed by an existing OAuth2 connection."
+msgstr ""
+"クイックセットアップで管理されているためこの %s を削除することはできません。"
 
 #, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
@@ -11605,6 +11651,18 @@ msgstr "ファイル \"%s\"を書き込めません: %s"
 
 #, fuzzy
 msgid "Capabilities"
+msgstr "互換性"
+
+#, fuzzy
+msgid "Capabilities enabled"
+msgstr "互換性"
+
+#, fuzzy
+msgid "Capabilities map supported"
+msgstr "互換性"
+
+#, fuzzy
+msgid "Capabilities supported"
 msgstr "互換性"
 
 msgid "Capacity filled"
@@ -14308,9 +14366,6 @@ msgstr "条件"
 msgid "Conditions for this rule to apply"
 msgstr "本ルールが適用される条件"
 
-msgid "Conditions of rules managed by Quick setup cannot be changed."
-msgstr "クイックセットアップで管理しているルールの条件は変更できません。"
-
 msgid "Conference Allocation Latency"
 msgstr "会議の割り当て遅延"
 
@@ -15218,10 +15273,6 @@ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
 #, python-format
-msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
-msgstr "コネクター：サイト \"%s\"で開いているtelemetry ホストを収集しています"
-
-#, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
@@ -16038,6 +16089,10 @@ msgstr "%sを作成"
 msgid "Create Conference Latency"
 msgstr "会議の遅延を作成する"
 
+#, fuzzy
+msgid "Create OAuth2 connections."
+msgstr "接続を追加"
+
 msgid "Create SLA"
 msgstr "SLAを作成する"
 
@@ -16313,6 +16368,10 @@ msgstr "保存されたレポートを作成する"
 
 msgid "Create the following interface groups"
 msgstr "次のインターフェイスグループを作成します"
+
+#, fuzzy
+msgid "Create the rule in the configured folder"
+msgstr "新しい仮想ホストツリー構成を作成する"
 
 msgid "Create topic"
 msgstr "トピックを作成する"
@@ -17557,14 +17616,6 @@ msgstr "データパスの可用性下位レベル"
 msgid "Data point"
 msgstr "送信データ"
 
-#, fuzzy
-msgid "Data point attribute"
-msgstr "ダウンタイム属性:"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "ダウンタイム属性:"
-
 msgid "Data range"
 msgstr "データ範囲"
 
@@ -18149,6 +18200,10 @@ msgstr "遅延ファイルの経過時間"
 
 msgid "Deferred files in Spool"
 msgstr "スプール内の遅延ファイル"
+
+#, fuzzy
+msgid "Define OAuth parameters"
+msgstr "デフォルトパラメータ"
 
 msgid ""
 "Define Oracle database instances to monitor to overwrite default settings."
@@ -22559,6 +22614,11 @@ msgstr "通知ログを有効にする"
 msgid "Enable notifications?"
 msgstr "通知を有効にしますか?"
 
+msgid ""
+"Enable or disable product telemetry. When disabled, you can configure "
+"whether to show a popup asking for consent on login."
+msgstr ""
+
 msgid "Enable passive checks"
 msgstr "パッシブチェックを有効にする"
 
@@ -24176,6 +24236,14 @@ msgstr "有効期限が切れます"
 msgid "Expires on"
 msgstr "有効期限"
 
+#, python-format
+msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
+msgstr ""
+
+#, fuzzy
+msgid "Explain with AI"
+msgstr "AIを続行しますか？"
+
 msgid "Explanation for event action"
 msgstr "イベントアクションの説明"
 
@@ -24184,9 +24252,6 @@ msgstr "明示的"
 
 msgid "Explicit Queue Names"
 msgstr "明示的なキュー名"
-
-msgid "Explicit condition"
-msgstr "明示的な条件"
 
 msgid "Explicit conditions"
 msgstr "明示的な条件"
@@ -24667,6 +24732,10 @@ msgid "Failed to create sync archive [%d]: %s"
 msgstr "同期アーカイブの作成に失敗しました [%d]: %s"
 
 msgid "Failed to decode certificate data"
+msgstr "証明書データのデコードに失敗しました"
+
+#, fuzzy
+msgid "Failed to decode filter context"
 msgstr "証明書データのデコードに失敗しました"
 
 #, python-format
@@ -31665,6 +31734,12 @@ msgstr ""
 "リンク速度の自動検出が機能しない場合は、ここでリンク速度を設定できます。"
 
 msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
+msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
 "between the monitoring site and the host. Enable this flag for compatibility "
 "reasons or if you experience problems with the controller related to TLS or "
@@ -34664,10 +34739,6 @@ msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "無効な拡張子タイプです：%s"
 
-#, fuzzy, python-format
-msgid "Invalid figure content: %s"
-msgstr "無効なユーザー接続: %s"
-
 msgid "Invalid file name"
 msgstr "無効なファイル名"
 
@@ -34692,10 +34763,6 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
-
-#, fuzzy, python-format
-msgid "Invalid graph content: %s"
-msgstr "無効なグラフタイプ: %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -34738,6 +34805,10 @@ msgstr "無効なID"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "無効なID: %s"
+
+#, fuzzy
+msgid "Invalid ifid parameter"
+msgstr "チェックパラメータが無効です"
 
 msgid "Invalid login credentials."
 msgstr "ログイン資格情報が無効です。"
@@ -35102,6 +35173,10 @@ msgstr "ログインしていません。"
 
 msgid "Is not using persistent connections."
 msgstr "持続的接続を使用していません。"
+
+#, fuzzy
+msgid "Is show more"
+msgstr "もっと表示"
 
 msgid "Is unlicensed"
 msgstr "ライセンスがありません"
@@ -35912,6 +35987,13 @@ msgstr "LIST リクエスト"
 msgid "LISTEN"
 msgstr "聴く"
 
+#, fuzzy
+msgid "LLDP cache"
+msgstr "キャッシュされた"
+
+msgid "LLDP neighbours"
+msgstr ""
+
 msgid "LPAR statistics for AIX"
 msgstr "LPAR 統計for AIX"
 
@@ -36228,6 +36310,10 @@ msgid "Latencies (99th percentile)"
 msgstr "レイテンシー(99パーセンタイル)"
 
 msgid "Latency"
+msgstr "レイテンシー"
+
+#, fuzzy
+msgid "Latency (ms)"
 msgstr "レイテンシー"
 
 msgid "Latency of GetItem requests"
@@ -39077,9 +39163,6 @@ msgstr "Checkmk拡張パッケージ(MKP)を管理および作成します。"
 msgid "Manage background jobs"
 msgstr "バックグラウンドジョブとして管理"
 
-msgid "Manage configuration read only mode"
-msgstr "構成の読み取り専用モードを管理する"
-
 msgid "Manage custom attributes"
 msgstr "カスタム属性の管理"
 
@@ -40712,9 +40795,6 @@ msgstr "メトリックのラベル"
 msgid "Metric levels"
 msgstr "メートリックレベル"
 
-msgid "Metric name"
-msgstr "メトリック名"
-
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
 
@@ -41065,6 +41145,10 @@ msgstr "前提条件の欠落"
 
 #, fuzzy, python-format
 msgid "Missing request variable '%s'"
+msgstr "変数siteidがありません"
+
+#, fuzzy
+msgid "Missing request variable 'widget_id'"
 msgstr "変数siteidがありません"
 
 msgid "Missing required \"Host name\" selection."
@@ -42585,6 +42669,11 @@ msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "否定: このパッケージを <b>持っていない</b>ホストを見つける"
 
 #, fuzzy
+msgid "Negate: make rule apply for all but the above entries"
+msgstr ""
+"<b>否定:</b>上記のエントリを<b>除く</b>すべてのエントリにルールを適用する"
+
+#, fuzzy
 msgid "Negative age tolerance"
 msgstr "負の値は不可"
 
@@ -42609,6 +42698,10 @@ msgid "Neighbor address"
 msgstr "ネットワークアドレス"
 
 #, fuzzy
+msgid "Neighbor description"
+msgstr "説明を表示"
+
+#, fuzzy
 msgid "Neighbor name"
 msgstr "センサー名"
 
@@ -42622,6 +42715,10 @@ msgstr "詳細はこちらをクリックしてください。"
 #, fuzzy
 msgid "Neighbor port"
 msgstr "ブローカーポートのメッセージ"
+
+#, fuzzy
+msgid "Neighbor port description"
+msgstr "ポートの説明"
 
 msgid "Neither"
 msgstr "どちらでもない"
@@ -43109,10 +43206,6 @@ msgstr "このメソッドには追加の設定オプションはありません
 msgid "No agent labels present."
 msgstr "エージェントラベルはありません。"
 
-#, fuzzy
-msgid "No aggregation"
-msgstr "集約"
-
 msgid "No appropriate request ID"
 msgstr "適切なリクエストIDがない"
 
@@ -43172,6 +43265,9 @@ msgstr "連絡先グループは割り当てられていません。"
 msgid "No custom attributes are defined yet."
 msgstr "カスタム属性はまだ定義されていません。"
 
+msgid "No dashboard found for the given dashboard name and/or dashboard owner"
+msgstr ""
+
 msgid "No data"
 msgstr "データなし"
 
@@ -43200,6 +43296,10 @@ msgid "No datasource defined."
 msgstr "データソースが定義されていません。"
 
 msgid "No default values can be set for condition choices."
+msgstr "条件の選択肢にデフォルト値を設定することはできません。"
+
+#, fuzzy
+msgid "No default values can be set."
 msgstr "条件の選択肢にデフォルト値を設定することはできません。"
 
 msgid "No defaults"
@@ -45290,6 +45390,10 @@ msgstr "OAuth2（クライアントID/テナントID）"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "接続を追加"
+
+#, fuzzy
+msgid "OAuth2 connections"
 msgstr "接続を追加"
 
 msgid "OEM data interpretation"
@@ -49302,6 +49406,10 @@ msgstr "少なくとも1つの受信者を追加してください"
 msgid "Please add at least one service group."
 msgstr "少なくとも1つのサービスグループを追加してください。"
 
+#, fuzzy
+msgid "Please add at least one service item."
+msgstr "少なくとも1つのサービスを追加してください。"
+
 msgid "Please add at least one service label."
 msgstr "少なくとも1つのサービスラベルを追加してください。"
 
@@ -50318,10 +50426,6 @@ msgid "Predefined condition"
 msgstr "事前定義された条件"
 
 #, python-format
-msgid "Predefined condition '%s' does not exist or using not permitted"
-msgstr "事前定義された条件 '%s' が存在しないか、使用が許可されていません"
-
-#, python-format
 msgid "Predefined condition: '%s' does not exist or using not permitted"
 msgstr "事前定義された条件: '%s' が存在しないか、使用が許可されていません"
 
@@ -50725,6 +50829,10 @@ msgstr "プロセッサー最大容量"
 
 msgid "Product"
 msgstr "製品"
+
+#, fuzzy
+msgid "Product Telemetry"
+msgstr "レポート要素"
 
 msgid "Profile"
 msgstr "プロフィール"
@@ -51605,9 +51713,6 @@ msgstr "Raritan EMXラック: 温度"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: 入力フェーズ"
 
-msgid "Rate"
-msgstr ""
-
 msgid "Rate computation"
 msgstr "料金計算"
 
@@ -51670,6 +51775,14 @@ msgstr "1秒あたりのIO操作の読み取り"
 
 msgid "Read Latency"
 msgstr "読み取りレイテンシ"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations (experimental)"
+msgstr "OpenTelemetry の設定を管理する（実験的機能）"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations."
+msgstr "OpenTelemetryコレクターの設定を追加する"
 
 msgid "Read access to all hosts and folders"
 msgstr "すべてのホストとフォルダへの読み取りアクセス"
@@ -51812,6 +51925,14 @@ msgstr "最小待機時間を読み取る"
 
 msgid "Read wait time"
 msgstr "読み込み待機時間"
+
+#, fuzzy
+msgid "Read-only mode"
+msgstr "読み取り専用モード"
+
+#, fuzzy
+msgid "Read-only mode for configuration"
+msgstr "リモート設定"
 
 msgid "Reading connections"
 msgstr "接続の読み取り"
@@ -52442,6 +52563,10 @@ msgid "Relay ID"
 msgstr "キーID"
 
 #, fuzzy
+msgid "Relay alias"
+msgstr "ディレイ:"
+
+#, fuzzy
 msgid "Relay configuration"
 msgstr "プラン構成"
 
@@ -52450,15 +52575,11 @@ msgid "Relay configurations"
 msgstr "プラン構成"
 
 #, fuzzy
-msgid "Relay display name"
+msgid "Relay display alias"
 msgstr "表示名"
 
 msgid "Relay log size"
 msgstr "中継用ログサイズ"
-
-#, fuzzy
-msgid "Relay name"
-msgstr "名前を変更する"
 
 #, fuzzy
 msgid "Relay properties"
@@ -53542,16 +53663,8 @@ msgid "Resource Name"
 msgstr "リソース名"
 
 #, fuzzy
-msgid "Resource attribute"
-msgstr "属性をリセット"
-
-#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "カスタムホスト名算出"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "属性をリセット"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Windowsプロセスのリソース消費"
@@ -54837,6 +54950,18 @@ msgstr "SNAT使用量"
 msgid "SNAT Usage (Deprecated)"
 msgstr "Azureストレージ使用量"
 
+#, fuzzy
+msgid "SNAT port utilization"
+msgstr "ノードの使用率"
+
+#, fuzzy
+msgid "SNAT port utilization %"
+msgstr "ノードの使用率"
+
+#, fuzzy
+msgid "SNAT port utilization levels"
+msgstr "CPU使用率レベル"
+
 msgid "SNAT usage"
 msgstr "SNAT 利用量"
 
@@ -55144,7 +55269,8 @@ msgstr "保存する"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "ホスト '%s'のチェック構成を %d サービスで保存しました"
 
-msgid "Saved read only settings"
+#, fuzzy
+msgid "Saved read-only settings"
 msgstr "保存された読み取り専用設定"
 
 msgid "Saved space"
@@ -55261,14 +55387,6 @@ msgstr "科学的（標準）シンボル%s"
 
 msgid "Scope"
 msgstr "スコープ"
-
-#, fuzzy
-msgid "Scope attribute"
-msgstr "役割属性"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "役割属性"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -55932,6 +56050,10 @@ msgstr ""
 "ションに依存しています：'Volume Performance Counters'は'Volumes'のデータが必"
 "要です。パフォーマンスカウンターセクションは、大規模なシステムではより多くの"
 "リソースを消費し、収集に時間がかかる場合があります。"
+
+#, fuzzy
+msgid "Select the authority for the OAuth2 connection."
+msgstr "TCP接続を確立するサイトを選択してください。"
 
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
@@ -56856,6 +56978,10 @@ msgstr "サービス状態経過日数"
 msgid "Service state for Differing Service States"
 msgstr "サービス状態のパーセンテージ"
 
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "サービス状態の変換"
+
 msgid "Service state if no map rule matches"
 msgstr "一致するマップルールがない場合のサービス状態"
 
@@ -57369,6 +57495,17 @@ msgid ""
 msgstr ""
 "LDAPサーバーのホストアドレスを設定します。IPアドレスまたは解決可能なホスト名"
 "である可能性があります。"
+
+msgid ""
+"Set the host names or IP addresses of the site. The entries will be added as "
+"additional subject alternative names (SANs) to the site certificate, "
+"alongside the default SANs. Configuring this allows proper server name "
+"identification when connecting to the site via TLS, for example for "
+"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
+"Changing this setting will trigger re-issuance of the site certificate by "
+"the site CA. In distributed setups, configure SANs separately for each site "
+"in the distributed monitoring configuration."
+msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Windowsエージェントのログレベルを設定します"
@@ -58360,6 +58497,10 @@ msgstr ""
 msgid "Signing agents' client certificates"
 msgstr "エージェントのクライアント証明書の署名"
 
+#, fuzzy
+msgid "Signing relay client certificates"
+msgstr "エージェントのクライアント証明書の署名"
+
 msgid "Signing the site certificate"
 msgstr "サイト証明書の署名"
 
@@ -58590,6 +58731,10 @@ msgstr "サイトのバックアップ"
 
 msgid "Site backup targets"
 msgstr "サイトのバックアップターゲット"
+
+#, fuzzy
+msgid "Site certificate subject alternative names"
+msgstr "証明書サブジェクトの別名"
 
 msgid "Site certificate validity"
 msgstr "サイト証明書の有効性"
@@ -62601,6 +62746,14 @@ msgstr "Tel2IP 失敗したSIP/H323コールの数"
 msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Tel2IP SIP/H323通話の総所要時間"
 
+#, fuzzy
+msgid "Telemetry is disabled"
+msgstr "セットアップは無効になっています。"
+
+#, fuzzy
+msgid "Telemetry is enabled"
+msgstr "OpenTelemetryメトリック名"
+
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -63156,6 +63309,13 @@ msgid ""
 msgstr ""
 "CheckmkサーバーのURLはFQDNでなければならない(詳細はインラインヘルプを参照)。"
 
+msgid "The Client ID (Application ID) of your registered application."
+msgstr ""
+
+#, fuzzy
+msgid "The Client secret of your registered application."
+msgstr "システムレプリケーションがない場合の状態"
+
 msgid ""
 "The Conda environment file specifies all dependencies that will be installed "
 "in the environment."
@@ -63597,6 +63757,9 @@ msgid ""
 "The TCP Port the SMTP server is listening on. The default is <tt>25</tt>."
 msgstr ""
 "SMTPサーバーがリッスンしているTCPポート。デフォルトは<tt> 25 </tt>です。"
+
+msgid "The Tenant ID of your Azure AD instance."
+msgstr ""
 
 msgid ""
 "The URI of the request. This should start with '/' and not include the "
@@ -64285,13 +64448,6 @@ msgid ""
 msgstr ""
 "設定されたパスワードが削除されたか、このパスワードの使用が許可されていませ"
 "ん。別のものを選択してください。"
-
-msgid ""
-"The configured predefined condition has either be removed or you are not "
-"permitted to use it. Please choose another one."
-msgstr ""
-"構成済みの事前定義された条件が削除されたか、使用が許可されていません。別のも"
-"のを選択してください。"
 
 msgid "The configured site is not known to this site."
 msgstr "構成されたサイトはこのサイトに認識されていません。"
@@ -65072,6 +65228,9 @@ msgid ""
 msgstr ""
 "指定された値は許可されていません。<tt> dashboard.py?name=my_dashboard </tt>の"
 "ような相対URLのみを構成できます。"
+
+msgid "The given widget id does not match any of this dashboard's widgets"
+msgstr ""
 
 msgid ""
 "The glob pattern by which to select the affected plug-ins. It is applied to "
@@ -66625,6 +66784,10 @@ msgstr ""
 "あります。これは、ユーザー指向の文字列間のhtmlマークアップを含みます。これは"
 "正規表現で検索する場合にも当てはまります。"
 
+#, fuzzy
+msgid "The provided token is not valid for the requested page."
+msgstr "キーファイルが無効です、またはパスワードが間違っています。"
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "照会されたESXシステム(vCenter /ホスト)"
 
@@ -66913,6 +67076,10 @@ msgstr ""
 "ルールセット\"{rule_title}\"には、特殊エージェントの構成が含まれています。資"
 "格情報およびその他のエージェント固有のデータは、ここで編集可能です"
 
+#, fuzzy, python-format
+msgid "The rule specification %r does not exist."
+msgstr "ルールセット \"%s\" は存在しません。"
+
 msgid "The rule you are trying to edit does not exist."
 msgstr "編集しようとしているルールが存在しません。"
 
@@ -66936,6 +67103,10 @@ msgstr ""
 
 #, python-format
 msgid "The ruleset \"%s\" does not exist."
+msgstr "ルールセット \"%s\" は存在しません。"
+
+#, fuzzy, python-format
+msgid "The ruleset \"%s\" uses legacy valuespecs."
 msgstr "ルールセット \"%s\" は存在しません。"
 
 #, fuzzy
@@ -70469,13 +70640,6 @@ msgstr ""
 "RAID コントローラと接続されたハードディスクの監視情報を提供します。このツール"
 "は<a href='http://www.lsi.com/'>LSI</a> からダウンロードできます。"
 
-msgid ""
-"This predefined condition can not be used with the current ruleset, because "
-"it defines the same label conditions as set by this rule."
-msgstr ""
-"事前定義された各条件は、このルールで設定されたものと同じラベル条件を定義して"
-"いるため、現在のルールセットで使用することはできません。"
-
 msgid "This problem has been acknowledged"
 msgstr "この問題は承認済です"
 
@@ -71524,6 +71688,37 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall SNAT port "
+"utilization monitoring"
+msgstr ""
+"このルールでは、データベースのCPU使用率のレベルを設定することができます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall latency "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall throughput "
+"monitoring"
 msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
@@ -72865,6 +73060,10 @@ msgid "Throughput (FC)"
 msgstr "スループット"
 
 msgid "Throughput levels"
+msgstr "スループットレベル"
+
+#, fuzzy
+msgid "Throughput levels (/sec)"
 msgstr "スループットレベル"
 
 msgid "Throughput optimized HDD space"
@@ -76574,19 +76773,6 @@ msgstr "リクエスト処理不可"
 
 #, python-format
 msgid ""
-"Unable to read current conditions of this rule. Falling back to default "
-"values. When saving this rule now, your previous settings will be "
-"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
-"issue may be caused by an inconsistent configuration, e.g. when rules refer "
-"to tag groups or tags that do not exist anymore."
-msgstr ""
-"このルールの現在の条件を読み取れません。デフォルト値に戻ります。このルールを"
-"保存すると以前の設定は上書きされます。問題：%sでした、以前の条件：<pre>%s</"
-"pre>このような問題は、ルールがすでに存在しないタググループやタグを参照してい"
-"る場合など、設定に一貫性がないために発生することがあります。"
-
-#, python-format
-msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
 "When saving this rule now, your previous settings will be overwritten. The "
 "problem was: %s."
@@ -76866,6 +77052,10 @@ msgstr "日付不明"
 
 msgid "Unknown entities"
 msgstr "不明なエンティティ"
+
+#, fuzzy, python-format
+msgid "Unknown form type %s"
+msgstr "不明なメトリックのタイプ %s"
 
 #, python-format
 msgid "Unknown group: %s"
@@ -83072,6 +83262,10 @@ msgstr "構成変更をアクティブ化することは許可されていませ
 msgid "You are not permitted to edit this global setting."
 msgstr "このグローバル設定を編集することは許可されていません。"
 
+#, fuzzy
+msgid "You are not permitted to edit this rule."
+msgstr "このルールセットにアクセスすることは許可されていません。"
+
 msgid "You are not permitted to perform this action."
 msgstr "このアクションを実行することは許可されていません。"
 
@@ -83300,10 +83494,6 @@ msgid ""
 msgstr ""
 "以下のデータ構造をコピーして、REST APIリクエストで使用することができます。"
 
-#, python-format
-msgid "You can create predefined conditions <a href=\"%s\">here</a>."
-msgstr "<a href=\"%s\">ここ</a>で事前定義された条件を作成できます。"
-
 msgid ""
 "You can customize the list of icon categories to be able to assign your <a "
 "href=\"wato.py?mode=icons\">custom icons</a> to these categories. They will "
@@ -83379,14 +83569,6 @@ msgstr ""
 msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
 "プランをアップグレードすることで、サイトの容量を簡単に増やすことができます。"
-
-msgid ""
-"You can either specify individual conditions for this rule, or use a set of "
-"predefined conditions, which may be handy if you have to configure the same "
-"conditions in different rulesets."
-msgstr ""
-"このルールに個別の条件を指定するか、事前定義された条件のセットを使用できま"
-"す。これは、異なるルールセットで同じ条件を構成する必要がある場合に便利です。"
 
 msgid ""
 "You can enter a text here that will be displayed in the element when viewing "
@@ -85093,6 +85275,10 @@ msgstr "Zypperの更新"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "通常のZypperアップデートとセキュリティアップデート(Linux)"
 
+#, fuzzy, python-format
+msgid "[%s] - OAuth2 connection"
+msgstr "接続を追加"
+
 #, python-format
 msgid "[%s] - Quick setup"
 msgstr "[%s] - クイックセットアップ"
@@ -86796,6 +86982,10 @@ msgid "rule"
 msgid_plural "rules"
 msgstr[0] "ルール"
 
+#, fuzzy, python-format
+msgid "rule %s"
+msgstr "ルール %s を編集する"
+
 msgid "rule matches"
 msgid_plural "rules are matching"
 msgstr[0] "ルール一致"
@@ -87107,6 +87297,9 @@ msgstr "エイリアスを使用"
 msgid "use port name"
 msgstr "ポート名を使用する"
 
+msgid "use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
+msgstr ""
+
 msgid "used"
 msgstr "使用中"
 
@@ -87338,6 +87531,10 @@ msgid "There is %{ n } apple"
 msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 
+#, fuzzy
+msgid "Error retrieving AI service information. Please try again later."
+msgstr "何か問題が発生しました: %s"
+
 msgid "Checkmk AI feature documentation & privacy policy"
 msgstr ""
 
@@ -87373,6 +87570,10 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "見つかりません"
+
+#, fuzzy
+msgid "Error retrieving available AI actions. Please try again later."
+msgstr "何か問題が発生しました: %s"
 
 msgid "The following feature uses a Large Language Model (LLM)."
 msgstr ""
@@ -87469,8 +87670,12 @@ msgid "Remove row"
 msgstr "削除：%r"
 
 #, fuzzy
-msgid "Dashboard filter"
-msgstr "ダッシュボード要素"
+msgid "Filter configuration"
+msgstr "Iptablesフィルター構成"
+
+#, fuzzy
+msgid "Runtime filters"
+msgstr "フィルタを取り外します"
 
 #, fuzzy
 msgid "Close filter configuration"
@@ -87480,45 +87685,50 @@ msgstr "Iptablesフィルター構成"
 msgid "Clear search"
 msgstr "ルール検索"
 
-msgid "Filters included by dashboard owner"
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values are temporary and can be overridden by widget filters."
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a runtime filter"
-msgstr "クイックフィルターを追加することでこれらを上書きできます"
+msgid "Set filters for all widgets."
+msgstr "すべてのセクションにデフォルト値を設定する"
 
 #, fuzzy
-msgid "Host filter"
-msgstr "ホストフィルター"
+msgid "Values can be overriden by runtime or widget filters."
+msgstr "クイックフィルターを追加することでこれらを上書きできます"
+
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
+
+msgid "Values are temporary and can be overriden by widget filters."
+msgstr ""
 
 #, fuzzy
 msgid "Select from list"
 msgstr "リストからタイプを選択"
 
 #, fuzzy
-msgid "Service filter"
-msgstr "サービスフィルター"
+msgid "%{n} filters"
+msgstr "適用されたフィルター:"
 
 #, fuzzy
-msgid "Reset to saved filters"
-msgstr "フィルタを取り外します"
+msgid "Applied filters"
+msgstr "適用されたフィルター:"
 
-msgid "Success! Your new dashboard filters have been saved"
-msgstr "成功！新しいダッシュボードのフィルターが保存されました"
+#, fuzzy
+msgid "No %{n} dashboard filters applied"
+msgstr "%{n} 対象フィルターは適用されていません"
 
-msgid "Runtime filters are required to load data."
+msgid ""
+"%{n} filters selected on dashboard level appear and apply to all widgets. "
+"You can override the values by setting widget specific or runtime filters. "
 msgstr ""
 
-msgid "Values apply across all widgets."
-msgstr ""
-
 #, fuzzy
-msgid "Apply to dashboard"
-msgstr "ダッシュボードに追加"
-
-#, fuzzy
-msgid "Edit required runtime filters"
-msgstr "必要なコンテキストフィルター"
+msgid "Edit filter configuration"
+msgstr "この接続を編集する"
 
 #, fuzzy
 msgid "Override dashboard filters"
@@ -87933,6 +88143,10 @@ msgid "Overriden"
 msgstr "概要"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "ダッシュボード要素"
+
+#, fuzzy
 msgid "Runtime filter"
 msgstr "フィルタを取り外します"
 
@@ -88166,6 +88380,20 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Data selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "視覚化"
+
+msgid "Select the data you want to analyze"
+msgstr "分析したいので早くデータを選択してください"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
 msgid "Link content to"
 msgstr "タイトルのリンク"
 
@@ -88202,10 +88430,6 @@ msgid "Show widget background"
 msgstr "背景なしでタイトルを表示"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "サイト選択"
-
-#, fuzzy
 msgid "Alert & Notification"
 msgstr "テスト通知"
 
@@ -88226,20 +88450,6 @@ msgstr "通知ルール"
 
 msgid "Percentage of service problems"
 msgstr "サービスの問題の割合"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "フィルタを追加"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "視覚化"
-
-msgid "Select the data you want to analyze"
-msgstr "分析したいので早くデータを選択してください"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
 
 #, fuzzy
 msgid "Host selection"
@@ -88283,6 +88493,10 @@ msgstr "ルール分析のために通知を保存する"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "追加オプション"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "フィルタを追加"
 
 #, fuzzy
 msgid "Save widget"
@@ -88340,10 +88554,6 @@ msgstr "カスタムグラフのクローンを作成する"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "カスタムグラフのクローンを作成する"
-
-#, fuzzy
-msgid "Widget visualization"
-msgstr "BIの視覚化"
 
 #, fuzzy
 msgid "Clone & review dashboard filters"
@@ -88474,6 +88684,10 @@ msgid "Event selection"
 msgstr "ファイル選択"
 
 #, fuzzy
+msgid "Available visualization type"
+msgstr "利用可能なオプション"
+
+#, fuzzy
 msgid "Show background in status color and label"
 msgstr "ステータスの色とラベルの背景"
 
@@ -88539,6 +88753,15 @@ msgstr "グラフライン"
 #, fuzzy
 msgid "Service metric"
 msgstr "サービスメトリクス"
+
+#, fuzzy
+msgid "Filter service metric by"
+msgstr "サービスメトリクス"
+
+msgid ""
+"Use these fields to narrow down the list of available service metrics.<br /"
+">Click the Host name or Service label to clear the filter."
+msgstr ""
 
 #, fuzzy
 msgid "Must select an option"
@@ -88656,6 +88879,26 @@ msgid "Copy existing view: %{viewName}"
 msgstr "既存のビューをコピーする"
 
 #, fuzzy
+msgid "Select operator"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Select label"
+msgstr "ラベルを選択..."
+
+#, fuzzy
+msgid "Remove item"
+msgstr "フィルタを取り外します"
+
+#, fuzzy
+msgid "Remove group"
+msgstr "削除：%r"
+
+#, fuzzy
+msgid "and not"
+msgstr "ではありません"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "新しいパスワード"
 
@@ -88674,11 +88917,20 @@ msgstr "もっと表示"
 msgid "Preview of matches:"
 msgstr "ルール一致"
 
-msgid "Auto"
-msgstr "自動"
+msgid "Metric name"
+msgstr "メトリック名"
 
-msgid "Strict"
-msgstr "制限"
+#, fuzzy
+msgid "Resource attributes"
+msgstr "属性をリセット"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "役割属性"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "ダウンタイム属性:"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -88686,6 +88938,12 @@ msgstr "レイテンシーの適用"
 
 msgid "Apply percentile (histograms)"
 msgstr ""
+
+msgid "Auto"
+msgstr "自動"
+
+msgid "Strict"
+msgstr "制限"
 
 msgid "Area"
 msgstr "範囲"
@@ -88735,6 +88993,28 @@ msgstr "編集するグラフの線を少なくとも１つ選択してくださ
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "編集するグラフの線を選択してください"
+
+#, fuzzy
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
+msgid "Edit rule: Metric backend (Custom query)"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
+msgid "Validation error"
+msgstr "構成エラー"
+
+#, fuzzy
+msgid "Fatal error"
+msgstr "内部エラー"
+
+msgid "When you save this rule a new rule will be created."
+msgstr ""
+
+msgid "Dismiss"
+msgstr ""
 
 msgid "Graph metrics with all zero values"
 msgstr "すべての値がゼロのグラフメトリクス"
@@ -89137,26 +89417,6 @@ msgid "Define OAuth2 parameter"
 msgstr "デフォルトパラメータ"
 
 #, fuzzy
-msgid "Description:"
-msgstr "説明"
-
-#, fuzzy
-msgid "Authority:"
-msgstr "権限"
-
-#, fuzzy
-msgid "Tenant ID:"
-msgstr "テナントID"
-
-#, fuzzy
-msgid "Client ID:"
-msgstr "クライアントID"
-
-#, fuzzy
-msgid "Client secret:"
-msgstr "Client secret"
-
-#, fuzzy
 msgid "Start authorization"
 msgstr "基本認証"
 
@@ -89201,11 +89461,12 @@ msgstr "Dockerコンテナプラグインをデプロイする"
 msgid "Name the relay"
 msgstr "プロキシの名前"
 
-msgid "Provide a display name for your Relay."
+#, fuzzy
+msgid "Provide a display alias for your Relay."
 msgstr "リレーの表示名を入力してください。"
 
 msgid ""
-"The name you enter here will be automatically inserted into the terminal "
+"The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
 
@@ -89726,6 +89987,167 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Aggregation for histograms"
+#~ msgstr "集約グループ"
+
+#, fuzzy
+#~ msgid "Aggregation for sums"
+#~ msgstr "集約グループ"
+
+#, fuzzy
+#~ msgid "Data point attribute"
+#~ msgstr "ダウンタイム属性:"
+
+#, fuzzy, python-format
+#~ msgid "Invalid graph content: %s"
+#~ msgstr "無効なグラフタイプ: %s"
+
+#, fuzzy
+#~ msgid "No aggregation"
+#~ msgstr "集約"
+
+#, fuzzy
+#~ msgid "Resource attribute"
+#~ msgstr "属性をリセット"
+
+#, fuzzy
+#~ msgid "Scope attribute"
+#~ msgstr "役割属性"
+
+#, fuzzy
+#~ msgid "Host filter"
+#~ msgstr "ホストフィルター"
+
+#, fuzzy
+#~ msgid "Service filter"
+#~ msgstr "サービスフィルター"
+
+#, fuzzy
+#~ msgid "Reset to saved filters"
+#~ msgstr "フィルタを取り外します"
+
+#~ msgid "Success! Your new dashboard filters have been saved"
+#~ msgstr "成功！新しいダッシュボードのフィルターが保存されました"
+
+#, fuzzy
+#~ msgid "Apply to dashboard"
+#~ msgstr "ダッシュボードに追加"
+
+#, fuzzy
+#~ msgid "Edit required runtime filters"
+#~ msgstr "必要なコンテキストフィルター"
+
+#~ msgid "Cannot change folder of rules managed by Quick setup."
+#~ msgstr ""
+#~ "クイックセットアップで管理されているルールのフォルダを変更できません。"
+
+#~ msgid "Conditions of rules managed by Quick setup cannot be changed."
+#~ msgstr "クイックセットアップで管理しているルールの条件は変更できません。"
+
+#, fuzzy
+#~ msgid "Add OAuth2 connection"
+#~ msgstr "LDAP接続を追加します"
+
+#, fuzzy
+#~ msgid "Broadcast"
+#~ msgstr "ブロードキャスト"
+
+#, fuzzy
+#~ msgid "Prefix length"
+#~ msgstr "プレフィックスのテキスト"
+
+#, fuzzy
+#~ msgid "Scope ID"
+#~ msgstr "スコープ"
+
+#, fuzzy
+#~ msgid "Description:"
+#~ msgstr "説明"
+
+#, fuzzy
+#~ msgid "Authority:"
+#~ msgstr "権限"
+
+#, fuzzy
+#~ msgid "Tenant ID:"
+#~ msgstr "テナントID"
+
+#, fuzzy
+#~ msgid "Client ID:"
+#~ msgstr "クライアントID"
+
+#, fuzzy
+#~ msgid "Client secret:"
+#~ msgstr "Client secret"
+
+#, python-format
+#~ msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
+#~ msgstr ""
+#~ "コネクター：サイト \"%s\"で開いているtelemetry ホストを収集しています"
+
+#~ msgid "Manage configuration read only mode"
+#~ msgstr "構成の読み取り専用モードを管理する"
+
+#, fuzzy
+#~ msgid "Widget visualization"
+#~ msgstr "BIの視覚化"
+
+#~ msgid "Explicit condition"
+#~ msgstr "明示的な条件"
+
+#, fuzzy, python-format
+#~ msgid "Invalid figure content: %s"
+#~ msgstr "無効なユーザー接続: %s"
+
+#, python-format
+#~ msgid "Predefined condition '%s' does not exist or using not permitted"
+#~ msgstr "事前定義された条件 '%s' が存在しないか、使用が許可されていません"
+
+#, fuzzy
+#~ msgid "Relay name"
+#~ msgstr "名前を変更する"
+
+#~ msgid ""
+#~ "The configured predefined condition has either be removed or you are not "
+#~ "permitted to use it. Please choose another one."
+#~ msgstr ""
+#~ "構成済みの事前定義された条件が削除されたか、使用が許可されていません。別の"
+#~ "ものを選択してください。"
+
+#~ msgid ""
+#~ "This predefined condition can not be used with the current ruleset, "
+#~ "because it defines the same label conditions as set by this rule."
+#~ msgstr ""
+#~ "事前定義された各条件は、このルールで設定されたものと同じラベル条件を定義し"
+#~ "ているため、現在のルールセットで使用することはできません。"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to read current conditions of this rule. Falling back to default "
+#~ "values. When saving this rule now, your previous settings will be "
+#~ "overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such "
+#~ "an issue may be caused by an inconsistent configuration, e.g. when rules "
+#~ "refer to tag groups or tags that do not exist anymore."
+#~ msgstr ""
+#~ "このルールの現在の条件を読み取れません。デフォルト値に戻ります。このルール"
+#~ "を保存すると以前の設定は上書きされます。問題：%sでした、以前の条件："
+#~ "<pre>%s</pre>このような問題は、ルールがすでに存在しないタググループやタグ"
+#~ "を参照している場合など、設定に一貫性がないために発生することがあります。"
+
+#, python-format
+#~ msgid "You can create predefined conditions <a href=\"%s\">here</a>."
+#~ msgstr "<a href=\"%s\">ここ</a>で事前定義された条件を作成できます。"
+
+#~ msgid ""
+#~ "You can either specify individual conditions for this rule, or use a set "
+#~ "of predefined conditions, which may be handy if you have to configure the "
+#~ "same conditions in different rulesets."
+#~ msgstr ""
+#~ "このルールに個別の条件を指定するか、事前定義された条件のセットを使用できま"
+#~ "す。これは、異なるルールセットで同じ条件を構成する必要がある場合に便利で"
+#~ "す。"
+
 #~ msgid "Add new field"
 #~ msgstr "新しいフィールドを追加"
 
@@ -89778,10 +90200,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Select at least one column."
 #~ msgstr "少なくとも1つの要素を選択してください"
-
-#, fuzzy
-#~ msgid "Site certificate subject alternative names"
-#~ msgstr "証明書サブジェクトの別名"
 
 #~ msgid ""
 #~ "The OpenTelemetry collector is an experimental beta feature, and not "
@@ -89934,9 +90352,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service state for Stopped VMs"
 #~ msgstr "サービス状態タイプ"
-
-#~ msgid "Continue with AI?"
-#~ msgstr "AIを続行しますか？"
 
 #, fuzzy
 #~ msgid "Do not ask again"
@@ -91008,10 +91423,6 @@ msgstr ""
 
 #~ msgid "Transformation on selected metric"
 #~ msgstr "選択したメトリックの変換"
-
-#, python-format
-#~ msgid "Unknown metric type %s"
-#~ msgstr "不明なメトリックのタイプ %s"
 
 #~ msgid "Update transform"
 #~ msgstr "変換を更新"

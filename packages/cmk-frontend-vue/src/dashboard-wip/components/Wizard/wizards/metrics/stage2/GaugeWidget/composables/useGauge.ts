@@ -27,6 +27,8 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 type TimeRangeType = 'current' | 'window'
 
+const CONTENT_TYPE = 'gauge'
+
 export type ShowServiceStatusType = 'disabled' | 'text' | 'background'
 export interface UseGauge extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Time range
@@ -47,11 +49,12 @@ export const useGauge = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseGauge> => {
-  const currentContent = currentSpec?.content as GaugeContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as GaugeContent) : null
 
   const timeRangeType = ref<TimeRangeType>('current')
   const currentTimerange: TimerangeModel | null =
-    currentContent?.time_range === 'current' ? null : currentContent?.time_range.window
+    currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(currentTimerange)
 
   const {
@@ -92,7 +95,7 @@ export const useGauge = async (
 
   const _generateContent = (): GaugeContent => {
     const content: GaugeContent = {
-      type: 'gauge',
+      type: CONTENT_TYPE,
       metric: metric,
       display_range: fixedDataRangeProps.value,
       time_range: {

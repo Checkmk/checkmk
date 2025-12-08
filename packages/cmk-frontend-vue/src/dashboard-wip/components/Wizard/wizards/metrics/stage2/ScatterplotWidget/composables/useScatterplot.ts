@@ -24,6 +24,7 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditionalOptions'
 
+const CONTENT_TYPE = 'average_scatterplot'
 export interface UseScatterplot
   extends UseWidgetHandler,
     UseWidgetVisualizationOptions,
@@ -38,7 +39,10 @@ export const useScatterplot = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseScatterplot> => {
-  const currentContent = currentSpec?.content as ScatterplotContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as ScatterplotContent)
+      : null
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
     currentContent?.time_range ?? null
@@ -70,7 +74,7 @@ export const useScatterplot = async (
 
   const _generateContent = (): ScatterplotContent => {
     return {
-      type: 'average_scatterplot',
+      type: CONTENT_TYPE,
       metric,
       time_range: generateTimeRangeSpec(),
       metric_color: metricColor.value === 'default' ? 'default' : metricColor.value.toUpperCase(),

@@ -105,6 +105,7 @@ function navigateUrl(url: string) {
   padding-bottom: 20px;
   background-color: var(--ux-theme-1);
   border-right: 4px solid var(--success);
+  border-top: 1px solid var(--default-nav-border-color);
 
   .mm-default-popup__header {
     display: flex;
@@ -112,7 +113,7 @@ function navigateUrl(url: string) {
     align-items: center;
     justify-content: space-between;
     height: 60px;
-    border-bottom: 1px solid var(--ux-theme-3);
+    border-bottom: 1px solid var(--default-nav-border-color);
     padding: 0 var(--dimension-5) 0 var(--dimension-8);
 
     .mm-default-popup__header-trigger-button {

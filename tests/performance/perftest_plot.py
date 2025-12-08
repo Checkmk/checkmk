@@ -1669,6 +1669,8 @@ class PerftestPlot:
             "project": {"key": "CMK"},
             "summary": summary,
             "description": description,
+            "customfield_11500": "QA",  # cf[11500] = "Developer Team"
+            "customfield_10106": 3,  # cf[10106] = "Story Points"
             "issuetype": {"name": "Task"},
         }
         jira_client = JIRA(

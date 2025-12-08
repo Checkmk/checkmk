@@ -53,7 +53,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from typing import NamedTuple
 
-import docker  # type: ignore[import-untyped]
+import docker
 
 from cmk.ccc.archive import CheckmkTarArchive
 
@@ -395,7 +395,7 @@ def build_tar_gz(
         )
         LOG.debug("Built image: %s", image)
         for chunk in build_logs:
-            if "stream" in chunk:
+            if isinstance(chunk, dict) and "stream" in chunk and isinstance(chunk["stream"], str):
                 for line in chunk["stream"].splitlines():
                     LOG.debug(line)
 

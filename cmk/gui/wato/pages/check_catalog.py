@@ -17,12 +17,17 @@ from __future__ import annotations
 
 import re
 from collections.abc import Collection, Mapping, Sequence
-from typing import overload, TypedDict, Union
+from typing import Any, overload, TypedDict, Union
 
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    DefaultValue,
+    DisplayMode,
+    render_form_spec,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -41,11 +46,13 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.valuespec import ID
+from cmk.gui.valuespec import ID, ValueSpec
+from cmk.gui.wato.pages.rulesets import render_value_model_readonly
 from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import man_pages
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -67,6 +74,19 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeCheckPluginSearch)
     mode_registry.register(ModeCheckPluginTopic)
     mode_registry.register(ModeCheckManPage)
+
+
+def show_value_model_editable(used_value_model: FormSpec[Any] | ValueSpec) -> None:
+    if isinstance(used_value_model, FormSpec):
+        render_form_spec(
+            form_spec=used_value_model,
+            field_id="edit_id",
+            value=DefaultValue(),
+            do_validate=False,
+            display_mode=DisplayMode.EDIT,
+        )
+    else:
+        used_value_model.render_input("dummy", used_value_model.default_value())
 
 
 class ModeCheckPlugins(WatoMode):
@@ -647,8 +667,7 @@ class ModeCheckManPage(WatoMode):
         html.open_tr()
         html.th(_("Example for parameters"))
         html.open_td()
-        vs = rulespec.valuespec
-        vs.render_input("dummy", vs.default_value())
+        show_value_model_editable(rulespec.value_model)
         html.close_td()
         html.close_tr()
 
@@ -656,19 +675,13 @@ class ModeCheckManPage(WatoMode):
         if not params or varname not in rulespec_registry:
             return
 
-        rulespec = rulespec_registry[varname]
-        try:
-            rulespec.valuespec.validate_datatype(params, "")
-            rulespec.valuespec.validate_value(params, "")
-            paramtext = rulespec.valuespec.value_to_html(params)
-        except Exception:
-            # This should not happen, we have tests for that.
-            # If it does happen, do not fail here.
-            return
-
         html.open_tr()
         html.th(_("Default parameters"))
         html.open_td()
-        html.write_html(HTML.with_escaping(paramtext))
+        html.write_html(
+            HTML.with_escaping(
+                render_value_model_readonly(rulespec_registry[varname].value_model, params)
+            )
+        )
         html.close_td()
         html.close_tr()

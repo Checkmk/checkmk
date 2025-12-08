@@ -17,6 +17,8 @@ import { buildWidgetEffectiveFilterContext, dashboardAPI } from '@/dashboard-wip
 
 import type { UseSidebarElements } from './useSidebarElements'
 
+const CONTENT_TYPE = 'sidebar_element'
+
 export interface UseSidebarWidget extends UseWidgetHandler, UseWidgetVisualizationOptions {
   sidebarElementName: Ref<string>
 }
@@ -38,7 +40,10 @@ export function useSidebarWidget(
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as SidebarElementContent | undefined
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as SidebarElementContent)
+      : undefined
   const elementName = ref<string>(currentContent?.name || 'tactical_overview')
 
   watch(sidebarElements, (newElements) => {
@@ -73,7 +78,7 @@ export function useSidebarWidget(
 
   const content = computed<SidebarElementContent>(() => {
     return {
-      type: 'sidebar_element',
+      type: CONTENT_TYPE,
       name: elementName.value
     }
   })

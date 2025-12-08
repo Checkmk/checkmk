@@ -89,16 +89,10 @@ node_networking_addresses = Node(
     path=["networking", "addresses"],
     title=Title("IP addresses"),
     table=Table(
-        view=View(name="invipaddresses", title=Title("IP addresses")),
         columns={
             "address": TextField(Title("Address")),
             "device": TextField(Title("Device")),
             "type": TextField(Title("Address type"), render=_render_ip_address_type),
-            "network": TextField(Title("Network")),
-            "netmask": TextField(Title("Netmask")),
-            "cidr": TextField(Title("Prefix length")),
-            "broadcast": TextField(Title("Broadcast")),
-            "scope_id": TextField(Title("Scope ID")),
         },
     ),
 )
@@ -107,10 +101,12 @@ node_networking_interfaces = Node(
     name="networking_interfaces",
     path=["networking", "interfaces"],
     title=Title("Network interfaces"),
+    attributes={"is_show_more": BoolField(Title("Is show more"))},
     table=Table(
         view=View(name="invinterface", title=Title("Network interfaces")),
         columns={
             "index": NumberField(Title("Index"), render=UNIT_NUMBER),
+            "name": TextField(Title("Name")),
             "description": TextField(Title("Description")),
             "alias": TextField(Title("Alias")),
             "oper_status": ChoiceField(
@@ -589,4 +585,10 @@ node_networking_lldp_cache_neighbours = Node(
             "system_description": TextField(Title("Neighbor description")),
         },
     ),
+)
+
+node_networking_interfaces_name = Node(
+    name=".networking.interfaces:*.name",
+    path=["networking", "interfaces", "name"],
+    title=Title("Name"),
 )

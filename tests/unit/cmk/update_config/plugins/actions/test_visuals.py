@@ -421,17 +421,23 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "inv_hardware_cpu_bus_speed_canonical": {
-                        "inv_hardware_cpu_bus_speed_canonical_from": "1000000",
-                        "inv_hardware_cpu_bus_speed_canonical_until": "2000000",
+                    "inv_hardware_cpu_bus_speed": {
+                        "inv_hardware_cpu_bus_speed_from": "1",
+                        "inv_hardware_cpu_bus_speed_from_prefix": "M",
+                        "inv_hardware_cpu_bus_speed_until": "2",
+                        "inv_hardware_cpu_bus_speed_until_prefix": "M",
                     },
-                    "inv_hardware_memory_total_ram_usable_canonical": {
-                        "inv_hardware_memory_total_ram_usable_canonical_from": "3145728",
-                        "inv_hardware_memory_total_ram_usable_canonical_until": "4194304",
+                    "inv_hardware_memory_total_ram_usable": {
+                        "inv_hardware_memory_total_ram_usable_from": "3",
+                        "inv_hardware_memory_total_ram_usable_from_prefix": "M",
+                        "inv_hardware_memory_total_ram_usable_until": "4",
+                        "inv_hardware_memory_total_ram_usable_until_prefix": "M",
                     },
-                    "inv_hardware_cpu_cache_size_canonical": {
-                        "inv_hardware_cpu_cache_size_canonical_from": "5242880",
-                        "inv_hardware_cpu_cache_size_canonical_until": "6291456",
+                    "inv_hardware_cpu_cache_size": {
+                        "inv_hardware_cpu_cache_size_from": "5",
+                        "inv_hardware_cpu_cache_size_from_prefix": "M",
+                        "inv_hardware_cpu_cache_size_until": "6",
+                        "inv_hardware_cpu_cache_size_until_prefix": "M",
                     },
                 },
                 single_infos=[],
@@ -481,9 +487,11 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_last_change_canonical": {
-                        "invinterface_last_change_canonical_from": "86400",
-                        "invinterface_last_change_canonical_until": "172800",
+                    "invinterface_last_change": {
+                        "invinterface_last_change_from": "1",
+                        "invinterface_last_change_from_prefix": "d",
+                        "invinterface_last_change_until": "2",
+                        "invinterface_last_change_until_prefix": "d",
                     },
                 },
                 single_infos=[],

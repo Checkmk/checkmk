@@ -1728,11 +1728,11 @@ def get_section_snapshot_summary(
     ]
 
 
-def _make_unix_time(raw_time: str) -> int:
-    return int(dateutil.parser.isoparse(raw_time).timestamp())
+def _make_unix_time(raw_time: str) -> float:
+    return dateutil.parser.isoparse(raw_time).timestamp()
 
 
-def get_systemtime(connection: ESXConnection, debug: bool) -> int | None:
+def get_systemtime(connection: ESXConnection, debug: bool) -> float | None:
     try:
         response = connection.query_server("systemtime")
         raw_systime = get_pattern("<returnval>(.*)</returnval>", response)[0]
@@ -1783,7 +1783,7 @@ def eval_snapshot_list(info: str, _datastores: Mapping[str, Mapping[str, str]]) 
     for entry in snapshot_info:
         try:
             # 2013-11-06T15:39:39.347543Z
-            creation_time = _make_unix_time(entry[2])
+            creation_time = int(_make_unix_time(entry[2]))
         except ValueError:
             creation_time = 0
         response.append(
@@ -2049,14 +2049,17 @@ def fetch_data(connection: ESXConnection, opt: argparse.Namespace) -> list[str]:
     # Virtual machines
     ###########################
     systime = get_systemtime(connection, bool(opt.debug))
+    local_time = time.time()
 
     if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output += get_section_vm(vms, systime)
+        output += get_section_vm(vms, int(systime) if systime is not None else None)
         output += get_section_virtual_machines(vms)
 
         if not opt.direct or opt.snapshots_on_host:
-            output += get_section_snapshot_summary(vms, systime)
+            output += get_section_snapshot_summary(
+                vms, int(systime) if systime is not None else None
+            )
     else:
         vms, vm_esx_host = {}, {}
 
@@ -2071,7 +2074,7 @@ def fetch_data(connection: ESXConnection, opt: argparse.Namespace) -> list[str]:
         output += get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt)
 
     if systime is not None:
-        output += ["<<<systemtime>>>", f"{systime} {time.time()}"]
+        output += ["<<<systemtime>>>", f"{systime} {local_time}"]
 
     return output
 

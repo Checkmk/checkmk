@@ -6,10 +6,19 @@
 import functools
 
 from cmk.gui.search.sorting import get_sorter
-from cmk.gui.search.type_defs import UnifiedSearchResultItem, UnifiedSearchResultTarget
+from cmk.shared_typing.unified_search import (
+    IconNames,
+    ProviderName,
+    SortType,
+    UnifiedSearchResultItem,
+    UnifiedSearchResultTarget,
+)
 
 I = functools.partial(
-    UnifiedSearchResultItem, target=UnifiedSearchResultTarget(url=""), provider="setup", icon=""
+    UnifiedSearchResultItem,
+    target=UnifiedSearchResultTarget(url=""),
+    provider=ProviderName.setup,
+    icon=IconNames.main_setup_active,
 )
 
 
@@ -26,13 +35,13 @@ def get_results_alphabetically() -> list[UnifiedSearchResultItem]:
         I(title="Limit the number of rows in View tables", topic="Global settings"),
         I(title="Sounds in Views", topic="Global settings"),
         I(title="Threshold for slow views", topic="Global settings"),
-        I(title="Views", topic="Visualization", provider="customize"),
+        I(title="Views", topic="Visualization", provider=ProviderName.customize),
     ]
 
 
 def test_weighted_index_sorting_with_view_query() -> None:
     results = get_results_alphabetically()
-    get_sorter("weighted_index", query="view")(results)
+    get_sorter(SortType.weighted_index, query="view")(results)
 
     value = [(result.title, result.topic) for result in results]
     expected = [

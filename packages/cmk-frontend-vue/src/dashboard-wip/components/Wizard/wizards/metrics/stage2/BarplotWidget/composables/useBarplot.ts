@@ -23,6 +23,8 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 type DataRangeType = 'fixed' | 'automatic'
 
+const CONTENT_TYPE = 'barplot'
+
 export interface UseBarplot extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
   dataRangeType: Ref<DataRangeType>
@@ -37,7 +39,8 @@ export const useBarplot = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseBarplot> => {
-  const currentContent = currentSpec?.content as BarplotContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as BarplotContent) : null
 
   const {
     title,
@@ -67,7 +70,7 @@ export const useBarplot = async (
 
   const _generateContent = (): BarplotContent => {
     return {
-      type: 'barplot',
+      type: CONTENT_TYPE,
       metric: metric,
       display_range: dataRangeProps.value
     }

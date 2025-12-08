@@ -9,6 +9,7 @@ from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
+graph_title: str = "My Custom Graph"
 
 
 class CustomGraphs(CmkPage):
@@ -69,32 +70,18 @@ class CreateCustomGraph(CmkPage):
         self.main_area.get_suggestion("Save & go to Custom graph").click()
 
 
-class DesignGraph(CmkPage):
-    graph_title: str = "My Custom Graph"
-    page_title: str = f"Design graph '{graph_title}'"
-
+class BaseGraph(CmkPage):
     @override
     def navigate(self) -> None:
-        create_custom_graph = CreateCustomGraph(self.page)
-        create_custom_graph.add_title(self.graph_title)
-        create_custom_graph.save_graph()
-        self.validate_page()
+        raise NotImplementedError("'navigate' method should be overridden")
 
     @override
     def validate_page(self) -> None:
-        logger.info("Validate that current page is 'Design graph' page")
-        _url_pattern = quote_plus("custom_graph_design.py")
-        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        self.main_area.check_page_title(self.page_title)
+        raise NotImplementedError("'validate_page' method should be overridden")
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
-
-    def add_graph_line_otel(self, metric_name: str) -> None:
-        self.main_area.get_text("Metric name").click()
-        self.main_area.get_text(metric_name).click()
-        self.main_area.get_text("Add").click()
 
     def _value_cell_selector(self, n_child: int) -> Locator:
         return self.main_area.locator(
@@ -116,3 +103,55 @@ class DesignGraph(CmkPage):
     @property
     def last_value_cell(self) -> Locator:
         return self._value_cell_selector(5)
+
+
+class DesignGraph(BaseGraph):
+    page_title: str = f"Design graph '{graph_title}'"
+
+    @override
+    def navigate(self) -> None:
+        create_custom_graph = CreateCustomGraph(self.page)
+        create_custom_graph.add_title(graph_title)
+        create_custom_graph.save_graph()
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is 'Design graph' page")
+        _url_pattern = quote_plus("custom_graph_design.py")
+        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
+        self.main_area.check_page_title(self.page_title)
+
+    def add_graph_line_otel(self, metric_name: str) -> None:
+        self.main_area.get_text("Metric name").click()
+        self.main_area.get_text(metric_name).click()
+        self.main_area.get_text("Add").click()
+
+    def save_graph(self) -> None:
+        logger.info("Save designed graph")
+        self.main_area.get_suggestion("Save").click()
+
+
+class CustomGraph(BaseGraph):
+    page_title: str = "Custom graph"
+
+    @override
+    def navigate(self) -> None:
+        custom_graphs = CustomGraphs(self.page)
+        custom_graphs.navigate()
+        custom_graphs.get_link(graph_title).click()
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is '%s page", self.page_title)
+        _url_pattern: str = quote_plus("custom_graph.py")
+        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
+        expect(
+            self.edit_graph,
+            f"'{self.edit_graph}' button not visible in '{self.page_title}' page",
+        ).to_be_visible()
+
+    @property
+    def edit_graph(self) -> Locator:
+        return self.get_link("Edit graph")

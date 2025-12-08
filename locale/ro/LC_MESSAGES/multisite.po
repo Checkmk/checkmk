@@ -657,6 +657,10 @@ msgstr "%s Preluare fișier de vidare creat"
 msgid "%s by host"
 msgstr "%s de către gazdă"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via OAuth2 connection"
+msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
+
 #, python-format
 msgid "%s can only be deleted via Quick setup"
 msgstr ""
@@ -2301,6 +2305,10 @@ msgstr ""
 "seta o perioadă de timp pentru cât timp este permis ca o condiție să fie "
 "într-o anumită stare înainte ca verificarea să se alerteze."
 
+#, fuzzy
+msgid "A descriptive name for this OAuth2 connection."
+msgstr "Un titlu descriptiv despre această acțiune."
+
 msgid "A descriptive title for this rule pack"
 msgstr "Un titlu descriptiv pentru acest pachet de reguli"
 
@@ -2372,7 +2380,7 @@ msgid "A host with this name already exists in this folder."
 msgstr "O gazdă cu acest nume există deja în acest dosar."
 
 #, fuzzy
-msgid "A human-readable name for this relay configuration."
+msgid "A human-readable alias for this relay configuration."
 msgstr "Creați o nouă configurație a arborelui de gazde virtuale"
 
 #, fuzzy
@@ -2778,6 +2786,14 @@ msgstr "AES-256"
 
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
+
+#, fuzzy
+msgid "AI"
+msgstr "AIX"
+
+#, fuzzy
+msgid "AI Assistance"
+msgstr "Instanța"
 
 msgid "AIX"
 msgstr "AIX"
@@ -3259,6 +3275,9 @@ msgstr "Accept orice cheie SSH Host Key"
 
 msgid "Accept incoming TCP connections"
 msgstr "Acceptarea conexiunilor TCP primite"
+
+msgid "Accept only one neighbor per local port"
+msgstr ""
 
 #, fuzzy
 msgid "Accept service properties"
@@ -4054,10 +4073,6 @@ msgstr "Adaugă filtre"
 
 msgid "Add NGINX instance"
 msgstr "Adăugați instanța NGINX"
-
-#, fuzzy
-msgid "Add OAuth2 connection"
-msgstr "Adăugați conexiunea LDAP"
 
 msgid "Add OID descriptions"
 msgstr "Adăugați descrieri OID"
@@ -5572,14 +5587,6 @@ msgstr "Atribuirea agregării"
 msgid "Aggregation checks"
 msgstr "Controale de agregare"
 
-#, fuzzy
-msgid "Aggregation for histograms"
-msgstr "Grupuri de agregare"
-
-#, fuzzy
-msgid "Aggregation for sums"
-msgstr "Grupuri de agregare"
-
 msgid "Aggregation function"
 msgstr "Funcția de agregare"
 
@@ -6583,6 +6590,9 @@ msgid ""
 msgstr ""
 "Permite încărcarea, instalarea, dezinstalarea, crearea și modificarea "
 "pachetelor de extensii (MKP). Notă: MKP-urile conțin cod executabil."
+
+msgid "Allows to use the 'Explain with AI' button."
+msgstr ""
 
 #, python-format
 msgid "Allows to view and edit %s created by other users."
@@ -9162,6 +9172,10 @@ msgid "Azure Agent Info (deprecated)"
 msgstr "Informații despre Azure Agent"
 
 #, fuzzy
+msgid "Azure App Registration"
+msgstr "Înregistrări de aplicații"
+
+#, fuzzy
 msgid "Azure Application Gateway"
 msgstr "Poarta de aplicații"
 
@@ -9213,6 +9227,22 @@ msgstr "Azure DB Storage"
 
 msgid "Azure Databases"
 msgstr "Baze de date Azure"
+
+#, fuzzy
+msgid "Azure Firewall Health"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure Firewall Latency"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure Firewall SNAT Utilization"
+msgstr "GCP/Redis Utilizare CPU"
+
+#, fuzzy
+msgid "Azure Firewall Throughput"
+msgstr "Viteză de citire"
 
 #, fuzzy
 msgid "Azure Firewalls"
@@ -9395,6 +9425,18 @@ msgstr "Conexiuni la baza de date"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure firewall health"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure firewall latency"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Azure recovery services vault backup"
+msgstr "Servicii de recuperare Vault"
 
 #, fuzzy
 msgid "Azure resource group"
@@ -12097,9 +12139,6 @@ msgstr "Nu se pot calcula rețete grafice"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Nu se pot calcula rețete grafice: %s."
 
-msgid "Cannot change folder of rules managed by Quick setup."
-msgstr ""
-
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
@@ -12146,6 +12185,11 @@ msgid ""
 msgstr ""
 "Nu se pot defini macro-uri care să suprascrie \"CUSTOMER_ID\" sau "
 "\"CUSTOMER_NAME\" implicite;"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete %s because it is managed by an existing OAuth2 connection."
+msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
 
 #, fuzzy, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
@@ -12382,6 +12426,18 @@ msgstr "Nu se poate scrie fișierul \"%s\": %s."
 
 #, fuzzy
 msgid "Capabilities"
+msgstr "Compatibilitate"
+
+#, fuzzy
+msgid "Capabilities enabled"
+msgstr "Compatibilitate"
+
+#, fuzzy
+msgid "Capabilities map supported"
+msgstr "Compatibilitate"
+
+#, fuzzy
+msgid "Capabilities supported"
 msgstr "Compatibilitate"
 
 msgid "Capacity filled"
@@ -15205,9 +15261,6 @@ msgstr "Condiții"
 msgid "Conditions for this rule to apply"
 msgstr "Condiții de aplicare a acestei reguli"
 
-msgid "Conditions of rules managed by Quick setup cannot be changed."
-msgstr ""
-
 msgid "Conference Allocation Latency"
 msgstr "Latența de alocare a conferinței"
 
@@ -16173,10 +16226,6 @@ msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
 #, python-format
-msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
-msgstr ""
-
-#, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
@@ -17024,6 +17073,10 @@ msgstr "Creați %s"
 msgid "Create Conference Latency"
 msgstr "Creați o latență de conferință"
 
+#, fuzzy
+msgid "Create OAuth2 connections."
+msgstr "Adăugați o conexiune"
+
 msgid "Create SLA"
 msgstr "Creați SLA"
 
@@ -17316,6 +17369,10 @@ msgstr "Creați un raport stocat"
 # georgem ##############
 msgid "Create the following interface groups"
 msgstr "Creați următoarele grupuri de interfețe"
+
+#, fuzzy
+msgid "Create the rule in the configured folder"
+msgstr "Creați o nouă configurație a arborelui de gazde virtuale"
 
 msgid "Create topic"
 msgstr "Creați un subiect"
@@ -18614,14 +18671,6 @@ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 msgid "Data point"
 msgstr "Date trimise"
 
-#, fuzzy
-msgid "Data point attribute"
-msgstr "Atributele timpilor morți:"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributele timpilor morți:"
-
 msgid "Data range"
 msgstr "Intervalul de date"
 
@@ -19229,6 +19278,10 @@ msgstr "Dosare amânate Vârsta"
 
 msgid "Deferred files in Spool"
 msgstr "Fișiere amânate în Spool"
+
+#, fuzzy
+msgid "Define OAuth parameters"
+msgstr "Parametrii impliciți"
 
 msgid ""
 "Define Oracle database instances to monitor to overwrite default settings."
@@ -23978,6 +24031,11 @@ msgstr "Activați jurnalizarea notificărilor"
 msgid "Enable notifications?"
 msgstr "Activați notificările?"
 
+msgid ""
+"Enable or disable product telemetry. When disabled, you can configure "
+"whether to show a popup asking for consent on login."
+msgstr ""
+
 msgid "Enable passive checks"
 msgstr "Activați verificările pasive"
 
@@ -25664,6 +25722,14 @@ msgstr "Expiră"
 msgid "Expires on"
 msgstr "Expiră la"
 
+#, python-format
+msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
+msgstr ""
+
+#, fuzzy
+msgid "Explain with AI"
+msgstr "Continuați creșterea aici"
+
 msgid "Explanation for event action"
 msgstr "Explicație pentru acțiunea evenimentului"
 
@@ -25672,10 +25738,6 @@ msgstr "Explicit"
 
 msgid "Explicit Queue Names"
 msgstr "Nume explicite ale cozilor de așteptare"
-
-#, fuzzy
-msgid "Explicit condition"
-msgstr "Condiții explicite"
 
 msgid "Explicit conditions"
 msgstr "Condiții explicite"
@@ -26199,6 +26261,10 @@ msgid "Failed to create sync archive [%d]: %s"
 msgstr "Nu s-a reușit crearea arhivei de sincronizare [%d]: %s."
 
 msgid "Failed to decode certificate data"
+msgstr "Nu a reușit să decodifice datele certificatului"
+
+#, fuzzy
+msgid "Failed to decode filter context"
 msgstr "Nu a reușit să decodifice datele certificatului"
 
 #, python-format
@@ -33813,6 +33879,12 @@ msgstr ""
 "Dacă detectarea automată a vitezei de legătură nu funcționează, puteți seta "
 "viteza de legătură aici."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -36989,10 +37061,6 @@ msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
 
-#, fuzzy, python-format
-msgid "Invalid figure content: %s"
-msgstr "Conexiune de utilizator invalidă: %s"
-
 msgid "Invalid file name"
 msgstr "Nume de fișier invalid"
 
@@ -37017,10 +37085,6 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Nume de dosar invalid. Sunt permise numai caracterele a-z, A-Z, 0-9, _ și -."
-
-#, fuzzy, python-format
-msgid "Invalid graph content: %s"
-msgstr "Tip de grafic invalid: %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -37066,6 +37130,10 @@ msgstr "Identificator invalid"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Identificator invalid: %s"
+
+#, fuzzy
+msgid "Invalid ifid parameter"
+msgstr "Parametru de control invalid"
 
 msgid "Invalid login credentials."
 msgstr "Datele de autentificare nevalabile."
@@ -37454,6 +37522,10 @@ msgstr "Nu este logat."
 
 msgid "Is not using persistent connections."
 msgstr "Nu utilizează conexiuni persistente."
+
+#, fuzzy
+msgid "Is show more"
+msgstr "arată mai mult"
 
 msgid "Is unlicensed"
 msgstr "Nu deține licență"
@@ -38333,6 +38405,13 @@ msgid "LISTEN"
 msgstr "ASCULTĂ"
 
 #, fuzzy
+msgid "LLDP cache"
+msgstr "În cache"
+
+msgid "LLDP neighbours"
+msgstr ""
+
+#, fuzzy
 msgid "LPAR statistics for AIX"
 msgstr "Statistici RMON"
 
@@ -38661,6 +38740,10 @@ msgid "Latencies (99th percentile)"
 msgstr "Latențe (percentila 99)"
 
 msgid "Latency"
+msgstr "Latență"
+
+#, fuzzy
+msgid "Latency (ms)"
 msgstr "Latență"
 
 msgid "Latency of GetItem requests"
@@ -41635,9 +41718,6 @@ msgstr "Gestionați și creați pachete de extensii Checkmk (MKP)."
 msgid "Manage background jobs"
 msgstr "Gestionați lucrările de fundal"
 
-msgid "Manage configuration read only mode"
-msgstr "Gestionarea configurației în modul numai pentru citire"
-
 msgid "Manage custom attributes"
 msgstr "Gestionați atributele personalizate"
 
@@ -43353,10 +43433,6 @@ msgid "Metric levels"
 msgstr "Niveluri metrice"
 
 #, fuzzy
-msgid "Metric name"
-msgstr "Etichetă metrică"
-
-#, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Numele gazdei (potrivire exactă)"
 
@@ -43720,6 +43796,10 @@ msgstr "Precondiții lipsă"
 
 #, fuzzy, python-format
 msgid "Missing request variable '%s'"
+msgstr "Variabila lipsă siteid"
+
+#, fuzzy
+msgid "Missing request variable 'widget_id'"
 msgstr "Variabila lipsă siteid"
 
 msgid "Missing required \"Host name\" selection."
@@ -45367,6 +45447,12 @@ msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negate: găsiți gazdele <b>nu</b> care au acest pachet"
 
 #, fuzzy
+msgid "Negate: make rule apply for all but the above entries"
+msgstr ""
+"<b>Negate:</b> face ca regula să se aplice pentru <b>toate, cu excepția</b> "
+"intrărilor de mai sus"
+
+#, fuzzy
 msgid "Negative age tolerance"
 msgstr "Aici nu este permisă o valoare goală."
 
@@ -45392,6 +45478,10 @@ msgid "Neighbor address"
 msgstr "Adresa de rețea"
 
 #, fuzzy
+msgid "Neighbor description"
+msgstr "Arată descrierea"
+
+#, fuzzy
 msgid "Neighbor name"
 msgstr "Numele senzorului"
 
@@ -45405,6 +45495,10 @@ msgstr "Click aici pentru detalii."
 #, fuzzy
 msgid "Neighbor port"
 msgstr "Mesaj pentru alertele gazdelor"
+
+#, fuzzy
+msgid "Neighbor port description"
+msgstr "Descrierea portului"
 
 msgid "Neither"
 msgstr "Nici"
@@ -45930,10 +46024,6 @@ msgstr "Nu există opțiuni suplimentare de configurare pentru această metodă.
 msgid "No agent labels present."
 msgstr "Nu sunt prezente etichete de agent."
 
-#, fuzzy
-msgid "No aggregation"
-msgstr "agregare"
-
 msgid "No appropriate request ID"
 msgstr "Nu există un ID de cerere corespunzător"
 
@@ -45996,6 +46086,9 @@ msgstr "Nu sunt alocate grupuri de contact."
 msgid "No custom attributes are defined yet."
 msgstr "Nu sunt definite încă atribute personalizate."
 
+msgid "No dashboard found for the given dashboard name and/or dashboard owner"
+msgstr ""
+
 msgid "No data"
 msgstr "Nu există date"
 
@@ -46026,6 +46119,10 @@ msgstr "Nu este definită nicio sursă de date."
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
+msgstr "Setați valorile implicite pentru toate secțiunile"
+
+#, fuzzy
+msgid "No default values can be set."
 msgstr "Setați valorile implicite pentru toate secțiunile"
 
 #, fuzzy
@@ -48257,6 +48354,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Adăugați o conexiune"
+
+#, fuzzy
+msgid "OAuth2 connections"
 msgstr "Adăugați o conexiune"
 
 msgid "OEM data interpretation"
@@ -52672,6 +52773,10 @@ msgid "Please add at least one service group."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 #, fuzzy
+msgid "Please add at least one service item."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
 msgid "Please add at least one service label."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
@@ -53795,10 +53900,6 @@ msgid "Predefined condition"
 msgstr "Condiție predefinită"
 
 #, python-format
-msgid "Predefined condition '%s' does not exist or using not permitted"
-msgstr "Condiția predefinită '%s' nu există sau utilizarea nu este permisă"
-
-#, python-format
 msgid "Predefined condition: '%s' does not exist or using not permitted"
 msgstr "Condiție predefinită: '%s' nu există sau utilizarea nu este permisă"
 
@@ -54227,6 +54328,10 @@ msgstr "Procesor Max. Capacitate"
 
 msgid "Product"
 msgstr "Produs"
+
+#, fuzzy
+msgid "Product Telemetry"
+msgstr "element de raport"
 
 msgid "Profile"
 msgstr "Profil"
@@ -55157,9 +55262,6 @@ msgstr "Raritan EMX Rack: Temperatura"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: Fazele de intrare"
 
-msgid "Rate"
-msgstr ""
-
 #, fuzzy
 msgid "Rate computation"
 msgstr "Calculul tendințelor"
@@ -55224,6 +55326,14 @@ msgstr "Operațiuni IO de citire pe secundă"
 
 msgid "Read Latency"
 msgstr "Latență de citire"
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations (experimental)"
+msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
+
+#, fuzzy
+msgid "Read OpenTelemetry configurations."
+msgstr "Adaugp o noua configurație de utilizator"
 
 msgid "Read access to all hosts and folders"
 msgstr "Acces de citire la toate gazdele și folderele"
@@ -55385,6 +55495,14 @@ msgstr "Minimum de așteptare pentru citire"
 
 msgid "Read wait time"
 msgstr "Timp de așteptare pentru citire"
+
+#, fuzzy
+msgid "Read-only mode"
+msgstr "Mod de numai citire"
+
+#, fuzzy
+msgid "Read-only mode for configuration"
+msgstr "Configurație la distanță"
 
 msgid "Reading connections"
 msgstr "Conexiuni de lectură"
@@ -56057,6 +56175,10 @@ msgid "Relay ID"
 msgstr "ID cheie"
 
 #, fuzzy
+msgid "Relay alias"
+msgstr "Întârziere:"
+
+#, fuzzy
 msgid "Relay configuration"
 msgstr "configurare"
 
@@ -56065,16 +56187,12 @@ msgid "Relay configurations"
 msgstr "configurare"
 
 #, fuzzy
-msgid "Relay display name"
+msgid "Relay display alias"
 msgstr "Afișați numele"
 
 #, fuzzy
 msgid "Relay log size"
 msgstr "Dimensiunea jurnalului de releu"
-
-#, fuzzy
-msgid "Relay name"
-msgstr "Redenumiți"
 
 #, fuzzy
 msgid "Relay properties"
@@ -57193,16 +57311,8 @@ msgid "Resource Name"
 msgstr "Numele resursei"
 
 #, fuzzy
-msgid "Resource attribute"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Calcularea numelui de gazdă"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Resetarea atributelor"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -58590,6 +58700,18 @@ msgstr "Utilizarea SNAT"
 msgid "SNAT Usage (Deprecated)"
 msgstr "Azure Storage"
 
+#, fuzzy
+msgid "SNAT port utilization"
+msgstr "Utilizarea nodurilor"
+
+#, fuzzy
+msgid "SNAT port utilization %"
+msgstr "Utilizarea nodurilor"
+
+#, fuzzy
+msgid "SNAT port utilization levels"
+msgstr "Utilizare CPU"
+
 msgid "SNAT usage"
 msgstr "Utilizarea SNAT"
 
@@ -58907,7 +59029,8 @@ msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
 "Salvat verificarea configurației de verificare a gazdei '%s' cu servicii %d."
 
-msgid "Saved read only settings"
+#, fuzzy
+msgid "Saved read-only settings"
 msgstr "Setări salvate numai pentru citire"
 
 msgid "Saved space"
@@ -59027,14 +59150,6 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
-
-#, fuzzy
-msgid "Scope attribute"
-msgstr "Atributul rolului"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributul rolului"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -59727,6 +59842,10 @@ msgid ""
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
+
+#, fuzzy
+msgid "Select the authority for the OAuth2 connection."
+msgstr "Adăugați o conexiune"
 
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
@@ -60732,6 +60851,10 @@ msgstr "Vârsta statului de serviciu"
 msgid "Service state for Differing Service States"
 msgstr "Procentul de stare de serviciu"
 
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Traducerea stării serviciului"
+
 msgid "Service state if no map rule matches"
 msgstr ""
 "Starea serviciului în cazul în care nicio regulă de hartă nu corespunde"
@@ -61298,6 +61421,17 @@ msgid ""
 msgstr ""
 "Setați adresa gazdă a serverului LDAP. Poate fi o adresă IP sau un nume de "
 "gazdă rezolvabil."
+
+msgid ""
+"Set the host names or IP addresses of the site. The entries will be added as "
+"additional subject alternative names (SANs) to the site certificate, "
+"alongside the default SANs. Configuring this allows proper server name "
+"identification when connecting to the site via TLS, for example for "
+"instrumented applications connecting to the OpenTelemetry collector.\\nNote: "
+"Changing this setting will trigger re-issuance of the site certificate by "
+"the site CA. In distributed setups, configure SANs separately for each site "
+"in the distributed monitoring configuration."
+msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Setați nivelul de jurnalizare pentru Windows Agent"
@@ -62353,6 +62487,10 @@ msgid "Signing agents' client certificates"
 msgstr "Certificate SSL Citrix Netscaler"
 
 #, fuzzy
+msgid "Signing relay client certificates"
+msgstr "Certificate SSL Citrix Netscaler"
+
+#, fuzzy
 msgid "Signing the site certificate"
 msgstr "Verificarea certificatului"
 
@@ -62589,6 +62727,10 @@ msgstr "Copie de rezervă a site-ului"
 
 msgid "Site backup targets"
 msgstr "Ținte de backup pentru site"
+
+#, fuzzy
+msgid "Site certificate subject alternative names"
+msgstr "Denumirea alternativă a subiectului certificatului"
 
 msgid "Site certificate validity"
 msgstr "Valabilitatea certificatului site-ului"
@@ -66864,6 +67006,14 @@ msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Durata totală"
 
 #, fuzzy
+msgid "Telemetry is disabled"
+msgstr "Configurarea este dezactivată."
+
+#, fuzzy
+msgid "Telemetry is enabled"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -67473,6 +67623,13 @@ msgstr ""
 "URL-ul serverului Checkmk trebuie să fie FQDN (consultați ajutorul în linie "
 "pentru detalii)."
 
+msgid "The Client ID (Application ID) of your registered application."
+msgstr ""
+
+#, fuzzy
+msgid "The Client secret of your registered application."
+msgstr "Starea în cazul în care nu există replicare a sistemului"
+
 msgid ""
 "The Conda environment file specifies all dependencies that will be installed "
 "in the environment."
@@ -67922,6 +68079,9 @@ msgid ""
 msgstr ""
 "Portul TCP pe care ascultă serverul SMTP. Valoarea implicită este <tt>25</"
 "tt>."
+
+msgid "The Tenant ID of your Azure AD instance."
+msgstr ""
 
 msgid ""
 "The URI of the request. This should start with '/' and not include the "
@@ -68629,13 +68789,6 @@ msgid ""
 msgstr ""
 "Parola configurată trebuie fie eliminată, fie nu aveți permisiunea de a "
 "utiliza această parolă. Vă rugăm să alegeți alta."
-
-msgid ""
-"The configured predefined condition has either be removed or you are not "
-"permitted to use it. Please choose another one."
-msgstr ""
-"Condiția predefinită configurată trebuie fie eliminată, fie nu aveți voie să "
-"o utilizați. Vă rugăm să alegeți o alta."
 
 msgid "The configured site is not known to this site."
 msgstr "Site-ul configurat nu este cunoscut de acest site."
@@ -69446,6 +69599,9 @@ msgid ""
 msgstr ""
 "Valoarea dată nu este permisă. Puteți configura numai URL-uri relative, cum "
 "ar fi <tt>dashboard.py?name=my_dashboard</tt>."
+
+msgid "The given widget id does not match any of this dashboard's widgets"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -71070,6 +71226,10 @@ msgid ""
 "This is also true for searching in a regular expression."
 msgstr ""
 
+#, fuzzy
+msgid "The provided token is not valid for the requested page."
+msgstr "Fișierul nu pare a fi un fișier cheie valid."
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Sistemul ESX interogat (vCenter / Host)"
 
@@ -71373,6 +71533,10 @@ msgid ""
 "Credentials and other agent-specific data can be edited here"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The rule specification %r does not exist."
+msgstr "Setul de reguli \"%s\" nu există."
+
 msgid "The rule you are trying to edit does not exist."
 msgstr "Regula pe care încercați să o modificați nu există."
 
@@ -71399,6 +71563,10 @@ msgstr ""
 
 #, python-format
 msgid "The ruleset \"%s\" does not exist."
+msgstr "Setul de reguli \"%s\" nu există."
+
+#, fuzzy, python-format
+msgid "The ruleset \"%s\" uses legacy valuespecs."
 msgstr "Setul de reguli \"%s\" nu există."
 
 msgid ""
@@ -75119,14 +75287,6 @@ msgstr ""
 "a discurilor hard disk atașate. Puteți descărca acest instrument de la <a "
 "href='http://www.lsi.com/'>LSI</a>."
 
-msgid ""
-"This predefined condition can not be used with the current ruleset, because "
-"it defines the same label conditions as set by this rule."
-msgstr ""
-"Această condiție predefinită nu poate fi utilizată cu setul de reguli "
-"curent, deoarece definește aceleași condiții de etichetare ca și cele "
-"stabilite de această regulă."
-
 msgid "This problem has been acknowledged"
 msgstr "Această problemă a fost recunoscută"
 
@@ -76204,6 +76364,38 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall SNAT port "
+"utilization monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall health "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall latency "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Firewall throughput "
+"monitoring"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
 "tablespace și un indexspace al bazei de date."
@@ -77640,6 +77832,10 @@ msgid "Throughput (FC)"
 msgstr "Randament"
 
 msgid "Throughput levels"
+msgstr "Niveluri de randament"
+
+#, fuzzy
+msgid "Throughput levels (/sec)"
 msgstr "Niveluri de randament"
 
 msgid "Throughput optimized HDD space"
@@ -81883,21 +82079,6 @@ msgstr "Imposibilitatea de a procesa cererea"
 
 #, python-format
 msgid ""
-"Unable to read current conditions of this rule. Falling back to default "
-"values. When saving this rule now, your previous settings will be "
-"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
-"issue may be caused by an inconsistent configuration, e.g. when rules refer "
-"to tag groups or tags that do not exist anymore."
-msgstr ""
-"Imposibilitatea de a citi condițiile actuale ale acestei reguli. Se revine "
-"la valorile implicite. Când salvați această regulă acum, setările anterioare "
-"vor fi suprascrise. Problema a fost: %s, Condiții anterioare: <pre>%s</pre>O "
-"astfel de problemă poate fi cauzată de o configurație inconsecventă, de "
-"exemplu, atunci când regulile se referă la grupuri de etichete sau etichete "
-"care nu mai există."
-
-#, python-format
-msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
 "When saving this rule now, your previous settings will be overwritten. The "
 "problem was: %s."
@@ -82194,6 +82375,10 @@ msgstr "Data necunoscută"
 
 msgid "Unknown entities"
 msgstr "Entități necunoscute"
+
+#, fuzzy, python-format
+msgid "Unknown form type %s"
+msgstr "Tip metric necunoscut %s"
 
 #, python-format
 msgid "Unknown group: %s"
@@ -88904,6 +89089,10 @@ msgstr "Nu vi se permite să activați modificările de configurare."
 msgid "You are not permitted to edit this global setting."
 msgstr "Nu vi se permite să modificați această setare globală."
 
+#, fuzzy
+msgid "You are not permitted to edit this rule."
+msgstr "Nu aveți permisiunea de a accesa acest set de reguli."
+
 msgid "You are not permitted to perform this action."
 msgstr "Nu vă este permis să efectuați această acțiune."
 
@@ -89143,10 +89332,6 @@ msgid ""
 msgstr ""
 "Puteți copia și utiliza structura de date de mai jos în cererile API REST."
 
-#, python-format
-msgid "You can create predefined conditions <a href=\"%s\">here</a>."
-msgstr "Puteți crea condiții predefinite <a href=\"%s\"> aici</a>."
-
 msgid ""
 "You can customize the list of icon categories to be able to assign your <a "
 "href=\"wato.py?mode=icons\">custom icons</a> to these categories. They will "
@@ -89222,15 +89407,6 @@ msgstr ""
 
 msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
-
-msgid ""
-"You can either specify individual conditions for this rule, or use a set of "
-"predefined conditions, which may be handy if you have to configure the same "
-"conditions in different rulesets."
-msgstr ""
-"Puteți fie să specificați condiții individuale pentru această regulă, fie să "
-"utilizați un set de condiții predefinite, ceea ce poate fi util dacă trebuie "
-"să configurați aceleași condiții în diferite seturi de reguli."
 
 msgid ""
 "You can enter a text here that will be displayed in the element when viewing "
@@ -91017,6 +91193,10 @@ msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal și actualizări de securitate (Linux)"
 
 #, fuzzy, python-format
+msgid "[%s] - OAuth2 connection"
+msgstr "Adăugați o conexiune"
+
+#, fuzzy, python-format
 msgid "[%s] - Quick setup"
 msgstr "Configurare rapidă"
 
@@ -92792,6 +92972,10 @@ msgstr[0] "regula"
 msgstr[1] ""
 msgstr[2] ""
 
+#, fuzzy, python-format
+msgid "rule %s"
+msgstr "Editați regula %s."
+
 #, fuzzy
 msgid "rule matches"
 msgid_plural "rules are matching"
@@ -93119,6 +93303,9 @@ msgstr "foloseste alias"
 msgid "use port name"
 msgstr "foloseste numele portului"
 
+msgid "use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
+msgstr ""
+
 msgid "used"
 msgstr "folosit"
 
@@ -93353,6 +93540,12 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
+#, fuzzy
+msgid "Error retrieving AI service information. Please try again later."
+msgstr ""
+"Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
+"de căutare."
+
 msgid "Checkmk AI feature documentation & privacy policy"
 msgstr ""
 
@@ -93388,6 +93581,12 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Nu a fost găsit"
+
+#, fuzzy
+msgid "Error retrieving available AI actions. Please try again later."
+msgstr ""
+"Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
+"de căutare."
 
 msgid "The following feature uses a Large Language Model (LLM)."
 msgstr ""
@@ -93489,8 +93688,12 @@ msgid "Remove row"
 msgstr "Eliminat: %s"
 
 #, fuzzy
-msgid "Dashboard filter"
-msgstr "Element de tablou de bord"
+msgid "Filter configuration"
+msgstr "Configurația filtrului Iptables"
+
+#, fuzzy
+msgid "Runtime filters"
+msgstr "Eliminați filtrul"
 
 #, fuzzy
 msgid "Close filter configuration"
@@ -93500,47 +93703,50 @@ msgstr "Configurația filtrului Iptables"
 msgid "Clear search"
 msgstr "Căutarea regulilor"
 
-msgid "Filters included by dashboard owner"
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values are temporary and can be overridden by widget filters."
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a runtime filter"
-msgstr "Nu puteți suprascrie grupul de etichete încorporat \"%s\"."
+msgid "Set filters for all widgets."
+msgstr "Setați valorile implicite pentru toate secțiunile"
 
 #, fuzzy
-msgid "Host filter"
-msgstr "Fișiere jurnal gazdă"
+msgid "Values can be overriden by runtime or widget filters."
+msgstr "Nu puteți suprascrie grupul de etichete încorporat \"%s\"."
+
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
+
+msgid "Values are temporary and can be overriden by widget filters."
+msgstr ""
 
 #, fuzzy
 msgid "Select from list"
 msgstr "Selectați tipul din listă"
 
-# georgem ##############
 #, fuzzy
-msgid "Service filter"
-msgstr "Filtre de service"
+msgid "%{n} filters"
+msgstr "Filtre aplicate:"
 
 #, fuzzy
-msgid "Reset to saved filters"
-msgstr "Eliminați filtrul"
+msgid "Applied filters"
+msgstr "Filtre aplicate:"
 
 #, fuzzy
-msgid "Success! Your new dashboard filters have been saved"
-msgstr "Modificările dvs. au fost salvate."
+msgid "No %{n} dashboard filters applied"
+msgstr "Gazda Ntopng"
 
-msgid "Runtime filters are required to load data."
+msgid ""
+"%{n} filters selected on dashboard level appear and apply to all widgets. "
+"You can override the values by setting widget specific or runtime filters. "
 msgstr ""
 
-msgid "Values apply across all widgets."
-msgstr ""
-
 #, fuzzy
-msgid "Apply to dashboard"
-msgstr "Adăugați la tabloul de bord"
-
-#, fuzzy
-msgid "Edit required runtime filters"
-msgstr "Filtre de context necesare"
+msgid "Edit filter configuration"
+msgstr "Configurație gazdă"
 
 #, fuzzy
 msgid "Override dashboard filters"
@@ -93971,6 +94177,10 @@ msgid "Overriden"
 msgstr "Prezentare generală"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Element de tablou de bord"
+
+#, fuzzy
 msgid "Runtime filter"
 msgstr "Eliminați filtrul"
 
@@ -94206,6 +94416,21 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Vizualizare"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Selectați tipul de element de conținut"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
 msgid "Link content to"
 msgstr "Legătura cu titlul"
 
@@ -94242,10 +94467,6 @@ msgid "Show widget background"
 msgstr "Afișați titlul fără fundal"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Selecția fișierelor"
-
-#, fuzzy
 msgid "Alert & Notification"
 msgstr "Notificări de testare"
 
@@ -94266,21 +94487,6 @@ msgstr "Regula de notificare"
 
 msgid "Percentage of service problems"
 msgstr "Procentul de probleme de serviciu"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Adaugă filtre"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Vizualizare"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Selectați tipul de element de conținut"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
 
 #, fuzzy
 msgid "Host selection"
@@ -94325,6 +94531,10 @@ msgstr "Stocarea notificărilor pentru analiza regulilor"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Adaugă filtre"
 
 #, fuzzy
 msgid "Save widget"
@@ -94383,10 +94593,6 @@ msgstr "Clonarea graficului personalizat"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonarea graficului personalizat"
-
-#, fuzzy
-msgid "Widget visualization"
-msgstr "Vizualizare BI"
 
 #, fuzzy
 msgid "Clone & review dashboard filters"
@@ -94519,6 +94725,10 @@ msgid "Event selection"
 msgstr "Selecția fișierelor"
 
 #, fuzzy
+msgid "Available visualization type"
+msgstr "Opțiuni disponibile"
+
+#, fuzzy
 msgid "Show background in status color and label"
 msgstr "Fundalul în culoarea de stare și eticheta"
 
@@ -94585,6 +94795,16 @@ msgstr "Opțiuni grafice"
 #, fuzzy
 msgid "Service metric"
 msgstr "Metrici de servicii"
+
+# georgem ##############
+#, fuzzy
+msgid "Filter service metric by"
+msgstr "Metrici de servicii"
+
+msgid ""
+"Use these fields to narrow down the list of available service metrics.<br /"
+">Click the Host name or Service label to clear the filter."
+msgstr ""
 
 #, fuzzy
 msgid "Must select an option"
@@ -94706,6 +94926,26 @@ msgid "Copy existing view: %{viewName}"
 msgstr "Copierea vizualizării existente"
 
 #, fuzzy
+msgid "Select operator"
+msgstr "Conexiuni respinse"
+
+#, fuzzy
+msgid "Select label"
+msgstr "Selectați fișierul"
+
+#, fuzzy
+msgid "Remove item"
+msgstr "Eliminați filtrul"
+
+#, fuzzy
+msgid "Remove group"
+msgstr "Eliminat: %s"
+
+#, fuzzy
+msgid "and not"
+msgstr "nu este"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Parolă nouă"
 
@@ -94725,12 +94965,20 @@ msgid "Preview of matches:"
 msgstr "Această regulă se potrivește cu"
 
 #, fuzzy
-msgid "Auto"
-msgstr "Automat"
+msgid "Metric name"
+msgstr "Etichetă metrică"
 
 #, fuzzy
-msgid "Strict"
-msgstr "Metric"
+msgid "Resource attributes"
+msgstr "Resetarea atributelor"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Atributul rolului"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributele timpilor morți:"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -94738,6 +94986,14 @@ msgstr "Latență"
 
 msgid "Apply percentile (histograms)"
 msgstr ""
+
+#, fuzzy
+msgid "Auto"
+msgstr "Automat"
+
+#, fuzzy
+msgid "Strict"
+msgstr "Metric"
 
 msgid "Area"
 msgstr "Zona"
@@ -94793,6 +95049,28 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "Vă rugăm să selectați cel puțin un element"
+
+#, fuzzy
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Edit rule: Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Validation error"
+msgstr "Eroare de configurare"
+
+#, fuzzy
+msgid "Fatal error"
+msgstr "Eroare internă"
+
+msgid "When you save this rule a new rule will be created."
+msgstr ""
+
+msgid "Dismiss"
+msgstr ""
 
 #, fuzzy
 msgid "Graph metrics with all zero values"
@@ -95214,26 +95492,6 @@ msgid "Define OAuth2 parameter"
 msgstr "Parametrii impliciți"
 
 #, fuzzy
-msgid "Description:"
-msgstr "Descriere"
-
-#, fuzzy
-msgid "Authority:"
-msgstr "Autoritatea"
-
-#, fuzzy
-msgid "Tenant ID:"
-msgstr "TenantID"
-
-#, fuzzy
-msgid "Client ID:"
-msgstr "ID client"
-
-#, fuzzy
-msgid "Client secret:"
-msgstr "Secretul clientului"
-
-#, fuzzy
 msgid "Start authorization"
 msgstr "Autorizare de bază"
 
@@ -95282,11 +95540,11 @@ msgid "Name the relay"
 msgstr "Numele reprezentantului"
 
 #, fuzzy
-msgid "Provide a display name for your Relay."
+msgid "Provide a display alias for your Relay."
 msgstr "Denumire alternativă de afișare pentru servicii"
 
 msgid ""
-"The name you enter here will be automatically inserted into the terminal "
+"The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
 
@@ -95824,6 +96082,161 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Aggregation for histograms"
+#~ msgstr "Grupuri de agregare"
+
+#, fuzzy
+#~ msgid "Aggregation for sums"
+#~ msgstr "Grupuri de agregare"
+
+#, fuzzy
+#~ msgid "Data point attribute"
+#~ msgstr "Atributele timpilor morți:"
+
+#, fuzzy, python-format
+#~ msgid "Invalid graph content: %s"
+#~ msgstr "Tip de grafic invalid: %s"
+
+#, fuzzy
+#~ msgid "No aggregation"
+#~ msgstr "agregare"
+
+#, fuzzy
+#~ msgid "Resource attribute"
+#~ msgstr "Resetarea atributelor"
+
+#, fuzzy
+#~ msgid "Scope attribute"
+#~ msgstr "Atributul rolului"
+
+#, fuzzy
+#~ msgid "Host filter"
+#~ msgstr "Fișiere jurnal gazdă"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Service filter"
+#~ msgstr "Filtre de service"
+
+#, fuzzy
+#~ msgid "Reset to saved filters"
+#~ msgstr "Eliminați filtrul"
+
+#, fuzzy
+#~ msgid "Success! Your new dashboard filters have been saved"
+#~ msgstr "Modificările dvs. au fost salvate."
+
+#, fuzzy
+#~ msgid "Apply to dashboard"
+#~ msgstr "Adăugați la tabloul de bord"
+
+#, fuzzy
+#~ msgid "Edit required runtime filters"
+#~ msgstr "Filtre de context necesare"
+
+#, fuzzy
+#~ msgid "Add OAuth2 connection"
+#~ msgstr "Adăugați conexiunea LDAP"
+
+#, fuzzy
+#~ msgid "Broadcast"
+#~ msgstr "difuzare"
+
+#, fuzzy
+#~ msgid "Prefix length"
+#~ msgstr "Prefix text"
+
+#, fuzzy
+#~ msgid "Scope ID"
+#~ msgstr "ID-ul nodului"
+
+#, fuzzy
+#~ msgid "Description:"
+#~ msgstr "Descriere"
+
+#, fuzzy
+#~ msgid "Authority:"
+#~ msgstr "Autoritatea"
+
+#, fuzzy
+#~ msgid "Tenant ID:"
+#~ msgstr "TenantID"
+
+#, fuzzy
+#~ msgid "Client ID:"
+#~ msgstr "ID client"
+
+#, fuzzy
+#~ msgid "Client secret:"
+#~ msgstr "Secretul clientului"
+
+#~ msgid "Manage configuration read only mode"
+#~ msgstr "Gestionarea configurației în modul numai pentru citire"
+
+#, fuzzy
+#~ msgid "Widget visualization"
+#~ msgstr "Vizualizare BI"
+
+#, fuzzy
+#~ msgid "Explicit condition"
+#~ msgstr "Condiții explicite"
+
+#, fuzzy, python-format
+#~ msgid "Invalid figure content: %s"
+#~ msgstr "Conexiune de utilizator invalidă: %s"
+
+#, python-format
+#~ msgid "Predefined condition '%s' does not exist or using not permitted"
+#~ msgstr "Condiția predefinită '%s' nu există sau utilizarea nu este permisă"
+
+#, fuzzy
+#~ msgid "Relay name"
+#~ msgstr "Redenumiți"
+
+#~ msgid ""
+#~ "The configured predefined condition has either be removed or you are not "
+#~ "permitted to use it. Please choose another one."
+#~ msgstr ""
+#~ "Condiția predefinită configurată trebuie fie eliminată, fie nu aveți voie "
+#~ "să o utilizați. Vă rugăm să alegeți o alta."
+
+#~ msgid ""
+#~ "This predefined condition can not be used with the current ruleset, "
+#~ "because it defines the same label conditions as set by this rule."
+#~ msgstr ""
+#~ "Această condiție predefinită nu poate fi utilizată cu setul de reguli "
+#~ "curent, deoarece definește aceleași condiții de etichetare ca și cele "
+#~ "stabilite de această regulă."
+
+#, python-format
+#~ msgid ""
+#~ "Unable to read current conditions of this rule. Falling back to default "
+#~ "values. When saving this rule now, your previous settings will be "
+#~ "overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such "
+#~ "an issue may be caused by an inconsistent configuration, e.g. when rules "
+#~ "refer to tag groups or tags that do not exist anymore."
+#~ msgstr ""
+#~ "Imposibilitatea de a citi condițiile actuale ale acestei reguli. Se "
+#~ "revine la valorile implicite. Când salvați această regulă acum, setările "
+#~ "anterioare vor fi suprascrise. Problema a fost: %s, Condiții anterioare: "
+#~ "<pre>%s</pre>O astfel de problemă poate fi cauzată de o configurație "
+#~ "inconsecventă, de exemplu, atunci când regulile se referă la grupuri de "
+#~ "etichete sau etichete care nu mai există."
+
+#, python-format
+#~ msgid "You can create predefined conditions <a href=\"%s\">here</a>."
+#~ msgstr "Puteți crea condiții predefinite <a href=\"%s\"> aici</a>."
+
+#~ msgid ""
+#~ "You can either specify individual conditions for this rule, or use a set "
+#~ "of predefined conditions, which may be handy if you have to configure the "
+#~ "same conditions in different rulesets."
+#~ msgstr ""
+#~ "Puteți fie să specificați condiții individuale pentru această regulă, fie "
+#~ "să utilizați un set de condiții predefinite, ceea ce poate fi util dacă "
+#~ "trebuie să configurați aceleași condiții în diferite seturi de reguli."
+
+#, fuzzy
 #~ msgid "Add new field"
 #~ msgstr "Adăugați o nouă oră"
 
@@ -95881,10 +96294,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Select at least one column."
 #~ msgstr "Vă rugăm să selectați cel puțin un element"
-
-#, fuzzy
-#~ msgid "Site certificate subject alternative names"
-#~ msgstr "Denumirea alternativă a subiectului certificatului"
 
 #, fuzzy
 #~ msgid ""
@@ -95988,10 +96397,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service state for Stopped VMs"
 #~ msgstr "Tipul de stare a serviciului"
-
-#, fuzzy
-#~ msgid "Continue with AI?"
-#~ msgstr "Continuați creșterea aici"
 
 #, fuzzy
 #~ msgid "Do not ask again"
@@ -97098,10 +97503,6 @@ msgstr ""
 
 #~ msgid "Transformation on selected metric"
 #~ msgstr "Transformare pe metrica selectată"
-
-#, python-format
-#~ msgid "Unknown metric type %s"
-#~ msgstr "Tip metric necunoscut %s"
 
 #~ msgid "Update transform"
 #~ msgstr "Actualizarea transformării"

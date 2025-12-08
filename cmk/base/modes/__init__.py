@@ -12,17 +12,13 @@
 from __future__ import annotations
 
 import textwrap
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 
 from cmk import trace
-from cmk.base.config import ConfigCache
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.ccc.hostaddress import HostName, Hosts
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
-from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
-from cmk.utils.tags import TagID
 
 OptionSpec = str
 Argument = str
@@ -54,55 +50,10 @@ class Modes:
 
     def exists(self, opt: OptionName) -> bool:
         try:
-            self._get(opt)
+            self.get(opt)
             return True
         except KeyError:
             return False
-
-    def call(
-        self,
-        opt: str,
-        arg: Argument | None,
-        all_opts: Options,
-        all_args: Arguments,
-        trace_context: trace.Context,
-    ) -> int:
-        mode = self._get(opt)
-        sub_options = mode.get_sub_options(all_opts)
-
-        handler_args: list = []
-        if mode.sub_options:
-            handler_args.append(sub_options)
-
-        if mode.argument and mode.argument_optional:
-            handler_args.append(all_args)
-        elif mode.argument:
-            handler_args.append(arg)
-
-        handler = mode.handler_function
-        if handler is None:
-            raise TypeError()
-
-        with tracer.span(
-            f"mode[{mode.name()}]",
-            attributes={
-                "cmk.base.mode.name": mode.name(),
-                "cmk.base.mode.args": repr(handler_args),
-            },
-            context=trace_context,
-        ):
-            return handler(*handler_args)
-
-    def _get(self, opt: str) -> Mode:
-        opt_name = self._strip_dashes(opt)
-        return self._mode_map[opt_name]
-
-    def _strip_dashes(self, opt: str) -> str:
-        if opt.startswith("--"):
-            return opt[2:]
-        if opt.startswith("-"):
-            return opt[1:]
-        raise NotImplementedError()
 
     def get(self, name: OptionName) -> Mode:
         return self._mode_map[name]
@@ -139,53 +90,6 @@ class Modes:
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def parse_hostname_list(
-        self,
-        config_cache: ConfigCache,
-        hosts_config: Hosts,
-        args: list[str],
-        with_clusters: bool = True,
-        with_foreign_hosts: bool = False,
-    ) -> Sequence[HostName]:
-        if with_foreign_hosts:
-            valid_hosts = set(hosts_config.hosts)
-        else:
-            valid_hosts = {
-                hn
-                for hn in hosts_config.hosts
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            }
-
-        if with_clusters:
-            valid_hosts = valid_hosts.union(
-                hn
-                for hn in hosts_config.clusters
-                # Inconsistent with `with_foreign_hosts` above.
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            )
-
-        hostlist: list[HostName] = []
-        for arg in args:
-            if arg[0] != "@" and arg in valid_hosts:
-                hostlist.append(HostName(arg))
-            else:
-                if arg[0] == "@":
-                    arg = arg[1:]
-                tagspec = arg.split(",")
-
-                num_found = 0
-                for hostname in valid_hosts:
-                    if hosttags_match_taglist(
-                        config_cache.host_tags.tag_list(hostname), (TagID(_) for _ in tagspec)
-                    ):
-                        hostlist.append(hostname)
-                        num_found += 1
-                if num_found == 0:
-                    raise MKBailOut(
-                        "Host name or tag specification '%s' does not match any host." % arg
-                    )
-        return hostlist
-
     #
     # GENERAL OPTIONS
     #
@@ -216,11 +120,43 @@ class Modes:
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def _get_general_option(self, opt: str) -> Option | None:
-        opt_name = self._strip_dashes(opt)
         for option in self._general_options:
-            if opt_name in [option.long_option, option.short_option]:
+            if opt.lstrip("-") in [option.long_option, option.short_option]:
                 return option
         return None
+
+
+def call(
+    mode: Mode,
+    arg: Argument | None,
+    all_opts: Options,
+    all_args: Arguments,
+    trace_context: trace.Context,
+) -> int:
+    sub_options = mode.get_sub_options(all_opts)
+
+    handler_args: list = []
+    if mode.sub_options:
+        handler_args.append(sub_options)
+
+    if mode.argument and mode.argument_optional:
+        handler_args.append(all_args)
+    elif mode.argument:
+        handler_args.append(arg)
+
+    handler = mode.handler_function
+    if handler is None:
+        raise TypeError()
+
+    with tracer.span(
+        f"mode[{mode.name()}]",
+        attributes={
+            "cmk.base.mode.name": mode.name(),
+            "cmk.base.mode.args": repr(handler_args),
+        },
+        context=trace_context,
+    ):
+        return handler(*handler_args)
 
 
 class Option:

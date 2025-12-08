@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -26,7 +26,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _valuespec_inventory_multipath_rules():
+def _valuespec_inventory_multipath_rules() -> Dictionary:
     return Dictionary(
         title=_("Linux Multipath Inventory"),
         elements=[
@@ -60,7 +60,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_multipath():
+def _item_spec_multipath() -> TextInput:
     return TextInput(
         title=_("Name of the MP LUN"),
         help=_(
@@ -71,7 +71,7 @@ def _item_spec_multipath():
     )
 
 
-def _multipath_lower_levels():
+def _multipath_lower_levels() -> Alternative:
     return Alternative(
         title=_("Expected number of active paths"),
         elements=[
@@ -87,7 +87,7 @@ def _multipath_lower_levels():
     )
 
 
-def _parameter_valuespec_multipath():
+def _parameter_valuespec_multipath() -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             help=_(

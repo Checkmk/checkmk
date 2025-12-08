@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -8,7 +7,7 @@ import os
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum
 from pathlib import Path
 from typing import Literal, TypedDict
 
@@ -19,7 +18,7 @@ DEFAULT_CFG_PATH = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman_cfg.json"
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
 
 
-class AutomaticSocketDetectionMethod(StrEnum):
+class AutomaticSocketDetectionMethod(Enum):
     AUTO = "auto"
     ONLY_ROOT_SOCKET = "only_root_socket"
     ONLY_USER_SOCKETS = "only_user_sockets"

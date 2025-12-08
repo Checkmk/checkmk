@@ -198,11 +198,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     ),
     "azure_v2": (
         "cmk.agent_based.v1",  # FIXME
-        "cmk.ccc.version",  # edition detection
-        "cmk.ccc.hostaddress",  # FormSpec validation
-        "cmk.plugins.lib",  # ?
         "cmk.utils.http_proxy_config",
-        "cmk.utils.paths",  # edition detection
     ),
     "checkmk": (
         "cmk.agent_based.v1",  # FIXME
@@ -251,6 +247,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     "metric_backend": (
         "cmk.metric_backend",
         "cmk.utils.paths",
+        "cmk.gui.form_specs.nonfree.ultimate.unstable.metric_backend_custom_query",
     ),
     "otel": (
         "cmk.gui.form_specs.unstable",
@@ -389,7 +386,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.servicename",
         "cmk.utils.unixsocket_http",
     ),
-    Component("cmk.bakery"): _allow(),  # only allow itself, this is the future :-)
+    # only allow itself, this is the future :-)
+    Component("cmk.bakery"): _allow(),
     Component("cmk.base.api.bakery"): _allow(
         "cmk.bakery",
         "cmk.ccc",
@@ -720,6 +718,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.redis",
         "cmk.utils.urls",
         "cmk.rulesets.v1",
+        "cmk.shared_typing",
         exclude=("cmk.gui.plugins", "cmk.gui.nonfree.pro.plugins"),
     ),
     Component("cmk.gui.graphing.nonfree.ultimate"): _allow(
@@ -811,7 +810,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             "cmk.gui.nonfree.ultimatemt",
         ),
     ),
-    Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),  # should become a package
+    # should become a package
+    Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),
     Component("cmk.inventory"): _allow(
         *PACKAGE_CCC,
     ),
@@ -823,6 +823,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_MESSAGING,
         "cmk.utils.paths",
+        "cmk.utils.log.security_event",
     ),
     **{  # some plugin families that refuse to play by the rules:
         Component(f"cmk.plugins.{family}"): _allow(
@@ -845,6 +846,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_PLUGIN_APIS,
     ),
     Component("cmk.product_telemetry"): _allow(
+        "cmk.ccc.version",
         "cmk.livestatus_client",
         "cmk.utils.licensing.helper",
         "cmk.utils.livestatus_helpers",
@@ -1100,6 +1102,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         "cmk.bi",
         "cmk.gui",
+        "cmk.shared_typing",
         "cmk.utils",
     ),
     Component("tests.integration.cmk.post_rename_site"): _allow(

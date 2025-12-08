@@ -61,10 +61,10 @@ const props = defineProps<DashboardPageProperties>()
 
 const isDashboardEditingMode = ref(false)
 const openDashboardFilterSettings = ref(false)
-const openDashboardSettings = ref(false)
+const openDashboardSettings = ref(props.mode === 'settings')
 const openAddWidgetDialog = ref(false)
 const openDashboardCreationDialog = ref(props.mode === 'create')
-const openDashboardCloneDialog = ref(false)
+const openDashboardCloneDialog = ref(props.mode === 'clone')
 const openDashboardShareDialog = ref(false)
 const openWizard = ref(false)
 const selectedWizard = ref('')
@@ -304,11 +304,6 @@ const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards
 }
 
-const handleSaveDashboardFilters = async (filters: ConfiguredFilters) => {
-  dashboardFilters.handleSaveDashboardFilters(filters)
-  await dashboardsManager.persistDashboard()
-}
-
 const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilterMode) => {
   dashboardFilters.handleApplyRuntimeFilters(filters)
   dashboardFilters.setRuntimeFiltersMode(mode)
@@ -340,8 +335,12 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilt
   urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
 }
 
-const handleSaveMandatoryRuntimeFilters = async (filters: string[]) => {
-  dashboardFilters.handleSaveMandatoryRuntimeFilters(filters)
+const handleSaveFilterSettings = async (payload: {
+  dashboardFilters: ConfiguredFilters
+  mandatoryRuntimeFilters: string[]
+}) => {
+  dashboardFilters.handleSaveDashboardFilters(payload.dashboardFilters)
+  dashboardFilters.handleSaveMandatoryRuntimeFilters(payload.mandatoryRuntimeFilters)
   await dashboardsManager.persistDashboard()
 }
 
@@ -457,10 +456,9 @@ function deepClone<T>(obj: T): T {
           dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
         "
         :can-edit="can_edit_dashboards"
-        starting-tab="dashboard-filter"
-        @save-dashboard-filters="handleSaveDashboardFilters"
+        starting-window="runtime-filters"
         @apply-runtime-filters="handleApplyRuntimeFilters"
-        @save-mandatory-runtime-filters="handleSaveMandatoryRuntimeFilters"
+        @save-filter-settings="handleSaveFilterSettings"
         @close="openDashboardFilterSettings = false"
       />
       <DashboardSettingsWizard

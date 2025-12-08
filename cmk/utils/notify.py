@@ -15,7 +15,7 @@ from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
-from cmk.ccc.store import load_object_from_file, save_object_to_file
+from cmk.ccc.store import DimSerializer, load_object_from_file
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import omd_root
@@ -30,6 +30,9 @@ class NotificationHostConfig:
     host_labels: Labels
     service_labels: Mapping[ServiceName, Labels]
     tags: Mapping[TagGroupID, TagID]
+
+
+type NotifyHostFiles = Mapping[HostName, bytes]
 
 
 def find_wato_folder(context: NotificationContext) -> str:
@@ -85,29 +88,30 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
             logger_.info(not_found_msg)
 
 
-def write_notify_host_file(
-    config_path: Path,
+def create_notify_host_files(
     config_per_host: Mapping[HostName, NotificationHostConfig],
-) -> None:
-    notify_config_path: Path = _get_host_file_path(config_path)
-    for host, labels in config_per_host.items():
-        host_path = notify_config_path / host
-        save_object_to_file(
-            host_path,
+) -> NotifyHostFiles:
+    serializer = DimSerializer(pretty=False)
+    return {
+        host: serializer.serialize(
             dataclasses.asdict(
                 NotificationHostConfig(
                     host_labels=labels.host_labels,
                     service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
                     tags=labels.tags,
                 )
-            ),
+            )
         )
+        for host, labels in config_per_host.items()
+    }
 
 
 def read_notify_host_file(
     host_name: HostName,
 ) -> NotificationHostConfig:
-    host_file_path: Path = _get_host_file_path(host_name=host_name)
+    # FIXME: using "latest" here is subject to race conditions
+    config_path = VersionedConfigPath.make_latest_path(omd_root)
+    host_file_path: Path = make_notify_host_file_path(config_path, host_name)
     return NotificationHostConfig(
         **load_object_from_file(
             path=host_file_path,
@@ -116,8 +120,5 @@ def read_notify_host_file(
     )
 
 
-def _get_host_file_path(config_path: Path | None = None, host_name: HostName | None = None) -> Path:
-    root_path = config_path if config_path else VersionedConfigPath.make_latest_path(omd_root)
-    if host_name:
-        return root_path / "notify" / "host_config" / host_name
-    return root_path / "notify" / "host_config"
+def make_notify_host_file_path(config_path: Path, host_name: HostName) -> Path:
+    return config_path.joinpath("notify", "host_config", host_name)

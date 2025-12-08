@@ -5,10 +5,15 @@
 
 from collections.abc import Iterable
 
-from cmk.gui.utils.loading_transition import LoadingTransition
+from cmk.gui.search.legacy_helpers import transform_legacy_loading_transition_to_unified
+from cmk.shared_typing.unified_search import (
+    LoadingTransition,
+    ProviderName,
+    UnifiedSearchResultItem,
+    UnifiedSearchResultTarget,
+)
 
 from ..icon_mapping import get_icon_for_topic
-from ..type_defs import UnifiedSearchResultItem, UnifiedSearchResultTarget
 
 
 class CustomizeSearchEngine:
@@ -43,14 +48,18 @@ class CustomizeSearchEngine:
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
         return (
             UnifiedSearchResultItem(
-                provider="customize",
+                provider=ProviderName.customize,
                 title=title,
                 topic=topic,
                 target=UnifiedSearchResultTarget(
                     url=url,
-                    transition=loading_transition,
+                    transition=transform_legacy_loading_transition_to_unified(
+                        loading_transition.value
+                    )
+                    if loading_transition
+                    else None,
                 ),
-                icon=get_icon_for_topic(topic, "customize"),
+                icon=get_icon_for_topic(topic, ProviderName.customize),
             )
             for topic, title, url, loading_transition in self._result_store
             if query.lower() in title.lower()

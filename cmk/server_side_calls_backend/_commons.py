@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shlex
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import Protocol
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir
 from cmk.password_store.v1_unstable import get_store_secret, PasswordStore
@@ -99,7 +100,8 @@ def _make_helpful_exception(index: int, arguments: Sequence[str | Secret]) -> Ty
     )
 
 
-ExecutableFinderProtocol = Callable[[str, str | None], str]
+class ExecutableFinderProtocol(Protocol):
+    def __call__(self, executable: str, module: str | None) -> str: ...
 
 
 class ExecutableFinder:

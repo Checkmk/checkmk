@@ -2,16 +2,15 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""rule for assinging the special agent to host objects"""
+"""rule for assigning the special agent to host objects"""
 
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
 
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
-    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
@@ -185,7 +184,7 @@ def migrate_redfish(data: object) -> Mapping[str, object]:
     if not isinstance(data, Mapping):
         raise TypeError(data)
     if "fetching" in data:
-        return data
+        return {k: v for k, v in data.items() if k != "debug"}
 
     enabled_sections = data.get("sections", [s.name for s in REDFISH_SECTIONS])
     disabled_sections = data.get("disabled_sections", ())
@@ -206,7 +205,6 @@ def migrate_redfish(data: object) -> Mapping[str, object]:
             if all(mode == "always" for (mode, _) in fetching.values())
             else {"fetching": fetching}
         ),
-        "debug": data.get("debug", False),
     }
 
 
@@ -217,13 +215,6 @@ def _valuespec_special_agents_redfish() -> Dictionary:
             **_auth_elements(),
             "fetching": _fetching_settings(),
             **_connection_elements(),
-            "debug": DictElement(
-                required=True,
-                parameter_form=BooleanChoice(
-                    title=Title("Debug mode"),
-                    label=Label("enabled"),
-                ),
-            ),
         },
         migrate=migrate_redfish,
     )

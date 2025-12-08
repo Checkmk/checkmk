@@ -18,12 +18,12 @@ from cmk.gui.main_menu_types import (
     UnifiedSearch,
 )
 from cmk.gui.wato._snapins import _hide_menu
-from cmk.shared_typing.unified_search import Provider, Providers, UnifiedSearchConfig
+from cmk.shared_typing.unified_search import Edition, Provider, Providers, UnifiedSearchProps
 from cmk.utils import paths
 
 
 @dataclass
-class UnifiedSearchMainMenuData(UnifiedSearchConfig, MainMenuData): ...
+class UnifiedSearchMainMenuData(UnifiedSearchProps, MainMenuData): ...
 
 
 def get_unified_search_config(request: Request) -> UnifiedSearchMainMenuData:
@@ -34,7 +34,7 @@ def get_unified_search_config(request: Request) -> UnifiedSearchMainMenuData:
             setup=Provider(active=not _hide_menu(), sort=2),
         ),
         user_id=str(user.id),
-        edition=edition(paths.omd_root).short,
+        edition=Edition(edition(paths.omd_root).short),
     )
 
 

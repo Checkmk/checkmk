@@ -1099,10 +1099,12 @@ filter_table_tests = [
     ),
     # Testing base class FilterInvtableTimestampAsAge
     FilterTableTest(
-        ident="invinterface_last_change_canonical",
+        ident="invinterface_last_change",
         request_vars=[
-            ("invinterface_last_change_canonical_from", "86400"),
-            ("invinterface_last_change_canonical_until", "432000"),
+            ("invinterface_last_change_from", "1"),
+            ("invinterface_last_change_from_prefix", "d"),
+            ("invinterface_last_change_until", "5"),
+            ("invinterface_last_change_until_prefix", "d"),
         ],
         rows=[
             {"invinterface_last_change": 1523811000},
@@ -1302,10 +1304,12 @@ def test_filters_filter_table(
         ),
         # Testing base class FilterInvFloat
         FilterTableTest(
-            ident="inv_hardware_cpu_bus_speed_canonical",
+            ident="inv_hardware_cpu_bus_speed",
             request_vars=[
-                ("inv_hardware_cpu_bus_speed_canonical_from", "10000000"),
-                ("inv_hardware_cpu_bus_speed_canonical_until", "20000000"),
+                ("inv_hardware_cpu_bus_speed_from", "10"),
+                ("inv_hardware_cpu_bus_speed_from_prefix", "M"),
+                ("inv_hardware_cpu_bus_speed_until", "20"),
+                ("inv_hardware_cpu_bus_speed_until_prefix", "M"),
             ],
             rows=[
                 {"host_inventory": deserialize_tree({"hardware": {"cpu": {"bus_speed": 1000000}}})},

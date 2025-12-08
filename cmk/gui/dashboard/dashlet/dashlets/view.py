@@ -686,7 +686,10 @@ class ViewWidgetIFramePage(Page):
 
     @staticmethod
     def _get_context(request: Request) -> VisualContext:
-        context = json.loads(request.get_ascii_input_mandatory("context"))
+        try:
+            context = json.loads(request.get_ascii_input_mandatory("context"))
+        except ValueError as e:
+            raise MKUserError("context", _("Failed to decode filter context")) from e
         return {
             filter_name: filter_values
             for filter_name, filter_values in context.items()

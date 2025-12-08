@@ -18,3 +18,7 @@ class NoServicesInfoError(Exception):
 
 class ServicesInfoLengthError(Exception):
     pass
+
+
+class InvalidTelemetryEndpointError(Exception):
+    pass

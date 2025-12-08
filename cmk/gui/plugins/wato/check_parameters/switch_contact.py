@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from typing import Any
@@ -23,7 +22,7 @@ def _migrate(p: str | dict) -> dict[str, Any]:
     return {"state": p}
 
 
-def _parameter_valuespec_switch_contact():
+def _parameter_valuespec_switch_contact() -> Migrate:
     return Migrate(
         migrate=_migrate,
         valuespec=Dictionary(

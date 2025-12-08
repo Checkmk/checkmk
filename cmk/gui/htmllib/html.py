@@ -610,6 +610,22 @@ class HTMLGenerator(HTMLWriter):
             )
         )
 
+    def render_loading_button(
+        self, name: str, url: str, label: str, class_: str = "", waiting_message: str | None = None
+    ) -> HTML:
+        before_redirect_action = (
+            (f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');")
+            if waiting_message
+            else ""
+        )
+        return self.render_input(
+            name=name,
+            type_="button",
+            class_="button " + class_,
+            onclick=f"{before_redirect_action}location.href='{url}';return false",
+            value=label,
+        )
+
     def render_button(
         self,
         varname: str,
@@ -1326,6 +1342,19 @@ class HTMLGenerator(HTMLWriter):
             onfocus="if (this.blur) this.blur();",
             onclick=onclick,
             download=download,
+        )
+
+    def icon_loading_button(self, url: str, title: str, icon: Icon, waiting_message: str) -> None:
+        self.icon_button(
+            url=None,
+            title=title,
+            icon=icon,
+            onclick=(
+                "let i = this.getElementsByTagName('img')[0];"
+                + r"i.src = i.src.replace(/facelift\/images\/.+$/,'facelift/images/load_graph.png');"
+                + f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');"
+                + f"location.href='{url}';return false;"
+            ),
         )
 
     def icon_button(

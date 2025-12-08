@@ -34,7 +34,7 @@ import cmk.utils.log
 import cmk.utils.paths
 from cmk import trace
 from cmk.base import profiling
-from cmk.base.modes import modes
+from cmk.base.modes import call, modes
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     BaseDetails,
@@ -120,13 +120,13 @@ try:
     done, exit_status = False, 0
     trace_context = trace.extract_context_from_environment(dict(os.environ))
     if mode_name is not None and mode_args is not None:
-        exit_status = modes.call(mode_name, mode_args, opts, args, trace_context)
+        exit_status = call(modes.get(mode_name.lstrip("-")), mode_args, opts, args, trace_context)
         done = True
 
     # When no mode was found, Checkmk is running the "check" mode
     if not done:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-            exit_status = modes.call("--check", None, opts, args, trace_context)
+            exit_status = call(modes.get("check"), None, opts, args, trace_context)
         else:
             help_function = modes.get("help").handler_function
             if help_function is None:

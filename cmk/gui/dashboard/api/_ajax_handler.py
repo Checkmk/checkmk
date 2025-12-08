@@ -15,17 +15,29 @@ from typing import Annotated, Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel, Discriminator, Json, ValidationError
 
+from cmk.gui.dashboard.api.model.widget_content.graph import (
+    CombinedGraphContent,
+    CustomGraphContent,
+    PerformanceGraphContent,
+    ProblemGraphContent,
+    SingleTimeseriesContent,
+)
+from cmk.gui.dashboard.dashlet.dashlets.graph import TemplateGraphDashletConfig
 from cmk.gui.dashboard.dashlet.dashlets.stats import StatsDashletConfig
 from cmk.gui.dashboard.type_defs import (
     AlertOverviewDashletConfig,
     AverageScatterplotDashletConfig,
     BarplotDashletConfig,
+    CombinedGraphDashletConfig,
+    CustomGraphDashletConfig,
     EventBarChartDashletConfig,
     GaugeDashletConfig,
     HostStateSummaryDashletConfig,
     InventoryDashletConfig,
+    ProblemsGraphDashletConfig,
     ServiceStateSummaryDashletConfig,
     SingleMetricDashletConfig,
+    SingleTimeseriesDashletConfig,
     SiteOverviewDashletConfig,
     StateDashletConfig,
 )
@@ -124,7 +136,7 @@ def _general_settings_to_internal(
 
 @dataclass
 class FigureRequestInternal:
-    figure_config: FigureDashletConfig
+    dashlet_config: FigureDashletConfig
     context: VisualContext
     single_infos: SingleInfos
     general_settings: _WidgetGeneralSettingsInternal
@@ -138,7 +150,7 @@ class _FigureRequest(BaseModel, frozen=True):
 
     def to_internal(self) -> FigureRequestInternal:
         return FigureRequestInternal(
-            figure_config=self.content.to_internal(),
+            dashlet_config=self.content.to_internal(),
             context=self.context,
             single_infos=self.single_infos,
             general_settings=_general_settings_to_internal(self.general_settings),
@@ -159,3 +171,60 @@ def get_validated_internal_figure_request(
         return _FigureRequest.model_validate(request_dict).to_internal()
     except ValidationError as exc:
         raise MKUserError("figure_request_validation", str(exc))
+
+
+type GraphContent = Annotated[
+    CombinedGraphContent
+    | CustomGraphContent
+    | PerformanceGraphContent
+    | ProblemGraphContent
+    | SingleTimeseriesContent,
+    Discriminator("type"),
+]
+
+type GraphDashletConfig = (
+    CombinedGraphDashletConfig
+    | CustomGraphDashletConfig
+    | ProblemsGraphDashletConfig
+    | SingleTimeseriesDashletConfig
+    | TemplateGraphDashletConfig  # corresponds to PerformanceGraphContent ("pnpgraph")
+)
+
+
+@dataclass
+class GraphRequestInternal:
+    widget_id: str
+    dashlet_config: GraphDashletConfig
+    context: VisualContext
+    single_infos: SingleInfos
+
+
+class _GraphRequest(BaseModel, frozen=True):
+    widget_id: str
+    content: Annotated[GraphContent, Json]
+    context: Annotated[VisualContext, Json]
+    single_infos: Annotated[SingleInfos, Json]
+
+    def to_internal(self) -> GraphRequestInternal:
+        return GraphRequestInternal(
+            widget_id=self.widget_id,
+            dashlet_config=self.content.to_internal(),
+            context=self.context,
+            single_infos=self.single_infos,
+        )
+
+
+def get_validated_internal_graph_request(
+    ctx: PageContext,
+) -> GraphRequestInternal:
+    request_dict = {}
+    for key in ["widget_id", "content", "context", "single_infos"]:
+        val = ctx.request.get_str_input(key)
+        if val is None:
+            raise MKUserError(key, _("Missing request variable '%s'") % key)
+        request_dict[key] = val
+
+    try:
+        return _GraphRequest.model_validate(request_dict).to_internal()
+    except ValidationError as exc:
+        raise MKUserError("graph_request_validation", str(exc))

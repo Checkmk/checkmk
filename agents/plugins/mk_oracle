@@ -701,6 +701,7 @@ set_ora_version() {
 #TODO Create subsections in query and parse them in related check plugin.
 sql_iostats() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_performance:sep(124)>>>'
         echo "WITH iostat_file AS (
                 SELECT con_id,
@@ -750,12 +751,14 @@ sql_iostats() {
                 JOIN v\$database d ON 1 = 1
             ORDER BY vd.con_id,
                 io.filetype_name;"
+        echo 'PROMPT '
     fi
 }
 
 sql_performance() {
 
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_performance:sep(124)>>>'
         echo "        select upper(DECODE(cdb,'NO',instance_name
                                              ,instance_name || '.' || con_name) )
@@ -890,8 +893,10 @@ EXCEPTION
 END;
 /
 "
+        echo 'PROMPT '
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo 'PROMPT '
         echo "PROMPT <<<oracle_performance:sep(124)>>>"
         echo "select upper(i.INSTANCE_NAME)
                      ||'|'|| 'sys_time_model'
@@ -927,6 +932,7 @@ END;
                      ||'|'|| b.reloads
                      ||'|'|| b.invalidations
               from v\$instance i, V\$librarycache b;"
+        echo 'PROMPT '
     fi
 }
 
@@ -1085,6 +1091,7 @@ sql_tablespaces() {
               set serverout off"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo "SET SERVEROUTPUT ON feedback off
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
@@ -1231,10 +1238,13 @@ sql_tablespaces() {
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
                     'TEMP', t.block_size, t.status);"
     fi
+
+    echo 'PROMPT '
 }
 
 sql_dataguard_stats() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_dataguard_stats:sep(124)>>>'
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| upper(d.DB_UNIQUE_NAME)
@@ -1260,10 +1270,12 @@ sql_dataguard_stats() {
               WHERE vp.name = 'log_archive_config'
               AND   vp.value is not null
               ORDER BY 1;"
+        echo 'PROMPT '
     fi
 }
 
 sql_recovery_status() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_recovery_status:sep(124)>>>'
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}
@@ -1319,6 +1331,7 @@ sql_recovery_status() {
               ORDER BY dh.file#;
              "
     fi
+    echo 'PROMPT '
 }
 
 sql_rman() {
@@ -1328,7 +1341,7 @@ sql_rman() {
         if [ "$NUMERIC_ORACLE_VERSION" -ge 122 ]; then
             archive_target="'PRIMARY', 'LOCAL'"
         fi
-
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
@@ -1398,6 +1411,7 @@ sql_rman() {
                            , case when a.backup_count > 0 then 1 else 0 end);"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "select /*${HINT_RMAN} check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
@@ -1465,10 +1479,12 @@ sql_rman() {
                     group by d.NAME, i.instance_name
                            , case when a.backup_count > 0 then 1 else 0 end);"
     fi
+    echo 'PROMPT '
 }
 
 sql_recovery_area() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_recovery_area:sep(124)>>>'
         echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| round((SPACE_USED-SPACE_RECLAIMABLE)/
@@ -1478,10 +1494,12 @@ sql_recovery_area() {
                      ||'|'|| round(SPACE_RECLAIMABLE/1024/1024)
                      ||'|'|| d.FLASHBACK_ON
               from V\$RECOVERY_FILE_DEST, v\$database d, v\$instance i;"
+        echo 'PROMPT '
     fi
 }
 
 sql_undostat() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_undostat:sep(124)>>>'
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
         echo "select decode(vp.con_id, null, upper(i.INSTANCE_NAME)
@@ -1532,10 +1550,11 @@ sql_undostat() {
                             where rownum = 1
                   );"
     fi
+    echo 'PROMPT '
 }
 
 sql_resumable() {
-
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_resumable:sep(124)>>>'
     echo "SET SERVEROUTPUT ON feedback off
               DECLARE
@@ -1576,10 +1595,11 @@ sql_resumable() {
               END;
               /
               set serverout off"
+    echo 'PROMPT '
 }
 
 sql_jobs() {
-
+    echo 'PROMPT '
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
@@ -1692,9 +1712,11 @@ sql_jobs() {
               set serverout off"
 
     fi
+    echo 'PROMPT '
 }
 
 sql_ts_quotas() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_ts_quotas:sep(124)>>>'
     echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                  ||'|'|| Q.USERNAME
@@ -1708,19 +1730,23 @@ sql_ts_quotas() {
                  ||'|||'
           from v\$database d, v\$instance i
           order by 1;"
+    echo 'PROMPT '
 }
 
 sql_version() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_version>>>'
     echo "select upper(i.INSTANCE_NAME)
          || ' ' || banner
          from v\$version, v\$instance i
          where banner like 'Oracle%';"
+    echo 'PROMPT '
 }
 
 sql_systemparameter() {
     # TODO In the future, all data needed for HW/SW Inventory, should
     # implement a "persist:$UNTIL" to reduce amount of data transmission
+    echo 'PROMPT '
     echo "PROMPT <<<oracle_systemparameter:sep(124)>>>"
     echo "select upper(i.instance_name)
          || '|' || NAME
@@ -1728,9 +1754,11 @@ sql_systemparameter() {
          || '|' || ISDEFAULT
          from v\$system_parameter, v\$instance i
          where name not like '!_%' ESCAPE '!';"
+    echo 'PROMPT '
 }
 
 sql_instance() {
+    echo 'prompt '
     echo 'prompt <<<oracle_instance:sep(124)>>>'
 
     if [ "$NUMERIC_ORACLE_VERSION" -ge 180 ]; then
@@ -1829,9 +1857,11 @@ sql_instance() {
                      || '|' || i.host_name
                 from v\$instance i, v\$database d;"
     fi
+    echo 'prompt '
 }
 
 sql_sessions() {
+    echo 'prompt '
     echo 'prompt <<<oracle_sessions:sep(124)>>>'
 
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
@@ -1862,18 +1892,22 @@ sql_sessions() {
               from v\$resource_limit, v\$instance i
               where RESOURCE_NAME = 'sessions';"
     fi
+    echo 'prompt '
 }
 
 sql_processes() {
+    echo 'prompt '
     echo 'prompt <<<oracle_processes:sep(124)>>>'
     echo "select upper(i.instance_name)
                   || '|' || CURRENT_UTILIZATION
                   || '|' || ltrim(rtrim(LIMIT_VALUE))
            from v\$resource_limit, v\$instance i
            where RESOURCE_NAME = 'processes';"
+    echo 'prompt '
 }
 
 sql_logswitches() {
+    echo 'prompt '
     echo 'prompt <<<oracle_logswitches:sep(124)>>>'
     echo "select upper(i.instance_name)
                   || '|' || logswitches
@@ -1883,9 +1917,11 @@ sql_logswitches() {
                  where h.first_time > sysdate - 1/24
                  and h.thread# = i.instance_number
                 );"
+    echo 'prompt '
 }
 
 sql_locks() {
+    echo 'prompt '
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
         echo 'prompt <<<oracle_locks:sep(124)>>>'
         echo "select upper(vp.name)
@@ -1963,10 +1999,12 @@ sql_locks() {
                      || '|||||||||||||||||'
               from v\$instance i;"
     fi
+    echo 'prompt '
 }
 
 sql_locks_old() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo 'prompt '
         echo 'prompt <<<oracle_locks:sep(124)>>>'
         echo "SET SERVEROUTPUT ON feedback off
               DECLARE
@@ -2011,10 +2049,12 @@ sql_locks_old() {
               END;
               /
               set serverout off"
+        echo 'prompt '
     fi
 }
 
 sql_longactivesessions() {
+    echo 'prompt '
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo 'prompt <<<oracle_longactivesessions:sep(124)>>>'
@@ -2078,9 +2118,11 @@ sql_longactivesessions() {
                      || '||||||||'
               from v\$instance i;"
     fi
+    echo 'prompt '
 }
 
 sql_asm_diskgroup() {
+    echo 'prompt '
     echo 'prompt <<<oracle_asm_diskgroup:sep(124)>>>'
     if [ "$NUMERIC_ORACLE_VERSION" -ge 112 ]; then
 
@@ -2131,6 +2173,7 @@ sql_asm_diskgroup() {
                      || '|' || name || '/'
                 from v\$asm_diskgroup;"
     fi
+    echo 'prompt '
 }
 
 # .

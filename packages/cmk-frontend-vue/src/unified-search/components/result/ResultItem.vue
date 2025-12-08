@@ -4,6 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type {
+  UnifiedSearchResultItemInlineButton,
+  UnifiedSearchResultTarget
+} from 'cmk-shared-typing/typescript/unified_search'
 import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
@@ -12,11 +16,7 @@ import type { CmkIconProps } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon'
 import CmkZebra from '@/components/CmkZebra.vue'
 
-import {
-  type LoadingTransition,
-  showLoadingTransition
-} from '@/loading-transition/loadingTransition'
-import type { UnifiedSearchResultElementInlineButton } from '@/unified-search/lib/providers/unified'
+import { showLoadingTransition } from '@/loading-transition/loadingTransition'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
 import ResultItemTitle from './ResultItemTitle.vue'
@@ -26,8 +26,8 @@ export interface ResultItemProps {
   icon?: CmkIconProps | undefined
   title: string
   html?: string | undefined
-  target?: { url: string; transition?: LoadingTransition | undefined } | undefined
-  inlineButtons?: UnifiedSearchResultElementInlineButton[] | undefined
+  target?: UnifiedSearchResultTarget | undefined
+  inlineButtons?: UnifiedSearchResultItemInlineButton[] | undefined
   context?: string | undefined
   focus?: boolean | undefined
   breadcrumb?: string[] | undefined
@@ -112,9 +112,7 @@ onBeforeUnmount(() => {
         target="main"
         class="result-item-handler"
         :class="{ focus: props.focus }"
-        @click="
-          target?.transition !== undefined && showLoadingTransition(target.transition, props.title)
-        "
+        @click="target?.transition && showLoadingTransition(target.transition, props.title)"
       >
         <div v-if="props.icon" class="result-item-inner-start">
           <CmkIcon
@@ -158,18 +156,10 @@ onBeforeUnmount(() => {
         :href="ib.target.url"
         target="main"
         class="result-item-handler inline"
-        @click="
-          ib.target?.transition !== undefined &&
-          showLoadingTransition(ib.target.transition, ib.title)
-        "
+        @click="ib.target?.transition && showLoadingTransition(ib.target.transition, ib.title)"
       >
         <div v-if="ib.icon" class="result-item-inner-start">
-          <CmkIcon
-            :name="ib.icon.name"
-            :rotate="ib.icon.rotate"
-            :size="ib.icon.size"
-            class="result-item-icon"
-          ></CmkIcon>
+          <CmkIcon :name="ib.icon.name" :size="ib.icon.size" class="result-item-icon"></CmkIcon>
         </div>
         <div class="result-item-inner-end">
           <ResultItemTitle :title="ib.title"></ResultItemTitle>

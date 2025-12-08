@@ -379,6 +379,7 @@ ALL_METRICS: dict[str, list[AzureMetric]] = {
         AzureMetric(name="FirewallHealth", interval="PT1M", aggregation="average"),
         AzureMetric(name="SNATPortUtilization", interval="PT1M", aggregation="maximum"),
         AzureMetric(name="Throughput", interval="PT1M", aggregation="average"),
+        AzureMetric(name="FirewallLatencyPng", interval="PT1M", aggregation="average"),
     ],
     "Microsoft.Compute/virtualMachines": [
         AzureMetric(name="Percentage CPU", interval="PT1M", aggregation="average"),

@@ -1,4 +1,4 @@
-# Component AI Tools
+# Root directory
 #
 # Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
@@ -7,5 +7,17 @@
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
 
+per-file .bazelignore=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazeliskrc=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazelrc=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .dockerignore=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file AGENTS.md=file:/component_owners/ai_tools/OWNERS_DEFINITION
 per-file AGENTS.md=set noparent
+per-file artifacts.make=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file bazel_variables.bzl=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file defines.make=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file editions.yml=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file MODULE.bazel=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file MODULE.bazel.lock=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file package_versions.bzl=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file WORKSPACE=file:/component_owners/ci_platform/OWNERS_DEFINITION

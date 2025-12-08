@@ -124,7 +124,9 @@ def _do_test_and_get_tasks(
 
 
 def _create_version_folder(omd_root: Path, edition: str) -> None:
-    version_path = omd_root / f"some-detailed-version.{edition}"
+    version_path = omd_root / f"some.detailed.version.{edition}"
     version_path.mkdir(exist_ok=True)
     version_link = omd_root / "version"
+    if version_link.exists() or version_link.is_symlink():
+        version_link.unlink()
     version_link.symlink_to(version_path)

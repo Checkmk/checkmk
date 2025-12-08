@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -118,7 +117,7 @@ def test_jolokia_yield_configured_instances() -> None:
     assert next(yci) == {"server": "s2", "port": 1234}
 
 
-class _MockHttpResponse(object):
+class _MockHttpResponse:
     def __init__(self, http_status: int, **kwargs: object) -> None:
         self.status_code = http_status
         self.headers = {}  # type: dict

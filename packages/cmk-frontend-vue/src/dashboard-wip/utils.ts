@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import client, { unwrap } from '@/lib/rest-api-client/client'
+import { copyToClipboard as copyToClipboardUtil } from '@/lib/utils'
 
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import type {
@@ -325,7 +326,7 @@ export function toPathAndSearch(url: URL): string {
 
 export async function copyToClipboard(text: string): Promise<void> {
   try {
-    await navigator.clipboard.writeText(text)
+    await copyToClipboardUtil(text)
   } catch (err) {
     console.error('Failed to copy to clipboard:', err)
   }

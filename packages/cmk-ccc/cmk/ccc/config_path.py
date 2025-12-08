@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Self
+from typing import Final
 
 from cmk.ccc.store import DimSerializer, ObjectStore
 
@@ -26,6 +26,16 @@ class ConfigCreationContext:
     path_active: Path
     path_created: Path
     serial_created: int
+
+
+def detect_latest_config_path(base: Path) -> Path:
+    """Resolve the 'latest' symlink to the latest config path.
+
+    Using this probably subject to a race condition, as the
+    CMC might choose to remove that config.
+    """
+    latest_link_path = VersionedConfigPath.make_latest_path(base)
+    return latest_link_path.resolve()
 
 
 class VersionedConfigPath:
@@ -43,7 +53,9 @@ class VersionedConfigPath:
         super().__init__()
         self.base: Final = base
         self.root: Final = self.make_root_path(base)
-        self.latest: Final = self.make_latest_path(base)
+        # TODO: The fact that this can be interpreted as an int
+        # is an implementation detail of _increment_to_next_serial.
+        # But fixing this would require changing a lot of code.
         self.serial: Final = serial
 
     def __str__(self) -> str:
@@ -61,37 +73,53 @@ class VersionedConfigPath:
     def __hash__(self) -> int:
         return hash(Path(self))
 
-    @classmethod
-    def next(cls, base: Path) -> Self:
-        root = cls.make_root_path(base)
-        store = ObjectStore(root / "serial.mk", serializer=DimSerializer())
-        with store.locked():
-            old_serial: int = store.read_obj(default=0)
-            new_serial = old_serial + 1
-            store.write_obj(new_serial)
-        return cls(base, new_serial)
 
-    @contextmanager
-    def create(self, *, is_cmc: bool) -> Iterator[ConfigCreationContext]:
-        # NOTE:
-        # The "latest" symlink points to the last successfully created config.
-        # The "serial.mk" file contains the last serial we started to create.
-        if not is_cmc:  # CMC manages the configs on its own.
-            for path in self.root.iterdir() if self.root.exists() else []:
-                if (
-                    not path.is_symlink()  # keep "lates" symlink
-                    and path.is_dir()  # keep "serial.mk"
-                    and path.resolve() != self.latest.resolve()  # keep latest config
-                ):
-                    shutil.rmtree(path)
-        Path(self).mkdir(parents=True, exist_ok=True)
+def _increment_to_next_serial(base: Path) -> int:
+    root = VersionedConfigPath.make_root_path(base)
+    store = ObjectStore(root / "serial.mk", serializer=DimSerializer())
+    with store.locked():
+        old_serial: int = store.read_obj(default=0)
+        new_serial = old_serial + 1
+        store.write_obj(new_serial)
+    # TODO: The fact that this can be interpreted as an int
+    # is an implementation detail of _increment_to_next_serial.
+    # But fixing this would require changing a lot of code.
+    return new_serial
+
+
+def _cleanup_old_configs(base: Path, current_config_path: Path) -> None:
+    root = VersionedConfigPath.make_root_path(base)
+    for path in root.iterdir() if root.exists() else []:
+        if (
+            not path.is_symlink()  # keep "lates" symlink
+            and path.is_dir()  # keep "serial.mk"
+            and path.resolve() != current_config_path  # keep latest config
+        ):
+            shutil.rmtree(path)
+
+
+@contextmanager
+def create(base: Path, *, is_cmc: bool) -> Iterator[ConfigCreationContext]:
+    # NOTE:
+    # The "latest" symlink points to the last successfully created config.
+    # The "serial.mk" file contains the last serial we started to create.
+    latest_link_path = VersionedConfigPath.make_latest_path(base)
+    current_config_path = latest_link_path.resolve()
+    serial = _increment_to_next_serial(base)
+    under_construction_path = Path(VersionedConfigPath(base, serial))
+
+    if not is_cmc:  # CMC manages the configs on its own.
+        _cleanup_old_configs(base, current_config_path)
+
+    under_construction_path.mkdir(parents=True, exist_ok=True)
+    try:
         yield ConfigCreationContext(
-            path_active=self.latest.resolve(),
-            path_created=Path(self),
-            serial_created=self.serial,
+            path_active=current_config_path,
+            path_created=under_construction_path,
+            serial_created=serial,
         )
-        # TODO(ml) We should probably remove the files that were created
-        #          previously and not update `serial.mk` on error.
-        # TODO: Should this be in a "finally" or not? Unclear...
-        self.latest.unlink(missing_ok=True)
-        self.latest.symlink_to(Path(self).name)
+    except Exception:
+        raise
+    else:
+        latest_link_path.unlink(missing_ok=True)
+        latest_link_path.symlink_to(under_construction_path.name)

@@ -59,6 +59,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes/statefulset",
     "cmk/kubernetes/cluster",
     "cmk/kubernetes/cluster-host",
+    "cmk/lldp_neighbor",
     "cmk/meraki",
     "cmk/meraki/device_type",
     "cmk/meraki/net_id",

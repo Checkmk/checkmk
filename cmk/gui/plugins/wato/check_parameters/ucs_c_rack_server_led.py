@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -21,7 +20,7 @@ COLORS_DEF_STATES = [
 ]
 
 
-def _item_spec_ucs_c_rack_server_led():
+def _item_spec_ucs_c_rack_server_led() -> TextInput:
     return TextInput(
         title=_("LED"),
         help=_("Specify the LED, for example 'Rack Unit 1 0'."),
@@ -29,7 +28,7 @@ def _item_spec_ucs_c_rack_server_led():
     )
 
 
-def _parameter_valuespec_ucs_c_rack_server_led():
+def _parameter_valuespec_ucs_c_rack_server_led() -> Dictionary:
     return Dictionary(
         title=_("Mapping of LED color to monitoring state"),
         help=_(

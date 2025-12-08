@@ -38,9 +38,13 @@ class FigureDashletPage(AjaxPage):
             dashboard = get_permitted_dashboards_by_owners()[dashboard_name][dashboard_owner]
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
+
         # Get context from the AJAX request body (not simply from the dashboard config) to include
         # potential dashboard context given via HTTP request variables
-        dashboard["context"] = json.loads(ctx.request.get_ascii_input_mandatory("context"))
+        try:
+            dashboard["context"] = json.loads(ctx.request.get_ascii_input_mandatory("context"))
+        except ValueError as e:
+            raise MKUserError("context", _("Failed to decode filter context")) from e
 
         dashlet_id = ctx.request.get_integer_input_mandatory("id")
         try:

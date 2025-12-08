@@ -32,11 +32,15 @@ function explainThis() {
 const templateLoaded = computed(() => {
   return aiTemplate.value !== null
 })
+
+document.addEventListener('cmk-ai-explain-button', () => {
+  explainThis()
+})
 </script>
 
 <template>
   <div id="ai-explain-button"></div>
-  <Teleport defer :to="teleport ?? '#ai-explain-button'">
+  <Teleport v-if="props.hide_button !== true" defer :to="teleport ?? '#ai-explain-button'">
     <CmkButton class="ai-explain-button-app__button" @click="explainThis">
       <div class="ai-explain-button-app__shimmer"></div>
       <CmkIcon name="sparkle" />
@@ -62,6 +66,7 @@ const templateLoaded = computed(() => {
   margin: 3px 0;
   position: relative;
   overflow: hidden;
+  border: 1px solid var(--ux-theme-5) !important;
 
   .ai-explain-button-app__shimmer {
     width: 100%;

@@ -13,6 +13,7 @@ from pydantic import Base64Bytes, BaseModel, Field
 
 class HEADERS(StrEnum):
     SERIAL = "X-CMK-SERIAL"
+    VERSION = "X-CMK-VERSION"
 
 
 class _TaskType(StrEnum):

@@ -5,10 +5,6 @@
 /// distro-package as well as source-package jobs need agent updater binaries
 /// built the same way.
 /// This file gathers the magic to accomplish this, in orde to make it re-usable
-///
-/// Please note that the content in here badly written and full of hard-coded
-/// values which should not be here. If that gets on `master`, it should be gotten
-/// rid of as soon as possible
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
@@ -127,6 +123,26 @@ void provide_agent_binaries(Map args) {
                 cp mk-oracle ${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8
                 """.stripIndent(),
         ],
+        "build-mk-oracle-rhel8-component-test": [
+            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package",
+            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
+            additional_build_params: [
+                PACKAGE_PATH: "packages/mk-oracle",
+                DISTRO: "almalinux-8",
+                FILE_ARCHIVING_PATTERN: "test_ora_sql_test",
+                COMMAND_LINE: """\
+                    bazel build //packages/mk-oracle:mk-oracle-lib-test-external;
+                    cp \
+                      \$(bazel info workspace)/\$( \
+                        bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/test_ora_sql_test \
+                      ) \
+                      \$(bazel info workspace)
+                    """
+            ],
+            install_cmd: """\
+                cp test_ora_sql_test ${checkout_dir}/packages/mk-oracle/
+                """.stripIndent(),
+        ],
         "winagt-build": [
             // NOTE: We're stripping of "Testing/..." if present, because
             //       Windows can't handle long folder names so we take the absolute
@@ -179,8 +195,10 @@ void provide_agent_binaries(Map args) {
                 """.stripIndent(),
         ],
     ];
+    def filter = args.filter == null ? upstream_job_details.keySet() : args.filter;
+    def filtered_upstream_job_details = upstream_job_details.subMap(filter)
 
-    def stages = upstream_job_details.collectEntries { job_name, details ->
+    def stages = filtered_upstream_job_details.collectEntries { job_name, details ->
         [("${job_name}".toString()) : {
             def run_condition = details.get("condition", true);
             def build_instance = null;

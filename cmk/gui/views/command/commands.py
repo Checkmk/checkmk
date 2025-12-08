@@ -41,7 +41,7 @@ from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.view_utils import render_community_upgrade_button
-from cmk.livestatus_client.commands import (
+from cmk.livestatus_client import (
     AcknowledgeHostProblem,
     Acknowledgement,
     AcknowledgeServiceProblem,
@@ -78,7 +78,7 @@ from cmk.livestatus_client.commands import (
     SendCustomHostNotification,
     SendCustomServiceNotification,
 )
-from cmk.livestatus_client.commands import Command as LivestatusCommand
+from cmk.livestatus_client import Command as LivestatusCommand
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts

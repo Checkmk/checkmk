@@ -1145,7 +1145,7 @@ def test_genericdataset_cmciii_discovery(
                 (
                     "CMC-PU Output",
                     [
-                        Result(state=State.CRIT, summary="Status: Off"),
+                        Result(state=State.OK, summary="Status: Off"),
                         Result(state=State.OK, summary="Logic: 0:Off / 1:On"),
                         Result(state=State.OK, summary="Relay: Off"),
                     ],

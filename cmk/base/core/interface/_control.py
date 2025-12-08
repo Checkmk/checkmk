@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import hashlib
 import os
 import shutil
 import socket
@@ -21,8 +22,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache
-from cmk.ccc import tty
-from cmk.ccc.config_path import VersionedConfigPath
+from cmk.ccc import config_path, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
@@ -308,8 +308,8 @@ def _create_active_config(
     )
 
     with (
-        VersionedConfigPath.next(cmk.utils.paths.omd_root).create(
-            is_cmc=core.is_cmc()
+        config_path.create(
+            cmk.utils.paths.omd_root, is_cmc=core.is_cmc()
         ) as config_creation_context,
         _backup_objects_file(core),
     ):
@@ -352,10 +352,24 @@ def _snapshot_local_dir(local_root: Path, config_path: Path) -> None:
     At the time of writing this is only written to be used by the relay, but it would
     also be correct for the core(s) to use it.
     """
+    target_path = config_path / "local"
+    hash_path = Path(f"{target_path}.hash")
     try:
-        shutil.copytree(local_root, config_path / "local", symlinks=True)
+        shutil.copytree(local_root, target_path, symlinks=True)
+        hash_value = _hash_local_dir(target_path)
     except FileNotFoundError:
-        pass
+        hash_value = ""
+    hash_path.write_text(hash_value)
+
+
+def _hash_local_dir(path: Path) -> str:
+    """create a hash of a directory tree based on file paths and contents"""
+    hasher = hashlib.blake2b()
+    for file_path in sorted(path.rglob("*")):
+        if file_path.is_file():
+            hasher.update(file_path.relative_to(path).as_posix().encode())
+            hasher.update(file_path.read_bytes())
+    return hasher.hexdigest()
 
 
 def _print(txt: str) -> None:

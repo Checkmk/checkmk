@@ -13,7 +13,7 @@ import datetime
 import http.client as http_client
 import json
 import time
-from base64 import b32decode, b32encode
+from base64 import b32decode, b32encode, b64decode
 from collections.abc import Sequence
 from http import HTTPStatus
 from typing import assert_never, Literal, override
@@ -25,11 +25,13 @@ import fido2.features
 from fido2.server import Fido2Server
 from fido2.webauthn import (
     AttestedCredentialData,
+    AuthenticationResponse,
     AuthenticatorAssertionResponse,
     AuthenticatorAttachment,
     AuthenticatorAttestationResponse,
     PublicKeyCredentialRpEntity,
     PublicKeyCredentialUserEntity,
+    RegistrationResponse,
     UserVerificationRequirement,
 )
 
@@ -1133,17 +1135,16 @@ class UserWebAuthnRegisterComplete(JsonPage):
 
         raw_data = ctx.request.get_data()
         logger.debug("Raw request: %r", raw_data)
-        data = AuthenticatorAttestationResponse.from_dict(json.loads(raw_data))
+        json_data = json.loads(raw_data)
+        data = AuthenticatorAttestationResponse.from_dict(json_data)
         logger.debug("Client data: %r", data.client_data)
         logger.debug("Attestation object: %r", data.attestation_object)
-
         try:
             auth_data = make_fido2_server(ctx.request.host).register_complete(
                 state=session.session_info.webauthn_action_state,
-                response={  # TODO: Passing a RegistrationResponse would be nicer here.
-                    "client_data": data.client_data,
-                    "attestation_object": data.attestation_object,
-                },
+                response=RegistrationResponse(
+                    raw_id=b64decode(json_data["credentialId"]), response=data
+                ),
             )
         except ValueError as e:
             if "Invalid origin in ClientData" in str(e):
@@ -1468,8 +1469,8 @@ class UserWebAuthnLoginComplete(JsonPage):
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
-
-        data = AuthenticatorAssertionResponse.from_dict(json.loads(ctx.request.get_data()))
+        json_data = json.loads(ctx.request.get_data())
+        data = AuthenticatorAssertionResponse.from_dict(json_data)
         logger.debug("ClientData: %r", data.client_data)
         logger.debug("AuthenticatorData: %r", data.authenticator_data)
 
@@ -1480,12 +1481,9 @@ class UserWebAuthnLoginComplete(JsonPage):
                     AttestedCredentialData.unpack_from(v["credential_data"])[0]
                     for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
                 ],
-                response={  # TODO: Passing an AuthenticationResponse would be nicer here.
-                    "credential_id": data.credential_id,
-                    "client_data": data.client_data,
-                    "auth_data": data.authenticator_data,
-                    "signature": data.signature,
-                },
+                response=AuthenticationResponse(
+                    raw_id=b64decode(json_data["credentialId"]), response=data
+                ),
             )
         except BaseException:
             _log_event_auth(ctx.request.remote_ip, "Webauthn")

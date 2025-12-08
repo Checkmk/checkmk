@@ -21,6 +21,7 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'service_state_summary'
 export interface UseServiceStateSummary extends UseWidgetHandler, UseWidgetVisualizationOptions {
   selectedState: Ref<string>
 }
@@ -30,6 +31,11 @@ export const useServiceStateSummary = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseServiceStateSummary> => {
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec.content as ServiceStateSummaryContent)
+      : undefined
+
   const {
     title,
     showTitle,
@@ -42,9 +48,7 @@ export const useServiceStateSummary = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const selectedState = ref<string>(
-    (currentSpec?.content as ServiceStateSummaryContent)?.state || 'OK'
-  )
+  const selectedState = ref<string>(currentContent?.state || 'OK')
 
   const widgetProps = ref<WidgetProps>()
 
@@ -54,7 +58,7 @@ export const useServiceStateSummary = async (
 
   const _generateContent = (): ServiceStateSummaryContent => {
     return {
-      type: 'service_state_summary',
+      type: CONTENT_TYPE,
       state: selectedState.value as ServiceState
     }
   }

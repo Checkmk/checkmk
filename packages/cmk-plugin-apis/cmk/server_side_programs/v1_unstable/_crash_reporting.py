@@ -101,13 +101,15 @@ def _report_crashes(
                 except Exception as inner_exception:
                     sys.stderr.write(traceback.format_exc() + "\n")
                     sys.stderr.write(
-                        f"Failed: {outer_exception} - failed to create a crash report: {inner_exception}"
+                        f"Failed: {outer_exception}"
+                        f" - failed to create a crash report: {inner_exception}\n"
                     )
                     return 1
 
                 _store_crash_report(crash, crash_report_path)
                 sys.stderr.write(
-                    f"Failed: {outer_exception} - please submit a crash report! (Crash-ID: {crash.crash_id})"
+                    f"Failed: {outer_exception}"
+                    f" - please submit a crash report! (Crash-ID: {crash.crash_id})\n"
                 )
                 return 1
 

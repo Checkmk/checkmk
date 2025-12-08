@@ -16,6 +16,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.oauth2_connections.utils import oauth2_render_link, oauth2_source_cell
+from cmk.gui.oauth2_connections.watolib.store import is_locked_by_oauth2_connection
 from cmk.gui.quick_setup.html import (
     quick_setup_duplication_warning,
     quick_setup_locked_warning,
@@ -101,6 +103,12 @@ class ModePasswords(SimpleListMode[Password]):
                 _("Cannot delete %s because it is managed by quick setup.")
                 % self._mode_type.name_singular(),
             )
+        if is_locked_by_oauth2_connection(entry.get("locked_by")):
+            raise MKUserError(
+                "_delete",
+                _("Cannot delete %s because it is managed by an existing OAuth2 connection.")
+                % self._mode_type.name_singular(),
+            )
 
     def _delete_confirm_message(self) -> str:
         return " ".join(
@@ -123,7 +131,14 @@ class ModePasswords(SimpleListMode[Password]):
                 icon="delete",
                 class_=["disabled"],
             )
-
+        elif is_locked_by_oauth2_connection(entry.get("locked_by")):
+            html.icon_button(
+                url="",
+                title=_("%s can only be deleted via OAuth2 connection")
+                % self._mode_type.name_singular().title(),
+                icon="delete",
+                class_=["disabled"],
+            )
         else:
             super()._show_delete_action(nr, ident, entry)
 
@@ -163,6 +178,7 @@ class ModePasswords(SimpleListMode[Password]):
             )
 
         quick_setup_source_cell(table, entry.get("locked_by"))
+        oauth2_source_cell(entry.get("locked_by"))
 
     def _contact_group_alias(self, name: str) -> str:
         return self._contact_groups.get(name, {"alias": name})["alias"]
@@ -206,6 +222,17 @@ class ModeEditPassword(SimpleEditMode[Password]):
                         value=locked_by["instance_id"],
                         title=_("Source"),
                         totext=quick_setup_render_link(locked_by),
+                    ),
+                )
+            )
+        if is_locked_by_oauth2_connection(locked_by, check_reference_exists=False):
+            elements.append(
+                (
+                    "source",
+                    FixedValue(
+                        value=locked_by["instance_id"],
+                        title=_("Source"),
+                        totext=oauth2_render_link(locked_by),
                     ),
                 )
             )

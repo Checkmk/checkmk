@@ -116,7 +116,7 @@ class FetchAgentOutputRequest:
             debug = serialized["debug"]
         if "timeout" not in serialized:
             timeout = (
-                int(active_config.reschedule_timeout)
+                180
                 if serialized["agent_type"] == "agent"
                 else int(active_config.snmp_walk_download_timeout)
             )
@@ -164,9 +164,7 @@ class AgentOutputPage(Page, abc.ABC):
             host=host,
             agent_type=ty,
             debug=active_config.debug,
-            timeout=int(active_config.reschedule_timeout)
-            if ty == "agent"
-            else int(active_config.snmp_walk_download_timeout),
+            timeout=(180 if ty == "agent" else int(active_config.snmp_walk_download_timeout)),
         )
 
     @staticmethod
@@ -397,27 +395,26 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         )
 
         if not agent_output_result.success:
-            global_setting_name = (
-                "reschedule_timeout"
-                if self._agent_type == "agent"
-                else "snmp_walk_download_timeout"
-            )
             job_interface.send_progress_update(
                 _("Failed: %s") % agent_output_result.service_details
             )
             if agent_output_result.service_details.find("timed out"):
-                url = mode_url("edit_configvar", varname=global_setting_name)
-                result = (
-                    _("Background job timed out due to the global setting ")
-                    + f"'<a href=\"{url}\">{global_setting_name}</a>'. "
-                    + _("%s Click on the icon to review.")
-                    % HTMLGenerator.render_icon_button(
-                        url=url,
-                        title=_("Global setting '%s'") % global_setting_name,
-                        icon="configuration",
-                        theme=make_theme(validate_choices=False),
+                if self._agent_type == "agent":
+                    result = _("Background job timed out after 3 minutes.")
+                else:
+                    global_setting_name = "snmp_walk_download_timeout"
+                    url = mode_url("edit_configvar", varname=global_setting_name)
+                    result = (
+                        _("Background job timed out due to the global setting ")
+                        + f"'<a href=\"{url}\">{global_setting_name}</a>'. "
+                        + _("%s Click on the icon to review.")
+                        % HTMLGenerator.render_icon_button(
+                            url=url,
+                            title=_("Global setting '%s'") % global_setting_name,
+                            icon="configuration",
+                            theme=make_theme(validate_choices=False),
+                        )
                     )
-                )
 
                 job_interface.send_result_message(result)
 

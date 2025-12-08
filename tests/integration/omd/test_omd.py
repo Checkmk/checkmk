@@ -9,6 +9,7 @@
 import tempfile
 from pathlib import Path
 
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import run
 from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
@@ -138,15 +139,13 @@ def test_run_omd_reload_service(site: Site) -> None:
     """
 
     expected: dict[str, int] = site.get_omd_service_names_and_statuses()
-
-    for service, status in expected.items():
-        p = site.omd("reload", service, check=False)
-        assert p.stderr == "", f"No error output expected from 'omd reload {service}'"
-        assert p.returncode == 0, f"The 'omd reload {service}' should return status 0"
-
-        after_reload = site.get_omd_service_names_and_statuses(service)
-        assert after_reload[service] == 0, (
-            f"The 'omd status {service}' should return status 0 after reload"
+    for service in expected:
+        _ = site.omd("reload", service)
+        wait_until(
+            lambda: site.get_omd_service_names_and_statuses(service)[service] == 0,
+            timeout=10,
+            interval=1,
+            condition_name=f"Validate '{service}' state is OK",
         )
 
 

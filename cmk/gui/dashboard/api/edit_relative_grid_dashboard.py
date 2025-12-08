@@ -23,6 +23,7 @@ from cmk.gui.type_defs import AnnotatedUserId
 from ..store import get_all_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
+    disable_dashboard_token,
     get_permitted_user_id,
     PERMISSIONS_DASHBOARD_EDIT,
     save_dashboard_to_file,
@@ -73,6 +74,8 @@ def edit_relative_grid_dashboard_v1(
     )
 
     save_dashboard_to_file(api_context.config.sites, new_dashboard, user_id)
+    disable_dashboard_token(new_dashboard)
+
     return serialize_relative_grid_dashboard(
         dashboard_id, RelativeGridDashboardResponse.from_internal(new_dashboard)
     )

@@ -9,12 +9,7 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkIndent from '@/components/CmkIndent.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
-import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
-import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import ObjectTypeFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/ObjectTypeFilterConfiguration/ObjectTypeFilterConfiguration.vue'
 import WidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/WidgetObjectFilterConfiguration/WidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
@@ -23,6 +18,9 @@ import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/compon
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
+
+import SectionBlock from '../../../components/SectionBlock.vue'
+import Stage1Header from '../../../components/Stage1Header.vue'
 
 const { _t } = usei18n()
 
@@ -59,65 +57,37 @@ const configuredFiltersByObjectType = computed(() =>
 </script>
 
 <template>
-  <CmkHeading type="h1">
-    {{ _t('Widget data') }}
-  </CmkHeading>
+  <Stage1Header @click="emit('goNext')" />
 
-  <ContentSpacer />
+  <SectionBlock :title="_t('Host selection')">
+    <CmkIndent>
+      <WidgetObjectFilterConfiguration
+        :object-type="hostObjectType"
+        :object-selection-mode="ElementSelection.MULTIPLE"
+        :object-configured-filters="configuredFiltersByObjectType[hostObjectType] || {}"
+        :in-focus="isInFilterSelectionMenuFocus(hostObjectType)"
+        :context-filters="contextFilters"
+        @set-focus="emit('set-focus', $event)"
+        @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+      />
+    </CmkIndent>
+  </SectionBlock>
 
-  <ActionBar align-items="left">
-    <ActionButton
-      :label="_t('Next step: Visualization')"
-      :icon="{ name: 'continue', side: 'right' }"
-      :action="() => emit('goNext')"
-      variant="secondary"
-    />
-  </ActionBar>
-
-  <ContentSpacer />
-
-  <CmkParagraph>
-    {{ _t('Select the data you want to analyze') }} <br />
-    {{ _t("Dashboard filters apply here and don't have to be selected again") }}
-  </CmkParagraph>
-
-  <ContentSpacer />
-
-  <CmkHeading type="h2">
-    {{ _t('Host selection') }}
-  </CmkHeading>
-
-  <CmkIndent>
-    <WidgetObjectFilterConfiguration
-      :object-type="hostObjectType"
-      :object-selection-mode="ElementSelection.MULTIPLE"
-      :object-configured-filters="configuredFiltersByObjectType[hostObjectType] || {}"
-      :in-focus="isInFilterSelectionMenuFocus(hostObjectType)"
-      :context-filters="contextFilters"
-      @set-focus="emit('set-focus', $event)"
-      @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
-    />
-  </CmkIndent>
-  <ContentSpacer />
-
-  <CmkHeading type="h2">
-    {{ _t('Event selection') }}
-  </CmkHeading>
-
-  <CmkIndent>
-    <ObjectTypeFilterConfiguration
-      :object-type="eventObjectType"
-      :object-selection-mode="ElementSelection.MULTIPLE"
-      :object-configured-filters="configuredFiltersByObjectType[eventObjectType] || {}"
-      :in-focus="isInFilterSelectionMenuFocus(eventObjectType)"
-      :filter-labels="{
-        title: _t('Widget filters'),
-        tooltip: _t('Widget configured filters override dashboard and runtime filters')
-      }"
-      @set-focus="emit('set-focus', $event)"
-      @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
-      @remove-filter="(filterId) => emit('remove-filter', filterId)"
-    />
-  </CmkIndent>
-  <ContentSpacer />
+  <SectionBlock :title="_t('Event selection')">
+    <CmkIndent>
+      <ObjectTypeFilterConfiguration
+        :object-type="eventObjectType"
+        :object-selection-mode="ElementSelection.MULTIPLE"
+        :object-configured-filters="configuredFiltersByObjectType[eventObjectType] || {}"
+        :in-focus="isInFilterSelectionMenuFocus(eventObjectType)"
+        :filter-labels="{
+          title: _t('Widget filters'),
+          tooltip: _t('Widget configured filters override dashboard and runtime filters')
+        }"
+        @set-focus="emit('set-focus', $event)"
+        @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+        @remove-filter="(filterId) => emit('remove-filter', filterId)"
+      />
+    </CmkIndent>
+  </SectionBlock>
 </template>

@@ -20,16 +20,17 @@ import logging
 import os
 import subprocess
 import tarfile
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Final, Literal, Self
+from socket import SocketIO
+from typing import Any, Final, Literal, Self, TypeAlias, TypedDict
 
-import docker.client  # type: ignore[import-untyped]
-import docker.errors  # type: ignore[import-untyped]
-import docker.models  # type: ignore[import-untyped]
-import docker.models.containers  # type: ignore[import-untyped]
-import docker.models.images  # type: ignore[import-untyped]
+import docker.client
+import docker.errors
+import docker.models
+import docker.models.containers
+import docker.models.images
 import requests
 
 from cmk.crypto.password import Password
@@ -46,6 +47,8 @@ from tests.testlib.version import (
 )
 
 logger = logging.getLogger()
+
+JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
 
 build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
@@ -94,8 +97,12 @@ def get_container_ip(c: docker.models.containers.Container) -> str:
 
 def send_to_container(c: docker.models.containers.Container, text: str) -> None:
     """Send text to the STDIN of a given container."""
-    s = c.attach_socket(c, params={"stdin": 1, "stream": 1})
-    s._sock.send(text.encode("utf-8"))
+    s = c.attach_socket(params={"stdin": 1, "stream": 1})
+
+    if not isinstance(s, SocketIO):
+        raise TypeError(f"Expected SocketIO, got {type(s)}")
+
+    s.write(text.encode("utf-8"))
     s.close()
 
 
@@ -155,7 +162,7 @@ def prepare_package(package_info: CMKPackageInfo | CMKPackageInfoOld) -> None:
 def pull_checkmk(
     client: docker.client.DockerClient,
     package_info: CMKPackageInfo | CMKPackageInfoOld,
-) -> docker.models.containers.Image:
+) -> docker.models.images.Image:
     if not package_info.edition.is_community_edition():
         raise Exception("Can only fetch community edition at the moment")
     image_name = f"checkmk/check-mk-{package_info.edition.long}"
@@ -179,7 +186,7 @@ def build_checkmk(
     client: docker.client.DockerClient,
     package_info: CMKPackageInfo | CMKPackageInfoOld,
     prepare_pkg: bool = True,
-) -> tuple[docker.models.images.Image, Iterator[Mapping[str, Any]]]:
+) -> tuple[docker.models.images.Image, Iterator[JSON]]:
     """Builds (or reuses) and verifies a docker image for a given Checkmk version.
 
     Args:
@@ -188,7 +195,7 @@ def build_checkmk(
         prepare_pkg (bool, optional): Also pull CMK packages; see prepare_package. Defaults to True.
 
     Returns:
-        tuple[docker.models.images.Image, Iterator[Mapping[str, Any]]]: the docker image and
+        tuple[docker.models.images.Image, Iterator[JSON]: the docker image and
             the docker build logs
     """
     prepare_build()
@@ -198,8 +205,6 @@ def build_checkmk(
 
     logger.info("Building docker image (or reuse existing): %s", image_name(package_info))
     try:
-        image: docker.models.images.Image
-        build_logs: Iterator[Mapping[str, Any]]
         image, build_logs = client.images.build(
             path=build_path.as_posix(),
             tag=image_name(package_info),
@@ -220,13 +225,17 @@ def build_checkmk(
         raise
 
     logger.info("(Set pytest log level to DEBUG (--log-cli-level=DEBUG) to see the build log)")
-    for entry in build_logs:
-        if "stream" in entry:
-            logger.debug(entry["stream"].rstrip())
-        elif "aux" in entry:
-            logger.debug(entry["aux"])
+
+    for logs_entry in build_logs:
+        if not isinstance(logs_entry, dict):
+            logger.debug("UNEXPECTED FORMAT: %r", logs_entry)
+        elif "stream" in logs_entry and isinstance(logs_entry["stream"], str):
+            logger.debug(logs_entry["stream"].rstrip())
+        elif "aux" in logs_entry:
+            logger.debug(logs_entry["aux"])
         else:
-            logger.debug("UNEXPECTED FORMAT: %r", entry)
+            logger.debug("UNEXPECTED FORMAT: %r", logs_entry)
+
     logger.debug("= Build log ==================")
 
     logger.info("Built image: %s", image.short_id)
@@ -339,7 +348,7 @@ class CheckmkApp:
 
     @property
     def logs(self) -> str:
-        return self.container.logs().decode("utf-8")  # type: ignore[no-any-return]
+        return self.container.logs().decode("utf-8")
 
     def _setup(self) -> docker.models.containers.Container:
         """Provide a readily configured Checkmk docker container."""
@@ -365,21 +374,11 @@ class CheckmkApp:
 
             create_cse_initial_config(root=Path(cse_config_root))
 
-        kwargs = {
-            key: value
-            for key, value in {
-                "name": self.name,
-                "hostname": self.hostname,
-                "environment": self.environment,
-                "ports": self.ports,
-                "volumes": self.volumes,
-                "volumes_from": self.volumes_from,
-            }.items()
-            if value is not None
-        }
-
         try:
-            c: docker.models.containers.Container = self.client.containers.get(self.name)
+            if self.name is None:
+                raise docker.errors.NullResource("No container name specified")
+
+            c = self.client.containers.get(self.name)
             if os.getenv("REUSE") == "1":
                 logger.info("Reusing existing container %s", c.short_id)
                 c.start()
@@ -390,8 +389,34 @@ class CheckmkApp:
                 self._remove_volumes()
                 raise docker.errors.NotFound(self.name)
         except (docker.errors.NotFound, docker.errors.NullResource):
+
+            class RunContainersKwargs(TypedDict, total=False):
+                name: str
+                hostname: str
+                environment: dict[str, str]
+                ports: dict[str, int | None | tuple[str, int] | list[int]]
+                volumes: list[str]
+                volumes_from: list[str]
+
+            kwargs = RunContainersKwargs(environment=self.environment)
+
+            if self.name is not None:
+                kwargs["name"] = self.name
+
+            if self.hostname is not None:
+                kwargs["hostname"] = self.hostname
+
+            if self.ports is not None:
+                kwargs["ports"] = self.ports
+
+            if self.volumes is not None:
+                kwargs["volumes"] = self.volumes
+
+            if self.volumes_from is not None:
+                kwargs["volumes_from"] = self.volumes_from
+
             try:
-                c = self.client.containers.run(image=_image.id, detach=True, **kwargs)
+                c = self.client.containers.run(image=_image, detach=True, **kwargs)
             except Exception as e:
                 raise Exception(f"Failed to start container from image {_image.short_id}!") from e
             logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
@@ -468,7 +493,7 @@ class CheckmkApp:
 
     def _remove_volumes(self) -> None:
         volume_ids = [_.split(":")[0] for _ in self.volumes or []]
-        exceptions = [docker.errors.NotFound]
+        exceptions: list[type[docker.errors.APIError]] = [docker.errors.NotFound]
         if self.is_update:
             exceptions.append(docker.errors.APIError)
         with suppress(*exceptions):

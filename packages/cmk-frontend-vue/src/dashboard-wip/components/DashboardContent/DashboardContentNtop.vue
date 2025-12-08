@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { NtopBase, getIfid } from './ntop.ts'
 import type { ContentProps, NtopType } from './types.ts'
@@ -15,10 +15,17 @@ let ntop: NtopBase | undefined = undefined
 const interfaceDivId: string = 'ntop_interface_quickstats'
 const contentDivId: string = `db-content-ntop-${props.widget_id}`
 let ifid: string
+const errorMessage = ref<string | null>(null)
 
 onMounted(async () => {
-  ifid = await getIfid()
-  ntop = new NtopBase(props.content.type as NtopType, interfaceDivId, contentDivId, ifid)
+  try {
+    ifid = await getIfid()
+    ntop = new NtopBase(props.content.type as NtopType, interfaceDivId, contentDivId, ifid)
+  } catch (error) {
+    // Cant let the site crash as this causes XSS crawler to fail
+    console.error('Error initializing ntop content:', error)
+    errorMessage.value = (error as Error).message
+  }
 })
 
 onBeforeUnmount(() => {
@@ -29,7 +36,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <div v-if="errorMessage" class="db-content-ntop__error error">
+    {{ errorMessage }}
+  </div>
   <div
+    v-else
     class="db-content-ntop__wrapper ntop"
     :class="{
       'db-content-ntop__background': !!general_settings.render_background
@@ -49,5 +60,9 @@ onBeforeUnmount(() => {
 
 .db-content-ntop__background {
   background-color: var(--db-content-bg-color);
+}
+
+.db-content-ntop__error {
+  max-width: 95%;
 }
 </style>

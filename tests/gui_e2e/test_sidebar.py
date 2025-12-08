@@ -28,6 +28,7 @@ def test_add_remove_snapin(dashboard_page: MainDashboard, snapin_id: str) -> Non
     add_sidebar_element_page.snapin_container(snapin_id).wait_for(state="attached")
 
 
+@pytest.mark.xfail(reason="https://jira.lan.tribe29.com/browse/CMK-28193")
 def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:
     """Tests the addition of the NagVis snapin to the sidebar and verifies its functionality.
 

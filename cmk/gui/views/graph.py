@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import copy
@@ -287,7 +286,7 @@ def _paint_time_graph_cmk(
     )
 
 
-def cmk_time_graph_params():
+def cmk_time_graph_params() -> MigrateNotUpdated:
     elements = [
         (
             "set_default_time_range",
@@ -330,7 +329,7 @@ class PainterServiceGraphs(Painter):
     def ident(self) -> str:
         return "service_graphs"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Service graphs with time range previews")
 
     @property
@@ -344,15 +343,15 @@ class PainterServiceGraphs(Painter):
         ]
 
     @property
-    def printable(self):
+    def printable(self) -> str:
         return "time_graph"
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["pnp_timerange", "graph_render_options"]
 
     @property
-    def parameters(self):
+    def parameters(self) -> MigrateNotUpdated:
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -390,7 +389,7 @@ class PainterHostGraphs(Painter):
     def ident(self) -> str:
         return "host_graphs"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Host Graphs with Time Range Previews")
 
     @property
@@ -398,15 +397,15 @@ class PainterHostGraphs(Painter):
         return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property
-    def printable(self):
+    def printable(self) -> str:
         return "time_graph"
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["pnp_timerange", "graph_render_options"]
 
     @property
-    def parameters(self):
+    def parameters(self) -> MigrateNotUpdated:
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:

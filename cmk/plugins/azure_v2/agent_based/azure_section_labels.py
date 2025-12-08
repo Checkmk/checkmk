@@ -7,8 +7,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.agent_based.v1 import HostLabel
-from cmk.agent_based.v2 import AgentSection, HostLabelGenerator, StringTable
+from cmk.agent_based.v2 import AgentSection, HostLabel, HostLabelGenerator, StringTable
 from cmk.plugins.lib.labels import ensure_valid_labels
 
 

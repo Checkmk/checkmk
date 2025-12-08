@@ -31,6 +31,8 @@ import { VisualizationTimelineType } from '../../../composables/useSelectGraphTy
 
 const { _t } = usei18n()
 
+const CONTENT_TYPE = 'notification_timeline'
+
 export interface UseNotificationTimeline extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
   timeRangeType: Ref<TimeRangeType>
@@ -63,7 +65,10 @@ export const useNotificationTimeline = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as NotificationTimelineContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as NotificationTimelineContent)
+      : null
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
     currentContent?.render_mode?.time_range ?? null
   )
@@ -112,7 +117,7 @@ export const useNotificationTimeline = async (
   const _generateContent = (): NotificationTimelineContent => {
     if (visualizationType.value === VisualizationTimelineType.METRIC) {
       return {
-        type: 'notification_timeline',
+        type: CONTENT_TYPE,
         log_target: logtarget.value,
         render_mode: {
           type: 'simple_number',
@@ -121,7 +126,7 @@ export const useNotificationTimeline = async (
       }
     }
     return {
-      type: 'notification_timeline',
+      type: CONTENT_TYPE,
       log_target: logtarget.value,
       render_mode: {
         type: 'bar_chart',

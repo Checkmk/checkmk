@@ -67,7 +67,7 @@ def _check_https(site: Site, tmp_path: Path) -> Iterator[tuple[str, dict[str, Se
     # start https dummy server
     httpss = HTTPSDummy(
         address=site.http_address,
-        cert_dir=tmp_path.as_posix(),
+        cert_dir=tmp_path,
     )
     port: int = httpss.run()
 

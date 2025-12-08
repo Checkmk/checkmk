@@ -45,6 +45,7 @@ py_library(
         "cmk/agent_receiver/relay/api/routers/tasks/handlers/activate_config.py",
         "cmk/agent_receiver/relay/api/routers/tasks/handlers/create_task.py",
         "cmk/agent_receiver/relay/api/routers/tasks/handlers/get_tasks.py",
+        "cmk/agent_receiver/relay/api/routers/tasks/handlers/get_version.py",
         "cmk/agent_receiver/relay/api/routers/tasks/handlers/update_task.py",
         "cmk/agent_receiver/relay/api/routers/tasks/libs/config_task_factory.py",
         "cmk/agent_receiver/relay/api/routers/tasks/libs/retrieve_config_serial.py",

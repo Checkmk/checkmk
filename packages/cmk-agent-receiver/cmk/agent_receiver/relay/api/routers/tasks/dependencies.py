@@ -14,6 +14,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     CreateTaskHandler,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
+    GetVersionHandler,
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
@@ -81,3 +82,7 @@ def get_activate_config_handler(
     return ActivateConfigHandler(
         config_task_factory=config_task_factory,
     )
+
+
+def get_version_handler() -> GetVersionHandler:
+    return GetVersionHandler()

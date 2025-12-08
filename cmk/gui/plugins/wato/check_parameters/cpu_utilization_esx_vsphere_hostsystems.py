@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.cpu_utilization import cpu_util_elements
@@ -13,10 +12,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Integer, ListOf, Tuple
+from cmk.gui.valuespec import Dictionary, DictionaryEntry, Integer, ListOf, Tuple
 
 
-def _vsphere_esx_hostsystem_cluster_elements():
+def _vsphere_esx_hostsystem_cluster_elements() -> list[DictionaryEntry]:
     return [
         (
             "cluster",
@@ -43,7 +42,7 @@ def _vsphere_esx_hostsystem_cluster_elements():
     ]
 
 
-def _parameter_valuespec_cpu_utilization_esx_vsphere_hostsystem():
+def _parameter_valuespec_cpu_utilization_esx_vsphere_hostsystem() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule configures levels for the CPU utilization (not load) for "

@@ -28,6 +28,8 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 type TimeRangeType = 'current' | 'window'
 
+const CONTENT_TYPE = 'problem_graph'
+
 export interface UsePercentageOfServiceProblems
   extends UseWidgetHandler,
     UseWidgetVisualizationOptions,
@@ -54,8 +56,13 @@ export const usePercentageOfServiceProblems = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as ProblemGraphContent
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(currentContent?.timerange)
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as ProblemGraphContent)
+      : null
+  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
+    currentContent?.timerange ?? null
+  )
   const {
     horizontalAxis,
     verticalAxis,
@@ -79,7 +86,7 @@ export const usePercentageOfServiceProblems = async (
 
   const _generateContent = (): ProblemGraphContent => {
     const content: ProblemGraphContent = {
-      type: 'problem_graph',
+      type: CONTENT_TYPE,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value
     }

@@ -18,11 +18,12 @@ from livestatus import MultiSiteConnection
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.livestatus_client.commands import (
+from cmk.livestatus_client import (
     AddHostComment,
     AddServiceComment,
     DeleteHostComment,
     DeleteServiceComment,
+    LivestatusClient,
 )
 from cmk.utils.livestatus_helpers.expressions import QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
@@ -138,7 +139,7 @@ def add_host_comment_by_query(
         raise CommentQueryException
 
     for site, host in hosts:
-        connection.command_obj(
+        LivestatusClient(connection).command(
             AddHostComment(host_name=host, comment=comment, persistent=persistent, user=user),
             site,
         )
@@ -183,7 +184,7 @@ def add_host_comment(
         ...     add_host_comment(live, 'example.com', 'test', "NO_SITE")
 
     """
-    connection.command_obj(
+    LivestatusClient(connection).command(
         AddHostComment(host_name=host_name, user=user, persistent=persistent, comment=comment),
         site_id,
     )
@@ -253,7 +254,7 @@ def add_service_comment(
 
     """
 
-    connection.command_obj(
+    LivestatusClient(connection).command(
         AddServiceComment(
             host_name=host_name,
             description=service_description,
@@ -308,7 +309,7 @@ def delete_host_comment(
 
     """
 
-    connection.command_obj(
+    LivestatusClient(connection).command(
         DeleteHostComment(comment_id=comment_id),
         site_id,
     )
@@ -340,7 +341,7 @@ def delete_service_comment(
 
     """
 
-    connection.command_obj(
+    LivestatusClient(connection).command(
         DeleteServiceComment(comment_id=comment_id),
         site_id,
     )

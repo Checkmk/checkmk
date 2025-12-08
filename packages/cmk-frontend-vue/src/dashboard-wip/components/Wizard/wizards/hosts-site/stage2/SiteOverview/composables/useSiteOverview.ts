@@ -20,6 +20,7 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
+const CONTENT_TYPE = 'site_overview'
 export interface UseSiteOverview extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
   showStateOf: Ref<string>
@@ -31,8 +32,6 @@ export const useSiteOverview = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseSiteOverview> => {
-  //Todo: Fill values if they exist in serializedData
-
   const {
     title,
     showTitle,
@@ -45,7 +44,10 @@ export const useSiteOverview = async (
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
-  const currentContent = currentSpec?.content as SiteOverviewContent
+  const currentContent =
+    currentSpec?.content?.type === CONTENT_TYPE
+      ? (currentSpec?.content as SiteOverviewContent)
+      : null
 
   const showStateOf = ref<'via_context' | 'sites' | 'hosts'>(
     currentContent?.dataset ?? 'via_context'
@@ -59,7 +61,7 @@ export const useSiteOverview = async (
 
   const _generateContent = (): SiteOverviewContent => {
     return {
-      type: 'site_overview',
+      type: CONTENT_TYPE,
       dataset: showStateOf.value,
       hexagon_size: hexagonSize.value === 'small' ? 'default' : 'large'
     }

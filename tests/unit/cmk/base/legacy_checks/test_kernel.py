@@ -17,6 +17,7 @@ from typing import Any
 import pytest
 import time_machine
 
+from cmk.agent_based.v2 import GetRateError
 from cmk.base.legacy_checks import kernel
 from cmk.plugins.collection.agent_based.kernel import parse_kernel, Section
 
@@ -162,6 +163,22 @@ def test_check_kernel_performance_missing_counters(monkeypatch: pytest.MonkeyPat
     assert "Context Switches:" in summary
     assert len(metrics) == 1
     assert metrics[0][0] == "context_switches"
+
+
+@time_machine.travel("1970-01-01 00:00:00")
+def test_check_kernel_performance_counter_reset(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test kernel performance check function with missing counters."""
+
+    # Create parsed data with minimal counters
+    minimal_parsed = (11238.0, {"Context Switches": [("ctxt", 0)]})
+
+    # Pre-populate value store
+    base_time = -60.0
+    value_store: dict[str, object] = {"ctxt": (base_time, 500000000)}
+    monkeypatch.setattr(kernel, "get_value_store", lambda: value_store)
+
+    with pytest.raises(GetRateError):
+        _ = list(kernel.check_kernel_performance(None, {}, minimal_parsed))
 
 
 def test_kernel_parse_function_empty() -> None:

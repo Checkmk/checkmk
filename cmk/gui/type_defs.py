@@ -39,6 +39,7 @@ from cmk.crypto.secrets import Secret
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDPath
+from cmk.utils.http_proxy_config import ProxyConfigSpec
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
@@ -63,6 +64,16 @@ GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 class TrustedCertificateAuthorities(TypedDict):
     use_system_wide_cas: bool
     trusted_cas: Sequence[str]
+
+
+class ProductTelemetrySettings(TypedDict):
+    enable_telemetry: Literal["enabled", "disabled"]
+    proxy_config: (
+        tuple[Literal["environment"], Literal["environment"]]
+        | tuple[Literal["no_proxy"], None]
+        | tuple[Literal["global"], str]
+        | tuple[Literal["url"], ProxyConfigSpec]
+    )
 
 
 class ChoiceGroup(NamedTuple):
@@ -537,6 +548,7 @@ class ViewSpec(Visual):
     user_sortable: NotRequired[bool]
     play_sounds: NotRequired[bool]
     inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
+    modified_at: NotRequired[str]  # timestamp in ISO format
 
 
 # NOTE: keep in sync with `ViewSpec`
@@ -562,6 +574,7 @@ class DashboardEmbeddedViewSpec(TypedDict):
     user_sortable: NotRequired[bool]
     play_sounds: NotRequired[bool]
     inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
+    modified_at: NotRequired[str]  # timestamp in ISO format
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]

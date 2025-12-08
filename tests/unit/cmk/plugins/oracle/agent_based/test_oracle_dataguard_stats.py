@@ -17,8 +17,8 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.oracle.agent_based.oracle_dataguard_stats import (
+    check_plugin_oracle_dataguard_stats,
     inventory_oracle_dataguard_stats,
     parse_oracle_dataguard_stats,
 )
@@ -64,13 +64,13 @@ _AGENT_OUTPUT = [
     ],
 )
 def test_discover_oracle_dataguard_stats(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     expected_result: DiscoveryResult,
 ) -> None:
-    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
-    assert sorted(check_plugin.discovery_function(section)) == expected_result
+    assert (
+        sorted(check_plugin_oracle_dataguard_stats.discovery_function(section)) == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -114,16 +114,14 @@ def test_discover_oracle_dataguard_stats(
     ],
 )
 def test_check_oracle_dataguard_stats(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     item: str,
     expected_result: CheckResult,
 ) -> None:
-    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert (
         list(
-            check_plugin.check_function(
+            check_plugin_oracle_dataguard_stats.check_function(
                 item=item, params={"missing_apply_lag_state": 2}, section=section
             )
         )

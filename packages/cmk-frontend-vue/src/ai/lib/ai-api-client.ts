@@ -69,7 +69,8 @@ export interface AiInference extends AiBaseLlmResponse {
 
 export class AiApiClient extends Api {
   public constructor(private user_id: string | null = null) {
-    super('/ai-service/', [
+    // no leading slash to use the given base url and path https://hostname.tld/sitename/check_mk/
+    super('ai-service/', [
       ['Content-Type', 'application/json'],
       ['Accept', 'application/json']
     ])

@@ -27,7 +27,8 @@ const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayo
 // So far, urlParams is only needed and used by the DashboardContentNtop component (ntop.ts)
 //         cmkToken only by the DashboardContentFigure component
 provide(urlParamsKey, props.url_params)
-provide(cmkTokenKey, props.token_value)
+// TODO: remove this hard coded "0:" once the backend can provide the token version
+provide(cmkTokenKey, `0:${props.token_value}`)
 
 const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))
 const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))

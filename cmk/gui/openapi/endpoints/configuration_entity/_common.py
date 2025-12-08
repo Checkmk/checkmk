@@ -8,7 +8,12 @@ from typing import Any, assert_never
 from cmk import fields
 from cmk.gui.http import Response
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas, type_defs
+from cmk.gui.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    response_schemas,
+    type_defs,
+)
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
     EntityId,
@@ -42,6 +47,8 @@ def to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
             return ConfigEntityType.folder.value
         case ConfigEntityType.passwordstore_password:
             return ConfigEntityType.passwordstore_password.value
+        case ConfigEntityType.rule_form_spec:
+            return ConfigEntityType.rule_form_spec.value
         case other:
             assert_never(other)
 

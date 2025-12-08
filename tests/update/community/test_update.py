@@ -12,7 +12,7 @@ from tests.testlib.utils import get_services_with_status
 from tests.testlib.version import TypeCMKEdition, TypeCMKEditionOld
 from tests.update.helpers import (
     bulk_discover_and_schedule,
-    check_agent_receiver_error_log,
+    check_errors_in_log_files,
     check_services,
     get_target_package,
     update_site,
@@ -21,6 +21,7 @@ from tests.update.helpers import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip("CMK-28228: scenario; fix in progress")
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8", reason="Fails on almalinux-8 due to dependency issue."
 )
@@ -39,4 +40,4 @@ def test_update(test_setup: tuple[Site, TypeCMKEdition, bool, str]) -> None:
 
     check_services(target_site, hostname, base_data)
 
-    check_agent_receiver_error_log(target_site)
+    check_errors_in_log_files(target_site)

@@ -5,65 +5,38 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import {
-  type MsGraphApi,
-  type Oauth2Urls
-} from 'cmk-shared-typing/typescript/mode_oauth2_connection'
-import { v4 as uuid } from 'uuid'
-import { ref } from 'vue'
+import { type Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
-import CmkLabel from '@/components/CmkLabel.vue'
-import type { Suggestions } from '@/components/CmkSuggestions'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkInput from '@/components/user-input/CmkInput.vue'
+
+import type { ValidationMessages } from '@/form'
+
+import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
+
+import FormEdit from '../../form/FormEdit.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<CmkWizardStepProps & { urls: Oauth2Urls }>()
-
-const suggestions: Suggestions = {
-  type: 'fixed',
-  suggestions: [
-    {
-      name: 'global_',
-      title: _t('Global')
-    },
-    {
-      name: 'china',
-      title: _t('China')
+defineProps<
+  CmkWizardStepProps & {
+    urls: Oauth2Urls
+    form_spec: {
+      id: string
+      spec: FormSpec
+      validation?: ValidationMessages
+      data: unknown
     }
-  ]
-}
+  }
+>()
 
-const model = defineModel<MsGraphApi>({ required: true })
-
-const title = ref<string>(model.value.title ?? '')
-const authority = ref<'global_' | 'china'>(model.value.authority ?? 'global_')
-const tenantId = ref<string>(model.value.tenant_id ?? '')
-const clientId = ref<string>(model.value.client_id ?? '')
-const clientSecret = ref<string>(model.value.client_secret ?? '')
+const dataRef = defineModel<OAuth2FormData>({ required: true })
 
 async function validate(): Promise<boolean> {
-  if (!title.value || !tenantId.value || !clientId.value || !clientSecret.value) {
-    return false
-  }
-
-  model.value = {
-    type: 'ms_graph_api',
-    id: uuid(),
-    title: title.value,
-    authority: authority.value,
-    tenant_id: tenantId.value,
-    client_id: clientId.value,
-    client_secret: clientSecret.value,
-    redirect_uri: location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect
-  }
-
   return true
 }
 </script>
@@ -73,43 +46,12 @@ async function validate(): Promise<boolean> {
     <template #header>
       <CmkHeading type="h2"> {{ _t('Define OAuth2 parameter') }}</CmkHeading>
     </template>
-
     <template #content>
-      <div class="mode-oauth2-connection-define-params__form-row">
-        <CmkLabel class="mode-oauth2-connection-define-params__label" for="description">{{
-          _t('Description:')
-        }}</CmkLabel>
-        <CmkInput id="title" v-model="title" type="text" field-size="MEDIUM" />
-      </div>
-      <div class="mode-oauth2-connection-define-params__form-row">
-        <CmkLabel class="mode-oauth2-connection-define-params__label" for="authority">{{
-          _t('Authority:')
-        }}</CmkLabel>
-        <CmkDropdown
-          id="client_secret"
-          :options="suggestions"
-          :selected-option="authority"
-          :label="_t('Authority')"
-        />
-      </div>
-      <div class="mode-oauth2-connection-define-params__form-row">
-        <CmkLabel class="mode-oauth2-connection-define-params__label" for="tenant_id">{{
-          _t('Tenant ID:')
-        }}</CmkLabel>
-        <CmkInput id="tenant_id" v-model="tenantId" type="text" field-size="MEDIUM" />
-      </div>
-      <div class="mode-oauth2-connection-define-params__form-row">
-        <CmkLabel class="mode-oauth2-connection-define-params__label" for="client_id">{{
-          _t('Client ID:')
-        }}</CmkLabel>
-        <CmkInput id="client_id" v-model="clientId" type="text" field-size="MEDIUM" />
-      </div>
-      <div class="mode-oauth2-connection-define-params__form-row">
-        <CmkLabel class="mode-oauth2-connection-define-params__label" for="client_secret">{{
-          _t('Client secret:')
-        }}</CmkLabel>
-        <CmkInput id="client_secret" v-model="clientSecret" type="password" field-size="MEDIUM" />
-      </div>
+      <FormEdit
+        v-model:data="dataRef"
+        :backend-validation="form_spec.validation ?? []"
+        :spec="form_spec.spec"
+      />
     </template>
 
     <template #actions>

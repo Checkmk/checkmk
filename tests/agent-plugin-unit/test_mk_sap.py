@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -12,10 +11,7 @@ from collections import namedtuple
 
 import pytest
 
-if sys.version_info[0] == 2:
-    import agents.plugins.mk_sap_2 as mk_sap
-else:
-    from agents.plugins import mk_sap
+from agents.plugins import mk_sap
 
 Value = namedtuple("Value", ["value"])  # nosemgrep: typing-namedtuple-call
 

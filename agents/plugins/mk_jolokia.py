@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -634,7 +633,7 @@ def _process_queries(inst, queries):
         try:
             for instance_out, title_out, value in fetch_metric(inst, mbean_path, title, itemspec):
                 yield instance_out, title_out, value
-        except (IOError, socket.timeout):
+        except (OSError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:
             continue
@@ -715,7 +714,7 @@ def generate_json(inst, mbeans):
             data = inst.get_post_data(mbean, "read", use_target=True)
             obj = inst.post(data)
             yield inst.name, mbean, json.dumps(obj["value"])
-        except (IOError, socket.timeout):
+        except (OSError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:
             pass

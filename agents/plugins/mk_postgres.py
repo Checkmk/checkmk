@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -542,7 +541,7 @@ class PostgresWin(PostgresBase):
         for pg_version in self._supported_pg_versions:
             try:
                 return self._psql_path(pg_version)
-            except IOError as e:
+            except OSError as e:
                 ioerr = e
                 continue
         raise ioerr
@@ -570,7 +569,7 @@ class PostgresWin(PostgresBase):
                 if os.path.isfile(psql_path):
                     return psql_path
 
-        raise IOError("Could not determine %s bin and its path." % self.psql_binary_name)
+        raise OSError("Could not determine %s bin and its path." % self.psql_binary_name)
 
     def get_psql_binary_dirname(self):
         # type: () -> str

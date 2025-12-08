@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -25,8 +24,6 @@ Installation options:
 
 This plugin it will be called by the agent without any arguments.
 """
-
-from __future__ import with_statement
 
 __version__ = "2.5.0b1"
 
@@ -63,7 +60,8 @@ if (
     sys.exit(1)
 
 try:
-    import docker  # type: ignore[import-untyped]
+    import docker
+    import docker.utils.socket
 except ImportError:
     sys.stdout.write(
         "<<<docker_node_info:sep(124)>>>\n"

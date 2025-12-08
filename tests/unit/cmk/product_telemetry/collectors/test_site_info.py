@@ -7,11 +7,11 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from pytest_mock import MockType
+from pytest_mock import MockerFixture, MockType
 
 import cmk.product_telemetry.collectors.site_info as site_info_collector
 from cmk.product_telemetry.exceptions import SiteInfoInvalidError, SiteInfoItemsInvalidError
-from cmk.utils.paths import check_mk_config_dir, var_dir
+from cmk.utils.paths import check_mk_config_dir, omd_root, var_dir
 
 
 @pytest.fixture()
@@ -22,45 +22,53 @@ def wato_path() -> Path:
     return wato_fp
 
 
-@pytest.mark.usefixtures("mock_instance_id")
+@pytest.fixture()
+def mock_checkmk_info(mocker: MockerFixture) -> None:
+    mocker.patch(
+        "cmk.ccc.version.get_general_version_infos",
+        return_value={"version": "2.2.0", "edition": "pro"},
+    )
+
+
+@pytest.mark.usefixtures("mock_instance_id", "mock_checkmk_info")
 def test_collect_and_number_of_folders(local_connection: MockType, wato_path: Path) -> None:
-    local_connection.query.return_value = [[10, 20, "cre", "2.2.0"]]
+    local_connection.query.return_value = [[10, 20]]
 
     (wato_path / "folder1" / "subfolder1").mkdir(parents=True, exist_ok=True)
     (wato_path / "folder1" / "subfolder2").mkdir(parents=True, exist_ok=True)
     (wato_path / "folder2" / "subfolder3").mkdir(parents=True, exist_ok=True)
 
-    data = site_info_collector.collect(check_mk_config_dir, var_dir)
+    data = site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
 
     assert data.count_hosts == 10
     assert data.count_services == 20
     assert data.count_folders == 5
-    assert data.edition == "cre"
+    assert data.edition == "pro"
     assert data.cmk_version == "2.2.0"
 
 
-@pytest.mark.usefixtures("mock_instance_id")
+@pytest.mark.usefixtures("mock_instance_id", "mock_checkmk_info")
 def test_collect_too_many_columns(local_connection: MockType) -> None:
-    local_connection.query.return_value = [[0, 0, "test", "1", "unexpected"]]
+    local_connection.query.return_value = [[0, 0, "unexpected"]]
     with pytest.raises(SiteInfoItemsInvalidError):
-        site_info_collector.collect(check_mk_config_dir, var_dir)
+        site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
 
 
-@pytest.mark.usefixtures("mock_instance_id")
+@pytest.mark.usefixtures("mock_instance_id", "mock_checkmk_info")
 def test_collect_too_few_columns(local_connection: MockType) -> None:
-    local_connection.query.return_value = [[0, 0, "test"]]
+    local_connection.query.return_value = [[0]]
     with pytest.raises(SiteInfoItemsInvalidError):
-        site_info_collector.collect(check_mk_config_dir, var_dir)
+        site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
 
 
-@pytest.mark.usefixtures("mock_instance_id")
+@pytest.mark.usefixtures("mock_instance_id", "mock_checkmk_info")
 def test_collect_no_site_info(local_connection: MockType) -> None:
     local_connection.query.return_value = []
     with pytest.raises(SiteInfoInvalidError):
-        site_info_collector.collect(check_mk_config_dir, var_dir)
+        site_info_collector.collect(check_mk_config_dir, var_dir, omd_root)
 
 
-def test_get_or_create_telemetry_id(local_connection: MockType) -> None:
+def test_get_or_create_telemetry_id() -> None:
     telemetry_id_fp = site_info_collector.telemetry_id_file_path(var_dir)
 
     assert site_info_collector.get_telemetry_id(telemetry_id_fp) is None

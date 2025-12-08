@@ -16,16 +16,16 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
+from cmk.plugins.oracle.agent_based.oracle_instance_check import (
+    check_plugin_oracle_instance_uptime,
+)
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 
 
-def test_discover_oracle_instance_uptime(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_discover_oracle_instance_uptime() -> None:
     assert list(
-        agent_based_plugins.check_plugins[
-            CheckPluginName("oracle_instance_uptime")
-        ].discovery_function(
+        check_plugin_oracle_instance_uptime.discovery_function(
             {
                 "a": Instance(sid="a", version="", openmode="", logins="", up_seconds=1234),
                 "b": Instance(sid="a", version="", openmode="", logins=""),
@@ -38,12 +38,10 @@ def test_discover_oracle_instance_uptime(agent_based_plugins: AgentBasedPlugins)
     ]
 
 
-def test_check_oracle_instance_uptime_normal(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_check_oracle_instance_uptime_normal() -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(1643360266, tz=ZoneInfo("UTC"))):
         assert list(
-            agent_based_plugins.check_plugins[
-                CheckPluginName("oracle_instance_uptime")
-            ].check_function(
+            check_plugin_oracle_instance_uptime.check_function(
                 item="IC731",
                 params={},
                 section=parse_oracle_instance(
@@ -72,12 +70,10 @@ def test_check_oracle_instance_uptime_normal(agent_based_plugins: AgentBasedPlug
         ]
 
 
-def test_check_oracle_instance_uptime_error(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_check_oracle_instance_uptime_error() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
-            agent_based_plugins.check_plugins[
-                CheckPluginName("oracle_instance_uptime")
-            ].check_function(
+            check_plugin_oracle_instance_uptime.check_function(
                 item="IC731",
                 params={},
                 section=parse_oracle_instance(
@@ -94,12 +90,10 @@ def test_check_oracle_instance_uptime_error(agent_based_plugins: AgentBasedPlugi
         )
 
 
-def test_check_oracle_instance_uptime_pdb_mounted(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_check_oracle_instance_uptime_pdb_mounted() -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(1643360266, tz=ZoneInfo("UTC"))):
         assert list(
-            agent_based_plugins.check_plugins[
-                CheckPluginName("oracle_instance_uptime")
-            ].check_function(
+            check_plugin_oracle_instance_uptime.check_function(
                 item="CPMOZD.PDB$SEED",
                 params={},
                 section=parse_oracle_instance(

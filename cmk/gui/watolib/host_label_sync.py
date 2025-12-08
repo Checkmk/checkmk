@@ -143,10 +143,8 @@ def execute_host_label_sync(
 def execute_host_label_sync_job(config: Config) -> None:
     """This function is called by the GUI cron job once a minute.
     Errors are logged to var/log/web.log."""
-    if not (remote_sites := distributed_setup_remote_sites(config.sites)):
-        return
-
-    DiscoveredHostLabelSyncJob().do_sync(remote_sites=remote_sites, debug=config.debug)
+    if remote_sites := distributed_setup_remote_sites(config.sites):
+        DiscoveredHostLabelSyncJob().do_sync(remote_sites=remote_sites, debug=config.debug)
 
     now = time.time()
     if (

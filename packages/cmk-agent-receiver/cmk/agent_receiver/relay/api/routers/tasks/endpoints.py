@@ -15,12 +15,14 @@ from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_relay_task_handler,
     get_relay_tasks_handler,
     get_update_task_handler,
+    get_version_handler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     ActivateConfigHandler,
     CreateTaskHandler,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
+    GetVersionHandler,
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
@@ -195,6 +197,8 @@ async def get_task_endpoint(
     relay_id: str,
     task_id: str,
     handler: Annotated[GetRelayTaskHandler, fastapi.Depends(get_relay_task_handler)],
+    version_handler: Annotated[GetVersionHandler, fastapi.Depends(get_version_handler)],
+    response: fastapi.Response,
 ) -> tasks_protocol.TaskResponse:
     """
     Get a specific task for a relay
@@ -214,6 +218,9 @@ async def get_task_endpoint(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
+
+    version = version_handler.process()
+    response.headers[tasks_protocol.HEADERS.VERSION] = version
 
     return TaskResponseSerializer.serialize(task)
 

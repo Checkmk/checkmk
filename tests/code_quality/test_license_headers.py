@@ -42,13 +42,6 @@ OMD_HEADER = re.compile(rf"#!/omd/versions/###OMD_VERSION###/bin/python3\n{GPL}"
 
 GPL_HEADER = re.compile(rf"#!/usr/bin/env (python3|-S python3 -P)\n{GPL}")
 
-GPL_HEADER_CODING = re.compile(
-    rf"""#\!/usr/bin/env python3
-# -\*- coding: utf-8 -\*-
-{GPL}
-"""
-)
-
 GPL_HEADER_NOTIFICATION = re.compile(
     rf"""#!/usr/bin/env python3
 # .+(\n# Bulk: (yes|no))?
@@ -107,9 +100,6 @@ def check_for_license_header_violation(rel_path, abs_path):
     elif rel_path == "omd/packages/omd/omd.bin":
         if not OMD_HEADER.match(get_file_header(abs_path, length=23)):
             yield "omd gpl license header not matching", rel_path
-    elif rel_path.startswith("tests/agent-plugin-unit/") or rel_path.startswith("agents/plugins/"):
-        if not GPL_HEADER_CODING.match(get_file_header(abs_path, length=5)):
-            yield "gpl header with coding not matching", rel_path
     elif rel_path.startswith("notifications/"):
         if not GPL_HEADER_NOTIFICATION.match(get_file_header(abs_path, length=10)):
             yield "gpl header with notification not matching", rel_path

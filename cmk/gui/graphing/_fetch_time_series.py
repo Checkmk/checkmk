@@ -58,31 +58,30 @@ def fetch_augmented_time_series(
         step=step,
     )
 
-    # Align grid (start, end, step) to RRD data if available. We need this because our graph
-    # rendering code assumes a fixed grid for all time series in a graph. The RRDs are already
-    # aligned to a fixed grid (the grid used by the first RRD time series).
-    if first_rrd_series := next(iter(rrd_data.values()), None):
-        start_time = first_rrd_series.start
-        end_time = first_rrd_series.end
-        step = first_rrd_series.step
-    else:
-        # A too low step size leads to two negative effects:
-        # 1. Higher query load
-        # 2. Lots of None values in the time series ==> Lots of holes in the graphs
-        # Note that the RRDs also adjust to their internal precision. They dont't return data at higher
-        # precision than they store it.
-        step = max(int(step), 60)
+    if backend_time_series_fetcher and query_keys:
+        # Align grid (start, end, step) to RRD data if available. We need this because our graph
+        # rendering code assumes a fixed grid for all time series in a graph. The RRDs are already
+        # aligned to a fixed grid (the grid used by the first RRD time series).
+        if first_rrd_series := next(iter(rrd_data.values()), None):
+            start_time = first_rrd_series.start
+            end_time = first_rrd_series.end
+            step = first_rrd_series.step
+        else:
+            # A too low step size leads to two negative effects:
+            # 1. Higher query load
+            # 2. Lots of None values in the time series ==> Lots of holes in the graphs
+            # Note that the RRDs also adjust to their internal precision. They dont't return data at higher
+            # precision than they store it.
+            step = max(int(step), 60)
 
-    query_data = (
-        backend_time_series_fetcher(
+        query_data = backend_time_series_fetcher(
             list(query_keys),
             start_time=start_time,
             end_time=end_time,
             step=step,
         )
-        if backend_time_series_fetcher
-        else {}
-    )
+    else:
+        query_data = {}
 
     for graph_metric in graph_recipe.metrics:
         if augmented_time_series := graph_metric.operation.compute_augmented_time_series(

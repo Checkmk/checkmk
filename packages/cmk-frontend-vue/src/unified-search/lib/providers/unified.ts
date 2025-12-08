@@ -3,49 +3,20 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { CmkIconProps, SimpleIcons } from '@/components/CmkIcon'
+import type {
+  ProviderName,
+  UnifiedSearchApiResponse
+} from 'cmk-shared-typing/typescript/unified_search'
 
-import type { LoadingTransition } from '@/loading-transition/loadingTransition'
+import { type UnifiedSearchError } from '@/unified-search/lib/unified-search'
 import { SearchProvider, type SearchProviderResult } from '@/unified-search/lib/unified-search'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
-export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchResultResponse>
-
-export interface UnifiedSearchResultElementInlineButton {
-  icon?: CmkIconProps | undefined
-  title: string
-  target: { url: string; transition?: LoadingTransition | undefined }
-}
-
-export interface UnifiedSearchResultElement {
-  title: string
-  target: { url: string; transition?: LoadingTransition | undefined }
-  inlineButtons?: UnifiedSearchResultElementInlineButton[]
-  topic: string
-  provider: UnifiedSearchProviderIdentifier
-  context: string
-  icon: SimpleIcons
-}
-
-export interface UnifiedSearchrResultCounts {
-  total: number
-  setup: number
-  monitoring: number
-  customize?: number
-}
-
-export interface UnifiedSearchResultResponse {
-  url: string
-  query: string
-  counts: UnifiedSearchrResultCounts
-  results: UnifiedSearchResultElement[]
-}
-
-export type UnifiedSearchProviderIdentifier = 'monitoring' | 'setup' | 'customize'
+export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchApiResponse>
 
 export class UnifiedSearchProvider extends SearchProvider {
   constructor(
-    public providers: UnifiedSearchProviderIdentifier[],
+    public providers: ProviderName[],
     public override title?: string,
     public override sort: number = 0
   ) {
@@ -60,12 +31,14 @@ export class UnifiedSearchProvider extends SearchProvider {
     return q.length >= this.minInputlength
   }
 
-  public async search(query: UnifiedSearchQueryLike): Promise<UnifiedSearchResultResponse> {
+  public async search(
+    query: UnifiedSearchQueryLike
+  ): Promise<UnifiedSearchApiResponse | UnifiedSearchError> {
     const { q, provider, sort } = this.renderQuery(query)
 
-    return this.getApi().get(
-      'ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort)
-    ) as Promise<UnifiedSearchResultResponse>
+    return this.getApi().get('ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort), {
+      exceptOnNonZeroResultCode: true
+    }) as Promise<UnifiedSearchApiResponse | UnifiedSearchError>
   }
 
   protected renderQuery(query: UnifiedSearchQueryLike): {

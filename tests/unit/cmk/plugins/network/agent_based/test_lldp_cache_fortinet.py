@@ -100,13 +100,14 @@ LLDP = Lldp(
 @pytest.mark.parametrize(
     "data, expected",
     [
-        (
-            [],
-            None,
+        pytest.param([], None, id="no data"),
+        pytest.param(STRING_TABLE, LLDP, id="lldp available"),
+        pytest.param(
+            [[], [], [], [], [], []],
+            Lldp(lldp_global=None, lldp_neighbors=[]),
+            id="empty individual items (from siteless tests)",
         ),
-        (STRING_TABLE, LLDP),
     ],
-    ids=["no data", "lldp available"],
 )
 def test_parse_lldp_cache_fortinet(data: Sequence[StringByteTable], expected: Lldp | None) -> None:
     parsed = parse_lldp_cache_fortinet(string_table=data)

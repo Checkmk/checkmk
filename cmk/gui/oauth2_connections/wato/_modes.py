@@ -4,29 +4,52 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import asdict
 from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import RawDiskData, serialize_data_for_frontend
+from cmk.gui.form_specs.unstable import (
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+    TwoColumnDictionary,
+)
+from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.oauth2_connections.watolib.store import OAuth2Connection, OAuth2ConnectionsConfigFile
+from cmk.gui.logged_in import user
+from cmk.gui.oauth2_connections.watolib.store import (
+    delete_oauth2_connection,
+    load_oauth2_connections,
+    OAuth2Connection,
+    OAuth2ConnectionsConfigFile,
+)
 from cmk.gui.page_menu import (
     PageMenu,
 )
 from cmk.gui.table import Table
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.passwords import remove_password
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Password,
+    String,
+)
 from cmk.shared_typing.mode_oauth2_connection import (
     AuthorityUrls,
-    MsGraphApi,
     MsGraphApiUrls,
     Oauth2ConnectionConfig,
     Oauth2Urls,
@@ -39,7 +62,63 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeOAuth2Connections)
 
 
-def get_oauth2_connection_config(connection: MsGraphApi | None = None) -> Oauth2ConnectionConfig:
+def get_oauth_2_connection_form_spec() -> Dictionary:
+    return TwoColumnDictionary(
+        title=Title("Define OAuth parameters"),
+        elements={
+            "title": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Title"),
+                    help_text=Help("A descriptive name for this OAuth2 connection."),
+                ),
+            ),
+            "authority": DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended(
+                    title=Title("Authority"),
+                    help_text=Help("Select the authority for the OAuth2 connection."),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name="global",
+                            title=Title("Global"),
+                        ),
+                        SingleChoiceElementExtended(
+                            name="china",
+                            title=Title("China"),
+                        ),
+                    ],
+                    prefill=DefaultValue("global"),
+                ),
+            ),
+            "tenant_id": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Tenant ID"),
+                    help_text=Help("The Tenant ID of your Azure AD instance."),
+                ),
+            ),
+            "client_id": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Client ID"),
+                    help_text=Help(
+                        "The Client ID (Application ID) of your registered application."
+                    ),
+                ),
+            ),
+            "client_secret": DictElement(
+                required=True,
+                parameter_form=Password(
+                    title=Title("Client secret"),
+                    help_text=Help("The Client secret of your registered application."),
+                ),
+            ),
+        },
+    )
+
+
+def get_oauth2_connection_config() -> Oauth2ConnectionConfig:
     return Oauth2ConnectionConfig(
         urls=Oauth2Urls(
             redirect=makeuri(request, [("mode", "redirect_oauth2_connection")]),
@@ -51,9 +130,15 @@ def get_oauth2_connection_config(connection: MsGraphApi | None = None) -> Oauth2
                     base_url="https://login.chinacloudapi.cn/###tenant_id###/oauth2/v2.0"
                 ),
             ),
-        ),
-        connection=connection,
+        )
     )
+
+
+def get_authority_mapping() -> Mapping[str, str]:
+    return {
+        SingleChoiceVisitor.option_id("global"): "global_",
+        SingleChoiceVisitor.option_id("china"): "china",
+    }
 
 
 class OAuth2ModeType(SimpleModeType[OAuth2Connection]):
@@ -101,6 +186,51 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         table.cell(_("ID"), ident)
         table.cell(_("Title"), entry["title"])
 
+    @override
+    def action(self, config: Config) -> ActionResult:
+        if not transactions.transaction_valid():
+            return None
+
+        action_var = request.get_str_input("_action")
+        if action_var is None:
+            return None
+
+        if not transactions.check_transaction():
+            return redirect(mode_url(self._mode_type.list_mode_name()))
+
+        ident = request.get_ascii_input("_delete")
+        entries = load_oauth2_connections()
+        if ident not in entries:
+            raise MKUserError(
+                "_delete", _("This %s does not exist.") % self._mode_type.name_singular()
+            )
+
+        remove_password(
+            entries[ident]["client_secret_reference"],
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
+        remove_password(
+            entries[ident]["access_token_reference"],
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
+        remove_password(
+            entries[ident]["refresh_token_reference"],
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
+        delete_oauth2_connection(
+            ident,
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
+        return redirect(mode_url(self._mode_type.list_mode_name()))
+
 
 class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     @classmethod
@@ -125,18 +255,85 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
         return ModeOAuth2Connections
 
     @override
-    def title(self) -> str:
-        return _("Add OAuth2 connection")
-
-    @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
     @override
     def page(self, config: Config, form_name: str = "edit") -> None:
+        if self._clone:
+            html.vue_component(
+                "cmk-mode-create-oauth2-connection",
+                data={
+                    "config": asdict(get_oauth2_connection_config()),
+                    "form_spec": asdict(
+                        serialize_data_for_frontend(
+                            form_spec=get_oauth_2_connection_form_spec(),
+                            value=RawDiskData(
+                                value={
+                                    "title": self._entry["title"] + " (Clone)",
+                                    "authority": self._entry["authority"],
+                                    "tenant_id": self._entry["tenant_id"],
+                                    "client_id": self._entry["client_id"],
+                                    "client_secret": (
+                                        "cmk_postprocessed",
+                                        "stored_password",
+                                        (self._entry["client_secret_reference"], ""),
+                                    ),
+                                }
+                            ),
+                            field_id=form_name,
+                            do_validate=False,
+                        )
+                    ),
+                    "authority_mapping": get_authority_mapping(),
+                },
+            )
+            return
+
+        if self._new:
+            html.vue_component(
+                "cmk-mode-create-oauth2-connection",
+                data={
+                    "config": asdict(get_oauth2_connection_config()),
+                    "form_spec": asdict(
+                        serialize_data_for_frontend(
+                            form_spec=get_oauth_2_connection_form_spec(),
+                            field_id=form_name,
+                            do_validate=False,
+                        )
+                    ),
+                    "authority_mapping": get_authority_mapping(),
+                },
+            )
+            return
+
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
-            data=asdict(get_oauth2_connection_config()),
+            data={
+                "config": asdict(get_oauth2_connection_config()),
+                "form_spec": asdict(
+                    serialize_data_for_frontend(
+                        form_spec=get_oauth_2_connection_form_spec(),
+                        value=RawDiskData(
+                            value={
+                                "title": self._entry["title"],
+                                "authority": self._entry["authority"],
+                                "tenant_id": self._entry["tenant_id"],
+                                "client_id": self._entry["client_id"],
+                                "client_secret": (
+                                    "cmk_postprocessed",
+                                    "stored_password",
+                                    (self._entry["client_secret_reference"], ""),
+                                ),
+                            }
+                        ),
+                        field_id=form_name,
+                        do_validate=False,
+                    )
+                ),
+                "ident": self._ident,
+                "authority_mapping": get_authority_mapping(),
+            },
         )
 
 

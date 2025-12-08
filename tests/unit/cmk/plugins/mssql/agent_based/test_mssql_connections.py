@@ -7,19 +7,13 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 from cmk.plugins.mssql.agent_based.mssql_connections import (
+    check_plugin_mssql_connections,
     CheckParams,
     inventory_mssql_connections,
     MSSQLConnections,
     parse_mssql_connections,
 )
-
-
-@pytest.fixture
-def check_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
-    return agent_based_plugins.check_plugins[CheckPluginName("mssql_connections")]
-
 
 STRING_TABLE = [
     ["FOO", "DBa", "25"],
@@ -91,7 +85,6 @@ def test_inventory_mssql_connections() -> None:
     ],
 )
 def test_check_mssql_connections(
-    check_plugin: CheckPlugin,
     item: str,
     params: Mapping[str, object],
     string_table: StringTable,
@@ -99,6 +92,8 @@ def test_check_mssql_connections(
 ) -> None:
     section = parse_mssql_connections(string_table)
     assert (
-        list(check_plugin.check_function(item=item, params=params, section=section))
+        list(
+            check_plugin_mssql_connections.check_function(item=item, params=params, section=section)
+        )
         == expected_results
     )

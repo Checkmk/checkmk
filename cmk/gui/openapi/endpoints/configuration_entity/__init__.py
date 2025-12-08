@@ -24,7 +24,12 @@ from cmk.gui.openapi.endpoints.configuration_entity import (
 from cmk.gui.openapi.endpoints.configuration_entity import (
     passwordstore_password as passwordstore_password_endpoints,
 )
-from cmk.gui.openapi.endpoints.configuration_entity._common import ENTITY_TYPE_SPECIFIER_FIELD
+from cmk.gui.openapi.endpoints.configuration_entity import (
+    rule_form_spec as rule_form_spec_endpoints,
+)
+from cmk.gui.openapi.endpoints.configuration_entity._common import (
+    ENTITY_TYPE_SPECIFIER_FIELD,
+)
 from cmk.gui.openapi.endpoints.configuration_entity.request_schemas import (
     CreateConfigurationEntity,
     UpdateConfigurationEntity,
@@ -193,3 +198,4 @@ def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) ->
     passwordstore_password_endpoints.register(
         endpoint_registry, ignore_duplicates=ignore_duplicates
     )
+    rule_form_spec_endpoints.register(endpoint_registry, ignore_duplicates=ignore_duplicates)

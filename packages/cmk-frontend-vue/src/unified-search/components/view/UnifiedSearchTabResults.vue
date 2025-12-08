@@ -4,6 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import {
+  type UnifiedSearchApiResponse,
+  type UnifiedSearchResultItem
+} from 'cmk-shared-typing/typescript/unified_search'
 import { onBeforeUnmount, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -15,11 +19,8 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ResultItem from '@/unified-search/components/result/ResultItem.vue'
 import ResultList from '@/unified-search/components/result/ResultList.vue'
-import {
-  type UnifiedSearchResultElement,
-  type UnifiedSearchResultResponse
-} from '@/unified-search/lib/providers/unified'
 import { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import type { UnifiedSearchError } from '@/unified-search/lib/unified-search'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
 import UnifiedSearchEmptyResults from './UnifiedSearchEmptyResults.vue'
@@ -29,7 +30,7 @@ const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const currentlySelected = ref<number>(-1)
 const inited = ref<boolean>(false)
-const results = ref<UnifiedSearchResultElement[]>([])
+const results = ref<UnifiedSearchResultItem[]>([])
 searchUtils.input?.onSetFocus(() => {
   currentlySelected.value = -1
 })
@@ -76,7 +77,7 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
   }
 }
 
-function handleItemClick(item: UnifiedSearchResultElement) {
+function handleItemClick(item: UnifiedSearchResultItem) {
   searchUtils.history?.add(new HistoryEntry(searchUtils.query.toQueryLike(), item))
   searchUtils.resetSearch()
   searchUtils.closeSearch()
@@ -85,7 +86,8 @@ function handleItemClick(item: UnifiedSearchResultElement) {
 const isFocused = (i: number): boolean => currentlySelected.value === i
 
 const props = defineProps<{
-  result?: UnifiedSearchResultResponse | undefined
+  result?: UnifiedSearchApiResponse | undefined
+  error?: UnifiedSearchError | undefined
 }>()
 
 immediateWatch(
@@ -103,7 +105,7 @@ onBeforeUnmount(() => {
 })
 
 function searchResultNotEmpty(): boolean {
-  return results.value.length > 0
+  return results.value && results.value.length > 0
 }
 </script>
 
@@ -124,7 +126,7 @@ function searchResultNotEmpty(): boolean {
           :title="item.title"
           :context="item.context"
           :icon="{ name: item.icon as SimpleIcons }"
-          :inline-buttons="item.inlineButtons"
+          :inline-buttons="item.inline_buttons"
           :target="item.target"
           :html="searchUtils.highlightQuery(item.title)"
           :breadcrumb="searchUtils.breadcrumb(item.provider, item.topic)"
@@ -143,7 +145,10 @@ function searchResultNotEmpty(): boolean {
       </ResultList>
     </CmkScrollContainer>
   </div>
-  <UnifiedSearchEmptyResults v-if="inited && !searchResultNotEmpty()"></UnifiedSearchEmptyResults>
+  <UnifiedSearchEmptyResults
+    v-if="(inited && !searchResultNotEmpty()) || error"
+    :error="error"
+  ></UnifiedSearchEmptyResults>
 </template>
 
 <style scoped>

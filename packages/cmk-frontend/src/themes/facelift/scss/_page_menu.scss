@@ -530,6 +530,29 @@ div#top_heading {
           border-radius: 4px;
           box-sizing: border-box;
 
+          &.ai_animation {
+            position: relative;
+            overflow: hidden;
+
+            &::after {
+              content: '';
+              width: 100%;
+              height: 100%;
+              position: absolute;
+              inset: 0;
+              transform: translateX(-100%);
+              opacity: 0.2;
+              background: linear-gradient(
+                90deg,
+                transparent 0,
+                var(--color-purple-80) 20%,
+                var(--color-purple-60) 60%,
+                transparent
+              );
+              animation: shimmer 3s infinite;
+            }
+          }
+
           &:hover {
             cursor: pointer;
             background-color: $button-bg-color-default;
@@ -561,6 +584,12 @@ div#top_heading {
         }
       }
     }
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
 

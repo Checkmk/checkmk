@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -24,7 +23,7 @@ bvip_link_states = [
 ]
 
 
-def _parameter_valuespec_bvip_link():
+def _parameter_valuespec_bvip_link() -> Dictionary:
     return Dictionary(
         title=_("Update State"),
         elements=[

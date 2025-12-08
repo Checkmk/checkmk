@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import os
 import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
 from cmk.product_telemetry.collectors.grafana import remove_grafana_usage_data
+from cmk.product_telemetry.exceptions import InvalidTelemetryEndpointError
 
 
 def transmit_telemetry_data(var_dir: Path) -> None:
@@ -46,4 +49,8 @@ def _transmit_single_telemetry_file(file_path: Path) -> bool:
 
 
 def _get_api_url() -> str:
-    return "https://telemetry.checkmk.com/upload"
+    domain = os.environ.get("CMK_TELEMETRY_URL", "https://telemetry.checkmk.com/upload")
+    parsed = urlparse(domain)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise InvalidTelemetryEndpointError
+    return domain

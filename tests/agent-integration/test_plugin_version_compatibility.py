@@ -9,7 +9,8 @@ import os
 from collections.abc import Iterator
 from pathlib import Path
 
-import docker  # type: ignore[import-untyped]
+import docker
+import docker.models.containers
 import pytest
 
 from tests.testlib.common.repo import repo_path
@@ -29,7 +30,7 @@ def python_container(
         command=["python2.5", "-c", "import time; time.sleep(9999)"],
         detach=True,
         volumes={
-            repo_path(): {"bind": "/cmk", "mode": "ro"},
+            str(repo_path()): {"bind": "/cmk", "mode": "ro"},
         },
     )
     yield c

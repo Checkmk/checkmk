@@ -92,7 +92,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     relays={},
     product_telemetry={
         "enable_telemetry": ("disabled", None),
-        "proxy_config": ("no_proxy", None),
+        "proxy_setting": ("environment", "environment"),
     },
 )
 

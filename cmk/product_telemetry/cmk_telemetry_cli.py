@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from cmk.product_telemetry.collection import collect_telemetry_data, store_telemetry_data
-from cmk.product_telemetry.config import telemetry_enabled_config
+from cmk.product_telemetry.config import load_telemetry_config
 from cmk.product_telemetry.logger import init_logging
 from cmk.product_telemetry.schedule import (
     create_next_random_ts,
@@ -36,7 +36,7 @@ def main(args: Sequence[str]) -> int:
     request = parse_args(args)
     logger = init_logging(paths.log_dir)
     now = datetime.now()
-    config = telemetry_enabled_config()
+    config = load_telemetry_config()
     next_run_file_path = next_telemetry_run_file_path(paths.var_dir)
 
     try:
@@ -62,7 +62,7 @@ def main(args: Sequence[str]) -> int:
                 store_telemetry_data(data, paths.var_dir)
 
         if request.upload:
-            transmit_telemetry_data(paths.var_dir)
+            transmit_telemetry_data(paths.var_dir, proxy_config=config.proxy_config)
 
         if request.schedule:
             store_next_telemetry_run_ts(next_run_file_path, create_next_ts(now))

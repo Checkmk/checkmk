@@ -1886,12 +1886,12 @@ ConfigVariableProductTelemetry = ConfigVariable(
                 ),
             ),
             (
-                "proxy_config",
+                "proxy_setting",
                 HTTPProxyReference(),
             ),
         ],
         optional_keys=[],
-        default_keys=["enable_telemetry", "proxy_config"],
+        default_keys=["enable_telemetry", "proxy_setting"],
     ),
 )
 

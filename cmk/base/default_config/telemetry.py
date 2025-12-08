@@ -12,18 +12,20 @@ from typing import (
 
 from cmk.utils.http_proxy_config import ProxyConfigSpec
 
+type ProxySetting = (
+    tuple[Literal["environment"], Literal["environment"]]
+    | tuple[Literal["no_proxy"], None]
+    | tuple[Literal["global"], str]
+    | tuple[Literal["url"], ProxyConfigSpec]
+)
+
 
 class ProductTelemetrySettings(TypedDict):
     enable_telemetry: tuple[Literal["enabled", "disabled"], None]
-    proxy_config: (
-        tuple[Literal["environment"], Literal["environment"]]
-        | tuple[Literal["no_proxy"], None]
-        | tuple[Literal["global"], str]
-        | tuple[Literal["url"], ProxyConfigSpec]
-    )
+    proxy_setting: ProxySetting
 
 
 product_telemetry: ProductTelemetrySettings = {
     "enable_telemetry": ("disabled", None),
-    "proxy_config": ("no_proxy", None),
+    "proxy_setting": ("environment", "environment"),
 }

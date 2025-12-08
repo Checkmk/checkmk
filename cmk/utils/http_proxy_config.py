@@ -92,6 +92,9 @@ class ExplicitProxyConfig:
     def __eq__(self, o: object) -> bool:
         return isinstance(o, ExplicitProxyConfig) and self._url == o._url
 
+    def __repr__(self) -> str:
+        return f"ExplicitProxyConfig(url='{self._url}')"
+
 
 type HTTPProxyConfig = EnvironmentProxyConfig | NoProxyConfig | ExplicitProxyConfig
 
@@ -172,19 +175,7 @@ def http_proxy_config_from_user_setting(
         proxy_type == "global"
         and (global_proxy := http_proxies_global_settings.get(str(value))) is not None
     ):
-        proxy_config = global_proxy["proxy_config"]
-        proxy_auth = ""
-        if (auth := proxy_config.get("auth")) is not None:
-            proxy_auth = (
-                f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'explicit_password', auth['password'][2]))}@"
-                if auth["password"][1] == "explicit_password"
-                else f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'stored_password', auth['password'][2]))}@"
-            )
-
-        return ExplicitProxyConfig(
-            url=f"{proxy_config['scheme']}://{proxy_auth}"
-            f"{proxy_config['proxy_server_name']}:{proxy_config['port']}",
-        )
+        return build_explicit_proxy_config(global_proxy["proxy_config"])
 
     if proxy_type == "url":
         return ExplicitProxyConfig(str(value))
@@ -193,3 +184,18 @@ def http_proxy_config_from_user_setting(
         return NoProxyConfig()
 
     return EnvironmentProxyConfig()
+
+
+def build_explicit_proxy_config(proxy_spec: ProxyConfigSpec) -> ExplicitProxyConfig:
+    proxy_auth = ""
+    if (auth := proxy_spec.get("auth")) is not None:
+        proxy_auth = (
+            f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'explicit_password', auth['password'][2]))}@"
+            if auth["password"][1] == "explicit_password"
+            else f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'stored_password', auth['password'][2]))}@"
+        )
+
+    return ExplicitProxyConfig(
+        url=f"{proxy_spec['scheme']}://{proxy_auth}"
+        f"{proxy_spec['proxy_server_name']}:{proxy_spec['port']}",
+    )

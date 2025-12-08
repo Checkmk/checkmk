@@ -7,6 +7,7 @@ from typing import Final
 
 from cmk.ccc.version import Edition
 
+from .automations.automations import Automations
 from .modes.modes import Modes
 
 
@@ -16,6 +17,7 @@ class CheckmkBaseApp:
     Hold the features available to the runtime based on the context (edition) the app is created for.
     """
 
-    def __init__(self, edition: Edition, modes: Modes) -> None:
+    def __init__(self, edition: Edition, modes: Modes, automations: Automations) -> None:
         self.edition: Final = edition
         self.modes: Final = modes
+        self.automations: Final = automations

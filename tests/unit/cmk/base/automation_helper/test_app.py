@@ -29,7 +29,7 @@ from cmk.base.automation_helper._app import (
 )
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
-from cmk.base.automations import AutomationError
+from cmk.base.automations.automations import AutomationError
 from cmk.base.config import ConfigCache, LoadingResult
 from cmk.ccc.version import Version
 from cmk.checkengine.plugins import AgentBasedPlugins

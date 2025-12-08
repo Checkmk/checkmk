@@ -5,6 +5,8 @@
 
 from cmk.ccc.version import Edition
 
+from .automations.automations import Automations
+from .automations.check_mk import register_common_automations
 from .base_app import CheckmkBaseApp
 from .modes.check_mk import common_modes, general_options
 from .modes.modes import Modes
@@ -14,6 +16,7 @@ def make_app() -> CheckmkBaseApp:
     return CheckmkBaseApp(
         edition=Edition.COMMUNITY,
         modes=_modes(),
+        automations=_automations(),
     )
 
 
@@ -27,3 +30,9 @@ def _modes() -> Modes:
         modes.register(mode)
 
     return modes
+
+
+def _automations() -> Automations:
+    automations = Automations()
+    register_common_automations(automations)
+    return automations

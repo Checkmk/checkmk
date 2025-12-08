@@ -15,8 +15,9 @@ from pathlib import Path
 
 from setproctitle import setproctitle
 
+import cmk.ccc.version as cmk_version
 from cmk.base import config
-from cmk.base.automations import automations
+from cmk.base.app import make_app
 from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.checkengine.plugin_backend import (
@@ -117,7 +118,7 @@ def _application():
         configure_logger(omd_root / _RELATIVE_LOG_DIRECTORY)
 
     return make_application(
-        engine=automations,
+        engine=make_app(cmk_version.edition(omd_root)).automations,
         cache=Cache.setup(client=get_redis_client()),
         reloader_config=config.reloader_config,
         reload_config=_reload_automation_config,

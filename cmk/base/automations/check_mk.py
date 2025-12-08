@@ -88,9 +88,9 @@ from cmk.automations.results import (
     UpdatePasswordsMergedFileResult,
 )
 from cmk.base import config, notify, sources
-from cmk.base.automations import (
+from cmk.base.automations.automations import (
     Automation,
-    automations,
+    Automations,
     load_config,
     load_plugins,
     MKAutomationError,
@@ -494,9 +494,6 @@ class AutomationDiscovery(DiscoveryAutomation):
         return ServiceDiscoveryResult(results)
 
 
-automations.register(AutomationDiscovery())
-
-
 class AutomationSpecialAgentDiscoveryPreview(Automation):
     cmd = "special-agent-discovery-preview"
 
@@ -577,9 +574,6 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
         )
 
         return preview
-
-
-automations.register(AutomationSpecialAgentDiscoveryPreview())
 
 
 class AutomationDiscoveryPreview(Automation):
@@ -708,9 +702,6 @@ class AutomationDiscoveryPreview(Automation):
             ip_address_of=ip_address_of_with_fallback,
             ip_address=ip_address,
         )
-
-
-automations.register(AutomationDiscoveryPreview())
 
 
 def _get_discovery_preview(
@@ -1031,9 +1022,6 @@ class AutomationAutodiscovery(DiscoveryAutomation):
             result = _execute_autodiscovery(edition, plugins, loading_result)
 
         return AutodiscoveryResult(*result)
-
-
-automations.register(AutomationAutodiscovery())
 
 
 def _make_configured_bake_on_restart_callback(
@@ -1495,9 +1483,6 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
         return SetAutochecksV2Result()
 
 
-automations.register(AutomationSetAutochecksV2())
-
-
 class AutomationUpdateHostLabels(DiscoveryAutomation):
     """Set the new collection of discovered host labels"""
 
@@ -1523,9 +1508,6 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
             loading_result.config_cache, hostname, loading_result.loaded_config.monitoring_core
         )
         return UpdateHostLabelsResult()
-
-
-automations.register(AutomationUpdateHostLabels())
 
 
 class AutomationRenameHosts(Automation):
@@ -1921,9 +1903,6 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname}
         return name.replace(".", "[.]")
 
 
-automations.register(AutomationRenameHosts())
-
-
 class AutomationGetServicesLabels(Automation):
     cmd = "get-services-labels"
 
@@ -1972,9 +1951,6 @@ class AutomationGetServicesLabels(Automation):
         )
 
 
-automations.register(AutomationGetServicesLabels())
-
-
 class AutomationGetServiceName(Automation):
     cmd = "get-service-name"
 
@@ -2012,9 +1988,6 @@ class AutomationGetServiceName(Automation):
                 ),
             )
         )
-
-
-automations.register(AutomationGetServiceName())
 
 
 @dataclass
@@ -2310,9 +2283,6 @@ class AutomationAnalyseServices(Automation):
                 return
 
 
-automations.register(AutomationAnalyseServices())
-
-
 class AutomationAnalyseHost(Automation):
     cmd = "analyse-host"
 
@@ -2334,9 +2304,6 @@ class AutomationAnalyseHost(Automation):
             label_manager.labels_of_host(host_name),
             label_manager.label_sources_of_host(host_name),
         )
-
-
-automations.register(AutomationAnalyseHost())
 
 
 class AutomationAnalyzeHostRuleMatches(Automation):
@@ -2376,9 +2343,6 @@ class AutomationAnalyzeHostRuleMatches(Automation):
                 for rules in match_rules
             }
         )
-
-
-automations.register(AutomationAnalyzeHostRuleMatches())
 
 
 class AutomationAnalyzeServiceRuleMatches(Automation):
@@ -2428,9 +2392,6 @@ class AutomationAnalyzeServiceRuleMatches(Automation):
         )
 
 
-automations.register(AutomationAnalyzeServiceRuleMatches())
-
-
 class AutomationAnalyzeHostRuleEffectiveness(Automation):
     cmd = "analyze-host-rule-effectiveness"
     needs_config = True
@@ -2478,9 +2439,6 @@ class AutomationAnalyzeHostRuleEffectiveness(Automation):
                 for rules in match_rules
             }
         )
-
-
-automations.register(AutomationAnalyzeHostRuleEffectiveness())
 
 
 class ABCDeleteHosts:
@@ -2594,9 +2552,6 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         self._delete_robotmk_html_log_dir(hostname)
 
 
-automations.register(AutomationDeleteHosts())
-
-
 class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
     """Cleanup automation call for hosts that were previously located on the
     local site and are now handled by a remote site"""
@@ -2636,9 +2591,6 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
         self._delete_logwatch(hostname)
         self._delete_server_side_program_files(hostname)
         self._delete_robotmk_html_log_dir(hostname)
-
-
-automations.register(AutomationDeleteHostsKnownRemote())
 
 
 class AutomationRestart(Automation):
@@ -2763,9 +2715,6 @@ class AutomationRestart(Automation):
             return 0.0
 
 
-automations.register(AutomationRestart())
-
-
 class AutomationReload(AutomationRestart):
     cmd = "reload"
 
@@ -2781,9 +2730,6 @@ class AutomationReload(AutomationRestart):
         loading_result: config.LoadingResult | None,
     ) -> ReloadResult:
         return ReloadResult(super().execute(args, plugins, loading_result).config_warnings)
-
-
-automations.register(AutomationReload())
 
 
 def _execute_silently(
@@ -2888,9 +2834,6 @@ class AutomationGetConfiguration(Automation):
         return GetConfigurationResult(result)
 
 
-automations.register(AutomationGetConfiguration())
-
-
 class AutomationGetCheckInformation(Automation):
     cmd = "get-check-information"
 
@@ -2940,9 +2883,6 @@ class AutomationGetCheckInformation(Automation):
             raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
 
 
-automations.register(AutomationGetCheckInformation())
-
-
 class AutomationGetSectionInformation(Automation):
     cmd = "get-section-information"
 
@@ -2971,9 +2911,6 @@ class AutomationGetSectionInformation(Automation):
             }
         )
         return GetSectionInformationResult(section_infos)
-
-
-automations.register(AutomationGetSectionInformation())
 
 
 class AutomationScanParents(Automation):
@@ -3028,9 +2965,6 @@ class AutomationScanParents(Automation):
             return ScanParentsResult(gateway_results)
         except Exception as e:
             raise MKAutomationError("%s" % e)
-
-
-automations.register(AutomationScanParents())
 
 
 def _disabled_ip_lookup(host_name: object, family: object = None) -> None:
@@ -3168,9 +3102,6 @@ class AutomationDiagSpecialAgent(Automation):
                 )
 
 
-automations.register(AutomationDiagSpecialAgent())
-
-
 class AutomationPingHost(Automation):
     cmd = "ping-host"
 
@@ -3194,9 +3125,6 @@ class AutomationPingHost(Automation):
             check=False,
         )
         return completed_process.returncode, completed_process.stdout
-
-
-automations.register(AutomationPingHost())
 
 
 class AutomationDiagCmkAgent(Automation):
@@ -3292,9 +3220,6 @@ class AutomationDiagCmkAgent(Automation):
 
         # TODO do we need the output?
         return DiagCmkAgentResult(state, output)
-
-
-automations.register(AutomationDiagCmkAgent())
 
 
 class AutomationDiagHost(Automation):
@@ -3792,9 +3717,6 @@ class AutomationDiagHost(Automation):
         return 1, "Got empty SNMP response"
 
 
-automations.register(AutomationDiagHost())
-
-
 class AutomationActiveCheck(Automation):
     cmd = "active-check"
 
@@ -3958,9 +3880,6 @@ class AutomationActiveCheck(Automation):
             return 3, "UNKNOWN - Cannot execute command: %s" % e
 
 
-automations.register(AutomationActiveCheck())
-
-
 class AutomationUpdatePasswordsMergedFile(Automation):
     cmd = "update-passwords-merged-file"
 
@@ -3976,9 +3895,6 @@ class AutomationUpdatePasswordsMergedFile(Automation):
             cmk.utils.password_store.pending_secrets_path_site(),
         )
         return UpdatePasswordsMergedFileResult()
-
-
-automations.register(AutomationUpdatePasswordsMergedFile())
 
 
 class AutomationUpdateDNSCache(Automation):
@@ -4008,9 +3924,6 @@ class AutomationUpdateDNSCache(Automation):
                 lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
             )
         )
-
-
-automations.register(AutomationUpdateDNSCache())
 
 
 class AutomationGetAgentOutput(Automation):
@@ -4267,9 +4180,6 @@ class AutomationGetAgentOutput(Automation):
         )
 
 
-automations.register(AutomationGetAgentOutput())
-
-
 class AutomationNotificationReplay(Automation):
     cmd = "notification-replay"
 
@@ -4307,9 +4217,6 @@ class AutomationNotificationReplay(Automation):
             ),
         )
         return NotificationReplayResult()
-
-
-automations.register(AutomationNotificationReplay())
 
 
 class AutomationNotificationAnalyse(Automation):
@@ -4350,9 +4257,6 @@ class AutomationNotificationAnalyse(Automation):
                 ),
             )
         )
-
-
-automations.register(AutomationNotificationAnalyse())
 
 
 class AutomationNotificationTest(Automation):
@@ -4399,9 +4303,6 @@ class AutomationNotificationTest(Automation):
         )
 
 
-automations.register(AutomationNotificationTest())
-
-
 class AutomationGetBulks(Automation):
     cmd = "notification-get-bulks"
 
@@ -4422,9 +4323,6 @@ class AutomationGetBulks(Automation):
                 ),
             )
         )
-
-
-automations.register(AutomationGetBulks())
 
 
 class AutomationCreateDiagnosticsDump(Automation):
@@ -4452,9 +4350,6 @@ class AutomationCreateDiagnosticsDump(Automation):
             )
 
 
-automations.register(AutomationCreateDiagnosticsDump())
-
-
 class AutomationFindUnknownCheckParameterRuleSets(Automation):
     cmd = "find-unknown-check-parameter-rule-sets"
 
@@ -4479,4 +4374,40 @@ class AutomationFindUnknownCheckParameterRuleSets(Automation):
         )
 
 
-automations.register(AutomationFindUnknownCheckParameterRuleSets())
+def register_common_automations(automations: Automations) -> None:
+    automations.register(AutomationDiscovery())
+    automations.register(AutomationSpecialAgentDiscoveryPreview())
+    automations.register(AutomationDiscoveryPreview())
+    automations.register(AutomationAutodiscovery())
+    automations.register(AutomationSetAutochecksV2())
+    automations.register(AutomationUpdateHostLabels())
+    automations.register(AutomationRenameHosts())
+    automations.register(AutomationGetServicesLabels())
+    automations.register(AutomationGetServiceName())
+    automations.register(AutomationAnalyseServices())
+    automations.register(AutomationAnalyseHost())
+    automations.register(AutomationAnalyzeHostRuleMatches())
+    automations.register(AutomationAnalyzeServiceRuleMatches())
+    automations.register(AutomationAnalyzeHostRuleEffectiveness())
+    automations.register(AutomationDeleteHosts())
+    automations.register(AutomationDeleteHostsKnownRemote())
+    automations.register(AutomationRestart())
+    automations.register(AutomationReload())
+    automations.register(AutomationGetConfiguration())
+    automations.register(AutomationGetCheckInformation())
+    automations.register(AutomationGetSectionInformation())
+    automations.register(AutomationScanParents())
+    automations.register(AutomationDiagSpecialAgent())
+    automations.register(AutomationPingHost())
+    automations.register(AutomationDiagCmkAgent())
+    automations.register(AutomationDiagHost())
+    automations.register(AutomationActiveCheck())
+    automations.register(AutomationUpdatePasswordsMergedFile())
+    automations.register(AutomationUpdateDNSCache())
+    automations.register(AutomationGetAgentOutput())
+    automations.register(AutomationNotificationReplay())
+    automations.register(AutomationNotificationAnalyse())
+    automations.register(AutomationNotificationTest())
+    automations.register(AutomationGetBulks())
+    automations.register(AutomationCreateDiagnosticsDump())
+    automations.register(AutomationFindUnknownCheckParameterRuleSets())

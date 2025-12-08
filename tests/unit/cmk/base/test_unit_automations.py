@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 from pytest import MonkeyPatch
 
-import cmk.base.automations
 import cmk.base.automations.check_mk as automations
-import cmk.ccc.version as cmk_version
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
+from cmk.base.app import make_app
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
@@ -23,7 +19,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 
-def test_registered_automations() -> None:
+def test_registered_automations(edition: Edition) -> None:
     needed_automations = [
         "active-check",
         "analyse-host",
@@ -63,15 +59,13 @@ def test_registered_automations() -> None:
         "find-unknown-check-parameter-rule-sets",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+    if edition is not Edition.COMMUNITY:
         needed_automations += [
             "bake-agents",
             "notify",
         ]
 
-    assert sorted(needed_automations) == sorted(
-        cmk.base.automations.automations._automations.keys()
-    )
+    assert sorted(needed_automations) == sorted(make_app(edition).automations._automations.keys())
 
 
 def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
@@ -113,7 +107,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-def test_service_labels(monkeypatch):
+def test_service_labels(monkeypatch: MonkeyPatch) -> None:
     automation = automations.AutomationGetServicesLabels()
 
     ts = Scenario()

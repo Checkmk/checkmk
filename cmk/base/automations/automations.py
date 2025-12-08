@@ -21,7 +21,6 @@ from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import log, paths
 from cmk.utils.log import console
-from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.rulesets import RuleSetName
 
 tracer = trace.get_tracer()
@@ -157,12 +156,3 @@ class Automation(abc.ABC):
         plugins: AgentBasedPlugins | None,
         loaded_config: config.LoadingResult | None,
     ) -> ABCAutomationResult: ...
-
-
-#
-# Initialize the modes object and load all available modes
-#
-
-automations = Automations()
-
-import_plugins(__file__, __package__)

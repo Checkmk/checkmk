@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 from cmk.base import config
-from cmk.base.automations import AutomationError
+from cmk.base.automations.automations import AutomationError
 from cmk.base.config import ConfigCache
 from cmk.ccc import tty
 from cmk.ccc import version as cmk_version

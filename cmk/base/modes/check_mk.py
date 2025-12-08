@@ -2006,10 +2006,10 @@ _BROWSE_MAN_MODE = Mode(
 
 
 def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
-    from cmk.base import automations
+    from cmk.base.automations.automations import MKAutomationError
 
     if not args:
-        raise automations.MKAutomationError("You need to provide arguments")
+        raise MKAutomationError("You need to provide arguments")
 
     # At least for the automation calls that buffer and handle the stdout/stderr on their own
     # we can now enable this. In the future we should remove this call for all automations calls and
@@ -2034,9 +2034,7 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
         },
     ):
         sys.exit(
-            automations.automations.execute_and_write_serialized_result_to_stdout(
-                name, automation_args
-            )
+            app.automations.execute_and_write_serialized_result_to_stdout(name, automation_args)
         )
 
 

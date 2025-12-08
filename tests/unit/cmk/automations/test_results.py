@@ -21,7 +21,7 @@ from cmk.automations.results import (
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
-from cmk.base.automations import automations
+from cmk.base.app import make_app
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
@@ -38,10 +38,12 @@ def test_result_type_registry_completeness() -> None:
     # registered in cmk.automations
     automations_missing = (
         {"bake-agents", "notify"}
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY
+        if (edition := cmk_version.edition(paths.omd_root)) is cmk_version.Edition.COMMUNITY
         else set()
     )
-    assert set(result_type_registry) - automations_missing == set(automations._automations)
+    assert set(result_type_registry) - automations_missing == set(
+        make_app(edition).automations._automations
+    )
 
 
 @dataclass

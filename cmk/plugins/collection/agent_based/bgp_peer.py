@@ -98,6 +98,7 @@ from typing import NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
     all_of,
+    any_of,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -221,6 +222,34 @@ BGP_ERROR_CODE_NAME_MAPPING: dict[int, BGPErrorCode] = {
 DEFAULT_BGP_PEER_PARAMS = BGPPeerParams(
     admin_state_mapping=DEFAULT_ADMIN_STATE_MAPPING,
     peer_state_mapping=DEFAULT_PEER_STATE_MAPPING,
+)
+
+DETECT_IETF_BGP_PEER = all_of(
+    any_of(
+        # If we do not want to keep extending this list, but rather detect all devices
+        # we can use
+        # If we down the road decide to cover even more of the devices, we could just use
+        # all_of(
+        #         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),  # Fortinet FortiGate
+        #         exists(".1.3.6.1.2.1.15.3.1.*"),
+        #     )
+        startswith(
+            ".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.1001"
+        ),  # Fortinet FortiGate FGT1001F
+        startswith(
+            ".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.845"
+        ),  # Fortinet FortiGate FGT80F
+        startswith(
+            ".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.701"
+        ),  # Fortinet FortiGate FGT70F
+        startswith(
+            ".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.10007"
+        ),  # Fortinet FortiGate FGT1101E
+        startswith(
+            ".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.9002"
+        ),  # Fortinet FortiGate FGT901G
+    ),
+    exists(".1.3.6.1.2.1.15.3.1.*"),
 )
 
 
@@ -540,10 +569,7 @@ snmp_section_ietf_bgp_peer = SNMPSection(
             ],
         ),
     ],
-    detect=all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.1001"),  # Fortinet FortiGate
-        exists(".1.3.6.1.2.1.15.3.1.*"),
-    ),
+    detect=DETECT_IETF_BGP_PEER,
 )
 
 check_plugin_bgp_peer = CheckPlugin(

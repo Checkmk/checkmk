@@ -110,3 +110,16 @@ def test_telemetry_json_id_matches_telemetry_id_file(site: Site) -> None:
     telemetry_data = json.loads(json_content)
     telemetry_id = site.read_file(f"{TELEMETRY_DATA_PATH}/telemetry_id").strip()
     assert telemetry_data["data"]["id"] == telemetry_id
+
+
+@pytest.mark.usefixtures("default_cfg")
+def test_telemetry_json_counts_and_version(site: Site) -> None:
+    """Telemetry JSON contains expected counts and version information."""
+    run_telemetry_collection(site)
+
+    json_content = get_telemetry_json_content(site)
+    telemetry_data = json.loads(json_content)["data"]
+    assert telemetry_data["count_hosts"] == EXPECTED_HOST_COUNT
+    assert telemetry_data["count_folders"] == EXPECTED_FOLDER_COUNT
+    assert telemetry_data["edition"] == site.edition.short
+    assert telemetry_data["cmk_version"] == f"{site.version.version_data}"

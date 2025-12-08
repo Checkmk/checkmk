@@ -86,15 +86,6 @@
       },
       "required": ["type", "enabled", "value", "unit"]
     },
-    "query_aggregation_histogram_percentile": {
-      "type": "object",
-      "properties": {
-        "type": { "type": "string", "enum": ["percentile"] },
-        "enabled": { "type": "boolean" },
-        "value": { "type": "number" }
-      },
-      "required": ["type", "enabled", "value"]
-    },
     "graph_line_query": {
       "type": "object",
       "title": "query",
@@ -126,13 +117,8 @@
         "aggregation_sum": {
           "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/query_aggregation_sum_rate" }]
         },
-        "aggregation_histogram": {
-          "oneOf": [
-            { "type": "null" },
-            {
-              "$ref": "#/$defs/query_aggregation_histogram_percentile"
-            }
-          ]
+        "aggregation_histogram_percentile": {
+          "type": "number"
         }
       },
       "required": [
@@ -149,7 +135,7 @@
         "scope_attributes",
         "data_point_attributes",
         "aggregation_sum",
-        "aggregation_histogram"
+        "aggregation_histogram_percentile"
       ]
     },
     "graph_line_metric": {

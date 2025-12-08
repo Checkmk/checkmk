@@ -206,15 +206,12 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     )
   }
 
-  if (value.aggregation_histogram && value.aggregation_histogram.enabled) {
-    const percentileText = `${value.aggregation_histogram.value}`
-    rows.push(
-      h('tr', [
-        h('td', { class: 'dict_title' }, ['Aggregation Histogram Percentile:']),
-        h('td', [percentileText])
-      ])
-    )
-  }
+  rows.push(
+    h('tr', [
+      h('td', { class: 'dict_title' }, ['Percentile (histograms):']),
+      h('td', [`${value.aggregation_histogram_percentile} %`])
+    ])
+  )
 
   return h('table', { class: 'form-readonly__dictionary' }, rows)
 }

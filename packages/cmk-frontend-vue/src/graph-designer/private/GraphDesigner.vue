@@ -12,7 +12,6 @@ import {
   type GraphLines,
   type GraphOptions,
   type Operation,
-  type QueryAggregationHistogramPercentile,
   type QueryAggregationSumRate,
   type Transformation
 } from 'cmk-shared-typing/typescript/graph_designer'
@@ -196,13 +195,14 @@ function formulaOf(graphLine: GraphLine): string {
   }
 }
 
+const dataQueryAggregationHistogramPercentile = 90
 const dataQuery = ref<Query>({
   metricName: null,
   resourceAttributes: [],
   scopeAttributes: [],
   dataPointAttributes: [],
   aggregationSum: null,
-  aggregationHistogram: null
+  aggregationHistogramPercentile: dataQueryAggregationHistogramPercentile
 })
 const dataMetric = ref<Metric>({
   hostName: null,
@@ -314,7 +314,7 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         scope_attributes: graphLine.scope_attributes,
         data_point_attributes: graphLine.data_point_attributes,
         aggregation_sum: graphLine.aggregation_sum,
-        aggregation_histogram: graphLine.aggregation_histogram
+        aggregation_histogram_percentile: graphLine.aggregation_histogram_percentile
       }
     case 'metric':
       return {
@@ -443,16 +443,6 @@ async function addQuery() {
     } else {
       aggregationSum = null
     }
-    let aggregationHistogram: QueryAggregationHistogramPercentile | null
-    if (metricTypes.includes('histogram')) {
-      aggregationHistogram = {
-        type: 'percentile',
-        enabled: false,
-        value: 95
-      }
-    } else {
-      aggregationHistogram = null
-    }
     graphLines.value.push({
       id: nextIndex(),
       type: 'query',
@@ -467,7 +457,7 @@ async function addQuery() {
       scope_attributes: dataQuery.value.scopeAttributes,
       data_point_attributes: dataQuery.value.dataPointAttributes,
       aggregation_sum: aggregationSum,
-      aggregation_histogram: aggregationHistogram
+      aggregation_histogram_percentile: dataQuery.value.aggregationHistogramPercentile
     })
     dataQuery.value = {
       metricName: null,
@@ -475,7 +465,7 @@ async function addQuery() {
       scopeAttributes: [],
       dataPointAttributes: [],
       aggregationSum: null,
-      aggregationHistogram: null
+      aggregationHistogramPercentile: dataQueryAggregationHistogramPercentile
     }
   }
 }
@@ -836,24 +826,6 @@ function transformQueryAggregationSum(aggregationSum: QueryAggregationSumRate | 
   }
 }
 
-function transformQueryAggregationHistogram(
-  aggregationHistogram: QueryAggregationHistogramPercentile | null
-) {
-  if (aggregationHistogram === null) {
-    return {
-      type: 'percentile',
-      enabled: false,
-      value: 90
-    }
-  } else {
-    return {
-      type: 'percentile',
-      enabled: aggregationHistogram.enabled,
-      value: aggregationHistogram.value
-    }
-  }
-}
-
 const slideInAPI = {
   getSchema: async () => {
     return (
@@ -880,9 +852,7 @@ const slideInAPI = {
             graphLineQuery.value.data_point_attributes
           ),
           aggregation_sum: transformQueryAggregationSum(graphLineQuery.value.aggregation_sum),
-          aggregation_histogram: transformQueryAggregationHistogram(
-            graphLineQuery.value.aggregation_histogram
-          )
+          aggregation_histogram_percentile: graphLineQuery.value.aggregation_histogram_percentile
         }
         values.value = {
           value: { metric_backend_custom_query: queryAttributes }
@@ -1024,7 +994,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:scope-attributes="graphLine.scope_attributes"
               v-model:data-point-attributes="graphLine.data_point_attributes"
               v-model:aggregation-sum="graphLine.aggregation_sum"
-              v-model:aggregation-histogram="graphLine.aggregation_histogram"
+              v-model:aggregation-histogram-percentile="graphLine.aggregation_histogram_percentile"
               @update:metric-name="updateGraphLineAutoTitle(graphLine)"
             />
           </div>
@@ -1125,7 +1095,7 @@ const graphDesignerContentAsJson = computed(() => {
           v-model:scope-attributes="dataQuery.scopeAttributes"
           v-model:data-point-attributes="dataQuery.dataPointAttributes"
           v-model:aggregation-sum="dataQuery.aggregationSum"
-          v-model:aggregation-histogram="dataQuery.aggregationHistogram"
+          v-model:aggregation-histogram-percentile="dataQuery.aggregationHistogramPercentile"
         />
         <CmkButton @click="addQuery">
           {{ _t('Add') }}

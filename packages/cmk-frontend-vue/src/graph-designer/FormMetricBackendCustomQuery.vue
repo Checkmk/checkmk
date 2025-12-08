@@ -8,7 +8,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type GraphLineQueryAttribute,
   type GraphLineQueryAttributes,
-  type QueryAggregationHistogramPercentile,
   type QueryAggregationSumRate
 } from 'cmk-shared-typing/typescript/graph_designer'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
@@ -34,7 +33,7 @@ export interface Query {
   scopeAttributes: GraphLineQueryAttributes
   dataPointAttributes: GraphLineQueryAttributes
   aggregationSum: QueryAggregationSumRate | null
-  aggregationHistogram: QueryAggregationHistogramPercentile | null
+  aggregationHistogramPercentile: number
 }
 
 const metricName = defineModel<string | null>('metricName', { default: null })
@@ -50,12 +49,9 @@ const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttr
 const aggregationSum = defineModel<QueryAggregationSumRate | null>('aggregationSum', {
   default: null
 })
-const aggregationHistogram = defineModel<QueryAggregationHistogramPercentile | null>(
-  'aggregationHistogram',
-  {
-    default: null
-  }
-)
+const aggregationHistogramPercentile = defineModel<number>('aggregationHistogramPercentile', {
+  required: true
+})
 
 // Clear form fields if one changes
 
@@ -355,15 +351,10 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
           />
         </td>
       </tr>
-      <tr v-if="aggregationHistogram !== null && aggregationHistogram.type === 'percentile'">
+      <tr>
+        <td>{{ _t('Percentile (histograms)') }}</td>
         <td>
-          <CmkCheckbox
-            v-model="aggregationHistogram.enabled"
-            :label="_t('Apply percentile (histograms)')"
-          />
-        </td>
-        <td>
-          <CmkInput v-model="aggregationHistogram.value" type="number" />
+          <CmkInput v-model="aggregationHistogramPercentile" type="number" :unit="'%'" />
         </td>
       </tr>
     </tbody>

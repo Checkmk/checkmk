@@ -279,7 +279,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
                 "scope_attributes": ["a"],
                 "data_point_attributes": ["a"],
                 "aggregation_sum": ["none", None],
-                "aggregation_histogram": ["none", None],
+                "aggregation_histogram_percentile": 90,
                 "host_name": "v250",
             }
         )

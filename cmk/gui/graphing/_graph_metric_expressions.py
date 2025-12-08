@@ -102,11 +102,6 @@ class QueryAggregationSumRate:
 
 
 @dataclass(frozen=True)
-class QueryAggregationHistogramPercentile:
-    value: float
-
-
-@dataclass(frozen=True)
 class GraphLineQueryAttribute:
     key: str
     value: str
@@ -119,7 +114,7 @@ class QueryDataKey:
     scope_attributes: tuple[GraphLineQueryAttribute, ...]
     data_point_attributes: tuple[GraphLineQueryAttribute, ...]
     aggregation_sum: QueryAggregationSumRate | None
-    aggregation_histogram: QueryAggregationHistogramPercentile | None
+    aggregation_histogram_percentile: float
 
 
 @dataclass(frozen=True)

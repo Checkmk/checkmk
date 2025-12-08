@@ -930,9 +930,6 @@
     "metric_backend_custom_query_aggregation_sum": {
       "$ref": "../graph_designer.json#/$defs/query_aggregation_sum_rate"
     },
-    "metric_backend_custom_query_aggregation_histogram": {
-      "$ref": "../graph_designer.json#/$defs/query_aggregation_histogram_percentile"
-    },
     "metric_backend_custom_query": {
       "id": "metric_backend_custom_query",
       "type": "object",
@@ -962,8 +959,8 @@
             "aggregation_sum": {
               "$ref": "#/$defs/metric_backend_custom_query_aggregation_sum"
             },
-            "aggregation_histogram": {
-              "$ref": "#/$defs/metric_backend_custom_query_aggregation_histogram"
+            "aggregation_histogram_percentile": {
+              "type": "number"
             }
           },
           "required": [
@@ -973,7 +970,7 @@
             "scope_attributes",
             "data_point_attributes",
             "aggregation_sum",
-            "aggregation_histogram"
+            "aggregation_histogram_percentile"
           ]
         }
       ]

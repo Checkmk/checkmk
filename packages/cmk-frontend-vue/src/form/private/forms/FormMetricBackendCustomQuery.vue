@@ -35,6 +35,6 @@ const componentId = useId()
     v-model:scope-attributes="value.scope_attributes"
     v-model:data-point-attributes="value.data_point_attributes"
     v-model:aggregation-sum="value.aggregation_sum"
-    v-model:aggregation-histogram="value.aggregation_histogram"
+    v-model:aggregation-histogram-percentile="value.aggregation_histogram_percentile"
   />
 </template>

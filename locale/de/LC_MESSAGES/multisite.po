@@ -7647,9 +7647,6 @@ msgstr "Anhängen von bis zu"
 msgid "Attempt to interpret OEM data"
 msgstr "Versuch der Interpretation von OEM-Daten"
 
-msgid "Attempted concurrent connections"
-msgstr "Versuchte gleichzeitige Verbindungen"
-
 msgid "Atto Fibrebridge FC port"
 msgstr "Atto Fibrebridge FC Port"
 
@@ -14622,9 +14619,6 @@ msgstr "Raten für alle monotonen Zähler berechnen"
 msgid "Computing differences"
 msgstr "Berechne Unterschiede"
 
-msgid "Concurrent SNAT connections"
-msgstr "Gleichzeitige SNAT-Verbindungen"
-
 msgid "Concurrent connections"
 msgstr "Gleichzeitige Verbindungen"
 
@@ -16046,6 +16040,121 @@ msgstr "Beschädigte Dateien im Spooler"
 
 msgid "Cosmic"
 msgstr "Kosmisch"
+
+#, fuzzy
+msgid "Cosmos DB container failed requests (404)"
+msgstr "Fehlgeschlagene Anfragen (404)"
+
+#, fuzzy
+msgid "Cosmos DB container normalized RU consumption"
+msgstr "Normalisierter RU-Verbrauch"
+
+#, fuzzy
+msgid "Cosmos DB container requests"
+msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests (429)"
+msgstr "Gedrosselte Anfragen (429)"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests ratio"
+msgstr "Gedrosselte Anfragerate"
+
+#, fuzzy
+msgid "Cosmos DB container throughput"
+msgstr "Azure Cosmos DB Datenbank-Container-Durchsatz"
+
+msgid "Cosmos DB container total RUs"
+msgstr ""
+
+#, fuzzy
+msgid "Cosmos DB container total requests"
+msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+
+#, fuzzy
+msgid "Cosmos DB data usage"
+msgstr "verwendete Daten"
+
+#, fuzzy
+msgid "Cosmos DB database failed requests (404)"
+msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+
+#, fuzzy
+msgid "Cosmos DB database normalized RU consumption"
+msgstr "Normalisierter RU-Verbrauch"
+
+#, fuzzy
+msgid "Cosmos DB database requests"
+msgstr "Azure Cosmos DB Datenbank-Anfragen"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests (429)"
+msgstr "Gedrosselte Anfragen (429)"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests ratio"
+msgstr "Gedrosselte Anfragerate"
+
+#, fuzzy
+msgid "Cosmos DB database throughput"
+msgstr "Azure Cosmos DB Datenbank-Durchsatz"
+
+#, fuzzy
+msgid "Cosmos DB database total RUs"
+msgstr "Azure/Cosmos DB Datenbank-Container"
+
+#, fuzzy
+msgid "Cosmos DB database total requests"
+msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+
+#, fuzzy
+msgid "Cosmos DB documents"
+msgstr "Azure Cosmos DB Anfragen"
+
+#, fuzzy
+msgid "Cosmos DB failed requests (404)"
+msgstr "Fehlgeschlagene Anfragen (404)"
+
+#, fuzzy
+msgid "Cosmos DB index overhead"
+msgstr "Index-Overhead"
+
+#, fuzzy
+msgid "Cosmos DB index usage"
+msgstr "Kosten und Nutzung (CE)"
+
+#, fuzzy
+msgid "Cosmos DB normalized RU consumption"
+msgstr "Normalisierter RU-Verbrauch"
+
+#, fuzzy
+msgid "Cosmos DB service availability"
+msgstr "Service-Verfügbarkeit"
+
+#, fuzzy
+msgid "Cosmos DB storage"
+msgstr "Azure Cosmos DB Speicher"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests (429)"
+msgstr "Gedrosselte Anfragen (429)"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests ratio"
+msgstr "Gedrosselte Anfragerate"
+
+#, fuzzy
+msgid "Cosmos DB total RUs"
+msgstr "Azure Cosmos DB Speicher"
+
+#, fuzzy
+msgid "Cosmos DB total requests"
+msgstr "Azure Cosmos DB Anfragen"
+
+#, fuzzy
+msgid "Cosmos DB total storage"
+msgstr "Azure Cosmos DB Speicher"
 
 msgid "CosmosDb"
 msgstr "CosmosDB"
@@ -18169,14 +18278,8 @@ msgstr "Größen der Datendatei"
 msgid "Dataguard statistics"
 msgstr "Dataguard-Statistiken"
 
-msgid "Datapath availability"
-msgstr "Datapath-Verfügbarkeit"
-
 msgid "Datapath availability %"
 msgstr "Datapath-Verfügbarkeit %"
-
-msgid "Datapath availability (average)"
-msgstr "Datapath-Verfügbarkeit (Durchschnitt)"
 
 msgid "Datasource"
 msgstr "Datenquelle"
@@ -21492,9 +21595,6 @@ msgstr "URL zur Dokumentation"
 
 msgid "Documentation files"
 msgstr "Dokumentation Dateien"
-
-msgid "Documents"
-msgstr "Dokumente"
 
 msgid "Documents fragmentation"
 msgstr "Dokumentation Fragmentation"
@@ -25126,9 +25226,6 @@ msgstr "Fehlgeschlagene Bereitstellungen"
 
 msgid "Failed requests"
 msgstr "Fehlgeschlagene Anfragen"
-
-msgid "Failed requests (404)"
-msgstr "Fehlgeschlagene Anfragen (404)"
 
 msgid "Failed requests to adress book files"
 msgstr "Fehlgeschlagene Anfragen an Adressbuchdateien"
@@ -34421,17 +34518,11 @@ msgstr "Eingehende NAT-Regeln"
 msgid "Inbound and Outbound Messages"
 msgstr "Eingehende und ausgehende Meldungen"
 
-msgid "Inbound data"
-msgstr "Eingehende Daten"
-
 msgid "Inbound levels (per second)"
 msgstr "Eingangslevels (pro Sekunde)"
 
 msgid "Inbound messages"
 msgstr "Eingehende Meldungen"
-
-msgid "Inbound packets"
-msgstr "Eingehende Pakete"
 
 msgid "Inbound throughput lower levels (/sec)"
 msgstr "Untergrenzen des eingehenden Durchsatzes (/sec)"
@@ -34666,9 +34757,6 @@ msgstr "Prozentuale Levels für Index-Bloat"
 
 msgid "Index space"
 msgstr "Index-Platz"
-
-msgid "Index usage"
-msgstr "Index-Auslastung"
 
 msgid "Indexes to search"
 msgstr "Zu durchsuchende Indizes"
@@ -42896,6 +42984,78 @@ msgstr "NAS DB-Pfad"
 msgid "NAS DB user name"
 msgstr "NAS DB Benutzername"
 
+#, fuzzy
+msgid "NAT Gateway attempted concurrent connections"
+msgstr "Versuchte gleichzeitige Verbindungen"
+
+#, fuzzy
+msgid "NAT Gateway concurrent SNAT connections"
+msgstr "Gleichzeitige SNAT-Verbindungen"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability"
+msgstr "Verfügbarkeit des Azure NAT Gateways Datapath"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability (average)"
+msgstr "Datapath-Verfügbarkeit (Durchschnitt)"
+
+#, fuzzy
+msgid "NAT Gateway dropped packets"
+msgstr "Maximale Rate für verworfene Pakete"
+
+#, fuzzy
+msgid "NAT Gateway failed concurrent connections"
+msgstr "Fehlgeschlagene gleichzeitige Verbindungen"
+
+#, fuzzy
+msgid "NAT Gateway inbound data"
+msgstr "Eingehende Daten"
+
+#, fuzzy
+msgid "NAT Gateway inbound packets"
+msgstr "Azure NAT Gateways Pakete"
+
+#, fuzzy
+msgid "NAT Gateway outbound data"
+msgstr "Ausgehende Daten"
+
+#, fuzzy
+msgid "NAT Gateway outbound packets"
+msgstr "Ausgehende Pakete"
+
+#, fuzzy
+msgid "NAT Gateway packets (in/out)"
+msgstr "Pakete (ein-/ausgehend)"
+
+#, fuzzy
+msgid "NAT Gateway throughput"
+msgstr "Azure NAT Gateways Durchsatz"
+
+#, fuzzy
+msgid "NAT Gateway total SNAT connections"
+msgstr "Gesamte SNAT-Verbindungen"
+
+#, fuzzy
+msgid "NAT Gateway total active connections"
+msgstr "Gesamte aktive Verbindungen"
+
+#, fuzzy
+msgid "NAT Gateway total concurrent connections"
+msgstr "Gesamte gleichzeitige Verbindungen"
+
+#, fuzzy
+msgid "NAT Gateway total data"
+msgstr "NAT Gateways"
+
+#, fuzzy
+msgid "NAT Gateway total data transmitted"
+msgstr "Gesamte übermittelte Daten"
+
+#, fuzzy
+msgid "NAT Gateway total packets"
+msgstr "Azure NAT Gateways Pakete"
+
 msgid "NAT Gateways"
 msgstr "NAT Gateways"
 
@@ -44670,9 +44830,6 @@ msgstr "Normal-/Wiederholungs-Intervall"
 
 msgid "Normal: Regular push notification (default)"
 msgstr "Normal: reguläre Push-Benachrichtigung (Standard)"
-
-msgid "Normalized RU consumption"
-msgstr "Normalisierter RU-Verbrauch"
 
 msgid "Normalized RU consumption lower levels"
 msgstr "Untergrenzen des normalisierten RU-Verbrauchs"
@@ -48282,17 +48439,11 @@ msgstr "Bedingung für Anzahl der Ausfälle"
 msgid "Outage statistics"
 msgstr "Ausfall-Statistiken"
 
-msgid "Outbound data"
-msgstr "Ausgehende Daten"
-
 msgid "Outbound levels (per second)"
 msgstr "Ausgangslevels (pro Sekunde)"
 
 msgid "Outbound messages"
 msgstr "Ausgehende Meldungen"
-
-msgid "Outbound packets"
-msgstr "Ausgehende Pakete"
 
 msgid "Outbound rule"
 msgstr "Ausgangsregel"
@@ -48986,9 +49137,6 @@ msgstr "Pakete"
 
 msgid "Packets (dropped)"
 msgstr "Pakete (fallen gelassen)"
-
-msgid "Packets (in/out)"
-msgstr "Pakete (ein-/ausgehend)"
 
 msgid "Packets (total)"
 msgstr "Pakete (gesamt)"
@@ -54411,9 +54559,6 @@ msgstr "Angeforderter Authentifizierungskontext"
 
 msgid "Requests"
 msgstr "Anfragen"
-
-msgid "Requests (Azure, CosmosDB)"
-msgstr "Anfragen (Azure, CosmosDB)"
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Fordert Daten über Elasticsearch-Cluster, -Knoten und -Indizes an."
@@ -74886,17 +75031,11 @@ msgstr "Schwellwerte für obere Meldungsanzahl"
 msgid "Throttle periodic notifications"
 msgstr "Periodische Benachrichtigungen drosseln"
 
-msgid "Throttled Requests Ratio"
-msgstr "Gedrosselte Anfragerate"
-
 msgid "Throttled Server Connections"
 msgstr "Gedrosselte Serververbindungen"
 
 msgid "Throttled requests"
 msgstr "Gedrosselte Anfragen"
-
-msgid "Throttled requests (429)"
-msgstr "Gedrosselte Anfragen (429)"
 
 msgid "Throttled requests ratio"
 msgstr "Gedrosselte Anfragerate"
@@ -74909,12 +75048,6 @@ msgstr "Drosselung der 'periodischen Benachrichtigungen'"
 
 msgid "Throughput"
 msgstr "Durchsatz"
-
-msgid "Throughput (Azure, CosmosDB container)"
-msgstr "Durchsatz (Azure, CosmosDB Container)"
-
-msgid "Throughput (Azure, CosmosDB)"
-msgstr "Durchsatz (Azure, CosmosDB)"
 
 msgid "Throughput (FC)"
 msgstr "Durchsatz (FC)"
@@ -75950,9 +76083,6 @@ msgstr "Gesamter RAM"
 msgid "Total RAM + Swap installed"
 msgstr "Gesamtes RAM + installierter Swapspeicher"
 
-msgid "Total RUs"
-msgstr "Gesamte Anforderungseinheiten (RU)"
-
 msgid "Total RUs lower levels"
 msgstr "Untergrenzen für gesamte Anforderungseinheiten (RU)"
 
@@ -75961,9 +76091,6 @@ msgstr "Obergrenzen für gesamte Anforderungseinheiten (RU)"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Anzahl laufender On-Demand-Instanzen insgesamt (bei AWS veraltet)"
-
-msgid "Total SNAT connections"
-msgstr "Gesamte SNAT-Verbindungen"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "Durchsatz-optimierter Festplattenspeicher insgesamt"
@@ -75976,9 +76103,6 @@ msgstr "Gesamtzahl von eindeutigen Port Verbindungen"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr "Akkumulierter Gesamtwert für Energie auf Stromleitung"
-
-msgid "Total active connections"
-msgstr "Gesamte aktive Verbindungen"
 
 msgid "Total active sessions"
 msgstr "Gesamtzahl aktiver Sitzungen"
@@ -76011,9 +76135,6 @@ msgstr "Kommentare insgesamt: %d"
 msgid "Total commitable memory"
 msgstr "Absoluter aktivierbarer Speicherplatz"
 
-msgid "Total concurrent connections"
-msgstr "Gesamte gleichzeitige Verbindungen"
-
 msgid "Total connections"
 msgstr "Gesamtzahl Verbindungen"
 
@@ -76032,17 +76153,11 @@ msgstr "Container insgesamt"
 msgid "Total count"
 msgstr "Gesamtanzahl"
 
-msgid "Total data"
-msgstr "Gesamtdaten"
-
 msgid "Total data file size: Absolute upper levels"
 msgstr "Gesamtgröße der Datendatei: Absolute Obergrenzen"
 
 msgid "Total data in relation to RAM"
 msgstr "Gesamtmenge Daten relativ zu RAM"
-
-msgid "Total data transmitted"
-msgstr "Gesamte übermittelte Daten"
 
 msgid "Total devices"
 msgstr "Geräte insgesamt"
@@ -76299,9 +76414,6 @@ msgstr "Gesamtzahl Zombie Aufträge"
 msgid "Total number of {property} upper levels"
 msgstr "Obergrenze für die Gesamtzahl an {property}"
 
-msgid "Total packets"
-msgstr "Gesamtzahl Pakete"
-
 msgid "Total packets maximum"
 msgstr "Maximale Gesamtzahl Pakete"
 
@@ -76331,9 +76443,6 @@ msgstr "Gesamtgröße der wiederverwendbaren Podman Volumes"
 
 msgid "Total reclaimable size upper levels"
 msgstr "Obergrenzen für die wiederverwendbare Größe"
-
-msgid "Total requests"
-msgstr "Gesamte Anfragen"
 
 msgid "Total reservation utilization"
 msgstr "Gesamte Reservierungsauslastung"
@@ -92128,6 +92237,42 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Datapath availability"
+#~ msgstr "Datapath-Verfügbarkeit"
+
+#~ msgid "Documents"
+#~ msgstr "Dokumente"
+
+#~ msgid "Inbound packets"
+#~ msgstr "Eingehende Pakete"
+
+#~ msgid "Index usage"
+#~ msgstr "Index-Auslastung"
+
+#~ msgid "Requests (Azure, CosmosDB)"
+#~ msgstr "Anfragen (Azure, CosmosDB)"
+
+#~ msgid "Throttled Requests Ratio"
+#~ msgstr "Gedrosselte Anfragerate"
+
+#~ msgid "Throughput (Azure, CosmosDB container)"
+#~ msgstr "Durchsatz (Azure, CosmosDB Container)"
+
+#~ msgid "Throughput (Azure, CosmosDB)"
+#~ msgstr "Durchsatz (Azure, CosmosDB)"
+
+#~ msgid "Total RUs"
+#~ msgstr "Gesamte Anforderungseinheiten (RU)"
+
+#~ msgid "Total data"
+#~ msgstr "Gesamtdaten"
+
+#~ msgid "Total packets"
+#~ msgstr "Gesamtzahl Pakete"
+
+#~ msgid "Total requests"
+#~ msgstr "Gesamte Anfragen"
 
 #~ msgid "Aggregation for histograms"
 #~ msgstr "Aggregation der Histogramme"

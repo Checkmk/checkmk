@@ -7823,10 +7823,6 @@ msgstr "Laat je zien aan"
 msgid "Attempt to interpret OEM data"
 msgstr "Poging tot interpretatie van OEM gegevens"
 
-#, fuzzy
-msgid "Attempted concurrent connections"
-msgstr "Aantal huidige verbindingen"
-
 msgid "Atto Fibrebridge FC port"
 msgstr "Atto Fibrebridge FC-poort"
 
@@ -15184,10 +15180,6 @@ msgid "Computing differences"
 msgstr "Berekeningsverschillen"
 
 #, fuzzy
-msgid "Concurrent SNAT connections"
-msgstr "Huidige verbindingen"
-
-#, fuzzy
 msgid "Concurrent connections"
 msgstr "Huidige verbindingen"
 
@@ -16659,6 +16651,121 @@ msgstr "Corrupte bestanden in Spool"
 
 msgid "Cosmic"
 msgstr "Kosmisch"
+
+#, fuzzy
+msgid "Cosmos DB container failed requests (404)"
+msgstr "Mislukte verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB container normalized RU consumption"
+msgstr "Opslag IO verbruik"
+
+#, fuzzy
+msgid "Cosmos DB container requests"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests (429)"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests ratio"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB container throughput"
+msgstr "Web ACL Verzoeken"
+
+msgid "Cosmos DB container total RUs"
+msgstr ""
+
+#, fuzzy
+msgid "Cosmos DB container total requests"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB data usage"
+msgstr "Gebruik van gegevens"
+
+#, fuzzy
+msgid "Cosmos DB database failed requests (404)"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB database normalized RU consumption"
+msgstr "Opslag IO verbruik"
+
+#, fuzzy
+msgid "Cosmos DB database requests"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests (429)"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests ratio"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB database throughput"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB database total RUs"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB database total requests"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB documents"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB failed requests (404)"
+msgstr "Mislukte verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB index overhead"
+msgstr "Indexen om te zoeken"
+
+#, fuzzy
+msgid "Cosmos DB index usage"
+msgstr "Kosten en gebruik (CE)"
+
+#, fuzzy
+msgid "Cosmos DB normalized RU consumption"
+msgstr "Opslag IO verbruik"
+
+#, fuzzy
+msgid "Cosmos DB service availability"
+msgstr "Beschikbaarheid van de dienst"
+
+#, fuzzy
+msgid "Cosmos DB storage"
+msgstr "Azure DB opslag"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests (429)"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests ratio"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB total RUs"
+msgstr "Azure DB opslag"
+
+#, fuzzy
+msgid "Cosmos DB total requests"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Cosmos DB total storage"
+msgstr "Azure DB opslag"
 
 msgid "CosmosDb"
 msgstr ""
@@ -18856,15 +18963,7 @@ msgid "Dataguard statistics"
 msgstr "Dataguard Statistieken"
 
 #, fuzzy
-msgid "Datapath availability"
-msgstr "Beschikbaarheid gegevenspad lagere niveaus"
-
-#, fuzzy
 msgid "Datapath availability %"
-msgstr "Beschikbaarheid gegevenspad lagere niveaus"
-
-#, fuzzy
-msgid "Datapath availability (average)"
 msgstr "Beschikbaarheid gegevenspad lagere niveaus"
 
 msgid "Datasource"
@@ -22392,10 +22491,6 @@ msgstr "Documentatie URL"
 
 msgid "Documentation files"
 msgstr "Documentatiebestanden"
-
-#, fuzzy
-msgid "Documents"
-msgstr "Documentatie URL"
 
 msgid "Documents fragmentation"
 msgstr "Versnippering van documenten"
@@ -26088,10 +26183,6 @@ msgid "Failed provisionings"
 msgstr "Mislukte bevoorradingen"
 
 msgid "Failed requests"
-msgstr "Mislukte verzoeken"
-
-#, fuzzy
-msgid "Failed requests (404)"
 msgstr "Mislukte verzoeken"
 
 #, fuzzy
@@ -35821,19 +35912,11 @@ msgid "Inbound and Outbound Messages"
 msgstr "Inkomende en uitgaande berichten"
 
 #, fuzzy
-msgid "Inbound data"
-msgstr "In kaart gebrachte gegevens"
-
-#, fuzzy
 msgid "Inbound levels (per second)"
 msgstr "gebeurtenissen per seconde"
 
 msgid "Inbound messages"
 msgstr "Inkomende berichten"
-
-#, fuzzy
-msgid "Inbound packets"
-msgstr "Invoer Pakketten"
 
 #, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
@@ -36076,10 +36159,6 @@ msgid "Index percentage bloat levels"
 msgstr "Index percentage opgeblazen gevoeligheid"
 
 msgid "Index space"
-msgstr "Index ruimte"
-
-#, fuzzy
-msgid "Index usage"
 msgstr "Index ruimte"
 
 msgid "Indexes to search"
@@ -44652,6 +44731,78 @@ msgid "NAS DB user name"
 msgstr "NAS DB-gebruikersnaam"
 
 #, fuzzy
+msgid "NAT Gateway attempted concurrent connections"
+msgstr "Aantal huidige verbindingen"
+
+#, fuzzy
+msgid "NAT Gateway concurrent SNAT connections"
+msgstr "Huidige verbindingen"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability"
+msgstr "Bekijk de beschikbaarheid"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability (average)"
+msgstr "Beschikbaarheid gegevenspad lagere niveaus"
+
+#, fuzzy
+msgid "NAT Gateway dropped packets"
+msgstr "Maximum aantal dropped packets"
+
+#, fuzzy
+msgid "NAT Gateway failed concurrent connections"
+msgstr "Mislukte verbindingen"
+
+#, fuzzy
+msgid "NAT Gateway inbound data"
+msgstr "In kaart gebrachte gegevens"
+
+#, fuzzy
+msgid "NAT Gateway inbound packets"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "NAT Gateway outbound data"
+msgstr "Uitgaande regel"
+
+#, fuzzy
+msgid "NAT Gateway outbound packets"
+msgstr "Uitgaande pakketten"
+
+#, fuzzy
+msgid "NAT Gateway packets (in/out)"
+msgstr "Noem een regel"
+
+#, fuzzy
+msgid "NAT Gateway throughput"
+msgstr "Database doorvoer eenheid"
+
+#, fuzzy
+msgid "NAT Gateway total SNAT connections"
+msgstr "normale verbinding"
+
+#, fuzzy
+msgid "NAT Gateway total active connections"
+msgstr "normale verbinding"
+
+#, fuzzy
+msgid "NAT Gateway total concurrent connections"
+msgstr "Huidige verbindingen"
+
+#, fuzzy
+msgid "NAT Gateway total data"
+msgstr "vNet Gateway"
+
+#, fuzzy
+msgid "NAT Gateway total data transmitted"
+msgstr "Geen gegevens van een site"
+
+#, fuzzy
+msgid "NAT Gateway total packets"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
 msgid "NAT Gateways"
 msgstr "vNet Gateway"
 
@@ -46579,10 +46730,6 @@ msgstr "Normaal/herhaling controle-interval"
 
 msgid "Normal: Regular push notification (default)"
 msgstr "Normaal: Normale pushmelding (standaard)"
-
-#, fuzzy
-msgid "Normalized RU consumption"
-msgstr "Opslag IO verbruik"
 
 #, fuzzy
 msgid "Normalized RU consumption lower levels"
@@ -50487,19 +50634,11 @@ msgid "Outage statistics"
 msgstr "Uitvalstatistieken"
 
 #, fuzzy
-msgid "Outbound data"
-msgstr "Uitgaande regel"
-
-#, fuzzy
 msgid "Outbound levels (per second)"
 msgstr "gebeurtenissen per seconde"
 
 msgid "Outbound messages"
 msgstr "Uitgaande berichten"
-
-#, fuzzy
-msgid "Outbound packets"
-msgstr "Uitgaande pakketten"
 
 #, fuzzy
 msgid "Outbound rule"
@@ -51210,10 +51349,6 @@ msgstr "Pakketten"
 #, fuzzy
 msgid "Packets (dropped)"
 msgstr "Gedropte pakketten"
-
-#, fuzzy
-msgid "Packets (in/out)"
-msgstr "Noem een regel"
 
 #, fuzzy
 msgid "Packets (total)"
@@ -56936,9 +57071,6 @@ msgstr "VCenter-authenticatie"
 
 msgid "Requests"
 msgstr "Verzoeken"
-
-msgid "Requests (Azure, CosmosDB)"
-msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Vraagt gegevens op over Elasticsearch clusters, nodes en indexen."
@@ -77483,18 +77615,10 @@ msgstr "Drempels voor aantal berichten"
 msgid "Throttle periodic notifications"
 msgstr "Periodieke meldingen"
 
-#, fuzzy
-msgid "Throttled Requests Ratio"
-msgstr "Afgedwongen verzoeken"
-
 msgid "Throttled Server Connections"
 msgstr "Beperkte serververbindingen"
 
 msgid "Throttled requests"
-msgstr "Afgedwongen verzoeken"
-
-#, fuzzy
-msgid "Throttled requests (429)"
 msgstr "Afgedwongen verzoeken"
 
 #, fuzzy
@@ -77510,13 +77634,6 @@ msgstr "Periodieke meldingen"
 
 msgid "Throughput"
 msgstr "Doorvoer"
-
-#, fuzzy
-msgid "Throughput (Azure, CosmosDB container)"
-msgstr "Web ACL Verzoeken"
-
-msgid "Throughput (Azure, CosmosDB)"
-msgstr ""
 
 #, fuzzy
 msgid "Throughput (FC)"
@@ -78556,10 +78673,6 @@ msgid "Total RAM + Swap installed"
 msgstr "Totaal RAM + Swap geïnstalleerd"
 
 #, fuzzy
-msgid "Total RUs"
-msgstr "Totaal bruikbare RAM"
-
-#, fuzzy
 msgid "Total RUs lower levels"
 msgstr "Containers lagere niveaus"
 
@@ -78569,10 +78682,6 @@ msgstr "Containers bovenste niveaus"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Totaal aantal lopende On-Demand Instances(Afgeschaft door AWS)"
-
-#, fuzzy
-msgid "Total SNAT connections"
-msgstr "normale verbinding"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "Totale doorvoer Geoptimaliseerde HDD-ruimte"
@@ -78585,10 +78694,6 @@ msgstr "Totaal aantal unieke havencontacten"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr "Totale geaccumuleerde actieve energie van het vermogenskanaal"
-
-#, fuzzy
-msgid "Total active connections"
-msgstr "normale verbinding"
 
 #, fuzzy
 msgid "Total active sessions"
@@ -78624,10 +78729,6 @@ msgid "Total commitable memory"
 msgstr "Absoluut beschikbaar geheugen"
 
 #, fuzzy
-msgid "Total concurrent connections"
-msgstr "Huidige verbindingen"
-
-#, fuzzy
 msgid "Total connections"
 msgstr "normale verbinding"
 
@@ -78649,20 +78750,12 @@ msgstr "Totaal containers"
 msgid "Total count"
 msgstr "Totaal aantal"
 
-#, fuzzy
-msgid "Total data"
-msgstr "Totale breedte"
-
 msgid "Total data file size: Absolute upper levels"
 msgstr "Totale grootte gegevensbestand: Absolute bovengrenzen"
 
 #, fuzzy
 msgid "Total data in relation to RAM"
 msgstr "Totale gegevens in verhouding tot RAM"
-
-#, fuzzy
-msgid "Total data transmitted"
-msgstr "Geen gegevens van een site"
 
 msgid "Total devices"
 msgstr "Totaal apparaten"
@@ -78925,10 +79018,6 @@ msgid "Total number of {property} upper levels"
 msgstr "Totaal aantal gebruikers bovenste niveau"
 
 #, fuzzy
-msgid "Total packets"
-msgstr "Totaal aantal pakketten Maximum"
-
-#, fuzzy
 msgid "Total packets maximum"
 msgstr "Totaal aantal pakketten Maximum"
 
@@ -78964,10 +79053,6 @@ msgstr "Hostnaam gebruikt voor containers"
 #, fuzzy
 msgid "Total reclaimable size upper levels"
 msgstr "Totale grootte logbestand: Absolute bovenste niveaus"
-
-#, fuzzy
-msgid "Total requests"
-msgstr "alleen verzoeken"
 
 #, fuzzy
 msgid "Total reservation utilization"
@@ -95797,6 +95882,46 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Datapath availability"
+#~ msgstr "Beschikbaarheid gegevenspad lagere niveaus"
+
+#, fuzzy
+#~ msgid "Documents"
+#~ msgstr "Documentatie URL"
+
+#, fuzzy
+#~ msgid "Inbound packets"
+#~ msgstr "Invoer Pakketten"
+
+#, fuzzy
+#~ msgid "Index usage"
+#~ msgstr "Index ruimte"
+
+#, fuzzy
+#~ msgid "Throttled Requests Ratio"
+#~ msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+#~ msgid "Throughput (Azure, CosmosDB container)"
+#~ msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+#~ msgid "Total RUs"
+#~ msgstr "Totaal bruikbare RAM"
+
+#, fuzzy
+#~ msgid "Total data"
+#~ msgstr "Totale breedte"
+
+#, fuzzy
+#~ msgid "Total packets"
+#~ msgstr "Totaal aantal pakketten Maximum"
+
+#, fuzzy
+#~ msgid "Total requests"
+#~ msgstr "alleen verzoeken"
 
 #, fuzzy
 #~ msgid "Aggregation for histograms"

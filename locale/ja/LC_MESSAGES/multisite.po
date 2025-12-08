@@ -7396,10 +7396,6 @@ msgstr "添付最大"
 msgid "Attempt to interpret OEM data"
 msgstr "OEMデータの解釈の試行"
 
-#, fuzzy
-msgid "Attempted concurrent connections"
-msgstr "現在の接続数"
-
 msgid "Atto Fibrebridge FC port"
 msgstr "Atto Fibrebridge FCポート"
 
@@ -14325,10 +14321,6 @@ msgid "Computing differences"
 msgstr "計算の違い"
 
 #, fuzzy
-msgid "Concurrent SNAT connections"
-msgstr "現在の接続状況"
-
-#, fuzzy
 msgid "Concurrent connections"
 msgstr "現在の接続状況"
 
@@ -15701,6 +15693,121 @@ msgstr "スプール内の破損したファイル"
 
 msgid "Cosmic"
 msgstr "コズミック"
+
+#, fuzzy
+msgid "Cosmos DB container failed requests (404)"
+msgstr "失敗したリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB container normalized RU consumption"
+msgstr "ストレージIO消費量"
+
+#, fuzzy
+msgid "Cosmos DB container requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests (429)"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests ratio"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB container throughput"
+msgstr "Web ACLリクエスト"
+
+msgid "Cosmos DB container total RUs"
+msgstr ""
+
+#, fuzzy
+msgid "Cosmos DB container total requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB data usage"
+msgstr "データ使用量"
+
+#, fuzzy
+msgid "Cosmos DB database failed requests (404)"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB database normalized RU consumption"
+msgstr "ストレージIO消費量"
+
+#, fuzzy
+msgid "Cosmos DB database requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests (429)"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests ratio"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB database throughput"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB database total RUs"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB database total requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB documents"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB failed requests (404)"
+msgstr "失敗したリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB index overhead"
+msgstr "検索するインデックス"
+
+#, fuzzy
+msgid "Cosmos DB index usage"
+msgstr "コストと使用量(CE)"
+
+#, fuzzy
+msgid "Cosmos DB normalized RU consumption"
+msgstr "ストレージIO消費量"
+
+#, fuzzy
+msgid "Cosmos DB service availability"
+msgstr "サービスの可用性"
+
+#, fuzzy
+msgid "Cosmos DB storage"
+msgstr "Azure DB ストレージ"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests (429)"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests ratio"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB total RUs"
+msgstr "Azure DB ストレージ"
+
+#, fuzzy
+msgid "Cosmos DB total requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Cosmos DB total storage"
+msgstr "Azure DB ストレージ"
 
 msgid "CosmosDb"
 msgstr ""
@@ -17815,15 +17922,7 @@ msgid "Dataguard statistics"
 msgstr "データガード統計"
 
 #, fuzzy
-msgid "Datapath availability"
-msgstr "データパスの可用性下位レベル"
-
-#, fuzzy
 msgid "Datapath availability %"
-msgstr "データパスの可用性下位レベル"
-
-#, fuzzy
-msgid "Datapath availability (average)"
 msgstr "データパスの可用性下位レベル"
 
 msgid "Datasource"
@@ -21094,10 +21193,6 @@ msgstr "ドキュメントURL"
 
 msgid "Documentation files"
 msgstr "ドキュメントファイル"
-
-#, fuzzy
-msgid "Documents"
-msgstr "ドキュメント"
 
 msgid "Documents fragmentation"
 msgstr "ドキュメントの断片化"
@@ -24651,10 +24746,6 @@ msgid "Failed provisionings"
 msgstr "プロビジョニングの失敗"
 
 msgid "Failed requests"
-msgstr "失敗したリクエスト"
-
-#, fuzzy
-msgid "Failed requests (404)"
 msgstr "失敗したリクエスト"
 
 msgid "Failed requests to adress book files"
@@ -33678,19 +33769,11 @@ msgstr "インバウンドNAT規則"
 msgid "Inbound and Outbound Messages"
 msgstr "インバウンドおよびアウトバウンドメッセージ"
 
-#, fuzzy
-msgid "Inbound data"
-msgstr "データ送信"
-
 msgid "Inbound levels (per second)"
 msgstr "インバウンドレベル(毎秒)"
 
 msgid "Inbound messages"
 msgstr "インバウンドメッセージ"
-
-#, fuzzy
-msgid "Inbound packets"
-msgstr "入力パケット"
 
 #, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
@@ -33929,10 +34012,6 @@ msgid "Index percentage bloat levels"
 msgstr "肥大化レベルのパーセンテージのインデックス"
 
 msgid "Index space"
-msgstr "インデックススペース"
-
-#, fuzzy
-msgid "Index usage"
 msgstr "インデックススペース"
 
 msgid "Indexes to search"
@@ -42058,6 +42137,78 @@ msgid "NAS DB user name"
 msgstr "NAS DBユーザー名"
 
 #, fuzzy
+msgid "NAT Gateway attempted concurrent connections"
+msgstr "現在の接続数"
+
+#, fuzzy
+msgid "NAT Gateway concurrent SNAT connections"
+msgstr "現在の接続状況"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability"
+msgstr "サービスの可用性を見る"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability (average)"
+msgstr "データパスの可用性下位レベル"
+
+#, fuzzy
+msgid "NAT Gateway dropped packets"
+msgstr "ドロップされたパケットの最大レート"
+
+#, fuzzy
+msgid "NAT Gateway failed concurrent connections"
+msgstr "失敗した接続"
+
+#, fuzzy
+msgid "NAT Gateway inbound data"
+msgstr "データ送信"
+
+#, fuzzy
+msgid "NAT Gateway inbound packets"
+msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "NAT Gateway outbound data"
+msgstr "アウトバウンドルール"
+
+#, fuzzy
+msgid "NAT Gateway outbound packets"
+msgstr "出力パケット"
+
+#, fuzzy
+msgid "NAT Gateway packets (in/out)"
+msgstr "コールイン/アウト"
+
+#, fuzzy
+msgid "NAT Gateway throughput"
+msgstr "Azure SQLデータベーススループット"
+
+#, fuzzy
+msgid "NAT Gateway total SNAT connections"
+msgstr "総接続数"
+
+#, fuzzy
+msgid "NAT Gateway total active connections"
+msgstr "総接続数"
+
+#, fuzzy
+msgid "NAT Gateway total concurrent connections"
+msgstr "現在の接続状況"
+
+#, fuzzy
+msgid "NAT Gateway total data"
+msgstr "vNet ゲートウェイ"
+
+#, fuzzy
+msgid "NAT Gateway total data transmitted"
+msgstr "どのサイトからのデータもありません"
+
+#, fuzzy
+msgid "NAT Gateway total packets"
+msgstr "Azure データベース接続"
+
+#, fuzzy
 msgid "NAT Gateways"
 msgstr "vNet ゲートウェイ"
 
@@ -43824,10 +43975,6 @@ msgstr "通常/再試行のチェック間隔"
 
 msgid "Normal: Regular push notification (default)"
 msgstr "通常:定期的なプッシュ通知(デフォルト)"
-
-#, fuzzy
-msgid "Normalized RU consumption"
-msgstr "ストレージIO消費量"
 
 #, fuzzy
 msgid "Normalized RU consumption lower levels"
@@ -47354,19 +47501,11 @@ msgstr "停止カウント要件"
 msgid "Outage statistics"
 msgstr "停止統計"
 
-#, fuzzy
-msgid "Outbound data"
-msgstr "アウトバウンドルール"
-
 msgid "Outbound levels (per second)"
 msgstr "アウトバウンドレベル（1秒あたり）"
 
 msgid "Outbound messages"
 msgstr "アウトバウンドメッセージ"
-
-#, fuzzy
-msgid "Outbound packets"
-msgstr "出力パケット"
 
 msgid "Outbound rule"
 msgstr "アウトバウンドルール"
@@ -48048,10 +48187,6 @@ msgstr "パケット"
 #, fuzzy
 msgid "Packets (dropped)"
 msgstr "ドロップされたパケット"
-
-#, fuzzy
-msgid "Packets (in/out)"
-msgstr "コールイン/アウト"
 
 #, fuzzy
 msgid "Packets (total)"
@@ -53418,9 +53553,6 @@ msgstr "要求された認証コンテキスト"
 
 msgid "Requests"
 msgstr "リクエスト"
-
-msgid "Requests (Azure, CosmosDB)"
-msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr ""
@@ -73021,18 +73153,10 @@ msgstr "メッセージの上限数に関するしきい値"
 msgid "Throttle periodic notifications"
 msgstr "スロットル定期通知"
 
-#, fuzzy
-msgid "Throttled Requests Ratio"
-msgstr "スロットルされたリクエスト"
-
 msgid "Throttled Server Connections"
 msgstr "スロットルされたサーバー接続"
 
 msgid "Throttled requests"
-msgstr "スロットルされたリクエスト"
-
-#, fuzzy
-msgid "Throttled requests (429)"
 msgstr "スロットルされたリクエスト"
 
 #, fuzzy
@@ -73047,13 +73171,6 @@ msgstr "定期通知の帯域制御"
 
 msgid "Throughput"
 msgstr "スループット"
-
-#, fuzzy
-msgid "Throughput (Azure, CosmosDB container)"
-msgstr "Web ACLリクエスト"
-
-msgid "Throughput (Azure, CosmosDB)"
-msgstr ""
 
 #, fuzzy
 msgid "Throughput (FC)"
@@ -74045,10 +74162,6 @@ msgid "Total RAM + Swap installed"
 msgstr "合計RAM +インストールされたスワップ"
 
 #, fuzzy
-msgid "Total RUs"
-msgstr "合計RAM"
-
-#, fuzzy
 msgid "Total RUs lower levels"
 msgstr "コンテナの下位レベル"
 
@@ -74058,10 +74171,6 @@ msgstr "総容量 上位レベル"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "稼動中のオンデマンドインスタンスの総数(AWSで非推奨)"
-
-#, fuzzy
-msgid "Total SNAT connections"
-msgstr "総接続数"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "合計スループットが最適化されたHDDスペース"
@@ -74074,10 +74183,6 @@ msgstr "一意のポート連絡先の合計"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr "電力チャネルの積算電力量"
-
-#, fuzzy
-msgid "Total active connections"
-msgstr "総接続数"
 
 msgid "Total active sessions"
 msgstr "合計アクティブセッション"
@@ -74110,10 +74215,6 @@ msgstr "トータルコメント :%d"
 msgid "Total commitable memory"
 msgstr "合計コミット可能メモリ"
 
-#, fuzzy
-msgid "Total concurrent connections"
-msgstr "現在の接続状況"
-
 msgid "Total connections"
 msgstr "総接続数"
 
@@ -74134,19 +74235,11 @@ msgstr "コンテナ合計"
 msgid "Total count"
 msgstr "総数"
 
-#, fuzzy
-msgid "Total data"
-msgstr "全ての幅"
-
 msgid "Total data file size: Absolute upper levels"
 msgstr "合計データファイルサイズ: 絶対上位レベル"
 
 msgid "Total data in relation to RAM"
 msgstr "RAM関連の合計データ"
-
-#, fuzzy
-msgid "Total data transmitted"
-msgstr "どのサイトからのデータもありません"
 
 msgid "Total devices"
 msgstr "合計デバイス"
@@ -74403,10 +74496,6 @@ msgstr "ゾンビジョブの総数"
 msgid "Total number of {property} upper levels"
 msgstr "{property}上位レベルの総数"
 
-#, fuzzy
-msgid "Total packets"
-msgstr "最大総パケット数"
-
 msgid "Total packets maximum"
 msgstr "最大総パケット数"
 
@@ -74436,10 +74525,6 @@ msgstr "Podman ボリュームの総再利用可能なサイズ"
 
 msgid "Total reclaimable size upper levels"
 msgstr "総再利用可能な容量 上位ベル"
-
-#, fuzzy
-msgid "Total requests"
-msgstr "リクエストのみ"
 
 msgid "Total reservation utilization"
 msgstr "合計メモリ使用率"
@@ -89986,6 +90071,46 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Datapath availability"
+#~ msgstr "データパスの可用性下位レベル"
+
+#, fuzzy
+#~ msgid "Documents"
+#~ msgstr "ドキュメント"
+
+#, fuzzy
+#~ msgid "Inbound packets"
+#~ msgstr "入力パケット"
+
+#, fuzzy
+#~ msgid "Index usage"
+#~ msgstr "インデックススペース"
+
+#, fuzzy
+#~ msgid "Throttled Requests Ratio"
+#~ msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+#~ msgid "Throughput (Azure, CosmosDB container)"
+#~ msgstr "Web ACLリクエスト"
+
+#, fuzzy
+#~ msgid "Total RUs"
+#~ msgstr "合計RAM"
+
+#, fuzzy
+#~ msgid "Total data"
+#~ msgstr "全ての幅"
+
+#, fuzzy
+#~ msgid "Total packets"
+#~ msgstr "最大総パケット数"
+
+#, fuzzy
+#~ msgid "Total requests"
+#~ msgstr "リクエストのみ"
 
 #, fuzzy
 #~ msgid "Aggregation for histograms"

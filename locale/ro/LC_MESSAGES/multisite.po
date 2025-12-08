@@ -7838,10 +7838,6 @@ msgstr "Să se prezinte la"
 msgid "Attempt to interpret OEM data"
 msgstr "Încercarea de a interpreta datele OEM"
 
-#, fuzzy
-msgid "Attempted concurrent connections"
-msgstr "Numărul de conexiuni curente"
-
 msgid "Atto Fibrebridge FC port"
 msgstr "Portul Atto Fibrebridge FC"
 
@@ -15220,10 +15216,6 @@ msgid "Computing differences"
 msgstr "Diferențe de calcul"
 
 #, fuzzy
-msgid "Concurrent SNAT connections"
-msgstr "Conexiuni curente"
-
-#, fuzzy
 msgid "Concurrent connections"
 msgstr "Conexiuni curente"
 
@@ -16683,6 +16675,121 @@ msgstr "Fișiere corupte în Spool"
 
 msgid "Cosmic"
 msgstr "Cosmic"
+
+#, fuzzy
+msgid "Cosmos DB container failed requests (404)"
+msgstr "Solicitări eșuate"
+
+#, fuzzy
+msgid "Cosmos DB container normalized RU consumption"
+msgstr "Consumul de stocare IO"
+
+#, fuzzy
+msgid "Cosmos DB container requests"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests (429)"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests ratio"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Cosmos DB container throughput"
+msgstr "Cereri ACL Web"
+
+msgid "Cosmos DB container total RUs"
+msgstr ""
+
+#, fuzzy
+msgid "Cosmos DB container total requests"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB data usage"
+msgstr "Utilizarea datelor"
+
+#, fuzzy
+msgid "Cosmos DB database failed requests (404)"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB database normalized RU consumption"
+msgstr "Consumul de stocare IO"
+
+#, fuzzy
+msgid "Cosmos DB database requests"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests (429)"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests ratio"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Cosmos DB database throughput"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB database total RUs"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB database total requests"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB documents"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB failed requests (404)"
+msgstr "Solicitări eșuate"
+
+#, fuzzy
+msgid "Cosmos DB index overhead"
+msgstr "Indicii de căutare"
+
+#, fuzzy
+msgid "Cosmos DB index usage"
+msgstr "Costuri și utilizare (CE)"
+
+#, fuzzy
+msgid "Cosmos DB normalized RU consumption"
+msgstr "Consumul de stocare IO"
+
+#, fuzzy
+msgid "Cosmos DB service availability"
+msgstr "Disponibilitatea serviciului"
+
+#, fuzzy
+msgid "Cosmos DB storage"
+msgstr "Azure DB Storage"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests (429)"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests ratio"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Cosmos DB total RUs"
+msgstr "Azure DB Storage"
+
+#, fuzzy
+msgid "Cosmos DB total requests"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Cosmos DB total storage"
+msgstr "Azure DB Storage"
 
 msgid "CosmosDb"
 msgstr ""
@@ -18887,15 +18994,7 @@ msgid "Dataguard statistics"
 msgstr "Statistici Dataguard"
 
 #, fuzzy
-msgid "Datapath availability"
-msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
-
-#, fuzzy
 msgid "Datapath availability %"
-msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
-
-#, fuzzy
-msgid "Datapath availability (average)"
 msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 
 msgid "Datasource"
@@ -22453,10 +22552,6 @@ msgstr "URL de documentare"
 
 msgid "Documentation files"
 msgstr "Fișiere de documentare"
-
-#, fuzzy
-msgid "Documents"
-msgstr "URL de documentare"
 
 msgid "Documents fragmentation"
 msgstr "Fragmentarea documentelor"
@@ -26180,10 +26275,6 @@ msgid "Failed provisionings"
 msgstr "Provizioane eșuate"
 
 msgid "Failed requests"
-msgstr "Solicitări eșuate"
-
-#, fuzzy
-msgid "Failed requests (404)"
 msgstr "Solicitări eșuate"
 
 #, fuzzy
@@ -35946,19 +36037,11 @@ msgid "Inbound and Outbound Messages"
 msgstr "Mesaje de intrare și de ieșire"
 
 #, fuzzy
-msgid "Inbound data"
-msgstr "Parola"
-
-#, fuzzy
 msgid "Inbound levels (per second)"
 msgstr "evenimente pe secundă"
 
 msgid "Inbound messages"
 msgstr "Mesaje primite"
-
-#, fuzzy
-msgid "Inbound packets"
-msgstr "Pachete de intrare"
 
 #, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
@@ -36202,10 +36285,6 @@ msgid "Index percentage bloat levels"
 msgstr "Niveluri procentuale de umflături"
 
 msgid "Index space"
-msgstr "Spațiul de indexare"
-
-#, fuzzy
-msgid "Index usage"
 msgstr "Spațiul de indexare"
 
 msgid "Indexes to search"
@@ -44767,6 +44846,78 @@ msgid "NAS DB user name"
 msgstr "Nume utilizator NAS DB"
 
 #, fuzzy
+msgid "NAT Gateway attempted concurrent connections"
+msgstr "Numărul de conexiuni curente"
+
+#, fuzzy
+msgid "NAT Gateway concurrent SNAT connections"
+msgstr "Conexiuni curente"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability"
+msgstr "Vezi disponibilitatea"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability (average)"
+msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
+
+#, fuzzy
+msgid "NAT Gateway dropped packets"
+msgstr "Rata maximă a pachetelor abandonate"
+
+#, fuzzy
+msgid "NAT Gateway failed concurrent connections"
+msgstr "Conexiuni eșuate"
+
+#, fuzzy
+msgid "NAT Gateway inbound data"
+msgstr "Parola"
+
+#, fuzzy
+msgid "NAT Gateway inbound packets"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "NAT Gateway outbound data"
+msgstr "Regula de ieșire"
+
+#, fuzzy
+msgid "NAT Gateway outbound packets"
+msgstr "Pachete de ieșire"
+
+#, fuzzy
+msgid "NAT Gateway packets (in/out)"
+msgstr "Apelarea unei reguli"
+
+#, fuzzy
+msgid "NAT Gateway throughput"
+msgstr "Unitatea de debit a bazei de date"
+
+#, fuzzy
+msgid "NAT Gateway total SNAT connections"
+msgstr "conexiune normală"
+
+#, fuzzy
+msgid "NAT Gateway total active connections"
+msgstr "conexiune normală"
+
+#, fuzzy
+msgid "NAT Gateway total concurrent connections"
+msgstr "Conexiuni curente"
+
+#, fuzzy
+msgid "NAT Gateway total data"
+msgstr "Gateway vNet"
+
+#, fuzzy
+msgid "NAT Gateway total data transmitted"
+msgstr "Nu există date din niciun site"
+
+#, fuzzy
+msgid "NAT Gateway total packets"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
 msgid "NAT Gateways"
 msgstr "Gateway vNet"
 
@@ -46693,10 +46844,6 @@ msgstr "Intervalul de verificare normală/retry"
 
 msgid "Normal: Regular push notification (default)"
 msgstr "Normal: Notificare push obișnuită (implicit)"
-
-#, fuzzy
-msgid "Normalized RU consumption"
-msgstr "Consumul de stocare IO"
 
 #, fuzzy
 msgid "Normalized RU consumption lower levels"
@@ -50597,19 +50744,11 @@ msgid "Outage statistics"
 msgstr "Statistici privind întreruperile"
 
 #, fuzzy
-msgid "Outbound data"
-msgstr "Regula de ieșire"
-
-#, fuzzy
 msgid "Outbound levels (per second)"
 msgstr "evenimente pe secundă"
 
 msgid "Outbound messages"
 msgstr "Mesaje de ieșire"
-
-#, fuzzy
-msgid "Outbound packets"
-msgstr "Pachete de ieșire"
 
 #, fuzzy
 msgid "Outbound rule"
@@ -51320,10 +51459,6 @@ msgstr "Pachete"
 #, fuzzy
 msgid "Packets (dropped)"
 msgstr "Pachete abandonate"
-
-#, fuzzy
-msgid "Packets (in/out)"
-msgstr "Apelarea unei reguli"
 
 #, fuzzy
 msgid "Packets (total)"
@@ -57054,9 +57189,6 @@ msgstr "Introduceți codul de autentificare"
 
 msgid "Requests"
 msgstr "Cereri"
-
-msgid "Requests (Azure, CosmosDB)"
-msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Solicită date despre clusterele, nodurile și indicii Elasticsearch."
@@ -77792,18 +77924,10 @@ msgstr "Praguri privind numărul de mesaje"
 msgid "Throttle periodic notifications"
 msgstr "Notificări periodice ale accelerației"
 
-#, fuzzy
-msgid "Throttled Requests Ratio"
-msgstr "Cereri restricționate"
-
 msgid "Throttled Server Connections"
 msgstr "Conexiuni de server restricționate"
 
 msgid "Throttled requests"
-msgstr "Cereri restricționate"
-
-#, fuzzy
-msgid "Throttled requests (429)"
 msgstr "Cereri restricționate"
 
 #, fuzzy
@@ -77819,13 +77943,6 @@ msgstr "Notificări periodice ale accelerației"
 
 msgid "Throughput"
 msgstr "Randament"
-
-#, fuzzy
-msgid "Throughput (Azure, CosmosDB container)"
-msgstr "Cereri ACL Web"
-
-msgid "Throughput (Azure, CosmosDB)"
-msgstr ""
 
 #, fuzzy
 msgid "Throughput (FC)"
@@ -78866,10 +78983,6 @@ msgid "Total RAM + Swap installed"
 msgstr "Total RAM + Swap instalat"
 
 #, fuzzy
-msgid "Total RUs"
-msgstr "Total RAM"
-
-#, fuzzy
 msgid "Total RUs lower levels"
 msgstr "Containere niveluri inferioare"
 
@@ -78879,10 +78992,6 @@ msgstr "Containere niveluri superioare"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Totalul instanțelor On-Demand care rulează (Depreciat de AWS)"
-
-#, fuzzy
-msgid "Total SNAT connections"
-msgstr "conexiune normală"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "Turație totală Spațiu optimizat pentru HDD"
@@ -78895,10 +79004,6 @@ msgstr "Totalul contactelor unice ale portului"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr "Energia activă totală acumulată a canalului de putere"
-
-#, fuzzy
-msgid "Total active connections"
-msgstr "conexiune normală"
 
 #, fuzzy
 msgid "Total active sessions"
@@ -78933,10 +79038,6 @@ msgid "Total commitable memory"
 msgstr "Memorie totală de comisionare"
 
 #, fuzzy
-msgid "Total concurrent connections"
-msgstr "Conexiuni curente"
-
-#, fuzzy
 msgid "Total connections"
 msgstr "conexiune normală"
 
@@ -78958,20 +79059,12 @@ msgstr "Total containere"
 msgid "Total count"
 msgstr "Număr total"
 
-#, fuzzy
-msgid "Total data"
-msgstr "Lățimea totală"
-
 msgid "Total data file size: Absolute upper levels"
 msgstr "Dimensiunea totală a fișierului de date: Niveluri superioare absolute"
 
 #, fuzzy
 msgid "Total data in relation to RAM"
 msgstr "Date totale în raport cu RAM"
-
-#, fuzzy
-msgid "Total data transmitted"
-msgstr "Nu există date din niciun site"
 
 msgid "Total devices"
 msgstr "Total dispozitive"
@@ -79236,10 +79329,6 @@ msgid "Total number of {property} upper levels"
 msgstr "Numărul total de utilizatori nivel superior"
 
 #, fuzzy
-msgid "Total packets"
-msgstr "Total pachete Maxim"
-
-#, fuzzy
 msgid "Total packets maximum"
 msgstr "Total pachete Maxim"
 
@@ -79275,10 +79364,6 @@ msgstr "Numele de gazdă utilizat pentru containere"
 #, fuzzy
 msgid "Total reclaimable size upper levels"
 msgstr "Dimensiunea totală a fișierului jurnal: Niveluri superioare absolute"
-
-#, fuzzy
-msgid "Total requests"
-msgstr "numai cereri"
 
 msgid "Total reservation utilization"
 msgstr "Utilizarea totală a rezervărilor"
@@ -96080,6 +96165,46 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Datapath availability"
+#~ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
+
+#, fuzzy
+#~ msgid "Documents"
+#~ msgstr "URL de documentare"
+
+#, fuzzy
+#~ msgid "Inbound packets"
+#~ msgstr "Pachete de intrare"
+
+#, fuzzy
+#~ msgid "Index usage"
+#~ msgstr "Spațiul de indexare"
+
+#, fuzzy
+#~ msgid "Throttled Requests Ratio"
+#~ msgstr "Cereri restricționate"
+
+#, fuzzy
+#~ msgid "Throughput (Azure, CosmosDB container)"
+#~ msgstr "Cereri ACL Web"
+
+#, fuzzy
+#~ msgid "Total RUs"
+#~ msgstr "Total RAM"
+
+#, fuzzy
+#~ msgid "Total data"
+#~ msgstr "Lățimea totală"
+
+#, fuzzy
+#~ msgid "Total packets"
+#~ msgstr "Total pachete Maxim"
+
+#, fuzzy
+#~ msgid "Total requests"
+#~ msgstr "numai cereri"
 
 #, fuzzy
 #~ msgid "Aggregation for histograms"

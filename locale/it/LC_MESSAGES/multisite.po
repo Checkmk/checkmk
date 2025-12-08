@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-12-07 16:24+0000\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -7831,10 +7831,6 @@ msgstr "Mostra fino a"
 msgid "Attempt to interpret OEM data"
 msgstr "Tentativo di interpretazione dei dati OEM"
 
-#, fuzzy
-msgid "Attempted concurrent connections"
-msgstr "Numero di connessioni attuali"
-
 msgid "Atto Fibrebridge FC port"
 msgstr "Porta Atto Fibrebridge FC"
 
@@ -15111,10 +15107,6 @@ msgid "Computing differences"
 msgstr "Differenze di calcolo"
 
 #, fuzzy
-msgid "Concurrent SNAT connections"
-msgstr "Connessioni attuali"
-
-#, fuzzy
 msgid "Concurrent connections"
 msgstr "Connessioni attuali"
 
@@ -16569,6 +16561,121 @@ msgstr "File corrotti nello spool"
 
 msgid "Cosmic"
 msgstr "Cosmico"
+
+#, fuzzy
+msgid "Cosmos DB container failed requests (404)"
+msgstr "Richieste fallite"
+
+#, fuzzy
+msgid "Cosmos DB container normalized RU consumption"
+msgstr "Consumo IO dello storage"
+
+#, fuzzy
+msgid "Cosmos DB container requests"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests (429)"
+msgstr "Richieste strozzate"
+
+#, fuzzy
+msgid "Cosmos DB container throttled requests ratio"
+msgstr "Richieste strozzate"
+
+#, fuzzy
+msgid "Cosmos DB container throughput"
+msgstr "Richieste Web ACL"
+
+msgid "Cosmos DB container total RUs"
+msgstr ""
+
+#, fuzzy
+msgid "Cosmos DB container total requests"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB data usage"
+msgstr "Utilizzo dei dati"
+
+#, fuzzy
+msgid "Cosmos DB database failed requests (404)"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB database normalized RU consumption"
+msgstr "Consumo IO dello storage"
+
+#, fuzzy
+msgid "Cosmos DB database requests"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests (429)"
+msgstr "Richieste strozzate"
+
+#, fuzzy
+msgid "Cosmos DB database throttled requests ratio"
+msgstr "Richieste strozzate"
+
+#, fuzzy
+msgid "Cosmos DB database throughput"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB database total RUs"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB database total requests"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB documents"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB failed requests (404)"
+msgstr "Richieste fallite"
+
+#, fuzzy
+msgid "Cosmos DB index overhead"
+msgstr "Indici da ricercare"
+
+#, fuzzy
+msgid "Cosmos DB index usage"
+msgstr "Costi e utilizzo (CE)"
+
+#, fuzzy
+msgid "Cosmos DB normalized RU consumption"
+msgstr "Consumo IO dello storage"
+
+#, fuzzy
+msgid "Cosmos DB service availability"
+msgstr "Disponibilità del servizio"
+
+#, fuzzy
+msgid "Cosmos DB storage"
+msgstr "Archiviazione DB di Azure"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests (429)"
+msgstr "Richieste strozzate"
+
+#, fuzzy
+msgid "Cosmos DB throttled requests ratio"
+msgstr "Richieste strozzate"
+
+#, fuzzy
+msgid "Cosmos DB total RUs"
+msgstr "Archiviazione DB di Azure"
+
+#, fuzzy
+msgid "Cosmos DB total requests"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Cosmos DB total storage"
+msgstr "Archiviazione DB di Azure"
 
 msgid "CosmosDb"
 msgstr ""
@@ -18750,15 +18857,7 @@ msgid "Dataguard statistics"
 msgstr "Statistiche Dataguard"
 
 #, fuzzy
-msgid "Datapath availability"
-msgstr "Disponibilità del percorso dati livelli inferiori"
-
-#, fuzzy
 msgid "Datapath availability %"
-msgstr "Disponibilità del percorso dati livelli inferiori"
-
-#, fuzzy
-msgid "Datapath availability (average)"
 msgstr "Disponibilità del percorso dati livelli inferiori"
 
 msgid "Datasource"
@@ -22278,10 +22377,6 @@ msgstr "URL della documentazione"
 
 msgid "Documentation files"
 msgstr "File di documentazione"
-
-#, fuzzy
-msgid "Documents"
-msgstr "URL della documentazione"
 
 msgid "Documents fragmentation"
 msgstr "Frammentazione dei documenti"
@@ -25943,10 +26038,6 @@ msgid "Failed provisionings"
 msgstr "Accantonamenti non riusciti"
 
 msgid "Failed requests"
-msgstr "Richieste fallite"
-
-#, fuzzy
-msgid "Failed requests (404)"
 msgstr "Richieste fallite"
 
 #, fuzzy
@@ -35615,19 +35706,11 @@ msgid "Inbound and Outbound Messages"
 msgstr "Messaggi in entrata e in uscita"
 
 #, fuzzy
-msgid "Inbound data"
-msgstr "Dati mappati"
-
-#, fuzzy
 msgid "Inbound levels (per second)"
 msgstr "eventi al secondo"
 
 msgid "Inbound messages"
 msgstr "Messaggi in entrata"
-
-#, fuzzy
-msgid "Inbound packets"
-msgstr "Pacchetti di ingresso"
 
 #, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
@@ -35868,10 +35951,6 @@ msgid "Index percentage bloat levels"
 msgstr "Indice percentuale dei livelli di gonfiore"
 
 msgid "Index space"
-msgstr "Spazio indice"
-
-#, fuzzy
-msgid "Index usage"
 msgstr "Spazio indice"
 
 msgid "Indexes to search"
@@ -44364,6 +44443,78 @@ msgid "NAS DB user name"
 msgstr "Nome utente NAS DB"
 
 #, fuzzy
+msgid "NAT Gateway attempted concurrent connections"
+msgstr "Numero di connessioni attuali"
+
+#, fuzzy
+msgid "NAT Gateway concurrent SNAT connections"
+msgstr "Connessioni attuali"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability"
+msgstr "Vedere la disponibilità"
+
+#, fuzzy
+msgid "NAT Gateway datapath availability (average)"
+msgstr "Disponibilità del percorso dati livelli inferiori"
+
+#, fuzzy
+msgid "NAT Gateway dropped packets"
+msgstr "Tasso massimo di pacchetti caduti"
+
+#, fuzzy
+msgid "NAT Gateway failed concurrent connections"
+msgstr "Connessioni fallite"
+
+#, fuzzy
+msgid "NAT Gateway inbound data"
+msgstr "Dati mappati"
+
+#, fuzzy
+msgid "NAT Gateway inbound packets"
+msgstr "Connessioni al database"
+
+#, fuzzy
+msgid "NAT Gateway outbound data"
+msgstr "Regola in uscita"
+
+#, fuzzy
+msgid "NAT Gateway outbound packets"
+msgstr "Pacchetti di uscita"
+
+#, fuzzy
+msgid "NAT Gateway packets (in/out)"
+msgstr "Chiamare una regola"
+
+#, fuzzy
+msgid "NAT Gateway throughput"
+msgstr "Unità di flusso del database"
+
+#, fuzzy
+msgid "NAT Gateway total SNAT connections"
+msgstr "connessione normale"
+
+#, fuzzy
+msgid "NAT Gateway total active connections"
+msgstr "connessione normale"
+
+#, fuzzy
+msgid "NAT Gateway total concurrent connections"
+msgstr "Connessioni attuali"
+
+#, fuzzy
+msgid "NAT Gateway total data"
+msgstr "Gateway vNet"
+
+#, fuzzy
+msgid "NAT Gateway total data transmitted"
+msgstr "Nessun dato da nessun sito"
+
+#, fuzzy
+msgid "NAT Gateway total packets"
+msgstr "Connessioni al database"
+
+#, fuzzy
 msgid "NAT Gateways"
 msgstr "Gateway vNet"
 
@@ -46269,10 +46420,6 @@ msgstr "Intervallo di controllo normale/di ripetizione"
 
 msgid "Normal: Regular push notification (default)"
 msgstr "Normale: Notifica push regolare (predefinita)"
-
-#, fuzzy
-msgid "Normalized RU consumption"
-msgstr "Consumo IO dello storage"
 
 #, fuzzy
 msgid "Normalized RU consumption lower levels"
@@ -50141,19 +50288,11 @@ msgid "Outage statistics"
 msgstr "Statistiche di interruzione"
 
 #, fuzzy
-msgid "Outbound data"
-msgstr "Regola in uscita"
-
-#, fuzzy
 msgid "Outbound levels (per second)"
 msgstr "eventi al secondo"
 
 msgid "Outbound messages"
 msgstr "Messaggi in uscita"
-
-#, fuzzy
-msgid "Outbound packets"
-msgstr "Pacchetti di uscita"
 
 #, fuzzy
 msgid "Outbound rule"
@@ -50864,10 +51003,6 @@ msgstr "Pacchetti"
 #, fuzzy
 msgid "Packets (dropped)"
 msgstr "Pacchetti abbandonati"
-
-#, fuzzy
-msgid "Packets (in/out)"
-msgstr "Chiamare una regola"
 
 #, fuzzy
 msgid "Packets (total)"
@@ -56567,9 +56702,6 @@ msgstr "Inserire il codice di autenticazione"
 
 msgid "Requests"
 msgstr "Richiesta"
-
-msgid "Requests (Azure, CosmosDB)"
-msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Richiede dati su cluster, nodi e indici di Elasticsearch."
@@ -76991,18 +77123,10 @@ msgstr "Soglie sul conteggio dei messaggi"
 msgid "Throttle periodic notifications"
 msgstr "Notifiche periodiche dell'acceleratore"
 
-#, fuzzy
-msgid "Throttled Requests Ratio"
-msgstr "Richieste strozzate"
-
 msgid "Throttled Server Connections"
 msgstr "Connessioni server strozzate"
 
 msgid "Throttled requests"
-msgstr "Richieste strozzate"
-
-#, fuzzy
-msgid "Throttled requests (429)"
 msgstr "Richieste strozzate"
 
 #, fuzzy
@@ -77018,13 +77142,6 @@ msgstr "Notifiche periodiche dell'acceleratore"
 
 msgid "Throughput"
 msgstr "Throughput"
-
-#, fuzzy
-msgid "Throughput (Azure, CosmosDB container)"
-msgstr "Richieste Web ACL"
-
-msgid "Throughput (Azure, CosmosDB)"
-msgstr ""
 
 #, fuzzy
 msgid "Throughput (FC)"
@@ -78045,10 +78162,6 @@ msgid "Total RAM + Swap installed"
 msgstr "Totale RAM + Swap installato"
 
 #, fuzzy
-msgid "Total RUs"
-msgstr "RAM totale"
-
-#, fuzzy
 msgid "Total RUs lower levels"
 msgstr "Contenitori livelli inferiori"
 
@@ -78058,10 +78171,6 @@ msgstr "Contenitori livelli superiori"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Totale istanze On-Demand in esecuzione (deprecato da AWS)"
-
-#, fuzzy
-msgid "Total SNAT connections"
-msgstr "connessione normale"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "Throughput totale Spazio HDD ottimizzato"
@@ -78074,10 +78183,6 @@ msgstr "Contatti unici totali della porta"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr "Energia attiva totale accumulata del canale di potenza"
-
-#, fuzzy
-msgid "Total active connections"
-msgstr "connessione normale"
 
 #, fuzzy
 msgid "Total active sessions"
@@ -78112,10 +78217,6 @@ msgid "Total commitable memory"
 msgstr "Memoria totale impegnabile"
 
 #, fuzzy
-msgid "Total concurrent connections"
-msgstr "Connessioni attuali"
-
-#, fuzzy
 msgid "Total connections"
 msgstr "connessione normale"
 
@@ -78137,20 +78238,12 @@ msgstr "Totale contenitori"
 msgid "Total count"
 msgstr "Conteggio totale"
 
-#, fuzzy
-msgid "Total data"
-msgstr "Larghezza totale"
-
 msgid "Total data file size: Absolute upper levels"
 msgstr "Dimensione totale del file di dati: Livelli superiori assoluti"
 
 #, fuzzy
 msgid "Total data in relation to RAM"
 msgstr "Dati totali in relazione alla RAM"
-
-#, fuzzy
-msgid "Total data transmitted"
-msgstr "Nessun dato da nessun sito"
 
 msgid "Total devices"
 msgstr "Dispositivi totali"
@@ -78417,10 +78510,6 @@ msgid "Total number of {property} upper levels"
 msgstr "Numero totale di utenti di livello superiore"
 
 #, fuzzy
-msgid "Total packets"
-msgstr "Totale pacchetti massimo"
-
-#, fuzzy
 msgid "Total packets maximum"
 msgstr "Totale pacchetti massimo"
 
@@ -78456,10 +78545,6 @@ msgstr "Nome dell'host usato per i container"
 #, fuzzy
 msgid "Total reclaimable size upper levels"
 msgstr "Dimensione totale del file di log: Livelli superiori assoluti"
-
-#, fuzzy
-msgid "Total requests"
-msgstr "solo richieste"
 
 msgid "Total reservation utilization"
 msgstr "Utilizzo totale delle prenotazioni"
@@ -95115,6 +95200,46 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Datapath availability"
+#~ msgstr "Disponibilità del percorso dati livelli inferiori"
+
+#, fuzzy
+#~ msgid "Documents"
+#~ msgstr "URL della documentazione"
+
+#, fuzzy
+#~ msgid "Inbound packets"
+#~ msgstr "Pacchetti di ingresso"
+
+#, fuzzy
+#~ msgid "Index usage"
+#~ msgstr "Spazio indice"
+
+#, fuzzy
+#~ msgid "Throttled Requests Ratio"
+#~ msgstr "Richieste strozzate"
+
+#, fuzzy
+#~ msgid "Throughput (Azure, CosmosDB container)"
+#~ msgstr "Richieste Web ACL"
+
+#, fuzzy
+#~ msgid "Total RUs"
+#~ msgstr "RAM totale"
+
+#, fuzzy
+#~ msgid "Total data"
+#~ msgstr "Larghezza totale"
+
+#, fuzzy
+#~ msgid "Total packets"
+#~ msgstr "Totale pacchetti massimo"
+
+#, fuzzy
+#~ msgid "Total requests"
+#~ msgstr "solo richieste"
 
 #, fuzzy
 #~ msgid "Aggregation for histograms"

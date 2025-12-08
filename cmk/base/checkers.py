@@ -495,6 +495,7 @@ class CMKFetcher:
                                 else ((cmk.utils.paths.omd_root, Path()),)
                             ),
                         ),
+                        for_relay=current_relay_id is not None,
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(
                         current_host_name

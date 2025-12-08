@@ -201,6 +201,7 @@ def test_iter_special_agent_commands(
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
+        for_relay=False,
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
     assert commands == expected_result
@@ -245,6 +246,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         stored_passwords={"1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
+        for_relay=False,
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -272,6 +274,7 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
         stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
+        for_relay=False,
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -307,6 +310,7 @@ def test_iter_special_agent_commands_crash() -> None:
         stored_passwords={},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "/path/to/agent",
+        for_relay=False,
     )
 
     with pytest.raises(

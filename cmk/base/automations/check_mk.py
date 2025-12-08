@@ -3080,6 +3080,7 @@ def get_special_agent_commandline(
                 () if host_config.relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
             ),
         ),
+        for_relay=host_config.relay_id is not None,
     )
 
     if not params:
@@ -3571,6 +3572,7 @@ class AutomationDiagHost(Automation):
                         () if host_relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
                     ),
                 ),
+                for_relay=host_relay_id is not None,
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
@@ -4168,6 +4170,7 @@ class AutomationGetAgentOutput(Automation):
                                 () if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
                             ),
                         ),
+                        for_relay=relay_id is not None,
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),
                     check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

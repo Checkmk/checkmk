@@ -770,6 +770,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     cmk.utils.paths.special_agents_dir,
                     prefix_map=(() if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)),
                 ),
+                for_relay=relay_id is not None,
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
             check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

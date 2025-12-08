@@ -2501,6 +2501,7 @@ class ConfigCache:
         secrets_file_option: Path,
         ip_address_of: IPLookup,
         executable_finder: ExecutableFinderProtocol,
+        for_relay: bool,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         if not (host_special_agents := self.special_agents(host_name)):
             return
@@ -2534,6 +2535,7 @@ class ConfigCache:
             secrets,
             secrets_file_option,
             executable_finder,
+            for_relay=for_relay,
         )
         for agentname, params_seq in host_special_agents:
             for params in params_seq:

@@ -225,10 +225,12 @@ def dump_host(
     used_password_store = cmk.utils.password_store.pending_secrets_path_site()
     # Don't show the real passwords here!
     passwords = defaultdict[str, Secret[str]](lambda: Secret("****"))
-    agenttypes = (
-        []
-        if hostname in hosts_config.clusters
-        else [
+
+    if hostname in hosts_config.clusters:
+        agenttypes = list[str]()
+    else:
+        relay_id = get_relay_id(label_manager.labels_of_host(hostname))
+        agenttypes = [
             dump_source(source)
             for source in sources.make_sources(
                 plugins,
@@ -284,11 +286,10 @@ def dump_host(
                         cmk.utils.paths.local_special_agents_dir,
                         cmk.utils.paths.special_agents_dir,
                         prefix_map=(
-                            ()
-                            if get_relay_id(label_manager.labels_of_host(hostname)) is None
-                            else ((cmk.utils.paths.omd_root, Path()),)
+                            () if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
                         ),
                     ),
+                    for_relay=relay_id is not None,
                 ),
                 agent_connection_mode=config_cache.agent_connection_mode(hostname),
                 check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
@@ -300,7 +301,6 @@ def dump_host(
                 ),
             )
         ]
-    )
 
     if config_cache.is_ping_host(hostname):
         agenttypes.append("PING only")

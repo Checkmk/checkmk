@@ -41,7 +41,7 @@ class SpecialAgent:
         stored_passwords: Mapping[str, StoreSecret[str]],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
-        for_relay: bool = False,
+        for_relay: bool,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}

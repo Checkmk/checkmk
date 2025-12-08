@@ -101,6 +101,7 @@ def _make_sources(
             secrets={},
             ip_address_of=lambda *a: ipaddress,
             executable_finder=lambda name, module: "/yolo/bin/hurra",
+            for_relay=False,
         ),
         agent_connection_mode=config_cache.agent_connection_mode(hostname),
         check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

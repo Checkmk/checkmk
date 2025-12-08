@@ -17,8 +17,7 @@ from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.livestatus_client import Command as LivestatusCommand
-from cmk.livestatus_client import LivestatusClient
+from cmk.livestatus_client.commands import Command as LivestatusCommand
 
 from .group import CommandGroup
 
@@ -181,4 +180,4 @@ class Command(abc.ABC):
         if self._executor:
             self._executor(command, site)
             return
-        LivestatusClient(sites.live()).command(command, site)
+        sites.live().command_obj(command, site)

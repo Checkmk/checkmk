@@ -17,7 +17,6 @@ from pytest import MonkeyPatch
 import livestatus
 
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.utils.certs import SiteCA
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -271,13 +270,13 @@ def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusC
         ("a'dmin", False),
     ],
 )
-def test_set_auth_user(patch_omd_site: None, user_id: str, allowed: bool) -> None:
+def test_set_auth_user(patch_omd_site: None, user_id: livestatus.UserId, allowed: bool) -> None:
     if not allowed:
-        with pytest.raises(ValueError, match="invalid username"):
-            livestatus.LocalConnection().set_auth_user("mydomain", UserId(user_id))
+        with pytest.raises(ValueError, match="Invalid user ID"):
+            livestatus.LocalConnection().set_auth_user("mydomain", user_id)
         return
 
-    livestatus.LocalConnection().set_auth_user("mydomain", UserId(user_id))
+    livestatus.LocalConnection().set_auth_user("mydomain", user_id)
 
 
 @pytest.mark.parametrize(

@@ -18,7 +18,7 @@ from typing import Final, NewType
 
 import livestatus
 
-from cmk.livestatus_client import LivestatusClient, Log
+from cmk.livestatus_client.commands import Log
 
 from .notification_result import (
     NOTIFICATION_RESULT_OK,
@@ -47,8 +47,7 @@ def log_to_history(message: SanitizedLivestatusLogStr) -> None:
     try:
         connection = livestatus.LocalConnection()
         connection.set_timeout(timeout)
-        livestatus_client = LivestatusClient(connection)
-        livestatus_client.command(Log(message=message))
+        connection.command_obj(Log(message=message))
     except livestatus.MKLivestatusException:
         logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
         logger.info("Command was: LOG;%s", message)

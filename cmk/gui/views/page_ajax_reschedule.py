@@ -19,9 +19,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.livestatus_client import (
+from cmk.livestatus_client.commands import (
     Command,
-    LivestatusClient,
     ScheduleForcedHostCheck,
     ScheduleForcedServiceCheck,
 )
@@ -105,9 +104,7 @@ class PageRescheduleCheck(AjaxPage):
             # But we do want to see new services, so for SNMP we set the cache age to zero.
             # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
             # user manually triggers "Check_MK Discovery".
-            LivestatusClient(sites.live()).command(
-                ScheduleForcedServiceCheck(host, now, "Check_MK"), site
-            )
+            sites.live().command_obj(ScheduleForcedServiceCheck(host, now, "Check_MK"), site)
             self._wait_for(
                 site,
                 host,
@@ -118,7 +115,7 @@ class PageRescheduleCheck(AjaxPage):
                 reschedule_timeout,
             )
 
-        LivestatusClient(sites.live()).command(cmd, site)
+        sites.live().command_obj(cmd, site)
         row = self._wait_for(site, host, what, wait_spec, now, add_filter, reschedule_timeout)
 
         last_check = row[0]

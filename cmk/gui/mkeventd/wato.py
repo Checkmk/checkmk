@@ -189,7 +189,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
-from cmk.livestatus_client import ECCreate, ECResetCounters, ECSwitchMode, LivestatusClient
+from cmk.livestatus_client.commands import ECCreate, ECResetCounters, ECSwitchMode
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
@@ -1844,7 +1844,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         # Reset all rule hit counters
         elif request.has_var("_reset_counters"):
             for site in _get_event_console_sync_sites():
-                LivestatusClient(sites.live()).command(ECResetCounters(), site)
+                sites.live().command_obj(ECResetCounters(), site)
             self._add_change(
                 action_name="counter-reset",
                 text=_("Reset all rule hit counters to zero"),
@@ -3019,7 +3019,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 use_git=config.wato_use_git,
             )
             # Reset hit counters of this rule
-            LivestatusClient(sites.live()).command(ECResetCounters(rule["id"]), omd_site())
+            sites.live().command_obj(ECResetCounters(rule["id"]), omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
     def page(self, config: Config) -> None:
@@ -3076,7 +3076,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         if request.has_var("_switch_sync"):
             new_mode = "sync"
 
-        LivestatusClient(sites.live()).command(ECSwitchMode(mode=new_mode), omd_site())
+        sites.live().command_obj(ECSwitchMode(mode=new_mode), omd_site())
         log_audit(
             action="mkeventd-switchmode",
             message="Switched replication slave mode to %s" % new_mode,
@@ -5371,7 +5371,7 @@ def send_event(event: ec.Event) -> str:
             service_level=event["sl"],
         )
     )
-    LivestatusClient(sites.live()).command(ECCreate(message=syslog_message_str), event["site"])
+    sites.live().command_obj(ECCreate(message=syslog_message_str), event["site"])
 
     return syslog_message_str
 

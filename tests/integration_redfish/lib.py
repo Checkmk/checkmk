@@ -64,7 +64,6 @@ def create_special_agent_rule(
             "proto": "http",
             "retries": 2,
             "timeout": 3.0,
-            **({"debug": False} if agent == "redfish" else {}),
             **value,
         },
         f"special_agents:{agent}",

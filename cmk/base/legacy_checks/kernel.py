@@ -99,7 +99,7 @@ def check_kernel_performance(_no_item, params, parsed):
             yield 3, "item '%s' not unique (found %d times)" % (item_name, len(item_values))
 
         counter, value = item_values[0]
-        rate = get_rate(get_value_store(), counter, timestamp, value)
+        rate = get_rate(get_value_store(), counter, timestamp, value, raise_overflow=True)
 
         if counter in ["pswpin", "pswpout"]:
             levels = params.get(

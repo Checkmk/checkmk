@@ -404,8 +404,10 @@ def package_info_from_path(package_path: Path) -> CMKPackageInfo:
         edition = pkg_manager.get_edition(package_path)
         version_str = pkg_manager.get_version(package_path)
     else:
+        # Match both Docker and source tar.gz formats:
+        # check-mk-{edition}-docker-{version}.tar.gz or check-mk-{edition}-{version}.tar.gz
         match = re.match(
-            r"check-mk-(community|pro|ultimate|ultimatemt|cloud)-([^_]+).tar.gz$",
+            r"check-mk-(community|pro|ultimate|ultimatemt|cloud)(?:-docker)?-([^_]+)\.tar\.gz$",
             package_path.name,
         )
         if not match:

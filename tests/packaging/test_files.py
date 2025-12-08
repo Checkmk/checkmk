@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
+import atexit
 import csv
 import io
 import json
@@ -14,6 +15,7 @@ import logging
 import os
 import re
 import subprocess
+import tarfile
 from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
@@ -23,6 +25,69 @@ from typing import NamedTuple
 import pytest
 
 LOGGER = logging.getLogger()
+
+# Cache for Docker container IDs: package_path -> container_id
+_docker_container_cache: dict[str, str] = {}
+
+# Cache for Docker manifest.json: package_path -> (image_tag, manifest_data)
+_docker_manifest_cache: dict[str, tuple[str, dict]] = {}
+
+
+def _cleanup_docker_containers() -> None:
+    for container_id in _docker_container_cache.values():
+        subprocess.run(
+            ["docker", "rm", "-v", container_id],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+
+
+atexit.register(_cleanup_docker_containers)
+
+
+def _get_or_create_docker_container(package_path: str) -> str:
+    """Get or create a Docker container from a Docker OCI image tar.gz.
+
+    Returns the container ID.
+    The container and image are cached for reuse during runtime - as we'll repeatedly retrieve
+    files from the image / container.
+    """
+    # Get or read the manifest to find the image tag (with caching)
+    if package_path in _docker_manifest_cache:
+        image_tag, _ = _docker_manifest_cache[package_path]
+    else:
+        manifest_json = json.loads(
+            subprocess.check_output(["tar", "xOzf", package_path, "manifest.json", "-O"])
+        )
+        # we should have only one image in the tarball
+        image_tag = manifest_json[0]["RepoTags"][0]
+        _docker_manifest_cache[package_path] = (image_tag, manifest_json)
+
+        assert len(manifest_json) == 1, "Multiple images in the docker container tarball"
+
+    # Get or create container (with caching)
+    if package_path in _docker_container_cache:
+        return _docker_container_cache[package_path]
+
+    # Ensure image is loaded
+    image_exists = (
+        subprocess.run(
+            ["docker", "image", "inspect", image_tag],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        ).returncode
+        == 0
+    )
+
+    if not image_exists:
+        LOGGER.info("Loading docker image %s...", package_path)
+        subprocess.check_call(["docker", "load", "-i", package_path])
+
+    container_id = subprocess.check_output(["docker", "create", image_tag]).strip().decode("utf-8")
+    _docker_container_cache[package_path] = container_id
+    return container_id
 
 
 def _get_package_dependencies(package_path: str) -> Sequence[str]:
@@ -63,6 +128,46 @@ def _edition_from_pkg_path(package_path: str) -> str:
     if file_name.startswith("check-mk-cloud-"):
         return "cloud"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
+
+
+def _get_file_from_docker_package(
+    package_path: str, omd_version: str, version_rel_path: str
+) -> bytes:
+    """Extract a file from a Docker OCI image tar.gz using docker cp from a container.
+
+    This function loads the Docker image, creates a container, and uses docker cp
+    to extract files. The container is cached for subsequent extractions.
+    """
+    container_id = _get_or_create_docker_container(package_path)
+
+    # Copy file out using 'docker cp'
+    target_path = f"/opt/omd/versions/{omd_version}/{version_rel_path}"
+
+    proc = subprocess.Popen(
+        ["docker", "cp", f"{container_id}:{target_path}", "-"],
+        stdout=subprocess.PIPE,
+    )
+
+    if proc.stdout is None:
+        raise RuntimeError("Failed to open stdout pipe for 'docker cp'")
+
+    # read file from the stdout stream of tarfile
+    with tarfile.open(fileobj=proc.stdout, mode="r|*") as tar:
+        for member in tar:
+            if member.isfile():
+                f = tar.extractfile(member)
+                if f:
+                    content = f.read()
+                    proc.stdout.close()
+                    proc.wait()
+                    return content
+
+        # If we get here, we didn't find a file in the tar stream
+        proc.wait()
+        raise FileNotFoundError(f"File {version_rel_path} not found in {package_path}")
+
+    # This shouldn't be reached, but just in case
+    raise FileNotFoundError(f"File {version_rel_path} not found in {package_path}")
 
 
 def _file_exists_in_package(package_path: str, cmk_version: str, version_rel_path: str) -> bool:
@@ -109,6 +214,8 @@ def _get_file_from_package(package_path: str, cmk_version: str, version_rel_path
         )
 
     if package_path.endswith(".tar.gz"):
+        if "-docker-" in package_path:
+            return _get_file_from_docker_package(package_path, omd_version, version_rel_path)
         return subprocess.check_output(
             [
                 "tar",
@@ -241,7 +348,35 @@ def _get_paths_from_package(path_to_package: str) -> list[str]:
             ).splitlines()
         ]
 
-    if path_to_package.endswith(".tar.gz") and "-docker-" not in path_to_package:
+    if path_to_package.endswith(".tar.gz"):
+        if "-docker-" in path_to_package:
+            # Docker OCI image: use docker container to list files
+            container_id = _get_or_create_docker_container(path_to_package)
+
+            # Use docker export to get all files
+            proc = subprocess.Popen(
+                ["docker", "export", container_id],
+                stdout=subprocess.PIPE,
+            )
+
+            if proc.stdout is None:
+                raise RuntimeError("Failed to open stdout pipe for docker export")
+
+            # List files from the tar stream
+            paths_output = subprocess.check_output(
+                ["tar", "t"],
+                input=proc.stdout.read(),
+            )
+            proc.wait()
+
+            all_paths = [
+                "/" + path if not path.startswith("/") else path
+                for path in paths_output.decode("utf-8").splitlines()
+            ]
+
+            return all_paths
+
+        # source package
         return [
             line
             for line in subprocess.check_output(
@@ -669,7 +804,7 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
 
 
 @pytest.mark.parametrize(
-    "is_no_tar,path_prefix_agents,non_msi_files",
+    "is_no_source,path_prefix_agents,non_msi_files",
     [
         (
             True,
@@ -688,25 +823,27 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
             ],
         ),
     ],
-    ids=["deb_rpm_cma", "tar_gz_source"],
+    ids=["deb_rpm_cma_docker", "tar_gz_source"],
 )
 def test_windows_artifacts_are_signed(
     package_path: str,
     cmk_version: str,
-    is_no_tar: bool,
+    is_no_source: bool,
     path_prefix_agents: str,
     non_msi_files: list[str],
 ) -> None:
     # Skip mismatched package types
-    actual_is_no_tar = not package_path.endswith(".tar.gz")
-    if actual_is_no_tar != is_no_tar:
-        expected_ext = ".deb/.rpm/.cma" if is_no_tar else ".tar.gz"
-        actual_ext = os.path.splitext(package_path)[1]
-        pytest.skip(f"Package type mismatch: expected '{expected_ext}' but got '{actual_ext}'")
+    actual_is_source = package_path.endswith(".tar.gz") and "-docker-" not in package_path
 
-    if package_path.endswith(".tar.gz") and "-docker-" in package_path:
-        # todo: implement test for docker images, e.g. in tests/docker/test_docker.py - CMK-26808
-        pytest.skip("Can't verify signatures in docker OCI images")
+    if actual_is_source != (not is_no_source):
+        if is_no_source:
+            pytest.skip(
+                f"Expected binary package but got source: '{os.path.basename(package_path)}'"
+            )
+        else:
+            pytest.skip(
+                f"Expected source package but got binary: '{os.path.basename(package_path)}'"
+            )
 
     signing_failures = []
     paths_checked = []
@@ -721,7 +858,7 @@ def test_windows_artifacts_are_signed(
 
     # check msi and files inside msi
     # TODO: Clarify why the msi is missing in the source.tar.gz CMK-26785
-    if is_no_tar:
+    if is_no_source:
         with NamedTemporaryFile() as msi_file:
             msi_file.write(
                 _get_file_from_package(
@@ -756,12 +893,12 @@ def test_windows_artifacts_are_signed(
 
     # check for additional files in the package
     # (so we don't forget to add them to the signing process)
-    if is_no_tar:
+    if is_no_source:
         paths = _get_paths_from_package(package_path)
         omd_version = _get_omd_version(cmk_version, package_path)
         paths_signable = [
             # remove prefixes of paths to make it comparable
-            #   * /opt/omd/versions/{omd_version}/...
+            #   * /opt/omd/versions/{omd_version}/...  (for deb/rpm/docker)
             #   * {omd_version}/...  (for cma)
             path.removeprefix(f"/opt/omd/versions/{omd_version}/").removeprefix(f"{omd_version}/")
             for path in paths

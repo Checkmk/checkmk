@@ -8,11 +8,7 @@ import { computed, ref, toValue, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-
 import DashboardPreviewContent from '@/dashboard-wip/components/DashboardPreviewContent.vue'
-import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
-import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import { useWidgetVisualizationProps } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization.ts'
@@ -24,6 +20,8 @@ import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce.ts'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings, WidgetSpec } from '@/dashboard-wip/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard-wip/utils.ts'
+
+import Stage2Header from '../../../components/Stage2Header.vue'
 
 const { _t } = usei18n()
 
@@ -106,27 +104,7 @@ const widgetProps = computed(() => configuredWidgetProps)
 </script>
 
 <template>
-  <CmkHeading type="h1">
-    {{ _t('Widget data') }}
-  </CmkHeading>
-
-  <ContentSpacer />
-
-  <ActionBar align-items="left">
-    <ActionButton
-      :label="_t('Previous step')"
-      :icon="{ name: 'back', side: 'left' }"
-      :action="() => emit('goPrev')"
-      variant="secondary"
-    />
-    <ActionButton
-      :label="editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
-      :action="gotoNextStage"
-      variant="primary"
-    />
-  </ActionBar>
-
-  <ContentSpacer />
+  <Stage2Header :edit="!!editWidgetSpec" @back="emit('goPrev')" @save="gotoNextStage" />
 
   <DashboardPreviewContent
     widget_id="event-stats-preview"

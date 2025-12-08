@@ -18,8 +18,6 @@ defineProps<SectionBlockProps>()
 </script>
 
 <template>
-  <ContentSpacer :dimension="8" />
-
   <CmkHeading type="h3">
     {{ title }}
   </CmkHeading>

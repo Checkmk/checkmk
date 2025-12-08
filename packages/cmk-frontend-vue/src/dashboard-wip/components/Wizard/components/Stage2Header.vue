@@ -5,10 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import ActionBar from './ActionBar.vue'
 import ActionButton from './ActionButton.vue'
@@ -17,11 +15,12 @@ import ContentSpacer from './ContentSpacer.vue'
 const { _t } = usei18n()
 
 interface Stage1HeaderEmits {
-  click: []
+  save: []
+  back: []
 }
 
 interface Stage1HeaderProps {
-  buttonTitle?: TranslatedString
+  edit?: boolean
 }
 
 defineProps<Stage1HeaderProps>()
@@ -30,26 +29,24 @@ const emit = defineEmits<Stage1HeaderEmits>()
 
 <template>
   <CmkHeading type="h1">
-    {{ _t('Data selection') }}
+    {{ _t('Widget data') }}
   </CmkHeading>
 
   <ContentSpacer />
 
   <ActionBar align-items="left">
     <ActionButton
-      :label="buttonTitle || _t('Next step: Visualization')"
-      :icon="{ name: 'continue', side: 'right' }"
-      :action="() => emit('click')"
+      :label="_t('Previous step')"
+      :icon="{ name: 'continue', side: 'left', rotate: 180 }"
+      :action="() => emit('back')"
       variant="secondary"
+    />
+    <ActionButton
+      :label="!!edit ? _t('Save widget') : _t('Add & place widget')"
+      :action="() => emit('save')"
+      variant="primary"
     />
   </ActionBar>
 
   <ContentSpacer :dimension="11" />
-
-  <CmkParagraph>
-    {{ _t('Select the data you want to analyze') }} <br />
-    {{ _t("Dashboard filters apply here and don't have to be selected again") }}
-  </CmkParagraph>
-
-  <ContentSpacer :dimension="8" />
 </template>

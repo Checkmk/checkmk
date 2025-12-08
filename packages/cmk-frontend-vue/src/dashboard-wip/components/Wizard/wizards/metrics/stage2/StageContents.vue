@@ -8,11 +8,6 @@ import { ref, toValue } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-
-import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
-import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
-import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import { ElementSelection, type UseWidgetHandler } from '@/dashboard-wip/components/Wizard/types'
 import {
   Graph,
@@ -28,6 +23,9 @@ import type {
   WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
+import ContentSpacer from '../../../components/ContentSpacer.vue'
+import SectionBlock from '../../../components/SectionBlock.vue'
+import Stage2Header from '../../../components/Stage2Header.vue'
 import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { getGraph } from '../utils'
@@ -193,49 +191,25 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
 </script>
 
 <template>
-  <CmkHeading type="h1">
-    {{ _t('Widget data') }}
-  </CmkHeading>
-
-  <ContentSpacer />
-
-  <ActionBar align-items="left">
-    <ActionButton
-      :label="_t('Previous step')"
-      :icon="{ name: 'continue', side: 'left', rotate: 180 }"
-      :action="gotoPrevStage"
-      variant="secondary"
-    />
-    <ActionButton
-      :label="!!editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
-      :action="gotoNextStage"
-      variant="primary"
-    />
-  </ActionBar>
-
-  <ContentSpacer :dimension="11" />
+  <Stage2Header :edit="!!editWidgetSpec" @back="gotoPrevStage" @save="gotoNextStage" />
 
   <div v-if="metricType === MetricSelection.SINGLE_METRIC">
-    <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
+    <SectionBlock :title="_t('Choose how to display your data')">
+      <SelectableWidgets
+        v-model:selected-widget="selectedWidget as Graph"
+        :available-items="availableWidgetsTop"
+        :enabled-widgets="enabledWidgets"
+      />
 
-    <ContentSpacer :dimension="5" />
+      <ContentSpacer />
 
-    <SelectableWidgets
-      v-model:selected-widget="selectedWidget as Graph"
-      :available-items="availableWidgetsTop"
-      :enabled-widgets="enabledWidgets"
-    />
-
-    <ContentSpacer />
-
-    <SelectableWidgets
-      v-model:selected-widget="selectedWidget as Graph"
-      :available-items="availableWidgetsBottom"
-      :enabled-widgets="enabledWidgets"
-    />
+      <SelectableWidgets
+        v-model:selected-widget="selectedWidget as Graph"
+        :available-items="availableWidgetsBottom"
+        :enabled-widgets="enabledWidgets"
+      />
+    </SectionBlock>
   </div>
-  <ContentSpacer />
-
   <div v-if="metricType === MetricSelection.SINGLE_METRIC">
     <GaugeWidget
       v-if="selectedWidget === Graph.GAUGE"

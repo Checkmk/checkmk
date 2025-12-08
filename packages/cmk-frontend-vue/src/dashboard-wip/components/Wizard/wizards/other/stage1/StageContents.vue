@@ -23,6 +23,7 @@ import type {
   WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
+import SectionBlock from '../../../components/SectionBlock.vue'
 import { type GetValidWidgetProps, OtherWidgetType } from '../types'
 import EmbeddedURL from './EmbeddedURL/EmbeddedURL.vue'
 import SidebarWidget from './SidebarWidget/SidebarWidget.vue'
@@ -112,18 +113,18 @@ function gotoNextStage() {
   <ContentSpacer />
 
   <ActionBar align-items="left">
-    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="secondary" />
+    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="primary" />
   </ActionBar>
 
-  <ContentSpacer />
+  <ContentSpacer :dimension="8" />
 
-  <SelectableWidgets
-    v-model:selected-widget="selectedWidget"
-    :available-items="availableWidgets"
-    :enabled-widgets="enabledWidgets"
-  />
-
-  <ContentSpacer />
+  <SectionBlock :title="_t('Choose how to display your data')">
+    <SelectableWidgets
+      v-model:selected-widget="selectedWidget as OtherWidgetType"
+      :available-items="availableWidgets"
+      :enabled-widgets="enabledWidgets"
+    />
+  </SectionBlock>
 
   <UserMessages
     v-show="selectedWidget === OtherWidgetType.USER_MESSAGES"

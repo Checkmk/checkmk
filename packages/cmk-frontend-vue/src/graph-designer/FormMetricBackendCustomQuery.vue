@@ -60,6 +60,9 @@ const aggregationHistogramPercentile = defineModel<number>('aggregationHistogram
 watch(
   () => metricName.value,
   () => {
+    resourceAttribute.value = { key: null, value: null }
+    scopeAttribute.value = { key: null, value: null }
+    dataPointAttribute.value = { key: null, value: null }
     resourceAttributes.value = []
     scopeAttributes.value = []
     dataPointAttributes.value = []

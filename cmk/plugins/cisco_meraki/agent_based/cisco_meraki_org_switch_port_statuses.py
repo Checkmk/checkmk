@@ -107,7 +107,7 @@ class SwitchPortStatus(BaseModel, frozen=True):
 
     @computed_field
     @property
-    def operational_state(self) -> Status:
+    def oper_state(self) -> Status:
         match self.status.lower():
             case "connected":
                 return "up"
@@ -170,13 +170,13 @@ def discover_switch_ports_statuses(params: DiscoveryParams, section: Section) ->
     for item, port in section.items():
         if (
             port.admin_state in params["admin_port_states"]
-            and port.operational_state in params["operational_port_states"]
+            and port.oper_state in params["operational_port_states"]
         ):
             yield Service(
                 item=item,
                 parameters={
                     "admin_state": port.admin_state,
-                    "operational_state": port.operational_state,
+                    "operational_state": port.oper_state,
                     "speed": port.speed,
                 },
             )
@@ -216,7 +216,7 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
         return
 
     prior_admin_state = params.get("admin_state", "unknown")
-    prior_operation_state = params.get("operational_state", "unknown")
+    prior_oper_state = params.get("operational_state", "unknown")
     prior_speed = params.get("speed")
 
     if port.admin_state == "down":
@@ -238,28 +238,28 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
     if port.admin_state == "down":
         return
 
-    match port.operational_state:
+    match port.oper_state:
         case "down":
-            operational_state = params["state_not_connected"]
+            oper_state = params["state_not_connected"]
         case "up":
-            operational_state = State.OK.value
+            oper_state = State.OK.value
         case _:
-            operational_state = State.UNKNOWN.value
+            oper_state = State.UNKNOWN.value
 
     yield Result(
-        state=State(operational_state),
-        summary=f"({port.operational_state})",
-        details=f"Operational status: {port.operational_state}",
+        state=State(oper_state),
+        summary=f"({port.oper_state})",
+        details=f"Operational status: {port.oper_state}",
     )
 
-    if _state_has_changed(port.operational_state, prior_operation_state):
+    if _state_has_changed(port.oper_state, prior_oper_state):
         yield Result(
             state=State(params["state_op_change"]),
-            summary=f"changed {prior_operation_state} -> {port.operational_state}",
+            summary=f"changed {prior_oper_state} -> {port.oper_state}",
         )
 
-    # If operational status is down or unknown, there is no need to continue.
-    if port.operational_state in {"down", "unknown"}:
+    # If operational state is down or unknown, there is no need to continue.
+    if port.oper_state in {"down", "unknown"}:
         return
 
     yield Result(state=State.OK, summary=f"Speed: {port.speed}")
@@ -347,11 +347,7 @@ def inventory_meraki_interfaces(section: Section) -> InventoryResult:
             inventory_columns={
                 "name": port.name,
                 "admin_status": port.admin_state,
-                **(
-                    {"oper_status": port.operational_state}
-                    if port.operational_state != "unknown"
-                    else {}
-                ),
+                **({"oper_status": port.oper_state} if port.oper_state != "unknown" else {}),
                 "speed": port.speed,
                 "port_type": port.port_type,
             },

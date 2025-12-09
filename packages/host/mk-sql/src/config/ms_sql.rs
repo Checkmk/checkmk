@@ -446,6 +446,7 @@ pub struct Connection {
     timeout: u64,
     backend: Backend,
     exclude_databases: Vec<String>,
+    force_local_host: bool,
 }
 
 impl Connection {
@@ -456,9 +457,8 @@ impl Connection {
         }
         Ok(Some(
             Self {
-                hostname: if conn.get_bool(keys::ALWAYS_LOCALHOST, false) {
-                    HostName::from("localhost".to_string())
-                } else {
+                force_local_host: conn.get_bool(keys::FORCE_LOCAL_HOST, false),
+                hostname: {
                     conn.get_string(keys::HOSTNAME)
                         .map(|s| {
                             if s.is_empty() {
@@ -502,7 +502,11 @@ impl Connection {
         ))
     }
     pub fn hostname(&self) -> HostName {
-        self.hostname.clone()
+        if self.force_local_host {
+            HostName::from("localhost".to_owned())
+        } else {
+            self.hostname.clone()
+        }
     }
     pub fn fail_over_partner(&self) -> Option<&String> {
         self.fail_over_partner.as_ref()
@@ -556,6 +560,7 @@ impl Default for Connection {
             timeout: defaults::CONNECTION_TIMEOUT,
             backend: Backend::default(),
             exclude_databases: vec![],
+            force_local_host: false,
         }
     }
 }
@@ -805,7 +810,13 @@ impl CustomInstance {
                 );
             }
         }
-        Ok((auth, conn))
+        Ok((
+            auth,
+            Connection {
+                force_local_host: conn.force_local_host || main_conn.force_local_host,
+                ..conn
+            },
+        ))
     }
 
     /// Make auth and conn for custom instance using windows registry
@@ -1219,7 +1230,7 @@ authentication:
         assert!(c.exclude_databases().is_empty());
     }
 
-    fn connection_always_local_host(param: Option<bool>) -> String {
+    fn connection_force_local_host(param: Option<bool>) -> String {
         format!(
             r#"
 connection:
@@ -1227,18 +1238,18 @@ connection:
   {}
 "#,
             match param {
-                Some(v) => format!("always_local_host: {}", if v { "yes" } else { "no" }),
+                Some(v) => format!("force_local_host: {}", if v { "yes" } else { "no" }),
                 None => "".to_string(),
             }
         )
     }
 
     #[test]
-    fn test_connection_always_local_host_from_yaml() {
+    fn test_connection_force_local_host_from_yaml() {
         for (inp, expected) in [
-            (connection_always_local_host(Some(true)), "localhost"),
-            (connection_always_local_host(Some(false)), "alice"),
-            (connection_always_local_host(None), "alice"),
+            (connection_force_local_host(Some(true)), "localhost"),
+            (connection_force_local_host(Some(false)), "alice"),
+            (connection_force_local_host(None), "alice"),
         ] {
             let c = Connection::from_yaml(&create_yaml(&inp), None)
                 .unwrap()
@@ -1478,6 +1489,32 @@ discovery:
         assert_eq!(instance.auth().username(), "u1");
         assert_eq!(instance.conn().hostname(), "h1".to_string().into());
         assert_eq!(instance.calc_real_host(), "h1".to_string().into());
+        assert_eq!(instance.alias(), &Some("a1".to_string().into()));
+        assert_eq!(instance.piggyback().unwrap().hostname(), "Piggy");
+        assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
+    }
+
+    #[test]
+    fn test_custom_instance_always_localhost() {
+        let a = Authentication {
+            username: "ux".to_string(),
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+        let instance = CustomInstance::from_yaml(
+            &create_yaml(data::INSTANCE),
+            &a,
+            &Connection {
+                force_local_host: true,
+                ..Default::default()
+            },
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(instance.name().to_string(), "INST1");
+        assert_eq!(instance.auth().username(), "u1");
+        assert_eq!(instance.conn().hostname(), "localhost".to_string().into());
+        assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
         assert_eq!(instance.alias(), &Some("a1".to_string().into()));
         assert_eq!(instance.piggyback().unwrap().hostname(), "Piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import enum
 import os
 import sys
@@ -45,15 +44,27 @@ class AutomationContext:
     ]
 
 
+@dataclass
+class Automation:
+    ident: str
+    handler: Callable[
+        [
+            AutomationContext,
+            list[str],
+            AgentBasedPlugins | None,
+            config.LoadingResult | None,
+        ],
+        ABCAutomationResult,
+    ]
+
+
 class Automations:
     def __init__(self) -> None:
         super().__init__()
         self._automations: dict[str, Automation] = {}
 
-    def register(self, automation: "Automation") -> None:
-        if automation.cmd is None:
-            raise TypeError()
-        self._automations[automation.cmd] = automation
+    def register(self, automation: Automation) -> None:
+        self._automations[automation.ident] = automation
 
     def execute(
         self,
@@ -122,7 +133,7 @@ class Automations:
                 )
 
             with tracer.span(f"execute_automation[{cmd}]"):
-                result = automation.execute(ctx, args, plugins, loading_result)
+                result = automation.handler(ctx, args, plugins, loading_result)
 
         except (MKGeneralException, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
@@ -158,16 +169,3 @@ def load_plugins() -> AgentBasedPlugins:
 def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadingResult:
     with tracer.span("load_config"):
         return config.load(discovery_rulesets, validate_hosts=False)
-
-
-class Automation(abc.ABC):
-    cmd: str | None = None
-
-    @abc.abstractmethod
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadingResult | None,
-    ) -> ABCAutomationResult: ...

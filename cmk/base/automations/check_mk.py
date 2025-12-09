@@ -277,7 +277,7 @@ def _schedule_discovery_check(
             raise
 
 
-class DiscoveryAutomation(Automation):
+class DiscoveryAutomation:
     def _trigger_discovery_check(
         self,
         config_cache: ConfigCache,
@@ -304,8 +304,6 @@ def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]
 
 
 class AutomationDiscovery(DiscoveryAutomation):
-    cmd = "service-discovery"
-
     # Does discovery for a list of hosts. For possible values see
     # DiscoverySettings
     # Hosts on the list that are offline (unmonitored) will
@@ -495,9 +493,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         return ServiceDiscoveryResult(results)
 
 
-class AutomationSpecialAgentDiscoveryPreview(Automation):
-    cmd = "special-agent-discovery-preview"
-
+class AutomationSpecialAgentDiscoveryPreview:
     def execute(
         self,
         ctx: AutomationContext,
@@ -578,9 +574,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
         return preview
 
 
-class AutomationDiscoveryPreview(Automation):
-    cmd = "service-discovery-preview"
-
+class AutomationDiscoveryPreview:
     def execute(
         self,
         ctx: AutomationContext,
@@ -1466,8 +1460,6 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
 class AutomationUpdateHostLabels(DiscoveryAutomation):
     """Set the new collection of discovered host labels"""
 
-    cmd = "update-host-labels"
-
     def execute(
         self,
         ctx: AutomationContext,
@@ -1491,9 +1483,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
         return UpdateHostLabelsResult()
 
 
-class AutomationRenameHosts(Automation):
-    cmd = "rename-hosts"
-
+class AutomationRenameHosts:
     def __init__(self) -> None:
         super().__init__()
         self._finished_history_files: dict[HistoryFilePair, list[HistoryFile]] = {}
@@ -1882,9 +1872,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname}
         return name.replace(".", "[.]")
 
 
-class AutomationGetServicesLabels(Automation):
-    cmd = "get-services-labels"
-
+class AutomationGetServicesLabels:
     def execute(
         self,
         ctx: AutomationContext,
@@ -1931,9 +1919,7 @@ class AutomationGetServicesLabels(Automation):
         )
 
 
-class AutomationGetServiceName(Automation):
-    cmd = "get-service-name"
-
+class AutomationGetServiceName:
     def execute(
         self,
         ctx: AutomationContext,
@@ -1977,9 +1963,7 @@ class _FoundService:
     discovered_labels: Mapping[str, str]
 
 
-class AutomationAnalyseServices(Automation):
-    cmd = "analyse-service"
-
+class AutomationAnalyseServices:
     def execute(
         self,
         ctx: AutomationContext,
@@ -2265,9 +2249,7 @@ class AutomationAnalyseServices(Automation):
                 return
 
 
-class AutomationAnalyseHost(Automation):
-    cmd = "analyse-host"
-
+class AutomationAnalyseHost:
     def execute(
         self,
         ctx: AutomationContext,
@@ -2289,11 +2271,7 @@ class AutomationAnalyseHost(Automation):
         )
 
 
-class AutomationAnalyzeHostRuleMatches(Automation):
-    cmd = "analyze-host-rule-matches"
-    needs_config = True
-    needs_checks = False
-
+class AutomationAnalyzeHostRuleMatches:
     def execute(
         self,
         ctx: AutomationContext,
@@ -2329,11 +2307,7 @@ class AutomationAnalyzeHostRuleMatches(Automation):
         )
 
 
-class AutomationAnalyzeServiceRuleMatches(Automation):
-    cmd = "analyze-service-rule-matches"
-    needs_config = True
-    needs_checks = False
-
+class AutomationAnalyzeServiceRuleMatches:
     def execute(
         self,
         ctx: AutomationContext,
@@ -2377,11 +2351,7 @@ class AutomationAnalyzeServiceRuleMatches(Automation):
         )
 
 
-class AutomationAnalyzeHostRuleEffectiveness(Automation):
-    cmd = "analyze-host-rule-effectiveness"
-    needs_config = True
-    needs_checks = False
-
+class AutomationAnalyzeHostRuleEffectiveness:
     def execute(
         self,
         ctx: AutomationContext,
@@ -2485,9 +2455,7 @@ class ABCDeleteHosts:
             )
 
 
-class AutomationDeleteHosts(ABCDeleteHosts, Automation):
-    cmd = "delete-hosts"
-
+class AutomationDeleteHosts(ABCDeleteHosts):
     def execute(
         self,
         ctx: AutomationContext,
@@ -2539,11 +2507,9 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         self._delete_robotmk_html_log_dir(hostname)
 
 
-class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
+class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
     """Cleanup automation call for hosts that were previously located on the
     local site and are now handled by a remote site"""
-
-    cmd = "delete-hosts-known-remote"
 
     def execute(
         self,
@@ -2581,9 +2547,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
         self._delete_robotmk_html_log_dir(hostname)
 
 
-class AutomationRestart(Automation):
-    cmd = "restart"
-
+class AutomationRestart:
     def _mode(self, monitoring_core: Literal["nagios", "cmc"]) -> CoreAction:
         if monitoring_core == "cmc" and not self._check_plugins_have_changed(monitoring_core):
             return CoreAction.RELOAD
@@ -2702,8 +2666,6 @@ class AutomationRestart(Automation):
 
 
 class AutomationReload(AutomationRestart):
-    cmd = "reload"
-
     def _mode(self, monitoring_core: Literal["nagios", "cmc"]) -> CoreAction:
         if self._check_plugins_have_changed(monitoring_core):
             return CoreAction.RESTART
@@ -2789,10 +2751,8 @@ def _execute_silently(
         )
 
 
-class AutomationGetConfiguration(Automation):
+class AutomationGetConfiguration:
     # Automation call to get the default configuration
-    cmd = "get-configuration"
-
     def execute(
         self,
         ctx: AutomationContext,
@@ -2822,9 +2782,7 @@ class AutomationGetConfiguration(Automation):
         return GetConfigurationResult(result)
 
 
-class AutomationGetCheckInformation(Automation):
-    cmd = "get-check-information"
-
+class AutomationGetCheckInformation:
     def execute(
         self,
         ctx: AutomationContext,
@@ -2872,9 +2830,7 @@ class AutomationGetCheckInformation(Automation):
             raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
 
 
-class AutomationGetSectionInformation(Automation):
-    cmd = "get-section-information"
-
+class AutomationGetSectionInformation:
     def execute(
         self,
         ctx: AutomationContext,
@@ -2903,9 +2859,7 @@ class AutomationGetSectionInformation(Automation):
         return GetSectionInformationResult(section_infos)
 
 
-class AutomationScanParents(Automation):
-    cmd = "scan-parents"
-
+class AutomationScanParents:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3014,9 +2968,7 @@ def get_special_agent_commandline(
     yield from special_agent.iter_special_agent_commands(agent_name, params)
 
 
-class AutomationDiagSpecialAgent(Automation):
-    cmd = "diag-special-agent"
-
+class AutomationDiagSpecialAgent:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3094,9 +3046,7 @@ class AutomationDiagSpecialAgent(Automation):
                 )
 
 
-class AutomationPingHost(Automation):
-    cmd = "ping-host"
-
+class AutomationPingHost:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3120,9 +3070,7 @@ class AutomationPingHost(Automation):
         return completed_process.returncode, completed_process.stdout
 
 
-class AutomationDiagCmkAgent(Automation):
-    cmd = "diag-cmk-agent"
-
+class AutomationDiagCmkAgent:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3216,9 +3164,7 @@ class AutomationDiagCmkAgent(Automation):
         return DiagCmkAgentResult(state, output)
 
 
-class AutomationDiagHost(Automation):
-    cmd = "diag-host"
-
+class AutomationDiagHost:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3711,9 +3657,7 @@ class AutomationDiagHost(Automation):
         return 1, "Got empty SNMP response"
 
 
-class AutomationActiveCheck(Automation):
-    cmd = "active-check"
-
+class AutomationActiveCheck:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3875,9 +3819,7 @@ class AutomationActiveCheck(Automation):
             return 3, "UNKNOWN - Cannot execute command: %s" % e
 
 
-class AutomationUpdatePasswordsMergedFile(Automation):
-    cmd = "update-passwords-merged-file"
-
+class AutomationUpdatePasswordsMergedFile:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3893,9 +3835,7 @@ class AutomationUpdatePasswordsMergedFile(Automation):
         return UpdatePasswordsMergedFileResult()
 
 
-class AutomationUpdateDNSCache(Automation):
-    cmd = "update-dns-cache"
-
+class AutomationUpdateDNSCache:
     def execute(
         self,
         ctx: AutomationContext,
@@ -3923,9 +3863,7 @@ class AutomationUpdateDNSCache(Automation):
         )
 
 
-class AutomationGetAgentOutput(Automation):
-    cmd = "get-agent-output"
-
+class AutomationGetAgentOutput:
     # TODO: This is inconsistent.
     # On one hand we are loading the penging config,
     # # on the other hand we are using the activated secrets.
@@ -4177,9 +4115,7 @@ class AutomationGetAgentOutput(Automation):
         )
 
 
-class AutomationNotificationReplay(Automation):
-    cmd = "notification-replay"
-
+class AutomationNotificationReplay:
     def execute(
         self,
         ctx: AutomationContext,
@@ -4217,9 +4153,7 @@ class AutomationNotificationReplay(Automation):
         return NotificationReplayResult()
 
 
-class AutomationNotificationAnalyse(Automation):
-    cmd = "notification-analyse"
-
+class AutomationNotificationAnalyse:
     def execute(
         self,
         ctx: AutomationContext,
@@ -4258,9 +4192,7 @@ class AutomationNotificationAnalyse(Automation):
         )
 
 
-class AutomationNotificationTest(Automation):
-    cmd = "notification-test"
-
+class AutomationNotificationTest:
     def execute(
         self,
         ctx: AutomationContext,
@@ -4303,9 +4235,7 @@ class AutomationNotificationTest(Automation):
         )
 
 
-class AutomationGetBulks(Automation):
-    cmd = "notification-get-bulks"
-
+class AutomationGetBulks:
     def execute(
         self,
         ctx: AutomationContext,
@@ -4326,9 +4256,7 @@ class AutomationGetBulks(Automation):
         )
 
 
-class AutomationCreateDiagnosticsDump(Automation):
-    cmd = "create-diagnostics-dump"
-
+class AutomationCreateDiagnosticsDump:
     def execute(
         self,
         ctx: AutomationContext,
@@ -4352,9 +4280,7 @@ class AutomationCreateDiagnosticsDump(Automation):
             )
 
 
-class AutomationFindUnknownCheckParameterRuleSets(Automation):
-    cmd = "find-unknown-check-parameter-rule-sets"
-
+class AutomationFindUnknownCheckParameterRuleSets:
     def execute(
         self,
         ctx: AutomationContext,
@@ -4378,39 +4304,116 @@ class AutomationFindUnknownCheckParameterRuleSets(Automation):
 
 
 def register_common_automations(automations: Automations) -> None:
-    automations.register(AutomationDiscovery())
-    automations.register(AutomationSpecialAgentDiscoveryPreview())
-    automations.register(AutomationDiscoveryPreview())
-    automations.register(AutomationAutodiscovery())
-    automations.register(AutomationSetAutochecksV2())
-    automations.register(AutomationUpdateHostLabels())
-    automations.register(AutomationRenameHosts())
-    automations.register(AutomationGetServicesLabels())
-    automations.register(AutomationGetServiceName())
-    automations.register(AutomationAnalyseServices())
-    automations.register(AutomationAnalyseHost())
-    automations.register(AutomationAnalyzeHostRuleMatches())
-    automations.register(AutomationAnalyzeServiceRuleMatches())
-    automations.register(AutomationAnalyzeHostRuleEffectiveness())
-    automations.register(AutomationDeleteHosts())
-    automations.register(AutomationDeleteHostsKnownRemote())
-    automations.register(AutomationRestart())
-    automations.register(AutomationReload())
-    automations.register(AutomationGetConfiguration())
-    automations.register(AutomationGetCheckInformation())
-    automations.register(AutomationGetSectionInformation())
-    automations.register(AutomationScanParents())
-    automations.register(AutomationDiagSpecialAgent())
-    automations.register(AutomationPingHost())
-    automations.register(AutomationDiagCmkAgent())
-    automations.register(AutomationDiagHost())
-    automations.register(AutomationActiveCheck())
-    automations.register(AutomationUpdatePasswordsMergedFile())
-    automations.register(AutomationUpdateDNSCache())
-    automations.register(AutomationGetAgentOutput())
-    automations.register(AutomationNotificationReplay())
-    automations.register(AutomationNotificationAnalyse())
-    automations.register(AutomationNotificationTest())
-    automations.register(AutomationGetBulks())
-    automations.register(AutomationCreateDiagnosticsDump())
-    automations.register(AutomationFindUnknownCheckParameterRuleSets())
+    automations.register(
+        Automation(ident="service-discovery", handler=AutomationDiscovery().execute)
+    )
+    automations.register(
+        Automation(
+            ident="special-agent-discovery-preview",
+            handler=AutomationSpecialAgentDiscoveryPreview().execute,
+        )
+    )
+    automations.register(
+        Automation(ident="service-discovery-preview", handler=AutomationDiscoveryPreview().execute)
+    )
+    automations.register(
+        Automation(ident="autodiscovery", handler=AutomationAutodiscovery().execute)
+    )
+    automations.register(
+        Automation(ident="set-autochecks-v2", handler=AutomationSetAutochecksV2().execute)
+    )
+    automations.register(
+        Automation(ident="update-host-labels", handler=AutomationUpdateHostLabels().execute)
+    )
+    automations.register(Automation(ident="rename-hosts", handler=AutomationRenameHosts().execute))
+    automations.register(
+        Automation(ident="get-services-labels", handler=AutomationGetServicesLabels().execute)
+    )
+    automations.register(
+        Automation(ident="get-service-name", handler=AutomationGetServiceName().execute)
+    )
+    automations.register(
+        Automation(ident="analyse-service", handler=AutomationAnalyseServices().execute)
+    )
+    automations.register(Automation(ident="analyse-host", handler=AutomationAnalyseHost().execute))
+    automations.register(
+        Automation(
+            ident="analyze-host-rule-matches", handler=AutomationAnalyzeHostRuleMatches().execute
+        )
+    )
+    automations.register(
+        Automation(
+            ident="analyze-service-rule-matches",
+            handler=AutomationAnalyzeServiceRuleMatches().execute,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="analyze-host-rule-effectiveness",
+            handler=AutomationAnalyzeHostRuleEffectiveness().execute,
+        )
+    )
+    automations.register(Automation(ident="delete-hosts", handler=AutomationDeleteHosts().execute))
+    automations.register(
+        Automation(
+            ident="delete-hosts-known-remote", handler=AutomationDeleteHostsKnownRemote().execute
+        )
+    )
+    automations.register(Automation(ident="restart", handler=AutomationRestart().execute))
+    automations.register(Automation(ident="reload", handler=AutomationReload().execute))
+    automations.register(
+        Automation(ident="get-configuration", handler=AutomationGetConfiguration().execute)
+    )
+    automations.register(
+        Automation(ident="get-check-information", handler=AutomationGetCheckInformation().execute)
+    )
+    automations.register(
+        Automation(
+            ident="get-section-information", handler=AutomationGetSectionInformation().execute
+        )
+    )
+    automations.register(Automation(ident="scan-parents", handler=AutomationScanParents().execute))
+    automations.register(
+        Automation(ident="diag-special-agent", handler=AutomationDiagSpecialAgent().execute)
+    )
+    automations.register(Automation(ident="ping-host", handler=AutomationPingHost().execute))
+    automations.register(
+        Automation(ident="diag-cmk-agent", handler=AutomationDiagCmkAgent().execute)
+    )
+    automations.register(Automation(ident="diag-host", handler=AutomationDiagHost().execute))
+    automations.register(Automation(ident="active-check", handler=AutomationActiveCheck().execute))
+    automations.register(
+        Automation(
+            ident="update-passwords-merged-file",
+            handler=AutomationUpdatePasswordsMergedFile().execute,
+        )
+    )
+    automations.register(
+        Automation(ident="update-dns-cache", handler=AutomationUpdateDNSCache().execute)
+    )
+    automations.register(
+        Automation(ident="get-agent-output", handler=AutomationGetAgentOutput().execute)
+    )
+    automations.register(
+        Automation(ident="notification-replay", handler=AutomationNotificationReplay().execute)
+    )
+    automations.register(
+        Automation(ident="notification-analyse", handler=AutomationNotificationAnalyse().execute)
+    )
+    automations.register(
+        Automation(ident="notification-test", handler=AutomationNotificationTest().execute)
+    )
+    automations.register(
+        Automation(ident="notification-get-bulks", handler=AutomationGetBulks().execute)
+    )
+    automations.register(
+        Automation(
+            ident="create-diagnostics-dump", handler=AutomationCreateDiagnosticsDump().execute
+        )
+    )
+    automations.register(
+        Automation(
+            ident="find-unknown-check-parameter-rule-sets",
+            handler=AutomationFindUnknownCheckParameterRuleSets().execute,
+        )
+    )

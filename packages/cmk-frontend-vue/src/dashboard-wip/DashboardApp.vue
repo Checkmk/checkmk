@@ -96,6 +96,9 @@ onBeforeMount(async () => {
       dashboard.metadata.layout_type as DashboardLayout
     )
     dashboardFilters.handleApplyRuntimeFilters(dashboard.filter_context.context)
+    if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
+      openDashboardFilterSettings.value = true
+    }
   }
 })
 
@@ -129,6 +132,10 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
     dashboard.layout_type as DashboardLayout,
     dashboard.display?.topic?.breadcrumb ?? null
   )
+
+  if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
+    openDashboardFilterSettings.value = true
+  }
 }
 
 const selectedDashboard = computed(() => {

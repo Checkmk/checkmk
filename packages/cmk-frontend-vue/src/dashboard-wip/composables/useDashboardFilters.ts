@@ -24,6 +24,12 @@ export function useDashboardFilters(
     return dashboardFilterContextRef.value?.mandatory_context_filters ?? []
   })
 
+  const areAllMandatoryFiltersApplied = computed<boolean>(() => {
+    return configuredMandatoryRuntimeFilters.value.every(
+      (filterId) => filterId in appliedRuntimeFilters.value
+    )
+  })
+
   const configuredDashboardFilters = computed<ConfiguredFilters>(() => {
     return dashboardFilterContextRef.value?.filters ?? {}
   })
@@ -91,6 +97,7 @@ export function useDashboardFilters(
     configuredDashboardFilters,
     configuredMandatoryRuntimeFilters,
     appliedRuntimeFilters,
+    areAllMandatoryFiltersApplied,
     baseFilters,
     contextFilters,
     runtimeFiltersMode: computed(() => runtimeFiltersMode.value),

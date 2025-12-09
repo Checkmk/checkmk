@@ -2041,7 +2041,7 @@ class RuleIdentifier:
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class IsLocked:
+class LockedConditions:
     instance_id: str
     render_link: HTML
     message: str
@@ -2054,7 +2054,7 @@ class RuleSpecItem:
 
 
 def _create_rule_properties_catalog_topic(
-    *, rule_identifier: RuleIdentifier, is_locked: IsLocked | None
+    *, rule_identifier: RuleIdentifier, locked_conditions: LockedConditions | None
 ) -> dict[str, Topic]:
     elements = {
         "description": TopicElement(
@@ -2099,14 +2099,14 @@ def _create_rule_properties_catalog_topic(
             required=True,
         ),
     }
-    if is_locked:
+    if locked_conditions:
         elements.update(
             {
                 "source": TopicElement(
                     parameter_form=FixedValueAPI(
                         title=Title("Source"),
-                        value=is_locked.instance_id,
-                        label=Label("%s") % str(is_locked.render_link),
+                        value=locked_conditions.instance_id,
+                        label=Label("%s") % str(locked_conditions.render_link),
                     )
                 )
             }
@@ -2120,11 +2120,11 @@ def _create_rule_properties_catalog_topic(
 
 
 def create_rule_properties_catalog(
-    *, rule_identifier: RuleIdentifier, is_locked: IsLocked | None
+    *, rule_identifier: RuleIdentifier, locked_conditions: LockedConditions | None
 ) -> Catalog:
     return Catalog(
         elements=_create_rule_properties_catalog_topic(
-            rule_identifier=rule_identifier, is_locked=is_locked
+            rule_identifier=rule_identifier, locked_conditions=locked_conditions
         )
     )
 
@@ -2331,7 +2331,7 @@ def _create_explicit_rule_conditions_dict(
 
 def _create_rule_conditions_catalog_topic(
     *,
-    is_locked: IsLocked | None,
+    locked_conditions: LockedConditions | None,
     tree: FolderTree,
     rule_spec_name: str,
     rule_spec_item: RuleSpecItem | None,
@@ -2370,21 +2370,21 @@ def _create_rule_conditions_catalog_topic(
                     required=True,
                 ),
             },
-            locked=None if is_locked is None else Locked(message=is_locked.message),
+            locked=None if locked_conditions is None else Locked(message=locked_conditions.message),
         )
     }
 
 
 def create_rule_conditions_catalog(
     *,
-    is_locked: IsLocked | None,
+    locked_conditions: LockedConditions | None,
     tree: FolderTree,
     rule_spec_name: str,
     rule_spec_item: RuleSpecItem | None,
 ) -> Catalog:
     return Catalog(
         elements=_create_rule_conditions_catalog_topic(
-            is_locked=is_locked,
+            locked_conditions=locked_conditions,
             tree=tree,
             rule_spec_name=rule_spec_name,
             rule_spec_item=rule_spec_item,
@@ -2395,7 +2395,7 @@ def create_rule_conditions_catalog(
 def create_rule_catalog(
     *,
     rule_identifier: RuleIdentifier,
-    is_locked: IsLocked | None,
+    locked_conditions: LockedConditions | None,
     title: str | None,
     value_parameter_form: FormSpec,
     tree: FolderTree,
@@ -2405,7 +2405,7 @@ def create_rule_catalog(
     return Catalog(
         elements={
             **_create_rule_properties_catalog_topic(
-                rule_identifier=rule_identifier, is_locked=is_locked
+                rule_identifier=rule_identifier, locked_conditions=locked_conditions
             ),
             **{
                 "value": Topic(
@@ -2419,7 +2419,7 @@ def create_rule_catalog(
                 )
             },
             **_create_rule_conditions_catalog_topic(
-                is_locked=is_locked,
+                locked_conditions=locked_conditions,
                 tree=tree,
                 rule_spec_name=rule_spec_name,
                 rule_spec_item=rule_spec_item,

@@ -68,7 +68,7 @@ def _get_rule_spec_and_form_spec(
         rule_spec,
         create_rule_catalog(
             rule_identifier=rule_identifier,
-            is_locked=None,
+            locked_conditions=None,
             title=rule_spec.title,
             value_parameter_form=rule_spec.form_spec,
             tree=tree,

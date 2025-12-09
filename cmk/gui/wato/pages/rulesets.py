@@ -157,7 +157,7 @@ from cmk.gui.watolib.rulesets import (
     FolderRulesets,
     get_rule_conditions_from_catalog_value,
     get_rule_options_from_catalog_value,
-    IsLocked,
+    LockedConditions,
     may_edit_ruleset,
     Rule,
     RuleConditions,
@@ -2088,8 +2088,8 @@ class ABCEditRuleMode(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._is_locked = (
-            IsLocked(
+        self._locked_conditions = (
+            LockedConditions(
                 instance_id=self._rule.locked_by["instance_id"],
                 render_link=quick_setup_render_link(self._rule.locked_by),
                 message=_("Cannot change rule conditions for rules managed by Quick setup."),
@@ -2122,10 +2122,10 @@ class ABCEditRuleMode(WatoMode):
                         rule_identifier=RuleIdentifier(
                             id=self._rule.id, name=self._rule.ruleset.name
                         ),
-                        is_locked=self._is_locked,
+                        locked_conditions=self._locked_conditions,
                     ),
                     conditions_catalog=create_rule_conditions_catalog(
-                        is_locked=self._is_locked,
+                        locked_conditions=self._locked_conditions,
                         tree=folder_tree(),
                         rule_spec_name=self._rulespec.name,
                         rule_spec_item=(
@@ -2144,7 +2144,7 @@ class ABCEditRuleMode(WatoMode):
                         rule_identifier=RuleIdentifier(
                             id=self._rule.id, name=self._rule.ruleset.name
                         ),
-                        is_locked=self._is_locked,
+                        locked_conditions=self._locked_conditions,
                         title=title,
                         value_parameter_form=registered_form_spec,
                         tree=folder_tree(),
@@ -2402,8 +2402,8 @@ class ABCEditRuleMode(WatoMode):
         self._rule.rule_options = rule_values.options
         self._rule.value = rule_values.value
 
-        if self._is_locked and self._rule.conditions != rule_values.conditions:
-            flash(self._is_locked.message, msg_type="error")
+        if self._locked_conditions and self._rule.conditions != rule_values.conditions:
+            flash(self._locked_conditions.message, msg_type="error")
             return redirect(self._back_url())
 
         self._rule.update_conditions(rule_values.conditions)
@@ -2423,8 +2423,8 @@ class ABCEditRuleMode(WatoMode):
             flash(self._success_message())
             return redirect(self._back_url())
 
-        if self._is_locked:
-            flash(self._is_locked.message, msg_type="error")
+        if self._locked_conditions:
+            flash(self._locked_conditions.message, msg_type="error")
             return redirect(self._back_url())
 
         # Move rule to new folder during editing
@@ -3348,8 +3348,8 @@ class ModeNewRule(ABCEditRuleMode):
                 return get_rule_conditions_from_catalog_value(
                     parse_data_from_field_id(
                         create_rule_conditions_catalog(
-                            # 'is_locked' does not matter here because we only want to get the folder.
-                            is_locked=None,
+                            # 'locked_conditions' does not matter here because we only want to get the folder.
+                            locked_conditions=None,
                             tree=tree,
                             rule_spec_name=rule_spec_name,
                             rule_spec_item=rule_spec_item,
@@ -3363,10 +3363,10 @@ class ModeNewRule(ABCEditRuleMode):
                 return get_rule_conditions_from_catalog_value(
                     parse_data_from_field_id(
                         create_rule_catalog(
-                            # 'rule_identifier', 'is_locked' and 'title' do not matter here
+                            # 'rule_identifier', 'locked_conditions' and 'title' do not matter here
                             # because we only want to get the folder.
                             rule_identifier=RuleIdentifier(id="", name=""),
-                            is_locked=None,
+                            locked_conditions=None,
                             title=None,
                             value_parameter_form=registered_form_spec,
                             tree=tree,

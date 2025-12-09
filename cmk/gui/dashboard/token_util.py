@@ -198,11 +198,11 @@ def impersonate_dashboard_token_issuer(
 
     The context yields an object which can be used to load user specific data."""
     with UserContext(token_issuer, user_permissions):
-        x = ImpersonatedDashboardTokenIssuer(token_details, user_permissions)
+        issuer = ImpersonatedDashboardTokenIssuer(token_details, user_permissions)
         try:
-            yield x
+            yield issuer
         finally:
-            x.invalidate()
+            issuer.invalidate()
 
 
 def get_dashboard_widget_by_id(dashboard_config: DashboardConfig, widget_id: str) -> DashletConfig:

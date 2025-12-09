@@ -128,7 +128,7 @@ def _allow(
     return _is_allowed
 
 
-_CLEAN_PLUGIN_FAMILIES = {
+CLEAN_PLUGIN_FAMILIES = {
     "acme",
     "activemq",
     "alertmanager",
@@ -144,7 +144,6 @@ _CLEAN_PLUGIN_FAMILIES = {
     "couchbase",
     # "datadog", This cannot be fixed easily. It bypasses APIs to talk to the EC
     "ddn_s2a",
-    "elasticsearch",
     "fritzbox",
     # "gcp",  # : Edition
     "gerrit",
@@ -152,37 +151,25 @@ _CLEAN_PLUGIN_FAMILIES = {
     "hivemanager_ng",
     "hivemanager",
     "hp_msa",
-    "hpe_par",
+    "hpe_3par",
     "ibmsvc",
     "innovaphone",
-    "ipmi",
     "jenkins",
     "jira",
     # "jolokia",  # : import hack. resolve by migrating the bakery plugin
-    "kube"
     # "metric_backend",  # :cmk.metric_backend, cmk.utils.paths
     "mobileiron",
     "mqtt",
-    "netapp",
     # "otel", # :
-    "prism",
     "prometheus",
-    "proxmox_ve",
-    "pure_storage_fa",
-    "rabbitmq",
-    "random",
-    "redfish",
     "ruckus_spot",
     "salesforce",
     "siemens_plc",
     "smb",
-    "splunk",
     "storeonce4x",
     "storeonce",
     "tinkerforge",
-    "ucs_bladecenter",
     # "vnx_quotas", TODO. make the authorized keys configurable?
-    "vsphere",
     "zerto",
 }
 
@@ -901,7 +888,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             *PACKAGE_PLUGIN_APIS,
             "cmk.plugins.lib",
         )
-        for family in _CLEAN_PLUGIN_FAMILIES
+        for family in CLEAN_PLUGIN_FAMILIES
     },
     Component("cmk.plugins"): _allow(
         *PACKAGE_PLUGIN_APIS,

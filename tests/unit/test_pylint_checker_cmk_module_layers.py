@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.pylint.checker_cmk_module_layers import Component, COMPONENTS
+from tests.pylint.checker_cmk_module_layers import CLEAN_PLUGIN_FAMILIES, Component, COMPONENTS
+from tests.testlib.common.repo import repo_path
 
 
 def test_no_component_masked_by_more_general_component() -> None:
@@ -15,3 +16,15 @@ def test_no_component_masked_by_more_general_component() -> None:
         shadowed = {c for c in seen_components if component.is_below(c)}
         seen_components.add(component)
         assert not shadowed
+
+
+def test_clean_plugin_families_list_up_to_date() -> None:
+    """make sure we remove plugin families that don't exist
+
+    (anymore, because they've been moved into a package)
+    """
+    assert not {
+        family
+        for family in CLEAN_PLUGIN_FAMILIES
+        if not (repo_path() / f"cmk/plugins/{family}").exists()
+    }

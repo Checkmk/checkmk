@@ -47,7 +47,6 @@ from cmk.automations.results import (
     AnalyzeHostRuleMatchesResult,
     AnalyzeServiceRuleMatchesResult,
     AutodiscoveryResult,
-    CreateDiagnosticsDumpResult,
     DeleteHostsKnownRemoteResult,
     DeleteHostsResult,
     DiagCmkAgentInput,
@@ -124,7 +123,6 @@ from cmk.base.configlib.servicename import (
 from cmk.base.core.interface import CoreAction, do_reload, do_restart, MonitoringCore
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.core_factory import create_core
-from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
@@ -213,7 +211,6 @@ from cmk.snmplib import (
 from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
-from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
@@ -4172,28 +4169,6 @@ def automation_get_bulks(
     )
 
 
-def automation_create_diagnostics_dump(
-    ctx: AutomationContext,
-    args: DiagnosticsCLParameters,
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> CreateDiagnosticsDumpResult:
-    if loading_result is None:
-        loading_result = load_config(discovery_rulesets=())
-    buf = io.StringIO()
-    with redirect_stdout(buf), redirect_stderr(buf):
-        log.setup_console_logging()
-        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-        log.logger.setLevel(logging.INFO)
-        dump = DiagnosticsDump(loading_result.loaded_config, deserialize_cl_parameters(args))
-        dump.create()
-        return CreateDiagnosticsDumpResult(
-            output=buf.getvalue(),
-            tarfile_path=str(dump.tarfile_path),
-            tarfile_created=dump.tarfile_created,
-        )
-
-
 def automation_find_unknown_check_parameter_rule_sets(
     ctx: AutomationContext,
     args: list[str],
@@ -4418,12 +4393,6 @@ def register_common_automations(automations: Automations) -> None:
         Automation(
             ident="notification-get-bulks",
             handler=automation_get_bulks,
-        )
-    )
-    automations.register(
-        Automation(
-            ident="create-diagnostics-dump",
-            handler=automation_create_diagnostics_dump,
         )
     )
     automations.register(

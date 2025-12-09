@@ -10,7 +10,9 @@
 from __future__ import annotations
 
 import abc
+import io
 import json
+import logging
 import os
 import platform
 import re
@@ -23,6 +25,7 @@ import traceback
 import urllib.parse
 import uuid
 from collections.abc import Mapping
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
@@ -35,24 +38,35 @@ import livestatus
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
+from cmk.automations.results import CreateDiagnosticsDumpResult
+from cmk.base import config
+from cmk.base.automations.automations import Automation, AutomationContext, Automations, load_config
+from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.config import LoadingResult
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.modes.modes import Mode, Modes, Option
 from cmk.ccc import site, store, tty
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import omd_site
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.inventory.structured_data import (
     InventoryStore,
     SDNodeName,
     serialize_tree,
 )
+from cmk.utils import log
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
     CheckmkFilesMap,
+    deserialize_cl_parameters,
+    DiagnosticsCLParameters,
     DiagnosticsElementCSVResult,
     DiagnosticsElementFilepaths,
     DiagnosticsElementJSONResult,
+    DiagnosticsModesParameters,
     DiagnosticsOptionalParameters,
     FILE_MAP_CONFIG,
     FILE_MAP_CORE,
@@ -104,6 +118,114 @@ class _DiagnosticsElement:
 
 
 SUFFIX = ".tar.gz"
+
+
+def register(modes: Modes, automations: Automations) -> None:
+    modes.register(
+        Mode(
+            long_option="create-diagnostics-dump",
+            handler_function=mode_create_diagnostics_dump,
+            short_help="Create diagnostics dump",
+            long_help=[
+                "Create a dump containing information for diagnostic analysis "
+                "in the folder var/check_mk/diagnostics."
+            ],
+            sub_options=_get_diagnostics_dump_sub_options(),
+        )
+    )
+
+    automations.register(
+        Automation(
+            ident="create-diagnostics-dump",
+            handler=automation_create_diagnostics_dump,
+        )
+    )
+
+
+def mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
+    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+    log.logger.setLevel(logging.INFO)
+    create_diagnostics_dump(
+        config.load(discovery_rulesets=()).loaded_config,
+        cmk.utils.diagnostics.deserialize_modes_parameters(options),
+    )
+
+
+def _get_diagnostics_dump_sub_options() -> list[Option]:
+    sub_options = [
+        Option(
+            long_option=OPT_LOCAL_FILES,
+            short_help=(
+                "Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
+                "This also includes information about installed MKPs."
+            ),
+        ),
+        Option(
+            long_option=OPT_OMD_CONFIG,
+            short_help="Pack content of 'etc/omd/site.conf'",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_CRASH_REPORTS,
+            short_help="Pack the latest crash reports.",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_OVERVIEW,
+            short_help=(
+                "Pack HW/SW Inventory node 'Software > Applications > Checkmk'. "
+                "The parameter H is the name of the Checkmk server in Checkmk itself."
+            ),
+            argument=True,
+            argument_descr="H",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_CONFIG_FILES,
+            short_help="Pack configuration files ('*.mk' or '*.conf') from etc/checkmk",
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_LOG_FILES,
+            short_help="Pack log files ('*.log' or '*.state') from var/log",
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+    ]
+
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+        sub_options.append(
+            Option(
+                long_option=OPT_PERFORMANCE_GRAPHS,
+                short_help=(
+                    "Pack performance graphs like CPU load and utilization of Checkmk Server. "
+                    "The parameter H is the name of the Checkmk server in Checkmk itself."
+                ),
+                argument=True,
+                argument_descr="H",
+            )
+        )
+    return sub_options
+
+
+def automation_create_diagnostics_dump(
+    ctx: AutomationContext,
+    args: DiagnosticsCLParameters,
+    plugins: AgentBasedPlugins | None,
+    loading_result: LoadingResult | None,
+) -> CreateDiagnosticsDumpResult:
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=())
+    buf = io.StringIO()
+    with redirect_stdout(buf), redirect_stderr(buf):
+        log.setup_console_logging()
+        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+        log.logger.setLevel(logging.INFO)
+        dump = DiagnosticsDump(loading_result.loaded_config, deserialize_cl_parameters(args))
+        dump.create()
+        return CreateDiagnosticsDumpResult(
+            output=buf.getvalue(),
+            tarfile_path=str(dump.tarfile_path),
+            tarfile_created=dump.tarfile_created,
+        )
 
 
 def create_diagnostics_dump(

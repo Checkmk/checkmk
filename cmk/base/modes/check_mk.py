@@ -22,9 +22,7 @@ from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
 import livestatus
 
-import cmk.base.diagnostics
 import cmk.base.dump_host
-import cmk.base.parent_scan
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -137,16 +135,6 @@ from cmk.snmplib import (
 from cmk.utils import config_warnings, ip_lookup, log, timeperiod
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.diagnostics import (
-    DiagnosticsModesParameters,
-    OPT_CHECKMK_CONFIG_FILES,
-    OPT_CHECKMK_CRASH_REPORTS,
-    OPT_CHECKMK_LOG_FILES,
-    OPT_CHECKMK_OVERVIEW,
-    OPT_LOCAL_FILES,
-    OPT_OMD_CONFIG,
-    OPT_PERFORMANCE_GRAPHS,
-)
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.http_proxy_config import make_http_proxy_getter
 from cmk.utils.ip_lookup import ConfiguredIPLookup
@@ -3639,92 +3627,6 @@ _HELP_MODE = Mode(
     short_help="Print this help",
 )
 
-# .
-#   .--diagnostics---------------------------------------------------------.
-#   |             _ _                             _   _                    |
-#   |          __| (_) __ _  __ _ _ __   ___  ___| |_(_) ___ ___           |
-#   |         / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|          |
-#   |        | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \          |
-#   |         \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/          |
-#   |                       |___/                                          |
-#   '----------------------------------------------------------------------'
-
-
-def mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
-    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    log.logger.setLevel(logging.INFO)
-    cmk.base.diagnostics.create_diagnostics_dump(
-        config.load(discovery_rulesets=()).loaded_config,
-        cmk.utils.diagnostics.deserialize_modes_parameters(options),
-    )
-
-
-def _get_diagnostics_dump_sub_options() -> list[Option]:
-    sub_options = [
-        Option(
-            long_option=OPT_LOCAL_FILES,
-            short_help=(
-                "Pack a list of installed, unpacked, optional files below $OMD_ROOT/local. "
-                "This also includes information about installed MKPs."
-            ),
-        ),
-        Option(
-            long_option=OPT_OMD_CONFIG,
-            short_help="Pack content of 'etc/omd/site.conf'",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_CRASH_REPORTS,
-            short_help="Pack the latest crash reports.",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_OVERVIEW,
-            short_help=(
-                "Pack HW/SW Inventory node 'Software > Applications > Checkmk'. "
-                "The parameter H is the name of the Checkmk server in Checkmk itself."
-            ),
-            argument=True,
-            argument_descr="H",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_CONFIG_FILES,
-            short_help="Pack configuration files ('*.mk' or '*.conf') from etc/checkmk",
-            argument=True,
-            argument_descr="FILE,FILE...",
-        ),
-        Option(
-            long_option=OPT_CHECKMK_LOG_FILES,
-            short_help="Pack log files ('*.log' or '*.state') from var/log",
-            argument=True,
-            argument_descr="FILE,FILE...",
-        ),
-    ]
-
-    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
-        sub_options.append(
-            Option(
-                long_option=OPT_PERFORMANCE_GRAPHS,
-                short_help=(
-                    "Pack performance graphs like CPU load and utilization of Checkmk Server. "
-                    "The parameter H is the name of the Checkmk server in Checkmk itself."
-                ),
-                argument=True,
-                argument_descr="H",
-            )
-        )
-    return sub_options
-
-
-_CREATE_DIAGNOSTICS_DUMP_MODE = Mode(
-    long_option="create-diagnostics-dump",
-    handler_function=mode_create_diagnostics_dump,
-    short_help="Create diagnostics dump",
-    long_help=[
-        "Create a dump containing information for diagnostic analysis "
-        "in the folder var/check_mk/diagnostics."
-    ],
-    sub_options=_get_diagnostics_dump_sub_options(),
-)
-
 
 def common_modes() -> list[Mode]:
     return [
@@ -3756,5 +3658,4 @@ def common_modes() -> list[Mode]:
         _INVENTORY_MODE,
         _INVENTORIZE_MARKED_HOSTS_MODE,
         _VERSION_MODE,
-        _CREATE_DIAGNOSTICS_DUMP_MODE,
     ]

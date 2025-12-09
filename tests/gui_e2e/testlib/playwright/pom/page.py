@@ -365,9 +365,14 @@ class MainArea(LocatorHelper):
             return _loc
         return _loc.locator(selector)
 
+    @property
+    def page_title_locator(self) -> Locator:
+        """Return the page title locator."""
+        return self.locator(".titlebar a>>nth=0")
+
     def check_page_title(self, title: str | Pattern[str]) -> None:
         """check the page title"""
-        expect(self.locator(".titlebar a>>nth=0")).to_have_text(title)
+        expect(self.page_title_locator).to_have_text(title)
 
     def expect_no_entries(self) -> None:
         """Expect no previous entries are found in the page.

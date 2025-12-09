@@ -38,7 +38,7 @@ class AllHosts(CmkPage):
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
-    def _get_host_link(self, host_name: str) -> Locator:
+    def get_host_link(self, host_name: str) -> Locator:
         """Get the link to a host in the 'All hosts' view.
 
         Args:
@@ -54,6 +54,6 @@ class AllHosts(CmkPage):
         """
         logger.info("Check if host '%s' is present", host_name)
         expect(
-            self._get_host_link(host_name),
+            self.get_host_link(host_name),
             message=f"Host '{host_name}' is not present on the 'All hosts' page",
         ).to_be_visible()

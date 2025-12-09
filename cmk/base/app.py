@@ -15,19 +15,19 @@ def make_app(edition: Edition) -> CheckmkBaseApp:
     make_app: Callable[[], CheckmkBaseApp]
     match edition:
         case Edition.PRO:
-            from cmk.base.nonfree.pro.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.nonfree.pro.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore, no-redef]
                 make_app,
             )
         case Edition.ULTIMATEMT:
-            from cmk.base.nonfree.ultimatemt.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.nonfree.ultimatemt.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore, no-redef]
                 make_app,
             )
         case Edition.ULTIMATE:
-            from cmk.base.nonfree.ultimate.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.nonfree.ultimate.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore, no-redef]
                 make_app,
             )
         case Edition.CLOUD:
-            from cmk.base.nonfree.cloud.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.nonfree.cloud.app import (  # type: ignore[import-not-found, import-untyped, unused-ignore, no-redef]
                 make_app,
             )
 

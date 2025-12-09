@@ -1144,6 +1144,9 @@ msgstr "0,2 - 0,5 ms"
 msgid "0.5 - 1.0 ms"
 msgstr "0,5 - 1,0 ms"
 
+msgid "1 - up"
+msgstr ""
+
 msgid "1 Host"
 msgstr "1 Element"
 
@@ -1198,6 +1201,10 @@ msgstr "15 minute"
 
 msgid "17"
 msgstr ""
+
+#, fuzzy
+msgid "2 - down"
+msgstr "în jos"
 
 msgid "2 weeks back"
 msgstr "2 săptămâni înapoi"
@@ -1997,6 +2004,11 @@ msgstr ""
 "corespunzător corespunde. De exemplu: puteți utiliza această regulă pentru a "
 "exclude toate procesele aparținând unui container docker specificând "
 "expresia \"%s\" (fără ghilimele) și selectând \"%s\".</p>."
+
+msgid ""
+"<p>The minimum value is 15 minutes and the maximum value is 31 days.</p>This "
+"applies to the following sections: <ul><li>switch port statuses</li></ul>"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -7396,6 +7408,12 @@ msgstr ""
 "Aplicați această regulă numai la interfețele a căror stare de administrare "
 "(<tt>ifAdminStatus</tt>) este listată mai jos."
 
+#, fuzzy
+msgid "Apply this rule only to interfaces whose admin state is listed below"
+msgstr ""
+"Aplicați această regulă numai la interfețele a căror stare a portului este "
+"enumerată mai jos."
+
 msgid "Apply this rule only to interfaces whose port state is listed below."
 msgstr ""
 "Aplicați această regulă numai la interfețele a căror stare a portului este "
@@ -9423,14 +9441,6 @@ msgid "Azure database connections (deprecated)"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
-msgid "Azure firewall health"
-msgstr "Zorp firewall"
-
-#, fuzzy
-msgid "Azure firewall latency"
-msgstr "Zorp firewall"
-
-#, fuzzy
 msgid "Azure recovery services vault backup"
 msgstr "Servicii de recuperare Vault"
 
@@ -9697,6 +9707,10 @@ msgstr "Sarcina de fundal a fost oprită"
 
 msgid "Background job info is not available"
 msgstr "Informațiile despre postul de muncă din fundal nu sunt disponibile"
+
+#, fuzzy
+msgid "Background job timed out after 3 minutes."
+msgstr "Nu vi se permite să modificați această setare globală."
 
 #, fuzzy
 msgid "Background job timed out due to the global setting "
@@ -10208,6 +10222,10 @@ msgstr "Luminozitate"
 
 msgid "Brightness Levels"
 msgstr "Niveluri de luminozitate"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "difuzare"
 
 msgid "Broadcast packet rates"
 msgstr "Ratele pachetelor de difuzare"
@@ -14172,6 +14190,10 @@ msgid "Cisco Meraki power supply"
 msgstr "Cisco Meraki"
 
 #, fuzzy
+msgid "Cisco Meraki switch port statuses"
+msgstr "Afișați starea serviciului"
+
+#, fuzzy
 msgid "Cisco Nexus Supervisor memory usage"
 msgstr "Utilizarea memoriei Cisco Nexus Supervisor"
 
@@ -16035,10 +16057,6 @@ msgid "Connected"
 msgstr "Conectați-vă"
 
 #, fuzzy
-msgid "Connected Clients"
-msgstr "Conexiuni"
-
-#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "Configurația RRA"
 
@@ -17390,6 +17408,10 @@ msgstr "Crearea unei noi etichete auxiliare"
 
 msgid "Create new notification rule"
 msgstr "Creați o nouă regulă de notificare"
+
+#, fuzzy
+msgid "Create new package"
+msgstr "Creați pachetul"
 
 msgid "Create new report schedule entry"
 msgstr "Crearea unei noi intrări în programul de raportare"
@@ -20231,6 +20253,11 @@ msgstr ""
 "În funcție de precizie, unitatea de măsură poate fi fie milisecundele, fie "
 "micosecundele."
 
+msgid ""
+"Depending on your Meraki organization size (number of switches) this may "
+"exceed the limits of the allowed API requests per second."
+msgstr ""
+
 #, python-format
 msgid "Deploy %s"
 msgstr "Implementați %s"
@@ -21242,6 +21269,10 @@ msgstr "Servicii pentru persoane cu handicap"
 msgid "Disabled via master control"
 msgstr "Dezactivați controlerul"
 
+#, fuzzy, python-format
+msgid "Disabling extension package \"%s\"."
+msgstr "Pachet de extensie dezactivat %s %s"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -21292,6 +21323,10 @@ msgid "Discover templates"
 msgstr "Starea de descoperire"
 
 #, fuzzy
+msgid "Discovered admin state"
+msgstr "Starea de descoperire"
+
+#, fuzzy
 msgid "Discovered changes"
 msgstr "Schimbări de respingere"
 
@@ -21303,7 +21338,15 @@ msgstr "Descoperirea a eșuat"
 msgid "Discovered host labels (%s)"
 msgstr "Etichete gazdă descoperite (%s)"
 
+#, fuzzy
+msgid "Discovered operational state"
+msgstr "ignoră starea de funcționare"
+
 msgid "Discovered process name"
+msgstr "Numele procesului descoperit"
+
+#, fuzzy
+msgid "Discovered speed"
 msgstr "Numele procesului descoperit"
 
 msgid "Discovery"
@@ -21842,13 +21885,6 @@ msgstr "Afișează starea unei anumite gazde."
 
 msgid "Displays the state of a specific service."
 msgstr "Afișează starea unui anumit serviciu."
-
-msgid "Dissolve the package, release its files into unpackaged state"
-msgstr "Dizolvarea pachetului, eliberarea fișierelor sale în stare neambalată"
-
-#, python-format
-msgid "Dissolved extension package %s %s"
-msgstr "Pachet de extensie dizolvat %s %s"
 
 msgid "Distinguish times in and out of notification period"
 msgstr ""
@@ -24131,6 +24167,10 @@ msgid ""
 "whether to show a popup asking for consent on login."
 msgstr ""
 
+#, fuzzy
+msgid "Enable package"
+msgstr "Activați acest pachet"
+
 msgid "Enable passive checks"
 msgstr "Activați verificările pasive"
 
@@ -24340,6 +24380,10 @@ msgstr "Secțiuni activate (agent Windows)"
 
 msgid "Enabled until disabling"
 msgstr "Activat până la dezactivare"
+
+#, fuzzy, python-format
+msgid "Enabling extension package \"%s\""
+msgstr "Pachet de extensie dezactivat %s %s"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -25991,6 +26035,22 @@ msgstr "Date de performanță extinse"
 msgid "Extension"
 msgstr "Extensie"
 
+#, fuzzy, python-format
+msgid "Extension package \"%s\" disabled."
+msgstr "Fișiere de pachete de extensie"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" released."
+msgstr "Pachete de extensie"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" removed."
+msgstr "Pachete de extensie"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" uploaded."
+msgstr "Pachete de extensie"
+
 #, fuzzy
 msgid "Extension package enabled and active."
 msgstr "Fișiere de pachete de extensie"
@@ -26963,6 +27023,9 @@ msgstr "Nivelurile discurilor Filer (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Fișiere"
 
+msgid "Files are unpackaged and remain in your system."
+msgstr ""
+
 #, fuzzy
 msgid "Filestore"
 msgstr "Spațiu liber exact"
@@ -27204,8 +27267,24 @@ msgstr "Fireeye Security Content"
 msgid "Firewall Interfaces"
 msgstr "Interfețe Firewall"
 
+#, fuzzy
+msgid "Firewall SNAT port utilization"
+msgstr "Utilizarea nodurilor"
+
 msgid "Firewall connections"
 msgstr "Conexiuni firewall"
+
+#, fuzzy
+msgid "Firewall health"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Firewall latency"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Firewall throughput"
+msgstr "Viteză de citire"
 
 msgid "Firmware"
 msgstr "Firmware"
@@ -30635,10 +30714,6 @@ msgstr "Istoricul notificărilor"
 msgid "History of scheduled downtimes"
 msgstr "Istoricul întreruperilor programate"
 
-#, fuzzy
-msgid "Hit ratio"
-msgstr "Durata de init"
-
 msgid "Hits"
 msgstr "Lovituri"
 
@@ -32876,9 +32951,6 @@ msgstr "Miezuri de monitorizare OMD"
 
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthread-uri per CPU"
-
-msgid "Hz"
-msgstr "Hz"
 
 #, fuzzy
 msgid "I/O database reads (attached) average latency"
@@ -37209,10 +37281,6 @@ msgstr "Identificator invalid"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Identificator invalid: %s"
-
-#, fuzzy
-msgid "Invalid ifid parameter"
-msgstr "Parametru de control invalid"
 
 msgid "Invalid login credentials."
 msgstr "Datele de autentificare nevalabile."
@@ -42159,6 +42227,10 @@ msgstr "Comutator principal"
 msgid "Match"
 msgstr "Meci"
 
+#, fuzzy
+msgid "Match admin states"
+msgstr "Potriviți stările porturilor"
+
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "Potriviți stările admin (numai SNMP cu contoare pe 64 de biți)"
 
@@ -44468,6 +44540,10 @@ msgstr ""
 "Starea de monitorizare în cazul în care o unitate monitorizată nu este "
 "găsită deloc."
 
+#, fuzzy
+msgid "Monitoring state if admin state changed"
+msgstr "Starea de monitorizare dacă serviciul este activ"
+
 msgid "Monitoring state if failover link not up"
 msgstr "Monitorizarea stării dacă legătura de failover nu este activă"
 
@@ -44476,6 +44552,22 @@ msgstr "Stare de monitorizare dacă nu se detectează fum"
 
 msgid "Monitoring state if not active/standby"
 msgstr "Starea de monitorizare dacă nu este activă/în așteptare"
+
+#, fuzzy
+msgid "Monitoring state if operational state changed"
+msgstr "Starea de monitorizare în cazul în care serviciul este eșuat"
+
+#, fuzzy
+msgid "Monitoring state if port is not connected"
+msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
+
+#, fuzzy
+msgid "Monitoring state if port is not full duplex"
+msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
+
+#, fuzzy
+msgid "Monitoring state if port was disabled"
+msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
 
 #, fuzzy
 msgid "Monitoring state if power supply is not \"powering\""
@@ -44492,6 +44584,10 @@ msgstr "Starea de monitorizare în cazul în care serviciul este inactiv"
 
 msgid "Monitoring state if smoke is detected"
 msgstr "Starea de monitorizare în cazul în care se detectează fum"
+
+#, fuzzy
+msgid "Monitoring state if speed changed"
+msgstr "Starea de monitorizare în cazul în care serviciul este eșuat"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
@@ -54104,6 +54200,10 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Prefix pentru numele de gazdă piggyback"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "Prefix text"
+
 msgid "Prefix match"
 msgstr "Prefixul se potrivește"
 
@@ -55885,11 +55985,31 @@ msgstr "URL de redirecționare (trebuie să fie https)"
 msgid "Redis Caches"
 msgstr "Clienți Redis"
 
+#, fuzzy
+msgid "Redis cache hit ratio"
+msgstr "Rata de accesare a cache-ului L2"
+
+#, fuzzy
+msgid "Redis cache hits"
+msgstr "Clienți Redis"
+
+#, fuzzy
+msgid "Redis cache misses"
+msgstr "Dimensiunea cache-ului"
+
 msgid "Redis clients"
 msgstr "Clienți Redis"
 
+#, fuzzy
+msgid "Redis connected clients"
+msgstr "Numărul de clienți conectați"
+
 msgid "Redis databases"
 msgstr "Baze de date Redis"
+
+#, fuzzy
+msgid "Redis hit ratio"
+msgstr "Rata de succes a regulilor"
 
 msgid "Redis info"
 msgstr "Informații Redis"
@@ -55897,11 +56017,27 @@ msgstr "Informații Redis"
 msgid "Redis is not reachable, terminating"
 msgstr "Redis nu este accesibil, se încheie"
 
+#, fuzzy
+msgid "Redis memory utilization"
+msgstr "Utilizarea memoriei GCP/Redis"
+
 msgid "Redis persistence"
 msgstr "Persistența Redis"
 
+#, fuzzy
+msgid "Redis read throughput"
+msgstr "Viteză de citire"
+
 msgid "Redis server name"
 msgstr "Numele serverului Redis"
+
+#, fuzzy
+msgid "Redis throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "Redis write throughput"
+msgstr "Viteza de scriere"
 
 msgid "Redis/Hitratio"
 msgstr "Redis/Hitratio"
@@ -56337,11 +56473,34 @@ msgstr "Proprietăți ale regulilor"
 msgid "Relays"
 msgstr "Întârziere:"
 
-msgid "Release"
-msgstr "Eliberare"
+#, fuzzy, python-format
+msgid "Release extension package \"%s\""
+msgstr "A fost creat un nou pachet de extensii %s."
 
 msgid "Release package"
 msgstr "Pachet de lansare"
+
+#, fuzzy
+msgid "Release this package"
+msgstr "Pachet de lansare"
+
+#, fuzzy, python-format
+msgid "Released extension package %s %s"
+msgstr "Pachet de extensie eliminat %s %s"
+
+#, fuzzy
+msgid ""
+"Releases the package and sets its files to unpackaged state. Files remain in "
+"your system and can be repackaged or deleted later."
+msgstr ""
+"Această operațiune va elibera pachetul din sistemul dumneavoastră și va "
+"elibera toate fișierele sale împachetate în stare nepachetată. Fișierele "
+"sunt apoi libere să fie împachetate într-un alt pachet sau să fie șterse "
+"manual."
+
+#, fuzzy, python-format
+msgid "Releasing extension package \"%s\"."
+msgstr "Pachet de extensie eliminat %s %s"
 
 msgid "Reliability"
 msgstr "Fiabilitate"
@@ -56560,6 +56719,10 @@ msgstr "Eliminarea setărilor explicite ale atributelor"
 msgid "Remove explicit setting"
 msgstr "Îndepărtați setarea explicită"
 
+#, fuzzy, python-format
+msgid "Remove extension package \"%s\""
+msgstr "Pachet de extensie eliminat %s %s"
+
 msgid "Remove filter"
 msgstr "Eliminați filtrul"
 
@@ -56581,9 +56744,6 @@ msgstr "Eliminați toate"
 
 msgid "Remove only matching vanished services"
 msgstr "Îndepărtați numai serviciile dispărute corespunzătoare"
-
-msgid "Remove package"
-msgstr "Îndepărtați pachetul"
 
 #, fuzzy
 msgid "Remove pattern"
@@ -56702,6 +56862,10 @@ msgstr "Eliminat: %s"
 #, python-format
 msgid "Removed: %s"
 msgstr "Eliminat: %s"
+
+#, fuzzy, python-format
+msgid "Removing extension package \"%s\"."
+msgstr "Pachet de extensie eliminat %s %s"
 
 msgid "Rename"
 msgstr "Redenumiți"
@@ -58833,10 +58997,6 @@ msgid "SNAT Usage (Deprecated)"
 msgstr "Azure Storage"
 
 #, fuzzy
-msgid "SNAT port utilization"
-msgstr "Utilizarea nodurilor"
-
-#, fuzzy
 msgid "SNAT port utilization %"
 msgstr "Utilizarea nodurilor"
 
@@ -59283,6 +59443,10 @@ msgstr ""
 msgid "Scope"
 msgstr ""
 
+#, fuzzy
+msgid "Scope ID"
+msgstr "ID-ul nodului"
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -59728,6 +59892,10 @@ msgstr "Vezi disponibilitatea"
 
 msgid "See the availability views of hosts and services"
 msgstr "Vedeți vizualizările de disponibilitate ale gazdelor și serviciilor"
+
+#, fuzzy
+msgid "See unpackaged files"
+msgstr "Ștergeți fișierul neambalat"
 
 #, python-format
 msgid "See user %s"
@@ -62076,6 +62244,10 @@ msgstr "Afișați toate fazele de notificări"
 
 msgid "Show all rules"
 msgstr "Afișați toate regulile"
+
+#, fuzzy
+msgid "Show bandwidth"
+msgstr "Lățime de bandă"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr ""
@@ -66363,6 +66535,10 @@ msgstr "Numărul de comutator"
 msgid "Switch port statistics"
 msgstr "Statisticile portului de comutare"
 
+#, fuzzy
+msgid "Switch port statuses"
+msgstr "Statisticile portului de comutare"
+
 msgid "Switch slave replication mode"
 msgstr "Comutați modul de replicare a sclavilor"
 
@@ -70013,6 +70189,9 @@ msgstr ""
 "Numele instanței, numele bazei de date și numele tablespace-ului combinate "
 "astfel db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid "The interval for which the information will be fetched."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval the connection will be executed to check the available "
@@ -71264,6 +71443,11 @@ msgstr ""
 "Plugin-ul <tt>isc_dhcpd</tt> colectează informații despre un daemon server "
 "DHCP pe Linux."
 
+msgid ""
+"The plug-in <tt>mailman3_lists</tt> (Mailman 3) monitors Mailman mailing "
+"lists."
+msgstr ""
+
 #, python-format
 msgid ""
 "The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
@@ -71278,18 +71462,6 @@ msgid ""
 msgstr ""
 "Plugin-ul va procesa tot ceea ce se potrivește cu acest model de globbing. "
 "Dacă este un director, va procesa recursiv tot conținutul acestuia."
-
-#, fuzzy
-msgid ""
-"The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</tt> "
-"(Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins will be "
-"deployed, since only one of them will produce data, depending on the install "
-"Mailman version."
-msgstr ""
-"Plugin-urile <tt>mailman2_lists</tt> (Mailman 2) și <tt>mailman3_lists</tt> "
-"(Mailman 3) monitorizează listele de discuții Mailman. Dacă sunt activate, "
-"ambele pluginuri vor fi implementate, deoarece numai unul dintre ele va "
-"produce date, în funcție de versiunea Mailman instalată."
 
 #, fuzzy
 msgid ""
@@ -74439,16 +74611,6 @@ msgid ""
 msgstr ""
 "Acest obiect este un obiect fantomă de la un site la distanță. Acesta nu "
 "poate fi gestionat aici."
-
-msgid ""
-"This operation will release the package from your system and release all its "
-"packaged files into unpackaged state. The files are then free to be packaged "
-"into another package or to be deleted manually."
-msgstr ""
-"Această operațiune va elibera pachetul din sistemul dumneavoastră și va "
-"elibera toate fișierele sale împachetate în stare nepachetată. Fișierele "
-"sunt apoi libere să fie împachetate într-un alt pachet sau să fie șterse "
-"manual."
 
 #, fuzzy
 msgid ""
@@ -78539,6 +78701,10 @@ msgstr "Times"
 
 msgid "Timeseries"
 msgstr "Serii de timp"
+
+#, fuzzy
+msgid "Timespan"
+msgstr "Times"
 
 msgid "Timespan for difference calculation of summed up values"
 msgstr "Durata de timp pentru calculul diferenței valorilor însumate"
@@ -89102,6 +89268,10 @@ msgid "You are not allowed to change the sidebar."
 msgstr "Nu aveți voie să modificați bara laterală."
 
 #, fuzzy
+msgid "You are not allowed to clone dashboards."
+msgstr "Nu aveți voie să editați tablouri de bord."
+
+#, fuzzy
 msgid "You are not allowed to create dashboards."
 msgstr "Nu aveți voie să editați tablouri de bord."
 
@@ -93830,6 +94000,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Reset to pre-defined filters"
+msgstr "Eliminați filtrul"
+
+#, fuzzy
 msgid "Edit filter configuration"
 msgstr "Configurație gazdă"
 
@@ -94516,6 +94690,18 @@ msgid "Dashboard filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
+msgid "Widget data"
+msgstr "Adaugă filtre"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
 msgid "Link content to"
 msgstr "Legătura cu titlul"
 
@@ -94616,18 +94802,6 @@ msgstr "Stocarea notificărilor pentru analiza regulilor"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Adaugă filtre"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "Adăugați o țintă"
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Adăugați o țintă"
 
 #, fuzzy
 msgid "Unrestricted"
@@ -96167,6 +96341,47 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Connected Clients"
+#~ msgstr "Conexiuni"
+
+#~ msgid "Dissolve the package, release its files into unpackaged state"
+#~ msgstr ""
+#~ "Dizolvarea pachetului, eliberarea fișierelor sale în stare neambalată"
+
+#, python-format
+#~ msgid "Dissolved extension package %s %s"
+#~ msgstr "Pachet de extensie dizolvat %s %s"
+
+#, fuzzy
+#~ msgid "Hit ratio"
+#~ msgstr "Durata de init"
+
+#~ msgid "Hz"
+#~ msgstr "Hz"
+
+#, fuzzy
+#~ msgid "Invalid ifid parameter"
+#~ msgstr "Parametru de control invalid"
+
+#~ msgid "Release"
+#~ msgstr "Eliberare"
+
+#~ msgid "Remove package"
+#~ msgstr "Îndepărtați pachetul"
+
+#, fuzzy
+#~ msgid ""
+#~ "The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</"
+#~ "tt> (Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins "
+#~ "will be deployed, since only one of them will produce data, depending on "
+#~ "the install Mailman version."
+#~ msgstr ""
+#~ "Plugin-urile <tt>mailman2_lists</tt> (Mailman 2) și <tt>mailman3_lists</"
+#~ "tt> (Mailman 3) monitorizează listele de discuții Mailman. Dacă sunt "
+#~ "activate, ambele pluginuri vor fi implementate, deoarece numai unul "
+#~ "dintre ele va produce date, în funcție de versiunea Mailman instalată."
+
+#, fuzzy
 #~ msgid "Datapath availability"
 #~ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 
@@ -96244,10 +96459,6 @@ msgstr ""
 #~ msgstr "Filtre de service"
 
 #, fuzzy
-#~ msgid "Reset to saved filters"
-#~ msgstr "Eliminați filtrul"
-
-#, fuzzy
 #~ msgid "Success! Your new dashboard filters have been saved"
 #~ msgstr "Modificările dvs. au fost salvate."
 
@@ -96262,18 +96473,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add OAuth2 connection"
 #~ msgstr "Adăugați conexiunea LDAP"
-
-#, fuzzy
-#~ msgid "Broadcast"
-#~ msgstr "difuzare"
-
-#, fuzzy
-#~ msgid "Prefix length"
-#~ msgstr "Prefix text"
-
-#, fuzzy
-#~ msgid "Scope ID"
-#~ msgstr "ID-ul nodului"
 
 #, fuzzy
 #~ msgid "Description:"
@@ -98175,10 +98374,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Date sent"
 #~ msgstr "Date trimise"
-
-#, fuzzy, python-format
-#~ msgid "Extension package %r"
-#~ msgstr "Pachete de extensie"
 
 #, fuzzy, python-format
 #~ msgid "Unpackaged file %r"

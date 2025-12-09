@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-12-04 21:04+0000\n"
+"PO-Revision-Date: 2025-12-08 20:04+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -648,9 +648,9 @@ msgstr "%s erstellte Dump-Datei abrufen"
 msgid "%s by host"
 msgstr "%s pro Host"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s can only be deleted via OAuth2 connection"
-msgstr "%s kann nur durch Quick Setup gelöscht werden"
+msgstr "%s kann nur mit Hilfe einer OAuth2-Verbindung gelöscht werden"
 
 #, python-format
 msgid "%s can only be deleted via Quick setup"
@@ -1137,6 +1137,9 @@ msgstr "0.2 - 0.5 ms"
 msgid "0.5 - 1.0 ms"
 msgstr "0.5 - 1.0 ms"
 
+msgid "1 - up"
+msgstr ""
+
 msgid "1 Host"
 msgstr "1 Host"
 
@@ -1188,6 +1191,10 @@ msgstr "15 Minuten"
 
 msgid "17"
 msgstr "17"
+
+#, fuzzy
+msgid "2 - down"
+msgstr "heruntergefahren"
 
 msgid "2 weeks back"
 msgstr "Vor 2 Wochen"
@@ -1998,6 +2005,11 @@ msgstr ""
 "auswählen.</p>"
 
 msgid ""
+"<p>The minimum value is 15 minutes and the maximum value is 31 days.</p>This "
+"applies to the following sections: <ul><li>switch port statuses</li></ul>"
+msgstr ""
+
+msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
 "with ~. For each <tt>%s</tt> in the description, the expression has to "
@@ -2774,9 +2786,8 @@ msgstr "AES-256"
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
-#, fuzzy
 msgid "AI"
-msgstr "AIX"
+msgstr "KI"
 
 msgid "AI Assistance"
 msgstr "KI-Unterstützung"
@@ -7209,6 +7220,12 @@ msgstr ""
 "Wenden Sie diese Regel nur auf Schnittstellen an, deren Admin-Zustand "
 "(<tt>ifAdminStatus</tt>) unten aufgeführt ist."
 
+#, fuzzy
+msgid "Apply this rule only to interfaces whose admin state is listed below"
+msgstr ""
+"Wende diese Regel nur bei Schnittstellen an, deren Port-Zustand unten "
+"gelistet ist."
+
 msgid "Apply this rule only to interfaces whose port state is listed below."
 msgstr ""
 "Wende diese Regel nur bei Schnittstellen an, deren Port-Zustand unten "
@@ -8813,9 +8830,8 @@ msgstr "Azure Agent-Info"
 msgid "Azure Agent Info (deprecated)"
 msgstr "Azure Agent-Info (veraltet)"
 
-#, fuzzy
 msgid "Azure App Registration"
-msgstr "App-Registrierung"
+msgstr "Azure App-Registrierung"
 
 msgid "Azure Application Gateway"
 msgstr "Azure Applikations-Gateway"
@@ -9009,15 +9025,8 @@ msgstr "Azure Datenbank-Verbindungen"
 msgid "Azure database connections (deprecated)"
 msgstr "Azure Datenbank-Verbindungen (veraltet)"
 
-msgid "Azure firewall health"
-msgstr "Gesundheit des Azure Firewalls"
-
-msgid "Azure firewall latency"
-msgstr "Latenz des Azure Firewalls"
-
-#, fuzzy
 msgid "Azure recovery services vault backup"
-msgstr "Recovery Services-Tresor"
+msgstr "Backup des Azure Recovery Services-Tresors"
 
 msgid "Azure resource group"
 msgstr "Azure Ressourcengruppe"
@@ -9257,6 +9266,10 @@ msgstr "Hintergrund-Prozess wurde gestoppt"
 
 msgid "Background job info is not available"
 msgstr "Hintergrund-Prozess Information ist nicht verfügbar"
+
+#, fuzzy
+msgid "Background job timed out after 3 minutes."
+msgstr "Background-Job wurde aufgrund der globalen Einstellung abgebrochen "
 
 msgid "Background job timed out due to the global setting "
 msgstr "Background-Job wurde aufgrund der globalen Einstellung abgebrochen "
@@ -9745,6 +9758,10 @@ msgstr "Helligkeit"
 
 msgid "Brightness Levels"
 msgstr "Helligkeitslevels"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "an alle"
 
 msgid "Broadcast packet rates"
 msgstr "Rate an Broadcast-Paketen"
@@ -11659,10 +11676,12 @@ msgstr ""
 "Man kann keine Makros definieren, die Standard Einträge \"CUSTOMER_ID\" oder "
 "\"CUSTOMER_NAME\" überschreiben"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Cannot delete %s because it is managed by an existing OAuth2 connection."
-msgstr "%s kann nicht gelöscht werden, da es von Quick Setup verwaltet wird."
+msgstr ""
+"%s kann nicht gelöscht werden, da es über eine existierende OAuth2-"
+"Verbindung verwaltet wird."
 
 #, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
@@ -11911,9 +11930,8 @@ msgstr "Fähigkeiten"
 msgid "Capabilities enabled"
 msgstr "Fähigkeiten aktiviert"
 
-#, fuzzy
 msgid "Capabilities map supported"
-msgstr "Fähigkeiten"
+msgstr ""
 
 msgid "Capabilities supported"
 msgstr "Unterstützte Fähigkeiten"
@@ -13591,6 +13609,10 @@ msgstr "Auslastung der Cisco Meraki Appliance"
 
 msgid "Cisco Meraki power supply"
 msgstr "Cisco Meraki Netzteil"
+
+#, fuzzy
+msgid "Cisco Meraki switch port statuses"
+msgstr "Cisco Meraki Gerätestatus"
 
 msgid "Cisco Nexus Supervisor memory usage"
 msgstr "Speicherauslastung von Cisco Nexus Supervisor"
@@ -15423,9 +15445,6 @@ msgstr "Verbinden ohne Passwort"
 msgid "Connected"
 msgstr "Verbunden"
 
-msgid "Connected Clients"
-msgstr "Verbundene Clients"
-
 msgid "Connected Relay configurations"
 msgstr "Verbundene Relais-Konfigurationen"
 
@@ -16041,120 +16060,96 @@ msgstr "Beschädigte Dateien im Spooler"
 msgid "Cosmic"
 msgstr "Kosmisch"
 
-#, fuzzy
 msgid "Cosmos DB container failed requests (404)"
-msgstr "Fehlgeschlagene Anfragen (404)"
+msgstr "Fehlgeschlagene Anfragen des Cosmos DB Containers (404)"
 
-#, fuzzy
 msgid "Cosmos DB container normalized RU consumption"
-msgstr "Normalisierter RU-Verbrauch"
+msgstr ""
+"Normalisierter Verbrauch an Anforderungseinheiten (RU) des Cosmos DB "
+"Containers"
 
-#, fuzzy
 msgid "Cosmos DB container requests"
-msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+msgstr "Anfragen des Cosmos DB Containers"
 
-#, fuzzy
 msgid "Cosmos DB container throttled requests (429)"
-msgstr "Gedrosselte Anfragen (429)"
+msgstr "Gedrosselte Anfragen des Cosmos DB Containers (429)"
 
-#, fuzzy
 msgid "Cosmos DB container throttled requests ratio"
-msgstr "Gedrosselte Anfragerate"
+msgstr "Gedrosselte Anfragerate des Cosmos DB Containers"
 
-#, fuzzy
 msgid "Cosmos DB container throughput"
-msgstr "Azure Cosmos DB Datenbank-Container-Durchsatz"
+msgstr "Durchsatz des Cosmos DB Containers"
 
 msgid "Cosmos DB container total RUs"
-msgstr ""
+msgstr "Gesamtmenge an Anforderungseinheiten (RU) des Cosmos DB Containers"
 
-#, fuzzy
 msgid "Cosmos DB container total requests"
-msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+msgstr "Gesamte Anfragen des Cosmos DB Containers"
 
-#, fuzzy
 msgid "Cosmos DB data usage"
-msgstr "verwendete Daten"
+msgstr "Datenauslastung der Cosmos DB"
 
-#, fuzzy
 msgid "Cosmos DB database failed requests (404)"
-msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+msgstr "Fehlgeschlagene Anfragen der Cosmos DB Datenbank (404)"
 
-#, fuzzy
 msgid "Cosmos DB database normalized RU consumption"
-msgstr "Normalisierter RU-Verbrauch"
+msgstr ""
+"Normalisierter Verbrauch an Anforderungseinheiten (RU) der Cosmos DB "
+"Datenbank"
 
-#, fuzzy
 msgid "Cosmos DB database requests"
-msgstr "Azure Cosmos DB Datenbank-Anfragen"
+msgstr "Anfragen der Cosmos DB Datenbank"
 
-#, fuzzy
 msgid "Cosmos DB database throttled requests (429)"
-msgstr "Gedrosselte Anfragen (429)"
+msgstr "Gedrosselte Anfragen der Cosmos DB Datenbank (429)"
 
-#, fuzzy
 msgid "Cosmos DB database throttled requests ratio"
-msgstr "Gedrosselte Anfragerate"
+msgstr "Gedrosselte Anfragerate der Cosmos DB Datenbank"
 
-#, fuzzy
 msgid "Cosmos DB database throughput"
-msgstr "Azure Cosmos DB Datenbank-Durchsatz"
+msgstr "Durchsatz der Cosmos DB Datenbank"
 
-#, fuzzy
 msgid "Cosmos DB database total RUs"
-msgstr "Azure/Cosmos DB Datenbank-Container"
+msgstr "Gesamtmenge an Anforderungseinheiten (RU) der Cosmos DB Datenbank"
 
-#, fuzzy
 msgid "Cosmos DB database total requests"
-msgstr "Azure Cosmos DB Datenbank-Container-Anfragen"
+msgstr "Gesamtmenge der Anfragen der Cosmos DB Datenbank"
 
-#, fuzzy
 msgid "Cosmos DB documents"
-msgstr "Azure Cosmos DB Anfragen"
+msgstr "Cosmos DB Dokumente"
 
-#, fuzzy
 msgid "Cosmos DB failed requests (404)"
-msgstr "Fehlgeschlagene Anfragen (404)"
+msgstr "Fehlgeschlagene Anfragen der Cosmos DB (404)"
 
-#, fuzzy
 msgid "Cosmos DB index overhead"
-msgstr "Index-Overhead"
+msgstr "Index-Overhead der Cosmos DB"
 
-#, fuzzy
 msgid "Cosmos DB index usage"
-msgstr "Kosten und Nutzung (CE)"
+msgstr "Auslastung des Cosmos DB Index"
 
-#, fuzzy
 msgid "Cosmos DB normalized RU consumption"
-msgstr "Normalisierter RU-Verbrauch"
+msgstr "Normalisierter Verbrauch an Anforderungseinheiten (RU) der Cosmos DB"
 
-#, fuzzy
 msgid "Cosmos DB service availability"
-msgstr "Service-Verfügbarkeit"
+msgstr "Service-Verfügbarkeit der Cosmos DB"
 
-#, fuzzy
 msgid "Cosmos DB storage"
-msgstr "Azure Cosmos DB Speicher"
+msgstr "Cosmos DB Speicher"
 
-#, fuzzy
 msgid "Cosmos DB throttled requests (429)"
-msgstr "Gedrosselte Anfragen (429)"
+msgstr "Gedrosselte Anfragen der Cosmos DB (429)"
 
-#, fuzzy
 msgid "Cosmos DB throttled requests ratio"
-msgstr "Gedrosselte Anfragerate"
+msgstr "Gedrosselte Anfragerate der Cosmos DB"
 
-#, fuzzy
 msgid "Cosmos DB total RUs"
-msgstr "Azure Cosmos DB Speicher"
+msgstr "Gesamtmenge an Anforderungseinheiten (RU) der Cosmos DB"
 
-#, fuzzy
 msgid "Cosmos DB total requests"
-msgstr "Azure Cosmos DB Anfragen"
+msgstr "Gesamtmenge an Anfragen der Cosmos DB"
 
-#, fuzzy
 msgid "Cosmos DB total storage"
-msgstr "Azure Cosmos DB Speicher"
+msgstr "Gesamtspeicher der Cosmos DB"
 
 msgid "CosmosDb"
 msgstr "CosmosDB"
@@ -16754,6 +16749,10 @@ msgstr "Erstelle neues Hilfsmerkmal"
 
 msgid "Create new notification rule"
 msgstr "Eine neue Benachrichtigungsregel erstellen"
+
+#, fuzzy
+msgid "Create new package"
+msgstr "Paket erstellen"
 
 msgid "Create new report schedule entry"
 msgstr "Neuen Eintrag im Berichtsplaner erstellen"
@@ -19510,6 +19509,11 @@ msgstr ""
 "Abhängig von der Genauigkeit ist die Einheit in Sekunden oder Millisekunden "
 "angegeben."
 
+msgid ""
+"Depending on your Meraki organization size (number of switches) this may "
+"exceed the limits of the allowed API requests per second."
+msgstr ""
+
 #, python-format
 msgid "Deploy %s"
 msgstr "%s verteilen"
@@ -20411,6 +20415,10 @@ msgstr "Deaktivierte Services"
 msgid "Disabled via master control"
 msgstr "Durch Master Control deaktiviert"
 
+#, fuzzy, python-format
+msgid "Disabling extension package \"%s\"."
+msgstr "Deaktiviertes Erweiterungspaket %s %s"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -20456,6 +20464,10 @@ msgstr "Einzelne Schnittstellen erkennen"
 msgid "Discover templates"
 msgstr "Vorlagen ermitteln"
 
+#, fuzzy
+msgid "Discovered admin state"
+msgstr "Erkennungszustand"
+
 msgid "Discovered changes"
 msgstr "Erkannte Änderungen"
 
@@ -20466,7 +20478,15 @@ msgstr "Erkannter Failover-Modus"
 msgid "Discovered host labels (%s)"
 msgstr "Erkannte Host-Labels (%s)"
 
+#, fuzzy
+msgid "Discovered operational state"
+msgstr "ignoriere Betriebszustand"
+
 msgid "Discovered process name"
+msgstr "Erkannter Prozessname"
+
+#, fuzzy
+msgid "Discovered speed"
 msgstr "Erkannter Prozessname"
 
 msgid "Discovery"
@@ -20987,13 +21007,6 @@ msgstr "Zeigt den Zustand eines spezifischen Hosts an."
 
 msgid "Displays the state of a specific service."
 msgstr "Zeigt den Zustand eines spezifischen Services an."
-
-msgid "Dissolve the package, release its files into unpackaged state"
-msgstr "Paket auflösen, Einzelteile entlassen in den Zustand 'unpaketiert'"
-
-#, python-format
-msgid "Dissolved extension package %s %s"
-msgstr "Erweiterungspaket %s %s aufgelöst"
 
 msgid "Distinguish times in and out of notification period"
 msgstr ""
@@ -23149,6 +23162,10 @@ msgid ""
 "whether to show a popup asking for consent on login."
 msgstr ""
 
+#, fuzzy
+msgid "Enable package"
+msgstr "Aktiviere dieses Paket"
+
 msgid "Enable passive checks"
 msgstr "Passive Checks aktivieren"
 
@@ -23354,6 +23371,10 @@ msgstr "Aktivierte Sektionen (Windows Agent)"
 
 msgid "Enabled until disabling"
 msgstr "Bis zum manuellen Deaktivieren aktiv"
+
+#, fuzzy, python-format
+msgid "Enabling extension package \"%s\""
+msgstr "Deaktiviertes Erweiterungspaket %s %s"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -24967,6 +24988,22 @@ msgstr "Erweiterte Metriken"
 msgid "Extension"
 msgstr "Erweiterung"
 
+#, fuzzy, python-format
+msgid "Extension package \"%s\" disabled."
+msgstr "Erweiterungspaketdateien"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" released."
+msgstr "Erweiterungspaket %r"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" removed."
+msgstr "Erweiterungspaket %r"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" uploaded."
+msgstr "Erweiterungspaket %r"
+
 msgid "Extension package enabled and active."
 msgstr "Erweiterungspaket aktiviert und aktiv."
 
@@ -25902,6 +25939,9 @@ msgstr "Levels für Filer-Platten (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Dateien"
 
+msgid "Files are unpackaged and remain in your system."
+msgstr ""
+
 msgid "Filestore"
 msgstr "Dateienspeicher"
 
@@ -26132,8 +26172,24 @@ msgstr "Fireeye Sicherheit Inhalt"
 msgid "Firewall Interfaces"
 msgstr "Firewall-Schnittstellen"
 
+#, fuzzy
+msgid "Firewall SNAT port utilization"
+msgstr "Auslastung des SNAT-Ports"
+
 msgid "Firewall connections"
 msgstr "Firewallverbindungen"
+
+#, fuzzy
+msgid "Firewall health"
+msgstr "Gesundheit des Azure Firewalls"
+
+#, fuzzy
+msgid "Firewall latency"
+msgstr "Latenz des Azure Firewalls"
+
+#, fuzzy
+msgid "Firewall throughput"
+msgstr "Durchsatz des Azure Firewalls"
 
 msgid "Firmware"
 msgstr "Firmware"
@@ -29480,9 +29536,6 @@ msgstr "Historie der Benachrichtigungen"
 msgid "History of scheduled downtimes"
 msgstr "Historie der Wartungszeiten"
 
-msgid "Hit ratio"
-msgstr "Hit Ratio"
-
 msgid "Hits"
 msgstr "Zugriffe"
 
@@ -31394,9 +31447,6 @@ msgstr "Hyper-V Monitoring-Komponenten"
 
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthreads pro CPU"
-
-msgid "Hz"
-msgstr "Hz"
 
 msgid "I/O database reads (attached) average latency"
 msgstr "E/A-Datenbank-Lesezugriffe (Attached), durchschnittliche Latenz"
@@ -35643,10 +35693,6 @@ msgstr "Ungültiger Schlüssel"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Ungültiger Schlüssel: %s"
-
-#, fuzzy
-msgid "Invalid ifid parameter"
-msgstr "Ungültiger Check-Parameter"
 
 msgid "Invalid login credentials."
 msgstr "Login-Daten sind ungültig."
@@ -40415,6 +40461,10 @@ msgstr "Hauptschalter"
 msgid "Match"
 msgstr "Passend"
 
+#, fuzzy
+msgid "Match admin states"
+msgstr "Port-Zustände abgleichen"
+
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "Admin-Zustände abgleichen (nur SNMP mit 64-Bit-Zählern)"
 
@@ -42624,6 +42674,10 @@ msgstr ""
 "Monitoring-Zustand, wenn eine überwachte Einheit überhaupt nicht gefunden "
 "wird."
 
+#, fuzzy
+msgid "Monitoring state if admin state changed"
+msgstr "Monitoring-Zustand für Gerätezustand \"alarmierend (alerting)\""
+
 msgid "Monitoring state if failover link not up"
 msgstr "Monitoring-Zustand, wenn der Failover-Link nicht aktiv ist"
 
@@ -42632,6 +42686,22 @@ msgstr "Monitoring-Zustand, solange kein Rauch festgestellt wird"
 
 msgid "Monitoring state if not active/standby"
 msgstr "Monitoring-Zustand, wenn nicht aktiv/standby"
+
+#, fuzzy
+msgid "Monitoring state if operational state changed"
+msgstr "Monitoring-Zustand falls der Service fehlgeschlagen ist"
+
+#, fuzzy
+msgid "Monitoring state if port is not connected"
+msgstr "Monitoring-Zustand falls der Task nicht aktiviert ist"
+
+#, fuzzy
+msgid "Monitoring state if port is not full duplex"
+msgstr "Monitoring-Zustand falls der Task nicht aktiviert ist"
+
+#, fuzzy
+msgid "Monitoring state if port was disabled"
+msgstr "Monitoring-Zustand falls der Task nicht aktiviert ist"
 
 msgid "Monitoring state if power supply is not \"powering\""
 msgstr ""
@@ -42648,6 +42718,10 @@ msgstr "Monitoring-Zustand falls der Service inaktiv ist"
 
 msgid "Monitoring state if smoke is detected"
 msgstr "Monitoring-Zustand, wenn Rauch festgestellt wird"
+
+#, fuzzy
+msgid "Monitoring state if speed changed"
+msgstr "Monitoring-Zustand falls der Service fehlgeschlagen ist"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "Monitoring-Zustand falls der Task nicht aktiviert ist"
@@ -44832,10 +44906,12 @@ msgid "Normal: Regular push notification (default)"
 msgstr "Normal: reguläre Push-Benachrichtigung (Standard)"
 
 msgid "Normalized RU consumption lower levels"
-msgstr "Untergrenzen des normalisierten RU-Verbrauchs"
+msgstr ""
+"Untergrenzen des normalisierten Verbrauchs an Anforderungseinheiten (RU)"
 
 msgid "Normalized RU consumption upper levels"
-msgstr "Obergrenzen des normalisierten RU-Verbrauchs"
+msgstr ""
+"Obergrenzen des normalisierten Verbrauchs an Anforderungseinheiten (RU)"
 
 msgid ""
 "Normally a user can login to the GUI from unlimited number of clients at the "
@@ -51645,6 +51721,10 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Präfix für Piggyback-Host-Name"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "Zusätzlicher Text"
+
 msgid "Prefix match"
 msgstr "Präfixübereinstimmung"
 
@@ -53315,11 +53395,31 @@ msgstr "URL für die Umleitung (muss HTTPS verwenden)"
 msgid "Redis Caches"
 msgstr "Redis-Caches"
 
+#, fuzzy
+msgid "Redis cache hit ratio"
+msgstr "L2-Cache Hit Ratio"
+
+#, fuzzy
+msgid "Redis cache hits"
+msgstr "Redis-Caches"
+
+#, fuzzy
+msgid "Redis cache misses"
+msgstr "Cache Misses"
+
 msgid "Redis clients"
 msgstr "Redis-Clients"
 
+#, fuzzy
+msgid "Redis connected clients"
+msgstr "Verbundene Clients"
+
 msgid "Redis databases"
 msgstr "Redis-Datenbanken"
+
+#, fuzzy
+msgid "Redis hit ratio"
+msgstr "Regelzugriffe (Verhältnis)"
 
 msgid "Redis info"
 msgstr "Redis-Informationen"
@@ -53327,11 +53427,27 @@ msgstr "Redis-Informationen"
 msgid "Redis is not reachable, terminating"
 msgstr "Redis ist nicht erreichbar, wird beendet"
 
+#, fuzzy
+msgid "Redis memory utilization"
+msgstr "GCP/Redis-Speicherauslastung"
+
 msgid "Redis persistence"
 msgstr "Redis-Persistenz"
 
+#, fuzzy
+msgid "Redis read throughput"
+msgstr "Lesedurchsatz"
+
 msgid "Redis server name"
 msgstr "Redis Servername"
+
+#, fuzzy
+msgid "Redis throughput"
+msgstr "Lesedurchsatz"
+
+#, fuzzy
+msgid "Redis write throughput"
+msgstr "FCP-Schreibdurchsatz"
 
 msgid "Redis/Hitratio"
 msgstr "Redis/Hitratio"
@@ -53740,11 +53856,33 @@ msgstr "Relais-Eigenschaften"
 msgid "Relays"
 msgstr "Relais"
 
-msgid "Release"
-msgstr "Release"
+#, fuzzy, python-format
+msgid "Release extension package \"%s\""
+msgstr "Veraltetes Erweiterungspaket: %s"
 
 msgid "Release package"
 msgstr "Release-Paket"
+
+#, fuzzy
+msgid "Release this package"
+msgstr "Release-Paket"
+
+#, fuzzy, python-format
+msgid "Released extension package %s %s"
+msgstr "Erweiterungspaket %s %s entfernt"
+
+#, fuzzy
+msgid ""
+"Releases the package and sets its files to unpackaged state. Files remain in "
+"your system and can be repackaged or deleted later."
+msgstr ""
+"Durch diesen Vorgang wird das Paket von Ihrem System freigegeben und alle "
+"gepackten Dateien werden in den ungepackten Zustand überführt. Die Dateien "
+"können dann in ein anderes Paket gepackt oder manuell gelöscht werden."
+
+#, fuzzy, python-format
+msgid "Releasing extension package \"%s\"."
+msgstr "Erweiterungspaket %s %s entfernt"
 
 msgid "Reliability"
 msgstr "Zuverlässigkeit"
@@ -53958,6 +54096,10 @@ msgstr "Explizite Attribut-Einstellungen entfernen"
 msgid "Remove explicit setting"
 msgstr "Entferne explizite Einstellungen"
 
+#, fuzzy, python-format
+msgid "Remove extension package \"%s\""
+msgstr "Erweiterungspaket %s %s entfernt"
+
 msgid "Remove filter"
 msgstr "Filter entfernen"
 
@@ -53975,9 +54117,6 @@ msgstr "Name entfernen"
 
 msgid "Remove only matching vanished services"
 msgstr "Nur übereinstimmende verschwundene Services entfernen"
-
-msgid "Remove package"
-msgstr "Paket entfernen"
 
 msgid "Remove pattern"
 msgstr "Pattern entfernen"
@@ -54093,6 +54232,10 @@ msgstr "Entfernt: %r"
 #, python-format
 msgid "Removed: %s"
 msgstr "Entfernt: %s"
+
+#, fuzzy, python-format
+msgid "Removing extension package \"%s\"."
+msgstr "Erweiterungspaket %s %s entfernt"
 
 msgid "Rename"
 msgstr "Umbenennen"
@@ -56112,9 +56255,6 @@ msgstr "SNAT-Nutzung"
 msgid "SNAT Usage (Deprecated)"
 msgstr "SNAT-Auslastung (veraltet)"
 
-msgid "SNAT port utilization"
-msgstr "Auslastung des SNAT-Ports"
-
 msgid "SNAT port utilization %"
 msgstr "Auslastung des SNAT-Ports %"
 
@@ -56542,6 +56682,10 @@ msgstr "Wissenschaftlich (Standard) mit Symbol %s"
 msgid "Scope"
 msgstr "Umfang"
 
+#, fuzzy
+msgid "Scope ID"
+msgstr "Umfang"
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -56963,6 +57107,10 @@ msgstr "Verfügbarkeit ansehen"
 
 msgid "See the availability views of hosts and services"
 msgstr "Verfügbarkeitsansichten aller Hosts und Services ansehen"
+
+#, fuzzy
+msgid "See unpackaged files"
+msgstr "Unpaketierte Datei löschen"
 
 #, python-format
 msgid "See user %s"
@@ -59224,6 +59372,10 @@ msgstr "Alle Benachrichtigungsphasen zeigen"
 
 msgid "Show all rules"
 msgstr "Alle Regeln anzeigen"
+
+#, fuzzy
+msgid "Show bandwidth"
+msgstr "Bandbreite"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr "Bandbreite anzeigen (nur mit deaktiviertem Cache nutzen)"
@@ -63367,6 +63519,10 @@ msgstr "Switchnummer"
 msgid "Switch port statistics"
 msgstr "Switchportstatistiken"
 
+#, fuzzy
+msgid "Switch port statuses"
+msgstr "Switchportstatistiken"
+
 msgid "Switch slave replication mode"
 msgstr "Replikationsmodus der Remote-Instanz umschalten"
 
@@ -67059,6 +67215,9 @@ msgstr ""
 "Der Instanzname, der Datenbankname und der Tablespace-Name, wie folgt "
 "zusammengesetzt: db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid "The interval for which the information will be fetched."
+msgstr ""
+
 msgid ""
 "The interval the connection will be executed to check the available "
 "OpenTelemetry data and update the configuration."
@@ -68345,6 +68504,11 @@ msgstr ""
 "Das Plugin <tt>isc_dhcpd</tt> sammelt Informationen über einen DHCP Server "
 "Daemon auf Linux."
 
+msgid ""
+"The plug-in <tt>mailman3_lists</tt> (Mailman 3) monitors Mailman mailing "
+"lists."
+msgstr ""
+
 #, python-format
 msgid ""
 "The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
@@ -68362,17 +68526,6 @@ msgstr ""
 "Das Plugin verarbeitet alles, was von diesem Globbing Pattern unterstützt "
 "wird. Wenn es sich um ein Verzeichnis handelt, verarbeiten Sie rekursiv den "
 "gesamten Inhalt."
-
-msgid ""
-"The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</tt> "
-"(Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins will be "
-"deployed, since only one of them will produce data, depending on the install "
-"Mailman version."
-msgstr ""
-"Die Plugins <tt>mailman2_lists</tt> (Mailman 2) und <tt>mailman3_lists</tt> "
-"(Mailman 3) überwachen Mailman Mailing-Listen. Wenn diese Option aktiviert "
-"ist, werden beide Plugins verteilt, da je nach installierter Mailman-Version "
-"nur eines von ihnen Daten erzeugt."
 
 msgid ""
 "The plug-ins in this list will be called such that they will create real-"
@@ -71595,15 +71748,6 @@ msgid ""
 msgstr ""
 "Dieses Objekt ist ein Schattenobjekt einer Remote-Instanz. Es kann hier "
 "nicht verwaltet werden."
-
-msgid ""
-"This operation will release the package from your system and release all its "
-"packaged files into unpackaged state. The files are then free to be packaged "
-"into another package or to be deleted manually."
-msgstr ""
-"Durch diesen Vorgang wird das Paket von Ihrem System freigegeben und alle "
-"gepackten Dateien werden in den ungepackten Zustand überführt. Die Dateien "
-"können dann in ein anderes Paket gepackt oder manuell gelöscht werden."
 
 msgid ""
 "This option allows to omit individual sections from being fetched at all. As "
@@ -75634,6 +75778,10 @@ msgstr "Zeiten"
 
 msgid "Timeseries"
 msgstr "Zeitreihe"
+
+#, fuzzy
+msgid "Timespan"
+msgstr "Zeiten"
 
 msgid "Timespan for difference calculation of summed up values"
 msgstr "Zeitspanne für die Differenzbildung der summierten Werte"
@@ -85409,6 +85557,10 @@ msgstr ""
 msgid "You are not allowed to change the sidebar."
 msgstr "Sie sind nicht berechtigt, die Seitenleiste zu verändern."
 
+#, fuzzy
+msgid "You are not allowed to clone dashboards."
+msgstr "Sie sind nicht berechtigt, Dashboards zu erstellen."
+
 msgid "You are not allowed to create dashboards."
 msgstr "Sie sind nicht berechtigt, Dashboards zu erstellen."
 
@@ -90113,6 +90265,10 @@ msgstr ""
 "überschreiben, indem Sie widgetspezifische Filter festlegen. "
 
 #, fuzzy
+msgid "Reset to pre-defined filters"
+msgstr "Auf gespeicherte Filter zurücksetzen"
+
+#, fuzzy
 msgid "Edit filter configuration"
 msgstr "Diese Konfiguration bearbeiten"
 
@@ -90713,6 +90869,15 @@ msgstr ""
 "Dashboard-Filter werden hier angewendet und müssen nicht erneut ausgewählt "
 "werden"
 
+msgid "Widget data"
+msgstr "Widget-Daten"
+
+msgid "Save widget"
+msgstr "Widget speichern"
+
+msgid "Add & place widget"
+msgstr "Widget hinzufügen & platzieren"
+
 msgid "Link content to"
 msgstr "Inhalt verknüpfen mit"
 
@@ -90790,15 +90955,6 @@ msgstr "Nur Benachrichtigungen für Services anzeigen"
 
 msgid "Additional graph options"
 msgstr "Zusätzliche Graph-Optionen"
-
-msgid "Widget data"
-msgstr "Widget-Daten"
-
-msgid "Save widget"
-msgstr "Widget speichern"
-
-msgid "Add & place widget"
-msgstr "Widget hinzufügen & platzieren"
 
 msgid "Unrestricted"
 msgstr "Unbegrenzt"
@@ -92238,6 +92394,43 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Connected Clients"
+#~ msgstr "Verbundene Clients"
+
+#~ msgid "Dissolve the package, release its files into unpackaged state"
+#~ msgstr "Paket auflösen, Einzelteile entlassen in den Zustand 'unpaketiert'"
+
+#, python-format
+#~ msgid "Dissolved extension package %s %s"
+#~ msgstr "Erweiterungspaket %s %s aufgelöst"
+
+#~ msgid "Hit ratio"
+#~ msgstr "Hit Ratio"
+
+#~ msgid "Hz"
+#~ msgstr "Hz"
+
+#, fuzzy
+#~ msgid "Invalid ifid parameter"
+#~ msgstr "Ungültiger Check-Parameter"
+
+#~ msgid "Release"
+#~ msgstr "Release"
+
+#~ msgid "Remove package"
+#~ msgstr "Paket entfernen"
+
+#~ msgid ""
+#~ "The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</"
+#~ "tt> (Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins "
+#~ "will be deployed, since only one of them will produce data, depending on "
+#~ "the install Mailman version."
+#~ msgstr ""
+#~ "Die Plugins <tt>mailman2_lists</tt> (Mailman 2) und <tt>mailman3_lists</"
+#~ "tt> (Mailman 3) überwachen Mailman Mailing-Listen. Wenn diese Option "
+#~ "aktiviert ist, werden beide Plugins verteilt, da je nach installierter "
+#~ "Mailman-Version nur eines von ihnen Daten erzeugt."
+
 #~ msgid "Datapath availability"
 #~ msgstr "Datapath-Verfügbarkeit"
 
@@ -92308,9 +92501,6 @@ msgstr ""
 #~ msgid "Service filter"
 #~ msgstr "Service-Filter"
 
-#~ msgid "Reset to saved filters"
-#~ msgstr "Auf gespeicherte Filter zurücksetzen"
-
 #~ msgid "Success! Your new dashboard filters have been saved"
 #~ msgstr "Erfolg! Ihre neuen Dashboard-Filter wurden gespeichert"
 
@@ -92335,18 +92525,6 @@ msgstr ""
 
 #~ msgid "Add OAuth2 connection"
 #~ msgstr "OAuth2-Verbindung hinzufügen"
-
-#, fuzzy
-#~ msgid "Broadcast"
-#~ msgstr "an alle"
-
-#, fuzzy
-#~ msgid "Prefix length"
-#~ msgstr "Zusätzlicher Text"
-
-#, fuzzy
-#~ msgid "Scope ID"
-#~ msgstr "Umfang"
 
 #~ msgid "Description:"
 #~ msgstr "Beschreibung:"
@@ -94356,10 +94534,6 @@ msgstr ""
 
 #~ msgid "Proxy host is required but not specified."
 #~ msgstr "Ein Proxy-Host wird benötigt, ist aber nicht angegeben."
-
-#, python-format
-#~ msgid "Extension package %r"
-#~ msgstr "Erweiterungspaket %r"
 
 #, python-format
 #~ msgid "Unpackaged file %r"

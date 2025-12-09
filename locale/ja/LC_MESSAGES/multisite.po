@@ -1115,6 +1115,9 @@ msgstr "0.2 - 0.5ミリ秒"
 msgid "0.5 - 1.0 ms"
 msgstr "0.5 - 1.0ミリ秒"
 
+msgid "1 - up"
+msgstr ""
+
 msgid "1 Host"
 msgstr "1ホスト"
 
@@ -1166,6 +1169,10 @@ msgstr "15分"
 
 msgid "17"
 msgstr ""
+
+#, fuzzy
+msgid "2 - down"
+msgstr "ダウン"
 
 msgid "2 weeks back"
 msgstr "2週間前"
@@ -1915,6 +1922,11 @@ msgstr ""
 "のコントロールグループが一致した場合にのみインベントリがトリガーされます。た"
 "とえば、このルールを使用して、式 \"%s\" (引用符なし)を指定し、 \"%s\" を選択"
 "することで、Dockerコンテナに属するすべてのプロセスを除外できます。</p>"
+
+msgid ""
+"<p>The minimum value is 15 minutes and the maximum value is 31 days.</p>This "
+"applies to the following sections: <ul><li>switch port statuses</li></ul>"
+msgstr ""
 
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
@@ -6974,6 +6986,12 @@ msgstr ""
 "このルールは、管理状態(<tt>ifAdminStatus</tt>)が以下にリストされているイン"
 "ターフェースにのみ適用してください。"
 
+#, fuzzy
+msgid "Apply this rule only to interfaces whose admin state is listed below"
+msgstr ""
+"このルールは、ポートの状態が以下にリストされているインターフェイスにのみ適用"
+"されます。"
+
 msgid "Apply this rule only to interfaces whose port state is listed below."
 msgstr ""
 "このルールは、ポートの状態が以下にリストされているインターフェイスにのみ適用"
@@ -8818,14 +8836,6 @@ msgid "Azure database connections (deprecated)"
 msgstr "Azure データベース接続"
 
 #, fuzzy
-msgid "Azure firewall health"
-msgstr "Zorpファイアウォール"
-
-#, fuzzy
-msgid "Azure firewall latency"
-msgstr "Zorpファイアウォール"
-
-#, fuzzy
 msgid "Azure recovery services vault backup"
 msgstr "Recovery Services Vault"
 
@@ -9076,6 +9086,10 @@ msgstr "バックグラウンドジョブが停止しました"
 
 msgid "Background job info is not available"
 msgstr "バックグラウンドジョブ情報は利用できません"
+
+#, fuzzy
+msgid "Background job timed out after 3 minutes."
+msgstr "グローバル設定によるバックグラウンドジョブのタイムアウト "
 
 msgid "Background job timed out due to the global setting "
 msgstr "グローバル設定によるバックグラウンドジョブのタイムアウト "
@@ -9564,6 +9578,10 @@ msgstr "明るさ"
 
 msgid "Brightness Levels"
 msgstr "明るさのレベル"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "ブロードキャスト"
 
 msgid "Broadcast packet rates"
 msgstr "ブロードキャストパケットレート"
@@ -13302,6 +13320,10 @@ msgstr "Cisco Meraki デバイスステータス"
 msgid "Cisco Meraki power supply"
 msgstr "Cisco Meraki power supply"
 
+#, fuzzy
+msgid "Cisco Meraki switch port statuses"
+msgstr "Cisco Meraki デバイスステータス"
+
 msgid "Cisco Nexus Supervisor memory usage"
 msgstr "Cisco Nexusスーパーバイザのメモリ使用量"
 
@@ -15085,10 +15107,6 @@ msgid "Connected"
 msgstr "接続する"
 
 #, fuzzy
-msgid "Connected Clients"
-msgstr "接続"
-
-#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "Conda設定"
 
@@ -16399,6 +16417,10 @@ msgstr "新しい補助タグを作成する"
 
 msgid "Create new notification rule"
 msgstr "新しい通知ルールを作成する"
+
+#, fuzzy
+msgid "Create new package"
+msgstr "パッケージを作成する"
 
 msgid "Create new report schedule entry"
 msgstr "新しいレポートスケジュールエントリを作成する"
@@ -19121,6 +19143,11 @@ msgid ""
 "micoseconds."
 msgstr "精度に応じて、単位はミリ秒またはマイクロ秒のいずれかになります。"
 
+msgid ""
+"Depending on your Meraki organization size (number of switches) this may "
+"exceed the limits of the allowed API requests per second."
+msgstr ""
+
 #, python-format
 msgid "Deploy %s"
 msgstr "%sを展開する"
@@ -20020,6 +20047,10 @@ msgstr "無効なサービス"
 msgid "Disabled via master control"
 msgstr "マスターコントロールにより無効化"
 
+#, fuzzy, python-format
+msgid "Disabling extension package \"%s\"."
+msgstr "拡張パッケージ%s %sを無効化"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -20065,6 +20096,10 @@ msgstr "単一のインターフェースを発見する"
 msgid "Discover templates"
 msgstr "テンプレートを探す"
 
+#, fuzzy
+msgid "Discovered admin state"
+msgstr "ディスカバリ状態"
+
 msgid "Discovered changes"
 msgstr "変更点を発見"
 
@@ -20075,7 +20110,15 @@ msgstr "フェイルオーバーモードを発見"
 msgid "Discovered host labels (%s)"
 msgstr "検出されたホストラベル (%s)"
 
+#, fuzzy
+msgid "Discovered operational state"
+msgstr "動作状態を無視する"
+
 msgid "Discovered process name"
+msgstr "検出されたプロセス名"
+
+#, fuzzy
+msgid "Discovered speed"
 msgstr "検出されたプロセス名"
 
 msgid "Discovery"
@@ -20578,15 +20621,6 @@ msgstr "特定のホストの状態を表示します。"
 
 msgid "Displays the state of a specific service."
 msgstr "特定のサービスの状態を表示します。"
-
-msgid "Dissolve the package, release its files into unpackaged state"
-msgstr ""
-"パッケージをディゾルブし、ファイルをパッケージ化されていない状態にリリースし"
-"ます"
-
-#, python-format
-msgid "Dissolved extension package %s %s"
-msgstr "拡張パッケージ %s%sを無効にする"
 
 msgid "Distinguish times in and out of notification period"
 msgstr "通知期間の内外の時間を区別する"
@@ -22714,6 +22748,10 @@ msgid ""
 "whether to show a popup asking for consent on login."
 msgstr ""
 
+#, fuzzy
+msgid "Enable package"
+msgstr "このパッケージを有効にする"
+
 msgid "Enable passive checks"
 msgstr "パッシブチェックを有効にする"
 
@@ -22911,6 +22949,10 @@ msgstr "有効なセクション(Windowsエージェント)"
 
 msgid "Enabled until disabling"
 msgstr "無効にするまで有効"
+
+#, fuzzy, python-format
+msgid "Enabling extension package \"%s\""
+msgstr "拡張パッケージ%s %sを無効化"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -24489,6 +24531,22 @@ msgstr "拡張perfdata"
 msgid "Extension"
 msgstr "拡張"
 
+#, fuzzy, python-format
+msgid "Extension package \"%s\" disabled."
+msgstr "拡張パッケージファイル"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" released."
+msgstr "拡張パッケージ"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" removed."
+msgstr "拡張パッケージ"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" uploaded."
+msgstr "拡張パッケージ"
+
 msgid "Extension package enabled and active."
 msgstr "拡張パッケージが有効でアクティブである。"
 
@@ -25409,6 +25467,9 @@ msgstr "ファイラーディスクレベル(NetApp、IBM SVC)"
 msgid "Files"
 msgstr "ファイル"
 
+msgid "Files are unpackaged and remain in your system."
+msgstr ""
+
 msgid "Filestore"
 msgstr "ファイルストア"
 
@@ -25642,8 +25703,24 @@ msgstr "Fireeyeセキュリティコンテンツ"
 msgid "Firewall Interfaces"
 msgstr "ファイアウォールインターフェース"
 
+#, fuzzy
+msgid "Firewall SNAT port utilization"
+msgstr "ノードの使用率"
+
 msgid "Firewall connections"
 msgstr "ファイアウォール接続"
+
+#, fuzzy
+msgid "Firewall health"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Firewall latency"
+msgstr "Zorpファイアウォール"
+
+#, fuzzy
+msgid "Firewall throughput"
+msgstr "読み取りスループット"
 
 msgid "Firmware"
 msgstr "ファームウェア"
@@ -28899,10 +28976,6 @@ msgstr "通知の履歴"
 msgid "History of scheduled downtimes"
 msgstr "スケジュールされたダウンタイムの履歴"
 
-#, fuzzy
-msgid "Hit ratio"
-msgstr "初期所要時間"
-
 msgid "Hits"
 msgstr "ヒット"
 
@@ -30813,9 +30886,6 @@ msgstr "OMDモニタリングコア"
 
 msgid "Hyperthreads per CPU"
 msgstr "CPUあたりのハイパースレッド"
-
-msgid "Hz"
-msgstr "Hz"
 
 msgid "I/O database reads (attached) average latency"
 msgstr "I/Oデータベースの読み取り(添付)平均レイテンシ"
@@ -34884,10 +34954,6 @@ msgstr "無効なID"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "無効なID: %s"
-
-#, fuzzy
-msgid "Invalid ifid parameter"
-msgstr "チェックパラメータが無効です"
 
 msgid "Invalid login credentials."
 msgstr "ログイン資格情報が無効です。"
@@ -39582,6 +39648,10 @@ msgstr "マスタースイッチ"
 msgid "Match"
 msgstr "一致"
 
+#, fuzzy
+msgid "Match admin states"
+msgstr "ポートの状態を一致させる"
+
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "adminステータスの一致(64ビットカウンターのみのSNMP)"
 
@@ -41778,6 +41848,10 @@ msgstr "監視対象サービスがまったく見つからない場合の監視
 msgid "Monitoring state if a monitored unit is not found at all."
 msgstr "監視対象ユニットが全く見つからない場合の監視状態。"
 
+#, fuzzy
+msgid "Monitoring state if admin state changed"
+msgstr "デバイス状態 \"警告中 \"の監視状態"
+
 msgid "Monitoring state if failover link not up"
 msgstr "フェイルオーバーリンクがアップしていない場合の状態監視"
 
@@ -41786,6 +41860,22 @@ msgstr "煙が検出されない場合の監視状態"
 
 msgid "Monitoring state if not active/standby"
 msgstr "アクティブ/スタンバイでない場合の監視状態"
+
+#, fuzzy
+msgid "Monitoring state if operational state changed"
+msgstr "サービスが失敗した場合の状態の監視"
+
+#, fuzzy
+msgid "Monitoring state if port is not connected"
+msgstr "タスクが有効になっていない場合の状態の監視"
+
+#, fuzzy
+msgid "Monitoring state if port is not full duplex"
+msgstr "タスクが有効になっていない場合の状態の監視"
+
+#, fuzzy
+msgid "Monitoring state if port was disabled"
+msgstr "タスクが有効になっていない場合の状態の監視"
 
 msgid "Monitoring state if power supply is not \"powering\""
 msgstr "電源が \"通電 \"していない場合の監視状態"
@@ -41801,6 +41891,10 @@ msgstr "サービスが非アクティブ場合、状態を監視する"
 
 msgid "Monitoring state if smoke is detected"
 msgstr "煙が検出された場合の監視状態"
+
+#, fuzzy
+msgid "Monitoring state if speed changed"
+msgstr "サービスが失敗した場合の状態の監視"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "タスクが有効になっていない場合の状態の監視"
@@ -50626,6 +50720,10 @@ msgstr "GCEピギーバックホスト名のプレフィックス。デフォル
 msgid "Prefix for piggyback host name"
 msgstr "ピギーバックホスト名のプレフィックス"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "プレフィックスのテキスト"
+
 msgid "Prefix match"
 msgstr "プレフィックス一致"
 
@@ -52298,11 +52396,31 @@ msgstr "リダイレクトURL(httpsである必要があります)"
 msgid "Redis Caches"
 msgstr "Redisクライアント"
 
+#, fuzzy
+msgid "Redis cache hit ratio"
+msgstr "L2キャッシュヒット率"
+
+#, fuzzy
+msgid "Redis cache hits"
+msgstr "Redisクライアント"
+
+#, fuzzy
+msgid "Redis cache misses"
+msgstr "キャッシュミス"
+
 msgid "Redis clients"
 msgstr "Redisクライアント"
 
+#, fuzzy
+msgid "Redis connected clients"
+msgstr "接続されているクライアントの数"
+
 msgid "Redis databases"
 msgstr "Redisデータベース"
+
+#, fuzzy
+msgid "Redis hit ratio"
+msgstr "ルールヒット率"
 
 msgid "Redis info"
 msgstr "Redis情報"
@@ -52310,11 +52428,27 @@ msgstr "Redis情報"
 msgid "Redis is not reachable, terminating"
 msgstr "Redisにアクセスできません、終了"
 
+#, fuzzy
+msgid "Redis memory utilization"
+msgstr "GCP/Redis メモリ使用率"
+
 msgid "Redis persistence"
 msgstr "Redisの永続性"
 
+#, fuzzy
+msgid "Redis read throughput"
+msgstr "読み取りスループット"
+
 msgid "Redis server name"
 msgstr "Redisサーバー名"
+
+#, fuzzy
+msgid "Redis throughput"
+msgstr "読み取りスループット"
+
+#, fuzzy
+msgid "Redis write throughput"
+msgstr "FCP 書き込みスループット"
 
 msgid "Redis/Hitratio"
 msgstr "Redis/Hitratio"
@@ -52724,11 +52858,33 @@ msgstr "ルールのプロパティ"
 msgid "Relays"
 msgstr "ディレイ:"
 
-msgid "Release"
-msgstr "リリース"
+#, fuzzy, python-format
+msgid "Release extension package \"%s\""
+msgstr "非推奨拡張パッケージ: %s"
 
 msgid "Release package"
 msgstr "リリースパッケージ"
+
+#, fuzzy
+msgid "Release this package"
+msgstr "リリースパッケージ"
+
+#, fuzzy, python-format
+msgid "Released extension package %s %s"
+msgstr "拡張パッケージ %s %sを削除しました"
+
+#, fuzzy
+msgid ""
+"Releases the package and sets its files to unpackaged state. Files remain in "
+"your system and can be repackaged or deleted later."
+msgstr ""
+"この操作により、パッケージがシステムからリリースされ、パッケージ化されたすべ"
+"てのファイルがパッケージ化されていない状態にリリースされます。その後、ファイ"
+"ルは自由に別のパッケージにパッケージ化するか、手動で削除することができます。"
+
+#, fuzzy, python-format
+msgid "Releasing extension package \"%s\"."
+msgstr "拡張パッケージ %s %sを削除しました"
 
 msgid "Reliability"
 msgstr "信頼性"
@@ -52939,6 +53095,10 @@ msgstr "明示的な属性設定を削除する"
 msgid "Remove explicit setting"
 msgstr "明示的な設定を削除する"
 
+#, fuzzy, python-format
+msgid "Remove extension package \"%s\""
+msgstr "拡張パッケージ %s %sを削除しました"
+
 msgid "Remove filter"
 msgstr "フィルタを取り外します"
 
@@ -52956,9 +53116,6 @@ msgstr "名前を削除する"
 
 msgid "Remove only matching vanished services"
 msgstr "一致する消失したサービスのみを削除する"
-
-msgid "Remove package"
-msgstr "パッケージの取り外し"
 
 msgid "Remove pattern"
 msgstr "パターンを削除する"
@@ -53074,6 +53231,10 @@ msgstr "削除：%r"
 #, python-format
 msgid "Removed: %s"
 msgstr "削除:%s"
+
+#, fuzzy, python-format
+msgid "Removing extension package \"%s\"."
+msgstr "拡張パッケージ %s %sを削除しました"
 
 msgid "Rename"
 msgstr "名前を変更する"
@@ -55083,10 +55244,6 @@ msgid "SNAT Usage (Deprecated)"
 msgstr "Azureストレージ使用量"
 
 #, fuzzy
-msgid "SNAT port utilization"
-msgstr "ノードの使用率"
-
-#, fuzzy
 msgid "SNAT port utilization %"
 msgstr "ノードの使用率"
 
@@ -55520,6 +55677,10 @@ msgstr "科学的（標準）シンボル%s"
 msgid "Scope"
 msgstr "スコープ"
 
+#, fuzzy
+msgid "Scope ID"
+msgstr "スコープ"
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -55936,6 +56097,10 @@ msgstr "サービスの可用性を見る"
 
 msgid "See the availability views of hosts and services"
 msgstr "ホストとサービスの可用性ビューを見る"
+
+#, fuzzy
+msgid "See unpackaged files"
+msgstr "パッケージ化されていないファイルを削除"
 
 #, python-format
 msgid "See user %s"
@@ -58113,6 +58278,10 @@ msgstr "通知のすべてのフェーズを表示する"
 
 msgid "Show all rules"
 msgstr "すべてのルールを表示"
+
+#, fuzzy
+msgid "Show bandwidth"
+msgstr "帯域幅"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr ""
@@ -62152,6 +62321,10 @@ msgstr "スイッチ番号"
 msgid "Switch port statistics"
 msgstr "スイッチポートの統計"
 
+#, fuzzy
+msgid "Switch port statuses"
+msgstr "スイッチポートの統計"
+
 msgid "Switch slave replication mode"
 msgstr "スレーブレプリケーションモードの切り替え"
 
@@ -65622,6 +65795,9 @@ msgstr ""
 "インスタンス名、データベース名、テーブルスペース名の組み合わせは以下のように"
 "なります。 db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid "The interval for which the information will be fetched."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval the connection will be executed to check the available "
@@ -66810,6 +66986,11 @@ msgstr ""
 "プラグイン <tt>isc_dhcpd</tt> は、Linux 上の DHCP サーバデーモンに関する情報"
 "を収集します。"
 
+msgid ""
+"The plug-in <tt>mailman3_lists</tt> (Mailman 3) monitors Mailman mailing "
+"lists."
+msgstr ""
+
 #, python-format
 msgid ""
 "The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
@@ -66826,17 +67007,6 @@ msgid ""
 msgstr ""
 "プラグインは、このグロビングパターンに一致するものをすべて処理します。ディレ"
 "クトリであれば、そのすべてのコンテンツを再帰的に処理します。"
-
-msgid ""
-"The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</tt> "
-"(Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins will be "
-"deployed, since only one of them will produce data, depending on the install "
-"Mailman version."
-msgstr ""
-"プラグイン <tt>mailman2_lists</tt> (Mailman 2) と <tt>mailman3_lists</tt> "
-"(Mailman 3) は Mailman のメーリングリストを監視します。有効化された場合、イン"
-"ストールされた Mailman のバージョンによってどちらか一方だけがデータを生成する"
-"ので、両方のプラグインがデプロイされます。"
 
 msgid ""
 "The plug-ins in this list will be called such that they will create real-"
@@ -69872,15 +70042,6 @@ msgid ""
 msgstr ""
 "このオブジェクトは、リモートサイトからのシャドウオブジェクトです。ここでは管"
 "理できません。"
-
-msgid ""
-"This operation will release the package from your system and release all its "
-"packaged files into unpackaged state. The files are then free to be packaged "
-"into another package or to be deleted manually."
-msgstr ""
-"この操作により、パッケージがシステムからリリースされ、パッケージ化されたすべ"
-"てのファイルがパッケージ化されていない状態にリリースされます。その後、ファイ"
-"ルは自由に別のパッケージにパッケージ化するか、手動で削除することができます。"
 
 msgid ""
 "This option allows to omit individual sections from being fetched at all. As "
@@ -73728,6 +73889,10 @@ msgstr "時間"
 
 msgid "Timeseries"
 msgstr "時系列"
+
+#, fuzzy
+msgid "Timespan"
+msgstr "時間"
 
 msgid "Timespan for difference calculation of summed up values"
 msgstr "合計値の差計算の期間"
@@ -83276,6 +83441,10 @@ msgid "You are not allowed to change the sidebar."
 msgstr "サイドバーを変更することはできません。"
 
 #, fuzzy
+msgid "You are not allowed to clone dashboards."
+msgstr "ダッシュボードを編集することは許可されていません。"
+
+#, fuzzy
 msgid "You are not allowed to create dashboards."
 msgstr "ダッシュボードを編集することは許可されていません。"
 
@@ -87812,6 +87981,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Reset to pre-defined filters"
+msgstr "フィルタを取り外します"
+
+#, fuzzy
 msgid "Edit filter configuration"
 msgstr "この接続を編集する"
 
@@ -88479,6 +88652,18 @@ msgid "Dashboard filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
+msgid "Widget data"
+msgstr "フィルタを追加"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
 msgid "Link content to"
 msgstr "タイトルのリンク"
 
@@ -88578,18 +88763,6 @@ msgstr "ルール分析のために通知を保存する"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "追加オプション"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "フィルタを追加"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "ターゲットを追加"
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "ターゲットを追加"
 
 #, fuzzy
 msgid "Unrestricted"
@@ -90073,6 +90246,47 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Connected Clients"
+#~ msgstr "接続"
+
+#~ msgid "Dissolve the package, release its files into unpackaged state"
+#~ msgstr ""
+#~ "パッケージをディゾルブし、ファイルをパッケージ化されていない状態にリリース"
+#~ "します"
+
+#, python-format
+#~ msgid "Dissolved extension package %s %s"
+#~ msgstr "拡張パッケージ %s%sを無効にする"
+
+#, fuzzy
+#~ msgid "Hit ratio"
+#~ msgstr "初期所要時間"
+
+#~ msgid "Hz"
+#~ msgstr "Hz"
+
+#, fuzzy
+#~ msgid "Invalid ifid parameter"
+#~ msgstr "チェックパラメータが無効です"
+
+#~ msgid "Release"
+#~ msgstr "リリース"
+
+#~ msgid "Remove package"
+#~ msgstr "パッケージの取り外し"
+
+#~ msgid ""
+#~ "The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</"
+#~ "tt> (Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins "
+#~ "will be deployed, since only one of them will produce data, depending on "
+#~ "the install Mailman version."
+#~ msgstr ""
+#~ "プラグイン <tt>mailman2_lists</tt> (Mailman 2) と <tt>mailman3_lists</tt> "
+#~ "(Mailman 3) は Mailman のメーリングリストを監視します。有効化された場合、"
+#~ "インストールされた Mailman のバージョンによってどちらか一方だけがデータを"
+#~ "生成するので、両方のプラグインがデプロイされます。"
+
+#, fuzzy
 #~ msgid "Datapath availability"
 #~ msgstr "データパスの可用性下位レベル"
 
@@ -90148,10 +90362,6 @@ msgstr ""
 #~ msgid "Service filter"
 #~ msgstr "サービスフィルター"
 
-#, fuzzy
-#~ msgid "Reset to saved filters"
-#~ msgstr "フィルタを取り外します"
-
 #~ msgid "Success! Your new dashboard filters have been saved"
 #~ msgstr "成功！新しいダッシュボードのフィルターが保存されました"
 
@@ -90173,18 +90383,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add OAuth2 connection"
 #~ msgstr "LDAP接続を追加します"
-
-#, fuzzy
-#~ msgid "Broadcast"
-#~ msgstr "ブロードキャスト"
-
-#, fuzzy
-#~ msgid "Prefix length"
-#~ msgstr "プレフィックスのテキスト"
-
-#, fuzzy
-#~ msgid "Scope ID"
-#~ msgstr "スコープ"
 
 #, fuzzy
 #~ msgid "Description:"
@@ -92121,10 +92319,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Date sent"
 #~ msgstr "送信データ"
-
-#, fuzzy, python-format
-#~ msgid "Extension package %r"
-#~ msgstr "拡張パッケージ"
 
 #, fuzzy, python-format
 #~ msgid "Unpackaged file %r"

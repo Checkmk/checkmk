@@ -1134,6 +1134,9 @@ msgstr "0.2 - 0.5 ms"
 msgid "0.5 - 1.0 ms"
 msgstr "0.5 - 1.0 ms"
 
+msgid "1 - up"
+msgstr ""
+
 msgid "1 Host"
 msgstr "1 Host"
 
@@ -1188,6 +1191,10 @@ msgstr "15 minuten"
 
 msgid "17"
 msgstr ""
+
+#, fuzzy
+msgid "2 - down"
+msgstr "naar beneden"
 
 msgid "2 weeks back"
 msgstr "2 weken geleden"
@@ -1979,6 +1986,11 @@ msgstr ""
 "gebruiken om alle processen uit te sluiten die behoren tot een docker "
 "container door de expressie \"%s\" (zonder de aanhalingstekens) te "
 "specificeren, en \"%s\" te selecteren.</p>"
+
+msgid ""
+"<p>The minimum value is 15 minutes and the maximum value is 31 days.</p>This "
+"applies to the following sections: <ul><li>switch port statuses</li></ul>"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -7385,6 +7397,12 @@ msgstr ""
 "Pas deze regel alleen toe op interfaces waarvan de admin status "
 "(<tt>ifAdminStatus</tt>) hieronder vermeld staat."
 
+#, fuzzy
+msgid "Apply this rule only to interfaces whose admin state is listed below"
+msgstr ""
+"Pas deze regel alleen toe op interfaces waarvan de poortstatus hieronder "
+"vermeld staat."
+
 msgid "Apply this rule only to interfaces whose port state is listed below."
 msgstr ""
 "Pas deze regel alleen toe op interfaces waarvan de poortstatus hieronder "
@@ -9422,14 +9440,6 @@ msgid "Azure database connections (deprecated)"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
-msgid "Azure firewall health"
-msgstr "Zorp firewall"
-
-#, fuzzy
-msgid "Azure firewall latency"
-msgstr "Zorp firewall"
-
-#, fuzzy
 msgid "Azure recovery services vault backup"
 msgstr "Hersteldiensten Kluis"
 
@@ -9698,6 +9708,10 @@ msgstr "Achtergrond opdracht is gestopt"
 
 msgid "Background job info is not available"
 msgstr "Achtergrondinformatie over de baan is niet beschikbaar"
+
+#, fuzzy
+msgid "Background job timed out after 3 minutes."
+msgstr "Het is niet toegestaan deze globale instelling te bewerken."
 
 #, fuzzy
 msgid "Background job timed out due to the global setting "
@@ -10211,6 +10225,10 @@ msgstr "Helderheid"
 
 msgid "Brightness Levels"
 msgstr "Helderheidsniveaus"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "uitzending"
 
 msgid "Broadcast packet rates"
 msgstr "Uitzending pakket tarieven"
@@ -14133,6 +14151,10 @@ msgid "Cisco Meraki power supply"
 msgstr "Cisco Meraki"
 
 #, fuzzy
+msgid "Cisco Meraki switch port statuses"
+msgstr "Toon dienst status"
+
+#, fuzzy
 msgid "Cisco Nexus Supervisor memory usage"
 msgstr "Cisco Nexus Supervisor-geheugengebruik"
 
@@ -15999,10 +16021,6 @@ msgid "Connected"
 msgstr "Connect"
 
 #, fuzzy
-msgid "Connected Clients"
-msgstr "Verbindingen"
-
-#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "RRA-configuratie"
 
@@ -17357,6 +17375,10 @@ msgstr "Maak een nieuwe hulp tag"
 
 msgid "Create new notification rule"
 msgstr "Nieuwe meldingsregel maken"
+
+#, fuzzy
+msgid "Create new package"
+msgstr "Pakket maken"
 
 msgid "Create new report schedule entry"
 msgstr "Maak nieuw rapport schema item"
@@ -20185,6 +20207,11 @@ msgstr ""
 "Afhankelijk van de nauwkeurigheid kan de eenheid milliseconden of "
 "micoseconden zijn."
 
+msgid ""
+"Depending on your Meraki organization size (number of switches) this may "
+"exceed the limits of the allowed API requests per second."
+msgstr ""
+
 #, python-format
 msgid "Deploy %s"
 msgstr "Inzetten %s"
@@ -21201,6 +21228,10 @@ msgstr "Diensten voor gehandicapten"
 msgid "Disabled via master control"
 msgstr "Controller uitschakelen"
 
+#, fuzzy, python-format
+msgid "Disabling extension package \"%s\"."
+msgstr "Uitgeschakeld uitbreidingspakket %s %s"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -21251,6 +21282,10 @@ msgid "Discover templates"
 msgstr "Ontdekkingsstatus"
 
 #, fuzzy
+msgid "Discovered admin state"
+msgstr "Ontdekkingsstatus"
+
+#, fuzzy
 msgid "Discovered changes"
 msgstr "%d aanpassingen"
 
@@ -21262,7 +21297,15 @@ msgstr "Ontdekking mislukt"
 msgid "Discovered host labels (%s)"
 msgstr "Ontdekte host labels (%s)"
 
+#, fuzzy
+msgid "Discovered operational state"
+msgstr "operationele toestand negeren"
+
 msgid "Discovered process name"
+msgstr "Ontdekte procesnaam"
+
+#, fuzzy
+msgid "Discovered speed"
 msgstr "Ontdekte procesnaam"
 
 msgid "Discovery"
@@ -21783,13 +21826,6 @@ msgstr "Geeft de status van een specifieke host weer."
 
 msgid "Displays the state of a specific service."
 msgstr "Geeft de status van een specifieke dienst weer."
-
-msgid "Dissolve the package, release its files into unpackaged state"
-msgstr "Los het pakket op, geef zijn bestanden vrij in onverpakte toestand"
-
-#, python-format
-msgid "Dissolved extension package %s %s"
-msgstr "Opgelost uitbreidingspakket %s %s"
 
 msgid "Distinguish times in and out of notification period"
 msgstr ""
@@ -24068,6 +24104,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Enable package"
+msgstr "Activeer dit pakket"
+
+#, fuzzy
 msgid "Enable passive checks"
 msgstr "Actieve controles inschakelen"
 
@@ -24256,6 +24296,10 @@ msgstr "Ingeschakelde secties (Windows agent)"
 
 msgid "Enabled until disabling"
 msgstr "Ingeschakeld tot uitschakeling"
+
+#, fuzzy, python-format
+msgid "Enabling extension package \"%s\""
+msgstr "Uitgeschakeld uitbreidingspakket %s %s"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -25898,6 +25942,22 @@ msgstr "Uitgebreide perfagegevens"
 msgid "Extension"
 msgstr "Uitbreiding"
 
+#, fuzzy, python-format
+msgid "Extension package \"%s\" disabled."
+msgstr "Uitbreiding pakketbestanden"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" released."
+msgstr "Uitbreidingspakketten"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" removed."
+msgstr "Uitbreidingspakketten"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" uploaded."
+msgstr "Uitbreidingspakketten"
+
 #, fuzzy
 msgid "Extension package enabled and active."
 msgstr "Uitbreiding pakketbestanden"
@@ -26869,6 +26929,9 @@ msgstr "Schijfniveaus van archiefsystemen (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Bestanden"
 
+msgid "Files are unpackaged and remain in your system."
+msgstr ""
+
 msgid "Filestore"
 msgstr "Bestandenbestand"
 
@@ -27110,8 +27173,24 @@ msgstr "Fireeye Beveiliging Inhoud"
 msgid "Firewall Interfaces"
 msgstr "Firewall interfaces"
 
+#, fuzzy
+msgid "Firewall SNAT port utilization"
+msgstr "Gebruik knooppunten"
+
 msgid "Firewall connections"
 msgstr "Firewall verbindingen"
+
+#, fuzzy
+msgid "Firewall health"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Firewall latency"
+msgstr "Zorp firewall"
+
+#, fuzzy
+msgid "Firewall throughput"
+msgstr "Lees doorvoer"
 
 msgid "Firmware"
 msgstr "Firmware"
@@ -30550,10 +30629,6 @@ msgstr "Geschiedenis van de kennisgevingen"
 msgid "History of scheduled downtimes"
 msgstr "Geschiedenis van geplande uitvaltijd"
 
-#, fuzzy
-msgid "Hit ratio"
-msgstr "Init duur"
-
 msgid "Hits"
 msgstr "Hits"
 
@@ -32798,9 +32873,6 @@ msgstr "OMD bewakingskernen"
 
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthreads per CPU"
-
-msgid "Hz"
-msgstr "Hz"
 
 #, fuzzy
 msgid "I/O database reads (attached) average latency"
@@ -37079,10 +37151,6 @@ msgstr "Ongeldige ident"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Ongeldige ident: %s"
-
-#, fuzzy
-msgid "Invalid ifid parameter"
-msgstr "Ongeldige controleparameter"
 
 msgid "Invalid login credentials."
 msgstr "Ongeldige inloggegevens."
@@ -42055,6 +42123,10 @@ msgstr "Hoofdschakelaar"
 msgid "Match"
 msgstr "Wedstrijd"
 
+#, fuzzy
+msgid "Match admin states"
+msgstr "Poort toestanden overeenkomen"
+
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "Overeenkomen met admin toestanden (alleen SNMP met 64-bit tellers)"
 
@@ -44354,6 +44426,10 @@ msgstr ""
 msgid "Monitoring state if a monitored unit is not found at all."
 msgstr "Bewakingsstatus als een bewaakte eenheid helemaal niet wordt gevonden."
 
+#, fuzzy
+msgid "Monitoring state if admin state changed"
+msgstr "Bewakingstoestand als de dienst actief is"
+
 msgid "Monitoring state if failover link not up"
 msgstr "Bewakingstoestand als failover link niet up is"
 
@@ -44363,6 +44439,22 @@ msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
 
 msgid "Monitoring state if not active/standby"
 msgstr "Bewakingstoestand indien niet actief/standby"
+
+#, fuzzy
+msgid "Monitoring state if operational state changed"
+msgstr "Bewakingstoestand als de dienst mislukt"
+
+#, fuzzy
+msgid "Monitoring state if port is not connected"
+msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
+
+#, fuzzy
+msgid "Monitoring state if port is not full duplex"
+msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
+
+#, fuzzy
+msgid "Monitoring state if port was disabled"
+msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
 
 #, fuzzy
 msgid "Monitoring state if power supply is not \"powering\""
@@ -44380,6 +44472,10 @@ msgstr "Bewakingstoestand als de dienst inactief is"
 #, fuzzy
 msgid "Monitoring state if smoke is detected"
 msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
+
+#, fuzzy
+msgid "Monitoring state if speed changed"
+msgstr "Bewakingstoestand als de dienst mislukt"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "Bewakingstoestand indien taak niet is ingeschakeld"
@@ -53994,6 +54090,10 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Voorvoegsel voor piggyback hostname"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "Voorvoegsel tekst"
+
 msgid "Prefix match"
 msgstr "Voorvoegsel match"
 
@@ -55769,11 +55869,31 @@ msgstr "Redirect URL (moet https zijn)"
 msgid "Redis Caches"
 msgstr "Redis cliënten"
 
+#, fuzzy
+msgid "Redis cache hit ratio"
+msgstr "L2 cache hit ratio"
+
+#, fuzzy
+msgid "Redis cache hits"
+msgstr "Redis cliënten"
+
+#, fuzzy
+msgid "Redis cache misses"
+msgstr "Cachegrootte"
+
 msgid "Redis clients"
 msgstr "Redis cliënten"
 
+#, fuzzy
+msgid "Redis connected clients"
+msgstr "Aantal aangesloten cliënten"
+
 msgid "Redis databases"
 msgstr "Redis databases"
+
+#, fuzzy
+msgid "Redis hit ratio"
+msgstr "Regel trefverhouding"
 
 msgid "Redis info"
 msgstr "Redis info"
@@ -55781,11 +55901,27 @@ msgstr "Redis info"
 msgid "Redis is not reachable, terminating"
 msgstr "Redis is niet bereikbaar, beëindiging"
 
+#, fuzzy
+msgid "Redis memory utilization"
+msgstr "GCP/Redis geheugengebruik"
+
 msgid "Redis persistence"
 msgstr "Redis persistentie"
 
+#, fuzzy
+msgid "Redis read throughput"
+msgstr "Lees doorvoer"
+
 msgid "Redis server name"
 msgstr "Redis server naam"
+
+#, fuzzy
+msgid "Redis throughput"
+msgstr "Lees doorvoer"
+
+#, fuzzy
+msgid "Redis write throughput"
+msgstr "Schrijf doorvoer"
 
 msgid "Redis/Hitratio"
 msgstr "Redis/Hitratio"
@@ -56223,11 +56359,33 @@ msgstr "Regeleigenschappen"
 msgid "Relays"
 msgstr "Vertraging:"
 
-msgid "Release"
-msgstr "Release"
+#, fuzzy, python-format
+msgid "Release extension package \"%s\""
+msgstr "Nieuw uitbreidingspakket %s aangemaakt"
 
 msgid "Release package"
 msgstr "Release pakket"
+
+#, fuzzy
+msgid "Release this package"
+msgstr "Release pakket"
+
+#, fuzzy, python-format
+msgid "Released extension package %s %s"
+msgstr "Uitbreidingspakket verwijderd %s %s"
+
+#, fuzzy
+msgid ""
+"Releases the package and sets its files to unpackaged state. Files remain in "
+"your system and can be repackaged or deleted later."
+msgstr ""
+"Deze operatie zal het pakket vrijgeven van uw systeem en al zijn verpakte "
+"bestanden vrijgeven in onverpakte staat. De bestanden zijn dan vrij om "
+"verpakt te worden in een ander pakket of om handmatig verwijderd te worden."
+
+#, fuzzy, python-format
+msgid "Releasing extension package \"%s\"."
+msgstr "Uitbreidingspakket verwijderd %s %s"
 
 msgid "Reliability"
 msgstr "Betrouwbaarheid"
@@ -56447,6 +56605,10 @@ msgstr "Expliciete attribuutinstellingen verwijderen"
 msgid "Remove explicit setting"
 msgstr "Expliciete instelling verwijderen"
 
+#, fuzzy, python-format
+msgid "Remove extension package \"%s\""
+msgstr "Uitbreidingspakket verwijderd %s %s"
+
 msgid "Remove filter"
 msgstr "Verwijder filter"
 
@@ -56468,9 +56630,6 @@ msgstr "Verwijder alle"
 
 msgid "Remove only matching vanished services"
 msgstr "Alleen overeenkomende verdwenen diensten verwijderen"
-
-msgid "Remove package"
-msgstr "Pakket verwijderen"
 
 #, fuzzy
 msgid "Remove pattern"
@@ -56593,6 +56752,10 @@ msgstr "Verwijderd: %s"
 #, python-format
 msgid "Removed: %s"
 msgstr "Verwijderd: %s"
+
+#, fuzzy, python-format
+msgid "Removing extension package \"%s\"."
+msgstr "Uitbreidingspakket verwijderd %s %s"
 
 msgid "Rename"
 msgstr "Hernoemen"
@@ -58714,10 +58877,6 @@ msgid "SNAT Usage (Deprecated)"
 msgstr "Azure Opslag"
 
 #, fuzzy
-msgid "SNAT port utilization"
-msgstr "Gebruik knooppunten"
-
-#, fuzzy
 msgid "SNAT port utilization %"
 msgstr "Gebruik knooppunten"
 
@@ -59165,6 +59324,10 @@ msgstr ""
 msgid "Scope"
 msgstr ""
 
+#, fuzzy
+msgid "Scope ID"
+msgstr "Knooppunt-ID"
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -59610,6 +59773,10 @@ msgstr "Bekijk de beschikbaarheid"
 
 msgid "See the availability views of hosts and services"
 msgstr "Bekijk de beschikbaarheidsoverzichten van hosts en diensten"
+
+#, fuzzy
+msgid "See unpackaged files"
+msgstr "Uitgepakt bestand verwijderen"
 
 #, python-format
 msgid "See user %s"
@@ -61892,6 +62059,10 @@ msgstr "Toon alle fasen van meldingen"
 
 msgid "Show all rules"
 msgstr "Toon alle regels"
+
+#, fuzzy
+msgid "Show bandwidth"
+msgstr "Bandbreedte"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr ""
@@ -66148,6 +66319,10 @@ msgstr "Schakelaarnummer"
 msgid "Switch port statistics"
 msgstr "Switch poort statistieken"
 
+#, fuzzy
+msgid "Switch port statuses"
+msgstr "Switch poort statistieken"
+
 msgid "Switch slave replication mode"
 msgstr "Schakel slavenreplicatiemodus"
 
@@ -69810,6 +69985,9 @@ msgstr ""
 "De naam van de instantie, de naam van de database en de naam van de "
 "tablespace gecombineerd als volgt db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid "The interval for which the information will be fetched."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval the connection will be executed to check the available "
@@ -71049,6 +71227,11 @@ msgstr ""
 "De plugin <tt>isc_dhcpd</tt> verzamelt informatie over een DHCP server "
 "daemon op Linux."
 
+msgid ""
+"The plug-in <tt>mailman3_lists</tt> (Mailman 3) monitors Mailman mailing "
+"lists."
+msgstr ""
+
 #, python-format
 msgid ""
 "The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
@@ -71063,13 +71246,6 @@ msgid ""
 msgstr ""
 "De plugin zal alles verwerken dat overeenkomt met dit globbing patroon. Als "
 "het een directory is, wordt alle inhoud recursief verwerkt."
-
-msgid ""
-"The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</tt> "
-"(Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins will be "
-"deployed, since only one of them will produce data, depending on the install "
-"Mailman version."
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -74191,15 +74367,6 @@ msgid ""
 msgstr ""
 "Dit object is een schaduwobject van een externe locatie. Het kan hier niet "
 "worden beheerd."
-
-msgid ""
-"This operation will release the package from your system and release all its "
-"packaged files into unpackaged state. The files are then free to be packaged "
-"into another package or to be deleted manually."
-msgstr ""
-"Deze operatie zal het pakket vrijgeven van uw systeem en al zijn verpakte "
-"bestanden vrijgeven in onverpakte staat. De bestanden zijn dan vrij om "
-"verpakt te worden in een ander pakket of om handmatig verwijderd te worden."
 
 #, fuzzy
 msgid ""
@@ -78235,6 +78402,10 @@ msgstr "Times"
 
 msgid "Timeseries"
 msgstr "Timeseries"
+
+#, fuzzy
+msgid "Timespan"
+msgstr "Times"
 
 msgid "Timespan for difference calculation of summed up values"
 msgstr ""
@@ -88861,6 +89032,10 @@ msgid "You are not allowed to change the sidebar."
 msgstr "U mag de zijbalk niet veranderen."
 
 #, fuzzy
+msgid "You are not allowed to clone dashboards."
+msgstr "U mag dashboards niet bewerken."
+
+#, fuzzy
 msgid "You are not allowed to create dashboards."
 msgstr "U mag dashboards niet bewerken."
 
@@ -93564,6 +93739,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Reset to pre-defined filters"
+msgstr "Verwijder filter"
+
+#, fuzzy
 msgid "Edit filter configuration"
 msgstr "Host configuratie"
 
@@ -94248,6 +94427,18 @@ msgid "Dashboard filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
+msgid "Widget data"
+msgstr "Filter toevoegen"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
 msgid "Link content to"
 msgstr "Link van titel"
 
@@ -94348,18 +94539,6 @@ msgstr "Meldingen opslaan voor regelanalyse"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Extra opties"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Filter toevoegen"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "Doel toevoegen"
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Doel toevoegen"
 
 #, fuzzy
 msgid "Unrestricted"
@@ -95884,6 +96063,34 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Connected Clients"
+#~ msgstr "Verbindingen"
+
+#~ msgid "Dissolve the package, release its files into unpackaged state"
+#~ msgstr "Los het pakket op, geef zijn bestanden vrij in onverpakte toestand"
+
+#, python-format
+#~ msgid "Dissolved extension package %s %s"
+#~ msgstr "Opgelost uitbreidingspakket %s %s"
+
+#, fuzzy
+#~ msgid "Hit ratio"
+#~ msgstr "Init duur"
+
+#~ msgid "Hz"
+#~ msgstr "Hz"
+
+#, fuzzy
+#~ msgid "Invalid ifid parameter"
+#~ msgstr "Ongeldige controleparameter"
+
+#~ msgid "Release"
+#~ msgstr "Release"
+
+#~ msgid "Remove package"
+#~ msgstr "Pakket verwijderen"
+
+#, fuzzy
 #~ msgid "Datapath availability"
 #~ msgstr "Beschikbaarheid gegevenspad lagere niveaus"
 
@@ -95960,10 +96167,6 @@ msgstr ""
 #~ msgstr "Service Filters"
 
 #, fuzzy
-#~ msgid "Reset to saved filters"
-#~ msgstr "Verwijder filter"
-
-#, fuzzy
 #~ msgid "Success! Your new dashboard filters have been saved"
 #~ msgstr "Uw wijzigingen zijn opgeslagen."
 
@@ -95978,18 +96181,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add OAuth2 connection"
 #~ msgstr "LDAP-verbinding toevoegen"
-
-#, fuzzy
-#~ msgid "Broadcast"
-#~ msgstr "uitzending"
-
-#, fuzzy
-#~ msgid "Prefix length"
-#~ msgstr "Voorvoegsel tekst"
-
-#, fuzzy
-#~ msgid "Scope ID"
-#~ msgstr "Knooppunt-ID"
 
 #, fuzzy
 #~ msgid "Description:"
@@ -97864,10 +98055,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Date sent"
 #~ msgstr "Verzonden gegevens"
-
-#, fuzzy, python-format
-#~ msgid "Extension package %r"
-#~ msgstr "Uitbreidingspakketten"
 
 #, fuzzy, python-format
 #~ msgid "Unpackaged file %r"

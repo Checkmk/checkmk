@@ -1135,6 +1135,9 @@ msgstr "0,2 - 0,5 ms"
 msgid "0.5 - 1.0 ms"
 msgstr "0,5 - 1,0 ms"
 
+msgid "1 - up"
+msgstr ""
+
 msgid "1 Host"
 msgstr "1 hôte"
 
@@ -1189,6 +1192,10 @@ msgstr "15 minutes"
 
 msgid "17"
 msgstr ""
+
+#, fuzzy
+msgid "2 - down"
+msgstr "en bas"
 
 msgid "2 weeks back"
 msgstr "2 semaines en arrière"
@@ -1999,6 +2006,11 @@ msgstr ""
 "utiliser cette règle pour exclure tous les processus appartenant à un "
 "conteneur docker en spécifiant l'expression \"%s\" (sans les guillemets), et "
 "en sélectionnant \"%s\".</p>"
+
+msgid ""
+"<p>The minimum value is 15 minutes and the maximum value is 31 days.</p>This "
+"applies to the following sections: <ul><li>switch port statuses</li></ul>"
+msgstr ""
 
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
@@ -7430,6 +7442,12 @@ msgstr ""
 "Appliquez cette règle uniquement aux interfaces dont l'état d'administration "
 "(<tt>ifAdminStatus</tt>) est répertorié ci-dessous."
 
+#, fuzzy
+msgid "Apply this rule only to interfaces whose admin state is listed below"
+msgstr ""
+"Appliquez cette règle uniquement aux interfaces dont l'état du port est "
+"répertorié ci-dessous."
+
 msgid "Apply this rule only to interfaces whose port state is listed below."
 msgstr ""
 "Appliquez cette règle uniquement aux interfaces dont l'état du port est "
@@ -9474,14 +9492,6 @@ msgid "Azure database connections (deprecated)"
 msgstr "Connexions à la base de données"
 
 #, fuzzy
-msgid "Azure firewall health"
-msgstr "Pare-feu Zorp"
-
-#, fuzzy
-msgid "Azure firewall latency"
-msgstr "Pare-feu Zorp"
-
-#, fuzzy
 msgid "Azure recovery services vault backup"
 msgstr "Chambre forte des services de recouvrement"
 
@@ -9748,6 +9758,10 @@ msgstr "La tâche d'arrière-plan a été arrêtée"
 
 msgid "Background job info is not available"
 msgstr "Les informations sur le travail de fond ne sont pas disponibles"
+
+#, fuzzy
+msgid "Background job timed out after 3 minutes."
+msgstr "Vous n'êtes pas autorisé à modifier ce paramètre global."
 
 #, fuzzy
 msgid "Background job timed out due to the global setting "
@@ -10265,6 +10279,10 @@ msgstr "Luminosité"
 
 msgid "Brightness Levels"
 msgstr "Niveaux de luminosité"
+
+#, fuzzy
+msgid "Broadcast"
+msgstr "diffuser"
 
 msgid "Broadcast packet rates"
 msgstr "Taux de paquets de diffusion"
@@ -14208,6 +14226,10 @@ msgid "Cisco Meraki power supply"
 msgstr "Cisco Meraki"
 
 #, fuzzy
+msgid "Cisco Meraki switch port statuses"
+msgstr "Afficher l'état du service"
+
+#, fuzzy
 msgid "Cisco Nexus Supervisor memory usage"
 msgstr "Utilisation de la mémoire du superviseur Cisco Nexus"
 
@@ -16096,10 +16118,6 @@ msgid "Connected"
 msgstr "déconnecté"
 
 #, fuzzy
-msgid "Connected Clients"
-msgstr "Connexions"
-
-#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "Configuration de l'ARR"
 
@@ -17465,6 +17483,10 @@ msgstr "Créer une nouvelle balise auxiliaire"
 
 msgid "Create new notification rule"
 msgstr "Créer une nouvelle règle de notification"
+
+#, fuzzy
+msgid "Create new package"
+msgstr "Créer un paquet"
 
 msgid "Create new report schedule entry"
 msgstr "Créer une nouvelle entrée de calendrier de rapports"
@@ -20319,6 +20341,11 @@ msgid ""
 msgstr ""
 "Selon la précision, l'unité peut être la milliseconde ou la microseconde."
 
+msgid ""
+"Depending on your Meraki organization size (number of switches) this may "
+"exceed the limits of the allowed API requests per second."
+msgstr ""
+
 #, python-format
 msgid "Deploy %s"
 msgstr "Déployer %s"
@@ -21335,6 +21362,10 @@ msgstr "Services désactivés"
 msgid "Disabled via master control"
 msgstr "Désactiver le contrôleur"
 
+#, fuzzy, python-format
+msgid "Disabling extension package \"%s\"."
+msgstr "Paquet d'extension désactivé %s %s"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -21385,6 +21416,10 @@ msgid "Discover templates"
 msgstr "État de la découverte"
 
 #, fuzzy
+msgid "Discovered admin state"
+msgstr "État de la découverte"
+
+#, fuzzy
 msgid "Discovered changes"
 msgstr "%d changements"
 
@@ -21396,7 +21431,15 @@ msgstr "La découverte a échoué"
 msgid "Discovered host labels (%s)"
 msgstr "Étiquettes d'hôtes découvertes (%s)"
 
+#, fuzzy
+msgid "Discovered operational state"
+msgstr "ignorer l'état opérationnel"
+
 msgid "Discovered process name"
+msgstr "Nom du processus découvert"
+
+#, fuzzy
+msgid "Discovered speed"
 msgstr "Nom du processus découvert"
 
 msgid "Discovery"
@@ -21936,13 +21979,6 @@ msgstr "Affiche l'état d'un hôte spécifique."
 
 msgid "Displays the state of a specific service."
 msgstr "Affiche l'état d'un service spécifique."
-
-msgid "Dissolve the package, release its files into unpackaged state"
-msgstr "Dissoudre le paquet, libérer ses fichiers dans un état non emballé"
-
-#, python-format
-msgid "Dissolved extension package %s %s"
-msgstr "Paquet d'extension dissous %s %s"
 
 msgid "Distinguish times in and out of notification period"
 msgstr "Distinguer les temps dans et hors de la période de notification"
@@ -24245,6 +24281,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Enable package"
+msgstr "Activez ce paquet"
+
+#, fuzzy
 msgid "Enable passive checks"
 msgstr "Activer les contrôles actifs"
 
@@ -24434,6 +24474,10 @@ msgstr "Sections activées (agent Windows)"
 
 msgid "Enabled until disabling"
 msgstr "Activé jusqu'à la désactivation"
+
+#, fuzzy, python-format
+msgid "Enabling extension package \"%s\""
+msgstr "Paquet d'extension désactivé %s %s"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -26093,6 +26137,22 @@ msgstr "Données de perforation étendues"
 msgid "Extension"
 msgstr "Extension"
 
+#, fuzzy, python-format
+msgid "Extension package \"%s\" disabled."
+msgstr "Fichiers d'extension"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" released."
+msgstr "Paquets d'extension"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" removed."
+msgstr "Paquets d'extension"
+
+#, fuzzy, python-format
+msgid "Extension package \"%s\" uploaded."
+msgstr "Paquets d'extension"
+
 #, fuzzy
 msgid "Extension package enabled and active."
 msgstr "Fichiers d'extension"
@@ -27068,6 +27128,9 @@ msgstr "Niveaux de disques de filer (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Fichiers"
 
+msgid "Files are unpackaged and remain in your system."
+msgstr ""
+
 msgid "Filestore"
 msgstr "Filestore"
 
@@ -27310,8 +27373,24 @@ msgstr "Contenu de Fireeye Security"
 msgid "Firewall Interfaces"
 msgstr "Interfaces de pare-feu"
 
+#, fuzzy
+msgid "Firewall SNAT port utilization"
+msgstr "Utilisation des nœuds"
+
 msgid "Firewall connections"
 msgstr "Connexions au pare-feu"
+
+#, fuzzy
+msgid "Firewall health"
+msgstr "Pare-feu Zorp"
+
+#, fuzzy
+msgid "Firewall latency"
+msgstr "Pare-feu Zorp"
+
+#, fuzzy
+msgid "Firewall throughput"
+msgstr "Débit de lecture"
 
 msgid "Firmware"
 msgstr "Firmware"
@@ -30798,10 +30877,6 @@ msgstr "Historique des notifications"
 msgid "History of scheduled downtimes"
 msgstr "Historique des temps d'arrêt programmés"
 
-#, fuzzy
-msgid "Hit ratio"
-msgstr "Durée d'initialisation"
-
 msgid "Hits"
 msgstr "Hits"
 
@@ -33048,9 +33123,6 @@ msgstr "Noyaux de surveillance OMD"
 
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthreads par CPU"
-
-msgid "Hz"
-msgstr "Hz"
 
 #, fuzzy
 msgid "I/O database reads (attached) average latency"
@@ -37372,10 +37444,6 @@ msgstr "Identité non valide"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Identifiant non valide : %s"
-
-#, fuzzy
-msgid "Invalid ifid parameter"
-msgstr "Paramètre de contrôle non valide"
 
 msgid "Invalid login credentials."
 msgstr "Identifiants de connexion non valides."
@@ -42368,6 +42436,10 @@ msgstr "Interrupteur principal"
 msgid "Match"
 msgstr "Match"
 
+#, fuzzy
+msgid "Match admin states"
+msgstr "Faire correspondre les états des ports"
+
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr ""
 "États d'administration de la correspondance (SNMP avec compteurs 64 bits "
@@ -44687,6 +44759,10 @@ msgid "Monitoring state if a monitored unit is not found at all."
 msgstr ""
 "État de surveillance si une unité surveillée n'est pas du tout trouvée."
 
+#, fuzzy
+msgid "Monitoring state if admin state changed"
+msgstr "État de surveillance si le service est actif"
+
 msgid "Monitoring state if failover link not up"
 msgstr "Surveillance de l'état si le lien de basculement n'est pas en place"
 
@@ -44696,6 +44772,22 @@ msgstr "État de surveillance si la tâche n'est pas activée"
 
 msgid "Monitoring state if not active/standby"
 msgstr "État de surveillance si non actif/standby"
+
+#, fuzzy
+msgid "Monitoring state if operational state changed"
+msgstr "Etat de surveillance en cas d'échec du service"
+
+#, fuzzy
+msgid "Monitoring state if port is not connected"
+msgstr "État de surveillance si la tâche n'est pas activée"
+
+#, fuzzy
+msgid "Monitoring state if port is not full duplex"
+msgstr "État de surveillance si la tâche n'est pas activée"
+
+#, fuzzy
+msgid "Monitoring state if port was disabled"
+msgstr "État de surveillance si la tâche n'est pas activée"
 
 #, fuzzy
 msgid "Monitoring state if power supply is not \"powering\""
@@ -44713,6 +44805,10 @@ msgstr "État de surveillance si le service est inactif"
 #, fuzzy
 msgid "Monitoring state if smoke is detected"
 msgstr "État de surveillance si la tâche n'est pas activée"
+
+#, fuzzy
+msgid "Monitoring state if speed changed"
+msgstr "Etat de surveillance en cas d'échec du service"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "État de surveillance si la tâche n'est pas activée"
@@ -54403,6 +54499,10 @@ msgstr ""
 msgid "Prefix for piggyback host name"
 msgstr "Préfixe pour le nom d'hôte de ferroutage"
 
+#, fuzzy
+msgid "Prefix length"
+msgstr "Texte du préfixe"
+
 msgid "Prefix match"
 msgstr "Correspondance de préfixe"
 
@@ -56189,11 +56289,31 @@ msgstr "URL de redirection (doit être https)"
 msgid "Redis Caches"
 msgstr "Clients Redis"
 
+#, fuzzy
+msgid "Redis cache hit ratio"
+msgstr "Taux de réussite du cache L2"
+
+#, fuzzy
+msgid "Redis cache hits"
+msgstr "Clients Redis"
+
+#, fuzzy
+msgid "Redis cache misses"
+msgstr "Taille du cache"
+
 msgid "Redis clients"
 msgstr "Clients Redis"
 
+#, fuzzy
+msgid "Redis connected clients"
+msgstr "Nombre de clients connectés"
+
 msgid "Redis databases"
 msgstr "Bases de données Redis"
+
+#, fuzzy
+msgid "Redis hit ratio"
+msgstr "Taux de réussite de la règle"
 
 msgid "Redis info"
 msgstr "Informations sur Redis"
@@ -56201,11 +56321,27 @@ msgstr "Informations sur Redis"
 msgid "Redis is not reachable, terminating"
 msgstr "Redis n'est pas joignable, terminaison"
 
+#, fuzzy
+msgid "Redis memory utilization"
+msgstr "Utilisation de la mémoire de GCP/Redis"
+
 msgid "Redis persistence"
 msgstr "Persistance Redis"
 
+#, fuzzy
+msgid "Redis read throughput"
+msgstr "Débit de lecture"
+
 msgid "Redis server name"
 msgstr "Nom du serveur Redis"
+
+#, fuzzy
+msgid "Redis throughput"
+msgstr "Débit de lecture"
+
+#, fuzzy
+msgid "Redis write throughput"
+msgstr "Débit d'écriture"
 
 msgid "Redis/Hitratio"
 msgstr "Redis/Hitratio"
@@ -56650,11 +56786,33 @@ msgstr "Propriétés des règles"
 msgid "Relays"
 msgstr "Retard :"
 
-msgid "Release"
-msgstr "Libération"
+#, fuzzy, python-format
+msgid "Release extension package \"%s\""
+msgstr "Création d'un nouveau paquet d'extension %s"
 
 msgid "Release package"
 msgstr "Paquet de libération"
+
+#, fuzzy
+msgid "Release this package"
+msgstr "Paquet de libération"
+
+#, fuzzy, python-format
+msgid "Released extension package %s %s"
+msgstr "Suppression du paquet d'extensions %s %s"
+
+#, fuzzy
+msgid ""
+"Releases the package and sets its files to unpackaged state. Files remain in "
+"your system and can be repackaged or deleted later."
+msgstr ""
+"Cette opération libérera le paquet de votre système et libérera tous ses "
+"fichiers empaquetés dans un état non empaqueté. Les fichiers sont alors "
+"libres d'être intégrés dans un autre paquet ou d'être supprimés manuellement."
+
+#, fuzzy, python-format
+msgid "Releasing extension package \"%s\"."
+msgstr "Suppression du paquet d'extensions %s %s"
 
 msgid "Reliability"
 msgstr "Fiabilité"
@@ -56877,6 +57035,10 @@ msgstr "Supprimer les paramètres explicites des attributs"
 msgid "Remove explicit setting"
 msgstr "Supprimer le paramètre explicite"
 
+#, fuzzy, python-format
+msgid "Remove extension package \"%s\""
+msgstr "Suppression du paquet d'extensions %s %s"
+
 msgid "Remove filter"
 msgstr "Supprimer le filtre"
 
@@ -56898,9 +57060,6 @@ msgstr "Supprimer tout"
 
 msgid "Remove only matching vanished services"
 msgstr "Supprimer uniquement les services disparus correspondants"
-
-msgid "Remove package"
-msgstr "Retirer l'emballage"
 
 #, fuzzy
 msgid "Remove pattern"
@@ -57022,6 +57181,10 @@ msgstr "Supprimé : %s"
 #, python-format
 msgid "Removed: %s"
 msgstr "Supprimé : %s"
+
+#, fuzzy, python-format
+msgid "Removing extension package \"%s\"."
+msgstr "Suppression du paquet d'extensions %s %s"
 
 msgid "Rename"
 msgstr "Renommer"
@@ -59186,10 +59349,6 @@ msgid "SNAT Usage (Deprecated)"
 msgstr "Stockage Azure"
 
 #, fuzzy
-msgid "SNAT port utilization"
-msgstr "Utilisation des nœuds"
-
-#, fuzzy
 msgid "SNAT port utilization %"
 msgstr "Utilisation des nœuds"
 
@@ -59638,6 +59797,10 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
+
+#, fuzzy
+msgid "Scope ID"
+msgstr "ID du nœud"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -60089,6 +60252,10 @@ msgstr "Voir la disponibilité"
 
 msgid "See the availability views of hosts and services"
 msgstr "Voir la disponibilité des hôtes et des services"
+
+#, fuzzy
+msgid "See unpackaged files"
+msgstr "Supprimer le fichier non emballé"
 
 #, python-format
 msgid "See user %s"
@@ -62395,6 +62562,10 @@ msgstr "Afficher toutes les phases des notifications"
 
 msgid "Show all rules"
 msgstr "Afficher toutes les règles"
+
+#, fuzzy
+msgid "Show bandwidth"
+msgstr "Bande passante"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr ""
@@ -66688,6 +66859,10 @@ msgstr "Numéro de l'interrupteur"
 msgid "Switch port statistics"
 msgstr "Statistiques du port du commutateur"
 
+#, fuzzy
+msgid "Switch port statuses"
+msgstr "Statistiques du port du commutateur"
+
 msgid "Switch slave replication mode"
 msgstr "Changement du mode de réplication des esclaves"
 
@@ -70382,6 +70557,9 @@ msgstr ""
 "Le nom de l'instance, le nom de la base de données et le nom du tablespace "
 "combinés comme ceci db2wps8:WPSCOMT8.USERSPACE1"
 
+msgid "The interval for which the information will be fetched."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The interval the connection will be executed to check the available "
@@ -71636,6 +71814,11 @@ msgstr ""
 "Le plugin <tt>isc_dhcpd</tt> collecte des informations sur un démon serveur "
 "DHCP sous Linux."
 
+msgid ""
+"The plug-in <tt>mailman3_lists</tt> (Mailman 3) monitors Mailman mailing "
+"lists."
+msgstr ""
+
 #, python-format
 msgid ""
 "The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
@@ -71650,13 +71833,6 @@ msgid ""
 msgstr ""
 "Le plugin traitera tout ce qui correspond à ce modèle de globbing. Si c'est "
 "un répertoire, il traitera récursivement tout son contenu."
-
-msgid ""
-"The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</tt> "
-"(Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins will be "
-"deployed, since only one of them will produce data, depending on the install "
-"Mailman version."
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -74809,15 +74985,6 @@ msgid ""
 msgstr ""
 "Cet objet est un objet fantôme provenant d'un site distant. Il ne peut pas "
 "être géré ici."
-
-msgid ""
-"This operation will release the package from your system and release all its "
-"packaged files into unpackaged state. The files are then free to be packaged "
-"into another package or to be deleted manually."
-msgstr ""
-"Cette opération libérera le paquet de votre système et libérera tous ses "
-"fichiers empaquetés dans un état non empaqueté. Les fichiers sont alors "
-"libres d'être intégrés dans un autre paquet ou d'être supprimés manuellement."
 
 #, fuzzy
 msgid ""
@@ -78914,6 +79081,10 @@ msgstr "Times"
 
 msgid "Timeseries"
 msgstr "Série chronologique"
+
+#, fuzzy
+msgid "Timespan"
+msgstr "Times"
 
 msgid "Timespan for difference calculation of summed up values"
 msgstr "Délai de calcul de la différence des valeurs additionnées"
@@ -89636,6 +89807,10 @@ msgid "You are not allowed to change the sidebar."
 msgstr "Vous n'êtes pas autorisé à modifier la barre latérale."
 
 #, fuzzy
+msgid "You are not allowed to clone dashboards."
+msgstr "Vous n'êtes pas autorisé à modifier les tableaux de bord."
+
+#, fuzzy
 msgid "You are not allowed to create dashboards."
 msgstr "Vous n'êtes pas autorisé à modifier les tableaux de bord."
 
@@ -94386,6 +94561,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Reset to pre-defined filters"
+msgstr "Supprimer le filtre"
+
+#, fuzzy
 msgid "Edit filter configuration"
 msgstr "Configuration de l'hôte"
 
@@ -95070,6 +95249,18 @@ msgid "Dashboard filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
+msgid "Widget data"
+msgstr "Ajouter un filtre"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "Ajouter une cible"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Ajouter une cible"
+
+#, fuzzy
 msgid "Link content to"
 msgstr "Lien du titre"
 
@@ -95170,18 +95361,6 @@ msgstr "Stocker les notifications pour l'analyse des règles"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Options supplémentaires"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Ajouter un filtre"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "Ajouter une cible"
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Ajouter une cible"
 
 #, fuzzy
 msgid "Unrestricted"
@@ -96713,6 +96892,34 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Connected Clients"
+#~ msgstr "Connexions"
+
+#~ msgid "Dissolve the package, release its files into unpackaged state"
+#~ msgstr "Dissoudre le paquet, libérer ses fichiers dans un état non emballé"
+
+#, python-format
+#~ msgid "Dissolved extension package %s %s"
+#~ msgstr "Paquet d'extension dissous %s %s"
+
+#, fuzzy
+#~ msgid "Hit ratio"
+#~ msgstr "Durée d'initialisation"
+
+#~ msgid "Hz"
+#~ msgstr "Hz"
+
+#, fuzzy
+#~ msgid "Invalid ifid parameter"
+#~ msgstr "Paramètre de contrôle non valide"
+
+#~ msgid "Release"
+#~ msgstr "Libération"
+
+#~ msgid "Remove package"
+#~ msgstr "Retirer l'emballage"
+
+#, fuzzy
 #~ msgid "Datapath availability"
 #~ msgstr "Disponibilité du chemin de données niveaux inférieurs"
 
@@ -96789,10 +96996,6 @@ msgstr ""
 #~ msgstr "Filtres de service"
 
 #, fuzzy
-#~ msgid "Reset to saved filters"
-#~ msgstr "Supprimer le filtre"
-
-#, fuzzy
 #~ msgid "Success! Your new dashboard filters have been saved"
 #~ msgstr "Vos modifications ont été enregistrées."
 
@@ -96807,18 +97010,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add OAuth2 connection"
 #~ msgstr "Ajouter une connexion LDAP"
-
-#, fuzzy
-#~ msgid "Broadcast"
-#~ msgstr "diffuser"
-
-#, fuzzy
-#~ msgid "Prefix length"
-#~ msgstr "Texte du préfixe"
-
-#, fuzzy
-#~ msgid "Scope ID"
-#~ msgstr "ID du nœud"
 
 #, fuzzy
 #~ msgid "Description:"
@@ -98663,10 +98854,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Date sent"
 #~ msgstr "Données envoyées"
-
-#, fuzzy, python-format
-#~ msgid "Extension package %r"
-#~ msgstr "Paquets d'extension"
 
 #, fuzzy, python-format
 #~ msgid "Unpackaged file %r"

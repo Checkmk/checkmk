@@ -1586,42 +1586,22 @@ class LicenseAPI(BaseAPI):
 class OtelCollectorAPI(BaseAPI):
     def __init__(self, session: CMKOpenApiSession) -> None:
         super().__init__(session)
-        # Hack to use the "internal" version of the API endpoint
+        # Hack to use the "unstable" version of the API endpoint
         self.base_url = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
-
-    def get_receivers(self, expect_ok: bool = True) -> requests.Response:
-        """Get all OpenTelemetry collector receivers via REST API."""
-        response = self.session.get(
-            url=self.base_url + "/domain-types/otel_collector_config_receivers/collections/all",
-        )
-        if expect_ok and response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
-
-    def get_prom_scrapers(self, expect_ok: bool = True) -> requests.Response:
-        """Get all OpenTelemetry collector prometheus scrapiers via REST API."""
-        response = self.session.get(
-            url=self.base_url + "/domain-types/otel_collector_config_prom_scrape/collections/all",
-        )
-        if expect_ok and response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
 
     def create_receivers(
         self,
         ident: str,
-        site_ids: Sequence[str],
         title: str,
         disabled: bool,
         receiver_protocol_grpc: dict[str, Any] | None = None,
         receiver_protocol_http: dict[str, Any] | None = None,
-        expect_ok: bool = True,
-    ) -> requests.Response:
+    ) -> None:
         """Create an OpenTelemetry collector receivers via REST API."""
         body = {
             "id": ident,
             "disabled": disabled,
-            "site": site_ids,
+            "site": [self.session.site],
             "title": title,
         }
         if receiver_protocol_grpc:
@@ -1629,28 +1609,26 @@ class OtelCollectorAPI(BaseAPI):
         if receiver_protocol_http:
             body["receiver_protocol_http"] = receiver_protocol_http
 
+        # hack to use the "unstable" version of the API endpoint
         response = self.session.post(
             url=self.base_url + "/domain-types/otel_collector_config_receivers/collections/all",
             json=body,
         )
-        if expect_ok and response.status_code != 200:
+        if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response
 
     def create_prom_scrape(
         self,
         ident: str,
-        site_ids: Sequence[str],
         title: str,
         disabled: bool,
         prometheus_scrape_configs: list[dict[str, Any]] | None = None,
-        expect_ok: bool = True,
-    ) -> requests.Response:
+    ) -> None:
         """Create an OpenTelemetry collector prometheus scraping config via REST API."""
         body = {
             "id": ident,
             "disabled": disabled,
-            "site": site_ids,
+            "site": [self.session.site],
             "title": title,
         }
         if prometheus_scrape_configs:
@@ -1661,106 +1639,40 @@ class OtelCollectorAPI(BaseAPI):
             url=self.base_url + "/domain-types/otel_collector_config_prom_scrape/collections/all",
             json=body,
         )
-        if expect_ok and response.status_code != 200:
+        if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response
 
-    def edit_receivers(
-        self,
-        ident: str,
-        site_ids: Sequence[str],
-        title: str | None = None,
-        disabled: bool | None = None,
-        receiver_protocol_grpc: dict[str, Any] | None = None,
-        receiver_protocol_http: dict[str, Any] | None = None,
-        expect_ok: bool = True,
-    ) -> requests.Response:
-        """Edit an OpenTelemetry collector receiver via REST API."""
-
-        body: dict[str, Any] = {
-            "id": ident,
-            "disabled": disabled,
-            "site": site_ids,
-            "title": title,
-        }
-
-        if receiver_protocol_grpc:
-            body["receiver_protocol_grpc"] = receiver_protocol_grpc
-        if receiver_protocol_http:
-            body["receiver_protocol_http"] = receiver_protocol_http
-
-        response = self.session.put(
-            url=self.base_url + f"/objects/otel_collector_config_receivers/{ident}",
-            json=body,
-        )
-        if expect_ok and response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
-
-    def edit_prom_scrape(
-        self,
-        ident: str,
-        site_ids: Sequence[str],
-        title: str | None = None,
-        disabled: bool | None = None,
-        prometheus_scrape_configs: list[dict[str, Any]] | None = None,
-        expect_ok: bool = True,
-    ) -> requests.Response:
-        """Edit an OpenTelemetry collector prometheus scraping via REST API."""
-
-        body: dict[str, Any] = {
-            "id": ident,
-            "disabled": disabled,
-            "site": site_ids,
-            "title": title,
-        }
-
-        if prometheus_scrape_configs:
-            body["prometheus_scrape_configs"] = prometheus_scrape_configs
-
-        response = self.session.put(
-            url=self.base_url + f"/objects/otel_collector_config_prom_scrape/{ident}",
-            json=body,
-        )
-        if expect_ok and response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
-
-    def delete_receivers(self, ident: str, expect_ok: bool = True) -> requests.Response:
+    def delete_receivers(self, ident: str) -> None:
         """Delete an OpenTelemetry collector receiver via REST API."""
         response = self.session.delete(
             self.base_url + f"/objects/otel_collector_config_receivers/{ident}"
         )
-        if expect_ok and response.status_code != 204:
+        if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
-        return response
 
-    def delete_prom_scrape(self, ident: str, expect_ok: bool = True) -> requests.Response:
+    def delete_prom_scrape(self, ident: str) -> None:
         """Delete an OpenTelemetry collector prometheus scraping via REST API."""
         response = self.session.delete(
             self.base_url + f"/objects/otel_collector_config_prom_scrape/{ident}"
         )
-        if expect_ok and response.status_code != 204:
+        if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
-        return response
 
-    def disable(self, site_id: str) -> requests.Response:
+    def disable(self, site_id: str) -> None:
         response = self.session.put(
             url=self.base_url + "/domain-types/otel_collector/actions/update/invoke",
             json={"site_id": site_id, "activation": {"mode": "disabled"}},
         )
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
-        return response
 
-    def enable(self, site_id: str) -> requests.Response:
+    def enable(self, site_id: str) -> None:
         response = self.session.put(
             url=self.base_url + "/domain-types/otel_collector/actions/update/invoke",
             json={"site_id": site_id, "activation": {"mode": "enabled"}},
         )
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
-        return response
 
 
 class EventConsoleAPI(BaseAPI):

@@ -116,6 +116,10 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                             name="switch_port_statuses", title=Title("Switch port statuses")
                         ),
                         MultipleChoiceElement(
+                            name="wireless_device_statuses",
+                            title=Title("Wireless device statuses"),
+                        ),
+                        MultipleChoiceElement(
                             name="wireless_ethernet_statuses",
                             title=Title("Wireless ethernet statuses"),
                         ),
@@ -279,6 +283,17 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                                     TimeMagnitude.MINUTE,
                                 ),
                                 prefill=DefaultValue(36000.0),  # 10 hours
+                                custom_validate=[NumberInRange(min_value=0.0)],
+                            )
+                        ),
+                        "wireless_device_statuses": DictElement(
+                            parameter_form=TimeSpan(
+                                title=Title("Wireless device statuses"),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(1800.0),  # 30 minutes
                                 custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),

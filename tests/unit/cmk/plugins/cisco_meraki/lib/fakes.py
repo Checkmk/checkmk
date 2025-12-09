@@ -206,6 +206,13 @@ class _FakeSwitchSDK:
 
 
 class _FakeWirelessSDK:
+    def getDeviceWirelessStatus(self, serial: str) -> Sequence[schema.RawWirelessDeviceStatus]:
+        wireless_statuses = {
+            "S123-wes": [factories.RawWirelessDeviceStatusFactory.build()],
+            "S456-wes": [factories.RawWirelessDeviceStatusFactory.build()],
+        }
+        return wireless_statuses.get(serial, [])
+
     def getOrganizationWirelessDevicesEthernetStatuses(
         self, organizationId: str, total_pages: TotalPages
     ) -> Sequence[schema.RawWirelessEthernetStatus]:

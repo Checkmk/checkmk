@@ -63,6 +63,7 @@ class TestMerakiAgentOutput:
         non_default_sections = {
             "appliance-performance",
             "switch-port-statuses",
+            "wireless-device-statuses",
         }
         updated_ctx = _update_section_names(ctx, sections=non_default_sections)
         agent.run(updated_ctx)
@@ -75,6 +76,7 @@ class TestMerakiAgentOutput:
             "networks",
             "organisations",
             "switch_port_statuses",
+            "wireless_device_statuses",
         }
 
         assert value == expected

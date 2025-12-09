@@ -106,6 +106,11 @@ class MerakiClient:
     def get_uplink_usage(self, id: str) -> Sequence[schema.RawUplinkUsage]:
         return self._appliance_client.get_uplink_usage(id)
 
+    def get_wireless_device_statuses(self, serial: str) -> Sequence[schema.RawWirelessDeviceStatus]:
+        fn = self._wireless_client.get_device_statuses
+        fetch = fn if self._no_cache else self._cache.wireless_device_statuses(fn)
+        return fetch(serial)
+
     def get_wireless_ethernet_statuses(self, id: str) -> Sequence[schema.RawWirelessEthernetStatus]:
         fn = self._wireless_client.get_ethernet_statuses
         fetch = fn if self._no_cache else self._cache.wireless_ethernet_statuses(fn)

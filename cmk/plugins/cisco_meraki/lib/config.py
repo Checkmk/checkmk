@@ -77,6 +77,7 @@ class _CacheConfig:
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]
     networks: _CacheDecorator[[str, str], Sequence[schema.Network]]
     organizations: _CacheDecorator[[], Sequence[schema.RawOrganisation]]
+    wireless_device_statuses: _CacheDecorator[[str], Sequence[schema.RawWirelessDeviceStatus]]
     wireless_ethernet_statuses: _CacheDecorator[[str], Sequence[schema.RawWirelessEthernetStatus]]
 
     @classmethod
@@ -114,6 +115,10 @@ class _CacheConfig:
                 Storage("cisco_meraki_organizations", host=args.hostname),
                 ttl=args.cache_organizations,
             ),
+            wireless_device_statuses=cache.cache_ttl(
+                Storage("cisco_meraki_wireless_device_statuses", host=args.hostname),
+                ttl=args.cache_wireless_device_statuses,
+            ),
             wireless_ethernet_statuses=cache.cache_ttl(
                 Storage("cisco_meraki_wireless_ethernet_statuses", host=args.hostname),
                 ttl=args.cache_wireless_ethernet_statuses,
@@ -132,6 +137,7 @@ class _RequiredSections:
     licenses_overview: bool
     sensor_readings: bool
     switch_port_statuses: bool
+    wireless_device_statuses: bool
     wireless_ethernet_statuses: bool
 
     @classmethod
@@ -146,6 +152,7 @@ class _RequiredSections:
             licenses_overview=constants.SEC_NAME_LICENSES_OVERVIEW in sections,
             sensor_readings=constants.SEC_NAME_SENSOR_READINGS in sections,
             switch_port_statuses=constants.SEC_NAME_SWITCH_PORT_STATUSES in sections,
+            wireless_device_statuses=constants.SEC_NAME_WIRELESS_DEVICE_STATUSES in sections,
             wireless_ethernet_statuses=constants.SEC_NAME_WIRELESS_ETHERNET_STATUSES in sections,
         )
 
@@ -159,5 +166,6 @@ class _RequiredSections:
             or self.appliance_vpns
             or self.appliance_performance
             or self.switch_port_statuses
+            or self.wireless_device_statuses
             or self.wireless_ethernet_statuses
         )

@@ -1,0 +1,9 @@
+title: Cisco Meraki: Wireless device statuses bands
+agents: cisco_meraki
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check plug-in monitors wireless device statuses band information.
+discovery:
+ One service per organisation ID and device serial is created.

@@ -76,8 +76,6 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         additional_labels = {"cmk/customer": "provider"}
         additional_label_sources = {"cmk/customer": "discovered"}
 
-    automation = automations.AutomationAnalyseHost()
-
     ts = Scenario()
     ts.add_host(HostName("test-host"))
     ts.set_option(
@@ -94,7 +92,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         "cmk/site": "discovered",
         "explicit": "explicit",
     }
-    assert automation.execute(
+    assert automations.automation_analyse_host(
         AutomationContext(
             edition=(app := make_app(edition(paths.omd_root))).edition,
             make_bake_on_restart=app.make_bake_on_restart,
@@ -113,8 +111,6 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_service_labels(monkeypatch: MonkeyPatch) -> None:
-    automation = automations.AutomationGetServicesLabels()
-
     ts = Scenario()
     ts.add_host(HostName("test-host"))
     ts.set_ruleset(
@@ -141,7 +137,7 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
     )
     config_cache = ts.apply(monkeypatch)
 
-    assert automation.execute(
+    assert automations.automation_get_service_labels(
         AutomationContext(
             edition=(app := make_app(edition(paths.omd_root))).edition,
             make_bake_on_restart=app.make_bake_on_restart,

@@ -28,8 +28,8 @@ from cmk.automations.results import (
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
-    AutomationAnalyzeHostRuleEffectiveness,
-    AutomationAnalyzeHostRuleMatches,
+    automation_analyze_host_rule_effectiveness,
+    automation_analyze_host_rule_matches,
 )
 from cmk.base.config import LoadingResult
 from cmk.ccc import version
@@ -751,7 +751,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return AutomationAnalyzeHostRuleMatches().execute(
+            return automation_analyze_host_rule_matches(
                 AutomationContext(
                     edition=(app := make_app(version.edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
@@ -907,7 +907,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return AutomationAnalyzeHostRuleEffectiveness().execute(
+            return automation_analyze_host_rule_effectiveness(
                 AutomationContext(
                     edition=(app := make_app(version.edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,

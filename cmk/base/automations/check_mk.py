@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
@@ -277,24 +275,22 @@ def _schedule_discovery_check(
             raise
 
 
-class DiscoveryAutomation:
-    def _trigger_discovery_check(
-        self,
-        config_cache: ConfigCache,
-        host_name: HostName,
-        monitoring_core: Literal["nagios", "cmc"],
-    ) -> None:
-        """if required, schedule the "Check_MK Discovery" check"""
-        if not config.inventory_check_autotrigger:
-            return
+def _trigger_discovery_check(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    monitoring_core: Literal["nagios", "cmc"],
+) -> None:
+    """if required, schedule the "Check_MK Discovery" check"""
+    if not config.inventory_check_autotrigger:
+        return
 
-        if config_cache.discovery_check_parameters(host_name).commandline_only:
-            return
+    if config_cache.discovery_check_parameters(host_name).commandline_only:
+        return
 
-        if host_name in config_cache.hosts_config.clusters:
-            return
+    if host_name in config_cache.hosts_config.clusters:
+        return
 
-        _schedule_discovery_check(host_name, monitoring_core)
+    _schedule_discovery_check(host_name, monitoring_core)
 
 
 def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]]:
@@ -303,401 +299,381 @@ def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]
     return False, args
 
 
-class AutomationDiscovery(DiscoveryAutomation):
-    # Does discovery for a list of hosts. For possible values see
-    # DiscoverySettings
-    # Hosts on the list that are offline (unmonitored) will
-    # be skipped.
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> ServiceDiscoveryResult:
-        force_snmp_cache_refresh, args = _extract_directive("@scan", args)
-        _prevent_scan, args = _extract_directive("@noscan", args)
-        raise_errors, args = _extract_directive("@raiseerrors", args)
-        # Error sensitivity
-        if raise_errors:
-            on_error = OnError.RAISE
-            os.dup2(os.open("/dev/null", os.O_WRONLY), 2)
-        else:
-            on_error = OnError.IGNORE
+def automation_service_discovery(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> ServiceDiscoveryResult:
+    """Does discovery for a list of hosts. For possible values see DiscoverySettings
+    Hosts on the list that are offline (unmonitored) will be skipped."""
+    force_snmp_cache_refresh, args = _extract_directive("@scan", args)
+    _prevent_scan, args = _extract_directive("@noscan", args)
+    raise_errors, args = _extract_directive("@raiseerrors", args)
+    # Error sensitivity
+    if raise_errors:
+        on_error = OnError.RAISE
+        os.dup2(os.open("/dev/null", os.O_WRONLY), 2)
+    else:
+        on_error = OnError.IGNORE
 
-        # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
-        file_cache_options = FileCacheOptions(use_outdated=True)
+    # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
+    file_cache_options = FileCacheOptions(use_outdated=True)
 
-        if len(args) < 2:
-            raise MKAutomationError("Need two arguments: DiscoverySettings HOSTNAME")
+    if len(args) < 2:
+        raise MKAutomationError("Need two arguments: DiscoverySettings HOSTNAME")
 
-        settings = DiscoverySettings.from_automation_arg(args[0])
-        hostnames = [HostName(h) for h in islice(args, 1, None)]
+    settings = DiscoverySettings.from_automation_arg(args[0])
+    hostnames = [HostName(h) for h in islice(args, 1, None)]
 
-        if plugins is None:
-            plugins = load_plugins()
+    if plugins is None:
+        plugins = load_plugins()
 
-        if loading_result is None:
-            loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
-            )
-        loaded_config = loading_result.loaded_config
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
-        hosts_config = loading_result.config_cache.hosts_config
-        config_cache = loading_result.config_cache
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
+    hosts_config = loading_result.config_cache.hosts_config
+    config_cache = loading_result.config_cache
 
-        discovery_config = DiscoveryConfig(
-            ruleset_matcher,
-            label_manager.labels_of_host,
-            loaded_config.discovery_rules,
-        )
-        service_name_config = config_cache.make_passive_service_name_config(
-            make_final_service_name_config(loaded_config, ruleset_matcher)
-        )
-        autochecks_config = config.AutochecksConfigurer(
-            config_cache, plugins.check_plugins, service_name_config
-        )
-        service_configurer = config_cache.make_service_configurer(
-            plugins.check_plugins, service_name_config
-        )
-        enforced_services_table = config.EnforcedServicesTable(
-            BundledHostRulesetMatcher(
-                loaded_config.static_checks, ruleset_matcher, label_manager.labels_of_host
-            ),
+    discovery_config = DiscoveryConfig(
+        ruleset_matcher,
+        label_manager.labels_of_host,
+        loaded_config.discovery_rules,
+    )
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loaded_config, ruleset_matcher)
+    )
+    autochecks_config = config.AutochecksConfigurer(
+        config_cache, plugins.check_plugins, service_name_config
+    )
+    service_configurer = config_cache.make_service_configurer(
+        plugins.check_plugins, service_name_config
+    )
+    enforced_services_table = config.EnforcedServicesTable(
+        BundledHostRulesetMatcher(
+            loaded_config.static_checks, ruleset_matcher, label_manager.labels_of_host
+        ),
+        service_name_config,
+        plugins.check_plugins,
+    )
+    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
+
+    results: dict[HostName, DiscoveryReport] = {}
+
+    parser = CMKParser(
+        config.make_parser_config(
+            loading_result.loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager,
+        ),
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
+    fetcher = CMKFetcher(
+        config_cache,
+        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
+        factory=config_cache.fetcher_factory(
+            service_configurer,
+            ip_address_of,
             service_name_config,
-            plugins.check_plugins,
-        )
-        ip_lookup_config = config_cache.ip_lookup_config()
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        )
-
-        results: dict[HostName, DiscoveryReport] = {}
-
-        parser = CMKParser(
-            config.make_parser_config(
-                loading_result.loaded_config,
-                config_cache.ruleset_matcher,
-                config_cache.label_manager,
-            ),
-            selected_sections=NO_SELECTION,
-            keep_outdated=file_cache_options.keep_outdated,
-            logger=logging.getLogger("cmk.base.discovery"),
-        )
-        fetcher = CMKFetcher(
-            config_cache,
-            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-            make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
-            factory=config_cache.fetcher_factory(
-                service_configurer,
-                ip_address_of,
-                service_name_config,
-                enforced_services_table,
-                SNMPFetcherConfig(
-                    on_error=on_error,
-                    missing_sys_description=config_cache.missing_sys_description,
-                    selected_sections=NoSelectedSNMPSections(),
-                    backend_override=None,
-                    base_path=cmk.utils.paths.omd_root,
-                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                    caching_config=make_parsed_snmp_fetch_intervals_config(
-                        loaded_config, ruleset_matcher, label_manager.labels_of_host
-                    ),
-                ),
-            ),
-            plugins=plugins,
-            get_ip_stack_config=ip_lookup_config.ip_stack_config,
-            default_address_family=ip_lookup_config.default_address_family,
-            file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=force_snmp_cache_refresh,
-            ip_address_of=ip_address_of,
-            ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
-            mode=Mode.DISCOVERY,
-            simulation_mode=config.simulation_mode,
-            secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
-            secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
-            secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
-            metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
-                hn,
-                config_cache.explicit_host_attributes,
-                config_cache.check_mk_check_interval,
-                loaded_config.monitoring_core == "cmc",
-            ),
-        )
-        # sort clusters last, to have them operate with the new nodes host labels.
-        for is_cluster, hostname in sorted((h in hosts_config.clusters, h) for h in hostnames):
-
-            def section_error_handling(
-                section_name: SectionName,
-                raw_data: Sequence[object],
-                host_name: HostName = hostname,
-            ) -> str:
-                return create_section_crash_dump(
-                    operation="parsing",
-                    section_name=section_name,
-                    section_content=raw_data,
-                    host_name=host_name,
-                    rtc_package=None,
-                )
-
-            results[hostname] = automation_discovery(
-                hostname,
-                is_cluster=is_cluster,
-                cluster_nodes=config_cache.nodes(hostname),
-                active_hosts={
-                    hn
-                    for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                    if config_cache.is_active(hn) and config_cache.is_online(hn)
-                },
-                clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
-                parser=parser,
-                fetcher=fetcher,
-                summarizer=CMKSummarizer(
-                    hostname,
-                    config_cache.summary_config,
-                    override_non_ok_state=None,
-                ),
-                section_plugins=SectionPluginMapper(
-                    {**plugins.agent_sections, **plugins.snmp_sections}
-                ),
-                section_error_handling=section_error_handling,
-                host_label_plugins=HostLabelPluginMapper(
-                    discovery_config=discovery_config,
-                    sections={**plugins.agent_sections, **plugins.snmp_sections},
-                ),
-                plugins=DiscoveryPluginMapper(
-                    discovery_config=discovery_config,
-                    check_plugins=plugins.check_plugins,
-                ),
-                autochecks_config=autochecks_config,
-                settings=settings,
-                keep_clustered_vanished_services=True,
-                service_filters=None,
-                enforced_services=enforced_services_table(hostname),
+            enforced_services_table,
+            SNMPFetcherConfig(
                 on_error=on_error,
+                missing_sys_description=config_cache.missing_sys_description,
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                base_path=cmk.utils.paths.omd_root,
+                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loaded_config, ruleset_matcher, label_manager.labels_of_host
+                ),
+            ),
+        ),
+        plugins=plugins,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
+        default_address_family=ip_lookup_config.default_address_family,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=force_snmp_cache_refresh,
+        ip_address_of=ip_address_of,
+        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        mode=Mode.DISCOVERY,
+        simulation_mode=config.simulation_mode,
+        secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
+        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
+            loaded_config.monitoring_core == "cmc",
+        ),
+    )
+    # sort clusters last, to have them operate with the new nodes host labels.
+    for is_cluster, hostname in sorted((h in hosts_config.clusters, h) for h in hostnames):
+
+        def section_error_handling(
+            section_name: SectionName,
+            raw_data: Sequence[object],
+            host_name: HostName = hostname,
+        ) -> str:
+            return create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=host_name,
+                rtc_package=None,
             )
 
-            if results[hostname].error_text is None:
-                # Trigger the discovery service right after performing the discovery to
-                # make the service reflect the new state as soon as possible.
-                self._trigger_discovery_check(
-                    config_cache, hostname, loading_result.loaded_config.monitoring_core
-                )
+        results[hostname] = automation_discovery(
+            hostname,
+            is_cluster=is_cluster,
+            cluster_nodes=config_cache.nodes(hostname),
+            active_hosts={
+                hn
+                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            },
+            clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
+            parser=parser,
+            fetcher=fetcher,
+            summarizer=CMKSummarizer(
+                hostname,
+                config_cache.summary_config,
+                override_non_ok_state=None,
+            ),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
+            section_error_handling=section_error_handling,
+            host_label_plugins=HostLabelPluginMapper(
+                discovery_config=discovery_config,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
+            plugins=DiscoveryPluginMapper(
+                discovery_config=discovery_config,
+                check_plugins=plugins.check_plugins,
+            ),
+            autochecks_config=autochecks_config,
+            settings=settings,
+            keep_clustered_vanished_services=True,
+            service_filters=None,
+            enforced_services=enforced_services_table(hostname),
+            on_error=on_error,
+        )
 
-        return ServiceDiscoveryResult(results)
-
-
-class AutomationSpecialAgentDiscoveryPreview:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> ServiceDiscoveryPreviewResult:
-        edition = cmk_version.edition(cmk.utils.paths.omd_root)
-        run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
-
-        if plugins is None:
-            plugins = load_plugins()
-        if loading_result is None:
-            loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
+        if results[hostname].error_text is None:
+            # Trigger the discovery service right after performing the discovery to
+            # make the service reflect the new state as soon as possible.
+            _trigger_discovery_check(
+                config_cache, hostname, loading_result.loaded_config.monitoring_core
             )
 
-        loaded_config = loading_result.loaded_config
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        config_cache = loading_result.config_cache
+    return ServiceDiscoveryResult(results)
 
-        final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
-        service_name_config = config_cache.make_passive_service_name_config(
-            final_service_name_config
-        )
-        file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
-        ad_hoc_secrets = AdHocSecrets(
-            path=(
-                Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
-                if run_settings.host_config.relay_id is None
-                else Path(cmk.utils.paths.relative_tmp_dir, f"passwords_temp_relay_{uuid.uuid4()}")
-            ),
-            secrets=run_settings.passwords,
-        )
 
-        cmds = get_special_agent_commandline(
-            run_settings.host_config,
-            run_settings.agent_name,
-            run_settings.params,
-            ad_hoc_secrets.path,
-            ad_hoc_secrets.secrets,
-            config_processing.GlobalProxiesWithLookup(
-                global_proxies={
-                    name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
-                    for name, raw in run_settings.http_proxies.items()
-                },
-                password_lookup=make_staged_passwords_lookup(),
-            ),
-        )
+def automation_special_agent_discovery_preview(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> ServiceDiscoveryPreviewResult:
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+    run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
 
-        fetcher = SpecialAgentFetcher(
-            config.make_fetcher_trigger(edition, run_settings.host_config.relay_id),
-            ad_hoc_secrets,
-            agent_name=run_settings.agent_name,
-            cmds=cmds,
-            is_cmc=loaded_config.monitoring_core == "cmc",
-        )
-        preview = _get_discovery_preview(
-            run_settings.host_config.host_name,
-            {
-                run_settings.host_config.host_name: run_settings.host_config.host_primary_family
-            }.__getitem__,
-            {
-                run_settings.host_config.host_name: run_settings.host_config.ip_stack_config
-            }.__getitem__,
-            OnError.RAISE,
-            fetcher,
-            file_cache_options,
-            loaded_config,
-            final_service_name_config,
+    if plugins is None:
+        plugins = load_plugins()
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    config_cache = loading_result.config_cache
+
+    final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
+    service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
+    file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
+    ad_hoc_secrets = AdHocSecrets(
+        path=(
+            Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
+            if run_settings.host_config.relay_id is None
+            else Path(cmk.utils.paths.relative_tmp_dir, f"passwords_temp_relay_{uuid.uuid4()}")
+        ),
+        secrets=run_settings.passwords,
+    )
+
+    cmds = get_special_agent_commandline(
+        run_settings.host_config,
+        run_settings.agent_name,
+        run_settings.params,
+        ad_hoc_secrets.path,
+        ad_hoc_secrets.secrets,
+        config_processing.GlobalProxiesWithLookup(
+            global_proxies={
+                name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
+                for name, raw in run_settings.http_proxies.items()
+            },
+            password_lookup=make_staged_passwords_lookup(),
+        ),
+    )
+
+    fetcher = SpecialAgentFetcher(
+        config.make_fetcher_trigger(edition, run_settings.host_config.relay_id),
+        ad_hoc_secrets,
+        agent_name=run_settings.agent_name,
+        cmds=cmds,
+        is_cmc=loaded_config.monitoring_core == "cmc",
+    )
+    preview = _get_discovery_preview(
+        run_settings.host_config.host_name,
+        {
+            run_settings.host_config.host_name: run_settings.host_config.host_primary_family
+        }.__getitem__,
+        {run_settings.host_config.host_name: run_settings.host_config.ip_stack_config}.__getitem__,
+        OnError.RAISE,
+        fetcher,
+        file_cache_options,
+        loaded_config,
+        final_service_name_config,
+        service_name_config,
+        config_cache,
+        plugins,
+        _disabled_ip_lookup,
+        run_settings.host_config.ip_address,
+    )
+
+    return preview
+
+
+def automation_discovery_preview(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> ServiceDiscoveryPreviewResult:
+    prevent_fetching, args = _extract_directive("@nofetch", args)
+    raise_errors, args = _extract_directive("@raiseerrors", args)
+    host_name = HostName(args[0])
+
+    if plugins is None:
+        plugins = load_plugins()
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
+
+    config_cache = loading_result.config_cache
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+    final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
+    service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
+    service_configurer = config_cache.make_service_configurer(
+        plugins.check_plugins, service_name_config
+    )
+    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
+        ip_address_of_bare,
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=handle_ip_lookup_failure,
+    )
+    on_error = OnError.RAISE if raise_errors else OnError.WARN
+    file_cache_options = FileCacheOptions(
+        use_outdated=prevent_fetching, use_only_cache=prevent_fetching
+    )
+    fetcher = CMKFetcher(
+        config_cache,
+        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
+        factory=config_cache.fetcher_factory(
+            service_configurer,
+            ip_address_of_with_fallback,
             service_name_config,
-            config_cache,
-            plugins,
-            _disabled_ip_lookup,
-            run_settings.host_config.ip_address,
-        )
-
-        return preview
-
-
-class AutomationDiscoveryPreview:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> ServiceDiscoveryPreviewResult:
-        prevent_fetching, args = _extract_directive("@nofetch", args)
-        raise_errors, args = _extract_directive("@raiseerrors", args)
-        host_name = HostName(args[0])
-
-        if plugins is None:
-            plugins = load_plugins()
-        if loading_result is None:
-            loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
-            )
-
-        loaded_config = loading_result.loaded_config
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
-
-        config_cache = loading_result.config_cache
-        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
-        service_name_config = config_cache.make_passive_service_name_config(
-            final_service_name_config
-        )
-        service_configurer = config_cache.make_service_configurer(
-            plugins.check_plugins, service_name_config
-        )
-        ip_lookup_config = config_cache.ip_lookup_config()
-        ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
-        ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
-            ip_address_of_bare,
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=handle_ip_lookup_failure,
-        )
-        on_error = OnError.RAISE if raise_errors else OnError.WARN
-        file_cache_options = FileCacheOptions(
-            use_outdated=prevent_fetching, use_only_cache=prevent_fetching
-        )
-        fetcher = CMKFetcher(
-            config_cache,
-            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-            make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
-            factory=config_cache.fetcher_factory(
-                service_configurer,
-                ip_address_of_with_fallback,
+            config.EnforcedServicesTable(
+                BundledHostRulesetMatcher(
+                    loaded_config.static_checks, ruleset_matcher, label_manager.labels_of_host
+                ),
                 service_name_config,
-                config.EnforcedServicesTable(
-                    BundledHostRulesetMatcher(
-                        loaded_config.static_checks, ruleset_matcher, label_manager.labels_of_host
-                    ),
-                    service_name_config,
-                    plugins.check_plugins,
-                ),
-                SNMPFetcherConfig(
-                    on_error=on_error,
-                    missing_sys_description=config_cache.missing_sys_description,
-                    selected_sections=NoSelectedSNMPSections(),
-                    backend_override=None,
-                    base_path=cmk.utils.paths.omd_root,
-                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                    caching_config=make_parsed_snmp_fetch_intervals_config(
-                        loading_result.loaded_config,
-                        config_cache.ruleset_matcher,
-                        config_cache.label_manager.labels_of_host,
-                    ),
-                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                ),
+                plugins.check_plugins,
             ),
-            plugins=plugins,
-            default_address_family=ip_lookup_config.default_address_family,
-            file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=not prevent_fetching,
-            get_ip_stack_config=ip_lookup_config.ip_stack_config,
-            ip_address_of=ip_address_of_with_fallback,
-            ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
-            mode=Mode.DISCOVERY,
-            simulation_mode=config.simulation_mode,
-            secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
-            secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
-            secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
-            # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
-            # and tabula rasa)
-            max_cachefile_age=MaxAge.zero(),
-            metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
-                hn,
-                config_cache.explicit_host_attributes,
-                config_cache.check_mk_check_interval,
-                loaded_config.monitoring_core == "cmc",
+            SNMPFetcherConfig(
+                on_error=on_error,
+                missing_sys_description=config_cache.missing_sys_description,
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                base_path=cmk.utils.paths.omd_root,
+                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                caching_config=make_parsed_snmp_fetch_intervals_config(
+                    loading_result.loaded_config,
+                    config_cache.ruleset_matcher,
+                    config_cache.label_manager.labels_of_host,
+                ),
+                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
             ),
-        )
-        hosts_config = config.make_hosts_config(loaded_config)
-        ip_family = ip_lookup_config.default_address_family(host_name)
-        ip_address = (
-            None
-            if host_name in hosts_config.clusters
-            or ip_lookup_config.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
-            # We *must* do the lookup *before* calling `get_host_attributes()`
-            # because...  I don't know... global variables I guess.  In any case,
-            # doing it the other way around breaks one integration test.
-            # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
-            else ip_address_of_bare(host_name, ip_family)
-        )
-        return _get_discovery_preview(
-            host_name,
-            ip_lookup_config.default_address_family,
-            ip_lookup_config.ip_stack_config,
-            on_error,
-            fetcher,
-            file_cache_options,
-            loaded_config,
-            active_service_name_config=final_service_name_config,
-            passive_service_name_config=service_name_config,
-            config_cache=config_cache,
-            plugins=plugins,
-            ip_address_of=ip_address_of_with_fallback,
-            ip_address=ip_address,
-        )
+        ),
+        plugins=plugins,
+        default_address_family=ip_lookup_config.default_address_family,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=not prevent_fetching,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
+        ip_address_of=ip_address_of_with_fallback,
+        ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        mode=Mode.DISCOVERY,
+        simulation_mode=config.simulation_mode,
+        secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
+        secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+        # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
+        # and tabula rasa)
+        max_cachefile_age=MaxAge.zero(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
+            loaded_config.monitoring_core == "cmc",
+        ),
+    )
+    hosts_config = config.make_hosts_config(loaded_config)
+    ip_family = ip_lookup_config.default_address_family(host_name)
+    ip_address = (
+        None
+        if host_name in hosts_config.clusters
+        or ip_lookup_config.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
+        # We *must* do the lookup *before* calling `get_host_attributes()`
+        # because...  I don't know... global variables I guess.  In any case,
+        # doing it the other way around breaks one integration test.
+        # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
+        else ip_address_of_bare(host_name, ip_family)
+    )
+    return _get_discovery_preview(
+        host_name,
+        ip_lookup_config.default_address_family,
+        ip_lookup_config.ip_stack_config,
+        on_error,
+        fetcher,
+        file_cache_options,
+        loaded_config,
+        active_service_name_config=final_service_name_config,
+        passive_service_name_config=service_name_config,
+        config_cache=config_cache,
+        plugins=plugins,
+        ip_address_of=ip_address_of_with_fallback,
+        ip_address=ip_address,
+    )
 
 
 def _get_discovery_preview(
@@ -1004,20 +980,16 @@ def _execute_discovery(
     )
 
 
-class AutomationAutodiscovery(DiscoveryAutomation):
-    cmd = "autodiscovery"
+def automation_autodiscovery(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> AutodiscoveryResult:
+    with redirect_stdout(open(os.devnull, "w")):
+        result = _execute_autodiscovery(ctx, plugins, loading_result)
 
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> AutodiscoveryResult:
-        with redirect_stdout(open(os.devnull, "w")):
-            result = _execute_autodiscovery(ctx, plugins, loading_result)
-
-        return AutodiscoveryResult(*result)
+    return AutodiscoveryResult(*result)
 
 
 def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
@@ -1380,107 +1352,98 @@ def _make_get_effective_host_of_autocheck_callback(
     return get_effective_host_of_autocheck
 
 
-class AutomationSetAutochecksV2(DiscoveryAutomation):
-    cmd = "set-autochecks-v2"
-    # This is an incompatibly changed version of the set-autochecks command.
-    # The last version to support the old 'set-autochecks' was 2.4
-    # Consider changing the name back to 'set-autochecks' in 2.6
+# This is an incompatibly changed version of the set-autochecks command.
+# The last version to support the old 'set-autochecks' was 2.4
+# Consider changing the name back to 'set-autochecks' in 2.6
+def automation_set_autochecks_v2(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> SetAutochecksV2Result:
+    set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
 
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> SetAutochecksV2Result:
-        set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
+    if plugins is None:
+        plugins = load_plugins()
 
-        if plugins is None:
-            plugins = load_plugins()
+    check_plugins = plugins.check_plugins
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
 
-        check_plugins = plugins.check_plugins
-        if loading_result is None:
-            loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
-            )
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
 
-        loaded_config = loading_result.loaded_config
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    config_cache = loading_result.config_cache
 
-        config_cache = loading_result.config_cache
+    service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
+        (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name
+        for host, services in {
+            **{set_autochecks_input.discovered_host: set_autochecks_input.target_services},
+            **set_autochecks_input.nodes_services,
+        }.items()
+        for service_name, autocheck_entry in services.items()
+    }
 
-        service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
-            (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name
-            for host, services in {
-                **{set_autochecks_input.discovered_host: set_autochecks_input.target_services},
-                **set_autochecks_input.nodes_services,
-            }.items()
-            for service_name, autocheck_entry in services.items()
-        }
+    # This function is used to get the effective host for a service description.
+    # Some of the service_descriptions are actually already passed down in which case they
+    # are used directly. In case all service_descriptions are passed down, needs_checks can
+    # be set to False.
+    get_effective_host_of_autocheck = _make_get_effective_host_of_autocheck_callback(
+        config_cache,
+        check_plugins,
+        config_cache.make_passive_service_name_config(
+            make_final_service_name_config(loaded_config, ruleset_matcher)
+        ),
+        service_descriptions,
+    )
 
-        # This function is used to get the effective host for a service description.
-        # Some of the service_descriptions are actually already passed down in which case they
-        # are used directly. In case all service_descriptions are passed down, needs_checks can
-        # be set to False.
-        get_effective_host_of_autocheck = _make_get_effective_host_of_autocheck_callback(
-            config_cache,
-            check_plugins,
-            config_cache.make_passive_service_name_config(
-                make_final_service_name_config(loaded_config, ruleset_matcher)
-            ),
-            service_descriptions,
+    if set_autochecks_input.discovered_host not in config_cache.hosts_config.clusters:
+        set_autochecks_for_effective_host(
+            autochecks_owner=set_autochecks_input.discovered_host,
+            effective_host=set_autochecks_input.discovered_host,
+            new_services=set_autochecks_input.target_services.values(),
+            get_effective_host=get_effective_host_of_autocheck,
         )
-
-        if set_autochecks_input.discovered_host not in config_cache.hosts_config.clusters:
+    else:
+        desired_on_cluster = {s.id() for s in set_autochecks_input.target_services.values()}
+        for node, services in set_autochecks_input.nodes_services.items():
             set_autochecks_for_effective_host(
-                autochecks_owner=set_autochecks_input.discovered_host,
+                autochecks_owner=node,
                 effective_host=set_autochecks_input.discovered_host,
-                new_services=set_autochecks_input.target_services.values(),
+                new_services=(s for s in services.values() if s.id() in desired_on_cluster),
                 get_effective_host=get_effective_host_of_autocheck,
             )
-        else:
-            desired_on_cluster = {s.id() for s in set_autochecks_input.target_services.values()}
-            for node, services in set_autochecks_input.nodes_services.items():
-                set_autochecks_for_effective_host(
-                    autochecks_owner=node,
-                    effective_host=set_autochecks_input.discovered_host,
-                    new_services=(s for s in services.values() if s.id() in desired_on_cluster),
-                    get_effective_host=get_effective_host_of_autocheck,
-                )
 
-        self._trigger_discovery_check(
-            config_cache,
-            set_autochecks_input.discovered_host,
-            loaded_config.monitoring_core,
-        )
+    _trigger_discovery_check(
+        config_cache,
+        set_autochecks_input.discovered_host,
+        loaded_config.monitoring_core,
+    )
 
-        return SetAutochecksV2Result()
+    return SetAutochecksV2Result()
 
 
-class AutomationUpdateHostLabels(DiscoveryAutomation):
+def automation_update_host_labels(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> UpdateHostLabelsResult:
     """Set the new collection of discovered host labels"""
+    hostname = HostName(args[0])
+    DiscoveredHostLabelsStore(hostname).save(
+        [
+            HostLabel.from_dict(name, hl_dict)
+            for name, hl_dict in ast.literal_eval(sys.stdin.read()).items()
+        ]
+    )
 
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> UpdateHostLabelsResult:
-        hostname = HostName(args[0])
-        DiscoveredHostLabelsStore(hostname).save(
-            [
-                HostLabel.from_dict(name, hl_dict)
-                for name, hl_dict in ast.literal_eval(sys.stdin.read()).items()
-            ]
-        )
-
-        if loading_result is None:
-            loading_result = load_config(discovery_rulesets=())
-        self._trigger_discovery_check(
-            loading_result.config_cache, hostname, loading_result.loaded_config.monitoring_core
-        )
-        return UpdateHostLabelsResult()
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=())
+    _trigger_discovery_check(
+        loading_result.config_cache, hostname, loading_result.loaded_config.monitoring_core
+    )
+    return UpdateHostLabelsResult()
 
 
 class AutomationRenameHosts:
@@ -1872,89 +1835,81 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname}
         return name.replace(".", "[.]")
 
 
-class AutomationGetServicesLabels:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> GetServicesLabelsResult:
-        host_name, services = HostName(args[0]), args[1:]
+def automation_get_service_labels(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> GetServicesLabelsResult:
+    host_name, services = HostName(args[0]), args[1:]
 
-        if plugins is None:
-            plugins = load_plugins()
-        if loading_result is None:
-            loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
+    if plugins is None:
+        plugins = load_plugins()
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
+
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+
+    # I think we might be computing something here that the caller already knew.
+    service_configurer = loading_result.config_cache.make_service_configurer(
+        plugins.check_plugins,
+        loading_result.config_cache.make_passive_service_name_config(
+            make_final_service_name_config(loaded_config, ruleset_matcher)
+        ),
+    )
+    discovered_services = service_configurer.configure_autochecks(
+        host_name, loading_result.config_cache.autochecks_memoizer.read(host_name)
+    )
+    discovered_labels = {s.description: s.labels for s in discovered_services}
+
+    return GetServicesLabelsResult(
+        {
+            service: label_manager.labels_of_service(
+                host_name,
+                service,
+                discovered_labels.get(service, {}),
             )
+            for service in services
+        }
+    )
 
-        loaded_config = loading_result.loaded_config
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
 
-        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+def automation_get_service_name(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> GetServiceNameResult:
+    host_name = HostName(args[0])
+    service_id = ServiceID(CheckPluginName(args[1]), ast.literal_eval(args[2]))
 
-        # I think we might be computing something here that the caller already knew.
-        service_configurer = loading_result.config_cache.make_service_configurer(
-            plugins.check_plugins,
-            loading_result.config_cache.make_passive_service_name_config(
-                make_final_service_name_config(loaded_config, ruleset_matcher)
+    if plugins is None:
+        plugins = load_plugins()
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+    service_name_config = loading_result.config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loaded_config, ruleset_matcher)
+    )
+    return GetServiceNameResult(
+        service_name=service_name_config(
+            host_name,
+            service_id,
+            (
+                None
+                if (p := get_check_plugin(service_id.name, plugins.check_plugins)) is None
+                else p.service_name
             ),
         )
-        discovered_services = service_configurer.configure_autochecks(
-            host_name, loading_result.config_cache.autochecks_memoizer.read(host_name)
-        )
-        discovered_labels = {s.description: s.labels for s in discovered_services}
-
-        return GetServicesLabelsResult(
-            {
-                service: label_manager.labels_of_service(
-                    host_name,
-                    service,
-                    discovered_labels.get(service, {}),
-                )
-                for service in services
-            }
-        )
-
-
-class AutomationGetServiceName:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> GetServiceNameResult:
-        host_name = HostName(args[0])
-        service_id = ServiceID(CheckPluginName(args[1]), ast.literal_eval(args[2]))
-
-        if plugins is None:
-            plugins = load_plugins()
-        if loading_result is None:
-            loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
-            )
-
-        loaded_config = loading_result.loaded_config
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-
-        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        service_name_config = loading_result.config_cache.make_passive_service_name_config(
-            make_final_service_name_config(loaded_config, ruleset_matcher)
-        )
-        return GetServiceNameResult(
-            service_name=service_name_config(
-                host_name,
-                service_id,
-                (
-                    None
-                    if (p := get_check_plugin(service_id.name, plugins.check_plugins)) is None
-                    else p.service_name
-                ),
-            )
-        )
+    )
 
 
 @dataclass
@@ -2249,152 +2204,140 @@ class AutomationAnalyseServices:
                 return
 
 
-class AutomationAnalyseHost:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> AnalyseHostResult:
-        host_name = HostName(args[0])
+def automation_analyse_host(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> AnalyseHostResult:
+    host_name = HostName(args[0])
 
-        if loading_result is None:
-            loading_result = load_config(discovery_rulesets=())
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=())
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
 
-        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        return AnalyseHostResult(
-            label_manager.labels_of_host(host_name),
-            label_manager.label_sources_of_host(host_name),
-        )
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+    return AnalyseHostResult(
+        label_manager.labels_of_host(host_name),
+        label_manager.label_sources_of_host(host_name),
+    )
 
 
-class AutomationAnalyzeHostRuleMatches:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> AnalyzeHostRuleMatchesResult:
-        host_name = HostName(args[0])
-        # We read the list of rules from stdin since it could be too much for the command line
-        match_rules = ast.literal_eval(sys.stdin.read())
+def automation_analyze_host_rule_matches(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> AnalyzeHostRuleMatchesResult:
+    host_name = HostName(args[0])
+    # We read the list of rules from stdin since it could be too much for the command line
+    match_rules = ast.literal_eval(sys.stdin.read())
 
-        if loading_result is None:
-            loading_result = load_config(discovery_rulesets=())
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=())
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
 
-        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
-        return AnalyzeHostRuleMatchesResult(
-            {
-                rules[0]["id"]: list(
-                    ruleset_matcher.get_host_values_all(
-                        host_name, rules, label_manager.labels_of_host
-                    )
-                )
-                # The caller needs to get one result per rule. For this reason we can not just use
-                # the list of rules with the ruleset matching functions but have to execute rule
-                # matching for the rules individually. If we would use the provided list of rules,
-                # then the not matching rules would not be represented in the result and we would
-                # not know which matched value is related to which rule.
-                for rules in match_rules
-            }
-        )
-
-
-class AutomationAnalyzeServiceRuleMatches:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> AnalyzeServiceRuleMatchesResult:
-        host_name = HostName(args[0])
-        # This is not necessarily a service description. Can also be an item name when matching
-        # checkgroup rules.
-        service_or_item = args[1]
-
-        # We read the list of rules from stdin since it could be too much for the command line
-        match_rules, service_labels = ast.literal_eval(sys.stdin.read())
-
-        if loading_result is None:
-            loading_result = load_config(discovery_rulesets=())
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
-
-        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-
-        return AnalyzeServiceRuleMatchesResult(
-            {
-                rules[0]["id"]: list(
-                    ruleset_matcher._get_service_ruleset_values(
-                        host_name,
-                        service_or_item,
-                        service_labels,
-                        rules,
-                        label_manager.labels_of_host,
-                    )
-                )
-                # The caller needs to get one result per rule. For this reason we can not just
-                # use the list of rules with the ruleset matching functions but have to execute
-                # rule matching for the rules individually. If we would use the provided list of
-                # rules, then the not matching rules would not be represented in the result and
-                # we would not know which matched value is related to which rule.
-                for rules in match_rules
-            }
-        )
-
-
-class AutomationAnalyzeHostRuleEffectiveness:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> AnalyzeHostRuleEffectivenessResult:
-        # We read the list of rules from stdin since it could be too much for the command line
-        match_rules = ast.literal_eval(sys.stdin.read())
-
-        if loading_result is None:
-            loading_result = load_config(discovery_rulesets=())
-        config_cache = loading_result.config_cache
-        ruleset_matcher = config_cache.ruleset_matcher
-        label_manager = config_cache.label_manager
-        hosts_config = config_cache.hosts_config
-
-        host_names = list(
-            filter(
-                config_cache.is_online,
-                itertools.chain(
-                    hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts
-                ),
+    return AnalyzeHostRuleMatchesResult(
+        {
+            rules[0]["id"]: list(
+                ruleset_matcher.get_host_values_all(host_name, rules, label_manager.labels_of_host)
             )
-        )
+            # The caller needs to get one result per rule. For this reason we can not just use
+            # the list of rules with the ruleset matching functions but have to execute rule
+            # matching for the rules individually. If we would use the provided list of rules,
+            # then the not matching rules would not be represented in the result and we would
+            # not know which matched value is related to which rule.
+            for rules in match_rules
+        }
+    )
 
-        return AnalyzeHostRuleEffectivenessResult(
-            {
-                rules[0]["id"]: any(
-                    True
-                    for host_name in host_names
-                    for _ in ruleset_matcher.get_host_values_all(
-                        host_name, rules, label_manager.labels_of_host
-                    )
+
+def automation_analyze_service_rule_matches(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> AnalyzeServiceRuleMatchesResult:
+    host_name = HostName(args[0])
+    # This is not necessarily a service description. Can also be an item name when matching
+    # checkgroup rules.
+    service_or_item = args[1]
+
+    # We read the list of rules from stdin since it could be too much for the command line
+    match_rules, service_labels = ast.literal_eval(sys.stdin.read())
+
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=())
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
+
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+
+    return AnalyzeServiceRuleMatchesResult(
+        {
+            rules[0]["id"]: list(
+                ruleset_matcher._get_service_ruleset_values(
+                    host_name,
+                    service_or_item,
+                    service_labels,
+                    rules,
+                    label_manager.labels_of_host,
                 )
-                # The caller needs to get one result per rule. For this reason we can not just use
-                # the list of rules with the ruleset matching functions but have to execute rule
-                # matching for the rules individually. If we would use the provided list of rules,
-                # then the not matching rules would not be represented in the result and we would
-                # not know which matched value is related to which rule.
-                for rules in match_rules
-            }
+            )
+            # The caller needs to get one result per rule. For this reason we can not just
+            # use the list of rules with the ruleset matching functions but have to execute
+            # rule matching for the rules individually. If we would use the provided list of
+            # rules, then the not matching rules would not be represented in the result and
+            # we would not know which matched value is related to which rule.
+            for rules in match_rules
+        }
+    )
+
+
+def automation_analyze_host_rule_effectiveness(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> AnalyzeHostRuleEffectivenessResult:
+    # We read the list of rules from stdin since it could be too much for the command line
+    match_rules = ast.literal_eval(sys.stdin.read())
+
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=())
+    config_cache = loading_result.config_cache
+    ruleset_matcher = config_cache.ruleset_matcher
+    label_manager = config_cache.label_manager
+    hosts_config = config_cache.hosts_config
+
+    host_names = list(
+        filter(
+            config_cache.is_online,
+            itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts),
         )
+    )
+
+    return AnalyzeHostRuleEffectivenessResult(
+        {
+            rules[0]["id"]: any(
+                True
+                for host_name in host_names
+                for _ in ruleset_matcher.get_host_values_all(
+                    host_name, rules, label_manager.labels_of_host
+                )
+            )
+            # The caller needs to get one result per rule. For this reason we can not just use
+            # the list of rules with the ruleset matching functions but have to execute rule
+            # matching for the rules individually. If we would use the provided list of rules,
+            # then the not matching rules would not be represented in the result and we would
+            # not know which matched value is related to which rule.
+            for rules in match_rules
+        }
+    )
 
 
 class ABCDeleteHosts:
@@ -2751,165 +2694,157 @@ def _execute_silently(
         )
 
 
-class AutomationGetConfiguration:
-    # Automation call to get the default configuration
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> GetConfigurationResult:
-        called_from_automation_helper = plugins is not None or loading_result is not None
-        if called_from_automation_helper:
-            raise RuntimeError(
-                "This automation call should never be called from the automation helper "
-                "as it can only return the active config and we want the default config."
-            )
-
-        # We read the list of variable names from stdin since
-        # that could be too much for the command line
-        variable_names = ast.literal_eval(sys.stdin.read())
-
-        config.load(discovery_rulesets=(), with_conf_d=False)
-
-        result = {}
-        for varname in variable_names:
-            if hasattr(config, varname):
-                value = getattr(config, varname)
-                if not hasattr(value, "__call__"):
-                    result[varname] = value
-        return GetConfigurationResult(result)
-
-
-class AutomationGetCheckInformation:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> GetCheckInformationResult:
-        man_page_path_map = man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+def automation_get_configuration(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> GetConfigurationResult:
+    """Automation call to get the default configuration"""
+    called_from_automation_helper = plugins is not None or loading_result is not None
+    if called_from_automation_helper:
+        raise RuntimeError(
+            "This automation call should never be called from the automation helper "
+            "as it can only return the active config and we want the default config."
         )
-        plugins = plugins or load_plugins()
 
-        plugin_infos: dict[str, dict[str, Any]] = {}
-        for plugin in plugins.check_plugins.values():
-            plugin_info = plugin_infos.setdefault(
-                str(plugin.name),
-                {
-                    "title": self._get_title(man_page_path_map, plugin.name),
-                    "name": str(plugin.name),
-                    "service_description": str(plugin.service_name),
-                },
-            )
-            if plugin.check_ruleset_name:
-                plugin_info["check_ruleset_name"] = str(plugin.check_ruleset_name)
-                plugin_info["check_default_parameters"] = plugin.check_default_parameters
-                # TODO: kept for compatibility. See if we can drop this.
-                plugin_info["group"] = str(plugin.check_ruleset_name)
-            if plugin.discovery_ruleset_name:
-                plugin_info["discovery_ruleset_name"] = str(plugin.discovery_ruleset_name)
+    # We read the list of variable names from stdin since
+    # that could be too much for the command line
+    variable_names = ast.literal_eval(sys.stdin.read())
 
-        return GetCheckInformationResult(plugin_infos)
+    config.load(discovery_rulesets=(), with_conf_d=False)
 
-    @staticmethod
-    def _get_title(man_page_path_map: Mapping[str, Path], plugin_name: CheckPluginName) -> str:
-        try:
-            manfile = man_page_path_map[str(plugin_name)]
-        except KeyError:
-            return str(plugin_name)
-
-        try:
-            return cmk.utils.man_pages.get_title_from_man_page(manfile)
-        except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
+    result = {}
+    for varname in variable_names:
+        if hasattr(config, varname):
+            value = getattr(config, varname)
+            if not hasattr(value, "__call__"):
+                result[varname] = value
+    return GetConfigurationResult(result)
 
 
-class AutomationGetSectionInformation:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: object,
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> GetSectionInformationResult:
-        plugins = plugins or load_plugins()
-        section_infos = {
-            str(section_name): {
-                # for now, we need only these two.
-                "name": str(section_name),
-                "type": "agent",
-            }
-            for section_name in plugins.agent_sections
-        }
-        section_infos.update(
+def automation_get_check_information(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> GetCheckInformationResult:
+    man_page_path_map = man_pages.make_man_page_path_map(
+        discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+    )
+    plugins = plugins or load_plugins()
+
+    plugin_infos: dict[str, dict[str, Any]] = {}
+    for plugin in plugins.check_plugins.values():
+        plugin_info = plugin_infos.setdefault(
+            str(plugin.name),
             {
-                str(section_name): {
-                    "name": str(section_name),
-                    "type": "snmp",
-                }
-                for section_name in plugins.snmp_sections
-            }
+                "title": _get_man_page_title(man_page_path_map, plugin.name),
+                "name": str(plugin.name),
+                "service_description": str(plugin.service_name),
+            },
         )
-        return GetSectionInformationResult(section_infos)
+        if plugin.check_ruleset_name:
+            plugin_info["check_ruleset_name"] = str(plugin.check_ruleset_name)
+            plugin_info["check_default_parameters"] = plugin.check_default_parameters
+            # TODO: kept for compatibility. See if we can drop this.
+            plugin_info["group"] = str(plugin.check_ruleset_name)
+        if plugin.discovery_ruleset_name:
+            plugin_info["discovery_ruleset_name"] = str(plugin.discovery_ruleset_name)
+
+    return GetCheckInformationResult(plugin_infos)
 
 
-class AutomationScanParents:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> ScanParentsResult:
-        settings = {
-            "timeout": int(args[0]),
-            "probes": int(args[1]),
-            "max_ttl": int(args[2]),
-            "ping_probes": int(args[3]),
+def _get_man_page_title(man_page_path_map: Mapping[str, Path], plugin_name: CheckPluginName) -> str:
+    try:
+        manfile = man_page_path_map[str(plugin_name)]
+    except KeyError:
+        return str(plugin_name)
+
+    try:
+        return cmk.utils.man_pages.get_title_from_man_page(manfile)
+    except Exception as e:
+        if cmk.ccc.debug.enabled():
+            raise
+        raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
+
+
+def automation_get_section_information(
+    ctx: AutomationContext,
+    args: object,
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> GetSectionInformationResult:
+    plugins = plugins or load_plugins()
+    section_infos = {
+        str(section_name): {
+            # for now, we need only these two.
+            "name": str(section_name),
+            "type": "agent",
         }
-        hostnames = [HostName(hn) for hn in islice(args, 4, None)]
-        if not cmk.base.parent_scan.traceroute_available():
-            raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
-
-        plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
-
-        hosts_config = config.make_hosts_config(loading_result.loaded_config)
-        ip_lookup_config = loading_result.config_cache.ip_lookup_config()
-
-        monitoring_host = (
-            HostName(config.monitoring_host) if config.monitoring_host is not None else None
-        )
-
-        def make_scan_config() -> Mapping[HostName, ScanConfig]:
-            return {
-                host: loading_result.config_cache.make_parent_scan_config(host)
-                for host in itertools.chain(
-                    hostnames,
-                    hosts_config.hosts,
-                    ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
-                )
+        for section_name in plugins.agent_sections
+    }
+    section_infos.update(
+        {
+            str(section_name): {
+                "name": str(section_name),
+                "type": "snmp",
             }
+            for section_name in plugins.snmp_sections
+        }
+    )
+    return GetSectionInformationResult(section_infos)
 
-        try:
-            gateway_results = cmk.base.parent_scan.scan_parents_of(
-                make_scan_config(),
-                hosts_config,
-                monitoring_host,
+
+def automation_scan_parents(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> ScanParentsResult:
+    settings = {
+        "timeout": int(args[0]),
+        "probes": int(args[1]),
+        "max_ttl": int(args[2]),
+        "ping_probes": int(args[3]),
+    }
+    hostnames = [HostName(hn) for hn in islice(args, 4, None)]
+    if not cmk.base.parent_scan.traceroute_available():
+        raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
+
+    plugins = plugins or load_plugins()  # do we really still need this?
+    loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+
+    hosts_config = config.make_hosts_config(loading_result.loaded_config)
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+
+    monitoring_host = (
+        HostName(config.monitoring_host) if config.monitoring_host is not None else None
+    )
+
+    def make_scan_config() -> Mapping[HostName, ScanConfig]:
+        return {
+            host: loading_result.config_cache.make_parent_scan_config(host)
+            for host in itertools.chain(
                 hostnames,
-                silent=True,
-                settings=settings,
-                lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
+                hosts_config.hosts,
+                ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
             )
-            return ScanParentsResult(gateway_results)
-        except Exception as e:
-            raise MKAutomationError("%s" % e)
+        }
+
+    try:
+        gateway_results = cmk.base.parent_scan.scan_parents_of(
+            make_scan_config(),
+            hosts_config,
+            monitoring_host,
+            hostnames,
+            silent=True,
+            settings=settings,
+            lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        )
+        return ScanParentsResult(gateway_results)
+    except Exception as e:
+        raise MKAutomationError("%s" % e)
 
 
 def _disabled_ip_lookup(host_name: object, family: object = None) -> None:
@@ -2968,200 +2903,193 @@ def get_special_agent_commandline(
     yield from special_agent.iter_special_agent_commands(agent_name, params)
 
 
-class AutomationDiagSpecialAgent:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> DiagSpecialAgentResult:
-        diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
-        return DiagSpecialAgentResult(
-            tuple(
-                SpecialAgentResult(*result)
-                for result in self._execute_diag_special_agent(diag_special_agent_input)
-            )
+def automation_diag_special_agent(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> DiagSpecialAgentResult:
+    diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
+    return DiagSpecialAgentResult(
+        tuple(
+            SpecialAgentResult(*result)
+            for result in _execute_diag_special_agent(diag_special_agent_input)
         )
+    )
 
-    @staticmethod
-    def _execute_diag_special_agent(
-        diag_special_agent_input: DiagSpecialAgentInput,
-    ) -> Iterator[tuple[int, str]]:
-        # All passwords are provided by the automation call since we cannot rely that the password
-        # store is available on the remote site.
-        ad_hoc_secrets = AdHocSecrets(
-            Path(
-                cmk.utils.paths.tmp_dir
-                if diag_special_agent_input.host_config.relay_id is None
-                else cmk.utils.paths.relative_tmp_dir,
-                f"passwords_temp_{uuid.uuid4()}",
-            ),
+
+def _execute_diag_special_agent(
+    diag_special_agent_input: DiagSpecialAgentInput,
+) -> Iterator[tuple[int, str]]:
+    # All passwords are provided by the automation call since we cannot rely that the password
+    # store is available on the remote site.
+    ad_hoc_secrets = AdHocSecrets(
+        Path(
+            cmk.utils.paths.tmp_dir
+            if diag_special_agent_input.host_config.relay_id is None
+            else cmk.utils.paths.relative_tmp_dir,
+            f"passwords_temp_{uuid.uuid4()}",
+        ),
+        diag_special_agent_input.passwords,
+    )
+    try:
+        cmds = get_special_agent_commandline(
+            diag_special_agent_input.host_config,
+            diag_special_agent_input.agent_name,
+            diag_special_agent_input.params,
+            ad_hoc_secrets.path,
             diag_special_agent_input.passwords,
+            config_processing.GlobalProxiesWithLookup(
+                global_proxies={
+                    name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
+                    for name, raw in diag_special_agent_input.http_proxies.items()
+                },
+                password_lookup=lambda s_id: None
+                if (s := diag_special_agent_input.passwords.get(s_id)) is None
+                else s.reveal(),
+            ),
         )
-        try:
-            cmds = get_special_agent_commandline(
-                diag_special_agent_input.host_config,
-                diag_special_agent_input.agent_name,
-                diag_special_agent_input.params,
-                ad_hoc_secrets.path,
-                diag_special_agent_input.passwords,
-                config_processing.GlobalProxiesWithLookup(
-                    global_proxies={
-                        name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
-                        for name, raw in diag_special_agent_input.http_proxies.items()
-                    },
-                    password_lookup=lambda s_id: None
-                    if (s := diag_special_agent_input.passwords.get(s_id)) is None
-                    else s.reveal(),
-                ),
+    except Exception as exc:
+        # this handles broken plugins.
+        if cmk.ccc.debug.enabled():
+            raise
+        yield 1, str(exc)
+
+    with ad_hoc_secrets_file(ad_hoc_secrets):
+        for cmd in cmds:
+            fetcher = ProgramFetcher(
+                cmdline=cmd.cmdline,
+                stdin=cmd.stdin,
+                is_cmc=diag_special_agent_input.is_cmc,
             )
-        except Exception as exc:
-            # this handles broken plugins.
-            if cmk.ccc.debug.enabled():
-                raise
-            yield 1, str(exc)
+            with fetcher:
+                fetched = fetcher.fetch(Mode.DISCOVERY)
 
-        with ad_hoc_secrets_file(ad_hoc_secrets):
-            for cmd in cmds:
-                fetcher = ProgramFetcher(
-                    cmdline=cmd.cmdline,
-                    stdin=cmd.stdin,
-                    is_cmc=diag_special_agent_input.is_cmc,
+            yield (
+                (
+                    0,
+                    ensure_str_with_fallback(
+                        fetched.ok,
+                        encoding="utf-8",
+                        fallback="latin-1",
+                    ),
                 )
-                with fetcher:
-                    fetched = fetcher.fetch(Mode.DISCOVERY)
-
-                yield (
-                    (
-                        0,
-                        ensure_str_with_fallback(
-                            fetched.ok,
-                            encoding="utf-8",
-                            fallback="latin-1",
-                        ),
-                    )
-                    if fetched.is_ok()
-                    else (1, str(fetched.error))
-                )
+                if fetched.is_ok()
+                else (1, str(fetched.error))
+            )
 
 
-class AutomationPingHost:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadingResult | None,
-    ) -> PingHostResult:
-        ping_host_input = PingHostInput.deserialize(sys.stdin.read())
-        return PingHostResult(
-            *self._execute_ping(ping_host_input.ip_or_dns_name, ping_host_input.base_cmd)
-        )
-
-    def _execute_ping(self, ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]:
-        completed_process = subprocess.run(
-            [base_cmd.value, "-A", "-i", "0.2", "-c", "2", "-W", "5", ip_or_dns_name],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-            check=False,
-        )
-        return completed_process.returncode, completed_process.stdout
+def automation_ping_host(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loaded_config: config.LoadingResult | None,
+) -> PingHostResult:
+    ping_host_input = PingHostInput.deserialize(sys.stdin.read())
+    return PingHostResult(*_execute_ping(ping_host_input.ip_or_dns_name, ping_host_input.base_cmd))
 
 
-class AutomationDiagCmkAgent:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        _plugins: AgentBasedPlugins | None,
-        _loading_result: config.LoadingResult | None,
-    ) -> DiagCmkAgentResult:
-        diag_cmk_agent_input = DiagCmkAgentInput.deserialize(sys.stdin.read())
-        host_name = diag_cmk_agent_input.host_name
-        ipaddress = diag_cmk_agent_input.ip_address
-        family = diag_cmk_agent_input.address_family
+def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]:
+    completed_process = subprocess.run(
+        [base_cmd.value, "-A", "-i", "0.2", "-c", "2", "-W", "5", ip_or_dns_name],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding="utf-8",
+        check=False,
+    )
+    return completed_process.returncode, completed_process.stdout
 
-        def address_family_config(
-            address_family: Literal["no-ip", "ip-v4-only", "ip-v6-only", "ip-v4v6"],
-        ) -> Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]:
-            if address_family == "ip-v4-only":
-                return socket.AddressFamily.AF_INET
-            if address_family == "ip-v6-only":
-                return socket.AddressFamily.AF_INET6
-            # TODO What to use for DualStack?
-            if address_family == "ip-v4v6":
-                return socket.AddressFamily.AF_INET6
+
+def automation_diag_cmk_agent(
+    ctx: AutomationContext,
+    args: list[str],
+    _plugins: AgentBasedPlugins | None,
+    _loading_result: config.LoadingResult | None,
+) -> DiagCmkAgentResult:
+    diag_cmk_agent_input = DiagCmkAgentInput.deserialize(sys.stdin.read())
+    host_name = diag_cmk_agent_input.host_name
+    ipaddress = diag_cmk_agent_input.ip_address
+    family = diag_cmk_agent_input.address_family
+
+    def address_family_config(
+        address_family: Literal["no-ip", "ip-v4-only", "ip-v6-only", "ip-v4v6"],
+    ) -> Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]:
+        if address_family == "ip-v4-only":
             return socket.AddressFamily.AF_INET
+        if address_family == "ip-v6-only":
+            return socket.AddressFamily.AF_INET6
+        # TODO What to use for DualStack?
+        if address_family == "ip-v4v6":
+            return socket.AddressFamily.AF_INET6
+        return socket.AddressFamily.AF_INET
 
-        if not ipaddress:
-            if family == "no-ip":
-                return DiagCmkAgentResult(
-                    1,
-                    "Host is configured as No-IP host: %s" % host_name,
-                )
-            try:
-                resolved_address = ip_lookup.cached_dns_lookup(
-                    hostname=host_name,
-                    family=address_family_config(family),
-                    force_file_cache_renewal=False,
-                )
-            except Exception:
-                return DiagCmkAgentResult(
-                    1,
-                    "Cannot resolve host name %s into IP address" % host_name,
-                )
-
-            if resolved_address is None:
-                return DiagCmkAgentResult(
-                    1,
-                    "Cannot resolve host name %s into IP address" % host_name,
-                )
-
-            ipaddress = resolved_address
-
-        tls_config = TLSConfig(
-            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
-            ca_store=Path(cmk.utils.paths.agent_cert_store),
-            site_crt=Path(cmk.utils.paths.site_cert_file),
-        )
-
-        state, output = 0, ""
-        raw_data = PlainFetcherTrigger().get_raw_data(
-            file_cache=NoCache(
-                path_template="/dev/null",
-                max_age=MaxAge(checking=0.0, discovery=0.0, inventory=0.0),
-                simulation=False,
-                use_only_cache=False,
-                file_cache_mode=0,
-            ),
-            fetcher=TCPFetcher(
-                family=socket.AddressFamily.AF_INET,
-                address=(ipaddress, int(diag_cmk_agent_input.agent_port)),
-                timeout=float(diag_cmk_agent_input.timeout),
-                host_name=host_name,
-                encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
-                uuid_file=cmk.utils.paths.uuid_lookup_dir / host_name,
-                pre_shared_secret=None,
-                tls_config=tls_config,
-            ),
-            mode=Mode.CHECKING,
-            secrets=None,
-        )
-
-        if raw_data.is_ok():
-            output += ensure_str_with_fallback(
-                raw_data.ok,
-                encoding="utf-8",
-                fallback="latin-1",
+    if not ipaddress:
+        if family == "no-ip":
+            return DiagCmkAgentResult(
+                1,
+                "Host is configured as No-IP host: %s" % host_name,
             )
-        else:
-            state = 1
-            output += str(raw_data.error)
+        try:
+            resolved_address = ip_lookup.cached_dns_lookup(
+                hostname=host_name,
+                family=address_family_config(family),
+                force_file_cache_renewal=False,
+            )
+        except Exception:
+            return DiagCmkAgentResult(
+                1,
+                "Cannot resolve host name %s into IP address" % host_name,
+            )
 
-        # TODO do we need the output?
-        return DiagCmkAgentResult(state, output)
+        if resolved_address is None:
+            return DiagCmkAgentResult(
+                1,
+                "Cannot resolve host name %s into IP address" % host_name,
+            )
+
+        ipaddress = resolved_address
+
+    tls_config = TLSConfig(
+        cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+        ca_store=Path(cmk.utils.paths.agent_cert_store),
+        site_crt=Path(cmk.utils.paths.site_cert_file),
+    )
+
+    state, output = 0, ""
+    raw_data = PlainFetcherTrigger().get_raw_data(
+        file_cache=NoCache(
+            path_template="/dev/null",
+            max_age=MaxAge(checking=0.0, discovery=0.0, inventory=0.0),
+            simulation=False,
+            use_only_cache=False,
+            file_cache_mode=0,
+        ),
+        fetcher=TCPFetcher(
+            family=socket.AddressFamily.AF_INET,
+            address=(ipaddress, int(diag_cmk_agent_input.agent_port)),
+            timeout=float(diag_cmk_agent_input.timeout),
+            host_name=host_name,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            uuid_file=cmk.utils.paths.uuid_lookup_dir / host_name,
+            pre_shared_secret=None,
+            tls_config=tls_config,
+        ),
+        mode=Mode.CHECKING,
+        secrets=None,
+    )
+
+    if raw_data.is_ok():
+        output += ensure_str_with_fallback(
+            raw_data.ok,
+            encoding="utf-8",
+            fallback="latin-1",
+        )
+    else:
+        state = 1
+        output += str(raw_data.error)
+
+    # TODO do we need the output?
+    return DiagCmkAgentResult(state, output)
 
 
 class AutomationDiagHost:
@@ -3819,51 +3747,52 @@ class AutomationActiveCheck:
             return 3, "UNKNOWN - Cannot execute command: %s" % e
 
 
-class AutomationUpdatePasswordsMergedFile:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> UpdatePasswordsMergedFileResult:
-        loading_result = loading_result or load_config(discovery_rulesets=())
-        cmk.utils.password_store.save(
-            {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
-            cmk.utils.password_store.pending_secrets_path_site(),
+def automation_update_passwords_merged_file(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> UpdatePasswordsMergedFileResult:
+    loading_result = loading_result or load_config(discovery_rulesets=())
+    cmk.utils.password_store.save(
+        {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
+        cmk.utils.password_store.pending_secrets_path_site(),
+    )
+    return UpdatePasswordsMergedFileResult()
+
+
+def automation_update_dns_cache(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> UpdateDNSCacheResult:
+    plugins = plugins or load_plugins()  # can we remove this?
+    loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+
+    hosts_config = loading_result.config_cache.hosts_config
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+
+    return UpdateDNSCacheResult(
+        *ip_lookup.update_dns_cache(
+            hosts=(
+                hn
+                for hn in frozenset(itertools.chain(hosts_config.hosts, hosts_config.clusters))
+                if loading_result.config_cache.is_active(hn)
+                and loading_result.config_cache.is_online(hn)
+            ),
+            get_ip_stack_config=ip_lookup_config.ip_stack_config,
+            lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         )
-        return UpdatePasswordsMergedFileResult()
+    )
 
 
-class AutomationUpdateDNSCache:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> UpdateDNSCacheResult:
-        plugins = plugins or load_plugins()  # can we remove this?
-        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
-
-        hosts_config = loading_result.config_cache.hosts_config
-        ip_lookup_config = loading_result.config_cache.ip_lookup_config()
-
-        return UpdateDNSCacheResult(
-            *ip_lookup.update_dns_cache(
-                hosts=(
-                    hn
-                    for hn in frozenset(itertools.chain(hosts_config.hosts, hosts_config.clusters))
-                    if loading_result.config_cache.is_active(hn)
-                    and loading_result.config_cache.is_online(hn)
-                ),
-                get_ip_stack_config=ip_lookup_config.ip_stack_config,
-                lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            )
-        )
-
-
-class AutomationGetAgentOutput:
+def automation_get_agent_output(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> GetAgentOutputResult:
     # TODO: This is inconsistent.
     # On one hand we are loading the penging config,
     # # on the other hand we are using the activated secrets.
@@ -3873,262 +3802,292 @@ class AutomationGetAgentOutput:
     # Also clarify: Are we running any datasource, or just the (push/pull) agent fetcher?
     # Seems we are also running the special agents here.
     # For SNMP we are not getting the output we would get during checking, but a walk.
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> GetAgentOutputResult:
-        hostname = HostName(args[0])
-        ty = args[1]
+    hostname = HostName(args[0])
+    ty = args[1]
 
-        plugins = plugins or load_plugins()  # do we really still need this?
-        # This loads the pending config:
-        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
-        loaded_config = loading_result.loaded_config
-        ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
+    plugins = plugins or load_plugins()  # do we really still need this?
+    # This loads the pending config:
+    loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+    loaded_config = loading_result.loaded_config
+    ruleset_matcher = loading_result.config_cache.ruleset_matcher
+    label_manager = loading_result.config_cache.label_manager
 
-        service_name_config = loading_result.config_cache.make_passive_service_name_config(
-            make_final_service_name_config(loaded_config, ruleset_matcher)
+    service_name_config = loading_result.config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loaded_config, ruleset_matcher)
+    )
+    service_configurer = loading_result.config_cache.make_service_configurer(
+        plugins.check_plugins, service_name_config
+    )
+    config_cache = loading_result.config_cache
+    hosts_config = config.make_hosts_config(loaded_config)
+
+    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
+    ip_family = ip_lookup_config.default_address_family(hostname)
+    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
+        ip_address_of_bare,
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
+
+    # No caching option over commandline here.
+    file_cache_options = FileCacheOptions()
+
+    host_labels = label_manager.labels_of_host(hostname)
+    relay_id = config.get_relay_id(host_labels)
+    trigger = config.make_fetcher_trigger(ctx.edition, relay_id)
+
+    success = True
+    output = ""
+    info = b""
+
+    try:
+        ipaddress = (
+            None
+            if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
+            else ip_address_of_bare(hostname, ip_family)
         )
-        service_configurer = loading_result.config_cache.make_service_configurer(
-            plugins.check_plugins, service_name_config
-        )
-        config_cache = loading_result.config_cache
-        hosts_config = config.make_hosts_config(loaded_config)
-
-        ip_lookup_config = config_cache.ip_lookup_config()
-        ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
-        ip_family = ip_lookup_config.default_address_family(hostname)
-        ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
-        ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
-            ip_address_of_bare,
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
+        check_interval = config_cache.check_mk_check_interval(hostname)
+        section_cache_path = var_dir
+        tls_config = TLSConfig(
+            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+            ca_store=Path(cmk.utils.paths.agent_cert_store),
+            site_crt=Path(cmk.utils.paths.site_cert_file),
         )
 
-        # No caching option over commandline here.
-        file_cache_options = FileCacheOptions()
+        if ty == "agent":
+            if hostname in hosts_config.clusters:
+                return GetAgentOutputResult(success, output, AgentRawData(info))
 
-        host_labels = label_manager.labels_of_host(hostname)
-        relay_id = config.get_relay_id(host_labels)
-        trigger = config.make_fetcher_trigger(ctx.edition, relay_id)
-
-        success = True
-        output = ""
-        info = b""
-
-        try:
-            ipaddress = (
-                None
-                if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
-                else ip_address_of_bare(hostname, ip_family)
+            active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
+            active_secrets_path = cmk.utils.password_store.active_secrets_path_site(
+                active_config_path
             )
-            check_interval = config_cache.check_mk_check_interval(hostname)
-            section_cache_path = var_dir
-            tls_config = TLSConfig(
-                cas_dir=Path(cmk.utils.paths.agent_cas_dir),
-                ca_store=Path(cmk.utils.paths.agent_cert_store),
-                site_crt=Path(cmk.utils.paths.site_cert_file),
+            secrets_file_option = (
+                active_secrets_path
+                if relay_id is None
+                else cmk.utils.password_store.active_secrets_path_relay(active_config_path)
             )
+            secrets = load_secrets_file(active_secrets_path)
 
-            if ty == "agent":
-                if hostname in hosts_config.clusters:
-                    return GetAgentOutputResult(success, output, AgentRawData(info))
-
-                active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
-                active_secrets_path = cmk.utils.password_store.active_secrets_path_site(
-                    active_config_path
-                )
-                secrets_file_option = (
-                    active_secrets_path
-                    if relay_id is None
-                    else cmk.utils.password_store.active_secrets_path_relay(active_config_path)
-                )
-                secrets = load_secrets_file(active_secrets_path)
-
-                for source in sources.make_sources(
-                    plugins,
+            for source in sources.make_sources(
+                plugins,
+                hostname,
+                ip_family,
+                ipaddress,
+                ip_stack_config,
+                fetcher_factory=config_cache.fetcher_factory(
+                    service_configurer,
+                    ip_address_of_with_fallback,
+                    service_name_config,
+                    # Enforced services are only needed for the SNMP fetcher, which is not used here.
+                    # But how to guarantee this? - Let's pass the real deal just in case.
+                    config.EnforcedServicesTable(
+                        BundledHostRulesetMatcher(
+                            loading_result.loaded_config.static_checks,
+                            config_cache.ruleset_matcher,
+                            config_cache.label_manager.labels_of_host,
+                        ),
+                        service_name_config,
+                        plugins.check_plugins,
+                    ),
+                    snmp_fetcher_config=SNMPFetcherConfig(
+                        on_error=OnError.RAISE,
+                        missing_sys_description=config_cache.missing_sys_description,
+                        selected_sections=NoSelectedSNMPSections(),
+                        backend_override=None,
+                        base_path=cmk.utils.paths.omd_root,
+                        relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                        relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                        relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
+                        caching_config=make_parsed_snmp_fetch_intervals_config(
+                            loaded_config, ruleset_matcher, label_manager.labels_of_host
+                        ),
+                    ),
+                ),
+                simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
+                file_cache_max_age=MaxAge(
+                    checking=config.check_max_cachefile_age,
+                    discovery=1.5 * check_interval,
+                    inventory=1.5 * check_interval,
+                ),
+                snmp_backend=config_cache.get_snmp_backend(hostname),
+                file_cache_path_base=cmk.utils.paths.omd_root,
+                file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+                tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
+                tls_config=tls_config,
+                computed_datasources=config_cache.computed_datasources(hostname),
+                datasource_programs=config_cache.datasource_programs(hostname),
+                tag_list=config_cache.host_tags.tag_list(hostname),
+                management_ip=make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+                    hostname, ip_family
+                ),
+                management_protocol=config_cache.management_protocol(hostname),
+                special_agent_command_lines=config_cache.special_agent_command_lines(
                     hostname,
                     ip_family,
                     ipaddress,
-                    ip_stack_config,
-                    fetcher_factory=config_cache.fetcher_factory(
-                        service_configurer,
-                        ip_address_of_with_fallback,
-                        service_name_config,
-                        # Enforced services are only needed for the SNMP fetcher, which is not used here.
-                        # But how to guarantee this? - Let's pass the real deal just in case.
-                        config.EnforcedServicesTable(
-                            BundledHostRulesetMatcher(
-                                loading_result.loaded_config.static_checks,
-                                config_cache.ruleset_matcher,
-                                config_cache.label_manager.labels_of_host,
-                            ),
-                            service_name_config,
-                            plugins.check_plugins,
-                        ),
-                        snmp_fetcher_config=SNMPFetcherConfig(
-                            on_error=OnError.RAISE,
-                            missing_sys_description=config_cache.missing_sys_description,
-                            selected_sections=NoSelectedSNMPSections(),
-                            backend_override=None,
-                            base_path=cmk.utils.paths.omd_root,
-                            relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                            relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                            relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                            caching_config=make_parsed_snmp_fetch_intervals_config(
-                                loaded_config, ruleset_matcher, label_manager.labels_of_host
-                            ),
+                    secrets_file_option=secrets_file_option,
+                    secrets=secrets,
+                    ip_address_of=ip_address_of_with_fallback,
+                    executable_finder=ExecutableFinder(
+                        # NOTE: we can't ignore these, they're an API promise.
+                        cmk.utils.paths.local_special_agents_dir,
+                        cmk.utils.paths.special_agents_dir,
+                        prefix_map=(
+                            () if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
                         ),
                     ),
-                    simulation_mode=config.simulation_mode,
-                    file_cache_options=file_cache_options,
-                    file_cache_max_age=MaxAge(
-                        checking=config.check_max_cachefile_age,
-                        discovery=1.5 * check_interval,
-                        inventory=1.5 * check_interval,
-                    ),
-                    snmp_backend=config_cache.get_snmp_backend(hostname),
-                    file_cache_path_base=cmk.utils.paths.omd_root,
-                    file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
-                    tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
-                    tls_config=tls_config,
-                    computed_datasources=config_cache.computed_datasources(hostname),
-                    datasource_programs=config_cache.datasource_programs(hostname),
-                    tag_list=config_cache.host_tags.tag_list(hostname),
-                    management_ip=make_lookup_mgmt_board_ip_address(ip_lookup_config)(
-                        hostname, ip_family
-                    ),
-                    management_protocol=config_cache.management_protocol(hostname),
-                    special_agent_command_lines=config_cache.special_agent_command_lines(
-                        hostname,
-                        ip_family,
-                        ipaddress,
-                        secrets_file_option=secrets_file_option,
-                        secrets=secrets,
-                        ip_address_of=ip_address_of_with_fallback,
-                        executable_finder=ExecutableFinder(
-                            # NOTE: we can't ignore these, they're an API promise.
-                            cmk.utils.paths.local_special_agents_dir,
-                            cmk.utils.paths.special_agents_dir,
-                            prefix_map=(
-                                () if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
-                            ),
-                        ),
-                        for_relay=relay_id is not None,
-                    ),
-                    agent_connection_mode=config_cache.agent_connection_mode(hostname),
-                    check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
-                    metric_backend_fetcher=get_metric_backend_fetcher(
-                        hostname,
-                        config_cache.explicit_host_attributes,
-                        config_cache.check_mk_check_interval,
-                        loaded_config.monitoring_core == "cmc",
-                    ),
-                ):
-                    source_info = source.source_info()
-                    if source_info.fetcher_type is FetcherType.SNMP:
-                        continue
+                    for_relay=relay_id is not None,
+                ),
+                agent_connection_mode=config_cache.agent_connection_mode(hostname),
+                check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+                metric_backend_fetcher=get_metric_backend_fetcher(
+                    hostname,
+                    config_cache.explicit_host_attributes,
+                    config_cache.check_mk_check_interval,
+                    loaded_config.monitoring_core == "cmc",
+                ),
+            ):
+                source_info = source.source_info()
+                if source_info.fetcher_type is FetcherType.SNMP:
+                    continue
 
-                    raw_data = trigger.get_raw_data(
-                        source.file_cache(
-                            simulation=config.simulation_mode, file_cache_options=file_cache_options
+                raw_data = trigger.get_raw_data(
+                    source.file_cache(
+                        simulation=config.simulation_mode, file_cache_options=file_cache_options
+                    ),
+                    source.fetcher(),
+                    Mode.CHECKING,
+                    secrets=None
+                    if relay_id is None
+                    else AdHocSecrets(secrets_file_option, secrets),
+                )
+                host_sections = parse_raw_data(
+                    make_parser(
+                        config.make_parser_config(
+                            loading_result.loaded_config,
+                            config_cache.ruleset_matcher,
+                            config_cache.label_manager,
                         ),
-                        source.fetcher(),
-                        Mode.CHECKING,
-                        secrets=None
-                        if relay_id is None
-                        else AdHocSecrets(secrets_file_option, secrets),
-                    )
-                    host_sections = parse_raw_data(
-                        make_parser(
-                            config.make_parser_config(
-                                loading_result.loaded_config,
-                                config_cache.ruleset_matcher,
-                                config_cache.label_manager,
-                            ),
+                        source_info.hostname,
+                        source_info.ipaddress,
+                        source_info.fetcher_type,
+                        omd_root=cmk.utils.paths.omd_root,
+                        persisted_section_dir=make_persisted_section_dir(
                             source_info.hostname,
-                            source_info.ipaddress,
-                            source_info.fetcher_type,
-                            omd_root=cmk.utils.paths.omd_root,
-                            persisted_section_dir=make_persisted_section_dir(
-                                source_info.hostname,
-                                ident=source_info.ident,
-                                section_cache_path=section_cache_path,
-                            ),
-                            keep_outdated=file_cache_options.keep_outdated,
-                            logger=logging.getLogger("cmk.base.checking"),
+                            ident=source_info.ident,
+                            section_cache_path=section_cache_path,
                         ),
-                        raw_data,
-                        selection=NO_SELECTION,
-                    )
-                    source_results = summarize(
-                        host_sections,
-                        config=config_cache.summary_config(hostname, source_info.ident),
-                        fetcher_type=source_info.fetcher_type,
-                    )
-                    if any(r.state != 0 for r in source_results):
-                        # Optionally show errors of problematic data sources
-                        success = False
-                        output += f"[{source_info.ident}] {', '.join(r.summary for r in source_results)}\n"
-                    assert raw_data.ok is not None
-                    info += raw_data.ok
-            else:
-                if not ipaddress:
-                    raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-                snmp_config = config_cache.make_snmp_config(
-                    hostname, ip_family, ipaddress, SourceType.HOST, backend_override=None
+                        keep_outdated=file_cache_options.keep_outdated,
+                        logger=logging.getLogger("cmk.base.checking"),
+                    ),
+                    raw_data,
+                    selection=NO_SELECTION,
                 )
-                backend = make_snmp_backend(
-                    snmp_config,
-                    log.logger,
-                    use_cache=False,
-                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+                source_results = summarize(
+                    host_sections,
+                    config=config_cache.summary_config(hostname, source_info.ident),
+                    fetcher_type=source_info.fetcher_type,
                 )
+                if any(r.state != 0 for r in source_results):
+                    # Optionally show errors of problematic data sources
+                    success = False
+                    output += (
+                        f"[{source_info.ident}] {', '.join(r.summary for r in source_results)}\n"
+                    )
+                assert raw_data.ok is not None
+                info += raw_data.ok
+        else:
+            if not ipaddress:
+                raise MKGeneralException("Failed to gather IP address of %s" % hostname)
+            snmp_config = config_cache.make_snmp_config(
+                hostname, ip_family, ipaddress, SourceType.HOST, backend_override=None
+            )
+            backend = make_snmp_backend(
+                snmp_config,
+                log.logger,
+                use_cache=False,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
+            )
 
-                lines = []
-                for walk_oid in oids_to_walk():
-                    try:
-                        for oid, value in walk_for_export(backend.walk(walk_oid, context="")):
-                            raw_oid_value = f"{oid} {value}\n"
-                            lines.append(raw_oid_value.encode())
-                    except Exception as e:
-                        if cmk.ccc.debug.enabled():
-                            raise
-                        success = False
-                        output += f"OID '{oid}': {e}\n"
+            lines = []
+            for walk_oid in oids_to_walk():
+                try:
+                    for oid, value in walk_for_export(backend.walk(walk_oid, context="")):
+                        raw_oid_value = f"{oid} {value}\n"
+                        lines.append(raw_oid_value.encode())
+                except Exception as e:
+                    if cmk.ccc.debug.enabled():
+                        raise
+                    success = False
+                    output += f"OID '{oid}': {e}\n"
 
-                info = b"".join(lines)
-        except Exception as e:
-            success = False
-            output = f"Failed to fetch data from {hostname}: {e}\n"
-            if cmk.ccc.debug.enabled():
-                raise
+            info = b"".join(lines)
+    except Exception as e:
+        success = False
+        output = f"Failed to fetch data from {hostname}: {e}\n"
+        if cmk.ccc.debug.enabled():
+            raise
 
-        return GetAgentOutputResult(
-            success,
-            output,
-            AgentRawData(info),
-        )
+    return GetAgentOutputResult(
+        success,
+        output,
+        AgentRawData(info),
+    )
 
 
-class AutomationNotificationReplay:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> NotificationReplayResult:
-        plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(discovery_rulesets=())
-        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+def automation_notification_replay(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationReplayResult:
+    plugins = plugins or load_plugins()  # do we really still need this?
+    loading_result = loading_result or load_config(discovery_rulesets=())
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
-        nr = args[0]
-        notify.notification_replay_backlog(
+    nr = args[0]
+    notify.notification_replay_backlog(
+        lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
+            hostname, plugin
+        ),
+        http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
+        notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
+        int(nr),
+        rules=config.notification_rules,
+        parameters=config.notification_parameter,
+        define_servicegroups=config.define_servicegroups,
+        config_contacts=config.contacts,
+        fallback_email=config.notification_fallback_email,
+        fallback_format=config.notification_fallback_format,
+        plugin_timeout=config.notification_plugin_timeout,
+        spooling=ConfigCache.notification_spooling(),
+        backlog_size=config.notification_backlog,
+        logging_level=ConfigCache.notification_logging_level(),
+        all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, log=logger.warning
+        ),
+    )
+    return NotificationReplayResult()
+
+
+def automation_notification_analyse(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationAnalyseResult:
+    plugins = plugins or load_plugins()  # do we really still need this?
+    loading_result = loading_result or load_config(discovery_rulesets=())
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+
+    nr = args[0]
+    return NotificationAnalyseResult(
+        notify.notification_analyse_backlog(
             lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                 hostname, plugin
             ),
@@ -4150,270 +4109,326 @@ class AutomationNotificationReplay:
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
         )
-        return NotificationReplayResult()
+    )
 
 
-class AutomationNotificationAnalyse:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> NotificationAnalyseResult:
-        plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(discovery_rulesets=())
-        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+def automation_notification_test(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationTestResult:
+    context = json.loads(args[0])
+    dispatch = args[1]
 
-        nr = args[0]
-        return NotificationAnalyseResult(
-            notify.notification_analyse_backlog(
-                lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-                    hostname, plugin
-                ),
-                http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-                notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-                int(nr),
-                rules=config.notification_rules,
-                parameters=config.notification_parameter,
-                define_servicegroups=config.define_servicegroups,
-                config_contacts=config.contacts,
-                fallback_email=config.notification_fallback_email,
-                fallback_format=config.notification_fallback_format,
-                plugin_timeout=config.notification_plugin_timeout,
-                spooling=ConfigCache.notification_spooling(),
-                backlog_size=config.notification_backlog,
-                logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
-                ),
-            )
+    plugins = plugins or load_plugins()  # do we really still need this?
+    loading_result = loading_result or load_config(discovery_rulesets=())
+    ensure_nagios = notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core)
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+
+    return NotificationTestResult(
+        notify.notification_test(
+            context,
+            lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
+                hostname, plugin
+            ),
+            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
+            ensure_nagios,
+            rules=config.notification_rules,
+            parameters=config.notification_parameter,
+            define_servicegroups=config.define_servicegroups,
+            config_contacts=config.contacts,
+            fallback_email=config.notification_fallback_email,
+            fallback_format=config.notification_fallback_format,
+            plugin_timeout=config.notification_plugin_timeout,
+            spooling=ConfigCache.notification_spooling(),
+            backlog_size=config.notification_backlog,
+            logging_level=ConfigCache.notification_logging_level(),
+            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+            dispatch=dispatch,
+            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ),
+        )
+    )
+
+
+def automation_get_bulks(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationGetBulksResult:
+    only_ripe = args[0] == "1"
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+    return NotificationGetBulksResult(
+        notify.find_bulks(
+            only_ripe,
+            bulk_interval=config.notification_bulk_interval,
+            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ),
+        )
+    )
+
+
+def automation_create_diagnostics_dump(
+    ctx: AutomationContext,
+    args: DiagnosticsCLParameters,
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> CreateDiagnosticsDumpResult:
+    if loading_result is None:
+        loading_result = load_config(discovery_rulesets=())
+    buf = io.StringIO()
+    with redirect_stdout(buf), redirect_stderr(buf):
+        log.setup_console_logging()
+        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+        log.logger.setLevel(logging.INFO)
+        dump = DiagnosticsDump(loading_result.loaded_config, deserialize_cl_parameters(args))
+        dump.create()
+        return CreateDiagnosticsDumpResult(
+            output=buf.getvalue(),
+            tarfile_path=str(dump.tarfile_path),
+            tarfile_created=dump.tarfile_created,
         )
 
 
-class AutomationNotificationTest:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> NotificationTestResult:
-        context = json.loads(args[0])
-        dispatch = args[1]
-
-        plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(discovery_rulesets=())
-        ensure_nagios = notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core)
-        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-
-        return NotificationTestResult(
-            notify.notification_test(
-                context,
-                lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-                    hostname, plugin
-                ),
-                http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-                ensure_nagios,
-                rules=config.notification_rules,
-                parameters=config.notification_parameter,
-                define_servicegroups=config.define_servicegroups,
-                config_contacts=config.contacts,
-                fallback_email=config.notification_fallback_email,
-                fallback_format=config.notification_fallback_format,
-                plugin_timeout=config.notification_plugin_timeout,
-                spooling=ConfigCache.notification_spooling(),
-                backlog_size=config.notification_backlog,
-                logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-                dispatch=dispatch,
-                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
-                ),
-            )
-        )
-
-
-class AutomationGetBulks:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> NotificationGetBulksResult:
-        only_ripe = args[0] == "1"
-        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-        return NotificationGetBulksResult(
-            notify.find_bulks(
-                only_ripe,
-                bulk_interval=config.notification_bulk_interval,
-                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
-                ),
-            )
-        )
-
-
-class AutomationCreateDiagnosticsDump:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: DiagnosticsCLParameters,
-        plugins: AgentBasedPlugins | None,
-        loading_result: config.LoadingResult | None,
-    ) -> CreateDiagnosticsDumpResult:
-        if loading_result is None:
-            loading_result = load_config(discovery_rulesets=())
-        buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
-            log.setup_console_logging()
-            # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-            log.logger.setLevel(logging.INFO)
-            dump = DiagnosticsDump(loading_result.loaded_config, deserialize_cl_parameters(args))
-            dump.create()
-            return CreateDiagnosticsDumpResult(
-                output=buf.getvalue(),
-                tarfile_path=str(dump.tarfile_path),
-                tarfile_created=dump.tarfile_created,
-            )
-
-
-class AutomationFindUnknownCheckParameterRuleSets:
-    def execute(
-        self,
-        ctx: AutomationContext,
-        args: list[str],
-        plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadingResult | None,
-    ) -> UnknownCheckParameterRuleSetsResult:
-        plugins = plugins or load_plugins()  # do we really still need this?
-        known_check_rule_sets = {
-            str(plugin.check_ruleset_name)
-            for plugin in plugins.check_plugins.values()
-            if plugin.check_ruleset_name
-        }
-        return UnknownCheckParameterRuleSetsResult(
-            [
-                rule_set
-                for rule_set in config.checkgroup_parameters
-                if rule_set not in known_check_rule_sets
-            ]
-        )
+def automation_find_unknown_check_parameter_rule_sets(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loaded_config: config.LoadingResult | None,
+) -> UnknownCheckParameterRuleSetsResult:
+    plugins = plugins or load_plugins()  # do we really still need this?
+    known_check_rule_sets = {
+        str(plugin.check_ruleset_name)
+        for plugin in plugins.check_plugins.values()
+        if plugin.check_ruleset_name
+    }
+    return UnknownCheckParameterRuleSetsResult(
+        [
+            rule_set
+            for rule_set in config.checkgroup_parameters
+            if rule_set not in known_check_rule_sets
+        ]
+    )
 
 
 def register_common_automations(automations: Automations) -> None:
     automations.register(
-        Automation(ident="service-discovery", handler=AutomationDiscovery().execute)
+        Automation(
+            ident="service-discovery",
+            handler=automation_service_discovery,
+        )
     )
     automations.register(
         Automation(
             ident="special-agent-discovery-preview",
-            handler=AutomationSpecialAgentDiscoveryPreview().execute,
+            handler=automation_special_agent_discovery_preview,
         )
     )
     automations.register(
-        Automation(ident="service-discovery-preview", handler=AutomationDiscoveryPreview().execute)
+        Automation(
+            ident="service-discovery-preview",
+            handler=automation_discovery_preview,
+        )
     )
-    automations.register(
-        Automation(ident="autodiscovery", handler=AutomationAutodiscovery().execute)
-    )
-    automations.register(
-        Automation(ident="set-autochecks-v2", handler=AutomationSetAutochecksV2().execute)
-    )
-    automations.register(
-        Automation(ident="update-host-labels", handler=AutomationUpdateHostLabels().execute)
-    )
-    automations.register(Automation(ident="rename-hosts", handler=AutomationRenameHosts().execute))
-    automations.register(
-        Automation(ident="get-services-labels", handler=AutomationGetServicesLabels().execute)
-    )
-    automations.register(
-        Automation(ident="get-service-name", handler=AutomationGetServiceName().execute)
-    )
-    automations.register(
-        Automation(ident="analyse-service", handler=AutomationAnalyseServices().execute)
-    )
-    automations.register(Automation(ident="analyse-host", handler=AutomationAnalyseHost().execute))
     automations.register(
         Automation(
-            ident="analyze-host-rule-matches", handler=AutomationAnalyzeHostRuleMatches().execute
+            ident="autodiscovery",
+            handler=automation_autodiscovery,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="set-autochecks-v2",
+            handler=automation_set_autochecks_v2,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="update-host-labels",
+            handler=automation_update_host_labels,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="rename-hosts",
+            handler=AutomationRenameHosts().execute,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="get-services-labels",
+            handler=automation_get_service_labels,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="get-service-name",
+            handler=automation_get_service_name,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="analyse-service",
+            handler=AutomationAnalyseServices().execute,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="analyse-host",
+            handler=automation_analyse_host,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="analyze-host-rule-matches",
+            handler=automation_analyze_host_rule_matches,
         )
     )
     automations.register(
         Automation(
             ident="analyze-service-rule-matches",
-            handler=AutomationAnalyzeServiceRuleMatches().execute,
+            handler=automation_analyze_service_rule_matches,
         )
     )
     automations.register(
         Automation(
             ident="analyze-host-rule-effectiveness",
-            handler=AutomationAnalyzeHostRuleEffectiveness().execute,
+            handler=automation_analyze_host_rule_effectiveness,
         )
-    )
-    automations.register(Automation(ident="delete-hosts", handler=AutomationDeleteHosts().execute))
-    automations.register(
-        Automation(
-            ident="delete-hosts-known-remote", handler=AutomationDeleteHostsKnownRemote().execute
-        )
-    )
-    automations.register(Automation(ident="restart", handler=AutomationRestart().execute))
-    automations.register(Automation(ident="reload", handler=AutomationReload().execute))
-    automations.register(
-        Automation(ident="get-configuration", handler=AutomationGetConfiguration().execute)
-    )
-    automations.register(
-        Automation(ident="get-check-information", handler=AutomationGetCheckInformation().execute)
     )
     automations.register(
         Automation(
-            ident="get-section-information", handler=AutomationGetSectionInformation().execute
+            ident="delete-hosts",
+            handler=AutomationDeleteHosts().execute,
         )
     )
-    automations.register(Automation(ident="scan-parents", handler=AutomationScanParents().execute))
     automations.register(
-        Automation(ident="diag-special-agent", handler=AutomationDiagSpecialAgent().execute)
+        Automation(
+            ident="delete-hosts-known-remote",
+            handler=AutomationDeleteHostsKnownRemote().execute,
+        )
     )
-    automations.register(Automation(ident="ping-host", handler=AutomationPingHost().execute))
     automations.register(
-        Automation(ident="diag-cmk-agent", handler=AutomationDiagCmkAgent().execute)
+        Automation(
+            ident="restart",
+            handler=AutomationRestart().execute,
+        )
     )
-    automations.register(Automation(ident="diag-host", handler=AutomationDiagHost().execute))
-    automations.register(Automation(ident="active-check", handler=AutomationActiveCheck().execute))
+    automations.register(
+        Automation(
+            ident="reload",
+            handler=AutomationReload().execute,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="get-configuration",
+            handler=automation_get_configuration,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="get-check-information",
+            handler=automation_get_check_information,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="get-section-information",
+            handler=automation_get_section_information,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="scan-parents",
+            handler=automation_scan_parents,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="diag-special-agent",
+            handler=automation_diag_special_agent,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="ping-host",
+            handler=automation_ping_host,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="diag-cmk-agent",
+            handler=automation_diag_cmk_agent,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="diag-host",
+            handler=AutomationDiagHost().execute,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="active-check",
+            handler=AutomationActiveCheck().execute,
+        )
+    )
     automations.register(
         Automation(
             ident="update-passwords-merged-file",
-            handler=AutomationUpdatePasswordsMergedFile().execute,
+            handler=automation_update_passwords_merged_file,
         )
     )
     automations.register(
-        Automation(ident="update-dns-cache", handler=AutomationUpdateDNSCache().execute)
-    )
-    automations.register(
-        Automation(ident="get-agent-output", handler=AutomationGetAgentOutput().execute)
-    )
-    automations.register(
-        Automation(ident="notification-replay", handler=AutomationNotificationReplay().execute)
-    )
-    automations.register(
-        Automation(ident="notification-analyse", handler=AutomationNotificationAnalyse().execute)
-    )
-    automations.register(
-        Automation(ident="notification-test", handler=AutomationNotificationTest().execute)
-    )
-    automations.register(
-        Automation(ident="notification-get-bulks", handler=AutomationGetBulks().execute)
+        Automation(
+            ident="update-dns-cache",
+            handler=automation_update_dns_cache,
+        )
     )
     automations.register(
         Automation(
-            ident="create-diagnostics-dump", handler=AutomationCreateDiagnosticsDump().execute
+            ident="get-agent-output",
+            handler=automation_get_agent_output,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-replay",
+            handler=automation_notification_replay,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-analyse",
+            handler=automation_notification_analyse,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-test",
+            handler=automation_notification_test,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-get-bulks",
+            handler=automation_get_bulks,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="create-diagnostics-dump",
+            handler=automation_create_diagnostics_dump,
         )
     )
     automations.register(
         Automation(
             ident="find-unknown-check-parameter-rule-sets",
-            handler=AutomationFindUnknownCheckParameterRuleSets().execute,
+            handler=automation_find_unknown_check_parameter_rule_sets,
         )
     )

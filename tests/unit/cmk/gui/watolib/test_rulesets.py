@@ -18,8 +18,8 @@ from cmk.automations.results import (
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
-    AutomationAnalyzeHostRuleMatches,
-    AutomationAnalyzeServiceRuleMatches,
+    automation_analyze_host_rule_matches,
+    automation_analyze_service_rule_matches,
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import edition
@@ -49,7 +49,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return AutomationAnalyzeHostRuleMatches().execute(
+            return automation_analyze_host_rule_matches(
                 AutomationContext(
                     edition=(app := make_app(edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
@@ -181,7 +181,7 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
-            return AutomationAnalyzeServiceRuleMatches().execute(
+            return automation_analyze_service_rule_matches(
                 AutomationContext(
                     edition=(app := make_app(edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,

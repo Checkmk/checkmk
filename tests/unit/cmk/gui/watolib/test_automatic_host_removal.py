@@ -19,7 +19,7 @@ from pytest_mock import MockerFixture
 from cmk.automations.results import AnalyzeHostRuleMatchesResult
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
-from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleMatches
+from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
@@ -223,7 +223,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
         h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
     ) -> AnalyzeHostRuleMatchesResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return AutomationAnalyzeHostRuleMatches().execute(
+            return automation_analyze_host_rule_matches(
                 AutomationContext(
                     edition=(app := make_app(edition(omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,

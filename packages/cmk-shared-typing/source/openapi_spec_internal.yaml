@@ -65348,9 +65348,18 @@ components:
             type: string
           title: Restricted To Single
           type: array
+        filters:
+          additionalProperties:
+            additionalProperties:
+              type: string
+            type: object
+          description: Active filters in the format filter_id -> (variable -> value)
+          title: Filters
+          type: object
       required:
       - data_source
       - restricted_to_single
+      - filters
       title: ViewExtensions
       type: object
     ViewModel:

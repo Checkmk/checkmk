@@ -12,6 +12,10 @@ class RawOrganizationFactory(TypedDictFactory[schema.RawOrganisation]):
     __check_model__ = False
 
 
+class RawApiResponseCodesFactory(TypedDictFactory[schema.RawApiResponseCodes]):
+    __check_model__ = False
+
+
 class RawLicensesOverviewFactory(TypedDictFactory[schema.RawLicensesOverview]):
     __check_model__ = False
 

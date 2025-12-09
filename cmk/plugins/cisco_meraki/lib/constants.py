@@ -8,6 +8,7 @@ from typing import Final
 AGENT = "cisco_meraki"
 APIKEY_OPTION_NAME: Final = "apikey"
 
+SEC_NAME_API_RESPONSE_CODES: Final = "api-response-codes"
 SEC_NAME_LICENSES_OVERVIEW: Final = "licenses-overview"
 SEC_NAME_DEVICE_STATUSES: Final = "device-statuses"
 SEC_NAME_DEVICE_UPLINKS_INFO: Final = "device-uplinks-info"
@@ -18,6 +19,7 @@ SEC_NAME_APPLIANCE_VPNS: Final = "appliance-vpns"
 SEC_NAME_SWITCH_PORT_STATUSES: Final = "switch-port-statuses"
 
 OPTIONAL_SECTIONS_CHOICES: Final = (
+    SEC_NAME_API_RESPONSE_CODES,
     SEC_NAME_APPLIANCE_PERFORMANCE,
     SEC_NAME_APPLIANCE_UPLINKS,
     SEC_NAME_APPLIANCE_VPNS,
@@ -29,6 +31,7 @@ OPTIONAL_SECTIONS_CHOICES: Final = (
 )
 
 OPTIONAL_SECTIONS_DEFAULT: Final = (
+    SEC_NAME_API_RESPONSE_CODES,
     SEC_NAME_APPLIANCE_UPLINKS,
     SEC_NAME_APPLIANCE_VPNS,
     SEC_NAME_DEVICE_STATUSES,

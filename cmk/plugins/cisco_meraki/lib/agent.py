@@ -31,7 +31,13 @@ from .constants import (
     OPTIONAL_SECTIONS_DEFAULT,
 )
 from .log import LOGGER
-from .schema import Device, RawOrganisation, UplinkStatuses, UplinkUsageByInterface
+from .schema import (
+    ApiResponseCodes,
+    Device,
+    RawOrganisation,
+    UplinkStatuses,
+    UplinkUsageByInterface,
+)
 
 __version__ = "2.5.0b1"
 
@@ -88,6 +94,18 @@ class MerakiOrganisation:
             name="cisco_meraki_org_organisations",
             data=self.organisation,
         )
+
+        if self.config.required.api_response_codes:
+            for raw_response_codes in self.client.get_api_response_codes(self.id):
+                response_codes = ApiResponseCodes(
+                    organization_id=self.id,
+                    organization_name=self.name,
+                    **raw_response_codes,
+                )
+                yield Section(
+                    name="cisco_meraki_org_api_response_codes",
+                    data=response_codes,
+                )
 
         # If API is disabled for organization, it doesn't make sense to continue.
         if self.api_disabled:

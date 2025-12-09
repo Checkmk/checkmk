@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._api_response_codes import ApiResponseCodes, RawApiResponseCodes
 from ._appliance_performance import RawAppliancePerformance
 from ._device_uplinks_info import RawDeviceUplinksAddress
 from ._devices import Device, RawDevice
@@ -17,9 +18,11 @@ from ._uplink_usage import RawUplinkUsage
 from ._uplink_vpn_statuses import RawUplinkVpnStatuses
 
 __all__ = [
+    "ApiResponseCodes",
     "Device",
     "LicensesOverview",
     "Network",
+    "RawApiResponseCodes",
     "RawAppliancePerformance",
     "RawDevice",
     "RawDevicesStatus",

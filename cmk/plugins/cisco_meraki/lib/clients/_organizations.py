@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -14,6 +15,9 @@ from cmk.plugins.cisco_meraki.lib.type_defs import TotalPages
 
 class OrganizationsSDK(Protocol):
     def getOrganizations(self) -> Sequence[schema.RawOrganisation]: ...
+    def getOrganizationApiRequestsOverviewResponseCodesByInterval(
+        self, organizationId: str, total_pages: TotalPages, t0: str, t1: str
+    ) -> Sequence[schema.RawApiResponseCodes]: ...
     def getOrganizationDevices(
         self, organizationId: str, total_pages: TotalPages
     ) -> Sequence[schema.RawDevice]: ...
@@ -40,6 +44,18 @@ class OrganizationsClient:
             return self._sdk.getOrganizations()
         except APIError as e:
             log.LOGGER.debug("Get organisations: %r", e)
+            return []
+
+    def get_api_response_codes(self, id: str, /) -> Sequence[schema.RawApiResponseCodes]:
+        try:
+            return self._sdk.getOrganizationApiRequestsOverviewResponseCodesByInterval(
+                id,
+                total_pages="all",
+                t0=time.strftime("%Y-%m-%dT%H:%M:%MZ", time.gmtime(time.time() - 120)),
+                t1=time.strftime("%Y-%m-%dT%H:%M:%MZ", time.gmtime()),
+            )
+        except APIError as e:
+            log.LOGGER.debug(f"Get API response codes {id}: {e}")
             return []
 
     def get_devices(self, id: str, name: str, /) -> dict[str, schema.Device]:

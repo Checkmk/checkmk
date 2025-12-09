@@ -144,6 +144,19 @@ class _FakeOrganisationsSDK:
         }
         return devices_statuses.get(organizationId, [])
 
+    def getOrganizationApiRequestsOverviewResponseCodesByInterval(
+        self, organizationId: str, total_pages: TotalPages, t0: str, t1: str
+    ) -> Sequence[schema.RawApiResponseCodes]:
+        response_codes = {
+            "123": [
+                factories.RawApiResponseCodesFactory.build(),
+            ],
+            "456": [
+                factories.RawApiResponseCodesFactory.build(),
+            ],
+        }
+        return response_codes.get(organizationId, [])
+
     def getOrganizationDevicesUplinksAddressesByDevice(
         self, organizationId: str, total_pages: TotalPages
     ) -> Sequence[schema.RawDeviceUplinksAddress]:

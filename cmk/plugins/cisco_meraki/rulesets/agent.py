@@ -85,6 +85,10 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     ),
                     elements=[
                         MultipleChoiceElement(
+                            name="api_response_codes",
+                            title=Title("API response codes"),
+                        ),
+                        MultipleChoiceElement(
                             name="appliance_performance",
                             title=Title("Appliance uplink performance"),
                         ),
@@ -114,6 +118,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     ],
                     prefill=DefaultValue(
                         [
+                            "api_response_codes",
                             "appliance_uplinks",
                             "appliance_vpns",
                             "device_statuses",

@@ -118,6 +118,7 @@ class _CacheConfig:
 
 @dataclass(frozen=True)
 class _RequiredSections:
+    api_response_codes: bool
     appliance_performance: bool
     appliance_uplinks: bool
     appliance_vpns: bool
@@ -130,6 +131,7 @@ class _RequiredSections:
     @classmethod
     def build(cls, sections: set[str]) -> Self:
         return cls(
+            api_response_codes=constants.SEC_NAME_API_RESPONSE_CODES in sections,
             appliance_performance=constants.SEC_NAME_APPLIANCE_PERFORMANCE in sections,
             appliance_uplinks=constants.SEC_NAME_APPLIANCE_UPLINKS in sections,
             appliance_vpns=constants.SEC_NAME_APPLIANCE_VPNS in sections,

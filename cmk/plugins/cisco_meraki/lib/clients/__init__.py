@@ -47,6 +47,9 @@ class MerakiClient:
         self._sensor_client = SensorClient(sdk.sensor)
         self._switch_client = SwitchClient(sdk.switch)
 
+    def get_api_response_codes(self, id: str) -> Sequence[schema.RawApiResponseCodes]:
+        return self._org_client.get_api_response_codes(id)
+
     def get_appliance_performance(self, serial: str) -> Sequence[schema.RawAppliancePerformance]:
         return self._appliance_client.get_appliance_performance(serial)
 

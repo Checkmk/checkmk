@@ -120,11 +120,8 @@ class MerakiOrganisation:
             for device_status in self.client.get_devices_statuses(self.id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
-                if (
-                    piggyback := self._get_device_piggyback(
-                        device_status["serial"], devices_by_serial
-                    )
-                ) is not None:
+                serial = device_status["serial"]
+                if (piggyback := self._get_device_piggyback(serial, devices_by_serial)) is not None:
                     yield Section(
                         name="cisco_meraki_org_device_status",
                         data=device_status,

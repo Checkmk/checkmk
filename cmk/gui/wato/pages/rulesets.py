@@ -2589,10 +2589,6 @@ class ABCEditRuleMode(WatoMode):
 
         forms.end()
 
-        if self._is_locked:
-            forms.warning_message(self._is_locked.message)
-            return
-
         render_form_spec(
             conditions_catalog,
             "_vue_edit_rule_conditions",

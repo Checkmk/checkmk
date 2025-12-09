@@ -198,3 +198,33 @@ def test_successful_https_telemetry_data_transmission(
     assert len(json_files) == 0, (
         f"Expected 0 JSON files after transmission, found {len(json_files)}: {json_files}"
     )
+
+
+@pytest.mark.usefixtures("default_cfg")
+def test_unsuccessful_https_telemetry_data_transmission(
+    site: Site, mock_https_server: MockServer
+) -> None:
+    """Test that failed HTTPS transmission keeps telemetry files."""
+    run_telemetry_collection(site)
+
+    # Get the JSON files before transmission
+    json_files_before = get_telemetry_json_files(site)
+    assert len(json_files_before) == 1, (
+        f"Expected 1 JSON file before transmission, found {len(json_files_before)}"
+    )
+
+    mock_https_server.add_endpoint(
+        MockEndpoint(method=MockMethod.POST, path="/upload"),
+        MockResponse(status=500, body=b'{"error": "Internal server error"}'),
+    )
+
+    run_telemetry_upload(site, f"{mock_https_server.url}/upload")
+
+    # Verify telemetry JSON files were NOT deleted after failed transmission
+    json_files_after = get_telemetry_json_files(site)
+    assert len(json_files_after) == 1, (
+        f"Expected 1 JSON file after failed transmission, found {len(json_files_after)}"
+    )
+    assert json_files_before[0] == json_files_after[0], (
+        "JSON file should be the same after failed transmission"
+    )

@@ -22,9 +22,24 @@ SEVEN_DAYS = 7 * 24 * 60 * 60
 def _make_form() -> Dictionary:
     return Dictionary(
         elements={
-            "expiration_time": DictElement(
+            "expiration_time_secrets": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Time until credentials expiration"),
+                    title=Title("Time until secret credentials expiration"),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.SECOND,
+                        ]
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=DefaultValue((THIRTY_DAYS, SEVEN_DAYS)),
+                )
+            ),
+            "expiration_time_certificates": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Time until certificate credentials expiration"),
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[
                             TimeMagnitude.DAY,

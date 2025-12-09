@@ -1784,8 +1784,12 @@ async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> Azu
         "applications", key="value", next_page_key="@odata.nextLink"
     )
 
-    key_subset = {"id", "appId", "displayName", "passwordCredentials"}
-    apps = [{k: app[k] for k in key_subset} for app in apps if app["passwordCredentials"]]
+    key_subset = {"id", "appId", "displayName", "passwordCredentials", "keyCredentials"}
+    apps = [
+        {k: app[k] for k in key_subset}
+        for app in apps
+        if app["passwordCredentials"] or app["keyCredentials"]
+    ]
 
     section = AzureSection("app_registration", separator=0)
     for app_reg in apps:

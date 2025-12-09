@@ -920,6 +920,7 @@ def test_write_remaining_reads(
                             "secretText": None,
                         }
                     ],
+                    "keyCredentials": [],
                 },
                 {
                     "not_used_field_1": "not_used_value_1",
@@ -932,15 +933,16 @@ def test_write_remaining_reads(
                             "customKeyIdentifier": None,
                         }
                     ],
+                    "keyCredentials": [],
                 },
             ],
             MockAzureSection(
                 "app_registration",
                 content=[
                     '{"appId": "app_id_1", "displayName": "test_app_1", "id": "id_1", \
-"passwordCredentials": [{"customKeyIdentifier": null, "hint": "B4j", "secretText": null}]}\n',
+"keyCredentials": [], "passwordCredentials": [{"customKeyIdentifier": null, "hint": "B4j", "secretText": null}]}\n',
                     '{"appId": "app_id_2", "displayName": "test_app_2", "id": "id_2", \
-"passwordCredentials": [{"customKeyIdentifier": null}]}\n',
+"keyCredentials": [], "passwordCredentials": [{"customKeyIdentifier": null}]}\n',
                 ],
                 separator=0,
             ),
@@ -956,6 +958,7 @@ def test_write_remaining_reads(
                     "id": "id_1",
                     "displayName": "test_app_1",
                     "passwordCredentials": [],
+                    "keyCredentials": [],
                 },
                 {
                     "not_used_field_1": "not_used_value_1",
@@ -968,13 +971,14 @@ def test_write_remaining_reads(
                             "customKeyIdentifier": None,
                         }
                     ],
+                    "keyCredentials": [],
                 },
             ],
             MockAzureSection(
                 "app_registration",
                 content=[
                     '{"appId": "app_id_2", "displayName": "test_app_2", "id": "id_2", \
-"passwordCredentials": [{"customKeyIdentifier": null}]}\n',
+"keyCredentials": [], "passwordCredentials": [{"customKeyIdentifier": null}]}\n',
                 ],
                 separator=0,
             ),

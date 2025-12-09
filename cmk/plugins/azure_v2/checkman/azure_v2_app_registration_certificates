@@ -1,0 +1,18 @@
+title: Microsoft Azure App Registration Certficate
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description: This check monitors validity of an Microsoft Azure
+  app registration certificate.
+  The state of the service is CRIT if the certificate has
+  expired.
+
+  The levels for remaining time until expiry can be
+  configured in the rule "Azure App Registration".
+
+  In order to use this check, you need to configure the Azure special agent.
+
+item: The app and the certificate name.
+
+discovery: One service is created for each app registration certificate.

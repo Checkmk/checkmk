@@ -629,7 +629,7 @@ class SidebarRenderer:
                     "treeangle",
                     "open" if snapin.visible == SnapinVisibility.OPEN else "closed",
                 ],
-                src=theme.url("images/tree_closed.svg"),
+                src=theme.detect_icon_path("tree_closed", "icon_"),
                 onclick=onclick,
             )
         html.b(

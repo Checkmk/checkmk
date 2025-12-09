@@ -340,7 +340,7 @@ def grouped_row_title(
     )
 
     html.img(
-        theme.url("images/tree_closed.svg"),
+        theme.detect_icon_path("tree_closed", "icon_"),
         align="absbottom",
         class_=["treeangle", "nform", "open" if is_open else "closed"],
     )

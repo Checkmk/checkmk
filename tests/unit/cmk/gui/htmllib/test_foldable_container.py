@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.gui.htmllib.foldable_container import (
     foldable_container,
@@ -16,7 +17,11 @@ from tests.unit.cmk.gui.compare_html import compare_html
 
 
 @pytest.mark.usefixtures("request_context")
-def test_foldable_container() -> None:
+def test_foldable_container(mocker: MockerFixture) -> None:
+    mocker.patch(
+        "cmk.gui.theme._theme_type.Theme.detect_icon_path",
+        return_value="some_random_icon_path.svg",
+    )
     with output_funnel.plugged():
         with foldable_container(treename="name", id_="id", isopen=False, title="Title") as is_open:
             assert is_open is False
@@ -24,10 +29,14 @@ def test_foldable_container() -> None:
         assert compare_html(
             code,
             """
-            <div class="foldable closed"><div class="foldable_header">
-            <img id="treeimg.name.id" src="themes/facelift/images/tree_closed.svg" class="treeangle closed" />
-            <b class="treeangle title">Title</b></div>
-            <ul id="tree.name.id" style="padding-left: 15px; " class="treeangle closed"></ul></div>
+            <div class="foldable closed">
+            <div onclick="cmk.foldable_container.toggle(&quot;name&quot;, &quot;id&quot;, &quot;&quot;, true)" class="foldable_header">
+            <img id="treeimg.name.id" src="some_random_icon_path.svg" class="treeangle closed" />
+            <b class="treeangle title">Title</b>
+            </div>
+            <ul id="tree.name.id" style="padding-left: 15px; " class="treeangle closed"></ul>
+            </div>
+
             """,
         )
 

@@ -734,7 +734,7 @@ $themed-icons: (
   'table-actions-on': 'icon_table_actions_on.svg',
   'tick': 'icon_tick.svg',
   'toggle-off': 'icon_toggle_off.svg',
-  'tree-closed': 'tree_closed.svg'
+  'tree-closed': 'icon_tree_closed.svg'
 );
 
 @each $name, $filename in $themed-icons {

@@ -108,7 +108,7 @@ def _table_head(
         html.img(
             id_=foldable_container_img_id(treename, id_),
             class_=["treeangle", "nform"] + foldable_attrs.class_,
-            src=theme.url("images/tree_closed.svg"),
+            src=theme.detect_icon_path("tree_closed", prefix="icon_"),
             align="absbottom",
         )
     else:

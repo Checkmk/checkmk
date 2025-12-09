@@ -412,7 +412,7 @@ oncontextmenu = e => e.preventDefault();"""
         self._show_item_title(multilevel_topic)
         html.close_span()
         html.img(
-            src=theme.url("images/tree_closed.svg"),
+            src=theme.detect_icon_path("tree_closed", "icon_"),
         )
         html.close_a()
         html.close_li()

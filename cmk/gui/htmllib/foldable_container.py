@@ -49,7 +49,7 @@ def foldable_container(
     html.img(
         id_=img_id,
         class_=["treeangle", "open" if isopen else "closed"] + (["title", "icon"] if icon else []),
-        src=theme.detect_icon_path(icon, "icon_") if icon else theme.url("images/tree_closed.svg"),
+        src=theme.detect_icon_path(icon if icon else "tree_closed", "icon_"),
         onclick=onclick if title_url else None,
     )
 

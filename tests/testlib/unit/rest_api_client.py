@@ -3522,6 +3522,18 @@ class DashboardClient(RestApiClient):
             expect_ok=True,
         )
 
+    def show_dashboard_metadata(
+        self, dashboard_id: str, owner: str | None = None, expect_ok: bool = True
+    ) -> Response:
+        url = f"/objects/{self.domain_metadata}/{dashboard_id}"
+        if owner is not None:
+            url += f"?owner={owner}"
+        return self.request(
+            "get",
+            url=url,
+            expect_ok=expect_ok,
+        )
+
     def get_relative_grid_dashboard(self, dashboard_id: str, expect_ok: bool = True) -> Response:
         return self.request(
             "get",

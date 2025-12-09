@@ -190,12 +190,17 @@ def test_delete_dashboard(clients: ClientRegistry) -> None:
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
 
 
-class TestDashboardListMetadata:
+class TestDashboardMetadata:
     def test_list_dashboard_metadata(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.list_dashboard_metadata()
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
         assert len(resp.json["value"]) > 0, "Expected at least one dashboard to be returned"
+
+    def test_show_dashboard_metadata(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.show_dashboard_metadata("main", owner="")
+
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
 
 
 class TestDashboardIcon:

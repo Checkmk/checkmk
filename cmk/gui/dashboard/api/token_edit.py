@@ -2,8 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.token_util import (
+    DashboardTokenExpirationInvalid,
     DashboardTokenNotFound,
     InvalidDashboardTokenReference,
     update_dashboard_token,
@@ -18,6 +20,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
+from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 from cmk.gui.openapi.utils import ProblemException
 
 from ._family import DASHBOARD_FAMILY
@@ -42,6 +45,17 @@ def edit_dashboard_token_v1(
             status=404,
             title="Dashboard token not found",
             detail="No token for this dashboard exists.",
+        ) from None
+    except DashboardTokenExpirationInvalid as e:
+        raise RequestDataValidator.format_error_details(
+            [
+                ErrorDetails(
+                    type="value_error",
+                    msg=e.message,
+                    loc=("body", "expires_at"),
+                    input=body.expires_at,
+                )
+            ]
         ) from None
 
     return DashboardTokenObjectModel(

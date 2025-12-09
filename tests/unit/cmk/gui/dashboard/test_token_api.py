@@ -9,6 +9,7 @@ from collections.abc import Generator
 import pytest
 
 from cmk.ccc.user import UserId
+from tests.testlib.common.repo import is_non_free_repo
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -53,7 +54,7 @@ def fixture_user_dashboard_with_token(
     user_dashboard: str,
 ) -> Generator[str]:
     """Creates a user dashboard with a token for testing."""
-    expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat()
+    expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat()
     payload = {
         "dashboard_owner": with_automation_user[0],
         "dashboard_id": user_dashboard,
@@ -66,7 +67,7 @@ def fixture_user_dashboard_with_token(
 
 
 def test_create_token_builtin_dashboard(clients: ClientRegistry) -> None:
-    expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat()
+    expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat()
     payload = {
         "dashboard_owner": "",
         "dashboard_id": "main",
@@ -83,7 +84,7 @@ def test_create_token_builtin_dashboard(clients: ClientRegistry) -> None:
 def test_create_token_user_dashboard(
     clients: ClientRegistry, with_automation_user: tuple[UserId, str], user_dashboard: str
 ) -> None:
-    expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat()
+    expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat()
     payload = {
         "dashboard_owner": with_automation_user[0],
         "dashboard_id": user_dashboard,
@@ -99,37 +100,60 @@ def test_create_token_user_dashboard(
     assert resp.json["extensions"]["issued_at"] is not None
 
 
-@pytest.mark.parametrize(
-    "expires_at, expected_error",
-    [
-        pytest.param(
-            (dt.datetime.now(dt.UTC) - dt.timedelta(days=1)).isoformat(),
-            "Input should be in the future",
-            id="expiration_in_past",
-        ),
-        pytest.param(
-            (dt.datetime.now(dt.UTC) + dt.timedelta(days=800)).isoformat(),
-            "Value error, Expiration time must be less than two years from now.",
-            id="expiration_too_far_in_future",
-        ),
-    ],
-)
-def test_create_token_invalid_expiration(
+def test_create_token_expiration_in_past(
     clients: ClientRegistry,
     with_automation_user: tuple[UserId, str],
     user_dashboard: str,
-    expires_at: str,
-    expected_error: str,
 ) -> None:
     payload = {
         "dashboard_owner": with_automation_user[0],
         "dashboard_id": user_dashboard,
         "comment": "Invalid expiration",
-        "expires_at": expires_at,
+        "expires_at": (dt.datetime.now(dt.UTC) - dt.timedelta(days=1)).isoformat(),
     }
     resp = clients.DashboardClient.create_dashboard_token(payload, expect_ok=False)
     assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.json!r}"
-    assert resp.json["fields"]["body.expires_at"]["msg"] == expected_error
+    assert resp.json["fields"]["body.expires_at"]["msg"] == "Input should be in the future"
+
+
+def test_create_token_expiration_too_far_in_future(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard: str,
+) -> None:
+    if is_non_free_repo():
+        pytest.skip("This test is only relevant for Checkmk Community Edition")
+
+    payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard,
+        "comment": "Invalid expiration",
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=800)).isoformat(),
+    }
+    resp = clients.DashboardClient.create_dashboard_token(payload, expect_ok=False)
+    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.json!r}"
+    assert resp.json["fields"]["body.expires_at"]["msg"] == (
+        "Value error, In the Checkmk Community Edition, "
+        "dashboard tokens can only be valid for up to one month."
+    )
+
+
+def test_create_token_no_expiration(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard: str,
+) -> None:
+    if not is_non_free_repo():
+        pytest.skip("This test is only relevant for commercial Checkmk editions")
+
+    payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard,
+        "comment": "Invalid expiration",
+        "expires_at": None,
+    }
+    resp = clients.DashboardClient.create_dashboard_token(payload)
+    assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.json!r}"
 
 
 def test_create_token_nonexistent_dashboard(
@@ -151,7 +175,7 @@ def test_edit_token_user_dashboard(
     user_dashboard_with_token: str,
 ) -> None:
     new_expires = (
-        (dt.datetime.now(dt.UTC) + dt.timedelta(days=60)).isoformat().replace("+00:00", "Z")
+        (dt.datetime.now(dt.UTC) + dt.timedelta(days=2)).isoformat().replace("+00:00", "Z")
     )
     edit_payload = {
         "dashboard_owner": with_automation_user[0],
@@ -173,7 +197,7 @@ def test_edit_token_builtin_dashboard(clients: ClientRegistry) -> None:
         "dashboard_id": "main",
         "comment": "Should fail",
         "is_disabled": True,
-        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat(),
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat(),
     }
     resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
     assert resp.status_code == 403, f"Expected 403, got {resp.status_code} {resp.json!r}"
@@ -209,6 +233,9 @@ def test_edit_token_invalid_expiration(
     with_automation_user: tuple[UserId, str],
     user_dashboard_with_token: str,
 ) -> None:
+    if is_non_free_repo():
+        pytest.skip("This test is only relevant for Checkmk Community Edition")
+
     edit_payload = {
         "dashboard_owner": with_automation_user[0],
         "dashboard_id": user_dashboard_with_token,
@@ -218,10 +245,29 @@ def test_edit_token_invalid_expiration(
     }
     resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
     assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.json!r}"
-    assert (
-        resp.json["fields"]["body.expires_at"]["msg"]
-        == "Value error, Expiration time must be less than two years from now."
+    assert resp.json["fields"]["body.expires_at"]["msg"] == (
+        "Value error, In the Checkmk Community Edition, "
+        "dashboard tokens can only be valid for up to one month."
     )
+
+
+def test_edit_token_no_expiration(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard_with_token: str,
+) -> None:
+    if not is_non_free_repo():
+        pytest.skip("This test is only relevant for commercial Checkmk editions")
+
+    edit_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard_with_token,
+        "comment": "Edited",
+        "is_disabled": False,
+        "expires_at": None,
+    }
+    resp = clients.DashboardClient.edit_dashboard_token(edit_payload)
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.json!r}"
 
 
 def test_edit_token_nonexistent_dashboard(
@@ -232,7 +278,7 @@ def test_edit_token_nonexistent_dashboard(
         "dashboard_id": "does_not_exist",
         "comment": "Should fail",
         "is_disabled": True,
-        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat(),
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat(),
     }
     resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code}"

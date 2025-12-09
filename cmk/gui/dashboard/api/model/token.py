@@ -9,7 +9,7 @@ import datetime as dt
 from typing import Annotated, Literal, Self
 
 from dateutil.relativedelta import relativedelta
-from pydantic import AfterValidator, AwareDatetime, FutureDatetime
+from pydantic import AwareDatetime, FutureDatetime
 
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
@@ -64,13 +64,6 @@ class DashboardTokenObjectModel(DomainObjectModel):
     extensions: DashboardTokenMetadata = api_field(description="The metadata of this token.")
 
 
-def _validate_max_time(value: dt.datetime) -> dt.datetime:
-    now = dt.datetime.now(dt.UTC)
-    if value >= (now + relativedelta(years=2)):
-        raise ValueError("Expiration time must be less than two years from now.")
-    return value
-
-
 @api_model
 class _BaseDashboardTokenRequest:
     dashboard_owner: AnnotatedUserId = api_field(description="The user ID of the dashboard owner.")
@@ -86,12 +79,10 @@ class _BaseDashboardTokenRequestWithComment(_BaseDashboardTokenRequest):
 
 @api_model
 class CreateDashboardToken(_BaseDashboardTokenRequestWithComment):
-    expires_at: Annotated[
-        dt.datetime, AwareDatetime, FutureDatetime, AfterValidator(_validate_max_time)
-    ] = api_field(
-        description="The date and time when the token will expire. Defaults to one year from now.",
+    expires_at: Annotated[dt.datetime, AwareDatetime, FutureDatetime] | None = api_field(
+        description="The date and time when the token will expire. Defaults to one month from now.",
         example="2025-12-31T23:59:59Z",
-        default_factory=lambda: dt.datetime.now(dt.UTC) + relativedelta(years=1),
+        default_factory=lambda: dt.datetime.now(dt.UTC) + relativedelta(months=1),
     )
 
 
@@ -99,12 +90,9 @@ class CreateDashboardToken(_BaseDashboardTokenRequestWithComment):
 class EditDashboardToken(_BaseDashboardTokenRequestWithComment):
     is_disabled: bool = api_field(description="Indicates whether the token is disabled.")
     # NOTE: We don't use FutureDatetime here since the token may already be expired
-    # TODO: do we even want to allow editing the expiration time
-    expires_at: Annotated[dt.datetime, AwareDatetime, AfterValidator(_validate_max_time)] = (
-        api_field(
-            description="The date and time when the token will expire.",
-            example="2025-12-31T23:59:59Z",
-        )
+    expires_at: Annotated[dt.datetime, AwareDatetime] | None = api_field(
+        description="The date and time when the token will expire.",
+        example="2025-12-31T23:59:59Z",
     )
 
 

@@ -12,6 +12,7 @@ from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition, edition
 from cmk.gui import visuals
 from cmk.gui.dashboard.store import DashboardStore
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig, LinkedViewDashletConfig
@@ -33,6 +34,7 @@ from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.views.store import get_permitted_views, ViewStore
+from cmk.utils import paths
 
 
 class InvalidWidgetError(MKException):
@@ -56,6 +58,34 @@ class DashboardTokenNotFound(MKUserError):
 
 class DashboardTokenAlreadyExists(MKUserError):
     """The dashboard already has a token assigned to it."""
+
+
+class DashboardTokenExpirationInvalid(MKUserError):
+    """The token expiration time is invalid."""
+
+
+def _validate_expiration(
+    now: dt.datetime, expiration_time: dt.datetime | None, *, allow_past: bool = False
+) -> dt.datetime | None:
+    """Validate the given expiration time for a dashboard token."""
+    if not allow_past and expiration_time is not None and expiration_time <= now:
+        raise DashboardTokenExpirationInvalid(
+            varname="expiration_time",
+            message=_("The expiration time must be in the future."),
+        )
+
+    if edition(paths.omd_root) == Edition.COMMUNITY:
+        # please consider buying commercial editions :)
+        upper_bound = now + relativedelta(months=1)
+        if expiration_time is None or expiration_time > upper_bound:
+            raise DashboardTokenExpirationInvalid(
+                varname="expiration_time",
+                message=_(
+                    "In the Checkmk Community Edition, dashboard tokens can only be valid for up to one month."
+                ),
+            )
+
+    return expiration_time
 
 
 @contextmanager
@@ -120,6 +150,7 @@ def issue_dashboard_token(
     if token_store is None:
         token_store = get_token_store()
     now = dt.datetime.now(dt.UTC)
+    expiration_time = _validate_expiration(now, expiration_time)
     return token_store.issue(
         DashboardToken(
             type_="dashboard",
@@ -144,12 +175,14 @@ def update_dashboard_token(
     token_store: TokenStore | None = None,
 ) -> AuthToken:
     """Update an existing dashboard token for the given dashboard."""
+    now = dt.datetime.now(dt.UTC)
+    expiration_time = _validate_expiration(now, expiration_time, allow_past=True)
     with edit_dashboard_auth_token(dashboard, token_store) as token:
         token.valid_until = expiration_time
         token.details.comment = comment
         token.details.disabled = disabled
         token.details.view_owners = _get_view_owners(dashboard)
-        token.details.synced_at = dt.datetime.now(dt.UTC)
+        token.details.synced_at = now
         return token
 
 

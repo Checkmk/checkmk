@@ -2,9 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import datetime as dt
+from pydantic_core import ErrorDetails
 
-from cmk.gui.dashboard.token_util import DashboardTokenAlreadyExists, issue_dashboard_token
+from cmk.gui.dashboard.token_util import (
+    DashboardTokenAlreadyExists,
+    DashboardTokenExpirationInvalid,
+    issue_dashboard_token,
+)
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -16,6 +20,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
+from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import get_token_store
 
@@ -28,16 +33,6 @@ def create_dashboard_token_v1(
     api_context: ApiContext, body: CreateDashboardToken
 ) -> ApiResponse[DashboardTokenObjectModel]:
     """Creates a new dashboard token and returns its metadata."""
-    now = dt.datetime.now(dt.UTC)
-    if body.expires_at <= now:
-        # pydantic already checks for future date/time, but in case of very low validity we
-        # double-check to prevent negative time deltas
-        raise ProblemException(
-            status=400,
-            title="Invalid expiration time",
-            detail="The expiration time must be in the future.",
-        )
-
     dashboard = get_dashboard_for_edit(body.dashboard_owner, body.dashboard_id)
 
     token_store = get_token_store()
@@ -54,6 +49,17 @@ def create_dashboard_token_v1(
             title="Dashboard token already exists",
             detail="A token for this dashboard already exists, cannot create another one.",
         )
+    except DashboardTokenExpirationInvalid as e:
+        raise RequestDataValidator.format_error_details(
+            [
+                ErrorDetails(
+                    type="value_error",
+                    msg=e.message,
+                    loc=("body", "expires_at"),
+                    input=body.expires_at,
+                )
+            ]
+        ) from None
 
     dashboard["public_token_id"] = token.token_id
     try:

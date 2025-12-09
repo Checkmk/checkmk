@@ -99,13 +99,13 @@ onMounted(async () => {
     <div v-if="role === AiRole.ai" class="ai-conversation-element__ai-header">
       <CmkIcon name="sparkle" size="xlarge" />
       <div class="ai-conversation-element__ai-header-text">
-        <CmkHeading type="h2">{{ _t('Answer') }}</CmkHeading>
+        <CmkHeading type="h2">{{ _t('AI-generated answer') }}</CmkHeading>
         <div v-if="contentData === null" class="ai-conversation-element__loader">
           <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
           <label>{{ loadingText ?? _t('Generating response...') }}</label>
         </div>
         <div v-else class="ai-conversation-element__disclaimer">
-          <label>{{ _t('AI-generated answer. Please verify critical facts.') }}</label>
+          <label>{{ _t('Please review to ensure factual correctness.') }}</label>
         </div>
       </div>
     </div>
@@ -267,6 +267,18 @@ onMounted(async () => {
       background: transparent;
       border: none;
       width: calc(100% - (var(--dimension-4) + var(--dimension-7)));
+    }
+  }
+
+  &.ai-conversation-element--system {
+    width: auto;
+
+    .ai-conversation-element__text {
+      border: 1px solid var(--default-border-color);
+      border-radius: var(--border-radius);
+      padding-left: var(--dimension-7);
+      padding-right: var(--dimension-7);
+      box-sizing: border-box;
     }
   }
 

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
 import { type Ref, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -113,7 +114,7 @@ export class AiTemplateService extends ServiceBase {
   constructor(
     public templateId: string,
     public userId: string,
-    public data: unknown
+    public data: ExplainThisIssueData
   ) {
     super(templateId, new KeyShortcutService(window))
 
@@ -124,11 +125,9 @@ export class AiTemplateService extends ServiceBase {
       userActions: {}
     }
 
-    if (!this.getDisclaimerPersistentRef().value) {
-      this.config.getDisclaimer = this.getDisclaimer.bind(this)
-    }
-
     void this.loadInfo()
+
+    this.addContext()
   }
 
   public isDisclaimerShown(): boolean {
@@ -159,30 +158,29 @@ export class AiTemplateService extends ServiceBase {
     this.elements.push(element)
   }
 
-  public async getDisclaimer(): Promise<TAiConversationElementContent[]> {
-    if (!this.info) {
-      await this.loadInfo()
+  public addContext() {
+    const context = this.toSentenceCase(this.templateId.replace(/-/g, ' '))
+    const contextData: string[] = []
+
+    if (typeof this.data === 'object' && this.data) {
+      for (const [key, value] of Object.entries(this.data)) {
+        const keyName = this.toSentenceCase(key.replace(/_/g, ' '))
+        contextData.push(`- ${keyName}: **${value}**`)
+      }
     }
 
-    return [
-      {
-        content_type: 'text',
-        text: _t(
-          'The following feature uses a Large Language Model (LLM).' +
-            'Remember that the output is based on patterns and training data, ' +
-            'and should always be checked critical for factual correctness before implementation'
-        )
-      },
-      {
-        content_type: 'markdown',
-        content: _t(
-          'For a full understanding please visit our ' +
-            '<a href="https://docs.checkmk.com/latest" target="_blank">Documentation</a> and ' +
-            '<a href="https://checkmk.com/privacy-policy" target="_blank">Privacy Policy</a>.<br/>' +
-            `This feature utilizes ${this.info?.models.join(', ')} of ${this.info?.provider} to generate its output.`
-        )
-      }
-    ]
+    this.addElement({
+      role: AiRole.system,
+      content: [
+        {
+          content_type: 'markdown',
+          content: `### Context:  **${context}**\n${contextData.join('\n')}`
+        }
+      ],
+      noAnimation: true
+    })
+
+    this.setActiveRole(AiRole.user)
   }
 
   public async getUserActionButtons(): Promise<AiActionButton[] | undefined | Error> {
@@ -223,6 +221,10 @@ export class AiTemplateService extends ServiceBase {
 
   public onInfoLoaded(cb: () => void) {
     this.pushCallBack('info-loaded', cb)
+  }
+
+  protected toSentenceCase(str: string): string {
+    return String(str).charAt(0).toUpperCase() + String(str).slice(1)
   }
 
   protected async loadInfo() {

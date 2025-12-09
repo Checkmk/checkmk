@@ -15,7 +15,7 @@ const props = defineProps<{
   title: TranslatedString
 }>()
 
-const slideInOpen = defineModel<boolean>('slidoeut-open', { required: true })
+const slideInOpen = defineModel<boolean>('slideout-open', { required: true })
 
 function onClose() {
   slideInOpen.value = false

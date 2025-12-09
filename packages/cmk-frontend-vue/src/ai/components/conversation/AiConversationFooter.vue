@@ -21,8 +21,8 @@ const aiInfo = ref<string | null>(null)
 aiTemplate.value?.onInfoLoaded(() => {
   if (aiTemplate.value?.info) {
     aiInfo.value = _t(
-      `This feature utilizes ${aiTemplate.value.info.models.join(', ')} of ${aiTemplate.value.info.provider} to generate its output. ` +
-        'This feature can make mistakes, including about people, so double-check the output. '
+      `This feature uses ${aiTemplate.value.info.models.join(', ')} by ${aiTemplate.value.info.provider}. ` +
+        'The generated output can contain errors or inaccuracies and must be carefully reviewed by a human for factual correctness. '
     )
   }
 })
@@ -32,6 +32,8 @@ aiTemplate.value?.onInfoLoaded(() => {
   <div class="ai-conversation-footer">
     <template v-if="aiInfo">
       <span>{{ aiInfo }}</span>
+      <a href="https://docs.checkmk.com" target="_blank">{{ _t('Documentation') }}</a>
+      {{ _t('and') }}
       <a href="https://checkmk.com/privacy-policy" target="_blank">{{ _t('Privacy Policy') }}</a>
     </template>
     <CmkSkeleton v-else type="info-text" class="ai-conversation-footer__skeleton"></CmkSkeleton>

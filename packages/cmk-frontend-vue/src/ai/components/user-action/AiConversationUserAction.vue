@@ -10,6 +10,7 @@ import { onMounted, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkSkeleton from '@/components/CmkSkeleton.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import AlertContent from '@/ai/components/conversation/content/AlertContent.vue'
 import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
@@ -42,9 +43,9 @@ onMounted(async () => {
 
 <template>
   <div class="ai-conversation-user-action__container">
-    <span v-if="userActions && userActions.filter((a) => !a.executed).length > 0">{{
+    <CmkHeading v-if="userActions && userActions.filter((a) => !a.executed).length > 0" type="h4">{{
       _t('What would you like the AI to do?')
-    }}</span>
+    }}</CmkHeading>
     <template v-if="userActions">
       <AiConversationUserActionButton
         v-for="action in userActions.filter((a) => !a.executed)"
@@ -76,12 +77,14 @@ onMounted(async () => {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   justify-self: flex-end;
   gap: var(--dimension-5);
 
   button {
     gap: var(--dimension-4);
+    display: flex;
+    justify-content: flex-start;
   }
 
   .ai-conversation-user-action__skeleton {

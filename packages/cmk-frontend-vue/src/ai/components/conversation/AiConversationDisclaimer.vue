@@ -14,36 +14,16 @@ import CmkSkeleton from '@/components/CmkSkeleton.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
-import type { TAiConversationElementContent } from '@/ai/lib/service/ai-template'
-import { AiRole } from '@/ai/lib/utils'
-
-import AiConversationElement from './AiConversationElement.vue'
 
 const { _t } = usei18n()
 const aiTemplate = getInjectedAiTemplate()
-const disclaimerPrompt = ref<TAiConversationElementContent[] | null>(null)
+const disclaimerActive = ref<boolean>(false)
 const consentTriggered = ref<boolean>(false)
 const startButtonDisabled = ref<boolean>(false)
 
 onMounted(async () => {
   if (!aiTemplate.value?.isDisclaimerShown()) {
-    if (typeof aiTemplate.value?.config.getDisclaimer === 'function') {
-      try {
-        const res = await aiTemplate.value.config.getDisclaimer()
-        if (res) {
-          disclaimerPrompt.value = res
-        }
-      } catch {
-        startButtonDisabled.value = true
-        disclaimerPrompt.value = [
-          {
-            content_type: 'alert',
-            variant: 'error',
-            text: _t('Error retrieving AI service information. Please try again later.')
-          }
-        ]
-      }
-    }
+    disclaimerActive.value = true
   }
 })
 
@@ -58,20 +38,27 @@ function onConsent() {
 
 <template>
   <div
-    v-if="disclaimerPrompt"
+    v-if="disclaimerActive"
     class="ai-conversation-disclaimer"
     :class="{ 'ai-conversation-disclaimer--triggered': consentTriggered }"
   >
     <CmkHeading type="h1" class="ai-conversation-disclaimer__header">
-      {{ _t('Checkmk AI feature documentation & privacy policy') }}
+      {{ _t('Checkmk AI feature usage notice') }}
     </CmkHeading>
-    <AiConversationElement
-      :role="AiRole.system"
-      :content="disclaimerPrompt"
-      :no-animation="true"
-      :hide-controls="true"
-      class="ai-conversation-disclaimer__element"
-    />
+    <div class="ai-conversation-disclaimer__element">
+      {{
+        _t(
+          `The feature "Explain with AI" uses a Large Language Model (LLM) [${aiTemplate?.info?.models.join(', ')}] of [${aiTemplate?.info?.provider}] to generate its output. ` +
+            'Generated content (output) my contain errors or inaccuracies. ' +
+            'Ensure all output generated is carefully reviewed and checked by a human for factual correctness before being used in any way. ' +
+            'For further information visit our '
+        )
+      }}
+      <a href="https://docs.checkmk.com/latest" target="_blank">{{ _t('Documentation') }}</a>
+      {{ _t('and') }}
+      <a href="https://checkmk.com/privacy-policy" target="_blank">{{ _t('Privacy Policy') }}</a
+      >.
+    </div>
 
     <div v-if="!consentTriggered" class="ai-conversation-disclaimer__ctrls">
       <div>
@@ -109,13 +96,12 @@ function onConsent() {
   }
 
   .ai-conversation-disclaimer__element {
-    margin: var(--dimension-10) 0 0 -28px;
+    margin: var(--dimension-10) 0;
   }
 
   .ai-conversation-disclaimer__ctrls {
     display: flex;
     flex-direction: column;
-    padding-left: var(--dimension-4);
     margin-bottom: var(--dimension-8);
     align-items: start;
     justify-content: start;

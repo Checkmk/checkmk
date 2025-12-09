@@ -50,9 +50,9 @@ document.addEventListener('cmk-ai-explain-button', () => {
 
   <AiConversationSlideout
     v-if="templateLoaded"
-    :slidoeut-open="conversationOpen"
+    :slideout-open="conversationOpen"
     :title="props.template.title as TranslatedString"
-    @update:slidoeut-open="
+    @update:slideout-open="
       (value) => {
         conversationOpen = value
       }

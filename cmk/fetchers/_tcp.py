@@ -118,6 +118,10 @@ class TCPFetcher(Fetcher[AgentRawData]):
         )
 
     def open(self) -> None:
+        ip_addr, _port = self.address
+        if ip_addr in ("0.0.0.0", "::"):  # nosec B104
+            raise MKFetcherError("IP Address of the host %s is not known" % self.host_name)
+
         self._logger.debug(
             "Connecting via TCP to %s:%d (%ss timeout)",
             self.address[0],

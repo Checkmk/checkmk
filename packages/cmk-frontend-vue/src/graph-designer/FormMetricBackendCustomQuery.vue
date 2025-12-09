@@ -423,4 +423,9 @@ table {
   border-collapse: separate;
   border-spacing: 5px;
 }
+
+div {
+  display: inline-block;
+  margin-right: 1px;
+}
 </style>

@@ -37,22 +37,20 @@ function onValueUpdate(newValue: string | null) {
 
 <template>
   <div>
-    <div>
-      <FormAutocompleter
-        v-model="attribute.key"
-        :autocompleter="props.autocompleterGetter(attribute.key, true)"
-        :placeholder="_t('Attribute key')"
-        @update:model-value="attribute.value = null"
-      />
-    </div>
-    <div>
-      <FormAutocompleter
-        v-model="attribute.value"
-        :autocompleter="props.autocompleterGetter(attribute.key, false)"
-        :placeholder="_t('Attribute value')"
-        @update:model-value="onValueUpdate"
-      />
-    </div>
+    <FormAutocompleter
+      v-model="attribute.key"
+      :autocompleter="props.autocompleterGetter(attribute.key, true)"
+      :placeholder="_t('Attribute key')"
+      @update:model-value="attribute.value = null"
+    />
+  </div>
+  <div>
+    <FormAutocompleter
+      v-model="attribute.value"
+      :autocompleter="props.autocompleterGetter(attribute.key, false)"
+      :placeholder="_t('Attribute value')"
+      @update:model-value="onValueUpdate"
+    />
   </div>
 </template>
 

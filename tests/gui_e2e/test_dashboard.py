@@ -597,7 +597,9 @@ def test_builtin_dashboard_filter_by_site(
         )
 
         logger.info("Filter by remote site")
-        custom_dashboard.apply_filter_to_the_dashboard("Site", "Remote Testsite", exact=True)
+        custom_dashboard.apply_filter_to_the_dashboard(
+            "Site", f"Remote site {remote_site.id}", exact=True
+        )
         custom_dashboard.leave_layout_mode()
         custom_dashboard.verify_summary_dashlet_shows_site_related_data(
             dashlet_title,

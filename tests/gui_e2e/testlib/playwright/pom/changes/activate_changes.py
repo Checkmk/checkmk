@@ -148,7 +148,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     def site_entry(self, site_name: str = "", central: bool = True) -> Locator:
         """Get the locator for the specific site entry in the sites section."""
-        text = f"Local site {site_name}" if central else "Remote Testsite"
+        text = f"Local site {site_name}" if central else "Remote site {site_name}"
         return self.slideout.locator("div.cmk-changes-sites-item-wrapper").filter(has_text=text)
 
     def site_online_status(self, site_entry: Locator) -> Locator:

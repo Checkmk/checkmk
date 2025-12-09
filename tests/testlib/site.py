@@ -2733,7 +2733,7 @@ def connection(
             By default, replication will be enabled for sites with matching editions.
     """
     basic_settings = {
-        "alias": "Remote Testsite",
+        "alias": f"Remote site {remote_site.id}",
         "site_id": remote_site.id,
     }
     if central_site.edition.is_ultimatemt_edition():

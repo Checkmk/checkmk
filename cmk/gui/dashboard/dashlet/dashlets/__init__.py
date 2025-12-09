@@ -14,7 +14,6 @@ from .graph import (
     graph_templates_autocompleter,
     TemplateGraphDashlet,
 )
-from .logo import MKLogoDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
 from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
 from .user_messages import MessageUsersDashlet
@@ -43,7 +42,6 @@ def register_dashlets(
     dashlet_registry.register(URLDashlet)
     dashlet_registry.register(FailedNotificationsDashlet)
     dashlet_registry.register(TemplateGraphDashlet)
-    dashlet_registry.register(MKLogoDashlet)
     dashlet_registry.register(HostStatsDashlet)
     dashlet_registry.register(ServiceStatsDashlet)
     dashlet_registry.register(EventStatsDashlet)

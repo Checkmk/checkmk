@@ -77,7 +77,6 @@ def test_dashlet_registry_plugins() -> None:
         "servicestats",
         "eventstats",
         "notify_failed_notifications",
-        "mk_logo",
         "url",
         "pnpgraph",
         "view",
@@ -119,7 +118,6 @@ def test_dashlet_registry_plugins() -> None:
 def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
     expected = [
         ("hoststats", False),
-        ("mk_logo", False),
         ("nodata", False),
         ("notify_failed_notifications", 60),
         ("user_messages", False),

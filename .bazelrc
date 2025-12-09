@@ -3,6 +3,9 @@ common --registry="file:///%workspace%/bazel/thirdparty"
 common --registry="file:///%workspace%/bazel/registry"
 common --registry=https://bcr.bazel.build
 
+# Add mirrors for certain download URLs
+common --downloader_config=bazel_downloader.cfg
+
 # enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
 common:linux --disk_cache=~/.cache/bazel_disk_cache/
 common:linux --experimental_disk_cache_gc_max_size=100G

@@ -7,7 +7,7 @@ from __future__ import annotations
 import enum
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Annotated, Final, NamedTuple, NewType, Self
+from typing import Annotated, Final, Literal, NamedTuple, NewType, Self
 
 from pydantic import BaseModel, Field
 
@@ -38,9 +38,17 @@ class Schedule(BaseModel):
     max_attempts: Annotated[int, Field(description="Maximum number of attempts", gt=0)]
 
 
+class Service(BaseModel):
+    name: Annotated[str, Field(description="name of the service in checkmk")]
+    command: Annotated[
+        Literal["@cmk"], Field(description="command for execute, can have routing prefix @cmk")
+    ]
+    schedule: Annotated[Schedule, Field(description="Service scheduling configuration")]
+
+
 class Host(BaseModel):
     id: Annotated[str, Field(description="Host ID")]
-    schedule: Annotated[Schedule, Field(description="Host scheduling configuration")]
+    services: Annotated[Sequence[Service], Field(description="Services of the host")]
 
 
 class HistoryConfig(BaseModel):

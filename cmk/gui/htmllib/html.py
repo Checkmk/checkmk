@@ -1090,25 +1090,6 @@ class HTMLGenerator(HTMLWriter):
         if error:
             self.close_x()
 
-    def icon_dropdown(
-        self, varname: str, choices: Sequence[tuple[str, str, str]], deflt: str = ""
-    ) -> None:
-        current = self.request.var(varname, deflt)
-        if varname:
-            self.form_vars.append(varname)
-
-        self.open_select(class_="icon", name=varname, id_=varname, size="1")
-        for value, text, icon in choices:
-            # if both the default in choices and current was '' then selected depended on the order in choices
-            selected = (value == current) or (not value and not current)
-            self.option(
-                text,
-                value=value if value else "",
-                selected="" if selected else None,
-                style="background-image:url(%s);" % theme.url(f"images/icon_{icon}.png"),
-            )
-        self.close_select()
-
     def upload_file(self, varname: str) -> None:
         # We need this to upload files, other enctypes won't work.
         error = user_errors.get(varname)

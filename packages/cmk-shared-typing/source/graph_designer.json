@@ -76,18 +76,6 @@
         "$ref": "#/$defs/graph_line_query_attribute"
       }
     },
-    "graph_line_query_aggregation_lookback_unit": {
-      "type": "string",
-      "enum": ["s", "min"]
-    },
-    "graph_line_query_aggregation_lookback": {
-      "type": "object",
-      "properties": {
-        "value": { "type": "number" },
-        "unit": { "$ref": "#/$defs/graph_line_query_aggregation_lookback_unit" }
-      },
-      "required": ["value", "unit"]
-    },
     "graph_line_query": {
       "type": "object",
       "title": "query",
@@ -117,7 +105,7 @@
           "$ref": "#/$defs/graph_line_query_attributes"
         },
         "aggregation_lookback": {
-          "$ref": "#/$defs/graph_line_query_aggregation_lookback"
+          "type": "number"
         },
         "aggregation_histogram_percentile": {
           "type": "number"

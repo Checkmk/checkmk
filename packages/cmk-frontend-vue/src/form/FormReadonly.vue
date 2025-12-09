@@ -202,7 +202,7 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
   rows.push(
     h('tr', [
       h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
-      h('td', [`${value.aggregation_lookback.value} ${value.aggregation_lookback.unit}`])
+      h('td', [`${value.aggregation_lookback} s`])
     ])
   )
 

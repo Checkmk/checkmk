@@ -932,18 +932,6 @@
         "$ref": "#/$defs/metric_backend_custom_query_attribute"
       }
     },
-    "metric_backend_custom_query_aggregation_lookback_unit": {
-      "type": "string",
-      "enum": ["s", "min"]
-    },
-    "metric_backend_custom_query_aggregation_lookback": {
-      "type": "object",
-      "properties": {
-        "value": { "type": "number" },
-        "unit": { "$ref": "#/$defs/metric_backend_custom_query_aggregation_lookback_unit" }
-      },
-      "required": ["value", "unit"]
-    },
     "metric_backend_custom_query": {
       "id": "metric_backend_custom_query",
       "type": "object",
@@ -971,7 +959,7 @@
               "$ref": "#/$defs/metric_backend_custom_query_attributes"
             },
             "aggregation_lookback": {
-              "$ref": "#/$defs/metric_backend_custom_query_aggregation_lookback"
+              "type": "number"
             },
             "aggregation_histogram_percentile": {
               "type": "number"

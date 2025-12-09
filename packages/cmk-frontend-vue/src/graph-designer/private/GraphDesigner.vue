@@ -8,7 +8,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import {
   type GraphLine,
-  type GraphLineQueryAggregationLookback,
   type GraphLineQueryAttributes,
   type GraphLines,
   type GraphOptions,
@@ -192,10 +191,7 @@ function formulaOf(graphLine: GraphLine): string {
   }
 }
 
-const dataQueryAggregationLookbackDefault: GraphLineQueryAggregationLookback = {
-  value: 2,
-  unit: 'min'
-}
+const dataQueryAggregationLookbackDefault = 120
 const dataQueryAggregationHistogramPercentile = 90
 const dataQuery = ref<Query>({
   metricName: null,
@@ -792,13 +788,6 @@ function transformQueryAttributes(attributes: GraphLineQueryAttributes) {
   })
 }
 
-function transformQueryAggregationLookback(aggregationLookback: GraphLineQueryAggregationLookback) {
-  return {
-    value: aggregationLookback.value,
-    unit: aggregationLookback.unit
-  }
-}
-
 const slideInAPI = {
   getSchema: async () => {
     return (
@@ -824,9 +813,7 @@ const slideInAPI = {
           data_point_attributes: transformQueryAttributes(
             graphLineQuery.value.data_point_attributes
           ),
-          aggregation_lookback: transformQueryAggregationLookback(
-            graphLineQuery.value.aggregation_lookback
-          ),
+          aggregation_lookback: graphLineQuery.value.aggregation_lookback,
           aggregation_histogram_percentile: graphLineQuery.value.aggregation_histogram_percentile
         }
         values.value = {

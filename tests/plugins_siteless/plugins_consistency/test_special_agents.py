@@ -284,7 +284,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
                 "data_point_attributes": [
                     {"key": "data_point_attributes_key_1", "value": "data_point_attributes_value_1"}
                 ],
-                "aggregation_lookback": {"value": 2, "unit": "min"},
+                "aggregation_lookback": 120,
                 "aggregation_histogram_percentile": 90,
                 "host_name": "v250",
             }

@@ -9,17 +9,13 @@ import {
   type GraphLineQueryAttribute,
   type GraphLineQueryAttributes
 } from 'cmk-shared-typing/typescript/graph_designer'
-import { type MetricBackendCustomQueryAggregationLookback } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
 import { computed } from 'vue'
 
-import { untranslated } from '@/lib/i18n'
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown'
 import CmkList from '@/components/CmkList'
-import { type Suggestion } from '@/components/CmkSuggestions'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
@@ -35,7 +31,7 @@ export interface Query {
   resourceAttributes: GraphLineQueryAttributes
   scopeAttributes: GraphLineQueryAttributes
   dataPointAttributes: GraphLineQueryAttributes
-  aggregationLookback: MetricBackendCustomQueryAggregationLookback
+  aggregationLookback: number
   aggregationHistogramPercentile: number
 }
 
@@ -49,12 +45,9 @@ const scopeAttributes = defineModel<GraphLineQueryAttributes>('scopeAttributes',
 const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttributes', {
   default: []
 })
-const aggregationLookback = defineModel<MetricBackendCustomQueryAggregationLookback>(
-  'aggregationLookback',
-  {
-    required: true
-  }
-)
+const aggregationLookback = defineModel<number>('aggregationLookback', {
+  required: true
+})
 const aggregationHistogramPercentile = defineModel<number>('aggregationHistogramPercentile', {
   required: true
 })
@@ -293,13 +286,6 @@ function deleteDataPointAttribute(index: number) {
   dataPointAttribute.value = { key: null, value: null }
   return true
 }
-
-// Unit for interval/time frame of aggregation sum rate
-
-const aggregationLookbackUnitSuggestions: Suggestion[] = [
-  { name: 's', title: untranslated('s') },
-  { name: 'min', title: untranslated('min') }
-]
 </script>
 
 <template>
@@ -396,16 +382,7 @@ const aggregationLookbackUnitSuggestions: Suggestion[] = [
       <tr>
         <td>{{ _t('Aggregation lookback') }}</td>
         <td>
-          <div>
-            <CmkInput v-model="aggregationLookback.value" type="number" />
-          </div>
-          <div>
-            <CmkDropdown
-              v-model:selected-option="aggregationLookback.unit"
-              :options="{ type: 'fixed', suggestions: aggregationLookbackUnitSuggestions }"
-              :label="_t('Time range')"
-            />
-          </div>
+          <CmkInput v-model="aggregationLookback" type="number" :unit="'s'" field-size="SMALL" />
         </td>
       </tr>
       <tr>

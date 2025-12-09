@@ -106,12 +106,29 @@ const dashboardWidgets = useDashboardWidgets(
   computed(() => dashboardsManager.activeDashboard.value?.content.widgets)
 )
 
-const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
-  await dashboardsManager.loadDashboard(dashboard.name, dashboard.layout_type as DashboardLayout)
-  selectedDashboardBreadcrumb.value = dashboard.display?.topic?.breadcrumb ?? null
+const setAsActiveDashboard = async (
+  dashboardName: string,
+  layout: DashboardLayout,
+  breadcrumb: BreadcrumbItem[] | null = null
+) => {
+  await dashboardsManager.loadDashboard(dashboardName, layout)
+  if (breadcrumb) {
+    selectedDashboardBreadcrumb.value = breadcrumb
+  } else {
+    const metadata = await dashboardAPI.showDashboardMetadata(dashboardName)
+    selectedDashboardBreadcrumb.value = metadata.display?.topic?.breadcrumb ?? null
+  }
 
-  const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboard.name)
+  const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboardName)
   urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+}
+
+const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
+  await setAsActiveDashboard(
+    dashboard.name,
+    dashboard.layout_type as DashboardLayout,
+    dashboard.display?.topic?.breadcrumb ?? null
+  )
 }
 
 const selectedDashboard = computed(() => {
@@ -291,12 +308,8 @@ const cloneDashboard = async (
     )
   }
   if (nextStep === 'setFilters') {
+    await setAsActiveDashboard(dashboardId, layout, null)
     openDashboardFilterSettings.value = true
-    const updatedDashboardUrl = urlHandler.setDashboardName(
-      window.location.origin + window.location.pathname,
-      dashboardId
-    )
-    urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
   } else {

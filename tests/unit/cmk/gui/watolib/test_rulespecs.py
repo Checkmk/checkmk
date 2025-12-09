@@ -283,6 +283,7 @@ def test_rulespec_get_all_groups() -> None:
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_rulespec_groups += [
+            "agents/automatic_updates",
             "agents/linux_agent",
             "agents/windows_agent",
             "agents/windows_modules",

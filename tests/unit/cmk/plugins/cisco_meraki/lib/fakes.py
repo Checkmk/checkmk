@@ -144,6 +144,20 @@ class _FakeOrganisationsSDK:
         }
         return devices_statuses.get(organizationId, [])
 
+    def getOrganizationDevicesUplinksAddressesByDevice(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawDeviceUplinksAddress]:
+        uplink_addresses = {
+            "123": [
+                factories.RawDevicesUplinksAddressFactory.build(serial="S123-1"),
+                factories.RawDevicesUplinksAddressFactory.build(serial="S123-2"),
+            ],
+            "456": [
+                factories.RawDevicesUplinksAddressFactory.build(serial="S456"),
+            ],
+        }
+        return uplink_addresses.get(organizationId, [])
+
 
 class _FakeSensorSDK:
     def getOrganizationSensorReadingsLatest(

@@ -128,6 +128,16 @@ class MerakiOrganisation:
                         piggyback=piggyback or None,
                     )
 
+        if self.config.required.device_uplinks_info:
+            for uplink_address in self.client.get_device_uplink_addresses(self.id):
+                serial = uplink_address["serial"]
+                if (piggyback := self._get_device_piggyback(serial, devices_by_serial)) is not None:
+                    yield Section(
+                        name="cisco_meraki_org_device_uplinks_info",
+                        data=uplink_address,
+                        piggyback=piggyback or None,
+                    )
+
         devices_by_type = defaultdict(list)
         for device in devices_by_serial.values():
             devices_by_type[device["productType"]].append(device)
@@ -326,6 +336,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--cache-appliance-vpns", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-devices", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-device-statuses", type=float, default=3600.0)  # 1 hour
+    parser.add_argument("--cache-device-uplinks-info", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-licenses-overview", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-networks", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-organizations", type=float, default=36000.0)  # 10 hours

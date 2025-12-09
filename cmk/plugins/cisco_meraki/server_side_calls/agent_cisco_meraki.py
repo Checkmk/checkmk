@@ -27,6 +27,7 @@ class CachePerSection(BaseModel):
     appliance_vpns: int | None = None
     devices: int | None = None
     device_statuses: int | None = None
+    device_uplinks_info: int | None = None
     licenses_overview: int | None = None
     networks: int | None = None
     organizations: int | None = None
@@ -91,6 +92,8 @@ def agent_cisco_meraki_arguments(
             args += ["--cache-devices", str(cache_per_section.devices)]
         if cache_per_section.device_statuses:
             args += ["--cache-device-statuses", str(cache_per_section.device_statuses)]
+        if cache_per_section.device_uplinks_info:
+            args += ["--cache-device-uplinks-info", str(cache_per_section.device_uplinks_info)]
         if cache_per_section.licenses_overview:
             args += ["--cache-licenses-overview", str(cache_per_section.licenses_overview)]
         if cache_per_section.networks:

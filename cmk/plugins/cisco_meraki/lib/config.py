@@ -73,6 +73,7 @@ class _CacheConfig:
     appliance_vpns: _CacheDecorator[[str], Sequence[schema.RawUplinkVpnStatuses]]
     devices: _CacheDecorator[[str, str], dict[str, schema.Device]]
     device_statuses: _CacheDecorator[[str], Sequence[schema.RawDevicesStatus]]
+    device_uplinks_info: _CacheDecorator[[str], Sequence[schema.RawDeviceUplinksAddress]]
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]
     networks: _CacheDecorator[[str, str], Sequence[schema.Network]]
     organizations: _CacheDecorator[[], Sequence[schema.RawOrganisation]]
@@ -96,6 +97,10 @@ class _CacheConfig:
                 Storage("cisco_meraki_devices_statuses", host=args.hostname),
                 ttl=args.cache_device_statuses,
             ),
+            device_uplinks_info=cache.cache_ttl(
+                Storage("cisco_meraki_device_uplinks_info", host=args.hostname),
+                ttl=args.cache_device_uplinks_info,
+            ),
             licenses_overview=cache.cache_ttl(
                 Storage("cisco_meraki_licenses_overview", host=args.hostname),
                 ttl=args.cache_licenses_overview,
@@ -117,6 +122,7 @@ class _RequiredSections:
     appliance_uplinks: bool
     appliance_vpns: bool
     device_statuses: bool
+    device_uplinks_info: bool
     licenses_overview: bool
     sensor_readings: bool
     switch_port_statuses: bool
@@ -128,6 +134,7 @@ class _RequiredSections:
             appliance_uplinks=constants.SEC_NAME_APPLIANCE_UPLINKS in sections,
             appliance_vpns=constants.SEC_NAME_APPLIANCE_VPNS in sections,
             device_statuses=constants.SEC_NAME_DEVICE_STATUSES in sections,
+            device_uplinks_info=constants.SEC_NAME_DEVICE_UPLINKS_INFO in sections,
             licenses_overview=constants.SEC_NAME_LICENSES_OVERVIEW in sections,
             sensor_readings=constants.SEC_NAME_SENSOR_READINGS in sections,
             switch_port_statuses=constants.SEC_NAME_SWITCH_PORT_STATUSES in sections,
@@ -137,6 +144,7 @@ class _RequiredSections:
     def devices(self) -> bool:
         return (
             self.device_statuses
+            or self.device_uplinks_info
             or self.sensor_readings
             or self.appliance_uplinks
             or self.appliance_vpns

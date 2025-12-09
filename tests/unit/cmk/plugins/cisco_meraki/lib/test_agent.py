@@ -48,6 +48,7 @@ class TestMerakiAgentOutput:
             "appliance_vpns",
             "device_info",
             "device_status",
+            "device_uplinks_info",
             "licenses_overview",
             "networks",
             "organisations",

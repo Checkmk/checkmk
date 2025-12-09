@@ -60,6 +60,11 @@ class MerakiClient:
         fetch = fn if self._no_cache else self._cache.device_statuses(fn)
         return fetch(id)
 
+    def get_device_uplink_addresses(self, id: str) -> Sequence[schema.RawDeviceUplinksAddress]:
+        fn = self._org_client.get_device_uplink_addresses
+        fetch = fn if self._no_cache else self._cache.device_uplinks_info(fn)
+        return fetch(id)
+
     def get_licenses_overview(self, id: str, name: str) -> schema.LicensesOverview | None:
         fn = self._org_client.get_licenses_overview
         fetch = fn if self._no_cache else self._cache.licenses_overview(fn)

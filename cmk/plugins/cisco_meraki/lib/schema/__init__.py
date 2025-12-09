@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._appliance_performance import RawAppliancePerformance
+from ._device_uplinks_info import RawDeviceUplinksAddress
 from ._devices import Device, RawDevice
 from ._devices_statuses import RawDevicesStatus
 from ._licenses_overview import LicensesOverview, RawLicensesOverview
@@ -22,6 +23,7 @@ __all__ = [
     "RawAppliancePerformance",
     "RawDevice",
     "RawDevicesStatus",
+    "RawDeviceUplinksAddress",
     "RawLicensesOverview",
     "RawNetwork",
     "RawOrganisation",

@@ -20,6 +20,9 @@ class OrganizationsSDK(Protocol):
     def getOrganizationDevicesStatuses(
         self, organizationId: str, total_pages: TotalPages
     ) -> Sequence[schema.RawDevicesStatus]: ...
+    def getOrganizationDevicesUplinksAddressesByDevice(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawDeviceUplinksAddress]: ...
     def getOrganizationLicensesOverview(
         self, organizationId: str
     ) -> schema.RawLicensesOverview: ...
@@ -54,6 +57,13 @@ class OrganizationsClient:
             return self._sdk.getOrganizationDevicesStatuses(id, total_pages="all")
         except APIError as e:
             log.LOGGER.debug("Organisation ID: %r: Get device statuses: %r", id, e)
+            return []
+
+    def get_device_uplink_addresses(self, id: str, /) -> Sequence[schema.RawDeviceUplinksAddress]:
+        try:
+            return self._sdk.getOrganizationDevicesUplinksAddressesByDevice(id, total_pages="all")
+        except APIError as e:
+            log.LOGGER.debug("Organisation ID: %r: Get device uplink addresses: %r", id, e)
             return []
 
     def get_licenses_overview(self, id: str, name: str, /) -> schema.LicensesOverview | None:

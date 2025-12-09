@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, TypedDict, TypeGuard
+from typing import TypeGuard
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -12,20 +12,11 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
+from cmk.utils.oauth2_connection import OAuth2Connection
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
     config_file_registry.register(OAuth2ConnectionsConfigFile())
-
-
-class OAuth2Connection(TypedDict):
-    title: str
-    client_secret: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
-    access_token: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
-    refresh_token: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
-    client_id: str
-    tenant_id: str
-    authority: str
 
 
 class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):

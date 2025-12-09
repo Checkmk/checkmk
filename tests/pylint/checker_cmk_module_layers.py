@@ -377,6 +377,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.check_utils",
         "cmk.utils.config_warnings",
         "cmk.utils.http_proxy_config",
+        "cmk.utils.oauth2_connection",
         "cmk.utils.ip_lookup",
         "cmk.utils.labels",
         "cmk.utils.log",
@@ -800,6 +801,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.unixsocket_http",
         "cmk.utils.urls",
         "cmk.utils.http_proxy_config",
+        "cmk.utils.oauth2_connection",
         "cmk.utils.visuals",
         "cmk.utils.werks",
         exclude=(

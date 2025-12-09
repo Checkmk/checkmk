@@ -25,7 +25,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import (
     delete_oauth2_connection,
     load_oauth2_connections,
-    OAuth2Connection,
     OAuth2ConnectionsConfigFile,
 )
 from cmk.gui.page_menu import (
@@ -54,6 +53,7 @@ from cmk.shared_typing.mode_oauth2_connection import (
     Oauth2ConnectionConfig,
     Oauth2Urls,
 )
+from cmk.utils.oauth2_connection import OAuth2Connection
 
 
 def register(mode_registry: ModeRegistry) -> None:

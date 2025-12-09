@@ -18,13 +18,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.wato._modes import get_oauth_2_connection_form_spec
 from cmk.gui.oauth2_connections.watolib.store import (
     load_oauth2_connections,
-    OAuth2Connection,
     save_oauth2_connection,
     update_oauth2_connection,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.watolib.passwords import load_passwords, save_password
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
+from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.password_store import Password
 
 

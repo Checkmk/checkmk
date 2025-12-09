@@ -16,7 +16,6 @@ from ._registration import register_endpoints
 from ._utils import (
     convert_internal_relative_dashboard_to_api_model_dict,
     DashboardConstants,
-    disable_dashboard_token,
     get_permitted_user_id,
     PERMISSIONS_DASHBOARD,
     PERMISSIONS_DASHBOARD_EDIT,
@@ -34,7 +33,6 @@ __all__ = [
     "GraphRequestInternal",
     "PERMISSIONS_DASHBOARD",
     "PERMISSIONS_DASHBOARD_EDIT",
-    "disable_dashboard_token",
     "get_permitted_user_id",
     "get_validated_internal_figure_request",
     "get_validated_internal_graph_request",

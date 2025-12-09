@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
 
-from dateutil.relativedelta import relativedelta
-
-from cmk.gui.logged_in import user
+from cmk.gui.dashboard.token_util import DashboardTokenAlreadyExists, issue_dashboard_token
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -19,15 +17,10 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.token_auth import DashboardToken, get_token_store
+from cmk.gui.token_auth import get_token_store
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import (
-    get_dashboard_for_edit,
-    get_view_owners,
-    PERMISSIONS_DASHBOARD_EDIT,
-    save_dashboard_to_file,
-)
+from ._utils import get_dashboard_for_edit, PERMISSIONS_DASHBOARD_EDIT, save_dashboard_to_file
 from .model.token import CreateDashboardToken, DashboardTokenMetadata, DashboardTokenObjectModel
 
 
@@ -47,28 +40,20 @@ def create_dashboard_token_v1(
 
     dashboard = get_dashboard_for_edit(body.dashboard_owner, body.dashboard_id)
 
-    if dashboard.get("public_token_id"):
+    token_store = get_token_store()
+    try:
+        token = issue_dashboard_token(
+            dashboard,
+            expiration_time=body.expires_at,
+            comment=body.comment,
+            token_store=token_store,
+        )
+    except DashboardTokenAlreadyExists:
         raise ProblemException(
             status=400,
             title="Dashboard token already exists",
             detail="A token for this dashboard already exists, cannot create another one.",
         )
-
-    token_store = get_token_store()
-    token = token_store.issue(
-        DashboardToken(
-            type_="dashboard",
-            owner=body.dashboard_owner,
-            dashboard_name=body.dashboard_id,
-            comment=body.comment,
-            disabled=False,
-            view_owners=get_view_owners(dashboard),
-            synced_at=now,
-        ),
-        issuer=user.ident,
-        now=now,
-        valid_for=relativedelta(body.expires_at, now),
-    )
 
     dashboard["public_token_id"] = token.token_id
     try:

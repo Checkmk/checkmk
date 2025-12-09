@@ -3,16 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
+import datetime as dt
 from collections.abc import Callable, Generator
+from contextlib import contextmanager
+from typing import cast
+
+from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.dashboard.store import DashboardStore
-from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig
+from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig, LinkedViewDashletConfig
 from cmk.gui.exceptions import HTTPRedirect, MKMethodNotAllowed, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.session import UserContext
 from cmk.gui.token_auth import (
@@ -21,11 +27,12 @@ from cmk.gui.token_auth import (
     get_token_store,
     TokenAuthenticatedPage,
     TokenId,
+    TokenStore,
 )
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.views.store import ViewStore
+from cmk.gui.views.store import get_permitted_views, ViewStore
 
 
 class InvalidWidgetError(MKException):
@@ -37,6 +44,133 @@ class InvalidWidgetError(MKException):
 
     def __str__(self) -> str:
         return _("The given widget id does not match any of this dashboard's widgets.")
+
+
+class InvalidDashboardTokenReference(MKException):
+    """The token ID referenced in the dashboard configuration is invalid."""
+
+
+class DashboardTokenNotFound(MKUserError):
+    """The dashboard doesn't have a token assigned to it."""
+
+
+class DashboardTokenAlreadyExists(MKUserError):
+    """The dashboard already has a token assigned to it."""
+
+
+@contextmanager
+def edit_dashboard_auth_token(
+    dashboard: DashboardConfig, token_store: TokenStore | None = None
+) -> Generator[AuthToken]:
+    """Context manager to edit the auth token of a dashboard."""
+    if (token_id := dashboard.get("public_token_id")) is None:
+        raise DashboardTokenNotFound(
+            varname=None,
+            message=_("No token for this dashboard exists."),
+            status=404,
+        )
+
+    if token_store is None:
+        token_store = get_token_store()
+    with token_store.read_locked() as data:
+        if (token := data.get(TokenId(token_id))) and isinstance(token.details, DashboardToken):
+            yield token
+            return
+
+    raise InvalidDashboardTokenReference()
+
+
+def get_dashboard_auth_token(
+    dashboard: DashboardConfig, token_store: TokenStore | None = None
+) -> AuthToken | None:
+    """Read access to the auth token of a dashboard."""
+    try:
+        with edit_dashboard_auth_token(dashboard, token_store) as token:
+            return token
+    except (DashboardTokenNotFound, InvalidDashboardTokenReference):
+        return None
+
+
+def disable_dashboard_token(
+    dashboard_config: DashboardConfig, token_store: TokenStore | None = None
+) -> None:
+    """Disable the auth token of a dashboard.
+
+    This should be done whenever a dashboard is edited."""
+    try:
+        with edit_dashboard_auth_token(dashboard_config, token_store) as token:
+            token.details.disabled = True
+    except (DashboardTokenNotFound, InvalidDashboardTokenReference):
+        return None
+
+
+def issue_dashboard_token(
+    dashboard: DashboardConfig,
+    expiration_time: dt.datetime | None,
+    comment: str = "",
+    token_store: TokenStore | None = None,
+) -> AuthToken:
+    """Issues a new dashboard token for the given dashboard."""
+    if dashboard.get("public_token_id"):
+        raise DashboardTokenAlreadyExists(
+            varname=None,
+            message=_("A token for this dashboard already exists, cannot create another one."),
+        )
+
+    if token_store is None:
+        token_store = get_token_store()
+    now = dt.datetime.now(dt.UTC)
+    return token_store.issue(
+        DashboardToken(
+            type_="dashboard",
+            owner=dashboard["owner"],
+            dashboard_name=dashboard["name"],
+            comment=comment,
+            disabled=False,
+            view_owners=_get_view_owners(dashboard),
+            synced_at=now,
+        ),
+        issuer=user.ident,
+        now=now,
+        valid_for=relativedelta(expiration_time, now) if expiration_time else None,
+    )
+
+
+def update_dashboard_token(
+    dashboard: DashboardConfig,
+    disabled: bool,
+    expiration_time: dt.datetime | None,
+    comment: str,
+    token_store: TokenStore | None = None,
+) -> AuthToken:
+    """Update an existing dashboard token for the given dashboard."""
+    with edit_dashboard_auth_token(dashboard, token_store) as token:
+        token.valid_until = expiration_time
+        token.details.comment = comment
+        token.details.disabled = disabled
+        token.details.view_owners = _get_view_owners(dashboard)
+        token.details.synced_at = dt.datetime.now(dt.UTC)
+        return token
+
+
+def _get_view_owners(dashboard_config: DashboardConfig) -> dict[str, UserId]:
+    """Get the owners of all views used in linked view widgets of the dashboard.
+
+    This is relative to the current user and their permissions."""
+    widget_id_to_view_name = {
+        f"{dashboard_config['name']}-{idx}": cast(LinkedViewDashletConfig, widget)["name"]
+        for idx, widget in enumerate(dashboard_config["dashlets"])
+        if widget["type"] == "linked_view"
+    }
+    view_owners: dict[str, UserId] = {}
+    if widget_id_to_view_name:
+        views = get_permitted_views()
+        for widget_id, view_name in widget_id_to_view_name.items():
+            if view_name in views:
+                view_owners[widget_id] = views[view_name]["owner"]
+            # else: a not found message should be displayed in the widget itself (on access)
+
+    return view_owners
 
 
 class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):

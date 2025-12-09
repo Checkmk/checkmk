@@ -6,40 +6,15 @@
 # mypy: disable-error-code="mutable-override"
 
 import datetime as dt
-from collections.abc import Generator
-from contextlib import contextmanager
 from typing import Annotated, Literal, Self
 
 from dateutil.relativedelta import relativedelta
 from pydantic import AfterValidator, AwareDatetime, FutureDatetime
 
-from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
-from cmk.gui.token_auth import AuthToken, DashboardToken, get_token_store, TokenId
+from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import AnnotatedUserId
-
-
-@contextmanager
-def edit_dashboard_auth_token(dashboard: DashboardConfig) -> Generator[AuthToken | None]:
-    """Context manager to edit the auth token of a dashboard."""
-    if (token_id := dashboard.get("public_token_id")) is None:
-        yield None
-        return
-
-    token_store = get_token_store()
-    with token_store.read_locked() as data:
-        if (token := data.get(TokenId(token_id))) and isinstance(token.details, DashboardToken):
-            yield token
-            return
-
-    yield None
-
-
-def get_dashboard_auth_token(dashboard: DashboardConfig) -> AuthToken | None:
-    """Read access to the auth token of a dashboard."""
-    with edit_dashboard_auth_token(dashboard) as token:
-        return token
 
 
 @api_model

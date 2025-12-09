@@ -14,9 +14,9 @@ from pydantic import AfterValidator, Discriminator
 from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
-from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
-from cmk.gui.dashboard.type_defs import DashboardRelativeGridLayoutSpec
+from cmk.gui.dashboard.token_util import get_dashboard_auth_token
+from cmk.gui.dashboard.type_defs import DashboardConfig, DashboardRelativeGridLayoutSpec
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
@@ -35,7 +35,7 @@ from cmk.gui.type_defs import (
     VisualPublic,
 )
 
-from .token import DashboardTokenModel, get_dashboard_auth_token
+from .token import DashboardTokenModel
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
 from .widget_content.view import EmbeddedViewContent

@@ -2,8 +2,12 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import datetime as dt
 
+from cmk.gui.dashboard.token_util import (
+    DashboardTokenNotFound,
+    InvalidDashboardTokenReference,
+    update_dashboard_token,
+)
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -17,18 +21,8 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import (
-    get_dashboard_for_edit,
-    get_view_owners,
-    PERMISSIONS_DASHBOARD_EDIT,
-    save_dashboard_to_file,
-)
-from .model.token import (
-    DashboardTokenMetadata,
-    DashboardTokenObjectModel,
-    edit_dashboard_auth_token,
-    EditDashboardToken,
-)
+from ._utils import get_dashboard_for_edit, PERMISSIONS_DASHBOARD_EDIT, save_dashboard_to_file
+from .model.token import DashboardTokenMetadata, DashboardTokenObjectModel, EditDashboardToken
 
 
 def edit_dashboard_token_v1(
@@ -37,23 +31,18 @@ def edit_dashboard_token_v1(
     """Edit a dashboard token and returns its metadata."""
     dashboard = get_dashboard_for_edit(body.dashboard_owner, body.dashboard_id)
 
-    with edit_dashboard_auth_token(dashboard) as token:
-        if token:
-            token.valid_until = body.expires_at
-            token.details.comment = body.comment
-            token.details.disabled = body.is_disabled
-            token.details.view_owners = get_view_owners(dashboard)
-            token.details.synced_at = dt.datetime.now(dt.UTC)
-        else:
-            if dashboard.get("public_token_id") is not None:
-                # remove invalid token reference
-                dashboard["public_token_id"] = None
-                save_dashboard_to_file(api_context.config.sites, dashboard, body.dashboard_owner)
-            raise ProblemException(
-                status=404,
-                title="Dashboard token not found",
-                detail="No token for this dashboard exists.",
-            )
+    try:
+        token = update_dashboard_token(dashboard, body.is_disabled, body.expires_at, body.comment)
+    except (InvalidDashboardTokenReference, DashboardTokenNotFound) as e:
+        if isinstance(e, InvalidDashboardTokenReference):
+            # remove invalid token reference
+            dashboard["public_token_id"] = None
+            save_dashboard_to_file(api_context.config.sites, dashboard, body.dashboard_owner)
+        raise ProblemException(
+            status=404,
+            title="Dashboard token not found",
+            detail="No token for this dashboard exists.",
+        ) from None
 
     return DashboardTokenObjectModel(
         id=token.token_id,

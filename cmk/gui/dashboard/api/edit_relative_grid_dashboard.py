@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated
 
+from cmk.gui.dashboard.store import get_all_dashboards
+from cmk.gui.dashboard.token_util import disable_dashboard_token
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -20,10 +22,8 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import AnnotatedUserId
 
-from ..store import get_all_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
-    disable_dashboard_token,
     get_permitted_user_id,
     PERMISSIONS_DASHBOARD_EDIT,
     save_dashboard_to_file,

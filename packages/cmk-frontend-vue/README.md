@@ -58,6 +58,13 @@ To try our reusable components outside a checkmk site, you can
 * run `ibazel run :vite -- --config vite.config.demo.ts`
 * surf to `http://localhost:5174/`
 
+or
+
+* Visit https://devdocs.lan.checkmk.net/frontend-demo/
+
+The hosted demo app is built from the master branch daily. It can also
+be manually deployed by triggering the "Build and deploy frontend-demo"
+jenkins job.
 
 ## Package management
 

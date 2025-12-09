@@ -10,6 +10,7 @@ import { v4 as uuid } from 'uuid'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 import { randomId } from '@/lib/randomId'
 import { immediateWatch } from '@/lib/watch.ts'
 
@@ -37,6 +38,8 @@ const props = defineProps<
   }
 >()
 
+const TIMEOUT = 5 * 60000
+
 const context = getWizardContext()
 
 const loading = ref(true)
@@ -44,6 +47,7 @@ const loadingTitle = ref(_t('Verifying the authorization...'))
 const errorTitle = ref(_t('Authorization failed.'))
 const authSucceeded = ref(false)
 const refId = randomId()
+const countDownValue = ref<number>(TIMEOUT)
 
 const dataRef = defineModel<OAuth2FormData>({ required: true })
 const resultCode = ref<string | null>(null)
@@ -79,8 +83,15 @@ async function authorize(): Promise<string | null> {
 
       const authWindow = open(url, '_blank')
       if (authWindow) {
-        // TODO: think about how to handle the timeout properly
-        waitForRedirect<string | null>(authWindow, resolve, verifyAuthorization)
+        waitForRedirect<string | null>(
+          authWindow,
+          {
+            host: location.host
+          },
+          resolve,
+          verifyAuthorization,
+          TIMEOUT
+        )
       }
     }
   })
@@ -88,8 +99,16 @@ async function authorize(): Promise<string | null> {
 
 function verifyAuthorization(
   authWindow: WindowProxy,
-  resolve: (value: string | null | PromiseLike<string | null>) => void
+  resolve: (value: string | null | PromiseLike<string | null>) => void,
+  error?: string
 ) {
+  if (error) {
+    loading.value = false
+    errorTitle.value = error as TranslatedString
+    authWindow.close()
+    return
+  }
+
   const params = new URL(authWindow.location.href).searchParams
 
   if (params.get('state') === refId) {
@@ -131,20 +150,39 @@ async function requestAndSaveAccessToken(): Promise<boolean> {
   return false
 }
 
+function resetProcess() {
+  loading.value = false
+  countDownValue.value = TIMEOUT
+}
+
+function countDown() {
+  if (countDownValue.value > 0 && loading.value) {
+    countDownValue.value -= 1000
+    setTimeout(countDown, 1000)
+  }
+}
+
 immediateWatch(
   () => context.isSelected(props.index),
   async (isSelected) => {
     if (isSelected) {
       authSucceeded.value = false
       loading.value = true
-      const code = await authorize()
-      if (code) {
-        resultCode.value = code
-        authSucceeded.value = await requestAndSaveAccessToken()
+      try {
+        countDown()
+        const code = await authorize()
+
+        if (code) {
+          resultCode.value = code
+          authSucceeded.value = await requestAndSaveAccessToken()
+          loading.value = false
+        } else {
+          loading.value = false
+          errorTitle.value = _t('Authorization was not completed. Please try again.')
+        }
+      } catch (e) {
         loading.value = false
-      } else {
-        loading.value = false
-        errorTitle.value = _t('Authorization was not completed. Please try again.')
+        errorTitle.value = (e as Error).message as TranslatedString
       }
     }
   }
@@ -158,12 +196,9 @@ immediateWatch(
     </template>
 
     <template #content>
-      <CmkParagraph>
-        {{
-          _t(
-            'A new tab will be opened. Please follow the instructions to authorize the application'
-          )
-        }}
+      <CmkParagraph v-if="loading">
+        {{ countDownValue / 1000 }}
+        {{ _t('seconds remaining') }}
       </CmkParagraph>
       <span v-if="loading">
         <CmkIcon name="load-graph" />
@@ -185,6 +220,7 @@ immediateWatch(
       <CmkWizardButton
         type="previous"
         :override-label="_t('Go back to restart authorization process')"
+        @click="resetProcess"
       />
     </template>
   </CmkWizardStep>

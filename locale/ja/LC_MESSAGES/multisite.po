@@ -30254,6 +30254,12 @@ msgstr ""
 "リンク速度の自動検出が機能しない場合は、ここでリンク速度を設定できます。"
 
 msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
+msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
 "between the monitoring site and the host. Enable this flag for compatibility "
 "reasons or if you experience problems with the controller related to TLS or "
@@ -48734,6 +48740,12 @@ msgstr "Datadog インスタンスの API ホストと認証情報をここに�
 msgid "Provide command for python script execution"
 msgstr "Pythonスクリプト実行用のコマンドを提供する"
 
+msgid ""
+"Provide fixed string or regular expression conditions for the HTTP reponse. "
+"If the response fails the condition (E.g., expected string not found in "
+"body), this will result in a CRITICAL state."
+msgstr ""
+
 msgid "Provide levels"
 msgstr "レベルを提供する"
 
@@ -51617,8 +51629,9 @@ msgstr "このテストを再試行してください"
 msgid "Retry time"
 msgstr "再試行時間"
 
-msgid "Return WARNING if found, OK if not"
-msgstr "見つかった場合はWARNING を返し、見つからなかった場合はOKを返します"
+#, fuzzy
+msgid "Return CRITICAL if found, OK if not"
+msgstr "見つかった場合はクリティカルを返し、見つからなかった場合はOKを返します"
 
 msgid "Return code class 2xx (success)"
 msgstr "リターンコードクラス 2xx（成功）"
@@ -54491,6 +54504,10 @@ msgstr "サービス状態"
 
 msgid "Service state age"
 msgstr "サービス状態経過日数"
+
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "サービス状態の変換"
 
 msgid "Service state if no map rule matches"
 msgstr "一致するマップルールがない場合のサービス状態"
@@ -64015,9 +64032,10 @@ msgstr ""
 "上記の問題はキャッシュの欠落が原因かもしれません。再スキャンを行ってくださ"
 "い。"
 
+#, fuzzy
 msgid ""
 "The provided header key and value need to match exactly with the actual "
-"header of the response. Please note that the service will get a WARN, if "
+"header of the response. Please note that the service will get a CRIT, if "
 "either the key or the value does not match. If searching for a regular "
 "expression, the first match is considered a success."
 msgstr ""
@@ -84187,6 +84205,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Return WARNING if found, OK if not"
+#~ msgstr "見つかった場合はWARNING を返し、見つからなかった場合はOKを返します"
 
 #~ msgid "Issuer Name"
 #~ msgstr "発行名"

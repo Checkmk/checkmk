@@ -32585,6 +32585,12 @@ msgstr ""
 "Si la détection automatique de la vitesse de la liaison ne fonctionne pas, "
 "vous pouvez régler la vitesse de la liaison ici."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -52464,6 +52470,12 @@ msgstr ""
 msgid "Provide command for python script execution"
 msgstr "Fournir une commande pour l'exécution du script python"
 
+msgid ""
+"Provide fixed string or regular expression conditions for the HTTP reponse. "
+"If the response fails the condition (E.g., expected string not found in "
+"body), this will result in a CRITICAL state."
+msgstr ""
+
 msgid "Provide levels"
 msgstr "Fournir des niveaux"
 
@@ -55536,7 +55548,7 @@ msgid "Retry time"
 msgstr "Temps de répétition"
 
 #, fuzzy
-msgid "Return WARNING if found, OK if not"
+msgid "Return CRITICAL if found, OK if not"
 msgstr "retourne CRITIQUE si trouvé, OK sinon"
 
 msgid "Return code class 2xx (success)"
@@ -58601,6 +58613,10 @@ msgstr "État du service"
 
 msgid "Service state age"
 msgstr "Âge de l'état de service"
+
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Traduction de l'état du service"
 
 msgid "Service state if no map rule matches"
 msgstr "État du service si aucune règle de carte ne correspond"
@@ -68727,7 +68743,7 @@ msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
-"header of the response. Please note that the service will get a WARN, if "
+"header of the response. Please note that the service will get a CRIT, if "
 "either the key or the value does not match. If searching for a regular "
 "expression, the first match is considered a success."
 msgstr ""
@@ -90649,6 +90665,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid "Return WARNING if found, OK if not"
+#~ msgstr "retourne CRITIQUE si trouvé, OK sinon"
 
 #, fuzzy
 #~ msgid "Issuer Name"

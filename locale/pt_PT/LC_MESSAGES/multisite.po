@@ -32300,6 +32300,12 @@ msgstr ""
 "Se a detecção automática da velocidade da ligação não funcionar, você pode "
 "definir a velocidade da ligação aqui."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -51981,6 +51987,12 @@ msgstr ""
 msgid "Provide command for python script execution"
 msgstr "Fornecer comando para execução de scripts python"
 
+msgid ""
+"Provide fixed string or regular expression conditions for the HTTP reponse. "
+"If the response fails the condition (E.g., expected string not found in "
+"body), this will result in a CRITICAL state."
+msgstr ""
+
 msgid "Provide levels"
 msgstr "Fornecer níveis"
 
@@ -55030,7 +55042,7 @@ msgid "Retry time"
 msgstr "Tempo de tentativas"
 
 #, fuzzy
-msgid "Return WARNING if found, OK if not"
+msgid "Return CRITICAL if found, OK if not"
 msgstr "devolver CRÍTICO se encontrado, OK se não"
 
 msgid "Return code class 2xx (success)"
@@ -58067,6 +58079,10 @@ msgstr "Estado de serviço"
 
 msgid "Service state age"
 msgstr "Idade do estado de serviço"
+
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Serviço de tradução do estado"
 
 msgid "Service state if no map rule matches"
 msgstr "Estado do serviço se nenhuma regra do mapa corresponder"
@@ -68072,7 +68088,7 @@ msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
-"header of the response. Please note that the service will get a WARN, if "
+"header of the response. Please note that the service will get a CRIT, if "
 "either the key or the value does not match. If searching for a regular "
 "expression, the first match is considered a success."
 msgstr ""
@@ -89666,6 +89682,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Return WARNING if found, OK if not"
+#~ msgstr "devolver CRÍTICO se encontrado, OK se não"
 
 #, fuzzy
 #~ msgid "Issuer Name"

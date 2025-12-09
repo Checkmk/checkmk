@@ -32300,6 +32300,12 @@ msgstr ""
 "Als de automatische detectie van de verbindingssnelheid niet werkt, kunt u "
 "de verbindingssnelheid hier instellen."
 
+msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -52014,6 +52020,12 @@ msgstr "Geef hier API host en credentials voor uw Datadog instance."
 msgid "Provide command for python script execution"
 msgstr "Geef opdracht voor uitvoering van python script"
 
+msgid ""
+"Provide fixed string or regular expression conditions for the HTTP reponse. "
+"If the response fails the condition (E.g., expected string not found in "
+"body), this will result in a CRITICAL state."
+msgstr ""
+
 msgid "Provide levels"
 msgstr "Zorg voor niveaus"
 
@@ -55042,7 +55054,7 @@ msgid "Retry time"
 msgstr "Herhalingstijd"
 
 #, fuzzy
-msgid "Return WARNING if found, OK if not"
+msgid "Return CRITICAL if found, OK if not"
 msgstr "geef CRITICAL terug indien gevonden, OK indien niet"
 
 msgid "Return code class 2xx (success)"
@@ -58084,6 +58096,10 @@ msgstr "Dienststaat"
 
 msgid "Service state age"
 msgstr "Leeftijd dienststaat"
+
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Dienst staat vertaling"
 
 msgid "Service state if no map rule matches"
 msgstr "Dienst status als er geen kaart regel overeenkomt"
@@ -68105,7 +68121,7 @@ msgstr ""
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
-"header of the response. Please note that the service will get a WARN, if "
+"header of the response. Please note that the service will get a CRIT, if "
 "either the key or the value does not match. If searching for a regular "
 "expression, the first match is considered a success."
 msgstr ""
@@ -89776,6 +89792,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Return WARNING if found, OK if not"
+#~ msgstr "geef CRITICAL terug indien gevonden, OK indien niet"
 
 #, fuzzy
 #~ msgid "Issuer Name"

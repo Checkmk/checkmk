@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-12-04 21:04+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -31071,6 +31071,12 @@ msgstr ""
 "geben Sie hier einen Wert dafür ein."
 
 msgid ""
+"If the configured string/regex searches fail, this will result in a CRIT "
+"state by default. Here you can choose an alternative state that will apply "
+"to all configured string/regex searches when failing their condition."
+msgstr ""
+
+msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
 "between the monitoring site and the host. Enable this flag for compatibility "
 "reasons or if you experience problems with the controller related to TLS or "
@@ -50010,6 +50016,12 @@ msgstr ""
 msgid "Provide command for python script execution"
 msgstr "Stelle einen Befehl für die Python Skript Ausführung bereit"
 
+msgid ""
+"Provide fixed string or regular expression conditions for the HTTP reponse. "
+"If the response fails the condition (E.g., expected string not found in "
+"body), this will result in a CRITICAL state."
+msgstr ""
+
 msgid "Provide levels"
 msgstr "Grenzwerte bereitstellen"
 
@@ -52915,8 +52927,9 @@ msgstr "Test wiederholen"
 msgid "Retry time"
 msgstr "Wiederholungszeitraum"
 
-msgid "Return WARNING if found, OK if not"
-msgstr "Rückgabe WARNING wenn gefunden, OK wenn nicht"
+#, fuzzy
+msgid "Return CRITICAL if found, OK if not"
+msgstr "Rückgabewert: CRITICAL wenn gefunden, OK wenn nicht"
 
 msgid "Return code class 2xx (success)"
 msgstr "Rückgabecode Klasse 2xx (Erfolg)"
@@ -55842,6 +55855,10 @@ msgstr "Service-Zustand"
 
 msgid "Service state age"
 msgstr "Alter des Service-Zustands"
+
+#, fuzzy
+msgid "Service state for failing text search condition."
+msgstr "Übersetzen von Service-Zuständen"
 
 msgid "Service state if no map rule matches"
 msgstr "Service-Zustand, wenn keine Map-Regel greift"
@@ -65819,9 +65836,10 @@ msgstr ""
 "Die oben genannten Probleme können durch fehlende Caches verursacht worden "
 "sein. Bitte führen Sie einen Rescan durch."
 
+#, fuzzy
 msgid ""
 "The provided header key and value need to match exactly with the actual "
-"header of the response. Please note that the service will get a WARN, if "
+"header of the response. Please note that the service will get a CRIT, if "
 "either the key or the value does not match. If searching for a regular "
 "expression, the first match is considered a success."
 msgstr ""
@@ -86806,6 +86824,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Return WARNING if found, OK if not"
+#~ msgstr "Rückgabe WARNING wenn gefunden, OK wenn nicht"
 
 #~ msgid "Issuer Name"
 #~ msgstr "Name des Herausgebers"

@@ -14,6 +14,7 @@ import {
   type Operation,
   type Transformation
 } from 'cmk-shared-typing/typescript/graph_designer'
+import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -788,14 +789,28 @@ function transformQueryAttributes(attributes: GraphLineQueryAttributes) {
   })
 }
 
+function setLockedValue(catalog: Catalog) {
+  for (const element of catalog.elements) {
+    if (element.name === 'value') {
+      element.locked = {
+        message: _t('Cannot change rule value for rules managed by custom graph editor.')
+      }
+    }
+  }
+}
+
 const slideInAPI = {
   getSchema: async () => {
-    return (
+    const schema = (
       await configEntityAPI.getSchema(
         configEntityType as ConfigEntityType,
         configEntityTypeSpecifier
       )
     ).schema
+    if ('type' in schema && schema.type === 'catalog') {
+      setLockedValue(schema as Catalog)
+    }
+    return schema
   },
   getData: async (objectId: ObjectId | null) => {
     if (objectId === null) {

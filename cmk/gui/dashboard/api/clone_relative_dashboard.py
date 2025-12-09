@@ -101,6 +101,10 @@ def clone_as_relative_grid_dashboard_v1(
             "owner": owner,
             "name": body.dashboard_id,
         }
+
+    if cloned_dashboard.get("public_token_id"):
+        cloned_dashboard["public_token_id"] = None  # Remove token reference in cloned dashboard
+
     save_dashboard_to_file(api_context.config.sites, cloned_dashboard, owner)
 
 

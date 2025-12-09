@@ -288,6 +288,40 @@ py_test(
 )
 
 py_library(
+    name = "pure_storage_fa",
+    srcs = glob(["cmk/plugins/pure_storage_fa/**/*.py"]),
+    data = glob([
+        "cmk/plugins/pure_storage_fa/checkman/*",
+        "cmk/plugins/pure_storage_fa/libexec/*",
+    ]) + ["cmk/plugins/pure_storage_fa/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("requests"),
+        requirement("pydantic"),
+        requirement("urllib3"),
+    ],
+)
+
+py_test(
+    name = "pure_storage_fa-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/pure_storage_fa/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":pure_storage_fa",
+        requirement("pytest"),
+    ],
+)
+
+py_library(
     name = "randomds",
     srcs = glob(
         [

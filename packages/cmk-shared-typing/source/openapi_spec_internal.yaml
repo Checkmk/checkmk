@@ -10381,6 +10381,146 @@ paths:
           automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
           n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
           \ \"Accept: application/json\" \\\n  \n  \"$API_URL/objects/constant/widget_available_inventory/collections/all\""
+  /objects/dashboard_metadata/{dashboard_id}:
+    get:
+      tags:
+      - Dashboards
+      description: "Available in the following editions: all\n\nThis endpoint requires\
+        \ the following permissions: \n * All of:\n   * Customize dashboards and use\
+        \ them (`general.edit_dashboards`): Allows to create own dashboards, customize\
+        \ built-in dashboards and use them.\n   * Optionally:\n     * Modify built-in\
+        \ dashboards (`general.force_dashboards`): Make own published dashboards override\
+        \ built-in dashboards for all users.\n   * Optionally:\n     * See user dashboards\
+        \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
+        \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
+        \ Is needed for seeing dashboards that are provided via extension packages.\n\
+        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \ Is needed for seeing topics that other users have created.\n       * Some\
+        \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
+        \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
+        \ views and use them (`general.edit_views`): Allows to create own views, customize\
+        \ built-in views and use them.\n       * See user views (`general.see_user_views`):\
+        \ Is needed for seeing views that other users have created.\n       * See\
+        \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
+        \ that are provided via extension packages.\n       * Some permissions starting\
+        \ with `view`:\n"
+      summary: Show a dashboard's metadata.
+      operationId: Dashboards.show_dashboard_metadata_v1
+      parameters:
+      - in: path
+        name: dashboard_id
+        content:
+          application/json:
+            schema:
+              description: Dashboard ID
+              examples:
+              - main
+              title: Dashboard Id
+              type: string
+        required: true
+      - in: query
+        name: owner
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - const: ''
+                type: string
+              - {}
+              description: The owner of the dashboard. If not provided, the current
+                user is assumed. Use an empty string to indicate a built-in dashboard.
+              examples:
+              - admin
+              title: Owner
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '404':
+          description: 'Not Found: The requested object has not be found.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
+        '400':
+          description: 'Bad Request: Parameter or validation failure.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetadataModel'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/dashboard_metadata/main\"\
+          ,\n    params={  # goes into query string\n        \"owner\": 'admin',\n\
+          \    },\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\n\
+          else:\n    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.parse\n\
+          import urllib.request\n\nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\
+          \nPROTO = \"http\" #[http|https]\nAPI_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nquery_string =\
+          \ urllib.parse.urlencode({\n    \"owner\": 'admin',\n})\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/dashboard_metadata/main?{query_string}\",\n  \
+          \  method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \n    },\n)\n# Will raise an HTTPError if status code is >= 400\n\
+          resp = urllib.request.urlopen(request)\nif resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/objects/dashboard_metadata/main\" \\\n   \
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
+          \ \\\n    \n    owner=='admin' "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --get \\\n  --write-out\
+          \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
+          \ \\\n  \n  --data-urlencode 'owner=admin' \\\n  \"$API_URL/objects/dashboard_metadata/main\""
   /objects/dashboard_relative_grid/{dashboard_id}:
     get:
       tags:
@@ -41064,6 +41204,50 @@ components:
       - detail
       title: Api404DefaultErrorBFBB02DDEB1EED3A
       type: object
+    Api400DefaultErrorE40947496A3FF3F8:
+      properties:
+        status:
+          description: The HTTP status code.
+          examples:
+          - 400
+          title: Status
+          type: integer
+        title:
+          description: A summary of the problem.
+          examples:
+          - Bad Request
+          title: Title
+          type: string
+        detail:
+          description: Detailed information on what exactly went wrong.
+          examples:
+          - Parameter or validation failure.
+          title: Detail
+          type: string
+        fields:
+          additionalProperties:
+            type: string
+          description: Detailed error messages on all fields failing validation.
+          examples:
+          - field: error message
+          title: Validation errors
+          type: object
+        ext:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - {}
+          description: Additional information about the error.
+          examples:
+          - key: value
+          title: Error extensions
+      required:
+      - status
+      - title
+      - detail
+      title: Api400DefaultErrorE40947496A3FF3F8
+      type: object
     AlertOverviewContent:
       properties:
         type:
@@ -43043,50 +43227,6 @@ components:
       - layout
       - widgets
       title: EditDashboardV1
-      type: object
-    Api400DefaultErrorE40947496A3FF3F8:
-      properties:
-        status:
-          description: The HTTP status code.
-          examples:
-          - 400
-          title: Status
-          type: integer
-        title:
-          description: A summary of the problem.
-          examples:
-          - Bad Request
-          title: Title
-          type: string
-        detail:
-          description: Detailed information on what exactly went wrong.
-          examples:
-          - Parameter or validation failure.
-          title: Detail
-          type: string
-        fields:
-          additionalProperties:
-            type: string
-          description: Detailed error messages on all fields failing validation.
-          examples:
-          - field: error message
-          title: Validation errors
-          type: object
-        ext:
-          anyOf:
-          - additionalProperties:
-              type: string
-            type: object
-          - {}
-          description: Additional information about the error.
-          examples:
-          - key: value
-          title: Error extensions
-      required:
-      - status
-      - title
-      - detail
-      title: Api400DefaultErrorE40947496A3FF3F8
       type: object
     Api415DefaultError3A6CC372948DF091:
       properties:

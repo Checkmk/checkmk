@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>OhmBridge</RootNamespace>
     <AssemblyName>ohm_bridge</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>

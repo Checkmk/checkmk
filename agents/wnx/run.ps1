@@ -15,10 +15,9 @@ if ((get-host).version.major -lt 7) {
 }
 
 $argAll = $false
-$argBuild = $false
+$argBuildOnly = $false
 $argClean = $false
 $argCtl = $false
-$argBuild = $false
 $argSign = $false
 $argMsi = $false
 $argOhm = $false
@@ -63,12 +62,12 @@ function Write-Help() {
     Write-Host ""
     Write-Host "Available arguments:"
     Write-Host "  -?, -h, --help          display help and exit"
-    Write-Host "  -A, --all               shortcut to -C -O -T -M -E -Q -o:  ctl, ohm, unit, msi, extensions, mk-sql, mk-oracle"
+    Write-Host "  -A, --all               shortcut to -C -O -T -M -E -Q -R:  ctl, ohm, unit, msi, extensions, mk-sql, mk-oracle"
     Write-Host "  --clean-all             clean literally all, use with care"
     Write-Host "  --clean-artifacts       clean artifacts"
     Write-Host "  -C, --ctl               make controller"
     Write-Host "  -Q, --mk-sql            make mk-sql"
-    Write-Host "  -o, --mk-oracle         make mk-oracle"
+    Write-Host "  -R, --mk-oracle         make mk-oracle"
     Write-Host "  -B, --build-only        do not test, just build"
     Write-Host "  -W, --win-agent         make windows agent"
     Write-Host "  -M, --msi               make msi"
@@ -98,11 +97,11 @@ else {
             { $("-?", "-h", "--help") -contains "$_" } { Write-Help; return }
             { $("-A", "--all") -contains $_ } { $argAll = $true }
             { $("-C", "--controller") -contains $_ } { $argCtl = $true }
-            { $("-B", "--build") -contains $_ } { $argBuild = $true }
+            { $("-B", "--build") -contains $_ } { $argBuildOnly = $true }
             { $("-W", "--win-agent") -contains $_ } { $argWin = $true }
             { $("-M", "--msi") -contains $_ } { $argMsi = $true }
             { $("-O", "--ohm") -contains $_ } { $argOhm = $true }
-            { $("-o", "--mk-oracle") -contains $_ } { $argOracle = $true }
+            { $("-R", "--mk-oracle") -contains $_ } { $argOracle = $true }
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
             { $("-S", "--skip-sql-test") -contains $_ } { $argSkipSqlTest = $true }
@@ -302,16 +301,18 @@ function Set-MSI-Version {
 }
 
 function Start-UnitTests {
-    if ($argBuild) {
+    if (($argBuildOnly -ne $true) -and ($argWin -eq $true) ) {
+        Write-Host "Running unit tests..." -ForegroundColor White
+        & ./run_tests.ps1 --plugins --unit
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Error unit Testing, error code is $LASTEXITCODE" -ErrorAction Stop
+        }
+        Write-Host "Success unit tests" -foreground Green
+    }
+    else {
         Write-Host "Skipping unit testing..." -ForegroundColor Yellow
         return
     }
-    Write-Host "Running unit tests..." -ForegroundColor White
-    & ./run_tests.ps1 --plugins --unit
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Error unit Testing, error code is $LASTEXITCODE" -ErrorAction Stop
-    }
-    Write-Host "Success unit tests" -foreground Green
 }
 
 function Test-SigningQuickly {
@@ -713,7 +714,7 @@ try {
 
     # BUILDING
     Build-Agent
-    if ($argBuild){
+    if ($argBuildOnly){
         $build_arg = "--build"
     }
     else

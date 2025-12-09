@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>OpenHardwareMonitorCLI</RootNamespace>
     <AssemblyName>OpenHardwareMonitorCLI</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

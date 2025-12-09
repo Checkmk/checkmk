@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>OhmHost</RootNamespace>
     <AssemblyName>ohm_host</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>

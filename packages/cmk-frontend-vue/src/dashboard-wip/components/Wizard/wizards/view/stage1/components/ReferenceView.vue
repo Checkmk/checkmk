@@ -15,13 +15,20 @@ import SingleInfosSpecifier from '@/dashboard-wip/components/Wizard/wizards/view
 import SelectorView from '@/dashboard-wip/components/selectors/SelectorView.vue'
 import { useDataSourcesCollection } from '@/dashboard-wip/composables/api/useDataSourcesCollection.ts'
 import { useInjectViews } from '@/dashboard-wip/composables/useProvideViews'
+import type { ContextFilters } from '@/dashboard-wip/types/filter'
 import { RestrictedToSingle } from '@/dashboard-wip/types/shared.ts'
 
 const { _t } = usei18n()
 
+const emit = defineEmits<{
+  (e: 'overwrite-filters', filters: ContextFilters): void
+}>()
+
 const referencedView = defineModel<string | null>('referencedView', { default: null })
 const contextInfos = defineModel<string[]>('contextInfos', { default: [] })
-const restrictedToSingleInfos = defineModel<string[]>('restrictedToSingleInfos', { default: [] })
+const restrictedToSingleInfos = defineModel<string[]>('restrictedToSingleInfos', {
+  default: []
+})
 const singleInfosMode = ref<RestrictedToSingle>(RestrictedToSingle.NO)
 
 const byViewId = useInjectViews()
@@ -41,6 +48,7 @@ watch(
 
     if (!id) {
       contextInfos.value = []
+      emit('overwrite-filters', {})
       return
     }
 
@@ -64,6 +72,7 @@ watch(
       singleInfosMode.value = RestrictedToSingle.NO
     }
     restrictedToSingleInfos.value = restrictedToSingle
+    emit('overwrite-filters', (view!.extensions?.filters ?? {}) as unknown as ContextFilters)
   },
   { immediate: true }
 )

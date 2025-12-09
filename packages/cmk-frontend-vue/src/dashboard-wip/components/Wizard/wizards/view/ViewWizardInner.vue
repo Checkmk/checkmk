@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, h, ref } from 'vue'
+import { computed, h, nextTick, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { randomId } from '@/lib/randomId'
@@ -248,6 +248,19 @@ const handleResetAllFilters = (): void => {
   widgetFilterManager.closeSelectionMenu()
   widgetFilterManager.resetFilterValuesOfObjectType()
 }
+
+async function handleOverwriteFilters(newFilters: ContextFilters) {
+  // Use nextTick to ensure any pending DOM updates (e.g., from contextInfos watcher
+  // emitting reset-all-filters) are processed before applying new filters,
+  // preventing a race condition where filters might be reset after being set.
+  await nextTick()
+  handleResetAllFilters()
+  if (newFilters) {
+    Object.entries(newFilters).forEach(([filterId, { configuredValues }]) => {
+      widgetFilterManager.updateFilterValues(filterId, configuredValues)
+    })
+  }
+}
 </script>
 
 <template>
@@ -296,6 +309,7 @@ const handleResetAllFilters = (): void => {
         @update-filter-values="
           (filterId, values) => widgetFilterManager.updateFilterValues(filterId, values)
         "
+        @overwrite-filters="handleOverwriteFilters"
         @reset-all-filters="handleResetAllFilters"
         @reset-object-type-filters="handleObjectTypeSwitch"
         @remove-filter="(filterId) => widgetFilterManager.filterHandler.removeFilter(filterId)"

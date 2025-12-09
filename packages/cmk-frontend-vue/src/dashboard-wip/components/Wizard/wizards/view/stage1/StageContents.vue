@@ -54,6 +54,7 @@ const emit = defineEmits<{
   (e: 'reset-all-filters'): void
   (e: 'remove-filter', filterId: string): void
   (e: 'goNext', selectedView: ViewSelection): void
+  (e: 'overwrite-filters', filters: ContextFilters): void
 }>()
 
 const visualInfosById = useInjectVisualInfos()
@@ -187,12 +188,14 @@ const sortedContextInfos = computed(() => {
         <ReferenceView
           v-model:referenced-view="originalViewName"
           v-model:context-infos="contextInfos"
+          @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
         />
       </div>
       <div v-else-if="modeSelection === ViewSelectionMode.LINK">
         <ReferenceView
           v-model:referenced-view="referencedViewName"
           v-model:context-infos="contextInfos"
+          @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
         />
       </div>
       <ContentSpacer />

@@ -102,8 +102,24 @@ class SwitchPortStatus(BaseModel, frozen=True):
 
     @computed_field
     @property
+    def admin_status(self) -> str:
+        return "1" if self.enabled else "2"
+
+    @computed_field
+    @property
     def admin_state(self) -> Status:
         return "up" if self.enabled else "down"
+
+    @computed_field
+    @property
+    def oper_status(self) -> str | None:
+        match self.status.lower():
+            case "connected":
+                return "1"
+            case "disconnected":
+                return "2"
+            case _:
+                return None
 
     @computed_field
     @property
@@ -346,8 +362,8 @@ def inventory_meraki_interfaces(section: Section) -> InventoryResult:
             key_columns={"index": port.port_id},
             inventory_columns={
                 "name": port.name,
-                "admin_status": port.admin_state,
-                **({"oper_status": port.oper_state} if port.oper_state != "unknown" else {}),
+                "admin_status": port.admin_status,
+                **({"oper_status": port.oper_status} if port.oper_status else {}),
                 "speed": port.speed,
                 "port_type": port.port_type,
             },

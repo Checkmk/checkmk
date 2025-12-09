@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import logging
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from pathlib import Path
 
 import pytest
@@ -21,7 +21,7 @@ TELEMETRY_URL_ENV_VAR = "CMK_TELEMETRY_URL"
 
 
 @pytest.fixture(scope="module")
-def default_cfg(site: Site) -> None:
+def default_cfg(site: Site) -> Generator[None]:
     """Setup site and create resources for product telemetry tests."""
     site.ensure_running()
     for i in range(EXPECTED_FOLDER_COUNT):
@@ -32,6 +32,14 @@ def default_cfg(site: Site) -> None:
             attributes={"ipaddress": "127.0.0.1"},
         )
     site.openapi.changes.activate_and_wait_for_completion()
+    try:
+        yield
+    finally:
+        for i in range(EXPECTED_HOST_COUNT):
+            site.openapi.hosts.delete(f"test-host-pt{i + 1}")
+        for i in range(EXPECTED_FOLDER_COUNT):
+            site.openapi.folders.delete(f"/test_folder_pt{i + 1}")
+        site.openapi.changes.activate_and_wait_for_completion()
 
 
 @pytest.fixture(autouse=True)

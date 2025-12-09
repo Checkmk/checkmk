@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import TypedDict, TypeGuard
+from typing import Literal, TypedDict, TypeGuard
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -20,9 +20,9 @@ def register(config_file_registry: ConfigFileRegistry) -> None:
 
 class OAuth2Connection(TypedDict):
     title: str
-    client_secret_reference: str
-    access_token_reference: str
-    refresh_token_reference: str
+    client_secret: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
+    access_token: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
+    refresh_token: tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
     client_id: str
     tenant_id: str
     authority: str

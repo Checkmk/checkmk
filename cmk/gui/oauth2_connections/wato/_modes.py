@@ -205,24 +205,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
                 "_delete", _("This %s does not exist.") % self._mode_type.name_singular()
             )
 
-        remove_password(
-            entries[ident]["client_secret_reference"],
-            user_id=user.id,
-            pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
-        )
-        remove_password(
-            entries[ident]["access_token_reference"],
-            user_id=user.id,
-            pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
-        )
-        remove_password(
-            entries[ident]["refresh_token_reference"],
-            user_id=user.id,
-            pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
-        )
+        self._delete_passwords(entries[ident], config)
         delete_oauth2_connection(
             ident,
             user_id=user.id,
@@ -230,6 +213,26 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             use_git=config.wato_use_git,
         )
         return redirect(mode_url(self._mode_type.list_mode_name()))
+
+    def _delete_passwords(self, entry: OAuth2Connection, config: Config) -> None:
+        remove_password(
+            entry["client_secret"][2][0],
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
+        remove_password(
+            entry["access_token"][2][0],
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
+        remove_password(
+            entry["refresh_token"][2][0],
+            user_id=user.id,
+            pprint_value=config.wato_pprint_config,
+            use_git=config.wato_use_git,
+        )
 
 
 class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
@@ -274,11 +277,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                                     "authority": self._entry["authority"],
                                     "tenant_id": self._entry["tenant_id"],
                                     "client_id": self._entry["client_id"],
-                                    "client_secret": (
-                                        "cmk_postprocessed",
-                                        "stored_password",
-                                        (self._entry["client_secret_reference"], ""),
-                                    ),
+                                    "client_secret": self.entry["client_secret"],
                                 }
                             ),
                             field_id=form_name,
@@ -320,11 +319,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                                 "authority": self._entry["authority"],
                                 "tenant_id": self._entry["tenant_id"],
                                 "client_id": self._entry["client_id"],
-                                "client_secret": (
-                                    "cmk_postprocessed",
-                                    "stored_password",
-                                    (self._entry["client_secret_reference"], ""),
-                                ),
+                                "client_secret": self.entry["client_secret"],
                             }
                         ),
                         field_id=form_name,

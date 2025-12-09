@@ -206,10 +206,10 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
     ) -> None:
         details = OAuth2Connection(
             title=title,
-            access_token_reference=f"{ident}_access_token",
+            access_token=("cmk_postprocessed", "stored_password", (f"{ident}_access_token", "")),
             client_id=client_id,
-            client_secret_reference=f"{ident}_client_secret",
-            refresh_token_reference=f"{ident}_refresh_token",
+            client_secret=("cmk_postprocessed", "stored_password", (f"{ident}_client_secret", "")),
+            refresh_token=("cmk_postprocessed", "stored_password", (f"{ident}_refresh_token", "")),
             tenant_id=tenant_id,
             authority=authority,
         )

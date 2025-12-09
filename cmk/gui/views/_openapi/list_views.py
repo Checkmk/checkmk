@@ -22,8 +22,9 @@ from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
+from cmk.gui.type_defs import VisualContext
+from cmk.gui.views.store import get_permitted_views
 
-from ..store import get_permitted_views
 from ._family import VIEW_FAMILY
 
 
@@ -36,6 +37,9 @@ class ViewExtensions:
             "A list of single infos that this view is restricted to. "
             "This means that the view must be filtered to exactly one item for each info name."
         )
+    )
+    filters: VisualContext = api_field(
+        description="Active filters in the format filter_id -> (variable -> value)"
     )
 
 
@@ -64,6 +68,7 @@ def list_views_v1() -> ViewCollectionModel:
             extensions=ViewExtensions(
                 data_source=view_spec["datasource"],
                 restricted_to_single=list(view_spec["single_infos"]),
+                filters=view_spec.get("context", dict()),
             ),
             links=[],
         )

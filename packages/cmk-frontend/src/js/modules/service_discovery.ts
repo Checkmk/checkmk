@@ -65,7 +65,7 @@ interface AjaxServiceDiscovery {
   is_finished: boolean
   job_state: any
   message: string | null
-  message_type: 'success' | 'warning' | 'error' | 'waiting' | 'info'
+  message_type: 'message' | 'warning' | 'error' | 'waiting' | 'info'
   body: string
   datasources: string
   fixall: string

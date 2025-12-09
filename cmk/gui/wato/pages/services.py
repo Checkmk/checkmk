@@ -58,6 +58,7 @@ from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, PermissionName
 from cmk.gui.utils.agent_commands import agent_commands_registry
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
@@ -645,14 +646,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         performed_action: DiscoveryAction,
         initial_action: DiscoveryAction | None,
         host_name: HostName,
-    ) -> tuple[str, Literal["success", "warning", "error", "waiting", "info"]]:
+    ) -> tuple[str, MsgType]:
         if initial_action and performed_action != DiscoveryAction.NONE:
             initial_action = None
         if not initial_action:
             initial_action = performed_action
 
         if performed_action is DiscoveryAction.UPDATE_HOST_LABELS:
-            return _("The discovered host labels have been updated."), "success"
+            return _("The discovered host labels have been updated."), "message"
 
         cmk_check_entries = [
             e for e in discovery_result.check_table if DiscoveryState.is_discovered(e.check_source)
@@ -711,9 +712,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 if initial_action == DiscoveryAction.FIX_ALL:
                     return _(
                         "All undecided services and new labels accepted. Monitoring is enabled."
-                    ), "success"
+                    ), "message"
                 if initial_action == DiscoveryAction.REFRESH:
-                    return _("Services rescanned."), "success"
+                    return _("Services rescanned."), "message"
 
             return " ".join(messages), "info"
 

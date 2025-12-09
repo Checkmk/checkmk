@@ -105,7 +105,7 @@ function _toggle_class(element: HTMLElement, className: string, add: boolean) {
 }
 
 function _show_message(
-  type: 'success' | 'error' | 'warning' | 'waiting' | 'info',
+  type: 'message' | 'error' | 'warning' | 'waiting' | 'info',
   text: string,
   newDesign: boolean
 ) {
@@ -117,20 +117,24 @@ function _show_message(
     msg = document.createElement('div')
     container.appendChild(msg)
   }
-
-  _toggle_class(msg, 'success', type === 'success')
-  _toggle_class(msg, 'error', type === 'error')
-  _toggle_class(msg, 'warning', type === 'warning')
-  _toggle_class(msg, 'waiting', type === 'waiting')
-  _toggle_class(msg, 'info_msg', type === 'info')
-  _toggle_class(msg, 'flashed', newDesign)
+  const classes = [
+    { className: 'success', enabled: type === 'message' },
+    { className: 'error', enabled: type === 'error' },
+    { className: 'warning', enabled: type === 'warning' },
+    { className: 'waiting', enabled: type === 'waiting' },
+    { className: 'info_msg', enabled: type === 'info' },
+    { className: 'flashed', enabled: newDesign }
+  ]
+  for (const { className, enabled } of classes) {
+    _toggle_class(msg, className, enabled)
+  }
 
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   msg.innerHTML = text
 }
 
 export function show_message_by_type(
-  type: 'success' | 'error' | 'warning' | 'waiting' | 'info',
+  type: 'message' | 'error' | 'warning' | 'waiting' | 'info',
   text: string
 ) {
   _show_message(type, text, true)
@@ -144,7 +148,7 @@ export function show_info(text: string) {
   // NOTE: the `show_info` function is used for displaying non-error messages,
   // without any special styling (old design). The name is misleading, as it's
   // not actually showing an "info" message type.
-  _show_message('success', text, false)
+  _show_message('message', text, false)
 }
 
 export function hide_msg() {

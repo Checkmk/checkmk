@@ -18,16 +18,31 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.table import table_element
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
-from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
+from cmk.gui.valuespec import Dictionary, DropdownChoice, FileUploadModel, IconSelector, ImageUpload
 from cmk.gui.wato import PERMISSION_SECTION_WATO
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.utils.images import CMKImage, ImageType
+
+
+def validate_icon(value: FileUploadModel, varprefix: str) -> None:
+    file_name = value[0]  # type: ignore[index]
+    if os.path.exists(
+        f"{cmk.utils.paths.omd_root}/share/check_mk/web/htdocs/themes/facelift/images/icon_{file_name}"
+    ) or os.path.exists(
+        f"{cmk.utils.paths.omd_root}/share/check_mk/web/htdocs/images/icons/{file_name}"
+    ):
+        raise MKUserError(
+            varprefix,
+            _(
+                "Your icon conflicts with a Checkmk built-in icon. Please "
+                "choose another name for your icon."
+            ),
+        )
 
 
 class ModeIcons(WatoMode):
@@ -59,7 +74,7 @@ class ModeIcons(WatoMode):
                         allowed_extensions=[".png"],
                         mime_types=["image/png"],
                         max_size=(80, 80),
-                        validate=self._validate_icon,
+                        validate=validate_icon,
                     ),
                 ),
                 (
@@ -72,22 +87,6 @@ class ModeIcons(WatoMode):
                 ),
             ],
         )
-
-    def _validate_icon(self, value, varprefix):
-        file_name = value[0]
-        browser_url = theme.url("images/icon_%s" % file_name)
-        if os.path.exists(
-            f"{cmk.utils.paths.omd_root}/share/check_mk/web/htdocs/{browser_url}"
-        ) or os.path.exists(
-            f"{cmk.utils.paths.omd_root}/share/check_mk/web/htdocs/images/icons/{file_name}"
-        ):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "Your icon conflicts with a Checkmk built-in icon. Please "
-                    "choose another name for your icon."
-                ),
-            )
 
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()

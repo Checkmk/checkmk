@@ -175,6 +175,25 @@ export const dashboardAPI = {
     const data = unwrap(await client.GET('/domain-types/dashboard_metadata/collections/all'))
     return data.value.map((model) => model.extensions).filter(Boolean)
   },
+  showDashboardMetadata: async (
+    dashboardId: string,
+    dashboardOwner: string | null = null
+  ): Promise<DashboardMetadata> => {
+    const queryParams: Record<string, string> = {}
+    if (dashboardOwner !== null) {
+      queryParams.owner = dashboardOwner
+    }
+
+    const data = unwrap(
+      await client.GET('/objects/dashboard_metadata/{dashboard_id}', {
+        params: {
+          path: { dashboard_id: dashboardId },
+          query: queryParams
+        }
+      })
+    )
+    return data.extensions
+  },
   listFilterCollection: async (): Promise<FilterCollection> => {
     return unwrap(await client.GET('/domain-types/visual_filter/collections/all'))
   },

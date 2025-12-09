@@ -4653,9 +4653,9 @@ types-requests==2.32.4.20250611 \
     --hash=sha256:741c8777ed6425830bf51e54d6abe245f79b4dcb9019f1622b773463946bf826 \
     --hash=sha256:ad2fe5d3b0cb3c2c902c8815a70e7fb2302c4b8c1f77bdcd738192cdb3878072
     # via -r requirements_dev.txt
-types-s3transfer==0.15.0 \
-    --hash=sha256:1e617b14a9d3ce5be565f4b187fafa1d96075546b52072121f8fda8e0a444aed \
-    --hash=sha256:43a523e0c43a88e447dfda5f4f6b63bf3da85316fdd2625f650817f2b170b5f7
+types-s3transfer==0.16.0 \
+    --hash=sha256:1c0cd111ecf6e21437cb410f5cddb631bfb2263b77ad973e79b9c6d0cb24e0ef \
+    --hash=sha256:b4636472024c5e2b62278c5b759661efeb52a81851cde5f092f24100b1ecb443
     # via boto3-stubs
 types-setuptools==75.6.0.20241126 \
     --hash=sha256:7bf25ad4be39740e469f9268b6beddda6e088891fa5a27e985c6ce68bf62ace0 \

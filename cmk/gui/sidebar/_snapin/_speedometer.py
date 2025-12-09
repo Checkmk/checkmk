@@ -38,7 +38,7 @@ class Speedometer(SidebarSnapin):
 
     def show(self, config: Config) -> None:
         html.open_div(class_="speedometer")
-        html.img(theme.url("images/speedometer.svg"), id_="speedometerbg")
+        html.img(theme.detect_icon_path("speedometer", ""), id_="speedometerbg")
         html.canvas("", width=str(snapin_width), height="146", id_="speedometer")
         html.close_div()
 

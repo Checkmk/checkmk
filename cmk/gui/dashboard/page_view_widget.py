@@ -249,6 +249,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     limit: Literal["soft", "hard", "none"]
     raw_debug: str | None
 
+    @override
     @classmethod
     def from_request(cls, request: Request) -> Self:
         try:
@@ -433,6 +434,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             name=unique_widget_name,
         )
 
+    @override
     def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
         parameters = _ViewWidgetIFrameAuthTokenRequestParameters.from_request(ctx.request)
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
@@ -461,6 +463,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             is_debug=False,
         )
 
+    @override
     def _redirect_to_shared_dashboard_page(self, token: AuthToken) -> PageResult:
         # Since we're in an iframe we cannot just return a redirect response.
         # We also shouldn't just update `window.top`, since we expect shared dashboards to be used

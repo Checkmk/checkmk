@@ -12,7 +12,7 @@
 of the dashboard to render is given in the HTML variable 'name'.
 """
 
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
@@ -31,9 +31,11 @@ from .type_defs import DashboardConfig
 
 
 class SharedDashboardPage(DashboardTokenAuthenticatedPage):
+    @override
     def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
         page_shared_dashboard(token.token_id, token.issuer, token_details, ctx)
 
+    @override
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
         return page_dashboard_token_invalid(_("Token invalid"))
 

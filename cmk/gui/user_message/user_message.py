@@ -277,6 +277,7 @@ class GetUserMessagesTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
     def ident(cls) -> str:
         return "get_user_messages_token_auth"
 
+    @override
     def _post(
         self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
     ) -> PageResult:

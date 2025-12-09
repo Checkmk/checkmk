@@ -135,6 +135,7 @@ class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
     def ident(cls) -> str:
         return "widget_graph_token_auth"
 
+    @override
     def _post(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
         widget_id = ctx.request.get_str_input_mandatory("widget_id")
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)

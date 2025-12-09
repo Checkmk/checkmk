@@ -47,6 +47,7 @@ class InvalidWidgetError(MKException):
     ) -> None:
         self.disable_token = disable_token
 
+    @override
     def __str__(self) -> str:
         return _("The given widget id does not match any of this dashboard's widgets.")
 
@@ -219,9 +220,11 @@ def _get_view_owners(dashboard_config: DashboardConfig) -> dict[str, UserId]:
 
 
 class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
+    @override
     def get(self, token: AuthToken, ctx: PageContext) -> PageResult:
         return self._handle_method(token, ctx, self._get)
 
+    @override
     def post(self, token: AuthToken, ctx: PageContext) -> PageResult:
         return self._handle_method(token, ctx, self._post)
 
@@ -319,6 +322,7 @@ class DashboardTokenAuthenticatedJsonPage(DashboardTokenAuthenticatedPage):
 
         self._set_response_data({"result_code": 1, "result": str(exception), "severity": severity})
 
+    @override
     def get(self, token: AuthToken, ctx: PageContext) -> PageResult:
         action_response = self._handle_method(token, ctx, self._get)
         self._set_response_data(
@@ -326,6 +330,7 @@ class DashboardTokenAuthenticatedJsonPage(DashboardTokenAuthenticatedPage):
         )
         return action_response
 
+    @override
     def post(self, token: AuthToken, ctx: PageContext) -> PageResult:
         action_response = self._handle_method(token, ctx, self._post)
         self._set_response_data(

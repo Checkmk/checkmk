@@ -92,6 +92,7 @@ class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
     def get_data_generator(cls, figure_type_name: str) -> Callable[..., FigureResponseData]:
         return FigureWidgetPage.get_data_generator(figure_type_name)
 
+    @override
     def _post(
         self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
     ) -> PageResult:

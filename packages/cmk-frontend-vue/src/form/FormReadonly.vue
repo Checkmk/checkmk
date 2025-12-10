@@ -438,12 +438,16 @@ function renderDict(
     }
     if (group.layout === 'vertical') {
       elements.forEach((element) => {
-        dictElements.push(
-          h('tr', trProps, [
-            h('td', { class: 'dict_title' }, [`${element[0]}:`]),
-            h('td', { class: 'dict_value' }, [element[1]])
-          ])
-        )
+        if (element[0]) {
+          dictElements.push(
+            h('tr', trProps, [
+              h('td', { class: 'dict_title' }, [`${element[0]}:`]),
+              h('td', { class: 'dict_value' }, [element[1]])
+            ])
+          )
+        } else {
+          dictElements.push(h('tr', trProps, [h('td', { class: 'dict_value' }, [element[1]])]))
+        }
       })
     } else {
       const headers: VNode[] = []

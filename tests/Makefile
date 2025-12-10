@@ -306,7 +306,7 @@ test-plugins-siteless:
 
 test-plugins-consistency:
 	$(PYTEST) --log-cli-level=INFO $(realpath plugins_siteless/plugins_consistency) \
-	--session-timeout 1800 --html="../results/plugins-consistency.html"
+	--session-timeout 1800 --html="../results/plugins-consistency.html" --self-contained-html
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"

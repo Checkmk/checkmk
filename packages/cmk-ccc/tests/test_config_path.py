@@ -45,23 +45,22 @@ class TestVersionedConfigPath:
 
 
 def test_create(tmp_path: Path) -> None:
-    with create(tmp_path, is_cmc=True) as ctx:
+    with create(tmp_path) as ctx:
         assert ctx.path_created.exists()
         assert ctx.serial_created == 1
 
-    with create(tmp_path, is_cmc=True) as ctx:
+    with create(tmp_path) as ctx:
         assert ctx.serial_created == 2
 
-    with create(tmp_path, is_cmc=True) as ctx:
+    with create(tmp_path) as ctx:
         assert ctx.serial_created == 3
 
 
-@pytest.mark.parametrize("is_cmc", (True, False))
-def test_create_success(tmp_path: Path, is_cmc: bool) -> None:
+def test_create_success(tmp_path: Path) -> None:
     latest_path = VersionedConfigPath.make_latest_path(tmp_path)
     assert not latest_path.exists()
 
-    with create(tmp_path, is_cmc=is_cmc) as ctx:
+    with create(tmp_path) as ctx:
         assert ctx.path_created.exists()
         created_config_path = ctx.path_created
 
@@ -69,17 +68,16 @@ def test_create_success(tmp_path: Path, is_cmc: bool) -> None:
     assert latest_path.resolve() == created_config_path.resolve()
 
 
-@pytest.mark.parametrize("is_cmc", (True, False))
-def test_create_no_latest_link_update_on_failure(tmp_path: Path, is_cmc: bool) -> None:
+def test_create_no_latest_link_update_on_failure(tmp_path: Path) -> None:
     latest_path = VersionedConfigPath.make_latest_path(tmp_path)
 
-    with create(tmp_path, is_cmc=is_cmc) as ctx:
+    with create(tmp_path) as ctx:
         succesfully_created_path = ctx.path_created
 
     assert latest_path.resolve() == succesfully_created_path
     assert succesfully_created_path.exists()
 
-    with suppress(RuntimeError), create(tmp_path, is_cmc=is_cmc) as ctx:
+    with suppress(RuntimeError), create(tmp_path) as ctx:
         failing_created_path = ctx.path_created
         raise RuntimeError("boom")
 

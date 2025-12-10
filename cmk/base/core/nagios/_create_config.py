@@ -45,7 +45,7 @@ from cmk.base.core.shared import (
     host_check_command,
 )
 from cmk.ccc import store, tty
-from cmk.ccc.config_path import ConfigCreationContext
+from cmk.ccc.config_path import cleanup_old_configs, ConfigCreationContext
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -100,8 +100,8 @@ class NagiosCore(MonitoringCore):
         return "nagios"
 
     @staticmethod
-    def is_cmc() -> Literal[False]:
-        return False
+    def cleanup_old_configs(base: Path) -> None:
+        cleanup_old_configs(base)
 
     @staticmethod
     def objects_file() -> str:

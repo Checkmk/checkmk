@@ -308,9 +308,7 @@ def _create_active_config(
     )
 
     with (
-        config_path.create(
-            cmk.utils.paths.omd_root, is_cmc=core.is_cmc()
-        ) as config_creation_context,
+        config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
         _backup_objects_file(core),
     ):
         core.create_config(
@@ -335,6 +333,8 @@ def _create_active_config(
             cmk.utils.password_store.active_secrets_path_site(config_creation_context.path_created),
         )
         _snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
+
+    core.cleanup_old_configs(cmk.utils.paths.omd_root)
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:

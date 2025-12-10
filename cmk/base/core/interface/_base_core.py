@@ -12,6 +12,7 @@ import subprocess
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
+from pathlib import Path
 from typing import Final, Literal
 
 from cmk import trace
@@ -52,7 +53,7 @@ class MonitoringCore(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def is_cmc() -> bool:
+    def cleanup_old_configs(base: Path) -> None:
         raise NotImplementedError
 
     @staticmethod

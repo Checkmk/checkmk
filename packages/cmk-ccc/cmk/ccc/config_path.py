@@ -87,7 +87,8 @@ def _increment_to_next_serial(base: Path) -> int:
     return new_serial
 
 
-def _cleanup_old_configs(base: Path, current_config_path: Path) -> None:
+def cleanup_old_configs(base: Path) -> None:
+    current_config_path = detect_latest_config_path(base)
     root = VersionedConfigPath.make_root_path(base)
     for path in root.iterdir() if root.exists() else []:
         if (
@@ -99,7 +100,7 @@ def _cleanup_old_configs(base: Path, current_config_path: Path) -> None:
 
 
 @contextmanager
-def create(base: Path, *, is_cmc: bool) -> Iterator[ConfigCreationContext]:
+def create(base: Path) -> Iterator[ConfigCreationContext]:
     # NOTE:
     # The "latest" symlink points to the last successfully created config.
     # The "serial.mk" file contains the last serial we started to create.
@@ -107,9 +108,6 @@ def create(base: Path, *, is_cmc: bool) -> Iterator[ConfigCreationContext]:
     current_config_path = latest_link_path.resolve()
     serial = _increment_to_next_serial(base)
     under_construction_path = Path(VersionedConfigPath(base, serial))
-
-    if not is_cmc:  # CMC manages the configs on its own.
-        _cleanup_old_configs(base, current_config_path)
 
     under_construction_path.mkdir(parents=True, exist_ok=True)
     try:

@@ -124,6 +124,7 @@ def check(suffix: str, path: Path) -> bool:
             path,
             HEADER_CEE
             if path.is_relative_to(Path("src/graph-designer"))
+            or path.is_relative_to(Path("src/metric-backend"))
             or path == Path("src/form/private/forms/FormMetricBackendCustomQuery.vue")
             else HEADER,
         )

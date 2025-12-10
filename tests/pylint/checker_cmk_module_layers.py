@@ -1083,6 +1083,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         "cmk.utils.nonfree.pro.licensing",
         "cmk.utils.paths",
+        "cmk.utils.rulesets",
     ),
     Component("tests.plugins_siteless"): _allow(
         *PACKAGE_CCC,

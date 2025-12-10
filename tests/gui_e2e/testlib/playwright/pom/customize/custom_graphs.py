@@ -131,6 +131,23 @@ class DesignGraph(BaseGraph):
         logger.info("Save designed graph")
         self.main_area.get_suggestion("Save").click()
 
+    def open_slide_in_for_metric_backend_rule(self) -> None:
+        logger.info("Open 'Design graph' slide-in")
+        slide_in_selector = (
+            "#form_graph_designer_form_context > cmk-graph-designer > div > table > "
+            "tbody > tr > td:nth-child(3) > img:nth-child(4)"
+        )
+        self.main_area.locator(slide_in_selector).click()
+
+    def save_rule_via_slide_in(self) -> None:
+        logger.info("Save rule via 'Design graph' slide-in")
+        save_button_selector = (
+            "body > div.cmk-vue-app.cmk-slide-in__container.cmk-slide-in--"
+            "size-medium > div > div > div.form-edit-async__buttons > "
+            "button.cmk-button.cmk-button--variant-secondary"
+        )
+        self.main_area.locator(save_button_selector).click()
+
 
 class CustomGraph(BaseGraph):
     page_title: str = "Custom graph"

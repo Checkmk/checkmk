@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { FixedValue } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed } from 'vue'
 
+import CmkHtml from '@/components/CmkHtml.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -31,5 +32,8 @@ const fixedValue = computed(() => {
 
 <template>
   <FormValidation v-if="fixedValue" :validation="validation"></FormValidation>
-  <FormLabel v-if="fixedValue">{{ fixedValue }}</FormLabel>
+  <FormLabel v-if="fixedValue">
+    <CmkHtml v-if="spec.label" :html="spec.label" />
+    <template v-else>{{ fixedValue }}</template>
+  </FormLabel>
 </template>

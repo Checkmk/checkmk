@@ -277,7 +277,7 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
         return
 
     with CheckmkTarArchive.from_path(tmpfs_dump, compression="*") as archive:
-        archive.extractall(dest=site_tmp_dir)  # nosec B202 - its secured now
+        archive.extractall(dest=site_tmp_dir)  # nosec B202 # BNS:481b41
     tmpfs_dump.unlink()
 
 

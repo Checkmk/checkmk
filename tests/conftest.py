@@ -13,6 +13,20 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+try:
+    from tests.testlib.site import Site
+
+    _SITE_AVAILABLE = True
+except Exception:
+    # Site class is not available during packaging tests for community edition
+    _SITE_AVAILABLE = False
+
+    class _SiteStub:
+        def report_crashes(self) -> None:
+            pass
+
+    Site = _SiteStub  # type: ignore[assignment,misc]
+
 import pytest
 import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -403,3 +417,22 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 
     if item.config.getoption("--dry-run"):
         pytest.xfail("*** DRY-RUN ***")
+
+
+def _iter_site_objects(pytest_item: pytest.Item) -> Iterator[Site]:
+    """Yield all Site objects found in the function arguments of the given test."""
+    if not _SITE_AVAILABLE:
+        return
+    funcargs = getattr(pytest_item, "funcargs", None)
+    if not funcargs:
+        return
+    for obj in funcargs.values():
+        if isinstance(obj, Site):
+            yield obj
+
+
+@pytest.hookimpl
+def pytest_runtest_teardown(item: pytest.Item) -> None:
+    """Teardown hook to report crashes after each test."""
+    for site_obj in _iter_site_objects(item):
+        site_obj.report_crashes()

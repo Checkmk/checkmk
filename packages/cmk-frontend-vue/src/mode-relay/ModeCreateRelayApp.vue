@@ -19,9 +19,10 @@ const props = defineProps<CreateRelay>()
 
 const currentStep = ref<number>(1)
 const relayAlias = ref<string>('')
+const relayId = ref<string>('')
 
 const openCreateHostPage = () => {
-  const url = `${props.urls.create_host}&relay=${relayAlias.value}&prefill=relay`
+  const url = `${props.urls.create_host}&relay=${relayId.value}&prefill=relay`
   window.location.href = url
 }
 const openRelayOverviewPage = () => {
@@ -54,6 +55,7 @@ const openRelayOverviewPage = () => {
         :is-completed="() => currentStep > 3"
       />
       <VerifyRegistration
+        v-model="relayId"
         :relay-alias="relayAlias"
         :index="4"
         :is-completed="() => currentStep > 4"

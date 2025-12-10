@@ -36,7 +36,10 @@ from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 
 def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
-    return diagnostics.DiagnosticsDump(EMPTY_CONFIG)
+    return diagnostics.DiagnosticsDump(
+        EMPTY_CONFIG,
+        core_performance_settings=lambda x: {},
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -171,7 +174,10 @@ def test_diagnostics_element_general_content(
 
 
 def test_diagnostics_element_perfdata() -> None:
-    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(EMPTY_CONFIG)
+    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(
+        EMPTY_CONFIG,
+        core_performance_settings=lambda x: {},
+    )
     assert diagnostics_element.ident == "perfdata"
     assert diagnostics_element.title == "Performance data"
     assert diagnostics_element.description == (

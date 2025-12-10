@@ -24,7 +24,7 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Mapping
+from collections.abc import Callable
 from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from datetime import datetime
@@ -39,7 +39,6 @@ import livestatus
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult
-from cmk.base import config
 from cmk.base.automations.automations import Automation, AutomationContext, Automations, load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
@@ -89,21 +88,6 @@ from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 
-if cmk_version.edition(cmk.utils.paths.omd_root) in [
-    cmk_version.Edition.PRO,
-    cmk_version.Edition.ULTIMATEMT,
-    cmk_version.Edition.ULTIMATE,
-    cmk_version.Edition.CLOUD,
-]:
-    from cmk.base.nonfree.diagnostics import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-        cmc_specific_attrs,  # type: ignore[import,unused-ignore]
-    )
-else:
-
-    def cmc_specific_attrs(loaded_config: LoadedConfigFragment) -> Mapping[str, int]:
-        return {}
-
-
 # TODO: why is there localization in this module?
 
 
@@ -120,11 +104,15 @@ class _DiagnosticsElement:
 SUFFIX = ".tar.gz"
 
 
-def register(modes: Modes, automations: Automations) -> None:
+def register(
+    modes: Modes,
+    automations: Automations,
+    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+) -> None:
     modes.register(
         Mode(
             long_option="create-diagnostics-dump",
-            handler_function=mode_create_diagnostics_dump,
+            handler_function=_make_mode_create_diagnostics_dump(core_performance_settings),
             short_help="Create diagnostics dump",
             long_help=[
                 "Create a dump containing information for diagnostic analysis "
@@ -137,18 +125,27 @@ def register(modes: Modes, automations: Automations) -> None:
     automations.register(
         Automation(
             ident="create-diagnostics-dump",
-            handler=automation_create_diagnostics_dump,
+            handler=_make_automation_create_diagnostics_dump(core_performance_settings),
         )
     )
 
 
-def mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
-    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    log.logger.setLevel(logging.INFO)
-    create_diagnostics_dump(
-        config.load(discovery_rulesets=()).loaded_config,
-        cmk.utils.diagnostics.deserialize_modes_parameters(options),
-    )
+def _make_mode_create_diagnostics_dump(
+    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+) -> Callable[[CheckmkBaseApp, DiagnosticsModesParameters], None]:
+    def handler(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
+        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+        log.logger.setLevel(logging.INFO)
+
+        create_diagnostics_dump(
+            load_config(
+                discovery_rulesets=(),
+            ).loaded_config,
+            cmk.utils.diagnostics.deserialize_modes_parameters(options),
+            core_performance_settings,
+        )
+
+    return handler
 
 
 def _get_diagnostics_dump_sub_options() -> list[Option]:
@@ -206,33 +203,51 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
     return sub_options
 
 
-def automation_create_diagnostics_dump(
-    ctx: AutomationContext,
-    args: DiagnosticsCLParameters,
-    plugins: AgentBasedPlugins | None,
-    loading_result: LoadingResult | None,
-) -> CreateDiagnosticsDumpResult:
-    if loading_result is None:
-        loading_result = load_config(discovery_rulesets=())
-    buf = io.StringIO()
-    with redirect_stdout(buf), redirect_stderr(buf):
-        log.setup_console_logging()
-        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-        log.logger.setLevel(logging.INFO)
-        dump = DiagnosticsDump(loading_result.loaded_config, deserialize_cl_parameters(args))
-        dump.create()
-        return CreateDiagnosticsDumpResult(
-            output=buf.getvalue(),
-            tarfile_path=str(dump.tarfile_path),
-            tarfile_created=dump.tarfile_created,
-        )
+def _make_automation_create_diagnostics_dump(
+    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+) -> Callable[
+    [
+        AutomationContext,
+        DiagnosticsCLParameters,
+        AgentBasedPlugins | None,
+        LoadingResult | None,
+    ],
+    CreateDiagnosticsDumpResult,
+]:
+    def handler(
+        ctx: AutomationContext,
+        args: DiagnosticsCLParameters,
+        plugins: AgentBasedPlugins | None,
+        loading_result: LoadingResult | None,
+    ) -> CreateDiagnosticsDumpResult:
+        if loading_result is None:
+            loading_result = load_config(discovery_rulesets=())
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            log.setup_console_logging()
+            # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+            log.logger.setLevel(logging.INFO)
+            dump = DiagnosticsDump(
+                loading_result.loaded_config,
+                core_performance_settings,
+                deserialize_cl_parameters(args),
+            )
+            dump.create()
+            return CreateDiagnosticsDumpResult(
+                output=buf.getvalue(),
+                tarfile_path=str(dump.tarfile_path),
+                tarfile_created=dump.tarfile_created,
+            )
+
+    return handler
 
 
 def create_diagnostics_dump(
     loaded_config: LoadedConfigFragment,
     parameters: DiagnosticsOptionalParameters | None,
+    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
 ) -> None:
-    dump = DiagnosticsDump(loaded_config, parameters)
+    dump = DiagnosticsDump(loaded_config, core_performance_settings, parameters)
     dump.create()
 
     section.section_step("Creating diagnostics dump", verbose=False)
@@ -294,9 +309,10 @@ class DiagnosticsDump:
     def __init__(
         self,
         loaded_config: LoadedConfigFragment,
+        core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
         parameters: DiagnosticsOptionalParameters | None = None,
     ) -> None:
-        self.fixed_elements = self._get_fixed_elements(loaded_config)
+        self.fixed_elements = self._get_fixed_elements(loaded_config, core_performance_settings)
         self.optional_elements = self._get_optional_elements(parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
@@ -307,11 +323,13 @@ class DiagnosticsDump:
         self.tarfile_created = False
 
     def _get_fixed_elements(
-        self, loaded_config: LoadedConfigFragment
+        self,
+        loaded_config: LoadedConfigFragment,
+        core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
     ) -> list[ABCDiagnosticsElement]:
         fixed_elements = [
             GeneralDiagnosticsElement(),
-            PerfDataDiagnosticsElement(loaded_config),
+            PerfDataDiagnosticsElement(loaded_config, core_performance_settings),
             HWDiagnosticsElement(),
             VendorDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
@@ -761,8 +779,13 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    def __init__(self, load_config: LoadedConfigFragment) -> None:
-        self._loaded_config = load_config
+    def __init__(
+        self,
+        load_config: LoadedConfigFragment,
+        core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+    ) -> None:
+        self._loaded_config: Final = load_config
+        self._core_performance_settings: Final = core_performance_settings
 
     @override
     @property
@@ -789,7 +812,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if (key := result[0][i]) not in ["license_usage_history"]
         }
 
-        performance_data.update(cmc_specific_attrs(self._loaded_config))
+        performance_data.update(self._core_performance_settings(self._loaded_config))
 
         return performance_data
 

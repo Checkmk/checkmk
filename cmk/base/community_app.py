@@ -19,7 +19,7 @@ def make_app() -> CheckmkBaseApp:
     modes = _modes()
     automations = _automations()
 
-    diagnostics.register(modes, automations)
+    diagnostics.register(modes, automations, core_performance_settings=lambda x: {})
 
     return CheckmkBaseApp(
         edition=Edition.COMMUNITY,

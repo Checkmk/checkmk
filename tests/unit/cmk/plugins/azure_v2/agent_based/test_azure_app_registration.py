@@ -28,7 +28,7 @@ from cmk.plugins.azure_v2.agent_based.azure_app_registration import (
 )
 
 SECTION = {
-    "srv-whatever - MyKey": ClientSecret(
+    "srv-whatever - MyKey-bfd9d3a3": ClientSecret(
         appId="9c677ced-6cb2-44b3-af54-65f768065fdf",
         appName="srv-whatever",
         endDateTime="2023-11-05T09:40:39.655Z",
@@ -36,14 +36,14 @@ SECTION = {
         customKeyIdentifier="MyKey",
         displayName=None,
     ),
-    "srv-whatever - Very very secure": ClientSecret(
+    "srv-whatever - Very very secure-bfd9d3a2": ClientSecret(
         appId="9c677ced-6cb2-44b3-af54-65f768065fdf",
         appName="srv-whatever",
         displayName="Very very secure",
         endDateTime="2023-11-05T09:40:39.655Z",
         keyId="724fd654-4440-4209-9a83-39b9bfd9d3a2",
     ),
-    "srv-whatever - MyVault": ClientSecret(
+    "srv-whatever - MyVault-799a984e": ClientSecret(
         appId="9c677ced-6cb2-44b3-af54-65f768065fdf",
         appName="srv-whatever",
         displayName="MyVault",
@@ -76,9 +76,9 @@ def test_parse_app_registration(string_table: StringTable, expcted_section: Sect
         (
             SECTION,
             [
-                Service(item="srv-whatever - MyKey"),
-                Service(item="srv-whatever - Very very secure"),
-                Service(item="srv-whatever - MyVault"),
+                Service(item="srv-whatever - MyKey-bfd9d3a3"),
+                Service(item="srv-whatever - Very very secure-bfd9d3a2"),
+                Service(item="srv-whatever - MyVault-799a984e"),
             ],
         )
     ],
@@ -91,14 +91,14 @@ def test_discover_app_registration(section: Section, expected_discovery: Discove
     "item, params, section, expected_result",
     [
         pytest.param(
-            "srv-whatever - MyVault",
+            "srv-whatever - MyVault-799a984e",
             {},
             {},
             [],
             id="item_missing",
         ),
         pytest.param(
-            "srv-whatever - Very very secure",
+            "srv-whatever - Very very secure-bfd9d3a2",
             {"expiration_time": ("fixed", (500 * 24 * 60 * 60, 100 * 24 * 60 * 60))},
             SECTION,
             [
@@ -110,7 +110,7 @@ def test_discover_app_registration(section: Section, expected_discovery: Discove
             id="secret_still_valid",
         ),
         pytest.param(
-            "srv-whatever - MyVault",
+            "srv-whatever - MyVault-799a984e",
             {"expiration_time": ("fixed", (30 * 24 * 60 * 60, 7 * 24 * 60 * 60))},
             SECTION,
             [Result(state=State.CRIT, summary="Secret expired: 230 days 15 hours ago")],

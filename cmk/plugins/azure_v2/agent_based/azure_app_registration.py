@@ -47,9 +47,9 @@ def parse_app_registration(string_table: StringTable) -> Section:
         for credentials in app.get("passwordCredentials", []):
             secret = ClientSecret(appId=app["appId"], appName=app["displayName"], **credentials)
             secret_name = (
-                f"{secret.appName} - {secret.displayName}"
+                f"{secret.appName} - {secret.displayName}-{secret.keyId[-8:]}"
                 if secret.displayName
-                else f"{secret.appName} - {secret.customKeyIdentifier}"
+                else f"{secret.appName} - {secret.customKeyIdentifier}-{secret.keyId[-8:]}"
             )
             section[secret_name] = secret
 

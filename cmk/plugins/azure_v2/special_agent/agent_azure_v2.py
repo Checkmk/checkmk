@@ -1348,7 +1348,7 @@ async def process_cosmosdb(
         if isinstance(result, BaseException):
             if args.debug:
                 raise result
-            err.add("exception", "metric collection", str(result))
+            err.add("exception", "cosmosdb metric collection", str(result))
             LOGGER.exception(result)
             continue
 

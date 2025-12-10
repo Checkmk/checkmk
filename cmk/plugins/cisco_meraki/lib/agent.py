@@ -153,14 +153,14 @@ class MerakiOrganisation:
 
         if devices_by_type.get("appliance"):
             if self.config.required.appliance_uplinks:
-                for raw_data in self.client.get_uplink_statuses(self.id):
+                for raw_statuses in self.client.get_uplink_statuses(self.id):
                     if piggyback := self._get_device_piggyback(
-                        raw_data["serial"], devices_by_serial
+                        raw_statuses["serial"], devices_by_serial
                     ):
                         uplink_statuses = UplinkStatuses(
-                            networkName=networks[raw_data["networkId"]]["organizationName"],
+                            networkName=networks[raw_statuses["networkId"]]["organizationName"],
                             usageByInterface=self._get_usage_by_serial(),
-                            **raw_data,
+                            **raw_statuses,
                         )
                         yield Section(
                             name="cisco_meraki_org_appliance_uplinks",

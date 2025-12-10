@@ -75,6 +75,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         side="top"
         align="start"
         as-child
+        avoid-collisions
         class="cmk-help-text__popup"
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"

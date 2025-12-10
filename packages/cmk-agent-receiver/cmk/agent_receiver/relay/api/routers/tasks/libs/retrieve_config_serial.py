@@ -46,4 +46,4 @@ def retrieve_config_serial() -> Serial:
         raise GetConfigSerialError("could not resolve latest symlink")
 
     serial = target_path.name
-    return Serial(serial)
+    return Serial(int(serial))

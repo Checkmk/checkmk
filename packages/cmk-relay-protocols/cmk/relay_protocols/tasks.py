@@ -44,7 +44,7 @@ class FetchAdHocTask(BaseModel):
 
 
 class RelayConfigTask(BaseModel, frozen=True):
-    serial: str
+    serial: int
     tar_data: Base64Bytes = Field(
         title="Base64 encoded tar data",
         description="Base64 encoded tar data containing the configuration files for the relay",

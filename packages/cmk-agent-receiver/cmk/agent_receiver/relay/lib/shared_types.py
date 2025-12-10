@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 RelayID = NewType("RelayID", str)
 TaskID = NewType("TaskID", str)
-Serial = NewType("Serial", str)
+Serial = NewType("Serial", int)
 Version = NewType("Version", str)
 
 

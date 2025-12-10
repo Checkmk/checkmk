@@ -25,7 +25,7 @@ def test_relay_without_folder(
     - No config tasks are created.
     """
 
-    stale_serial = Serial("0")
+    stale_serial = Serial(0)
     cf = create_config_folder(root=site_context.omd_root, relays=["relay_id_1", "relay_id_3"])
     assert cf.serial != stale_serial
     agent_receiver.set_serial(stale_serial)

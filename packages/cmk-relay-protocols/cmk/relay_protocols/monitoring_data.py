@@ -12,7 +12,7 @@ Host = Annotated[str, StringConstraints(pattern=REGEX_HOST_NAME)]
 
 
 class MonitoringData(BaseModel):
-    serial: str
+    serial: int
     host: Host
     timestamp: int
     payload: Base64Bytes

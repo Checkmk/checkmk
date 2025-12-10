@@ -12,7 +12,7 @@ from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
-OLD_SERIAL = Serial("1")
+OLD_SERIAL = Serial(1)
 
 
 def test_config_update_triggered_by_outdated_serial(

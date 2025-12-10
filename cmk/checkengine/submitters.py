@@ -88,7 +88,7 @@ def get_submitter(
     perfdata_format: Literal["pnp", "standard"],
     show_perfdata: bool,
 ) -> Submitter:
-    """Enterprise should use `cmk.base.nonfree.pro.keepalive.submitters`."""
+    """Enterprise should use `cmk.base.nonfree.keepalive.submitters`."""
     if dry_run:
         return NoOpSubmitter(
             host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata

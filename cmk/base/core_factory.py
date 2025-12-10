@@ -50,7 +50,7 @@ def create_core(
                 CmcPb,
                 ConfigWriterInterface,
             )
-            from cmk.base.nonfree.pro.precompute_timeperiods import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.nonfree.precompute_timeperiods import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 precompute_timeperiods,
             )
 

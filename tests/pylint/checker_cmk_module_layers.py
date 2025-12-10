@@ -414,7 +414,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils",
         "cmk.automations",
     ),
-    Component("cmk.base.nonfree.pro.notify_automation"): _allow(
+    Component("cmk.base.nonfree.notify_automation"): _allow(
         "cmk.automations",
         "cmk.base.automations",
         "cmk.base.config",
@@ -423,7 +423,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.checkengine",
         "cmk.utils",
     ),
-    Component("cmk.base.nonfree.pro"): _allow(
+    Component("cmk.base.nonfree"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         "cmk.base",
@@ -468,7 +468,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_RELAY_PROTOCOLS,
-        "cmk.base.nonfree.pro",
+        "cmk.base.nonfree",
         "cmk.base.config",
         "cmk.base.core",
         "cmk.fetcher_encoder",

@@ -95,7 +95,7 @@ if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.ULTIMATE,
     cmk_version.Edition.CLOUD,
 ]:
-    from cmk.base.nonfree.pro.diagnostics import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+    from cmk.base.nonfree.diagnostics import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
         cmc_specific_attrs,  # type: ignore[import,unused-ignore]
     )
 else:

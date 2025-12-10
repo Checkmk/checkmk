@@ -404,7 +404,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.base.plugins.bakery.bakery_api",
         "cmk.base.modes.modes",
         "cmk.base.nonfree.cap",
-        "cmk.base.nonfree.pro.plugins.bakery.bakery_api",
+        "cmk.base.nonfree.plugins.bakery.bakery_api",
         "cmk.checkengine",
         "cmk.crypto.certificate",
         "cmk.nonfree.pro.robotmk.bakery",

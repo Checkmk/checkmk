@@ -69,7 +69,7 @@ def bakery_plugin(
 def get_bakery_plugins() -> dict[str, BakeryPlugin]:
     for plugin, exception in chain(
         # This is where our unmigrated shipped bakery plugins reside:
-        load_plugins_with_exceptions("cmk.base.nonfree.pro.plugins.bakery"),
+        load_plugins_with_exceptions("cmk.base.nonfree.plugins.bakery"),
         # This is where third party bakery plugins likely reside, as this is the
         # path we advertised previous to our edition renaming.
         # Let's be as undisruptive as possible, we're in the process of replacing the

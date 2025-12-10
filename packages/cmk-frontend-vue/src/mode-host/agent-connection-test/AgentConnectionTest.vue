@@ -9,11 +9,12 @@ import {
   type ModeHostAgentConnectionMode,
   type ModeHostSite
 } from 'cmk-shared-typing/typescript/mode_host'
-import { computed, onMounted, ref } from 'vue'
 import type { Ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
@@ -318,27 +319,24 @@ function onClose() {
       {{ _t('Test agent connection') }}
     </CmkButton>
 
-    <div v-if="isLoading" class="loading-container">
-      <CmkIcon name="load-graph" :title="tooltipText" size="medium" variant="inline" />
+    <CmkAlertBox v-if="isLoading" variant="loading" size="small" class="loading-container">
       {{ _t('Testing agent connection ...') }}
-    </div>
+    </CmkAlertBox>
 
-    <div v-if="isSuccess" class="success-container">
-      <CmkIcon name="checkmark" :title="tooltipText" size="medium" variant="inline" />
+    <CmkAlertBox v-if="isSuccess" variant="success" size="small" class="success-container">
       {{ _t('Successfully connected to agent.') }}
       <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
-    </div>
+    </CmkAlertBox>
 
-    <div v-if="isError" class="warn-container">
-      <CmkIcon name="validation-error" size="medium" variant="inline" />
+    <CmkAlertBox v-if="isError" variant="warning" size="small" class="warn-container">
+      <template #heading>{{ warnContainerValues.header }}</template>
       <div class="warn-txt-container">
-        <h2>{{ warnContainerValues.header }}</h2>
-        <p>{{ warnContainerValues.txt }}</p>
+        {{ warnContainerValues.txt }}
         <div class="warn-button-container">
           <CmkButton
             type="button"
             :title="warnContainerValues.buttonOneTitle"
-            class="agent-test-button"
+            class="agent-test-button alert-box-button"
             @click="warnContainerValues.buttonOneClick"
           >
             {{ warnContainerValues.buttonOneButton }}
@@ -347,14 +345,14 @@ function onClose() {
             v-if="warnContainerValues.buttonTwoTitle"
             type="button"
             :title="warnContainerValues.buttonTwoTitle"
-            class="agent-test-button"
+            class="agent-test-button alert-box-button"
             @click="warnContainerValues.buttonTwoClick"
           >
             {{ warnContainerValues.buttonTwoButton }}
           </CmkButton>
         </div>
       </div>
-    </div>
+    </CmkAlertBox>
 
     <CmkSlideInDialog
       :header="{
@@ -398,39 +396,29 @@ button {
 .agent-test-button {
   margin-left: var(--spacing-half);
   height: 21px;
+
+  &.alert-box-button {
+    margin-left: 0;
+    margin-right: var(--spacing-half);
+  }
 }
 
 .warn-container,
 .loading-container,
 .success-container {
-  display: inline-block;
-  padding: 2px 8px;
-  vertical-align: top;
+  display: inline-flex;
   color: var(--font-color);
-
-  /* TODO: Can be removed when CMK-23811 is fixed */
-  .cmk-icon {
-    display: inline-block;
-  }
+  margin: 0;
 }
 
 .warn-container {
-  border-radius: 4px;
-  background-color: rgb(from var(--color-warning) r g b / 15%);
-
   .warn-txt-container {
-    display: inline-block;
-    vertical-align: middle;
-    margin-top: var(--spacing-half);
-
-    h2,
-    p {
-      margin: 0 0 0 var(--spacing-half);
-    }
+    display: inline-flex;
+    flex-direction: column;
   }
 
   .warn-button-container {
-    margin: var(--spacing-half) 0 var(--spacing-half) 0;
+    margin: var(--spacing-half) 0 0;
   }
 }
 </style>

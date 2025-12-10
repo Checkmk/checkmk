@@ -21,6 +21,12 @@ logger = logging.getLogger(__name__)
 class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
     """Represent the page `Add OpenTelemetry collector: Prometheus scraping (experimental)`"""
 
+    incorrect_form_error_message = "Cannot save the form because it contains errors."
+    one_collector_per_site_error_detail = (
+        "A site is allowed to be used in exactly one "
+        "OpenTelemetry collector configuration: <br>- '%s' is used in '%s'"
+    )
+
     def __init__(
         self,
         page: Page,
@@ -48,6 +54,10 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
+
+    @property
+    def error_detail(self) -> Locator:
+        return self.main_area.locator("div.cmk-inline-validation")
 
     @property
     def save_configuration_button(self) -> Locator:
@@ -111,13 +121,10 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
         target_index = locator.count() - 1
         locator.nth(target_index).fill(value)
 
-    def fill_collector_scrape_properties(
+    def _fill_collector_scrape_properties(
         self,
         properties: dict[str, Any],
     ) -> None:
-        logger.info(
-            "Fill in the 'OpenTelemetry Collector: Prometheus Scraping (Experimental) properties' form"
-        )
         self.add_new_scraper_configuration_button.click()
         self.job_name_textfield.fill(properties["job_name"])
         self.scrape_interval_textfield.fill(str(properties["scrape_interval"]))
@@ -128,3 +135,21 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
             self.add_new_target_button.click()
             self.fill_last_locator(self.ip_address_or_hostname_textfield, target["address"])
             self.fill_last_locator(self.port_textfield, str(target["port"]))
+
+    def fill_collector_configuration_form_and_save(
+        self,
+        collector_id: str,
+        collector_title: str,
+        site_id: str,
+        collector_properties: dict[str, Any],
+    ) -> None:
+        logger.info(
+            "Fill in the 'OpenTelemetry Collector: Prometheus Scraping (Experimental)' form"
+        )
+        self.unique_id_textfield.fill(collector_id)
+        self.title_textfield.fill(collector_title)
+        self.site_restriction_checkbox(site_id).check()
+        self._fill_collector_scrape_properties(collector_properties)
+
+        logger.info("Save the OpenTelemetry Collector configuration")
+        self.save_configuration_button.click()

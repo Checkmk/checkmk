@@ -21,6 +21,12 @@ logger = logging.getLogger(__name__)
 class AddOpenTelemetryCollectorReceiver(CmkPage):
     """Represent the page `Add OpenTelemetry collector: Receiver (experimental)`"""
 
+    incorrect_form_error_message = "Cannot save the form because it contains errors."
+    one_collector_per_site_error_detail = (
+        "A site is allowed to be used in exactly one "
+        "OpenTelemetry collector configuration: <br>- '%s' is used in '%s'"
+    )
+
     def __init__(
         self,
         page: Page,
@@ -48,6 +54,10 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
+
+    @property
+    def error_detail(self) -> Locator:
+        return self.main_area.locator("div.cmk-inline-validation")
 
     @property
     def save_configuration_button(self) -> Locator:
@@ -120,14 +130,11 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         target_index = locator.count() - 1
         locator.nth(target_index).fill(value)
 
-    def fill_collector_receiver_properties(
+    def _fill_collector_receiver_properties(
         self,
         receiver_type: str,
         properties: dict[str, Any],
     ) -> None:
-        logger.info(
-            "Fill in the 'OpenTelemetry Collector: Receiver (Experimental) properties' form"
-        )
         self.receiver_protocol_endpoint_checkbox(receiver_type).check()
         if properties["endpoint"]["encryption"]:
             self.encrypt_communication_with_tls_checkbox(receiver_type).check()
@@ -150,3 +157,29 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
             self.resource_attribute_for_hostname_computation_textfield(receiver_type).fill(
                 properties["endpoint"]["event_console"]["host_name_resource_attribute_key"]
             )
+
+    def fill_collector_configuration_form_and_save(
+        self,
+        collector_id: str,
+        collector_title: str,
+        site_id: str,
+        http_receiver_properties: dict[str, Any] | None = None,
+        grpc_receiver_properties: dict[str, Any] | None = None,
+    ) -> None:
+        logger.info("Fill in the 'OpenTelemetry Collector: Receiver (Experimental)' form")
+        self.unique_id_textfield.fill(collector_id)
+        self.title_textfield.fill(collector_title)
+        self.site_restriction_checkbox(site_id).check()
+        if http_receiver_properties:
+            self._fill_collector_receiver_properties(
+                "Receiver protocol HTTP",
+                http_receiver_properties,
+            )
+        if grpc_receiver_properties:
+            self._fill_collector_receiver_properties(
+                "Receiver protocol GRPC",
+                grpc_receiver_properties,
+            )
+
+        logger.info("Save the OpenTelemetry Collector configuration")
+        self.save_configuration_button.click()

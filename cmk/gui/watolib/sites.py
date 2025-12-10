@@ -32,6 +32,7 @@ import cmk.gui.watolib.sidebar_reload
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.store import load_from_mk_file
 from cmk.gui import hooks, log
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -707,15 +708,25 @@ def _encode_socket_for_nagvis(site_id: SiteId, site: SiteConfiguration) -> str:
 
 
 def _update_distributed_wato_file(sites: SiteConfigurations) -> None:
-    """Update the the distributed_wato.mk in the site where the site configuration is saved
-
+    """Update the distributed_wato.mk files in the central site
     Makes sure, that in distributed mode we monitor only the hosts that are directly assigned
     to our (the local) site.
+
+    This function should only be called on the central site, since remote sites
+    always get their distributed_wato.mk file pushed from the central site.
     """
-    distributed = False
+
+    distributed_file = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
+    if distributed_file.exists() and load_from_mk_file(
+        distributed_file, key="is_distributed_setup_remote_site", default=False, lock=False
+    ):
+        # This is a remote site, do not create/clear distributed_wato.mk files here
+        return
+
+    sites_with_replication = False
     for siteid, site in sites.items():
         if is_replication_enabled(site):
-            distributed = True
+            sites_with_replication = True
         if site_is_local(site):
             create_distributed_wato_files(
                 base_dir=cmk.utils.paths.omd_root,
@@ -723,8 +734,8 @@ def _update_distributed_wato_file(sites: SiteConfigurations) -> None:
                 is_remote=False,
             )
 
-    if not distributed:
-        _delete_distributed_wato_file()
+    if not sites_with_replication:
+        _clear_distributed_wato_file()
 
 
 def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
@@ -750,7 +761,7 @@ def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration
     return is_replication_enabled(site) or site_is_local(site)
 
 
-def _delete_distributed_wato_file() -> None:
+def _clear_distributed_wato_file() -> None:
     p = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
     # We do not delete the file but empty it. That way
     # we do not need write permissions to the conf.d

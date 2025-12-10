@@ -15,7 +15,7 @@ import pprint
 from collections.abc import Callable, Generator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, TypedDict
+from typing import Any, Final, Literal, TypedDict
 
 from livestatus import SiteConfigurations
 
@@ -51,9 +51,15 @@ def wato_fileheader() -> str:
     return "# Created by WATO\n\n"
 
 
+class PasswordChange(TypedDict, total=True):
+    change_type: Literal["ADD", "EDIT", "DELETE"]
+    password_id: str
+
+
 class SerializedSettings(TypedDict, total=False):
     hosts_to_update: Sequence[HostName]
     need_apache_reload: bool
+    changed_passwords: Sequence[PasswordChange]
 
 
 DomainSettings = Mapping[ConfigDomainName, SerializedSettings]

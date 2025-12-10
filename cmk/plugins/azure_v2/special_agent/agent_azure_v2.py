@@ -51,6 +51,7 @@ from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     NoConsumptionAPIError,
     RateLimitException,
     SharedSessionApiClient,
+    to_requests_proxies,
 )
 from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Aggregations,
@@ -62,7 +63,6 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     OPTIONAL_METRICS,
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 from ._data_cache import DataCache
 
@@ -2026,7 +2026,7 @@ async def main_graph_client(args: argparse.Namespace, monitored_services: set[st
     try:
         async with BaseAsyncApiClient(
             get_graph_authority_urls(args.authority),
-            deserialize_http_proxy_config(args.proxy),
+            to_requests_proxies(args.proxy),
             tenant=args.tenant,
             client=args.client,
             # revealing later would be better, but I'm keeping this simple for now
@@ -2342,7 +2342,7 @@ async def _test_connection(args: argparse.Namespace) -> int:
     try:
         async with BaseAsyncApiClient(
             get_mgmt_authority_urls(args.authority, ""),
-            deserialize_http_proxy_config(args.proxy),
+            to_requests_proxies(args.proxy),
             tenant=args.tenant,
             client=args.client,
             # revealing later would be better, but I'm keeping this simple for now
@@ -2560,7 +2560,7 @@ async def main_subscription(
     try:
         async with SharedSessionApiClient(
             get_mgmt_authority_urls(args.authority, subscription.id),
-            deserialize_http_proxy_config(args.proxy),
+            to_requests_proxies(args.proxy),
             tenant=args.tenant,
             client=args.client,
             # revealing later would be better, but I'm keeping this simple for now
@@ -2614,7 +2614,7 @@ async def _get_subscriptions(args: argparse.Namespace) -> set[AzureSubscription]
     try:
         async with BaseAsyncApiClient(
             get_mgmt_authority_urls(args.authority, ""),
-            deserialize_http_proxy_config(args.proxy),
+            to_requests_proxies(args.proxy),
             args.tenant,
             args.client,
             # revealing later would be better, but I'm keeping this simple for now

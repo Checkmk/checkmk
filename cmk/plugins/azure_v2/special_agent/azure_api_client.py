@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import asyncio
 import logging
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, MutableMapping
 from typing import Literal, NamedTuple
 
 # mypy: disable-error-code="no-untyped-call"
@@ -14,7 +14,18 @@ from typing import Literal, NamedTuple
 import aiohttp
 import msal
 
-from cmk.utils.http_proxy_config import HTTPProxyConfig
+type HTTPProxyConfig = MutableMapping[str, str]
+
+
+def to_requests_proxies(raw: str) -> HTTPProxyConfig:
+    match raw:
+        case "NO_PROXY":
+            return {"http": "", "https": ""}
+        case "FROM_ENVIRONMENT":
+            return {}
+        case url:
+            return {"http": url, "https": url}
+
 
 LOGGER = logging.getLogger("azure_v2_api_client")
 
@@ -158,13 +169,12 @@ class BaseAsyncApiClient:
     async def _login_and_create_session(self) -> aiohttp.ClientSession:
         await self.login_async(tenant=self._tenant, client=self._client, secret=self._secret)
         if self._session is None or self._session.closed:
-            proxy_mapping = self._http_proxy_config.to_requests_proxies()
             session = aiohttp.ClientSession(
                 # aiohttp session and aiohttp request only accept a string as proxy
                 # (not the mapping with multiple schemes of the classical requests library)
                 # I assume it will always be https since all the url (for management and graph) are https
                 headers=self._headers,
-                proxy=proxy_mapping["https"] if proxy_mapping else None,
+                proxy=self._http_proxy_config.get("https") if self._http_proxy_config else None,
                 timeout=aiohttp.ClientTimeout(total=30),
             )
 
@@ -185,7 +195,7 @@ class BaseAsyncApiClient:
             client,
             secret,
             f"{self._login_url}/{tenant}",
-            proxies=self._http_proxy_config.to_requests_proxies(),
+            proxies=self._http_proxy_config,
         )
         # this should be safe,
         # the default thread pool in asyncio typically has a maximum number of worker threads

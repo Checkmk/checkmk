@@ -37,6 +37,7 @@ def parameter_form() -> Dictionary:
                         "host name here, e.g. my_graylog.com."
                     ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
+                    macro_support=True,
                 ),
             ),
             "user": DictElement(

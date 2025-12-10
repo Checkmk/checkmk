@@ -178,7 +178,8 @@ def test_man_page_consistency(
         | {f"check_{plugin.name}" for plugin in load_active_checks(raise_errors=False).values()}
         | {"check-mk", "check-mk-inventory"}
     )
-    assert set(all_pages) == expected_man_pages
+    assert not set(all_pages).difference(expected_man_pages)
+    assert not expected_man_pages.difference(all_pages)
 
 
 def test_cluster_check_functions_match_manpages_cluster_sections(

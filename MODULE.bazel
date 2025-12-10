@@ -357,11 +357,11 @@ http_archive(
 http_archive(
     name = "redis",
     build_file = "//omd/packages/redis:BUILD.redis.bazel",
-    sha256 = "5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
-    strip_prefix = "redis-6.2.6",
+    sha256 = "ca909aa15252f2ecb3a048cd086469827d636bf8334f50bb94d03fba4bfc56e8",
+    strip_prefix = "redis-8.4.0",
     urls = [
-        "https://download.redis.io/releases/redis-6.2.6.tar.gz",
-        UPSTREAM_MIRROR_URL + "redis-6.2.6.tar.gz",
+        "https://download.redis.io/releases/redis-8.4.0.tar.gz",
+        UPSTREAM_MIRROR_URL + "redis-8.4.0.tar.gz",
     ],
 )
 

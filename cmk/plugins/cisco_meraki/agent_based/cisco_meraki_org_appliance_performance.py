@@ -58,7 +58,7 @@ def check_appliance_performance(params: CheckParams, section: float | None) -> C
     )
 
 
-check_plugin_meraki_org_appliance_performance = CheckPlugin(
+check_plugin_cisco_meraki_org_appliance_performance = CheckPlugin(
     name="cisco_meraki_org_appliance_performance",
     service_name="Utilization",
     check_function=check_appliance_performance,

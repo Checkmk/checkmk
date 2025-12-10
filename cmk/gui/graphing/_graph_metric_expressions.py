@@ -205,7 +205,7 @@ def time_series_operators() -> dict[
     }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TimeSeriesMetaData:
     title: str
     line_type: LineType | Literal["ref"]

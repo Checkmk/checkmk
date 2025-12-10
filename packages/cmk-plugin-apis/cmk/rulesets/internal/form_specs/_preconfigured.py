@@ -44,3 +44,16 @@ class InternalProxy(
     """
 
     allowed_schemas: frozenset[InternalProxySchema] = frozenset(InternalProxySchema)
+
+
+@dataclass(frozen=True, kw_only=True)
+class OAuth2Connection(
+    FormSpec[
+        tuple[
+            Literal["cmk_postprocessed"],
+            Literal["oauth2_connection"],
+            str,
+        ]
+    ]
+):
+    """Specifies a form for configuring an OAuth2 connection"""

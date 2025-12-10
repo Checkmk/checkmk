@@ -20,3 +20,13 @@ class URLProxy:
     proxy_server_name: str
     port: int
     auth: URLProxyAuth | None = None
+
+
+@dataclass(frozen=False)
+class OAuth2Connection:
+    client_secret: Secret
+    access_token: Secret
+    refresh_token: Secret
+    client_id: str
+    tenant_id: str
+    authority: str

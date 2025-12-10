@@ -22,7 +22,7 @@ from cmk.server_side_calls.v1 import (
 
 from ._active_checks import ActiveCheckConfig
 from ._special_agents import SpecialAgentConfig
-from ._utils import URLProxy, URLProxyAuth
+from ._utils import OAuth2Connection, URLProxy, URLProxyAuth
 
 
 def entry_point_prefixes() -> Mapping[
@@ -65,4 +65,5 @@ __all__ = [
     "SpecialAgentConfig",
     "URLProxy",
     "URLProxyAuth",
+    "OAuth2Connection",
 ]

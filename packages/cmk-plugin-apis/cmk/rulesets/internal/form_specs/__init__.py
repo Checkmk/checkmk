@@ -6,11 +6,12 @@
 
 from ._extended import ListExtended
 from ._migrations import migrate_to_internal_proxy
-from ._preconfigured import InternalProxy, InternalProxySchema
+from ._preconfigured import InternalProxy, InternalProxySchema, OAuth2Connection
 
 __all__ = [
     "InternalProxy",
     "InternalProxySchema",
+    "OAuth2Connection",
     "ListExtended",
     "migrate_to_internal_proxy",
 ]

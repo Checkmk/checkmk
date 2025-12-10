@@ -92,6 +92,7 @@ watch(
         v-model:context-infos="contextInfos"
         v-model:restricted-ids="restrictedToSingleInfos"
         v-model:mode="singleInfosMode"
+        :read-only="true"
       />
     </div>
   </CmkIndent>

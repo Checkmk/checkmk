@@ -72,6 +72,7 @@ mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home_cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home_cache/bazel"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/omd_build"
 mkdir -p "${CHECKOUT_ROOT}/shared_cargo_folder"
+mkdir -p "${CHECKOUT_ROOT}/tmp/shared_repository_cache"
 mkdir -p "${CHECKOUT_ROOT}/omd/build"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${CHECKOUT_ROOT}")"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${CHECKOUT_ROOT}/omd/build")"
@@ -80,6 +81,7 @@ mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME
 
 # Needed for .cargo which is shared between workspaces
 mkdir -p "${HOME}/shared_cargo_folder"
+mkdir -p "/tmp/shared_repository_cache"
 
 # UNCONDITIONAL MOUNTS
 DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"
@@ -93,6 +95,7 @@ DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} --tmpfs ${HOME}/.cache:exec,size=10g,mod
 # other folders in HOME/.cache are not touched to ensure a fast venv creation
 
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${HOME}/shared_cargo_folder:${CHECKOUT_ROOT}/shared_cargo_folder"
+DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v /tmp/shared_repository_cache:/tmp/shared_repository_cache"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CHECKOUT_ROOT}:${CHECKOUT_ROOT}"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/omd_build:${CHECKOUT_ROOT}/omd/build"

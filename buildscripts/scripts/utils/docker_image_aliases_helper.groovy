@@ -70,6 +70,7 @@ inside_container = { Map arg1=[:], Closure arg2 ->
         def set_docker_group_id = args.get("set_docker_group_id", false).asBoolean();
         def mount_host_user_files = args.get("mount_host_user_files", true).asBoolean();
         def run_args = args.args == null ? [] : args.args;
+        def mount_shared_repository_cache = env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ?: false;
 
         // calling `image_distro()` has to be done inside `withRegistry` in order to
         // have `image.imageName()` contain the registry
@@ -90,6 +91,8 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 + (args.ulimit_nofile ? ["--ulimit nofile=${args.ulimit_nofile}:${args.ulimit_nofile}"] : [])
                 + (privileged ? ["-v /var/run/docker.sock:/var/run/docker.sock"] : [])
                 + ["-v \"${container_shadow_workspace}/home:${env.HOME}\""]
+                + (mount_shared_repository_cache
+                    ? ["-v /tmp/shared_repository_cache/:/tmp/shared_repository_cache/"] : [])
                 // use different size locally vs in CI, 16GB locally is to much.
                 // As CMK distro packages are built in k8s, no more than 24GB shall be required in CI
                 // 16GB is not enough to build "cmk-plugins" or "cmk-frontend-vue"
@@ -126,6 +129,7 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 mkdir -p "${container_shadow_workspace}/home_cache/bazel"
 
                 mkdir -p "${container_shadow_workspace}/home/.cache"
+                ${mount_shared_repository_cache} && mkdir -p "${container_shadow_workspace}/tmp/shared_repository_cache"
 
                 # create mount dirs for <checkout_dir>/.cache
                 mkdir -p "${checkout_dir}/.cache"
@@ -135,6 +139,7 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 # probably not needed, but kept here because things are somehow working..
                 mkdir -p "${checkout_dir}/shared_cargo_folder"
 
+                ${mount_shared_repository_cache} && mkdir -p "/tmp/shared_repository_cache"
                 # END COMMON CODE with run-in-docker.sh
             """);
             /* groovylint-enable LineLength */

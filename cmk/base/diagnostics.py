@@ -60,6 +60,7 @@ from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
     CheckmkFilesMap,
+    COMPONENT_DIRECTORIES,
     deserialize_cl_parameters,
     DiagnosticsCLParameters,
     DiagnosticsElementCSVResult,
@@ -405,6 +406,17 @@ class DiagnosticsDump:
         rel_checkmk_log_files = parameters.get(OPT_CHECKMK_LOG_FILES)
         if rel_checkmk_log_files:
             optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
+
+        for dir_comp in COMPONENT_DIRECTORIES:
+            if dir_comp in parameters:
+                for directory in COMPONENT_DIRECTORIES[dir_comp]["abs_dirs"]:
+                    optional_elements.append(
+                        CheckmkDirectoryDiagnosticsElement(directory, rel=False)
+                    )
+                for directory in COMPONENT_DIRECTORIES[dir_comp]["rel_dirs"]:
+                    optional_elements.append(
+                        CheckmkDirectoryDiagnosticsElement(directory, rel=True)
+                    )
 
         # CEE options
         if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
@@ -1343,6 +1355,62 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
         return _("Log files ('*.log' or '*.state') from var/log: %s") % ", ".join(
             self.rel_checkmk_files
         )
+
+
+#   ---directory dumps------------------------------------------------------------
+
+
+class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
+    def __init__(self, directory: str | Path, rel=False) -> None:
+        if isinstance(directory, str):
+            self.directory = Path(directory)
+        else:
+            self.directory = directory
+        self.rel = rel
+
+    @override
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the .mk or .conf file
+        return "checkmk_directory"
+
+    @override
+    @property
+    def title(self) -> str:
+        return _("Files in %s") % self.directory
+
+    @override
+    @property
+    def description(self) -> str:
+        return _("Configuration files from %s") % str(self.directory)
+
+    @override
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        abs_path = self.directory
+        if self.rel:
+            abs_path = cmk.utils.paths.omd_root / self.directory
+
+        if not abs_path.exists():
+            return
+
+        for path, dirs, files in os.walk(abs_path):
+            for file in files:
+                source_file = Path(path).joinpath(file)
+
+                if self.rel:
+                    tmp_target_folder = tmp_dump_folder / Path(path).relative_to(
+                        cmk.utils.paths.omd_root
+                    )
+                else:
+                    tmp_target_folder = tmp_dump_folder / "os_root" / Path(path).relative_to("/")
+
+                tmp_file = tmp_target_folder.joinpath(file)
+                tmp_target_folder.mkdir(parents=True, exist_ok=True)
+
+                if not tmp_file.exists():
+                    shutil.copy(str(source_file), str(tmp_file))
+
+                yield tmp_file
 
 
 #   ---cee dumps------------------------------------------------------------

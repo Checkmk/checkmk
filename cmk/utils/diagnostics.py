@@ -51,27 +51,28 @@ class FileMapConfig(TypedDict):
     ]
 
 
+OPT_APACHE_CONFIG = "apache-config"
 OPT_BI_RUNTIME_DATA = "bi-runtime-data"
-OPT_LOCAL_FILES = "local-files"
-OPT_OMD_CONFIG = "omd-config"
-OPT_CHECKMK_OVERVIEW = "checkmk-overview"
-OPT_CHECKMK_CRASH_REPORTS = "checkmk-crashes"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
 OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
+OPT_CHECKMK_CRASH_REPORTS = "checkmk-crashes"
 OPT_CHECKMK_LICENSING_FILES = "checkmk-licensing-files"
 OPT_CHECKMK_LOG_FILES = "checkmk-log-files"
+OPT_CHECKMK_OVERVIEW = "checkmk-overview"
+OPT_LOCAL_FILES = "local-files"
+OPT_OMD_CONFIG = "omd-config"
 
 
 # CEE specific options
 OPT_PERFORMANCE_GRAPHS = "performance-graphs"
 
 # GUI, component specific options
-OPT_COMP_GLOBAL_SETTINGS = "global-settings"
-OPT_COMP_HOSTS_AND_FOLDERS = "hosts-and-folders"
-OPT_COMP_NOTIFICATIONS = "notifications"
 OPT_COMP_BUSINESS_INTELLIGENCE = "business-intelligence"
 OPT_COMP_CMC = "cmc"
+OPT_COMP_GLOBAL_SETTINGS = "global-settings"
+OPT_COMP_HOSTS_AND_FOLDERS = "hosts-and-folders"
 OPT_COMP_LICENSING = "licensing"
+OPT_COMP_NOTIFICATIONS = "notifications"
 
 _OPTS_WITH_HOST = [
     OPT_PERFORMANCE_GRAPHS,
@@ -79,10 +80,11 @@ _OPTS_WITH_HOST = [
 ]
 
 _BOOLEAN_CONFIG_OPTS = [
+    OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
+    OPT_CHECKMK_CRASH_REPORTS,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
-    OPT_CHECKMK_CRASH_REPORTS,
 ]
 
 _FILES_OPTS = [
@@ -91,6 +93,25 @@ _FILES_OPTS = [
     OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
 ]
+
+COMPONENT_DIRECTORIES = {
+    OPT_APACHE_CONFIG: {
+        "abs_dirs": [
+            "/etc/apache2",
+            "/etc/httpd",
+            "/opt/omd/apache",
+        ],
+        "rel_dirs": [
+            "etc/apache",
+        ],
+    },
+    OPT_OMD_CONFIG: {
+        "abs_dirs": [],
+        "rel_dirs": [
+            "etc/omd",
+        ],
+    },
+}
 
 
 def serialize_wato_parameters(

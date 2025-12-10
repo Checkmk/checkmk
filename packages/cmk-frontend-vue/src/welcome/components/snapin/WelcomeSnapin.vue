@@ -34,6 +34,10 @@ const slideoutOpen = ref<boolean>(false)
 async function openSlideIn() {
   slideoutOpen.value = true
 }
+
+async function closeSlideIn() {
+  slideoutOpen.value = false
+}
 </script>
 
 <template>
@@ -53,16 +57,17 @@ async function openSlideIn() {
     size="small"
     class="welcome-snapin__progress-wrapper"
   />
+
   <CmkButton
-    v-if="!completed"
+    v-if="!slideoutOpen"
     variant="secondary"
     class="welcome-snapin__continue"
     @click="openSlideIn"
   >
-    {{ _t('Continue setup') }}
+    {{ completed ? _t("What's next") : _t('Continue setup') }}
   </CmkButton>
-  <CmkButton v-else variant="secondary" class="welcome-snapin__continue" @click="openSlideIn">
-    {{ _t("What's next") }}
+  <CmkButton v-else variant="secondary" class="welcome-snapin__continue" @click="closeSlideIn">
+    {{ _t('Close') }}
   </CmkButton>
   <WelcomeSnapinSlideout
     v-model="slideoutOpen"

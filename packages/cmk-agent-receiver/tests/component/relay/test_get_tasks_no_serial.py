@@ -16,12 +16,11 @@ def test_get_tasks_works_if_no_serial_is_given(
     site_context: Config,
     agent_receiver: AgentReceiverClient,
 ) -> None:
-    # register two relays
     relay_id_1 = str(uuid.uuid4())
     site.set_scenario([relay_id_1])
     _ = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])
 
-    # asking with an incorrect serial
+    agent_receiver.set_serial(None)
     relay_1_tasks = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
 
     assert len(relay_1_tasks) == 0

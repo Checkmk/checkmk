@@ -2,8 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import dataclasses
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
@@ -17,12 +15,8 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
-    Serial,
     TaskID,
 )
-
-# TODO remove this flag once the relay engine sends the right values
-TEMP_RELAY_SERIAL_FLAG = "0"
 
 
 @dataclasses.dataclass
@@ -31,12 +25,11 @@ class GetRelayTasksHandler:
     config_task_factory: ConfigTaskFactory
 
     def process(
-        self, relay_id: RelayID, status: TaskStatus | None, relay_serial: Serial | None
+        self, relay_id: RelayID, status: TaskStatus | None, relay_serial: str | None
     ) -> list[RelayTask]:
         current_serial = retrieve_config_serial()
-        if relay_serial and relay_serial != TEMP_RELAY_SERIAL_FLAG:
-            if relay_serial != current_serial:
-                self.config_task_factory.create_for_relay(relay_id)
+        if relay_serial is not None and relay_serial != current_serial:
+            _ = self.config_task_factory.create_for_relay(relay_id)
 
         return self._get_tasks(relay_id, status)
 

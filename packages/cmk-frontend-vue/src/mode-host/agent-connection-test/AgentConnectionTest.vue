@@ -408,10 +408,12 @@ button {
 .success-container {
   display: inline-flex;
   color: var(--font-color);
-  margin: 0;
+  margin: 0 0 0 var(--dimension-4);
 }
 
 .warn-container {
+  padding: var(--dimension-4) var(--dimension-5);
+
   .warn-txt-container {
     display: inline-flex;
     flex-direction: column;

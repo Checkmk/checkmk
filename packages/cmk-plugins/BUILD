@@ -386,7 +386,7 @@ py_test(
 py_library(
     name = "ucs_bladecenter",
     srcs = glob(["cmk/plugins/ucs_bladecenter/**/*.py"]),
-    data = ["cmk/plugins/kube/py.typed"],
+    data = ["cmk/plugins/ucs_bladecenter/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [

@@ -3049,6 +3049,7 @@ requests==2.32.5 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-plugins/requirements.in
     #   azure-core

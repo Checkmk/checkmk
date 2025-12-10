@@ -4514,6 +4514,7 @@ requests==2.32.5 \
     --hash=sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-plugins/requirements.in
     #   azure-core

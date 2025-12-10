@@ -6,14 +6,21 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, InventoryPlugin, render
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    InventoryPlugin,
+    render,
+)
 from cmk.plugins.azure_v2.agent_based.lib import (
     check_connections,
     check_cpu,
     check_memory,
     check_network,
-    check_storage,
     create_check_metrics_function,
+    create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
     create_inventory_function,
@@ -136,6 +143,7 @@ check_plugin_azure_mysql_network = CheckPlugin(
     check_default_parameters={},
 )
 
+
 check_plugin_azure_mysql_storage = CheckPlugin(
     name="azure_v2_mysql_storage",
     sections=["azure_v2_servers"],
@@ -146,7 +154,32 @@ check_plugin_azure_mysql_storage = CheckPlugin(
         "average_storage_percent",
         resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
-    check_function=check_storage(),
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_io_consumption_percent",
+                "io_consumption_percent",
+                "IO",
+                render.percent,
+                upper_levels_param="io_consumption",
+            ),
+            MetricData(
+                "average_storage_percent",
+                "storage_percent",
+                "Storage",
+                render.percent,
+                upper_levels_param="storage",
+            ),
+            MetricData(
+                "average_serverlog_storage_percent",
+                "serverlog_storage_percent",
+                "Server log storage",
+                render.percent,
+                upper_levels_param="serverlog_storage",
+            ),
+        ],
+        check_levels=check_levels,
+    ),
     check_ruleset_name="azure_v2_db_storage",
     check_default_parameters={},
 )

@@ -711,16 +711,6 @@ rulespec_registry.register(
     )
 )
 
-# TODO: migrate and move to new folder structure
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="azure_v2_db_storage",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_storage,
-        title=lambda: _("Azure DB Storage"),
-    )
-)
-
 
 def _parameter_valuespec_qps():
     return Dictionary(

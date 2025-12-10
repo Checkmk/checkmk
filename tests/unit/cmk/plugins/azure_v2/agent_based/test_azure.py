@@ -42,7 +42,6 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     check_memory,
     check_network,
     check_resource_metrics,
-    check_storage,
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
@@ -1015,34 +1014,3 @@ def test_check_network(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_network()(params, section)) == expected_result
-
-
-@pytest.mark.parametrize(
-    "section, item, params, expected_result",
-    [
-        (
-            PARSED_RESOURCE,
-            "checkmk-mysql-server",
-            {
-                "io_consumption": (70.0, 90.0),
-                "storage": (70.0, 90.0),
-                "serverlog_storage": (70.0, 90.0),
-            },
-            [
-                Result(state=State.WARN, summary="IO: 88.50% (warn/crit at 70.00%/90.00%)"),
-                Metric("io_consumption_percent", 88.5, levels=(70.0, 90.0)),
-                Result(state=State.OK, summary="Storage: 2.95%"),
-                Metric("storage_percent", 2.95, levels=(70.0, 90.0)),
-                Result(state=State.OK, summary="Server log storage: 0%"),
-                Metric("serverlog_storage_percent", 0.0, levels=(70.0, 90.0)),
-            ],
-        ),
-    ],
-)
-def test_check_storage(
-    section: Resource,
-    item: str,
-    params: Mapping[str, Any],
-    expected_result: Sequence[Result | Metric],
-) -> None:
-    assert list(check_storage()(params, section)) == expected_result

@@ -517,34 +517,6 @@ def check_network() -> CheckFunctionWithoutItem:
     )
 
 
-def check_storage() -> CheckFunctionWithoutItem:
-    return create_check_metrics_function_single(
-        [
-            MetricData(
-                "average_io_consumption_percent",
-                "io_consumption_percent",
-                "IO",
-                render.percent,
-                upper_levels_param="io_consumption",
-            ),
-            MetricData(
-                "average_storage_percent",
-                "storage_percent",
-                "Storage",
-                render.percent,
-                upper_levels_param="storage",
-            ),
-            MetricData(
-                "average_serverlog_storage_percent",
-                "serverlog_storage_percent",
-                "Server log storage",
-                render.percent,
-                upper_levels_param="serverlog_storage",
-            ),
-        ]
-    )
-
-
 # We wrap this so that potentially we can pass in extra data in the future,
 # per resource type.
 def create_inventory_function() -> Callable[[Resource], InventoryResult]:

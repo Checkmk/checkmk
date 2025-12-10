@@ -6,13 +6,19 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, InventoryPlugin, render
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    InventoryPlugin,
+    render,
+)
 from cmk.plugins.azure_v2.agent_based.lib import (
     check_connections,
     check_cpu,
     check_memory,
     check_network,
-    CheckFunctionWithoutItem,
     create_check_metrics_function,
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
@@ -146,8 +152,18 @@ check_plugin_azure_postgresql_network = CheckPlugin(
 )
 
 
-def check_storage() -> CheckFunctionWithoutItem:
-    return create_check_metrics_function_single(
+check_plugin_azure_postgresql_storage = CheckPlugin(
+    name="azure_v2_postgresql_storage",
+    sections=["azure_v2_servers"],
+    service_name="Azure/DB for PostgreSQL Storage",
+    discovery_function=create_discover_by_metrics_function_single(
+        "average_io_consumption_percent",  # single server metric name
+        "average_disk_iops_consumed_percentage",  # flexible server metric name
+        "average_serverlog_storage_percent",  # single server metric name
+        "average_storage_percent",
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
+    ),
+    check_function=create_check_metrics_function_single(
         [
             MetricData(
                 "average_io_consumption_percent",  # single server metric name
@@ -177,22 +193,9 @@ def check_storage() -> CheckFunctionWithoutItem:
                 render.percent,
                 upper_levels_param="serverlog_storage",
             ),
-        ]
-    )
-
-
-check_plugin_azure_postgresql_storage = CheckPlugin(
-    name="azure_v2_postgresql_storage",
-    sections=["azure_v2_servers"],
-    service_name="Azure/DB for PostgreSQL Storage",
-    discovery_function=create_discover_by_metrics_function_single(
-        "average_io_consumption_percent",  # single server metric name
-        "average_disk_iops_consumed_percentage",  # flexible server metric name
-        "average_serverlog_storage_percent",  # single server metric name
-        "average_storage_percent",
-        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
+        ],
+        check_levels=check_levels,
     ),
-    check_function=check_storage(),
     check_ruleset_name="azure_v2_db_storage",
     check_default_parameters={},
 )

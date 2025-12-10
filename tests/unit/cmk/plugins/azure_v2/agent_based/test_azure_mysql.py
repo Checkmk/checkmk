@@ -305,9 +305,9 @@ def test_azure_mysql_inventory() -> None:
                 },
             ),
             {
-                "io_consumption": (80.0, 90.0),
-                "storage": (80.0, 90.0),
-                "serverlog_storage": (80.0, 90.0),
+                "io_consumption": ("fixed", (80.0, 90.0)),
+                "storage": ("fixed", (80.0, 90.0)),
+                "serverlog_storage": ("fixed", (80.0, 90.0)),
             },
             [
                 Result(state=State.OK, summary="IO: 50.00%"),
@@ -336,7 +336,7 @@ def test_azure_mysql_inventory() -> None:
                 },
             ),
             {
-                "storage": (80.0, 90.0),
+                "storage": ("fixed", (80.0, 90.0)),
             },
             [
                 Result(state=State.WARN, summary="Storage: 85.00% (warn/crit at 80.00%/90.00%)"),

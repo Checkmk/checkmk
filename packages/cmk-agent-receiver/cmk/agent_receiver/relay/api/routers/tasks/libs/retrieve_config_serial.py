@@ -6,13 +6,14 @@
 
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 
 
 class GetConfigSerialError(Exception):
     pass
 
 
-def retrieve_config_serial() -> str:
+def retrieve_config_serial() -> Serial:
     """
     Determine the current config serial by following the helper_config/latest symlink.
 
@@ -45,4 +46,4 @@ def retrieve_config_serial() -> str:
         raise GetConfigSerialError("could not resolve latest symlink")
 
     serial = target_path.name
-    return serial
+    return Serial(serial)

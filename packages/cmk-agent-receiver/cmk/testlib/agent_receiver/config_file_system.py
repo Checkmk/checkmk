@@ -9,6 +9,7 @@ import secrets
 import tarfile
 from pathlib import Path
 
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME
 
 RelayId = str
@@ -32,7 +33,7 @@ _NUMBER_OF_FOLDERS_IN_STRUCTURE = 2  # config and config/workers
 
 @dataclasses.dataclass(frozen=True)
 class ConfigFolder:
-    serial: str
+    serial: Serial
     files: ConfigFiles
 
     def assert_tar_content(self, relay_id: RelayId, tar_data: bytes) -> None:
@@ -50,10 +51,10 @@ class ConfigFolder:
 
 
 def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
-    serial = secrets.token_urlsafe(8)
+    serial = Serial(str(secrets.randbelow(10000)))
 
     # the serial folder exists even if no relay configured
-    path_to_serial = root / _SUBPATH / serial
+    path_to_serial = root / _SUBPATH / str(serial)
     path_to_serial.mkdir(parents=True, exist_ok=True)
 
     config_files: ConfigFiles = {}

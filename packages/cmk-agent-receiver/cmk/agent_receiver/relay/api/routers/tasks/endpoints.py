@@ -152,7 +152,9 @@ async def update_task(
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
-    relay_serial: Annotated[str | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)] = None,
+    relay_serial: Annotated[
+        Serial | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)
+    ] = None,
     status: Annotated[
         tasks_protocol.TaskStatus | None, fastapi.Query(description="Filter tasks by status")
     ] = None,

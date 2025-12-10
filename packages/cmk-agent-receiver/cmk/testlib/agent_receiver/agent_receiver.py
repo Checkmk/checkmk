@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
@@ -29,17 +29,16 @@ class AgentReceiverClient:
     """
 
     def __init__(
-        self, client: TestClient, site_name: str, user: User, serial: str | None = None
+        self, client: TestClient, site_name: str, user: User, serial: Serial | None = None
     ) -> None:
         self.client = client
         self.site_name = site_name
         self.client.headers["Authorization"] = user.bearer
-        if serial:
-            self.client.headers[HEADERS.SERIAL] = serial
+        self.set_serial(serial)
 
-    def set_serial(self, serial: str | None) -> None:
+    def set_serial(self, serial: Serial | None) -> None:
         if serial:
-            self.client.headers[HEADERS.SERIAL] = serial
+            self.client.headers[HEADERS.SERIAL] = str(serial)
         else:
             try:
                 del self.client.headers[HEADERS.SERIAL]

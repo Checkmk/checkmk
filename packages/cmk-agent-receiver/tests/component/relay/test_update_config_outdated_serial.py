@@ -5,11 +5,14 @@
 import uuid
 
 from cmk.agent_receiver.lib.config import Config
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
+
+OLD_SERIAL = Serial("1")
 
 
 def test_config_update_triggered_by_outdated_serial(
@@ -24,8 +27,7 @@ def test_config_update_triggered_by_outdated_serial(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_1, relay_id_2])
 
     # asking with an incorrect serial
-    old_serial = "some-old-serial"
-    agent_receiver.set_serial(old_serial)
+    agent_receiver.set_serial(OLD_SERIAL)
     relay_1_tasks = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
 
     assert len(relay_1_tasks) == 1
@@ -51,8 +53,7 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])
 
     # asking with an incorrect serial
-    old_serial = "some-old-serial"
-    agent_receiver.set_serial(old_serial)
+    agent_receiver.set_serial(OLD_SERIAL)
     relay_1_tasks = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
 
     assert len(relay_1_tasks) == 1
@@ -77,8 +78,7 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     initial_config = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])
 
     # relays ask with an outdated serial
-    outdated_serial = "some-old-serial"
-    agent_receiver.set_serial(outdated_serial)
+    agent_receiver.set_serial(OLD_SERIAL)
 
     tasks_a_first = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
 
@@ -96,7 +96,7 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     new_config = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])
 
     # relay sends again an outdated serial
-    agent_receiver.set_serial(outdated_serial)
+    agent_receiver.set_serial(OLD_SERIAL)
 
     tasks_a_after = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
 

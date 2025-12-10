@@ -12,6 +12,7 @@ import httpx
 import pytest
 
 from cmk.agent_receiver.lib.config import Config
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import ConfigFolder, create_config_folder
@@ -316,7 +317,7 @@ def _assert_pending_config_task_is_present(
 def _assert_config_task_exists(
     tasks: list[TaskResponse],
     expected_status: TaskStatus,
-    expected_serial: str,
+    expected_serial: Serial,
 ) -> RelayConfigTask:
     for task in tasks:
         if (

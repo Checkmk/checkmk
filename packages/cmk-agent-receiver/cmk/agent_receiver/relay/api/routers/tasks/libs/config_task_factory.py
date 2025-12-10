@@ -20,7 +20,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TaskStatus,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME
 
 
@@ -66,7 +66,7 @@ class ConfigTaskFactory:
         return [t for t in tasks if t is not None]
 
     def _safe_single_task(
-        self, relay_id: RelayID, serial: str, helper_config_dir: Path, timestamp: datetime
+        self, relay_id: RelayID, serial: Serial, helper_config_dir: Path, timestamp: datetime
     ) -> RelayTask | None:
         with bound_contextvars(relay_id=relay_id, serial=serial):
             try:
@@ -89,7 +89,7 @@ class ConfigTaskFactory:
     def _pending_configuration_task_exists(
         self,
         relay_id: RelayID,
-        serial: str,
+        serial: Serial,
     ) -> bool:
         tasks = self.tasks_repository.get_tasks(relay_id)
         return any(

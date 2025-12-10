@@ -14,6 +14,7 @@ from typing import final
 from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
+    Serial,
     TaskID,
     TaskNotFoundError,
     TooManyTasksError,
@@ -44,7 +45,7 @@ class FetchSpec:
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class RelayConfigSpec:
-    serial: str
+    serial: Serial
     tar_data: bytes
 
 

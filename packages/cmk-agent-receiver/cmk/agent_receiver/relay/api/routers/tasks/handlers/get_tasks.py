@@ -15,6 +15,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
+    Serial,
     TaskID,
 )
 
@@ -25,7 +26,7 @@ class GetRelayTasksHandler:
     config_task_factory: ConfigTaskFactory
 
     def process(
-        self, relay_id: RelayID, status: TaskStatus | None, relay_serial: str | None
+        self, relay_id: RelayID, status: TaskStatus | None, relay_serial: Serial | None
     ) -> list[RelayTask]:
         current_serial = retrieve_config_serial()
         if relay_serial is not None and relay_serial != current_serial:

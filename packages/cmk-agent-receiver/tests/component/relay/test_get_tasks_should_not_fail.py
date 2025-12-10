@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_receiver.lib.config import Config
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
@@ -24,7 +25,7 @@ def test_relay_without_folder(
     - No config tasks are created.
     """
 
-    stale_serial = "stale-serial"
+    stale_serial = Serial("0")
     cf = create_config_folder(root=site_context.omd_root, relays=["relay_id_1", "relay_id_3"])
     assert cf.serial != stale_serial
     agent_receiver.set_serial(stale_serial)

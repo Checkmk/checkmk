@@ -21,6 +21,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_dat
     FailedToSendMonitoringDataError,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 
@@ -75,7 +76,7 @@ async def forward_monitoring_data(
         handler.process(
             payload=monitoring_data.payload,
             host=monitoring_data.host,
-            config_serial=monitoring_data.serial,
+            config_serial=Serial(monitoring_data.serial),
             timestamp=monitoring_data.timestamp,
             service=monitoring_data.service,
         )

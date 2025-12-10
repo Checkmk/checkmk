@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.main import main_app
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
@@ -115,7 +116,7 @@ def test_unsupported_editions(
 
 
 def _do_test_and_get_tasks(
-    relay_id: str, serial: str, site_context: Config, user: User
+    relay_id: str, serial: Serial, site_context: Config, user: User
 ) -> list[TaskResponse]:
     app = main_app()
     with TestClient(app) as client:

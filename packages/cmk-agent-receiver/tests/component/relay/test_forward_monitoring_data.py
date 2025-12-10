@@ -17,7 +17,7 @@ from unittest.mock import patch
 import pytest
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
@@ -37,7 +37,7 @@ TEST_SOCKET_TIMEOUT = 2.0
 def test_forward_monitoring_data(
     socket_path: str,
     relay_id: str,
-    serial: str,
+    serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
     payload = b"monitoring payload"
@@ -77,7 +77,7 @@ def test_forward_monitoring_data(
 def test_forward_monitoring_data_with_delay(
     socket_path: str,
     relay_id: str,
-    serial: str,
+    serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
     """
@@ -112,7 +112,7 @@ def assert_monitoring_data_payload(received_data: bytes, expected_payload: bytes
 
 
 def test_socket_busy_but_not_timeout(
-    socket_path: str, relay_id: str, serial: str, agent_receiver: AgentReceiverClient
+    socket_path: str, relay_id: str, serial: Serial, agent_receiver: AgentReceiverClient
 ) -> None:
     """
     If a previous client keeps the socket busy, but not long enough to cause a timeout,
@@ -204,7 +204,7 @@ def slow_client_thread_func(
 
 
 def test_socket_busy_slow_send(
-    socket_path: str, relay_id: str, serial: str, agent_receiver: AgentReceiverClient
+    socket_path: str, relay_id: str, serial: Serial, agent_receiver: AgentReceiverClient
 ) -> None:
     """
     If a previous client keeps the socket busy, long enough to cause a timeout,
@@ -277,7 +277,7 @@ def test_socket_busy_slow_send(
 
 
 def test_socket_busy_slow_close(
-    socket_path: str, relay_id: str, serial: str, agent_receiver: AgentReceiverClient
+    socket_path: str, relay_id: str, serial: Serial, agent_receiver: AgentReceiverClient
 ) -> None:
     """
     If a previous client keeps the socket busy, long enough to cause a timeout,
@@ -351,7 +351,7 @@ def test_socket_busy_slow_close(
 
 
 def test_socket_busy_interlaced_send(
-    socket_path: str, relay_id: str, serial: str, agent_receiver: AgentReceiverClient
+    socket_path: str, relay_id: str, serial: Serial, agent_receiver: AgentReceiverClient
 ) -> None:
     """
     If a previous client keeps the socket busy, sending data with multiple calls,
@@ -415,7 +415,7 @@ def test_socket_busy_interlaced_send(
 
 
 def test_socket_busy_interlaced_send_with_timeout(
-    socket_path: str, relay_id: str, serial: str, agent_receiver: AgentReceiverClient
+    socket_path: str, relay_id: str, serial: Serial, agent_receiver: AgentReceiverClient
 ) -> None:
     """
     If a previous client keeps the socket busy, sending data with multiple calls,
@@ -489,7 +489,7 @@ def test_socket_busy_interlaced_send_with_timeout(
 def test_connection_refused(
     socket_path: str,
     relay_id: str,
-    serial: str,
+    serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
     """
@@ -529,7 +529,7 @@ def socket_path(tmpdir: Path) -> Iterator[str]:
 @pytest.fixture
 def serial(
     site_context: Config, relay_id: str, agent_receiver: AgentReceiverClient, socket_path: str
-) -> str:
+) -> Serial:
     # We use socket_path indirectly; we want to make sure we use the patched the Config class.
     _ = socket_path
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])

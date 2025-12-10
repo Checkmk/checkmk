@@ -7,6 +7,8 @@ import socket
 from pathlib import Path
 from typing import Final
 
+from cmk.agent_receiver.relay.lib.shared_types import Serial
+
 
 class FailedToSendMonitoringDataError(Exception):
     pass
@@ -19,7 +21,7 @@ class ForwardMonitoringDataHandler:
         self._socket_timeout: Final = socket_timeout
 
     def process(
-        self, *, payload: bytes, host: str, config_serial: str, timestamp: int, service: str
+        self, *, payload: bytes, host: str, config_serial: Serial, timestamp: int, service: str
     ) -> None:
         header = (
             "payload_type:fetcher;"

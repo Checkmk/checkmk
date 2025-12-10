@@ -35,7 +35,7 @@ export const getIfid = async (cmkToken: string | undefined): Promise<string> => 
       const response = await axios.get(ifidEndpointUrl)
 
       if (response.data.result_code !== 0) {
-        throw new Error(`DashboardContentNtop: Error fetching ifid: ${response.data.result}`)
+        throw new Error(`Error fetching ifid: ${response.data.result}`)
       } else {
         return response.data.result as string
       }

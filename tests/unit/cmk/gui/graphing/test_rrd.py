@@ -122,6 +122,7 @@ def test_fetch_augmented_time_series(
                     title="Temperature",
                     line_type="area",
                     color="#ffa000",
+                    attributes={},
                 ),
             ),
         ]
@@ -146,6 +147,7 @@ def test_fetch_augmented_time_series_with_conversion(
                     title="Temperature",
                     line_type="area",
                     color="#ffa000",
+                    attributes={},
                 ),
             ),
         ]

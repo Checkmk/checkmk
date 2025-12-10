@@ -9,7 +9,8 @@ import time
 import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, assert_never, Literal, override
+from uuid import uuid4
 
 from livestatus import MKLivestatusNotFoundError
 
@@ -451,11 +452,36 @@ def _compute_graph_legend_styles(graph_render_config: GraphRenderConfig) -> Iter
         yield "margin-left:%dpx" % legend_margin_left
 
 
+def _sort_attributes_by_type(attribute_type: Literal["resource", "scope", "data_point"]) -> int:
+    match attribute_type:
+        case "resource":
+            return 0
+        case "scope":
+            return 1
+        case "data_point":
+            return 2
+        case other:
+            assert_never(other)
+
+
+def _readable_attribute_type(attribute_type: Literal["resource", "scope", "data_point"]) -> str:
+    match attribute_type:
+        case "resource":
+            return _("Resource")
+        case "scope":
+            return _("Scope")
+        case "data_point":
+            return _("Data point")
+        case other:
+            assert_never(other)
+
+
 def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig) -> None:
     font_size_style = "font-size: %dpt;" % graph_render_config.font_size
     scalars = _get_scalars(graph_artwork, graph_render_config)
 
-    html.open_table(class_="legend", style=list(_compute_graph_legend_styles(graph_render_config)))
+    graph_legend_styles = list(_compute_graph_legend_styles(graph_render_config))
+    html.open_table(class_="legend", style=graph_legend_styles)
 
     # Render the title row
     html.open_tr()
@@ -492,7 +518,14 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
 
     # Render the curve related rows
     for curve in order_graph_curves_for_legend_and_mouse_hover(graph_artwork.curves):
-        html.open_tr()
+        table_uuid_str = str(uuid4())
+        if attributes_by_type := curve["attributes"]:
+            html.open_tr(
+                onclick=f"const el = document.getElementById('{table_uuid_str}'); el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';"
+            )
+        else:
+            html.open_tr()
+
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
         html.write_text_permissive(curve["title"])
@@ -508,6 +541,43 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
 
             html.td(curve["scalars"][scalar][1], class_=classes, style=font_size_style)
 
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td(style=font_size_style, colspan=len(scalars) + 1)
+        if attributes_by_type:
+            html.open_table(
+                class_="legend",
+                style=graph_legend_styles
+                + [
+                    "display: none",
+                    "margin-top: 0px",
+                    "margin-bottom: 10px",
+                    "margin-right: 0px",
+                    "margin-left: 18px",
+                ],
+                id=table_uuid_str,
+            )
+
+            html.open_tr()
+            html.th(_("Attribute name"))
+            html.th(_("Attribute value"))
+            html.th(_("Attribute type"))
+            html.close_tr()
+
+            for attribute_type, attributes in sorted(
+                attributes_by_type.items(), key=lambda t: _sort_attributes_by_type(t[0])
+            ):
+                for key, value in sorted(attributes.items()):
+                    html.open_tr()
+                    html.td(key)
+                    html.td(value)
+                    html.td(_readable_attribute_type(attribute_type))
+                    html.close_tr()
+
+            html.close_table()
+
+        html.close_td()
         html.close_tr()
 
     # Render scalar values

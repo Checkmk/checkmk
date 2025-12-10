@@ -86,6 +86,7 @@ export interface AjaxGraph {
 interface LayoutedCurveArea {
   line_type: 'area' | '-area'
   points: [TimeSeriesValue, TimeSeriesValue][]
+  attributes: Record<str, str>
   //dynamic
   title?: string
   color: string
@@ -94,6 +95,7 @@ interface LayoutedCurveArea {
 interface LayoutedCurveStack {
   line_type: 'stack' | '-stack'
   points: [TimeSeriesValue, TimeSeriesValue][]
+  attributes: Record<str, str>
   //dynamic
   title?: string
   color: string
@@ -102,6 +104,7 @@ interface LayoutedCurveStack {
 interface LayoutedCurveLine {
   line_type: 'line' | '-line'
   points: TimeSeriesValue[]
+  attributes: Record<str, str>
   //dynamic
   title?: string
   color: string

@@ -116,6 +116,7 @@ class QueryDataValue:
     metric_type: Literal["gauge", "sum", "histogram", "exponential_histogram", "summary"]
     time_series: TimeSeries
     id: str
+    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
 
 
 type RRDData = Mapping[RRDDataKey, TimeSeries]
@@ -210,6 +211,7 @@ class TimeSeriesMetaData:
     title: str
     line_type: LineType | Literal["ref"]
     color: str
+    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
 
 
 @dataclass(frozen=True)

@@ -112,6 +112,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
                     color="",
                     title="",
                     scalars={},
+                    attributes={},
                     line_type="line",
                     points=[-5.0, 10.0],
                 )
@@ -128,6 +129,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
                     color="",
                     title="",
                     scalars={},
+                    attributes={},
                     line_type="line",
                     points=[-5.0, 10.0],
                 )
@@ -184,6 +186,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
+                    attributes={},
                     line_type="line",
                     points=[-600.0, 2000.0],
                 )
@@ -199,6 +202,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
+                    attributes={},
                     line_type="line",
                     points=[-250.0, 500.0],
                 )
@@ -214,6 +218,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
+                    attributes={},
                     line_type="line",
                     points=[-1000.0, 2000.0],
                 )
@@ -229,6 +234,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
+                    attributes={},
                     line_type="line",
                     points=[1000.0, 2000.0],
                 )
@@ -251,6 +257,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
+                    attributes={},
                     line_type="line",
                     points=[-500.0, 1000.0],
                 )
@@ -708,42 +715,49 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     line_type="line",
                     color="",
                     title="1",
+                    attributes={},
                     rrddata=rrd_data,
                 ),
                 Curve(
                     line_type="ref",
                     color="",
                     title="2",
+                    attributes={},
                     rrddata=rrd_data,
                 ),
                 Curve(
                     line_type="-area",
                     color="",
                     title="3",
+                    attributes={},
                     rrddata=rrd_data,
                 ),
                 Curve(
                     line_type="stack",
                     color="",
                     title="4",
+                    attributes={},
                     rrddata=rrd_data,
                 ),
                 Curve(
                     line_type="area",
                     color="",
                     title="5",
+                    attributes={},
                     rrddata=rrd_data,
                 ),
                 Curve(
                     line_type="-stack",
                     color="",
                     title="6",
+                    attributes={},
                     rrddata=rrd_data,
                 ),
                 Curve(
                     line_type="stack",
                     color="",
                     title="7",
+                    attributes={},
                     rrddata=rrd_data,
                 ),
             ]
@@ -752,42 +766,49 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
         Curve(
             color="",
             line_type="line",
+            attributes={},
             rrddata=rrd_data,
             title="1",
         ),
         Curve(
             color="",
             line_type="stack",
+            attributes={},
             rrddata=rrd_data,
             title="7",
         ),
         Curve(
             color="",
             line_type="area",
+            attributes={},
             rrddata=rrd_data,
             title="5",
         ),
         Curve(
             color="",
             line_type="stack",
+            attributes={},
             rrddata=rrd_data,
             title="4",
         ),
         Curve(
             color="",
             line_type="-area",
+            attributes={},
             rrddata=rrd_data,
             title="3",
         ),
         Curve(
             color="",
             line_type="-stack",
+            attributes={},
             rrddata=rrd_data,
             title="6",
         ),
         Curve(
             color="",
             line_type="ref",
+            attributes={},
             rrddata=rrd_data,
             title="2",
         ),
@@ -804,6 +825,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="1",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
@@ -811,6 +833,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="2",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
@@ -818,6 +841,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="3",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
             ],
@@ -827,6 +851,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="3",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
@@ -834,6 +859,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="2",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
@@ -841,6 +867,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="1",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
             ],
@@ -853,6 +880,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="1",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
@@ -860,6 +888,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="2",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
@@ -867,6 +896,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="3",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
@@ -874,6 +904,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="4",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
@@ -881,6 +912,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="5",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
@@ -888,6 +920,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="6",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
             ],
@@ -897,6 +930,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="6",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
@@ -904,6 +938,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="5",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
@@ -911,6 +946,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="4",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
@@ -918,6 +954,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="1",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
@@ -925,6 +962,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="2",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
@@ -932,6 +970,7 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     color="",
                     title="3",
                     scalars={},
+                    attributes={},
                     points=[],
                 ),
             ],

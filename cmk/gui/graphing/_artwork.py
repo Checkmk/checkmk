@@ -67,6 +67,7 @@ class _LayoutedCurveBase(TypedDict):
     color: str
     title: str
     scalars: dict[str, tuple[TimeSeriesValue, str]]
+    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
 
 
 class LayoutedCurveLine(_LayoutedCurveBase):
@@ -238,6 +239,7 @@ class Curve(TypedDict):
     line_type: LineType | Literal["ref"]
     color: str
     title: str
+    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
     rrddata: TimeSeries
     # Added during runtime by _compute_scalars
     scalars: NotRequired[dict[str, tuple[TimeSeriesValue, str]]]
@@ -279,6 +281,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                     color=curve["color"],
                     title=curve["title"],
                     scalars=curve["scalars"],
+                    attributes=curve["attributes"],
                     line_type=line_type,
                     points=raw_points,
                 )
@@ -287,6 +290,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                     color=curve["color"],
                     title=curve["title"],
                     scalars=curve["scalars"],
+                    attributes=curve["attributes"],
                     line_type=line_type,
                     points=_areastack(raw_points, []),
                 )
@@ -296,6 +300,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                     color=curve["color"],
                     title=curve["title"],
                     scalars=curve["scalars"],
+                    attributes=curve["attributes"],
                     line_type=line_type,
                     points=_areastack(raw_points, stacks[stack_nr] or []),
                 )
@@ -348,6 +353,7 @@ def compute_graph_artwork_curves(
             line_type=augmented_time_series.meta_data.line_type,
             color=augmented_time_series.meta_data.color,
             title=augmented_time_series.meta_data.title,
+            attributes=augmented_time_series.meta_data.attributes,
             rrddata=augmented_time_series.time_series,
         )
         for augmented_time_series in fetch_augmented_time_series(

@@ -30,6 +30,7 @@ from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels, LabelSources
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
+from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
@@ -635,6 +636,7 @@ class DiagSpecialAgentInput:
     params: Mapping[str, object]
     passwords: Mapping[str, Secret[str]]
     http_proxies: Mapping[str, HTTPProxySpec] = field(default_factory=dict)
+    oauth2_connections: Mapping[str, OAuth2Connection] = field(default_factory=dict)
     is_cmc: bool = True
 
     @classmethod
@@ -651,6 +653,8 @@ class DiagSpecialAgentInput:
         }
         if "http_proxies" in raw:
             deserialized["http_proxies"] = raw["http_proxies"]
+        if "oauth2_connections" in raw:
+            deserialized["oauth2_connections"] = raw["oauth2_connections"]
         if "is_cmc" in raw:
             deserialized["is_cmc"] = raw["is_cmc"]
         return cls(**deserialized)
@@ -663,6 +667,7 @@ class DiagSpecialAgentInput:
                 "params": repr(self.params),
                 "passwords": {k: v.reveal() for k, v in self.passwords.items()},
                 "http_proxies": self.http_proxies,
+                "oauth2_connections": self.oauth2_connections,
                 "is_cmc": self.is_cmc,
             }
         )

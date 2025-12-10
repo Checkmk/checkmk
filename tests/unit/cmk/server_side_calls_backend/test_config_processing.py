@@ -9,6 +9,7 @@ from cmk.server_side_calls import internal, v1
 from cmk.server_side_calls_backend.config_processing import (
     BackendProxy,
     GlobalProxiesWithLookup,
+    OAuth2Connection,
     process_configuration_to_parameters,
     ReplacementResult,
 )
@@ -21,6 +22,7 @@ def test_process_configuration_to_parameter_password_stored() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -39,6 +41,7 @@ def test_process_configuration_to_parameter_password_explicit() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -55,6 +58,7 @@ def test_process_configuration_to_parameter_no_proxy_v1() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -70,6 +74,7 @@ def test_process_configuration_to_parameter_env_proxy_v1() -> None:
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda x: None
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -86,6 +91,7 @@ def test_process_configuration_to_parameter_explicit_proxy_v1() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -108,6 +114,7 @@ def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
             },
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -124,6 +131,7 @@ def test_process_configuration_to_parameter_global_proxy_missing_v1() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -140,6 +148,7 @@ def test_process_configuration_to_parameter_no_proxy_internal() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -156,6 +165,7 @@ def test_process_configuration_to_parameter_env_proxy_internal() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
@@ -178,6 +188,7 @@ def test_process_configuration_to_parameter_explicit_proxy_internal() -> None:
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=True,
     ) == ReplacementResult(
@@ -204,6 +215,7 @@ def test_process_configuration_to_parameter_global_proxy_ok_internal() -> None:
             },
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=True,
     ) == ReplacementResult(
@@ -227,10 +239,47 @@ def test_process_configuration_to_parameter_global_proxy_missing_internal() -> N
             global_proxies={},
             password_lookup=lambda x: None,
         ),
+        oauth2_connections={},
         usage_hint="test",
         is_internal=False,
     ) == ReplacementResult(
         value={"proxy": internal.EnvProxy()},
         found_secrets={},
         surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_oauth2_connection() -> None:
+    assert process_configuration_to_parameters(
+        params={"auth": ("cmk_postprocessed", "oauth2_connection", "my_oauth2_connection")},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
+        oauth2_connections={
+            "my_oauth2_connection": OAuth2Connection(
+                title="My OAuth",
+                client_secret=("cmk_postprocessed", "stored_password", ("1", "")),
+                access_token=("cmk_postprocessed", "stored_password", ("2", "")),
+                refresh_token=("cmk_postprocessed", "stored_password", ("3", "")),
+                client_id="client_id_value",
+                tenant_id="tenant_id_value",
+                authority="global",
+            )
+        },
+        usage_hint="test",
+        is_internal=False,
+    ) == ReplacementResult(
+        value={
+            "auth": internal.OAuth2Connection(
+                client_secret=v1.Secret(id("1")),
+                access_token=v1.Secret(id("2")),
+                refresh_token=v1.Secret(id("3")),
+                client_id="client_id_value",
+                tenant_id="tenant_id_value",
+                authority="global",
+            )
+        },
+        found_secrets={},
+        surrogates={id("1"): "1", id("2"): "2", id("3"): "3"},
     )

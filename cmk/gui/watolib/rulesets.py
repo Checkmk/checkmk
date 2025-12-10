@@ -56,6 +56,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import get_labels_from_core, LabelType
 from cmk.gui.valuespec import DropdownChoiceEntries
@@ -111,6 +112,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.server_side_calls_backend.config_processing import (
     GlobalProxiesWithLookup,
+    OAuth2Connection,
     process_configuration_to_parameters,
 )
 from cmk.shared_typing.vue_formspec_components import (
@@ -557,6 +559,10 @@ class RulesetCollection:
                     global_proxies={},
                     password_lookup=lambda _name: None,
                 ),
+                oauth2_connections={
+                    ident: OAuth2Connection(**entry)
+                    for ident, entry in load_oauth2_connections().items()
+                },
                 usage_hint=f"ruleset: {name}",
                 is_internal=True,
             ).found_secrets

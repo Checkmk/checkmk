@@ -96,6 +96,7 @@ def test_get_active_service_data_respects_finalizer(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         service_name_finalizer=lambda x: x.upper(),
         stored_passwords={},
         password_store_file=Path("/pw/store"),
@@ -281,6 +282,7 @@ def test_get_active_service_data(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         service_name_finalizer=lambda x: x,
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
@@ -327,6 +329,7 @@ def test_get_active_service_data_password_with_hack(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         service_name_finalizer=lambda x: x,
         stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
@@ -375,6 +378,7 @@ def test_get_active_service_data_password_without_hack() -> None:
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         service_name_finalizer=lambda x: x,
         stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
@@ -450,6 +454,7 @@ def test_test_get_active_service_data_crash_with_debug(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         service_name_finalizer=lambda x: x,
         stored_passwords={},
         password_store_file=Path("/pw/store"),
@@ -571,6 +576,7 @@ def test_get_active_service_data_warnings(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         service_name_finalizer=lambda x: x,
         stored_passwords={},
         password_store_file=Path("/pw/store"),

@@ -19,6 +19,7 @@ from cmk.utils.servicename import ServiceName
 from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
     GlobalProxiesWithLookup,
+    OAuth2Connection,
     process_configuration_to_parameters,
 )
 
@@ -39,6 +40,7 @@ class ActiveCheck:
         host_name: HostName,
         host_config: v1.HostConfig,
         global_proxies_with_lookup: GlobalProxiesWithLookup,
+        oauth2_connections: Mapping[str, OAuth2Connection],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         stored_passwords: Mapping[str, Secret[str]],
         password_store_file: Path,
@@ -51,6 +53,7 @@ class ActiveCheck:
         self.host_name = host_name
         self.host_config = host_config
         self._global_proxies_with_lookup = global_proxies_with_lookup
+        self._oauth2_connections = oauth2_connections
         self._service_name_finalizer = service_name_finalizer
         self.stored_passwords = stored_passwords or {}
         self.password_store_file = password_store_file
@@ -76,6 +79,7 @@ class ActiveCheck:
                 process_configuration_to_parameters(
                     config_set,
                     self._global_proxies_with_lookup,
+                    self._oauth2_connections,
                     usage_hint=f"plugin: {plugin_name}",
                     is_internal=isinstance(active_check, internal.ActiveCheckConfig),
                 ),

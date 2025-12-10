@@ -198,6 +198,7 @@ def test_iter_special_agent_commands(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -243,6 +244,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         stored_passwords={"1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -271,6 +273,7 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -307,6 +310,7 @@ def test_iter_special_agent_commands_crash() -> None:
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
+        oauth2_connections={},
         stored_passwords={},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "/path/to/agent",

@@ -523,6 +523,10 @@ def automation_special_agent_discovery_preview(
             },
             password_lookup=make_staged_passwords_lookup(),
         ),
+        {
+            ident: config_processing.OAuth2Connection(**entry)
+            for ident, entry in run_settings.oauth2_connections.items()
+        },
     )
 
     fetcher = SpecialAgentFetcher(
@@ -2864,6 +2868,7 @@ def get_special_agent_commandline(
     password_store_file: Path,
     passwords: Mapping[str, Secret[str]],
     global_proxies_with_lookup: config_processing.GlobalProxiesWithLookup,
+    oauth2_connections: Mapping[str, config_processing.OAuth2Connection],
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
         load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
@@ -2881,6 +2886,7 @@ def get_special_agent_commandline(
         ),
         host_config.host_attrs,
         global_proxies_with_lookup,
+        oauth2_connections,
         passwords,
         password_store_file,
         ExecutableFinder(
@@ -2945,6 +2951,10 @@ def _execute_diag_special_agent(
                 if (s := diag_special_agent_input.passwords.get(s_id)) is None
                 else s.reveal(),
             ),
+            {
+                ident: config_processing.OAuth2Connection(**entry)
+                for ident, entry in diag_special_agent_input.oauth2_connections.items()
+            },
         )
     except Exception as exc:
         # this handles broken plugins.

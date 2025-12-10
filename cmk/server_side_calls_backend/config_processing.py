@@ -68,9 +68,21 @@ class GlobalProxiesWithLookup:
     password_lookup: Callable[[str], str | None]
 
 
+@dataclass(frozen=True)
+class OAuth2Connection:
+    title: str
+    client_secret: _PasswordSpec
+    access_token: _PasswordSpec
+    refresh_token: _PasswordSpec
+    client_id: str
+    tenant_id: str
+    authority: str
+
+
 def extract_all_adhoc_secrets(
     rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     global_proxies_with_lookup: GlobalProxiesWithLookup,
+    oauth2_connections: Mapping[str, OAuth2Connection],
 ) -> Mapping[str, StoreSecret[str]]:
     """
     >>> extract_all_adhoc_secrets(
@@ -89,6 +101,7 @@ def extract_all_adhoc_secrets(
     ...         global_proxies={},
     ...         password_lookup=lambda name: None,
     ...     ),
+    ...     oauth2_connections={},
     ... )
     {':uuid:1234': 'knubblwubbl'}
     """
@@ -98,7 +111,11 @@ def extract_all_adhoc_secrets(
             name,
             [
                 process_configuration_to_parameters(
-                    rule, global_proxies_with_lookup, f"ruleset: {name}", use_alpha
+                    rule,
+                    global_proxies_with_lookup,
+                    oauth2_connections,
+                    f"ruleset: {name}",
+                    use_alpha,
                 )
                 for rule in rules
             ],
@@ -127,11 +144,17 @@ class ReplacementResult(Generic[_RuleSetType_co]):
 def process_configuration_to_parameters(
     params: Mapping[str, object],
     global_proxies_with_lookup: GlobalProxiesWithLookup,
+    oauth2_connections: Mapping[str, OAuth2Connection],
     usage_hint: str,
     is_internal: bool,
 ) -> ReplacementResult[Mapping[str, object]]:
     d_results = [
-        (k, _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_internal))
+        (
+            k,
+            _processed_config_value(
+                v, global_proxies_with_lookup, oauth2_connections, usage_hint, is_internal
+            ),
+        )
         for k, v in params.items()
     ]
     return ReplacementResult(
@@ -144,13 +167,16 @@ def process_configuration_to_parameters(
 def _processed_config_value(
     params: object,
     global_proxies_with_lookup: GlobalProxiesWithLookup,
+    oauth2_connections: Mapping[str, OAuth2Connection],
     usage_hint: str,
     is_internal: bool,
 ) -> ReplacementResult[object]:
     match params:
         case list():
             results = [
-                _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_internal)
+                _processed_config_value(
+                    v, global_proxies_with_lookup, oauth2_connections, usage_hint, is_internal
+                )
                 for v in params
             ]
             return ReplacementResult(
@@ -170,6 +196,14 @@ def _processed_config_value(
                 StoreSecret(secret_value) if secret_type == "explicit_password" else None,
                 is_internal=is_internal,
             )
+        case tuple(
+            (
+                "cmk_postprocessed",
+                "oauth2_connection",
+                str() as connection_id,
+            )
+        ):
+            return _replace_oauth2_connection(connection_id, oauth2_connections)
 
         case tuple(("cmk_postprocessed", str() as special_type, value)):
             match special_type, value, is_internal:
@@ -200,7 +234,9 @@ def _processed_config_value(
 
         case tuple():
             results = [
-                _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_internal)
+                _processed_config_value(
+                    v, global_proxies_with_lookup, oauth2_connections, usage_hint, is_internal
+                )
                 for v in params
             ]
             return ReplacementResult(
@@ -210,7 +246,7 @@ def _processed_config_value(
             )
         case dict():
             return process_configuration_to_parameters(
-                params, global_proxies_with_lookup, usage_hint, is_internal
+                params, global_proxies_with_lookup, oauth2_connections, usage_hint, is_internal
             )
         case other:
             return ReplacementResult(value=other, found_secrets={}, surrogates={})
@@ -227,6 +263,50 @@ def _replace_password(
         value=(internal.Secret if is_internal else v1.Secret)(surrogate),
         found_secrets={} if value is None else {name: value},
         surrogates={surrogate: name},
+    )
+
+
+def _replace_oauth2_connection(
+    connection_id: str, oauth2_connections: Mapping[str, OAuth2Connection]
+) -> ReplacementResult[internal.OAuth2Connection]:
+    try:
+        oauth2_connection = oauth2_connections[connection_id]
+    except KeyError:
+        config_warnings.warn(f'The OAuth2 connection "{connection_id}" does not exist.')
+        return ReplacementResult(
+            internal.OAuth2Connection(
+                client_secret=v1.Secret(id(0)),
+                access_token=v1.Secret(id(0)),
+                refresh_token=v1.Secret(id(0)),
+                client_id="",
+                tenant_id="",
+                authority="",
+            ),
+            {},
+            {},
+        )
+    _replaced_client_secret = _replace_password(oauth2_connection.client_secret[2][0], None, True)
+    _replaced_access_token = _replace_password(oauth2_connection.access_token[2][0], None, True)
+    _replaced_refresh_token = _replace_password(oauth2_connection.refresh_token[2][0], None, True)
+    return ReplacementResult(
+        internal.OAuth2Connection(
+            client_secret=_replaced_client_secret.value,
+            access_token=_replaced_access_token.value,
+            refresh_token=_replaced_refresh_token.value,
+            client_id=oauth2_connection.client_id,
+            tenant_id=oauth2_connection.tenant_id,
+            authority=oauth2_connection.authority,
+        ),
+        {
+            **_replaced_client_secret.found_secrets,
+            **_replaced_access_token.found_secrets,
+            **_replaced_refresh_token.found_secrets,
+        },
+        {
+            **_replaced_client_secret.surrogates,
+            **_replaced_access_token.surrogates,
+            **_replaced_refresh_token.surrogates,
+        },
     )
 
 

@@ -19,6 +19,7 @@ from cmk.utils import config_warnings, password_store
 from ._commons import ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
     GlobalProxiesWithLookup,
+    OAuth2Connection,
     process_configuration_to_parameters,
 )
 
@@ -38,6 +39,7 @@ class SpecialAgent:
         host_config: v1.HostConfig,
         host_attrs: Mapping[str, str],
         global_proxies_with_lookup: GlobalProxiesWithLookup,
+        oauth2_connections: Mapping[str, OAuth2Connection],
         stored_passwords: Mapping[str, StoreSecret[str]],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
@@ -50,6 +52,7 @@ class SpecialAgent:
         self.host_config = host_config
         self.host_attrs = host_attrs
         self._global_proxies_with_lookup = global_proxies_with_lookup
+        self._oauth2_connections = oauth2_connections
         self.stored_passwords = stored_passwords
         self.password_store_file = password_store_file
         self._finder = finder
@@ -66,6 +69,7 @@ class SpecialAgent:
         processed = process_configuration_to_parameters(
             conf_dict,
             self._global_proxies_with_lookup,
+            self._oauth2_connections,
             usage_hint=f"special agent: {special_agent.name}",
             is_internal=isinstance(special_agent, internal.SpecialAgentConfig),
         )

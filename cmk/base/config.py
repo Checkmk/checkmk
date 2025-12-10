@@ -2414,6 +2414,10 @@ class ConfigCache:
                 },
                 password_lookup=make_configured_passwords_lookup(),
             ),
+            {
+                ident: config_processing.OAuth2Connection(**entry)
+                for ident, entry in self._loaded_config.oauth2_connections.items()
+            },
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             passwords,
             password_store_file,
@@ -2534,6 +2538,10 @@ class ConfigCache:
                 },
                 password_lookup=make_configured_passwords_lookup(),
             ),
+            {
+                ident: config_processing.OAuth2Connection(**entry)
+                for ident, entry in self._loaded_config.oauth2_connections.items()
+            },
             secrets,
             secrets_file_option,
             executable_finder,
@@ -2575,10 +2583,18 @@ class ConfigCache:
             **extract_all_adhoc_secrets(
                 rules_by_name=_compose_filtered_ssc_rules(active_checks.items()),
                 global_proxies_with_lookup=global_proxies_with_lookup,
+                oauth2_connections={
+                    ident: config_processing.OAuth2Connection(**entry)
+                    for ident, entry in oauth2_connections.items()
+                },
             ),
             **extract_all_adhoc_secrets(
                 rules_by_name=_compose_filtered_ssc_rules(special_agents.items()),
                 global_proxies_with_lookup=global_proxies_with_lookup,
+                oauth2_connections={
+                    ident: config_processing.OAuth2Connection(**entry)
+                    for ident, entry in oauth2_connections.items()
+                },
             ),
         }
 

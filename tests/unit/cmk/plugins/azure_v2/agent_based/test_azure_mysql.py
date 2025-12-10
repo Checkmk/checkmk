@@ -5,17 +5,18 @@
 
 # mypy: disable-error-code="misc"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.azure_v2.agent_based.azure_mysql import (
     check_azure_mysql_memory,
     check_plugin_azure_mysql_connections,
     check_plugin_azure_mysql_memory,
     check_plugin_azure_mysql_replication,
+    check_plugin_azure_mysql_storage,
     check_replication,
     inventory_plugin_azure_mysql,
 )
@@ -114,7 +115,7 @@ from .inventory import get_inventory_value
 def test_check_replication(
     section: Resource,
     params: Mapping[str, Any],
-    expected_result: Sequence[Result | Metric],
+    expected_result: CheckResult,
 ) -> None:
     assert (
         list(check_replication()("Replication", params, {"Replication": section}))
@@ -192,7 +193,7 @@ def test_check_replication(
 def test_check_connections(
     section: Resource,
     params: Mapping[str, Any],
-    expected_result: Sequence[Result | Metric],
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_connections()(params, section)) == expected_result
 
@@ -270,3 +271,84 @@ def test_azure_mysql_inventory() -> None:
     )
     inventory = inventory_plugin_azure_mysql.inventory_function(section)
     assert get_inventory_value(inventory, "region") == "westeurope"
+
+
+@pytest.mark.parametrize(
+    "section, params, expected_result",
+    [
+        pytest.param(
+            Resource(
+                id="test-id",
+                name="test-name",
+                type="Microsoft.DBforMySQL/servers",
+                group="test-group",
+                location="westeurope",
+                metrics={
+                    "average_io_consumption_percent": AzureMetric(
+                        name="io_consumption_percent",
+                        aggregation="average",
+                        value=50.0,
+                        unit="percent",
+                    ),
+                    "average_storage_percent": AzureMetric(
+                        name="storage_percent",
+                        aggregation="average",
+                        value=60.0,
+                        unit="percent",
+                    ),
+                    "average_serverlog_storage_percent": AzureMetric(
+                        name="serverlog_storage_percent",
+                        aggregation="average",
+                        value=70.0,
+                        unit="percent",
+                    ),
+                },
+            ),
+            {
+                "io_consumption": (80.0, 90.0),
+                "storage": (80.0, 90.0),
+                "serverlog_storage": (80.0, 90.0),
+            },
+            [
+                Result(state=State.OK, summary="IO: 50.00%"),
+                Metric("io_consumption_percent", 50.0, levels=(80.0, 90.0)),
+                Result(state=State.OK, summary="Storage: 60.00%"),
+                Metric("storage_percent", 60.0, levels=(80.0, 90.0)),
+                Result(state=State.OK, summary="Server log storage: 70.00%"),
+                Metric("serverlog_storage_percent", 70.0, levels=(80.0, 90.0)),
+            ],
+            id="all ok",
+        ),
+        pytest.param(
+            Resource(
+                id="test-id",
+                name="test-name",
+                type="Microsoft.DBforMySQL/servers",
+                group="test-group",
+                location="westeurope",
+                metrics={
+                    "average_storage_percent": AzureMetric(
+                        name="storage_percent",
+                        aggregation="average",
+                        value=85.0,
+                        unit="percent",
+                    ),
+                },
+            ),
+            {
+                "storage": (80.0, 90.0),
+            },
+            [
+                Result(state=State.WARN, summary="Storage: 85.00% (warn/crit at 80.00%/90.00%)"),
+                Metric("storage_percent", 85.0, levels=(80.0, 90.0)),
+            ],
+            id="storage warn",
+        ),
+    ],
+)
+def test_check_storage(
+    section: Resource,
+    params: Mapping[str, Any],
+    expected_result: CheckResult,
+) -> None:
+    assert list(check_plugin_azure_mysql_storage.check_function(params, section)) == expected_result

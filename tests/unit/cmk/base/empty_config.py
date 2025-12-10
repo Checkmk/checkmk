@@ -85,6 +85,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     },
     cluster_max_cachefile_age=90,
     http_proxies={},
+    oauth2_connections={},
     extra_service_conf={},
     timeperiods={},
     check_periods=(),

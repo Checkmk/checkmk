@@ -706,6 +706,7 @@ def _perform_post_config_loading_actions(
         cmc_log_levels=cmc_log_levels,
         cluster_max_cachefile_age=cluster_max_cachefile_age,
         http_proxies=http_proxies,
+        oauth2_connections=oauth2_connections,
         extra_service_conf=extra_service_conf,
         timeperiods=timeperiods,
         check_periods=check_periods,

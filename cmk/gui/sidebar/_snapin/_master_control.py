@@ -21,7 +21,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.audit_log import log_audit
-from cmk.livestatus_client.commands import (
+from cmk.livestatus_client import (
     DisableEventHandlers,
     DisableFlapDetection,
     DisableNotifications,
@@ -30,6 +30,7 @@ from cmk.livestatus_client.commands import (
     EnableFlapDetection,
     EnableNotifications,
     EnablePerformanceData,
+    LivestatusClient,
     StartExecutingHostChecks,
     StartExecutingServiceChecks,
     StopExecutingHostChecks,
@@ -216,7 +217,7 @@ class MasterControlSnapin(SidebarSnapin):
         if not command:
             html.write_text_permissive(_("Command %s/%d not found") % (column, state))
             return
-        sites.live().command_obj(command, site)
+        LivestatusClient(sites.live()).command(command, site)
         sites.live().set_only_sites([site])
         sites.live().query(
             "GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n"

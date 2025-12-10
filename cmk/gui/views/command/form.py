@@ -20,7 +20,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.selection_id import SelectionId
-from cmk.livestatus_client.commands import Command as LivestatusCommand
+from cmk.livestatus_client import Command as LivestatusCommand
 
 from .base import Command, CommandConfirmDialogOptions, CommandExecutor, CommandSpec
 from .group import CommandGroup

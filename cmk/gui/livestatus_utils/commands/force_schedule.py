@@ -11,7 +11,8 @@ from livestatus import MultiSiteConnection
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.gui.logged_in import user as _user
-from cmk.livestatus_client.commands import (
+from cmk.livestatus_client import (
+    LivestatusClient,
     ScheduleForcedHostCheck,
     ScheduleForcedServiceCheck,
 )
@@ -35,7 +36,7 @@ def force_schedule_host_check(
 
     """
     _user.need_permission("action.reschedule")
-    connection.command_obj(
+    LivestatusClient(connection).command(
         ScheduleForcedHostCheck(host_name=host_name, check_time=check_time), omd_site()
     )
 
@@ -63,7 +64,7 @@ def force_schedule_service_check(
 
     """
     _user.need_permission("action.reschedule")
-    connection.command_obj(
+    LivestatusClient(connection).command(
         ScheduleForcedServiceCheck(
             host_name=host_name,
             description=service_description,

@@ -15,7 +15,7 @@ from livestatus import MultiSiteConnection, OnlySites
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
-from cmk.livestatus_client.commands import ECChangeState, ECDelete, ECUpdate
+from cmk.livestatus_client import ECChangeState, ECDelete, ECUpdate, LivestatusClient
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
@@ -197,7 +197,7 @@ def update_and_acknowledge(
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         ids = list(map(int, event_ids))
-        connection.command_obj(
+        LivestatusClient(connection).command(
             ECUpdate(
                 event_ids=ids,
                 user=user.ident,
@@ -219,7 +219,7 @@ def change_state(
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         ids = list(map(int, event_ids))
-        connection.command_obj(
+        LivestatusClient(connection).command(
             ECChangeState(event_ids=ids, user=user.ident, state=states_ints_reversed[state]),
             SiteId(site),
         )
@@ -234,4 +234,4 @@ def archive_events(
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         ids = list(map(int, event_ids))
-        connection.command_obj(ECDelete(event_ids=ids, user=user.ident), SiteId(site))
+        LivestatusClient(connection).command(ECDelete(event_ids=ids, user=user.ident), SiteId(site))

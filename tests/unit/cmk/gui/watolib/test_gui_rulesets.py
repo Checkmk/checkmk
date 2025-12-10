@@ -755,6 +755,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
                 AutomationContext(
                     edition=(app := make_app(version.edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
+                    create_core=app.create_core,
                 ),
                 [h],
                 None,
@@ -911,6 +912,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
                 AutomationContext(
                     edition=(app := make_app(version.edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
+                    create_core=app.create_core,
                 ),
                 [],
                 None,

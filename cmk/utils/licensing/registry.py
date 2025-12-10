@@ -36,12 +36,6 @@ class LicensingHandlerRegistry:
 licensing_handler_registry = LicensingHandlerRegistry()
 
 
-def get_available_licensing_handler_type() -> type[LicensingHandler]:
-    if (ed := edition(paths.omd_root)) is Edition.COMMUNITY:
-        return CRELicensingHandler
-    raise ValueError(ed)
-
-
 def _get_licensing_handler() -> type[LicensingHandler]:
     return licensing_handler_registry[edition(paths.omd_root)]
 

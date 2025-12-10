@@ -122,7 +122,6 @@ from cmk.base.configlib.servicename import (
 )
 from cmk.base.core.interface import CoreAction, do_reload, do_restart, MonitoringCore
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
-from cmk.base.core_factory import create_core
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
@@ -1243,7 +1242,7 @@ def _execute_autodiscovery(
     if not activation_required:
         return discovery_results, False
 
-    core = create_core(
+    core = ctx.create_core(
         ctx.edition,
         ruleset_matcher,
         label_manager,
@@ -1490,7 +1489,7 @@ class AutomationRenameHosts:
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 
-        core = create_core(
+        core = ctx.create_core(
             ctx.edition,
             ruleset_matcher,
             label_manager,
@@ -2541,7 +2540,7 @@ class AutomationRestart:
         ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
         return _execute_silently(
-            create_core(
+            ctx.create_core(
                 ctx.edition,
                 ruleset_matcher,
                 label_manager,

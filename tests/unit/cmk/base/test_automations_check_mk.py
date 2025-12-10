@@ -109,6 +109,7 @@ class TestAutomationDiagHost:
             AutomationContext(
                 edition=(app := make_app(edition(paths.omd_root))).edition,
                 make_bake_on_restart=app.make_bake_on_restart,
+                create_core=app.create_core,
             ),
             args,
             AgentBasedPlugins.empty(),
@@ -253,6 +254,7 @@ def test_automation_active_check(
             AutomationContext(
                 edition=(app := make_app(edition(paths.omd_root))).edition,
                 make_bake_on_restart=app.make_bake_on_restart,
+                create_core=app.create_core,
             ),
             active_check_args,
             AgentBasedPlugins.empty(),
@@ -326,6 +328,7 @@ def test_automation_active_check_invalid_args(
         AutomationContext(
             edition=(app := make_app(edition(paths.omd_root))).edition,
             make_bake_on_restart=app.make_bake_on_restart,
+            create_core=app.create_core,
         ),
         active_check_args,
         AgentBasedPlugins.empty(),

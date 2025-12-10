@@ -227,6 +227,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
                 AutomationContext(
                     edition=(app := make_app(edition(omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
+                    create_core=app.create_core,
                 ),
                 [h],
                 None,

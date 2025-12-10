@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.version import Edition
+from cmk.utils.licensing.community_handler import CRELicensingHandler
 
 from . import diagnostics
 from .automations.automations import Automations
 from .automations.check_mk import register_common_automations
 from .base_app import CheckmkBaseApp
+from .core.factory import create_core
 from .modes.check_mk import common_modes, general_options
 from .modes.modes import Modes
 
@@ -24,6 +26,8 @@ def make_app() -> CheckmkBaseApp:
         modes=modes,
         automations=automations,
         make_bake_on_restart=lambda *args: lambda: None,
+        create_core=create_core,
+        licensing_handler_type=CRELicensingHandler,
     )
 
 

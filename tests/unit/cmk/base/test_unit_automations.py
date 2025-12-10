@@ -96,6 +96,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         AutomationContext(
             edition=(app := make_app(edition(paths.omd_root))).edition,
             make_bake_on_restart=app.make_bake_on_restart,
+            create_core=app.create_core,
         ),
         ["test-host"],
         AgentBasedPlugins.empty(),
@@ -141,6 +142,7 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
         AutomationContext(
             edition=(app := make_app(edition(paths.omd_root))).edition,
             make_bake_on_restart=app.make_bake_on_restart,
+            create_core=app.create_core,
         ),
         ["test-host", "CPU load", "CPU temp"],
         AgentBasedPlugins.empty(),

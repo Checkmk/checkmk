@@ -255,6 +255,7 @@ def _execute_automation_endpoint(
                 AutomationContext(
                     edition=(app := make_app(cmk_version.edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
+                    create_core=app.create_core,
                 ),
                 payload.name,
                 list(payload.args),

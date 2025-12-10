@@ -15,14 +15,19 @@ import cmk.ccc.debug
 from cmk import trace
 from cmk.automations.results import ABCAutomationResult
 from cmk.base import config, profiling
+from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.core.interface import MonitoringCore
 from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import log, paths
+from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 tracer = trace.get_tracer()
 
@@ -41,6 +46,18 @@ class AutomationContext:
     edition: cmk_version.Edition
     make_bake_on_restart: Callable[
         [config.LoadingResult, Sequence[HostAddress]], Callable[[], None]
+    ]
+    create_core: Callable[
+        [
+            cmk_version.Edition,
+            RulesetMatcher,
+            LabelManager,
+            LoadedConfigFragment,
+            SNMPPluginStore,
+            config.ConfigCache,
+            AgentBasedPlugins,
+        ],
+        MonitoringCore,
     ]
 
 

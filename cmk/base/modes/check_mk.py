@@ -55,7 +55,6 @@ from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
-from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
@@ -1518,7 +1517,7 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
         ),
         plugins.check_plugins,
         hostnames=hostnames,
-        licensing_handler=get_licensing_handler_type().make(),
+        licensing_handler=app.licensing_handler_type().make(),
         passwords=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
@@ -1611,7 +1610,7 @@ def mode_update(app: CheckmkBaseApp) -> None:
             main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=config.restart_locking
         ):
             core_interface.do_create_config(
-                core=create_core(
+                core=app.create_core(
                     app.edition,
                     ruleset_matcher,
                     label_manager,
@@ -1723,7 +1722,7 @@ def mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        create_core(
+        app.create_core(
             app.edition,
             ruleset_matcher,
             label_manager,
@@ -1820,7 +1819,7 @@ def mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        create_core(
+        app.create_core(
             app.edition,
             ruleset_matcher,
             label_manager,
@@ -2005,6 +2004,7 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
                 AutomationContext(
                     edition=app.edition,
                     make_bake_on_restart=app.make_bake_on_restart,
+                    create_core=app.create_core,
                 ),
                 name,
                 automation_args,

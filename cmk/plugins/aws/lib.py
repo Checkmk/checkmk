@@ -429,9 +429,9 @@ def get_region_from_item(item: str) -> str:
 
 @dataclass
 class LambdaCloudwatchMetrics:
-    Duration: float
-    Errors: float
-    Throttles: float
+    Duration: float | None = None
+    Errors: float | None = None
+    Throttles: float | None = None
     Invocations: float | None = None
     ConcurrentExecutions: float | None = None
     DeadLetterErrors: float | None = None
@@ -446,7 +446,8 @@ class LambdaCloudwatchMetrics:
 
     def __post_init__(self) -> None:
         # convert timespans from milliseconds to canonical seconds
-        self.Duration /= 1000.0
+        if self.Duration:
+            self.Duration /= 1000.0
         if self.PostRuntimeExtensionsDuration:
             self.PostRuntimeExtensionsDuration /= 1000.0
         if self.IteratorAge:

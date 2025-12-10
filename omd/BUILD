@@ -232,7 +232,8 @@ pkg_files(
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
     ],
-    extension = "tar.xz",
+    compressor = "@zstd//:zstd_cli",
+    extension = "tar.zst",
     package_dir_file = ":omd_root_dir",
     tags = ["manual"],
     deps = [

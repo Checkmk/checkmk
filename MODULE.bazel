@@ -42,6 +42,7 @@ bazel_dep(name = "toolchains_musl", version = "0.1.20")
 bazel_dep(name = "clickhouse", version = "v25.8.11.66-lts")
 bazel_dep(name = "rules_sphinx", version = "0.2.0")
 bazel_dep(name = "lcov", version = "2.3.2")
+bazel_dep(name = "zstd", version = "1.5.7")
 
 # rules_sphinx is not yet on BCR
 git_override(

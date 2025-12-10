@@ -557,6 +557,38 @@ msgstr[2] "Îndepărtați această etichetă"
 msgid "%d rows"
 msgstr "%d rânduri"
 
+#, fuzzy, python-format
+msgid "%d service(s) moved to disabled services table. Monitoring is disabled."
+msgstr ""
+"Adăugați la monitorizare toate serviciile detectate, dar care nu au fost "
+"încă monitorizate."
+
+#, fuzzy, python-format
+msgid "%d service(s) moved to monitored services table. Monitoring is enabled."
+msgstr ""
+"Adăugați la monitorizare toate serviciile detectate, dar care nu au fost "
+"încă monitorizate."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to undecided services table. Monitoring is disabled."
+msgstr ""
+"Adăugați la monitorizare toate serviciile detectate, dar care nu au fost "
+"încă monitorizate."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to vanished services table. Monitoring is enabled, but "
+"service is unknown."
+msgstr ""
+"Adăugați la monitorizare toate serviciile detectate, dar care nu au fost "
+"încă monitorizate."
+
+# georgem ##############
+#, fuzzy, python-format
+msgid "%d service(s) removed. Monitoring is disabled."
+msgstr "Reguli de monitorizare a serviciilor"
+
 #, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
@@ -3314,6 +3346,10 @@ msgstr "Conexiuni acceptate pe secundă"
 msgid "Accepted packages/s"
 msgstr "Pachete acceptate"
 
+#, fuzzy, python-format
+msgid "Accepting all services of host %s."
+msgstr "Afișează serviciile gazdei %s"
+
 #, fuzzy
 msgid "Accepting peer"
 msgstr "Viteza de funcționare"
@@ -4088,10 +4124,6 @@ msgstr "Adăugați instanța NGINX"
 
 msgid "Add OID descriptions"
 msgstr "Adăugați descrieri OID"
-
-#, fuzzy
-msgid "Add OpenTelemetry collector configuration"
-msgstr "Adaugp o noua configurație de utilizator"
 
 #, fuzzy
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
@@ -6344,6 +6376,12 @@ msgstr ""
 "acest depozit de parole, sunt necesare în text simplu pentru a contacta "
 "sistemele la distanță pentru monitorizare. Așadar, toate aceste parole "
 "trebuie să fie stocate în mod lizibil pentru monitorizare."
+
+#, fuzzy
+msgid "All undecided services and new labels accepted. Monitoring is enabled."
+msgstr ""
+"Adăugați la monitorizare toate serviciile detectate, dar care nu au fost "
+"încă monitorizate."
 
 msgid "All unknown services of a certain host group"
 msgstr "Toate serviciile necunoscute ale unui anumit grup de gazde"
@@ -12423,6 +12461,9 @@ msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Nu se pot prelua date istorice cu Nagios core"
 
 msgid "Cannot save the form because it contains errors."
+msgstr ""
+
+msgid "Cannot specify both 'view_name' and 'embedded_id' parameters."
 msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
@@ -33131,6 +33172,9 @@ msgstr "Setări de stare a pool-ului de aplicații IIS"
 msgid "IMAP"
 msgstr "IMAP"
 
+msgid "INFO"
+msgstr ""
+
 msgid "INotify Levels"
 msgstr "Nivelurile INotify"
 
@@ -37363,6 +37407,10 @@ msgstr "Tip de element de raport invalid '%s'"
 #, fuzzy
 msgid "Invalid request"
 msgstr "Cerere invalidă: %r"
+
+#, fuzzy
+msgid "Invalid request parameters."
+msgstr "Parametru de control invalid"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -46333,8 +46381,9 @@ msgstr "Nu sunt alocate grupuri de contact."
 msgid "No custom attributes are defined yet."
 msgstr "Nu sunt definite încă atribute personalizate."
 
-msgid "No dashboard found for the given dashboard name and/or dashboard owner"
-msgstr ""
+#, fuzzy
+msgid "No dashboard name provided."
+msgstr "Din magazinul de parole"
 
 msgid "No data"
 msgstr "Nu există date"
@@ -46738,6 +46787,10 @@ msgstr "Fără limitare de versiune"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "Nu există nicio vizualizare definită cu numele '%s'."
+
+#, fuzzy
+msgid "No view name provided."
+msgstr "Din magazinul de parole"
 
 #, fuzzy
 msgid "No waiting batches"
@@ -49453,14 +49506,6 @@ msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "OpenTelemetry Collector Memory Limit"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
-msgid "OpenTelemetry collector (experimental)"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
-msgid "OpenTelemetry collector configurations"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -57434,6 +57479,10 @@ msgstr "Starea de contact necesară a comutatorului"
 msgid "Rescan"
 msgstr "Rescan"
 
+#, fuzzy, python-format
+msgid "Rescanning services of host %s."
+msgstr "Afișează serviciile gazdei %s"
+
 msgid "Reschedule"
 msgstr "Reprogramare"
 
@@ -60801,9 +60850,6 @@ msgstr "Descoperirea serviciilor"
 msgid "Service discovery and activation: "
 msgstr "Descoperirea serviciilor: "
 
-msgid "Service discovery details"
-msgstr "Detalii de descoperire a serviciului"
-
 #, fuzzy
 msgid "Service discovery ran on"
 msgstr "Descoperirea serviciilor: "
@@ -61292,6 +61338,10 @@ msgstr "Servicii de monitorizat pe regiune"
 
 msgid "Services per region to monitor"
 msgstr "Servicii de monitorizat pe regiune"
+
+#, fuzzy
+msgid "Services rescanned."
+msgstr "Statele serviciilor"
 
 msgid "Services states"
 msgstr "Statele serviciilor"
@@ -69908,7 +69958,7 @@ msgstr ""
 "Valoarea dată nu este permisă. Puteți configura numai URL-uri relative, cum "
 "ar fi <tt>dashboard.py?name=my_dashboard</tt>."
 
-msgid "The given widget id does not match any of this dashboard's widgets"
+msgid "The given widget id does not match any of this dashboard's widgets."
 msgstr ""
 
 #, fuzzy
@@ -71531,7 +71581,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "The provided token is not valid for the requested page."
+msgid "The provided token is not valid for dashboard access."
 msgstr "Fișierul nu pare a fi un fișier cheie valid."
 
 msgid "The queried ESX system (vCenter / Host)"
@@ -72496,6 +72546,9 @@ msgid ""
 msgstr ""
 "Titlul sub care va apărea valoarea în Checkmk. Dacă nu este specificat, se "
 "utilizează calea de acces."
+
+msgid "The token owner did not have access to this view."
+msgstr ""
 
 msgid "The top level rule does not exist."
 msgstr "Regula de nivel superior nu există."
@@ -94420,6 +94473,18 @@ msgid "Choose how to display your data"
 msgstr "Nu afișați o dată"
 
 #, fuzzy
+msgid "Add optional filters to refine this widget"
+msgstr "Text suplimentar prefixat la ieșire"
+
+#, fuzzy
+msgid "Add optional filter to refine this widget"
+msgstr "Text suplimentar prefixat la ieșire"
+
+#, fuzzy
+msgid "Add %{name}"
+msgstr "Adaugă nume"
+
+#, fuzzy
 msgid "Single %{n}"
 msgstr "Single"
 
@@ -94444,7 +94509,7 @@ msgid "Runtime filter"
 msgstr "Eliminați filtrul"
 
 #, fuzzy
-msgid "Applied %{n} targeted filter"
+msgid "Applied %{n} filter"
 msgstr "Filtre aplicate:"
 
 msgid ""
@@ -94453,14 +94518,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "No %{n} targeted filter applied"
+msgid "No %{n} filter applied"
 msgstr "Gazda Ntopng"
-
-msgid ""
-"A %{n} targeted filter selected as dashboard or runtime filter appears here "
-"and applies to this widget. You can override the value by setting a widget "
-"specific filter."
-msgstr ""
 
 #, fuzzy
 msgid "Applied %{n} filters"
@@ -94474,12 +94533,6 @@ msgstr ""
 #, fuzzy
 msgid "No %{n} filters applied"
 msgstr "Gazda Ntopng"
-
-msgid ""
-"Dashboard or runtime %{n} filters selected on dashboard level appear and "
-"apply to this widget. You can override the values by setting widget specific "
-"filters. "
-msgstr ""
 
 #, fuzzy
 msgid "Widget filters"
@@ -95240,11 +95293,12 @@ msgid "Data point attributes"
 msgstr "Atributele timpilor morți:"
 
 #, fuzzy
-msgid "Apply rate (sums)"
-msgstr "Latență"
+msgid "Aggregation lookback"
+msgstr "Controale de agregare"
 
-msgid "Apply percentile (histograms)"
-msgstr ""
+#, fuzzy
+msgid "Percentile (histograms)"
+msgstr "Grupuri de agregare"
 
 #, fuzzy
 msgid "Auto"
@@ -95298,8 +95352,8 @@ msgid "Clone this entry"
 msgstr "Clonați această metrică"
 
 #, fuzzy
-msgid "Create services"
-msgstr "Servicii schimbate"
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -95308,10 +95362,6 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "Vă rugăm să selectați cel puțin un element"
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Instanțe Oracle"
 
 #, fuzzy
 msgid "Edit rule: Metric backend (Custom query)"
@@ -96341,6 +96391,37 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Add OpenTelemetry collector configuration"
+#~ msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+#~ msgid "OpenTelemetry collector (experimental)"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "OpenTelemetry collector configurations"
+#~ msgstr "Configurația stilului selectat"
+
+#~ msgid "Service discovery details"
+#~ msgstr "Detalii de descoperire a serviciului"
+
+#, fuzzy
+#~ msgid "Applied %{n} targeted filter"
+#~ msgstr "Filtre aplicate:"
+
+#, fuzzy
+#~ msgid "No %{n} targeted filter applied"
+#~ msgstr "Gazda Ntopng"
+
+#, fuzzy
+#~ msgid "Apply rate (sums)"
+#~ msgstr "Latență"
+
+#, fuzzy
+#~ msgid "Create services"
+#~ msgstr "Servicii schimbate"
+
+#, fuzzy
 #~ msgid "Connected Clients"
 #~ msgstr "Conexiuni"
 
@@ -96420,10 +96501,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Total requests"
 #~ msgstr "numai cereri"
-
-#, fuzzy
-#~ msgid "Aggregation for histograms"
-#~ msgstr "Grupuri de agregare"
 
 #, fuzzy
 #~ msgid "Aggregation for sums"

@@ -549,6 +549,37 @@ msgstr[1] "%d entfernte Labels"
 msgid "%d rows"
 msgstr "%d Zeilen"
 
+#, fuzzy, python-format
+msgid "%d service(s) moved to disabled services table. Monitoring is disabled."
+msgstr ""
+"Der Service wurde in die Tabelle für deaktivierte Services verschoben. Das "
+"Monitoring ist deaktiviert."
+
+#, fuzzy, python-format
+msgid "%d service(s) moved to monitored services table. Monitoring is enabled."
+msgstr ""
+"Der Service wurde in die Tabelle der überwachten Services verschoben. Das "
+"Monitoring ist aktiviert."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to undecided services table. Monitoring is disabled."
+msgstr ""
+"Der Service wurde in die Tabelle für nicht entschiedene Services verschoben. "
+"Das Monitoring ist deaktiviert."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to vanished services table. Monitoring is enabled, but "
+"service is unknown."
+msgstr ""
+"Der Service wurde in die Tabelle für verschwundene Services verschoben. Das "
+"Monitoring ist aktiviert, aber der Service ist unbekannt (unknown)."
+
+#, fuzzy, python-format
+msgid "%d service(s) removed. Monitoring is disabled."
+msgstr "Service wurde entfernt. Das Monitoring ist deaktiviert."
+
 #, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
@@ -3278,6 +3309,10 @@ msgstr "Angenommene Verbindungen pro Sekunde"
 msgid "Accepted packages/s"
 msgstr "Akzeptierte Pakete/s"
 
+#, fuzzy, python-format
+msgid "Accepting all services of host %s."
+msgstr "Services des Hosts %s anzeigen"
+
 msgid "Accepting peer"
 msgstr "Annehmender Peer"
 
@@ -4008,9 +4043,6 @@ msgstr "NGNIX-Instanz hinzufügen"
 
 msgid "Add OID descriptions"
 msgstr "OID-Beschreibung hinzufügen"
-
-msgid "Add OpenTelemetry collector configuration"
-msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
 
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
 msgstr ""
@@ -6193,6 +6225,12 @@ msgstr ""
 "einschließlich dieses Passwortspeichers, werden im Klartext benötigt, um "
 "Remote-Systeme für das Monitoring zu kontaktieren. Daher müssen alle diese "
 "Passwörter für das Monitoring lesbar gespeichert werden."
+
+#, fuzzy
+msgid "All undecided services and new labels accepted. Monitoring is enabled."
+msgstr ""
+"Der Service wurde in die Tabelle für nicht entschiedene Services verschoben. "
+"Das Monitoring ist deaktiviert."
 
 msgid "All unknown services of a certain host group"
 msgstr "Alle unbekannten Services einer bestimmten Host-Gruppe"
@@ -11910,6 +11948,9 @@ msgstr "Historische Daten vom Nagios Core können nicht abgerufen werden"
 
 msgid "Cannot save the form because it contains errors."
 msgstr "Das Formular kann nicht gespeichert werden, da es Fehler enthält."
+
+msgid "Cannot specify both 'view_name' and 'embedded_id' parameters."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -31613,6 +31654,9 @@ msgstr "IIS-Anwendungspool Zustandseinstellungen"
 msgid "IMAP"
 msgstr "IMAP"
 
+msgid "INFO"
+msgstr ""
+
 msgid "INotify Levels"
 msgstr "INotify-Levels"
 
@@ -35775,6 +35819,10 @@ msgstr "Es gibt kein Berichtselement vom Typ '%s'"
 
 msgid "Invalid request"
 msgstr "Ungültige Anfrage"
+
+#, fuzzy
+msgid "Invalid request parameters."
+msgstr "Ungültiger Check-Parameter"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -44335,8 +44383,9 @@ msgstr "Keine Kontakt-Gruppen zugewiesen."
 msgid "No custom attributes are defined yet."
 msgstr "Es wurden noch keine Benutzer-Attribute definiert."
 
-msgid "No dashboard found for the given dashboard name and/or dashboard owner"
-msgstr ""
+#, fuzzy
+msgid "No dashboard name provided."
+msgstr "Kein Passwort angegeben"
 
 msgid "No data"
 msgstr "Keine Daten"
@@ -44717,6 +44766,10 @@ msgstr "Keine Versionsbeschränkung"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "Ist gibt keine Ansicht mit dem Namen '%s'."
+
+#, fuzzy
+msgid "No view name provided."
+msgstr "Kein Passwort angegeben"
 
 msgid "No waiting batches"
 msgstr "Keine wartenden Batches"
@@ -47345,12 +47398,6 @@ msgstr "OpenTelemetry (experimentell)"
 
 msgid "OpenTelemetry Collector Memory Limit"
 msgstr "OpenTelemetry Collector Speicherlimit"
-
-msgid "OpenTelemetry collector (experimental)"
-msgstr "OpenTelemetry Collector (experimentell)"
-
-msgid "OpenTelemetry collector configurations"
-msgstr "Konfigurationen des OpenTelemetry Collectors"
 
 msgid "OpenTelemetry collector prometheus scraping configurations"
 msgstr "Prometheus-Scraping-Konfigurationen des OpenTelemetry Collectors"
@@ -54781,6 +54828,10 @@ msgstr "Erwarteter Zustand des Schaltkontaktes"
 msgid "Rescan"
 msgstr "Erneut suchen"
 
+#, fuzzy, python-format
+msgid "Rescanning services of host %s."
+msgstr "Services des Hosts %s anzeigen"
+
 msgid "Reschedule"
 msgstr "Neu ansetzen"
 
@@ -58016,9 +58067,6 @@ msgstr "Service-Erkennung"
 msgid "Service discovery and activation: "
 msgstr "Service-Erkennung und -Aktivierung: "
 
-msgid "Service discovery details"
-msgstr "Details der Service-Erkennung"
-
 msgid "Service discovery ran on"
 msgstr "Service-Erkennung lief am"
 
@@ -58454,6 +58502,10 @@ msgstr "Services pro Region"
 
 msgid "Services per region to monitor"
 msgstr "Zu überwachende Dienste pro Region"
+
+#, fuzzy
+msgid "Services rescanned."
+msgstr "Service-Zustände"
 
 msgid "Services states"
 msgstr "Service-Zustände"
@@ -66942,7 +66994,7 @@ msgstr ""
 "Der angegebene Wert ist nicht erlaubt. Sie dürfen nur relative URLs wie "
 "<tt>dashboard.py?name=my_dashboard</tt> konfigurieren."
 
-msgid "The given widget id does not match any of this dashboard's widgets"
+msgid "The given widget id does not match any of this dashboard's widgets."
 msgstr ""
 
 msgid ""
@@ -68606,7 +68658,8 @@ msgstr ""
 "zwischen benutzerorientierten Zeichenketten. Dies gilt auch für die Suche in "
 "einem regulären Ausdruck."
 
-msgid "The provided token is not valid for the requested page."
+#, fuzzy
+msgid "The provided token is not valid for dashboard access."
 msgstr "Der bereitgestellte Token ist für die angeforderte Seite nicht gültig."
 
 msgid "The queried ESX system (vCenter / Host)"
@@ -69612,6 +69665,9 @@ msgid ""
 msgstr ""
 "Der Titel, unter dem der Wert in Checkmk angezeigt wird. Default ist der "
 "Pfad."
+
+msgid "The token owner did not have access to this view."
+msgstr ""
 
 msgid "The top level rule does not exist."
 msgstr "Die Hauptregel existiert nicht."
@@ -90606,6 +90662,18 @@ msgstr ""
 msgid "Choose how to display your data"
 msgstr "Wählen Sie, wie Sie Ihre Daten anzeigen wollen"
 
+#, fuzzy
+msgid "Add optional filters to refine this widget"
+msgstr "Zusätzlicher Text, welcher der Ausgabe vorangestellt wird"
+
+#, fuzzy
+msgid "Add optional filter to refine this widget"
+msgstr "Zusätzlicher Text, welcher der Ausgabe vorangestellt wird"
+
+#, fuzzy
+msgid "Add %{name}"
+msgstr "Name hinzufügen"
+
 msgid "Single %{n}"
 msgstr "Einzeln %{n}"
 
@@ -90624,8 +90692,9 @@ msgstr "Dashboard-Filter"
 msgid "Runtime filter"
 msgstr "Laufzeit-Filter"
 
-msgid "Applied %{n} targeted filter"
-msgstr "%{n} gezielter Filter angewendet"
+#, fuzzy
+msgid "Applied %{n} filter"
+msgstr "%{n} Filter angewendet"
 
 msgid ""
 "Relevant %{n} targeted filter set on dashboard level via dashboard or "
@@ -90634,17 +90703,9 @@ msgstr ""
 "Relevanter %{n} Zielfilter, der auf Dashboard-Ebene über Dashboard- oder "
 "Laufzeitfilter festgelegt wird."
 
-msgid "No %{n} targeted filter applied"
-msgstr "Kein %{n} gezielter Filter angewendet"
-
-msgid ""
-"A %{n} targeted filter selected as dashboard or runtime filter appears here "
-"and applies to this widget. You can override the value by setting a widget "
-"specific filter."
-msgstr ""
-"Ein als Dashboard- oder Laufzeitfilter ausgewählter %{n}-zielgerichteter "
-"Filter wird hier angezeigt und gilt für dieses Widget. Sie können den Wert "
-"überschreiben, indem Sie einen widgetspezifischen Filter festlegen."
+#, fuzzy
+msgid "No %{n} filter applied"
+msgstr "Keine %{n} Filter angewendet"
 
 msgid "Applied %{n} filters"
 msgstr "%{n} Filter angewendet"
@@ -90658,15 +90719,6 @@ msgstr ""
 
 msgid "No %{n} filters applied"
 msgstr "Keine %{n} Filter angewendet"
-
-msgid ""
-"Dashboard or runtime %{n} filters selected on dashboard level appear and "
-"apply to this widget. You can override the values by setting widget specific "
-"filters. "
-msgstr ""
-"Dashboard- oder Laufzeitfilter %{n}, die auf Dashboard-Ebene ausgewählt "
-"wurden, werden angezeigt und gelten für dieses Widget. Sie können die Werte "
-"überschreiben, indem Sie widgetspezifische Filter festlegen. "
 
 msgid "Widget filters"
 msgstr "Widget-Filter"
@@ -91306,10 +91358,12 @@ msgstr "Umfang-Attribute"
 msgid "Data point attributes"
 msgstr "Attribute des Datenpunkts"
 
-msgid "Apply rate (sums)"
-msgstr "Rate anwenden (sums)"
+#, fuzzy
+msgid "Aggregation lookback"
+msgstr "Aggregierte Checks"
 
-msgid "Apply percentile (histograms)"
+#, fuzzy
+msgid "Percentile (histograms)"
 msgstr "Perzentile anwenden (Histogramm)"
 
 msgid "Auto"
@@ -91355,18 +91409,15 @@ msgstr "Operation auflösen"
 msgid "Clone this entry"
 msgstr "Diesen Eintrag klonen"
 
-msgid "Create services"
-msgstr "Services erstellen"
+#, fuzzy
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Metrik-Backend (Kundenanfrage)"
 
 msgid "Select at least two graph lines to edit"
 msgstr "Wählen Sie mindestens zwei Graph-Linien zur Bearbeitung aus"
 
 msgid "Select one graph line to edit"
 msgstr "Wählen Sie eine Graph-Linie zur Bearbeitung aus"
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Metrik-Backend (Kundenanfrage)"
 
 #, fuzzy
 msgid "Edit rule: Metric backend (Custom query)"
@@ -92393,6 +92444,48 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Add OpenTelemetry collector configuration"
+#~ msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+
+#~ msgid "OpenTelemetry collector (experimental)"
+#~ msgstr "OpenTelemetry Collector (experimentell)"
+
+#~ msgid "OpenTelemetry collector configurations"
+#~ msgstr "Konfigurationen des OpenTelemetry Collectors"
+
+#~ msgid "Service discovery details"
+#~ msgstr "Details der Service-Erkennung"
+
+#~ msgid "Applied %{n} targeted filter"
+#~ msgstr "%{n} gezielter Filter angewendet"
+
+#~ msgid "No %{n} targeted filter applied"
+#~ msgstr "Kein %{n} gezielter Filter angewendet"
+
+#~ msgid ""
+#~ "A %{n} targeted filter selected as dashboard or runtime filter appears "
+#~ "here and applies to this widget. You can override the value by setting a "
+#~ "widget specific filter."
+#~ msgstr ""
+#~ "Ein als Dashboard- oder Laufzeitfilter ausgewählter %{n}-zielgerichteter "
+#~ "Filter wird hier angezeigt und gilt für dieses Widget. Sie können den "
+#~ "Wert überschreiben, indem Sie einen widgetspezifischen Filter festlegen."
+
+#~ msgid ""
+#~ "Dashboard or runtime %{n} filters selected on dashboard level appear and "
+#~ "apply to this widget. You can override the values by setting widget "
+#~ "specific filters. "
+#~ msgstr ""
+#~ "Dashboard- oder Laufzeitfilter %{n}, die auf Dashboard-Ebene ausgewählt "
+#~ "wurden, werden angezeigt und gelten für dieses Widget. Sie können die "
+#~ "Werte überschreiben, indem Sie widgetspezifische Filter festlegen. "
+
+#~ msgid "Apply rate (sums)"
+#~ msgstr "Rate anwenden (sums)"
+
+#~ msgid "Create services"
+#~ msgstr "Services erstellen"
 
 #~ msgid "Connected Clients"
 #~ msgstr "Verbundene Clients"

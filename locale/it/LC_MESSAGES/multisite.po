@@ -549,6 +549,33 @@ msgstr[1] "%d etichette rimosse"
 msgid "%d rows"
 msgstr "%d righe"
 
+#, fuzzy, python-format
+msgid "%d service(s) moved to disabled services table. Monitoring is disabled."
+msgstr ""
+"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+
+#, fuzzy, python-format
+msgid "%d service(s) moved to monitored services table. Monitoring is enabled."
+msgstr ""
+"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to undecided services table. Monitoring is disabled."
+msgstr ""
+"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to vanished services table. Monitoring is enabled, but "
+"service is unknown."
+msgstr ""
+"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+
+#, fuzzy, python-format
+msgid "%d service(s) removed. Monitoring is disabled."
+msgstr "Regole di monitoraggio del servizio"
+
 #, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
@@ -3337,6 +3364,10 @@ msgstr "Connessioni accettate al secondo"
 msgid "Accepted packages/s"
 msgstr "Pacchetti accettati"
 
+#, fuzzy, python-format
+msgid "Accepting all services of host %s."
+msgstr "Mostra i servizi dell'host %s"
+
 #, fuzzy
 msgid "Accepting peer"
 msgstr "Velocità di funzionamento"
@@ -4111,10 +4142,6 @@ msgstr "Aggiungere l'istanza NGINX"
 
 msgid "Add OID descriptions"
 msgstr "Aggiungere descrizioni OID"
-
-#, fuzzy
-msgid "Add OpenTelemetry collector configuration"
-msgstr "Aggiungere una nuova configurazione utente"
 
 #, fuzzy
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
@@ -6353,6 +6380,11 @@ msgstr ""
 "monitoraggio, compreso questo archivio di password, sono necessarie in "
 "chiaro per contattare i sistemi remoti per il monitoraggio. Quindi tutte "
 "queste password devono essere memorizzate leggibili dal monitoraggio."
+
+#, fuzzy
+msgid "All undecided services and new labels accepted. Monitoring is enabled."
+msgstr ""
+"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
 
 msgid "All unknown services of a certain host group"
 msgstr "Tutti i servizi sconosciuti di un determinato gruppo di host"
@@ -12341,6 +12373,9 @@ msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Impossibile recuperare i dati storici con Nagios core"
 
 msgid "Cannot save the form because it contains errors."
+msgstr ""
+
+msgid "Cannot specify both 'view_name' and 'embedded_id' parameters."
 msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
@@ -32864,6 +32899,9 @@ msgstr "Impostazioni dello stato del pool di applicazioni IIS"
 msgid "IMAP"
 msgstr "IMAP"
 
+msgid "INFO"
+msgstr ""
+
 msgid "INotify Levels"
 msgstr "Livelli INotify"
 
@@ -37017,6 +37055,10 @@ msgstr "Tipo di elemento di rapporto non valido '%s'"
 #, fuzzy
 msgid "Invalid request"
 msgstr "Richiesta non valida: %r"
+
+#, fuzzy
+msgid "Invalid request parameters."
+msgstr "Parametro di controllo non valido"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -45913,8 +45955,9 @@ msgstr "Nessun gruppo di contatto assegnato."
 msgid "No custom attributes are defined yet."
 msgstr "Non sono ancora stati definiti attributi personalizzati."
 
-msgid "No dashboard found for the given dashboard name and/or dashboard owner"
-msgstr ""
+#, fuzzy
+msgid "No dashboard name provided."
+msgstr "Dal negozio di password"
 
 msgid "No data"
 msgstr "Nessun dato"
@@ -46315,6 +46358,10 @@ msgstr "Nessuna limitazione di versione"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "Nessuna vista definita con il nome '%s'."
+
+#, fuzzy
+msgid "No view name provided."
+msgstr "Dal negozio di password"
 
 #, fuzzy
 msgid "No waiting batches"
@@ -49001,14 +49048,6 @@ msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "OpenTelemetry Collector Memory Limit"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "OpenTelemetry collector (experimental)"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "OpenTelemetry collector configurations"
 msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
@@ -56946,6 +56985,10 @@ msgstr "Stato del contatto dell'interruttore richiesto"
 msgid "Rescan"
 msgstr "Rescan"
 
+#, fuzzy, python-format
+msgid "Rescanning services of host %s."
+msgstr "Mostra i servizi dell'host %s"
+
 msgid "Reschedule"
 msgstr "Riprogrammare"
 
@@ -60258,9 +60301,6 @@ msgstr "Scoperta del servizio"
 msgid "Service discovery and activation: "
 msgstr "Scoperta del servizio: "
 
-msgid "Service discovery details"
-msgstr "Dettagli sulla scoperta del servizio"
-
 #, fuzzy
 msgid "Service discovery ran on"
 msgstr "Scoperta del servizio: "
@@ -60725,6 +60765,10 @@ msgstr "Servizi per regione da monitorare"
 
 msgid "Services per region to monitor"
 msgstr "Servizi per regione da monitorare"
+
+#, fuzzy
+msgid "Services rescanned."
+msgstr "Stati dei servizi"
 
 msgid "Services states"
 msgstr "Stati dei servizi"
@@ -69228,7 +69272,7 @@ msgstr ""
 "Il valore dato non è consentito. Si possono configurare solo URL relativi "
 "come <tt>dashboard.py?name=my_dashboard</tt>."
 
-msgid "The given widget id does not match any of this dashboard's widgets"
+msgid "The given widget id does not match any of this dashboard's widgets."
 msgstr ""
 
 #, fuzzy
@@ -70831,7 +70875,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "The provided token is not valid for the requested page."
+msgid "The provided token is not valid for dashboard access."
 msgstr "Il file non sembra un file chiave valido."
 
 msgid "The queried ESX system (vCenter / Host)"
@@ -71790,6 +71834,9 @@ msgid ""
 msgstr ""
 "Il titolo con cui il valore apparirà in Checkmk. Se non viene specificato, "
 "il valore predefinito è il percorso."
+
+msgid "The token owner did not have access to this view."
+msgstr ""
 
 msgid "The top level rule does not exist."
 msgstr "La regola di livello superiore non esiste."
@@ -93474,6 +93521,18 @@ msgid "Choose how to display your data"
 msgstr "Non visualizzare una data"
 
 #, fuzzy
+msgid "Add optional filters to refine this widget"
+msgstr "Testo aggiuntivo con prefisso all'output"
+
+#, fuzzy
+msgid "Add optional filter to refine this widget"
+msgstr "Testo aggiuntivo con prefisso all'output"
+
+#, fuzzy
+msgid "Add %{name}"
+msgstr "Aggiungere il nome"
+
+#, fuzzy
 msgid "Single %{n}"
 msgstr "Singolo"
 
@@ -93498,7 +93557,7 @@ msgid "Runtime filter"
 msgstr "Rimuovi filtro"
 
 #, fuzzy
-msgid "Applied %{n} targeted filter"
+msgid "Applied %{n} filter"
 msgstr "Filtri applicati:"
 
 msgid ""
@@ -93507,14 +93566,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "No %{n} targeted filter applied"
+msgid "No %{n} filter applied"
 msgstr "Host Ntopng"
-
-msgid ""
-"A %{n} targeted filter selected as dashboard or runtime filter appears here "
-"and applies to this widget. You can override the value by setting a widget "
-"specific filter."
-msgstr ""
 
 #, fuzzy
 msgid "Applied %{n} filters"
@@ -93528,12 +93581,6 @@ msgstr ""
 #, fuzzy
 msgid "No %{n} filters applied"
 msgstr "Host Ntopng"
-
-msgid ""
-"Dashboard or runtime %{n} filters selected on dashboard level appear and "
-"apply to this widget. You can override the values by setting widget specific "
-"filters. "
-msgstr ""
 
 #, fuzzy
 msgid "Widget filters"
@@ -94287,11 +94334,12 @@ msgid "Data point attributes"
 msgstr "Attributi di inattività:"
 
 #, fuzzy
-msgid "Apply rate (sums)"
-msgstr "Latenza"
+msgid "Aggregation lookback"
+msgstr "Controlli di aggregazione"
 
-msgid "Apply percentile (histograms)"
-msgstr ""
+#, fuzzy
+msgid "Percentile (histograms)"
+msgstr "Gruppi di aggregazione"
 
 #, fuzzy
 msgid "Auto"
@@ -94345,8 +94393,8 @@ msgid "Clone this entry"
 msgstr "Clona questa metrica"
 
 #, fuzzy
-msgid "Create services"
-msgstr "Servizi modificati"
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Istanze Oracle"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -94355,10 +94403,6 @@ msgstr "Seleziona almeno un elemento"
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "Seleziona almeno un elemento"
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Istanze Oracle"
 
 #, fuzzy
 msgid "Edit rule: Metric backend (Custom query)"
@@ -95380,6 +95424,37 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Add OpenTelemetry collector configuration"
+#~ msgstr "Aggiungere una nuova configurazione utente"
+
+#, fuzzy
+#~ msgid "OpenTelemetry collector (experimental)"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "OpenTelemetry collector configurations"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#~ msgid "Service discovery details"
+#~ msgstr "Dettagli sulla scoperta del servizio"
+
+#, fuzzy
+#~ msgid "Applied %{n} targeted filter"
+#~ msgstr "Filtri applicati:"
+
+#, fuzzy
+#~ msgid "No %{n} targeted filter applied"
+#~ msgstr "Host Ntopng"
+
+#, fuzzy
+#~ msgid "Apply rate (sums)"
+#~ msgstr "Latenza"
+
+#, fuzzy
+#~ msgid "Create services"
+#~ msgstr "Servizi modificati"
+
+#, fuzzy
 #~ msgid "Connected Clients"
 #~ msgstr "Connessioni"
 
@@ -95448,10 +95523,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Total requests"
 #~ msgstr "solo richieste"
-
-#, fuzzy
-#~ msgid "Aggregation for histograms"
-#~ msgstr "Gruppi di aggregazione"
 
 #, fuzzy
 #~ msgid "Aggregation for sums"

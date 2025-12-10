@@ -538,6 +538,29 @@ msgstr[0] "%d 削除されたラベル"
 msgid "%d rows"
 msgstr "%d行"
 
+#, fuzzy, python-format
+msgid "%d service(s) moved to disabled services table. Monitoring is disabled."
+msgstr "検出されたがまだ監視されていないすべてのサービスを監視に追加します。"
+
+#, fuzzy, python-format
+msgid "%d service(s) moved to monitored services table. Monitoring is enabled."
+msgstr "検出されたがまだ監視されていないすべてのサービスを監視に追加します。"
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to undecided services table. Monitoring is disabled."
+msgstr "検出されたがまだ監視されていないすべてのサービスを監視に追加します。"
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to vanished services table. Monitoring is enabled, but "
+"service is unknown."
+msgstr "検出されたがまだ監視されていないすべてのサービスを監視に追加します。"
+
+#, fuzzy, python-format
+msgid "%d service(s) removed. Monitoring is disabled."
+msgstr "サービス監視ルール"
+
 #, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
@@ -3158,6 +3181,10 @@ msgstr "1秒あたりに受け入れられる接続"
 msgid "Accepted packages/s"
 msgstr "受け入れられたパッケージ/s"
 
+#, fuzzy, python-format
+msgid "Accepting all services of host %s."
+msgstr "ホスト %s のサービスを表示する"
+
 msgid "Accepting peer"
 msgstr "ピアを受諾する"
 
@@ -3878,9 +3905,6 @@ msgstr "NGINXインスタンスを追加します"
 
 msgid "Add OID descriptions"
 msgstr "OIDの説明を追加する"
-
-msgid "Add OpenTelemetry collector configuration"
-msgstr "OpenTelemetryコレクターの設定を追加する"
 
 #, fuzzy
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
@@ -5993,6 +6017,10 @@ msgstr ""
 "めにリモートシステムに接続するためにプレーンテキストで必要です。したがって、"
 "これらのパスワードはすべて、監視によって読み取り可能に保存する必要がありま"
 "す。"
+
+#, fuzzy
+msgid "All undecided services and new labels accepted. Monitoring is enabled."
+msgstr "検出されたがまだ監視されていないすべてのサービスを監視に追加します。"
 
 msgid "All unknown services of a certain host group"
 msgstr "特定ホストグループのすべての不明なサービス"
@@ -11651,6 +11679,9 @@ msgstr "Nagiosコアで履歴データを取得できません"
 
 msgid "Cannot save the form because it contains errors."
 msgstr "エラーが含まれているため、フォームを保存できません。"
+
+msgid "Cannot specify both 'view_name' and 'embedded_id' parameters."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "テストできません。ターゲットシステムのCPU数を判別できません。"
@@ -31052,6 +31083,9 @@ msgstr "IISアプリケーションプールの状態設定"
 msgid "IMAP"
 msgstr "IMAP"
 
+msgid "INFO"
+msgstr ""
+
 msgid "INotify Levels"
 msgstr "INotifyレベル"
 
@@ -35037,6 +35071,10 @@ msgstr "無効なレポート要素タイプ '%s'"
 
 msgid "Invalid request"
 msgstr "無効なリクエスト"
+
+#, fuzzy
+msgid "Invalid request parameters."
+msgstr "チェックパラメータが無効です"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -43510,8 +43548,9 @@ msgstr "連絡先グループは割り当てられていません。"
 msgid "No custom attributes are defined yet."
 msgstr "カスタム属性はまだ定義されていません。"
 
-msgid "No dashboard found for the given dashboard name and/or dashboard owner"
-msgstr ""
+#, fuzzy
+msgid "No dashboard name provided."
+msgstr "パスワードが提供されていません"
 
 msgid "No data"
 msgstr "データなし"
@@ -43883,6 +43922,10 @@ msgstr "バージョン制限なし"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "%s'という名前で定義されたビューはありません。"
+
+#, fuzzy
+msgid "No view name provided."
+msgstr "パスワードが提供されていません"
 
 msgid "No waiting batches"
 msgstr "待機中のバッチはありません"
@@ -46438,12 +46481,6 @@ msgstr "OpenTelemetry（実験的）"
 #, fuzzy
 msgid "OpenTelemetry Collector Memory Limit"
 msgstr "OpenTelemetryコレクター（実験的）"
-
-msgid "OpenTelemetry collector (experimental)"
-msgstr "OpenTelemetryコレクター（実験的）"
-
-msgid "OpenTelemetry collector configurations"
-msgstr "Open Telemetryコレクターの構成"
 
 #, fuzzy
 msgid "OpenTelemetry collector prometheus scraping configurations"
@@ -53794,6 +53831,10 @@ msgstr "必要なスイッチの接触状態"
 msgid "Rescan"
 msgstr "再スキャン"
 
+#, fuzzy, python-format
+msgid "Rescanning services of host %s."
+msgstr "ホスト %s のサービスを表示する"
+
 msgid "Reschedule"
 msgstr "再スケジュール"
 
@@ -56972,9 +57013,6 @@ msgstr "サービスディスカバリ"
 msgid "Service discovery and activation: "
 msgstr "サービスディスカバリとアクティベーション: "
 
-msgid "Service discovery details"
-msgstr "サービスディスカバリーの詳細"
-
 msgid "Service discovery ran on"
 msgstr "サービスディスカバリ実行"
 
@@ -57404,6 +57442,10 @@ msgstr "リージョン別サービス"
 
 msgid "Services per region to monitor"
 msgstr "監視する地域ごとのサービス"
+
+#, fuzzy
+msgid "Services rescanned."
+msgstr "サービスの状態"
 
 msgid "Services states"
 msgstr "サービスの状態"
@@ -65534,7 +65576,7 @@ msgstr ""
 "指定された値は許可されていません。<tt> dashboard.py?name=my_dashboard </tt>の"
 "ような相対URLのみを構成できます。"
 
-msgid "The given widget id does not match any of this dashboard's widgets"
+msgid "The given widget id does not match any of this dashboard's widgets."
 msgstr ""
 
 msgid ""
@@ -67087,7 +67129,7 @@ msgstr ""
 "正規表現で検索する場合にも当てはまります。"
 
 #, fuzzy
-msgid "The provided token is not valid for the requested page."
+msgid "The provided token is not valid for dashboard access."
 msgstr "キーファイルが無効です、またはパスワードが間違っています。"
 
 msgid "The queried ESX system (vCenter / Host)"
@@ -68026,6 +68068,9 @@ msgid ""
 msgstr ""
 "Checkmkで値が表示されるタイトル。指定されていない場合、デフォルトでパスになり"
 "ます。"
+
+msgid "The token owner did not have access to this view."
+msgstr ""
 
 msgid "The top level rule does not exist."
 msgstr "トップレベルのルールは存在しません。"
@@ -88386,6 +88431,18 @@ msgid "Choose how to display your data"
 msgstr "日付を表示しない"
 
 #, fuzzy
+msgid "Add optional filters to refine this widget"
+msgstr "出力の前に追加されるテキスト"
+
+#, fuzzy
+msgid "Add optional filter to refine this widget"
+msgstr "出力の前に追加されるテキスト"
+
+#, fuzzy
+msgid "Add %{name}"
+msgstr "名前を追加"
+
+#, fuzzy
 msgid "Single %{n}"
 msgstr "シングル"
 
@@ -88409,7 +88466,7 @@ msgid "Runtime filter"
 msgstr "フィルタを取り外します"
 
 #, fuzzy
-msgid "Applied %{n} targeted filter"
+msgid "Applied %{n} filter"
 msgstr "適用されたフィルター:"
 
 msgid ""
@@ -88417,14 +88474,9 @@ msgid ""
 "runtime filters."
 msgstr ""
 
-msgid "No %{n} targeted filter applied"
-msgstr "%{n}対象フィルターは適用されていません"
-
-msgid ""
-"A %{n} targeted filter selected as dashboard or runtime filter appears here "
-"and applies to this widget. You can override the value by setting a widget "
-"specific filter."
-msgstr ""
+#, fuzzy
+msgid "No %{n} filter applied"
+msgstr "%{n} 対象フィルターは適用されていません"
 
 #, fuzzy
 msgid "Applied %{n} filters"
@@ -88437,12 +88489,6 @@ msgstr ""
 
 msgid "No %{n} filters applied"
 msgstr "%{n} 対象フィルターは適用されていません"
-
-msgid ""
-"Dashboard or runtime %{n} filters selected on dashboard level appear and "
-"apply to this widget. You can override the values by setting widget specific "
-"filters. "
-msgstr ""
 
 #, fuzzy
 msgid "Widget filters"
@@ -89191,11 +89237,12 @@ msgid "Data point attributes"
 msgstr "ダウンタイム属性:"
 
 #, fuzzy
-msgid "Apply rate (sums)"
-msgstr "レイテンシーの適用"
+msgid "Aggregation lookback"
+msgstr "集約チェック"
 
-msgid "Apply percentile (histograms)"
-msgstr ""
+#, fuzzy
+msgid "Percentile (histograms)"
+msgstr "集約グループ"
 
 msgid "Auto"
 msgstr "自動"
@@ -89241,8 +89288,8 @@ msgid "Clone this entry"
 msgstr "このエントリのクローンを作成する"
 
 #, fuzzy
-msgid "Create services"
-msgstr "サービス変更"
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Oracleインスタンス"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -89251,10 +89298,6 @@ msgstr "編集するグラフの線を少なくとも１つ選択してくださ
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "編集するグラフの線を選択してください"
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Oracleインスタンス"
 
 #, fuzzy
 msgid "Edit rule: Metric backend (Custom query)"
@@ -90245,6 +90288,33 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Add OpenTelemetry collector configuration"
+#~ msgstr "OpenTelemetryコレクターの設定を追加する"
+
+#~ msgid "OpenTelemetry collector (experimental)"
+#~ msgstr "OpenTelemetryコレクター（実験的）"
+
+#~ msgid "OpenTelemetry collector configurations"
+#~ msgstr "Open Telemetryコレクターの構成"
+
+#~ msgid "Service discovery details"
+#~ msgstr "サービスディスカバリーの詳細"
+
+#, fuzzy
+#~ msgid "Applied %{n} targeted filter"
+#~ msgstr "適用されたフィルター:"
+
+#~ msgid "No %{n} targeted filter applied"
+#~ msgstr "%{n}対象フィルターは適用されていません"
+
+#, fuzzy
+#~ msgid "Apply rate (sums)"
+#~ msgstr "レイテンシーの適用"
+
+#, fuzzy
+#~ msgid "Create services"
+#~ msgstr "サービス変更"
+
 #, fuzzy
 #~ msgid "Connected Clients"
 #~ msgstr "接続"
@@ -90325,10 +90395,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Total requests"
 #~ msgstr "リクエストのみ"
-
-#, fuzzy
-#~ msgid "Aggregation for histograms"
-#~ msgstr "集約グループ"
 
 #, fuzzy
 #~ msgid "Aggregation for sums"

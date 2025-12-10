@@ -554,6 +554,33 @@ msgstr[1] "Verwijder dit etiket"
 msgid "%d rows"
 msgstr "%d rijen"
 
+#, fuzzy, python-format
+msgid "%d service(s) moved to disabled services table. Monitoring is disabled."
+msgstr ""
+"Voeg alle gedetecteerde maar nog niet bewaakte diensten toe aan de bewaking."
+
+#, fuzzy, python-format
+msgid "%d service(s) moved to monitored services table. Monitoring is enabled."
+msgstr ""
+"Voeg alle gedetecteerde maar nog niet bewaakte diensten toe aan de bewaking."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to undecided services table. Monitoring is disabled."
+msgstr ""
+"Voeg alle gedetecteerde maar nog niet bewaakte diensten toe aan de bewaking."
+
+#, fuzzy, python-format
+msgid ""
+"%d service(s) moved to vanished services table. Monitoring is enabled, but "
+"service is unknown."
+msgstr ""
+"Voeg alle gedetecteerde maar nog niet bewaakte diensten toe aan de bewaking."
+
+#, fuzzy, python-format
+msgid "%d service(s) removed. Monitoring is disabled."
+msgstr "Regels voor toezicht op diensten"
+
 #, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
@@ -3290,6 +3317,10 @@ msgstr "Geaccepteerde verbindingen per seconde"
 msgid "Accepted packages/s"
 msgstr "Geaccepteerde pakketten/s"
 
+#, fuzzy, python-format
+msgid "Accepting all services of host %s."
+msgstr "Toon diensten van host %s"
+
 #, fuzzy
 msgid "Accepting peer"
 msgstr "Werksnelheid"
@@ -4071,10 +4102,6 @@ msgstr "NGINX instantie toevoegen"
 
 msgid "Add OID descriptions"
 msgstr "OID-beschrijvingen toevoegen"
-
-#, fuzzy
-msgid "Add OpenTelemetry collector configuration"
-msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
 #, fuzzy
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
@@ -6329,6 +6356,11 @@ msgstr ""
 "wachtwoordopslag, zijn nodig in platte tekst om contact te maken met "
 "systemen op afstand voor bewaking. Dus al die wachtwoorden moeten worden "
 "opgeslagen die leesbaar zijn voor de bewaking."
+
+#, fuzzy
+msgid "All undecided services and new labels accepted. Monitoring is enabled."
+msgstr ""
+"Voeg alle gedetecteerde maar nog niet bewaakte diensten toe aan de bewaking."
 
 msgid "All unknown services of a certain host group"
 msgstr "Alle onbekende diensten van een bepaalde hostgroep"
@@ -12375,6 +12407,9 @@ msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Kan geen historische gegevens ophalen met Nagios core"
 
 msgid "Cannot save the form because it contains errors."
+msgstr ""
+
+msgid "Cannot specify both 'view_name' and 'embedded_id' parameters."
 msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
@@ -33051,6 +33086,9 @@ msgstr "IIS Application Pool State Instellingen"
 msgid "IMAP"
 msgstr "IMAP"
 
+msgid "INFO"
+msgstr ""
+
 msgid "INotify Levels"
 msgstr "INotify Niveaus"
 
@@ -37233,6 +37271,10 @@ msgstr "Ongeldig rapport element type '%s'"
 #, fuzzy
 msgid "Invalid request"
 msgstr "Ongeldig verzoek: %r"
+
+#, fuzzy
+msgid "Invalid request parameters."
+msgstr "Ongeldige controleparameter"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -46217,8 +46259,9 @@ msgstr "Geen contactgroepen toegewezen."
 msgid "No custom attributes are defined yet."
 msgstr "Er zijn nog geen aangepaste attributen gedefinieerd."
 
-msgid "No dashboard found for the given dashboard name and/or dashboard owner"
-msgstr ""
+#, fuzzy
+msgid "No dashboard name provided."
+msgstr "Van wachtwoord opslag"
 
 msgid "No data"
 msgstr "Geen gegevens"
@@ -46624,6 +46667,10 @@ msgstr "Geen versiebeperking"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "Geen view gedefinieerd met de naam '%s'."
+
+#, fuzzy
+msgid "No view name provided."
+msgstr "Van wachtwoord opslag"
 
 #, fuzzy
 msgid "No waiting batches"
@@ -49337,14 +49384,6 @@ msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "OpenTelemetry Collector Memory Limit"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "OpenTelemetry collector (experimental)"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "OpenTelemetry collector configurations"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
@@ -57317,6 +57356,10 @@ msgstr "Vereiste schakelaarcontactstatus"
 msgid "Rescan"
 msgstr "Rescan"
 
+#, fuzzy, python-format
+msgid "Rescanning services of host %s."
+msgstr "Toon diensten van host %s"
+
 msgid "Reschedule"
 msgstr "Herschikken"
 
@@ -60664,9 +60707,6 @@ msgstr "Ontdekken van diensten"
 msgid "Service discovery and activation: "
 msgstr "Dienst ontdekking: "
 
-msgid "Service discovery details"
-msgstr "Details over het zoeken naar een dienst"
-
 #, fuzzy
 msgid "Service discovery ran on"
 msgstr "Dienst ontdekking: "
@@ -61132,6 +61172,10 @@ msgstr "Te controleren diensten per regio"
 
 msgid "Services per region to monitor"
 msgstr "Te controleren diensten per regio"
+
+#, fuzzy
+msgid "Services rescanned."
+msgstr "Diensten"
 
 msgid "Services states"
 msgstr "Diensten"
@@ -69705,7 +69749,7 @@ msgstr ""
 "De opgegeven waarde is niet toegestaan. U mag alleen relatieve URL's "
 "configureren, zoals <tt>dashboard.py?name=my_dashboard</tt>."
 
-msgid "The given widget id does not match any of this dashboard's widgets"
+msgid "The given widget id does not match any of this dashboard's widgets."
 msgstr ""
 
 #, fuzzy
@@ -71312,7 +71356,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "The provided token is not valid for the requested page."
+msgid "The provided token is not valid for dashboard access."
 msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
 
 msgid "The queried ESX system (vCenter / Host)"
@@ -72269,6 +72313,9 @@ msgid ""
 msgstr ""
 "De titel waaronder de waarde zal verschijnen in Checkmk. Wordt standaard op "
 "pad gezet indien niet opgegeven."
+
+msgid "The token owner did not have access to this view."
+msgstr ""
 
 msgid "The top level rule does not exist."
 msgstr "De regel van het hoogste niveau bestaat niet."
@@ -94157,6 +94204,18 @@ msgid "Choose how to display your data"
 msgstr "Geef geen datum weer"
 
 #, fuzzy
+msgid "Add optional filters to refine this widget"
+msgstr "Extra tekst als voorvoegsel bij de uitvoer"
+
+#, fuzzy
+msgid "Add optional filter to refine this widget"
+msgstr "Extra tekst als voorvoegsel bij de uitvoer"
+
+#, fuzzy
+msgid "Add %{name}"
+msgstr "Naam toevoegen"
+
+#, fuzzy
 msgid "Single %{n}"
 msgstr "Single"
 
@@ -94181,7 +94240,7 @@ msgid "Runtime filter"
 msgstr "Verwijder filter"
 
 #, fuzzy
-msgid "Applied %{n} targeted filter"
+msgid "Applied %{n} filter"
 msgstr "Toegepaste filters:"
 
 msgid ""
@@ -94190,14 +94249,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "No %{n} targeted filter applied"
+msgid "No %{n} filter applied"
 msgstr "Ntop gastheer"
-
-msgid ""
-"A %{n} targeted filter selected as dashboard or runtime filter appears here "
-"and applies to this widget. You can override the value by setting a widget "
-"specific filter."
-msgstr ""
 
 #, fuzzy
 msgid "Applied %{n} filters"
@@ -94211,12 +94264,6 @@ msgstr ""
 #, fuzzy
 msgid "No %{n} filters applied"
 msgstr "Ntop gastheer"
-
-msgid ""
-"Dashboard or runtime %{n} filters selected on dashboard level appear and "
-"apply to this widget. You can override the values by setting widget specific "
-"filters. "
-msgstr ""
 
 #, fuzzy
 msgid "Widget filters"
@@ -94971,11 +95018,12 @@ msgid "Data point attributes"
 msgstr "Gewijzigde attributen"
 
 #, fuzzy
-msgid "Apply rate (sums)"
-msgstr "Latency"
+msgid "Aggregation lookback"
+msgstr "Aggregatiecontroles"
 
-msgid "Apply percentile (histograms)"
-msgstr ""
+#, fuzzy
+msgid "Percentile (histograms)"
+msgstr "Aggregatiegroepen"
 
 #, fuzzy
 msgid "Auto"
@@ -95029,8 +95077,8 @@ msgid "Clone this entry"
 msgstr "Kloon deze metriek"
 
 #, fuzzy
-msgid "Create services"
-msgstr "Diensten beheren"
+msgid "Add rule: Metric backend (Custom query)"
+msgstr "Oracle gevallen"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -95039,10 +95087,6 @@ msgstr "Selecteer ten minste één element"
 #, fuzzy
 msgid "Select one graph line to edit"
 msgstr "Selecteer ten minste één element"
-
-#, fuzzy
-msgid "Add rule: Metric backend (Custom query)"
-msgstr "Oracle gevallen"
 
 #, fuzzy
 msgid "Edit rule: Metric backend (Custom query)"
@@ -96063,6 +96107,37 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Add OpenTelemetry collector configuration"
+#~ msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+#~ msgid "OpenTelemetry collector (experimental)"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "OpenTelemetry collector configurations"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#~ msgid "Service discovery details"
+#~ msgstr "Details over het zoeken naar een dienst"
+
+#, fuzzy
+#~ msgid "Applied %{n} targeted filter"
+#~ msgstr "Toegepaste filters:"
+
+#, fuzzy
+#~ msgid "No %{n} targeted filter applied"
+#~ msgstr "Ntop gastheer"
+
+#, fuzzy
+#~ msgid "Apply rate (sums)"
+#~ msgstr "Latency"
+
+#, fuzzy
+#~ msgid "Create services"
+#~ msgstr "Diensten beheren"
+
+#, fuzzy
 #~ msgid "Connected Clients"
 #~ msgstr "Verbindingen"
 
@@ -96129,10 +96204,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Total requests"
 #~ msgstr "alleen verzoeken"
-
-#, fuzzy
-#~ msgid "Aggregation for histograms"
-#~ msgstr "Aggregatiegroepen"
 
 #, fuzzy
 #~ msgid "Aggregation for sums"

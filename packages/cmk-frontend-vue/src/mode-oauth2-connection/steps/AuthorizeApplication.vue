@@ -80,6 +80,7 @@ async function authorize(): Promise<string | null> {
       url.searchParams.append('response_mode', 'query')
       url.searchParams.append('scope', '.default')
       url.searchParams.append('state', refId)
+      url.searchParams.append('prompt', 'select_account')
 
       const authWindow = open(url, '_blank')
       if (authWindow) {

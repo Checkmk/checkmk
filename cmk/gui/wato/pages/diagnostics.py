@@ -34,6 +34,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_file_description,
     get_checkmk_file_info,
     get_checkmk_file_sensitivity_for_humans,
+    OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
@@ -367,6 +368,7 @@ class ModeDiagnostics(WatoMode):
                         elements=self._get_optional_information_elements(),
                         default_keys=[
                             OPT_LOCAL_FILES,
+                            OPT_APACHE_CONFIG,
                             OPT_OMD_CONFIG,
                             OPT_CHECKMK_OVERVIEW,
                             OPT_CHECKMK_CRASH_REPORTS,
@@ -403,6 +405,18 @@ class ModeDiagnostics(WatoMode):
                     help=_(
                         "List of installed, unpacked, optional files below OMD_ROOT/local. "
                         "This also includes information about installed MKPs."
+                    ),
+                ),
+            ),
+            (
+                OPT_APACHE_CONFIG,
+                FixedValue(
+                    value=True,
+                    totext="",
+                    title=_("Apache Config"),
+                    help=_(
+                        "Apache Configuration files in /etc/apache2 or /etc/httpd, "
+                        "/opt/omd/apache and $OMD_ROOT/etc/apache"
                     ),
                 ),
             ),

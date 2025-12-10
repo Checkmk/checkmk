@@ -118,6 +118,7 @@ from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
+from cmk.gui.watolib.icons import all_available_icon_emblems, all_available_icons
 from cmk.utils import dateutils
 from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
@@ -7723,81 +7724,17 @@ class IconSelector(ValueSpec[IconSelectorModel]):
     def category_alias(cls, category_name: str) -> str:
         return dict(cls.categories()).get(category_name, category_name)
 
-    # All icons within the images/icons directory have the ident of a category
-    # witten in the PNG meta data. For the default images we have done this scripted.
-    # During upload of user specific icons, the meta data is added to the images.
-    def available_icons(self, only_local: bool = False) -> Mapping[str, str]:
-        icons: dict[str, str] = {}
-        icons.update(self._available_builtin_icons("icon_", only_local))
-        icons.update(self._available_user_icons(only_local))
-        return icons
+    @staticmethod
+    def available_icons(only_local: bool = False) -> Mapping[str, str]:
+        return all_available_icons(
+            theme, wato_icon_categories=active_config.wato_icon_categories, only_local=only_local
+        )
 
-    def available_emblems(self, only_local: bool = False) -> Mapping[str, str]:
-        return self._available_builtin_icons("emblem_", only_local)
-
-    def _available_builtin_icons(self, prefix: str, only_local: bool = False) -> Mapping[str, str]:
-        if not self._show_builtin_icons:
-            return {}
-
-        icons = {}
-        for theme_id in theme.icon_themes():
-            dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/themes" / theme_id / "images"]
-            if not only_local:
-                dirs.append(cmk.utils.paths.web_dir / "htdocs/themes" / theme_id / "images")
-
-            for file_stem, category in self._get_icons_from_directories(
-                dirs, default_category="builtin"
-            ).items():
-                if file_stem.startswith(prefix):
-                    icons[file_stem[len(prefix) :]] = category
-        return icons
-
-    def _available_user_icons(self, only_local: bool = False) -> Mapping[str, str]:
-        dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/images/icons"]
-        if not only_local:
-            dirs.append(cmk.utils.paths.web_dir / "htdocs/images/icons")
-
-        return self._get_icons_from_directories(dirs, default_category="misc")
-
-    def _get_icons_from_directories(
-        self, dirs: Iterable[Path], default_category: str
-    ) -> Mapping[str, str]:
-        icons: dict[str, str] = {}
-        for directory in dirs:
-            try:
-                files = [f for f in directory.iterdir() if f.is_file()]
-            except OSError:
-                continue
-
-            for file_ in files:
-                if file_.suffix == ".png":
-                    try:
-                        category = self._extract_category_from_png(file_, default_category)
-                    except OSError as e:
-                        if "%s" % e == "cannot identify image file":
-                            continue  # silently skip invalid files
-                        raise
-                elif file_.suffix == ".svg":
-                    # users are not able to add SVGs and our builtin SVGs don't have a category
-                    category = default_category
-                else:
-                    continue
-
-                icons[file_.stem] = category
-
-        for exclude in self._exclude:
-            icons.pop(exclude, None)
-
-        return icons
-
-    def _extract_category_from_png(self, file_path: Path, default: str) -> str:
-        # extract the category from the meta data
-        image = CMKImage.from_path(file_path, ImageType.PNG)
-        category = image.get_comment()
-        valid_categories = {k for k, _v in self.categories()}
-        if category not in valid_categories:
-            return default
-        return category
+    @staticmethod
+    def available_emblems(only_local: bool = False) -> Mapping[str, str]:
+        return all_available_icon_emblems(
+            theme, wato_icon_categories=active_config.wato_icon_categories, only_local=only_local
+        )
 
     def _available_icons_by_category(
         self, icons: Mapping[str, str]

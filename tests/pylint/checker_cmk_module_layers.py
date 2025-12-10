@@ -394,7 +394,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.ccc",
         "cmk.utils",
     ),
-    Component("cmk.base.nonfree.pro.bakery"): _allow(
+    Component("cmk.base.nonfree.bakery"): _allow(
         "cmk.bakery",
         "cmk.base.api.bakery",
         "cmk.base.automations",
@@ -953,7 +953,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         # I don't think we have any idea of how to fix this.
-        "cmk.base.nonfree.pro.bakery",
+        "cmk.base.nonfree.bakery",
         "cmk.base.plugins.bakery",
         "cmk.nonfree.pro.bakery",
         "cmk.checkengine",

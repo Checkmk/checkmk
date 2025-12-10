@@ -19,7 +19,12 @@ from collections.abc import Iterable, Sequence
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    replace_macros,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
+)
 from cmk.server_side_calls.v1._utils import Secret
 
 
@@ -71,7 +76,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
     if params.events_since:
         command_arguments += ["--events_since", f"{params.events_since:.0f}"]
 
-    command_arguments.append(params.instance)
+    command_arguments.append(replace_macros(params.instance, host_config.macros))
 
     yield SpecialAgentCommand(command_arguments=command_arguments)
 

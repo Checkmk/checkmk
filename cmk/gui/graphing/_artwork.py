@@ -276,28 +276,28 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
         match line_type:
             case "line" | "-line":
                 layouted_curve: LayoutedCurve = LayoutedCurveLine(
-                    line_type=line_type,
-                    points=raw_points,
                     color=curve["color"],
                     title=curve["title"],
                     scalars=curve["scalars"],
+                    line_type=line_type,
+                    points=raw_points,
                 )
             case "area" | "-area":
                 layouted_curve = LayoutedCurveArea(
-                    line_type=line_type,
-                    points=_areastack(raw_points, []),
                     color=curve["color"],
                     title=curve["title"],
                     scalars=curve["scalars"],
+                    line_type=line_type,
+                    points=_areastack(raw_points, []),
                 )
                 stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
             case "stack" | "-stack":
                 layouted_curve = LayoutedCurveStack(
-                    line_type=line_type,
-                    points=_areastack(raw_points, stacks[stack_nr] or []),
                     color=curve["color"],
                     title=curve["title"],
                     scalars=curve["scalars"],
+                    line_type=line_type,
+                    points=_areastack(raw_points, stacks[stack_nr] or []),
                 )
                 stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 

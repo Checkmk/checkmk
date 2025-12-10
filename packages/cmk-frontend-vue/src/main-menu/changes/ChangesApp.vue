@@ -473,16 +473,8 @@ onMounted(() => {
 }
 
 .cmk-div-activation-result-container {
-  display: flex;
-  padding: 20px 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 13px;
-  height: 76px;
-  align-self: stretch;
-  background-color: var(--ux-theme-4);
-  margin-top: 20px;
-  border-radius: var(--border-radius);
+  position: relative;
+  box-sizing: border-box;
 }
 
 .cmk-div-activation-result {

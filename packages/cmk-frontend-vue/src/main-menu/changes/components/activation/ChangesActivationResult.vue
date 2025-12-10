@@ -5,40 +5,25 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 const props = defineProps<{ type: 'success' | 'warning'; title: string; info: string }>()
 </script>
 
 <template>
   <div>
-    <div class="mm-changes-activation-result">
-      <CmkIcon v-if="props.type === 'success'" variant="plain" size="xxlarge" name="save" />
-      <CmkIcon
-        v-if="props.type === 'warning'"
-        variant="plain"
-        size="xxlarge"
-        name="validation-error"
-      />
-      <span class="mm-changes-activation-result__title">{{ props.title }}</span>
-
-      <span>{{ props.info }}</span>
-    </div>
+    <CmkAlertBox :variant="props.type" class="mm-changes-activation-result">
+      <template #heading>
+        {{ props.title }}
+      </template>
+      {{ props.info }}
+    </CmkAlertBox>
   </div>
 </template>
 
 <style scoped>
 .mm-changes-activation-result {
-  display: flex;
-  padding: 0 29px;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  align-self: stretch;
-}
-
-.mm-changes-activation-result__title {
-  font-weight: var(--font-weight-bold);
+  width: 100%;
+  box-sizing: border-box;
 }
 </style>

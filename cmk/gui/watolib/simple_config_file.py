@@ -18,7 +18,7 @@ from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.validation_utils import ConfigValidationError
 from cmk.gui.watolib.config_domain_name import wato_fileheader
-from cmk.utils.paths import omd_root
+from cmk.utils import paths
 
 _G = TypeVar("_G")
 _T = TypeVar("_T")
@@ -67,7 +67,7 @@ class WatoConfigFile(ABC, Generic[_G]):
 
     @property
     def name(self) -> str:
-        return self._config_file_path.relative_to(omd_root).as_posix()
+        return self._config_file_path.relative_to(paths.omd_root).as_posix()
 
     def read_file_and_validate(self) -> None:
         self.validate(self.load_for_reading())

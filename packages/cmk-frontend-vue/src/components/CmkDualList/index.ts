@@ -11,3 +11,5 @@ export interface DualListElement {
 }
 
 export default CmkDualList
+
+export type SearchableListWidthVariants = 'small' | 'medium' | 'large'

@@ -15,15 +15,19 @@ import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 import CmkSearchableList from './CmkSearchableList.vue'
-import type { DualListElement } from './index.ts'
+import type { DualListElement, SearchableListWidthVariants } from './index.ts'
 
-const props = defineProps<{
+interface CmkDualListProps {
   elements: DualListElement[]
   title: string
-
   validators: Validator[]
   backendValidation: ValidationMessages
-}>()
+  width?: SearchableListWidthVariants
+}
+
+const props = withDefaults(defineProps<CmkDualListProps>(), {
+  width: 'medium'
+})
 
 const data = defineModel<DualListElement[]>('data', { required: true })
 
@@ -112,6 +116,7 @@ const elementCounter = computed(() => props.elements.length)
           :title="_t('Available options')"
           :count-elements="elementCounter"
           :length-elements="elementsTitleMaxLength"
+          :width="props.width"
           @element:dblclick="handleDoubleClickToAddItem"
         />
       </div>
@@ -162,6 +167,7 @@ const elementCounter = computed(() => props.elements.length)
           :title="_t('Selected options')"
           :count-elements="elementCounter"
           :length-elements="elementsTitleMaxLength"
+          :width="props.width"
           @element:dblclick="handleDoubleClickToRemoveItem"
         />
       </div>

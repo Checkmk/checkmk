@@ -11,15 +11,18 @@ import useId from '@/lib/useId'
 
 import CmkIcon from '../CmkIcon/'
 import CmkInput from '../user-input/CmkInput.vue'
-import type { DualListElement } from './index.ts'
+import type { DualListElement, SearchableListWidthVariants } from './index.ts'
 
-const props = defineProps<{
+interface CmkSearchableListProps {
   elements: DualListElement[]
   title: string
 
   countElements: number
   lengthElements: number
-}>()
+  width?: SearchableListWidthVariants | undefined
+}
+
+const props = defineProps<CmkSearchableListProps>()
 
 const { _t } = usei18n()
 const emit = defineEmits(['element:dblclick'])
@@ -60,10 +63,19 @@ watch(
   { deep: true, immediate: true }
 )
 
+const maxWidthMap: Record<SearchableListWidthVariants, number> = {
+  small: 25.3,
+  medium: 50,
+  large: 75
+}
+
 const selectStyle = computed(() => {
+  const contentBasedWidth = (props.lengthElements + 1) * 0.7
+  const effectiveMaxWidth = maxWidthMap[(props.width ?? 'medium') as SearchableListWidthVariants]
+  const width = Math.max(20, Math.min(contentBasedWidth, effectiveMaxWidth))
   return {
     height: props.countElements < 10 ? '200px' : `${Math.min(props.countElements * 15, 400)}px`,
-    width: `${Math.max(20, Math.min(50, (props.lengthElements + 1) * 0.7))}em`
+    width: `${width}em`
   }
 })
 
@@ -137,7 +149,7 @@ watch(
 .cmk-searchable-list__container {
   display: flex;
   flex-direction: column;
-  max-width: 50em;
+  max-width: v-bind(selectStyle.width);
 }
 
 .cmk-searchable-list__header {

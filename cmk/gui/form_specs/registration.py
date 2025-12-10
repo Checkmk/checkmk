@@ -52,6 +52,7 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_monitored_host,
     recompose_monitored_service,
     recompose_multiple_choice,
+    recompose_oauth2_connection,
     recompose_passwordstore_password,
     recompose_percentage,
     recompose_proxy,
@@ -62,7 +63,7 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_time_period,
     recompose_user_selection,
 )
-from cmk.rulesets.internal.form_specs import InternalProxy
+from cmk.rulesets.internal.form_specs import InternalProxy, OAuth2Connection
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -199,6 +200,7 @@ def register_form_specs() -> None:
     register_recomposer_function(Proxy, recompose_proxy)
     register_recomposer_function(TimePeriod, recompose_time_period)
     register_recomposer_function(InternalProxy, recompose_internal_proxy)
+    register_recomposer_function(OAuth2Connection, recompose_oauth2_connection)
 
 
 def register_validators() -> None:

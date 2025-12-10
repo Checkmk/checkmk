@@ -13,6 +13,7 @@ from .metric import recompose as recompose_metric
 from .monitored_host import recompose as recompose_monitored_host
 from .monitored_service import recompose as recompose_monitored_service
 from .multiple_choice import recompose as recompose_multiple_choice
+from .oauth2_connection import recompose as recompose_oauth2_connection
 from .passwordstore_password import recompose as recompose_passwordstore_password
 from .percentage import recompose as recompose_percentage
 from .proxy import recompose as recompose_proxy
@@ -43,4 +44,5 @@ __all__ = [
     "recompose_string",
     "recompose_time_period",
     "recompose_user_selection",
+    "recompose_oauth2_connection",
 ]

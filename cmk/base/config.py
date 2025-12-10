@@ -40,16 +40,12 @@ from typing import (
     TypeGuard,
 )
 
-import cmk.ccc.cleanup
 import cmk.ccc.debug
-import cmk.ccc.translations
 import cmk.ccc.version as cmk_version
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
-import cmk.utils.check_utils
 import cmk.utils.paths
 import cmk.utils.tags
-import cmk.utils.timeperiod
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.base import default_config
@@ -104,13 +100,11 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import (
-    FetcherTrigger,
     IPMICredentials,
     IPMIFetcher,
     MetricBackendFetcherConfig,
     NoSelectedSNMPSections,
     PiggybackFetcher,
-    PlainFetcherTrigger,
     ProgramFetcher,
     SNMPFetcher,
     SNMPFetcherConfig,
@@ -3705,28 +3699,6 @@ _RELAY_LABEL_KEY = "cmk/relay"
 
 def get_relay_id(labels: Labels) -> str | None:
     return labels.get(_RELAY_LABEL_KEY)
-
-
-def make_fetcher_trigger(
-    edition: cmk_version.Edition,
-    relay_id: str | None,
-) -> FetcherTrigger:
-    if relay_id is None:
-        return PlainFetcherTrigger()
-
-    match edition:
-        case (
-            cmk_version.Edition.ULTIMATE
-            | cmk_version.Edition.ULTIMATEMT
-            | cmk_version.Edition.CLOUD
-        ):
-            from cmk.relay_fetcher_trigger.trigger import (  # type: ignore[import-not-found, unused-ignore]
-                RelayFetcherTrigger,
-            )
-
-            return RelayFetcherTrigger(relay_id=relay_id, omd_root=cmk.utils.paths.omd_root)
-        case cmk_version.Edition.PRO | cmk_version.Edition.COMMUNITY:
-            return PlainFetcherTrigger()
 
 
 def make_parser_config(

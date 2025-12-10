@@ -34,7 +34,6 @@ import livestatus
 
 import cmk.base.parent_scan
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.timeperiod
@@ -170,6 +169,7 @@ from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
     ad_hoc_secrets_file,
     AdHocSecrets,
+    FetcherTrigger,
     Mode,
     NoSelectedSNMPSections,
     PlainFetcherTrigger,
@@ -376,7 +376,7 @@ def automation_service_discovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
+        make_trigger=ctx.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             service_configurer,
             ip_address_of,
@@ -485,7 +485,6 @@ def automation_special_agent_discovery_preview(
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> ServiceDiscoveryPreviewResult:
-    edition = cmk_version.edition(cmk.utils.paths.omd_root)
     run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
 
     if plugins is None:
@@ -529,7 +528,7 @@ def automation_special_agent_discovery_preview(
     )
 
     fetcher = SpecialAgentFetcher(
-        config.make_fetcher_trigger(edition, run_settings.host_config.relay_id),
+        ctx.make_fetcher_trigger(run_settings.host_config.relay_id),
         ad_hoc_secrets,
         agent_name=run_settings.agent_name,
         cmds=cmds,
@@ -596,7 +595,7 @@ def automation_discovery_preview(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
+        make_trigger=ctx.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             service_configurer,
             ip_address_of_with_fallback,
@@ -1074,7 +1073,7 @@ def _execute_autodiscovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
+        make_trigger=ctx.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             service_configurer,
             slightly_different_ip_address_of,
@@ -3168,7 +3167,7 @@ class AutomationDiagHost:
             if test == "agent":
                 return DiagHostResult(
                     *self._execute_agent(
-                        ctx.edition,
+                        ctx.make_fetcher_trigger,
                         loading_result.loaded_config,
                         loading_result.config_cache,
                         label_manager,
@@ -3262,7 +3261,7 @@ class AutomationDiagHost:
 
     def _execute_agent(
         self,
-        edition: cmk_version.Edition,
+        make_fetcher_trigger: Callable[[str | None], FetcherTrigger],
         loaded_config: LoadedConfigFragment,
         config_cache: ConfigCache,
         label_manager: LabelManager,
@@ -3301,7 +3300,7 @@ class AutomationDiagHost:
         )
         passwords = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
 
-        trigger = config.make_fetcher_trigger(edition, host_relay_id)
+        trigger = make_fetcher_trigger(host_relay_id)
         for source in sources.make_sources(
             plugins,
             host_name,
@@ -3842,7 +3841,7 @@ def automation_get_agent_output(
 
     host_labels = label_manager.labels_of_host(hostname)
     relay_id = config.get_relay_id(host_labels)
-    trigger = config.make_fetcher_trigger(ctx.edition, relay_id)
+    trigger = ctx.make_fetcher_trigger(relay_id)
 
     success = True
     output = ""

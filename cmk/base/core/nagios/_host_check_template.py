@@ -14,6 +14,7 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.config_path import VersionedConfigPath
@@ -99,7 +100,7 @@ def main() -> int:
         config.ipv6addresses = CONFIG.ipv6addresses
 
         return run_checking(
-            cmk_version.edition(omd_root),
+            make_app(cmk_version.edition(omd_root)),
             loading_result.loaded_config,
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager,

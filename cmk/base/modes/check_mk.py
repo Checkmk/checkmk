@@ -647,7 +647,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
 
     host_labels = label_manager.labels_of_host(hostname)
     relay_id = config.get_relay_id(host_labels)
-    fetcher_trigger = config.make_fetcher_trigger(app.edition, relay_id)
+    fetcher_trigger = app.make_fetcher_trigger(relay_id)
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
@@ -1975,6 +1975,7 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
                     edition=app.edition,
                     make_bake_on_restart=app.make_bake_on_restart,
                     create_core=app.create_core,
+                    make_fetcher_trigger=app.make_fetcher_trigger,
                 ),
                 name,
                 automation_args,
@@ -2169,7 +2170,7 @@ def mode_check_discovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
+        make_trigger=app.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2534,7 +2535,7 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
+        make_trigger=app.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2707,7 +2708,7 @@ def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) 
     label_manager = loading_result.config_cache.label_manager
 
     return run_checking(
-        app.edition,
+        app,
         loaded_config,
         ruleset_matcher,
         label_manager,
@@ -2729,7 +2730,7 @@ def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) 
 
 # also used in precompiled host checks!
 def run_checking(
-    edition: cmk_version.Edition,
+    app: CheckmkBaseApp,
     loaded_config: LoadedConfigFragment,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
@@ -2790,7 +2791,7 @@ def run_checking(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        make_trigger=app.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             service_configurer,
             ip_address_of,
@@ -3087,7 +3088,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
+        make_trigger=app.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -3398,7 +3399,7 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(app.edition, relay_id),
+        make_trigger=app.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,

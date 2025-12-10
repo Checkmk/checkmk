@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.version import Edition
+from cmk.fetchers import PlainFetcherTrigger
 from cmk.utils.licensing.community_handler import CRELicensingHandler
 
 from . import diagnostics, localize
@@ -29,6 +30,7 @@ def make_app() -> CheckmkBaseApp:
         make_bake_on_restart=lambda *args: lambda: None,
         create_core=create_core,
         licensing_handler_type=CRELicensingHandler,
+        make_fetcher_trigger=lambda x: PlainFetcherTrigger(),
     )
 
 

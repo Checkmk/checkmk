@@ -79,14 +79,6 @@ class TestModeDumpAgent:
         )
 
     @pytest.fixture
-    def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(
-            check_mk.config,  # type: ignore[attr-defined]
-            "make_fetcher_trigger",
-            lambda *args: _MockFetcherTrigger(raw_data),
-        )
-
-    @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):
         ts = Scenario()
         ts.add_host(hostname)
@@ -95,10 +87,11 @@ class TestModeDumpAgent:
         return ts
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.usefixtures("patch_fetch")
     @pytest.mark.usefixtures("patch_config_load")
     def test_success(
         self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        check_mk.mode_dump_agent(make_app(Edition.COMMUNITY), {}, hostname)
+        app = make_app(Edition.COMMUNITY)
+        app.make_fetcher_trigger = lambda *args: _MockFetcherTrigger(raw_data)
+        check_mk.mode_dump_agent(app, {}, hostname)
         assert capsys.readouterr().out == raw_data.decode()

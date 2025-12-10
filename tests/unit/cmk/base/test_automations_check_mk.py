@@ -75,15 +75,6 @@ class TestAutomationDiagHost:
         ts.set_option("ipaddresses", {hostname: ipaddress})
         return ts.apply(monkeypatch)
 
-    @pytest.fixture
-    def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(
-            check_mk.config,  # type: ignore[attr-defined]
-            "make_fetcher_trigger",
-            lambda *args: _MockFetcherTrigger(raw_data.encode("utf-8")),
-        )
-
-    @pytest.mark.usefixtures("patch_fetch")
     def test_execute(
         self, hostname: str, ipaddress: str, raw_data: str, scenario: ConfigCache
     ) -> None:
@@ -110,6 +101,7 @@ class TestAutomationDiagHost:
                 edition=(app := make_app(edition(paths.omd_root))).edition,
                 make_bake_on_restart=app.make_bake_on_restart,
                 create_core=app.create_core,
+                make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode("utf-8")),
             ),
             args,
             AgentBasedPlugins.empty(),
@@ -255,6 +247,7 @@ def test_automation_active_check(
                 edition=(app := make_app(edition(paths.omd_root))).edition,
                 make_bake_on_restart=app.make_bake_on_restart,
                 create_core=app.create_core,
+                make_fetcher_trigger=app.make_fetcher_trigger,
             ),
             active_check_args,
             AgentBasedPlugins.empty(),
@@ -329,6 +322,7 @@ def test_automation_active_check_invalid_args(
             edition=(app := make_app(edition(paths.omd_root))).edition,
             make_bake_on_restart=app.make_bake_on_restart,
             create_core=app.create_core,
+            make_fetcher_trigger=app.make_fetcher_trigger,
         ),
         active_check_args,
         AgentBasedPlugins.empty(),

@@ -14,6 +14,8 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.base import config
+from cmk.base.app import make_app
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -122,7 +124,7 @@ def main(argv: Sequence[str]) -> int:
     )
 
     return inventory_as_check(
-        cmk_version.edition(cmk.utils.paths.omd_root),
+        make_app(cmk_version.edition(cmk.utils.paths.omd_root)),
         parameters,
         args.hostname,
         load_plugins_from_index(VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root))
@@ -132,7 +134,7 @@ def main(argv: Sequence[str]) -> int:
 
 
 def inventory_as_check(
-    edition: cmk_version.Edition,
+    app: CheckmkBaseApp,
     parameters: HWSWInventoryParameters,
     hostname: HostName,
     plugins: AgentBasedPlugins,
@@ -168,7 +170,7 @@ def inventory_as_check(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        make_trigger=app.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,

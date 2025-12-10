@@ -11,6 +11,7 @@ from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.fetchers import FetcherTrigger
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
@@ -46,6 +47,7 @@ class CheckmkBaseApp:
             MonitoringCore,
         ],
         licensing_handler_type: type[LicensingHandler],
+        make_fetcher_trigger: Callable[[str | None], FetcherTrigger],
     ) -> None:
         self.edition: Final = edition
         self.modes: Final = modes
@@ -53,3 +55,4 @@ class CheckmkBaseApp:
         self.make_bake_on_restart: Final = make_bake_on_restart
         self.create_core: Final = create_core
         self.licensing_handler_type: Final = licensing_handler_type
+        self.make_fetcher_trigger: Final = make_fetcher_trigger

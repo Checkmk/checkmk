@@ -26,6 +26,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
+from cmk.plugins.cisco_meraki.lib.type_defs import PossiblyMissing
 from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 
 
@@ -49,11 +50,13 @@ class Components(BaseModel, frozen=True):
 class DeviceStatus(BaseModel, frozen=True):
     status: str
     last_reported: datetime = Field(alias="lastReportedAt")
-    components: Components
+    components: PossiblyMissing[Components] = None
 
     @computed_field
     @property
     def power_supplies(self) -> dict[str, PowerSupply]:
+        if not self.components:
+            return {}
         return {str(ps.slot): ps for ps in self.components.power_supplies}
 
 

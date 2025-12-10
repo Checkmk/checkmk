@@ -9,7 +9,7 @@ import axios from 'axios'
 import { type I18NPingHost, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 import { type Ref, computed, onMounted, ref } from 'vue'
 
-import StatusBox, { type DNSStatus } from '@/mode-host/ping-host/StatusBox.vue'
+import CmkAlertBox, { type Variants } from '@/components/CmkAlertBox.vue'
 
 const props = defineProps<{
   i18n: I18NPingHost
@@ -202,6 +202,11 @@ async function callAJAX(
     })
 }
 
+interface DNSStatus {
+  tooltip: string
+  status: Variants
+}
+
 function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean): DNSStatus {
   switch (response.result_code) {
     case 0:
@@ -211,20 +216,20 @@ function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean):
             tooltip: isIpAddress
               ? props.i18n.success_ip_pingable
               : props.i18n.success_host_dns_resolvable,
-            status: 'ok'
+            status: 'success'
           }
         default:
           return {
             tooltip: isIpAddress
               ? props.i18n.error_ip_not_pingable
               : props.i18n.error_host_not_dns_resolvable,
-            status: 'warn'
+            status: 'warning'
           }
       }
     case 1:
       return {
         tooltip: response.result,
-        status: 'crit'
+        status: 'error'
       }
   }
 }
@@ -236,6 +241,27 @@ function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean):
     :key="elementName"
     :to="element.parentNode"
   >
-    <StatusBox :status="status" />
+    <span class="mh-ping-host__status-box">
+      <CmkAlertBox
+        :title="status.tooltip"
+        :variant="status.status"
+        size="small"
+        class="mh-ping-host__status-box-alert"
+      >
+        {{ status.tooltip }}
+      </CmkAlertBox>
+    </span>
   </Teleport>
 </template>
+
+<style scoped>
+.mh-ping-host__status-box {
+  display: inline-block;
+  position: relative;
+  top: 4px;
+
+  .mh-ping-host__status-box-alert {
+    margin: 0;
+  }
+}
+</style>

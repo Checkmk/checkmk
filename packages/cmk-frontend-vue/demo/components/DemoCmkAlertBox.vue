@@ -18,6 +18,7 @@ defineProps<{ screenshotMode: boolean }>()
       <li><CmkAlertBox variant="info">This is the info variant</CmkAlertBox></li>
       <li><CmkAlertBox variant="warning">This is the warning variant</CmkAlertBox></li>
       <li><CmkAlertBox variant="error">This is the error variant</CmkAlertBox></li>
+      <li><CmkAlertBox variant="loading">This is the loading variant</CmkAlertBox></li>
     </ul>
     Size:
     <ul>

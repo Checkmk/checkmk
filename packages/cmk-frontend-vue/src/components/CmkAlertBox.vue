@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
 
+import CmkIcon from '@/components/CmkIcon'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import CmkHeading from './typography/CmkHeading.vue'
@@ -17,7 +18,8 @@ const propsCva = cva('', {
       error: 'cmk-alert-box--error',
       warning: 'cmk-alert-box--warning',
       success: 'cmk-alert-box--success',
-      info: 'cmk-alert-box--info'
+      info: 'cmk-alert-box--info',
+      loading: 'cmk-alert-box--loading'
     },
     size: {
       small: 'cmk-alert-box--small',
@@ -71,7 +73,8 @@ const alertIconColor = computed(() => {
 <template>
   <div class="cmk-alert-box" :class="propsCva({ variant, size })">
     <div class="cmk-alert-box__icon">
-      <CmkMultitoneIcon :name="alertIconName" :primary-color="alertIconColor" size="large" />
+      <CmkIcon v-if="variant === 'loading'" name="load-graph" size="large" />
+      <CmkMultitoneIcon v-else :name="alertIconName" :primary-color="alertIconColor" size="large" />
     </div>
     <div class="cmk-alert-box__text">
       <CmkHeading v-if="$slots.heading || heading" type="h4">
@@ -128,7 +131,8 @@ const alertIconColor = computed(() => {
   background: color-mix(in srgb, var(--color-corporate-green-50) 10%, transparent);
 }
 
-.cmk-alert-box--info {
+.cmk-alert-box--info,
+.cmk-alert-box--loading {
   color: var(--font-color);
   background-color: color-mix(in srgb, var(--color-dark-blue-50) 10%, transparent);
 }

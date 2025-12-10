@@ -1,13 +1,8 @@
-# Component Microcore & Livestatus, Notifications
-#
 # Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
 # Find information about code-owners (+ find-owners syntax) here:
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-
-per-file core_factory.py=file:/component_owners/microcore_and_livestatus/OWNERS_DEFINITION
-per-file core_factory.py=set noparent
 per-file notify.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notify.py=set noparent

@@ -4508,7 +4508,7 @@ def _valuespec_clustered_services_mapping() -> TextInput:
             "<i>Clustered services</i> is not sufficient since it would not be clear "
             "to which of the several possible clusters a service found on such a shared "
             "node should be assigned to. With this ruleset you can assign services and "
-            "explicitly specify which cluster assign them to."
+            "explicitly specify which cluster to assign them to."
         ),
     )
 

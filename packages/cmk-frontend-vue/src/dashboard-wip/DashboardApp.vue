@@ -462,7 +462,7 @@ function deepClone<T>(obj: T): T {
         @close="openDashboardFilterSettings = false"
       />
       <DashboardSettingsWizard
-        v-if="openDashboardSettings"
+        v-if="openDashboardSettings && dashboardsManager.activeDashboard.value"
         :active-dashboard-id="dashboardsManager.activeDashboardName.value!"
         :dashboard-general-settings="
           deepClone(dashboardsManager.activeDashboard.value!.general_settings)

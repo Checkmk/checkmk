@@ -864,7 +864,17 @@ class DiscoveryPageRenderer:
                         must_escape=not active_config.sites[self._host.site_id()]["is_trusted"],
                     )
                 )
-                if "[agent]" in output and state == 2 and "No cached data available" not in output:
+
+                outputMessagePartials = [
+                    "No cached data available",
+                    "This data source is not supported for relay hosts",
+                ]
+
+                if (
+                    "[agent]" in output
+                    and state == 2
+                    and not any(msg in output for msg in outputMessagePartials)
+                ):
                     html.open_td()
                     self._render_agent_download_tooltip(output)
                     html.close_td()

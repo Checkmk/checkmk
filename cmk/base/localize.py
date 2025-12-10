@@ -10,11 +10,13 @@ import sys
 from pathlib import Path
 
 import cmk.utils.paths
+from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.modes.modes import Mode, Modes
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
 from cmk.utils.log import VERBOSE
 
-__all__ = ["do_localize"]
+__all__ = ["register"]
 
 logger = logging.getLogger("cmk.base.localize")
 
@@ -27,6 +29,28 @@ class LocalizeException(MKException):
 
 
 domain = "multisite"
+
+
+def register(modes: Modes) -> None:
+    modes.register(
+        Mode(
+            long_option="localize",
+            handler_function=_mode_localize,
+            argument=True,
+            argument_descr="COMMAND",
+            argument_optional=True,
+            short_help="Do localization operations",
+            long_help=[
+                "Brings you into localization mode. You can create "
+                "and/or improve the localization of Check_MKs GUI. "
+                "Call without arguments for a help on localization."
+            ],
+        )
+    )
+
+
+def _mode_localize(app: CheckmkBaseApp, args: list[str]) -> None:
+    do_localize(args)
 
 
 def _locale_base() -> Path:

@@ -6,7 +6,7 @@
 from cmk.ccc.version import Edition
 from cmk.utils.licensing.community_handler import CRELicensingHandler
 
-from . import diagnostics
+from . import diagnostics, localize
 from .automations.automations import Automations
 from .automations.check_mk import register_common_automations
 from .base_app import CheckmkBaseApp
@@ -20,6 +20,7 @@ def make_app() -> CheckmkBaseApp:
     automations = _automations()
 
     diagnostics.register(modes, automations, core_performance_settings=lambda x: {})
+    localize.register(modes)
 
     return CheckmkBaseApp(
         edition=Edition.COMMUNITY,

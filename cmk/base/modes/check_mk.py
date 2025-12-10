@@ -147,7 +147,6 @@ from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagID
 
-from ._localize import do_localize
 from .modes import Mode, Option
 
 tracer = trace.get_tracer()
@@ -952,35 +951,6 @@ _PACKAGE_MODE = Mode(
     argument_optional=True,
     short_help="DEPRECATED: Do package operations",
     long_help=[_DEPRECATION_MSG % ""],
-)
-
-# .
-#   .--localize------------------------------------------------------------.
-#   |                    _                 _ _                             |
-#   |                   | | ___   ___ __ _| (_)_______                     |
-#   |                   | |/ _ \ / __/ _` | | |_  / _ \                    |
-#   |                   | | (_) | (_| (_| | | |/ /  __/                    |
-#   |                   |_|\___/ \___\__,_|_|_/___\___|                    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def mode_localize(app: CheckmkBaseApp, args: list[str]) -> None:
-    do_localize(args)
-
-
-_LOCALIZE_MODE = Mode(
-    long_option="localize",
-    handler_function=mode_localize,
-    argument=True,
-    argument_descr="COMMAND",
-    argument_optional=True,
-    short_help="Do localization operations",
-    long_help=[
-        "Brings you into localization mode. You can create "
-        "and/or improve the localization of Check_MKs GUI. "
-        "Call without arguments for a help on localization."
-    ],
 )
 
 # .
@@ -3637,7 +3607,6 @@ def common_modes() -> list[Mode]:
         _DUMP_AGENT_MODE,
         _DUMP_MODE,
         _PACKAGE_MODE,
-        _LOCALIZE_MODE,
         _UPDATE_DNS_CACHE_MODE,
         _CLEANUP_PIGGYBACK_MODE,
         _SNMPTRANSLATE_MODE,

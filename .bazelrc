@@ -66,6 +66,8 @@ common:ci --color=no
 common:ci --show_progress_rate_limit=0
 common:ci --show_timestamps
 common:ci --memory_profile=bazel-memory.profile
+common:ci --generate_json_trace_profile
+common:ci --profile=trace_profile.json
 common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=opt
 common:ci --local_resources=cpu=HOST_CPUS*.21
 common:ci --local_resources=memory=HOST_RAM*.67

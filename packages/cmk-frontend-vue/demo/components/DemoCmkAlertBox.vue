@@ -19,6 +19,11 @@ defineProps<{ screenshotMode: boolean }>()
       <li><CmkAlertBox variant="warning">This is the warning variant</CmkAlertBox></li>
       <li><CmkAlertBox variant="error">This is the error variant</CmkAlertBox></li>
     </ul>
+    Size:
+    <ul>
+      <li><CmkAlertBox variant="success">This is medium size</CmkAlertBox></li>
+      <li><CmkAlertBox variant="success" size="small">This is small size</CmkAlertBox></li>
+    </ul>
     Simple text heading:
     <CmkAlertBox variant="error" heading="Error occurred"> Something went wrong... </CmkAlertBox>
     Rich content heading via slot:

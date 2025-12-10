@@ -18,17 +18,24 @@ const propsCva = cva('', {
       warning: 'cmk-alert-box--warning',
       success: 'cmk-alert-box--success',
       info: 'cmk-alert-box--info'
+    },
+    size: {
+      small: 'cmk-alert-box--small',
+      medium: 'cmk-alert-box--medium'
     }
   },
   defaultVariants: {
-    variant: 'info'
+    variant: 'info',
+    size: 'medium'
   }
 })
 
 export type Variants = VariantProps<typeof propsCva>['variant']
+export type Sizes = VariantProps<typeof propsCva>['size']
 
 export interface CmkAlertBoxProps {
   variant?: Variants
+  size?: Sizes
   heading?: string | undefined
 }
 
@@ -62,7 +69,7 @@ const alertIconColor = computed(() => {
 </script>
 
 <template>
-  <div class="cmk-alert-box" :class="propsCva({ variant })">
+  <div class="cmk-alert-box" :class="propsCva({ variant, size })">
     <div class="cmk-alert-box__icon">
       <CmkMultitoneIcon :name="alertIconName" :primary-color="alertIconColor" size="large" />
     </div>
@@ -124,5 +131,13 @@ const alertIconColor = computed(() => {
 .cmk-alert-box--info {
   color: var(--font-color);
   background-color: color-mix(in srgb, var(--color-dark-blue-50) 10%, transparent);
+}
+
+.cmk-alert-box--small {
+  padding: var(--dimension-1) var(--dimension-5);
+
+  .cmk-alert-box__icon {
+    width: 14px;
+  }
 }
 </style>

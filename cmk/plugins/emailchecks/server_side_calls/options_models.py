@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from cmk.server_side_calls.internal import OAuth2Connection
 from cmk.server_side_calls.v1 import Secret
 
 
@@ -46,6 +47,20 @@ class CommonParameters(BaseModel):
     email_address: str | None = None
 
 
-SendingParameters = tuple[Literal["SMTP"], SMTPParameters] | tuple[Literal["EWS"], CommonParameters]
+class GraphApiConnectionParameters(BaseModel):
+    auth: OAuth2Connection
+    server: str | None = None
+    connection: CommonConnectionParameters = CommonConnectionParameters()
+    email_address: str | None = None
 
-FetchingParameters = tuple[Literal["IMAP", "POP3", "EWS"], CommonParameters]
+
+SendingParameters = (
+    tuple[Literal["SMTP"], SMTPParameters]
+    | tuple[Literal["EWS"], CommonParameters]
+    | tuple[Literal["GRAPHAPI"], GraphApiConnectionParameters]
+)
+
+FetchingParameters = (
+    tuple[Literal["IMAP", "POP3", "EWS"], CommonParameters]
+    | tuple[Literal["GRAPHAPI"], GraphApiConnectionParameters]
+)

@@ -5,9 +5,10 @@
 
 from collections.abc import Sequence
 
+from cmk.server_side_calls.internal import OAuth2Connection
 from cmk.server_side_calls.v1 import HostConfig, replace_macros, Secret
 
-from .options_models import BasicAuthParameters, FetchingParameters
+from .options_models import BasicAuthParameters, FetchingParameters, Oauth2Parameters
 
 
 def fetching_options_to_args(
@@ -35,21 +36,38 @@ def fetching_options_to_args(
     if (fetch_port := fetch_params.connection.port) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
-    if isinstance(auth := fetch_params.auth[1], BasicAuthParameters):
-        args += [
-            "--fetch-username",
-            auth.username,
-            "--fetch-password-reference",
-            auth.password,
-        ]
-
-    else:
-        args += [
-            f"--fetch-client-id={auth.client_id}",
-            "--fetch-client-secret-reference",
-            auth.client_secret,
-            f"--fetch-tenant-id={auth.tenant_id}",
-        ]
+    match fetch_params.auth:
+        case OAuth2Connection() as oauth2:
+            args += [
+                "--fetch-initial-access-token-reference",
+                oauth2.access_token,
+                "--fetch-initial-refresh-token-reference",
+                oauth2.refresh_token,
+                "--fetch-authority",
+                oauth2.authority,
+                "--fetch-client-secret-reference",
+                oauth2.client_secret,
+                "--fetch-client-id",
+                oauth2.client_id,
+                "--fetch-tenant-id",
+                oauth2.tenant_id,
+            ]
+        case tuple(("basic", BasicAuthParameters() as auth)):
+            args += [
+                "--fetch-username",
+                auth.username,
+                "--fetch-password-reference",
+                auth.password,
+            ]
+        case tuple(("oauth2", Oauth2Parameters() as auth)):
+            args += [
+                f"--fetch-client-id={auth.client_id}",
+                "--fetch-client-secret-reference",
+                auth.client_secret,
+                f"--fetch-tenant-id={auth.tenant_id}",
+            ]
+        case _:
+            pass
 
     if fetch_params.email_address:
         args.append(f"--fetch-email-address={fetch_params.email_address}")

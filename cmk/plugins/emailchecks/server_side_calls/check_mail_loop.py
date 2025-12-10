@@ -21,6 +21,8 @@ from .options_models import (
     BasicAuthParameters,
     CommonParameters,
     FetchingParameters,
+    GraphApiConnectionParameters,
+    Oauth2Parameters,
     SendingParameters,
     SMTPParameters,
 )
@@ -62,45 +64,68 @@ def check_mail_loop_arguments(
     if (port := send_params.connection.port) is not None:
         args.append(f"--send-port={port}")
 
-    if send_protocol == "SMTP":
-        assert isinstance(send_params, SMTPParameters)
-        if send_params.connection.tls:
-            args.append("--send-tls")
+    match params.send:
+        case ("SMTP", SMTPParameters() as smtp_params):
+            if smtp_params.connection.tls:
+                args.append("--send-tls")
 
-        if auth := send_params.auth:
-            args.extend(
-                ["--send-username", auth.username, "--send-password-reference", auth.password]
-            )
+            if auth := smtp_params.auth:
+                args.extend(
+                    [
+                        "--send-username",
+                        auth.username,
+                        "--send-password-reference",
+                        auth.password,
+                    ]
+                )
+        case ("EWS", CommonParameters() as common_params):
+            if not common_params.connection.disable_tls:
+                args.append("--send-tls")
 
-    elif send_protocol == "EWS":
-        assert isinstance(send_params, CommonParameters)
-        if not send_params.connection.disable_tls:
-            args.append("--send-tls")
+            if common_params.connection.disable_cert_validation:
+                args.append("--send-disable-cert-validation")
 
-        if send_params.connection.disable_cert_validation:
-            args.append("--send-disable-cert-validation")
+            match common_params.auth:
+                case ("basic", BasicAuthParameters() as ews_auth):
+                    args += [
+                        "--send-username",
+                        ews_auth.username,
+                        "--send-password-reference",
+                        ews_auth.password,
+                    ]
+                case ("oauth2", Oauth2Parameters() as ews_auth):
+                    args += [
+                        "--send-client-id",
+                        ews_auth.client_id,
+                        "--send-client-secret-reference",
+                        ews_auth.client_secret,
+                        "--send-tenant-id",
+                        ews_auth.tenant_id,
+                    ]
+                case _:
+                    pass
 
-        _auth_type, ews_auth = send_params.auth
-        if isinstance(ews_auth, BasicAuthParameters):
+            args.append(f"--send-email-address={common_params.email_address}")
+        case ("GRAPHAPI", GraphApiConnectionParameters() as graph_params):
+            oauth2 = graph_params.auth
             args += [
-                "--send-username",
-                ews_auth.username,
-                "--send-password-reference",
-                ews_auth.password,
+                "--fetch-initial-access-token-reference",
+                oauth2.access_token,
+                "--fetch-initial-refresh-token-reference",
+                oauth2.refresh_token,
+                "--fetch-authority",
+                oauth2.authority,
+                "--fetch-client-secret-reference",
+                oauth2.client_secret,
+                "--fetch-client-id",
+                oauth2.client_id,
+                "--fetch-tenant-id",
+                oauth2.tenant_id,
             ]
-        else:
-            args += [
-                "--send-client-id",
-                ews_auth.client_id,
-                "--send-client-secret-reference",
-                ews_auth.client_secret,
-                "--send-tenant-id",
-                ews_auth.tenant_id,
-            ]
-
-        args.append(f"--send-email-address={send_params.email_address}")
-    else:
-        raise NotImplementedError(f"Sending mails is not implemented for {send_protocol}")
+        case (protocol, _):
+            raise NotImplementedError(f"Sending mails is not implemented for {protocol}")
+        case _:
+            pass
 
     args.append(f"--mail-from={params.mail_from}")
     args.append(f"--mail-to={params.mail_to}")

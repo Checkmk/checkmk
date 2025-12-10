@@ -57,7 +57,7 @@ def _valuespec_active_checks_mail() -> Dictionary:
             ),
             "fetch": DictElement(
                 required=True,
-                parameter_form=fetching({"IMAP", "POP3", "EWS"}),
+                parameter_form=fetching({"IMAP", "POP3", "EWS", "GRAPHAPI"}),
             ),
             "connect_timeout": DictElement(
                 parameter_form=timeout(),

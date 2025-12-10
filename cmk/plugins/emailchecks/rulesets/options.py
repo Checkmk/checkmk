@@ -11,6 +11,7 @@
 from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Literal
 
+from cmk.rulesets.internal.form_specs import OAuth2Connection
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -258,12 +259,25 @@ def sending() -> CascadingSingleChoice:
             CascadingSingleChoiceElement(
                 name="EWS", title=Title("EWS"), parameter_form=common("EWS", "80/443")
             ),
+            CascadingSingleChoiceElement(
+                name="GRAPHAPI",
+                title=Title("GraphApi"),
+                parameter_form=Dictionary(
+                    title=Title("GraphApi"),
+                    elements={
+                        "auth": DictElement(
+                            required=True,
+                            parameter_form=OAuth2Connection(),
+                        )
+                    },
+                ),
+            ),
         ],
     )
 
 
 def fetching(
-    supported_protocols: Container[Literal["IMAP", "POP3", "EWS"]],
+    supported_protocols: Container[Literal["IMAP", "POP3", "EWS", "GRAPHAPI"]],
 ) -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Mail receiving"),
@@ -280,6 +294,19 @@ def fetching(
                 ),
                 CascadingSingleChoiceElement(
                     name="EWS", title=Title("EWS"), parameter_form=common("EWS", "80/443")
+                ),
+                CascadingSingleChoiceElement(
+                    name="GRAPHAPI",
+                    title=Title("GraphApi"),
+                    parameter_form=Dictionary(
+                        title=Title("GraphApi"),
+                        elements={
+                            "auth": DictElement(
+                                required=True,
+                                parameter_form=OAuth2Connection(),
+                            )
+                        },
+                    ),
                 ),
             ]
             if e.name in supported_protocols

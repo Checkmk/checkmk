@@ -322,6 +322,39 @@ py_test(
 )
 
 py_library(
+    name = "rabbitmq",
+    srcs = glob(["cmk/plugins/rabbitmq/**/*.py"]),
+    data = glob([
+        "cmk/plugins/rabbitmq/checkman/*",
+        "cmk/plugins/rabbitmq/libexec/*",
+    ]) + ["cmk/plugins/rabbitmq/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("requests"),
+        requirement("pydantic"),
+    ],
+)
+
+py_test(
+    name = "rabbitmq-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/rabbitmq/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":rabbitmq",
+        requirement("pytest"),
+    ],
+)
+
+py_library(
     name = "randomds",
     srcs = glob(
         [

@@ -3790,6 +3790,32 @@ class PagetypeTopicClient(RestApiClient):
         )
 
 
+class IconClient(RestApiClient):
+    domain: DomainType = "icon"
+    default_version = APIVersion.INTERNAL
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def get_all_emblems(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url="/domain-types/icon_emblem/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def get_all_categories(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url="/domain-types/icon_category/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3853,6 +3879,7 @@ class ClientRegistry:
     RelayClient: RelayClient
     MetricBackendClient: MetricBackendClient
     PagetypeTopicClient: PagetypeTopicClient
+    IconClient: IconClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3908,4 +3935,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         SidebarElement=SidebarElementClient(request_handler, url_prefix),
         MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
         PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
+        IconClient=IconClient(request_handler, url_prefix),
     )

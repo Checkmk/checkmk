@@ -84,6 +84,7 @@ class ApiConfig:
     password_policy: PasswordPolicy
     sites: SiteConfigurations
     tag_groups: list[TagGroup]
+    wato_icon_categories: list[tuple[str, str]]
     wato_max_snapshots: int
     wato_pprint_config: bool
     wato_use_git: bool
@@ -102,6 +103,7 @@ class ApiConfig:
             password_policy=config.password_policy,
             sites=config.sites,
             tag_groups=config.tags.tag_groups,
+            wato_icon_categories=config.wato_icon_categories,
             wato_max_snapshots=config.wato_max_snapshots,
             wato_pprint_config=config.wato_pprint_config,
             wato_use_git=config.wato_use_git,

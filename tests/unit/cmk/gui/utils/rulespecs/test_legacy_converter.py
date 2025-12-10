@@ -44,6 +44,7 @@ from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
 from cmk.gui.watolib.password_store import IndividualOrStoredPassword
+from cmk.rulesets.internal.form_specs import OAuth2Connection
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -1048,6 +1049,21 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 validate=lambda x, y: None,
             ),
             id="StringAutocompleter",
+        ),
+        pytest.param(
+            OAuth2Connection(
+                title=api_v1.Title("title"),
+                help_text=api_v1.Help("help text"),
+            ),
+            legacy_valuespecs.Transform(
+                valuespec=legacy_valuespecs.DropdownChoice(
+                    title="title",
+                    help="help text",
+                    choices=[],
+                    no_preselect_title="Please choose",
+                ),
+            ),
+            id="OAuth2Connection",
         ),
     ],
 )

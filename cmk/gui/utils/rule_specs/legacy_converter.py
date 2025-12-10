@@ -37,6 +37,9 @@ from cmk.gui.form_specs.unstable import (
 )
 from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword, Tuple
 from cmk.gui.form_specs.unstable.passwordstore_password import PasswordStorePassword
+from cmk.gui.form_specs.visitors.recomposers.oauth2_connection import (
+    recompose as recompose_oauth2_connection,
+)
 from cmk.gui.graphing import MetricName
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
@@ -802,6 +805,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_internal.form_specs.InternalProxy():
             return _convert_to_legacy_http_internal_proxy(to_convert, localizer)
+
+        case ruleset_api_internal.form_specs.OAuth2Connection():
+            return _convert_to_legacy_oauth2_connection(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.Metric():
             return _convert_to_legacy_metric_name(to_convert, localizer)
@@ -2635,6 +2641,19 @@ def _convert_to_legacy_individual_or_stored_password(
         validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
         if to_convert.custom_validate is not None
         else None,
+    )
+
+
+def _convert_to_legacy_oauth2_connection(
+    to_convert: ruleset_api_internal.form_specs.OAuth2Connection, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Transform:
+    recomposed = recompose_oauth2_connection(to_convert)
+    wrapped_form_spec = recomposed.wrapped_form_spec
+    fs = wrapped_form_spec() if callable(wrapped_form_spec) else wrapped_form_spec
+    return Transform(
+        _convert_to_inner_legacy_valuespec(fs, localizer),
+        back=recomposed.from_disk,
+        forth=recomposed.to_disk,
     )
 
 

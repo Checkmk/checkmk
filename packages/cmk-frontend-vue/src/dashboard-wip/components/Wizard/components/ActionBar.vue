@@ -34,7 +34,7 @@ const flexAlignment = computed(() => {
 <style scoped>
 .db-action-bar {
   display: flex;
-  gap: var(--spacing-double);
+  gap: var(--dimension-4);
   justify-content: v-bind(flexAlignment);
 }
 </style>

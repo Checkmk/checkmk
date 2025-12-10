@@ -8,8 +8,7 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHelpText from '@/components/CmkHelpText.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
+import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/types/dashboard'
@@ -132,7 +131,12 @@ const cancel = () => {
 <template>
   <div class="db-create-dashboard-wizard__root">
     <div class="db-create-dashboard-wizard__container">
-      <StepsHeader :title="_t('Create dashboard')" @back="cancel" />
+      <StepsHeader
+        :title="_t('Create dashboard')"
+        :hide-back-button="true"
+        :close-button="true"
+        @back="cancel"
+      />
 
       <ContentSpacer />
 
@@ -163,17 +167,15 @@ const cancel = () => {
       <ContentSpacer />
 
       <div>
-        <CmkHeading type="h4">
+        <CmkLabel
+          :help="
+            _t(
+              'Dashboards can display one or multiple entries depending on the selected datasource. By default, all are included. You can optionally restrict the configuration to a single host or specific datasources.'
+            )
+          "
+        >
           {{ _t('Dashboard type') }}
-          <CmkSpace />
-          <CmkHelpText
-            :help="
-              _t(
-                'Dashboards can display one or multiple entries depending on the selected datasource. By default, all are included. You can optionally restrict the configuration to a single host or specific datasources.'
-              )
-            "
-          />
-        </CmkHeading>
+        </CmkLabel>
       </div>
       <DashboardTypeSelector v-model:dashboard-type="dashboardType" />
 

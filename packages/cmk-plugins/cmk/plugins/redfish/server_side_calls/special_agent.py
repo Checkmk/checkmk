@@ -27,7 +27,6 @@ class ParamsRedfish(BaseModel):
     proto: Literal["http", "https"]
     retries: int
     timeout: float
-    debug: bool
 
 
 class ParamsRedfishPower(BaseModel):
@@ -77,7 +76,6 @@ def _agent_redfish_arguments(
             str(int(params.timeout)),
             "--retries",
             str(params.retries),
-            *(("--debug",) if params.debug else ()),
             host_config.primary_ip_config.address or host_config.name,
         ]
     )

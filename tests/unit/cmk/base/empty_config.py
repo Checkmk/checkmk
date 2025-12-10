@@ -94,6 +94,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
         "enable_telemetry": ("disabled", None),
         "proxy_setting": ("environment", "environment"),
     },
+    cmc_config_multiprocessing={"use_multiprocessing": True},
 )
 
 

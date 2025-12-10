@@ -115,3 +115,4 @@ class LoadedConfigFragment:
     check_periods: Sequence[RuleSpec[object]]
     relays: object  # see above
     product_telemetry: ProductTelemetrySettings
+    cmc_config_multiprocessing: object

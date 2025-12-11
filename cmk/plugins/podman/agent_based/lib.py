@@ -30,7 +30,8 @@ class SectionPodmanContainerState(BaseModel, frozen=True):
     status: str = Field(alias="Status")
     started_at: str = Field(alias="StartedAt")
     exit_code: int = Field(alias="ExitCode", description="Exit code of the container.")
-    health: ContainerHealth = Field(
+    health: ContainerHealth | None = Field(
+        default=None,
         alias="Health",
         description="Describes the results/logs from a healthcheck.",
     )

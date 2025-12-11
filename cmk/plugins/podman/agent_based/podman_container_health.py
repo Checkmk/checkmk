@@ -35,6 +35,13 @@ def check_podman_container_health(
     params: Params,
     section: SectionPodmanContainerInspect,
 ) -> CheckResult:
+    if not section.state.health:
+        yield Result(
+            state=State.OK,
+            summary="No health information available",
+        )
+        return
+
     details = f"""Last health report: {section.state.health.log[-1].output if section.state.health.log else "No health report available"}
     Health check command: {" ".join(section.config.healthcheck.command[1:]) if section.config.healthcheck else "No health check command configured"}
     Consecutive failed healthchecks: {section.state.health.failing_streak}

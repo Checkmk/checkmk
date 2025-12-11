@@ -29,7 +29,7 @@ void main() {
             disable_cache: disable_cache,
             bisect_comment: params.CIPARAM_BISECT_COMMENT,
             artifacts_base_dir: "tmp_artifacts",
-            filter: ["build-mk-oracle-rhel8-component-test"]
+            test_binaries_only: true,
             )
         )
     }

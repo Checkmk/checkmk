@@ -71,6 +71,7 @@ void provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
     def all_dependency_paths_hashes = dependency_paths_hashes();
+    def test_binaries_only = args.test_binaries_only == null ? false : true;
 
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -86,7 +87,7 @@ void provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for community edition..
-            condition: true, // edition != "community",  // FIXME!
+            condition: ! test_binaries_only,
             dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
             additional_build_params: [],
             install_cmd: """\
@@ -104,6 +105,7 @@ void provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
             additional_build_params: [],
+            condition: ! test_binaries_only,
             install_cmd: """\
                 cp mk-oracle.{aix,solaris} ${checkout_dir}/omd/packages/mk-oracle/
                 """.stripIndent(),
@@ -111,6 +113,7 @@ void provide_agent_binaries(Map args) {
         "build-mk-oracle-rhel8": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
+            condition: ! test_binaries_only,
             additional_build_params: [
                 PACKAGE_PATH: "packages/mk-oracle",
                 DISTRO: "almalinux-8",
@@ -126,6 +129,7 @@ void provide_agent_binaries(Map args) {
         "build-mk-oracle-rhel8-component-test": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
+            condition: test_binaries_only,
             additional_build_params: [
                 PACKAGE_PATH: "packages/mk-oracle",
                 DISTRO: "almalinux-8",
@@ -147,6 +151,7 @@ void provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
+            condition: ! test_binaries_only,
             additional_build_params: [],
             install_cmd: """\
                 cp \
@@ -182,6 +187,7 @@ void provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build-modules"],
+            condition: ! test_binaries_only,
             additional_build_params: [],
             install_cmd: """\
                 cp \
@@ -190,10 +196,8 @@ void provide_agent_binaries(Map args) {
                 """.stripIndent(),
         ],
     ];
-    def filter = args.filter == null ? upstream_job_details.keySet() : args.filter;
-    def filtered_upstream_job_details = upstream_job_details.subMap(filter)
 
-    def stages = filtered_upstream_job_details.collectEntries { job_name, details ->
+    def stages = upstream_job_details.collectEntries { job_name, details ->
         [("${job_name}".toString()) : {
             def run_condition = details.get("condition", true);
             def build_instance = null;

@@ -34,7 +34,7 @@ defineProps<AddFilterMessageProps>()
 
 .db-add-filter-message__inner {
   border: var(--color-midnight-grey-40) 1px dashed;
-  background-color: var(--color-midnight-grey-80);
+  background-color: var(--ux-theme-2);
   padding: var(--dimension-3);
 }
 </style>

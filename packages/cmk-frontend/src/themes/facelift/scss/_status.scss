@@ -357,7 +357,7 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     overflow: hidden;
-    border: 1px solid $color-table-border;
+    border: 1px solid $perfometer-border-color;
     filter: saturate(50%);
   }
 

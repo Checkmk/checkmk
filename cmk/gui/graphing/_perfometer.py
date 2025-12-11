@@ -19,7 +19,7 @@ from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.gui.color import parse_color_from_api
 from cmk.gui.log import logger
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.gui.view_utils import get_themed_perfometer_bg_color
+from cmk.gui.view_utils import get_perfometer_bg_color
 
 from ._from_api import parse_unit_from_api
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
@@ -799,13 +799,13 @@ def _get_renderer(
             return MetricometerRendererPerfometer(
                 perfometer_plugin,
                 translated_metrics,
-                get_themed_perfometer_bg_color(),
+                get_perfometer_bg_color(),
             )
         case perfometers_api.Bidirectional():
             return MetricometerRendererBidirectional(
                 perfometer_plugin,
                 translated_metrics,
-                get_themed_perfometer_bg_color(),
+                get_perfometer_bg_color(),
             )
         case perfometers_api.Stacked():
             return MetricometerRendererStacked(perfometer_plugin, translated_metrics)

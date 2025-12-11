@@ -152,9 +152,7 @@ async def update_task(
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
-    relay_serial: Annotated[
-        Serial | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)
-    ] = None,
+    relay_serial: Annotated[int | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)] = None,
     status: Annotated[
         tasks_protocol.TaskStatus | None, fastapi.Query(description="Filter tasks by status")
     ] = None,
@@ -182,7 +180,7 @@ async def get_tasks_endpoint(
         tasks = handler.process(
             RelayID(relay_id),
             TaskStatus(status.value) if status else None,
-            relay_serial=Serial(relay_serial) if relay_serial else None,
+            relay_serial=Serial(relay_serial) if relay_serial is not None else None,
         )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(

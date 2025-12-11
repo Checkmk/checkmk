@@ -2,15 +2,39 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
+import secrets
+from dataclasses import dataclass
 from http import HTTPStatus
-from typing import NewType
+from typing import NewType, override
 
 from fastapi import HTTPException
 
 RelayID = NewType("RelayID", str)
 TaskID = NewType("TaskID", str)
-Serial = NewType("Serial", int)
 Version = NewType("Version", str)
+
+
+@dataclass(frozen=True, slots=True)
+class Serial:
+    s: int
+
+    @override
+    def __repr__(self) -> str:
+        return str(self.s)
+
+    @property
+    def value(self) -> int:
+        return self.s
+
+    @classmethod
+    def random(cls) -> Serial:
+        return cls(secrets.randbelow(10000) + 1)
+
+    @classmethod
+    def default(cls) -> Serial:
+        return cls(0)
 
 
 class RelayNotFoundError(HTTPException):

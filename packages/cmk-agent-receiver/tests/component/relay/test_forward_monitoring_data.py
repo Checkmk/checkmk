@@ -97,7 +97,7 @@ def create_monitoring_data(
 ) -> MonitoringData:
     """Helper to create MonitoringData with consistent defaults."""
     return MonitoringData(
-        serial=serial,
+        serial=serial.value,
         host=HOST,
         service=service,
         timestamp=int(time.time()),

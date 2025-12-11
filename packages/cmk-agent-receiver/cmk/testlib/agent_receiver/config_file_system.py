@@ -51,7 +51,7 @@ class ConfigFolder:
 
 
 def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
-    serial = Serial(secrets.randbelow(10000))
+    serial = Serial.random()
 
     # the serial folder exists even if no relay configured
     path_to_serial = root / _SUBPATH / str(serial)

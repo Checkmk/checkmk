@@ -12,7 +12,7 @@ from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
-OLD_SERIAL = Serial(1)
+OLD_SERIAL = Serial.default()
 
 
 def test_config_update_triggered_by_outdated_serial(
@@ -33,7 +33,7 @@ def test_config_update_triggered_by_outdated_serial(
     assert len(relay_1_tasks) == 1
     task = relay_1_tasks[0]
     assert isinstance(task.spec, RelayConfigTask)
-    assert task.spec.serial == cf.serial
+    assert task.spec.serial == cf.serial.value
     cf.assert_tar_content(relay_id_1, task.spec.tar_data)
 
     # asking with correct serial, no task created in this case
@@ -59,7 +59,7 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     assert len(relay_1_tasks) == 1
     task = relay_1_tasks[0]
     assert isinstance(task.spec, RelayConfigTask)
-    assert task.spec.serial == cf.serial
+    assert task.spec.serial == cf.serial.value
     cf.assert_tar_content(relay_id_1, task.spec.tar_data)
 
     tasklist = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
@@ -89,7 +89,7 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     first_task = tasks_a_first[0]
     assert isinstance(first_task.spec, RelayConfigTask)
     assert first_task.status == TaskStatus.PENDING
-    assert first_task.spec.serial == initial_config.serial
+    assert first_task.spec.serial == initial_config.serial.value
     initial_config.assert_tar_content(relay_id_1, first_task.spec.tar_data)
 
     # new configuration in the AR (new serial)
@@ -107,5 +107,5 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     new_task_config = tasks_a_after[1]
     assert isinstance(new_task_config.spec, RelayConfigTask)
     assert new_task_config.status == TaskStatus.PENDING
-    assert new_task_config.spec.serial == new_config.serial
+    assert new_task_config.spec.serial == new_config.serial.value
     new_config.assert_tar_content(relay_id_1, new_task_config.spec.tar_data)

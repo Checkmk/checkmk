@@ -276,7 +276,7 @@ def test_activation_with_mixed_relay_task_states(
     tasks_a = get_relay_tasks(agent_receiver, relay_id_a)
     assert len(tasks_a.tasks) == 2
     assert all(
-        isinstance(task.spec, RelayConfigTask) and task.spec.serial == serial_folder.serial
+        isinstance(task.spec, RelayConfigTask) and task.spec.serial == serial_folder.serial.value
         for task in tasks_a.tasks
     )
     task_statuses = [task.status for task in tasks_a.tasks]
@@ -323,7 +323,7 @@ def _assert_config_task_exists(
         if (
             isinstance(task.spec, RelayConfigTask)
             and task.status == expected_status
-            and task.spec.serial == expected_serial
+            and task.spec.serial == expected_serial.value
         ):
             return task.spec
     assert False, (

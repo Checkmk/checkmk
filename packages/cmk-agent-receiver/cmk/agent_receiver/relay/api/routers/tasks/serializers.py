@@ -21,7 +21,7 @@ class TaskResponseSerializer:
         match task.spec:
             case RelayConfigSpec():
                 spec = tasks_protocol.RelayConfigTask(
-                    serial=task.spec.serial, tar_data=b64encode(task.spec.tar_data)
+                    serial=task.spec.serial.value, tar_data=b64encode(task.spec.tar_data)
                 )
             case FetchSpec():
                 spec = tasks_protocol.FetchAdHocTask(

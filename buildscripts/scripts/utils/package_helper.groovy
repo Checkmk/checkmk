@@ -130,14 +130,9 @@ void provide_agent_binaries(Map args) {
                 PACKAGE_PATH: "packages/mk-oracle",
                 DISTRO: "almalinux-8",
                 FILE_ARCHIVING_PATTERN: "test_ora_sql_test",
-                COMMAND_LINE: """\
-                    bazel build //packages/mk-oracle:mk-oracle-lib-test-external;
-                    cp \
-                      \$(bazel info workspace)/\$( \
-                        bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/test_ora_sql_test \
-                      ) \
-                      \$(bazel info workspace)
-                    """
+                // do not add line breaks here. ci-artifacts might not find a match
+                // groovylint-disable-next-line LineLength
+                COMMAND_LINE: """bazel build //packages/mk-oracle:mk-oracle-lib-test-external; cp \$(bazel info workspace)/\$(bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/test_ora_sql_test) \$(bazel info workspace)"""
             ],
             install_cmd: """\
                 cp test_ora_sql_test ${checkout_dir}/packages/mk-oracle/

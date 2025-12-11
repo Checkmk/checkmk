@@ -64,8 +64,9 @@ snmp_section_cisco_wlc_9800_clients = SNMPSection(
     detect=any_of(
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2391"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2530"),
-        equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2861"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2669"),
+        equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2860"),
+        equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2861"),
     ),
     parse_function=parse_cisco_wlc_9800_clients,
     fetch=[

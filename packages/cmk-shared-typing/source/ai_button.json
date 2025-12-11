@@ -27,9 +27,11 @@
       "type": "object",
       "properties": {
         "id": { "const": "explain-this-issue" },
-        "data": { "$ref": "#/$templateData/explain_this_issue_data" }
+        "context_data": {
+          "$ref": "#/$templateData/explain_this_issue_data"
+        }
       },
-      "required": ["id", "data"]
+      "required": ["id", "context_data"]
     }
   },
   "$templateData": {
@@ -38,9 +40,10 @@
       "properties": {
         "host_name": { "type": "string" },
         "service_name": { "type": "string" },
-        "status": { "enum": ["Critical", "Warning", "OK"] }
+        "host_state": { "enum": ["Up", "Down", "Unknown"] },
+        "service_state": { "enum": ["Critical", "Warning", "OK"] }
       },
-      "required": ["host_name", "service_name", "status"]
+      "required": ["host_name", "service_name", "service_state"]
     }
   }
 }

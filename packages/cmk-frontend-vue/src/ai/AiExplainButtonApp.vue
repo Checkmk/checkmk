@@ -25,7 +25,11 @@ provide(aiTemplateKey, aiTemplate as Ref<AiTemplateService | null>)
 const conversationOpen = ref(true)
 
 function explainThis() {
-  aiTemplate.value = new AiTemplateService(props.template.id, props.user_id, props.template.data)
+  aiTemplate.value = new AiTemplateService(
+    props.template.id,
+    props.user_id,
+    props.template.context_data
+  )
   conversationOpen.value = true
 }
 

@@ -28,7 +28,7 @@ export interface IAiUserActionConfig {
 
 export interface IAiConversationConfig<T> {
   user_id: string
-  data?: T
+  context_data?: T
   conversationId?: string | undefined
   getDisclaimer?: () => Promise<TAiConversationElementContent[]> | undefined
   userActions: IAiUserActionConfig
@@ -114,14 +114,14 @@ export class AiTemplateService extends ServiceBase {
   constructor(
     public templateId: string,
     public userId: string,
-    public data: ExplainThisIssueData
+    public context_data: ExplainThisIssueData
   ) {
     super(templateId, new KeyShortcutService(window))
 
     this.api = new AiApiClient(this.userId)
     this.config = {
       user_id: this.userId,
-      data: this.data,
+      context_data: this.context_data,
       userActions: {}
     }
 
@@ -162,8 +162,8 @@ export class AiTemplateService extends ServiceBase {
     const context = this.toSentenceCase(this.templateId.replace(/-/g, ' '))
     const contextData: string[] = []
 
-    if (typeof this.data === 'object' && this.data) {
-      for (const [key, value] of Object.entries(this.data)) {
+    if (typeof this.context_data === 'object' && this.context_data) {
+      for (const [key, value] of Object.entries(this.context_data)) {
         const keyName = this.toSentenceCase(key.replace(/_/g, ' '))
         contextData.push(`- ${keyName}: **${value}**`)
       }
@@ -252,7 +252,7 @@ export class AiTemplateService extends ServiceBase {
   ): Promise<TAiConversationElementContent[]> {
     const contents: TAiConversationElementContent[] = []
     try {
-      const res = await this.api.inference(action, this.data)
+      const res = await this.api.inference(action, this.context_data)
 
       for (const es of res.explanation_sections) {
         contents.push(es as MarkdownConversationElementContent)

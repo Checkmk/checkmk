@@ -208,9 +208,9 @@ def time_series_operators() -> dict[
 
 @dataclass(frozen=True, kw_only=True)
 class TimeSeriesMetaData:
-    title: str
-    line_type: LineType | Literal["ref"]
-    color: str
+    title: str | None
+    line_type: LineType | Literal["ref"] | None
+    color: str | None
     attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
 
 

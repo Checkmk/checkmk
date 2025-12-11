@@ -111,8 +111,10 @@ def _refine_augmented_time_series(
         color = graph_metric_color
         if ats.meta_data:
             if multi:
-                title = f"{graph_metric_title} - {ats.meta_data.title}"
-                line_type = ats.meta_data.line_type
+                if ats.meta_data.title is not None:
+                    title = f"{graph_metric_title} - {ats.meta_data.title}"
+                if ats.meta_data.line_type is not None:
+                    line_type = ats.meta_data.line_type
             if ats.meta_data.color:
                 color = ats.meta_data.color
 

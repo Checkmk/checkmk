@@ -348,23 +348,30 @@ def compute_graph_artwork_curves(
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> list[Curve]:
-    curves = [
-        Curve(
-            line_type=augmented_time_series.meta_data.line_type,
-            color=augmented_time_series.meta_data.color,
-            title=augmented_time_series.meta_data.title,
-            attributes=augmented_time_series.meta_data.attributes,
-            rrddata=augmented_time_series.time_series,
-        )
-        for augmented_time_series in fetch_augmented_time_series(
-            registered_metrics,
-            graph_recipe,
-            graph_data_range,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
-        )
-        if augmented_time_series.meta_data
-    ]
+    curves = []
+    for augmented_time_series in fetch_augmented_time_series(
+        registered_metrics,
+        graph_recipe,
+        graph_data_range,
+        temperature_unit=temperature_unit,
+        backend_time_series_fetcher=backend_time_series_fetcher,
+    ):
+        if not augmented_time_series.meta_data:
+            continue
+        if (
+            augmented_time_series.meta_data.line_type is not None
+            and augmented_time_series.meta_data.color is not None
+            and augmented_time_series.meta_data.title is not None
+        ):
+            curves.append(
+                Curve(
+                    line_type=augmented_time_series.meta_data.line_type,
+                    color=augmented_time_series.meta_data.color,
+                    title=augmented_time_series.meta_data.title,
+                    attributes=augmented_time_series.meta_data.attributes,
+                    rrddata=augmented_time_series.time_series,
+                )
+            )
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
     return curves

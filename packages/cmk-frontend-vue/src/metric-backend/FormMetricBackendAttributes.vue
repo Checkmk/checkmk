@@ -25,9 +25,10 @@ const { _t } = usei18n()
 const props = withDefaults(
   defineProps<{
     metricName?: string | null
+    disableValuesOnEmptyKey?: boolean
     strict?: boolean
   }>(),
-  { metricName: null, strict: true }
+  { metricName: null, disableValuesOnEmptyKey: false, strict: false }
 )
 
 const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
@@ -286,6 +287,7 @@ function deleteDataPointAttribute(index: number) {
               (key: string | null, isForKey: boolean) =>
                 resourceAttributesAutocompleter(key, isForKey, index)
             "
+            :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
             @update:model-value="addResourceAttribute"
           />
         </template>
@@ -293,6 +295,7 @@ function deleteDataPointAttribute(index: number) {
       <FormMetricBackendCustomQueryAttribute
         v-model="resourceAttribute"
         :autocompleter-getter="resourceAttributesAutocompleter"
+        :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
         @update:model-value="addResourceAttribute"
       />
     </td>
@@ -312,6 +315,7 @@ function deleteDataPointAttribute(index: number) {
               (key: string | null, isForKey: boolean) =>
                 scopeAttributesAutocompleter(key, isForKey, index)
             "
+            :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
             @update:model-value="addScopeAttribute"
           />
         </template>
@@ -319,6 +323,7 @@ function deleteDataPointAttribute(index: number) {
       <FormMetricBackendCustomQueryAttribute
         v-model="scopeAttribute"
         :autocompleter-getter="scopeAttributesAutocompleter"
+        :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
         @update:model-value="addScopeAttribute"
       />
     </td>
@@ -338,6 +343,7 @@ function deleteDataPointAttribute(index: number) {
               (key: string | null, isForKey: boolean) =>
                 dataPointAttributesAutocompleter(key, isForKey, index)
             "
+            :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
             @update:model-value="addDataPointAttribute"
           />
         </template>
@@ -345,6 +351,7 @@ function deleteDataPointAttribute(index: number) {
       <FormMetricBackendCustomQueryAttribute
         v-model="dataPointAttribute"
         :autocompleter-getter="dataPointAttributesAutocompleter"
+        :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
         @update:model-value="addDataPointAttribute"
       />
     </td>

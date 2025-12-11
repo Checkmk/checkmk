@@ -17,6 +17,7 @@ export type Attribute = { key: string | null; value: string | null }
 
 const props = defineProps<{
   autocompleterGetter: (key: string | null, isForKey: boolean) => Autocompleter
+  disableValuesOnEmptyKey?: boolean
 }>()
 
 const attribute = defineModel<Attribute>({
@@ -49,6 +50,7 @@ function onValueUpdate(newValue: string | null) {
       v-model="attribute.value"
       :autocompleter="props.autocompleterGetter(attribute.key, false)"
       :placeholder="_t('Attribute value')"
+      :disabled="props.disableValuesOnEmptyKey && (attribute.key === null || attribute.key === '')"
       @update:model-value="onValueUpdate"
     />
   </div>

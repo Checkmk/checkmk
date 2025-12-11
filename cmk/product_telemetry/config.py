@@ -8,8 +8,14 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.base.config import load
-from cmk.base.default_config.telemetry import ProxySetting
 from cmk.utils import http_proxy_config
+
+type ProxySetting = (
+    tuple[Literal["environment"], Literal["environment"]]
+    | tuple[Literal["no_proxy"], None]
+    | tuple[Literal["global"], str]
+    | tuple[Literal["url"], http_proxy_config.ProxyConfigSpec]
+)
 
 
 @dataclass(frozen=True)

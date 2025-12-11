@@ -11,6 +11,7 @@
 # TODO: create service label cmk/meraki/uplink:yes/no
 
 import json
+from collections.abc import Mapping
 from typing import Final, Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel, computed_field, Field
@@ -138,7 +139,7 @@ class SwitchPortStatus(BaseModel, frozen=True):
         return f"Port {self.port_id}"
 
 
-type Section = dict[str, SwitchPortStatus]
+type Section = Mapping[str, SwitchPortStatus]
 
 
 def parse_switch_ports_statuses(string_table: StringTable) -> Section:

@@ -133,8 +133,7 @@ def test_create_token_expiration_too_far_in_future(
     resp = clients.DashboardClient.create_dashboard_token(payload, expect_ok=False)
     assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.json!r}"
     assert resp.json["fields"]["body.expires_at"]["msg"] == (
-        "Value error, In the Checkmk Community Edition, "
-        "dashboard tokens can only be valid for up to one month."
+        "In the Checkmk Community Edition, dashboard tokens can only be valid for up to one month."
     )
 
 
@@ -246,8 +245,7 @@ def test_edit_token_invalid_expiration(
     resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
     assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.json!r}"
     assert resp.json["fields"]["body.expires_at"]["msg"] == (
-        "Value error, In the Checkmk Community Edition, "
-        "dashboard tokens can only be valid for up to one month."
+        "In the Checkmk Community Edition, dashboard tokens can only be valid for up to one month."
     )
 
 

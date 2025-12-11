@@ -45,6 +45,7 @@ PowerState = Literal[
     "P13",
     "P14",
     "P15",
+    "Requested functionality has been deprecated",
 ]
 
 MiB = 1024.0**2

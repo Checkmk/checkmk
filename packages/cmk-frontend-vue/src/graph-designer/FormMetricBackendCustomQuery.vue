@@ -40,15 +40,46 @@ const props = defineProps<{
   backendValidation?: ValidationMessages
 }>()
 
-const validation = ref<string[]>([])
+enum ValidationLocation {
+  METRIC_NAME = 'metric_name',
+  AGGREGATION_LOOKBACK = 'aggregation_lookback',
+  AGGREGATION_HISTOGRAM_PERCENTILE = 'aggregation_histogram_percentile'
+}
+
+type ValidationByLocation = {
+  [ValidationLocation.METRIC_NAME]: string[]
+  [ValidationLocation.AGGREGATION_LOOKBACK]: string[]
+  [ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE]: string[]
+}
+
+const validationByLocation = ref<ValidationByLocation>({
+  [ValidationLocation.METRIC_NAME]: [],
+  [ValidationLocation.AGGREGATION_LOOKBACK]: [],
+  [ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE]: []
+})
 
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages | undefined) => {
     if (newValidation && newValidation.length > 0) {
-      validation.value = newValidation.map((m) => m.message)
       newValidation.forEach((message) => {
-        metricName.value = (message.replacement_value as MetricBackendCustomQuery).metric_name
+        const location = message.location[0] as ValidationLocation
+        validationByLocation.value[location].push(message.message)
+        switch (location) {
+          case ValidationLocation.METRIC_NAME:
+            metricName.value = (message.replacement_value as MetricBackendCustomQuery).metric_name
+            break
+          case ValidationLocation.AGGREGATION_LOOKBACK:
+            aggregationLookback.value = (
+              message.replacement_value as MetricBackendCustomQuery
+            ).aggregation_lookback
+            break
+          case ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE:
+            aggregationHistogramPercentile.value = (
+              message.replacement_value as MetricBackendCustomQuery
+            ).aggregation_histogram_percentile
+            break
+        }
       })
     }
   }
@@ -96,13 +127,13 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
           ><CmkLabelRequired />
         </td>
         <td>
-          <FormValidation :validation="validation"></FormValidation>
+          <FormValidation :validation="validationByLocation.metric_name"></FormValidation>
           <FormAutocompleter
             v-model="metricName"
             :autocompleter="metricNameAutocompleter"
             :placeholder="_t('Metric name')"
-            :has-error="validation.length > 0"
-            @update:model-value="validation = []"
+            :has-error="validationByLocation.metric_name.length > 0"
+            @update:model-value="validationByLocation.metric_name = []"
           />
         </td>
       </tr>
@@ -115,13 +146,26 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
       <tr>
         <td>{{ _t('Aggregation lookback') }}</td>
         <td>
-          <CmkInput v-model="aggregationLookback" type="number" :unit="'s'" field-size="SMALL" />
+          <CmkInput
+            v-model="aggregationLookback"
+            type="number"
+            :unit="'s'"
+            field-size="SMALL"
+            :external-errors="validationByLocation.aggregation_lookback"
+            @update:model-value="validationByLocation.aggregation_lookback = []"
+          />
         </td>
       </tr>
       <tr>
         <td>{{ _t('Percentile (histograms)') }}</td>
         <td>
-          <CmkInput v-model="aggregationHistogramPercentile" type="number" :unit="'%'" />
+          <CmkInput
+            v-model="aggregationHistogramPercentile"
+            type="number"
+            :unit="'%'"
+            :external-errors="validationByLocation.aggregation_histogram_percentile"
+            @update:model-value="validationByLocation.aggregation_histogram_percentile = []"
+          />
         </td>
       </tr>
     </tbody>

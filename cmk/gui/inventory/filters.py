@@ -144,7 +144,11 @@ class _FilterNumberRange(Filter):
 
         if unit_choices:
             html.open_td()
-            html.dropdown(self._html_var_from_prefix, unit_choices)
+            html.dropdown(
+                self._html_var_from_prefix,
+                unit_choices,
+                deflt=value.get(self._html_var_from_prefix, ""),
+            )
             html.close_td()
             html.close_tr()
 
@@ -163,7 +167,11 @@ class _FilterNumberRange(Filter):
 
         if unit_choices:
             html.open_td()
-            html.dropdown(self._html_var_until_prefix, unit_choices)
+            html.dropdown(
+                self._html_var_until_prefix,
+                unit_choices,
+                deflt=value.get(self._html_var_until_prefix, ""),
+            )
             html.close_td()
             html.close_tr()
 

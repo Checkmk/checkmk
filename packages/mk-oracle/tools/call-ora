@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+# Simple tools to call deployed mk-oracle
+# Tries to find installed mk-oracle
+#
+# Usage examples:
+#   call-ora --display-log
+#   CFG=./t.yml call-ora
+
+ROOT=/opt/checkmk/agent/default/package/
+EXE=${ROOT}/plugins/packages/mk-oracle/mk-oracle
+if [[ -f ${EXE} ]]; then
+    if [[ -n "${CFG}" ]]; then
+        CONFIG="${CFG}"
+    else
+        CONFIG=${ROOT}/config/oracle.yml
+    fi
+    sudo MK_LIBDIR=${ROOT} "${EXE}" -c "${CONFIG}" "$@"
+    exit
+fi
+
+ROOT=/usr/lib/check_mk_agent/
+EXE=${ROOT}/plugins/packages/mk-oracle/mk-oracle
+if [[ -f ${EXE} ]]; then
+    if [[ -n "${CFG}" ]]; then
+        CONFIG="${CFG}"
+    else
+        CONFIG=/etc/check_mk/oracle.yml
+    fi
+    sudo MK_LIBDIR=${ROOT} "${EXE}" -c "${CONFIG}" "$@"
+else
+    echo "mk-oracle is not found"
+fi

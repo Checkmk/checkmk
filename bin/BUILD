@@ -64,6 +64,7 @@ pkg_files(
         ":cmk-monitor-broker",
         ":cmk-monitor-core",
         ":cmk-monitor-diskusage",
+        ":cmk-monitor-metric-backend",
         ":cmk-monitor-mkbackup",
         ":cmk-monitor-mknotifyd",
         ":cmk-monitor-otel-collector",

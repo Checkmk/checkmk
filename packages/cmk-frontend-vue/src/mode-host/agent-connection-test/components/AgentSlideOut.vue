@@ -12,8 +12,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
-import CmkIcon from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
@@ -188,9 +188,9 @@ function getInitStep() {
             </template>
             <template #content>
               <div v-if="currentStep === 2">
+                <CmkParagraph>{{ tab.installMsg }}</CmkParagraph>
                 <CmkCode
                   v-if="tab.installMsg && tab.installCmd"
-                  :title="tab.installMsg"
                   :code_txt="tab.installCmd"
                   class="code"
                 />
@@ -214,27 +214,19 @@ function getInitStep() {
                 </div>
                 <CmkCode
                   v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
-                  :title="tab.installMsg"
                   :code_txt="tab.installDebCmd"
                   class="code"
                 />
                 <CmkCode
                   v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
-                  :title="tab.installMsg"
                   :code_txt="tab.installRpmCmd"
                   class="code"
                 />
                 <CmkCode
                   v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
-                  :title="tab.installMsg"
                   :code_txt="tab.installTgzCmd"
                   class="code"
                 />
-              </div>
-              <div v-else>
-                <CmkParagraph>
-                  {{ _t('Run this command to download and install the Checkmk agent.') }}
-                </CmkParagraph>
               </div>
             </template>
             <template v-if="currentStep === 2" #actions>
@@ -260,11 +252,8 @@ function getInitStep() {
                       }}
                     </CmkParagraph>
                   </div>
-                  <CmkCode
-                    :title="tab.registrationMsg"
-                    :code_txt="tab.registrationCmd"
-                    class="code"
-                  />
+                  <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
+                  <CmkCode :code_txt="tab.registrationCmd" class="code" />
                 </div>
               </div>
               <div v-else>
@@ -342,7 +331,7 @@ button.all_agents {
 }
 
 .code {
-  margin-bottom: var(--dimension-7);
+  margin: var(--dimension-5) 0 var(--dimension-7);
 }
 
 .register-heading-row {

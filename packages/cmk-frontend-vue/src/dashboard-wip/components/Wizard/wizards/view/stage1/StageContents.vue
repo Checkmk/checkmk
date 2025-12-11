@@ -14,16 +14,16 @@ import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentS
 import WidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/WidgetObjectFilterConfiguration/WidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard-wip/components/Wizard/types.ts'
-import NewView from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/NewView.vue'
-import ReferenceView from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/ReferenceView.vue'
 import type {
   ConfiguredFilters,
   ConfiguredValues
 } from '@/dashboard-wip/components/filter/types.ts'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import { useInjectVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
+import type { DataSourceModel } from '@/dashboard-wip/types/api'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
+import type { EmbeddedViewContent, LinkedViewContent } from '@/dashboard-wip/types/widget'
 
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage1Header from '../../../components/Stage1Header.vue'
@@ -34,6 +34,9 @@ import type {
   ViewSelection
 } from '../types'
 import { ViewSelectionMode } from '../types'
+import EditModeViewInfo from './components/EditModeViewInfo.vue'
+import NewView from './components/NewView.vue'
+import ReferenceView from './components/ReferenceView.vue'
 
 const { _t } = usei18n()
 
@@ -42,7 +45,9 @@ interface Stage1Props {
   widgetActiveFilters: string[]
   contextFilters: ContextFilters
   currentFilterSelectionMenuFocus: ObjectType | null
-  // TODO: a read only mode is probably required here
+  isEditMode?: boolean
+  content?: EmbeddedViewContent | LinkedViewContent | undefined
+  datasourcesById: Record<string, DataSourceModel>
 }
 
 const props = defineProps<Stage1Props>()
@@ -67,6 +72,11 @@ const originalViewName = defineModel<string | null>('originalViewName', { defaul
 const referencedViewName = defineModel<string | null>('referencedViewName', { default: null })
 
 function goToNextStage() {
+  if (props.isEditMode) {
+    emit('goNext', { type: 'edit' } as unknown as ViewSelection)
+    return
+  }
+
   let viewSelection: ViewSelection
   if (modeSelection.value === ViewSelectionMode.NEW) {
     viewSelection = {
@@ -163,41 +173,50 @@ const sortedContextInfos = computed(() => {
     <Stage1Header :button-title="_t('Next step: Data configuration')" @click="goToNextStage" />
 
     <SectionBlock :title="_t('View selection')">
-      <CmkToggleButtonGroup
-        v-model="modeSelection as string"
-        :options="[
-          { label: _t('New view'), value: ViewSelectionMode.NEW },
-          {
-            label: _t('Copy view'),
-            value: ViewSelectionMode.COPY
-          },
-          {
-            label: _t('Link to existing view'),
-            value: ViewSelectionMode.LINK
-          }
-        ]"
+      <template v-if="!isEditMode">
+        <CmkToggleButtonGroup
+          v-model="modeSelection as string"
+          :options="[
+            { label: _t('New view'), value: ViewSelectionMode.NEW },
+            {
+              label: _t('Copy view'),
+              value: ViewSelectionMode.COPY
+            },
+            {
+              label: _t('Link to existing view'),
+              value: ViewSelectionMode.LINK
+            }
+          ]"
+        />
+        <div v-if="modeSelection === ViewSelectionMode.NEW">
+          <NewView
+            v-model:selected-datasource="selectedDatasource"
+            v-model:context-infos="contextInfos"
+            v-model:restricted-to-single-infos="restrictedToSingleInfos"
+          />
+        </div>
+        <div v-else-if="modeSelection === ViewSelectionMode.COPY">
+          <ReferenceView
+            v-model:referenced-view="originalViewName"
+            v-model:context-infos="contextInfos"
+            @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
+          />
+        </div>
+        <div v-else-if="modeSelection === ViewSelectionMode.LINK">
+          <ReferenceView
+            v-model:referenced-view="referencedViewName"
+            v-model:context-infos="contextInfos"
+            @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
+          />
+        </div>
+      </template>
+      <EditModeViewInfo
+        v-else
+        :content="content!"
+        :context-infos="contextInfos"
+        :restricted-to-single-infos="restrictedToSingleInfos"
+        :datasources-by-id="datasourcesById"
       />
-      <div v-if="modeSelection === ViewSelectionMode.NEW">
-        <NewView
-          v-model:selected-datasource="selectedDatasource"
-          v-model:context-infos="contextInfos"
-          v-model:restricted-to-single-infos="restrictedToSingleInfos"
-        />
-      </div>
-      <div v-else-if="modeSelection === ViewSelectionMode.COPY">
-        <ReferenceView
-          v-model:referenced-view="originalViewName"
-          v-model:context-infos="contextInfos"
-          @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
-        />
-      </div>
-      <div v-else-if="modeSelection === ViewSelectionMode.LINK">
-        <ReferenceView
-          v-model:referenced-view="referencedViewName"
-          v-model:context-infos="contextInfos"
-          @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
-        />
-      </div>
       <ContentSpacer />
       <div v-for="objectType in sortedContextInfos" :key="objectType">
         <h2>

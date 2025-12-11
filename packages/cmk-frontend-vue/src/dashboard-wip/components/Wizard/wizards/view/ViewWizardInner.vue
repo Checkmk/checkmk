@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, h, nextTick, ref } from 'vue'
+import { computed, h, nextTick, ref, watchEffect } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { randomId } from '@/lib/randomId'
@@ -17,7 +17,7 @@ import {
 import { useWidgetVisualizationProps } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
-import type { ViewModel } from '@/dashboard-wip/types/api'
+import type { DataSourceModel, ViewModel } from '@/dashboard-wip/types/api'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   EffectiveWidgetFilterContext,
@@ -53,11 +53,22 @@ interface ViewWizardProps {
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
   editWidgetId?: string | null
+  datasourcesById: Record<string, DataSourceModel>
 }
 
 const props = withDefaults(defineProps<ViewWizardProps>(), {
   editWidgetSpec: null,
   editWidgetId: null
+})
+
+const stage1Content = computed(() => {
+  if (
+    props.editWidgetSpec?.content?.type === 'linked_view' ||
+    props.editWidgetSpec?.content?.type === 'embedded_view'
+  ) {
+    return props.editWidgetSpec.content
+  }
+  return undefined
 })
 
 const emit = defineEmits<{
@@ -68,6 +79,27 @@ const emit = defineEmits<{
     filterContext: WidgetFilterContext
   ]
 }>()
+
+watchEffect(() => {
+  if (props.editWidgetSpec) {
+    let datasourceName: string | undefined
+    if (props.editWidgetSpec.content.type === 'linked_view') {
+      const view = props.viewsById[props.editWidgetSpec.content.view_name]
+      if (view) {
+        datasourceName = view.extensions.data_source
+      }
+    } else if (props.editWidgetSpec.content.type === 'embedded_view') {
+      datasourceName = props.editWidgetSpec.content.datasource
+    }
+
+    if (datasourceName) {
+      const datasource = props.datasourcesById[datasourceName]
+      if (datasource) {
+        contextInfos.value = datasource.extensions.infos
+      }
+    }
+  }
+})
 
 function getDefaultWidgetId(): string {
   if (props.editWidgetId) {
@@ -104,6 +136,13 @@ function getDefaultReferencedViewName(): string | null {
   return null
 }
 
+function getDefaultEmbeddedId(): string | undefined {
+  if (props.editWidgetSpec && props.editWidgetSpec.content.type === 'embedded_view') {
+    return props.editWidgetSpec.content.embedded_id
+  }
+  return undefined
+}
+
 function getConfigMode(mode: DataConfigurationMode): DataConfigurationMode {
   if (props.editWidgetSpec) {
     return DataConfigurationMode.EDIT
@@ -135,7 +174,7 @@ const referencedViewName = ref<string | null>(getDefaultReferencedViewName())
 const dataConfigurationMode = ref<DataConfigurationMode>(
   getConfigMode(DataConfigurationMode.CREATE)
 )
-const embeddedId = ref<string>()
+const embeddedId = ref<string | undefined>(getDefaultEmbeddedId())
 const viewSelection = ref<NewViewSelection | CopyExistingViewSelection>()
 
 // Stage 3
@@ -163,7 +202,18 @@ const wizardStages: QuickSetupStageSpec[] = [
 
 function stage1GoNext(selectedView: ViewSelection) {
   widgetFilterManager.closeSelectionMenu() // ensure filter menu is closed
-  // TODO: this and stage 1 needs to handle edit mode
+
+  if (props.editWidgetSpec) {
+    if (content.value?.type === 'linked_view') {
+      // skip data config stage
+      wizardHandler.goto(2)
+    } else {
+      dataConfigurationMode.value = DataConfigurationMode.EDIT
+      wizardHandler.next()
+    }
+    return
+  }
+
   if (selectedView.type === 'link') {
     wizardStages[0]!.recapContent = h(
       'div',
@@ -179,12 +229,16 @@ function stage1GoNext(selectedView: ViewSelection) {
     if (selectedView.type === 'new') {
       wizardStages[0]!.recapContent = h(
         'div',
-        _t('New view based on: %{datasource}', { datasource: selectedView.datasource })
+        _t('New view based on: %{datasource}', {
+          datasource: selectedView.datasource
+        })
       )
     } else if (selectedView.type === 'copy') {
       wizardStages[0]!.recapContent = h(
         'div',
-        _t('Copy existing view: %{viewName}', { viewName: selectedView.viewName })
+        _t('Copy existing view: %{viewName}', {
+          viewName: selectedView.viewName
+        })
       )
     }
     dataConfigurationMode.value = DataConfigurationMode.CREATE
@@ -304,6 +358,9 @@ async function handleOverwriteFilters(newFilters: ContextFilters) {
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :context-filters="contextFilters"
         :current-filter-selection-menu-focus="currentFilterSelectionFocus"
+        :is-edit-mode="!!editWidgetSpec"
+        :content="stage1Content"
+        :datasources-by-id="datasourcesById"
         @go-next="stage1GoNext"
         @set-focus="widgetFilterManager.openSelectionMenu"
         @update-filter-values="
@@ -327,6 +384,7 @@ async function handleOverwriteFilters(newFilters: ContextFilters) {
       <Stage3
         v-if="wizardHandler.stage.value === 2"
         v-model:visualization="visualizationProps"
+        :is-edit-mode="!!editWidgetSpec"
         :dashboard-name="dashboardName"
         :widget_id="widgetId"
         :content="content!"

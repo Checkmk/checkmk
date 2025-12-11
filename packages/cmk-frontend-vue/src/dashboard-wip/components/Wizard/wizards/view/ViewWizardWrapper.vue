@@ -4,9 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+
 import CmkIcon from '@/components/CmkIcon'
 
 import ViewWizardInner from '@/dashboard-wip/components/Wizard/wizards/view/ViewWizardInner.vue'
+import { useDataSourcesCollection } from '@/dashboard-wip/composables/api/useDataSourcesCollection'
 import { useProvideViews } from '@/dashboard-wip/composables/useProvideViews'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
@@ -16,7 +19,14 @@ import type {
   WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
-const { byId, ready } = useProvideViews()
+const { byId: viewsById, ready: viewsReady } = useProvideViews()
+const { byId: datasourcesById, ensureLoaded: ensureDataSourcesLoaded } = useDataSourcesCollection()
+
+const dataSourcesReady = ref(false)
+onMounted(async () => {
+  await ensureDataSourcesLoaded()
+  dataSourcesReady.value = true
+})
 
 interface ViewWizardProps {
   dashboardName: string
@@ -39,14 +49,15 @@ defineEmits<{
 </script>
 
 <template>
-  <template v-if="ready">
+  <template v-if="viewsReady && dataSourcesReady">
     <ViewWizardInner
       :dashboard-name="dashboardName"
       :dashboard-owner="dashboardOwner"
-      :views-by-id="byId"
+      :views-by-id="viewsById"
       :context-filters="contextFilters"
       :edit-widget-spec="editWidgetSpec"
       :edit-widget-id="editWidgetId"
+      :datasources-by-id="datasourcesById"
       @go-back="$emit('goBack')"
       @add-widget="
         (content, generalSettings, filterContext) =>

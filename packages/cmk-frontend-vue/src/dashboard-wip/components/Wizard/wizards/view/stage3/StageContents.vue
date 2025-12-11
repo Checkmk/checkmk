@@ -34,6 +34,7 @@ interface Stage3Props {
   widget_id: string
   content: EmbeddedViewContent | LinkedViewContent
   effective_filter_context: EffectiveWidgetFilterContext
+  isEditMode?: boolean
 }
 
 const props = defineProps<Stage3Props>()
@@ -86,7 +87,11 @@ const displayVisualizationSettings = ref<boolean>(true)
       :action="() => $emit('goPrev')"
       variant="secondary"
     />
-    <ActionButton :label="_t('Add & place widget')" :action="saveWidget" variant="secondary" />
+    <ActionButton
+      :label="!!isEditMode ? _t('Save widget') : _t('Add & place widget')"
+      :action="saveWidget"
+      variant="secondary"
+    />
   </ActionBar>
 
   <ContentSpacer />

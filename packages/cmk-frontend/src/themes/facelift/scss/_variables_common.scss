@@ -7,6 +7,7 @@
 // Common variables used across all themes
 
 @import '../zindices.scss';
+@import '../colors.scss';
 
 // -----------------------------------------------------------------------------
 // Colors
@@ -53,16 +54,16 @@ $downtime: rgb(0, 170, 255);
 $chaos: rgb(136, 68, 255);
 $site-state-unknown: rgb(169, 99, 148);
 $site-state-partial: rgb(189, 138, 63);
-$tag-color: rgb(0, 168, 181);
-$tag-explicit-color: rgb(119, 72, 152);
-$tag-discovered-color: rgba(243, 174, 75);
-$tag-ruleset-color: rgba(222, 67, 131);
-$tag-removed-color: rgba(79, 4, 71);
-$tag-removed-color-light: rgba(174, 25, 159);
-$tag-added-color: rgba(6, 61, 113);
-$tag-added-color-light: rgba(6, 103, 193);
-$tag-changed-color: rgba(191, 86, 26);
-$tag-changed-color-light: rgba(255, 132, 0);
+$tag-color: $color-cyan-80;
+$tag-explicit-color: $color-purple-70;
+$tag-discovered-color: $color-orange-30;
+$tag-ruleset-color: $color-pink-70;
+$tag-removed-color: $color-pink-80;
+$tag-removed-color-light: $color-pink-70;
+$tag-added-color: $color-dark-blue-80;
+$tag-added-color-light: $color-light-blue-70;
+$tag-changed-color: $color-orange-70;
+$tag-changed-color-light: $color-orange-50;
 
 // -----------------------------------------------------------------------------
 // Fonts

@@ -28,22 +28,22 @@ defineProps<{
 
   &.form-labels-label--null {
     background-color: var(--tag-color);
-    color: var(--black);
+    color: var(--tag-font-color-dark);
   }
 
   &.form-labels-label--discovered {
     background-color: var(--tag-discovered-color);
-    color: var(--black);
+    color: var(--tag-font-color-dark);
   }
 
   &.form-labels-label--explicit {
     background-color: var(--tag-explicit-color);
-    color: var(--white);
+    color: var(--tag-font-color-light);
   }
 
   &.form-labels-label--ruleset {
     background-color: var(--tag-ruleset-color);
-    color: var(--white);
+    color: var(--tag-font-color-light);
   }
 }
 </style>

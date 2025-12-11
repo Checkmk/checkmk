@@ -18,11 +18,6 @@
   --grey-4-dimmed: rgb(51 51 51 / 80%);
   --error-msg-bg-color: rgb(200 50 50 / 15%);
   --form-readonly-error-bg-color: rgb(252 85 85);
-  --tag-added-color-light: rgb(6 103 193);
-  --tag-color: rgb(0 168 181);
-  --tag-explicit-color: rgb(119 72 152);
-  --tag-discovered-color: rgb(243 174 75);
-  --tag-ruleset-color: rgb(222 67 131);
   --default-help-icon-bg-color: rgb(6 103 193);
   --default-help-icon-bg-color-hover: rgb(56 133 205);
   --default-nav-popup-border-color: rgb(19 211 137);
@@ -123,6 +118,14 @@
     --inline-help-text-bg: rgb(223 239 251);
     --inline-help-icon-bg: rgb(12 129 238);
     --slide-in-left-part: var(--color-daylight-grey-30);
+
+    /* Form Labels Colors */
+    --tag-color: var(--color-cyan-80);
+    --tag-explicit-color: var(--color-purple-70);
+    --tag-discovered-color: var(--color-orange-30);
+    --tag-ruleset-color: var(--color-pink-70);
+    --tag-font-color-light: var(--color-white-100);
+    --tag-font-color-dark: var(--color-conference-grey-100);
 
     /* Cmk Toggle Button Group */
     --toggle-button-group-active-bg-color: var(--ux-theme-10);
@@ -232,6 +235,14 @@
     --inline-help-text-bg: rgb(17 24 29);
     --inline-help-icon-bg: rgb(6 103 193);
     --slide-in-left-part: var(--ux-theme-2);
+
+    /* Form Labels Colors */
+    --tag-color: var(--color-cyan-80);
+    --tag-explicit-color: var(--color-purple-70);
+    --tag-discovered-color: var(--color-orange-30);
+    --tag-ruleset-color: var(--color-pink-70);
+    --tag-font-color-light: var(--color-white-100);
+    --tag-font-color-dark: var(--color-conference-grey-100);
 
     /* Cmk Toggle Button Group */
     --toggle-button-group-active-bg-color: var(--ux-theme-8);

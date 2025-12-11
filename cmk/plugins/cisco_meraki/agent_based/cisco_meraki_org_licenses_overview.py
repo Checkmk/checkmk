@@ -26,6 +26,8 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+type Section = Mapping[str, LicensesOverview]
+
 
 class LicensesOverview(BaseModel, frozen=True):
     organisation_id: str
@@ -50,9 +52,6 @@ class LicensesOverview(BaseModel, frozen=True):
     @property
     def license_total(self) -> int:
         return sum(self.licensed_device_counts.values())
-
-
-Section = Mapping[str, LicensesOverview]
 
 
 def parse_licenses_overview(string_table: StringTable) -> Section:

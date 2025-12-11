@@ -39,6 +39,9 @@ from cmk.plugins.cisco_meraki.lib.type_defs import PossiblyMissing
 # TODO: find out why this is required.
 _PORT_TYPE: Final = 6
 
+
+type Section = Mapping[str, SwitchPortStatus]
+
 Status = Literal["up", "down", "unknown"]
 
 
@@ -137,9 +140,6 @@ class SwitchPortStatus(BaseModel, frozen=True):
     @property
     def name(self) -> str:
         return f"Port {self.port_id}"
-
-
-type Section = Mapping[str, SwitchPortStatus]
 
 
 def parse_switch_ports_statuses(string_table: StringTable) -> Section:

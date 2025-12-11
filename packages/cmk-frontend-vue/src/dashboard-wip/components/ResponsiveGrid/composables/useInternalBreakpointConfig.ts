@@ -12,16 +12,23 @@ import type { ResponsiveGridInternalBreakpoint } from '../types'
 import { breakpointToInternal } from './utils'
 
 type ConfiguredBreakpoints = DashboardConstants['responsive_grid_breakpoints']
-type BreakpointToValue = Readonly<Record<ResponsiveGridInternalBreakpoint, number>>
+export type BreakpointToValue = Readonly<Record<ResponsiveGridInternalBreakpoint, number>>
+export type InternalBreakpointConfig = ReturnType<typeof useInternalBreakpointConfig>
+
+export function computeColumnsPerBreakpoint(
+  configuredBreakpoints: ConfiguredBreakpoints
+): BreakpointToValue {
+  return Object.fromEntries(
+    Object.entries(configuredBreakpoints).map(([key, value]) => [
+      breakpointToInternal[key as ResponsiveGridBreakpoint],
+      value.columns
+    ])
+  ) as BreakpointToValue
+}
 
 export function useInternalBreakpointConfig(configuredBreakpoints: ConfiguredBreakpoints) {
   return computed(() => {
-    const columns = Object.fromEntries(
-      Object.entries(configuredBreakpoints).map(([key, value]) => [
-        breakpointToInternal[key as ResponsiveGridBreakpoint],
-        value.columns
-      ])
-    ) as BreakpointToValue
+    const columns = computeColumnsPerBreakpoint(configuredBreakpoints)
 
     const widths = Object.fromEntries(
       Object.entries(configuredBreakpoints).map(([key, value]) => [

@@ -78,7 +78,9 @@ defineEmits<{
   'widget:clone': [widgetId: string, newLayout: ResponsiveGridWidgetLayouts]
 }>()
 
-const composable = useResponsiveGridLayout(content)
+const gridMargin = 10
+const internalBreakpointConfig = useInternalBreakpointConfig(props.responsiveGridBreakpoints)
+const composable = useResponsiveGridLayout(internalBreakpointConfig, content)
 
 // unique key for the grid layout component to force reloading `responsive-layouts`
 const gridKey = computed(
@@ -161,9 +163,6 @@ watch(
     immediate: true
   }
 )
-
-const internalBreakpointConfig = useInternalBreakpointConfig(props.responsiveGridBreakpoints)
-const gridMargin = 10
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary } = useCmkErrorBoundary()

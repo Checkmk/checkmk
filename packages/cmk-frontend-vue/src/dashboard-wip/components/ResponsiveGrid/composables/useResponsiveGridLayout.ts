@@ -9,6 +9,7 @@ import type {
   ContentResponsiveGrid,
   ResponsiveGridBreakpoint
 } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type {
   ResponsiveGridWidget,
   ResponsiveGridWidgetLayout,
@@ -22,6 +23,10 @@ import type {
   ResponsiveGridInternalBreakpoint,
   ResponsiveGridInternalLayout
 } from '../types'
+import {
+  type InternalBreakpointConfig,
+  computeColumnsPerBreakpoint
+} from './useInternalBreakpointConfig'
 import { breakpointFromInternal, breakpointToInternal, typedEntries } from './utils'
 
 // we define this here, because the openapi schema doesn't include the breakpoint key type
@@ -95,18 +100,31 @@ function layoutFromWidget(
 
 function findPositionForWidget(
   arrangement: ResponsiveGridInternalArrangement,
+  arrangementMaxColumns: number,
   columns: number,
-  _rows: number
+  rows: number
 ): { x: number; y: number } {
-  // place element in the bottom left corner
-  let y = 0
-  for (const element of arrangement) {
-    if (element.x >= columns) {
-      continue // irrelevant to us
-    }
-    y = Math.max(y, element.y + element.h)
+  // place element in the highest possible row, left aligned
+  if (arrangement.length === 0) {
+    return { x: 0, y: 0 }
   }
-  return { x: 0, y }
+  for (let y = 0; ; y++) {
+    for (let x = 0; x <= arrangementMaxColumns - columns; x++) {
+      // check if it fits at (x, y)
+      let overlaps = false
+      for (const element of arrangement) {
+        const overlapX = x + columns > element.x && x < element.x + element.w
+        const overlapY = y + rows > element.y && y < element.y + element.h
+        if (overlapX && overlapY) {
+          overlaps = true
+          break
+        }
+      }
+      if (!overlaps) {
+        return { x, y }
+      }
+    }
+  }
 }
 
 function layoutsFromWidget(
@@ -145,16 +163,23 @@ function computeConfiguredInternalLayouts(
 
 export function createWidgetLayout(
   responsiveGridContent: ContentResponsiveGrid,
-  widgetContentType: string
+  widgetContentType: string,
+  breakpointConfiguration: DashboardConstants['responsive_grid_breakpoints']
 ): ResponsiveGridWidgetLayouts {
   const configuredLayouts = computeConfiguredInternalLayouts(responsiveGridContent)
+  const columnsPerBreakpoint = computeColumnsPerBreakpoint(breakpointConfiguration)
   const layoutData: ResponsiveGridWidgetLayouts['layouts'] = {}
   for (const [layoutName, gridLayouts] of Object.entries(configuredLayouts)) {
     layoutData[layoutName] = {}
     for (const [breakpoint, elements] of typedEntries(gridLayouts)) {
       const externalBreakpoint = breakpointFromInternal[breakpoint]
       const { columns, rows } = getMinimumSize(widgetContentType, externalBreakpoint)
-      const position = findPositionForWidget(elements, columns, rows)
+      const position = findPositionForWidget(
+        elements,
+        columnsPerBreakpoint[breakpoint],
+        columns,
+        rows
+      )
       layoutData[layoutName]![externalBreakpoint] = {
         position,
         size: {
@@ -170,7 +195,10 @@ export function createWidgetLayout(
   } as ResponsiveGridWidgetLayouts
 }
 
-export function useResponsiveGridLayout(responsiveGridContent: ModelRef<ContentResponsiveGrid>) {
+export function useResponsiveGridLayout(
+  breakpointConfig: InternalBreakpointConfig,
+  responsiveGridContent: ModelRef<ContentResponsiveGrid>
+) {
   const layouts = computed<ResponsiveGridConfiguredInternalLayouts>(() =>
     computeConfiguredInternalLayouts(responsiveGridContent.value)
   )
@@ -201,7 +229,12 @@ export function useResponsiveGridLayout(responsiveGridContent: ModelRef<ContentR
           return null // widget not found in this layout
         }
 
-        const position = findPositionForWidget(arrangement, element.w, element.h)
+        const position = findPositionForWidget(
+          arrangement,
+          breakpointConfig.value.columns[breakpoint],
+          element.w,
+          element.h
+        )
         layoutData[layoutName]![breakpointFromInternal[breakpoint]] = {
           position,
           size: {

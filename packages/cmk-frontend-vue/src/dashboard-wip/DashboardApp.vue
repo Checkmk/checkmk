@@ -177,7 +177,11 @@ function addWidget(
   const widgetId = generateWidgetId(content.type)
   let layout: WidgetLayout
   if (activeDashboard.content.layout.type === 'responsive_grid') {
-    layout = createWidgetLayout(activeDashboard.content as ContentResponsiveGrid, content.type)
+    layout = createWidgetLayout(
+      activeDashboard.content as ContentResponsiveGrid,
+      content.type,
+      dashboardsManager.constants.value!.responsive_grid_breakpoints
+    )
   } else if (activeDashboard.content.layout.type === 'relative_grid') {
     const widgetConstants = dashboardsManager.constants.value!.widgets[content.type]!
     layout = {

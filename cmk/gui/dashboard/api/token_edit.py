@@ -53,7 +53,7 @@ def edit_dashboard_token_v1(
                     type="value_error",
                     msg=e.message,
                     loc=("body", "expires_at"),
-                    input=body.expires_at,
+                    input=body.expires_at.isoformat() if body.expires_at else None,
                 )
             ]
         ) from None

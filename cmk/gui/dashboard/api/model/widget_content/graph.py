@@ -224,7 +224,7 @@ class ProblemGraphContent(_BaseGraphContent):
     def from_internal(cls, config: ProblemsGraphDashletConfig) -> Self:
         return cls(
             type="problem_graph",
-            timerange=timerange_from_internal(config["timerange"]),
+            timerange=timerange_from_internal(config.get("timerange", "25h")),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -265,7 +265,7 @@ class CombinedGraphContent(_BaseGraphContent):
     def from_internal(cls, config: CombinedGraphDashletConfig) -> Self:
         return cls(
             type="combined_graph",
-            timerange=timerange_from_internal(config["timerange"]),
+            timerange=timerange_from_internal(config.get("timerange", "25h")),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -305,7 +305,7 @@ class SingleTimeseriesContent(_BaseGraphContent):
     def from_internal(cls, config: SingleTimeseriesDashletConfig) -> Self:
         return cls(
             type="single_timeseries",
-            timerange=timerange_from_internal(config["timerange"]),
+            timerange=timerange_from_internal(config.get("timerange", "25h")),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -351,7 +351,7 @@ class CustomGraphContent(_BaseGraphContent):
     def from_internal(cls, config: CustomGraphDashletConfig) -> Self:
         return cls(
             type="custom_graph",
-            timerange=timerange_from_internal(config["timerange"]),
+            timerange=timerange_from_internal(config.get("timerange", "25h")),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
@@ -393,7 +393,7 @@ class PerformanceGraphContent(_BaseGraphContent):
     def from_internal(cls, config: TemplateGraphDashletConfig) -> Self:
         return cls(
             type="performance_graph",
-            timerange=timerange_from_internal(config["timerange"]),
+            timerange=timerange_from_internal(config.get("timerange", "25h")),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),

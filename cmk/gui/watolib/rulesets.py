@@ -2460,21 +2460,21 @@ def _parse_explicit_hosts_or_services_for_conditions(
     return {"$nor": values} if raw_value["negate"] else values
 
 
-class _ExplicitHostsOrServices(TypedDict):
+class ExplicitHostsOrServices(TypedDict):
     value: Sequence[str]
     negate: bool
 
 
-def _parse_explicit_hosts_or_services_for_vue(
+def parse_explicit_hosts_or_services_for_vue(
     value: HostOrServiceConditions,
-) -> _ExplicitHostsOrServices:
+) -> ExplicitHostsOrServices:
     if isinstance(value, list):
-        return _ExplicitHostsOrServices(
+        return ExplicitHostsOrServices(
             value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value],
             negate=False,
         )
     if isinstance(value, dict):
-        return _ExplicitHostsOrServices(
+        return ExplicitHostsOrServices(
             value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value["$nor"]],
             negate=True,
         )

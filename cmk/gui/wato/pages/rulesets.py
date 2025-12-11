@@ -159,6 +159,7 @@ from cmk.gui.watolib.rulesets import (
     get_rule_options_from_catalog_value,
     LockedConditions,
     may_edit_ruleset,
+    parse_explicit_hosts_or_services_for_vue,
     Rule,
     RuleConditions,
     RuleIdentifier,
@@ -2019,27 +2020,6 @@ def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
     return RenderMode.FRONTEND, rulespec.form_spec
 
 
-class _ExplicitHostsOrServices(TypedDict):
-    value: Sequence[str]
-    negate: bool
-
-
-def _parse_explicit_hosts_or_services_for_vue(
-    value: HostOrServiceConditions,
-) -> _ExplicitHostsOrServices:
-    if isinstance(value, list):
-        return _ExplicitHostsOrServices(
-            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value],
-            negate=False,
-        )
-    if isinstance(value, dict):
-        return _ExplicitHostsOrServices(
-            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value["$nor"]],
-            negate=True,
-        )
-    raise TypeError(value)
-
-
 @dataclass(frozen=True, kw_only=True)
 class _BackendForm:
     title: str | None
@@ -2488,11 +2468,11 @@ class ABCEditRuleMode(WatoMode):
         if self._rule.conditions.host_label_groups:
             raw_explicit["host_label_groups"] = self._rule.conditions.host_label_groups
         if self._rule.conditions.host_name:
-            raw_explicit["explicit_hosts"] = _parse_explicit_hosts_or_services_for_vue(
+            raw_explicit["explicit_hosts"] = parse_explicit_hosts_or_services_for_vue(
                 self._rule.conditions.host_name
             )
         if self._rule.conditions.service_description is not None:
-            raw_explicit["explicit_services"] = _parse_explicit_hosts_or_services_for_vue(
+            raw_explicit["explicit_services"] = parse_explicit_hosts_or_services_for_vue(
                 self._rule.conditions.service_description
             )
         if self._rule.conditions.service_label_groups:

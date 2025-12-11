@@ -31,6 +31,7 @@ interface Props {
   linkNavigationEmbeddingPage: string
   isEditMode: boolean
   publicToken: DashboardTokenModel | null
+  isEmptyDashboard: boolean
 }
 
 const { _t } = usei18n()
@@ -213,9 +214,13 @@ const pageNavigation = parsePageNavigation()
           <span>{{ _t('Clone') }}</span>
         </MenuButton>
 
-        <MenuButton v-else class="menu-btn" @click="enterEditMode">
+        <MenuButton
+          v-else
+          class="menu-btn"
+          @click="isEmptyDashboard ? handleAddWidget() : enterEditMode()"
+        >
           <CmkIcon name="dashboard-grid" size="large" />
-          <span>{{ _t('Edit widgets') }}</span>
+          <span>{{ isEmptyDashboard ? _t('Add widget') : _t('Edit widgets') }}</span>
         </MenuButton>
       </template>
 

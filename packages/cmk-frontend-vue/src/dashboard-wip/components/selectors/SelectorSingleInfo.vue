@@ -85,6 +85,7 @@ watch(allowedIds, () => {
       :title="_t('Visual information')"
       :validators="[]"
       :backend-validation="[]"
+      width="small"
     />
 
     <div v-else class="vi-selector__skeleton" aria-busy="true" aria-live="polite">

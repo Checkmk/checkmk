@@ -46,7 +46,7 @@ const cancel = () => {
 </script>
 
 <template>
-  <CmkSlideIn :open="open">
+  <CmkSlideIn :open="open" size="small">
     <Suspense>
       <CreateDashboardWizard
         :available-layouts="props.availableLayouts"

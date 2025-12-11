@@ -375,6 +375,7 @@ function deepClone<T>(obj: T): T {
         :link-user-guide="props.links.user_guide"
         :link-navigation-embedding-page="props.links.navigation_embedding_page"
         :public-token="dashboardsManager.activeDashboard.value?.public_token ?? null"
+        :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
         @open-filter="openDashboardFilterSettings = true"
         @open-settings="openDashboardSettings = true"
         @open-clone-workflow="openDashboardCloneDialog = true"

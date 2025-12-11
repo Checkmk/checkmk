@@ -138,7 +138,7 @@ const cancel = () => {
         @back="cancel"
       />
 
-      <ContentSpacer />
+      <ContentSpacer :dimension="6" />
 
       <ActionBar>
         <ActionButton
@@ -164,7 +164,7 @@ const cancel = () => {
         />
       </ActionBar>
 
-      <ContentSpacer />
+      <ContentSpacer :dimension="11" />
 
       <div>
         <CmkLabel
@@ -249,6 +249,6 @@ const cancel = () => {
 .db-create-dashboard-wizard__container {
   width: 100vh;
   flex: 2;
-  padding: var(--spacing-double);
+  padding: var(--dimension-10);
 }
 </style>

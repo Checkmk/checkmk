@@ -63,6 +63,7 @@ defineProps<StepsHeaderProps>()
 
 .db-steps-header__container:has(.db-steps-header__close):not(:has(.db-steps-header__icon)) {
   justify-content: space-between;
+  padding-top: 0;
 }
 
 .db-steps-header__icon {

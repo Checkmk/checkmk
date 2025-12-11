@@ -128,6 +128,22 @@ def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     help_text=Help("The Client secret of your registered application."),
                 ),
             ),
+            "access_token": DictElement(
+                render_only=True,
+                required=True,
+                parameter_form=Password(
+                    title=Title("Access token"),
+                    help_text=Help("The access token for this OAuth2 connection."),
+                ),
+            ),
+            "refresh_token": DictElement(
+                render_only=True,
+                required=True,
+                parameter_form=Password(
+                    title=Title("Refresh token"),
+                    help_text=Help("The refresh token for this OAuth2 connection."),
+                ),
+            ),
         },
     )
 
@@ -292,6 +308,8 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                                     "tenant_id": self._entry["tenant_id"],
                                     "client_id": self._entry["client_id"],
                                     "client_secret": self.entry["client_secret"],
+                                    "access_token": self._entry["access_token"],
+                                    "refresh_token": self._entry["refresh_token"],
                                 }
                             ),
                             field_id=form_name,
@@ -335,6 +353,8 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                                 "tenant_id": self._entry["tenant_id"],
                                 "client_id": self._entry["client_id"],
                                 "client_secret": self.entry["client_secret"],
+                                "access_token": self._entry["access_token"],
+                                "refresh_token": self._entry["refresh_token"],
                             }
                         ),
                         field_id=form_name,

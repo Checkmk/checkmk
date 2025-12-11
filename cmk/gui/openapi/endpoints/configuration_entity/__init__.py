@@ -22,6 +22,9 @@ from cmk.gui.openapi.endpoints.configuration_entity import (
     notification_parameter as notification_parameter_endpoints,
 )
 from cmk.gui.openapi.endpoints.configuration_entity import (
+    oauth2_connection as oauth2_connection_endpoints,
+)
+from cmk.gui.openapi.endpoints.configuration_entity import (
     passwordstore_password as passwordstore_password_endpoints,
 )
 from cmk.gui.openapi.endpoints.configuration_entity import (
@@ -198,4 +201,5 @@ def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) ->
     passwordstore_password_endpoints.register(
         endpoint_registry, ignore_duplicates=ignore_duplicates
     )
+    oauth2_connection_endpoints.register(endpoint_registry, ignore_duplicates=ignore_duplicates)
     rule_form_spec_endpoints.register(endpoint_registry, ignore_duplicates=ignore_duplicates)

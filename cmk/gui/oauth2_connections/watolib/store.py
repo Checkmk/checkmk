@@ -3,16 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import TypeGuard
+from typing import Literal, TypeGuard
 
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.passwords import load_passwords, save_password
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
 from cmk.utils.oauth2_connection import OAuth2Connection
+from cmk.utils.password_store import Password
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
@@ -119,3 +122,104 @@ def is_locked_by_oauth2_connection(
         return False
 
     return True
+
+
+def save_tokens_to_passwordstore(
+    *,
+    ident: str,
+    title: str,
+    client_secret: str,
+    access_token: str,
+    refresh_token: str,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
+    # TODO Think site_id should be in data above
+    site_id = omd_site()
+    password_entries = load_passwords()
+    for pw_title, entry, password in [
+        ("Client secret", "client_secret", client_secret),
+        ("Access token", "access_token", access_token),
+        ("Refresh token", "refresh_token", refresh_token),
+    ]:
+        password_ident = f"{ident}_{entry}"
+        save_password(
+            ident=password_ident,
+            details=Password(
+                title=pw_title,
+                comment=title,
+                docu_url="",
+                password=password,
+                owned_by=None,
+                shared_with=[],
+                locked_by=GlobalIdent(
+                    site_id=site_id,
+                    program_id=PROGRAM_ID_OAUTH,
+                    instance_id=ident,
+                ),
+            ),
+            new_password=password_ident not in password_entries,
+            user_id=user_id,
+            pprint_value=pprint_value,
+            use_git=use_git,
+        )
+
+
+def save_reference_to_config_file(
+    *,
+    ident: str,
+    title: str,
+    client_id: str,
+    tenant_id: str,
+    authority: str,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> tuple[str, OAuth2Connection]:
+    details = OAuth2Connection(
+        title=title,
+        access_token=("cmk_postprocessed", "stored_password", (f"{ident}_access_token", "")),
+        client_id=client_id,
+        client_secret=("cmk_postprocessed", "stored_password", (f"{ident}_client_secret", "")),
+        refresh_token=("cmk_postprocessed", "stored_password", (f"{ident}_refresh_token", "")),
+        tenant_id=tenant_id,
+        authority=authority,
+    )
+    if ident in load_oauth2_connections():
+        update_oauth2_connection(
+            ident=ident,
+            details=details,
+            user_id=user_id,
+            pprint_value=pprint_value,
+            use_git=use_git,
+        )
+        return ident, details
+    save_oauth2_connection(
+        ident=ident,
+        details=details,
+        user_id=user_id,
+        pprint_value=pprint_value,
+        use_git=use_git,
+    )
+    return ident, details
+
+
+def extract_password_store_entry(
+    value: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ],
+) -> str:
+    match value:
+        case ("cmk_postprocessed", "stored_password", (password_id, str())):
+            password_entries = load_passwords()
+            password_entry = password_entries[password_id]
+            if not password_entry:
+                raise MKUserError("client_secret", f"Password with ID '{password_id}' not found")
+            return str(password_entry["password"])
+        case ("cmk_postprocessed", "explicit_password", (_password_id, password)):
+            return str(password)
+        case _:
+            raise MKUserError("client_secret", "Incorrect format for secret value")

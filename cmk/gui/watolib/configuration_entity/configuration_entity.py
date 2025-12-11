@@ -17,11 +17,18 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.oauth2_connections.watolib.store import (
+    load_oauth2_connections,
+)
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,
+)
+from cmk.gui.watolib.configuration_entity._oauth2_connections import (
+    save_oauth2_connection_and_passwords_from_slidein_schema,
 )
 from cmk.gui.watolib.configuration_entity._password import (
     get_password_slidein_schema,
@@ -97,6 +104,14 @@ def save_configuration_entity(
             return ConfigurationEntityDescription(
                 ident=EntityId(password.id), description=password.title
             )
+        case ConfigEntityType.oauth2_connection:
+            user.need_permission("general.oauth2_connections")
+            ident, oauth2_connection = save_oauth2_connection_and_passwords_from_slidein_schema(
+                RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
+            )
+            return ConfigurationEntityDescription(
+                ident=EntityId(ident), description=oauth2_connection["title"]
+            )
         case ConfigEntityType.rule_form_spec:
             rule_form_spec_descr = save_rule_form_spec_from_slidein_schema(
                 entity_type_specifier, RawFrontendData(data), tree, user
@@ -143,6 +158,11 @@ def update_configuration_entity(
             raise NotImplementedError(
                 "Editing/updating rules via config entity API is not supported."
             )
+        case ConfigEntityType.oauth2_connection:
+            user.need_permission("general.oauth2_connections")
+            raise NotImplementedError(
+                "Editing oauth2 connections via config entity API is not supported."
+            )
         case other:
             assert_never(other)
 
@@ -156,6 +176,8 @@ def _get_configuration_fs(
     match entity_type:
         case ConfigEntityType.notification_parameter:
             return notification_parameter_registry.form_spec(entity_type_specifier)
+        case ConfigEntityType.oauth2_connection:
+            return OAuth2ConnectionSetup()
         case ConfigEntityType.folder:
             return get_folder_slidein_schema(tree)
         case ConfigEntityType.passwordstore_password:
@@ -189,6 +211,8 @@ def get_readable_entity_selection(entity_type: ConfigEntityType, entity_type_spe
             return _("%s parameter") % notification_script_title(entity_type_specifier)
         case ConfigEntityType.folder:
             return _("folder")
+        case ConfigEntityType.oauth2_connection:
+            return _("OAuth2 connection")
         case ConfigEntityType.passwordstore_password:
             return _("password")
         case ConfigEntityType.rule_form_spec:
@@ -228,6 +252,11 @@ def get_configuration_entity(
             )
         case ConfigEntityType.rule_form_spec:
             raise NotImplementedError("Editing rules via config entity API is not yet supported.")
+        case ConfigEntityType.oauth2_connection:
+            user.need_permission("general.oauth2_connections")
+            raise NotImplementedError(
+                "Editing oauth2 connections via config entity API is not yet supported."
+            )
         case other:
             assert_never(other)
 
@@ -253,6 +282,12 @@ def get_list_of_configuration_entities(
             return [
                 ConfigurationEntityDescription(ident=EntityId(ident), description=description)
                 for ident, description in folder_tree().folder_choices_fulltitle()
+            ]
+        case ConfigEntityType.oauth2_connection:
+            user.need_permission("general.oauth2_connections")
+            return [
+                ConfigurationEntityDescription(ident=EntityId(ident), description=entry["title"])
+                for ident, entry in load_oauth2_connections().items()
             ]
         case ConfigEntityType.passwordstore_password:
             return [

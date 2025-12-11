@@ -67,6 +67,7 @@ DomainType = Literal[
     "pagetype_topic",
     "password",
     "passwordstore_password",
+    "oauth2_connection",
     "parent_scan",
     "relay",
     "rule",

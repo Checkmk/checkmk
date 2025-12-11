@@ -12,6 +12,8 @@ export interface OAuth2FormData {
   tenant_id: string
   client_id: string
   client_secret: unknown
+  access_token?: string
+  refresh_token?: string
 }
 
 export interface MsGraphApiAccessTokenRequestObject {
@@ -25,6 +27,10 @@ export interface MsGraphApiAccessTokenRequestObject {
 export interface MsGraphAjaxResponse {
   status: 'success' | 'error'
   message?: string
+  data?: {
+    access_token: string
+    refresh_token: string
+  }
 }
 
 export class Oauth2ConnectionApi extends Api {
@@ -35,11 +41,11 @@ export class Oauth2ConnectionApi extends Api {
     ])
   }
 
-  public async requestAndSaveAccessToken(
+  public async requestAccessToken(
     requestObject: MsGraphApiAccessTokenRequestObject
   ): Promise<MsGraphAjaxResponse> {
     return (await this.post(
-      'ajax_request_and_save_ms_graph_access_token.py',
+      'ajax_request_ms_graph_access_token.py',
       requestObject
     )) as Promise<MsGraphAjaxResponse>
   }

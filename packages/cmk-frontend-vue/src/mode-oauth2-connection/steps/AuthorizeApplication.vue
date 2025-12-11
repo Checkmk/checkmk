@@ -132,11 +132,11 @@ function verifyAuthorization(
   authWindow.close()
 }
 
-async function requestAndSaveAccessToken(): Promise<boolean> {
+async function requestAccessToken(): Promise<boolean> {
   loadingTitle.value = _t('Requesting access token')
   try {
     if (props.oAuth2Type === 'ms_graph_api' && resultCode.value) {
-      const res = await api.requestAndSaveAccessToken({
+      const res = await api.requestAccessToken({
         type: 'ms_graph_api',
         id: props.ident,
         redirect_uri: buildRedirectUri(),
@@ -146,6 +146,10 @@ async function requestAndSaveAccessToken(): Promise<boolean> {
       if (res.status !== 'success') {
         errorTitle.value = _t(`${res.message}`)
         return false
+      }
+      if (res.data) {
+        dataRef.value.access_token = res.data.access_token
+        dataRef.value.refresh_token = res.data.refresh_token
       }
       return true
     }
@@ -179,7 +183,7 @@ immediateWatch(
 
         if (code) {
           resultCode.value = code
-          authSucceeded.value = await requestAndSaveAccessToken()
+          authSucceeded.value = await requestAccessToken()
           loading.value = false
         } else {
           loading.value = false
@@ -212,7 +216,7 @@ immediateWatch(
 
       <template v-else-if="authSucceeded">
         <CmkAlertBox variant="success">
-          {{ _t('OAuth2 connection created successfully!') }}
+          {{ _t('OAuth2 connection parameters requested successfully!') }}
         </CmkAlertBox>
       </template>
       <CmkAlertBox v-else variant="error">
@@ -221,7 +225,7 @@ immediateWatch(
     </template>
 
     <template #actions>
-      <CmkWizardButton type="finish" :override-label="_t('Finish')" :disabled="!authSucceeded" />
+      <CmkWizardButton type="finish" :override-label="_t('Save')" :disabled="!authSucceeded" />
       <CmkWizardButton
         type="previous"
         :override-label="_t('Go back to restart authorization process')"

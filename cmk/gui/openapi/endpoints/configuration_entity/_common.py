@@ -45,6 +45,8 @@ def to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
             return ConfigEntityType.notification_parameter.value
         case ConfigEntityType.folder:
             return ConfigEntityType.folder.value
+        case ConfigEntityType.oauth2_connection:
+            return ConfigEntityType.oauth2_connection.value
         case ConfigEntityType.passwordstore_password:
             return ConfigEntityType.passwordstore_password.value
         case ConfigEntityType.rule_form_spec:

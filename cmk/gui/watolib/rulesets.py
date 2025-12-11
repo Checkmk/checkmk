@@ -2447,9 +2447,20 @@ def get_rule_options_from_catalog_value(raw_value: object) -> RuleOptions:
     )
 
 
-def _parse_explicit_hosts_or_services_for_conditions(
+def _parse_explicit_hosts_for_conditions(
     raw_value: object,
 ) -> HostOrServiceConditions | None:
+    if raw_value is None:
+        return None
+    if not isinstance(raw_value, dict):
+        raise TypeError(raw_value)
+    values: HostOrServiceConditionsSimple = [
+        {"$regex": e[1:]} if e.startswith("~") else e for e in raw_value["value"]
+    ]
+    return {"$nor": values} if raw_value["negate"] else values
+
+
+def _parse_explicit_services_for_conditions(raw_value: object) -> HostOrServiceConditions | None:
     if raw_value is None:
         return None
     if not isinstance(raw_value, dict):
@@ -2465,9 +2476,21 @@ class ExplicitHostsOrServices(TypedDict):
     negate: bool
 
 
-def parse_explicit_hosts_or_services_for_vue(
-    value: HostOrServiceConditions,
-) -> ExplicitHostsOrServices:
+def parse_explicit_hosts_for_vue(value: HostOrServiceConditions) -> ExplicitHostsOrServices:
+    if isinstance(value, list):
+        return ExplicitHostsOrServices(
+            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value],
+            negate=False,
+        )
+    if isinstance(value, dict):
+        return ExplicitHostsOrServices(
+            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value["$nor"]],
+            negate=True,
+        )
+    raise TypeError(value)
+
+
+def parse_explicit_services_for_vue(value: HostOrServiceConditions) -> ExplicitHostsOrServices:
     if isinstance(value, list):
         return ExplicitHostsOrServices(
             value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value],
@@ -2496,10 +2519,10 @@ def get_rule_conditions_from_catalog_value(raw_value: object) -> RuleConditions:
                 host_folder=raw_conditions["folder_path"],
                 host_tags=raw_conditions.get("host_tags"),
                 host_label_groups=raw_conditions.get("host_label_groups"),
-                host_name=_parse_explicit_hosts_or_services_for_conditions(
+                host_name=_parse_explicit_hosts_for_conditions(
                     raw_conditions.get("explicit_hosts")
                 ),
-                service_description=_parse_explicit_hosts_or_services_for_conditions(
+                service_description=_parse_explicit_services_for_conditions(
                     raw_conditions.get("explicit_services")
                 ),
                 service_label_groups=raw_conditions.get("service_label_groups"),

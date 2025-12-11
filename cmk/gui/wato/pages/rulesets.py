@@ -159,7 +159,8 @@ from cmk.gui.watolib.rulesets import (
     get_rule_options_from_catalog_value,
     LockedConditions,
     may_edit_ruleset,
-    parse_explicit_hosts_or_services_for_vue,
+    parse_explicit_hosts_for_vue,
+    parse_explicit_services_for_vue,
     Rule,
     RuleConditions,
     RuleIdentifier,
@@ -2468,11 +2469,11 @@ class ABCEditRuleMode(WatoMode):
         if self._rule.conditions.host_label_groups:
             raw_explicit["host_label_groups"] = self._rule.conditions.host_label_groups
         if self._rule.conditions.host_name:
-            raw_explicit["explicit_hosts"] = parse_explicit_hosts_or_services_for_vue(
+            raw_explicit["explicit_hosts"] = parse_explicit_hosts_for_vue(
                 self._rule.conditions.host_name
             )
         if self._rule.conditions.service_description is not None:
-            raw_explicit["explicit_services"] = parse_explicit_hosts_or_services_for_vue(
+            raw_explicit["explicit_services"] = parse_explicit_services_for_vue(
                 self._rule.conditions.service_description
             )
         if self._rule.conditions.service_label_groups:

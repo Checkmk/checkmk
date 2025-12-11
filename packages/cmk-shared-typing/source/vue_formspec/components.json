@@ -914,6 +914,52 @@
         }
       ]
     },
+    "oauth2_connection_setup": {
+      "id": "oauth2_connection_setup",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "oauth2_connection_setup",
+              "default": "oauth2_connection_setup"
+            },
+            "config": {
+              "$ref": "../mode_oauth2_connection.json"
+            },
+            "form_spec": {
+              "$ref": "#/$defs/form_spec"
+            },
+            "authority_mapping": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/authority"
+              }
+            },
+            "ident": {
+              "type": "string"
+            }
+          },
+          "required": ["type", "config", "form_spec", "authority_mapping"]
+        }
+      ]
+    },
+    "authority": {
+      "type": "object",
+      "properties": {
+        "authority_id": {
+          "type": "string"
+        },
+        "authority_name": {
+          "type": "string"
+        }
+      },
+      "required": ["authority_url", "display_name"]
+    },
     "metric_backend_custom_query_attribute": {
       "type": "object",
       "properties": {
@@ -1836,6 +1882,9 @@
         },
         {
           "$ref": "#/$defs/metric_backend_custom_query"
+        },
+        {
+          "$ref": "#/$defs/oauth2_connection_setup"
         },
         {
           "$ref": "#/$defs/metric"

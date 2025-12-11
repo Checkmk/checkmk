@@ -30,6 +30,7 @@ import FormListOfStrings from '@/form/private/forms/FormListOfStrings.vue'
 import FormMetric from '@/form/private/forms/FormMetric.vue'
 import FormMetricBackendCustomQuery from '@/form/private/forms/FormMetricBackendCustomQuery.vue'
 import FormMultilineText from '@/form/private/forms/FormMultilineText.vue'
+import FormOAuth2ConnectionSetup from '@/form/private/forms/FormOAuth2ConnectionSetup.vue'
 import FormOptionalChoice from '@/form/private/forms/FormOptionalChoice.vue'
 import FormPassword from '@/form/private/forms/FormPassword.vue'
 import FormRegex from '@/form/private/forms/FormRegex/FormRegex.vue'
@@ -67,6 +68,7 @@ const components: Record<Components['type'], Component> = {
   list_unique_selection: FormListUniqueSelection,
   list_of_strings: FormListOfStrings,
   metric_backend_custom_query: FormMetricBackendCustomQuery,
+  oauth2_connection_setup: FormOAuth2ConnectionSetup,
   metric: FormMetric,
   multiline_text: FormMultilineText,
   optional_choice: FormOptionalChoice,

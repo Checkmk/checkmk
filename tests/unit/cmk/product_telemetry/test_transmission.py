@@ -63,7 +63,7 @@ def test_transmission(
 
     with patch("requests.post") as mock_post:
         mock_post.side_effect = mocks
-        transmit_telemetry_data(tmp_path)
+        transmit_telemetry_data(tmp_path, logger=mock.Mock())
 
     for file in files:
         file_path = mocked_telemetry_dir / file["filename"]
@@ -97,7 +97,7 @@ def test_transmission_with_proxy(
     mock_response.ok = True
 
     with patch("requests.post", return_value=mock_response) as mock_post:
-        transmit_telemetry_data(tmp_path, proxy_config=proxy_config)
+        transmit_telemetry_data(tmp_path, proxy_config=proxy_config, logger=mock.Mock())
 
     assert mock_post.call_count == 1
     assert mock_post.call_args.kwargs["proxies"] == expected_requests_proxies

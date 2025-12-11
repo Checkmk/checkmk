@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import time
 from pathlib import Path
 
@@ -13,8 +14,10 @@ from cmk.product_telemetry.schema import ProductTelemetryPayload
 
 
 def collect_telemetry_data(
-    var_dir: Path, cmk_config_dir: Path, omd_root: Path
+    var_dir: Path, cmk_config_dir: Path, omd_root: Path, logger: logging.Logger
 ) -> ProductTelemetryPayload:
+    logger.info("Collection starts")
+
     site_info = site_info_collector.collect(cmk_config_dir, var_dir, omd_root)
 
     return ProductTelemetryPayload(

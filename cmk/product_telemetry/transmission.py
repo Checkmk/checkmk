@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import logging
 import os
 import re
 from pathlib import Path
@@ -18,8 +19,11 @@ from cmk.utils.http_proxy_config import EnvironmentProxyConfig, HTTPProxyConfig
 DEFAULT_PROXY = EnvironmentProxyConfig()
 
 
-def transmit_telemetry_data(var_dir: Path, proxy_config: HTTPProxyConfig = DEFAULT_PROXY) -> None:
-    # TODO: Logging for failed transmissions. E.g. timestamp, filename, success/failure, status code?
+def transmit_telemetry_data(
+    var_dir: Path, logger: logging.Logger, proxy_config: HTTPProxyConfig = DEFAULT_PROXY
+) -> None:
+    logger.info("Data transmission starts")
+
     directory = var_dir / "telemetry"
 
     # Ignored mypy error: it only checks filenames that already match the pattern, so it will never call group() on None
@@ -30,7 +34,7 @@ def transmit_telemetry_data(var_dir: Path, proxy_config: HTTPProxyConfig = DEFAU
 
     transmission_results: dict[str, bool] = {}
     for file_path in files:
-        successful_response = _transmit_single_telemetry_file(file_path, proxy_config)
+        successful_response = _transmit_single_telemetry_file(file_path, proxy_config, logger)
         transmission_results[file_path.name] = successful_response
         if successful_response:
             file_path.unlink()
@@ -40,10 +44,15 @@ def transmit_telemetry_data(var_dir: Path, proxy_config: HTTPProxyConfig = DEFAU
     if files:
         newest_file = files[-1]
         if transmission_results.get(newest_file.name):
+            logger.info("Removing Grafana usage data")
             remove_grafana_usage_data(var_dir)
 
 
-def _transmit_single_telemetry_file(file_path: Path, proxy_config: HTTPProxyConfig) -> bool:
+def _transmit_single_telemetry_file(
+    file_path: Path, proxy_config: HTTPProxyConfig, logger: logging.Logger
+) -> bool:
+    logger.info("Tansmitting %s", file_path)
+
     with file_path.open("r", encoding="utf-8") as f:
         json_data = json.load(f)
 
@@ -53,6 +62,10 @@ def _transmit_single_telemetry_file(file_path: Path, proxy_config: HTTPProxyConf
         timeout=30,
         proxies=proxy_config.to_requests_proxies(),
     )
+
+    if not response.ok:
+        logger.error("Error during transmission: status %s %s", response.status_code, response.text)
+
     return response.ok
 
 

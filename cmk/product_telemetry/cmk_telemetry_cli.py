@@ -47,14 +47,26 @@ def main(args: Sequence[str]) -> int:
             # If this is the first run after product telemetry being enabled,
             # we need to create a random next timestamp somewhere in the next 30 days and then exit.
             if not get_next_telemetry_run_ts(next_run_file_path):
-                store_next_telemetry_run_ts(next_run_file_path, create_next_random_ts(now))
+                next_scheduled_run_at = create_next_random_ts(now)
+                logger.info(
+                    "First scheduled execution, planning the next execution at %s",
+                    next_scheduled_run_at,
+                )
+                store_next_telemetry_run_ts(next_run_file_path, next_scheduled_run_at)
                 return 0
 
             if not should_run_telemetry_on_schedule(paths.var_dir, now):
                 return 0
 
+            logger.info("Scheduled run starts")
+
         if request.collect:
-            data = collect_telemetry_data(paths.var_dir, paths.check_mk_config_dir, paths.omd_root)
+            data = collect_telemetry_data(
+                paths.var_dir,
+                paths.check_mk_config_dir,
+                paths.omd_root,
+                logger,
+            )
             sys.stdout.write(data.model_dump_with_metadata_json().decode("utf-8") + "\n")
             sys.stdout.flush()
 
@@ -62,15 +74,19 @@ def main(args: Sequence[str]) -> int:
                 store_telemetry_data(data, paths.var_dir)
 
         if request.upload:
-            transmit_telemetry_data(paths.var_dir, proxy_config=config.proxy_config)
+            transmit_telemetry_data(paths.var_dir, logger, proxy_config=config.proxy_config)
 
         if request.schedule:
-            store_next_telemetry_run_ts(next_run_file_path, create_next_ts(now))
+            next_scheduled_run_at = create_next_ts(now)
+            logger.info("Planning the next execution at %s", next_scheduled_run_at)
+            store_next_telemetry_run_ts(next_run_file_path, next_scheduled_run_at)
 
     except Exception as e:
         sys.stderr.write(f"cmk-telemetry: {e}\n")
-        logger.error(str(e))
+        logger.exception("Unexpected error")
         return -1
+
+    logger.info("Successfully ran")
 
     return 0
 

@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import datetime as dt
+import json
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from typing import cast
+from typing import cast, override
 
 from dateutil.relativedelta import relativedelta
 
@@ -16,8 +17,9 @@ from cmk.ccc.version import Edition, edition
 from cmk.gui import visuals
 from cmk.gui.dashboard.store import DashboardStore
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig, LinkedViewDashletConfig
-from cmk.gui.exceptions import HTTPRedirect, MKMethodNotAllowed, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKMethodNotAllowed, MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
@@ -31,6 +33,7 @@ from cmk.gui.token_auth import (
     TokenStore,
 )
 from cmk.gui.type_defs import ViewSpec
+from cmk.gui.utils.json import CustomObjectJSONEncoder
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.views.store import get_permitted_views, ViewStore
@@ -208,10 +211,10 @@ def _get_view_owners(dashboard_config: DashboardConfig) -> dict[str, UserId]:
 
 class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
     def get(self, token: AuthToken, ctx: PageContext) -> PageResult:
-        return self.__handle_method(token, ctx, self._get)
+        return self._handle_method(token, ctx, self._get)
 
     def post(self, token: AuthToken, ctx: PageContext) -> PageResult:
-        return self.__handle_method(token, ctx, self._post)
+        return self._handle_method(token, ctx, self._post)
 
     @staticmethod
     def __check_token_details(token: AuthToken) -> DashboardToken:
@@ -225,7 +228,8 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
     def _disable_and_redirect(self, token: AuthToken) -> PageResult:
         """Disable the token and redirect to the shared dashboard page.
 
-        Redirection should then show the user a message that the token has been disabled."""
+        Redirection should then show the user a message that the token has been disabled.
+        """
         with get_token_store().read_locked() as store:
             if (edit_token := store.get(token.token_id)) and isinstance(
                 edit_token.details, DashboardToken
@@ -241,7 +245,7 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
         # That's fine for the v1 though, as long as the token is disabled beforehand.
         raise HTTPRedirect(get_shared_dashboard_url(token.token_id)) from None
 
-    def __handle_method(
+    def _handle_method(
         self,
         token: AuthToken,
         ctx: PageContext,
@@ -284,6 +288,41 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
     ) -> PageResult:
         """Override this to implement POST method logic"""
         raise MKMethodNotAllowed("Method not supported")
+
+
+class DashboardTokenAuthenticatedJsonPage(DashboardTokenAuthenticatedPage):
+    @staticmethod
+    def _set_response_data(data: dict[str, object]) -> None:
+        response.set_data(json.dumps(data, cls=CustomObjectJSONEncoder))
+
+    @override
+    def _before_method_handler(self, ctx: PageContext) -> None:
+        response.set_content_type("application/json")
+
+    @override
+    def _handle_exception(self, exception: Exception, ctx: PageContext) -> None:
+        if ctx.config.debug:
+            raise exception
+
+        severity = "error"
+        if isinstance(exception, MKMissingDataError):
+            severity = "success"
+
+        self._set_response_data({"result_code": 1, "result": str(exception), "severity": severity})
+
+    def get(self, token: AuthToken, ctx: PageContext) -> PageResult:
+        action_response = self._handle_method(token, ctx, self._get)
+        self._set_response_data(
+            {"result_code": 0, "result": action_response, "severity": "success"}
+        )
+        return action_response
+
+    def post(self, token: AuthToken, ctx: PageContext) -> PageResult:
+        action_response = self._handle_method(token, ctx, self._post)
+        self._set_response_data(
+            {"result_code": 0, "result": action_response, "severity": "success"}
+        )
+        return action_response
 
 
 class ImpersonatedDashboardTokenIssuer:

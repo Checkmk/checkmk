@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Callable, Mapping
 from typing import override
 
@@ -18,19 +17,17 @@ from cmk.gui.dashboard.dashlet.dashlets.stats import (
     ServiceStatsDashletDataGenerator,
 )
 from cmk.gui.dashboard.token_util import (
-    DashboardTokenAuthenticatedPage,
+    DashboardTokenAuthenticatedJsonPage,
     get_dashboard_widget_by_id,
     impersonate_dashboard_token_issuer,
     InvalidWidgetError,
 )
-from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
-from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.token_auth import AuthToken, DashboardToken
-from cmk.gui.utils.json import CustomObjectJSONEncoder
 
 __all__ = ["FigureWidgetPage", "FigureWidgetTokenAuthPage"]
 
@@ -87,7 +84,7 @@ class FigureWidgetPage(AjaxPage):
         )
 
 
-class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
+class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
     @classmethod
     def ident(cls) -> str:
         return "widget_figure_token_auth"
@@ -96,20 +93,9 @@ class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
     def get_data_generator(cls, figure_type_name: str) -> Callable[..., FigureResponseData]:
         return FigureWidgetPage.get_data_generator(figure_type_name)
 
-    @staticmethod
-    def _set_response_data(data: dict[str, object]) -> None:
-        response.set_data(json.dumps(data, cls=CustomObjectJSONEncoder))
-
-    def _before_method_handler(self, ctx: PageContext) -> None:
-        response.set_content_type("application/json")
-
-    def _handle_exception(self, exception: Exception, ctx: PageContext) -> None:
-        if ctx.config.debug:
-            raise exception
-
-        self._set_response_data({"result_code": 1, "result": str(exception), "severity": "error"})
-
-    def _post(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
+    def _post(
+        self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
+    ) -> PageResult:
         if (widget_id := ctx.request.get_str_input("widget_id")) is None:
             raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
 
@@ -127,17 +113,10 @@ class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
             # likely an edition downgrade where the figure type is not available anymore
             raise InvalidWidgetError(disable_token=True) from None
 
-        try:
-            action_response = create_figures_response(
-                data_generator(
-                    widget_config,
-                    widget_config["context"],
-                    widget_config["single_infos"],
-                )
+        return create_figures_response(
+            data_generator(
+                widget_config,
+                widget_config["context"],
+                widget_config["single_infos"],
             )
-
-            resp = {"result_code": 0, "result": action_response, "severity": "success"}
-        except MKMissingDataError as e:
-            resp = {"result_code": 1, "result": str(e), "severity": "success"}
-
-        self._set_response_data(resp)
+        )

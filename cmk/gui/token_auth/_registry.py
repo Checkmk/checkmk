@@ -9,11 +9,7 @@ from dataclasses import dataclass
 from typing import override
 
 import cmk.ccc.plugin_registry
-from cmk.gui.exceptions import (
-    MKMethodNotAllowed,
-    MKNotFound,
-    MKUnauthenticatedException,
-)
+from cmk.gui.exceptions import MKMethodNotAllowed, MKNotFound, MKUnauthenticatedException
 from cmk.gui.http import Request, Response, response
 from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.token_auth._exceptions import MKTokenExpiredOrRevokedException

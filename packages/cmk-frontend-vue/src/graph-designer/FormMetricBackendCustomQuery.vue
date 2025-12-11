@@ -19,6 +19,7 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
+import CmkTimeSpan from '@/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import { type ValidationMessages } from '@/form/private/validation'
@@ -146,13 +147,19 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
       <tr>
         <td>{{ _t('Aggregation lookback') }}</td>
         <td>
-          <CmkInput
-            v-model="aggregationLookback"
-            type="number"
-            :unit="'s'"
-            field-size="SMALL"
-            :external-errors="validationByLocation.aggregation_lookback"
-            @update:model-value="validationByLocation.aggregation_lookback = []"
+          <!-- We can't use the backend-validation from the CmkTimeSpan
+            as applying the replacement_value cleans the backend-validation
+            effectively causing it to not show the validation messages -->
+          <FormValidation :validation="validationByLocation.aggregation_lookback"></FormValidation>
+          <CmkTimeSpan
+            v-model:data="aggregationLookback"
+            :label="''"
+            :title="''"
+            :input-hint="1"
+            :displayed-magnitudes="['hour', 'minute', 'second']"
+            :validators="[]"
+            :backend-validation="[]"
+            @update:data="validationByLocation.aggregation_lookback = []"
           />
         </td>
       </tr>

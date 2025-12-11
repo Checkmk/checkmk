@@ -23,7 +23,6 @@ from cmk.plugins.azure_v2.agent_based.azure_postgresql import (
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     AzureMetric,
-    check_connections,
     Resource,
 )
 
@@ -222,7 +221,10 @@ def test_check_connections(
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
-    assert list(check_connections()(params, section)) == expected_result
+    assert (
+        list(check_plugin_azure_postgresql_connections.check_function(params, section))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(

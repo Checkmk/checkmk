@@ -23,7 +23,6 @@ from cmk.plugins.azure_v2.agent_based.azure_mysql import (
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     AzureMetric,
-    check_connections,
     Resource,
 )
 
@@ -196,7 +195,10 @@ def test_check_connections(
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
-    assert list(check_connections()(params, section)) == expected_result
+    assert (
+        list(check_plugin_azure_mysql_connections.check_function(params, section))
+        == expected_result
+    )
 
 
 def test_azure_mysql_connections_active_connections_lower() -> None:

@@ -178,7 +178,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["hosts"]  # TODO: add correct permissions
+        return ["general.oauth2_connections", "passwords"]
 
     def __init__(self) -> None:
         super().__init__(
@@ -260,7 +260,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     @staticmethod
     @override
     def static_permissions() -> Collection[PermissionName]:
-        return ["hosts"]  # TODO: add correct permissions
+        return ["general.oauth2_connections", "passwords"]
 
     @classmethod
     @override
@@ -355,7 +355,7 @@ class ModeRedirectOAuth2Connection(WatoMode[None]):
     @staticmethod
     @override
     def static_permissions() -> Collection[PermissionName]:
-        return ["hosts"]  # TODO: add correct permissions
+        return ["general.oauth2_connections", "passwords"]
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:

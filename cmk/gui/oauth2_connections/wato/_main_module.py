@@ -31,7 +31,7 @@ class MainModuleOAuth2Connection(ABCMainModule):
 
     @property
     def permission(self) -> None | str:
-        return "wato.use"  # TODO: add correct permission
+        return "oauth2_connections"
 
     @property
     def description(self) -> str:

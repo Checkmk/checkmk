@@ -338,4 +338,6 @@ def register(
     rulespec.register(rulespec_registry, notification_parameter_registry)
     welcome.register(page_registry, snapin_registry)
     search_registration.register(page_registry)
-    register_oauth2_connections(mode_registry, page_registry, main_module_registry)
+    register_oauth2_connections(
+        mode_registry, page_registry, main_module_registry, permission_registry
+    )

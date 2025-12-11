@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-12-08 20:04+0000\n"
+"PO-Revision-Date: 2025-12-10 21:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -9024,7 +9024,8 @@ msgstr "Azure Traffic Manager Prüfzustand"
 msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Manager Prüfzustand (veraltet)"
 
-msgid "Azure Traffic Manager Qps"
+#, fuzzy
+msgid "Azure Traffic Manager QPS"
 msgstr "Azure Traffic Manager Anfragen pro Sekunde (QPS)"
 
 msgid "Azure Traffic Manager Qps (deprecated)"
@@ -17438,6 +17439,10 @@ msgstr "Eigene MBeans"
 msgid "Custom MIBs"
 msgstr "Eigene MIBs"
 
+#, fuzzy
+msgid "Custom Query"
+msgstr "Kunde"
+
 msgid "Custom SQL"
 msgstr "Benutzerdefiniertes SQL"
 
@@ -23283,7 +23288,7 @@ msgid ""
 "standards. Enabling compatibility mode switches to a less restrictive TLS "
 "backend (native-tls) that behaves similarly to cURL and other common tools."
 msgstr ""
-"Aktivieren Sie diese Option, wenn bei diesem Check TLS-Verbindungsfehler "
+"Aktivieren Sie diese Option, wenn bei dieser Prüfung TLS-Verbindungsfehler "
 "auftreten, während andere Tools wie cURL oder das ältere check_http "
 "erfolgreich sind. Das standardmäßige TLS-Backend (rustls) ist restriktiver "
 "und hält sich strikt an die TLS-Standards. Durch Aktivieren des "
@@ -23604,9 +23609,9 @@ msgid ""
 "Enforce TLS 1.3 is not supported in compatibility mode. Please select a "
 "lower minimum TLS version or disable compatibility mode."
 msgstr ""
-"'TLS 1.3 erzwingen' wird im Kompatibilitätsmodus nicht unterstützt. Bitte "
-"wählen Sie eine niedrigere Mindestversion für TLS aus oder deaktivieren Sie "
-"den Kompatibilitätsmodus."
+"TLS 1.3 erzwingen wird im Kompabilitätsmodus nicht unterstützt. Bitte wählen "
+"Sie eine niedrigere Mindest-TLS-Version oder deaktivieren Sie den "
+"Kompabilitätsmodus."
 
 msgid "Enforce TLS v1.2"
 msgstr "Erzwinge TLS v1.2"
@@ -24869,10 +24874,6 @@ msgstr "Läuft ab %s"
 
 msgid "Expires on"
 msgstr "Läuft ab am"
-
-#, python-format
-msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
-msgstr ""
 
 msgid "Explain with AI"
 msgstr "Mit KI erklären"
@@ -27823,6 +27824,10 @@ msgstr "Graph-Sichtbarkeit"
 #, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "Beim Graph mit ID %s fehlt ein Titel"
+
+#, fuzzy
+msgid "GraphApi"
+msgstr "Graph"
 
 msgid "Graphic card name"
 msgstr "Grafikkartenname"
@@ -32564,8 +32569,8 @@ msgid ""
 "to all configured string/regex searches when failing their condition."
 msgstr ""
 "Wenn die konfigurierten String-/Regex-Suchen fehlschlagen, führt dies "
-"standardmäßig zu einem CRIT-Zustand. Hier können Sie einen alternativen "
-"Zustand auswählen, der für alle konfigurierten String-/Regex-Suchen gilt, "
+"standardmäßig zu einem CRIT-Status. Hier können Sie einen alternativen "
+"Status auswählen, der für alle konfigurierten String-/Regex-Suchen gilt, "
 "wenn deren Bedingung nicht erfüllt ist."
 
 msgid ""
@@ -36236,13 +36241,14 @@ msgstr "Sie wird noch von mindestens 1 Regel im Regelsatz verwendet:"
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "Es ist nicht erlaubt, hier ein führendes \"!\" zu verwenden."
 
+#, fuzzy
 msgid ""
 "It's possible to have clusters that share nodes. You could say that such "
 "clusters \"overlap\". In such a case using the ruleset <i>Clustered "
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
-"specify which cluster assign them to."
+"specify which cluster to assign them to."
 msgstr ""
 "Es ist möglich, Cluster zu haben, die sich Knoten teilen. Diese Cluster "
 "können sich \"überschneiden\". In einem solchen Fall ist die Verwendung des "
@@ -37549,6 +37555,10 @@ msgstr "Levels für Batterieparameter"
 msgid "Levels for checkpoint time"
 msgstr "Levels für Checkpoint-Zeit"
 
+#, fuzzy
+msgid "Levels for custom query monitoring"
+msgstr "Levels für das SLA-Monitoring"
+
 msgid "Levels for data size"
 msgstr "Levels für Datengröße"
 
@@ -37715,9 +37725,6 @@ msgstr "Levels für die Tablespace-Grösse"
 
 msgid "Levels for the Tablespace usage"
 msgstr "Levels für die Tablespacebelegung"
-
-msgid "Levels for the consumer count"
-msgstr "Levels für die Anzahl der Consumer"
 
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Levels für den Stromverbrauch eines Gerätes "
@@ -39568,6 +39575,10 @@ msgstr "Untergrenzen für die Reservierungsauslastung"
 
 msgid "Lower levels for successful connections"
 msgstr "Untergrenzen für erfolgreiche Verbindungen"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Levels für die Anzahl der Consumer"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
@@ -41815,6 +41826,10 @@ msgstr "Metrik-Levels"
 msgid "Metric name (exact match)"
 msgstr "Metrikname (exakter Match)"
 
+#, fuzzy
+msgid "Metric name and time series ID"
+msgstr "Graph eines einzelnen Services"
+
 #, python-format
 msgid ""
 "Metric names can only be defined once. Found the following keys multiple "
@@ -41873,11 +41888,12 @@ msgstr "Microsoft Azure Status"
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V Server VM-Zustand"
 
+#, fuzzy
+msgid "Microsoft SQL Server"
+msgstr "Microsoft SQL Server (veraltet)"
+
 msgid "Microsoft SQL Server (Linux, Windows)"
 msgstr "Microsoft SQL Server (Linux, Windows)"
-
-msgid "Microsoft SQL Server (deprecated)"
-msgstr "Microsoft SQL Server (veraltet)"
 
 msgid "Microsoft Teams parameters"
 msgstr "Microsoft Teams-Parameter"
@@ -55336,7 +55352,7 @@ msgid "Retry time"
 msgstr "Wiederholungszeitraum"
 
 msgid "Return CRITICAL if found, OK if not"
-msgstr "Liefere CRITICAL zurück, wenn gefunden, OK, wenn nicht"
+msgstr "CRITICAL zurückgeben, wenn gefunden, OK, wenn nicht"
 
 msgid "Return code class 2xx (success)"
 msgstr "Rückgabecode Klasse 2xx (Erfolg)"
@@ -58374,9 +58390,8 @@ msgstr "Alter des Service-Zustands"
 msgid "Service state for Differing Service States"
 msgstr "Service-Zustand bei abweichenden Service-Zuständen"
 
-#, fuzzy
 msgid "Service state for failing text search condition."
-msgstr "Übersetzen von Service-Zuständen"
+msgstr "Service-Zustand, wenn die Bedingung der Textsuche fehlschlägt."
 
 msgid "Service state if no map rule matches"
 msgstr "Service-Zustand, wenn keine Map-Regel greift"
@@ -62761,6 +62776,10 @@ msgstr "Zustand, wenn einer der Ströme im Zustand deaktiviert ist"
 
 msgid "State when packages are locked"
 msgstr "Zustand, wenn Pakete gesperrt sind"
+
+#, fuzzy
+msgid "State when probe is not OK"
+msgstr "Zustand, wenn der Probe-Zustand nicht OK ist"
 
 msgid "State when recommended updates are pending"
 msgstr "Zustand, wenn empfohlene Updates ausstehen"
@@ -68644,7 +68663,7 @@ msgid ""
 msgstr ""
 "Der angegebene Header-Schlüssel und der Wert müssen exakt mit dem "
 "tatsächlichen Header der Antwort übereinstimmen. Bitte beachten Sie, dass "
-"der Service ein CRIT erhält, wenn entweder der Schlüssel oder der Wert nicht "
+"der Service auf CRIT geht, wenn entweder der Schlüssel oder der Wert nicht "
 "übereinstimmen. Bei der Suche nach einem regulären Ausdruck wird die erste "
 "Übereinstimmung als Erfolg gewertet."
 
@@ -79715,6 +79734,10 @@ msgstr "Hochgeladene Dateien"
 msgid "Upper"
 msgstr "Obere"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Levels für die Anzahl der Consumer"
+
 msgid "Upper Temperature Levels"
 msgstr "Obergrenzen für Temperatur"
 
@@ -90130,13 +90153,21 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] "Es gibt %{ n } Apfel"
 msgstr[1] "Es gibt %{ n } Äpfel"
 
-msgid "Error retrieving AI service information. Please try again later."
-msgstr ""
-"Fehler beim Abrufen der Informationen zum KI-Service. Bitte versuchen Sie es "
-"später erneut."
+#, fuzzy
+msgid "Checkmk AI feature usage notice"
+msgstr "Checkmk-Fetcher Auslastung"
 
-msgid "Checkmk AI feature documentation & privacy policy"
-msgstr "Checkmk KI-Funktionsdokumentation & Datenschutzerklärung"
+#, fuzzy
+msgid ""
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) [$"
+"{aiTemplate?.info?.models.join(', ')}] of [${aiTemplate?.info?.provider}] to "
+"generate its output. "
+msgstr ""
+"Diese Funktion verwendet ${aiTemplate.value.info.models.join(‚, ‘)} von $"
+"{aiTemplate.value.info.provider}, um ihre Ausgabe zu generieren. "
+
+msgid "Privacy Policy"
+msgstr "Datenschutzerklärung"
 
 msgid "Start AI feature"
 msgstr "KI-Funktion starten"
@@ -90144,24 +90175,22 @@ msgstr "KI-Funktion starten"
 msgid "Cancel and go back"
 msgstr "Abbrechen und zurückgehen"
 
-msgid "Answer"
-msgstr "Antwort"
+msgid "AI-generated answer"
+msgstr ""
 
 msgid "Generating response..."
 msgstr "Antwort wird erstellt..."
 
-msgid "AI-generated answer. Please verify critical facts."
-msgstr "KI-generierte Antwort. Bitte überprüfen Sie wichtige Fakten."
+msgid "Please review to ensure factual correctness."
+msgstr ""
 
+#, fuzzy
 msgid ""
-"This feature utilizes ${aiTemplate.value.info.models.join(', ')} of $"
-"{aiTemplate.value.info.provider} to generate its output. "
+"This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
+"{aiTemplate.value.info.provider}. "
 msgstr ""
 "Diese Funktion verwendet ${aiTemplate.value.info.models.join(‚, ‘)} von $"
 "{aiTemplate.value.info.provider}, um ihre Ausgabe zu generieren. "
-
-msgid "Privacy Policy"
-msgstr "Datenschutzerklärung"
 
 msgid "What would you like the AI to do?"
 msgstr "Was soll die KI tun?"
@@ -90173,12 +90202,6 @@ msgid "Error retrieving available AI actions. Please try again later."
 msgstr ""
 "Fehler beim Empfang verfügbarer KI-Aktionen. Bitte versuchen Sie es später "
 "erneut."
-
-msgid "The following feature uses a Large Language Model (LLM)."
-msgstr "Die folgende Funktion nutzt ein Large Language Model (LLM)."
-
-msgid "For a full understanding please visit our "
-msgstr "Für ein umfassendes Verständnis besuchen Sie bitte unsere "
 
 msgid "Something went wrong. Please try again later."
 msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es später erneut."
@@ -91026,9 +91049,6 @@ msgstr "Erstelle & setze Dashboard-Filter"
 msgid "Create & view list"
 msgstr "Erstelle & betrachte die Liste"
 
-msgid "Dashboard type"
-msgstr "Dashboard-Typ"
-
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
 "datasource. By default, all are included. You can optionally restrict the "
@@ -91038,6 +91058,9 @@ msgstr ""
 "Einträge anzeigen. Standardmäßig sind alle enthalten. Optional können Sie "
 "die Konfiguration auf einen einzelnen Host oder bestimmte Datenquellen "
 "beschränken."
+
+msgid "Dashboard type"
+msgstr "Dashboard-Typ"
 
 msgid "Dashboard scope"
 msgstr "Dashboard-Ziel"
@@ -91829,12 +91852,9 @@ msgstr ""
 msgid "Authorize application"
 msgstr "Applikation autorisieren"
 
-msgid ""
-"A new tab will be opened. Please follow the instructions to authorize the "
-"application"
-msgstr ""
-"Es wird ein neuer Reiter geöffnet. Bitte folgen Sie den Anweisungen für die "
-"Autorisierung der Applikation"
+#, fuzzy
+msgid "seconds remaining"
+msgstr " Sekunden verbleibend)"
 
 msgid "OAuth2 connection created successfully!"
 msgstr "OAuth2-Verbindung wurde erfolgreich erstellt!"
@@ -91844,6 +91864,14 @@ msgstr "Zurückgehen, um Autorisierungsprozess erneut zu starten"
 
 msgid "Define OAuth2 parameter"
 msgstr "OAuth2-Parameter definieren"
+
+#, fuzzy
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application. The process has to be completed within 5 minutes."
+msgstr ""
+"Es wird ein neuer Reiter geöffnet. Bitte folgen Sie den Anweisungen für die "
+"Autorisierung der Applikation"
 
 msgid "Start authorization"
 msgstr "Autorisierung starten"
@@ -92444,6 +92472,26 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Error retrieving AI service information. Please try again later."
+#~ msgstr ""
+#~ "Fehler beim Abrufen der Informationen zum KI-Service. Bitte versuchen Sie "
+#~ "es später erneut."
+
+#~ msgid "Checkmk AI feature documentation & privacy policy"
+#~ msgstr "Checkmk KI-Funktionsdokumentation & Datenschutzerklärung"
+
+#~ msgid "Answer"
+#~ msgstr "Antwort"
+
+#~ msgid "AI-generated answer. Please verify critical facts."
+#~ msgstr "KI-generierte Antwort. Bitte überprüfen Sie wichtige Fakten."
+
+#~ msgid "The following feature uses a Large Language Model (LLM)."
+#~ msgstr "Die folgende Funktion nutzt ein Large Language Model (LLM)."
+
+#~ msgid "For a full understanding please visit our "
+#~ msgstr "Für ein umfassendes Verständnis besuchen Sie bitte unsere "
 
 #~ msgid "Add OpenTelemetry collector configuration"
 #~ msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"

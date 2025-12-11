@@ -9478,7 +9478,7 @@ msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "État de la sonde Azure Traffic Manager"
 
 #, fuzzy
-msgid "Azure Traffic Manager Qps"
+msgid "Azure Traffic Manager QPS"
 msgstr "Azure Traffic Manager Qps"
 
 #, fuzzy
@@ -18219,6 +18219,10 @@ msgstr "Moyens personnalisés"
 msgid "Custom MIBs"
 msgstr "MIBs personnalisées"
 
+#, fuzzy
+msgid "Custom Query"
+msgstr "Client"
+
 msgid "Custom SQL"
 msgstr "SQL personnalisé"
 
@@ -26002,10 +26006,6 @@ msgstr "Expiration"
 msgid "Expires on"
 msgstr "Expiration"
 
-#, python-format
-msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
-msgstr ""
-
 #, fuzzy
 msgid "Explain with AI"
 msgstr "Continuer la recherche"
@@ -29076,6 +29076,10 @@ msgstr "Visibilité du graphique"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "Il manque un titre au modèle graphique %s"
+
+#, fuzzy
+msgid "GraphApi"
+msgstr "Graphique"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -38015,7 +38019,7 @@ msgid ""
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
-"specify which cluster assign them to."
+"specify which cluster to assign them to."
 msgstr ""
 "Il est possible d'avoir des clusters qui partagent des nœuds. On pourrait "
 "dire que de tels clusters se &quot;chevauchent&quot;. Dans un tel cas, "
@@ -39394,6 +39398,10 @@ msgstr "Niveaux pour les paramètres de la batterie"
 msgid "Levels for checkpoint time"
 msgstr "Niveaux pour le temps de contrôle"
 
+#, fuzzy
+msgid "Levels for custom query monitoring"
+msgstr "Niveaux pour le suivi des SLA"
+
 msgid "Levels for data size"
 msgstr "Niveaux pour la taille des données"
 
@@ -39564,9 +39572,6 @@ msgstr "Niveaux pour la taille du Tablespace"
 
 msgid "Levels for the Tablespace usage"
 msgstr "Niveaux d'utilisation du Tablespace"
-
-msgid "Levels for the consumer count"
-msgstr "Niveaux pour le comptage des consommateurs"
 
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveaux de consommation d'énergie électrique d'un appareil "
@@ -41499,6 +41504,10 @@ msgstr "Niveaux inférieurs pour l'utilisation des demandes"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "Niveaux pour les connexions actives"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveaux pour le comptage des consommateurs"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -43856,6 +43865,10 @@ msgstr "Niveaux métriques"
 msgid "Metric name (exact match)"
 msgstr "Nom d'hôte (correspondance exacte)"
 
+#, fuzzy
+msgid "Metric name and time series ID"
+msgstr "Graphique des métriques d'un seul service"
+
 #, python-format
 msgid ""
 "Metric names can only be defined once. Found the following keys multiple "
@@ -43919,11 +43932,11 @@ msgid "Microsoft Hyper-V Server VM state"
 msgstr "État de la VM du serveur Microsoft Hyper-V"
 
 #, fuzzy
-msgid "Microsoft SQL Server (Linux, Windows)"
+msgid "Microsoft SQL Server"
 msgstr "Microsoft SQL Server (Windows)"
 
 #, fuzzy
-msgid "Microsoft SQL Server (deprecated)"
+msgid "Microsoft SQL Server (Linux, Windows)"
 msgstr "Microsoft SQL Server (Windows)"
 
 #, fuzzy
@@ -66059,6 +66072,10 @@ msgid "State when packages are locked"
 msgstr "État lorsque des changements matériels sont détectés"
 
 #, fuzzy
+msgid "State when probe is not OK"
+msgstr "État si l'état de la sonde n'est pas OK"
+
+#, fuzzy
 msgid "State when recommended updates are pending"
 msgstr "État lorsque des mises à jour normales sont en attente"
 
@@ -83600,6 +83617,10 @@ msgstr "Télécharger le fichier MIB"
 msgid "Upper"
 msgstr "Upper"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveaux pour le comptage des consommateurs"
+
 msgid "Upper Temperature Levels"
 msgstr "Niveaux de température supérieurs"
 
@@ -94411,12 +94432,18 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
-msgid "Error retrieving AI service information. Please try again later."
-msgstr ""
-"Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
+msgid "Checkmk AI feature usage notice"
+msgstr "Utilisation de Checkmk fetcher"
 
-msgid "Checkmk AI feature documentation & privacy policy"
+msgid ""
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) [$"
+"{aiTemplate?.info?.models.join(', ')}] of [${aiTemplate?.info?.provider}] to "
+"generate its output. "
 msgstr ""
+
+#, fuzzy
+msgid "Privacy Policy"
+msgstr "Protocole de confidentialité"
 
 #, fuzzy
 msgid "Start AI feature"
@@ -94425,24 +94452,20 @@ msgstr "Démarrer la restauration"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "Answer"
+msgid "AI-generated answer"
 msgstr ""
 
 #, fuzzy
 msgid "Generating response..."
 msgstr "Générer des rapports..."
 
-msgid "AI-generated answer. Please verify critical facts."
+msgid "Please review to ensure factual correctness."
 msgstr ""
 
 msgid ""
-"This feature utilizes ${aiTemplate.value.info.models.join(', ')} of $"
-"{aiTemplate.value.info.provider} to generate its output. "
+"This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
+"{aiTemplate.value.info.provider}. "
 msgstr ""
-
-#, fuzzy
-msgid "Privacy Policy"
-msgstr "Protocole de confidentialité"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -94455,12 +94478,6 @@ msgstr "Non trouvé"
 msgid "Error retrieving available AI actions. Please try again later."
 msgstr ""
 "Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
-
-msgid "The following feature uses a Large Language Model (LLM)."
-msgstr ""
-
-msgid "For a full understanding please visit our "
-msgstr ""
 
 #, fuzzy
 msgid "Something went wrong. Please try again later."
@@ -95438,15 +95455,15 @@ msgstr "Tableaux de bord connexes"
 msgid "Create & view list"
 msgstr "Sauvegarder & ; visualiser le dossier"
 
-#, fuzzy
-msgid "Dashboard type"
-msgstr "Élément du tableau de bord"
-
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
 "datasource. By default, all are included. You can optionally restrict the "
 "configuration to a single host or specific datasources."
 msgstr ""
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Élément du tableau de bord"
 
 #, fuzzy
 msgid "Dashboard scope"
@@ -96334,10 +96351,9 @@ msgstr ""
 msgid "Authorize application"
 msgstr "Autorisation"
 
-msgid ""
-"A new tab will be opened. Please follow the instructions to authorize the "
-"application"
-msgstr ""
+#, fuzzy
+msgid "seconds remaining"
+msgstr " secondes restants)"
 
 #, fuzzy
 msgid "OAuth2 connection created successfully!"
@@ -96350,6 +96366,11 @@ msgstr "Impossible de créer une demande d'authentification"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "Paramètres du modèle"
+
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application. The process has to be completed within 5 minutes."
+msgstr ""
 
 #, fuzzy
 msgid "Start authorization"
@@ -96939,6 +96960,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Error retrieving AI service information. Please try again later."
+#~ msgstr ""
+#~ "Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
 
 #, fuzzy
 #~ msgid "Add OpenTelemetry collector configuration"

@@ -9428,7 +9428,7 @@ msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Manager Probe State"
 
 #, fuzzy
-msgid "Azure Traffic Manager Qps"
+msgid "Azure Traffic Manager QPS"
 msgstr "Azure Traffic Manager Qps"
 
 #, fuzzy
@@ -18136,6 +18136,10 @@ msgstr "MBeani personalizați"
 msgid "Custom MIBs"
 msgstr "MIB-uri personalizate"
 
+#, fuzzy
+msgid "Custom Query"
+msgstr "Client"
+
 msgid "Custom SQL"
 msgstr "SQL personalizat"
 
@@ -25902,10 +25906,6 @@ msgstr "Expiră"
 msgid "Expires on"
 msgstr "Expiră la"
 
-#, python-format
-msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
-msgstr ""
-
 #, fuzzy
 msgid "Explain with AI"
 msgstr "Continuați creșterea aici"
@@ -28955,6 +28955,10 @@ msgstr "Vizibilitatea graficului"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "Șablonul grafic %s nu are un titlu"
+
+#, fuzzy
+msgid "GraphApi"
+msgstr "Grafic"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -37849,7 +37853,7 @@ msgid ""
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
-"specify which cluster assign them to."
+"specify which cluster to assign them to."
 msgstr ""
 "Este posibil să aveți clustere care împart noduri. Se poate spune că astfel "
 "de clustere &quot;se suprapun&quot;. Într-un astfel de caz, utilizarea "
@@ -39220,6 +39224,10 @@ msgstr "Niveluri pentru parametrii bateriei"
 msgid "Levels for checkpoint time"
 msgstr "Niveluri pentru timpul de control"
 
+#, fuzzy
+msgid "Levels for custom query monitoring"
+msgstr "Niveluri pentru monitorizarea SLA"
+
 msgid "Levels for data size"
 msgstr "Niveluri pentru dimensiunea datelor"
 
@@ -39389,9 +39397,6 @@ msgstr "Niveluri pentru dimensiunea Tablespace"
 
 msgid "Levels for the Tablespace usage"
 msgstr "Niveluri pentru utilizarea Tablespace"
-
-msgid "Levels for the consumer count"
-msgstr "Niveluri pentru numărul de consumatori"
 
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveluri pentru consumul de energie electrică al unui dispozitiv "
@@ -41301,6 +41306,10 @@ msgstr "Niveluri mai mici de utilizare a rezervărilor"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "Niveluri pentru conexiuni active"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveluri pentru numărul de consumatori"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -43635,6 +43644,10 @@ msgstr "Niveluri metrice"
 msgid "Metric name (exact match)"
 msgstr "Numele gazdei (potrivire exactă)"
 
+#, fuzzy
+msgid "Metric name and time series ID"
+msgstr "Graficul de măsurători al unui singur serviciu"
+
 #, python-format
 msgid ""
 "Metric names can only be defined once. Found the following keys multiple "
@@ -43698,11 +43711,11 @@ msgid "Microsoft Hyper-V Server VM state"
 msgstr "Starea VM Microsoft Hyper-V Server"
 
 #, fuzzy
-msgid "Microsoft SQL Server (Linux, Windows)"
+msgid "Microsoft SQL Server"
 msgstr "Microsoft SQL Server (Windows)"
 
 #, fuzzy
-msgid "Microsoft SQL Server (deprecated)"
+msgid "Microsoft SQL Server (Linux, Windows)"
 msgstr "Microsoft SQL Server (Windows)"
 
 #, fuzzy
@@ -65739,6 +65752,10 @@ msgstr "Stare atunci când unul dintre fluxuri este în stare dezactivată"
 msgid "State when packages are locked"
 msgstr "Starea când pachetele sunt blocate"
 
+#, fuzzy
+msgid "State when probe is not OK"
+msgstr "Stare dacă starea sondei nu este OK"
+
 msgid "State when recommended updates are pending"
 msgstr "Starea în care se așteaptă actualizările recomandate"
 
@@ -83140,6 +83157,10 @@ msgstr "Încărcați fișierul MIB"
 msgid "Upper"
 msgstr "Partea superioară"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveluri pentru numărul de consumatori"
+
 msgid "Upper Temperature Levels"
 msgstr "Niveluri superioare de temperatură"
 
@@ -93849,13 +93870,18 @@ msgstr[1] ""
 msgstr[2] ""
 
 #, fuzzy
-msgid "Error retrieving AI service information. Please try again later."
-msgstr ""
-"Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
-"de căutare."
+msgid "Checkmk AI feature usage notice"
+msgstr "Utilizarea Checkmk fetcher"
 
-msgid "Checkmk AI feature documentation & privacy policy"
+msgid ""
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) [$"
+"{aiTemplate?.info?.models.join(', ')}] of [${aiTemplate?.info?.provider}] to "
+"generate its output. "
 msgstr ""
+
+#, fuzzy
+msgid "Privacy Policy"
+msgstr "Protocol de confidențialitate"
 
 #, fuzzy
 msgid "Start AI feature"
@@ -93864,24 +93890,20 @@ msgstr "Începeți restaurarea"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "Answer"
+msgid "AI-generated answer"
 msgstr ""
 
 #, fuzzy
 msgid "Generating response..."
 msgstr "Generarea de rapoarte..."
 
-msgid "AI-generated answer. Please verify critical facts."
+msgid "Please review to ensure factual correctness."
 msgstr ""
 
 msgid ""
-"This feature utilizes ${aiTemplate.value.info.models.join(', ')} of $"
-"{aiTemplate.value.info.provider} to generate its output. "
+"This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
+"{aiTemplate.value.info.provider}. "
 msgstr ""
-
-#, fuzzy
-msgid "Privacy Policy"
-msgstr "Protocol de confidențialitate"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -93895,12 +93917,6 @@ msgid "Error retrieving available AI actions. Please try again later."
 msgstr ""
 "Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
 "de căutare."
-
-msgid "The following feature uses a Large Language Model (LLM)."
-msgstr ""
-
-msgid "For a full understanding please visit our "
-msgstr ""
 
 #, fuzzy
 msgid "Something went wrong. Please try again later."
@@ -94880,15 +94896,15 @@ msgstr "Tablouri de bord conexe"
 msgid "Create & view list"
 msgstr "Salvați & vizualizați folderul"
 
-#, fuzzy
-msgid "Dashboard type"
-msgstr "Element de tablou de bord"
-
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
 "datasource. By default, all are included. You can optionally restrict the "
 "configuration to a single host or specific datasources."
 msgstr ""
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Element de tablou de bord"
 
 #, fuzzy
 msgid "Dashboard scope"
@@ -95781,12 +95797,8 @@ msgid "Authorize application"
 msgstr "Autorizare"
 
 #, fuzzy
-msgid ""
-"A new tab will be opened. Please follow the instructions to authorize the "
-"application"
-msgstr ""
-"Vă rugăm să urmați instrucțiunile de autentificare ale browserului "
-"dumneavoastră."
+msgid "seconds remaining"
+msgstr "Credite rămase"
 
 #, fuzzy
 msgid "OAuth2 connection created successfully!"
@@ -95799,6 +95811,14 @@ msgstr "Nu se poate crea o cerere de autentificare"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "Parametrii impliciți"
+
+#, fuzzy
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application. The process has to be completed within 5 minutes."
+msgstr ""
+"Vă rugăm să urmați instrucțiunile de autentificare ale browserului "
+"dumneavoastră."
 
 #, fuzzy
 msgid "Start authorization"
@@ -96389,6 +96409,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Error retrieving AI service information. Please try again later."
+#~ msgstr ""
+#~ "Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt "
+#~ "termen de căutare."
 
 #, fuzzy
 #~ msgid "Add OpenTelemetry collector configuration"

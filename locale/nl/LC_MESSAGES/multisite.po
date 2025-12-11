@@ -9421,7 +9421,7 @@ msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Manager Probe State"
 
 #, fuzzy
-msgid "Azure Traffic Manager Qps"
+msgid "Azure Traffic Manager QPS"
 msgstr "Azure Traffic Manager Qps"
 
 #, fuzzy
@@ -18092,6 +18092,10 @@ msgstr "Aangepaste MBeans"
 msgid "Custom MIBs"
 msgstr "Aangepaste MIB's"
 
+#, fuzzy
+msgid "Custom Query"
+msgstr "Klant"
+
 msgid "Custom SQL"
 msgstr "Aangepaste SQL"
 
@@ -25806,10 +25810,6 @@ msgstr "Verloopt op"
 msgid "Expires on"
 msgstr "Verloopt op"
 
-#, python-format
-msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
-msgstr ""
-
 #, fuzzy
 msgid "Explain with AI"
 msgstr "Zoek verder"
@@ -28857,6 +28857,10 @@ msgstr "Grafiek zichtbaarheid"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "Grafieksjabloon %s mist een titel"
+
+#, fuzzy
+msgid "GraphApi"
+msgstr "Grafiek"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -37714,7 +37718,7 @@ msgid ""
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
-"specify which cluster assign them to."
+"specify which cluster to assign them to."
 msgstr ""
 "Het is mogelijk om clusters te hebben die nodes delen. Je zou kunnen zeggen "
 "dat zulke clusters &quot;overlappen&quot;. In zo'n geval is het gebruik van "
@@ -39091,6 +39095,10 @@ msgstr "Niveaus voor batterijparameters"
 msgid "Levels for checkpoint time"
 msgstr "Niveaus voor checkpoint tijd"
 
+#, fuzzy
+msgid "Levels for custom query monitoring"
+msgstr "Niveaus voor SLA-bewaking"
+
 msgid "Levels for data size"
 msgstr "Niveaus voor gegevensgrootte"
 
@@ -39262,9 +39270,6 @@ msgstr "Niveaus voor de Tablespace grootte"
 
 msgid "Levels for the Tablespace usage"
 msgstr "Niveaus voor het gebruik van de Tablespace"
-
-msgid "Levels for the consumer count"
-msgstr "Niveaus voor de consumententelling"
 
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveaus voor het elektriciteitsverbruik van een apparaat "
@@ -41194,6 +41199,10 @@ msgstr "Hogere niveaus voor verzoeken gebruik"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "Niveaus voor actieve verbindingen"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveaus voor de consumententelling"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Lagere niveaus voor de ventilatorsnelheid van een hardwareapparaat"
@@ -43530,6 +43539,10 @@ msgstr "Metrische niveaus"
 msgid "Metric name (exact match)"
 msgstr "Hostnaam (exacte match)"
 
+#, fuzzy
+msgid "Metric name and time series ID"
+msgstr "Metriekgrafiek van een enkele dienst"
+
 #, python-format
 msgid ""
 "Metric names can only be defined once. Found the following keys multiple "
@@ -43593,11 +43606,11 @@ msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V Server VM staat"
 
 #, fuzzy
-msgid "Microsoft SQL Server (Linux, Windows)"
+msgid "Microsoft SQL Server"
 msgstr "Microsoft SQL Server (Windows)"
 
 #, fuzzy
-msgid "Microsoft SQL Server (deprecated)"
+msgid "Microsoft SQL Server (Linux, Windows)"
 msgstr "Microsoft SQL Server (Windows)"
 
 #, fuzzy
@@ -65515,6 +65528,10 @@ msgid "State when packages are locked"
 msgstr "Toestand wanneer hardwarewijzigingen worden gedetecteerd"
 
 #, fuzzy
+msgid "State when probe is not OK"
+msgstr "Staat indien sondestaat niet OK"
+
+#, fuzzy
 msgid "State when recommended updates are pending"
 msgstr "Staat wanneer normale updates in afwachting zijn"
 
@@ -82915,6 +82932,10 @@ msgstr "Upload MIB-bestand"
 msgid "Upper"
 msgstr "Boven"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveaus voor de consumententelling"
+
 msgid "Upper Temperature Levels"
 msgstr "Bovenste temperatuurniveaus"
 
@@ -93587,11 +93608,18 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, fuzzy
-msgid "Error retrieving AI service information. Please try again later."
-msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
+msgid "Checkmk AI feature usage notice"
+msgstr "Checkmk fetcher gebruik"
 
-msgid "Checkmk AI feature documentation & privacy policy"
+msgid ""
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) [$"
+"{aiTemplate?.info?.models.join(', ')}] of [${aiTemplate?.info?.provider}] to "
+"generate its output. "
 msgstr ""
+
+#, fuzzy
+msgid "Privacy Policy"
+msgstr "Privacy-protocol"
 
 #, fuzzy
 msgid "Start AI feature"
@@ -93600,24 +93628,20 @@ msgstr "Herstel starten"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "Answer"
+msgid "AI-generated answer"
 msgstr ""
 
 #, fuzzy
 msgid "Generating response..."
 msgstr "Het genereren van rapport..."
 
-msgid "AI-generated answer. Please verify critical facts."
+msgid "Please review to ensure factual correctness."
 msgstr ""
 
 msgid ""
-"This feature utilizes ${aiTemplate.value.info.models.join(', ')} of $"
-"{aiTemplate.value.info.provider} to generate its output. "
+"This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
+"{aiTemplate.value.info.provider}. "
 msgstr ""
-
-#, fuzzy
-msgid "Privacy Policy"
-msgstr "Privacy-protocol"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -93629,12 +93653,6 @@ msgstr "Niet gevonden"
 #, fuzzy
 msgid "Error retrieving available AI actions. Please try again later."
 msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
-
-msgid "The following feature uses a Large Language Model (LLM)."
-msgstr ""
-
-msgid "For a full understanding please visit our "
-msgstr ""
 
 #, fuzzy
 msgid "Something went wrong. Please try again later."
@@ -94611,15 +94629,15 @@ msgstr "Gerelateerde dashboards"
 msgid "Create & view list"
 msgstr "Map opslaan en bekijken"
 
-#, fuzzy
-msgid "Dashboard type"
-msgstr "Dashboard-element"
-
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
 "datasource. By default, all are included. You can optionally restrict the "
 "configuration to a single host or specific datasources."
 msgstr ""
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Dashboard-element"
 
 #, fuzzy
 msgid "Dashboard scope"
@@ -95503,10 +95521,9 @@ msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 msgid "Authorize application"
 msgstr "Machtiging"
 
-msgid ""
-"A new tab will be opened. Please follow the instructions to authorize the "
-"application"
-msgstr ""
+#, fuzzy
+msgid "seconds remaining"
+msgstr "Resterende kredieten"
 
 #, fuzzy
 msgid "OAuth2 connection created successfully!"
@@ -95519,6 +95536,11 @@ msgstr "Kan geen authenticatieverzoek aanmaken"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "Modelparameters"
+
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application. The process has to be completed within 5 minutes."
+msgstr ""
 
 #, fuzzy
 msgid "Start authorization"
@@ -96105,6 +96127,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Error retrieving AI service information. Please try again later."
+#~ msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 
 #, fuzzy
 #~ msgid "Add OpenTelemetry collector configuration"

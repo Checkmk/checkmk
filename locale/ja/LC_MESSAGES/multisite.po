@@ -8813,7 +8813,7 @@ msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Managerプローブの状態"
 
 #, fuzzy
-msgid "Azure Traffic Manager Qps"
+msgid "Azure Traffic Manager QPS"
 msgstr "AzureトラフィックマネージャーQps"
 
 #, fuzzy
@@ -17094,6 +17094,10 @@ msgstr "カスタムMBean"
 msgid "Custom MIBs"
 msgstr "カスタムMIB"
 
+#, fuzzy
+msgid "Custom Query"
+msgstr "お客様"
+
 msgid "Custom SQL"
 msgstr "カスタムSQL"
 
@@ -24404,10 +24408,6 @@ msgstr "有効期限が切れます"
 msgid "Expires on"
 msgstr "有効期限"
 
-#, python-format
-msgid "Explain issue of service '%s' on host '%s' is in state '%s'"
-msgstr ""
-
 #, fuzzy
 msgid "Explain with AI"
 msgstr "AIを続行しますか？"
@@ -27309,6 +27309,10 @@ msgstr "グラフの可視性"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "グラフテンプレート %s にタイトルがありません"
+
+#, fuzzy
+msgid "GraphApi"
+msgstr "グラフ"
 
 msgid "Graphic card name"
 msgstr "グラフィックカード名"
@@ -35471,13 +35475,14 @@ msgstr "ルールセット内の少なくとも1つのルールでまだ使用�
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "先頭の[!]は使用できません。ここに。"
 
+#, fuzzy
 msgid ""
 "It's possible to have clusters that share nodes. You could say that such "
 "clusters \"overlap\". In such a case using the ruleset <i>Clustered "
 "services</i> is not sufficient since it would not be clear to which of the "
 "several possible clusters a service found on such a shared node should be "
 "assigned to. With this ruleset you can assign services and explicitly "
-"specify which cluster assign them to."
+"specify which cluster to assign them to."
 msgstr ""
 "ノードを共有するクラスターを持つことが可能です。そのようなクラスターは\"オー"
 "バーラップ\"していると言えます。このような場合、ルールセット<i>クラスタ化され"
@@ -36776,6 +36781,10 @@ msgstr "バッテリーパラメータのレベル"
 msgid "Levels for checkpoint time"
 msgstr "チェックポイント時間のレベル"
 
+#, fuzzy
+msgid "Levels for custom query monitoring"
+msgstr "SLAモニタリングのレベル"
+
 msgid "Levels for data size"
 msgstr "データサイズのレベル"
 
@@ -36942,9 +36951,6 @@ msgstr "表領域サイズのレベル"
 
 msgid "Levels for the Tablespace usage"
 msgstr "表領域の使用レベル"
-
-msgid "Levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
 
 msgid "Levels for the electrical power consumption of a device "
 msgstr "デバイスの電力消費量のレベル "
@@ -38765,6 +38771,10 @@ msgstr "予約使用率の下位レベル"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "アクティブな接続の下位レベル"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
@@ -40985,6 +40995,10 @@ msgstr "メートリックレベル"
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
 
+#, fuzzy
+msgid "Metric name and time series ID"
+msgstr "単一サービスのメトリクスグラフ"
+
 #, python-format
 msgid ""
 "Metric names can only be defined once. Found the following keys multiple "
@@ -41045,11 +41059,12 @@ msgstr "Microsoft Azureの状態"
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V ServerのVMの状態"
 
+#, fuzzy
+msgid "Microsoft SQL Server"
+msgstr "Microsoft SQL サーバー(非推奨)"
+
 msgid "Microsoft SQL Server (Linux, Windows)"
 msgstr "Microsoft SQL サーバー (Linux, Windows)"
-
-msgid "Microsoft SQL Server (deprecated)"
-msgstr "Microsoft SQL サーバー(非推奨)"
 
 msgid "Microsoft Teams parameters"
 msgstr "Microsoft Teamsパラメータ"
@@ -61559,6 +61574,10 @@ msgstr "ストリームの1つが無効状態にあるときの状態"
 msgid "State when packages are locked"
 msgstr "パッケージがロックされた状態"
 
+#, fuzzy
+msgid "State when probe is not OK"
+msgstr "プローブ状態がOKでない場合の状態"
+
 msgid "State when recommended updates are pending"
 msgstr "推奨されるアップデートが保留中の状態"
 
@@ -77791,6 +77810,10 @@ msgstr "アップロードされたファイル"
 msgid "Upper"
 msgstr "アッパー"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
+
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
 
@@ -87831,11 +87854,18 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 
 #, fuzzy
-msgid "Error retrieving AI service information. Please try again later."
-msgstr "何か問題が発生しました: %s"
+msgid "Checkmk AI feature usage notice"
+msgstr "Checkmkフェッチャーの使用量"
 
-msgid "Checkmk AI feature documentation & privacy policy"
+msgid ""
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) [$"
+"{aiTemplate?.info?.models.join(', ')}] of [${aiTemplate?.info?.provider}] to "
+"generate its output. "
 msgstr ""
+
+#, fuzzy
+msgid "Privacy Policy"
+msgstr "プライバシープロトコル"
 
 #, fuzzy
 msgid "Start AI feature"
@@ -87844,24 +87874,20 @@ msgstr "復元を開始します"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "Answer"
+msgid "AI-generated answer"
 msgstr ""
 
 #, fuzzy
 msgid "Generating response..."
 msgstr "レポートを生成しています..."
 
-msgid "AI-generated answer. Please verify critical facts."
+msgid "Please review to ensure factual correctness."
 msgstr ""
 
 msgid ""
-"This feature utilizes ${aiTemplate.value.info.models.join(', ')} of $"
-"{aiTemplate.value.info.provider} to generate its output. "
+"This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
+"{aiTemplate.value.info.provider}. "
 msgstr ""
-
-#, fuzzy
-msgid "Privacy Policy"
-msgstr "プライバシープロトコル"
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -87873,12 +87899,6 @@ msgstr "見つかりません"
 #, fuzzy
 msgid "Error retrieving available AI actions. Please try again later."
 msgstr "何か問題が発生しました: %s"
-
-msgid "The following feature uses a Large Language Model (LLM)."
-msgstr ""
-
-msgid "For a full understanding please visit our "
-msgstr ""
 
 #, fuzzy
 msgid "Something went wrong. Please try again later."
@@ -88833,15 +88853,15 @@ msgstr "関連ダッシュボード"
 msgid "Create & view list"
 msgstr "保存してフォルダを確認"
 
-#, fuzzy
-msgid "Dashboard type"
-msgstr "ダッシュボード要素"
-
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
 "datasource. By default, all are included. You can optionally restrict the "
 "configuration to a single host or specific datasources."
 msgstr ""
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "ダッシュボード要素"
 
 #, fuzzy
 msgid "Dashboard scope"
@@ -89700,10 +89720,8 @@ msgid "Authorize application"
 msgstr "承認"
 
 #, fuzzy
-msgid ""
-"A new tab will be opened. Please follow the instructions to authorize the "
-"application"
-msgstr "ブラウザの指示に従って認証を行ってください。"
+msgid "seconds remaining"
+msgstr " 秒 残)"
 
 #, fuzzy
 msgid "OAuth2 connection created successfully!"
@@ -89716,6 +89734,12 @@ msgstr "認証リクエスト作成不可"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "デフォルトパラメータ"
+
+#, fuzzy
+msgid ""
+"A new tab will be opened. Please follow the instructions to authorize the "
+"application. The process has to be completed within 5 minutes."
+msgstr "ブラウザの指示に従って認証を行ってください。"
 
 #, fuzzy
 msgid "Start authorization"
@@ -90287,6 +90311,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Error retrieving AI service information. Please try again later."
+#~ msgstr "何か問題が発生しました: %s"
 
 #~ msgid "Add OpenTelemetry collector configuration"
 #~ msgstr "OpenTelemetryコレクターの設定を追加する"

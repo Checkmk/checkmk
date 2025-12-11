@@ -125,6 +125,6 @@ def _refine_augmented_time_series(
                 title=title,
                 line_type=line_type,
                 color=color,
-                attributes={},
+                attributes={} if ats.meta_data is None else ats.meta_data.attributes,
             ),
         )

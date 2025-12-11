@@ -36,6 +36,7 @@ from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.generators.config_host_name import create_config_host_name
 from cmk.gui.form_specs.unstable import (
     BinaryConditionChoices,
     CommentTextArea,
@@ -93,7 +94,6 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue as FixedValueAPI,
 )
 from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope
-from cmk.rulesets.v1.form_specs import MonitoredHost as MonitoredHostAPI
 from cmk.rulesets.v1.form_specs import (
     MultipleChoice as MultipleChoiceAPI,
 )
@@ -2291,7 +2291,7 @@ def _create_explicit_rule_conditions_dict(
                 elements={
                     "value": DictElementAPI(
                         parameter_form=ListOfStringsAPI(
-                            string_spec=MonitoredHostAPI(),
+                            string_spec=create_config_host_name(),
                             custom_validate=[
                                 not_empty(error_msg=Message("Please add at least one host.")),
                             ],

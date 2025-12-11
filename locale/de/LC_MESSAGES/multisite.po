@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-12-04 21:04+0000\n"
+"PO-Revision-Date: 2025-12-10 21:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -22055,9 +22055,8 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Automatische Host-Entfernung aktivieren"
 
-#, fuzzy
 msgid "Enable compatibility mode"
-msgstr "Kompatibilität"
+msgstr "Kompatibilitätsmodus aktivieren"
 
 msgid "Enable controller"
 msgstr "Controller aktivieren"
@@ -22182,6 +22181,12 @@ msgid ""
 "standards. Enabling compatibility mode switches to a less restrictive TLS "
 "backend (native-tls) that behaves similarly to cURL and other common tools."
 msgstr ""
+"Aktivieren Sie diese Option, wenn bei dieser Prüfung TLS-Verbindungsfehler "
+"auftreten, während andere Tools wie cURL oder das ältere check_http "
+"erfolgreich sind. Das standardmäßige TLS-Backend (rustls) ist restriktiver "
+"und hält sich strikt an die TLS-Standards. Durch Aktivieren des "
+"Kompatibilitätsmodus wird zu einem weniger restriktiven TLS-Backend (native-"
+"tls) gewechselt, das sich ähnlich wie cURL und andere gängige Tools verhält."
 
 msgid ""
 "Enable this option if you want to uninstall the legacy agent after the new "
@@ -22434,6 +22439,9 @@ msgid ""
 "Enforce TLS 1.3 is not supported in compatibility mode. Please select a "
 "lower minimum TLS version or disable compatibility mode."
 msgstr ""
+"TLS 1.3 erzwingen wird im Kompabilitätsmodus nicht unterstützt. Bitte wählen "
+"Sie eine niedrigere Mindest-TLS-Version oder deaktivieren Sie den "
+"Kompabilitätsmodus."
 
 msgid "Enforce TLS v1.2"
 msgstr "Erzwinge TLS v1.2"
@@ -31075,6 +31083,10 @@ msgid ""
 "state by default. Here you can choose an alternative state that will apply "
 "to all configured string/regex searches when failing their condition."
 msgstr ""
+"Wenn die konfigurierten String-/Regex-Suchen fehlschlagen, führt dies "
+"standardmäßig zu einem CRIT-Status. Hier können Sie einen alternativen "
+"Status auswählen, der für alle konfigurierten String-/Regex-Suchen gilt, "
+"wenn deren Bedingung nicht erfüllt ist."
 
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -36124,9 +36136,6 @@ msgstr "Levels für die Tablespace-Grösse"
 msgid "Levels for the Tablespace usage"
 msgstr "Levels für die Tablespacebelegung"
 
-msgid "Levels for the consumer count"
-msgstr "Levels für die Anzahl der Consumer"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Levels für den Stromverbrauch eines Gerätes "
 
@@ -37929,6 +37938,10 @@ msgstr "Untergrenzen für die Auslastung von Anfragen"
 
 msgid "Lower levels for reservation utilization"
 msgstr "Untergrenzen für die Reservierungsauslastung"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Levels für die Anzahl der Consumer"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
@@ -52927,9 +52940,8 @@ msgstr "Test wiederholen"
 msgid "Retry time"
 msgstr "Wiederholungszeitraum"
 
-#, fuzzy
 msgid "Return CRITICAL if found, OK if not"
-msgstr "Rückgabewert: CRITICAL wenn gefunden, OK wenn nicht"
+msgstr "CRITICAL zurückgeben, wenn gefunden, OK, wenn nicht"
 
 msgid "Return code class 2xx (success)"
 msgstr "Rückgabecode Klasse 2xx (Erfolg)"
@@ -55856,9 +55868,8 @@ msgstr "Service-Zustand"
 msgid "Service state age"
 msgstr "Alter des Service-Zustands"
 
-#, fuzzy
 msgid "Service state for failing text search condition."
-msgstr "Übersetzen von Service-Zuständen"
+msgstr "Service-Zustand, wenn die Bedingung der Textsuche fehlschlägt."
 
 msgid "Service state if no map rule matches"
 msgstr "Service-Zustand, wenn keine Map-Regel greift"
@@ -65836,7 +65847,6 @@ msgstr ""
 "Die oben genannten Probleme können durch fehlende Caches verursacht worden "
 "sein. Bitte führen Sie einen Rescan durch."
 
-#, fuzzy
 msgid ""
 "The provided header key and value need to match exactly with the actual "
 "header of the response. Please note that the service will get a CRIT, if "
@@ -65845,7 +65855,7 @@ msgid ""
 msgstr ""
 "Der angegebene Header-Schlüssel und der Wert müssen exakt mit dem "
 "tatsächlichen Header der Antwort übereinstimmen. Bitte beachten Sie, dass "
-"der Service ein WARN erhält, wenn entweder der Schlüssel oder der Wert nicht "
+"der Service auf CRIT geht, wenn entweder der Schlüssel oder der Wert nicht "
 "übereinstimmen. Bei der Suche nach einem regulären Ausdruck wird die erste "
 "Übereinstimmung als Erfolg gewertet."
 
@@ -76539,6 +76549,10 @@ msgstr "Hochgeladenes Erweiterungspaket %s-%s (%s)"
 
 msgid "Upper"
 msgstr "Obere"
+
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Levels für die Anzahl der Consumer"
 
 msgid "Upper Temperature Levels"
 msgstr "Obergrenzen für Temperatur"

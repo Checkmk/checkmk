@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard_old import BaseDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class HostsDashboard(BaseDashboard):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
-        self.check_dashboard_selector_placeholder()
+        self.check_selected_dashboard_name()
         expect(
             self.main_area.locator("div#dashboard"),
             message=f"Dashboard '{self.page_title}' is not loaded",

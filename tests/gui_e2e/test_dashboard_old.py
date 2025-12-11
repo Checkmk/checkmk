@@ -468,40 +468,6 @@ def test_dashboard_required_context_filter_by_host_name(
         ).to_have_text("No entries.")
 
 
-def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[str]) -> None:
-    """Test dashboard creation from scratch.
-
-    Steps:
-        1. Navigate to the dashboard page.
-        2. Create a new dashboard.
-        3. Add a "CPU utilization" top list dashlet to the dashboard.
-        4. Check that the dashlet is present on the dashboard.
-        5. Check the hosts are present in the dashlet.
-        6. Delete the created dashboard.
-    """
-    dashlet_to_add = "Top 10: CPU utilization"
-
-    create_dashboard = CreateDashboard(dashboard_page.page)
-    custom_dashboard = create_dashboard.create_custom_dashboard("Test Dashboard")
-
-    try:
-        custom_dashboard.add_top_list_dashlet("CPU utilization")
-        custom_dashboard.leave_layout_mode()
-        custom_dashboard.check_dashlet_is_present(dashlet_to_add)
-        for host_name in custom_dashboard.dashlet_table_column_cells(
-            dashlet_to_add, column_index=1
-        ).all():
-            assert host_name.text_content() in linux_hosts, (
-                f"Unexpected host name found in dashlet '{dashlet_to_add}': "
-                f"{host_name.text_content()}. Only one of "
-                f"{', '.join(linux_hosts)} hosts is expected"
-            )
-
-    finally:
-        if is_cleanup_enabled():
-            custom_dashboard.delete()
-
-
 @pytest.mark.skip(reason="CMK-26831: UI got stuck on adding 'Host state summary' dashlet")
 @pytest.mark.parametrize(
     "bulk_create_hosts_remote_site, dashlet_to_add, dashlet_title",

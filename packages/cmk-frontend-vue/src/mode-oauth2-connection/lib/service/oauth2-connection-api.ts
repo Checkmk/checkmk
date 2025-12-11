@@ -6,6 +6,7 @@
 import { Api } from '@/lib/api-client'
 
 export interface OAuth2FormData {
+  ident: string
   title: string
   authority: string
   tenant_id: string

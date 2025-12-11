@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
-import { v4 as uuid } from 'uuid'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -34,7 +33,7 @@ const props = defineProps<
     urls: Oauth2Urls
     authorityMapping: Record<string, string>
     oAuth2Type: 'ms_graph_api'
-    ident: string | undefined
+    ident: string
   }
 >()
 
@@ -134,7 +133,7 @@ async function requestAndSaveAccessToken(): Promise<boolean> {
     if (props.oAuth2Type === 'ms_graph_api' && resultCode.value) {
       const res = await api.requestAndSaveAccessToken({
         type: 'ms_graph_api',
-        id: props.ident ? props.ident : uuid(),
+        id: props.ident,
         redirect_uri: buildRedirectUri(),
         data: dataRef.value,
         code: resultCode.value

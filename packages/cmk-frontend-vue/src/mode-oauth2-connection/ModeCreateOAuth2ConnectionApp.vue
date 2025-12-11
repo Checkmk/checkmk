@@ -29,7 +29,6 @@ const props = defineProps<{
     data: OAuth2FormData
   }
   authority_mapping: Record<string, string>
-  ident?: string
 }>()
 
 const dataRef = ref()
@@ -60,7 +59,7 @@ const currentStep = ref<number>(1)
         :o-auth2-type="oAuth2Type"
         :urls="config.urls"
         :authority-mapping="authority_mapping"
-        :ident="ident"
+        :ident="form_spec.data.ident"
         :index="2"
         :is-completed="() => currentStep > 2"
       />

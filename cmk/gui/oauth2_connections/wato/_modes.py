@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import uuid
 from collections.abc import Collection, Mapping
 from dataclasses import asdict
 from typing import override
@@ -44,6 +45,7 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    FixedValue,
     Password,
     String,
 )
@@ -66,6 +68,14 @@ def get_oauth_2_connection_form_spec() -> Dictionary:
     return TwoColumnDictionary(
         title=Title("Define OAuth parameters"),
         elements={
+            "ident": DictElement(
+                required=True,
+                parameter_form=FixedValue(
+                    title=Title("OAuth2 connection ID"),
+                    help_text=Help("A unique identifier for this OAuth2 connection."),
+                    value=str(uuid.uuid4()),
+                ),
+            ),
             "title": DictElement(
                 required=True,
                 parameter_form=String(
@@ -315,6 +325,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                         form_spec=get_oauth_2_connection_form_spec(),
                         value=RawDiskData(
                             value={
+                                "ident": self._ident,
                                 "title": self._entry["title"],
                                 "authority": self._entry["authority"],
                                 "tenant_id": self._entry["tenant_id"],
@@ -326,7 +337,6 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                         do_validate=False,
                     )
                 ),
-                "ident": self._ident,
                 "authority_mapping": get_authority_mapping(),
             },
         )

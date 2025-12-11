@@ -25,6 +25,7 @@ const props = defineProps<{
   label?: string
   width?: ButtonVariants['width']
   hasError?: boolean
+  disabled?: boolean
 }>()
 
 const model = defineModel<string | null>({ default: null })
@@ -60,5 +61,6 @@ async function suggestionCallback(query: string): Promise<ErrorResponse | Respon
     :start-of-group="startOfGroup || false"
     :width="width || 'wide'"
     :form-validation="hasError || false"
+    :disabled="disabled || false"
   />
 </template>

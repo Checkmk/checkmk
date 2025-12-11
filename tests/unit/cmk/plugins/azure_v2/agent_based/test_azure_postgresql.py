@@ -14,7 +14,6 @@ from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.azure_v2.agent_based.azure_postgresql import (
     check_azure_postgresql_memory,
     check_plugin_azure_postgresql_connections,
-    check_plugin_azure_postgresql_memory,
     check_plugin_azure_postgresql_network,
     check_plugin_azure_postgresql_replication,
     check_plugin_azure_postgresql_storage,
@@ -225,32 +224,64 @@ def test_check_connections(
     assert list(check_connections()(params, section)) == expected_result
 
 
-def test_check_memory_defaults() -> None:
-    section = Resource(
-        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
-        name="checkmk-postgres-flexible-server",
-        type="Microsoft.DBforPostgreSQL/flexibleServers",
-        group="BurningMan",
-        location="westeurope",
-        metrics={
-            "average_memory_percent": AzureMetric(
-                name="memory_percent",
-                aggregation="average",
-                value=96.03,
-                unit="percent",
+@pytest.mark.parametrize(
+    "section, params, expected_result",
+    [
+        pytest.param(
+            Resource(
+                id="test-id",
+                name="test-name",
+                type="Microsoft.DBforPostgreSQL/servers",
+                group="test-group",
+                location="westeurope",
+                metrics={
+                    "average_memory_percent": AzureMetric(
+                        name="memory_percent",
+                        aggregation="average",
+                        value=50.0,
+                        unit="percent",
+                    ),
+                },
             ),
-        },
-    )
-    params = check_plugin_azure_postgresql_memory.check_default_parameters
-    expected = [
-        Result(
-            state=State.CRIT,
-            summary="Memory utilization: 96.03% (warn/crit at 80.00%/90.00%)",
+            {"levels": (80.0, 90.0)},
+            [
+                Result(state=State.OK, summary="Memory utilization: 50.00%"),
+                Metric("mem_used_percent", 50.0, levels=(80.0, 90.0)),
+            ],
+            id="memory ok",
         ),
-        Metric("mem_used_percent", 96.03, levels=(80.0, 90.0)),
-    ]
-    assert params is not None  # for mypy
-    assert list(check_azure_postgresql_memory("Memory", params, section)) == expected
+        pytest.param(
+            Resource(
+                id="test-id",
+                name="test-name",
+                type="Microsoft.DBforPostgreSQL/servers",
+                group="test-group",
+                location="westeurope",
+                metrics={
+                    "average_memory_percent": AzureMetric(
+                        name="memory_percent",
+                        aggregation="average",
+                        value=96.03,
+                        unit="percent",
+                    ),
+                },
+            ),
+            {"levels": (80.0, 90.0)},
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Memory utilization: 96.03% (warn/crit at 80.00%/90.00%)",
+                ),
+                Metric("mem_used_percent", 96.03, levels=(80.0, 90.0)),
+            ],
+            id="memory crit",
+        ),
+    ],
+)
+def test_check_memory(
+    section: Resource, params: Mapping[str, Any], expected_result: CheckResult
+) -> None:
+    assert list(check_azure_postgresql_memory("Memory", params, section)) == expected_result
 
 
 def test_azure_postgresql_inventory() -> None:

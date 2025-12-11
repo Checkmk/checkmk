@@ -1060,7 +1060,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     title="title",
                     help="help text",
                     choices=[],
-                    no_preselect_title="Please choose",
+                    no_preselect_title="Please select an element",
                 ),
             ),
             id="OAuth2Connection",

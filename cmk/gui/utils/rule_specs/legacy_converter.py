@@ -31,6 +31,8 @@ from cmk.gui.form_specs.unstable import (
     LegacyValueSpec,
     ListExtended,
     ListOfStrings,
+    SingleChoiceEditable,
+    SingleChoiceElementExtended,
     SingleChoiceExtended,
     StringAutocompleter,
     UserSelection,
@@ -42,6 +44,7 @@ from cmk.gui.form_specs.visitors.recomposers.oauth2_connection import (
 )
 from cmk.gui.graphing import MetricName
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import (
     AutocompleterConfig,
@@ -74,6 +77,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.rulesets import internal as ruleset_api_internal
 from cmk.rulesets import v1 as ruleset_api_v1
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
 from cmk.utils.http_proxy_config import ProxyAuthSpec, ProxyConfigSpec
 from cmk.utils.rulesets.definition import RuleGroup
@@ -847,6 +851,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case StringAutocompleter():
             return _convert_to_legacy_autocompleter(to_convert, localizer)
+
+        case SingleChoiceEditable():
+            return _convert_to_legacy_single_choice_editable(to_convert, localizer)
 
         case other:
             raise NotImplementedError(other)
@@ -2655,6 +2662,32 @@ def _convert_to_legacy_oauth2_connection(
         back=recomposed.from_disk,
         forth=recomposed.to_disk,
     )
+
+
+def _convert_to_legacy_single_choice_editable(
+    to_convert: SingleChoiceEditable, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ValueSpec[Any]:
+    entities = {}
+    match to_convert.entity_type:
+        case ConfigEntityType.oauth2_connection:
+            entities = {ident: entry["title"] for ident, entry in load_oauth2_connections().items()}
+        case _:
+            raise NotImplementedError(
+                "Legacy conversion not implemented for entity type %r" % to_convert.entity_type
+            )
+    single_choice_extended = SingleChoiceExtended(
+        title=to_convert.title,
+        help_text=to_convert.help_text,
+        prefill=to_convert.prefill,
+        elements=[
+            SingleChoiceElementExtended(
+                name=ident,
+                title=ruleset_api_v1.Title(title),
+            )
+            for ident, title in entities.items()
+        ],
+    )
+    return _convert_to_inner_legacy_valuespec(single_choice_extended, localizer)
 
 
 def _convert_to_legacy_list_choice_match_type(

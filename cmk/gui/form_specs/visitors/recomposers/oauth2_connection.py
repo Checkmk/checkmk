@@ -6,15 +6,17 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
-from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.rulesets.internal.form_specs import OAuth2Connection
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     FormSpec,
+)
+from cmk.shared_typing.configuration_entity import (
+    ConfigEntityType,
 )
 
 
@@ -42,20 +44,14 @@ def recompose(
             f"Cannot recompose FormSpec. Expected an OAuth2Connection FormSpec, got {type(form_spec)}"
         )
 
-    oauth2_connections = load_oauth2_connections()
-    oauth2_connection_choices: list[SingleChoiceElementExtended[str]] = [
-        SingleChoiceElementExtended[str](
-            name=ident,
-            title=Title("%s") % connection["title"],
-        )
-        for ident, connection in oauth2_connections.items()
-    ]
-
     return TransformDataForLegacyFormatOrRecomposeFunction(
-        wrapped_form_spec=SingleChoiceExtended[str](
+        wrapped_form_spec=SingleChoiceEditable(
             title=form_spec.title or Title("OAuth2 connection"),
             help_text=form_spec.help_text,
-            elements=oauth2_connection_choices,
+            entity_type=ConfigEntityType.oauth2_connection,
+            entity_type_specifier="all",
+            # TODO: add later should be quite straight forward
+            allow_editing_existing_elements=False,
         ),
         from_disk=_oauth2_connection_disk_to_ui,
         to_disk=_oauth2_connection_ui_to_disk,

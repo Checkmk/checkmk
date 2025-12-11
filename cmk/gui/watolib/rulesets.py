@@ -2465,9 +2465,7 @@ def _parse_explicit_services_for_conditions(raw_value: object) -> HostOrServiceC
         return None
     if not isinstance(raw_value, dict):
         raise TypeError(raw_value)
-    values: HostOrServiceConditionsSimple = [
-        {"$regex": e[1:]} if e.startswith("~") else e for e in raw_value["value"]
-    ]
+    values: HostOrServiceConditionsSimple = [{"$regex": e} for e in raw_value["value"]]
     return {"$nor": values} if raw_value["negate"] else values
 
 
@@ -2490,15 +2488,20 @@ def parse_explicit_hosts_for_vue(value: HostOrServiceConditions) -> ExplicitHost
     raise TypeError(value)
 
 
+def _parse_explicit_service_entry(entry: HostOrServiceConditionRegex | str) -> str:
+    assert isinstance(entry, dict)
+    return entry["$regex"]
+
+
 def parse_explicit_services_for_vue(value: HostOrServiceConditions) -> ExplicitHostsOrServices:
     if isinstance(value, list):
         return ExplicitHostsOrServices(
-            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value],
+            value=[_parse_explicit_service_entry(e) for e in value],
             negate=False,
         )
     if isinstance(value, dict):
         return ExplicitHostsOrServices(
-            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value["$nor"]],
+            value=[_parse_explicit_service_entry(e) for e in value["$nor"]],
             negate=True,
         )
     raise TypeError(value)

@@ -37,11 +37,14 @@ import type {
   SingleChoice,
   SingleChoiceElement,
   TimeSpan,
+  TimeSpanTimeMagnitude,
   TimeSpecific,
   Tuple,
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { type PropType, type VNode, defineComponent, h } from 'vue'
+import { type PropType, type Ref, type VNode, defineComponent, h } from 'vue'
+
+import usei18n from '@/lib/i18n'
 
 import type { DualListElement } from '@/components/CmkDualList'
 import {
@@ -63,6 +66,8 @@ import {
   type OperatorI18n,
   translateOperator
 } from './private/forms/FormConditionChoices/utils'
+
+const { _t } = usei18n()
 
 function renderForm(
   formSpec: FormSpec,
@@ -206,10 +211,28 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     rows.push(dataPointRow)
   }
 
+  const timeSpan = []
+  const i18Magnitudes: Partial<Record<TimeSpanTimeMagnitude, string | Ref<string>>> = {
+    hour: _t('Hours'),
+    minute: _t('Minutes'),
+    second: _t('Seconds')
+  }
+  const values = splitToUnits(
+    value.aggregation_lookback,
+    getSelectedMagnitudes(['hour', 'minute', 'second'])
+  )
+  for (const [magnitude] of ALL_MAGNITUDES) {
+    const v = values[magnitude]
+    if (v !== undefined) {
+      const i18Magnitude = i18Magnitudes[magnitude]
+      const text = (i18Magnitude as Ref<string>)?.value || (i18Magnitude as string)
+      timeSpan.push(`${v} ${text}`)
+    }
+  }
   rows.push(
     h('tr', [
       h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
-      h('td', [`${value.aggregation_lookback} s`])
+      h('td', timeSpan.join(' '))
     ])
   )
 

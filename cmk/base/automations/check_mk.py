@@ -106,7 +106,6 @@ from cmk.base.checkers import (
 from cmk.base.config import (
     ConfigCache,
     EnforcedServicesTable,
-    get_metric_backend_fetcher,
     handle_ip_lookup_failure,
     load_resource_cfg_macros,
     snmp_default_community,
@@ -169,7 +168,6 @@ from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
     ad_hoc_secrets_file,
     AdHocSecrets,
-    FetcherTrigger,
     Mode,
     NoSelectedSNMPSections,
     PlainFetcherTrigger,
@@ -409,7 +407,7 @@ def automation_service_discovery(
         secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
         secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
         secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -639,7 +637,7 @@ def automation_discovery_preview(
         # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
         # and tabula rasa)
         max_cachefile_age=MaxAge.zero(),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -1108,7 +1106,7 @@ def _execute_autodiscovery(
         secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
         secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -3167,7 +3165,7 @@ class AutomationDiagHost:
             if test == "agent":
                 return DiagHostResult(
                     *self._execute_agent(
-                        ctx.make_fetcher_trigger,
+                        ctx,
                         loading_result.loaded_config,
                         loading_result.config_cache,
                         label_manager,
@@ -3261,7 +3259,7 @@ class AutomationDiagHost:
 
     def _execute_agent(
         self,
-        make_fetcher_trigger: Callable[[str | None], FetcherTrigger],
+        ctx: AutomationContext,
         loaded_config: LoadedConfigFragment,
         config_cache: ConfigCache,
         label_manager: LabelManager,
@@ -3300,7 +3298,7 @@ class AutomationDiagHost:
         )
         passwords = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
 
-        trigger = make_fetcher_trigger(host_relay_id)
+        trigger = ctx.make_fetcher_trigger(host_relay_id)
         for source in sources.make_sources(
             plugins,
             host_name,
@@ -3374,7 +3372,7 @@ class AutomationDiagHost:
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
-            metric_backend_fetcher=get_metric_backend_fetcher(
+            metric_backend_fetcher=ctx.make_metric_backend_fetcher(
                 host_name,
                 config_cache.explicit_host_attributes,
                 config_cache.check_mk_check_interval,
@@ -3949,7 +3947,7 @@ def automation_get_agent_output(
                 ),
                 agent_connection_mode=config_cache.agent_connection_mode(hostname),
                 check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
-                metric_backend_fetcher=get_metric_backend_fetcher(
+                metric_backend_fetcher=ctx.make_metric_backend_fetcher(
                     hostname,
                     config_cache.explicit_host_attributes,
                     config_cache.check_mk_check_interval,

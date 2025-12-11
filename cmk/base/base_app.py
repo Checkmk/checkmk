@@ -11,14 +11,14 @@ from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import FetcherTrigger
+from cmk.fetchers import FetcherTrigger, ProgramFetcher
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from .automations.automations import Automations
-from .config import ConfigCache, LoadingResult
+from .config import ConfigCache, LoadingResult, ObjectAttributes
 from .modes.modes import Modes
 
 
@@ -48,6 +48,15 @@ class CheckmkBaseApp:
         ],
         licensing_handler_type: type[LicensingHandler],
         make_fetcher_trigger: Callable[[str | None], FetcherTrigger],
+        make_metric_backend_fetcher: Callable[
+            [
+                HostAddress,
+                Callable[[HostAddress], ObjectAttributes],
+                Callable[[HostAddress], float],
+                bool,
+            ],
+            ProgramFetcher | None,
+        ],
     ) -> None:
         self.edition: Final = edition
         self.modes: Final = modes
@@ -56,3 +65,4 @@ class CheckmkBaseApp:
         self.create_core: Final = create_core
         self.licensing_handler_type: Final = licensing_handler_type
         self.make_fetcher_trigger: Final = make_fetcher_trigger
+        self.make_metric_backend_fetcher: Final = make_metric_backend_fetcher

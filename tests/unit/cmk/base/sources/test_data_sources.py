@@ -12,10 +12,12 @@ from typing import Literal
 
 import pytest
 
-from cmk.base.config import ConfigCache, get_metric_backend_fetcher
+from cmk.base.app import make_app
+from cmk.base.config import ConfigCache
 from cmk.base.sources import make_sources, Source
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.version import edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import (
     NoSelectedSNMPSections,
@@ -27,6 +29,7 @@ from cmk.fetchers import (
     TLSConfig,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.utils import paths
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
@@ -53,6 +56,7 @@ def _make_sources(
     # to test.
     ipaddress = HostAddress("127.0.0.1")
     ip_family: Literal[socket.AddressFamily.AF_INET] = socket.AddressFamily.AF_INET
+    app = make_app(edition(paths.omd_root))
     return make_sources(
         AgentBasedPlugins.empty(),
         hostname,
@@ -105,7 +109,7 @@ def _make_sources(
         ),
         agent_connection_mode=config_cache.agent_connection_mode(hostname),
         check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
-        metric_backend_fetcher=get_metric_backend_fetcher(
+        metric_backend_fetcher=app.make_metric_backend_fetcher(
             hostname,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,

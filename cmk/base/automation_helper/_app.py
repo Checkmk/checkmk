@@ -257,6 +257,7 @@ def _execute_automation_endpoint(
                     make_bake_on_restart=app.make_bake_on_restart,
                     create_core=app.create_core,
                     make_fetcher_trigger=app.make_fetcher_trigger,
+                    make_metric_backend_fetcher=app.make_metric_backend_fetcher,
                 ),
                 payload.name,
                 list(payload.args),

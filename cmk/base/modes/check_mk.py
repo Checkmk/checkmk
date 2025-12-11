@@ -45,11 +45,7 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import (
-    ConfigCache,
-    get_metric_backend_fetcher,
-    handle_ip_lookup_failure,
-)
+from cmk.base.config import ConfigCache, handle_ip_lookup_failure
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
@@ -754,7 +750,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
             check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
-            metric_backend_fetcher=get_metric_backend_fetcher(
+            metric_backend_fetcher=app.make_metric_backend_fetcher(
                 hostname,
                 config_cache.explicit_host_attributes,
                 config_cache.check_mk_check_interval,
@@ -904,6 +900,7 @@ def mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
             timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ).get,
+            make_metric_backend_fetcher=app.make_metric_backend_fetcher,
         )
 
 
@@ -1976,6 +1973,7 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
                     make_bake_on_restart=app.make_bake_on_restart,
                     create_core=app.create_core,
                     make_fetcher_trigger=app.make_fetcher_trigger,
+                    make_metric_backend_fetcher=app.make_metric_backend_fetcher,
                 ),
                 name,
                 automation_args,
@@ -2210,7 +2208,7 @@ def mode_check_discovery(
         secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
         secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -2578,7 +2576,7 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
         secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
         secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
         secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -2834,7 +2832,7 @@ def run_checking(
         secrets_file_option_relay=secrets_file_option_relay,
         secrets_file_option_site=secrets_file_option_site,
         secrets=secrets,
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -3131,7 +3129,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
         secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
         secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
         secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -3434,7 +3432,7 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
         secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
         secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,

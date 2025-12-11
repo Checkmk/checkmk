@@ -18,6 +18,7 @@ from pytest import MonkeyPatch
 
 from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -25,11 +26,12 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import ConfigCache, get_metric_backend_fetcher
+from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.version import edition
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
@@ -85,6 +87,7 @@ from cmk.plugins.collection.agent_based.labels import agent_section_labels
 from cmk.plugins.collection.agent_based.uptime import agent_section_uptime
 from cmk.plugins.liebert.agent_based.liebert_fans import snmp_section_liebert_fans
 from cmk.snmplib import SNMPRawDataElem
+from cmk.utils import paths
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -1512,6 +1515,7 @@ def test_commandline_discovery(
     service_name_config = config_cache.make_passive_service_name_config(
         make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
     )
+    app = make_app(edition(paths.omd_root))
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: None,
@@ -1546,7 +1550,7 @@ def test_commandline_discovery(
         secrets_file_option_relay=Path("/pw/store"),
         secrets_file_option_site=Path("/pw/store"),
         secrets={},
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,

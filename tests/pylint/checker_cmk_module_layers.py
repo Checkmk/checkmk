@@ -393,6 +393,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.ccc",
         "cmk.utils",
     ),
+    Component("cmk.base.nonfree.ultimate.metric_backend_fetcher"): _allow(
+        "cmk.base.config",
+        "cmk.ccc",
+        "cmk.fetchers",
+        "cmk.plugins.otel.special_agents.nonfree.ultimate.agent_otel",
+    ),
     Component("cmk.base.nonfree.bakery"): _allow(
         "cmk.bakery",
         "cmk.base.api.bakery",

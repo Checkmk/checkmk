@@ -18,14 +18,14 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.base import sources
-from cmk.base.config import ConfigCache, get_metric_backend_fetcher, get_relay_id
+from cmk.base.config import ConfigCache, get_relay_id, ObjectAttributes
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import Source
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.parameters import IsTimeperiodActiveCallback, TimespecificParameters
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
@@ -137,6 +137,15 @@ def dump_host(
     ip_address_of_mgmt: IPLookupOptional,
     simulation_mode: bool,
     timeperiod_active: IsTimeperiodActiveCallback,
+    make_metric_backend_fetcher: Callable[
+        [
+            HostAddress,
+            Callable[[HostAddress], ObjectAttributes],
+            Callable[[HostAddress], float],
+            bool,
+        ],
+        ProgramFetcher | None,
+    ],
 ) -> None:
     print_("\n")
     label_manager = config_cache.label_manager
@@ -293,7 +302,7 @@ def dump_host(
                 ),
                 agent_connection_mode=config_cache.agent_connection_mode(hostname),
                 check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
-                metric_backend_fetcher=get_metric_backend_fetcher(
+                metric_backend_fetcher=make_metric_backend_fetcher(
                     hostname,
                     config_cache.explicit_host_attributes,
                     config_cache.check_mk_check_interval,

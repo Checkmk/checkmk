@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.ccc.hostaddress import HostName
-from cmk.fetchers import MetricBackendFetcherConfig, TCPFetcherConfig
+from cmk.fetchers import TCPFetcherConfig
 from cmk.snmplib import SNMPSectionName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -67,11 +67,3 @@ def make_parsed_snmp_fetch_intervals_config(
         if seconds is not None
         for section_name in sections
     }
-
-
-def make_metric_backend_fetcher_config(
-    metrics_association: str, check_interval: float
-) -> MetricBackendFetcherConfig:
-    return MetricBackendFetcherConfig.from_serialized(
-        metrics_association_raw=metrics_association, check_interval=check_interval
-    )

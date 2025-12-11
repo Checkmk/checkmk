@@ -22,7 +22,6 @@ from cmk.base.checkers import (
     CMKSummarizer,
     SectionPluginMapper,
 )
-from cmk.base.config import get_metric_backend_fetcher
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.errorhandling import CheckResultErrorHandler
@@ -203,7 +202,7 @@ def inventory_as_check(
         secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
         secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
-        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,

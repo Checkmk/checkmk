@@ -22,7 +22,7 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import FetcherTrigger
+from cmk.fetchers import FetcherTrigger, ProgramFetcher
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import log, paths
 from cmk.utils.labels import LabelManager
@@ -61,6 +61,15 @@ class AutomationContext:
         MonitoringCore,
     ]
     make_fetcher_trigger: Callable[[str | None], FetcherTrigger]
+    make_metric_backend_fetcher: Callable[
+        [
+            HostAddress,
+            Callable[[HostAddress], config.ObjectAttributes],
+            Callable[[HostAddress], float],
+            bool,
+        ],
+        ProgramFetcher | None,
+    ]
 
 
 @dataclass

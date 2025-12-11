@@ -31,6 +31,7 @@ def make_app() -> CheckmkBaseApp:
         create_core=create_core,
         licensing_handler_type=CRELicensingHandler,
         make_fetcher_trigger=lambda x: PlainFetcherTrigger(),
+        make_metric_backend_fetcher=lambda *args: None,
     )
 
 

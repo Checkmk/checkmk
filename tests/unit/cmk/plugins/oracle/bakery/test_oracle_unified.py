@@ -17,6 +17,7 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiConfig,
     GuiConnectionConf,
     GuiDiscoveryConf,
+    GuiInstanceAdditionalOptionsConf,
     GuiInstanceAuthUserPasswordData,
     GuiInstanceConf,
     GuiMainConf,
@@ -208,9 +209,7 @@ oracle_config_full: GuiConfig = GuiConfig(
                 timeout=20,
                 tns_admin="/etc/oracle/tns2",
             ),
-            options=GuiAdditionalOptionsConf(
-                max_connections=5,
-                max_queries=50,
+            options=GuiInstanceAdditionalOptionsConf(
                 ignore_db_name=False,
             ),
         ),
@@ -252,8 +251,6 @@ expected_yaml_lines_full = [
     "        tns_admin: /etc/oracle/tns2",
     "      options:",
     "        ignore_db_name: 0",
-    "        max_connections: 5",
-    "        max_queries: 50",
     "      sid: SID2",
     "    options:",
     "      ignore_db_name: 1",
@@ -427,9 +424,7 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
                 timeout=10,
                 tns_admin="/etc/oracle/tnsb",
             ),
-            options=GuiAdditionalOptionsConf(
-                max_connections=2,
-                max_queries=20,
+            options=GuiInstanceAdditionalOptionsConf(
                 ignore_db_name=False,
             ),
         ),
@@ -465,8 +460,6 @@ expected_yaml_lines_discovery_instances = [
     "        tns_admin: /etc/oracle/tnsb",
     "      options:",
     "        ignore_db_name: 0",
-    "        max_connections: 2",
-    "        max_queries: 20",
     "      sid: SID_B",
 ]
 

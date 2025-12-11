@@ -121,11 +121,16 @@ class GuiMainConf(BaseModel):
         return self.cache_age or 600
 
 
+class GuiInstanceAdditionalOptionsConf(BaseModel):
+    ignore_db_name: bool | None = None
+    oracle_client_library: GuiOracleClientLibOptions | None = None
+
+
 class GuiInstanceConf(BaseModel):
     sid: str
     auth: tuple[Literal["standard"], GuiInstanceAuthUserPasswordData] | None = None
     connection: GuiConnectionConf | None = None
-    options: GuiAdditionalOptionsConf | None = None
+    options: GuiInstanceAdditionalOptionsConf | None = None
 
 
 class GuiConfig(BaseModel):
@@ -172,11 +177,16 @@ class OracleInstanceAuth(TypedDict):
     type: NotRequired[str]
 
 
+class OracleInstanceAdditionalOptions(TypedDict):
+    ignore_db_name: NotRequired[int]
+    use_host_client: NotRequired[str]
+
+
 class OracleInstance(TypedDict):
     sid: str
     authentication: NotRequired[OracleInstanceAuth]
     connection: NotRequired[OracleConnection]
-    options: NotRequired[OracleAdditionalOptions]
+    options: NotRequired[OracleInstanceAdditionalOptions]
 
 
 class OracleMain(TypedDict):
@@ -285,6 +295,23 @@ def _get_oracle_additional_options(options: GuiAdditionalOptionsConf) -> OracleA
     return result
 
 
+def _get_oracle_instance_additional_options(
+    options: GuiInstanceAdditionalOptionsConf,
+) -> OracleInstanceAdditionalOptions:
+    result: OracleInstanceAdditionalOptions = {}
+    if options.ignore_db_name is not None:
+        result["ignore_db_name"] = int(options.ignore_db_name)
+    if options.oracle_client_library is not None:
+        match options.oracle_client_library.use_host_client:
+            case (("auto" | "never" | "always") as predefined, None):
+                result["use_host_client"] = predefined
+            case ("custom", custom_path):
+                result["use_host_client"] = str(custom_path)
+            case None:
+                pass
+    return result
+
+
 def _get_oracle_discovery(discovery: GuiDiscoveryConf) -> OracleDiscovery:
     result: OracleDiscovery = {"enabled": discovery.enabled}
     if discovery.include:
@@ -340,7 +367,7 @@ def _get_oracle_instances(
         if instance.connection:
             inst_dict["connection"] = _get_oracle_connection(instance.connection)
         if instance.options:
-            inst_dict["options"] = _get_oracle_additional_options(instance.options)
+            inst_dict["options"] = _get_oracle_instance_additional_options(instance.options)
         result.append(inst_dict)
     return result
 

@@ -379,43 +379,47 @@ def _oracle_client_library_options() -> Dictionary:
     )
 
 
-def _additional_options() -> Dictionary:
+def _additional_options(is_default_options: bool = True) -> Dictionary:
+    elements: dict[str, DictElement] = {
+        "max_connections": DictElement(
+            parameter_form=Integer(
+                title=Title("Maximum connections"),
+                help_text=Help("Maximum number of database connections to open."),
+                prefill=DefaultValue(5),
+            ),
+            required=False,
+        ),
+        "max_queries": DictElement(
+            parameter_form=Integer(
+                title=Title("Maximum queries"),
+                help_text=Help("Maximum number of queries to execute per connection."),
+                prefill=DefaultValue(16),
+            ),
+            required=False,
+        ),
+        "ignore_db_name": DictElement(
+            parameter_form=FixedValue(
+                title=Title("Ignore database name"),
+                help_text=Help(
+                    "If enabled, the instance name will be queried "
+                    "from the database instead of the database name."
+                ),
+                label=Label("Ignore database name and use instance name instead"),
+                value=True,
+            ),
+            required=False,
+        ),
+        "oracle_client_library": DictElement(
+            parameter_form=_oracle_client_library_options(),
+            required=False,
+        ),
+    }
+    if not is_default_options:
+        elements.pop("max_connections")
+        elements.pop("max_queries")
     return Dictionary(
         title=Title("Additional options"),
-        elements={
-            "max_connections": DictElement(
-                parameter_form=Integer(
-                    title=Title("Maximum connections"),
-                    help_text=Help("Maximum number of database connections to open."),
-                    prefill=DefaultValue(5),
-                ),
-                required=False,
-            ),
-            "max_queries": DictElement(
-                parameter_form=Integer(
-                    title=Title("Maximum queries"),
-                    help_text=Help("Maximum number of queries to execute per connection."),
-                    prefill=DefaultValue(16),
-                ),
-                required=False,
-            ),
-            "ignore_db_name": DictElement(
-                parameter_form=FixedValue(
-                    title=Title("Ignore database name"),
-                    help_text=Help(
-                        "If enabled, the instance name will be queried "
-                        "from the database instead of the database name."
-                    ),
-                    label=Label("Ignore database name and use instance name instead"),
-                    value=True,
-                ),
-                required=False,
-            ),
-            "oracle_client_library": DictElement(
-                parameter_form=_oracle_client_library_options(),
-                required=False,
-            ),
-        },
+        elements=elements,
     )
 
 
@@ -430,7 +434,7 @@ def _common_instance_options(is_default_options: bool = True) -> dict[str, DictE
             required=is_default_options,
         ),
         "options": DictElement(
-            parameter_form=_additional_options(),
+            parameter_form=_additional_options(is_default_options=is_default_options),
             required=False,
         ),
     }

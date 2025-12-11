@@ -56,9 +56,11 @@ async function validate(): Promise<boolean> {
       <CmkParagraph>
         {{
           _t(
-            'A new tab will be opened. Please follow the instructions to authorize the application. The process has to be completed within 5 minutes.'
+            'A new tab will be opened. Please follow the instructions to authorize the application.'
           )
         }}
+        <br />
+        {{ _t('The process has to be completed within 5 minutes.') }}
       </CmkParagraph>
     </template>
 

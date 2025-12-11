@@ -478,13 +478,17 @@ class MainArea(LocatorHelper):
             raise e
         return self.locator(f"div#{menu_id}")
 
-    def item_in_dropdown_list(self, dropdown_button: str, item: str) -> Locator:
-        return self.dropdown_list(dropdown_button).locator(f"span:has-text('{item}')")
+    def get_item_in_dropdown_list(
+        self, dropdown_button: str, item: str, exact: bool = False
+    ) -> Locator:
+        return self.dropdown_list(dropdown_button).get_by_role("link", name=item, exact=exact)
 
-    def click_item_in_dropdown_list(self, dropdown_button: str, item: str) -> None:
+    def click_item_in_dropdown_list(
+        self, dropdown_button: str, item: str, exact: bool = False
+    ) -> None:
         self.dropdown_button(dropdown_button).click()
         expect(self.dropdown_list(dropdown_button)).to_be_visible()
-        self.item_in_dropdown_list(dropdown_button, item).click()
+        self.get_item_in_dropdown_list(dropdown_button, item, exact=exact).click()
 
 
 class Sidebar(LocatorHelper):

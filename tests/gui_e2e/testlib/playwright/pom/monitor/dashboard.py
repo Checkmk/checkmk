@@ -17,8 +17,8 @@ from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 logger = logging.getLogger(__name__)
 
 
-class SummaryDashletType(StrEnum):
-    """Types of summary dashlets."""
+class SummarywidgetType(StrEnum):
+    """Types of summary widgets."""
 
     HOST = "Host state summary"
     SERVICE = "Service state summary"
@@ -27,8 +27,9 @@ class SummaryDashletType(StrEnum):
 class BaseDashboard(CmkPage):
     """Base class for all dashboard pages.
 
-    This class is not intended to be used directly, but rather as a base class for specific dashboard pages.
-    It provides common functionality and properties that are shared across different dashboard pages.
+    This class is not intended to be used directly, but rather as a base class for specific
+    dashboard pages. It provides common functionality and properties that are shared across
+    different dashboard pages.
     """
 
     page_title: str
@@ -45,7 +46,7 @@ class BaseDashboard(CmkPage):
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
-    def check_dashboard_selector_placeholder(self) -> None:
+    def check_selected_dashboard_name(self) -> None:
         """Check that the dashboard selector has the expected placeholder text."""
         expect(
             self.dashboard_selector,
@@ -57,20 +58,93 @@ class BaseDashboard(CmkPage):
         ).to_have_attribute("placeholder", self.page_title)
 
     @property
+    def dashboard_container(self) -> Locator:
+        """Locator property for the dashboard container"""
+        return self.main_area.locator("cmk-dashboard")
+
+    @property
     def _menu_header(self) -> Locator:
+        """Locator property for top menu of the dashboard"""
         return self.main_area.locator(".dashboard-menu-header")
 
     @property
     def dashboard_selector(self) -> Locator:
+        """Locator property for the dropdown to select the dashboard
+
+        This is the place where dashboard title is checked.
+        """
         return self._menu_header.get_by_role("textbox")
 
-    def menu_button(self, button_name: str) -> Locator:
+    def get_menu_button(self, button_name: str) -> Locator:
+        """Get button of the top menu by its name.
+
+        Args:
+            button_name: name of the button to get.
+
+        Returns:
+            The locator of the button with the given name.
+        """
         return self._menu_header.get_by_role("button", name=button_name)
 
-    def widget(self, dashlet_name: str) -> Locator:
-        return self.main_area.locator(
-            f"div.db-relative-grid-frame:has(:text-is('{dashlet_name}'))"
-        )  # To replace with data attribute when available
+    def get_widget(self, widget_title: str) -> Locator:
+        """Get the Locator of the widget with the given title.
+
+        Args:
+            widget_title: the title of the widget.
+
+        Returns:
+            The locator of the widget with the given title.
+        """
+        return (
+            self.main_area.locator()
+            .get_by_label("Widget")
+            .filter(has=self.page.get_by_role("heading", name=widget_title))
+        )
+
+    def get_widget_table(self, widget_title: str) -> Locator:
+        """Get the table inside a widget.
+
+        Args:
+            widget_title: the title of the widget.
+
+        Returns:
+            The locator of the table inside the widget.
+        """
+        return self.get_widget(widget_title).locator("table")
+
+    def get_widget_table_rows(self, widget_title: str) -> Locator:
+        """Get the rows of the table inside a widget exluding the table heading.
+
+        Args:
+            widget_title: the title of the widget.
+
+        Returns:
+            The locator of the rows of the table inside the widget.
+        """
+        return self.get_widget_table(widget_title).locator("tr:not(:first-child)")
+
+    def get_widget_table_column_cells(self, widget_title: str, *, column_index: int) -> Locator:
+        """Get the cells that belong to one specific column of the table inside a widget.
+
+        Args:
+            widget_title: the title of the widget.
+            column_index: the index of the column to get the cells.
+
+        Returns:
+            The locator of the cells that belong to the given column of the table
+            inside the widget.
+        """
+        return self.get_widget_table_rows(widget_title).locator(f"> td:nth-child({column_index})")
+
+    def check_widget_is_present(self, widget_title: str) -> None:
+        """Check that a specific widget is present on the page.
+
+        Args:
+            widget_title: the title of the widget to check.
+        """
+        expect(
+            self.get_widget(widget_title), f"Widget '{widget_title}' is not presented on the page"
+        ).to_be_visible()
 
 
 class MainDashboard(BaseDashboard):
@@ -107,9 +181,9 @@ class MainDashboard(BaseDashboard):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Main dashboard' page")
-        self.check_dashboard_selector_placeholder()
-        expect(self.widget("Host statistics")).to_be_visible()
-        expect(self.menu_button("Filter")).to_be_visible()
+        self.check_selected_dashboard_name()
+        expect(self.get_widget("Host statistics")).to_be_visible()
+        expect(self.get_menu_button("Filter")).to_be_visible()
 
 
 class DashboardMobile(BaseDashboard):
@@ -170,9 +244,9 @@ class ProblemDashboard(BaseDashboard):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
-        self.check_dashboard_selector_placeholder()
-        expect(self.widget("Host statistics")).to_be_visible()
-        expect(self.widget("Events of recent 4 hours")).to_be_visible()
+        self.check_selected_dashboard_name()
+        expect(self.get_widget("Host statistics")).to_be_visible()
+        expect(self.get_widget("Events of recent 4 hours")).to_be_visible()
 
 
 # TODO: create Default dashboard POM for admin and non-admin users, see CMK-19521.

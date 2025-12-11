@@ -18,7 +18,6 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     check_connections,
     check_cpu,
     check_memory,
-    check_network,
     create_check_metrics_function,
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
@@ -146,8 +145,26 @@ check_plugin_azure_postgresql_network = CheckPlugin(
         "total_network_bytes_egress",
         resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
-    check_function=check_network(),
-    check_ruleset_name="network_io_without_item",
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "total_network_bytes_ingress",
+                "ingress",
+                "Network in",
+                render.bytes,
+                upper_levels_param="ingress_levels",
+            ),
+            MetricData(
+                "total_network_bytes_egress",
+                "egress",
+                "Network out",
+                render.bytes,
+                upper_levels_param="egress_levels",
+            ),
+        ],
+        check_levels=check_levels,
+    ),
+    check_ruleset_name="azure_v2_db_network",
     check_default_parameters={},
 )
 

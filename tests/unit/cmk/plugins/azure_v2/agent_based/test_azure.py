@@ -40,7 +40,6 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     check_connections,
     check_cpu,
     check_memory,
-    check_network,
     check_resource_metrics,
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
@@ -987,30 +986,3 @@ def test_check_connections(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_connections()(params, section)) == expected_result
-
-
-@pytest.mark.parametrize(
-    "section, item, params, expected_result",
-    [
-        (
-            PARSED_RESOURCE,
-            "checkmk-mysql-server",
-            {"ingress_levels": (5000, 10000), "egress_levels": (1000, 2000)},
-            [
-                Result(state=State.OK, summary="Network in: 1000 B"),
-                Metric("ingress", 1000.0, levels=(5000.0, 10000.0)),
-                Result(
-                    state=State.WARN, summary="Network out: 1.46 KiB (warn/crit at 1000 B/1.95 KiB)"
-                ),
-                Metric("egress", 1500.0, levels=(1000.0, 2000.0)),
-            ],
-        ),
-    ],
-)
-def test_check_network(
-    section: Resource,
-    item: str,
-    params: Mapping[str, Any],
-    expected_result: Sequence[Result | Metric],
-) -> None:
-    assert list(check_network()(params, section)) == expected_result

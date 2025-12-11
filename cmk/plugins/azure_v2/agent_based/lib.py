@@ -496,27 +496,6 @@ def check_connections() -> CheckFunctionWithoutItem:
     )
 
 
-def check_network() -> CheckFunctionWithoutItem:
-    return create_check_metrics_function_single(
-        [
-            MetricData(
-                "total_network_bytes_ingress",
-                "ingress",
-                "Network in",
-                render.bytes,
-                upper_levels_param="ingress_levels",
-            ),
-            MetricData(
-                "total_network_bytes_egress",
-                "egress",
-                "Network out",
-                render.bytes,
-                upper_levels_param="egress_levels",
-            ),
-        ]
-    )
-
-
 # We wrap this so that potentially we can pass in extra data in the future,
 # per resource type.
 def create_inventory_function() -> Callable[[Resource], InventoryResult]:

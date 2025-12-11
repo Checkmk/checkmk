@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.azure_v2.agent_based.azure_postgresql import (
     check_azure_postgresql_memory,
     check_plugin_azure_postgresql_connections,
+    check_plugin_azure_postgresql_cpu,
     check_plugin_azure_postgresql_network,
     check_plugin_azure_postgresql_replication,
     check_plugin_azure_postgresql_storage,
@@ -435,4 +436,66 @@ def test_check_network(
     assert (
         list(check_plugin_azure_postgresql_network.check_function(params, section))
         == expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    "section, params, expected_result",
+    [
+        pytest.param(
+            Resource(
+                id="test-id",
+                name="test-name",
+                type="Microsoft.DBforPostgreSQL/servers",
+                group="test-group",
+                location="westeurope",
+                metrics={
+                    "average_cpu_percent": AzureMetric(
+                        name="cpu_percent",
+                        aggregation="average",
+                        value=50.0,
+                        unit="percent",
+                    ),
+                },
+            ),
+            {"levels": (80.0, 90.0)},
+            [
+                Result(state=State.OK, summary="CPU utilization: 50.00%"),
+                Metric("util", 50.0, levels=(80.0, 90.0)),
+            ],
+            id="cpu ok",
+        ),
+        pytest.param(
+            Resource(
+                id="test-id",
+                name="test-name",
+                type="Microsoft.DBforPostgreSQL/servers",
+                group="test-group",
+                location="westeurope",
+                metrics={
+                    "average_cpu_percent": AzureMetric(
+                        name="cpu_percent",
+                        aggregation="average",
+                        value=95.0,
+                        unit="percent",
+                    ),
+                },
+            ),
+            {"levels": (80.0, 90.0)},
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="CPU utilization: 95.00% (warn/crit at 80.00%/90.00%)",
+                ),
+                Metric("util", 95.0, levels=(80.0, 90.0)),
+            ],
+            id="cpu crit",
+        ),
+    ],
+)
+def test_check_cpu(
+    section: Resource, params: Mapping[str, Any], expected_result: CheckResult
+) -> None:
+    assert (
+        list(check_plugin_azure_postgresql_cpu.check_function(params, section)) == expected_result
     )

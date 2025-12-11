@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import { DialogContent, DialogPortal, DialogRoot } from 'radix-vue'
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 
 const slideInVariants = cva('', {
   variants: {
@@ -32,9 +32,18 @@ const props = defineProps<CmkSlideInProps>()
 const emit = defineEmits(['close'])
 const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
 
+const handleAnimationEnd = () => {
+  document.body.style.overflow = ''
+}
+
+onMounted(() => {
+  dialogContentRef.value?.$el.addEventListener('animationend', handleAnimationEnd)
+})
+
 watch(
   () => props.open,
   async (isOpen) => {
+    document.body.style.overflow = 'hidden'
     if (isOpen) {
       await nextTick(() => {
         dialogContentRef.value?.$el.focus()

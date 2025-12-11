@@ -40,6 +40,7 @@ const isDisabled = (id: string): boolean => {
       title: _t('Add widget'),
       closeButton: true
     }"
+    :size="'small'"
     @close="emit('close')"
   >
     <div class="db-add-widget-dialog__container">

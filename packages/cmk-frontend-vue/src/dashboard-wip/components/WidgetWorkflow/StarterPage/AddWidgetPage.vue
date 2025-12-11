@@ -18,6 +18,11 @@ const props = defineProps<AddWidgetDialogProperties>()
 
 const emit = defineEmits(['select'])
 
+/* Set background gradient */
+const bg = document.getElementById('main_page_content') as HTMLElement
+bg.style.backgroundImage = 'linear-gradient(to bottom, var(--ux-theme-1), var(--ux-theme-8))'
+/* End set background gradient */
+
 const isDisabled = (id: string): boolean => {
   return (
     props.availableFeatures === DashboardFeatures.RESTRICTED &&
@@ -28,17 +33,19 @@ const isDisabled = (id: string): boolean => {
 
 <template>
   <div class="db-add-widget-page__wrapper">
-    <div class="db-add-widget-page__grid-container">
-      <WorkflowCard
-        v-for="(item, id) in props.workflowItems"
-        :key="id"
-        :title="item.title"
-        :icon="item.icon"
-        :subtitle="item.subtitle"
-        :icon_emblem="item.icon_emblem"
-        :disabled="isDisabled(id)"
-        @select="emit('select', id)"
-      />
+    <div class="db-add-widget-page__center-container">
+      <div class="db-add-widget-page__grid-container">
+        <WorkflowCard
+          v-for="(item, id) in props.workflowItems"
+          :key="id"
+          :title="item.title"
+          :icon="item.icon"
+          :subtitle="item.subtitle"
+          :icon_emblem="item.icon_emblem"
+          :disabled="isDisabled(id)"
+          @select="emit('select', id)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -48,18 +55,25 @@ const isDisabled = (id: string): boolean => {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
-  padding: var(--spacing-double);
   box-sizing: border-box;
+  padding: var(--spacing-double);
+}
+
+.db-add-widget-page__center-container {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .db-add-widget-page__grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-double);
-  padding: var(--spacing-double);
+  gap: var(--dimension-4);
+  padding: var(--spacing);
   width: 100%;
+  max-width: 1000px;
+  vertical-align: middle;
 }
 
 @media (width < 800px) {

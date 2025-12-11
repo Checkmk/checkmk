@@ -521,7 +521,16 @@ function deepClone<T>(obj: T): T {
       />
     </template>
     <template v-else>
-      <CmkIcon name="load-graph" size="xxlarge" />
+      <AddWidgetPage
+        v-if="openDashboardCreationDialog || openDashboardCloneDialog"
+        :workflow-items="dashboardWidgetWorkflows"
+        :available-features="available_features"
+      />
+      <CmkIcon
+        v-if="!(openDashboardCreationDialog || openDashboardCloneDialog)"
+        name="load-graph"
+        size="xxlarge"
+      />
     </template>
   </CmkErrorBoundary>
 </template>

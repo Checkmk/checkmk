@@ -24,6 +24,8 @@ import VisibilityProperties from '../../components/DashboardSettings/VisibilityP
 import { useDashboardGeneralSettings } from '../../components/DashboardSettings/composables/useDashboardGeneralSettings'
 import { DashboardType } from '../../components/DashboardSettings/types'
 import StepsHeader from '../../components/StepsHeader.vue'
+import CollapsibleContent from '../../components/collapsible/CollapsibleContent.vue'
+import CollapsibleTitle from '../../components/collapsible/CollapsibleTitle.vue'
 import DashboardTypeSelector from './components/DashboardTypeSelector.vue'
 
 const { _t } = usei18n()
@@ -126,6 +128,9 @@ const createAndViewList = async () => {
 const cancel = () => {
   emit('cancel-creation')
 }
+
+const displayGeneralProperties = ref<boolean>(true)
+const displayVisibility = ref<boolean>(true)
 </script>
 
 <template>
@@ -196,45 +201,47 @@ const cancel = () => {
         <ContentSpacer />
       </div>
 
-      <BoxedSection>
-        <template #header>
-          <CmkHeading type="h4">{{ _t('General properties') }}</CmkHeading>
-        </template>
-        <template #content>
-          <GeneralProperties
-            v-model:name="name"
-            v-model:create-unique-id="createUniqueId"
-            v-model:unique-id="uniqueId"
-            v-model:dashboard-icon="dashboardIcon"
-            v-model:dashboard-emblem="dashboardEmblem"
-            :name-validation-errors="nameErrors"
-            :unique-id-validation-errors="uniqueIdErrors"
-          />
+      <CollapsibleTitle
+        :title="_t('General properties')"
+        :open="displayGeneralProperties"
+        class="collapsible"
+        @toggle-open="displayGeneralProperties = !displayGeneralProperties"
+      />
+      <CollapsibleContent :open="displayGeneralProperties">
+        <GeneralProperties
+          v-model:name="name"
+          v-model:create-unique-id="createUniqueId"
+          v-model:unique-id="uniqueId"
+          v-model:dashboard-icon="dashboardIcon"
+          v-model:dashboard-emblem="dashboardEmblem"
+          :name-validation-errors="nameErrors"
+          :unique-id-validation-errors="uniqueIdErrors"
+        />
 
-          <ContentSpacer />
+        <ContentSpacer />
 
-          <DashboardLayoutSelector
-            v-model:dashboard-layout="dashboardLayout"
-            :available-layouts="availableLayouts"
-          />
-        </template>
-      </BoxedSection>
+        <DashboardLayoutSelector
+          v-model:dashboard-layout="dashboardLayout"
+          :available-layouts="availableLayouts"
+        />
+      </CollapsibleContent>
 
       <ContentSpacer />
 
-      <BoxedSection>
-        <template #header>
-          <CmkHeading type="h4">{{ _t('Visibility') }}</CmkHeading>
-        </template>
-        <template #content>
-          <VisibilityProperties
-            v-model:monitor-menu-topic="monitorMenuTopic"
-            v-model:show-in-monitor-menu="showInMonitorMenu"
-            v-model:sort-index="sortIndex"
-            :sort-index-error="sortIndexError"
-          />
-        </template>
-      </BoxedSection>
+      <CollapsibleTitle
+        :title="_t('Visibility')"
+        :open="displayVisibility"
+        class="collapsible"
+        @toggle-open="displayVisibility = !displayVisibility"
+      />
+      <CollapsibleContent :open="displayVisibility">
+        <VisibilityProperties
+          v-model:monitor-menu-topic="monitorMenuTopic"
+          v-model:show-in-monitor-menu="showInMonitorMenu"
+          v-model:sort-index="sortIndex"
+          :sort-index-error="sortIndexError"
+        />
+      </CollapsibleContent>
     </div>
   </div>
 </template>

@@ -52,11 +52,16 @@ const dataRef = defineModel<OAuth2FormData>({ required: true })
 const resultCode = ref<string | null>(null)
 
 function buildRedirectUri(): string {
-  const baseUri = location.origin + location.pathname.replace('wato.py', '') + props.urls.redirect
+  const baseUri = (
+    location.origin +
+    location.pathname.replace('wato.py', '') +
+    props.urls.redirect
+  ).replace('index.py', 'wato.py')
 
   const url = new URL(baseUri)
   url.searchParams.delete('clone')
   url.searchParams.delete('ident')
+  url.searchParams.delete('entity_type_specifier')
   return url.toString()
 }
 

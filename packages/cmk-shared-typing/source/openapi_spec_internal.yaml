@@ -1451,21 +1451,21 @@ x-tagGroups:
   - Autocomplete (internal)
   - Dynamic Configuration Daemon (DCD)
   - Metric (internal)
-  - Relays
   - Dashboards
   - User Messages
   - Graph Timeranges
   - Sidebar Element
   - Visual Filters
+  - Relays
   - Data Sources
   - Views
   - Pagetype Topics
+  - Icons
   - Visual Info
   - Metric backend
   - Dynamic Configuration Daemon (DCD) for Metric Backend
 - name: Undocumented Endpoint
-  tags:
-  - Onboarding helper
+  tags: []
 x-ignoredHeaderParameters:
 - User-Agent
 - X-Test-Header
@@ -2721,16 +2721,14 @@ paths:
       description: "Available in the following editions: all\n\nThis endpoint requires\
         \ the following permissions: \n * All of:\n   * Manage monitoring agents (`wato.agents`):\
         \ Manage customized packaged monitoring agents for Linux, Windows and other\
-        \ operating systems\n   * Optionally:\n     * Register host & download monitoring\
-        \ agents of your hosts (`wato.download_agents`): Register hosts that you are\
-        \ a contact for and then download monitoring agents that have been created\
-        \ with the Agent Bakery for these hosts. Please note that these agents might\
-        \ contain confidential information such as passwords.\n   * Optionally:\n\
-        \     * Register all hosts & download all monitoring agents (`wato.download_all_agents`):\
-        \ Register all hosts with the Agent Bakery and download all monitoring agents\
-        \ that have been created with the Agent Bakery, even if you are not a contact\
-        \ for the host in question. Please note that these agents might contain confidential\
-        \ information such as passwords.\n"
+        \ operating systems\n   * Optionally:\n     * Monitoring Agents (`wato.download_agents`):\
+        \ Download the default Checkmk monitoring agents for Linux, Windows and other\
+        \ operating systems.\n   * Optionally:\n     * Register all hosts & download\
+        \ all monitoring agents (`wato.download_all_agents`): Register all hosts with\
+        \ the Agent Bakery and download all monitoring agents that have been created\
+        \ with the Agent Bakery, even if you are not a contact for the host in question.\
+        \ Please note that these agents might contain confidential information such\
+        \ as passwords.\n"
       summary: Download an agent by agent hash and operating system
       operationId: cmk.gui.nonfree.pro.agent_bakery._openapi.download_agent_by_hash
       parameters:
@@ -2883,16 +2881,14 @@ paths:
         \ agents downloads page.\nThe field `host_name` should be omitted.\n\nThis\
         \ endpoint requires the following permissions: \n * All of:\n   * Manage monitoring\
         \ agents (`wato.agents`): Manage customized packaged monitoring agents for\
-        \ Linux, Windows and other operating systems\n   * Optionally:\n     * Register\
-        \ host & download monitoring agents of your hosts (`wato.download_agents`):\
-        \ Register hosts that you are a contact for and then download monitoring agents\
-        \ that have been created with the Agent Bakery for these hosts. Please note\
-        \ that these agents might contain confidential information such as passwords.\n\
-        \   * Optionally:\n     * Register all hosts & download all monitoring agents\
-        \ (`wato.download_all_agents`): Register all hosts with the Agent Bakery and\
-        \ download all monitoring agents that have been created with the Agent Bakery,\
-        \ even if you are not a contact for the host in question. Please note that\
-        \ these agents might contain confidential information such as passwords.\n"
+        \ Linux, Windows and other operating systems\n   * Optionally:\n     * Monitoring\
+        \ Agents (`wato.download_agents`): Download the default Checkmk monitoring\
+        \ agents for Linux, Windows and other operating systems.\n   * Optionally:\n\
+        \     * Register all hosts & download all monitoring agents (`wato.download_all_agents`):\
+        \ Register all hosts with the Agent Bakery and download all monitoring agents\
+        \ that have been created with the Agent Bakery, even if you are not a contact\
+        \ for the host in question. Please note that these agents might contain confidential\
+        \ information such as passwords.\n"
       summary: Download an agent by host or folder name and operating system
       operationId: cmk.gui.nonfree.pro.agent_bakery._openapi.download_agent_by_host
       parameters:
@@ -3142,7 +3138,10 @@ paths:
     get:
       tags:
       - Agents
-      description: 'Available in the following editions: all'
+      description: "Available in the following editions: all\n\nThis endpoint requires\
+        \ the following permissions: \n * Manage monitoring agents (`wato.agents`):\
+        \ Manage customized packaged monitoring agents for Linux, Windows and other\
+        \ operating systems\n"
       summary: Show Configuration of a single agent
       operationId: cmk.gui.nonfree.pro.agent_bakery._openapi.show_agent_information
       parameters:
@@ -3447,10 +3446,10 @@ paths:
           \nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/bake_and_sign/invoke\"\
           ,\n    headers={\n        \"Content-Type\": 'application/json',  # (required)\
           \ A header specifying which type of content is in the request/response body.\n\
-          \    },\n    json={\n        \"key_id\": 42,\n        \"passphrase\": \"\
-          sw0rdfish\",\n    },\n    allow_redirects=True,\n)\nif resp.status_code\
-          \ == 200:\n    pprint.pprint(resp.json())\nelif resp.status_code == 201:\n\
-          else:\n    raise RuntimeError(pprint.pformat(resp.json()))"
+          \    },\n    json={\n        \"key_id\": \"123e4567-e89b-12d3-a456-426614174000\"\
+          ,\n        \"passphrase\": \"sw0rdfish\",\n    },\n    allow_redirects=True,\n\
+          )\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelif resp.status_code\
+          \ == 201:\nelse:\n    raise RuntimeError(pprint.pformat(resp.json()))"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
@@ -3462,11 +3461,11 @@ paths:
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \        \n        \"Content-Type\": 'application/json',  # (required) A\
           \ header specifying which type of content is in the request/response body.\n\
-          \    },\n    data=json.dumps({\n        \"key_id\": 42,\n        \"passphrase\"\
-          : \"sw0rdfish\",\n    }).encode('utf-8'),\n)\n# Will raise an HTTPError\
-          \ if status code is >= 400\nresp = urllib.request.urlopen(request)\nif resp.status\
-          \ == 200:\n    pprint.pprint(json.loads(resp.read().decode()))\nelif resp.status\
-          \ == 201:"
+          \    },\n    data=json.dumps({\n        \"key_id\": \"123e4567-e89b-12d3-a456-426614174000\"\
+          ,\n        \"passphrase\": \"sw0rdfish\",\n    }).encode('utf-8'),\n)\n\
+          # Will raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))\n\
+          elif resp.status == 201:"
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
@@ -3475,7 +3474,7 @@ paths:
           \ >= 3\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake_and_sign/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    key_id:=42\\\n    passphrase='sw0rdfish'"
+          \ \\\n    key_id='123e4567-e89b-12d3-a456-426614174000'\\\n    passphrase='sw0rdfish'"
       - label: curl
         lang: bash
         source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
@@ -3487,8 +3486,8 @@ paths:
           \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  --data '{\n\
-          \          \"key_id\": 42,\n          \"passphrase\": \"sw0rdfish\"\n  \
-          \      }' \\\n  \"$API_URL/domain-types/agent/actions/bake_and_sign/invoke\""
+          \          \"key_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n     \
+          \     \"passphrase\": \"sw0rdfish\"\n        }' \\\n  \"$API_URL/domain-types/agent/actions/bake_and_sign/invoke\""
   /domain-types/agent/actions/sign/invoke:
     post:
       tags:
@@ -3557,10 +3556,10 @@ paths:
           \nresp = session.post(\n    f\"{API_URL}/domain-types/agent/actions/sign/invoke\"\
           ,\n    headers={\n        \"Content-Type\": 'application/json',  # (required)\
           \ A header specifying which type of content is in the request/response body.\n\
-          \    },\n    json={\n        \"key_id\": 42,\n        \"passphrase\": \"\
-          sw0rdfish\",\n    },\n    allow_redirects=True,\n)\nif resp.status_code\
-          \ == 201:\nelif resp.status_code == 204:\n    print('Done')\nelse:\n   \
-          \ raise RuntimeError(pprint.pformat(resp.json()))"
+          \    },\n    json={\n        \"key_id\": \"123e4567-e89b-12d3-a456-426614174000\"\
+          ,\n        \"passphrase\": \"sw0rdfish\",\n    },\n    allow_redirects=True,\n\
+          )\nif resp.status_code == 201:\nelif resp.status_code == 204:\n    print('Done')\n\
+          else:\n    raise RuntimeError(pprint.pformat(resp.json()))"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
@@ -3572,8 +3571,9 @@ paths:
           \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n        \n \
           \       \"Content-Type\": 'application/json',  # (required) A header specifying\
           \ which type of content is in the request/response body.\n    },\n    data=json.dumps({\n\
-          \        \"key_id\": 42,\n        \"passphrase\": \"sw0rdfish\",\n    }).encode('utf-8'),\n\
-          )\n# Will raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          \        \"key_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n       \
+          \ \"passphrase\": \"sw0rdfish\",\n    }).encode('utf-8'),\n)\n# Will raise\
+          \ an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
           if resp.status == 201:\nelif resp.status == 204:\n    print('Done')"
       - label: httpie
         lang: bash
@@ -3583,7 +3583,7 @@ paths:
           \ >= 3\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    key_id:=42\\\n    passphrase='sw0rdfish'"
+          \ \\\n    key_id='123e4567-e89b-12d3-a456-426614174000'\\\n    passphrase='sw0rdfish'"
       - label: curl
         lang: bash
         source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
@@ -3595,8 +3595,8 @@ paths:
           \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  --data '{\n\
-          \          \"key_id\": 42,\n          \"passphrase\": \"sw0rdfish\"\n  \
-          \      }' \\\n  \"$API_URL/domain-types/agent/actions/sign/invoke\""
+          \          \"key_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n     \
+          \     \"passphrase\": \"sw0rdfish\"\n        }' \\\n  \"$API_URL/domain-types/agent/actions/sign/invoke\""
   /domain-types/audit_log/collections/all:
     get:
       tags:
@@ -20783,6 +20783,249 @@ paths:
           \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  --data '{\n\
           \          \"uuid\": \"34e4c967-1591-4883-8cdf-0e335b09618d\"\n        }'\
           \ \\\n  \"$API_URL/objects/host_config_internal/example.com/actions/register/invoke\""
+  /domain-types/icon/collections/all:
+    get:
+      tags:
+      - Icons
+      description: 'Available in the following editions: all'
+      summary: Show all icons.
+      operationId: Icons.list_icons_v1
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IconCollectionModel'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/icon/collections/all\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/icon/collections/all\",\n    method=\"GET\"\
+          ,\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n        \n    },\n)\n# Will\
+          \ raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/domain-types/icon/collections/all\" \\\n \
+          \   \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\"\
+          \ "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/icon/collections/all\""
+  /domain-types/icon_category/collections/all:
+    get:
+      tags:
+      - Icons
+      description: 'Available in the following editions: all'
+      summary: Show all icon categories.
+      operationId: Icons.list_icon_categories_v1
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IconCategoryCollectionModel'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/icon_category/collections/all\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/icon_category/collections/all\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n        \n    },\n)\n# Will\
+          \ raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/domain-types/icon_category/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/icon_category/collections/all\""
+  /domain-types/icon_emblem/collections/all:
+    get:
+      tags:
+      - Icons
+      description: 'Available in the following editions: all'
+      summary: Show all icon emblems.
+      operationId: Icons.list_icon_emblems_v1
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IconEmblemCollectionModel'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/icon_emblem/collections/all\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/icon_emblem/collections/all\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/json\",\n        \n    },\n)\n# Will\
+          \ raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/domain-types/icon_emblem/collections/all\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/icon_emblem/collections/all\""
   /domain-types/ldap_connection/collections/all:
     get:
       tags:
@@ -21718,89 +21961,6 @@ paths:
           \ --write-out \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  --header \"If-Match: \"a20ceacf346041dc\"\" \\\n  \"$API_URL/objects/ldap_connection/LDAP_1\""
-  /domain-types/license_request/actions/download/invoke:
-    get:
-      tags:
-      - License usage
-      description: "Available in the following editions: all\n\nThis endpoint requires\
-        \ the following permissions: \n * Access the licensing mode (`wato.licensing`):\
-        \ All related information or settings of licensing of Checkmk sites.\n"
-      summary: Download a license request for offline verification
-      operationId: cmk.gui.nonfree.cloud.licensing._openapi.download_license_request
-      responses:
-        '406':
-          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Api406DefaultError'
-        '200':
-          description: 'OK: The operation was done successfully.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VerificationRequest'
-          headers:
-            Content-Type:
-              description: A header specifying which type of content is in the request/response
-                body. This is required when sending encoded data in a POST/PUT body.
-                When the request body is empty, this header should not be sent.
-              required: true
-              schema:
-                type: string
-              example: application/json
-            X-Checkmk-Edition:
-              description: The checkmk edition.
-              required: true
-              schema:
-                type: string
-              example: community
-            X-Checkmk-Version:
-              description: The checkmk version.
-              required: true
-              schema:
-                type: string
-              example: 2.2.0p10
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
-          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
-          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/license_request/actions/download/invoke\"\
-          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
-          \    raise RuntimeError(pprint.pformat(resp.json()))"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
-          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
-          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
-          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/license_request/actions/download/invoke\"\
-          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \        \n    },\n)\n# Will raise an HTTPError if status code is >= 400\n\
-          resp = urllib.request.urlopen(request)\nif resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
-          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
-          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
-          \ >= 3\n\nhttp GET \"$API_URL/domain-types/license_request/actions/download/invoke\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" "
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
-          httpie\" examples instead.\n#       `curl` should not be used for writing\
-          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
-          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
-          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
-          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
-          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
-          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/license_request/actions/download/invoke\""
   /domain-types/license_usage/actions/download/invoke:
     get:
       tags:
@@ -21980,8 +22140,10 @@ paths:
           \    },\n    json={\n        \"settings\": {\n            \"mode\": \"online\"\
           ,\n            \"credentials\": {\n                \"username\": \"application-account-id\"\
           ,\n                \"password\": \"application-account-password\",\n   \
-          \         },\n        },\n    },\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\n\
-          else:\n    raise RuntimeError(pprint.pformat(resp.json()))"
+          \         },\n            \"proxy\": {\n                \"proxy_selector\"\
+          : \"global\",\n                \"global_proxy_identifier\": \"external-proxy-1\"\
+          ,\n            },\n        },\n    },\n)\nif resp.status_code == 200:\n\
+          \    pprint.pprint(resp.json())\nelse:\n    raise RuntimeError(pprint.pformat(resp.json()))"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
@@ -21996,9 +22158,12 @@ paths:
           \    },\n    data=json.dumps({\n        \"settings\": {\n            \"\
           mode\": \"online\",\n            \"credentials\": {\n                \"\
           username\": \"application-account-id\",\n                \"password\": \"\
-          application-account-password\",\n            },\n        },\n    }).encode('utf-8'),\n\
-          )\n# Will raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
-          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+          application-account-password\",\n            },\n            \"proxy\":\
+          \ {\n                \"proxy_selector\": \"global\",\n                \"\
+          global_proxy_identifier\": \"external-proxy-1\",\n            },\n     \
+          \   },\n    }).encode('utf-8'),\n)\n# Will raise an HTTPError if status\
+          \ code is >= 400\nresp = urllib.request.urlopen(request)\nif resp.status\
+          \ == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
@@ -22008,7 +22173,8 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    \n    'Content-Type:application/json' \\\n\
           \    settings[mode]='online'\\\n    settings[credentials][username]='application-account-id'\\\
-          \n    settings[credentials][password]='application-account-password'"
+          \n    settings[credentials][password]='application-account-password'\\\n\
+          \    settings[proxy][proxy_selector]='global'\\\n    settings[proxy][global_proxy_identifier]='external-proxy-1'"
       - label: curl
         lang: bash
         source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
@@ -22023,7 +22189,9 @@ paths:
           \          \"settings\": {\n            \"credentials\": {\n           \
           \   \"password\": \"application-account-password\",\n              \"username\"\
           : \"application-account-id\"\n            },\n            \"mode\": \"online\"\
-          \n          }\n        }' \\\n  \"$API_URL/domain-types/licensing/actions/configure/invoke\""
+          ,\n            \"proxy\": {\n              \"global_proxy_identifier\":\
+          \ \"external-proxy-1\",\n              \"proxy_selector\": \"global\"\n\
+          \            }\n          }\n        }' \\\n  \"$API_URL/domain-types/licensing/actions/configure/invoke\""
   /domain-types/license_response/actions/upload/invoke:
     post:
       tags:
@@ -24028,93 +24196,6 @@ paths:
           \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  \"$API_URL/objects/notification_rule/5425d554-5741-4bbf-b907-1a391dfab5bb/actions/delete/invoke\""
-  /objects/onboarding/agent:
-    get:
-      tags:
-      - Onboarding helper
-      description: "Available in the following editions: all\n\nThis endpoint requires\
-        \ the following permissions: \n * All of:\n   * Register all hosts & download\
-        \ all monitoring agents (`wato.download_all_agents`): Register all hosts with\
-        \ the Agent Bakery and download all monitoring agents that have been created\
-        \ with the Agent Bakery, even if you are not a contact for the host in question.\
-        \ Please note that these agents might contain confidential information such\
-        \ as passwords.\n   * Manage monitoring agents (`wato.agents`): Manage customized\
-        \ packaged monitoring agents for Linux, Windows and other operating systems\n"
-      summary: get info to download an agent for the onboarding
-      operationId: cmk.gui.nonfree.cloud.onboarding.get_agent_download_info
-      responses:
-        '406':
-          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Api406DefaultError'
-        '200':
-          description: 'OK: The operation was done successfully.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response1'
-          headers:
-            Content-Type:
-              description: A header specifying which type of content is in the request/response
-                body. This is required when sending encoded data in a POST/PUT body.
-                When the request body is empty, this header should not be sent.
-              required: true
-              schema:
-                type: string
-              example: application/json
-            X-Checkmk-Edition:
-              description: The checkmk edition.
-              required: true
-              schema:
-                type: string
-              example: community
-            X-Checkmk-Version:
-              description: The checkmk version.
-              required: true
-              schema:
-                type: string
-              example: 2.2.0p10
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
-          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
-          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/objects/onboarding/agent\"\
-          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
-          \    raise RuntimeError(pprint.pformat(resp.json()))"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
-          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
-          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
-          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/onboarding/agent\",\n    method=\"GET\",\n   \
-          \ headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
-          ,\n        \"Accept\": \"application/json\",\n        \n    },\n)\n# Will\
-          \ raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
-          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
-          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
-          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
-          \ >= 3\n\nhttp GET \"$API_URL/objects/onboarding/agent\" \\\n    \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    \"Accept: application/json\" "
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
-          httpie\" examples instead.\n#       `curl` should not be used for writing\
-          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
-          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
-          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
-          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
-          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
-          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/objects/onboarding/agent\""
   /domain-types/pagetype_topic/collections/all:
     get:
       tags:
@@ -26157,6 +26238,88 @@ paths:
           \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  \"$API_URL/domain-types/relay/collections/all\""
+  /objects/relay/download_installation_script:
+    get:
+      tags:
+      - Relays
+      description: 'Available in the following editions: all'
+      summary: Download the relay installation script
+      operationId: Relays.download_relay_installation_script
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/x-shellscript:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/x-shellscript'\n\nresp = session.get(\n    f\"{API_URL}/objects/relay/download_installation_script\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/relay/download_installation_script\",\n    method=\"\
+          GET\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME} {PASSWORD}\"\
+          ,\n        \"Accept\": \"application/x-shellscript\",\n        \n    },\n\
+          )\n# Will raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/objects/relay/download_installation_script\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/x-shellscript\" "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/x-shellscript\" \\\n  \n  \"$API_URL/objects/relay/download_installation_script\""
   /objects/relay/{relay_id}:
     get:
       tags:
@@ -34345,9 +34508,9 @@ paths:
       tags:
       - open-telemetry
       description: "Available in the following editions: Ultimate, Ultimate with multi-tenancy\n\
-        \nThis endpoint requires the following permissions: \n * Manage OpenTelemetry\
-        \ configurations (experimental) (`wato.otel_collector`): Add, edit and delete\
-        \ OpenTelemetry configurations.\n"
+        \nThis endpoint requires the following permissions: \n * Read OpenTelemetry\
+        \ configurations (experimental) (`wato.read_otel_collector`): Read OpenTelemetry\
+        \ configurations.\n"
       summary: List all prometheus scrape configurations for OpenTelemetry collector
       operationId: open-telemetry.handler_list_prom_scrapes
       responses:
@@ -34506,7 +34669,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OTelCollectorPromScrapeSpec'
+              $ref: '#/components/schemas/OTelCollectorPromScrapeRequestSpec'
       x-codeSamples:
       - label: requests
         lang: python
@@ -34560,9 +34723,9 @@ paths:
       tags:
       - open-telemetry
       description: "Available in the following editions: Ultimate, Ultimate with multi-tenancy\n\
-        \nThis endpoint requires the following permissions: \n * Manage OpenTelemetry\
-        \ configurations (experimental) (`wato.otel_collector`): Add, edit and delete\
-        \ OpenTelemetry configurations.\n"
+        \nThis endpoint requires the following permissions: \n * Read OpenTelemetry\
+        \ configurations (experimental) (`wato.read_otel_collector`): Read OpenTelemetry\
+        \ configurations.\n"
       summary: List all receivers configurations for OpenTelemetry collector
       operationId: open-telemetry.handler_list_receivers
       responses:
@@ -34721,7 +34884,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OTelCollectorReceiverSpec'
+              $ref: '#/components/schemas/OTelCollectorReceiverRequestSpec'
       x-codeSamples:
       - label: requests
         lang: python
@@ -34969,7 +35132,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OTelCollectorPromScrapeSpec'
+              $ref: '#/components/schemas/OTelCollectorPromScrapeRequestSpec'
       x-codeSamples:
       - label: requests
         lang: python
@@ -35190,7 +35353,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OTelCollectorReceiverSpec'
+              $ref: '#/components/schemas/OTelCollectorReceiverRequestSpec'
       x-codeSamples:
       - label: requests
         lang: python
@@ -35954,9 +36117,6 @@ tags:
 
     language that is mostly used internally and not fully documented and specified
     yet.'
-- name: Onboarding helper
-  x-displayName: Onboarding helper
-  description: Endpoints to make the onboarding nicer
 - name: User Roles
   x-displayName: User Roles
   description: "\n\nUser Roles\n\nCheckmk always assigns permissions to users via\
@@ -36034,21 +36194,6 @@ tags:
 
 
     '
-- name: Relays
-  x-displayName: Relays
-  description: '
-
-    Relays are satellite systems deployed within private networks to gather monitoring
-    data (e.g., via SNMP queries) from hosts that cannot be directly accessed by the
-    Checkmk site.
-
-
-    This family of endpoints provides operations to register and manage Relays.
-
-    They allow you to create and update Relay configurations on disk, as well as remove
-    them when no longer needed.
-
-    '
 - name: HW/SW Inventory
   x-displayName: HW/SW Inventory
   description: '
@@ -36091,6 +36236,21 @@ tags:
 - name: Visual Filters
   x-displayName: Visual Filters
   description: Information about supported filters.
+- name: Relays
+  x-displayName: Relays
+  description: '
+
+    Relays are satellite systems deployed within private networks to gather monitoring
+    data (e.g., via SNMP queries) from hosts that cannot be directly accessed by the
+    Checkmk site.
+
+
+    This family of endpoints provides operations to register and manage Relays.
+
+    They allow you to create and update Relay configurations on disk, as well as remove
+    them when no longer needed.
+
+    '
 - name: Data Sources
   x-displayName: Data Sources
   description: Data sources provide data for views.
@@ -36101,6 +36261,9 @@ tags:
   x-displayName: Pagetype Topics
   description: Pagetype topics are the different topics that Dashboards, Views etc.
     can be grouped into.
+- name: Icons
+  x-displayName: Icons
+  description: Icons used throughout the Checkmk GUI.
 - name: Visual Info
   x-displayName: Visual Info
   description: Info objects provided by data sources for use in views and dashboards.
@@ -37652,10 +37815,9 @@ components:
       type: object
       properties:
         key_id:
-          type: integer
-          description: The id under that the desired agent signature key is stored
-          example: 42
-          minimum: 1
+          type: string
+          description: The ID of the desired agent signature key
+          example: 123e4567-e89b-12d3-a456-426614174000
         passphrase:
           type: string
           description: The password to unlock the agent signature key
@@ -40945,6 +41107,12 @@ components:
       - type
       title: AlertTimelineContent
       type: object
+    ApiRenderMode:
+      enum:
+      - hidden
+      - with_background
+      - without_background
+      type: string
     ApiVisualLink:
       properties:
         type:
@@ -42372,13 +42540,8 @@ components:
           title: Url
           type: string
         render_mode:
+          $ref: '#/components/schemas/ApiRenderMode'
           description: How the title should be rendered.
-          enum:
-          - hidden
-          - with_background
-          - without_background
-          title: Render Mode
-          type: string
       required:
       - text
       - render_mode
@@ -43369,12 +43532,14 @@ components:
           title: Is Disabled
           type: boolean
         expires_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
           description: The date and time when the token will expire.
           examples:
           - '2025-12-31T23:59:59Z'
-          format: date-time
           title: Expires At
-          type: string
       required:
       - dashboard_owner
       - dashboard_id
@@ -43471,13 +43636,15 @@ components:
           title: Comment
           type: string
         expires_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
           description: The date and time when the token will expire. Defaults to one
-            year from now.
+            month from now.
           examples:
           - '2025-12-31T23:59:59Z'
-          format: date-time
           title: Expires At
-          type: string
       required:
       - dashboard_owner
       - dashboard_id
@@ -45079,11 +45246,8 @@ components:
             set first.
           $ref: '#/components/schemas/SNMPCredentials'
         metrics_association:
-          type: array
-          items:
-            type:
-            - string
-            - 'null'
+          description: '[Only in editions: Ultimate, Ultimate with multi-tenancy,
+            Cloud] Configuration for metrics association backend'
         labels:
           type: object
           description: "Labels allow you to flexibly group your hosts in order to\
@@ -45429,11 +45593,8 @@ components:
             set first.
           $ref: '#/components/schemas/SNMPCredentials'
         metrics_association:
-          type: array
-          items:
-            type:
-            - string
-            - 'null'
+          description: '[Only in editions: Ultimate, Ultimate with multi-tenancy,
+            Cloud] Configuration for metrics association backend'
         labels:
           type: object
           description: "Labels allow you to flexibly group your hosts in order to\
@@ -46584,6 +46745,10 @@ components:
             valid
           title: Validity Period
           type: integer
+        maximum_number_of_hosts:
+          description: Maximum number of hosts that can be created by this connection.
+          title: Maximum Number Of Hosts
+          type: integer
       required:
       - connector_type
       title: ViewMetricBackendConnectorModel
@@ -46736,6 +46901,11 @@ components:
           description: Seconds to continue consider outdated metric backend data as
             valid
           title: Validity Period
+          type: integer
+        maximum_number_of_hosts:
+          default: 500
+          description: Maximum number of hosts that can be created by this connection.
+          title: Maximum Number Of Hosts
           type: integer
       required:
       - connector_type
@@ -50186,6 +50356,305 @@ components:
             \ triggered\n"
           enum: *id130
       additionalProperties: false
+    IconExtensions:
+      properties:
+        is_built_in:
+          description: Whether this icon is a built-in icon.
+          title: Is Built In
+          type: boolean
+        category:
+          description: The category of the icon.
+          title: Category
+          type: string
+        path:
+          description: The path to the icon.
+          title: Path
+          type: string
+      required:
+      - is_built_in
+      - category
+      - path
+      title: IconExtensions
+      type: object
+    IconModel:
+      properties:
+        links:
+          description: List of links to other resources.
+          examples:
+          - - href: https://.../api_resource
+              method: GET
+              rel: self
+              type: application/json
+          items:
+            $ref: '#/components/schemas/LinkModel'
+          title: Links
+          type: array
+        domainType:
+          const: icon
+          description: The domain type of the object.
+          title: Domaintype
+          type: string
+        id:
+          description: The unique identifier for this domain-object type.
+          examples:
+          - host1
+          title: ID
+          type: string
+        title:
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+          examples:
+          - My Host
+          title: Title
+          type: string
+        extensions:
+          $ref: '#/components/schemas/IconExtensions'
+          description: All the metadata of this icon.
+      required:
+      - links
+      - domainType
+      - extensions
+      title: IconModel
+      type: object
+    IconCollectionModel:
+      properties:
+        links:
+          description: List of links to other resources.
+          examples:
+          - - href: https://.../api_resource
+              method: GET
+              rel: self
+              type: application/json
+          items:
+            $ref: '#/components/schemas/LinkModel'
+          title: Links
+          type: array
+        id:
+          description: The name of this collection.
+          title: Id
+          type: string
+        domainType:
+          const: icon
+          description: The domain type of the objects in the collection
+          examples:
+          - icon
+          title: Domaintype
+          type: string
+        title:
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+          title: Title
+          type: string
+        value:
+          description: A list of icons
+          items:
+            $ref: '#/components/schemas/IconModel'
+          title: Value
+          type: array
+        extensions:
+          description: Additional attributes alongside the collection.
+          title: Extensions
+          type: object
+      required:
+      - links
+      - id
+      - domainType
+      - value
+      title: IconCollectionModel
+      type: object
+    IconCategoryModel:
+      properties:
+        links:
+          description: List of links to other resources.
+          examples:
+          - - href: https://.../api_resource
+              method: GET
+              rel: self
+              type: application/json
+          items:
+            $ref: '#/components/schemas/LinkModel'
+          title: Links
+          type: array
+        domainType:
+          const: icon_category
+          description: The domain type of the object.
+          title: Domaintype
+          type: string
+        id:
+          description: The unique identifier for this domain-object type.
+          examples:
+          - host1
+          title: ID
+          type: string
+        title:
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+          examples:
+          - My Host
+          title: Title
+          type: string
+      required:
+      - links
+      - domainType
+      title: IconCategoryModel
+      type: object
+    IconCategoryCollectionModel:
+      properties:
+        links:
+          description: List of links to other resources.
+          examples:
+          - - href: https://.../api_resource
+              method: GET
+              rel: self
+              type: application/json
+          items:
+            $ref: '#/components/schemas/LinkModel'
+          title: Links
+          type: array
+        id:
+          description: The name of this collection.
+          title: Id
+          type: string
+        domainType:
+          const: icon_category
+          description: The domain type of the objects in the collection
+          examples:
+          - icon_category
+          title: Domaintype
+          type: string
+        title:
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+          title: Title
+          type: string
+        value:
+          description: A list of icon emblems
+          examples:
+          - - domainType: icon_category
+              id: example_category
+              links: []
+              title: Example Category
+          items:
+            $ref: '#/components/schemas/IconCategoryModel'
+          title: Value
+          type: array
+        extensions:
+          description: Additional attributes alongside the collection.
+          title: Extensions
+          type: object
+      required:
+      - links
+      - id
+      - domainType
+      - value
+      title: IconCategoryCollectionModel
+      type: object
+    IconEmblemExtensions:
+      properties:
+        is_built_in:
+          description: Whether this icon emblem is a built-in icon emblem.
+          title: Is Built In
+          type: boolean
+        category:
+          description: The category of the icon emblem.
+          title: Category
+          type: string
+        path:
+          description: The path to the icon emblem.
+          title: Path
+          type: string
+      required:
+      - is_built_in
+      - category
+      - path
+      title: IconEmblemExtensions
+      type: object
+    IconEmblemModel:
+      properties:
+        links:
+          description: List of links to other resources.
+          examples:
+          - - href: https://.../api_resource
+              method: GET
+              rel: self
+              type: application/json
+          items:
+            $ref: '#/components/schemas/LinkModel'
+          title: Links
+          type: array
+        domainType:
+          const: icon_emblem
+          description: The domain type of the object.
+          title: Domaintype
+          type: string
+        id:
+          description: The unique identifier for this domain-object type.
+          examples:
+          - host1
+          title: ID
+          type: string
+        title:
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+          examples:
+          - My Host
+          title: Title
+          type: string
+        extensions:
+          $ref: '#/components/schemas/IconEmblemExtensions'
+          description: All the metadata of this icon emblem.
+      required:
+      - links
+      - domainType
+      - extensions
+      title: IconEmblemModel
+      type: object
+    IconEmblemCollectionModel:
+      properties:
+        links:
+          description: List of links to other resources.
+          examples:
+          - - href: https://.../api_resource
+              method: GET
+              rel: self
+              type: application/json
+          items:
+            $ref: '#/components/schemas/LinkModel'
+          title: Links
+          type: array
+        id:
+          description: The name of this collection.
+          title: Id
+          type: string
+        domainType:
+          const: icon_emblem
+          description: The domain type of the objects in the collection
+          examples:
+          - icon_emblem
+          title: Domaintype
+          type: string
+        title:
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+          title: Title
+          type: string
+        value:
+          description: A list of icon emblems
+          items:
+            $ref: '#/components/schemas/IconEmblemModel'
+          title: Value
+          type: array
+        extensions:
+          description: Additional attributes alongside the collection.
+          title: Extensions
+          type: object
+      required:
+      - links
+      - id
+      - domainType
+      - value
+      title: IconEmblemCollectionModel
+      type: object
     LDAPGeneralProperties:
       type: object
       properties:
@@ -52738,45 +53207,6 @@ components:
       - general_properties
       - ldap_connection
       additionalProperties: false
-    VerificationRequest:
-      type: object
-      properties:
-        VERSION:
-          type: string
-          description: The version of the request
-          example: '3.0'
-        request_id:
-          type: string
-          description: The ID of the request
-          example: df17e557-0daf-4b78-b9f2-f3550252a8b5
-        instance_id:
-          type: string
-          description: The ID of the instance the request is for
-          example: 6b9e78d1-de99-46ef-9644-32ee33a2b489
-        created_at:
-          type: integer
-          description: The creation timestamp
-          example: 1690379907
-        upload_origin:
-          type: string
-          description: How the request was uploaded
-          example: manual
-        raw_reports:
-          type: array
-          description: The license usage reports
-          example:
-          - {}
-          items:
-            type: object
-            additionalProperties: {}
-      required:
-      - VERSION
-      - created_at
-      - instance_id
-      - raw_reports
-      - request_id
-      - upload_origin
-      additionalProperties: false
     Api403CustomError5:
       type: object
       properties:
@@ -52808,7 +53238,7 @@ components:
           type: string
           description: 'With which mode to perform the license verification: ''online''
             or ''offline''. If ''online'' is chosen, credentials have to be provided'
-          enum: &id162
+          enum: &id163
           - offline
           - online
           example: online
@@ -52828,6 +53258,54 @@ components:
       - password
       - username
       additionalProperties: false
+    BaseProxySettings:
+      type: object
+      properties:
+        proxy_selector:
+          type: string
+          description: 'Determines where proxy configuration is taken from: ''environment''
+            to use environment variables, ''direct'' to not use any proxy, ''global''
+            to use a predefined global proxy in Checkmk settings.'
+          enum: &id162
+          - direct
+          - environment
+          - global
+          example: environment
+      required:
+      - proxy_selector
+      additionalProperties: false
+    GlobalProxySettings:
+      type: object
+      properties:
+        proxy_selector:
+          type: string
+          description: 'Determines where proxy configuration is taken from: ''environment''
+            to use environment variables, ''direct'' to not use any proxy, ''global''
+            to use a predefined global proxy in Checkmk settings.'
+          enum: *id162
+          example: environment
+        global_proxy_identifier:
+          type: string
+          description: The identifier of the global proxy to use.
+          example: external-proxy-1
+      required:
+      - global_proxy_identifier
+      - proxy_selector
+      additionalProperties: false
+    ProxySettings:
+      type: object
+      properties: {}
+      additionalProperties: false
+      oneOf:
+      - $ref: '#/components/schemas/BaseProxySettings'
+      - $ref: '#/components/schemas/BaseProxySettings'
+      - $ref: '#/components/schemas/GlobalProxySettings'
+      discriminator:
+        propertyName: proxy_selector
+        mapping:
+          environment: '#/components/schemas/BaseProxySettings'
+          direct: '#/components/schemas/BaseProxySettings'
+          global: '#/components/schemas/GlobalProxySettings'
     OnlineSettingMode:
       type: object
       properties:
@@ -52835,7 +53313,7 @@ components:
           type: string
           description: 'With which mode to perform the license verification: ''online''
             or ''offline''. If ''online'' is chosen, credentials have to be provided'
-          enum: *id162
+          enum: *id163
           example: online
         credentials:
           description: The credentials to use for online license configuration
@@ -52843,6 +53321,14 @@ components:
             username: application-account-id
             password: application-account-password
           $ref: '#/components/schemas/LicenseCredentials'
+        proxy:
+          description: 'The proxy settings to use for online license configuration.
+            If omitted, proxy configuration will be determined from the environment
+            variables (equivalent to ''proxy_selector'': ''environment'').'
+          example:
+            proxy_selector: global
+            global_proxy_identifier: external-proxy-1
+          $ref: '#/components/schemas/ProxySettings'
       required:
       - credentials
       - mode
@@ -52869,6 +53355,9 @@ components:
             credentials:
               username: application-account-id
               password: application-account-password
+            proxy:
+              proxy_selector: global
+              global_proxy_identifier: external-proxy-1
           $ref: '#/components/schemas/LicenceSettingMode'
       required:
       - settings
@@ -52984,7 +53473,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: &id163
+          example: &id164
             start: '2026-06-16 07:00:00+00:00'
             end: '2026-06-16 07:15:00+00:00'
           $ref: '#/components/schemas/TimeRange'
@@ -52994,7 +53483,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: &id164
+          enum: &id165
           - average
           - max
           - min
@@ -53006,7 +53495,7 @@ components:
             you have to specify a certain set of filters, otherwise Checkmk will refuse
             to return a result, as too many metrics would have to be returned. See
             example for commonly used filters.
-          example: &id165
+          example: &id166
             siteopt:
               site: site_name
             host:
@@ -53040,7 +53529,7 @@ components:
           default: 'off'
           description: A result that contains multiple metrics of the same type can
             be aggregated together. Aggregation is disabled by default.
-          enum: &id166
+          enum: &id167
           - average
           - maximum
           - minimum
@@ -53051,7 +53540,7 @@ components:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: &id167
+          enum: &id168
           - predefined_graph
           - single_metric
           example: single_metric
@@ -53073,7 +53562,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id163
+          example: *id164
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -53081,7 +53570,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id164
+          enum: *id165
           example: max
         filter:
           type: object
@@ -53090,20 +53579,20 @@ components:
             you have to specify a certain set of filters, otherwise Checkmk will refuse
             to return a result, as too many metrics would have to be returned. See
             example for commonly used filters.
-          example: *id165
+          example: *id166
           additionalProperties: {}
         aggregation:
           type: string
           default: 'off'
           description: A result that contains multiple metrics of the same type can
             be aggregated together. Aggregation is disabled by default.
-          enum: *id166
+          enum: *id167
           example: maximum
         type:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: *id167
+          enum: *id168
           example: single_metric
         metric_id:
           type: string
@@ -53265,7 +53754,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id163
+          example: *id164
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -53273,7 +53762,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id164
+          enum: *id165
           example: max
         site:
           type: string
@@ -53293,7 +53782,7 @@ components:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: *id167
+          enum: *id168
           example: single_metric
         graph_id:
           type: string
@@ -53314,7 +53803,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id163
+          example: *id164
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -53322,7 +53811,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id164
+          enum: *id165
           example: max
         site:
           type: string
@@ -53342,7 +53831,7 @@ components:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: *id167
+          enum: *id168
           example: single_metric
         metric_id:
           type: string
@@ -53408,7 +53897,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: &id168
+          enum: &id169
           - disabled
           - enabled
           example: enabled
@@ -53463,7 +53952,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           type: string
@@ -53474,7 +53963,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         time_horizon:
           type: integer
@@ -53491,7 +53980,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: &id169
+            enum: &id170
             - check_type
             - ec_comment
             - ec_contact
@@ -53526,7 +54015,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingCommonAttributes'
@@ -53537,7 +54026,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         time_horizon:
           type: integer
@@ -53554,7 +54043,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: *id169
+            enum: *id170
         notification_bulks_based_on_custom_macros:
           type: array
           description: 'If you enter the names of host/service-custom macros here
@@ -53600,7 +54089,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           $ref: '#/components/schemas/WhenToBulk'
@@ -53619,7 +54108,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           type: array
@@ -53644,7 +54133,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           type: array
@@ -53677,7 +54166,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           type: string
@@ -53717,7 +54206,7 @@ components:
         tag_type:
           type: string
           description: Identifies the type of host tag.
-          enum: &id170
+          enum: &id171
           - aux_tag
           - tag_group
           example: tag_group
@@ -53750,7 +54239,7 @@ components:
         tag_type:
           type: string
           description: Identifies the type of host tag.
-          enum: *id170
+          enum: *id171
           example: tag_group
         tag_group_id:
           type: string
@@ -53804,7 +54293,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           type: array
@@ -53836,7 +54325,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           type: array
@@ -53870,7 +54359,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           description: The service group alias must not match one of the following
@@ -53906,7 +54395,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           description: Host or service must be in the following service level to get
@@ -53965,7 +54454,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           description: 'Select the host event types and transitions this rule should
@@ -54050,7 +54539,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           description: 'Select the service event types and transitions this rule should
@@ -54078,7 +54567,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           $ref: '#/components/schemas/FromToNotificationNumbersOutput'
@@ -54102,7 +54591,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           $ref: '#/components/schemas/ThrottlePeriodicNotificationsOutput'
@@ -54143,7 +54632,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           $ref: '#/components/schemas/SysLogToFromPrioritiesOutput'
@@ -54166,7 +54655,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         match_type:
           type: string
@@ -54184,7 +54673,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id168
+          enum: *id169
           example: enabled
         value:
           $ref: '#/components/schemas/EventConsoleAlertsResponse'
@@ -54557,7 +55046,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: &id171
+          enum: &id172
           - disabled
           - enabled
           example: enabled
@@ -54640,7 +55129,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: The email address and visible name used in the From header
@@ -54669,7 +55158,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: The email address and visible name used in the Reply-To header
@@ -54696,7 +55185,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -54724,7 +55213,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -54752,7 +55241,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -54785,7 +55274,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -54811,7 +55300,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: &id173
+          enum: &id174
           - asciimail
           - cisco_webex_teams
           - ilert
@@ -54866,7 +55355,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -54914,7 +55403,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -54940,7 +55429,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id172
+          enum: &id173
           - automatic
           - manual
           example: automatic
@@ -54959,7 +55448,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id173
           example: automatic
         url:
           type: string
@@ -54986,7 +55475,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: If you use Automatic HTTP/s, the URL prefix for host and service
@@ -55038,7 +55527,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/Authentication'
@@ -55087,7 +55576,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/EnableSynchronousDeliveryViaSMTP'
@@ -55112,7 +55601,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: integer
@@ -55141,7 +55630,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: integer
@@ -55174,7 +55663,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         from_details:
           $ref: '#/components/schemas/FromDetailsOneOf'
@@ -55223,7 +55712,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id174
+          enum: &id175
           - explicit
           - store
           example: store
@@ -55240,7 +55729,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -55267,7 +55756,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id175
+          enum: &id176
           - environment
           - global
           - no_proxy
@@ -55281,7 +55770,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id175
+          enum: *id176
           example: ''
         url:
           type: string
@@ -55295,7 +55784,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id175
+          enum: *id176
           example: ''
         global_proxy_id:
           type: string
@@ -55327,7 +55816,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: Use the proxy settings from the environment variables. The
@@ -55358,7 +55847,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         disable_ssl_cert_verification:
           description: Ignore unverified HTTPS request warnings. Use with caution.
@@ -55384,7 +55873,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -55438,7 +55927,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -55466,7 +55955,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         syslog_facility_to_use:
           $ref: '#/components/schemas/SysLogFacilityOneOf'
@@ -55482,7 +55971,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         key:
           type: string
@@ -55496,7 +55985,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -55524,7 +56013,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         notification_priority:
           type: string
@@ -55569,7 +56058,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id176
+          enum: &id177
           - explicit_password
           - explicit_token
           - password_store_id
@@ -55593,7 +56082,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id176
+          enum: *id177
           example: password_store_id
         username:
           type: string
@@ -55613,7 +56102,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id176
+          enum: *id177
           example: password_store_id
         token:
           type: string
@@ -55628,7 +56117,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id176
+          enum: *id177
           example: password_store_id
         store_id:
           type: string
@@ -55660,7 +56149,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         jira_url:
           type: string
@@ -55752,7 +56241,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         key:
           type: string
@@ -55766,7 +56255,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -55794,7 +56283,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -55828,7 +56317,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -55856,7 +56345,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -55902,7 +56391,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         api_key:
           $ref: '#/components/schemas/OpsGenisStoreOrExplicitKeySelector'
@@ -55999,7 +56488,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         key:
           type: string
@@ -56013,7 +56502,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -56041,7 +56530,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         integration_key:
           $ref: '#/components/schemas/PagerDutyStoreOrIntegrationKeySelector'
@@ -56131,7 +56620,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: The pushover priority level
@@ -56159,7 +56648,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -56213,7 +56702,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         api_key:
           type: string
@@ -56255,7 +56744,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -56286,7 +56775,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -56335,7 +56824,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/ManagementTypeCaseStates'
@@ -56375,7 +56864,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id177
+          enum: &id178
           - case
           - incident
           example: case
@@ -56390,7 +56879,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -56454,7 +56943,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/ManagementTypeIncedentStates'
@@ -56507,7 +56996,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id177
+          enum: *id178
           example: case
         params:
           $ref: '#/components/schemas/IncidentParams'
@@ -56532,7 +57021,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         servicenow_url:
           type: string
@@ -56565,7 +57054,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         secret:
           type: string
@@ -56579,7 +57068,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -56607,7 +57096,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         team_secret:
           $ref: '#/components/schemas/SignL4ExplicitOrStoreSelector'
@@ -56633,7 +57122,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         url:
           type: string
@@ -56650,7 +57139,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -56678,7 +57167,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         webhook_url:
           $ref: '#/components/schemas/SlackStoreOrExplicitURLSelector'
@@ -56704,7 +57193,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         password:
           type: string
@@ -56718,7 +57207,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -56746,7 +57235,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         modem_type:
           type: string
@@ -56793,7 +57282,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         params:
           type: array
@@ -56818,7 +57307,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         destination_ip:
           type: string
@@ -56846,7 +57335,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         url:
           type: string
@@ -56862,7 +57351,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -56890,7 +57379,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         splunk_on_call_rest_endpoint:
           $ref: '#/components/schemas/SplunkRESTEndpointSelector'
@@ -56916,7 +57405,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         url:
           type: string
@@ -56931,7 +57420,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id175
           example: store
         store_id:
           type: string
@@ -56962,7 +57451,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id173
+          enum: *id174
           example: mail
         affected_host_groups:
           description: Enable/disable if we show affected host groups in the created
@@ -57115,7 +57604,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: &id178
+            enum: &id179
             - check_type
             - ec_comment
             - ec_contact
@@ -57159,7 +57648,7 @@ components:
         when_to_bulk:
           type: string
           description: Bulking can always happen or during a set time period
-          enum: &id179
+          enum: &id180
           - always
           - timeperiod
           example: always
@@ -57175,7 +57664,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingAlways'
@@ -57209,7 +57698,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: *id178
+            enum: *id179
         notification_bulks_based_on_custom_macros:
           type: array
           items:
@@ -57247,7 +57736,7 @@ components:
         when_to_bulk:
           type: string
           description: Bulking can always happen or during a set time period
-          enum: *id179
+          enum: *id180
           example: always
         params:
           $ref: '#/components/schemas/NotificationBulkingTimePeriod'
@@ -57273,7 +57762,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingWhenToBulkSelector'
@@ -57320,7 +57809,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57352,7 +57841,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57404,7 +57893,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57460,7 +57949,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57492,7 +57981,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -57553,7 +58042,7 @@ components:
       properties:
         tag_type:
           type: string
-          enum: &id180
+          enum: &id181
           - tag_group
           example: aux_tag
         tag_group_id:
@@ -57586,7 +58075,7 @@ components:
       properties:
         tag_type:
           type: string
-          enum: *id180
+          enum: *id181
           example: aux_tag
         tag_group_id:
           type: string
@@ -57642,7 +58131,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57692,7 +58181,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57721,7 +58210,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57755,7 +58244,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57790,7 +58279,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57842,7 +58331,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: The service group alias must not match one of the following
@@ -57890,7 +58379,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -57965,7 +58454,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: Host or service must be in the following service level to get
@@ -57993,7 +58482,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -58083,7 +58572,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: 'Select the host event types and transitions this rule should
@@ -58206,7 +58695,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: 'Select the service event types and transitions this rule should
@@ -58252,7 +58741,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/FromToNotificationNumbers'
@@ -58294,7 +58783,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/ThrottlePeriodicNotifications'
@@ -58320,7 +58809,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: array
@@ -58384,7 +58873,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           $ref: '#/components/schemas/SysLogToFromPriorities'
@@ -58409,7 +58898,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           type: string
@@ -58475,7 +58964,7 @@ components:
         match_type:
           type: string
           description: ''
-          enum: &id181
+          enum: &id182
           - do_not_match_event_console_alerts
           - match_only_event_console_alerts
           example: match_only_event_console_events
@@ -58491,7 +58980,7 @@ components:
         match_type:
           type: string
           description: ''
-          enum: *id181
+          enum: *id182
           example: match_only_event_console_events
       required:
       - match_type
@@ -58514,7 +59003,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id171
+          enum: *id172
           example: enabled
         value:
           description: The Event Console can have events create notifications in Check_MK.
@@ -58754,15 +59243,6 @@ components:
       required:
       - rule_config
       additionalProperties: false
-    Response1:
-      type: object
-      properties:
-        secret:
-          type: string
-          description: Secret of the download user
-      required:
-      - secret
-      additionalProperties: false
     PagetypeTopicExtensions:
       properties:
         description:
@@ -58911,7 +59391,7 @@ components:
         option:
           type: string
           description: Creation of gateway hosts option
-          enum: &id182
+          enum: &id183
           - create_in_folder
           - create_in_host_location
           - no_gateway_hosts
@@ -58925,7 +59405,7 @@ components:
         option:
           type: string
           description: Creation of gateway hosts option
-          enum: *id182
+          enum: *id183
           example: no_gateway_hosts
         folder:
           type: string
@@ -58952,7 +59432,7 @@ components:
         option:
           type: string
           description: Creation of gateway hosts option
-          enum: *id182
+          enum: *id183
           example: no_gateway_hosts
         hosts_alias:
           type: string
@@ -59469,14 +59949,14 @@ components:
         actions:
           type: array
           description: A list of all complete actions
-          example: &id183
+          example: &id184
           - id: save
             label: Save configuration
           items:
             $ref: '#/components/schemas/Action'
         prev_button:
           description: Definition of the `go to previous stage` button
-          example: &id184
+          example: &id185
             id: prev
             label: Back
             aria_label: Back
@@ -59548,12 +60028,12 @@ components:
         actions:
           type: array
           description: A list of all complete actions
-          example: *id183
+          example: *id184
           items:
             $ref: '#/components/schemas/Action'
         prev_button:
           description: Definition of the `go to previous stage` button
-          example: *id184
+          example: *id185
           anyOf:
           - $ref: '#/components/schemas/QuickSetupButton'
           - type: 'null'
@@ -59637,7 +60117,7 @@ components:
         background_job_exception:
           description: The exception details if the action was run in the background
             and raised an unexpected exception
-          example: &id185 {}
+          example: &id186 {}
           $ref: '#/components/schemas/BackgroundJobException'
       additionalProperties: false
     QuickSetupStageActionResponse:
@@ -59659,7 +60139,7 @@ components:
         background_job_exception:
           description: The exception details if the action was run in the background
             and raised an unexpected exception
-          example: *id185
+          example: *id186
           $ref: '#/components/schemas/BackgroundJobException'
       additionalProperties: false
     QuickSetupStageRequest:
@@ -60025,7 +60505,7 @@ components:
             you can use regular expressions if you enter a tilde `~` as the first
             character. That regular expression must match the beginning of the host
             names in question.
-          example: &id186
+          example: &id187
             match_on:
             - host1
             - host2
@@ -60035,7 +60515,7 @@ components:
           description: The rule will only be applied to hosts fulfilling all the host
             tag conditions listed here, even if they appear in the list of explicit
             host names.
-          example: &id187
+          example: &id188
           - key: criticality
             operator: is
             value: prod
@@ -60047,7 +60527,7 @@ components:
           description: Further restrict this rule by applying host label conditions.
             Although all items in this list have a default operator value, the operator
             value for the the first item in the list does not have any effect.
-          example: &id188
+          example: &id189
           - label_group:
             - operator: and
               label: db:mssql
@@ -60063,7 +60543,7 @@ components:
             label conditions. Although all items in this list have a default operator
             value, the operator value for the the first item in the list does not
             have any effect.
-          example: &id189
+          example: &id190
           - label_group:
             - operator: and
               label: db:mssql
@@ -60084,7 +60564,7 @@ components:
             \ the rules is only a check item or a full service name. For example the\
             \ check parameters rulesets only use the item, and other service rulesets\
             \ like disabled services ruleset use full servicedescriptions."
-          example: &id190
+          example: &id191
             match_on:
             - foo1
             - bar2
@@ -60218,13 +60698,13 @@ components:
             you can use regular expressions if you enter a tilde `~` as the first
             character. That regular expression must match the beginning of the host
             names in question.
-          example: *id186
+          example: *id187
           $ref: '#/components/schemas/HostOrServiceCondition'
         host_tags:
           description: The rule will only be applied to hosts fulfilling all the host
             tag conditions listed here, even if they appear in the list of explicit
             host names.
-          example: *id187
+          example: *id188
           type: array
           items:
             $ref: '#/components/schemas/TagCondition'
@@ -60233,7 +60713,7 @@ components:
           description: Further restrict this rule by applying host label conditions.
             Although all items in this list have a default operator value, the operator
             value for the the first item in the list does not have any effect.
-          example: *id188
+          example: *id189
           items:
             $ref: '#/components/schemas/LabelGroupCondition1'
         service_label_groups:
@@ -60242,7 +60722,7 @@ components:
             label conditions. Although all items in this list have a default operator
             value, the operator value for the the first item in the list does not
             have any effect.
-          example: *id189
+          example: *id190
           items:
             $ref: '#/components/schemas/LabelGroupCondition1'
         service_description:
@@ -60256,7 +60736,7 @@ components:
             \ the rules is only a check item or a full service name. For example the\
             \ check parameters rulesets only use the item, and other service rulesets\
             \ like disabled services ruleset use full servicedescriptions."
-          example: *id190
+          example: *id191
           $ref: '#/components/schemas/HostOrServiceCondition'
         host_labels:
           deprecated: true
@@ -60286,7 +60766,7 @@ components:
       properties:
         properties:
           description: Configuration values for rules.
-          example: &id191
+          example: &id192
             disabled: false
           $ref: '#/components/schemas/Properties'
         value_raw:
@@ -60297,7 +60777,7 @@ components:
           example: '{''cmk/os_family'': ''linux''}'
         conditions:
           description: Conditions.
-          example: &id192
+          example: &id193
             host_name:
               match_on:
               - host1
@@ -60339,7 +60819,7 @@ components:
       properties:
         properties:
           description: Configuration values for rules.
-          example: *id191
+          example: *id192
           $ref: '#/components/schemas/Properties'
         value_raw:
           type: string
@@ -60349,7 +60829,7 @@ components:
           example: '{''cmk/os_family'': ''linux''}'
         conditions:
           description: Conditions.
-          example: *id192
+          example: *id193
           $ref: '#/components/schemas/InputConditions'
         ruleset:
           type: string
@@ -60589,7 +61069,7 @@ components:
           default: activated
           description: Selecting 'deactivated' will disable the rule, but it will
             remain in the configuration.
-          enum: &id193
+          enum: &id194
           - activated
           - deactivated
         id:
@@ -61013,7 +61493,7 @@ components:
           default: activated
           description: Selecting 'deactivated' will disable the rule, but it will
             remain in the configuration.
-          enum: *id193
+          enum: *id194
         id:
           type: string
           description: A SAML connection ID string.
@@ -61087,7 +61567,7 @@ components:
         range_type:
           type: string
           description: The type of the time range.
-          enum: &id194
+          enum: &id195
           - custom
           - pre_defined
           example: pre_defined
@@ -61114,7 +61594,7 @@ components:
         range_type:
           type: string
           description: The type of the time range.
-          enum: *id194
+          enum: *id195
           example: pre_defined
         start:
           type: string
@@ -61306,7 +61786,7 @@ components:
           description: Whether the SLA agreement was broken or fulfilled during this
             period.The agreement is considered broken if at least one agreement of
             the defined state configurations was broken.
-          enum: &id195
+          enum: &id196
           - broken
           - fulfilled
           example: false
@@ -61407,7 +61887,7 @@ components:
           description: Whether the SLA agreement was broken or fulfilled during this
             period.The agreement is considered broken if at least one agreement of
             the defined state configurations was broken.
-          enum: *id195
+          enum: *id196
           example: false
         state_durations:
           description: The percentage of the duration for which the service was in
@@ -62125,7 +62605,7 @@ components:
           description: An query expression of the Livestatus 'services' table in nested
             dictionary form. If you want to use multiple expressions, nest them with
             the AND/OR operators.
-          example: &id196
+          example: &id197
             op: '='
             left: host_name
             right: example.com
@@ -62160,7 +62640,7 @@ components:
           description: An query expression of the Livestatus 'services' table in nested
             dictionary form. If you want to use multiple expressions, nest them with
             the AND/OR operators.
-          example: *id196
+          example: *id197
           $ref: '#/components/schemas/Expr'
       additionalProperties: false
     SidebarElementModel:
@@ -63361,7 +63841,7 @@ components:
           additionalProperties: {}
         extensions:
           description: The time period attributes.
-          example: &id197
+          example: &id198
             alias: holidays
             active_time_ranges:
             - day: monday
@@ -63409,7 +63889,7 @@ components:
             domainType: time_period
             id: time_period
             members: {}
-            extensions: *id197
+            extensions: *id198
           items:
             $ref: '#/components/schemas/TimePeriodResponse'
         extensions:
@@ -64051,7 +64531,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: &id198
+          enum: &id199
           - automation
           - password
           - remove
@@ -64075,7 +64555,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: *id198
+          enum: *id199
           example: password
         secret:
           type: string
@@ -64097,7 +64577,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: *id198
+          enum: *id199
           example: password
       required:
       - auth_type
@@ -64362,7 +64842,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: &id199
+          enum: &id200
           - automation
           - password
           example: password
@@ -64384,7 +64864,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: *id199
+          enum: *id200
           example: password
         secret:
           type: string
@@ -65276,42 +65756,6 @@ components:
       - value
       title: VisualInfoCollectionModel
       type: object
-    CustomHostNameRule:
-      properties:
-        type:
-          const: custom
-          description: Type of rule
-          title: Type
-          type: string
-        value:
-          description: List of host name rules
-          items:
-            $ref: '#/components/schemas/HostNameRule'
-          title: Value
-          type: array
-      required:
-      - type
-      - value
-      title: CustomHostNameRule
-      type: object
-    HostNameRule:
-      properties:
-        type:
-          description: Type of rule
-          enum:
-          - free
-          - key
-          title: Type
-          type: string
-        value:
-          description: Literal string or Otel attribute name
-          title: Value
-          type: string
-      required:
-      - type
-      - value
-      title: HostNameRule
-      type: object
     OTelCollectorEndpointConfig:
       properties:
         address:
@@ -65366,7 +65810,7 @@ components:
           title: Title
           type: string
         extensions:
-          $ref: '#/components/schemas/OTelCollectorPromScrapeSpec'
+          $ref: '#/components/schemas/OTelCollectorPromScrapeResponseSpec'
           description: All the data and metadata of this collector configuration.
       required:
       - links
@@ -65374,8 +65818,7 @@ components:
       - extensions
       title: OTelCollectorPromScrapeObject
       type: object
-    OTelCollectorPromScrapeSpec:
-      additionalProperties: false
+    OTelCollectorPromScrapeResponseSpec:
       properties:
         id:
           description: Unique identifier
@@ -65398,26 +65841,35 @@ components:
           type: array
           uniqueItems: true
         comment:
+          anyOf:
+          - type: string
+          - type: 'null'
           description: Optional comment or note about this configuration.
           title: Comment
-          type: string
         docu_url:
+          anyOf:
+          - type: string
+          - type: 'null'
           description: Optional URL to related documentation.
           title: Docu Url
-          type: string
         prometheus_scrape_configs:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/OTelCollectorPrometheusScrapeConfig'
+            type: array
+          - type: 'null'
           description: Configure targets supporting the Prometheus protocol for active
             scraping
-          items:
-            $ref: '#/components/schemas/OTelCollectorPrometheusScrapeConfig'
           title: Prometheus Scrape Configs
-          type: array
       required:
       - id
       - title
       - disabled
       - site
-      title: OTelCollectorPromScrapeSpec
+      - comment
+      - docu_url
+      - prometheus_scrape_configs
+      title: OTelCollectorPromScrapeResponseSpec
       type: object
     OTelCollectorPrometheusScrapeConfig:
       properties:
@@ -65441,19 +65893,6 @@ components:
             $ref: '#/components/schemas/OTelCollectorEndpointConfig'
           title: Targets
           type: array
-        host_name_rules:
-          description: Rules for generating host names from scraped data
-          items:
-            discriminator:
-              mapping:
-                custom: '#/components/schemas/CustomHostNameRule'
-                service_instance_id: '#/components/schemas/StaticHostNameRule'
-              propertyName: type
-            oneOf:
-            - $ref: '#/components/schemas/StaticHostNameRule'
-            - $ref: '#/components/schemas/CustomHostNameRule'
-          title: Host Name Rules
-          type: array
         encryption:
           description: Encryption configuration
           title: Encryption
@@ -65463,20 +65902,8 @@ components:
       - scrape_interval
       - metrics_path
       - targets
-      - host_name_rules
       - encryption
       title: OTelCollectorPrometheusScrapeConfig
-      type: object
-    StaticHostNameRule:
-      properties:
-        type:
-          const: service_instance_id
-          description: Type of rule
-          title: Type
-          type: string
-      required:
-      - type
-      title: StaticHostNameRule
       type: object
     OTelCollectorPromScrapeCollection:
       properties:
@@ -65542,6 +65969,16 @@ components:
       - userlist
       title: BasicAuthentication
       type: object
+    EventConsole:
+      properties:
+        host_name_resource_attribute_key:
+          description: The resource attribute used to compute the host name.
+          title: Host Name Resource Attribute Key
+          type: string
+      required:
+      - host_name_resource_attribute_key
+      title: EventConsole
+      type: object
     NoAuthentication:
       properties:
         type:
@@ -65557,6 +65994,7 @@ components:
       properties:
         endpoint:
           $ref: '#/components/schemas/OTelEndpointExtended'
+          description: Receiver endpoint configuration
       required:
       - endpoint
       title: OTelCollectorProtocolConfig
@@ -65595,7 +66033,7 @@ components:
           title: Title
           type: string
         extensions:
-          $ref: '#/components/schemas/OTelCollectorReceiverSpec'
+          $ref: '#/components/schemas/OTelCollectorReceiverResponseSpec'
           description: All the data and metadata of this collector configuration.
       required:
       - links
@@ -65603,8 +66041,7 @@ components:
       - extensions
       title: OTelCollectorReceiverObject
       type: object
-    OTelCollectorReceiverSpec:
-      additionalProperties: false
+    OTelCollectorReceiverResponseSpec:
       properties:
         id:
           description: Unique identifier
@@ -65627,27 +66064,37 @@ components:
           type: array
           uniqueItems: true
         comment:
+          anyOf:
+          - type: string
+          - type: 'null'
           description: Optional comment or note about this configuration.
           title: Comment
-          type: string
         docu_url:
+          anyOf:
+          - type: string
+          - type: 'null'
           description: Optional URL to related documentation.
           title: Docu Url
-          type: string
         receiver_protocol_grpc:
-          $ref: '#/components/schemas/OTelCollectorProtocolConfig'
+          anyOf:
+          - $ref: '#/components/schemas/OTelCollectorProtocolConfig'
+          - type: 'null'
           description: Configure the receiver for the GRPC protocol
-          title: Receiver Protocol Grpc
         receiver_protocol_http:
-          $ref: '#/components/schemas/OTelCollectorProtocolConfig'
+          anyOf:
+          - $ref: '#/components/schemas/OTelCollectorProtocolConfig'
+          - type: 'null'
           description: Configure the receiver for the HTTP protocol
-          title: Receiver Protocol Http
       required:
       - id
       - title
       - disabled
       - site
-      title: OTelCollectorReceiverSpec
+      - comment
+      - docu_url
+      - receiver_protocol_grpc
+      - receiver_protocol_http
+      title: OTelCollectorReceiverResponseSpec
       type: object
     OTelEndpointExtended:
       properties:
@@ -65664,23 +66111,6 @@ components:
           description: Port number
           title: Port
           type: integer
-        host_name_rules:
-          description: The host name computation computes the name of the host that
-            should have the corresponding Checkmk services. The computation is done
-            by the OpenTelemetry collector and the result is stored in the '{attr}'
-            attribute. For every rule configured here, the provided fields are concatenated
-            in the order they are listed. The first rule that results in a non-empty
-            value is used. For an example see the help text in the UI.
-          items:
-            items:
-              $ref: '#/components/schemas/HostNameRule'
-            type: array
-          title: Host Name Rules
-          type: array
-        export_to_syslog:
-          description: Set to 'true' to enable forwarding to syslog and Event Console
-          title: Export To Syslog
-          type: boolean
         auth:
           description: Authentication configuration
           discriminator:
@@ -65692,6 +66122,11 @@ components:
           - $ref: '#/components/schemas/NoAuthentication'
           - $ref: '#/components/schemas/BasicAuthentication'
           title: Auth
+        event_console:
+          anyOf:
+          - $ref: '#/components/schemas/EventConsole'
+          - type: 'null'
+          description: Event console configuration
         encryption:
           description: Encryption configuration
           title: Encryption
@@ -65699,19 +66134,16 @@ components:
       required:
       - address
       - port
-      - host_name_rules
-      - export_to_syslog
       - auth
+      - event_console
       - encryption
       title: OTelEndpointExtended
       type: object
     Password:
       properties:
         type:
+          const: store
           description: Password lookup type
-          enum:
-          - explicit
-          - store
           title: Type
           type: string
         value:
@@ -65818,12 +66250,122 @@ components:
       - activation
       title: OTelCollectorActivation
       type: object
+    OTelCollectorPromScrapeRequestSpec:
+      additionalProperties: false
+      properties:
+        id:
+          description: Unique identifier
+          title: Id
+          type: string
+        title:
+          description: Title of the collection configuration
+          title: Title
+          type: string
+        disabled:
+          description: Set to true to disable this configuration.
+          title: Disabled
+          type: boolean
+        site:
+          description: 'Sites for which the collector should be configured. Note:
+            There is only one configuration allowed per site.'
+          items:
+            type: string
+          title: Site
+          type: array
+          uniqueItems: true
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Optional comment or note about this configuration.
+          title: Comment
+        docu_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Optional URL to related documentation.
+          title: Docu Url
+        prometheus_scrape_configs:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/OTelCollectorPrometheusScrapeConfig'
+            type: array
+          - type: 'null'
+          default: null
+          description: Configure targets supporting the Prometheus protocol for active
+            scraping
+          title: Prometheus Scrape Configs
+      required:
+      - id
+      - title
+      - disabled
+      - site
+      title: OTelCollectorPromScrapeRequestSpec
+      type: object
+    OTelCollectorReceiverRequestSpec:
+      additionalProperties: false
+      properties:
+        id:
+          description: Unique identifier
+          title: Id
+          type: string
+        title:
+          description: Title of the collection configuration
+          title: Title
+          type: string
+        disabled:
+          description: Set to true to disable this configuration.
+          title: Disabled
+          type: boolean
+        site:
+          description: 'Sites for which the collector should be configured. Note:
+            There is only one configuration allowed per site.'
+          items:
+            type: string
+          title: Site
+          type: array
+          uniqueItems: true
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Optional comment or note about this configuration.
+          title: Comment
+        docu_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Optional URL to related documentation.
+          title: Docu Url
+        receiver_protocol_grpc:
+          anyOf:
+          - $ref: '#/components/schemas/OTelCollectorProtocolConfig'
+          - type: 'null'
+          default: null
+          description: Configure the receiver for the GRPC protocol
+        receiver_protocol_http:
+          anyOf:
+          - $ref: '#/components/schemas/OTelCollectorProtocolConfig'
+          - type: 'null'
+          default: null
+          description: Configure the receiver for the HTTP protocol
+      required:
+      - id
+      - title
+      - disabled
+      - site
+      title: OTelCollectorReceiverRequestSpec
+      type: object
     GetCustomGraph:
       type: object
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id163
+          example: *id164
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -65831,7 +66373,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id164
+          enum: *id165
           example: max
         custom_graph_id:
           type: string

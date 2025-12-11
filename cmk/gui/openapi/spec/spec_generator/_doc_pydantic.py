@@ -15,6 +15,7 @@ from apispec import APISpec
 from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
 
 from cmk.ccc.version import Edition
+from cmk.gui.http import Response
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import api_field
@@ -69,7 +70,7 @@ class PydanticSchemaDefinitions:
     def get_type_adapter(
         self, schema_type: Literal["body", "path", "query", "headers", "response"]
     ) -> TypeAdapter | None:
-        if (type_ := self.get_type(schema_type)) is not None:
+        if (type_ := self.get_type(schema_type)) is not None and not issubclass(type_, Response):
             # TypeAdapter performance: this is only used during spec generation
             return get_cached_type_adapter(type_)
 

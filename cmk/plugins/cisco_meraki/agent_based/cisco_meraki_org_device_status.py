@@ -29,6 +29,8 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.cisco_meraki.lib.type_defs import PossiblyMissing
 from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 
+type Section = DeviceStatus
+
 
 class PowerOverEthernet(BaseModel, frozen=True):
     maximum: int
@@ -60,7 +62,7 @@ class DeviceStatus(BaseModel, frozen=True):
         return {str(ps.slot): ps for ps in self.components.power_supplies}
 
 
-def parse_device_status(string_table: StringTable) -> DeviceStatus | None:
+def parse_device_status(string_table: StringTable) -> Section | None:
     match string_table:
         case [[payload]] if payload:
             return DeviceStatus.model_validate(json.loads(payload)[0])
@@ -74,7 +76,7 @@ agent_section_cisco_meraki_org_device_status = AgentSection(
 )
 
 
-def discover_device_status(section: DeviceStatus) -> DiscoveryResult:
+def discover_device_status(section: Section) -> DiscoveryResult:
     yield Service()
 
 
@@ -91,7 +93,7 @@ class Parameters(TypedDict, total=False):
     last_reported_upper_levels: tuple[int, int]
 
 
-def check_device_status(params: Parameters, section: DeviceStatus) -> CheckResult:
+def check_device_status(params: Parameters, section: Section) -> CheckResult:
     if (raw_state := params.get("status_map", {}).get(section.status)) is None:
         state = State(_STATUS_MAP[section.status])
     else:
@@ -119,14 +121,12 @@ check_plugin_cisco_meraki_org_device_status = CheckPlugin(
 )
 
 
-def discover_device_status_ps(section: DeviceStatus) -> DiscoveryResult:
+def discover_device_status_ps(section: Section) -> DiscoveryResult:
     for slot in section.power_supplies:
         yield Service(item=slot)
 
 
-def check_device_status_ps(
-    item: str, params: Mapping[str, int], section: DeviceStatus
-) -> CheckResult:
+def check_device_status_ps(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
     if (power_supply := section.power_supplies.get(item)) is None:
         return
 
@@ -153,7 +153,7 @@ check_plugin_cisco_meraki_org_device_status_ps = CheckPlugin(
 )
 
 
-def inventory_power_supplies(section: DeviceStatus) -> InventoryResult:
+def inventory_power_supplies(section: Section) -> InventoryResult:
     for slot, power_supply in section.power_supplies.items():
         yield TableRow(
             path=["hardware", "components", "psus"],

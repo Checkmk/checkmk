@@ -156,9 +156,7 @@ def parse_switch_ports_statuses(string_table: StringTable) -> Section:
             return {}
 
 
-def host_label_meraki_switch_ports_statuses(
-    section: Section,
-) -> HostLabelGenerator:
+def host_label_meraki_switch_ports_statuses(section: Section) -> HostLabelGenerator:
     """Host label function
 
     Labels:

@@ -11,7 +11,7 @@ import pytest
 import time_machine
 from polyfactory.factories import TypedDictFactory
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_sensor_readings import (
     check_sensor_temperature,
     discover_sensor_temperature,
@@ -24,27 +24,16 @@ class _RawSensorReadingsFactory(TypedDictFactory[RawSensorReadings]):
     __check_model__ = False
 
 
-@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
-def test_discover_sensor_temperature_no_payload(string_table: StringTable) -> None:
-    section = parse_sensor_readings(string_table)
-    assert not list(discover_sensor_temperature(section))
-
-
 def test_discover_sensor_temperature() -> None:
     sensor_reading = _RawSensorReadingsFactory.build(readings=[{"metric": "temperature"}])
     string_table = [[f"[{json.dumps(sensor_reading)}]"]]
     section = parse_sensor_readings(string_table)
+    assert section
 
     value = list(discover_sensor_temperature(section))
     expected = [Service(item="Sensor")]
 
     assert value == expected
-
-
-@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
-def test_check_sensor_temperature_no_payload(string_table: StringTable) -> None:
-    section = parse_sensor_readings(string_table)
-    assert not list(check_sensor_temperature("Sensor", {}, section))
 
 
 @pytest.fixture
@@ -74,6 +63,7 @@ def test_check_sensor_temperature() -> None:
     )
     string_table = [[f"[{json.dumps(sensor_reading)}]"]]
     section = parse_sensor_readings(string_table)
+    assert section
 
     value = list(check_sensor_temperature("Sensor", {}, section))
     expected = [

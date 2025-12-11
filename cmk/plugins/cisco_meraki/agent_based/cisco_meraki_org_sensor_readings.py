@@ -26,6 +26,8 @@ from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
+type Section = SensorReadings
+
 
 def _parse_percentage(raw_percentage: dict[str, int]) -> int | None:
     try:
@@ -95,7 +97,7 @@ class SensorReadings:
         return new_cls
 
 
-def parse_sensor_readings(string_table: StringTable) -> SensorReadings | None:
+def parse_sensor_readings(string_table: StringTable) -> Section | None:
     match string_table:
         case [[payload]] if payload:
             return SensorReadings.parse(json.loads(payload)[0])
@@ -109,19 +111,13 @@ agent_section_cisco_meraki_org_sensor_readings = AgentSection(
 )
 
 
-def discover_sensor_temperature(
-    section: SensorReadings | None,
-) -> DiscoveryResult:
-    if section and section.temperature:
+def discover_sensor_temperature(section: Section) -> DiscoveryResult:
+    if section.temperature:
         yield Service(item="Sensor")
 
 
-def check_sensor_temperature(
-    item: str,
-    params: TempParamType,
-    section: SensorReadings | None,
-) -> CheckResult:
-    if not section or not section.temperature:
+def check_sensor_temperature(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if not section.temperature:
         return
 
     if section.temperature.temperature:
@@ -149,19 +145,13 @@ check_plugin_cisco_meraki_org_sensor_temperature = CheckPlugin(
 )
 
 
-def discover_sensor_battery(
-    section: SensorReadings | None,
-) -> DiscoveryResult:
-    if section and section.battery:
+def discover_sensor_battery(section: Section) -> DiscoveryResult:
+    if section.battery:
         yield Service(item="Sensor")
 
 
-def check_sensor_battery(
-    item: str,
-    params: Mapping[str, Any],
-    section: SensorReadings | None,
-) -> CheckResult:
-    if not section or not section.battery:
+def check_sensor_battery(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not section.battery:
         return
 
     if section.battery.percentage:
@@ -188,19 +178,13 @@ check_plugin_cisco_meraki_org_sensor_battery = CheckPlugin(
 )
 
 
-def discover_sensor_humidity(
-    section: SensorReadings | None,
-) -> DiscoveryResult:
-    if section and section.humidity:
+def discover_sensor_humidity(section: Section) -> DiscoveryResult:
+    if section.humidity:
         yield Service(item="Sensor")
 
 
-def check_sensor_humidity(
-    item: str,
-    params: Mapping[str, Any],
-    section: SensorReadings | None,
-) -> CheckResult:
-    if not section or not section.humidity:
+def check_sensor_humidity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not section.humidity:
         return
 
     if section.humidity.relative_percentage:

@@ -20,8 +20,10 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+type Section = float
 
-def parse_appliance_performance(string_table: StringTable) -> float | None:
+
+def parse_appliance_performance(string_table: StringTable) -> Section | None:
     match string_table:
         case [[payload]] if payload:
             return float(json.loads(payload)[0]["perfScore"])
@@ -35,19 +37,15 @@ agent_section_meraki_org_appliance_performance = AgentSection(
 )
 
 
-def discover_appliance_performance(section: float | None) -> DiscoveryResult:
-    if section:
-        yield Service()
+def discover_appliance_performance(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
 class CheckParams(TypedDict):
     levels_upper: FixedLevelsT[int]
 
 
-def check_appliance_performance(params: CheckParams, section: float | None) -> CheckResult:
-    if section is None:
-        return
-
+def check_appliance_performance(params: CheckParams, section: Section) -> CheckResult:
     yield from check_levels(
         value=section,
         label="Utilization",

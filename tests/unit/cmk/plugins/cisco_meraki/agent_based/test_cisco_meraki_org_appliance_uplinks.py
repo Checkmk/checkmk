@@ -9,7 +9,7 @@ import json
 import pytest
 from polyfactory.factories import TypedDictFactory
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_appliance_uplinks import (
     check_appliance_uplinks,
     CheckParams,
@@ -42,16 +42,11 @@ class _UplinkStatusesFactory(TypedDictFactory[UplinkStatuses]):
         return datetime.datetime.now().strftime("%Y-%m-%d")
 
 
-@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
-def test_discover_appliance_uplinks_no_payload(string_table: StringTable) -> None:
-    section = parse_appliance_uplinks(string_table)
-    assert not list(discover_appliance_uplinks(section))
-
-
 def test_discover_appliance_uplinks() -> None:
     uplinks = _UplinkStatusesFactory.build()
     string_table = [[f"[{json.dumps(uplinks)}]"]]
     section = parse_appliance_uplinks(string_table)
+    assert section
 
     value = list(discover_appliance_uplinks(section))
     expected = [Service(item="wan1")]
@@ -67,12 +62,6 @@ def params() -> CheckParams:
     )
 
 
-@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
-def test_check_appliance_uplinks_no_payload(string_table: StringTable, params: CheckParams) -> None:
-    section = parse_appliance_uplinks(string_table)
-    assert not list(check_appliance_uplinks("", params, section))
-
-
 def test_check_appliance_uplinks(params: CheckParams) -> None:
     uplinks = _UplinkStatusesFactory.build(
         networkName="main",
@@ -81,6 +70,7 @@ def test_check_appliance_uplinks(params: CheckParams) -> None:
     )
     string_table = [[f"[{json.dumps(uplinks)}]"]]
     section = parse_appliance_uplinks(string_table)
+    assert section
 
     value = list(check_appliance_uplinks("wan1", params, section))
     expected = [
@@ -107,6 +97,7 @@ def test_check_appliance_uplinks_zero_usage(params: CheckParams) -> None:
     uplinks = _UplinkStatusesFactory.build(usageByInterface={"wan1": {"received": 0, "sent": 0}})
     string_table = [[f"[{json.dumps(uplinks)}]"]]
     section = parse_appliance_uplinks(string_table)
+    assert section
 
     value = set(check_appliance_uplinks("wan1", params, section))
     expected = {

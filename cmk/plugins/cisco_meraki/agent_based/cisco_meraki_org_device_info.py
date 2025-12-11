@@ -17,6 +17,8 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+type Section = DeviceInfo
+
 
 class DeviceInfo(BaseModel, frozen=True):
     serial: str
@@ -31,7 +33,7 @@ class DeviceInfo(BaseModel, frozen=True):
     product: str = Field(default="")
 
 
-def host_label_meraki_device_info(section: DeviceInfo) -> HostLabelGenerator:
+def host_label_meraki_device_info(section: Section) -> HostLabelGenerator:
     """Host label function
 
     Labels:
@@ -57,7 +59,7 @@ def host_label_meraki_device_info(section: DeviceInfo) -> HostLabelGenerator:
     yield HostLabel("cmk/meraki/org_name", section.organisation_name)
 
 
-def parse_device_info(string_table: StringTable) -> DeviceInfo | None:
+def parse_device_info(string_table: StringTable) -> Section | None:
     match string_table:
         case [[payload]] if payload:
             return DeviceInfo.model_validate(json.loads(payload)[0])
@@ -72,7 +74,7 @@ agent_section_cisco_meraki_org_device_info = AgentSection(
 )
 
 
-def inventory_device_info(section: DeviceInfo) -> InventoryResult:
+def inventory_device_info(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={

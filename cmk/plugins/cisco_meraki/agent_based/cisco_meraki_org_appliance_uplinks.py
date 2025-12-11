@@ -29,6 +29,8 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.cisco_meraki.lib.constants import DEFAULT_TIMESPAN
 from cmk.plugins.cisco_meraki.lib.schema import UplinkUsageByInterface
 
+type Section = ApplianceStatus
+
 
 class Uplink(BaseModel, frozen=True):
     gateway: str
@@ -61,7 +63,7 @@ class ApplianceStatus(BaseModel, frozen=True):
         return {up.interface: up for up in self.uplinks_list}
 
 
-def parse_appliance_uplinks(string_table: StringTable) -> ApplianceStatus | None:
+def parse_appliance_uplinks(string_table: StringTable) -> Section | None:
     match string_table:
         case [[payload]] if payload:
             return ApplianceStatus.model_validate(json.loads(payload)[0])
@@ -75,10 +77,9 @@ agent_section_cisco_meraki_org_appliance_uplinks = AgentSection(
 )
 
 
-def discover_appliance_uplinks(section: ApplianceStatus | None) -> DiscoveryResult:
-    if section:
-        for uplink in section.uplinks:
-            yield Service(item=uplink)
+def discover_appliance_uplinks(section: Section) -> DiscoveryResult:
+    for uplink in section.uplinks:
+        yield Service(item=uplink)
 
 
 def _get_bits_by_timespan(value: int) -> float:
@@ -94,10 +95,8 @@ class CheckParams(TypedDict):
     status_map: dict[str, int]
 
 
-def check_appliance_uplinks(
-    item: str, params: CheckParams, section: ApplianceStatus | None
-) -> CheckResult:
-    if not section or (uplink := section.uplinks.get(item)) is None:
+def check_appliance_uplinks(item: str, params: CheckParams, section: Section) -> CheckResult:
+    if (uplink := section.uplinks.get(item)) is None:
         return None
 
     # TODO: cannot use 'not connected' in params anymore - still relevant? (note from MKP)

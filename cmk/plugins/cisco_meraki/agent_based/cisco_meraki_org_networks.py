@@ -18,6 +18,8 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
+type Section = Sequence[Network]
+
 
 class Network(BaseModel, frozen=True):
     id: str
@@ -33,7 +35,7 @@ class Network(BaseModel, frozen=True):
     is_bound_to_config_template: bool = Field(alias="isBoundToConfigTemplate")
 
 
-def parse_meraki_networks(string_table: StringTable) -> Sequence[Network]:
+def parse_meraki_networks(string_table: StringTable) -> Section:
     match string_table:
         case [[payload]] if payload:
             network_map = json.loads(payload)[0]
@@ -48,7 +50,7 @@ agent_section_cisco_meraki_org_networks = AgentSection(
 )
 
 
-def inventory_meraki_networks(section: Sequence[Network]) -> InventoryResult:
+def inventory_meraki_networks(section: Section) -> InventoryResult:
     for network in section:
         inventory_columns = {
             "is_bound_to_template": "yes" if network.is_bound_to_config_template else "no",

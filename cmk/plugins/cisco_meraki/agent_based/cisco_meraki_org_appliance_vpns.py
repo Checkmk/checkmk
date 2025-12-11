@@ -26,6 +26,8 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+type Section = Mapping[str, VpnStatus]
+
 
 @dataclasses.dataclass
 class PeerInfo:
@@ -96,7 +98,7 @@ class VpnStatus(BaseModel, frozen=True):
         return PeerInfo()
 
 
-def parse_appliance_vpns(string_table: StringTable) -> dict[str, VpnStatus]:
+def parse_appliance_vpns(string_table: StringTable) -> Section:
     match string_table:
         case [[payload]] if payload:
             vpn_statuses = (VpnStatus.model_validate(data) for data in json.loads(payload))
@@ -111,7 +113,7 @@ agent_section_cisco_meraki_org_appliance_vpns = AgentSection(
 )
 
 
-def discover_appliance_vpns(section: Mapping[str, VpnStatus]) -> DiscoveryResult:
+def discover_appliance_vpns(section: Section) -> DiscoveryResult:
     for key in section:
         yield Service(item=key)
 
@@ -120,9 +122,7 @@ class CheckParams(TypedDict):
     status_not_reachable: int
 
 
-def check_appliance_vpns(
-    item: str, params: CheckParams, section: Mapping[str, VpnStatus]
-) -> CheckResult:
+def check_appliance_vpns(item: str, params: CheckParams, section: Section) -> CheckResult:
     if (peer := section.get(item)) is None:
         return None
 

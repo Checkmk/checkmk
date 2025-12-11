@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_appliance_performance import (
     check_appliance_performance,
     CheckParams,
@@ -16,26 +16,15 @@ from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_appliance_performance
 )
 
 
-@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
-def test_discover_appliance_performance_no_payload(string_table: StringTable) -> None:
-    section = parse_appliance_performance(string_table)
-    assert not list(discover_appliance_performance(section))
-
-
 def test_discover_appliance_performance() -> None:
     string_table = [[f"[{json.dumps({'perfScore': '20.0'})}]"]]
     section = parse_appliance_performance(string_table)
+    assert section
 
     value = list(discover_appliance_performance(section))
     expected = [Service()]
 
     assert value == expected
-
-
-@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
-def test_check_appliance_uplinks_no_payload(string_table: StringTable, params: CheckParams) -> None:
-    section = parse_appliance_performance(string_table)
-    assert not list(check_appliance_performance(params, section))
 
 
 @pytest.fixture
@@ -56,6 +45,7 @@ def test_check_appliance_uplinks(
 ) -> None:
     string_table = [[f"[{json.dumps({'perfScore': performance})}]"]]
     section = parse_appliance_performance(string_table)
+    assert section
 
     value = list(check_appliance_performance(params, section))
     expected = [

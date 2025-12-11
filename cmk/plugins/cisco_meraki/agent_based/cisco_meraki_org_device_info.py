@@ -72,33 +72,32 @@ agent_section_cisco_meraki_org_device_info = AgentSection(
 )
 
 
-def inventory_device_info(section: DeviceInfo | None) -> InventoryResult:
-    if section:
-        yield Attributes(
-            path=["hardware", "system"],
-            inventory_attributes={
-                "product": section.product,
-                "serial": section.serial,
-                "model": section.model,
-                "description": section.description,
-                "mac_address": section.mac_address,
-            },
-        )
-        yield Attributes(
-            path=["software", "firmware"],
-            inventory_attributes={
-                "version": section.firmware,
-            },
-        )
-        yield Attributes(
-            path=["software", "configuration", "organisation"],
-            inventory_attributes={
-                "organisation_id": section.organisation_id,
-                "organisation_name": section.organisation_name,
-                "network_id": section.network_id,
-                "address": section.address,
-            },
-        )
+def inventory_device_info(section: DeviceInfo) -> InventoryResult:
+    yield Attributes(
+        path=["hardware", "system"],
+        inventory_attributes={
+            "product": section.product,
+            "serial": section.serial,
+            "model": section.model,
+            "description": section.description,
+            "mac_address": section.mac_address,
+        },
+    )
+    yield Attributes(
+        path=["software", "firmware"],
+        inventory_attributes={
+            "version": section.firmware,
+        },
+    )
+    yield Attributes(
+        path=["software", "configuration", "organisation"],
+        inventory_attributes={
+            "organisation_id": section.organisation_id,
+            "organisation_name": section.organisation_name,
+            "network_id": section.network_id,
+            "address": section.address,
+        },
+    )
 
 
 inventory_plugin_cisco_meraki_org_device_info = InventoryPlugin(

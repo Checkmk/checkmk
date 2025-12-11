@@ -5,10 +5,9 @@
 
 import json
 
-import pytest
 from polyfactory.factories import TypedDictFactory
 
-from cmk.agent_based.v2 import Attributes, StringTable
+from cmk.agent_based.v2 import Attributes
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_info import (
     inventory_device_info,
     parse_device_info,
@@ -34,6 +33,7 @@ def test_inventory_device_info() -> None:
     )
     string_table = [[f"[{json.dumps(device)}]"]]
     section = parse_device_info(string_table)
+    assert section
 
     value = list(inventory_device_info(section))
     expected = [
@@ -64,9 +64,3 @@ def test_inventory_device_info() -> None:
         ),
     ]
     assert value == expected
-
-
-@pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])
-def test_inventory_device_info_no_payload(string_table: StringTable) -> None:
-    section = parse_device_info(string_table)
-    assert not list(inventory_device_info(section))

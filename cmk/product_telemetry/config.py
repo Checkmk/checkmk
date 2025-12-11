@@ -23,13 +23,13 @@ def load_telemetry_config() -> TelemetryConfig:
     config = load({})
 
     proxy_config = get_proxy_config(
-        config.loaded_config.product_telemetry.get("proxy_setting", ("environment", "environment")),
+        config.loaded_config.product_telemetry["proxy_setting"],
         global_proxies=config.loaded_config.http_proxies,
     )
 
     return TelemetryConfig(
-        enabled=config.loaded_config.product_telemetry.get("enable_telemetry")[0] == "enabled",
-        state=config.loaded_config.product_telemetry.get("enable_telemetry")[0],
+        enabled=config.loaded_config.product_telemetry["enable_telemetry"][0] == "enabled",
+        state=config.loaded_config.product_telemetry["enable_telemetry"][0],
         proxy_config=proxy_config,
     )
 

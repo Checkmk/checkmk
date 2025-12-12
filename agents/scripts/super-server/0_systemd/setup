@@ -88,12 +88,21 @@ _predefined_connection_not_present() {
 }
 
 _deploy_controller() {
-    [ -e "${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl.gz" ] || {
-        printf "%s\n" "Agent Controller is not packaged. Falling back to legacy systemd setup."
+    if [ "$(uname -m)" = "aarch64" ]; then
+        matching_controller_gz="cmk-agent-ctl-aarch64.gz"
+        target_arch="ARM"
+    else
+        matching_controller_gz="cmk-agent-ctl.gz"
+        target_arch="x86-64"
+    fi
+
+    [ -e "${CONTROLLER_PACKAGE_PATH}/${matching_controller_gz}" ] || {
+        printf "Agent controller for Linux on %s is not packaged. Falling back to legacy systemd setup.\n" "${target_arch}"
         return 1
     }
+
     printf "Deploying agent controller: %s\n" "${CONTROLLER_TARGET}"
-    gunzip --force --quiet -c "${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl.gz" >"${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl" || {
+    gunzip --force --quiet -c "${CONTROLLER_PACKAGE_PATH}/${matching_controller_gz}" >"${CONTROLLER_PACKAGE_PATH}/cmk-agent-ctl" || {
         printf "%s\n" "...Failed to unpack with gzip. Falling back to legacy systemd setup."
         return 1
     }

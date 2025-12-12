@@ -51,6 +51,7 @@ genrule(
         "@Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz",
         "//omd/packages/perl-modules/bin:cpan.wrapper",
         "//omd/packages/perl-modules:MyConfig.pm",
+        "@openssl//:gen_dir",
     ],
     outs = [
         "perl-modules.tar",
@@ -65,7 +66,7 @@ genrule(
         export PERL5LIB="$$(dirname $(location @omd_packages//omd/packages/perl-modules:lib/BuildHelper.pm)):$$PWD/perl-modules/lib/perl5:$$PWD/Crypt-SSLeay-0.72"
         FORCE=1 $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_1.txt));
         $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_2.txt));
-        $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $(locations @Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz);
+        $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules -L $(location @openssl//:gen_dir) $(locations @Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz);
 
         mv perl-modules perl-modules-install
         mkdir -p perl-modules/lib/perl5 perl-modules/bin

@@ -40,6 +40,8 @@ CrashIdRegex = r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}"
 CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
 # We allow a 120s timeout since a very new page might take a while to setup
 PW_TIMEOUT = 120_000
+SkipReason = str
+RelativeUrl = str
 
 
 class PageContent(NamedTuple):
@@ -186,7 +188,16 @@ class Crawler:
             "text/x-chdr",
             "text/x-sh",
         }
-
+        self._ignored_urls: dict[SkipReason, list[RelativeUrl]] = {
+            "CMK-28477: exception if ntop not configured": [
+                "dashboard.py?name=ntop_alerts&owner=",
+                "dashboard.py?name=ntop_flows&owner=",
+                "dashboard.py?name=ntop_top_talkers&owner=",
+                "edit_dashboard.py?back=edit_dashboards.py&load_name=ntop_alerts&mode=clone&owner=",
+                "edit_dashboard.py?back=edit_dashboards.py&load_name=ntop_flows&mode=clone&owner=",
+                "edit_dashboard.py?back=edit_dashboards.py&load_name=ntop_top_talkers&mode=clone&owner=",
+            ]
+        }
         # limit minimum value to 0.
         self._max_urls = max(0, max_urls)
         self._todos = deque([Url(self.site.internal_url)])
@@ -433,7 +444,12 @@ class Crawler:
             bool: True if the URL was visited successfully, False otherwise
         """
         start = time.time()
-
+        relative_url = url.url.removeprefix(self.site.internal_url)
+        if ignore_reason := next(
+            (reason for reason, urls in self._ignored_urls.items() if relative_url in urls), None
+        ):
+            self.handle_skipped_reference(url, reason="ignored url", message=ignore_reason)
+            return self.handle_page_done(url, duration=time.time() - start)
         content_type = self.requests_session.head(url.url).headers["content-type"]
         if content_type.startswith("text/html"):
             try:

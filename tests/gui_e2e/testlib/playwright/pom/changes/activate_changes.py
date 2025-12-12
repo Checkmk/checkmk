@@ -76,7 +76,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def no_pending_changes_text(self) -> Locator:
-        return self.slideout.get_by_text("No pending changes")
+        return self.slideout.get_by_role("heading", name="No pending changes")
 
     @property
     def info_text(self) -> Locator:
@@ -148,7 +148,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     def site_entry(self, site_name: str = "", central: bool = True) -> Locator:
         """Get the locator for the specific site entry in the sites section."""
-        text = f"Local site {site_name}" if central else "Remote site {site_name}"
+        text = f"Local site {site_name}" if central else f"Remote site {site_name}"
         return self.slideout.locator("div.cmk-changes-sites-item-wrapper").filter(has_text=text)
 
     def site_online_status(self, site_entry: Locator) -> Locator:
@@ -180,9 +180,9 @@ class ActivateChangesSlideout(LocatorHelper):
             )
         ).to_be_visible()
         expect(
-            self.slideout.locator(
-                "span.mm-changes-activation-result__title",
-                has_text=f"Successfully activated {expected_changes} change",
+            self.slideout.get_by_role(
+                "heading",
+                name=f"Successfully activated {expected_changes} changes",
             )
         ).to_be_visible()
 

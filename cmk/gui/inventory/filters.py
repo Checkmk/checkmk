@@ -36,9 +36,11 @@ from cmk.gui.visuals.filter import (
 from cmk.gui.visuals.filter.components import (
     Checkbox,
     Dropdown,
+    DualList,
     FilterComponent,
     HorizontalGroup,
     RadioButton,
+    StaticText,
     TextInput,
 )
 from cmk.inventory.structured_data import SDValue
@@ -598,26 +600,100 @@ class FilterInvtableTextWithSortKey(Filter):
         return self.query_filter.filter_table(context, rows)
 
 
-class FilterInvtableDualChoice(DualListFilter):
+class FilterInvtableDualChoice(Filter):
     def __init__(
-        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
+        self, *, inv_info: str, ident: str, title: str, choices: Sequence[tuple[str, str]]
     ) -> None:
+        self._choices = choices
+        self._html_var = ident
         super().__init__(
+            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.MultipleQuery(ident=ident, op="="),
-            options=lambda i: list(options),
+            htmlvars=[self._html_var],
+            link_columns=[],
         )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        if not self._choices:
+            html.write_text_permissive(_("There are no elements for selection."))
+            return
+
+        selected_from_value = value.get(self._html_var, "").strip().split("|")
+        selected = []
+        unselected = []
+        for k, v in self._choices:
+            if k in selected_from_value:
+                selected.append((k, v))
+            else:
+                unselected.append((k, v))
+
+        select_func = "cmk.valuespecs.duallist_switch('unselected', '%s', %d);" % (
+            self._html_var,
+            0,
+        )
+        unselect_func = "cmk.valuespecs.duallist_switch('selected', '%s', %d);" % (
+            self._html_var,
+            0,
+        )
+
+        html.open_table(class_=["vs_duallist"])
+
+        html.open_tr()
+        html.open_td(class_="head")
+        html.write_text_permissive(_("Available"))
+        html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
+        html.close_td()
+
+        html.open_td(class_="head")
+        html.write_text_permissive(_("Selected"))
+        html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        for suffix, choices, func in [
+            ("unselected", unselected, select_func),
+            ("selected", selected, unselect_func),
+        ]:
+            html.open_td()
+            html.dropdown(
+                f"{self._html_var}_{suffix}",
+                choices,
+                deflt="",
+                multiple=True,
+                style="height: 64px",
+                ondblclick=func,
+                onchange="",
+                locked_choice=None,
+            )
+
+            html.close_td()
+        html.close_tr()
+
+        html.close_table()
+
+        html.hidden_field(
+            self._html_var,
+            "|".join([str(k) for k, v in selected]),
+            id_=self._html_var,
+            add_var=True,
+        )
+
+    def components(self) -> Iterable[FilterComponent]:
+        if self._choices:
+            yield DualList(id=self._html_var, choices=dict(self._choices))
+        else:
+            yield StaticText(text=_("There are no elements for selection."))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.query_filter.ident, {})
-        if not (selection := self.query_filter.selection(value)):
-            return rows  # No types selected, filter is unused
-        return [row for row in rows if str(row[self.query_filter.column]) in selection]
+        if selection := context.get(self._html_var, {}).get(self._html_var, "").strip().split("|"):
+            return [row for row in rows if str(row[self._html_var]) in selection]
+        return rows  # No types selected, filter is unused
 
 
 class FilterInvtableTimestampAsAge(FilterNumberRange):

@@ -610,7 +610,7 @@ def _make_column_filter(
                 inv_info=table_view_name,
                 ident=filter_ident,
                 title=long_title,
-                options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+                choices=[(str(k), _make_str(v)) for k, v in field_from_api.mapping.items()],
             )
         case other:
             assert_never(other)
@@ -1024,7 +1024,7 @@ def _parse_col_filter_from_legacy(
                 inv_info=table_view_name,
                 ident=filter_ident,
                 title=title,
-                options=[
+                choices=[
                     (str(k), str(v))
                     for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])
                 ],

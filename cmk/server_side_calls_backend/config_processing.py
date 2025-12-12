@@ -103,7 +103,7 @@ def extract_all_adhoc_secrets(
     ...     ),
     ...     oauth2_connections={},
     ... )
-    {':uuid:1234': 'knubblwubbl'}
+    {':uuid:1234': Secret('****')}
     """
     use_alpha = True  # whatever is more comprehensive in extracting secrets
     preprocessing_results = [

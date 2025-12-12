@@ -3,9 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { TimeSpan } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-type Magnitude = TimeSpan['displayed_magnitudes'][number]
+export type Magnitude = 'day' | 'hour' | 'minute' | 'second' | 'millisecond'
 
 export const ALL_MAGNITUDES = new Map<Magnitude, number>([
   ['day', 24 * 60 * 60],

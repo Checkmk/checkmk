@@ -1,0 +1,133 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import { type Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { ref, watch, watchEffect } from 'vue'
+
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
+
+import {
+  type Magnitude,
+  getSelectedMagnitudes,
+  joinToSeconds,
+  splitToUnits as utilsSplitToUnits
+} from './timeSpan'
+
+const props = defineProps<{
+  label: string | null
+  title: string
+  inputHint: number | null
+  i18n: Record<Magnitude | 'validation_negative_number', string>
+  displayedMagnitudes: Magnitude[]
+  validators: Validator[]
+  backendValidation: ValidationMessages
+}>()
+const selectedMagnitudes = ref<Array<Magnitude>>([])
+
+watchEffect(() => {
+  selectedMagnitudes.value = getSelectedMagnitudes(props.displayedMagnitudes)
+})
+
+const data = defineModel<number | null>('data', { required: true })
+const values = ref<Partial<Record<Magnitude, number>>>(splitToUnits(0))
+
+const [validation, value] = useValidation(data, props.validators, () => props.backendValidation)
+
+watch(
+  value,
+  (newValue) => {
+    if (newValue === null) {
+      values.value = {}
+    } else {
+      if (newValue !== joinToSeconds(values.value)) {
+        // don't update values if we already show a similar value
+        // otherwise we could not inser minutes > 60 as those are automatically
+        // transformed to house and minutes...
+        values.value = splitToUnits(newValue)
+      }
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  values,
+  (newValue) => {
+    value.value = joinToSeconds(newValue)
+    localValidation.value = []
+    for (const [_magnitude, value] of Object.entries(newValue)) {
+      if (value < 0 && localValidation.value.length === 0) {
+        localValidation.value = [props.i18n.validation_negative_number]
+      }
+    }
+  },
+  { deep: true }
+)
+
+function splitToUnits(value: number): Partial<Record<Magnitude, number>> {
+  return utilsSplitToUnits(value, selectedMagnitudes.value)
+}
+
+function getPlaceholder(magnitude: Magnitude): string {
+  // TODO: not 100% sure if a placeholder is really useful here:
+  // the old valuespec always showed 0 in all fields => no placeholder would be visible at all
+  // the current implementation shows the placeholder as long as no other value was inputted
+  if (value.value === null || value.value === 0) {
+    const value = splitToUnits(props.inputHint || 0)[magnitude]
+    if (value === undefined) {
+      return '0'
+    }
+    return `${value}`
+  }
+  return '0'
+}
+
+const localValidation = ref<Array<string>>([])
+</script>
+
+<template>
+  <FormValidation :validation="[...validation, ...localValidation]" />
+  {{ props.label }}
+  <span role="group" :aria-label="props.label || props.title">
+    <label v-for="magnitude in selectedMagnitudes" :key="magnitude">
+      <input
+        v-model="values[magnitude]"
+        :placeholder="getPlaceholder(magnitude)"
+        class="form-time-span__number form-time-span__no-spinner"
+        step="any"
+        size="5"
+        type="number"
+      />
+      {{ props.i18n[magnitude] }}
+    </label>
+  </span>
+</template>
+
+<style scoped>
+.cmk-time-span__no-spinner::-webkit-outer-spin-button,
+.cmk-time-span__no-spinner::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.cmk-time-span__number {
+  text-align: right;
+}
+
+.cmk-time-span__no-spinner[type='number'] {
+  appearance: textfield;
+}
+
+input {
+  width: 4.8ex;
+}
+
+label {
+  margin-right: 0.5em;
+}
+</style>

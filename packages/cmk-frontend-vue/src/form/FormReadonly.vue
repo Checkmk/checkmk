@@ -44,6 +44,11 @@ import type {
 import { type PropType, type VNode, defineComponent, h } from 'vue'
 
 import type { DualListElement } from '@/components/CmkDualList'
+import {
+  ALL_MAGNITUDES,
+  getSelectedMagnitudes,
+  splitToUnits
+} from '@/components/user-input/CmkTimeSpan/timeSpan'
 
 import type { CheckboxListChoiceElement } from '@/form/private/forms/FormCheckboxListChoice.vue'
 import FormLabelsLabel from '@/form/private/forms/FormLabelsLabel.vue'
@@ -58,11 +63,6 @@ import {
   type OperatorI18n,
   translateOperator
 } from './private/forms/FormConditionChoices/utils'
-import {
-  ALL_MAGNITUDES,
-  getSelectedMagnitudes,
-  splitToUnits
-} from './private/forms/FormTimeSpan/timeSpan'
 
 function renderForm(
   formSpec: FormSpec,

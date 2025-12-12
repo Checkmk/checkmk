@@ -109,6 +109,11 @@ const dashboardWidgets = useDashboardWidgets(
   computed(() => dashboardsManager.activeDashboard.value?.content.widgets)
 )
 
+async function updateBreadcrumb(dashboardName: string): Promise<void> {
+  const metadata = await dashboardAPI.showDashboardMetadata(dashboardName)
+  selectedDashboardBreadcrumb.value = metadata.display?.topic?.breadcrumb ?? null
+}
+
 const setAsActiveDashboard = async (
   dashboardName: string,
   layout: DashboardLayout,
@@ -118,8 +123,7 @@ const setAsActiveDashboard = async (
   if (breadcrumb) {
     selectedDashboardBreadcrumb.value = breadcrumb
   } else {
-    const metadata = await dashboardAPI.showDashboardMetadata(dashboardName)
-    selectedDashboardBreadcrumb.value = metadata.display?.topic?.breadcrumb ?? null
+    await updateBreadcrumb(dashboardName)
   }
 
   const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboardName)
@@ -287,6 +291,7 @@ const createDashboard = async (
       dashboardId
     )
     urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+    await updateBreadcrumb(dashboardId)
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
   } else {

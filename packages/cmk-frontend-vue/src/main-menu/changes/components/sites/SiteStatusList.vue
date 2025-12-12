@@ -73,13 +73,13 @@ immediateWatch(
 
     <CmkTabs v-if="props.sites.length > 1" v-model="activeTab">
       <template #tabs>
-        <CmkTab id="sites-with-changes" :disabled="sitesWithChanges.length === 0">{{
+        <CmkTab v-if="sitesWithChanges.length > 0" id="sites-with-changes">{{
           _t('Sites with changes: %{n}', { n: sitesWithChanges.length })
         }}</CmkTab>
-        <CmkTab id="sites-with-errors" :disabled="sitesWithErrors.length === 0">{{
+        <CmkTab v-if="sitesWithErrors.length > 0" id="sites-with-errors">{{
           _t('Sites with errors: %{n}', { n: sitesWithErrors.length })
         }}</CmkTab>
-        <CmkTab id="logged-out-sites" :disabled="loggedOutSites.length === 0">{{
+        <CmkTab v-if="loggedOutSites.length > 0" id="logged-out-sites">{{
           _t('Sites logged out: %{n}', { n: loggedOutSites.length })
         }}</CmkTab>
       </template>

@@ -24,8 +24,10 @@ from cmk.base.automations.automations import AutomationContext, AutomationError
 from cmk.base.config import ConfigCache
 from cmk.ccc import tty
 from cmk.ccc import version as cmk_version
+from cmk.ccc.site import SiteId
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import paths
+from cmk.utils.labels import Labels
 from cmk.utils.log import logger as cmk_logger
 
 from ._cache import Cache, CacheError
@@ -48,10 +50,17 @@ class AutomationEngine(Protocol):
 @dataclass
 class _State:
     automation_or_reload_lock: asyncio.Lock
-    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult]
+    reload_config: Callable[
+        [
+            AgentBasedPlugins,
+            Callable[[SiteId], Labels],
+        ],
+        config.LoadingResult,
+    ]
     last_reload_at: float
     plugins: AgentBasedPlugins | None
     loading_result: config.LoadingResult | None
+    get_builtin_host_labels: Callable[[SiteId], Labels]
 
     def load_new(self, *, continue_on_error: bool) -> None:
         if self.plugins is None:
@@ -60,7 +69,7 @@ class _State:
         # Do not yet set `self.last_reload_at`. We don't know if we succeed.
         time_right_before_reload = time.time()
         try:
-            self.loading_result = self.reload_config(self.plugins)
+            self.loading_result = self.reload_config(self.plugins, self.get_builtin_host_labels)
             self.last_reload_at = time_right_before_reload
         except (Exception, BaseException) as e:
             LOGGER.error("[reloader] Error reloading configuration: %s", e)
@@ -86,7 +95,13 @@ def make_application(
     engine: AutomationEngine,
     cache: Cache,
     reloader_config: ReloaderConfig,
-    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
+    reload_config: Callable[
+        [
+            AgentBasedPlugins,
+            Callable[[SiteId], Labels],
+        ],
+        config.LoadingResult,
+    ],
     clear_caches_before_each_call: Callable[[ConfigCache], None],
 ) -> FastAPI:
     app = FastAPI(
@@ -106,6 +121,9 @@ def make_application(
             last_reload_at=0,
             plugins=None,
             loading_result=None,
+            get_builtin_host_labels=make_app(
+                cmk_version.edition(paths.omd_root)
+            ).get_builtin_host_labels,
         ),
     )
 
@@ -258,6 +276,7 @@ def _execute_automation_endpoint(
                     create_core=app.create_core,
                     make_fetcher_trigger=app.make_fetcher_trigger,
                     make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+                    get_builtin_host_labels=app.get_builtin_host_labels,
                 ),
                 payload.name,
                 list(payload.args),

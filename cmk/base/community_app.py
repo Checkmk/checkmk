@@ -5,6 +5,7 @@
 
 from cmk.ccc.version import Edition
 from cmk.fetchers import PlainFetcherTrigger
+from cmk.utils.labels import get_builtin_host_labels
 from cmk.utils.licensing.community_handler import CRELicensingHandler
 
 from . import diagnostics, localize
@@ -32,6 +33,7 @@ def make_app() -> CheckmkBaseApp:
         licensing_handler_type=CRELicensingHandler,
         make_fetcher_trigger=lambda x: PlainFetcherTrigger(),
         make_metric_backend_fetcher=lambda *args: None,
+        get_builtin_host_labels=get_builtin_host_labels,
     )
 
 

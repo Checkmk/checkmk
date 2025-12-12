@@ -74,7 +74,10 @@ class TestModeDumpAgent:
             config.load.__name__,
             lambda *a, **kw: config.LoadingResult(
                 loaded_config=loaded_config,
-                config_cache=config.ConfigCache(loaded_config),
+                config_cache=config.ConfigCache(
+                    loaded_config,
+                    make_app(Edition.COMMUNITY).get_builtin_host_labels,
+                ),
             ),
         )
 

@@ -12,8 +12,11 @@ from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.base import config
+from cmk.base.app import make_app
+from cmk.ccc.version import edition
 from cmk.plugins.logwatch.agent_based import commons as logwatch_
 from cmk.plugins.logwatch.agent_based import logwatch
+from cmk.utils import paths
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 TEST_DISCO_PARAMS = [logwatch_.ParameterLogwatchGroups(host_name="test-host", grouping_patterns=[])]
@@ -168,7 +171,10 @@ def test_check_single(
     monkeypatch.setattr(
         config,
         config.access_globally_cached_config_cache.__name__,
-        lambda: config.ConfigCache(EMPTY_CONFIG),
+        lambda: config.ConfigCache(
+            EMPTY_CONFIG,
+            make_app(edition(paths.omd_root)).get_builtin_host_labels,
+        ),
     )
     monkeypatch.setattr(
         logwatch_,
@@ -227,7 +233,10 @@ def test_check_logwatch_groups_node(
     monkeypatch.setattr(
         config,
         config.access_globally_cached_config_cache.__name__,
-        lambda: config.ConfigCache(EMPTY_CONFIG),
+        lambda: config.ConfigCache(
+            EMPTY_CONFIG,
+            make_app(edition(paths.omd_root)).get_builtin_host_labels,
+        ),
     )
     monkeypatch.setattr(
         logwatch_,

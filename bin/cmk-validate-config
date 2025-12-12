@@ -6,6 +6,8 @@
 import sys
 
 from cmk.base import config
+from cmk.base.app import make_app
+from cmk.ccc.version import edition
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
 )
@@ -26,7 +28,10 @@ def main() -> int:
             plugins = config.load_all_pluginX(paths.checks_dir)
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
-            config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+            config.load(
+                discovery_rulesets=extract_known_discovery_rulesets(plugins),
+                get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
+            )
 
             result = validate_mk_files()
 

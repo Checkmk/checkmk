@@ -20,6 +20,7 @@ from pytest_mock import MockerFixture
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
+from cmk.base.app import make_app
 from cmk.base.automation_helper._app import (
     _reloader_task,
     _State,
@@ -31,8 +32,11 @@ from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations.automations import AutomationContext, AutomationError
 from cmk.base.config import ConfigCache, LoadingResult
-from cmk.ccc.version import Version
+from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition, Version
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.utils import paths
+from cmk.utils.labels import Labels
 from tests.testlib.common.utils import wait_until
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
@@ -98,7 +102,13 @@ _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[AgentBasedPlugins], LoadingResult],
+    reload_config: Callable[
+        [
+            AgentBasedPlugins,
+            Callable[[SiteId], Labels],
+        ],
+        LoadingResult,
+    ],
     clear_caches_before_each_call: Callable[[ConfigCache], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
@@ -243,8 +253,9 @@ def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        lambda plugins: LoadingResult(
-            loaded_config=loaded_config, config_cache=ConfigCache(loaded_config)
+        lambda plugins, get_builtin_host_labels: LoadingResult(
+            loaded_config=loaded_config,
+            config_cache=ConfigCache(loaded_config, get_builtin_host_labels),
         ),
         lambda ruleset_matcher: None,
     ) as client:
@@ -263,6 +274,7 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
         reload_config=mock_reload_callback,
         plugins=None,
         loading_result=None,
+        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -306,6 +318,7 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
         plugins=None,
         reload_config=mock_reload_callback,
         loading_result=None,
+        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -357,6 +370,7 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
         plugins=None,
         reload_config=mock_reload_callback,
         loading_result=None,
+        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,

@@ -140,6 +140,7 @@ def _make_mode_create_diagnostics_dump(
         create_diagnostics_dump(
             load_config(
                 discovery_rulesets=(),
+                get_builtin_host_labels=app.get_builtin_host_labels,
             ).loaded_config,
             cmk.utils.diagnostics.deserialize_modes_parameters(options),
             core_performance_settings,
@@ -221,7 +222,10 @@ def _make_automation_create_diagnostics_dump(
         loading_result: LoadingResult | None,
     ) -> CreateDiagnosticsDumpResult:
         if loading_result is None:
-            loading_result = load_config(discovery_rulesets=())
+            loading_result = load_config(
+                discovery_rulesets=(),
+                get_builtin_host_labels=ctx.get_builtin_host_labels,
+            )
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()

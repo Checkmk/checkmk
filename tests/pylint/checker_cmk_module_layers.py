@@ -887,6 +887,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.product_telemetry"): _allow(
         "cmk.ccc.version",
+        "cmk.base.app.make_app",
         "cmk.base.config.load",
         "cmk.livestatus_client",
         "cmk.utils.http_proxy_config",
@@ -1110,6 +1111,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         "cmk.plugins",
+        "cmk.base.app.make_app",
         "cmk.base.config",
         "cmk.base.checkers",
         "cmk.checkengine",

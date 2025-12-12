@@ -103,12 +103,13 @@ class TestAutomationDiagHost:
                 create_core=app.create_core,
                 make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode("utf-8")),
                 make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+                get_builtin_host_labels=app.get_builtin_host_labels,
             ),
             args,
             AgentBasedPlugins.empty(),
             config.LoadingResult(
                 loaded_config=loaded_config,
-                config_cache=ConfigCache(loaded_config),
+                config_cache=ConfigCache(loaded_config, app.get_builtin_host_labels),
             ),
         ) == DiagHostResult(
             0,
@@ -238,18 +239,20 @@ def test_automation_active_check(
     monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
 
-    config_cache = config.ConfigCache(EMPTY_CONFIG)
+    app = make_app(edition(paths.omd_root))
+    config_cache = config.ConfigCache(EMPTY_CONFIG, app.get_builtin_host_labels)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
     assert (
         active_check.execute(
             AutomationContext(
-                edition=(app := make_app(edition(paths.omd_root))).edition,
+                edition=app.edition,
                 make_bake_on_restart=app.make_bake_on_restart,
                 create_core=app.create_core,
                 make_fetcher_trigger=app.make_fetcher_trigger,
                 make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+                get_builtin_host_labels=app.get_builtin_host_labels,
             ),
             active_check_args,
             AgentBasedPlugins.empty(),
@@ -313,7 +316,8 @@ def test_automation_active_check_invalid_args(
     loaded_config = replace(
         EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
     )
-    config_cache = config.ConfigCache(loaded_config)
+    app = make_app(edition(paths.omd_root))
+    config_cache = config.ConfigCache(loaded_config, app.get_builtin_host_labels)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
@@ -321,11 +325,12 @@ def test_automation_active_check_invalid_args(
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(
         AutomationContext(
-            edition=(app := make_app(edition(paths.omd_root))).edition,
+            edition=app.edition,
             make_bake_on_restart=app.make_bake_on_restart,
             create_core=app.create_core,
             make_fetcher_trigger=app.make_fetcher_trigger,
             make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+            get_builtin_host_labels=app.get_builtin_host_labels,
         ),
         active_check_args,
         AgentBasedPlugins.empty(),

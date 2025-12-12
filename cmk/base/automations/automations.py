@@ -20,12 +20,13 @@ from cmk.base.core.interface import MonitoringCore
 from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.site import SiteId
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import FetcherTrigger, ProgramFetcher
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import log, paths
-from cmk.utils.labels import LabelManager
+from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
@@ -70,6 +71,7 @@ class AutomationContext:
         ],
         ProgramFetcher | None,
     ]
+    get_builtin_host_labels: Callable[[SiteId], Labels]
 
 
 @dataclass
@@ -194,6 +196,9 @@ def load_plugins() -> AgentBasedPlugins:
         return config.load_all_pluginX(paths.checks_dir)
 
 
-def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadingResult:
+def load_config(
+    discovery_rulesets: Iterable[RuleSetName],
+    get_builtin_host_labels: Callable[[SiteId], Labels],
+) -> config.LoadingResult:
     with tracer.span("load_config"):
-        return config.load(discovery_rulesets, validate_hosts=False)
+        return config.load(discovery_rulesets, get_builtin_host_labels, validate_hosts=False)

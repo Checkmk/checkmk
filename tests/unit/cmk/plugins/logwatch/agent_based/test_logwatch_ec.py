@@ -27,7 +27,9 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import edition
 from cmk.plugins.logwatch.agent_based import commons as logwatch_
 from cmk.plugins.logwatch.agent_based import logwatch_ec
 from cmk.plugins.logwatch.agent_based.logwatch_section import parse_logwatch
@@ -102,7 +104,10 @@ def _patch_config_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         config,
         config.access_globally_cached_config_cache.__name__,
-        lambda: config.ConfigCache(EMPTY_CONFIG),
+        lambda: config.ConfigCache(
+            EMPTY_CONFIG,
+            make_app(edition(cmk.utils.paths.omd_root)).get_builtin_host_labels,
+        ),
     )
 
 

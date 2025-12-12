@@ -33,6 +33,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
@@ -2592,7 +2593,10 @@ def test_get_config_file_paths_with_confd(
 
 
 def test_load_config_folder_paths(folder_path_test_config: LoadedConfigFragment) -> None:
-    config_cache = config.ConfigCache(folder_path_test_config)
+    config_cache = config.ConfigCache(
+        folder_path_test_config,
+        make_app(edition(cmk.utils.paths.omd_root)).get_builtin_host_labels,
+    )
 
     assert config_cache.host_path(HostName("main-host")) == "/"
     assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"
@@ -2702,7 +2706,10 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    yield config.load(discovery_rulesets=()).loaded_config
+    yield config.load(
+        discovery_rulesets=(),
+        get_builtin_host_labels=make_app(edition(cmk.utils.paths.omd_root)).get_builtin_host_labels,
+    ).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     cmk.utils.paths.main_config_file.unlink()
@@ -2793,7 +2800,12 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        config.load(discovery_rulesets=())
+        config.load(
+            discovery_rulesets=(),
+            get_builtin_host_labels=make_app(
+                edition(cmk.utils.paths.omd_root)
+            ).get_builtin_host_labels,
+        )
         assert config.explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert config.explicit_host_conf["parents"][HostName("hostB")] == "setting2"
         assert config.explicit_host_conf["other"][HostName("hostA")] == "setting3"
@@ -2826,7 +2838,11 @@ def test_load_packed_config(config_path: Path) -> None:
     config.PackedConfigStore.from_serial(config_path).write({"abcd": 1})
 
     assert "abcd" not in config.__dict__
-    config.load_packed_config(config_path, discovery_rulesets=())
+    config.load_packed_config(
+        config_path,
+        discovery_rulesets=(),
+        get_builtin_host_labels=make_app(edition(cmk.utils.paths.omd_root)).get_builtin_host_labels,
+    )
     # Mypy does not understand that we add some new member for testing
     assert config.abcd == 1  # type: ignore[attr-defined]
     del config.__dict__["abcd"]

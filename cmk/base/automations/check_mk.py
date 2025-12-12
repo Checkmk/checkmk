@@ -324,7 +324,10 @@ def automation_service_discovery(
         plugins = load_plugins()
 
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+        loading_result = load_config(
+            discovery_rulesets=extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -488,7 +491,10 @@ def automation_special_agent_discovery_preview(
     if plugins is None:
         plugins = load_plugins()
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+        loading_result = load_config(
+            discovery_rulesets=extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
 
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -566,7 +572,10 @@ def automation_discovery_preview(
     if plugins is None:
         plugins = load_plugins()
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+        loading_result = load_config(
+            discovery_rulesets=extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
 
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1018,7 +1027,8 @@ def _execute_autodiscovery(
     ab_plugins = load_plugins() if ab_plugins is None else ab_plugins
     if loading_result is None:
         loading_result = load_config(
-            discovery_rulesets=extract_known_discovery_rulesets(ab_plugins)
+            discovery_rulesets=extract_known_discovery_rulesets(ab_plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
         )
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1254,7 +1264,7 @@ def _execute_autodiscovery(
     ):
         try:
             cache_manager.clear_all()
-            config_cache.initialize()
+            config_cache.initialize(ctx.get_builtin_host_labels)
             hosts_config = config.make_hosts_config(loaded_config)
             bake_on_restart = ctx.make_bake_on_restart(loading_result, hosts_config.hosts)
             notify_relay = _make_configured_notify_relay(bool(loaded_config.relays))
@@ -1317,7 +1327,7 @@ def _execute_autodiscovery(
                 )
         finally:
             cache_manager.clear_all()
-            config_cache.initialize()
+            config_cache.initialize(ctx.get_builtin_host_labels)
 
     return discovery_results, True
 
@@ -1365,7 +1375,10 @@ def automation_set_autochecks_v2(
 
     check_plugins = plugins.check_plugins
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+        loading_result = load_config(
+            discovery_rulesets=extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
 
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1436,7 +1449,10 @@ def automation_update_host_labels(
     )
 
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=())
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
     _trigger_discovery_check(
         loading_result.config_cache, hostname, loading_result.loaded_config.monitoring_core
     )
@@ -1465,7 +1481,8 @@ class AutomationRenameHosts:
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins),
+                get_builtin_host_labels=ctx.get_builtin_host_labels,
             )
 
         loaded_config = loading_result.loaded_config
@@ -1843,7 +1860,10 @@ def automation_get_service_labels(
     if plugins is None:
         plugins = load_plugins()
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+        loading_result = load_config(
+            discovery_rulesets=extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
 
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1887,7 +1907,10 @@ def automation_get_service_name(
     if plugins is None:
         plugins = load_plugins()
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+        loading_result = load_config(
+            discovery_rulesets=extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
 
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -1931,7 +1954,8 @@ class AutomationAnalyseServices:
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins),
+                get_builtin_host_labels=ctx.get_builtin_host_labels,
             )
         loaded_config = loading_result.loaded_config
         ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -2210,7 +2234,10 @@ def automation_analyse_host(
     host_name = HostName(args[0])
 
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=())
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2232,7 +2259,10 @@ def automation_analyze_host_rule_matches(
     match_rules = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=())
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2268,7 +2298,10 @@ def automation_analyze_service_rule_matches(
     match_rules, service_labels = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=())
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
@@ -2305,7 +2338,10 @@ def automation_analyze_host_rule_effectiveness(
     match_rules = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
-        loading_result = load_config(discovery_rulesets=())
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
     label_manager = config_cache.label_manager
@@ -2509,7 +2545,8 @@ class AutomationRestart:
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins),
+                get_builtin_host_labels=ctx.get_builtin_host_labels,
             )
         loaded_config = loading_result.loaded_config
         ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -2709,7 +2746,11 @@ def automation_get_configuration(
     # that could be too much for the command line
     variable_names = ast.literal_eval(sys.stdin.read())
 
-    config.load(discovery_rulesets=(), with_conf_d=False)
+    config.load(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+        with_conf_d=False,
+    )
 
     result = {}
     for varname in variable_names:
@@ -2810,7 +2851,10 @@ def automation_scan_parents(
         raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
 
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+    loading_result = loading_result or load_config(
+        extract_known_discovery_rulesets(plugins),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
 
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
@@ -3109,7 +3153,10 @@ class AutomationDiagHost:
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         plugins = plugins or load_plugins()
-        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+        loading_result = loading_result or load_config(
+            extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
         label_manager = loading_result.config_cache.label_manager
 
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -3600,7 +3647,10 @@ class AutomationActiveCheck:
         plugin, item = args[1:]
 
         plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+        loading_result = loading_result or load_config(
+            extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
         config_cache = loading_result.config_cache
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
@@ -3756,7 +3806,10 @@ def automation_update_passwords_merged_file(
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> UpdatePasswordsMergedFileResult:
-    loading_result = loading_result or load_config(discovery_rulesets=())
+    loading_result = loading_result or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
     cmk.utils.password_store.save(
         {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
         cmk.utils.password_store.pending_secrets_path_site(),
@@ -3771,7 +3824,10 @@ def automation_update_dns_cache(
     loading_result: config.LoadingResult | None,
 ) -> UpdateDNSCacheResult:
     plugins = plugins or load_plugins()  # can we remove this?
-    loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+    loading_result = loading_result or load_config(
+        extract_known_discovery_rulesets(plugins),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
 
     hosts_config = loading_result.config_cache.hosts_config
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
@@ -3810,7 +3866,10 @@ def automation_get_agent_output(
 
     plugins = plugins or load_plugins()  # do we really still need this?
     # This loads the pending config:
-    loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
+    loading_result = loading_result or load_config(
+        extract_known_discovery_rulesets(plugins),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -4049,7 +4108,10 @@ def automation_notification_replay(
     loading_result: config.LoadingResult | None,
 ) -> NotificationReplayResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(discovery_rulesets=())
+    loading_result = loading_result or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -4085,7 +4147,10 @@ def automation_notification_analyse(
     loading_result: config.LoadingResult | None,
 ) -> NotificationAnalyseResult:
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(discovery_rulesets=())
+    loading_result = loading_result or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
     nr = args[0]
@@ -4125,7 +4190,10 @@ def automation_notification_test(
     dispatch = args[1]
 
     plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(discovery_rulesets=())
+    loading_result = loading_result or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
     ensure_nagios = notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core)
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 

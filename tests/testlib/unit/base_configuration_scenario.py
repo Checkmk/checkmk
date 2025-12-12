@@ -17,9 +17,11 @@ from pytest import MonkeyPatch
 
 import cmk.utils.tags
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
 from cmk.checkengine.discovery import AutochecksMemoizer
 from cmk.checkengine.plugins import AutocheckEntry
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -50,11 +52,15 @@ class Scenario:
                 # But it's probably less confusing if we stick to that pattern anyway.
                 **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},
             ),
+            self.get_builtin_host_labels,
         )
 
     def __init__(self, site_id: str = "unit") -> None:
         super().__init__()
 
+        self.get_builtin_host_labels = make_app(
+            edition(cmk.utils.paths.omd_root)
+        ).get_builtin_host_labels
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         self.site_id = site_id
@@ -204,7 +210,7 @@ class Scenario:
             monkeypatch.setattr(config, key, value)
 
         self.config_cache = self._get_config_cache()
-        self.config_cache.initialize()
+        self.config_cache.initialize(self.get_builtin_host_labels)
 
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(

@@ -171,14 +171,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 
-try:
-    from cmk.utils.nonfree.ultimatemt.labels import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-        get_builtin_host_labels,
-    )
-except ModuleNotFoundError:
-    from cmk.utils.labels import get_builtin_host_labels
-
-
 tracer = trace.get_tracer()
 
 _ContactgroupName = str
@@ -569,6 +561,7 @@ class LoadingResult:
 # Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load(
     discovery_rulesets: Iterable[RuleSetName],
+    get_builtin_host_labels: Callable[[SiteId], Labels],
     with_conf_d: bool = True,
     validate_hosts: bool = True,
 ) -> LoadingResult:
@@ -576,7 +569,9 @@ def load(
 
     _changed_var_names = _load_config(with_conf_d)
 
-    loading_result = _perform_post_config_loading_actions(discovery_rulesets)
+    loading_result = _perform_post_config_loading_actions(
+        discovery_rulesets, get_builtin_host_labels
+    )
 
     if validate_hosts:
         hosts_config = loading_result.config_cache.hosts_config
@@ -599,7 +594,9 @@ def load(
 # This function still mostly manipulates a global state.
 # Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load_packed_config(
-    config_path: Path, discovery_rulesets: Iterable[RuleSetName]
+    config_path: Path,
+    discovery_rulesets: Iterable[RuleSetName],
+    get_builtin_host_labels: Callable[[SiteId], Labels],
 ) -> LoadingResult:
     """Load the configuration for the CMK helpers of CMC
 
@@ -616,7 +613,7 @@ def load_packed_config(
     """
     _initialize_config()
     globals().update(PackedConfigStore.from_serial(config_path).read())
-    return _perform_post_config_loading_actions(discovery_rulesets)
+    return _perform_post_config_loading_actions(discovery_rulesets, get_builtin_host_labels)
 
 
 def _initialize_config() -> None:
@@ -625,6 +622,7 @@ def _initialize_config() -> None:
 
 def _perform_post_config_loading_actions(
     discovery_rulesets: Iterable[RuleSetName],
+    get_builtin_host_labels: Callable[[SiteId], Labels],
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
@@ -708,7 +706,9 @@ def _perform_post_config_loading_actions(
         cmc_config_multiprocessing=cmc_config_multiprocessing,
     )
 
-    config_cache = ConfigCache(loaded_config).initialize()
+    config_cache = ConfigCache(loaded_config, get_builtin_host_labels).initialize(
+        get_builtin_host_labels
+    )
     _globally_cache_config_cache(config_cache)
     return LoadingResult(
         loaded_config=loaded_config,
@@ -1536,7 +1536,11 @@ class AutochecksConfigurer:
 
 
 class ConfigCache:
-    def __init__(self, loaded_config: LoadedConfigFragment) -> None:
+    def __init__(
+        self,
+        loaded_config: LoadedConfigFragment,
+        get_builtin_host_labels: Callable[[SiteId], Labels],
+    ) -> None:
         super().__init__()
         self._loaded_config: Final = loaded_config
         self.hosts_config = Hosts(hosts=(), clusters=(), shadow_hosts=())
@@ -1562,9 +1566,9 @@ class ConfigCache:
         self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
         self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
-        self.initialize()
+        self.initialize(get_builtin_host_labels)
 
-    def initialize(self) -> ConfigCache:
+    def initialize(self, get_builtin_host_labels: Callable[[SiteId], Labels]) -> ConfigCache:
         self.invalidate_host_config()
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")

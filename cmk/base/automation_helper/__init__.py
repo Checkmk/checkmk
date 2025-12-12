@@ -11,6 +11,7 @@ import multiprocessing
 import os
 import signal
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from setproctitle import setproctitle
@@ -20,11 +21,13 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
+from cmk.ccc.site import SiteId
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
 )
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils.caching import cache_manager
+from cmk.utils.labels import Labels
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
 
@@ -131,10 +134,12 @@ def _reset_global_multiprocessing_start_method_to_platform_default() -> None:
     multiprocessing.get_start_method(allow_none=False)
 
 
-def _reload_automation_config(plugins: AgentBasedPlugins) -> config.LoadingResult:
+def _reload_automation_config(
+    plugins: AgentBasedPlugins, get_builtin_host_labels: Callable[[SiteId], Labels]
+) -> config.LoadingResult:
     cache_manager.clear()
     discovery_rulesets = extract_known_discovery_rulesets(plugins)
-    return config.load(discovery_rulesets, validate_hosts=False)
+    return config.load(discovery_rulesets, get_builtin_host_labels, validate_hosts=False)
 
 
 def _clear_caches_before_each_call(config_cache: ConfigCache) -> None:

@@ -12,17 +12,20 @@ import pytest
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.checkers import (
     CheckerConfig,
     CheckerPluginMapper,
     SectionPluginMapper,
 )
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import edition
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.helper_interface import FetcherType, SourceInfo, SourceType
+from cmk.utils import paths
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.timeperiod import TimeperiodName
 from tests.plugins_siteless.helpers import (
@@ -79,7 +82,10 @@ def test_checks_executor(
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
-    config_cache = config.ConfigCache(EMPTY_CONFIG).initialize()
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        (get_builtin_host_labels := make_app(edition(paths.omd_root)).get_builtin_host_labels),
+    ).initialize(get_builtin_host_labels)
     parser_config = config.make_parser_config(
         EMPTY_CONFIG, config_cache.ruleset_matcher, config_cache.label_manager
     )

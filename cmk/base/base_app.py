@@ -9,11 +9,12 @@ from typing import Final
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import FetcherTrigger, ProgramFetcher
 from cmk.fetchers.snmp import SNMPPluginStore
-from cmk.utils.labels import LabelManager
+from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
@@ -57,6 +58,7 @@ class CheckmkBaseApp:
             ],
             ProgramFetcher | None,
         ],
+        get_builtin_host_labels: Callable[[SiteId], Labels],
     ) -> None:
         self.edition: Final = edition
         self.modes: Final = modes
@@ -66,3 +68,4 @@ class CheckmkBaseApp:
         self.licensing_handler_type: Final = licensing_handler_type
         self.make_fetcher_trigger: Final = make_fetcher_trigger
         self.make_metric_backend_fetcher: Final = make_metric_backend_fetcher
+        self.get_builtin_host_labels: Final = get_builtin_host_labels

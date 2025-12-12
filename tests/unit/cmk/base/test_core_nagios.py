@@ -23,12 +23,13 @@ from pytest import MonkeyPatch
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+import cmk.plugins.collection.server_side_calls.ftp
+from cmk.base import config
 
 # We need an active check plugin that exists.
 # The ExecutableFinder demands a location that exits :-/
 # We're importing it here, so that this fails the linters if that is removed.
-import cmk.plugins.collection.server_side_calls.ftp
-from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.nagios._create_config import (
     _format_nagios_object,
@@ -620,7 +621,10 @@ def test_create_nagios_servicedefs_active_check(
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
     hostname = HostName("my_host")
-    config_cache = config.ConfigCache(EMPTY_CONFIG)
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        make_app(cmk_version.edition(paths.omd_root)).get_builtin_host_labels,
+    )
     config_cache.label_manager = LabelManager(FakeLabelConfig(service_labels), {}, {}, {})
     monkeypatch.setattr(config_cache, "alias", lambda hn: {hostname: host_attrs["alias"]}[hn])
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -799,7 +803,10 @@ def test_create_nagios_servicedefs_with_warnings(
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
-    config_cache = config.ConfigCache(EMPTY_CONFIG)
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        make_app(cmk_version.edition(paths.omd_root)).get_builtin_host_labels,
+    )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     final_service_name_config = make_final_service_name_config(
@@ -876,7 +883,10 @@ def test_create_nagios_servicedefs_omit_service(
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
-    config_cache = config.ConfigCache(EMPTY_CONFIG)
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        make_app(cmk_version.edition(paths.omd_root)).get_builtin_host_labels,
+    )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
@@ -948,7 +958,10 @@ def test_create_nagios_servicedefs_invalid_args(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
 
-    config_cache = config.ConfigCache(EMPTY_CONFIG)
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        make_app(cmk_version.edition(paths.omd_root)).get_builtin_host_labels,
+    )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
@@ -1041,7 +1054,10 @@ def test_create_nagios_config_commands(
     )
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
-    config_cache = config.ConfigCache(EMPTY_CONFIG)
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        make_app(cmk_version.edition(paths.omd_root)).get_builtin_host_labels,
+    )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     final_service_name_config = make_final_service_name_config(

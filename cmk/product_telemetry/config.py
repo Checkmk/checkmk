@@ -7,8 +7,10 @@ import typing
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.base.app import make_app
 from cmk.base.config import load
-from cmk.utils import http_proxy_config
+from cmk.ccc.version import edition
+from cmk.utils import http_proxy_config, paths
 
 type ProxySetting = (
     tuple[Literal["environment"], Literal["environment"]]
@@ -26,7 +28,10 @@ class TelemetryConfig:
 
 
 def load_telemetry_config() -> TelemetryConfig:
-    config = load({})
+    config = load(
+        discovery_rulesets=(),
+        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
+    )
 
     proxy_config = get_proxy_config(
         config.loaded_config.product_telemetry["proxy_setting"],

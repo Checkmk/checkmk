@@ -91,16 +91,18 @@ def main() -> int:
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
         plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
+        app = make_app(cmk_version.edition(omd_root))
         loading_result = config.load_packed_config(
             VersionedConfigPath.make_latest_path(omd_root),
             discovery_rulesets=extract_known_discovery_rulesets(plugins),
+            get_builtin_host_labels=app.get_builtin_host_labels,
         )
 
         config.ipaddresses = CONFIG.ipaddresses
         config.ipv6addresses = CONFIG.ipv6addresses
 
         return run_checking(
-            make_app(cmk_version.edition(omd_root)),
+            app,
             loading_result.loaded_config,
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager,

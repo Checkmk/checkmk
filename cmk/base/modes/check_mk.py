@@ -59,6 +59,7 @@ from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.site import SiteId
 from cmk.ccc.store import activation_lock, lock_checkmk_configuration
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
@@ -133,7 +134,7 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.http_proxy_config import make_http_proxy_getter
 from cmk.utils.ip_lookup import ConfiguredIPLookup
-from cmk.utils.labels import LabelManager
+from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import (
     BundledHostRulesetMatcher,
@@ -148,11 +149,17 @@ from .modes import Mode, Option
 tracer = trace.get_tracer()
 
 
-def load_config(plugins: AgentBasedPlugins) -> config.LoadingResult:
+def load_config(
+    plugins: AgentBasedPlugins,
+    get_builtin_host_labels: Callable[[SiteId], Labels],
+) -> config.LoadingResult:
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed
     # by a broken configuration
-    return config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))
+    return config.load(
+        discovery_rulesets=extract_known_discovery_rulesets(plugins),
+        get_builtin_host_labels=get_builtin_host_labels,
+    )
 
 
 def load_checks() -> AgentBasedPlugins:
@@ -358,7 +365,9 @@ _SNMP_BACKEND_OPTION: Final = Option(
 
 
 def mode_list_hosts(app: CheckmkBaseApp, options: dict, args: list[str]) -> None:
-    config_cache = config.load(discovery_rulesets=()).config_cache
+    config_cache = config.load(
+        discovery_rulesets=(), get_builtin_host_labels=app.get_builtin_host_labels
+    ).config_cache
     hosts = _list_all_hosts(
         config_cache,
         args,
@@ -443,7 +452,9 @@ _LIST_HOSTS_MODE = Mode(
 
 
 def mode_list_tag(app: CheckmkBaseApp, args: list[str]) -> None:
-    config_cache = config.load(discovery_rulesets=()).config_cache
+    config_cache = config.load(
+        discovery_rulesets=(), get_builtin_host_labels=app.get_builtin_host_labels
+    ).config_cache
     hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args), config_cache)
     print_("\n".join(sorted(hosts)))
     if hosts:
@@ -618,7 +629,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -843,7 +854,7 @@ _DUMP_AGENT_MODE = Mode(
 def mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -962,7 +973,9 @@ _PACKAGE_MODE = Mode(
 
 
 def mode_update_dns_cache(app: CheckmkBaseApp) -> None:
-    config_cache = config.load(discovery_rulesets=()).config_cache
+    config_cache = config.load(
+        discovery_rulesets=(), get_builtin_host_labels=app.get_builtin_host_labels
+    ).config_cache
     hosts_config = config_cache.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_lookup.update_dns_cache(
@@ -997,7 +1010,9 @@ _UPDATE_DNS_CACHE_MODE = Mode(
 
 
 def mode_cleanup_piggyback(app: CheckmkBaseApp) -> None:
-    loaded_config = config.load(discovery_rulesets=()).loaded_config
+    loaded_config = config.load(
+        discovery_rulesets=(), get_builtin_host_labels=app.get_builtin_host_labels
+    ).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         loaded_config.piggyback_max_cachefile_age,
         (r["value"] for r in loaded_config.piggybacked_host_files),
@@ -1160,7 +1175,9 @@ def mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> N
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
-    config_cache = config.load(discovery_rulesets=()).config_cache
+    config_cache = config.load(
+        discovery_rulesets=(), get_builtin_host_labels=app.get_builtin_host_labels
+    ).config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
@@ -1241,7 +1258,9 @@ def mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Seque
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    loading_result = config.load(discovery_rulesets=())
+    loading_result = config.load(
+        discovery_rulesets=(), get_builtin_host_labels=app.get_builtin_host_labels
+    )
     config_cache = loading_result.config_cache
     hosts_config = config_cache.hosts_config
 
@@ -1309,7 +1328,7 @@ _SNMPGET_MODE = Mode(
 
 def mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, get_builtin_host_labels=app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     hosts_config = loading_result.config_cache.hosts_config
@@ -1434,7 +1453,7 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
     from cmk.base.core.nagios import create_config
 
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, get_builtin_host_labels=app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -1545,7 +1564,7 @@ def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
 
 def mode_update(app: CheckmkBaseApp) -> None:
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -1650,7 +1669,7 @@ _UPDATE_MODE = Mode(
 
 def mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -1747,7 +1766,7 @@ _RESTART_MODE = Mode(
 
 def mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -1974,6 +1993,7 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
                     create_core=app.create_core,
                     make_fetcher_trigger=app.make_fetcher_trigger,
                     make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+                    get_builtin_host_labels=app.get_builtin_host_labels,
                 ),
                 name,
                 automation_args,
@@ -2013,15 +2033,26 @@ def mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | No
         options=options,
         args=args,
         keepalive=not community_edition and "keepalive" in options,
+        get_builtin_host_labels=app.get_builtin_host_labels,
     )
 
 
-def _do_notify(options: dict, args: list[str], keepalive: bool) -> int | None:
+def _do_notify(
+    options: dict,
+    args: list[str],
+    keepalive: bool,
+    get_builtin_host_labels: Callable[[SiteId], Labels],
+) -> int | None:
     if keepalive:
         register_sigint_handler()
 
     with lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
-        loading_result = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
+        loading_result = config.load(
+            discovery_rulesets=(),
+            get_builtin_host_labels=get_builtin_host_labels,
+            with_conf_d=True,
+            validate_hosts=False,
+        )
 
     from cmk.base import notify
 
@@ -2129,7 +2160,7 @@ def mode_check_discovery(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
@@ -2469,7 +2500,7 @@ def _preprocess_hostnames(
 
 def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[str]) -> None:
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -2700,7 +2731,7 @@ _CheckingOptions = TypedDict(
 
 def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) -> ServiceState:
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -3033,7 +3064,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -3363,7 +3394,7 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
         return
 
     plugins = load_checks()
-    loading_result = load_config(plugins)
+    loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager

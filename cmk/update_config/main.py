@@ -25,6 +25,7 @@ from typing import Literal
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 from cmk.base import config as base_config
+from cmk.base.app import make_app
 from cmk.ccc import debug, tty
 from cmk.ccc.version import Edition, edition
 from cmk.gui import main_modules
@@ -300,7 +301,10 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 
 def _initialize_base_environment() -> None:
-    base_config.load(discovery_rulesets=())
+    base_config.load(
+        discovery_rulesets=(),
+        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
+    )
 
 
 @contextmanager

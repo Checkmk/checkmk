@@ -373,11 +373,11 @@ const updateDashboardSettings = async (
   generalSettings: DashboardGeneralSettings
 ) => {
   dashboardsManager.activeDashboard.value!.general_settings = generalSettings
-  await dashboardsManager.persistDashboard()
+  await dashboardsManager.persistDashboard(dashboardName)
   openDashboardSettings.value = false
-  if (dashboardsManager.activeDashboardName.value !== dashboardName) {
-    //TODO: Handle ID change
-  }
+
+  const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboardName)
+  urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
 }
 
 function deepClone<T>(obj: T): T {

@@ -13,35 +13,24 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 
 from ._family import DASHBOARD_FAMILY
 from ._utils import PERMISSIONS_DASHBOARD, save_dashboard_to_file, serialize_relative_grid_dashboard
-from .model.dashboard import BaseRelativeGridDashboardRequest, RelativeGridDashboardResponse
+from .model.dashboard import RelativeGridDashboardRequest, RelativeGridDashboardResponse
 from .model.response_model import RelativeGridDashboardDomainObject
 
 
-@api_model
-class CreateDashboardV1(BaseRelativeGridDashboardRequest):
-    dashboard_id: str = api_field(
-        serialization_alias="id",
-        description="Unique identifier for the dashboard.",
-        example="custom_dashboard",
-        pattern=r"^[a-zA-Z0-9_]+$",
-    )
-
-
 def create_relative_grid_dashboard_v1(
-    api_context: ApiContext, body: CreateDashboardV1
+    api_context: ApiContext, body: RelativeGridDashboardRequest
 ) -> TypedResponse[RelativeGridDashboardDomainObject]:
     """Create a dashboard."""
     body.validate(api_context, embedded_views={})
     user.need_permission("general.edit_dashboards")
 
     owner = user.ident
-    internal = body.to_internal(owner, body.dashboard_id, embedded_views={}, public_token_id=None)
+    internal = body.to_internal(owner, embedded_views={}, public_token_id=None)
     save_dashboard_to_file(api_context.config.sites, internal, owner)
 
     return ApiResponse(

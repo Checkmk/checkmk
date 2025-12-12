@@ -17,7 +17,7 @@ from cmk.gui.openapi.framework import (
     QueryParam,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model import api_model, ApiOmitted
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import AnnotatedUserId
@@ -29,18 +29,13 @@ from ._utils import (
     save_dashboard_to_file,
     serialize_relative_grid_dashboard,
 )
-from .model.dashboard import BaseRelativeGridDashboardRequest, RelativeGridDashboardResponse
+from .model.dashboard import RelativeGridDashboardRequest, RelativeGridDashboardResponse
 from .model.response_model import RelativeGridDashboardDomainObject
-
-
-@api_model
-class EditDashboardV1(BaseRelativeGridDashboardRequest):
-    pass
 
 
 def edit_relative_grid_dashboard_v1(
     api_context: ApiContext,
-    body: EditDashboardV1,
+    body: RelativeGridDashboardRequest,
     dashboard_id: Annotated[
         str,
         PathParam(description="Dashboard ID", example="main"),
@@ -69,15 +64,15 @@ def edit_relative_grid_dashboard_v1(
     embedded_views = old_dashboard.get("embedded_views", {})
     body.validate(api_context, embedded_views=embedded_views)
 
-    new_dashboard = body.to_internal(
-        user_id, dashboard_id, embedded_views, old_dashboard.get("public_token_id")
-    )
+    new_dashboard = body.to_internal(user_id, embedded_views, old_dashboard.get("public_token_id"))
 
-    save_dashboard_to_file(api_context.config.sites, new_dashboard, user_id)
+    save_dashboard_to_file(
+        api_context.config.sites, new_dashboard, user_id, old_dashboard_id=dashboard_id
+    )
     disable_dashboard_token(new_dashboard)
 
     return serialize_relative_grid_dashboard(
-        dashboard_id, RelativeGridDashboardResponse.from_internal(new_dashboard)
+        body.dashboard_id, RelativeGridDashboardResponse.from_internal(new_dashboard)
     )
 
 

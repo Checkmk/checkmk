@@ -8,16 +8,15 @@ import { type Ref, computed, onBeforeMount, ref } from 'vue'
 import {
   type ContentRelativeGrid,
   type ContentResponsiveGrid,
-  type CreateRelativeDashboardBody,
-  type CreateResponsiveDashboardBody,
   type DashboardGeneralSettings,
   DashboardLayout,
   type DashboardModel,
   DashboardOwnerType,
-  type EditRelativeDashboardBody,
-  type EditResponsiveDashboardBody
+  type RelativeGridDashboardRequest,
+  type ResponsiveGridDashboardRequest
 } from '@/dashboard-wip/types/dashboard'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
+import type { EditRelativeGridResult, EditResponsiveGridResult } from '@/dashboard-wip/utils'
 import { createDashboardModel, dashboardAPI } from '@/dashboard-wip/utils.ts'
 
 export function useDashboardsManager() {
@@ -86,7 +85,7 @@ export function useDashboardsManager() {
     let content: ContentRelativeGrid | ContentResponsiveGrid
 
     if (layoutType === DashboardLayout.RELATIVE_GRID) {
-      const dashboardBody: CreateRelativeDashboardBody = {
+      const dashboardBody: RelativeGridDashboardRequest = {
         id: dashboardName,
         general_settings: generalSettings,
         filter_context: filterContext,
@@ -100,7 +99,7 @@ export function useDashboardsManager() {
         widgets: dashboardResp.widgets
       } as ContentRelativeGrid
     } else {
-      const dashboardBody: CreateResponsiveDashboardBody = {
+      const dashboardBody: ResponsiveGridDashboardRequest = {
         id: dashboardName,
         general_settings: generalSettings,
         filter_context: filterContext,
@@ -137,11 +136,14 @@ export function useDashboardsManager() {
     }
   }
 
-  async function persistDashboard() {
+  async function persistDashboard(
+    rename?: string
+  ): Promise<EditRelativeGridResult | EditResponsiveGridResult> {
     const dashboard = activeDashboard.value
     if (!dashboard) {
       throw new Error('No active dashboard to persist')
     }
+    const id = rename ?? activeDashboardName.value!
 
     if (dashboard.content.layout.type === DashboardLayout.RELATIVE_GRID) {
       const widgets = Object.fromEntries(
@@ -154,7 +156,8 @@ export function useDashboardsManager() {
         )
       )
       const filterContext = dashboard.filter_context
-      const relativeDashboard: EditRelativeDashboardBody = {
+      const relativeDashboard: RelativeGridDashboardRequest = {
+        id,
         general_settings: dashboard.general_settings,
         filter_context: {
           restricted_to_single: filterContext.restricted_to_single,
@@ -179,7 +182,8 @@ export function useDashboardsManager() {
         )
       )
       const filterContext = dashboard.filter_context
-      const responsiveDashboard: EditResponsiveDashboardBody = {
+      const responsiveDashboard: ResponsiveGridDashboardRequest = {
+        id,
         general_settings: dashboard.general_settings,
         filter_context: {
           restricted_to_single: filterContext.restricted_to_single,

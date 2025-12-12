@@ -1451,12 +1451,12 @@ x-tagGroups:
   - Autocomplete (internal)
   - Dynamic Configuration Daemon (DCD)
   - Metric (internal)
+  - Relays
   - Dashboards
   - User Messages
   - Graph Timeranges
   - Sidebar Element
   - Visual Filters
-  - Relays
   - Data Sources
   - Views
   - Pagetype Topics
@@ -10751,7 +10751,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditDashboardV1'
+              $ref: '#/components/schemas/RelativeGridDashboardRequest'
       x-codeSamples:
       - label: requests
         lang: python
@@ -11032,7 +11032,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditResponsiveGridDashboardV1'
+              $ref: '#/components/schemas/ResponsiveGridDashboardRequest'
       x-codeSamples:
       - label: requests
         lang: python
@@ -11539,7 +11539,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDashboardV1'
+              $ref: '#/components/schemas/RelativeGridDashboardRequest'
       x-codeSamples:
       - label: requests
         lang: python
@@ -11786,7 +11786,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateResponsiveGridDashboardV1'
+              $ref: '#/components/schemas/ResponsiveGridDashboardRequest'
       x-codeSamples:
       - label: requests
         lang: python
@@ -36334,6 +36334,21 @@ tags:
 
 
     '
+- name: Relays
+  x-displayName: Relays
+  description: '
+
+    Relays are satellite systems deployed within private networks to gather monitoring
+    data (e.g., via SNMP queries) from hosts that cannot be directly accessed by the
+    Checkmk site.
+
+
+    This family of endpoints provides operations to register and manage Relays.
+
+    They allow you to create and update Relay configurations on disk, as well as remove
+    them when no longer needed.
+
+    '
 - name: HW/SW Inventory
   x-displayName: HW/SW Inventory
   description: '
@@ -36376,21 +36391,6 @@ tags:
 - name: Visual Filters
   x-displayName: Visual Filters
   description: Information about supported filters.
-- name: Relays
-  x-displayName: Relays
-  description: '
-
-    Relays are satellite systems deployed within private networks to gather monitoring
-    data (e.g., via SNMP queries) from hosts that cannot be directly accessed by the
-    Checkmk site.
-
-
-    This family of endpoints provides operations to register and manage Relays.
-
-    They allow you to create and update Relay configurations on disk, as well as remove
-    them when no longer needed.
-
-    '
 - name: Data Sources
   x-displayName: Data Sources
   description: Data sources provide data for views.
@@ -43203,7 +43203,7 @@ components:
       - layout
       title: RelativeGridWidgetRequest
       type: object
-    EditDashboardV1:
+    RelativeGridDashboardRequest:
       additionalProperties: false
       properties:
         general_settings:
@@ -43212,6 +43212,13 @@ components:
         filter_context:
           $ref: '#/components/schemas/DashboardFilterContext'
           description: Filter context for the dashboard.
+        id:
+          description: Unique identifier for the dashboard.
+          examples:
+          - custom_dashboard
+          pattern: ^[a-zA-Z0-9_]+$
+          title: Id
+          type: string
         layout:
           $ref: '#/components/schemas/DashboardRelativeGridLayout'
           description: The layout the dashboard uses.
@@ -43224,9 +43231,10 @@ components:
       required:
       - general_settings
       - filter_context
+      - id
       - layout
       - widgets
-      title: EditDashboardV1
+      title: RelativeGridDashboardRequest
       type: object
     Api415DefaultError3A6CC372948DF091:
       properties:
@@ -43325,7 +43333,7 @@ components:
       - layout
       title: ResponsiveGridWidgetRequest
       type: object
-    EditResponsiveGridDashboardV1:
+    ResponsiveGridDashboardRequest:
       additionalProperties: false
       properties:
         general_settings:
@@ -43334,6 +43342,13 @@ components:
         filter_context:
           $ref: '#/components/schemas/DashboardFilterContext'
           description: Filter context for the dashboard.
+        id:
+          description: Unique identifier for the dashboard.
+          examples:
+          - custom_dashboard
+          pattern: ^[a-zA-Z0-9_]+$
+          title: Id
+          type: string
         layout:
           $ref: '#/components/schemas/DashboardResponsiveGridLayout'
           description: The layout the dashboard uses.
@@ -43346,9 +43361,10 @@ components:
       required:
       - general_settings
       - filter_context
+      - id
       - layout
       - widgets
-      title: EditResponsiveGridDashboardV1
+      title: ResponsiveGridDashboardRequest
       type: object
     TopListRequest:
       additionalProperties: false
@@ -43571,72 +43587,6 @@ components:
       - reference_dashboard_id
       - dashboard_id
       title: CloneDashboardV1
-      type: object
-    CreateDashboardV1:
-      additionalProperties: false
-      properties:
-        general_settings:
-          $ref: '#/components/schemas/DashboardGeneralSettings'
-          description: General settings for the dashboard.
-        filter_context:
-          $ref: '#/components/schemas/DashboardFilterContext'
-          description: Filter context for the dashboard.
-        layout:
-          $ref: '#/components/schemas/DashboardRelativeGridLayout'
-          description: The layout the dashboard uses.
-        widgets:
-          additionalProperties:
-            $ref: '#/components/schemas/RelativeGridWidgetRequest'
-          description: All widgets that are part of this dashboard.
-          title: Widgets
-          type: object
-        id:
-          description: Unique identifier for the dashboard.
-          examples:
-          - custom_dashboard
-          pattern: ^[a-zA-Z0-9_]+$
-          title: Id
-          type: string
-      required:
-      - general_settings
-      - filter_context
-      - layout
-      - widgets
-      - id
-      title: CreateDashboardV1
-      type: object
-    CreateResponsiveGridDashboardV1:
-      additionalProperties: false
-      properties:
-        general_settings:
-          $ref: '#/components/schemas/DashboardGeneralSettings'
-          description: General settings for the dashboard.
-        filter_context:
-          $ref: '#/components/schemas/DashboardFilterContext'
-          description: Filter context for the dashboard.
-        layout:
-          $ref: '#/components/schemas/DashboardResponsiveGridLayout'
-          description: The layout the dashboard uses.
-        widgets:
-          additionalProperties:
-            $ref: '#/components/schemas/ResponsiveGridWidgetRequest'
-          description: All widgets that are part of this dashboard.
-          title: Widgets
-          type: object
-        id:
-          description: Unique identifier for the dashboard.
-          examples:
-          - custom_dashboard
-          pattern: ^[a-zA-Z0-9_]+$
-          title: Id
-          type: string
-      required:
-      - general_settings
-      - filter_context
-      - layout
-      - widgets
-      - id
-      title: CreateResponsiveGridDashboardV1
       type: object
     DeleteDashboardToken:
       additionalProperties: false
@@ -58077,7 +58027,6 @@ components:
       - all_contacts_of_the_notified_object
       - all_users
       - all_users_with_an_email_address
-      - explicit_email_addresses
       - members_of_contact_groups
       - restrict_by_contact_groups
       - restrict_by_custom_macros

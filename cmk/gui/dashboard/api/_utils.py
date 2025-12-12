@@ -173,10 +173,22 @@ def serialize_relative_grid_dashboard(
 
 
 def save_dashboard_to_file(
-    sites: SiteConfigurations, dashboard: DashboardConfig, user_id: UserId
+    sites: SiteConfigurations,
+    dashboard: DashboardConfig,
+    user_id: UserId,
+    old_dashboard_id: str | None = None,
 ) -> None:
     dashboard_id = dashboard["name"]
     store = DashboardStore.get_instance()
+    # TODO: tests, update spec & frontend
+    if old_dashboard_id and old_dashboard_id != dashboard_id:
+        if (user_id, dashboard_id) in store.all:
+            raise ProblemException(
+                status=400,
+                title="Dashboard ID already in use",
+                detail=f"A dashboard with ID '{dashboard_id}' already exists for user '{user_id}'.",
+            )
+        store.all.pop((user_id, old_dashboard_id), None)
     store.all[(user_id, dashboard_id)] = dashboard
 
     save_all_dashboards(user_id)

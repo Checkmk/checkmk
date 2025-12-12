@@ -11,18 +11,16 @@ import type {
   BadRequestBody,
   ContentRelativeGrid,
   ContentResponsiveGrid,
-  CreateRelativeDashboardBody,
-  CreateResponsiveDashboardBody,
   DashboardConstants,
   DashboardGeneralSettings,
   DashboardMainMenuTopic,
   DashboardMetadata,
   DashboardModel,
-  EditRelativeDashboardBody,
-  EditResponsiveDashboardBody,
   RelativeGridDashboardDomainObject,
+  RelativeGridDashboardRequest,
   RelativeGridDashboardResponse,
   ResponsiveGridDashboardDomainObject,
+  ResponsiveGridDashboardRequest,
   ResponsiveGridDashboardResponse,
   SidebarElement
 } from '@/dashboard-wip/types/dashboard.ts'
@@ -49,8 +47,8 @@ type EditGridResult<Result> =
   | { success: false; status: 400; error: BadRequestBody }
   | { success: false; status: number; error: unknown }
 
-type EditResponsiveGridResult = EditGridResult<ResponsiveGridDashboardDomainObject>
-type EditRelativeGridResult = EditGridResult<RelativeGridDashboardDomainObject>
+export type EditResponsiveGridResult = EditGridResult<ResponsiveGridDashboardDomainObject>
+export type EditRelativeGridResult = EditGridResult<RelativeGridDashboardDomainObject>
 
 function processEditResponse<T>(result: {
   data?: T
@@ -91,7 +89,7 @@ export const dashboardAPI = {
   },
   editRelativeGridDashboard: async (
     dashboardName: string,
-    dashboard: EditRelativeDashboardBody
+    dashboard: RelativeGridDashboardRequest
   ): Promise<EditRelativeGridResult> => {
     const result = await client.PUT('/objects/dashboard_relative_grid/{dashboard_id}', {
       params: {
@@ -104,7 +102,7 @@ export const dashboardAPI = {
   },
   editResponsiveGridDashboard: async (
     dashboardName: string,
-    dashboard: EditResponsiveDashboardBody
+    dashboard: ResponsiveGridDashboardRequest
   ): Promise<EditResponsiveGridResult> => {
     const result = await client.PUT('/objects/dashboard_responsive_grid/{dashboard_id}', {
       params: {
@@ -116,7 +114,7 @@ export const dashboardAPI = {
     return processEditResponse(result)
   },
   createRelativeGridDashboard: async (
-    dashboard: CreateRelativeDashboardBody
+    dashboard: RelativeGridDashboardRequest
   ): Promise<RelativeGridDashboardDomainObject> => {
     return unwrap(
       await client.POST('/domain-types/dashboard_relative_grid/collections/all', {
@@ -126,7 +124,7 @@ export const dashboardAPI = {
     )
   },
   createResponsiveGridDashboard: async (
-    dashboard: CreateResponsiveDashboardBody
+    dashboard: ResponsiveGridDashboardRequest
   ): Promise<ResponsiveGridDashboardDomainObject> => {
     return unwrap(
       await client.POST('/domain-types/dashboard_responsive_grid/collections/all', {

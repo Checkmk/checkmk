@@ -280,6 +280,13 @@ class _BaseDashboard:
 
 @api_model
 class BaseDashboardRequest(_BaseDashboard, ABC):
+    dashboard_id: str = api_field(
+        serialization_alias="id",
+        description="Unique identifier for the dashboard.",
+        example="custom_dashboard",
+        pattern=r"^[a-zA-Z0-9_]+$",
+    )
+
     @abstractmethod
     def _iter_widgets(self) -> Iterable[BaseWidgetRequest]:
         """Iterate over all widgets that are part of this dashboard."""
@@ -289,7 +296,6 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
     def to_internal(
         self,
         owner: UserId,
-        dashboard_id: str,
         embedded_views: dict[str, DashboardEmbeddedViewSpec],
         public_token_id: str | None,
     ) -> DashboardConfig:
@@ -307,7 +313,6 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
     def _to_internal_without_layout(
         self,
         owner: UserId,
-        dashboard_id: str,
         raw_embedded_views: dict[str, DashboardEmbeddedViewSpec],
         public_token_id: str | None,
     ) -> DashboardConfig:
@@ -323,7 +328,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
 
         return DashboardConfig(
             owner=owner,
-            name=dashboard_id,
+            name=self.dashboard_id,
             context=self.filter_context.filters,
             single_infos=self.filter_context.restricted_to_single,
             add_context_to_title=self.general_settings.title.include_context,
@@ -377,7 +382,7 @@ class BaseDashboardResponse(_BaseDashboard):
 
 
 @api_model
-class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
+class RelativeGridDashboardRequest(BaseDashboardRequest):
     layout: DashboardRelativeGridLayout = api_field(description="The layout the dashboard uses.")
     widgets: dict[str, RelativeGridWidgetRequest] = api_field(
         description="All widgets that are part of this dashboard.",
@@ -410,13 +415,10 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
     def to_internal(
         self,
         owner: UserId,
-        dashboard_id: str,
         embedded_views: dict[str, DashboardEmbeddedViewSpec],
         public_token_id: str | None,
     ) -> DashboardConfig:
-        config = self._to_internal_without_layout(
-            owner, dashboard_id, embedded_views, public_token_id
-        )
+        config = self._to_internal_without_layout(owner, embedded_views, public_token_id)
         config["layout"] = self.layout.to_internal()
         return config
 

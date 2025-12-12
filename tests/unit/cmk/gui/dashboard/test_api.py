@@ -158,6 +158,36 @@ def test_clone_relative_dashboard(clients: ClientRegistry) -> None:
     assert resp.status_code == 204, f"Expected 204, got {resp.status_code}"
 
 
+def test_edit_relative_grid_layout(clients: ClientRegistry) -> None:
+    dashboard_id = "test_dashboard"
+    new_dashboard_id = "some_other_id"
+    clients.DashboardClient.create_relative_grid_dashboard(
+        _create_dashboard_payload(dashboard_id, {})
+    )
+    resp = clients.DashboardClient.edit_relative_grid_dashboard(
+        dashboard_id,
+        _create_dashboard_payload(new_dashboard_id, {}),
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.json["id"] == new_dashboard_id
+
+
+def test_edit_id_in_use(clients: ClientRegistry) -> None:
+    dashboard_1 = "test_dashboard_1"
+    dashboard_2 = "test_dashboard_2"
+    for dashboard_id in (dashboard_1, dashboard_2):
+        clients.DashboardClient.create_relative_grid_dashboard(
+            _create_dashboard_payload(dashboard_id, {})
+        )
+    resp = clients.DashboardClient.edit_relative_grid_dashboard(
+        dashboard_1,
+        _create_dashboard_payload(dashboard_2, {}),
+        expect_ok=False,
+    )
+    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+    assert resp.json["title"] == "Dashboard ID already in use"
+
+
 @pytest.mark.parametrize(
     "dashboard_id", [pytest.param("", id="empty"), "with whitespace", "with_special_chars!!!"]
 )
@@ -756,7 +786,7 @@ class TestEmbeddedViewContent:
         dashboard_id, embedded_id, embedded_view_datasource = setup_embedded_view
 
         payload = _create_dashboard_payload(
-            "",
+            dashboard_id,  # keep the same ID
             {
                 "test_widget": _create_widget(
                     {
@@ -768,7 +798,6 @@ class TestEmbeddedViewContent:
                 ),
             },
         )
-        del payload["id"]  # remove dashboard ID, as it's now in the URL for the edit
         resp = clients.DashboardClient.edit_relative_grid_dashboard(dashboard_id, payload)
         widgets = resp.json["extensions"]["widgets"]
         assert len(widgets) == 1, f"Expected 1 widget, got {len(widgets)}"
@@ -783,7 +812,7 @@ class TestEmbeddedViewContent:
         dashboard_id, embedded_id, embedded_view_datasource = setup_embedded_view
 
         payload = _create_dashboard_payload(
-            "",
+            dashboard_id,
             {
                 "test_widget": _create_widget(
                     {
@@ -795,7 +824,6 @@ class TestEmbeddedViewContent:
                 ),
             },
         )
-        del payload["id"]  # remove dashboard ID, as it's now in the URL for the edit
         resp = clients.DashboardClient.edit_relative_grid_dashboard(
             dashboard_id, payload, expect_ok=False
         )

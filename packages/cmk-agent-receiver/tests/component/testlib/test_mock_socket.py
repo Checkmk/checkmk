@@ -70,6 +70,59 @@ def test_socket_is_closed_by_context_manager(socket_path: str) -> None:
     assert saved_socket.fileno == -1, "Socket was not closed"
 
 
+def test_socket_busy_queuing(socket_path: str) -> None:
+    """
+    Test that the mock socket handles OS-level connection queuing correctly.
+
+    When one client is connected and actively using the socket, a second client's
+    connection attempt should be queued by the OS. Once the first client finishes,
+    the second client should be able to send its data successfully.
+
+    This verifies the mock socket implementation behaves like a real UNIX domain socket
+    with respect to the OS kernel's accept queue.
+    """
+    import threading
+
+    first_payload = b"first-client-data"
+    second_payload = b"second-client-data"
+
+    # Barrier to synchronize the two clients
+    connection_barrier = threading.Barrier(2, timeout=10)
+
+    def slow_client() -> None:
+        """First client that connects and delays before sending."""
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.connect(socket_path)
+            # Signal that we're connected
+            connection_barrier.wait()
+            # Delay to keep the socket busy
+            time.sleep(0.5)
+            sock.sendall(first_payload)
+            sock.shutdown(socket.SHUT_RDWR)
+
+    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT * 2) as ms:
+        # Start the slow client
+        slow_thread = threading.Thread(target=slow_client)
+        slow_thread.start()
+
+        # Wait for slow client to connect
+        connection_barrier.wait()
+
+        # Now start the second client while the first is still connected
+        _connect_and_send(socket_path, second_payload)
+        slow_thread.join()
+
+        # Both payloads should be received, in order
+        chunk_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 2)
+        chunk_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 2)
+
+        assert chunk_1.data == first_payload
+        assert chunk_2.data == second_payload
+        # Different connections should have different socket IDs
+        assert chunk_1.socket_id != chunk_2.socket_id
+        assert ms.data_queue.empty()
+
+
 @pytest.fixture
 def socket_path(tmpdir: Path) -> str:
     return f"{tmpdir}/{secrets.token_urlsafe(8)}-test.sock"

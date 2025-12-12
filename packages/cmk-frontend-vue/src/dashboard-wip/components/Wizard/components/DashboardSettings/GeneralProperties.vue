@@ -16,7 +16,7 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
 
-import IconSelector from '../IconSelector.vue'
+import IconSelector from '../IconSelector/IconSelector.vue'
 import FieldComponent from '../TableForm/FieldComponent.vue'
 import FieldDescription from '../TableForm/FieldDescription.vue'
 import TableForm from '../TableForm/TableForm.vue'
@@ -144,7 +144,13 @@ const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)
         </FieldDescription>
         <FieldComponent>
           <div class="db-general-properties__item">
-            <IconSelector :selected-icon="dashboardIcon" :selected-emblem="dashboardEmblem" />
+            <div class="db-general-properties__inline">
+              <div><IconSelector v-model:selected-icon="dashboardIcon" /></div>
+              <span>+</span>
+              <div>
+                <IconSelector v-model:selected-icon="dashboardEmblem" :select-emblems="true" />
+              </div>
+            </div>
           </div>
         </FieldComponent>
       </TableFormRow>
@@ -168,5 +174,11 @@ const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)
 .db-general-properties__item {
   display: block;
   padding-bottom: var(--spacing-half);
+}
+
+.db-general-properties__inline {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--spacing-half);
 }
 </style>

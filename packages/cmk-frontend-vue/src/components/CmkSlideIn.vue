@@ -146,7 +146,7 @@ watch(
   position: absolute;
   inset: 0;
   animation: cmk-slide-in__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: +1;
+  z-index: var(--z-index-modal-overlay-offset);
 }
 
 @keyframes cmk-slide-in__overlay-show {

@@ -35,7 +35,7 @@ import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, Literal, NamedTuple
+from typing import Any, NamedTuple
 
 import requests
 
@@ -1251,9 +1251,8 @@ class BIAggregationAPI(BaseAPI):
 
 @dataclass(frozen=True, kw_only=True)
 class MetricBackendDCDConnectionAttributeFilter:
-    attribute_type: Literal["data_point", "resource", "scope"]
-    attribute_key: str
-    attribute_value: str
+    key: str
+    value: str
 
 
 class DcdAPI(BaseAPI):
@@ -1313,7 +1312,9 @@ class DcdAPI(BaseAPI):
         title: str,
         interval: int = 60,
         host_name_resource_attribute_key: str,
-        attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter],
+        resource_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
+        scope_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
+        data_point_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
         delete_hosts: bool = False,
         discover_on_creation: bool = True,
         validity_period: int = 60,
@@ -1329,13 +1330,26 @@ class DcdAPI(BaseAPI):
                 "connector": {
                     "connector_type": "metric_backend",
                     "interval": interval,
-                    "attribute_filters": [
+                    "resource_attribute_filters": [
                         {
-                            "attribute_type": attribute_filter.attribute_type,
-                            "attribute_key": attribute_filter.attribute_key,
-                            "attribute_value": attribute_filter.attribute_value,
+                            "key": attribute_filter.key,
+                            "value": attribute_filter.value,
                         }
-                        for attribute_filter in attribute_filters
+                        for attribute_filter in resource_attribute_filters
+                    ],
+                    "scope_attribute_filters": [
+                        {
+                            "key": attribute_filter.key,
+                            "value": attribute_filter.value,
+                        }
+                        for attribute_filter in scope_attribute_filters
+                    ],
+                    "data_point_attribute_filters": [
+                        {
+                            "key": attribute_filter.key,
+                            "value": attribute_filter.value,
+                        }
+                        for attribute_filter in data_point_attribute_filters
                     ],
                     "host_name_resource_attribute_key": host_name_resource_attribute_key,
                     "creation_rules": [

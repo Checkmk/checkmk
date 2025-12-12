@@ -40,6 +40,8 @@ logger = logging.getLogger()
 
 CrashIdRegex = r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}"
 CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
+SkipReason = str
+RelativeUrl = str
 
 
 class PageContent(NamedTuple):
@@ -184,7 +186,7 @@ class Crawler:
             "text/x-chdr",
             "text/x-sh",
         }
-
+        self._ignored_urls: dict[SkipReason, list[RelativeUrl]] = {}
         # override value using environment-variable
         maxlen = int(os.environ.get("GUI_CRAWLER_URL_LIMIT", "0")) or max_urls
         # limit minimum value to 0.
@@ -370,7 +372,12 @@ class Crawler:
         url: Url,
     ) -> bool:
         start = time.time()
-
+        relative_url = url.url.removeprefix(self.site.internal_url)
+        if ignore_reason := next(
+            (reason for reason, urls in self._ignored_urls.items() if relative_url in urls), None
+        ):
+            self.handle_skipped_reference(url, reason="ignored url", message=ignore_reason)
+            return self.handle_page_done(url, duration=time.time() - start)
         content_type = self.requests_session.head(url.url).headers["content-type"]
         if content_type.startswith("text/html"):
             try:

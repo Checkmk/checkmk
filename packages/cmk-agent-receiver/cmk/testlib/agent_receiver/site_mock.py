@@ -82,7 +82,7 @@ class SiteMock:
 
     @property
     def base_route(self) -> str:
-        return f"/{self.site_name}/check_mk/api/1.0"
+        return f"/{self.site_name}/check_mk/api/unstable"
 
     def set_scenario(
         self, relays: Sequence[Relay] | Relay, changes: Sequence[Change] | None = None

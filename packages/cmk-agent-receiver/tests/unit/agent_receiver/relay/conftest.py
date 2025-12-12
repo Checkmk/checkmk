@@ -94,7 +94,7 @@ def test_user() -> UserAuth:
 def site_api_client() -> Iterator[httpx.Client]:
     """Provides an httpx.Client configured for the site API."""
     client = httpx.Client(
-        base_url="http://test.com/test/check_mk/api/1.0",
+        base_url="http://test.com/test/check_mk/api/unstable",
         headers={"Content-Type": "application/json"},
         transport=create_relay_mock_transport(),
     )

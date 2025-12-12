@@ -6,7 +6,7 @@
 from dataclasses import asdict
 from typing import override
 
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
@@ -21,9 +21,9 @@ from .unified import UnifiedSearch
 class PageUnifiedSearch(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        query = request.get_str_input_mandatory("q")
-        provider = self._parse_provider_query_param()
-        sort_type = self._parse_sort_query_param()
+        query = ctx.request.get_str_input_mandatory("q")
+        provider = self._parse_provider_query_param(ctx.request)
+        sort_type = self._parse_sort_query_param(ctx.request)
 
         unified_search_engine = UnifiedSearch(
             setup_engine=SetupSearchEngine(ctx.config),
@@ -41,14 +41,14 @@ class PageUnifiedSearch(AjaxPage):
 
         return asdict(
             UnifiedSearchApiResponse(
-                url=request.url,
+                url=ctx.request.url,
                 query=query,
                 counts=result.counts,
                 results=result.results,
             )
         )
 
-    def _parse_provider_query_param(self) -> ProviderName | None:
+    def _parse_provider_query_param(self, request: Request) -> ProviderName | None:
         if (provider := request.get_str_input("provider")) is None:
             return None
         try:
@@ -56,7 +56,7 @@ class PageUnifiedSearch(AjaxPage):
         except ValueError:
             return None
 
-    def _parse_sort_query_param(self) -> SortType | None:
+    def _parse_sort_query_param(self, request: Request) -> SortType | None:
         if (sort_type := request.get_str_input("sort")) is None:
             return None
         try:

@@ -370,6 +370,7 @@ sub get_url_for_module {
 sub install_module {
     my $file    = shift;
     my $TARGET  = shift;
+    my $OPENSSL = shift;
     my $PERL    = shift || '/usr/bin/perl';
     my $verbose = shift || 0;
     my $x       = shift || 1;
@@ -423,7 +424,13 @@ sub install_module {
     }
     if(index($modname, 'Crypt::SSLeay') != -1) {
         print "in CryptSS";
-        $makefile_opts = "$makefile_opts FORCE=1 CCFLAGS=\"$Config::Config{ccflags} -Wno-implicit-function-declaration -Wno-int-conversion\"";
+        # Set RPATH to first look for libraries where Checkmk packages them relative to the install
+        # location for perl-libraries.
+        # lib/perl5/lib/perl5/x86_64-linux-thread-multi/auto/Crypt/SSLeay/SSLeay.so
+        #
+        # \\\$\\\$ is required as $$ is the syntax for the Makefile.
+        # Also we need to escape it for both perl and the shell.
+        $makefile_opts = "$makefile_opts FORCE=1 CCFLAGS=\"$Config::Config{ccflags} -Wno-implicit-function-declaration -Wno-int-conversion\" LDDLFLAGS=\"-L $OPENSSL $Config::Config{lddlflags} -Wl,-rpath,'\\\$\\\$ORIGIN/../../../../../../../../lib'\" ";
     }
     if($modname eq 'List::MoreUtils') {
         system("sed -i -e '/url\\s*=>.*github/d' -e '/perl.*=>\\s*\\\$^V/d' Makefile.PL");

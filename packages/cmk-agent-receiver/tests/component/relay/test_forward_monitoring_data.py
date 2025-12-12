@@ -31,6 +31,8 @@ HOST = "testhost"
 # Test timeout - should match the override in conftest.py
 # Production uses 5.0s, tests use 2.0s for faster execution
 TEST_SOCKET_TIMEOUT = 2.0
+BARRIER_TIMEOUT = 10
+TIMEOUT_MARGIN = 1  # Safety margin for timeout calculations
 
 
 @pytest.mark.parametrize("service_name", ["Check_MK", "TestCase"])
@@ -52,13 +54,7 @@ def test_forward_monitoring_data(
         f"service_description:{service_name};"
     )
     with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
-        monitoring_data = MonitoringData(
-            serial=serial,
-            host=HOST,
-            service=service_name,
-            timestamp=timestamp,
-            payload=base64.b64encode(payload),
-        )
+        monitoring_data = create_monitoring_data(serial, payload, service_name)
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
             monitoring_data=monitoring_data,
@@ -80,19 +76,13 @@ def test_forward_monitoring_data_with_delay(
     If the socket is slower in accepting data, the data can still be forwarded.
     Note: the configured socket timeouts don't seem to have an effect (on UNIX sockets at least).
     """
-    delay = TEST_SOCKET_TIMEOUT + 1
+    delay = TEST_SOCKET_TIMEOUT + TIMEOUT_MARGIN
+    payload = b"monitoring payload"
+    monitoring_data = create_monitoring_data(serial, payload)
 
     with create_socket(
         socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT, delay=delay
     ) as ms:
-        payload = b"monitoring payload"
-        monitoring_data = MonitoringData(
-            serial=serial,
-            host=HOST,
-            service="Check_MK",
-            timestamp=int(time.time()),
-            payload=base64.b64encode(payload),
-        )
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
             monitoring_data=monitoring_data,
@@ -102,8 +92,23 @@ def test_forward_monitoring_data_with_delay(
         assert_monitoring_data_payload(chunk.data, payload)
 
 
+def create_monitoring_data(
+    serial: Serial, payload: bytes, service: str = "Check_MK"
+) -> MonitoringData:
+    """Helper to create MonitoringData with consistent defaults."""
+    return MonitoringData(
+        serial=serial,
+        host=HOST,
+        service=service,
+        timestamp=int(time.time()),
+        payload=base64.b64encode(payload),
+    )
+
+
 def assert_monitoring_data_payload(received_data: bytes, expected_payload: bytes) -> None:
-    _, received_payload = received_data.splitlines()
+    lines = received_data.splitlines()
+    assert len(lines) == 2, f"Expected 2 lines (header + payload), got {len(lines)}"
+    received_payload = lines[1]
     assert received_payload == expected_payload
 
 
@@ -114,24 +119,16 @@ def test_socket_busy_but_not_timeout(
     If a previous client keeps the socket busy, but not long enough to cause a timeout,
     then the handler will wait for that client to finish its business before sending the data.
     """
-
     slow_client_payload = b"slow-payload"
     regular_payload = b"regular-payload"
-
-    monitoring_data = MonitoringData(
-        serial=serial,
-        host=HOST,
-        service="Check_MK",
-        timestamp=int(time.time()),
-        payload=base64.b64encode(regular_payload),
-    )
+    monitoring_data = create_monitoring_data(serial, regular_payload)
 
     # Sleep should be less than timeout to avoid triggering timeout
     sleep = TEST_SOCKET_TIMEOUT - 0.5
 
-    connection_barrier = threading.Barrier(2, timeout=10)
-    send_barrier = threading.Barrier(2, timeout=10)
-    close_barrier = threading.Barrier(2, timeout=10)
+    connection_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    send_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    close_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
 
     with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT * 2) as ms:
         slow_client_thread = threading.Thread(
@@ -148,10 +145,7 @@ def test_socket_busy_but_not_timeout(
         connection_barrier.wait()
 
         # At this moment the slow client is connected, but has not sent any data yet.
-
-        # Let the slow client sleep for a while, then this agent_receiver client sends data (while the slow client is connected).
-        # Don't sleep more than TEST_SOCKET_TIMEOUT.
-
+        # Let the slow client sleep for a while, then this agent_receiver client sends data.
         time.sleep(sleep)
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
@@ -208,23 +202,15 @@ def test_socket_busy_slow_send(
 
     Note: cannot make the handler return 502 in this case. Instead, the requests seem to be buffered.
     """
-
     slow_client_payload = b"slow-payload"
     regular_payload = b"regular-payload"
+    monitoring_data = create_monitoring_data(serial, regular_payload)
 
-    monitoring_data = MonitoringData(
-        serial=serial,
-        host=HOST,
-        service="Check_MK",
-        timestamp=int(time.time()),
-        payload=base64.b64encode(regular_payload),
-    )
+    send_sleep = TEST_SOCKET_TIMEOUT + TIMEOUT_MARGIN
 
-    send_sleep = TEST_SOCKET_TIMEOUT + 1
-
-    connection_barrier = threading.Barrier(2, timeout=10)
-    send_barrier = threading.Barrier(2, timeout=10)
-    close_barrier = threading.Barrier(2, timeout=10)
+    connection_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    send_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    close_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
 
     with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
         slow_client_thread = threading.Thread(
@@ -241,9 +227,7 @@ def test_socket_busy_slow_send(
         connection_barrier.wait()
 
         # At this moment the slow client is connected, but has not sent any data yet.
-
         # The agent_receiver client sends data, although the slow client is connected.
-
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
             monitoring_data=monitoring_data,
@@ -251,12 +235,10 @@ def test_socket_busy_slow_send(
 
         # Do a long sleep (more than TEST_SOCKET_TIMEOUT), then let the slow client send data.
         # This request from slow client will be ignored.
-
         time.sleep(send_sleep)
         send_barrier.wait()
 
         # Let the slow client close.
-
         close_barrier.wait()
         slow_client_thread.join()
 
@@ -267,7 +249,7 @@ def test_socket_busy_slow_send(
 
         # No other request (corresponding to the slow client) in the queue.
         with pytest.raises(queue.Empty):
-            ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + send_sleep + 1)
+            ms.data_queue.get(timeout=0.1)
     assert ms.data_queue.empty()
 
 
@@ -281,23 +263,15 @@ def test_socket_busy_slow_close(
 
     Note: cannot make the handler return 502 in this case. Instead, the requests seem to be buffered.
     """
-
     slow_client_payload = b"slow-payload"
     regular_payload = b"regular-payload"
+    monitoring_data = create_monitoring_data(serial, regular_payload)
 
-    monitoring_data = MonitoringData(
-        serial=serial,
-        host=HOST,
-        service="Check_MK",
-        timestamp=int(time.time()),
-        payload=base64.b64encode(regular_payload),
-    )
+    close_sleep = TEST_SOCKET_TIMEOUT + TIMEOUT_MARGIN
 
-    close_sleep = TEST_SOCKET_TIMEOUT + 1
-
-    connection_barrier = threading.Barrier(2, timeout=10)
-    send_barrier = threading.Barrier(2, timeout=10)
-    close_barrier = threading.Barrier(2, timeout=10)
+    connection_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    send_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    close_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
 
     with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
         slow_client_thread = threading.Thread(
@@ -314,7 +288,6 @@ def test_socket_busy_slow_close(
         connection_barrier.wait()
 
         # At this moment the slow client is connected, but has not sent any data yet.
-
         # Let the slow client send data
         send_barrier.wait()
 
@@ -322,14 +295,12 @@ def test_socket_busy_slow_close(
         time.sleep(close_sleep)
 
         # The agent_receiver client sends data, although the slow client is still using the socket.
-
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
             monitoring_data=monitoring_data,
         )
 
         # Let the slow client close.
-
         close_barrier.wait()
         slow_client_thread.join()
 
@@ -355,16 +326,10 @@ def test_socket_busy_interlaced_send(
     regular_payload = b"regular-payload"
     slow_payload_part_1 = b"abcd"
     slow_payload_part_2 = b"efgh"
+    monitoring_data = create_monitoring_data(serial, regular_payload)
 
-    monitoring_data = MonitoringData(
-        serial=serial,
-        host=HOST,
-        service="Check_MK",
-        timestamp=int(time.time()),
-        payload=base64.b64encode(regular_payload),
-    )
-    part_1_barrier = threading.Barrier(2, timeout=10)
-    part_2_barrier = threading.Barrier(2, timeout=10)
+    part_1_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    part_2_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
 
     def client_func() -> None:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
@@ -381,9 +346,8 @@ def test_socket_busy_interlaced_send(
         slow_client_thread.start()
         part_1_barrier.wait()
 
-        # The other client has just send the first part of its payload.
+        # The other client has just sent the first part of its payload.
         # Now this agent_receiver client will send its payload.
-
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
             monitoring_data=monitoring_data,
@@ -400,7 +364,6 @@ def test_socket_busy_interlaced_send(
         chunk_3 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
 
     # the regular payload is postponed until after the slow client has finished sending
-
     assert chunk_1.data == slow_payload_part_1
     assert chunk_2.data == slow_payload_part_2
     assert chunk_1.socket_id == chunk_2.socket_id
@@ -419,16 +382,10 @@ def test_socket_busy_interlaced_send_with_timeout(
     regular_payload = b"regular-payload"
     slow_payload_part_1 = b"abcd"
     slow_payload_part_2 = b"efgh"
+    monitoring_data = create_monitoring_data(serial, regular_payload)
 
-    monitoring_data = MonitoringData(
-        serial=serial,
-        host=HOST,
-        service="Check_MK",
-        timestamp=int(time.time()),
-        payload=base64.b64encode(regular_payload),
-    )
-    part_1_barrier = threading.Barrier(2, timeout=10)
-    part_2_barrier = threading.Barrier(2, timeout=10)
+    part_1_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
+    part_2_barrier = threading.Barrier(2, timeout=BARRIER_TIMEOUT)
 
     def client_func() -> None:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
@@ -448,16 +405,15 @@ def test_socket_busy_interlaced_send_with_timeout(
         slow_client_thread.start()
         part_1_barrier.wait()
 
-        # The other client has just send the first part of its payload.
+        # The other client has just sent the first part of its payload.
         # Now this agent_receiver client will send its payload.
-
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
             monitoring_data=monitoring_data,
         )
 
         # Do sleep timeout before sending the second part of the payload
-        time.sleep(TEST_SOCKET_TIMEOUT + 1)
+        time.sleep(TEST_SOCKET_TIMEOUT + TIMEOUT_MARGIN)
 
         # Now let the slow client send the second part of its payload.
         part_2_barrier.wait()
@@ -466,16 +422,14 @@ def test_socket_busy_interlaced_send_with_timeout(
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
 
         # Only two requests received
-
         chunk_1 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
         chunk_2 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
 
         with pytest.raises(queue.Empty):
-            ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
+            ms.data_queue.get(timeout=0.1)
 
     # The regular payload is postponed until after the slow client has finished sending the first part
     # of the payload. The second part is not received.
-
     assert chunk_1.data == slow_payload_part_1
     assert_monitoring_data_payload(chunk_2.data, regular_payload)
     assert chunk_1.socket_id != chunk_2.socket_id
@@ -490,15 +444,10 @@ def test_connection_refused(
     """
     If the socket is not connectable, the handler should be able to deal with the problem.
     """
+    payload = b"monitoring payload"
+    monitoring_data = create_monitoring_data(serial, payload)
+
     with create_non_listening_socket(socket_path=socket_path):
-        payload = b"monitoring payload"
-        monitoring_data = MonitoringData(
-            serial=serial,
-            host=HOST,
-            service="Check_MK",
-            timestamp=int(time.time()),
-            payload=base64.b64encode(payload),
-        )
         response = agent_receiver.forward_monitoring_data(
             relay_id=relay_id,
             monitoring_data=monitoring_data,

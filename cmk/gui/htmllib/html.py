@@ -622,7 +622,7 @@ class HTMLGenerator(HTMLWriter):
             name=name,
             type_="button",
             class_="button " + class_,
-            onclick=f"{before_redirect_action}location.href='{url}';return false",
+            onclick=f"{before_redirect_action}location.href='{url}';this.onclick='return false;'",
             value=label,
         )
 
@@ -1353,7 +1353,7 @@ class HTMLGenerator(HTMLWriter):
                 "let i = this.getElementsByTagName('img')[0];"
                 + r"i.src = i.src.replace(/facelift\/images\/.+$/,'facelift/images/load_graph.png');"
                 + f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');"
-                + f"location.href='{url}';return false;"
+                + f"location.href='{url}';this.onclick='return false;';"
             ),
         )
 

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.testlib.agent_receiver.mock_socket import create_socket
+from cmk.testlib.agent_receiver.mock_socket import create_socket, MockSocket
 
 SOCKET_TIMEOUT = 2.0
 
@@ -60,6 +60,14 @@ def test_socket_timeout(socket_path: str) -> None:
         time.sleep(socket_timeout + 0.5)
 
     assert not ms.is_running
+
+
+def test_socket_is_closed_by_context_manager(socket_path: str) -> None:
+    socket_timeout = 0.5
+    saved_socket: MockSocket
+    with create_socket(socket_path=socket_path, socket_timeout=socket_timeout) as ms:
+        saved_socket = ms
+    assert saved_socket.fileno == -1, "Socket was not closed"
 
 
 @pytest.fixture

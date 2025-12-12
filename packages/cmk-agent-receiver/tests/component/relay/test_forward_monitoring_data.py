@@ -24,7 +24,6 @@ from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.mock_socket import (
     create_non_listening_socket,
     create_socket,
-    MockSocket,
 )
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
@@ -52,9 +51,7 @@ def test_forward_monitoring_data(
         f"host_by_name:{HOST};"
         f"service_description:{service_name};"
     )
-    saved_socket: MockSocket  # assigned in with-block
     with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
-        saved_socket = ms
         monitoring_data = MonitoringData(
             serial=serial,
             host=HOST,
@@ -71,9 +68,6 @@ def test_forward_monitoring_data(
         lines = chunk.data.splitlines()
         assert lines[0].decode() == expected_header
         assert lines[1] == payload
-
-    # socket should be closed after context manager exits
-    assert saved_socket.fileno == -1, "Socket was not closed"
 
 
 def test_forward_monitoring_data_with_delay(
@@ -134,7 +128,6 @@ def test_socket_busy_but_not_timeout(
 
     # Sleep should be less than timeout to avoid triggering timeout
     sleep = TEST_SOCKET_TIMEOUT - 0.5
-    assert TEST_SOCKET_TIMEOUT > sleep
 
     connection_barrier = threading.Barrier(2, timeout=10)
     send_barrier = threading.Barrier(2, timeout=10)

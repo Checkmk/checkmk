@@ -118,6 +118,7 @@
     --inline-help-text-bg: rgb(223 239 251);
     --inline-help-icon-bg: rgb(12 129 238);
     --slide-in-left-part: var(--color-daylight-grey-30);
+    --dropdown-arrow-color: var(--color-conference-grey-100);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -235,6 +236,7 @@
     --inline-help-text-bg: rgb(17 24 29);
     --inline-help-icon-bg: rgb(6 103 193);
     --slide-in-left-part: var(--ux-theme-2);
+    --dropdown-arrow-color: var(--color-white-100);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);

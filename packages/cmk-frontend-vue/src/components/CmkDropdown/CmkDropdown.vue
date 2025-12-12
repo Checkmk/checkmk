@@ -196,7 +196,7 @@ const truncatedButtonLabel = computed(() =>
 
   .cmk-dropdown--arrow {
     width: 0.7em;
-    color: var(--color-conference-grey-100);
+    color: var(--dropdown-arrow-color);
     margin: 0 3px 0 10px;
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

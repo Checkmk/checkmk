@@ -1179,6 +1179,7 @@ table.modifydowntimes > tbody > tr {
 
     .select2-selection__arrow b {
       margin-top: -4px;
+      border-color: $dropdown-arrow-color transparent transparent transparent;
     }
   }
 

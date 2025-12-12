@@ -1,0 +1,3 @@
+# Run every 30 minutes
+# Note: in store_next_run_ts() the next (random) time point is set between 30 and 31 days from now
+*/30 * * * * ###ROOT###/bin/cmk-product-usage --cron

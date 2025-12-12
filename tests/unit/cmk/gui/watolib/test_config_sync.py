@@ -305,6 +305,7 @@ def _get_expected_paths(
         "etc/check_mk/mkeventd.d/wato",
         "etc/check_mk/multisite.d/wato",
         "etc/check_mk/multisite.d/wato/global.mk",
+        "etc/check_mk/product_usage_analytics.mk",
         "var/check_mk",
         "var/check_mk/web",
         "etc/htpasswd",

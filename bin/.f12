@@ -29,6 +29,7 @@ sudo install -m 755 \
     mkeventd \
     mkeventd_open514 \
     post-rename-site \
+    cmk-product-usage \
     "$ROOT"/bin/
 sudo ln -sf check_mk "$ROOT"/bin/cmk
 sudo chown root:omd "$ROOT"/bin/mkeventd_open514

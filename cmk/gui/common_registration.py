@@ -35,6 +35,7 @@ from cmk.gui import (
     pagetypes,
     painter_options,
     prediction,
+    product_usage_analytics,
     rulespec,
     user_message,
     valuespec,
@@ -262,6 +263,12 @@ def register(
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
+    product_usage_analytics.register(
+        config_domain_registry,
+        config_variable_registry,
+        config_variable_group_registry,
+        replication_path_registry,
+    )
     quick_setup_registration.register(
         automation_command_registry,
         main_module_registry,

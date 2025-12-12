@@ -297,6 +297,7 @@ def _allow_for_gui(
             imported.in_component(Component("cmk.messaging")),
             imported.in_component(Component("cmk.server_side_calls_backend")),
             imported.in_component(Component("cmk.diskspace.config")),
+            imported.in_component(Component("cmk.product_usage.collectors.grafana")),
         )
     )
 
@@ -319,6 +320,7 @@ def _allow_for_gui_cee(
             imported.in_component(Component("cmk.fetchers")),
             imported.in_component(Component("cmk.cee.bakery")),
             imported.in_component(Component("cmk.cee.robotmk.gui")),
+            imported.in_component(Component("cmk.product_usage.collectors.grafana")),
         )
     )
 
@@ -748,6 +750,20 @@ _COMPONENTS = (
     (Component("cmk.diskspace"), _is_allowed_for_diskspace),
     (Component("cmk.rrd"), _is_allowed_for_rrd),
     (Component("cmk.inventory"), _is_default_allowed_import),
+    (
+        Component("cmk.product_usage"),
+        _allow(
+            "cmk.ccc",
+            "cmk.base.app.make_app",
+            "cmk.base.config.load",
+            "cmk.livestatus_client",
+            "cmk.utils.http_proxy_config",
+            "cmk.utils.livestatus_helpers",
+            "cmk.utils.paths",
+            "cmk.utils",
+            "cmk.base",
+        ),
+    ),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -761,6 +777,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
     ModulePath("bin/cmk-migrate-http"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
+    ModulePath("bin/cmk-product-usage"): Component("cmk.product_usage"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),

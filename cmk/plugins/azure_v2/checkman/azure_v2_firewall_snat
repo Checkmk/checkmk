@@ -9,7 +9,7 @@ description:
  outbound SNAT ports currently in use.
 
  You can configure the warning and critical levels using the rule
- "Azure Firewall SNAT".
+ "Azure Firewall SNAT Utilization".
 
  In order to use this check, you need to configure the Azure special agent.
 

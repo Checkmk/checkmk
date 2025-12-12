@@ -7,7 +7,7 @@ description:
  This check reports the SNAT ports usage, the number of allocated and
  the number of used SNAT ports.
  You can configure levels for SNAT ports usage using the rule
- "SNAT Usage".
+ "Azure Load Balancer SNAT Consumption".
 
  In order to use this check, you need to configure the Azure special agent.
 

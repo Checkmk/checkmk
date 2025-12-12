@@ -65,7 +65,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeOAuth2Connections)
 
 
-def get_oauth_2_connection_form_spec() -> Dictionary:
+def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
     return TwoColumnDictionary(
         title=Title("Define OAuth parameters"),
         elements={
@@ -74,7 +74,7 @@ def get_oauth_2_connection_form_spec() -> Dictionary:
                 parameter_form=FixedValue(
                     title=Title("OAuth2 connection ID"),
                     help_text=Help("A unique identifier for this OAuth2 connection."),
-                    value=str(uuid.uuid4()),
+                    value=ident or str(uuid.uuid4()),
                 ),
             ),
             "title": DictElement(
@@ -326,7 +326,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                 "config": asdict(get_oauth2_connection_config()),
                 "form_spec": asdict(
                     serialize_data_for_frontend(
-                        form_spec=get_oauth_2_connection_form_spec(),
+                        form_spec=get_oauth_2_connection_form_spec(self._ident),
                         value=RawDiskData(
                             value={
                                 "ident": self._ident,

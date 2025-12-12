@@ -4,10 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type UnifiedSearchProps } from 'cmk-shared-typing/typescript/unified_search'
 import type {
   ProviderName,
-  UnifiedSearchApiResponse
+  UnifiedSearchApiResponse,
+  UnifiedSearchProps
 } from 'cmk-shared-typing/typescript/unified_search'
 import { onMounted, ref } from 'vue'
 

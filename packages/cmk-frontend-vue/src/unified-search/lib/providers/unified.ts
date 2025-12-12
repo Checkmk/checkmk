@@ -8,8 +8,11 @@ import type {
   UnifiedSearchApiResponse
 } from 'cmk-shared-typing/typescript/unified_search'
 
-import { type UnifiedSearchError } from '@/unified-search/lib/unified-search'
-import { SearchProvider, type SearchProviderResult } from '@/unified-search/lib/unified-search'
+import {
+  SearchProvider,
+  type SearchProviderResult,
+  type UnifiedSearchError
+} from '@/unified-search/lib/unified-search'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
 export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchApiResponse>

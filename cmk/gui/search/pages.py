@@ -12,6 +12,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.unified_search import ProviderName, SortType, UnifiedSearchApiResponse
 
+from .collapsing import get_collapser
 from .engines.customize import CustomizeSearchEngine
 from .engines.monitoring import MonitoringSearchEngine
 from .engines.setup import SetupSearchEngine
@@ -24,6 +25,7 @@ class PageUnifiedSearch(AjaxPage):
         query = ctx.request.get_str_input_mandatory("q")
         provider = self._parse_provider_query_param(ctx.request)
         sort_type = self._parse_sort_query_param(ctx.request)
+        collapser_disabled = self._parse_disabled_collapser(ctx.request)
 
         unified_search_engine = UnifiedSearch(
             setup_engine=SetupSearchEngine(ctx.config),
@@ -39,12 +41,15 @@ class PageUnifiedSearch(AjaxPage):
             sort_type=sort_type,
         )
 
+        collapse = get_collapser(provider=provider, disabled=collapser_disabled)
+        search_results, search_count = collapse(result.results, result.counts)
+
         return asdict(
             UnifiedSearchApiResponse(
                 url=ctx.request.url,
                 query=query,
-                counts=result.counts,
-                results=result.results,
+                counts=search_count,
+                results=search_results,
             )
         )
 
@@ -63,3 +68,6 @@ class PageUnifiedSearch(AjaxPage):
             return SortType(sort_type)
         except ValueError:
             return None
+
+    def _parse_disabled_collapser(self, request: Request) -> bool:
+        return request.get_str_input("collapse") is None

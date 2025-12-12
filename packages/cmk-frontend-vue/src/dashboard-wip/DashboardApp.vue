@@ -126,8 +126,11 @@ const setAsActiveDashboard = async (
     await updateBreadcrumb(dashboardName)
   }
 
-  const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboardName)
-  urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+  const updatedDashboardUrl = urlHandler.getDashboardUrl(
+    dashboardName,
+    dashboardFilters.getRuntimeFiltersSearchParams()
+  )
+  urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
 
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
@@ -286,11 +289,8 @@ const createDashboard = async (
 
   if (nextStep === 'setFilters') {
     openDashboardFilterSettings.value = true
-    const updatedDashboardUrl = urlHandler.setDashboardName(
-      window.location.origin + window.location.pathname,
-      dashboardId
-    )
-    urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+    const updatedDashboardUrl = urlHandler.getDashboardUrl(dashboardId, {})
+    urlHandler.updateCurrentUrl(updatedDashboardUrl)
     await updateBreadcrumb(dashboardId)
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
@@ -337,31 +337,13 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilt
   dashboardFilters.handleApplyRuntimeFilters(filters)
   dashboardFilters.setRuntimeFiltersMode(mode)
 
-  let urlSearchParams = {}
-  if (Object.keys(filters).length > 0) {
-    const allFilterIds: string[] = []
-    const allFilterValues: Record<string, string> = {}
-    Object.entries(filters).forEach(([filterId, filterValues]) => {
-      Object.entries(filterValues).forEach(([key, value]) => {
-        allFilterValues[key] = value
-      })
-      allFilterIds.push(filterId)
-    })
-    // TODO: may have to reverify after discussion on behavior
-    urlSearchParams = {
-      filled_in: 'filter',
-      _apply: 'Apply+filters',
-      ...(mode !== RuntimeFilterMode.MERGE ? { _active: allFilterIds.join(';') } : {}),
-      ...allFilterValues
-    }
-  }
-
+  const urlSearchParams = dashboardFilters.getRuntimeFiltersSearchParams()
   const updatedDashboardUrl = urlHandler.updateWithPreserve(
     window.location.href,
     ['name'],
     urlSearchParams
   )
-  urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+  urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
 
 const handleSaveFilterSettings = async (payload: {
@@ -381,8 +363,11 @@ const updateDashboardSettings = async (
   await dashboardsManager.persistDashboard(dashboardName)
   openDashboardSettings.value = false
 
-  const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboardName)
-  urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+  const updatedDashboardUrl = urlHandler.getDashboardUrl(
+    dashboardName,
+    dashboardFilters.getRuntimeFiltersSearchParams()
+  )
+  urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
 
 function deepClone<T>(obj: T): T {

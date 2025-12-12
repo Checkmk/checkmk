@@ -17,7 +17,7 @@ import {
   DashboardOwnerType,
   type DashboardTokenModel
 } from '@/dashboard-wip/types/dashboard.ts'
-import { copyToClipboard, getSharedDashboardLink, toPathAndSearch } from '@/dashboard-wip/utils.ts'
+import { copyToClipboard, toPathAndSearch, urlHandler } from '@/dashboard-wip/utils.ts'
 
 import DashboardSelector from './DashboardSelector.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -165,7 +165,7 @@ const pageNavigation = parsePageNavigation()
               hidden: isBuiltInDashboard,
               disabled: !publicToken,
               action: () => {
-                copyToClipboard(getSharedDashboardLink(publicToken!.token_id))
+                copyToClipboard(urlHandler.getSharedDashboardLink(publicToken!.token_id))
               }
             },
             {

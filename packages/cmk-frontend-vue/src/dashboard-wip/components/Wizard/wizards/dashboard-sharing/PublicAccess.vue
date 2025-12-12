@@ -14,7 +14,7 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import PopupDialog, { type PopupDialogProps } from '@/dashboard-wip/components/PopupDialog.vue'
-import { getSharedDashboardLink } from '@/dashboard-wip/utils'
+import { urlHandler } from '@/dashboard-wip/utils'
 
 import CollapsibleBox from '../../components/CollapsibleBox.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
@@ -212,7 +212,7 @@ const handleDelete = () => {
       <CmkLabel>{{ _t('Public dashboard URL') }}</CmkLabel>
       <div class="db-public-access__row">
         <div class="db-public-access__cell db-public-access__overflow">
-          <CmkCode :code_txt="getSharedDashboardLink(publicToken.token_id)" />
+          <CmkCode :code_txt="urlHandler.getSharedDashboardLink(publicToken.token_id)" />
         </div>
 
         <div class="db-public-access__cell">

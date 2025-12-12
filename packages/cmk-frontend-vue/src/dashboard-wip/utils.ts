@@ -294,10 +294,23 @@ export const buildWidgetEffectiveFilterContext = (
   }
 }
 
+const FILE_INDEX = '/index.py'
+const FILE_DASHBOARD = '/dashboard.py'
+const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
+
 export const urlHandler = {
-  setDashboardName(input: string, dashboardName: string): URL {
-    const url = new URL(input)
+  /** Construct a dashboard URL with the given name and runtime filters.
+   * @param dashboardName - The name of the dashboard.
+   * @param runtimeFilters - A record of runtime filter key-value pairs.
+   * @returns A URL object representing the constructed dashboard URL.
+   */
+  getDashboardUrl(dashboardName: string, runtimeFilters: Record<string, string>): URL {
+    // replace path, remove all existing query params
+    const url = replaceFileName(window.location.origin + window.location.pathname, FILE_DASHBOARD)
     url.searchParams.set('name', dashboardName)
+    for (const [k, v] of Object.entries(runtimeFilters)) {
+      url.searchParams.set(k, v)
+    }
     return url
   },
 
@@ -330,11 +343,48 @@ export const urlHandler = {
     return url
   },
 
-  updateCheckmkPageUrl(dashboardAppUrl: URL): void {
-    const checkmkUrl = new URL(window.parent.location.href)
-    checkmkUrl.searchParams.set('start_url', toPathAndSearch(dashboardAppUrl))
-    window.parent.history.replaceState({}, '', checkmkUrl.toString())
+  /** Update the current URL in the browser's address bar.
+   * If on the index page, updates the `start_url` parameter of the parent window instead.
+   * @param url - The new URL to set.
+   */
+  updateCurrentUrl(url: URL): void {
+    // because most url operations after this work with the current window's URL,
+    // we need to always update this one
+    window.history.replaceState({}, '', url.toString())
+    if (isOnIndexPage()) {
+      // updating the parent window's URL is only done so that the user has the correct link
+      const parentUrl = new URL(window.parent.location.href)
+      parentUrl.searchParams.set('start_url', toPathAndSearch(url))
+      window.parent.history.replaceState({}, '', parentUrl.toString())
+    }
+  },
+
+  /** Generate a shared dashboard link using the provided public token.
+   * @param publicToken - The public token for the shared dashboard.
+   * @returns A string representing the shared dashboard URL.
+   */
+  getSharedDashboardLink(publicToken: string): string {
+    const url = replaceFileName(
+      window.location.origin + window.location.pathname,
+      FILE_SHARED_DASHBOARD
+    )
+    url.searchParams.set('cmk-token', `0:${publicToken}`)
+    return url.toString()
   }
+}
+
+function isOnIndexPage(): boolean {
+  const parent = window.parent.location
+  return parent.origin === window.location.origin && parent.pathname.endsWith(FILE_INDEX)
+}
+
+function replaceFileName(input: string, newFileName: string): URL {
+  const fileName = newFileName.startsWith('/') ? newFileName : `/${newFileName}`
+  const url = new URL(input, window.location.origin) // default to current origin
+  const path = url.pathname
+  const idx = path.lastIndexOf('/')
+  url.pathname = idx !== -1 ? path.substring(0, idx) + fileName : fileName
+  return url
 }
 
 export function toPathAndSearch(url: URL): string {
@@ -347,15 +397,4 @@ export async function copyToClipboard(text: string): Promise<void> {
   } catch (err) {
     console.error('Failed to copy to clipboard:', err)
   }
-}
-
-export function getSharedDashboardLink(publicToken: string): string {
-  const removeFileNameFromPath = (str: string) => {
-    const idx = str.lastIndexOf('/')
-    return idx !== -1 ? str.substring(0, idx) : str
-  }
-
-  const checkmkUrl = new URL(window.parent.location.href ?? window.location.href)
-
-  return `${checkmkUrl.origin}${removeFileNameFromPath(checkmkUrl.pathname)}/shared_dashboard.py?cmk-token=0:${publicToken}`
 }

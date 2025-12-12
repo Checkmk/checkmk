@@ -93,6 +93,32 @@ export function useDashboardFilters(
     appliedRuntimeFilters.value = {}
   }
 
+  const getRuntimeFiltersSearchParams = (): Record<string, string> => {
+    const mode = runtimeFiltersMode.value
+    const filters = appliedRuntimeFilters.value
+
+    let urlSearchParams = {}
+    if (Object.keys(filters).length > 0) {
+      const allFilterIds: string[] = []
+      const allFilterValues: Record<string, string> = {}
+      Object.entries(filters).forEach(([filterId, filterValues]) => {
+        Object.entries(filterValues).forEach(([key, value]) => {
+          allFilterValues[key] = value
+        })
+        allFilterIds.push(filterId)
+      })
+      // TODO: may have to reverify after discussion on behavior
+      urlSearchParams = {
+        filled_in: 'filter',
+        _apply: 'Apply+filters',
+        ...(mode !== RuntimeFilterMode.MERGE ? { _active: allFilterIds.join(';') } : {}),
+        ...allFilterValues
+      }
+    }
+
+    return urlSearchParams
+  }
+
   return {
     configuredDashboardFilters,
     configuredMandatoryRuntimeFilters,
@@ -105,7 +131,8 @@ export function useDashboardFilters(
     handleSaveDashboardFilters,
     handleApplyRuntimeFilters,
     handleSaveMandatoryRuntimeFilters,
-    handleResetRuntimeFilters
+    handleResetRuntimeFilters,
+    getRuntimeFiltersSearchParams
   }
 }
 

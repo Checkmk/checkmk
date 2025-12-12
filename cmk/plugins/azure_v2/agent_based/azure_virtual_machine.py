@@ -199,7 +199,6 @@ def check_azure_vm_burst_cpu_credits(
                 lower_levels_param="levels",
             ),
         ],
-        check_levels=check_levels,
     )(params, section)
 
 

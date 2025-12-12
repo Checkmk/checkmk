@@ -267,7 +267,7 @@ def test_check_azure_vm_cpu_utilization(
     "params,section,expected_result",
     [
         (
-            {"levels": ("fixed", (200.0, 150.0))},
+            {"levels": (200.0, 150.0)},
             SECTION,
             [
                 Result(state=State.OK, summary="Consumed: 0"),

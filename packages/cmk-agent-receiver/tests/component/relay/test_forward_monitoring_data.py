@@ -19,8 +19,10 @@ from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.mock_socket import (
+    create_crashy_socket,
     create_non_listening_socket,
     create_socket,
+    create_unresponsive_socket,
 )
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
@@ -56,10 +58,54 @@ def test_forward_monitoring_data(
             monitoring_data=monitoring_data,
         )
         assert response.status_code == HTTPStatus.NO_CONTENT
-        chunk = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
-        lines = chunk.data.splitlines()
-        assert lines[0].decode() == expected_header
-        assert lines[1] == payload
+        connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
+        parts = connection_data.data.split(b"\n", 1)
+        assert parts[0].decode() == expected_header
+        assert parts[1] == payload
+
+
+def test_forward_monitoring_data_huge_payload(
+    socket_path: str,
+    relay_id: str,
+    serial: Serial,
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    """Test that large payloads (exceeding socket buffer size) are successfully transmitted."""
+    # Generate payload without newlines to avoid complicating the header/payload split
+    # Keep generating until we get a payload without newlines (very rare to have \n in random bytes)
+    payload = secrets.token_bytes(128 * 1024 * 2)  # 256KB - exceeds typical socket buffer
+    payload = payload.replace(b"\n", b"")
+    service_name = "Check_MK"
+    monitoring_data = create_monitoring_data(serial, payload, service_name)
+
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
+        response = agent_receiver.forward_monitoring_data(
+            relay_id=relay_id,
+            monitoring_data=monitoring_data,
+        )
+        assert response.status_code == HTTPStatus.NO_CONTENT
+
+        # Get the aggregated data from the connection
+        connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
+
+        # Split on first newline only (payload is binary and may contain line separator bytes)
+        parts = connection_data.data.split(b"\n", 1)
+        assert len(parts) == 2, f"Expected 2 parts (header + payload), got {len(parts)}"
+
+        received_header = parts[0].decode()
+        received_payload = parts[1]
+
+        # Verify header contains correct metadata
+        assert "payload_type:fetcher;" in received_header
+        assert f"payload_size:{len(payload)};" in received_header
+        assert f"config_serial:{serial};" in received_header
+        assert f"host_by_name:{HOST};" in received_header
+        assert f"service_description:{service_name};" in received_header
+
+        # Verify payload matches exactly
+        assert received_payload == payload, (
+            f"Expected {len(payload)} bytes, got {len(received_payload)} bytes"
+        )
 
 
 def test_forward_monitoring_data_with_delay(
@@ -84,8 +130,8 @@ def test_forward_monitoring_data_with_delay(
             monitoring_data=monitoring_data,
         )
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
-        chunk = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + delay + 1)
-        assert_monitoring_data_payload(chunk.data, payload)
+        connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + delay + 1)
+        assert_monitoring_data_payload(connection_data.data, payload)
 
 
 def create_monitoring_data(
@@ -102,9 +148,9 @@ def create_monitoring_data(
 
 
 def assert_monitoring_data_payload(received_data: bytes, expected_payload: bytes) -> None:
-    lines = received_data.splitlines()
-    assert len(lines) == 2, f"Expected 2 lines (header + payload), got {len(lines)}"
-    received_payload = lines[1]
+    parts = received_data.split(b"\n", 1)
+    assert len(parts) == 2, f"Expected 2 parts (header + payload), got {len(parts)}"
+    received_payload = parts[1]
     assert received_payload == expected_payload
 
 
@@ -115,7 +161,10 @@ def test_connection_refused(
     agent_receiver: AgentReceiverClient,
 ) -> None:
     """
-    If the socket is not connectable, the handler should be able to deal with the problem.
+    Test that connection refused (ECONNREFUSED) is handled correctly.
+
+    When the socket exists but is not listening (no accept() call),
+    connect() fails with ECONNREFUSED, which should return 502 BAD_GATEWAY.
     """
     payload = b"monitoring payload"
     monitoring_data = create_monitoring_data(serial, payload)
@@ -126,6 +175,93 @@ def test_connection_refused(
             monitoring_data=monitoring_data,
         )
         assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
+
+
+def test_socket_path_not_exists(
+    relay_id: str,
+    serial: Serial,
+    agent_receiver: AgentReceiverClient,
+    tmpdir: Path,
+) -> None:
+    """
+    Test that missing socket path (ENOENT) is handled correctly.
+
+    When the socket path doesn't exist, connect() fails with FileNotFoundError,
+    which should return 502 BAD_GATEWAY.
+    """
+    payload = b"monitoring payload"
+    monitoring_data = create_monitoring_data(serial, payload)
+
+    # Use a socket path that doesn't exist
+    nonexistent_socket = f"{tmpdir}/nonexistent-{secrets.token_urlsafe(8)}.sock"
+
+    with patch.object(Config, "raw_data_socket", nonexistent_socket):
+        response = agent_receiver.forward_monitoring_data(
+            relay_id=relay_id,
+            monitoring_data=monitoring_data,
+        )
+        assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
+
+
+def test_sendall_timeout_unresponsive_server(
+    socket_path: str,
+    relay_id: str,
+    serial: Serial,
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    """
+    Test that sendall() timeout is handled correctly.
+
+    When the CMC server accepts a connection but never calls recv(), and the
+    payload is large enough to exceed the socket buffer, sendall() will block
+    and eventually timeout. This should return 502 BAD_GATEWAY.
+
+    This tests the actual error path: sendall() → socket.timeout (OSError) →
+    FailedToSendMonitoringDataError → 502 response.
+    """
+    # Large payload that will exceed socket send buffer (typically 64KB-128KB)
+    # Using 256kb to ensure it blocks waiting for the server to recv()
+    payload = secrets.token_bytes(256 * 1024)
+    monitoring_data = create_monitoring_data(serial, payload)
+
+    with create_unresponsive_socket(socket_path=socket_path):
+        response = agent_receiver.forward_monitoring_data(
+            relay_id=relay_id,
+            monitoring_data=monitoring_data,
+        )
+        assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
+        assert "Failed to forward monitoring data" in response.text
+
+
+def test_broken_pipe_during_send(
+    socket_path: str,
+    relay_id: str,
+    serial: Serial,
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    """
+    Test that broken pipe (EPIPE) is handled correctly.
+
+    When the CMC server accepts a connection but immediately closes it,
+    the client's sendall() will raise BrokenPipeError. This should return
+    502 BAD_GATEWAY.
+
+    This tests the error path: sendall() → BrokenPipeError (OSError) →
+    FailedToSendMonitoringDataError → 502 response.
+    """
+    # Use a large payload (256KB) to ensure sendall() doesn't complete instantly.
+    # Small payloads fit entirely in the socket send buffer, making it impossible
+    # to reliably trigger EPIPE during transmission.
+    payload = secrets.token_bytes(256 * 1024)
+    monitoring_data = create_monitoring_data(serial, payload)
+
+    with create_crashy_socket(socket_path=socket_path):
+        response = agent_receiver.forward_monitoring_data(
+            relay_id=relay_id,
+            monitoring_data=monitoring_data,
+        )
+        assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
+        assert "Failed to forward monitoring data" in response.text
 
 
 @pytest.fixture

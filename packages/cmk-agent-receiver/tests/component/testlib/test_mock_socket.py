@@ -33,13 +33,13 @@ def test_multiple_messages(socket_path: str) -> None:
     """
     with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT) as ms:
         _connect_and_send(ms.socket_path, b"message1")
-        chunk_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
-        assert chunk_1.data == b"message1"
+        connection_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
+        assert connection_1.data == b"message1"
         _connect_and_send(ms.socket_path, b"message2")
-        chunk_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
-        assert chunk_2.data == b"message2"
+        connection_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
+        assert connection_2.data == b"message2"
 
-    assert chunk_1.socket_id != chunk_2.socket_id
+    assert connection_1.socket_id != connection_2.socket_id
     assert ms.data_queue.empty()
 
 
@@ -113,13 +113,13 @@ def test_socket_busy_queuing(socket_path: str) -> None:
         slow_thread.join()
 
         # Both payloads should be received, in order
-        chunk_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 2)
-        chunk_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 2)
+        connection_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 2)
+        connection_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 2)
 
-        assert chunk_1.data == first_payload
-        assert chunk_2.data == second_payload
+        assert connection_1.data == first_payload
+        assert connection_2.data == second_payload
         # Different connections should have different socket IDs
-        assert chunk_1.socket_id != chunk_2.socket_id
+        assert connection_1.socket_id != connection_2.socket_id
         assert ms.data_queue.empty()
 
 

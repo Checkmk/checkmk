@@ -611,18 +611,27 @@ class HTMLGenerator(HTMLWriter):
         )
 
     def render_loading_button(
-        self, name: str, url: str, label: str, class_: str = "", waiting_message: str | None = None
+        self,
+        name: str,
+        url: str,
+        label: str,
+        class_: str = "",
+        waiting_message: str | None = None,
+        remove_parent: bool = False,
     ) -> HTML:
-        before_redirect_action = (
+        create_flash_message = (
             (f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');")
             if waiting_message
             else ""
         )
+        remove_parent_action = "this.parent().remove();" if remove_parent else ""
+        redirect = f"location.href='{url}';"
+        disable_self = "this.onclick='return false;';"
         return self.render_input(
             name=name,
             type_="button",
             class_="button " + class_,
-            onclick=f"{before_redirect_action}location.href='{url}';this.onclick='return false;'",
+            onclick=f"{create_flash_message}{remove_parent_action}{redirect}{disable_self}",
             value=label,
         )
 

@@ -48,6 +48,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     Password,
     String,
+    validators,
 )
 from cmk.shared_typing.mode_oauth2_connection import (
     AuthorityUrls,
@@ -81,6 +82,7 @@ def get_oauth_2_connection_form_spec() -> Dictionary:
                 parameter_form=String(
                     title=Title("Title"),
                     help_text=Help("A descriptive name for this OAuth2 connection."),
+                    custom_validate=[validators.LengthInRange(min_value=1)],
                 ),
             ),
             "authority": DictElement(
@@ -106,6 +108,7 @@ def get_oauth_2_connection_form_spec() -> Dictionary:
                 parameter_form=String(
                     title=Title("Tenant ID"),
                     help_text=Help("The Tenant ID of your Azure AD instance."),
+                    custom_validate=[validators.LengthInRange(min_value=1)],
                 ),
             ),
             "client_id": DictElement(
@@ -115,6 +118,7 @@ def get_oauth_2_connection_form_spec() -> Dictionary:
                     help_text=Help(
                         "The Client ID (Application ID) of your registered application."
                     ),
+                    custom_validate=[validators.LengthInRange(min_value=1)],
                 ),
             ),
             "client_secret": DictElement(

@@ -2684,6 +2684,9 @@ msgstr ""
 "hele agent blokkeren. Als hier geen timeout is ingesteld, is de standaard 60 "
 "seconden."
 
+msgid "A token for this dashboard already exists, cannot create another one."
+msgstr ""
+
 msgid "A unique ID of this BI pack."
 msgstr "Een unieke ID van dit BI-pakket."
 
@@ -2705,6 +2708,10 @@ msgid ""
 msgstr ""
 "Een unieke ID van deze regel. Elke gebeurtenis zal zich de regel herinneren "
 "waarin ze werd geklasseerd door haar regel ID."
+
+#, fuzzy
+msgid "A unique identifier for this OAuth2 connection."
+msgstr "Een beschrijvende titel van deze actie."
 
 msgid ""
 "A unique identifier that might be required when you assume a role in another "
@@ -2876,6 +2883,10 @@ msgstr "API-sleutel"
 #, fuzzy
 msgid "API or personal access token"
 msgstr "API Toegangstoken"
+
+#, fuzzy
+msgid "API response codes"
+msgstr "Hop responstijden"
 
 msgid "API server connection"
 msgstr "API-serververbinding"
@@ -6432,6 +6443,9 @@ msgstr "Wachtwoord verificatie toestaan"
 msgid "Allow self-signed certificates"
 msgstr "CA of zelfondertekend certificaat toevoegen"
 
+msgid "Allow sending telemetry data"
+msgstr ""
+
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr ""
 "De gebruiker toestaan de actie \"Verwijder alle\" stilstanden te gebruiken"
@@ -7620,6 +7634,10 @@ msgstr "Checkmk agent"
 msgid "Ask for an optional comment"
 msgstr "Vraag om een optionele opmerking"
 
+#, fuzzy
+msgid "Ask user for consent via popup"
+msgstr "Toewijzing van diensten aan contactgroepen"
+
 msgid "Assertion Consumer Service endpoint"
 msgstr "Assertion Consumer Service eindpunt"
 
@@ -7889,6 +7907,10 @@ msgstr "Attribuut"
 
 #, fuzzy
 msgid "Attribute match value"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
+msgid "Attribute name"
 msgstr "In te stellen attribuut"
 
 #, fuzzy
@@ -9294,12 +9316,20 @@ msgid "Azure Firewalls"
 msgstr "Zorp firewall"
 
 #, fuzzy
+msgid "Azure Load Balancer Byte Count"
+msgstr "Gezondheid van de loadbalancer"
+
+#, fuzzy
 msgid "Azure Load Balancer Health"
 msgstr "Gezondheid van de loadbalancer"
 
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Gezondheid Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure Load Balancer SNAT Consumption"
+msgstr "Gezondheid van de loadbalancer"
 
 #, fuzzy
 msgid "Azure NAT Gateways Connections"
@@ -9456,6 +9486,10 @@ msgid "Azure VM instances"
 msgstr "Azure VM-instanties"
 
 #, fuzzy
+msgid "Azure VM instances (deprecated)"
+msgstr "Azure VM-Disk"
+
+#, fuzzy
 msgid "Azure VNet Gateway"
 msgstr "vNet Gateway"
 
@@ -9470,6 +9504,10 @@ msgstr "Databaseverbindingen"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure overview"
+msgstr "Overzicht waarschuwingen"
 
 #, fuzzy
 msgid "Azure recovery services vault backup"
@@ -9488,6 +9526,10 @@ msgstr "Te controleren Azure diensten"
 
 msgid "Azure storage accounts"
 msgstr "Azure opslagaccounts"
+
+#, fuzzy
+msgid "Azure storage accounts (deprecated)"
+msgstr "Azure Opslag"
 
 #, fuzzy
 msgid "Azure subscription"
@@ -11368,6 +11410,14 @@ msgstr "Verstuurde bytes"
 
 msgid "Bytes sent/received"
 msgstr "Verzonden/ontvangen bytes"
+
+#, fuzzy
+msgid "Bytes transmitted"
+msgstr "Aanvaarde bytes"
+
+#, fuzzy
+msgid "Bytes transmitted (lower levels)"
+msgstr "Byte count lagere niveaus"
 
 msgid "Bytes uploaded"
 msgstr "Geüploade bytes"
@@ -14159,6 +14209,10 @@ msgid "Cisco Meraki"
 msgstr "Cisco Meraki"
 
 #, fuzzy
+msgid "Cisco Meraki API response codes"
+msgstr "Cisco Meraki"
+
+#, fuzzy
 msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Checkmk automatisering"
 
@@ -14738,6 +14792,18 @@ msgstr "Clusterbreed"
 
 msgid "Cnt."
 msgstr "Cnt."
+
+msgid "Code 2xx"
+msgstr ""
+
+msgid "Code 3xx"
+msgstr ""
+
+msgid "Code 4xx"
+msgstr ""
+
+msgid "Code 5xx"
+msgstr ""
 
 #, fuzzy
 msgid "Code size"
@@ -15963,6 +16029,12 @@ msgid "Connect directly (not available in Checkmk Community)"
 msgstr "Rechtstreeks verbinden (niet beschikbaar in CRE)"
 
 msgid "Connect directly to the destination instead of using a proxy."
+msgstr ""
+"Maak rechtstreeks verbinding met de bestemming in plaats van een proxy te "
+"gebruiken."
+
+#, fuzzy
+msgid "Connect directly to the license server instead of using a proxy."
 msgstr ""
 "Maak rechtstreeks verbinding met de bestemming in plaats van een proxy te "
 "gebruiken."
@@ -18799,6 +18871,10 @@ msgstr "Gegevens knooppunten"
 msgid "Data not found"
 msgstr "Gegevens niet gevonden"
 
+#, fuzzy
+msgid "Data path availability"
+msgstr "Beschikbaarheid gegevenspad lagere niveaus"
+
 msgid "Data path availability lower levels"
 msgstr "Beschikbaarheid gegevenspad lagere niveaus"
 
@@ -20899,6 +20975,10 @@ msgstr "Type apparaat"
 msgid "Device unavailable"
 msgstr "Apparaat niet beschikbaar"
 
+#, fuzzy
+msgid "Device uplinks"
+msgstr "Apparaat online"
+
 msgid "Devices"
 msgstr "Apparaten"
 
@@ -21503,6 +21583,10 @@ msgstr "Schijf lees latentie"
 msgid "Disk read operations"
 msgstr "Schijf lees operaties"
 
+#, fuzzy
+msgid "Disk read throughput"
+msgstr "Lees doorvoer"
+
 msgid "Disk read throughput per second"
 msgstr "Schijfleesdoorvoer per seconde"
 
@@ -21545,6 +21629,10 @@ msgstr "Schijf schrijf latentie"
 
 msgid "Disk write operations"
 msgstr "Schijfschrijfbewerkingen"
+
+#, fuzzy
+msgid "Disk write throughput"
+msgstr "Schrijf doorvoer"
 
 msgid "Disk write throughput per second"
 msgstr "Schijfdoorvoer per seconde"
@@ -22438,6 +22526,10 @@ msgstr "Verwijder niets"
 
 msgid "Do not rotate based on the time"
 msgstr "Niet draaien op basis van de tijd"
+
+#, fuzzy
+msgid "Do not send telemetry data"
+msgstr "Niet verzenden naar host op afstand"
 
 msgid "Do not send to remote host"
 msgstr "Niet verzenden naar host op afstand"
@@ -24024,6 +24116,10 @@ msgstr "Inschakelen Livestatus toegang via netwerk (TCP)"
 msgid "Enable OpenTelemetry collector (experimental)"
 msgstr "Configuratie toestand toevoegen"
 
+#, fuzzy
+msgid "Enable Product Telemetry"
+msgstr "rapportelement"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) inschakelen"
 
@@ -24138,8 +24234,8 @@ msgid "Enable notifications?"
 msgstr "meldingen inschakelen"
 
 msgid ""
-"Enable or disable product telemetry. When disabled, you can configure "
-"whether to show a popup asking for consent on login."
+"Enable or disable product telemetry data collection. If not decided, the "
+"user will be asked for consent via a popup."
 msgstr ""
 
 #, fuzzy
@@ -29576,6 +29672,10 @@ msgstr "Gezondheidscontrole"
 
 msgid "Health check percentage healty"
 msgstr "Percentage gezondheidscontrole"
+
+#, fuzzy
+msgid "Health probe status"
+msgstr "Gezondheidssonde status lagere niveaus"
 
 msgid "Health probe status lower levels"
 msgstr "Gezondheidssonde status lagere niveaus"
@@ -35898,6 +35998,11 @@ msgstr ""
 #, fuzzy
 msgid "In termination"
 msgstr "Pauze"
+
+msgid ""
+"In the Checkmk Community Edition, dashboard tokens can only be valid for up "
+"to one month."
+msgstr ""
 
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
@@ -43818,6 +43923,9 @@ msgstr "Spiegeltoestand kriticiteit"
 msgid "Mirroring witness state criticality"
 msgstr "Het spiegelen van de kritische toestand van de getuige"
 
+msgid "Misc"
+msgstr ""
+
 msgid "Miscellaneous"
 msgstr "Diversen"
 
@@ -46633,6 +46741,10 @@ msgid "No title"
 msgstr "Geen titel"
 
 #, fuzzy
+msgid "No token for this dashboard exists."
+msgstr "Geen logs gevonden voor deze host."
+
+#, fuzzy
 msgid "No unknown check parameter rule sets found."
 msgstr "Gewijzigde meldingsregel %d"
 
@@ -47095,6 +47207,10 @@ msgstr "Niet geconfigureerd."
 
 msgid "Not contained in any group"
 msgstr "Niet opgenomen in een groep"
+
+#, fuzzy
+msgid "Not decided"
+msgstr "is vereist"
 
 msgid "Not enabled"
 msgstr "Niet ingeschakeld"
@@ -48557,6 +48673,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Aansluiting toevoegen"
+
+#, fuzzy
+msgid "OAuth2 connection ID"
 msgstr "Aansluiting toevoegen"
 
 #, fuzzy
@@ -58925,9 +59045,6 @@ msgstr "SMTP-server"
 msgid "SNAT Consumption"
 msgstr "SNAT-verbruik"
 
-msgid "SNAT Usage"
-msgstr "SNAT gebruik"
-
 #, fuzzy
 msgid "SNAT Usage (Deprecated)"
 msgstr "Azure Opslag"
@@ -58942,6 +59059,10 @@ msgstr "CPU-gebruik"
 
 msgid "SNAT usage"
 msgstr "SNAT gebruik"
+
+#, fuzzy
+msgid "SNAT usage (lower levels)"
+msgstr "SNAT-gebruik lagere niveaus"
 
 msgid "SNAT usage lower levels"
 msgstr "SNAT-gebruik lagere niveaus"
@@ -67172,14 +67293,6 @@ msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Totale duur"
 
 #, fuzzy
-msgid "Telemetry is disabled"
-msgstr "Setup is uitgeschakeld."
-
-#, fuzzy
-msgid "Telemetry is enabled"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -69487,6 +69600,11 @@ msgstr "Het verwachte aantal knooppunten in het cluster"
 
 msgid "The expected number of resources in the cluster"
 msgstr "Het verwachte aantal hulpbronnen in het cluster"
+
+#, fuzzy
+msgid "The expiration time must be in the future."
+msgstr ""
+"Je kunt tellen en verwachten niet tegelijk gebruiken in dezelfde regel."
 
 #, python-format
 msgid ""
@@ -78560,6 +78678,11 @@ msgstr ""
 "bewaren. Als u uw sleutels of de passphrases van de sleutels verliest, kan "
 "uw back-up niet worden hersteld.<br>De volgende sleutels zijn nog niet "
 "gedownload: %s"
+
+msgid ""
+"To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
+"proxy settings there."
+msgstr ""
 
 msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
@@ -88320,6 +88443,10 @@ msgstr "Windows, Linux, Solaris, AIX agenten overeenkomend met: %s"
 msgid "Windows: MSI (.msi)"
 msgstr "Windows: MSI (.msi)"
 
+#, fuzzy
+msgid "Wireless ethernet statuses"
+msgstr "de staat negeren"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -93856,11 +93983,11 @@ msgid "Set as start URL"
 msgstr "Instellen als start URL"
 
 #, fuzzy
-msgid "Edit widgets"
+msgid "Add widget"
 msgstr "Doel toevoegen"
 
 #, fuzzy
-msgid "Add widget"
+msgid "Edit widgets"
 msgstr "Doel toevoegen"
 
 #, fuzzy
@@ -95024,18 +95151,6 @@ msgid "Metric name"
 msgstr "Metrisch etiket"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Rolkenmerk"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Rolkenmerk"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Gewijzigde attributen"
-
-#, fuzzy
 msgid "Aggregation lookback"
 msgstr "Aggregatiecontroles"
 
@@ -95255,6 +95370,18 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Resource attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Gewijzigde attributen"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Time-out verbinding instellen"
 
@@ -95398,9 +95525,6 @@ msgstr "Opslaan en testen"
 msgid "Download and install"
 msgstr "Gedownloade Agent"
 
-msgid "Run this command to download and install the Checkmk agent."
-msgstr ""
-
 #, fuzzy
 msgid "Next step: Register agent"
 msgstr "Ontvanger"
@@ -95539,7 +95663,10 @@ msgstr "Modelparameters"
 
 msgid ""
 "A new tab will be opened. Please follow the instructions to authorize the "
-"application. The process has to be completed within 5 minutes."
+"application."
+msgstr ""
+
+msgid "The process has to be completed within 5 minutes."
 msgstr ""
 
 #, fuzzy
@@ -95648,6 +95775,58 @@ msgstr "Aantal gedegradeerde hosts"
 #, fuzzy
 msgid "Go to relay overview"
 msgstr "Overzicht gastheren"
+
+msgid "Help us improve Checkmk with product telemetry"
+msgstr ""
+
+msgid "Why do we need product telemetry in Checkmk?"
+msgstr ""
+
+msgid ""
+"Help us shape the future of Checkmk. Your usage data allows us to make "
+"better decisions and focus development on the tools you use regularly. "
+"Please consider consenting to Product Telemetry to help us build the "
+"features that matter the most to you."
+msgstr ""
+
+msgid "What data are we collecting?"
+msgstr ""
+
+msgid "We strictly limit data collection to aggregated, non-personal metrics."
+msgstr ""
+
+#, fuzzy
+msgid "We Collect:"
+msgstr "Collecties"
+
+msgid "Quantity metrics (e.g., count of hosts, folders, and services)."
+msgstr ""
+
+#, fuzzy
+msgid "We Do NOT Collect:"
+msgstr "Grootte van de logbestanden"
+
+msgid ""
+"User behavior (e.g., visit frequency) or sensitive identifiers (e.g., "
+"hostnames, file paths, service names, or raw metric values)."
+msgstr ""
+
+msgid "Do we automatically collect and send data?"
+msgstr ""
+
+msgid ""
+"No! We firmly believe in only receiving data you are happy to share with us. "
+"For this reason, on default product telemetry is turned off. To make a "
+"decision now, please click on the \"Decide on product telemetry\" button."
+msgstr ""
+
+#, fuzzy
+msgid "Ask me again"
+msgstr "De gastheer gaat weer omhoog"
+
+#, fuzzy
+msgid "Enable in global settings"
+msgstr "Globale instelling wijzigen"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -96128,6 +96307,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "SNAT Usage"
+#~ msgstr "SNAT gebruik"
+
+#, fuzzy
+#~ msgid "Telemetry is disabled"
+#~ msgstr "Setup is uitgeschakeld."
+
+#, fuzzy
+#~ msgid "Telemetry is enabled"
+#~ msgstr "Configuratie toestand toevoegen"
+
 #, fuzzy
 #~ msgid "Error retrieving AI service information. Please try again later."
 #~ msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
@@ -96190,10 +96380,6 @@ msgstr ""
 
 #~ msgid "Remove package"
 #~ msgstr "Pakket verwijderen"
-
-#, fuzzy
-#~ msgid "Datapath availability"
-#~ msgstr "Beschikbaarheid gegevenspad lagere niveaus"
 
 #, fuzzy
 #~ msgid "Documents"

@@ -2586,6 +2586,9 @@ msgstr ""
 "ント全体を停止させないようにします。ここでタイムアウトが設定されていない場"
 "合、デフォルトは60秒です。"
 
+msgid "A token for this dashboard already exists, cannot create another one."
+msgstr ""
+
 msgid "A unique ID of this BI pack."
 msgstr "このBIパックの一意のID。"
 
@@ -2607,6 +2610,10 @@ msgid ""
 msgstr ""
 "このルールの一意のID。各イベントは、ルールIDによって分類されたルールを記憶し"
 "ます。"
+
+#, fuzzy
+msgid "A unique identifier for this OAuth2 connection."
+msgstr "このアクションの説明的なタイトル。"
 
 msgid ""
 "A unique identifier that might be required when you assume a role in another "
@@ -2764,6 +2771,10 @@ msgstr "APIキーヘッダー"
 
 msgid "API or personal access token"
 msgstr "APIまたは個人アクセストークン"
+
+#, fuzzy
+msgid "API response codes"
+msgstr "ホップの応答時間"
 
 msgid "API server connection"
 msgstr "APIサーバー接続"
@@ -6086,6 +6097,9 @@ msgstr "パスワード認証を許可する"
 msgid "Allow self-signed certificates"
 msgstr "自己署名証明書を許可する"
 
+msgid "Allow sending telemetry data"
+msgstr ""
+
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr "ダウンタイムを\"すべて削除 \"のアクションを許可する"
 
@@ -7199,6 +7213,10 @@ msgstr "Checkmk AIに聞く"
 msgid "Ask for an optional comment"
 msgstr "オプションのコメントを求める"
 
+#, fuzzy
+msgid "Ask user for consent via popup"
+msgstr "連絡先グループへのサービスの割り当て"
+
 msgid "Assertion Consumer Service endpoint"
 msgstr "Assertion Consumer Service のエンドポイント"
 
@@ -7457,6 +7475,10 @@ msgstr "属性キー"
 
 msgid "Attribute match value"
 msgstr "属性一致する値"
+
+#, fuzzy
+msgid "Attribute name"
+msgstr "属性値"
 
 msgid "Attribute sync plug-ins"
 msgstr "属性同期プラグイン"
@@ -8686,12 +8708,20 @@ msgid "Azure Firewalls"
 msgstr "Zorpファイアウォール"
 
 #, fuzzy
+msgid "Azure Load Balancer Byte Count"
+msgstr "ロードバランサーヘルス"
+
+#, fuzzy
 msgid "Azure Load Balancer Health"
 msgstr "ロードバランサーヘルス"
 
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azureロードバランサーヘルス"
+
+#, fuzzy
+msgid "Azure Load Balancer SNAT Consumption"
+msgstr "ロードバランサーヘルス"
 
 #, fuzzy
 msgid "Azure NAT Gateways Connections"
@@ -8848,6 +8878,10 @@ msgid "Azure VM instances"
 msgstr "Azure VMインスタンス"
 
 #, fuzzy
+msgid "Azure VM instances (deprecated)"
+msgstr "Azure VMディスク"
+
+#, fuzzy
 msgid "Azure VNet Gateway"
 msgstr "vNet ゲートウェイ"
 
@@ -8862,6 +8896,10 @@ msgstr "Azure データベース接続"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure overview"
+msgstr "アラートの概要"
 
 #, fuzzy
 msgid "Azure recovery services vault backup"
@@ -8879,6 +8917,10 @@ msgstr "監視するAzureサービス"
 
 msgid "Azure storage accounts"
 msgstr "Azureストレージアカウント"
+
+#, fuzzy
+msgid "Azure storage accounts (deprecated)"
+msgstr "Azureストレージ使用量"
 
 #, fuzzy
 msgid "Azure subscription"
@@ -10685,6 +10727,14 @@ msgstr "送信されたバイト数"
 
 msgid "Bytes sent/received"
 msgstr "送信/受信　バイト数"
+
+#, fuzzy
+msgid "Bytes transmitted"
+msgstr "受け入れられたバイト"
+
+#, fuzzy
+msgid "Bytes transmitted (lower levels)"
+msgstr "バイト数の下位レベル"
 
 msgid "Bytes uploaded"
 msgstr "バイトアップロード済"
@@ -13327,6 +13377,10 @@ msgid "Cisco Meraki"
 msgstr "Cisco Meraki"
 
 #, fuzzy
+msgid "Cisco Meraki API response codes"
+msgstr "Cisco Meraki power supply"
+
+#, fuzzy
 msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Checkmkアプライアンス情報"
 
@@ -13896,6 +13950,18 @@ msgstr "クラスター全体"
 
 msgid "Cnt."
 msgstr "Cnt"
+
+msgid "Code 2xx"
+msgstr ""
+
+msgid "Code 3xx"
+msgstr ""
+
+msgid "Code 4xx"
+msgstr ""
+
+msgid "Code 5xx"
+msgstr ""
 
 msgid "Code size"
 msgstr "コードサイズ"
@@ -15052,6 +15118,10 @@ msgid "Connect directly (not available in Checkmk Community)"
 msgstr "直接接続します(CREでは使用できません)"
 
 msgid "Connect directly to the destination instead of using a proxy."
+msgstr "プロキシを使用せずに、宛先に直接接続します。"
+
+#, fuzzy
+msgid "Connect directly to the license server instead of using a proxy."
 msgstr "プロキシを使用せずに、宛先に直接接続します。"
 
 msgid "Connect directly, without Livestatus Proxy"
@@ -17773,6 +17843,10 @@ msgstr "データノード"
 msgid "Data not found"
 msgstr "データが見つかりません"
 
+#, fuzzy
+msgid "Data path availability"
+msgstr "データパスの可用性下位レベル"
+
 msgid "Data path availability lower levels"
 msgstr "データパスの可用性下位レベル"
 
@@ -19737,6 +19811,10 @@ msgstr "デバイスタイプ"
 msgid "Device unavailable"
 msgstr "デバイスを利用できません"
 
+#, fuzzy
+msgid "Device uplinks"
+msgstr "オンラインデバイス"
+
 msgid "Devices"
 msgstr "デバイス"
 
@@ -20306,6 +20384,10 @@ msgstr "ディスク読み取りの待ち時間"
 msgid "Disk read operations"
 msgstr "ディスク読込操作"
 
+#, fuzzy
+msgid "Disk read throughput"
+msgstr "読み取りスループット"
+
 msgid "Disk read throughput per second"
 msgstr "ディスク読込スループット/秒"
 
@@ -20347,6 +20429,10 @@ msgstr "ディスク書き込みの待ち時間"
 
 msgid "Disk write operations"
 msgstr "ディスク書込操作"
+
+#, fuzzy
+msgid "Disk write throughput"
+msgstr "FCP 書き込みスループット"
 
 msgid "Disk write throughput per second"
 msgstr "ディスク書込スループット/秒"
@@ -21141,6 +21227,10 @@ msgstr "何も削除しないでください"
 
 msgid "Do not rotate based on the time"
 msgstr "時間に基づいてローテーションしないでください"
+
+#, fuzzy
+msgid "Do not send telemetry data"
+msgstr "リモートホストに送信しないでください"
 
 msgid "Do not send to remote host"
 msgstr "リモートホストに送信しないでください"
@@ -22671,6 +22761,10 @@ msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にす
 msgid "Enable OpenTelemetry collector (experimental)"
 msgstr "OpenTelemetryコレクター（実験的）"
 
+#, fuzzy
+msgid "Enable Product Telemetry"
+msgstr "レポート要素"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
 
@@ -22779,8 +22873,8 @@ msgid "Enable notifications?"
 msgstr "通知を有効にしますか?"
 
 msgid ""
-"Enable or disable product telemetry. When disabled, you can configure "
-"whether to show a popup asking for consent on login."
+"Enable or disable product telemetry data collection. If not decided, the "
+"user will be asked for consent via a popup."
 msgstr ""
 
 #, fuzzy
@@ -27982,6 +28076,10 @@ msgstr "ヘルスチェックの正常カウント"
 
 msgid "Health check percentage healty"
 msgstr "ヘルスチェックの正常な割合"
+
+#, fuzzy
+msgid "Health probe status"
+msgstr "ヘルスプローブステータス下位レベル"
 
 msgid "Health probe status lower levels"
 msgstr "ヘルスプローブステータス下位レベル"
@@ -33749,6 +33847,11 @@ msgstr ""
 
 msgid "In termination"
 msgstr "終了"
+
+msgid ""
+"In the Checkmk Community Edition, dashboard tokens can only be valid for up "
+"to one month."
+msgstr ""
 
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
@@ -41260,6 +41363,9 @@ msgstr "ミラーリング状態の重要性"
 msgid "Mirroring witness state criticality"
 msgstr "ミラーリング ウィットネス状態の重要性"
 
+msgid "Misc"
+msgstr ""
+
 msgid "Miscellaneous"
 msgstr "その他"
 
@@ -43893,6 +43999,10 @@ msgstr "テストホストなし"
 msgid "No title"
 msgstr "タイトルなし"
 
+#, fuzzy
+msgid "No token for this dashboard exists."
+msgstr "このホストのログは見つかりませんでした。"
+
 msgid "No unknown check parameter rule sets found."
 msgstr "不明なチェックパラメータルールセットが見つかりません。"
 
@@ -44323,6 +44433,10 @@ msgstr "構成されていません。"
 
 msgid "Not contained in any group"
 msgstr "どのグループにも含まれていません"
+
+#, fuzzy
+msgid "Not decided"
+msgstr "不要"
 
 msgid "Not enabled"
 msgstr "有効になっていません"
@@ -45689,6 +45803,10 @@ msgstr "OAuth2（クライアントID/テナントID）"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "接続を追加"
+
+#, fuzzy
+msgid "OAuth2 connection ID"
 msgstr "接続を追加"
 
 #, fuzzy
@@ -55292,9 +55410,6 @@ msgstr "SMTPサーバー"
 msgid "SNAT Consumption"
 msgstr "SNAT の消費電力"
 
-msgid "SNAT Usage"
-msgstr "SNAT使用量"
-
 #, fuzzy
 msgid "SNAT Usage (Deprecated)"
 msgstr "Azureストレージ使用量"
@@ -55309,6 +55424,10 @@ msgstr "CPU使用率レベル"
 
 msgid "SNAT usage"
 msgstr "SNAT 利用量"
+
+#, fuzzy
+msgid "SNAT usage (lower levels)"
+msgstr "SNAT使用量の下位レベル"
 
 msgid "SNAT usage lower levels"
 msgstr "SNAT使用量の下位レベル"
@@ -63112,14 +63231,6 @@ msgstr "Tel2IP 失敗したSIP/H323コールの数"
 msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Tel2IP SIP/H323通話の総所要時間"
 
-#, fuzzy
-msgid "Telemetry is disabled"
-msgstr "セットアップは無効になっています。"
-
-#, fuzzy
-msgid "Telemetry is enabled"
-msgstr "OpenTelemetryメトリック名"
-
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -65321,6 +65432,10 @@ msgstr "クラスター内の予想されるノード数"
 
 msgid "The expected number of resources in the cluster"
 msgstr "クラスター内の予想されるリソース数"
+
+#, fuzzy
+msgid "The expiration time must be in the future."
+msgstr "過去の有効期限を設定することはできません："
 
 #, python-format
 msgid ""
@@ -74042,6 +74157,11 @@ msgstr ""
 "ロードして安全な場所に保管する必要があります。キーやキーのパスフレーズを紛失"
 "すると、バックアップを復元することはできません。<br>次のキーはまだダウンロー"
 "ドされていません: %s"
+
+msgid ""
+"To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
+"proxy settings there."
+msgstr ""
 
 msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
@@ -82773,6 +82893,10 @@ msgstr "一致するWindows、Linux、Solaris、AIXエージェント: %s"
 msgid "Windows: MSI (.msi)"
 msgstr "Windows: MSI (.msi)"
 
+#, fuzzy
+msgid "Wireless ethernet statuses"
+msgstr "状態を無視する"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -88098,11 +88222,11 @@ msgid "Set as start URL"
 msgstr "開始URLとして設定"
 
 #, fuzzy
-msgid "Edit widgets"
+msgid "Add widget"
 msgstr "ターゲットを追加"
 
 #, fuzzy
-msgid "Add widget"
+msgid "Edit widgets"
 msgstr "ターゲットを追加"
 
 #, fuzzy
@@ -89245,18 +89369,6 @@ msgid "Metric name"
 msgstr "メトリック名"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "属性をリセット"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "役割属性"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "ダウンタイム属性:"
-
-#, fuzzy
 msgid "Aggregation lookback"
 msgstr "集約チェック"
 
@@ -89457,6 +89569,18 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Resource attributes"
+msgstr "属性をリセット"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "役割属性"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "ダウンタイム属性:"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "接続タイムアウトを設定する"
 
@@ -89595,9 +89719,6 @@ msgstr "保存してテストする"
 #, fuzzy
 msgid "Download and install"
 msgstr "ダウンロード済・インストール済のエージェント"
-
-msgid "Run this command to download and install the Checkmk agent."
-msgstr ""
 
 #, fuzzy
 msgid "Next step: Register agent"
@@ -89738,8 +89859,11 @@ msgstr "デフォルトパラメータ"
 #, fuzzy
 msgid ""
 "A new tab will be opened. Please follow the instructions to authorize the "
-"application. The process has to be completed within 5 minutes."
+"application."
 msgstr "ブラウザの指示に従って認証を行ってください。"
+
+msgid "The process has to be completed within 5 minutes."
+msgstr ""
 
 #, fuzzy
 msgid "Start authorization"
@@ -89842,6 +89966,58 @@ msgstr "デグレードしたホストの数"
 #, fuzzy
 msgid "Go to relay overview"
 msgstr "%s概要へ"
+
+msgid "Help us improve Checkmk with product telemetry"
+msgstr ""
+
+msgid "Why do we need product telemetry in Checkmk?"
+msgstr ""
+
+msgid ""
+"Help us shape the future of Checkmk. Your usage data allows us to make "
+"better decisions and focus development on the tools you use regularly. "
+"Please consider consenting to Product Telemetry to help us build the "
+"features that matter the most to you."
+msgstr ""
+
+msgid "What data are we collecting?"
+msgstr ""
+
+msgid "We strictly limit data collection to aggregated, non-personal metrics."
+msgstr ""
+
+#, fuzzy
+msgid "We Collect:"
+msgstr "コレクション"
+
+msgid "Quantity metrics (e.g., count of hosts, folders, and services)."
+msgstr ""
+
+#, fuzzy
+msgid "We Do NOT Collect:"
+msgstr "コアのサイズ"
+
+msgid ""
+"User behavior (e.g., visit frequency) or sensitive identifiers (e.g., "
+"hostnames, file paths, service names, or raw metric values)."
+msgstr ""
+
+msgid "Do we automatically collect and send data?"
+msgstr ""
+
+msgid ""
+"No! We firmly believe in only receiving data you are happy to share with us. "
+"For this reason, on default product telemetry is turned off. To make a "
+"decision now, please click on the \"Decide on product telemetry\" button."
+msgstr ""
+
+#, fuzzy
+msgid "Ask me again"
+msgstr "ホストが再び上がる"
+
+#, fuzzy
+msgid "Enable in global settings"
+msgstr "グローバル設定を編集する"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -90312,6 +90488,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "SNAT Usage"
+#~ msgstr "SNAT使用量"
+
+#, fuzzy
+#~ msgid "Telemetry is disabled"
+#~ msgstr "セットアップは無効になっています。"
+
+#, fuzzy
+#~ msgid "Telemetry is enabled"
+#~ msgstr "OpenTelemetryメトリック名"
+
 #, fuzzy
 #~ msgid "Error retrieving AI service information. Please try again later."
 #~ msgstr "何か問題が発生しました: %s"
@@ -90383,10 +90570,6 @@ msgstr ""
 #~ "(Mailman 3) は Mailman のメーリングリストを監視します。有効化された場合、"
 #~ "インストールされた Mailman のバージョンによってどちらか一方だけがデータを"
 #~ "生成するので、両方のプラグインがデプロイされます。"
-
-#, fuzzy
-#~ msgid "Datapath availability"
-#~ msgstr "データパスの可用性下位レベル"
 
 #, fuzzy
 #~ msgid "Documents"

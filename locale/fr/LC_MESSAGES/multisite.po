@@ -2728,6 +2728,9 @@ msgstr ""
 "d'éviter que ces vérifications ne bloquent l'ensemble de l'agent. Si aucun "
 "délai n'est configuré ici, la valeur par défaut est de 60 secondes."
 
+msgid "A token for this dashboard already exists, cannot create another one."
+msgstr ""
+
 msgid "A unique ID of this BI pack."
 msgstr "Un ID unique de ce pack BI."
 
@@ -2749,6 +2752,10 @@ msgid ""
 msgstr ""
 "Un ID unique de cette règle. Chaque événement se souviendra de la règle avec "
 "laquelle il a été classé grâce à son ID de règle."
+
+#, fuzzy
+msgid "A unique identifier for this OAuth2 connection."
+msgstr "Un titre descriptif de cette action."
 
 msgid ""
 "A unique identifier that might be required when you assume a role in another "
@@ -2920,6 +2927,10 @@ msgstr "Clé API"
 #, fuzzy
 msgid "API or personal access token"
 msgstr "Token d'accès à l'API"
+
+#, fuzzy
+msgid "API response codes"
+msgstr "Temps de réponse des hop"
 
 msgid "API server connection"
 msgstr "Connexion au serveur API"
@@ -6480,6 +6491,9 @@ msgstr "Autoriser l'authentification par mot de passe"
 msgid "Allow self-signed certificates"
 msgstr "Ajouter un certificat CA ou auto-signé"
 
+msgid "Allow sending telemetry data"
+msgstr ""
+
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr "Autoriser l'utilisateur à utiliser l'action \"Remove all\" ; downtimes"
 
@@ -7675,6 +7689,10 @@ msgstr "Agent de contrôle"
 msgid "Ask for an optional comment"
 msgstr "Demandez un commentaire facultatif"
 
+#, fuzzy
+msgid "Ask user for consent via popup"
+msgstr "Attribution de services à des groupes de contacts"
+
 msgid "Assertion Consumer Service endpoint"
 msgstr "Point de terminaison du service consommateur d'assertions"
 
@@ -7945,6 +7963,10 @@ msgid "Attribute key"
 msgstr "Attribut"
 
 msgid "Attribute match value"
+msgstr "Valeur correspondant à l'attribut"
+
+#, fuzzy
+msgid "Attribute name"
 msgstr "Valeur correspondant à l'attribut"
 
 #, fuzzy
@@ -9351,12 +9373,20 @@ msgid "Azure Firewalls"
 msgstr "Pare-feu Zorp"
 
 #, fuzzy
+msgid "Azure Load Balancer Byte Count"
+msgstr "Santé de l'équilibreur de charge"
+
+#, fuzzy
 msgid "Azure Load Balancer Health"
 msgstr "Santé de l'équilibreur de charge"
 
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Santé de l'équilibreur de charge Azure"
+
+#, fuzzy
+msgid "Azure Load Balancer SNAT Consumption"
+msgstr "Santé de l'équilibreur de charge"
 
 #, fuzzy
 msgid "Azure NAT Gateways Connections"
@@ -9513,6 +9543,10 @@ msgid "Azure VM instances"
 msgstr "Instances VM Azure"
 
 #, fuzzy
+msgid "Azure VM instances (deprecated)"
+msgstr "Disque Azure VM"
+
+#, fuzzy
 msgid "Azure VNet Gateway"
 msgstr "Passerelle vNet"
 
@@ -9527,6 +9561,10 @@ msgstr "Connexions à la base de données"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Connexions à la base de données"
+
+#, fuzzy
+msgid "Azure overview"
+msgstr "Aperçu de l'alerte"
 
 #, fuzzy
 msgid "Azure recovery services vault backup"
@@ -9544,6 +9582,10 @@ msgstr "Services Azure à surveiller"
 
 msgid "Azure storage accounts"
 msgstr "Comptes de stockage Azure"
+
+#, fuzzy
+msgid "Azure storage accounts (deprecated)"
+msgstr "Stockage Azure"
 
 #, fuzzy
 msgid "Azure subscription"
@@ -11431,6 +11473,14 @@ msgstr "Octets envoyés"
 
 msgid "Bytes sent/received"
 msgstr "Octets envoyés/reçus"
+
+#, fuzzy
+msgid "Bytes transmitted"
+msgstr "Octets acceptés"
+
+#, fuzzy
+msgid "Bytes transmitted (lower levels)"
+msgstr "Comptage d'octets niveaux inférieurs"
 
 msgid "Bytes uploaded"
 msgstr "Octets téléchargés"
@@ -14239,6 +14289,10 @@ msgid "Cisco Meraki"
 msgstr "Cisco Meraki"
 
 #, fuzzy
+msgid "Cisco Meraki API response codes"
+msgstr "Cisco Meraki"
+
+#, fuzzy
 msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Automatisation de Checkmk"
 
@@ -14823,6 +14877,18 @@ msgstr "À l'échelle du groupe"
 
 msgid "Cnt."
 msgstr "Cnt."
+
+msgid "Code 2xx"
+msgstr ""
+
+msgid "Code 3xx"
+msgstr ""
+
+msgid "Code 4xx"
+msgstr ""
+
+msgid "Code 5xx"
+msgstr ""
 
 #, fuzzy
 msgid "Code size"
@@ -16066,6 +16132,11 @@ msgid "Connect directly (not available in Checkmk Community)"
 msgstr "Connexion directe (non disponible en CRE)"
 
 msgid "Connect directly to the destination instead of using a proxy."
+msgstr ""
+"Connectez-vous directement à la destination au lieu d'utiliser un proxy."
+
+#, fuzzy
+msgid "Connect directly to the license server instead of using a proxy."
 msgstr ""
 "Connectez-vous directement à la destination au lieu d'utiliser un proxy."
 
@@ -18928,6 +18999,10 @@ msgstr "Nœuds de données"
 msgid "Data not found"
 msgstr "Données non trouvées"
 
+#, fuzzy
+msgid "Data path availability"
+msgstr "Disponibilité du chemin de données niveaux inférieurs"
+
 msgid "Data path availability lower levels"
 msgstr "Disponibilité du chemin de données niveaux inférieurs"
 
@@ -21038,6 +21113,10 @@ msgstr "Type de dispositif"
 msgid "Device unavailable"
 msgstr "Dispositif indisponible"
 
+#, fuzzy
+msgid "Device uplinks"
+msgstr "Dispositif en ligne"
+
 msgid "Devices"
 msgstr "Dispositifs"
 
@@ -21644,6 +21723,10 @@ msgstr "Latence de lecture du disque"
 msgid "Disk read operations"
 msgstr "Opérations de lecture du disque"
 
+#, fuzzy
+msgid "Disk read throughput"
+msgstr "Débit de lecture"
+
 msgid "Disk read throughput per second"
 msgstr "Débit de lecture du disque par seconde"
 
@@ -21686,6 +21769,10 @@ msgstr "Latence d'écriture sur le disque"
 
 msgid "Disk write operations"
 msgstr "Opérations d'écriture sur disque"
+
+#, fuzzy
+msgid "Disk write throughput"
+msgstr "Débit d'écriture"
 
 msgid "Disk write throughput per second"
 msgstr "Débit d'écriture sur disque par seconde"
@@ -22600,6 +22687,10 @@ msgstr "N'enlevez rien"
 
 msgid "Do not rotate based on the time"
 msgstr "Ne pas faire de rotation en fonction de l'heure"
+
+#, fuzzy
+msgid "Do not send telemetry data"
+msgstr "Ne pas envoyer à l'hôte distant"
 
 msgid "Do not send to remote host"
 msgstr "Ne pas envoyer à l'hôte distant"
@@ -24203,6 +24294,10 @@ msgstr "Activer l'accès au Livestatus via le réseau (TCP)"
 msgid "Enable OpenTelemetry collector (experimental)"
 msgstr "Ajouter une configuration d'état"
 
+#, fuzzy
+msgid "Enable Product Telemetry"
+msgstr "élément de rapport"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activer SMTP AUTH (LOGIN)"
 
@@ -24320,8 +24415,8 @@ msgid "Enable notifications?"
 msgstr "Activer les notifications ?"
 
 msgid ""
-"Enable or disable product telemetry. When disabled, you can configure "
-"whether to show a popup asking for consent on login."
+"Enable or disable product telemetry data collection. If not decided, the "
+"user will be asked for consent via a popup."
 msgstr ""
 
 #, fuzzy
@@ -29795,6 +29890,10 @@ msgstr "Contrôle de la santé Compte de la santé"
 
 msgid "Health check percentage healty"
 msgstr "Pourcentage de l'examen de santé"
+
+#, fuzzy
+msgid "Health probe status"
+msgstr "État de la sonde de santé niveaux inférieurs"
 
 msgid "Health probe status lower levels"
 msgstr "État de la sonde de santé niveaux inférieurs"
@@ -36186,6 +36285,11 @@ msgstr ""
 #, fuzzy
 msgid "In termination"
 msgstr "Intermission"
+
+msgid ""
+"In the Checkmk Community Edition, dashboard tokens can only be valid for up "
+"to one month."
+msgstr ""
 
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
@@ -44145,6 +44249,9 @@ msgstr "Criticité de l'état miroir"
 msgid "Mirroring witness state criticality"
 msgstr "Criticité de l'état du témoin en miroir"
 
+msgid "Misc"
+msgstr ""
+
 msgid "Miscellaneous"
 msgstr "Divers"
 
@@ -46978,6 +47085,10 @@ msgid "No title"
 msgstr "Pas de titre"
 
 #, fuzzy
+msgid "No token for this dashboard exists."
+msgstr "Aucun journal trouvé pour cet hôte."
+
+#, fuzzy
 msgid "No unknown check parameter rule sets found."
 msgstr "Modification de la règle de notification %d"
 
@@ -47446,6 +47557,10 @@ msgstr "Non configuré."
 
 msgid "Not contained in any group"
 msgstr "Ne figure dans aucun groupe"
+
+#, fuzzy
+msgid "Not decided"
+msgstr "est nécessaire"
 
 msgid "Not enabled"
 msgstr "Non activé"
@@ -48913,6 +49028,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Ajouter une connexion"
+
+#, fuzzy
+msgid "OAuth2 connection ID"
 msgstr "Ajouter une connexion"
 
 #, fuzzy
@@ -59402,9 +59521,6 @@ msgstr "Serveur SMTP"
 msgid "SNAT Consumption"
 msgstr "Consommation de SNAT"
 
-msgid "SNAT Usage"
-msgstr "Utilisation du SNAT"
-
 #, fuzzy
 msgid "SNAT Usage (Deprecated)"
 msgstr "Stockage Azure"
@@ -59419,6 +59535,10 @@ msgstr "Utilisation du CPU"
 
 msgid "SNAT usage"
 msgstr "Utilisation du SNAT"
+
+#, fuzzy
+msgid "SNAT usage (lower levels)"
+msgstr "Utilisation du SNAT : niveaux inférieurs"
 
 msgid "SNAT usage lower levels"
 msgstr "Utilisation du SNAT : niveaux inférieurs"
@@ -67726,14 +67846,6 @@ msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Durée totale : "
 
 #, fuzzy
-msgid "Telemetry is disabled"
-msgstr "La configuration est désactivée."
-
-#, fuzzy
-msgid "Telemetry is enabled"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -70063,6 +70175,12 @@ msgstr "Le nombre attendu de nœuds dans le cluster"
 
 msgid "The expected number of resources in the cluster"
 msgstr "Le nombre attendu de ressources dans le cluster"
+
+#, fuzzy
+msgid "The expiration time must be in the future."
+msgstr ""
+"Vous ne pouvez pas définir une date et une heure d'expiration qui se situent "
+"dans le passé :"
 
 #, python-format
 msgid ""
@@ -79242,6 +79360,11 @@ msgstr ""
 "perdez vos clés ou les phrases de passe des clés, votre sauvegarde ne peut "
 "pas être restaurée.<br>Les clés suivantes n'ont pas encore été "
 "téléchargées : %s"
+
+msgid ""
+"To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
+"proxy settings there."
+msgstr ""
 
 msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
@@ -89093,6 +89216,10 @@ msgstr "Correspondance des agents Windows, Linux, Solaris, AIX : %s"
 msgid "Windows: MSI (.msi)"
 msgstr "Windows : MSI (.msi)"
 
+#, fuzzy
+msgid "Wireless ethernet statuses"
+msgstr "ignorer l'État"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -94682,11 +94809,11 @@ msgid "Set as start URL"
 msgstr "Définir comme URL de départ"
 
 #, fuzzy
-msgid "Edit widgets"
+msgid "Add widget"
 msgstr "Ajouter une cible"
 
 #, fuzzy
-msgid "Add widget"
+msgid "Edit widgets"
 msgstr "Ajouter une cible"
 
 #, fuzzy
@@ -95853,18 +95980,6 @@ msgid "Metric name"
 msgstr "Étiquette métrique"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Attribut du rôle"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Attribut du rôle"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Modifier les attributs"
-
-#, fuzzy
 msgid "Aggregation lookback"
 msgstr "Contrôles d'agrégation"
 
@@ -96084,6 +96199,18 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Resource attributes"
+msgstr "Attribut du rôle"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Attribut du rôle"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Modifier les attributs"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Définir le délai de connexion"
 
@@ -96227,9 +96354,6 @@ msgstr "Sauvegarder et tester"
 msgid "Download and install"
 msgstr "Agent téléchargé"
 
-msgid "Run this command to download and install the Checkmk agent."
-msgstr ""
-
 #, fuzzy
 msgid "Next step: Register agent"
 msgstr "Bénéficiaire"
@@ -96369,7 +96493,10 @@ msgstr "Paramètres du modèle"
 
 msgid ""
 "A new tab will be opened. Please follow the instructions to authorize the "
-"application. The process has to be completed within 5 minutes."
+"application."
+msgstr ""
+
+msgid "The process has to be completed within 5 minutes."
 msgstr ""
 
 #, fuzzy
@@ -96479,6 +96606,58 @@ msgstr "Nombre d'hôtes dégradés"
 #, fuzzy
 msgid "Go to relay overview"
 msgstr "Aperçu de l'hôte"
+
+msgid "Help us improve Checkmk with product telemetry"
+msgstr ""
+
+msgid "Why do we need product telemetry in Checkmk?"
+msgstr ""
+
+msgid ""
+"Help us shape the future of Checkmk. Your usage data allows us to make "
+"better decisions and focus development on the tools you use regularly. "
+"Please consider consenting to Product Telemetry to help us build the "
+"features that matter the most to you."
+msgstr ""
+
+msgid "What data are we collecting?"
+msgstr ""
+
+msgid "We strictly limit data collection to aggregated, non-personal metrics."
+msgstr ""
+
+#, fuzzy
+msgid "We Collect:"
+msgstr "Collections"
+
+msgid "Quantity metrics (e.g., count of hosts, folders, and services)."
+msgstr ""
+
+#, fuzzy
+msgid "We Do NOT Collect:"
+msgstr "Taille des fichiers journaux"
+
+msgid ""
+"User behavior (e.g., visit frequency) or sensitive identifiers (e.g., "
+"hostnames, file paths, service names, or raw metric values)."
+msgstr ""
+
+msgid "Do we automatically collect and send data?"
+msgstr ""
+
+msgid ""
+"No! We firmly believe in only receiving data you are happy to share with us. "
+"For this reason, on default product telemetry is turned off. To make a "
+"decision now, please click on the \"Decide on product telemetry\" button."
+msgstr ""
+
+#, fuzzy
+msgid "Ask me again"
+msgstr "L'hôte monte à nouveau"
+
+#, fuzzy
+msgid "Enable in global settings"
+msgstr "Modifier le paramètre global"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -96961,6 +97140,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "SNAT Usage"
+#~ msgstr "Utilisation du SNAT"
+
+#, fuzzy
+#~ msgid "Telemetry is disabled"
+#~ msgstr "La configuration est désactivée."
+
+#, fuzzy
+#~ msgid "Telemetry is enabled"
+#~ msgstr "Ajouter une configuration d'état"
+
 #, fuzzy
 #~ msgid "Error retrieving AI service information. Please try again later."
 #~ msgstr ""
@@ -97024,10 +97214,6 @@ msgstr ""
 
 #~ msgid "Remove package"
 #~ msgstr "Retirer l'emballage"
-
-#, fuzzy
-#~ msgid "Datapath availability"
-#~ msgstr "Disponibilité du chemin de données niveaux inférieurs"
 
 #, fuzzy
 #~ msgid "Documents"

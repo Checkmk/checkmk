@@ -2720,6 +2720,9 @@ msgstr ""
 "aceste verificări să blocheze întregul agent. Dacă nu este configurat niciun "
 "termen de așteptare aici, valoarea implicită este de 60 de secunde."
 
+msgid "A token for this dashboard already exists, cannot create another one."
+msgstr ""
+
 msgid "A unique ID of this BI pack."
 msgstr "Un ID unic al acestui pachet BI."
 
@@ -2741,6 +2744,10 @@ msgid ""
 msgstr ""
 "Un ID unic al acestei reguli. Fiecare eveniment își va aminti regula cu care "
 "a fost clasificat prin ID-ul său de regulă."
+
+#, fuzzy
+msgid "A unique identifier for this OAuth2 connection."
+msgstr "Un titlu descriptiv despre această acțiune."
 
 msgid ""
 "A unique identifier that might be required when you assume a role in another "
@@ -2911,6 +2918,10 @@ msgstr "Antet cheie API"
 #, fuzzy
 msgid "API or personal access token"
 msgstr "Token de acces la API"
+
+#, fuzzy
+msgid "API response codes"
+msgstr "Timpii de răspuns la hopuri"
 
 msgid "API server connection"
 msgstr "Conexiune la serverul API"
@@ -6453,6 +6464,9 @@ msgstr "Permiteți autentificarea cu parolă"
 msgid "Allow self-signed certificates"
 msgstr "Permiteți certificatele autofirmate"
 
+msgid "Allow sending telemetry data"
+msgstr ""
+
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr ""
 "Permiteți utilizatorului să utilizeze acțiunea \"Remove all\" downtimes"
@@ -7641,6 +7655,10 @@ msgstr "Agent Checkmk"
 msgid "Ask for an optional comment"
 msgstr "Cereți un comentariu opțional"
 
+#, fuzzy
+msgid "Ask user for consent via popup"
+msgstr "Atribuirea serviciilor la grupurile de contact"
+
 msgid "Assertion Consumer Service endpoint"
 msgstr "Punct final al serviciului de consum al afirmațiilor"
 
@@ -7909,6 +7927,10 @@ msgid "Attribute key"
 msgstr "Atributul"
 
 msgid "Attribute match value"
+msgstr "Valoarea de potrivire a atributului"
+
+#, fuzzy
+msgid "Attribute name"
 msgstr "Valoarea de potrivire a atributului"
 
 msgid "Attribute sync plug-ins"
@@ -9301,12 +9323,20 @@ msgid "Azure Firewalls"
 msgstr "Zorp firewall"
 
 #, fuzzy
+msgid "Azure Load Balancer Byte Count"
+msgstr "Sănătatea echilibrului de încărcare"
+
+#, fuzzy
 msgid "Azure Load Balancer Health"
 msgstr "Sănătatea echilibrului de încărcare"
 
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Sănătatea Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure Load Balancer SNAT Consumption"
+msgstr "Sănătatea echilibrului de încărcare"
 
 #, fuzzy
 msgid "Azure NAT Gateways Connections"
@@ -9463,6 +9493,10 @@ msgid "Azure VM instances"
 msgstr "Instanțe Azure VM"
 
 #, fuzzy
+msgid "Azure VM instances (deprecated)"
+msgstr "Azure VM Disk"
+
+#, fuzzy
 msgid "Azure VNet Gateway"
 msgstr "Gateway vNet"
 
@@ -9477,6 +9511,10 @@ msgstr "Conexiuni la baza de date"
 #, fuzzy
 msgid "Azure database connections (deprecated)"
 msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure overview"
+msgstr "Prezentare generală a alertelor"
 
 #, fuzzy
 msgid "Azure recovery services vault backup"
@@ -9495,6 +9533,10 @@ msgstr "Servicii Azure de monitorizat"
 
 msgid "Azure storage accounts"
 msgstr "Conturi de stocare Azure"
+
+#, fuzzy
+msgid "Azure storage accounts (deprecated)"
+msgstr "Azure Storage"
 
 #, fuzzy
 msgid "Azure subscription"
@@ -11422,6 +11464,14 @@ msgstr "Byte trimise"
 
 msgid "Bytes sent/received"
 msgstr "Octete trimise/recepționate"
+
+#, fuzzy
+msgid "Bytes transmitted"
+msgstr "Byte acceptate"
+
+#, fuzzy
+msgid "Bytes transmitted (lower levels)"
+msgstr "Număr de octeți niveluri inferioare"
 
 msgid "Bytes uploaded"
 msgstr "Byte încărcate"
@@ -14204,6 +14254,10 @@ msgid "Cisco Meraki"
 msgstr "Cisco Meraki"
 
 #, fuzzy
+msgid "Cisco Meraki API response codes"
+msgstr "Cisco Meraki"
+
+#, fuzzy
 msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Automatizare Checkmk"
 
@@ -14791,6 +14845,18 @@ msgstr "La nivel de cluster"
 
 msgid "Cnt."
 msgstr "Cnt."
+
+msgid "Code 2xx"
+msgstr ""
+
+msgid "Code 3xx"
+msgstr ""
+
+msgid "Code 4xx"
+msgstr ""
+
+msgid "Code 5xx"
+msgstr ""
 
 msgid "Code size"
 msgstr "Dimensiunea codului"
@@ -16008,6 +16074,10 @@ msgid "Connect directly (not available in Checkmk Community)"
 msgstr "Conectare directă (nu este disponibil în CRE)"
 
 msgid "Connect directly to the destination instead of using a proxy."
+msgstr "Conectați-vă direct la destinație în loc să utilizați un proxy."
+
+#, fuzzy
+msgid "Connect directly to the license server instead of using a proxy."
 msgstr "Conectați-vă direct la destinație în loc să utilizați un proxy."
 
 msgid "Connect directly, without Livestatus Proxy"
@@ -18838,6 +18908,10 @@ msgstr "Noduri de date"
 msgid "Data not found"
 msgstr "Datele nu au fost găsite"
 
+#, fuzzy
+msgid "Data path availability"
+msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
+
 msgid "Data path availability lower levels"
 msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 
@@ -20952,6 +21026,10 @@ msgstr "Tipul de dispozitiv"
 msgid "Device unavailable"
 msgstr "Dispozitiv indisponibil"
 
+#, fuzzy
+msgid "Device uplinks"
+msgstr "Dispozitiv online"
+
 msgid "Devices"
 msgstr "Dispozitive"
 
@@ -21551,6 +21629,10 @@ msgstr "Latența de citire a discului"
 msgid "Disk read operations"
 msgstr "Operațiuni de citire pe disc"
 
+#, fuzzy
+msgid "Disk read throughput"
+msgstr "Viteză de citire"
+
 msgid "Disk read throughput per second"
 msgstr "Viteza de citire a discului pe secundă"
 
@@ -21593,6 +21675,10 @@ msgstr "Latența de scriere pe disc"
 
 msgid "Disk write operations"
 msgstr "Operațiuni de scriere pe disc"
+
+#, fuzzy
+msgid "Disk write throughput"
+msgstr "Viteza de scriere"
 
 msgid "Disk write throughput per second"
 msgstr "Viteza de scriere pe disc pe secundă"
@@ -22507,6 +22593,10 @@ msgstr "Nu îndepărtați nimic"
 
 msgid "Do not rotate based on the time"
 msgstr "Nu se rotesc în funcție de timp"
+
+#, fuzzy
+msgid "Do not send telemetry data"
+msgstr "Nu trimiteți la gazda de la distanță"
 
 msgid "Do not send to remote host"
 msgstr "Nu trimiteți la gazda de la distanță"
@@ -24094,6 +24184,10 @@ msgstr "Activarea accesului la Livestatus prin rețea (TCP)"
 msgid "Enable OpenTelemetry collector (experimental)"
 msgstr "Configurația stilului selectat"
 
+#, fuzzy
+msgid "Enable Product Telemetry"
+msgstr "element de raport"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activați SMTP AUTH (LOGIN)"
 
@@ -24208,8 +24302,8 @@ msgid "Enable notifications?"
 msgstr "Activați notificările?"
 
 msgid ""
-"Enable or disable product telemetry. When disabled, you can configure "
-"whether to show a popup asking for consent on login."
+"Enable or disable product telemetry data collection. If not decided, the "
+"user will be asked for consent via a popup."
 msgstr ""
 
 #, fuzzy
@@ -29656,6 +29750,10 @@ msgstr "Sănătate verificați numărul de sanatate"
 
 msgid "Health check percentage healty"
 msgstr "Procentul de verificare a stării de sănătate healty"
+
+#, fuzzy
+msgid "Health probe status"
+msgstr "Starea sondei de sănătate niveluri inferioare"
 
 msgid "Health probe status lower levels"
 msgstr "Starea sondei de sănătate niveluri inferioare"
@@ -36029,6 +36127,11 @@ msgstr ""
 #, fuzzy
 msgid "In termination"
 msgstr "Pauză"
+
+msgid ""
+"In the Checkmk Community Edition, dashboard tokens can only be valid for up "
+"to one month."
+msgstr ""
 
 msgid ""
 "In the change log of the Checkmk software version the administrator can "
@@ -43920,6 +44023,9 @@ msgstr "Criticitatea stării de oglindire"
 msgid "Mirroring witness state criticality"
 msgstr "Criticitatea stării martorilor de oglindire"
 
+msgid "Misc"
+msgstr ""
+
 msgid "Miscellaneous"
 msgstr "Diverse"
 
@@ -46752,6 +46858,10 @@ msgid "No title"
 msgstr "Fără titlu"
 
 #, fuzzy
+msgid "No token for this dashboard exists."
+msgstr "Nu s-au găsit jurnale pentru această gazdă."
+
+#, fuzzy
 msgid "No unknown check parameter rule sets found."
 msgstr "Regula de notificare modificată %d"
 
@@ -47216,6 +47326,10 @@ msgstr "Nu este configurat."
 
 msgid "Not contained in any group"
 msgstr "Nu sunt incluse în nicio grupă"
+
+#, fuzzy
+msgid "Not decided"
+msgstr "este necesară"
 
 msgid "Not enabled"
 msgstr "Neactivat"
@@ -48663,6 +48777,10 @@ msgstr "OAuth2 (ClientID/TenantID)"
 
 #, fuzzy
 msgid "OAuth2 connection"
+msgstr "Adăugați o conexiune"
+
+#, fuzzy
+msgid "OAuth2 connection ID"
 msgstr "Adăugați o conexiune"
 
 #, fuzzy
@@ -59051,9 +59169,6 @@ msgstr "Server SMTP"
 msgid "SNAT Consumption"
 msgstr "Consumul de SNAT"
 
-msgid "SNAT Usage"
-msgstr "Utilizarea SNAT"
-
 #, fuzzy
 msgid "SNAT Usage (Deprecated)"
 msgstr "Azure Storage"
@@ -59068,6 +59183,10 @@ msgstr "Utilizare CPU"
 
 msgid "SNAT usage"
 msgstr "Utilizarea SNAT"
+
+#, fuzzy
+msgid "SNAT usage (lower levels)"
+msgstr "Utilizarea SNAT niveluri mai mici"
 
 msgid "SNAT usage lower levels"
 msgstr "Utilizarea SNAT niveluri mai mici"
@@ -67381,14 +67500,6 @@ msgid "Tel2IP Total duration of SIP/H323 calls"
 msgstr "Durata totală"
 
 #, fuzzy
-msgid "Telemetry is disabled"
-msgstr "Configurarea este dezactivată."
-
-#, fuzzy
-msgid "Telemetry is enabled"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -69699,6 +69810,10 @@ msgstr "Numărul preconizat de noduri din cluster"
 
 msgid "The expected number of resources in the cluster"
 msgstr "Numărul preconizat de resurse din cluster"
+
+#, fuzzy
+msgid "The expiration time must be in the future."
+msgstr "Nu puteți seta o dată și o oră de expirare care se află în trecut:"
 
 #, python-format
 msgid ""
@@ -78865,6 +78980,11 @@ msgstr ""
 "loc sigur. Dacă pierdeți cheile sau frazele de trecere ale cheilor, nu veți "
 "putea restaura copiile de rezervă.<br>Următoarele chei nu au fost încă "
 "descărcate: %s."
+
+msgid ""
+"To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
+"proxy settings there."
+msgstr ""
 
 msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
@@ -88564,6 +88684,10 @@ msgstr "Agenții Windows, Linux, Solaris, AIX se potrivesc: %s"
 msgid "Windows: MSI (.msi)"
 msgstr "Ferestre: MSI (.msi)"
 
+#, fuzzy
+msgid "Wireless ethernet statuses"
+msgstr "ignorați statul"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -94121,11 +94245,11 @@ msgid "Set as start URL"
 msgstr "Setați ca URL de pornire"
 
 #, fuzzy
-msgid "Edit widgets"
+msgid "Add widget"
 msgstr "Adăugați o țintă"
 
 #, fuzzy
-msgid "Add widget"
+msgid "Edit widgets"
 msgstr "Adăugați o țintă"
 
 #, fuzzy
@@ -95297,18 +95421,6 @@ msgid "Metric name"
 msgstr "Etichetă metrică"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributul rolului"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributele timpilor morți:"
-
-#, fuzzy
 msgid "Aggregation lookback"
 msgstr "Controale de agregare"
 
@@ -95528,6 +95640,18 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Resource attributes"
+msgstr "Resetarea atributelor"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Atributul rolului"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributele timpilor morți:"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Setați timeout-ul conexiunii"
 
@@ -95671,9 +95795,6 @@ msgstr "Salvați și testați"
 msgid "Download and install"
 msgstr "Agent descărcat"
 
-msgid "Run this command to download and install the Checkmk agent."
-msgstr ""
-
 #, fuzzy
 msgid "Next step: Register agent"
 msgstr "Destinatarul"
@@ -95815,10 +95936,13 @@ msgstr "Parametrii impliciți"
 #, fuzzy
 msgid ""
 "A new tab will be opened. Please follow the instructions to authorize the "
-"application. The process has to be completed within 5 minutes."
+"application."
 msgstr ""
 "Vă rugăm să urmați instrucțiunile de autentificare ale browserului "
 "dumneavoastră."
+
+msgid "The process has to be completed within 5 minutes."
+msgstr ""
 
 #, fuzzy
 msgid "Start authorization"
@@ -95927,6 +96051,58 @@ msgstr "Numărul de gazde degradate"
 #, fuzzy
 msgid "Go to relay overview"
 msgstr "Prezentare generală a gazdei"
+
+msgid "Help us improve Checkmk with product telemetry"
+msgstr ""
+
+msgid "Why do we need product telemetry in Checkmk?"
+msgstr ""
+
+msgid ""
+"Help us shape the future of Checkmk. Your usage data allows us to make "
+"better decisions and focus development on the tools you use regularly. "
+"Please consider consenting to Product Telemetry to help us build the "
+"features that matter the most to you."
+msgstr ""
+
+msgid "What data are we collecting?"
+msgstr ""
+
+msgid "We strictly limit data collection to aggregated, non-personal metrics."
+msgstr ""
+
+#, fuzzy
+msgid "We Collect:"
+msgstr "Colecții"
+
+msgid "Quantity metrics (e.g., count of hosts, folders, and services)."
+msgstr ""
+
+#, fuzzy
+msgid "We Do NOT Collect:"
+msgstr "Dimensiunea fișierelor jurnal"
+
+msgid ""
+"User behavior (e.g., visit frequency) or sensitive identifiers (e.g., "
+"hostnames, file paths, service names, or raw metric values)."
+msgstr ""
+
+msgid "Do we automatically collect and send data?"
+msgstr ""
+
+msgid ""
+"No! We firmly believe in only receiving data you are happy to share with us. "
+"For this reason, on default product telemetry is turned off. To make a "
+"decision now, please click on the \"Decide on product telemetry\" button."
+msgstr ""
+
+#, fuzzy
+msgid "Ask me again"
+msgstr "Gazda se ridică din nou"
+
+#, fuzzy
+msgid "Enable in global settings"
+msgstr "Editarea setării globale"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -96410,6 +96586,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "SNAT Usage"
+#~ msgstr "Utilizarea SNAT"
+
+#, fuzzy
+#~ msgid "Telemetry is disabled"
+#~ msgstr "Configurarea este dezactivată."
+
+#, fuzzy
+#~ msgid "Telemetry is enabled"
+#~ msgstr "Configurația stilului selectat"
+
 #, fuzzy
 #~ msgid "Error retrieving AI service information. Please try again later."
 #~ msgstr ""
@@ -96487,10 +96674,6 @@ msgstr ""
 #~ "tt> (Mailman 3) monitorizează listele de discuții Mailman. Dacă sunt "
 #~ "activate, ambele pluginuri vor fi implementate, deoarece numai unul "
 #~ "dintre ele va produce date, în funcție de versiunea Mailman instalată."
-
-#, fuzzy
-#~ msgid "Datapath availability"
-#~ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 
 #, fuzzy
 #~ msgid "Documents"

@@ -12,11 +12,11 @@ from cmk.inventory_ui.v1_unstable import (
     BoolField,
     ChoiceField,
     DecimalNotation,
-    IECNotation,
     Label,
     LabelColor,
     Node,
     NumberField,
+    SINotation,
     StrictPrecision,
     Table,
     TextField,
@@ -26,7 +26,7 @@ from cmk.inventory_ui.v1_unstable import (
 )
 
 UNIT_AGE = Unit(AgeNotation())
-UNIT_BITS_PER_SECOND = Unit(IECNotation("bits/s"))
+UNIT_BITS_PER_SECOND = Unit(SINotation("bits/s"))
 UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
 UNIT_NUMBER = Unit(DecimalNotation(""))
 

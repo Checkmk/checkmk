@@ -188,16 +188,7 @@ class Crawler:
             "text/x-chdr",
             "text/x-sh",
         }
-        self._ignored_urls: dict[SkipReason, list[RelativeUrl]] = {
-            "CMK-28477: exception if ntop not configured": [
-                "dashboard.py?name=ntop_alerts&owner=",
-                "dashboard.py?name=ntop_flows&owner=",
-                "dashboard.py?name=ntop_top_talkers&owner=",
-                "edit_dashboard.py?back=edit_dashboards.py&load_name=ntop_alerts&mode=clone&owner=",
-                "edit_dashboard.py?back=edit_dashboards.py&load_name=ntop_flows&mode=clone&owner=",
-                "edit_dashboard.py?back=edit_dashboards.py&load_name=ntop_top_talkers&mode=clone&owner=",
-            ]
-        }
+        self._ignored_urls: dict[SkipReason, list[RelativeUrl]] = {}
         # limit minimum value to 0.
         self._max_urls = max(0, max_urls)
         self._todos = deque([Url(self.site.internal_url)])

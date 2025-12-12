@@ -97,7 +97,7 @@ class Config(BaseModel):
                 port = int(value.strip("'"))
             if key == "CONFIG_APACHE_TCP_ADDR":
                 address = value.strip("'")
-        return f"http://{address}:{port}/{self.site_name}/check_mk/api/unstable"
+        return f"http://{address}:{port}/{self.site_name}/check_mk/api/1.0"
 
 
 @cache

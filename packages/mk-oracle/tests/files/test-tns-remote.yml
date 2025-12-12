@@ -20,7 +20,7 @@ oracle:
       include: ["FREE"] # optional
       exclude: [] # optional
     instances: # optional
-      - sid: FREE
+      - service_name: FREE
         alias: ora_remote
         connection: # mandatory
         authentication: # mandatory

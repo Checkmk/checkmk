@@ -37,7 +37,7 @@ pub struct MaxConnections(pub u32);
 #[derive(PartialEq, From, Debug, Clone)]
 pub struct MaxQueries(pub u32);
 
-#[derive(PartialEq, Debug, Display, Clone, Default, Into, Hash, Eq)]
+#[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
 pub struct InstanceName(String);
 
 impl From<&str> for InstanceName {
@@ -81,6 +81,11 @@ impl From<&str> for ServiceName {
     }
 }
 
+impl From<&String> for ServiceName {
+    fn from(s: &String) -> Self {
+        Self(s.clone())
+    }
+}
 #[derive(PartialEq, From, Clone, Debug, Display)]
 pub struct ServiceType(String);
 impl From<&str> for ServiceType {
@@ -88,9 +93,6 @@ impl From<&str> for ServiceType {
         Self(s.to_string())
     }
 }
-
-#[derive(PartialEq, From, Clone, Debug, Display, Default)]
-pub struct InstanceId(String);
 
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct InstanceEdition(String);

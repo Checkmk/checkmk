@@ -21,21 +21,21 @@ use crate::config::authentication::Authentication;
 #[derive(Debug, Clone)]
 pub struct Target {
     pub host: HostName,
-    pub instance: Option<InstanceName>,
-    pub service_type: Option<ServiceType>,
     pub service_name: Option<ServiceName>,
+    pub service_type: Option<ServiceType>,
+    pub instance_name: Option<InstanceName>,
     pub alias: Option<InstanceAlias>,
     pub port: Port,
     pub auth: Authentication,
 }
 
 impl Target {
-    pub fn make_connection_string(&self, optional_instance: Option<&InstanceName>) -> String {
+    pub fn make_connection_string(&self, use_instance: Option<&InstanceName>) -> String {
         use std::fmt::Display;
 
-        fn format_entry<T: Display>(instance: Option<&T>, sep: &str) -> String {
-            if let Some(inst) = instance {
-                format!("{}{}", sep, inst)
+        fn format_entry<T: Display>(optional_value: Option<&T>, sep: &str) -> String {
+            if let Some(value) = optional_value {
+                format!("{}{}", sep, value)
             } else {
                 String::new()
             }
@@ -44,31 +44,28 @@ impl Target {
             log::info!("Using alias connection: {alias}");
             return format!("{}", alias);
         }
-        let work_instance = if self.instance.is_some() {
-            self.instance.as_ref()
+        let instance_name = if use_instance.is_some() {
+            use_instance
         } else {
-            optional_instance
+            self.instance_name.as_ref()
         };
 
-        let conn_string = if let Some(service_name) = &self.service_name {
-            format!(
+        if let Some(service_name) = &self.service_name {
+            let conn_string = format!(
                 "{}:{}/{}{}{}",
                 self.host,
                 self.port,
                 service_name,
                 &format_entry(self.service_type.as_ref(), ":"),
-                &format_entry(work_instance, "/"),
-            )
+                &format_entry(instance_name, "/"),
+            );
+            log::info!("Using normal connection: {conn_string}");
+            conn_string
         } else {
-            format!(
-                "{}:{}{}",
-                self.host,
-                self.port,
-                &format_entry(work_instance, "/")
-            )
-        };
-        log::info!("Using normal connection: {conn_string}");
-        conn_string
+            let conn_string = format!("{}:{}", self.host, self.port);
+            log::info!("Using simple connection: {conn_string}");
+            conn_string
+        }
     }
 }
 
@@ -88,9 +85,9 @@ authentication:
     type: 'standard'";
         let target = Target {
             host: HostName::from("localhost".to_owned()),
-            instance: Some(InstanceName::from("orcl")),
-            service_type: Some(ServiceType::from("dedicated")),
             service_name: Some(ServiceName::from("my_service")),
+            service_type: Some(ServiceType::from("dedicated")),
+            instance_name: Some(InstanceName::from("orcl")),
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -99,7 +96,7 @@ authentication:
         };
         assert_eq!(
             target.make_connection_string(Some(InstanceName::from("XYZ")).as_ref()),
-            "localhost:1521/my_service:dedicated/ORCL"
+            "localhost:1521/my_service:dedicated/XYZ"
         );
         assert_eq!(
             target.make_connection_string(None),
@@ -107,9 +104,9 @@ authentication:
         );
         let target = Target {
             host: HostName::from("localhost".to_owned()),
-            instance: Some(InstanceName::from("orcl")),
-            service_type: Some(ServiceType::from("dedicated")),
             service_name: Some(ServiceName::from("my_service")),
+            service_type: Some(ServiceType::from("dedicated")),
+            instance_name: Some(InstanceName::from("orcl")),
             alias: Some(InstanceAlias::from("my_alias".to_string())),
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -123,9 +120,9 @@ authentication:
         assert_eq!(target.make_connection_string((None).as_ref()), "my_alias");
         let target = Target {
             host: HostName::from("localhost".to_owned()),
-            instance: None,
-            service_type: None,
             service_name: None,
+            service_type: None,
+            instance_name: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -135,15 +132,15 @@ authentication:
         assert_eq!(target.make_connection_string(None), "localhost:1521");
         let target = Target {
             host: HostName::from("localhost".to_owned()),
-            instance: Some(InstanceName::from("orcl")),
+            service_name: Some(ServiceName::from("oRcl")),
             service_type: None,
-            service_name: None,
+            instance_name: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
                 .unwrap()
                 .unwrap(),
         };
-        assert_eq!(target.make_connection_string(None), "localhost:1521/ORCL");
+        assert_eq!(target.make_connection_string(None), "localhost:1521/oRcl");
     }
 }

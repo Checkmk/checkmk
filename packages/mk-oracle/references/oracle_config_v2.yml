@@ -59,7 +59,7 @@ oracle:
       include: ["foo", "bar", "inst1"] # optional
       exclude: ["baz"] # optional
     instances: # optional
-      - sid: "INST1" # mandatory
+      - service_name: "INST1" # mandatory
         authentication: # optional, if absent will use main
         connection: # optional, is absent will use main
         alias: myservicename # optional, default: empty. Is used as TNS alias to overwrite sid and connection config

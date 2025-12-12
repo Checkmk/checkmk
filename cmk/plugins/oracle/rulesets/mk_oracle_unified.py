@@ -236,6 +236,15 @@ def _connection_options() -> Dictionary:
                 ),
                 required=False,
             ),
+            "service_name": DictElement(
+                parameter_form=String(
+                    title=Title(""),
+                    custom_validate=(
+                        validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+                    ),
+                ),
+                required=False,
+            ),
         },
     )
 

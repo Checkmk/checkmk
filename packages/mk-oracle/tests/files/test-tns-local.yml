@@ -19,7 +19,7 @@ oracle:
       include: ["XE"] # optional
       exclude: [] # optional
     instances: # optional
-      - sid: XE
+      - service_name: XE
         alias: ora_local
         connection: # mandatory
         authentication: # mandatory

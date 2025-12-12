@@ -10,11 +10,14 @@
 #
 # You can also omit username and password. In this case, the username/password from the previous
 # connection will be reused.
-# <hostname>:::<port>:<instance>:<role>:<service_name>:<reserved>:<reserved>
+# <hostname>:::<port>:<instance>:<role>:<instance_name>:<reserved>:<service_name>:_:_:
 #           ^^^ will be replaced with the user and password
 #
 # Notes:
 # * Currently, CI_ORA2_DB_TEST must be provided, since it's configured in CI jobs. This is also checked for in a test case.
 # * In case of specifying a string directly, DO NOT submit to git with credentials.
+# * service_name is mandatory for connection
+# * instance_name is required to check whether test correctly identifies the database
+# * service_name and instance_name can be the same
 #
-$CI_ORA2_DB_TEST # typically "oracle-win.dev.checkmk.net:<user>:<password>:1521:FREE::_:_:_"
+$CI_ORA2_DB_TEST # typically "oracle-win.dev.checkmk.net:<user>:<password>:1521:FREE::FREE.oratest:_:_"

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::ora_sql::CustomInstance;
+use crate::config::ora_sql::CustomService;
 use crate::config::{
     authentication::{AuthType, Authentication, Role},
     connection::EngineTag,
@@ -50,7 +50,7 @@ pub trait OraDbEngine {
 }
 
 impl OraDbEngine for StdEngine {
-    fn connect(&mut self, target: &Target, instance: Option<&InstanceName>) -> Result<()> {
+    fn connect(&mut self, target: &Target, instance_name: Option<&InstanceName>) -> Result<()> {
         if self.connection.is_some() {
             log::warn!("Connection already established, closing the previous connection.");
             return Ok(());
@@ -62,7 +62,7 @@ impl OraDbEngine for StdEngine {
             let mut connector = Connector::new(
                 target.auth.username(),
                 target.auth.password().unwrap_or(""),
-                target.make_connection_string(instance),
+                target.make_connection_string(instance_name),
             );
             connector.privilege(_to_privilege(role));
             self.connection = Some(connector.connect()?);
@@ -71,7 +71,7 @@ impl OraDbEngine for StdEngine {
             self.connection = Some(Connection::connect(
                 target.auth.username(),
                 target.auth.password().unwrap_or(""),
-                target.make_connection_string(instance),
+                target.make_connection_string(instance_name),
             )?);
         }
 
@@ -154,7 +154,7 @@ fn _to_privilege(role: &Role) -> Privilege {
 pub struct SqlPlusEngine {}
 
 impl OraDbEngine for SqlPlusEngine {
-    fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
+    fn connect(&mut self, _target: &Target, _service_name: Option<&InstanceName>) -> Result<()> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
 
@@ -174,7 +174,7 @@ impl OraDbEngine for SqlPlusEngine {
 #[derive(Debug, Clone)]
 pub struct JdbcEngine {}
 impl OraDbEngine for JdbcEngine {
-    fn connect(&mut self, _target: &Target, _instance: Option<&InstanceName>) -> Result<()> {
+    fn connect(&mut self, _target: &Target, _service_name: Option<&InstanceName>) -> Result<()> {
         anyhow::bail!("Jdbc engine is not implemented yet")
     }
     fn close(&mut self) -> Result<()> {
@@ -238,14 +238,14 @@ impl Clone for Spot<Closed> {
 }
 
 impl Spot<Closed> {
-    pub fn connect(mut self, instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
+    pub fn connect(mut self, use_instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
         log::info!(
             "{} {:?} -> {}",
             "Connecting to",
             self.target,
-            self.target.make_connection_string(instance)
+            self.target.make_connection_string(use_instance)
         );
-        self.engine.connect(&self.target, instance)?;
+        self.engine.connect(&self.target, use_instance)?;
         Ok(Spot {
             target: self.target,
             engine: self.engine,
@@ -316,9 +316,9 @@ impl SpotBuilder {
     pub fn endpoint_target(mut self, endpoint: &Endpoint) -> Self {
         self.target = Some(Target {
             host: endpoint.hostname().clone(),
-            instance: endpoint.conn().instance().map(|i| i.to_owned()),
             service_name: endpoint.conn().service_name().map(|n| n.to_owned()),
             service_type: endpoint.conn().service_type().map(|t| t.to_owned()),
+            instance_name: endpoint.conn().instance_name().map(|i| i.to_owned()),
             alias: None,
             port: endpoint.conn().port().clone(),
             auth: endpoint.auth().clone(),
@@ -326,13 +326,13 @@ impl SpotBuilder {
         self
     }
 
-    pub fn custom_instance_target(mut self, instance: &CustomInstance) -> Self {
+    pub fn custom_instance_target(mut self, instance: &CustomService) -> Self {
         let ep = &instance.endpoint();
         self.target = Some(Target {
             host: ep.hostname().clone(),
-            instance: Some(instance.name().clone()),
-            service_name: ep.conn().service_name().map(|n| n.to_owned()),
+            service_name: Some(instance.service_name().clone()),
             service_type: ep.conn().service_type().map(|t| t.to_owned()),
+            instance_name: ep.conn().instance_name().map(|t| t.to_owned()),
             alias: instance.alias().clone(),
             port: ep.conn().port().clone(),
             auth: ep.auth().clone(),
@@ -377,7 +377,7 @@ pub fn make_spot(endpoint: &Endpoint) -> Result<ClosedSpot> {
         .build()
 }
 
-pub fn make_custom_spot(instance: &CustomInstance) -> Result<ClosedSpot> {
+pub fn make_custom_spot(instance: &CustomService) -> Result<ClosedSpot> {
     SpotBuilder::new()
         .custom_instance_target(instance)
         .engine_type(instance.endpoint().conn().engine_tag())
@@ -411,7 +411,7 @@ oracle:
     connection:
        hostname: "localhost" # we use real host to avoid long timeout
        port: 65345 # we use weird port to avoid connection
-       instance: XE
+       service_name: XE
        timeout: 1
 "#;
         let s = Config::from_string(BASE.replace("type_tag", auth_type))?.unwrap();

@@ -26,7 +26,7 @@ const SQL_DB_ENDPOINT_PASSWORD: usize = 2;
 const SQL_DB_ENDPOINT_PORT: usize = 3;
 const SQL_DB_ENDPOINT_INSTANCE: usize = 4;
 const SQL_DB_ENDPOINT_ROLE: usize = 5;
-const SQL_DB_SERVICE_NAME: usize = 6;
+const SQL_DB_ENDPOINT_SERVICE_NAME: usize = 6;
 
 // See ticket CMK-23904 for details on the format of this environment variable.
 // CI_ORA1_DB_TEST=ora1.lan.tribe29.net:system:ABcd#1234:1521:XE:sysdba:_:_:_
@@ -37,9 +37,9 @@ pub struct SqlDbEndpoint {
     pub user: String,
     pub pwd: String,
     pub port: u16,
-    pub instance: String,
     pub role: Option<Role>,
-    pub service_name: Option<String>,
+    pub service_name: String,
+    pub instance_name: Option<String>,
 }
 
 impl SqlDbEndpoint {
@@ -64,10 +64,10 @@ impl FromStr for SqlDbEndpoint {
             port: parts[SQL_DB_ENDPOINT_PORT]
                 .parse()
                 .map_err(|_| anyhow::anyhow!("Wrong/malformed port number in {}", env_value))?,
-            instance: parts[SQL_DB_ENDPOINT_INSTANCE].to_string(),
+            service_name: parts[SQL_DB_ENDPOINT_SERVICE_NAME].to_string(),
             role: Role::new(parts[SQL_DB_ENDPOINT_ROLE]),
-            service_name: parts
-                .get(SQL_DB_SERVICE_NAME)
+            instance_name: parts
+                .get(SQL_DB_ENDPOINT_INSTANCE)
                 .filter(|s| !s.is_empty() && **s != "_")
                 .map(|s| s.to_string()),
         })
@@ -266,15 +266,15 @@ mod tests {
     #[test]
     fn test_endpoint() {
         assert_eq!(
-            SqlDbEndpoint::from_str("host:user:password:13:xe:sysdba").unwrap(),
+            SqlDbEndpoint::from_str("host:user:password:13::sysdba:xe:").unwrap(),
             SqlDbEndpoint {
                 host: "host".to_string(),
                 user: "user".to_string(),
                 pwd: "password".to_string(),
                 port: 13,
-                instance: "xe".to_string(),
+                service_name: "xe".to_string(),
                 role: Role::new("sysdba"),
-                service_name: None,
+                instance_name: None,
             }
         )
     }

@@ -12,7 +12,7 @@ orasql:
       use_host_oci: auto # optional, default: no, values: auto, never, always, "path-to-oci-lib"
   target: # mandatory
     connection:
-      name: localhost
+      hostname: localhost
     authentication: 
       user: "" # mandatory
     sections: # optional, if absent will use default as defined below

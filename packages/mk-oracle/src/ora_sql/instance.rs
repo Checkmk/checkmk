@@ -25,7 +25,7 @@ use std::collections::HashSet;
 
 use crate::config::connection::add_tns_admin_to_env;
 use crate::config::defines::defaults::SECTION_SEPARATOR;
-use crate::config::ora_sql::CustomInstance;
+use crate::config::ora_sql::CustomService;
 use crate::platform::get_local_instances;
 use anyhow::Result;
 
@@ -165,15 +165,15 @@ fn make_spot_works(
                         None
                     }
                 })
-                .map(|(instance, info)| {
+                .map(|(service, info)| {
                     let queries = sections
                         .iter()
                         .filter_map(|section| {
-                            if !instance.is_suitable_affinity(section.affinity()) {
+                            if !service.is_suitable_affinity(section.affinity()) {
                                 log::info!(
                                     "Skip section with not suitable affinity: {:?} instance {}",
                                     section,
-                                    instance
+                                    service
                                 );
                                 return None;
                             }
@@ -182,7 +182,7 @@ fn make_spot_works(
                                 .map(|q| (q, section.to_work_header()))
                         })
                         .collect::<Vec<(Vec<SqlQuery>, String)>>();
-                    (instance.clone(), queries)
+                    (service.clone(), queries)
                 })
                 .collect::<Vec<InstanceWorks>>();
             (closed, instance_works)
@@ -213,13 +213,13 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
 
 fn _exec_queries(
     spot: &ClosedSpot,
-    instance: &InstanceName,
+    service_name: &InstanceName,
     queries: &[(Vec<SqlQuery>, String)],
 ) -> Vec<String> {
-    let r = spot.clone().connect(Some(instance));
+    let r = spot.clone().connect(Some(service_name));
     match r {
         Ok(conn) => {
-            log::info!("Connected to : {}", instance);
+            log::info!("Connected to : {}", service_name);
             queries
                 .iter()
                 .flat_map(|(queries, title)| {
@@ -232,7 +232,7 @@ fn _exec_queries(
                                 .unwrap_or_else(|e| {
                                     log::error!(
                                         "Failed to execute query for instance {}: {}",
-                                        instance,
+                                        service_name,
                                         e
                                     );
                                     vec![e.to_string()]
@@ -245,17 +245,17 @@ fn _exec_queries(
                 .collect::<Vec<_>>()
         }
         Err(e) => {
-            log::error!("Failed to connect to instance {}: {}", instance, e);
+            log::error!("Failed to connect to instance {}: {}", service_name, e);
             vec![] // Skip this instance if connection fails
         }
     }
 }
 
 // tested only in integration tests
-fn connect_spots(spots: Vec<ClosedSpot>, instance: Option<&InstanceName>) -> Vec<OpenedSpot> {
+fn connect_spots(spots: Vec<ClosedSpot>, service_name: Option<&InstanceName>) -> Vec<OpenedSpot> {
     let connected = spots
         .into_iter()
-        .filter_map(|t| match t.connect(instance) {
+        .filter_map(|t| match t.connect(service_name) {
             Ok(opened) => {
                 log::info!("Connected to instance: {:?}", &opened.target());
                 Some(opened)
@@ -276,7 +276,7 @@ fn connect_spots(spots: Vec<ClosedSpot>, instance: Option<&InstanceName>) -> Vec
 
 fn calc_all_spots(
     endpoints: Vec<config::ora_sql::Endpoint>,
-    instances: &[CustomInstance],
+    instances: &[CustomService],
 ) -> Vec<ClosedSpot> {
     let mut all = calc_main_spots(endpoints);
     all.extend(calc_custom_spots(instances));
@@ -293,11 +293,17 @@ fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) 
     spots
         .into_iter()
         .filter(|spot| {
-            let name: String = spot.target().instance.clone().unwrap_or_default().into();
+            let service_name: String = spot
+                .target()
+                .service_name
+                .clone()
+                .unwrap_or_default()
+                .into();
+            let uppercased_name: String = service_name.to_uppercase();
             if !include.is_empty() {
-                return include.contains(&name);
+                return include.contains(&uppercased_name);
             } else if !exclude.is_empty() {
-                return !exclude.contains(&name);
+                return !exclude.contains(&uppercased_name);
             }
             true
         })
@@ -320,7 +326,7 @@ fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot>
         .collect::<Vec<ClosedSpot>>()
 }
 
-fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
+fn calc_custom_spots(instances: &[CustomService]) -> Vec<ClosedSpot> {
     log::info!("CUSTOM INSTANCES: {:?}", instances);
     instances
         .iter()
@@ -340,6 +346,8 @@ fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
 mod tests {
     use super::*;
     use crate::config::ora_sql::Discovery;
+    use crate::config::yaml::test_tools::create_yaml;
+    use crate::types::ServiceName;
 
     #[test]
     fn test_calc_spots() {
@@ -350,11 +358,12 @@ mod tests {
         ]);
         assert_eq!(all.len(), 2);
     }
-    fn make_instance(name: &str) -> config::ora_sql::CustomInstance {
-        config::ora_sql::CustomInstance::new(
-            InstanceName::from(name),
+    fn make_instance(service_name: &str) -> config::ora_sql::CustomService {
+        config::ora_sql::CustomService::new(
+            ServiceName::from(service_name),
             config::authentication::Authentication::default(),
             config::connection::Connection::default(),
+            None,
             None,
             None,
         )
@@ -364,6 +373,46 @@ mod tests {
         assert!(calc_custom_spots(&[]).is_empty());
         let all = calc_custom_spots(&[make_instance("A"), make_instance("B")]);
         assert_eq!(all.len(), 2);
+        assert_eq!(
+            all[0].target().service_name.as_ref().unwrap(),
+            &ServiceName::from("A")
+        );
+        assert_eq!(
+            all[1].target().service_name.as_ref().unwrap(),
+            &ServiceName::from("B")
+        );
+    }
+
+    fn make_instance_with_custom_conn(service_name: &str) -> config::ora_sql::CustomService {
+        config::ora_sql::CustomService::new(
+            ServiceName::from(service_name),
+            config::authentication::Authentication::default(),
+            config::connection::Connection::from_yaml(&create_yaml(
+                "connection:\n    service_name: X",
+            ))
+            .unwrap()
+            .unwrap(),
+            None,
+            None,
+            None,
+        )
+    }
+    #[test]
+    fn test_calc_custom_spot_with_custom_conn() {
+        assert!(calc_custom_spots(&[]).is_empty());
+        let all = calc_custom_spots(&[
+            make_instance_with_custom_conn("A"),
+            make_instance_with_custom_conn("B"),
+        ]);
+        assert_eq!(all.len(), 2);
+        assert_eq!(
+            all[0].target().service_name.as_ref().unwrap(),
+            &ServiceName::from("X")
+        );
+        assert_eq!(
+            all[1].target().service_name.as_ref().unwrap(),
+            &ServiceName::from("X")
+        );
     }
     #[test]
     fn test_filter_spots() {

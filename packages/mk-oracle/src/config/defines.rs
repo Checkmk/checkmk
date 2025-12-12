@@ -32,10 +32,10 @@ pub mod keys {
 
     pub const CONNECTION: &str = "connection";
     pub const HOSTNAME: &str = "hostname";
-    pub const INSTANCE: &str = "instance";
     pub const TNS_ADMIN: &str = "tns_admin";
     pub const ORACLE_LOCAL_REGISTRY: &str = "oracle_local_registry";
     pub const SERVICE_NAME: &str = "service_name";
+    pub const INSTANCE_NAME: &str = "instance_name";
     pub const SERVICE_TYPE: &str = "service_type";
     pub const PORT: &str = "port";
     pub const SOCKET: &str = "socket";
@@ -62,7 +62,7 @@ pub mod keys {
 
     pub const INSTANCES: &str = "instances";
 
-    pub const SID: &str = "sid";
+    pub const ORACLE_SID: &str = "sid";
     pub const ALIAS: &str = "alias";
     pub const PIGGYBACK: &str = "piggyback";
 

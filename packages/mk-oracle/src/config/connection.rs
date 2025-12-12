@@ -58,8 +58,8 @@ pub struct Connection {
     tns_admin: Option<PathBuf>, // config dir if not defined
     oracle_local_registry: Option<PathBuf>,
     service_name: Option<ServiceName>,
+    instance_name: Option<InstanceName>,
     service_type: Option<ServiceType>,
-    instance: Option<InstanceName>,
     engine: EngineTag, // Std if not defined
 }
 
@@ -88,8 +88,8 @@ impl Connection {
                 .map(PathBuf::from),
             service_name: conn.get_string(keys::SERVICE_NAME).map(ServiceName::from),
             service_type: conn.get_string(keys::SERVICE_TYPE).map(ServiceType::from),
-            instance: conn
-                .get_string(keys::INSTANCE)
+            instance_name: conn
+                .get_string(keys::INSTANCE_NAME)
                 .as_deref()
                 .map(InstanceName::from),
             port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
@@ -137,8 +137,8 @@ impl Connection {
     pub fn service_type(&self) -> Option<&ServiceType> {
         self.service_type.as_ref()
     }
-    pub fn instance(&self) -> Option<&InstanceName> {
-        self.instance.as_ref()
+    pub fn instance_name(&self) -> Option<&InstanceName> {
+        self.instance_name.as_ref()
     }
     pub fn is_local(&self) -> bool {
         self.hostname() == HostName::from("localhost".to_owned())
@@ -175,7 +175,7 @@ impl Default for Connection {
             tns_admin: None,
             service_name: None,
             service_type: None,
-            instance: None,
+            instance_name: None,
             port: Port(defaults::CONNECTION_PORT),
             timeout: defaults::CONNECTION_TIMEOUT,
             engine: EngineTag::default(),
@@ -200,7 +200,7 @@ connection:
   # not defined in docu, reserved for a future use
   service_name: service_NAME  #
   service_type: dedicated # dedicated or shared
-  instance: instance_NAME
+  instance_name: instance_NAME
   engine: std
 "#;
     }
@@ -224,7 +224,7 @@ connection:
                 oracle_local_registry: Some(PathBuf::from("/etc/oracle/olr.loc")),
                 service_name: Some(ServiceName::from("service_NAME")),
                 service_type: Some(ServiceType::from("dedicated")),
-                instance: Some(InstanceName::from("instance_NAME")),
+                instance_name: Some(InstanceName::from("instance_NAME")),
                 engine: EngineTag::Std,
             }
         );
@@ -239,7 +239,7 @@ connection:
                 oracle_local_registry: None,
                 service_name: None,
                 service_type: None,
-                instance: None,
+                instance_name: None,
                 port: Port(1521),
                 timeout: 5,
                 engine: EngineTag::default(),

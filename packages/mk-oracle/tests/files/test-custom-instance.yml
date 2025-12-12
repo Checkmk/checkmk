@@ -17,7 +17,7 @@ oracle:
       include: ["FREE"] # optional
       exclude: [] # optional
     instances: # optional
-      - sid: FREE
+      - service_name: FREE
         connection: # mandatory
           hostname: oracle-win.dev.checkmk.net
         authentication: # mandatory

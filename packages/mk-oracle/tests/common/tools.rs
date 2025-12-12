@@ -81,8 +81,8 @@ fn _make_mini_config(
     credentials: &Credentials,
     auth_type: AuthType,
     address: &str,
-    service_name: &Option<String>,
-    instance: &String,
+    service_name: &String,
+    instance_name: &Option<String>,
 ) -> Config {
     let config_str = format!(
         r#"
@@ -97,7 +97,7 @@ oracle:
     connection:
        hostname: {}
        timeout: 10
-       instance: {}
+       service_name: {}
        {}
 "#,
         credentials.user,
@@ -105,10 +105,10 @@ oracle:
         auth_type,
         if address == "localhost" { "sysdba" } else { "" },
         address,
-        instance,
-        service_name
+        service_name,
+        instance_name
             .as_ref()
-            .map(|s| format!("service_name: {}", s))
+            .map(|s| format!("instance_name: {}", s))
             .as_deref()
             .unwrap_or(""),
     );
@@ -150,7 +150,7 @@ oracle:
       include: [{5}] # optional
       exclude: [] # optional
     instances: # optional
-      - sid: {5}
+      - service_name: {5}
         {6}
         connection: # mandatory
           hostname: {4}
@@ -197,6 +197,6 @@ pub fn make_mini_config(endpoint: &SqlDbEndpoint) -> Config {
         AuthType::Standard,
         &endpoint.host,
         &endpoint.service_name,
-        &endpoint.instance,
+        &endpoint.instance_name,
     )
 }

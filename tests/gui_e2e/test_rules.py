@@ -186,6 +186,7 @@ def test_create_rules(
 
         current_setting.get_by_role("textbox").fill("test")
         current_setting.get_by_role("link", name="Choose another icon").click()
+        current_setting.get_by_role("link", name="Built-in").click()
         current_setting.locator("a[class='icon']").get_by_title("2fa", exact=True).click()
         dashboard_page.click_and_wait(
             dashboard_page.main_area.get_suggestion("Save"), navigate=True

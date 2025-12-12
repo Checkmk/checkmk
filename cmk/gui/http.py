@@ -622,9 +622,17 @@ class Response(flask.Response):
 
     default_mimetype = "text/html"
 
-    def set_http_cookie(self, key: str, value: str, *, secure: bool) -> None:
+    def set_http_cookie(
+        self, key: str, value: str, *, secure: bool, max_age: int | None = None
+    ) -> None:
         super().set_cookie(
-            key, value, path=url_prefix(), secure=secure, httponly=True, samesite="Lax"
+            key,
+            value,
+            path=url_prefix(),
+            secure=secure,
+            httponly=True,
+            samesite="Lax",
+            max_age=max_age,
         )
 
     def unset_http_cookie(self, key: str) -> None:

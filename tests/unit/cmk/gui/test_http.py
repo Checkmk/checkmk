@@ -7,6 +7,7 @@ import io
 import time
 from collections.abc import Iterator
 from contextlib import nullcontext
+from email.utils import formatdate
 
 import pytest
 from pydantic import BaseModel
@@ -350,6 +351,17 @@ def test_response_set_http_cookie_secure() -> None:
     assert (
         response.headers.getlist("Set-Cookie")[-1]
         == f"auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path={COOKIE_PATH}; SameSite=Lax"
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_response_set_http_cookie_expiry() -> None:
+    response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True, max_age=3600)
+
+    expected_expiry = formatdate(time.time() + 3600, usegmt=True)
+    assert (
+        response.headers.getlist("Set-Cookie")[-1]
+        == f"auth_SITE=user:123456:abcdefg; Expires={expected_expiry}; Max-Age=3600; Secure; HttpOnly; Path={COOKIE_PATH}; SameSite=Lax"
     )
 
 

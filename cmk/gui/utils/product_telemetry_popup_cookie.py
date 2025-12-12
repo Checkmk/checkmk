@@ -12,8 +12,13 @@ from cmk.gui.http import Request, Response
 def set_user_product_telemetry_popup_cookie(request: Request, response: Response) -> None:
     ct = datetime.datetime.now().timestamp()
     value = str(ct)
+    TWO_YEARS_IN_SECONDS = 2 * 365 * 24 * 60 * 60
     response.set_cookie(
-        "product_telemetry_popup_timestamp", value, path=url_prefix(), secure=request.is_secure
+        "product_telemetry_popup_timestamp",
+        value,
+        path=url_prefix(),
+        secure=request.is_secure,
+        max_age=TWO_YEARS_IN_SECONDS,
     )
 
 

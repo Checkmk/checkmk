@@ -1862,8 +1862,9 @@ ConfigVariableProductTelemetry = ConfigVariable(
                 CascadingDropdown(
                     title=_("Enable Product Telemetry"),
                     help=_(
-                        "Enable or disable product telemetry data collection. "
-                        "If not decided, the user will be asked for consent via a popup."
+                        "Consent to product telemetry data collection. "
+                        "By default, this is disabled, the user will be asked for consent via pop-up. "
+                        "Run  <tt>cmk-telemetry --dry-run</tt> in the command line to see a preview of the data."
                     ),
                     choices=[
                         (
@@ -1884,10 +1885,12 @@ ConfigVariableProductTelemetry = ConfigVariable(
                         ),
                         (
                             "not_decided",
-                            _("Not decided"),
+                            _("Disabled. Reminder scheduled"),
                             FixedValue(
                                 value=None,
-                                totext=_("Ask user for consent via popup"),
+                                totext=_(
+                                    "Product telemetry is disabled. Admin users will be reminded to make a decision via popup."
+                                ),
                             ),
                         ),
                     ],

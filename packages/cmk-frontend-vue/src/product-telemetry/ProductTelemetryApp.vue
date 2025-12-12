@@ -38,16 +38,16 @@ const popupOpen = ref(true)
           )
         }}
       </p>
-      <CmkSpace direction="horizontal" />
+      <CmkSpace direction="horizontal" size="small" />
       <h4>{{ _t('What data are we collecting?') }}</h4>
       <p>{{ _t('We strictly limit data collection to aggregated, non-personal metrics.') }}</p>
       <ul>
         <li>
-          <b>{{ _t('We Collect:') }}</b
+          <b>{{ _t('We collect:') }}</b
           >{{ _t('Quantity metrics (e.g., count of hosts, folders, and services).') }}
         </li>
         <li>
-          <b>{{ _t('We Do NOT Collect:') }}</b
+          <b>{{ _t('We do NOT collect:') }}</b
           >{{
             _t(
               'User behavior (e.g., visit frequency) or sensitive identifiers (e.g., hostnames, file paths, service names, or raw metric values).'
@@ -55,19 +55,19 @@ const popupOpen = ref(true)
           }}
         </li>
       </ul>
-      <CmkSpace direction="horizontal" />
+      <CmkSpace direction="horizontal" size="small" />
       <h4>{{ _t('Do we automatically collect and send data?') }}</h4>
       <p>
         {{
           _t(
-            'No! We firmly believe in only receiving data you are happy to share with us. For this reason, on default product telemetry is turned off. To make a decision now, please click on the "Decide on product telemetry" button.'
+            'No! We firmly believe in only receiving data you are happy to share with us. For this reason, on default product telemetry is turned off. To make a decision now, please click on the "Enable in global settings" button.'
           )
         }}
       </p>
     </div>
 
     <div class="product-telemetry-app__buttons">
-      <CmkButton variant="secondary" @click="popupOpen = false">{{ _t('Ask me again') }}</CmkButton>
+      <CmkButton variant="secondary" @click="popupOpen = false">{{ _t('Ask me later') }}</CmkButton>
       <a
         class="product-telemetry-app__link"
         :href="props.global_settings_link"
@@ -81,7 +81,7 @@ const popupOpen = ref(true)
 
 <style scoped>
 .product-telemetry-app__content {
-  padding: var(--dimension-4) var(--dimension-4) var(--dimension-10) var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-11) var(--dimension-10) var(--dimension-11);
 }
 
 .product-telemetry-app__buttons {

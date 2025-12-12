@@ -2013,7 +2013,7 @@ def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
             return RenderMode.FRONTEND, rulespec.form_spec
         return RenderMode.BACKEND, None
 
-    # FRONTEND rendering
+    # BACKEND RENDERING of legacy valuespec
     if not rulespec.has_form_spec and rulespec.has_valuespec:
         return RenderMode.BACKEND, None
 
@@ -3329,22 +3329,11 @@ class ModeNewRule(ABCEditRuleMode):
                 if item is not None:
                     service_description_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
-        try:
-            # If the rulespec already uses the new form spec, use the DEFAULT_VALUE sentinel
-            # instead of an auto-generated valuespec:default_value()
-            if _get_rule_render_mode() == RenderMode.FRONTEND:
-                _tmp = self._ruleset.rulespec.form_spec
-                v = get_visitor(
-                    self._ruleset.rulespec.form_spec,
-                    VisitorOptions(migrate_values=False, mask_values=False),
-                )
-                default_value = v.to_disk(RawFrontendData(v.to_vue(DEFAULT_VALUE)[1]))
-            else:
-                # Using legacy render mode
-                default_value = self._ruleset.rulespec.valuespec.default_value()
-        except FormSpecNotImplementedError:
-            # Unconverted valuespec
-            default_value = self._ruleset.rulespec.valuespec.default_value()
+        render_mode, form_spec = _get_render_mode(self._rulespec)
+        if render_mode == RenderMode.FRONTEND:
+            default_value = DEFAULT_VALUE
+        else:
+            default_value = self._rulespec.valuespec.default_value()
 
         self._rule = Rule.from_ruleset(self._folder, self._ruleset, default_value)
         self._rule.update_conditions(

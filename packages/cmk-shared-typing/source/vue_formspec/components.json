@@ -960,7 +960,7 @@
       },
       "required": ["authority_url", "display_name"]
     },
-    "metric_backend_custom_query_attribute": {
+    "metric_backend_attribute": {
       "type": "object",
       "properties": {
         "key": {
@@ -972,10 +972,10 @@
       },
       "required": ["key", "value"]
     },
-    "metric_backend_custom_query_attributes": {
+    "metric_backend_attributes": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/metric_backend_custom_query_attribute"
+        "$ref": "#/$defs/metric_backend_attribute"
       }
     },
     "metric_backend_custom_query": {
@@ -996,13 +996,13 @@
               "oneOf": [{ "type": "null" }, { "type": "string" }]
             },
             "resource_attributes": {
-              "$ref": "#/$defs/metric_backend_custom_query_attributes"
+              "$ref": "#/$defs/metric_backend_attributes"
             },
             "scope_attributes": {
-              "$ref": "#/$defs/metric_backend_custom_query_attributes"
+              "$ref": "#/$defs/metric_backend_attributes"
             },
             "data_point_attributes": {
-              "$ref": "#/$defs/metric_backend_custom_query_attributes"
+              "$ref": "#/$defs/metric_backend_attributes"
             },
             "aggregation_lookback": {
               "type": "number"
@@ -1020,6 +1020,33 @@
             "aggregation_lookback",
             "aggregation_histogram_percentile"
           ]
+        }
+      ]
+    },
+    "dcd_metric_backend_filter": {
+      "id": "dcd_metric_backend_filter",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "dcd_metric_backend_filter",
+              "default": "dcd_metric_backend_filter"
+            },
+            "resource_attributes": {
+              "$ref": "#/$defs/metric_backend_attributes"
+            },
+            "scope_attributes": {
+              "$ref": "#/$defs/metric_backend_attributes"
+            },
+            "data_point_attributes": {
+              "$ref": "#/$defs/metric_backend_attributes"
+            }
+          },
+          "required": ["type", "resource_attributes", "scope_attributes", "data_point_attributes"]
         }
       ]
     },
@@ -1882,6 +1909,9 @@
         },
         {
           "$ref": "#/$defs/metric_backend_custom_query"
+        },
+        {
+          "$ref": "#/$defs/dcd_metric_backend_filter"
         },
         {
           "$ref": "#/$defs/oauth2_connection_setup"

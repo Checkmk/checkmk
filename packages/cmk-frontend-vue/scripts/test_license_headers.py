@@ -48,6 +48,11 @@ FILES_IGNORED = {
     Path("demo/public/mockServiceWorker.js"),  # auto generated
 }
 
+ENTERPRISE_LICENSED_FILES_FORM_SPECS = {
+    Path("src/form/private/forms/FormDCDMetricBackendFilter.vue"),
+    Path("src/form/private/forms/FormMetricBackendCustomQuery.vue"),
+}
+
 ROOT_FOLDERS_IGNORED = {
     "node_modules",
     "dist",
@@ -125,7 +130,7 @@ def check(suffix: str, path: Path) -> bool:
             HEADER_CEE
             if path.is_relative_to(Path("src/graph-designer"))
             or path.is_relative_to(Path("src/metric-backend"))
-            or path == Path("src/form/private/forms/FormMetricBackendCustomQuery.vue")
+            or path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
             else HEADER,
         )
     except Exception as e:

@@ -158,6 +158,8 @@ function renderForm(
       return renderFileUpload(formSpec as FileUpload, value as [string, string, string])
     case 'metric_backend_custom_query':
       return renderMetricBackendCustomQuery(value as MetricBackendCustomQuery)
+    case 'dcd_metric_backend_filter':
+      return h('div', 'DCD Metric Backend Filter does not support readonly')
     case 'oauth2_connection_setup':
       return renderOAuth2ConnectionSetup(formSpec as Oauth2ConnectionSetup, value)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.

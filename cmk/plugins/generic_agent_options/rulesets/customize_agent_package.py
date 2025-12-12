@@ -6,8 +6,9 @@
 from cmk.plugins.generic_agent_options.rulesets._topic import (
     TOPIC_LINUX_UNIX_AGENT_OPTIONS,
 )
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
@@ -179,6 +180,53 @@ def _directory_form() -> Dictionary:
     )
 
 
+def _agent_controller_form() -> Dictionary:
+    # return SingleChoice(
+    #     prefill=DefaultValue("x86_64"),
+    #     elements=[
+    #         SingleChoiceElement(
+    #             name="x86_64",
+    #             title=Title("Deploy x86_64 agent controller"),
+    #         ),
+    #         SingleChoiceElement(
+    #             name="aarch64",
+    #             title=Title("Deploy aarch64 agent controller"),
+    #         ),
+    #         SingleChoiceElement(
+    #             name="both",
+    #             title=Title("Deploy both x86_64 and aarch64 agent controllers"),
+    #         ),
+    #     ],
+    # )
+    return Dictionary(
+        title=Title("Customize Linux agent controller deployment"),
+        help_text=Help(
+            "The Linux agent controller is available as x86 64bit (x86-64)"
+            " and ARM 64-bit (aarch644) executables.\n"
+            "By default, only the x86-64 version will be included in Linux agent packages.\n"
+            "Here you can choose to alternatively or additionally include the ARM executable, or"
+            " none at all.\n"
+            "The agent package installation scripts will automatically select the correct binary,"
+            " depending on the target system's architecture and the available binaries."
+        ),
+        elements={
+            "x86_64": DictElement(
+                parameter_form=BooleanChoice(
+                    label=Label("Include x86 version"),
+                    prefill=DefaultValue(True),
+                ),
+                required=True,
+            ),
+            "aarch64": DictElement(
+                parameter_form=BooleanChoice(
+                    label=Label("Include ARM version"),
+                ),
+                required=True,
+            ),
+        },
+    )
+
+
 def _parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
@@ -189,6 +237,7 @@ def _parameter_form() -> Dictionary:
         elements={
             "directory": DictElement(parameter_form=_directory_form(), required=True),
             "deployment_mode": DictElement(parameter_form=_deployment_mode_form()),
+            "agent_controller_deployment": DictElement(parameter_form=_agent_controller_form()),
         },
     )
 

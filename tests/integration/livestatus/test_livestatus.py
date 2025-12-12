@@ -209,8 +209,10 @@ class TestCrashReport:
         dir_path = f"var/check_mk/crashes/{component}/{uuid}/"
         site.makedirs(dir_path)
         site.write_file(dir_path + "crash.info", _json.dumps(crash_info))
+        site.known_crashes.add(site.crash_report_dir / component / uuid)
         yield
         site.delete_dir("var/check_mk/crashes/%s" % component)
+        site.known_crashes.remove(site.crash_report_dir / component / uuid)
 
     def test_list_crash_report(self, site: Site, component: str, uuid: str) -> None:
         rows = site.live.query("GET crashreports")

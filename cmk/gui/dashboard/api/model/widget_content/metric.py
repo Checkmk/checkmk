@@ -10,7 +10,7 @@
 from abc import ABC
 from typing import Annotated, assert_never, cast, Literal, override, Self
 
-from pydantic import AfterValidator, Discriminator
+from pydantic import Discriminator
 
 from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
@@ -25,10 +25,15 @@ from cmk.gui.dashboard.type_defs import (
     TopListColumnConfig,
     TopListDashletConfig,
 )
-from cmk.gui.graphing import id_from_unit_spec, metrics_from_api
+from cmk.gui.graphing import (
+    ConvertibleUnitSpecification,
+    DecimalNotation,
+    id_from_unit_spec,
+    metrics_from_api,
+)
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
-from cmk.gui.openapi.framework.model.converter import RegistryConverter
+from cmk.gui.unit_formatter import AutoPrecision
 
 from ..type_defs import ColorHex
 from ._base import BaseWidgetContent
@@ -70,7 +75,13 @@ class MetricDisplayRangeFixedModel:
         )
 
     def to_internal(self, metric_name: str) -> MetricDisplayRangeFixed:
-        unit_spec = metrics_from_api[metric_name].unit_spec
+        if metric := metrics_from_api.get(metric_name):
+            unit_spec = metric.unit_spec
+        else:
+            unit_spec = ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            )
         return "fixed", (id_from_unit_spec(unit_spec), (self.minimum, self.maximum))
 
 
@@ -231,11 +242,8 @@ def _metric_status_display_to_internal(
 
 @api_model
 class _BaseMetricContent(BaseWidgetContent, ABC):
-    metric: Annotated[str, AfterValidator(RegistryConverter(metrics_from_api).validate)] = (
-        api_field(
-            description="Name of the metric.",
-        )
-    )
+    # NOTE: currently no way to easily validate metrics, especially without host/service info
+    metric: str = api_field(description="Name of the metric.")
 
 
 @api_model

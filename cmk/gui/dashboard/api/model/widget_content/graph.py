@@ -23,7 +23,7 @@ from cmk.gui.dashboard.type_defs import (
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
 )
-from cmk.gui.graphing import graphs_from_api, metrics_from_api
+from cmk.gui.graphing import graphs_from_api
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import (
     timerange_from_internal,
@@ -241,8 +241,8 @@ def _validate_graph_template(value: str) -> str:
     except ValueError as exc:
         original_exception = exc
 
-    if (metric := value.removeprefix("METRIC_")) != value:
-        RegistryConverter(metrics_from_api).validate(metric)
+    if value.removeprefix("METRIC_") != value:
+        # NOTE: currently no way to easily validate metrics, especially without host/service info
         return value
 
     raise original_exception
@@ -287,11 +287,8 @@ class SingleTimeseriesContent(_BaseGraphContent):
     type: Literal["single_timeseries"] = api_field(
         description="Displays a timeseries for a single metric of a specific host and service.",
     )
-    metric: Annotated[str, AfterValidator(RegistryConverter(metrics_from_api).validate)] = (
-        api_field(
-            description="Name of the metric.",
-        )
-    )
+    # NOTE: currently no way to easily validate metrics, especially without host/service info
+    metric: str = api_field(description="Name of the metric.")
     color: Literal["default_theme", "default_metric"] | ColorHex = api_field(
         description="Color of the timeseries line.",
     )

@@ -291,14 +291,8 @@ class TestCombinedGraphContent:
             },
         )
 
-    @pytest.mark.parametrize(
-        "graph_template",
-        [
-            "non_existent_graph",
-            "METRIC_non_existent_metric",
-        ],
-    )
-    def test_invalid_graph_template(self, clients: ClientRegistry, graph_template: str) -> None:
+    def test_invalid_graph_template(self, clients: ClientRegistry) -> None:
+        graph_template = "non_existent_graph"
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
@@ -320,7 +314,7 @@ class TestCombinedGraphContent:
         assert resp.json["fields"][
             "body.widgets.test_widget.content.combined_graph.graph_template"
         ]["msg"].startswith(
-            f"Value error, Value '{graph_template.removeprefix('METRIC_')}' is not allowed, valid options are:"
+            f"Value error, Value '{graph_template}' is not allowed, valid options are:"
         )
 
 
@@ -341,29 +335,6 @@ class TestSingleTimeseriesContent:
                 "color": "#ABCDEF",
             },
         )
-
-    def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "single_timeseries",
-                            "timerange": {"type": "predefined", "value": "last_25_hours"},
-                            "graph_render_options": {},
-                            "metric": "non_existent_metric",
-                            "color": "#ABCDEF",
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.single_timeseries.metric"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
 
 @pytest.fixture(name="skip_custom_graph_validation")
@@ -441,27 +412,6 @@ class TestBarplotContent:
             },
         )
 
-    def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "barplot",
-                            "metric": "non_existent_metric",
-                            "display_range": "automatic",
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.barplot.metric"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
-
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
 class TestGaugeContent:
@@ -481,32 +431,6 @@ class TestGaugeContent:
                 "status_display": {"type": "text", "for_states": "not_ok"},
             },
         )
-
-    def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "gauge",
-                            "metric": "non_existent_metric",
-                            "display_range": "automatic",
-                            "time_range": "current",
-                            "status_display": {
-                                "type": "text",
-                                "for_states": "not_ok",
-                            },
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.gauge.metric"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
@@ -528,30 +452,6 @@ class TestSingleMetricContent:
             },
         )
 
-    def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "single_metric",
-                            "metric": "non_existent_metric",
-                            "time_range": "current",
-                            "status_display": {"type": "text", "for_states": "not_ok"},
-                            "display_range": "automatic",
-                            "show_display_range_limits": False,
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.single_metric.metric"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
-
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
 class TestAverageScatterplotContent:
@@ -567,30 +467,6 @@ class TestAverageScatterplotContent:
                 "median_color": "default",
             },
         )
-
-    def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "average_scatterplot",
-                            "timerange": {"type": "predefined", "value": "last_25_hours"},
-                            "metric": "non_existent_metric",
-                            "metric_color": "default",
-                            "average_color": "default",
-                            "median_color": "default",
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.average_scatterplot.metric"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
@@ -610,33 +486,6 @@ class TestTopListContent:
                 "limit_to": 10,
             },
         )
-
-    def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "top_list",
-                            "metric": "non_existent_metric",
-                            "display_range": "automatic",
-                            "columns": {
-                                "show_service_description": False,
-                                "show_bar_visualization": False,
-                            },
-                            "ranking_order": "low",
-                            "limit_to": 10,
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.top_list.metric"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")

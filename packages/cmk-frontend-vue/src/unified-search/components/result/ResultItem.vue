@@ -165,13 +165,14 @@ onBeforeUnmount(() => {
         @click="ib.target?.transition && showLoadingTransition(ib.target.transition, ib.title)"
       >
         <div v-if="ib.icon" class="result-item-inner-start">
-          <CmkIcon :name="ib.icon.name" :size="ib.icon.size" class="result-item-icon"></CmkIcon>
+          <CmkIcon
+            :name="ib.icon.name"
+            :size="ib.icon.size || undefined"
+            class="result-item-icon"
+          ></CmkIcon>
         </div>
         <div class="result-item-inner-end">
-          <ResultItemTitle
-            :title="props.html ? props.html : props.title"
-            :context="props.context ? props.context : ''"
-          ></ResultItemTitle>
+          <ResultItemTitle :title="ib.title" context=""></ResultItemTitle>
         </div>
       </a>
     </CmkZebra>

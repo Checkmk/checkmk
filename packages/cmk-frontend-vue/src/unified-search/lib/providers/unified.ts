@@ -37,22 +37,28 @@ export class UnifiedSearchProvider extends SearchProvider {
   public async search(
     query: UnifiedSearchQueryLike
   ): Promise<UnifiedSearchApiResponse | UnifiedSearchError> {
-    const { q, provider, sort } = this.renderQuery(query)
+    const { q, provider, sort, collapse } = this.renderQuery(query)
 
-    return this.getApi().get('ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort), {
-      exceptOnNonZeroResultCode: true
-    }) as Promise<UnifiedSearchApiResponse | UnifiedSearchError>
+    return this.getApi().get(
+      'ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort).concat(collapse),
+      {
+        exceptOnNonZeroResultCode: true
+      }
+    ) as Promise<UnifiedSearchApiResponse | UnifiedSearchError>
   }
 
   protected renderQuery(query: UnifiedSearchQueryLike): {
     q: string
     provider: string
     sort: string
+    collapse: string
   } {
     const provider = query.provider === 'all' ? '' : '&provider='.concat(query.provider)
 
     const sort = '&sort='.concat(query.sort)
 
-    return { q: query.input.replace(/^\//, ''), provider, sort }
+    const collapse = '&collapse=1'
+
+    return { q: query.input.replace(/^\//, ''), provider, sort, collapse }
   }
 }

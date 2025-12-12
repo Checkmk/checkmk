@@ -2,9 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import pytest
+import time_machine
 
 from cmk.base.legacy_checks.mkbackup import check_mkbackup
 
@@ -256,32 +257,32 @@ def test_mkbackup_parse(info: StringTable, expect_check_result: bool) -> None:
 
 
 def test_check_mkbackup_ok_when_started() -> None:
-    started = datetime.today() - timedelta(minutes=5)
-    results = list(
-        check_mkbackup({"state": "started", "started": started.timestamp(), "bytes_per_second": 10})
-    )
+    now = datetime(1970, 1, 1, tzinfo=UTC)
+    started = now - timedelta(minutes=5)
+    with time_machine.travel(now):
+        results = list(
+            check_mkbackup(
+                {"state": "started", "started": started.timestamp(), "bytes_per_second": 10}
+            )
+        )
 
     assert results[0][0] == STATE_OK
-    assert (
-        results[0][1]
-        == f"The job is running for 5 minutes 0 seconds since {render.datetime(started.timestamp())}"
-    )
+    assert results[0][1] == "The job is running for 5 minutes 0 seconds since 1969-12-31 23:55:00"
 
 
 def test_check_mkbackup_ok_when_running() -> None:
-    started = datetime.today() - timedelta(minutes=5)
+    now = datetime(1970, 1, 1, tzinfo=UTC)
+    started = now - timedelta(minutes=5)
     job_state = {"state": "running", "started": started.timestamp(), "bytes_per_second": 10}
-    results = list(check_mkbackup(job_state))
+    with time_machine.travel(now):
+        results = list(check_mkbackup(job_state))
 
     assert results[0][0] == STATE_OK
-    assert (
-        results[0][1]
-        == f"The job is running for 5 minutes 0 seconds since {render.datetime(started.timestamp())}"
-    )
+    assert results[0][1] == "The job is running for 5 minutes 0 seconds since 1969-12-31 23:55:00"
 
 
 def test_check_mkbackup_ok_when_finished_and_successful() -> None:
-    started = datetime.today()
+    started = datetime(1970, 1, 1, tzinfo=UTC)
     finished = started + timedelta(minutes=5)
     results = list(
         check_mkbackup(
@@ -299,7 +300,7 @@ def test_check_mkbackup_ok_when_finished_and_successful() -> None:
 
 
 def test_check_mkbackup_crit_when_finished_and_failed() -> None:
-    started = datetime.today()
+    started = datetime(1970, 1, 1, tzinfo=UTC)
     finished = started + timedelta(minutes=5)
     results = list(
         check_mkbackup(
@@ -317,7 +318,7 @@ def test_check_mkbackup_crit_when_finished_and_failed() -> None:
 
 
 def test_check_mkbackup_warn_when_finished_and_disabled() -> None:
-    started = datetime.today()
+    started = datetime(1970, 1, 1, tzinfo=UTC)
     finished = started + timedelta(minutes=5)
     results = list(
         check_mkbackup(
@@ -334,60 +335,65 @@ def test_check_mkbackup_warn_when_finished_and_disabled() -> None:
     assert (STATE_WARN, "Schedule is currently disabled") in results
 
 
-@pytest.mark.skip(reason="CMK-31660")
 @pytest.mark.parametrize(
     "next_schedule",
     [
-        datetime.today() + timedelta(minutes=1),
-        datetime.today() + timedelta(minutes=2),
-        datetime.today() + timedelta(days=1),
-        datetime.today() + timedelta(weeks=1),
+        datetime(1970, 1, 1, tzinfo=UTC),
+        datetime(1970, 1, 1, 0, 1, tzinfo=UTC),
+        datetime(1970, 1, 1, 0, 2, tzinfo=UTC),
+        datetime(1970, 1, 2, 0, 0, tzinfo=UTC),
+        datetime(1970, 1, 8, 0, 0, tzinfo=UTC),
     ],
 )
 def test_check_mkbackup_ok_when_finished_and_next_schedule_is_on_time(
     next_schedule: datetime,
 ) -> None:
-    started = datetime.now()
+    started = datetime(1970, 1, 1, tzinfo=UTC)
     finished = started + timedelta(seconds=30)
-    results = list(
-        check_mkbackup(
-            {
-                "state": "finished",
-                "started": started.timestamp(),
-                "finished": finished.timestamp(),
-                "bytes_per_second": 10,
-                "success": True,
-                "next_schedule": next_schedule.timestamp(),
-            }
+
+    with time_machine.travel(started):
+        results = list(
+            check_mkbackup(
+                {
+                    "state": "finished",
+                    "started": started.timestamp(),
+                    "finished": finished.timestamp(),
+                    "bytes_per_second": 10,
+                    "success": True,
+                    "next_schedule": next_schedule.timestamp(),
+                }
+            )
         )
-    )
-    assert (STATE_OK, f"Next run: {render.datetime(next_schedule.timestamp())}") in results
+        assert (STATE_OK, f"Next run: {render.datetime(next_schedule.timestamp())}") in results
 
 
 @pytest.mark.parametrize(
     "next_schedule",
     [
-        datetime.today() - timedelta(minutes=2),
-        datetime.today() - timedelta(minutes=3),
-        datetime.today() - timedelta(days=1),
-        datetime.today() - timedelta(weeks=1),
+        datetime(1969, 12, 31, 23, 57, 59, tzinfo=UTC),
+        datetime(1969, 12, 31, 23, 57, tzinfo=UTC),
+        datetime(1969, 12, 30, 0, 0, tzinfo=UTC),
+        datetime(1969, 12, 24, 0, 0, tzinfo=UTC),
     ],
 )
 def test_check_mkbackup_crit_when_finished_and_next_schedule_is_late(
     next_schedule: datetime,
 ) -> None:
-    started = datetime.today() - timedelta(days=7)
+    now = datetime(1970, 1, 1, tzinfo=UTC)
+    started = now - timedelta(days=7)
     finished = started + timedelta(seconds=30)
-    results = list(
-        check_mkbackup(
-            {
-                "state": "finished",
-                "started": started.timestamp(),
-                "finished": finished.timestamp(),
-                "bytes_per_second": 10,
-                "success": True,
-                "next_schedule": next_schedule.timestamp(),
-            }
+
+    with time_machine.travel(now):
+        results = list(
+            check_mkbackup(
+                {
+                    "state": "finished",
+                    "started": started.timestamp(),
+                    "finished": finished.timestamp(),
+                    "bytes_per_second": 10,
+                    "success": True,
+                    "next_schedule": next_schedule.timestamp(),
+                }
+            )
         )
-    )
-    assert (STATE_CRIT, f"Next run: {render.datetime(next_schedule.timestamp())}") in results
+        assert (STATE_CRIT, f"Next run: {render.datetime(next_schedule.timestamp())}") in results

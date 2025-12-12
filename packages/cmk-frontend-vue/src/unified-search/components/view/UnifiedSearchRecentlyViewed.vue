@@ -72,7 +72,7 @@ immediateWatch(
         :title="item.element.title"
         :context="item.element.context"
         :icon="{ name: item.element.icon as SimpleIcons }"
-        :inline-buttons="item.element.inline_buttons"
+        :inline_buttons="item.element.inline_buttons"
         :target="item.element.target"
         :html="searchUtils.highlightQuery(item.element.title)"
         :breadcrumb="searchUtils.breadcrumb(item.element.provider, item.element.topic)"

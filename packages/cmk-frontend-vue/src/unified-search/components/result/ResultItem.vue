@@ -27,7 +27,7 @@ export interface ResultItemProps {
   title: string
   html?: string | undefined
   target?: UnifiedSearchResultTarget | undefined
-  inlineButtons?: UnifiedSearchResultItemInlineButton[] | undefined
+  inline_buttons?: UnifiedSearchResultItemInlineButton[] | undefined
   context?: string | undefined
   focus?: boolean | undefined
   breadcrumb?: string[] | undefined
@@ -59,12 +59,12 @@ function toggleInline(d: number, set: boolean = false) {
       currentlySelected.value += d
     }
 
-    if (props.inlineButtons && props.inlineButtons.length > 0) {
+    if (props.inline_buttons && props.inline_buttons.length > 0) {
       if (currentlySelected.value < 0) {
-        currentlySelected.value = props.inlineButtons.length
+        currentlySelected.value = props.inline_buttons.length
       }
 
-      if (currentlySelected.value > props.inlineButtons.length) {
+      if (currentlySelected.value > props.inline_buttons.length) {
         currentlySelected.value = 0
       }
     }
@@ -156,7 +156,7 @@ onBeforeUnmount(() => {
         </div>
       </button>
       <a
-        v-for="(ib, i) in props.inlineButtons"
+        v-for="(ib, i) in props.inline_buttons"
         ref="item-focus-inline"
         :key="i"
         :href="ib.target.url"

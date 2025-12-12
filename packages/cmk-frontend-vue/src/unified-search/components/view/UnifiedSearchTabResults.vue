@@ -126,7 +126,7 @@ function searchResultNotEmpty(): boolean {
           :title="item.title"
           :context="item.context"
           :icon="{ name: item.icon as SimpleIcons }"
-          :inline-buttons="item.inline_buttons"
+          :inline_buttons="item.inline_buttons"
           :target="item.target"
           :html="searchUtils.highlightQuery(item.title)"
           :breadcrumb="searchUtils.breadcrumb(item.provider, item.topic)"

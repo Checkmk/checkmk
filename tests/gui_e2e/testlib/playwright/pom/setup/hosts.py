@@ -201,6 +201,22 @@ class AddHost(CmkPage):
         return self.main_area.get_input("host")
 
     @property
+    def _host_name_alert_box(self) -> Locator:
+        return self.main_area.locator("table#basic").locator("div.cmk-alert-box")
+
+    @property
+    def host_name_status_loading(self) -> Locator:
+        return self._host_name_alert_box.get_by_text("Loading")
+
+    @property
+    def host_name_status_valid(self) -> Locator:
+        return self._host_name_alert_box.get_by_title("icon-success")
+
+    @property
+    def host_name_status_invalid(self) -> Locator:
+        return self._host_name_alert_box.get_by_title("icon-warning")
+
+    @property
     def monitored_on_site_checkbox(self) -> Locator:
         return self.main_area.get_attribute_label("site")
 
@@ -215,6 +231,22 @@ class AddHost(CmkPage):
     @property
     def ipv4_address_text_field(self) -> Locator:
         return self.main_area.get_input("ipaddress")
+
+    @property
+    def _ipaddress_alert_box(self) -> Locator:
+        return self.main_area.locator("table#address").locator("div.cmk-alert-box")
+
+    @property
+    def ipaddress_status_loading(self) -> Locator:
+        return self._ipaddress_alert_box.get_by_text("Loading")
+
+    @property
+    def ipaddress_status_valid(self) -> Locator:
+        return self._ipaddress_alert_box.get_by_title("icon-success")
+
+    @property
+    def ipaddress_status_invalid(self) -> Locator:
+        return self._ipaddress_alert_box.get_by_title("icon-warning")
 
     def save_and_run_discovery(self) -> None:
         self.main_area.get_suggestion("Save & run service discovery").click()

@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 
 import pytest
 from faker import Faker
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Locator
 
 from tests.gui_e2e.testlib.api_helpers import create_and_delete_hosts, LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
@@ -276,26 +276,25 @@ def test_ping_host(dashboard_page: MainDashboard) -> None:
     """Validate pinging of a host."""
     add_host = AddHost(dashboard_page.page)
 
-    status_loading = add_host.main_area.locator("div.status-box.loading").get_by_role("img")
-    status_invalid = add_host.main_area.locator("div.status-box.warn").get_by_role("img")
-    status_valid = add_host.main_area.locator("div.status-box.ok").get_by_role("img")
+    def _expect_validation_status_to_be_visble(locator: Locator, name: str) -> None:
+        expect(locator, message=f"{name} status message not present").to_be_visible()
 
     add_host.host_name_text_field.fill("foo")
-    expect(status_loading).to_be_visible()
-    expect(status_invalid).to_be_visible()
+    _expect_validation_status_to_be_visble(add_host.host_name_status_loading, "Loading host")
+    _expect_validation_status_to_be_visble(add_host.host_name_status_invalid, "Invalid host")
 
     add_host.host_name_text_field.fill("localhost")
-    expect(status_loading).to_be_visible()
-    expect(status_valid).to_be_visible()
+    _expect_validation_status_to_be_visble(add_host.host_name_status_loading, "Loading host")
+    _expect_validation_status_to_be_visble(add_host.host_name_status_valid, "Valid host")
 
     add_host.ipv4_address_checkbox.click()
     add_host.ipv4_address_text_field.fill("foo")
-    expect(status_loading).to_be_visible()
-    expect(status_invalid).to_be_visible()
+    _expect_validation_status_to_be_visble(add_host.ipaddress_status_loading, "Loading IP adddress")
+    _expect_validation_status_to_be_visble(add_host.ipaddress_status_invalid, "Invalid IP address")
 
     add_host.ipv4_address_text_field.fill("127.0.0.1")
-    expect(status_loading).to_be_visible()
-    expect(status_valid).to_be_visible()
+    _expect_validation_status_to_be_visble(add_host.ipaddress_status_loading, "Loading IP address")
+    _expect_validation_status_to_be_visble(add_host.ipaddress_status_valid, "Valid IP adddress")
 
 
 def test_bulk_csv_upload_form(dashboard_page: MainDashboard) -> None:

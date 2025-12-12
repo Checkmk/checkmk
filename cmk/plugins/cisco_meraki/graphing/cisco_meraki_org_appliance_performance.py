@@ -14,8 +14,8 @@ metric_utilization = metrics.Metric(
     color=metrics.Color.LIGHT_GREEN,
 )
 
-graph_cisco_meraki_cisco_meraki_appliance_utilization = graphs.Graph(
-    name="cisco_meraki_cisco_meraki_appliance_utilization",
+graph_cisco_meraki_appliance_utilization = graphs.Graph(
+    name="cisco_meraki_appliance_utilization",
     title=Title("Cisco Meraki Appliance Performance Utilization"),
     compound_lines=["utilization"],
     simple_lines=[

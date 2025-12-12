@@ -35,8 +35,8 @@ metric_api_code_5xx = metrics.Metric(
     color=metrics.Color.DARK_RED,
 )
 
-graph_cisco_meraki_cisco_meraki_organisations_api_code = graphs.Bidirectional(
-    name="cisco_meraki_cisco_meraki_organisations_api_code",
+graph_cisco_meraki_organisations_api_code = graphs.Bidirectional(
+    name="cisco_meraki_organisations_api_code",
     title=Title("Cisco Meraki API response codes"),
     upper=graphs.Graph(
         name="api_code_ok",

@@ -5,7 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
  This check reports the CPU utilization in percent.
- You can configure levels using the rule "Azure Databases".
+ You can configure levels using the rule "Azure SQL database CPU usage".
 
 discovery:
  One service is created for each database if all required metrics

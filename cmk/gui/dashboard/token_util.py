@@ -132,7 +132,8 @@ def disable_dashboard_token(
     This should be done whenever a dashboard is edited."""
     try:
         with edit_dashboard_auth_token(dashboard_config, token_store) as token:
-            token.details.disabled = True
+            if isinstance(token.details, DashboardToken):
+                token.details.disabled = True
     except (DashboardTokenNotFound, InvalidDashboardTokenReference):
         return None
 
@@ -182,13 +183,14 @@ def update_dashboard_token(
     expiration_time = _validate_expiration(now, expiration_time, allow_past=True)
     with edit_dashboard_auth_token(dashboard, token_store) as token:
         token.valid_until = expiration_time
-        # name should be updated, just in case there was a rename
-        token.details.dashboard_name = dashboard["name"]
-        token.details.owner = dashboard["owner"]
-        token.details.comment = comment
-        token.details.disabled = disabled
-        token.details.view_owners = _get_view_owners(dashboard)
-        token.details.synced_at = now
+        if isinstance(token.details, DashboardToken):
+            # name should be updated, just in case there was a rename
+            token.details.dashboard_name = dashboard["name"]
+            token.details.owner = dashboard["owner"]
+            token.details.comment = comment
+            token.details.disabled = disabled
+            token.details.view_owners = _get_view_owners(dashboard)
+            token.details.synced_at = now
         return token
 
 
@@ -221,7 +223,7 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
     @staticmethod
     def __check_token_details(token: AuthToken) -> DashboardToken:
-        if not isinstance(token.details, DashboardToken) or token.details.disabled:  # type: ignore[redundant-expr]
+        if not isinstance(token.details, DashboardToken) or token.details.disabled:
             raise MKUserError(
                 "cmk-token",
                 _("The provided token is not valid for dashboard access."),

@@ -18,7 +18,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.utils import paths
 
-TokenType = Literal["dashboard"]
+TokenType = Literal["dashboard", "agent_registration"]
 
 
 class InvalidToken(ValueError):
@@ -26,7 +26,7 @@ class InvalidToken(ValueError):
 
 
 class TokenTypeError(ValueError):
-    """Token is expried or revoked but has valid type"""
+    """Token is expired or revoked but has valid type"""
 
     token_type: TokenType
 
@@ -54,9 +54,13 @@ class DashboardToken(BaseModel):
     synced_at: datetime  # last time the token was modified/synced with the dashboard config
 
 
+class AgentRegistrationToken(BaseModel):
+    type_: TokenType = "agent_registration"
+
+
 TokenId = NewType("TokenId", str)
 
-type TokenDetails = DashboardToken
+type TokenDetails = DashboardToken | AgentRegistrationToken
 
 
 class AuthToken(BaseModel):
@@ -163,7 +167,7 @@ class TokenStore:
 
     def issue(
         self,
-        token_details: DashboardToken,
+        token_details: TokenDetails,
         issuer: UserId,
         now: datetime,
         valid_for: relativedelta | None = None,

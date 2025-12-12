@@ -15,7 +15,11 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Table
-from cmk.gui.token_auth import get_token_store, TokenId
+from cmk.gui.token_auth import (
+    DashboardToken,
+    get_token_store,
+    TokenId,
+)
 from cmk.gui.type_defs import VisualName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -105,11 +109,13 @@ def _render_dashboard_columns() -> Callable[[Table, VisualName, TVisual], None]:
             _render_not_shared(table)
             return
 
-        table.cell(
-            _("Public link"),
-            _get_token_status_label(auth_token.valid_until, auth_token.details.disabled),
-        )
+        if isinstance(auth_token.details, DashboardToken):
+            table.cell(
+                _("Public link"),
+                _get_token_status_label(auth_token.valid_until, auth_token.details.disabled),
+            )
         table.cell(_("Link created"), auth_token.issued_at.strftime("%Y-%m-%d"))
-        table.cell(_("Comments"), auth_token.details.comment)
+        if isinstance(auth_token.details, DashboardToken):
+            table.cell(_("Comments"), auth_token.details.comment)
 
     return render

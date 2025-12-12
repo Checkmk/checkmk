@@ -9,7 +9,7 @@ description: This check monitors validity of an Microsoft Azure
   expired.
 
   The levels for remaining time until expiry can be
-  configured in the rule "Credentials Expiration".
+  configured in the rule "Azure App Registration".
 
   In order to use this check, you need to configure the Azure special agent.
 

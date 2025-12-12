@@ -238,8 +238,8 @@ run_test_component_remote_host() {
         cd "${TEST_BINARY_REMOTE_PATH}"
         export ORACLE_HOME="${ORACLE_HOME}"
         export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"
-        export MK_CONFDIR=$(pwd)
-        export MK_LIBDIR=$(pwd)/runtimes
+        export MK_CONFDIR="${TEST_BINARY_REMOTE_PATH}"
+        export MK_LIBDIR="${TEST_BINARY_REMOTE_PATH}"/runtimes
         chmod +x ./"${TEST_NAME}"
         ./"${TEST_NAME}"
 EOF

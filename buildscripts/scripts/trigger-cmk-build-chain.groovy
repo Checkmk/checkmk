@@ -174,6 +174,21 @@ void main() {
                     );
                 }[0]
             },
+            "Component tests for mk-oracle": {
+                // mk-oracle is the same for all editions, so only run for ultimatemt to save resources
+                success &= smart_stage(
+                    name: "Component tests for mk-oracle",
+                    condition: edition == "ultimatemt",
+                    raiseOnError: false,) {
+                    smart_build(
+                        use_upstream_build: true,
+                        relative_job_name: "${branch_base_folder}/builders/test-component-mk-oracle",
+                        build_params: job_parameters,
+                        build_params_no_check: job_parameters_no_check,
+                        download: false,
+                    );
+                }[0]
+            },
         ]);
 
         success &= smart_stage(

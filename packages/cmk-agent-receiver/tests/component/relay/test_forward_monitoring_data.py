@@ -34,11 +34,13 @@ HOST = "testhost"
 TEST_SOCKET_TIMEOUT = 2.0
 
 
+@pytest.mark.parametrize("service_name", ["Check_MK", "TestCase"])
 def test_forward_monitoring_data(
     socket_path: str,
     relay_id: str,
     serial: Serial,
     agent_receiver: AgentReceiverClient,
+    service_name: str,
 ) -> None:
     payload = b"monitoring payload"
     timestamp = int(time.time())
@@ -48,7 +50,7 @@ def test_forward_monitoring_data(
         f"config_serial:{serial};"
         f"start_timestamp:{timestamp};"
         f"host_by_name:{HOST};"
-        f"service_description:Check_MK;"
+        f"service_description:{service_name};"
     )
     saved_socket: MockSocket  # assigned in with-block
     with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
@@ -56,7 +58,7 @@ def test_forward_monitoring_data(
         monitoring_data = MonitoringData(
             serial=serial,
             host=HOST,
-            service="Check_MK",
+            service=service_name,
             timestamp=timestamp,
             payload=base64.b64encode(payload),
         )

@@ -25,8 +25,9 @@ const { _t } = usei18n()
 const props = withDefaults(
   defineProps<{
     metricName?: string | null
+    strict?: boolean
   }>(),
-  { metricName: null }
+  { metricName: null, strict: true }
 )
 
 const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
@@ -110,7 +111,7 @@ const attributeAutoCompleter = (
   data: {
     ident,
     params: {
-      strict: true,
+      strict: props.strict,
       context: getAutoCompleterContext(isForKey ? null : key, ignoreExisting)
     }
   }

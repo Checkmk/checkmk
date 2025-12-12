@@ -75,7 +75,6 @@ WELCOME_PAGE_PERMISSIONS = {
     "wato.service_discovery_to_ignored",
     "wato.service_discovery_to_removed",
     "wato.download_agents",
-    "wato.download_all_agents",
     "wato.activate",
     "wato.timeperiods",
     "wato.groups",

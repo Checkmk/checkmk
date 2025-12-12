@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -17,7 +17,6 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("This ruleset allows you to configure levels for the database CPU usage"),
         elements={
             "avg_response_time_levels": DictElement(
                 required=True,

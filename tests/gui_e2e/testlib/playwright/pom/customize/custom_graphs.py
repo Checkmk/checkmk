@@ -138,6 +138,11 @@ class DesignGraph(BaseGraph):
             "tbody > tr > td:nth-child(3) > img:nth-child(4)"
         )
         self.main_area.locator(slide_in_selector).click()
+        ruleset_name = "special_agents:metric_backend_custom_query"
+        expect(
+            self.main_area.get_text(ruleset_name),
+            f"Ruleset name'{ruleset_name}' not visible.",
+        ).to_be_visible()
 
     def save_rule_via_slide_in(self) -> None:
         logger.info("Save rule via 'Design graph' slide-in")

@@ -167,7 +167,7 @@ class _CrashReport:
 
 
 def _store_crash_report(crash: _CrashReport, crash_report_base_path: Path) -> None:
-    crash_dir = crash_report_base_path / crash.crash_id
+    crash_dir = crash_report_base_path / crash.crash_type / crash.crash_id
     crash_dir.mkdir(parents=True, exist_ok=True)
     (crash_dir / "crash.info").write_text(crash.dump())
 

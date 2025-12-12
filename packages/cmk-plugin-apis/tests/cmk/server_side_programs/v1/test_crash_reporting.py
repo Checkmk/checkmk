@@ -32,7 +32,7 @@ def test_crash_reported_for_exception(fixed_path: Path) -> None:
 
     _ = main()
 
-    (crash_dir,) = fixed_path.iterdir()
+    (crash_dir,) = (fixed_path / "agent").iterdir()
 
     match json.loads((crash_dir / "crash.info").read_text()):
         case {
@@ -104,7 +104,7 @@ def test_crash_report_masks_secrets(fixed_path: Path) -> None:
         raise ValueError("test exception")
 
     _ = main()
-    (crash_dir,) = fixed_path.iterdir()
+    (crash_dir,) = (fixed_path / "agent").iterdir()
 
     local_vars = base64.b64decode(json.loads((crash_dir / "crash.info").read_text())["local_vars"])
     assert (

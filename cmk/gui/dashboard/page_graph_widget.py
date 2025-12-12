@@ -24,7 +24,6 @@ from cmk.gui.dashboard.token_util import (
     InvalidWidgetError,
 )
 from cmk.gui.dashboard.type_defs import DashboardConfig
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
     get_temperature_unit,
     GraphRenderConfig,
@@ -34,7 +33,6 @@ from cmk.gui.graphing import (
     metrics_from_api,
 )
 from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
@@ -138,9 +136,7 @@ class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
         return "widget_graph_token_auth"
 
     def _post(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
-        if (widget_id := ctx.request.get_str_input("widget_id")) is None:
-            raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
-
+        widget_id = ctx.request.get_str_input_mandatory("widget_id")
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         with impersonate_dashboard_token_issuer(
             token.issuer, token_details, user_permissions

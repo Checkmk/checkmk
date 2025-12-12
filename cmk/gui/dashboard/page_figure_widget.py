@@ -22,7 +22,6 @@ from cmk.gui.dashboard.token_util import (
     impersonate_dashboard_token_issuer,
     InvalidWidgetError,
 )
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
@@ -96,9 +95,7 @@ class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
     def _post(
         self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
     ) -> PageResult:
-        if (widget_id := ctx.request.get_str_input("widget_id")) is None:
-            raise MKUserError("widget_id", _("Missing request variable 'widget_id'"))
-
+        widget_id = ctx.request.get_str_input_mandatory("widget_id")
         with impersonate_dashboard_token_issuer(
             token.issuer,
             token_details,

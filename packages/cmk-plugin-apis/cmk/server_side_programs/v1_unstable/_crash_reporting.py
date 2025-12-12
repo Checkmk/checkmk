@@ -132,7 +132,7 @@ class _CrashReport:
     edition: str
     python_paths: list[str]
     version: str
-    time: str
+    time: float
     os: str
 
     @classmethod
@@ -157,7 +157,7 @@ class _CrashReport:
             python_paths=sys.path,
             edition="N/A",
             version=version,
-            time=str(time.time()),
+            time=time.time(),
             os="N/A",
             local_vars=_get_local_vars_of_last_exception(),
         )

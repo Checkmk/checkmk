@@ -22,7 +22,9 @@ def fixed_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_crash_reported_for_exception(fixed_path: Path) -> None:
+def test_crash_reported_for_exception(monkeypatch: pytest.MonkeyPatch, fixed_path: Path) -> None:
+    monkeypatch.setattr("time.time", lambda: 10.0)
+
     # check sanity of setup
     assert not list(fixed_path.iterdir())
 
@@ -51,13 +53,13 @@ def test_crash_reported_for_exception(fixed_path: Path) -> None:
             "edition": "N/A",
             "python_paths": list(),
             "version": "3.14.15p92",
-            "time": str(),
+            "time": 10.0,
             "os": "N/A",
             **additional_values,
         }:
             assert not additional_values
         case _other:
-            assert False
+            assert False, repr(_other)
 
 
 def test_no_crash_reported_for_missing_env(

@@ -25,6 +25,7 @@ HOST_PACKAGES_DIR := $(REPO_PATH)/packages
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
 AGENT_CTL_GZ := $(AGENT_CTL).gz
 AGENT_CTL_AARCH64 := $(AGENTS_DIR)/linux/cmk-agent-ctl-aarch64
+AGENT_CTL_AARCH64_GZ := $(AGENT_CTL_AARCH64).gz
 
 AGENT_CTL_DIR := $(HOST_PACKAGES_DIR)/cmk-agent-ctl
 
@@ -38,6 +39,7 @@ BUILDROOT_DEPS := \
 	$(MK_SQL) \
 	$(AGENT_CTL_GZ) \
 	$(AGENT_CTL_AARCH64) \
+	$(AGENT_CTL_AARCH64_GZ) \
 	mk-job \
 	waitmax \
 	$(shell find scripts/ -type f)
@@ -114,6 +116,9 @@ $(AGENT_CTL_AARCH64):
 	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl-aarch64 --compilation_mode=opt --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/cmk-agent-ctl/cmk-agent-ctl-musl-aarch64 $(AGENT_CTL_AARCH64)
+
+$(AGENT_CTL_AARCH64_GZ): $(AGENT_CTL_AARCH64)
+	gzip --best --keep --force $(AGENT_CTL_AARCH64)
 
 $(MK_SQL):
 	bazel build //packages/mk-sql:mk-sql-musl --compilation_mode=opt --cmk_version=$(NEW_VERSION)

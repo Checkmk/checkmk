@@ -30,6 +30,7 @@ filegroup(
         "linux/cmk-agent-ctl",
         "linux/cmk-agent-ctl.gz",
         "linux/cmk-agent-ctl-aarch64",
+        "linux/cmk-agent-ctl-aarch64.gz",
         "linux/mk-sql",
     ],
     visibility = ["//omd:__subpackages__"],

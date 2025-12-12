@@ -220,12 +220,12 @@ class MerakiOrganisation:
 
         if devices_by_type.get("wireless"):
             if self.config.required.wireless_ethernet_statuses:
-                for wireless_status in self.client.get_wireless_ethernet_statuses(self.id):
-                    serial = wireless_status["serial"]
+                for wireless_ethernet_status in self.client.get_wireless_ethernet_statuses(self.id):
+                    serial = wireless_ethernet_status["serial"]
                     if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                         yield Section(
                             name="cisco_meraki_org_wireless_ethernet_statuses",
-                            data=wireless_status,
+                            data=wireless_ethernet_status,
                             piggyback=piggyback,
                         )
 

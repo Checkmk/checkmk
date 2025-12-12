@@ -12,7 +12,6 @@ import ast
 import glob
 import io
 import itertools
-import json
 import logging
 import operator
 import os
@@ -61,10 +60,6 @@ from cmk.automations.results import (
     GetSectionInformationResult,
     GetServiceNameResult,
     GetServicesLabelsResult,
-    NotificationAnalyseResult,
-    NotificationGetBulksResult,
-    NotificationReplayResult,
-    NotificationTestResult,
     PingHostCmd,
     PingHostInput,
     PingHostResult,
@@ -83,7 +78,7 @@ from cmk.automations.results import (
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
 )
-from cmk.base import config, notify, sources
+from cmk.base import config, sources
 from cmk.base.automations.automations import (
     Automation,
     AutomationContext,
@@ -205,7 +200,7 @@ from cmk.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
-from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, man_pages
+from cmk.utils import config_warnings, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
 from cmk.utils.encoding import ensure_str_with_fallback
@@ -241,7 +236,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
 )
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.timeperiod import get_all_timeperiods
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -4101,148 +4095,6 @@ def automation_get_agent_output(
     )
 
 
-def automation_notification_replay(
-    ctx: AutomationContext,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> NotificationReplayResult:
-    plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-    )
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-
-    nr = args[0]
-    notify.notification_replay_backlog(
-        lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-            hostname, plugin
-        ),
-        http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-        notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-        int(nr),
-        rules=config.notification_rules,
-        parameters=config.notification_parameter,
-        define_servicegroups=config.define_servicegroups,
-        config_contacts=config.contacts,
-        fallback_email=config.notification_fallback_email,
-        fallback_format=config.notification_fallback_format,
-        plugin_timeout=config.notification_plugin_timeout,
-        spooling=ConfigCache.notification_spooling(),
-        backlog_size=config.notification_backlog,
-        logging_level=ConfigCache.notification_logging_level(),
-        all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-            livestatus.get_optional_timeperiods_active_map, log=logger.warning
-        ),
-    )
-    return NotificationReplayResult()
-
-
-def automation_notification_analyse(
-    ctx: AutomationContext,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> NotificationAnalyseResult:
-    plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-    )
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-
-    nr = args[0]
-    return NotificationAnalyseResult(
-        notify.notification_analyse_backlog(
-            lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-                hostname, plugin
-            ),
-            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-            notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-            int(nr),
-            rules=config.notification_rules,
-            parameters=config.notification_parameter,
-            define_servicegroups=config.define_servicegroups,
-            config_contacts=config.contacts,
-            fallback_email=config.notification_fallback_email,
-            fallback_format=config.notification_fallback_format,
-            plugin_timeout=config.notification_plugin_timeout,
-            spooling=ConfigCache.notification_spooling(),
-            backlog_size=config.notification_backlog,
-            logging_level=ConfigCache.notification_logging_level(),
-            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                livestatus.get_optional_timeperiods_active_map, log=logger.warning
-            ),
-        )
-    )
-
-
-def automation_notification_test(
-    ctx: AutomationContext,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> NotificationTestResult:
-    context = json.loads(args[0])
-    dispatch = args[1]
-
-    plugins = plugins or load_plugins()  # do we really still need this?
-    loading_result = loading_result or load_config(
-        discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-    )
-    ensure_nagios = notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core)
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-
-    return NotificationTestResult(
-        notify.notification_test(
-            context,
-            lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-                hostname, plugin
-            ),
-            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-            ensure_nagios,
-            rules=config.notification_rules,
-            parameters=config.notification_parameter,
-            define_servicegroups=config.define_servicegroups,
-            config_contacts=config.contacts,
-            fallback_email=config.notification_fallback_email,
-            fallback_format=config.notification_fallback_format,
-            plugin_timeout=config.notification_plugin_timeout,
-            spooling=ConfigCache.notification_spooling(),
-            backlog_size=config.notification_backlog,
-            logging_level=ConfigCache.notification_logging_level(),
-            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
-            dispatch=dispatch,
-            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                livestatus.get_optional_timeperiods_active_map, log=logger.warning
-            ),
-        )
-    )
-
-
-def automation_get_bulks(
-    ctx: AutomationContext,
-    args: list[str],
-    plugins: AgentBasedPlugins | None,
-    loading_result: config.LoadingResult | None,
-) -> NotificationGetBulksResult:
-    only_ripe = args[0] == "1"
-    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
-    return NotificationGetBulksResult(
-        notify.find_bulks(
-            only_ripe,
-            bulk_interval=config.notification_bulk_interval,
-            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
-                livestatus.get_optional_timeperiods_active_map, log=logger.warning
-            ),
-        )
-    )
-
-
 def automation_find_unknown_check_parameter_rule_sets(
     ctx: AutomationContext,
     args: list[str],
@@ -4443,30 +4295,6 @@ def register_common_automations(automations: Automations) -> None:
         Automation(
             ident="get-agent-output",
             handler=automation_get_agent_output,
-        )
-    )
-    automations.register(
-        Automation(
-            ident="notification-replay",
-            handler=automation_notification_replay,
-        )
-    )
-    automations.register(
-        Automation(
-            ident="notification-analyse",
-            handler=automation_notification_analyse,
-        )
-    )
-    automations.register(
-        Automation(
-            ident="notification-test",
-            handler=automation_notification_test,
-        )
-    )
-    automations.register(
-        Automation(
-            ident="notification-get-bulks",
-            handler=automation_get_bulks,
         )
     )
     automations.register(

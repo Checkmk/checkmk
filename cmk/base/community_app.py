@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base import notify
 from cmk.ccc.version import Edition
 from cmk.fetchers import PlainFetcherTrigger
 from cmk.utils.labels import get_builtin_host_labels
@@ -23,6 +24,7 @@ def make_app() -> CheckmkBaseApp:
 
     diagnostics.register(modes, automations, core_performance_settings=lambda x: {})
     localize.register(modes)
+    notify.register(modes, automations)
 
     return CheckmkBaseApp(
         edition=Edition.COMMUNITY,

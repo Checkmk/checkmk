@@ -6,7 +6,6 @@
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
-import ast
 import dataclasses
 import enum
 import itertools
@@ -32,7 +31,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.automations.automation_helper import HelperExecutor
 from cmk.base import config, profiling, sources
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
@@ -54,13 +52,12 @@ from cmk.base.core import interface as core_interface
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
-from cmk.base.utils import register_sigint_handler
 from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import SiteId
-from cmk.ccc.store import activation_lock, lock_checkmk_configuration
+from cmk.ccc.store import activation_lock
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
 from cmk.checkengine.checking import (
@@ -132,7 +129,6 @@ from cmk.utils import config_warnings, ip_lookup, log, timeperiod
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.http_proxy_config import make_http_proxy_getter
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.log import console, section
@@ -2011,135 +2007,6 @@ _AUTOMATION_MODE = Mode(
 )
 
 # .
-#   .--notify--------------------------------------------------------------.
-#   |                                 _   _  __                            |
-#   |                     _ __   ___ | |_(_)/ _|_   _                      |
-#   |                    | '_ \ / _ \| __| | |_| | | |                     |
-#   |                    | | | | (_) | |_| |  _| |_| |                     |
-#   |                    |_| |_|\___/ \__|_|_|  \__, |                     |
-#   |                                           |___/                      |
-#   '----------------------------------------------------------------------'
-
-
-def mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:
-    community_edition = app.edition is cmk_version.Edition.COMMUNITY
-    if not community_edition and "spoolfile" in args:
-        return _do_notify_via_automation(
-            options=options,
-            args=args,
-        )
-
-    return _do_notify(
-        options=options,
-        args=args,
-        keepalive=not community_edition and "keepalive" in options,
-        get_builtin_host_labels=app.get_builtin_host_labels,
-    )
-
-
-def _do_notify(
-    options: dict,
-    args: list[str],
-    keepalive: bool,
-    get_builtin_host_labels: Callable[[SiteId], Labels],
-) -> int | None:
-    if keepalive:
-        register_sigint_handler()
-
-    with lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
-        loading_result = config.load(
-            discovery_rulesets=(),
-            get_builtin_host_labels=get_builtin_host_labels,
-            with_conf_d=True,
-            validate_hosts=False,
-        )
-
-    from cmk.base import notify
-
-    return notify.do_notify(
-        options,
-        args,
-        define_servicegroups=config.define_servicegroups,
-        host_parameters_cb=lambda hostname,
-        plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
-        rules=config.notification_rules,
-        parameters=config.notification_parameter,
-        get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
-        ensure_nagios=notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-        bulk_interval=config.notification_bulk_interval,
-        plugin_timeout=config.notification_plugin_timeout,
-        config_contacts=config.contacts,
-        fallback_email=config.notification_fallback_email,
-        fallback_format=config.notification_fallback_format,
-        spooling=ConfigCache.notification_spooling(),
-        backlog_size=config.notification_backlog,
-        logging_level=ConfigCache.notification_logging_level(),
-        keepalive=keepalive,
-        all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
-        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
-            livestatus.get_optional_timeperiods_active_map, notify.logger.warning
-        ),
-    )
-
-
-def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
-    log_to_stdout = False
-    if options.get("log-to-stdout"):
-        args.insert(0, "--log-to-stdout")
-        log_to_stdout = True
-
-    from cmk.base import notify
-
-    try:
-        result = HelperExecutor().execute(
-            command="notify",
-            args=args,
-            stdin="",
-            logger=notify.logger,
-            timeout=None,
-        )
-    except Exception as e:
-        notify.logger.error("Error running automation call 'notify': %s", e)
-        return 1
-
-    try:
-        data = ast.literal_eval(result.output)
-    except (SyntaxError, ValueError, TypeError) as e:
-        notify.logger.error("Could not parse automation result %r: %s", result.output, e)
-        return 2
-
-    if isinstance(data, dict):
-        if log_to_stdout:
-            sys.stdout.write(data["output"])
-            sys.stdout.flush()
-        return data.get("exit_code")
-
-    notify.logger.error("Unexpected automation result format: %r", data)
-    return 2
-
-
-_NOTIFY_MODE = Mode(
-    long_option="notify",
-    handler_function=mode_notify,
-    argument=True,
-    argument_descr="MODE",
-    argument_optional=True,
-    short_help="Used to send notifications from core",
-    # TODO: Write long help
-    sub_options=[
-        Option(
-            long_option="log-to-stdout",
-            short_help="Also write log messages to console",
-        ),
-        Option(
-            long_option="keepalive",
-            short_help="Execute in keepalive mode (Commercial editions only)",
-        ),
-    ],
-)
-
-
-# .
 #   .--check-discovery-----------------------------------------------------.
 #   |       _     _               _ _                                      |
 #   |   ___| |__ | | __        __| (_)___  ___ _____   _____ _ __ _   _    |
@@ -3650,7 +3517,6 @@ def common_modes() -> list[Mode]:
         _MAN_MODE,
         _BROWSE_MAN_MODE,
         _AUTOMATION_MODE,
-        _NOTIFY_MODE,
         _CHECK_DISCOVERY_MODE,
         _DISCOVER_MODE,
         _CHECK_MODE,

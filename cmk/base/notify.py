@@ -21,9 +21,11 @@
 #    => These already bear all information about the contact, the plug-in
 #       to call and its parameters.
 
+import ast
 import datetime
 import io
 import itertools
+import json
 import logging
 import os
 import re
@@ -38,16 +40,45 @@ from functools import partial
 from pathlib import Path
 from typing import cast, Literal
 
+import livestatus
 from livestatus import MKLivestatusException
 
 import cmk.ccc.debug
 import cmk.utils.paths
-from cmk.base import events
+import cmk.utils.timeperiod
+from cmk.automations.automation_helper import HelperExecutor
+from cmk.automations.results import (
+    NotificationAnalyseResult,
+    NotificationGetBulksResult,
+    NotificationReplayResult,
+    NotificationTestResult,
+)
+from cmk.base import config, events
+from cmk.base.automations.automations import (
+    Automation,
+    AutomationContext,
+    Automations,
+    load_config,
+    load_plugins,
+)
+from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.config import (
+    ConfigCache,
+)
+from cmk.base.modes.modes import Mode, Modes, Option
+from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import (
+    MKGeneralException,
+    MKTimeout,
+)
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
-from cmk.ccc.timeout import MKTimeout, Timeout
+from cmk.ccc.timeout import Timeout
+from cmk.ccc.version import Edition
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+)
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -60,7 +91,8 @@ from cmk.events.notification_spool_file import (
     NotificationForward,
     NotificationViaPlugin,
 )
-from cmk.utils import log
+from cmk.utils import http_proxy_config, log, timeperiod
+from cmk.utils.http_proxy_config import make_http_proxy_getter
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import find_wato_folder
@@ -85,6 +117,7 @@ from cmk.utils.notify_types import (
     UUIDs,
 )
 from cmk.utils.timeperiod import (
+    get_all_timeperiods,
     is_timeperiod_active,
     TimeperiodName,
     TimeperiodSpecs,
@@ -204,6 +237,133 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
 #   '----------------------------------------------------------------------'
 
 
+def register(modes: Modes, automations: Automations) -> None:
+    modes.register(
+        Mode(
+            long_option="notify",
+            handler_function=_mode_notify,
+            argument=True,
+            argument_descr="MODE",
+            argument_optional=True,
+            short_help="Used to send notifications from core",
+            # TODO: Write long help
+            sub_options=[
+                Option(
+                    long_option="log-to-stdout",
+                    short_help="Also write log messages to console",
+                ),
+                Option(
+                    long_option="keepalive",
+                    short_help="Execute in keepalive mode (Commercial editions only)",
+                ),
+            ],
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-replay",
+            handler=_automation_notification_replay,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-analyse",
+            handler=_automation_notification_analyse,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-test",
+            handler=_automation_notification_test,
+        )
+    )
+    automations.register(
+        Automation(
+            ident="notification-get-bulks",
+            handler=_automation_get_bulks,
+        )
+    )
+
+
+def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:
+    community_edition = app.edition is Edition.COMMUNITY
+    if not community_edition and "spoolfile" in args:
+        return _do_notify_via_automation(
+            options=options,
+            args=args,
+        )
+
+    if keepalive := not community_edition and "keepalive" in options:
+        register_sigint_handler()
+
+    with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
+        loading_result = config.load(
+            discovery_rulesets=(),
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            with_conf_d=True,
+            validate_hosts=False,
+        )
+
+    return do_notify(
+        options,
+        args,
+        define_servicegroups=config.define_servicegroups,
+        host_parameters_cb=lambda hostname,
+        plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
+        rules=config.notification_rules,
+        parameters=config.notification_parameter,
+        get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
+        ensure_nagios=make_ensure_nagios(loading_result.loaded_config.monitoring_core),
+        bulk_interval=config.notification_bulk_interval,
+        plugin_timeout=config.notification_plugin_timeout,
+        config_contacts=config.contacts,
+        fallback_email=config.notification_fallback_email,
+        fallback_format=config.notification_fallback_format,
+        spooling=config.ConfigCache.notification_spooling(),
+        backlog_size=config.notification_backlog,
+        logging_level=config.ConfigCache.notification_logging_level(),
+        keepalive=keepalive,
+        all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
+        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, logger.warning
+        ),
+    )
+
+
+def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
+    log_to_stdout = False
+    if options.get("log-to-stdout"):
+        args.insert(0, "--log-to-stdout")
+        log_to_stdout = True
+
+    try:
+        result = HelperExecutor().execute(
+            command="notify",
+            args=args,
+            stdin="",
+            logger=logger,
+            timeout=None,
+        )
+    except Exception as e:
+        logger.error("Error running automation call 'notify': %s", e)
+        return 1
+
+    try:
+        data = ast.literal_eval(result.output)
+    except (SyntaxError, ValueError, TypeError) as e:
+        logger.error("Could not parse automation result %r: %s", result.output, e)
+        return 2
+
+    if isinstance(data, dict):
+        if log_to_stdout:
+            sys.stdout.write(data["output"])
+            sys.stdout.flush()
+        return data.get("exit_code")
+
+    logger.error("Unexpected automation result format: %r", data)
+    return 2
+
+
 def notify_usage() -> None:
     console.error(
         """Usage: check_mk --notify [--keepalive]
@@ -295,7 +455,7 @@ def do_notify(
             )
 
         if keepalive:
-            notify_keepalive(
+            _notify_keepalive(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
@@ -549,7 +709,7 @@ def _locally_deliver_raw_context(
     return None
 
 
-def notification_replay_backlog(
+def _notification_replay_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
@@ -592,7 +752,7 @@ def notification_replay_backlog(
     )
 
 
-def notification_analyse_backlog(
+def _notification_analyse_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
@@ -636,7 +796,7 @@ def notification_analyse_backlog(
     )
 
 
-def notification_test(
+def _notification_test(
     raw_context: NotificationContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
@@ -704,7 +864,7 @@ def notification_test(
 
 
 # TODO: Make use of the generic do_keepalive() mechanism?
-def notify_keepalive(
+def _notify_keepalive(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
@@ -747,6 +907,148 @@ def notify_keepalive(
             plugin_timeout=plugin_timeout,
         ),
         loop_interval=bulk_interval,
+    )
+
+
+def _automation_notification_replay(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationReplayResult:
+    plugins = plugins or load_plugins()  # do we really still need this?
+    loading_result = loading_result or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+
+    nr = args[0]
+    _notification_replay_backlog(
+        lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
+            hostname, plugin
+        ),
+        http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
+        make_ensure_nagios(loading_result.loaded_config.monitoring_core),
+        int(nr),
+        rules=config.notification_rules,
+        parameters=config.notification_parameter,
+        define_servicegroups=config.define_servicegroups,
+        config_contacts=config.contacts,
+        fallback_email=config.notification_fallback_email,
+        fallback_format=config.notification_fallback_format,
+        plugin_timeout=config.notification_plugin_timeout,
+        spooling=ConfigCache.notification_spooling(),
+        backlog_size=config.notification_backlog,
+        logging_level=ConfigCache.notification_logging_level(),
+        all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, log=logger.warning
+        ),
+    )
+    return NotificationReplayResult()
+
+
+def _automation_notification_analyse(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationAnalyseResult:
+    plugins = plugins or load_plugins()  # do we really still need this?
+    loading_result = loading_result or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+
+    nr = args[0]
+    return NotificationAnalyseResult(
+        _notification_analyse_backlog(
+            lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
+                hostname, plugin
+            ),
+            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
+            make_ensure_nagios(loading_result.loaded_config.monitoring_core),
+            int(nr),
+            rules=config.notification_rules,
+            parameters=config.notification_parameter,
+            define_servicegroups=config.define_servicegroups,
+            config_contacts=config.contacts,
+            fallback_email=config.notification_fallback_email,
+            fallback_format=config.notification_fallback_format,
+            plugin_timeout=config.notification_plugin_timeout,
+            spooling=ConfigCache.notification_spooling(),
+            backlog_size=config.notification_backlog,
+            logging_level=ConfigCache.notification_logging_level(),
+            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ),
+        )
+    )
+
+
+def _automation_notification_test(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationTestResult:
+    context = json.loads(args[0])
+    dispatch = args[1]
+
+    plugins = plugins or load_plugins()  # do we really still need this?
+    loading_result = loading_result or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+    )
+    ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+
+    return NotificationTestResult(
+        _notification_test(
+            context,
+            lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
+                hostname, plugin
+            ),
+            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
+            ensure_nagios,
+            rules=config.notification_rules,
+            parameters=config.notification_parameter,
+            define_servicegroups=config.define_servicegroups,
+            config_contacts=config.contacts,
+            fallback_email=config.notification_fallback_email,
+            fallback_format=config.notification_fallback_format,
+            plugin_timeout=config.notification_plugin_timeout,
+            spooling=ConfigCache.notification_spooling(),
+            backlog_size=config.notification_backlog,
+            logging_level=ConfigCache.notification_logging_level(),
+            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+            dispatch=dispatch,
+            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ),
+        )
+    )
+
+
+def _automation_get_bulks(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> NotificationGetBulksResult:
+    only_ripe = args[0] == "1"
+    logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+    return NotificationGetBulksResult(
+        _find_bulks(
+            only_ripe,
+            bulk_interval=config.notification_bulk_interval,
+            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ),
+        )
     )
 
 
@@ -2212,7 +2514,7 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: float | None = N
             logger.info("    -> Error removing it: %s", e)
 
 
-def find_bulks(
+def _find_bulks(
     only_ripe: bool,
     *,
     bulk_interval: int,
@@ -2313,7 +2615,7 @@ def _send_ripe_bulks(
     bulk_interval: int,
     plugin_timeout: int,
 ) -> None:
-    ripe = find_bulks(True, bulk_interval=bulk_interval, timeperiods_active=timeperiods_active)
+    ripe = _find_bulks(True, bulk_interval=bulk_interval, timeperiods_active=timeperiods_active)
     if ripe:
         logger.info("Sending out %d ripe bulk notifications", len(ripe))
         for bulk in ripe:

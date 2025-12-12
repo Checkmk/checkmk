@@ -96,6 +96,7 @@ const componentId = useId()
 
 .form-string__button-clear-x {
   width: 13px;
+  height: 14px;
 }
 
 .form-string--dropdown {

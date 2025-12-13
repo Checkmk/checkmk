@@ -499,8 +499,22 @@ def _ensure_authenticated() -> None:
         if session.session.exc:
             raise session.session.exc
         raise MKAuthException("You need to be logged in to access this resource.")
-    if session.session.two_factor_pending():
-        raise MKAuthException("Two-factor authentication required.")
+    if isinstance(session.session.user, LoggedInSuperUser):
+        return
+
+    # Not defined in the case as this allows us to understand if a user go direct to 'logged_in'
+    if session.session.session_info.session_state == "credentials_needed":
+        session.session.check_and_update_session_state()
+
+    match session.session.session_info.session_state:
+        case "second_factor_auth_needed":
+            raise MKAuthException("Two-factor authentication is required.")
+        case "second_factor_setup_needed":
+            raise MKAuthException("Two-factor setup is required for user.")
+        case "password_change_needed":
+            raise MKAuthException("Password change is required.")
+        case _:
+            return
 
 
 type AdaptedEndpointMapByVersion = dict[APIVersion, dict[EndpointIdent, AbstractWSGIApp]]

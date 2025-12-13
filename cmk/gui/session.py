@@ -33,10 +33,9 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
-from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
-from cmk.gui.type_defs import AuthType, SessionInfo
+from cmk.gui.type_defs import AuthType, SessionInfo, SessionState, SessionStateMachine
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
 from cmk.gui.utils import roles
@@ -91,16 +90,16 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     def initialize(
         self,
-        user_name: UserId | None,
-        auth_type: AuthType | None,
+        user_name: UserId,
+        auth_type: AuthType,
         user_permissions: UserPermissions,
+        secure_flag: bool,
     ) -> None:
         now = datetime.now()
-        if user_name is not None:
-            userdb.session.ensure_user_can_init_session(user_name, datetime.now())
-            self.user = LoggedInUser(user_name, user_permissions)
-        else:
-            self.user = LoggedInNobody()
+        # check single-session-mode and timeouts, might raise
+        userdb.session.ensure_user_can_init_session(user_name, now)
+        self.is_secure = secure_flag
+        self.user = LoggedInUser(user_name, user_permissions)
 
         self.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),
@@ -109,6 +108,8 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             flashes=[],
             auth_type=auth_type,
         )
+
+        self.check_and_update_session_state()
 
     @classmethod
     def create_empty_session(
@@ -119,7 +120,14 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         This will lead to the session cookie being deleted.
         """
         sess = cls()
-        sess.initialize(None, None, user_permissions)
+        sess.user = LoggedInNobody()
+        sess.session_info = SessionInfo(
+            session_id=userdb.session.create_session_id(),
+            started_at=int(datetime.now().timestamp()),
+            last_activity=int(datetime.now().timestamp()),
+            flashes=[],
+            auth_type=None,
+        )
         sess.exc = exc
         return sess
 
@@ -136,8 +144,8 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             user_name,
             auth_type,
             user_permissions,
+            secure_flag,
         )
-        sess.is_secure = secure_flag
         return sess
 
     @classmethod
@@ -157,29 +165,75 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         return sess
 
     @classmethod
-    def load_session(
+    def load_cookie_session(
         cls,
         user_name: UserId,
         info: SessionInfo,
         user_permissions: UserPermissions,
     ) -> CheckmkFileBasedSession:
-        if info.logged_out:
+        if info.is_logged_out:
             raise MKAuthException("You have been logged out.")
 
         sess = cls()
         sess.user = LoggedInUser(user_name, user_permissions)
         sess.session_info = info
-        # NOTE: This is only called from a "cookie" auth location. If you add more, refactor.
         sess.session_info.auth_type = "cookie"
         sess.new = False
         sess["_flashes"] = info.flashes
         return sess
 
     @tracer.instrument("CheckmkFileBas.login")
-    def login(self, user_obj: LoggedInUser, secure_flag: bool) -> None:
-        userdb.session.on_succeeded_login(user_obj.ident, datetime.now())
-        self.user = user_obj
+    def login(
+        self, username: UserId, user_permissions: UserPermissions, secure_flag: bool
+    ) -> SessionState:
+        userdb.session.on_succeeded_login(username, datetime.now())
+        self.user = LoggedInUser(username, user_permissions)
         self.is_secure = secure_flag
+        return self.check_and_update_session_state()
+
+    def check_and_update_session_state(
+        self,
+    ) -> SessionState:
+        """
+        This method is designed to check if a user's state can be moved from credentials needed to either:
+            - second_factor_auth_needed
+            - second_factor_setup_needed
+            - password_change_needed
+            - logged_in
+        """
+        ssm = SessionStateMachine(self.session_info.session_state)
+
+        def is_two_fa_auth_needed() -> bool:
+            return userdb.is_two_factor_login_enabled(self.user.ident)
+
+        def is_two_fa_setup_needed() -> bool:
+            """
+            This does not check if a user already has configured their 2FA as it shouldn't be reached if they have.
+            """
+            return self.two_factor_enforced(self.user.ident, self.user._user_permissions)
+
+        def _is_pw_change_needed() -> bool:
+            pw_change_reason = userdb.need_to_change_pw(self.user.ident, datetime.now())
+            if pw_change_reason is not None:
+                self._flash_message(
+                    "warning",
+                    _("You need to change your password before proceeding. Reason: {}.").format(
+                        {
+                            "expired": _("Your password has expired"),
+                            "enforced": _("Your administrator has enforced a password change"),
+                        }.get(pw_change_reason, pw_change_reason)
+                    ),
+                )
+                return True
+            return False
+
+        self.session_info.session_state = ssm.transition(
+            check_if_2fa_auth_is_needed=is_two_fa_auth_needed,
+            check_if_2fa_setup_is_needed=is_two_fa_setup_needed,
+            check_if_pw_change_is_needed=_is_pw_change_needed,
+        )
+
+        return self.session_info.session_state
 
     def persist(self) -> None:
         """Save the session as "session_info" custom user attribute"""
@@ -199,14 +253,17 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
         # Ensure we don't override an already logged-out session with an active one (Werk #17808)
         # Check if the latest session persist was a logout, then keep the logged_out state
-        if (sid := session_infos.get(self.session_info.session_id)) and sid.logged_out:
-            self.session_info.logged_out = True
+        if (sid := session_infos.get(self.session_info.session_id)) and sid.is_logged_out:
+            self.session_info.session_state = "credentials_needed"
 
         session_infos[self.session_info.session_id] = self.session_info
         userdb.session.save_session_infos(self.user.ident, session_infos)
 
-    def invalidate(self) -> None:
-        self.session_info.logged_out = True
+    def logout(
+        self,
+    ) -> None:
+        self.session_info.logout()
+        self.persist()
 
     def is_expired(self, now: datetime) -> bool:
         """Check if session has expired either due to maximum duration or exceeded idle time."""
@@ -260,20 +317,10 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         if tuple_to_add not in self.session_info.flashes:
             self.session_info.flashes.append(tuple_to_add)
 
-    def two_factor_pending(self) -> bool:
-        if isinstance(self.user, LoggedInNobody | LoggedInSuperUser):
-            return False
-
-        return (
-            userdb.is_two_factor_login_enabled(self.user.ident)
-            and not self.session_info.two_factor_completed
+    def two_factor_enforced(self, user: UserId, user_permissions: UserPermissions) -> bool:
+        return config.active_config.require_two_factor_all_users or roles.is_two_factor_required(
+            user_permissions, user
         )
-
-    def two_factor_enforced(self, user_permissions: UserPermissions) -> bool:
-        return (
-            config.active_config.require_two_factor_all_users
-            or roles.is_two_factor_required(user_permissions, logged_in_user.ident)
-        ) and not self.session_info.two_factor_completed
 
 
 class FileBasedSession(SessionInterface):
@@ -331,9 +378,9 @@ class FileBasedSession(SessionInterface):
             return None
 
         try:
-            sess = self.session_class.load_session(user_name, session_info, user_permissions)
+            sess = self.session_class.load_cookie_session(user_name, session_info, user_permissions)
         except MKAuthException:
-            # load_session will raise if the session is logged out
+            # load_cookie_session will raise if the session is logged out
             return None
 
         # TODO: should the `is_expired` check come before the `warn_if_session_expires_soon`?
@@ -396,8 +443,15 @@ class FileBasedSession(SessionInterface):
 
         try:
             return self._resume_session(
-                app, request, user_permissions
-            ) or self._authenticate_and_open(app, request, config.active_config, user_permissions)
+                app,
+                request,
+                user_permissions,
+            ) or self._authenticate_and_open(
+                app,
+                request,
+                config.active_config,
+                user_permissions,
+            )
         except MKAuthException as exc:
             return self.session_class.create_empty_session(exc, user_permissions)
 
@@ -441,7 +495,7 @@ class FileBasedSession(SessionInterface):
         session.session_info.last_activity = int(datetime.now().timestamp())
         session.persist()
 
-        if session.session_info.logged_out:
+        if session.session_info.is_logged_out:
             response.delete_cookie(cookie_name, path=path)
             return
 

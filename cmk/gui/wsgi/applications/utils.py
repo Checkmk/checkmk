@@ -7,7 +7,6 @@ from __future__ import annotations
 import abc
 import functools
 from collections.abc import Callable
-from datetime import datetime
 from typing import final
 from wsgiref.types import StartResponse, WSGIEnvironment
 
@@ -17,7 +16,7 @@ import cmk.gui.session
 import cmk.utils.paths
 from cmk import trace
 from cmk.ccc.site import url_prefix
-from cmk.gui import login, pages, userdb
+from cmk.gui import login, pages
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
@@ -72,44 +71,48 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext],
 
             trace.get_current_span().set_attribute("cmk.auth.user_id", str(user_id))
 
-            two_factor_login_pages = requested_file_name(request) in (
+            is_two_factor_login_page = requested_file_name(request) in (
                 "user_login_two_factor",
                 "user_webauthn_login_begin",
                 "user_webauthn_login_complete",
             )
 
-            two_factor_registration_pages = requested_file_name(request) in (
+            is_two_factor_setup_page = requested_file_name(request) in (
                 "user_two_factor_enforce",
                 "user_totp_register",
                 "user_webauthn_register_begin",
                 "user_webauthn_register_complete",
             )
 
-            # Two factor login
-            if not two_factor_login_pages and session.two_factor_pending():
-                raise HTTPRedirect(
-                    "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
-                )
+            is_change_password_page = requested_file_name(request) == "user_change_pw"
 
-            # Enforce Two Factor
-            if (
-                not two_factor_registration_pages
-                and session.session_info.two_factor_required
-                and not session.session_info.two_factor_completed
-            ):
-                raise HTTPRedirect(
-                    "user_two_factor_enforce.py?_origtarget=%s" % urlencode(makeuri(request, []))
-                )
+            # 2FA Log flow, do not change order.
+            match session.session_info.session_state:
+                case "second_factor_auth_needed":
+                    if not is_two_factor_login_page:
+                        raise HTTPRedirect(
+                            "user_login_two_factor.py?_origtarget=%s"
+                            % urlencode(makeuri(request, []))
+                        )
 
-            if (
-                not two_factor_registration_pages
-                and not two_factor_login_pages
-                and requested_file_name(request) != "user_change_pw"
-            ):
-                if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
-                    raise HTTPRedirect(
-                        f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
-                    )
+                case "second_factor_setup_needed":
+                    if not is_two_factor_setup_page:
+                        raise HTTPRedirect(
+                            "user_two_factor_enforce.py?_origtarget=%s"
+                            % urlencode(makeuri(request, []))
+                        )
+
+                case "password_change_needed":
+                    if (
+                        not is_two_factor_setup_page
+                        and not is_two_factor_login_page
+                        and not is_change_password_page
+                    ):
+                        raise HTTPRedirect(
+                            f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}"
+                        )
+                case _:
+                    pass
 
             # When displaying the crash report message, the user authentication context
             # has already been left. We need to preserve this information to be able to

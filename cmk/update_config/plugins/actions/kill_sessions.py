@@ -29,7 +29,7 @@ class TerminateUserSessions(UpdateAction):
                 datetime.now(),
             )
             for session_info in session_infos.values():
-                session_info.logged_out = True
+                session_info.session_state = "credentials_needed"
             userdb.session.save_session_infos(user_id, session_infos)
 
 

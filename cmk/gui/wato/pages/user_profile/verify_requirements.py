@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.session import session
@@ -19,12 +18,11 @@ def verify_requirements(
 
     # If the user is obligated to change his password, or 2FA is
     # enforced, he should be allowed to do so.
-    if request.get_ascii_input("reason") not in (
-        "expired",
-        "enforced",
-    ) and not session.two_factor_enforced(user_permissions):
-        if not user.may(permission):
-            raise MKAuthException(_("You are not allowed to edit your user profile."))
+    if session.session_info.session_state not in (
+        "password_change_needed",
+        "second_factor_setup_needed",
+    ) and not user.may(permission):
+        raise MKAuthException(_("You are not allowed to edit your user profile."))
 
     if not wato_enabled:
         raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))

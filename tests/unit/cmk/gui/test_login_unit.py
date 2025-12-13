@@ -272,15 +272,27 @@ def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> Non
             assert user.id is None
 
 
-def test_auth_session_times(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
-    wsgi_app.get(auth_request)
+@pytest.fixture(name="user_login")
+def fixture_user_login(
+    wsgi_app: WebTestAppForCMK,
+    with_user: tuple[UserId, str],
+) -> Iterator[WebTestAppForCMK]:
+    """Define the operator to be used for validation, based on user's login status."""
+    wsgi_app.login(*with_user)
+    yield wsgi_app
+    session.logout()
+
+
+def test_auth_session_times(user_login: WebTestAppForCMK, auth_request: http.Request) -> None:
+    wsgi_app_ = user_login
+    wsgi_app_.get(auth_request)
     assert session.session_info.started_at is not None
     assert session.user.id == auth_request.environ["REMOTE_USER"]
     session_id = session.session_info.session_id
     started_at = session.session_info.started_at
     last_activity = session.session_info.last_activity
 
-    wsgi_app.get(auth_request)
+    wsgi_app_.get(auth_request)
     assert session.session_info.session_id == session_id
     assert session.session_info.started_at == started_at
     # tried it with time.sleep and ">".

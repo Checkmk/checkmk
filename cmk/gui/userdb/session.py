@@ -84,7 +84,7 @@ def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
     if (session_timeout := active_config.single_user_session) is None:
         return  # No login session limitation enabled, no validation
     for session_info in load_session_infos(username).values():
-        if session_info.logged_out:
+        if session_info.is_logged_out:
             continue
         idle_time = now.timestamp() - session_info.last_activity
         if idle_time <= session_timeout:
@@ -147,7 +147,7 @@ def is_valid_user_session(
     if not session_infos:
         return False  # no session active
 
-    if session_id not in session_infos or session_infos[session_id].logged_out:
+    if session_id not in session_infos or session_infos[session_id].is_logged_out:
         auth_logger.debug(
             "%s session_id %s not valid (logged out or timed out?)", username, session_id
         )

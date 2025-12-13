@@ -83,8 +83,12 @@ def single_auth_request(wsgi_app: WebTestAppForCMK, auth_request: http.Request) 
 
         session_id = session.session_info.session_id
         user_id = auth_request.environ["REMOTE_USER"]
+        session.session_info.session_state = infos[session_id].session_state = (
+            session.check_and_update_session_state()
+        )
         userdb.session.save_session_infos(user_id, session_infos={session_id: session.session_info})
         assert session.user.id == user_id
+        assert session.session_info.session_state == "logged_in"
         return session.user.id, infos[session_id]
 
     return caller
@@ -106,15 +110,6 @@ def _load_failed_logins(user_id: UserId) -> int | None:
     return load_custom_attr(user_id=user_id, key="num_failed_logins", parser=int)
 
 
-def test_load_pre_20_session(user_id: UserId) -> None:
-    timestamp = 1234567890
-    userdb.save_custom_attr(user_id, "session_info", f"sess2|{timestamp}")
-    old_session = load_session_infos(user_id)
-    assert isinstance(old_session, dict)
-    assert old_session["sess2"].started_at == timestamp
-    assert old_session["sess2"].last_activity == timestamp
-
-
 def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
     assert active_config.single_user_session is None
 
@@ -134,7 +129,7 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
             flashes=[],
             csrf_token=session_info.csrf_token,
             encrypter_secret=session_info.encrypter_secret,
-            logged_out=False,
+            session_state="logged_in",
             auth_type="web_server",
         )
     }
@@ -240,14 +235,19 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
     assert userdb.user_locked(user_id, load_user(user_id))
 
 
-def test_on_logout_no_session(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
+def test_on_logout_no_session(
+    wsgi_app: WebTestAppForCMK, auth_request: http.Request, with_user: tuple[UserId, str]
+) -> None:
+    # login using user
+    wsgi_app.login(*with_user)
     wsgi_app.get(auth_request)
 
     user_id = session.user.ident
     old_session = session.session_info
     session_id = old_session.session_id
 
-    old_session.invalidate()
+    # logout
+    old_session.logout()
     userdb.session.save_session_infos(user_id, {session_id: old_session})
 
     # Make another request to update "last_activity"
@@ -267,10 +267,12 @@ def test_on_logout_invalidate_session(single_auth_request: SingleRequest) -> Non
     user_id, session_info = single_auth_request()
     assert session_info.session_id in load_session_infos(user_id)
 
-    session_info.invalidate()
+    session_info.logout()
     userdb.session.save_session_infos(user_id, {session_info.session_id: session_info})
 
-    assert load_session_infos(user_id)[session_info.session_id].logged_out
+    assert (
+        load_session_infos(user_id)[session_info.session_id].session_state == "credentials_needed"
+    )
 
 
 def test_access_denied_with_invalidated_session(single_auth_request: SingleRequest) -> None:
@@ -279,10 +281,12 @@ def test_access_denied_with_invalidated_session(single_auth_request: SingleReque
 
     assert session_id in load_session_infos(user_id)
     assert is_valid_user_session(user_id, load_session_infos(user_id), session_id)
-    session.session_info.invalidate()
+    session.logout()
     userdb.session.save_session_infos(user_id, {session_id: session.session_info})
 
-    assert load_session_infos(user_id)[session_info.session_id].logged_out
+    assert (
+        load_session_infos(user_id)[session_info.session_id].session_state == "credentials_needed"
+    )
     assert not is_valid_user_session(user_id, load_session_infos(user_id), session_id)
 
 
@@ -290,30 +294,35 @@ def test_on_access_update_valid_session(
     wsgi_app: WebTestAppForCMK,
     auth_request: http.Request,
 ) -> None:
+    """Test that accessing with a valid session updates last_activity."""
     wsgi_app.get(auth_request)
 
-    # We push the access furhter in the past to see if its updated on the next request.
+    # We push the access further in the past to see if its updated on the next request.
     session.session_info.last_activity -= 3600
     session.persist()
 
-    session_info = session.session_info
+    old_session_info = session.session_info
+
+    assert session.session_info.session_id == old_session_info.session_id
 
     wsgi_app.get(auth_request)
 
-    assert session.session_info.session_id == session_info.session_id
-    assert session.session_info.started_at == session_info.started_at
-    assert session.session_info.last_activity > session_info.last_activity
+    assert session.session_info.session_id == old_session_info.session_id
+    assert session.session_info.started_at == old_session_info.started_at
+    assert session.session_info.last_activity > old_session_info.last_activity
 
 
 def test_timed_out_session_gets_a_new_one_instead(
-    wsgi_app: WebTestAppForCMK, auth_request: http.Request
+    wsgi_app: WebTestAppForCMK, auth_request: http.Request, with_user: tuple[UserId, str]
 ) -> None:
-    wsgi_app.get(auth_request)
+    # login user
+    wsgi_app.login(*with_user)
 
     user_id = session.user.ident
     session_id = session.session_info.session_id
 
     # Make the session older than it actually was
+    # user is logged out.
     old_session = session.session_info
     old_session.started_at -= 3600 * 2
     old_session.last_activity -= 3600 * 2
@@ -340,7 +349,10 @@ def test_update_unknown_session(single_auth_request: SingleRequest) -> None:
 def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: SetConfig) -> None:
     user_id, session_info = single_auth_request()
     session.initialize(
-        user_id, auth_type="web_server", user_permissions=UserPermissions({}, {}, {}, [])
+        user_id,
+        auth_type="web_server",
+        user_permissions=UserPermissions({}, {}, {}, []),
+        secure_flag=False,
     )
     now = datetime.now()
     session.session_info = session_info
@@ -351,7 +363,10 @@ def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: 
 def test_logout_on_maximum_session_reached(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session.initialize(
-        user_id, auth_type="web_server", user_permissions=UserPermissions({}, {}, {}, [])
+        user_id,
+        auth_type="web_server",
+        user_permissions=UserPermissions({}, {}, {}, []),
+        secure_flag=False,
     )
     now = datetime.now()
     session.session_info = session_info
@@ -418,9 +433,12 @@ def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_with_previous_invalidated_session(user_id: UserId) -> None:
     session.initialize(
-        user_id, auth_type="web_server", user_permissions=UserPermissions({}, {}, {}, [])
+        user_id,
+        auth_type="web_server",
+        user_permissions=UserPermissions({}, {}, {}, []),
+        secure_flag=False,
     )
-    session.invalidate()
+    session.logout()
     userdb.session.save_session_infos(
         user_id, {session.session_info.session_id: session.session_info}
     )
@@ -514,9 +532,11 @@ def test_invalidate_session(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session_id = session_info.session_id
     assert session_id in load_session_infos(user_id)
-    session_info.invalidate()
+    session_info.logout()
     userdb.session.save_session_infos(user_id, {session_id: session_info})
-    assert load_session_infos(user_id)[session_info.session_id].logged_out
+    assert (
+        load_session_infos(user_id)[session_info.session_id].session_state == "credentials_needed"
+    )
 
 
 def test_get_last_activity(single_auth_request: SingleRequest) -> None:

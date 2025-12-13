@@ -152,6 +152,7 @@ class UserChangePasswordPage(Page):
                 connection_id=connection_id,
             )
         )
+        session.check_and_update_session_state()
 
         flash(_("Successfully changed password."))
 
@@ -200,13 +201,6 @@ class UserChangePasswordPage(Page):
         assert user.id is not None
 
         users = userdb.load_users()
-
-        change_reason = request.get_ascii_input("reason")
-
-        if change_reason == "expired":
-            html.p(_("Your password is too old, you need to choose a new password."))
-        elif change_reason == "enforced":
-            html.p(_("You are required to change your password before proceeding."))
 
         user_spec = users.get(user.id)
         if user_spec is None:

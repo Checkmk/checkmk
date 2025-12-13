@@ -90,6 +90,11 @@ from cmk.gui.userdb import (
     UserAttribute,
     UserSpec,
 )
+from cmk.gui.userdb.session import (
+    active_sessions,
+    load_session_infos,
+    save_session_infos,
+)
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -167,14 +172,32 @@ def _handle_failed_auth(
         log_logon_failures=log_logon_failures,
     )
     if user_locked(user_id, user_spec):
-        session.invalidate()
-        session.persist()
+        session.logout()
         raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
 
 
 def _handle_success_auth(user_id: UserId) -> None:
-    session.session_info.two_factor_completed = True
+    session.check_and_update_session_state()
     save_custom_attr(user_id, "num_failed_logins", 0)
+
+
+def _sync_valid_session_2fa_checking() -> None:
+    # If 2fa is already enabled then no need force other sessions into a
+    # require 2fa state.
+    if is_two_factor_login_enabled(session.user.ident):
+        return
+
+    all_user_sessions_infos = active_sessions(
+        load_session_infos(session.user.ident, lock=True), datetime.datetime.now()
+    )
+
+    updated_infos = {}
+    for id, session_info in all_user_sessions_infos.items():
+        if session_info.session_state == "logged_in" and id != session.session_info.session_id:
+            session_info.session_state = "second_factor_auth_needed"
+        updated_infos[id] = session_info
+
+    save_session_infos(session.user.ident, updated_infos)
 
 
 def _sec_notification_event_from_2fa_event(
@@ -295,7 +318,6 @@ class UserTwoFactorOverview(Page):
             else:
                 return
             if not is_two_factor_login_enabled(user.id):
-                session.session_info.two_factor_completed = False
                 if credentials["backup_codes"]:
                     _handle_revoke_all_backup_codes(request, user, credentials, config.sites)
 
@@ -821,8 +843,9 @@ class RegisterTotpSecret(Page):
                 # set at login. We want them to then enter the main site after a successful TOTP add.
                 session.session_info.two_factor_required = False
                 origtarget = "index.py"
-            session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
+            _sync_valid_session_2fa_checking()
+            session.check_and_update_session_state()
             _save_credentials_all_sites(
                 request,
                 user,
@@ -1108,7 +1131,7 @@ class UserWebAuthnRegisterBegin(JsonPage):
         assert user.id is not None
 
         if not session.two_factor_enforced(
-            UserPermissions.from_config(ctx.config, permission_registry)
+            user.ident, UserPermissions.from_config(ctx.config, permission_registry)
         ):
             user.need_permission("general.manage_2fa")
 
@@ -1137,7 +1160,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         assert user.id is not None
 
         if not session.two_factor_enforced(
-            UserPermissions.from_config(ctx.config, permission_registry)
+            user.ident, UserPermissions.from_config(ctx.config, permission_registry)
         ):
             user.need_permission("general.manage_2fa")
 
@@ -1181,7 +1204,8 @@ class UserWebAuthnRegisterComplete(JsonPage):
         save_two_factor_credentials(user.id, credentials)
         _log_event_usermanagement(TwoFactorEventType.webauthn_add_)
         send_security_message(user.id, SecurityNotificationEvent.webauthn_added)
-        session.session_info.two_factor_completed = True
+        _sync_valid_session_2fa_checking()
+        session.check_and_update_session_state()
         flash(_("Registration successful"))
         navigation_json = {"status": "OK", "redirect": False, "replicate": False}
         if has_distributed_setup_remote_sites(ctx.config.sites):
@@ -1398,6 +1422,6 @@ class UserWebAuthnLoginComplete(JsonPage):
             raise
 
         session.session_info.webauthn_action_state = None
-        session.session_info.two_factor_completed = True
+        session.check_and_update_session_state()
         save_custom_attr(user.id, "num_failed_logins", 0)
         return {"status": "OK"}

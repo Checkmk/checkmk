@@ -117,6 +117,99 @@ AuthType = Literal[
 DismissableWarning = Literal["notification_fallback", "immediate_slideout_change", "changes-info"]
 
 
+SessionState = Literal[
+    "credentials_needed",
+    "second_factor_auth_needed",
+    "second_factor_setup_needed",
+    "password_change_needed",
+    "logged_in",
+]
+
+
+class SessionStateMachine:
+    """A state machine for the login process.
+
+    config = 2fa enabled
+    auth_needed = enforcement
+
+    Valid transitions:
+        credentials_needed          -> (any)
+        second_factor_auth_needed   -> password_change_needed, logged_in
+        second_factor_setup_needed  -> password_change_needed, logged_in
+        password_change_needed      -> logged_in
+        (any)                       -> credentials_needed
+    """
+
+    def __init__(self, initial_state: SessionState = "credentials_needed") -> None:
+        self.state = initial_state
+
+    def transition(
+        self,
+        *,
+        check_if_2fa_auth_is_needed: Callable[[], bool],
+        check_if_2fa_setup_is_needed: Callable[[], bool],
+        check_if_pw_change_is_needed: Callable[[], bool],
+    ) -> SessionState:
+        # note those checks can be expensive operations, e.g. loading user info from disk; that's
+        # why they are callbacks
+        match self.state:
+            case "credentials_needed":
+                self.credentials_verified(
+                    check_if_2fa_auth_is_needed=check_if_2fa_auth_is_needed,
+                    check_if_2fa_setup_is_needed=check_if_2fa_setup_is_needed,
+                    check_if_pw_change_is_needed=check_if_pw_change_is_needed,
+                )
+            case "second_factor_auth_needed":
+                self.second_factor_authenticated(check_if_pw_change_is_needed)
+            case "second_factor_setup_needed":
+                self.second_factor_configured(check_if_pw_change_is_needed)
+            case "password_change_needed":
+                self.password_changed()
+            case "logged_in":
+                return self.state
+            case _:
+                raise ValueError(f"Invalid state to transition: {self.state}")
+
+        return self.state
+
+    def credentials_verified(
+        self,
+        *,
+        check_if_2fa_auth_is_needed: Callable[[], bool],
+        check_if_2fa_setup_is_needed: Callable[[], bool],
+        check_if_pw_change_is_needed: Callable[[], bool],
+    ) -> None:
+        # NOTE: order matters here
+        if check_if_2fa_auth_is_needed():
+            self.state = "second_factor_auth_needed"
+            return
+
+        if check_if_2fa_setup_is_needed():
+            self.state = "second_factor_setup_needed"
+            return
+
+        if check_if_pw_change_is_needed():
+            self.state = "password_change_needed"
+            return
+
+        self.state = "logged_in"
+
+    def second_factor_configured(self, check_if_pw_change_is_needed: Callable[[], bool]) -> None:
+        if check_if_pw_change_is_needed():
+            self.state = "password_change_needed"
+        else:
+            self.state = "logged_in"
+
+    def second_factor_authenticated(self, check_if_pw_change_is_needed: Callable[[], bool]) -> None:
+        if check_if_pw_change_is_needed():
+            self.state = "password_change_needed"
+        else:
+            self.state = "logged_in"
+
+    def password_changed(self) -> None:
+        self.state = "logged_in"
+
+
 @dataclass
 class SessionInfo:
     session_id: SessionId
@@ -125,20 +218,23 @@ class SessionInfo:
     csrf_token: str = field(default_factory=lambda: str(uuid.uuid4()))
     flashes: list[tuple[str, str]] = field(default_factory=list)
     encrypter_secret: str = field(default_factory=lambda: Secret.generate(32).b64_str)
-    # In case it is enabled: Was it already authenticated?
-    two_factor_completed: bool = False
     # Enable a 'login' state for enforcing two factor
     two_factor_required: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
     webauthn_action_state: WebAuthnActionState | None = None
 
-    logged_out: bool = field(default=False)
+    # None is only required for bootstrapping the object; valid sessions always have an auth_type
     auth_type: AuthType | None = None
 
-    def invalidate(self) -> None:
+    session_state: SessionState = field(default="credentials_needed")
+
+    @property
+    def is_logged_out(self) -> bool:
+        return self.session_state == "credentials_needed"
+
+    def logout(self) -> None:
         """Called when a user logged out"""
-        self.auth_type = None
-        self.logged_out = True
+        self.session_state = "credentials_needed"
 
 
 class LastLoginInfo(TypedDict, total=False):

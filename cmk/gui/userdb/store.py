@@ -869,20 +869,7 @@ def convert_session_info(value: str) -> dict[str, SessionInfo]:
     if value == "":
         return {}
 
-    if value.startswith("{"):
-        return {k: SessionInfo(**v) for k, v in ast.literal_eval(value).items()}
-
-    # Transform pre 2.0 values
-    session_id, last_activity = value.split("|", 1)
-    return {
-        session_id: SessionInfo(
-            session_id=session_id,
-            # We don't have that information. The best guess is to use the last activitiy
-            started_at=int(last_activity),
-            last_activity=int(last_activity),
-            flashes=[],
-        ),
-    }
+    return {k: SessionInfo(**v) for k, v in ast.literal_eval(value).items()}
 
 
 def release_users_lock() -> None:

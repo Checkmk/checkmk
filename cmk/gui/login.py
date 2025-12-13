@@ -34,7 +34,6 @@ from cmk.gui.logged_in import (
     LoggedInNobody,
     LoggedInRemoteSite,
     LoggedInSuperUser,
-    LoggedInUser,
     user,
 )
 from cmk.gui.main import get_page_heading
@@ -208,27 +207,21 @@ class LoginPage(Page):
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                session.login(
-                    LoggedInUser(
-                        username,
-                        (
-                            user_permissions := UserPermissions.from_config(
-                                config, permission_registry
-                            )
-                        ),
-                    ),
+                session_state = session.login(
+                    username,
+                    UserPermissions.from_config(config, permission_registry),
                     request.is_secure,
                 )
 
                 # This must happen before the enforced password change is
                 # checked in order to have the redirects correct...
-                if userdb.is_two_factor_login_enabled(username):
+                if session_state == "second_factor_auth_needed":
                     raise HTTPRedirect(
                         "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                     )
 
                 # Having this before password updating to prevent redirect access issues
-                if session.two_factor_enforced(user_permissions):
+                if session_state == "second_factor_setup_needed":
                     session.session_info.two_factor_required = True
                     raise HTTPRedirect(
                         "user_two_factor_enforce.py?_origtarget=%s"
@@ -243,10 +236,8 @@ class LoginPage(Page):
 
                 # userdb.need_to_change_pw returns either None or the reason description why the
                 # password needs to be changed
-                if change_reason := userdb.need_to_change_pw(username, now):
-                    raise HTTPRedirect(
-                        f"user_change_pw.py?_origtarget={urlencode(origtarget)}&reason={change_reason}"
-                    )
+                if session_state == "password_change_needed":
+                    raise HTTPRedirect(f"user_change_pw.py?_origtarget={urlencode(origtarget)}")
 
                 # If user pasted e.g. a view to a link in mobile mode, redirect
                 # to the correct page
@@ -456,8 +447,7 @@ class LogoutPage(Page):
     def page(self, ctx: PageContext) -> None:
         assert user.id is not None
 
-        session.invalidate()
-        session.persist()
+        session.logout()
 
         if session.session_info.auth_type == "cookie":
             raise HTTPRedirect(url_prefix() + "check_mk/login.py")

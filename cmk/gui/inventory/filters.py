@@ -180,7 +180,7 @@ class _FilterNumberRange(Filter):
     def components(self) -> Iterable[FilterComponent]:
         unit_choices = {n: c.unit for n, c in self._unit_choices.items()}
 
-        def _components() -> Iterator[TextInput | Dropdown]:
+        def _from() -> Iterator[TextInput | Dropdown]:
             yield TextInput(
                 id=self._html_var_from,
                 label=_("From:"),
@@ -190,6 +190,8 @@ class _FilterNumberRange(Filter):
                     id=self._html_var_from_prefix,
                     choices=unit_choices,
                 )
+
+        def _to() -> Iterator[TextInput | Dropdown]:
             yield TextInput(
                 id=self._html_var_until,
                 label=_("To:"),
@@ -200,7 +202,8 @@ class _FilterNumberRange(Filter):
                     choices=unit_choices,
                 )
 
-        yield HorizontalGroup(components=list(_components()))
+        yield HorizontalGroup(components=list(_from()))
+        yield HorizontalGroup(components=list(_to()))
 
     def _get_bound(self, var: str, var_prefix: str | None) -> int | float | None:
         if var_prefix is not None and (choice := self._unit_choices.get(var_prefix)):

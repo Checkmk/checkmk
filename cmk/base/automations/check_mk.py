@@ -82,7 +82,6 @@ from cmk.base import config, sources
 from cmk.base.automations.automations import (
     Automation,
     AutomationContext,
-    Automations,
     load_config,
     load_plugins,
     MKAutomationError,
@@ -4116,190 +4115,130 @@ def automation_find_unknown_check_parameter_rule_sets(
     )
 
 
-def register_common_automations(automations: Automations) -> None:
-    automations.register(
+def automations_common() -> list[Automation]:
+    return [
         Automation(
             ident="service-discovery",
             handler=automation_service_discovery,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="special-agent-discovery-preview",
             handler=automation_special_agent_discovery_preview,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="service-discovery-preview",
             handler=automation_discovery_preview,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="autodiscovery",
             handler=automation_autodiscovery,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="set-autochecks-v2",
             handler=automation_set_autochecks_v2,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="update-host-labels",
             handler=automation_update_host_labels,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="rename-hosts",
             handler=AutomationRenameHosts().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="get-services-labels",
             handler=automation_get_service_labels,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="get-service-name",
             handler=automation_get_service_name,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="analyse-service",
             handler=AutomationAnalyseServices().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="analyse-host",
             handler=automation_analyse_host,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="analyze-host-rule-matches",
             handler=automation_analyze_host_rule_matches,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="analyze-service-rule-matches",
             handler=automation_analyze_service_rule_matches,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="analyze-host-rule-effectiveness",
             handler=automation_analyze_host_rule_effectiveness,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="delete-hosts",
             handler=AutomationDeleteHosts().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="delete-hosts-known-remote",
             handler=AutomationDeleteHostsKnownRemote().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="restart",
             handler=AutomationRestart().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="reload",
             handler=AutomationReload().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="get-configuration",
             handler=automation_get_configuration,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="get-check-information",
             handler=automation_get_check_information,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="get-section-information",
             handler=automation_get_section_information,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="scan-parents",
             handler=automation_scan_parents,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="diag-special-agent",
             handler=automation_diag_special_agent,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="ping-host",
             handler=automation_ping_host,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="diag-cmk-agent",
             handler=automation_diag_cmk_agent,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="diag-host",
             handler=AutomationDiagHost().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="active-check",
             handler=AutomationActiveCheck().execute,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="update-passwords-merged-file",
             handler=automation_update_passwords_merged_file,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="update-dns-cache",
             handler=automation_update_dns_cache,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="get-agent-output",
             handler=automation_get_agent_output,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="find-unknown-check-parameter-rule-sets",
             handler=automation_find_unknown_check_parameter_rule_sets,
-        )
-    )
+        ),
+    ]

@@ -39,11 +39,11 @@ import livestatus
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult
-from cmk.base.automations.automations import Automation, AutomationContext, Automations, load_config
+from cmk.base.automations.automations import Automation, AutomationContext, load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
-from cmk.base.modes.modes import Mode, Modes, Option
+from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import site, store, tty
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.hostaddress import HostName
@@ -104,29 +104,27 @@ class _DiagnosticsElement:
 SUFFIX = ".tar.gz"
 
 
-def register(
-    modes: Modes,
-    automations: Automations,
+def automation_create_diagnostics_dump(
     core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
-) -> None:
-    modes.register(
-        Mode(
-            long_option="create-diagnostics-dump",
-            handler_function=_make_mode_create_diagnostics_dump(core_performance_settings),
-            short_help="Create diagnostics dump",
-            long_help=[
-                "Create a dump containing information for diagnostic analysis "
-                "in the folder var/check_mk/diagnostics."
-            ],
-            sub_options=_get_diagnostics_dump_sub_options(),
-        )
+) -> Automation:
+    return Automation(
+        ident="create-diagnostics-dump",
+        handler=_make_automation_create_diagnostics_dump(core_performance_settings),
     )
 
-    automations.register(
-        Automation(
-            ident="create-diagnostics-dump",
-            handler=_make_automation_create_diagnostics_dump(core_performance_settings),
-        )
+
+def mode_create_diagnostics_dump(
+    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+) -> Mode:
+    return Mode(
+        long_option="create-diagnostics-dump",
+        handler_function=_make_mode_create_diagnostics_dump(core_performance_settings),
+        short_help="Create diagnostics dump",
+        long_help=[
+            "Create a dump containing information for diagnostic analysis "
+            "in the folder var/check_mk/diagnostics."
+        ],
+        sub_options=_get_diagnostics_dump_sub_options(),
     )
 
 

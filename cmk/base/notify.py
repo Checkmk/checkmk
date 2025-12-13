@@ -57,7 +57,6 @@ from cmk.base import config, events
 from cmk.base.automations.automations import (
     Automation,
     AutomationContext,
-    Automations,
     load_config,
     load_plugins,
 )
@@ -65,7 +64,7 @@ from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import (
     ConfigCache,
 )
-from cmk.base.modes.modes import Mode, Modes, Option
+from cmk.base.modes.modes import Mode, Option
 from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store
 from cmk.ccc.exceptions import (
@@ -237,52 +236,47 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
 #   '----------------------------------------------------------------------'
 
 
-def register(modes: Modes, automations: Automations) -> None:
-    modes.register(
-        Mode(
-            long_option="notify",
-            handler_function=_mode_notify,
-            argument=True,
-            argument_descr="MODE",
-            argument_optional=True,
-            short_help="Used to send notifications from core",
-            # TODO: Write long help
-            sub_options=[
-                Option(
-                    long_option="log-to-stdout",
-                    short_help="Also write log messages to console",
-                ),
-                Option(
-                    long_option="keepalive",
-                    short_help="Execute in keepalive mode (Commercial editions only)",
-                ),
-            ],
-        )
+def mode_notify() -> Mode:
+    return Mode(
+        long_option="notify",
+        handler_function=_mode_notify,
+        argument=True,
+        argument_descr="MODE",
+        argument_optional=True,
+        short_help="Used to send notifications from core",
+        # TODO: Write long help
+        sub_options=[
+            Option(
+                long_option="log-to-stdout",
+                short_help="Also write log messages to console",
+            ),
+            Option(
+                long_option="keepalive",
+                short_help="Execute in keepalive mode (Commercial editions only)",
+            ),
+        ],
     )
-    automations.register(
+
+
+def automations_notify() -> list[Automation]:
+    return [
         Automation(
             ident="notification-replay",
             handler=_automation_notification_replay,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="notification-analyse",
             handler=_automation_notification_analyse,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="notification-test",
             handler=_automation_notification_test,
-        )
-    )
-    automations.register(
+        ),
         Automation(
             ident="notification-get-bulks",
             handler=_automation_get_bulks,
-        )
-    )
+        ),
+    ]
 
 
 def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:

@@ -3495,7 +3495,7 @@ _HELP_MODE = Mode(
 )
 
 
-def common_modes() -> list[Mode]:
+def modes_common() -> list[Mode]:
     return [
         _HELP_MODE,
         _LIST_HOSTS_MODE,

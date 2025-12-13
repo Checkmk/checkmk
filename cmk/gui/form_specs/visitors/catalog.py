@@ -69,7 +69,8 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
                 }
             else:
                 resolved_value[topic_name] = {
-                    str(k): DataWrapper(v) for k, v in topic_value.items()
+                    str(k): v if isinstance(v, DefaultValue) else DataWrapper(v)
+                    for k, v in topic_value.items()
                 }
 
         return resolved_value

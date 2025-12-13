@@ -28,7 +28,7 @@ def make_check_period_config(
     matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> Callable[[HostName, ServiceName], TimeperiodName]:
-    """Create a callback that returns the check period for a given host/service in seconds."""
+    """Create a callback that returns the check period for a given host/service."""
     config = SingleServiceRulesetMatcherFirstParsed(
         host_ruleset=loaded_config.extra_service_conf.get("check_period", ()),
         default=SERVICE_CHECK_PERIOD,

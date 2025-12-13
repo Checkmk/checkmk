@@ -7,7 +7,7 @@
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
-from typing import NewType, NotRequired, TypedDict, TypeGuard
+from typing import Final, NewType, NotRequired, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
@@ -49,6 +49,17 @@ class TimeperiodSpec(TypedDict):
 
 
 TimeperiodSpecs = Mapping[TimeperiodName, TimeperiodSpec]
+
+TS_24X7: Final = TimeperiodSpec(
+    alias=_("Always"),
+    monday=[("00:00", "24:00")],
+    tuesday=[("00:00", "24:00")],
+    wednesday=[("00:00", "24:00")],
+    thursday=[("00:00", "24:00")],
+    friday=[("00:00", "24:00")],
+    saturday=[("00:00", "24:00")],
+    sunday=[("00:00", "24:00")],
+)
 
 
 def get_all_timeperiods(raw_configured_timeperiods: object) -> TimeperiodSpecs:
@@ -97,18 +108,7 @@ def is_builtin_timeperiod(name: TimeperiodName) -> bool:
 
 
 def builtin_timeperiods() -> TimeperiodSpecs:
-    return {
-        TimeperiodName("24X7"): TimeperiodSpec(
-            alias=_("Always"),
-            monday=[("00:00", "24:00")],
-            tuesday=[("00:00", "24:00")],
-            wednesday=[("00:00", "24:00")],
-            thursday=[("00:00", "24:00")],
-            friday=[("00:00", "24:00")],
-            saturday=[("00:00", "24:00")],
-            sunday=[("00:00", "24:00")],
-        )
-    }
+    return {TimeperiodName("24X7"): TS_24X7}
 
 
 def _is_time_range(obj: object) -> TypeGuard[DayTimeFrame]:

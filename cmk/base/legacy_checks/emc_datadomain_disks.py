@@ -8,49 +8,54 @@
 
 from collections.abc import Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_DATADOMAIN
 
-check_info = {}
+
+def inventory_emc_datadomain_disks(section: Sequence[StringTable]) -> DiscoveryResult:
+    for line in section[0]:
+        yield Service(item=f"{line[0]}-{line[1]}")
 
 
-def inventory_emc_datadomain_disks(info):
-    inventory = []
-    for line in info[0]:
-        item = line[0] + "-" + line[1]
-        inventory.append((item, None))
-    return inventory
-
-
-def check_emc_datadomain_disks(item, _no_params, info):
+def check_emc_datadomain_disks(item: str, section: Sequence[StringTable]) -> CheckResult:
     state_table = {
-        "1": ("Operational", 0),
-        "2": ("Unknown", 3),
-        "3": ("Absent", 1),
-        "4": ("Failed", 2),
-        "5": ("Spare", 0),
-        "6": ("Available", 0),
-        "10": ("System", 0),
+        "1": ("Operational", State.OK),
+        "2": ("Unknown", State.UNKNOWN),
+        "3": ("Absent", State.WARN),
+        "4": ("Failed", State.CRIT),
+        "5": ("Spare", State.OK),
+        "6": ("Available", State.OK),
+        "10": ("System", State.OK),
     }
-    for line in info[0]:
+    for line in section[0]:
         if item == line[0] + "-" + line[1]:
             model = line[2]
             firmware = line[3]
             serial = line[4]
             capacity = line[5]
             dev_state = line[6]
-            dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
-            dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
-            yield dev_state_rc, dev_state_str
+            dev_state_str, dev_state_rc = state_table.get(dev_state, ("Unknown", State.UNKNOWN))
+            yield Result(state=dev_state_rc, summary=dev_state_str)
             index = int(line[7].split(".")[1]) - 1
-            if len(info[1]) > index:
-                busy = info[1][index][0]
-                perfdata = [("busy", busy + "%")]
-                yield 0, "busy %s%%" % busy, perfdata
-            yield (
-                0,
-                f"Model {model}, Firmware {firmware}, Serial {serial}, Capacity {capacity}",
+            if len(section[1]) > index:
+                busy = section[1][index][0]
+                yield Result(state=State.OK, summary=f"busy {busy}%")
+                yield Metric("busy", float(busy))
+            yield Result(
+                state=State.OK,
+                summary=f"Model {model}, Firmware {firmware}, Serial {serial}, Capacity {capacity}",
             )
 
 
@@ -58,9 +63,8 @@ def parse_emc_datadomain_disks(string_table: Sequence[StringTable]) -> Sequence[
     return string_table
 
 
-check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
+snmp_section_emc_datadomain_disks = SNMPSection(
     name="emc_datadomain_disks",
-    parse_function=parse_emc_datadomain_disks,
     detect=DETECT_DATADOMAIN,
     fetch=[
         SNMPTree(
@@ -72,6 +76,12 @@ check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
             oids=["6"],
         ),
     ],
+    parse_function=parse_emc_datadomain_disks,
+)
+
+
+check_plugin_emc_datadomain_disks = CheckPlugin(
+    name="emc_datadomain_disks",
     service_name="Hard Disk %s",
     discovery_function=inventory_emc_datadomain_disks,
     check_function=check_emc_datadomain_disks,

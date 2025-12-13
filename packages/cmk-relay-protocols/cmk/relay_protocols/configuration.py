@@ -7,7 +7,7 @@ from __future__ import annotations
 import enum
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Annotated, Final, Literal, NamedTuple, NewType, Self
+from typing import Annotated, Final, NamedTuple, NewType, Self
 
 from pydantic import BaseModel, Field
 
@@ -40,9 +40,7 @@ class Schedule(BaseModel):
 
 class Service(BaseModel):
     name: Annotated[str, Field(description="name of the service in checkmk")]
-    command: Annotated[
-        Literal["@cmk"], Field(description="command for execute, can have routing prefix @cmk")
-    ]
+    command: Annotated[str, Field(description="command for execute, can have routing prefix @cmk")]
     schedule: Annotated[Schedule, Field(description="Service scheduling configuration")]
 
 

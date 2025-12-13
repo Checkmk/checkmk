@@ -2563,9 +2563,8 @@ def test_host_config_add_discovery_check(
                 },
             ],
         )
+    ts.set_option("inventory_check_interval", 42)
     config_cache = ts.apply(monkeypatch)
-
-    monkeypatch.setattr(config, "inventory_check_interval", 42)
 
     assert config_cache.discovery_check_parameters(xyz_host).commandline_only is result
 

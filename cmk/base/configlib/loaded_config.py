@@ -83,6 +83,7 @@ class LoadedConfigFragment:
     use_dns_cache: bool
     ipaddresses: Mapping[HostName, HostAddress]
     ipv6addresses: Mapping[HostName, HostAddress]
+    inventory_check_interval: object
     fake_dns: str | None
     tag_config: cmk.utils.tags.TagConfigSpec
     host_tags: ruleset_matcher.TagsOfHosts

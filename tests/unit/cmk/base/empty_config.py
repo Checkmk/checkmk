@@ -45,6 +45,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     use_dns_cache=True,
     ipaddresses={},
     ipv6addresses={},
+    inventory_check_interval=None,
     fake_dns=None,
     tag_config={
         "tag_groups": [],

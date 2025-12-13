@@ -671,6 +671,7 @@ def _perform_post_config_loading_actions(
         use_dns_cache=use_dns_cache,
         ipaddresses=ipaddresses,
         ipv6addresses=ipv6addresses,
+        inventory_check_interval=inventory_check_interval,
         fake_dns=fake_dns,
         tag_config=tag_config,
         host_tags=host_tags,
@@ -2261,9 +2262,15 @@ class ConfigCache:
     def discovery_check_parameters(self, host_name: HostName) -> DiscoveryCheckParameters:
         """Compute the parameters for the discovery check for a host"""
 
+        match self._loaded_config.inventory_check_interval:
+            case int() | None as inv_interval:
+                pass
+            case other:
+                raise TypeError(other)
+
         defaults = DiscoveryCheckParameters(
-            commandline_only=inventory_check_interval is None,
-            check_interval=int(inventory_check_interval or 0),
+            commandline_only=inv_interval is None,
+            check_interval=int(inv_interval or 0),
             severity_new_services=int(inventory_check_severity),
             severity_vanished_services=0,
             severity_new_host_labels=1,

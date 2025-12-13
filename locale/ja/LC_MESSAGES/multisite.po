@@ -8740,6 +8740,10 @@ msgid "Azure NAT Gateways datapath availability"
 msgstr "サービスの可用性を見る"
 
 #, fuzzy
+msgid "Azure Network IO"
+msgstr "ネットワークIO"
+
+#, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "GCP/Redis CPU使用率"
 
@@ -39443,6 +39447,10 @@ msgstr "すべてのスケジュールされたレポートを管理する"
 
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDBコネクションの管理"
+
+#, fuzzy
+msgid "Manage OAuth2 connections"
+msgstr "接続を追加"
 
 msgid "Manage OpenTelemetry configurations (experimental)"
 msgstr "OpenTelemetry の設定を管理する（実験的機能）"
@@ -72329,6 +72337,14 @@ msgstr ""
 "このルールセットでは、データベースのデッドロックのレベルを設定することができ"
 "ます"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the the time since last AD "
+"Connect sync."
+msgstr ""
+"このルールセットで、日々のストレージの使用コストに関するレベルを設定すること"
+"ができます。"
+
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
@@ -73959,6 +73975,10 @@ msgid ""
 msgstr ""
 "最新のCronJobジョブが設定時間より長く実行されている場合、アラートまでの時間"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "視覚情報の有効期限までの時間"
+
 msgid "Time until credentials expiration"
 msgstr "視覚情報の有効期限までの時間"
 
@@ -73967,6 +73987,10 @@ msgstr "サイクル開始後、変更が強制的にアクティブ化される
 
 msgid "Time until license expiration"
 msgstr "ライセンスの有効期限が切れるまでの時間"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "視覚情報の有効期限までの時間"
 
 msgid "Time usage by phase"
 msgstr "フェーズごとの時間使用"
@@ -83122,6 +83146,11 @@ msgstr ""
 "す。"
 
 msgid ""
+"With this permission set, users can manage OAuth2 connections for "
+"authentication."
+msgstr ""
+
+msgid ""
 "With this rule you can set limits for the VACUUM and ANALYZE operation of a "
 "PostgreSQL database. Keep in mind that each table within a database is "
 "checked with this limits."
@@ -89851,6 +89880,26 @@ msgstr "エージェント%sが成功しました"
 #, fuzzy
 msgid "Go back to restart authorization process"
 msgstr "認証リクエスト作成不可"
+
+#, fuzzy
+msgid "Title is required."
+msgstr "名前は必須です。"
+
+#, fuzzy
+msgid "Tenant ID is required."
+msgstr "ユニークIDですが必須。"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "値は文字列であること"
+
+#, fuzzy
+msgid "Client ID is required."
+msgstr "ユニークIDですが必須。"
+
+#, fuzzy
+msgid "Client ID must be a valid UUID."
+msgstr "値は文字列であること"
 
 #, fuzzy
 msgid "Define OAuth2 parameter"

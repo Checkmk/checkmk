@@ -8973,6 +8973,10 @@ msgstr "Azure NAT Gateways Durchsatz"
 msgid "Azure NAT Gateways datapath availability"
 msgstr "Verfügbarkeit des Azure NAT Gateways Datapath"
 
+#, fuzzy
+msgid "Azure Network IO"
+msgstr "Netzwerk-E/A"
+
 msgid "Azure Redis CPU utilization"
 msgstr "Azure Redis CPU-Auslastung"
 
@@ -40249,6 +40253,10 @@ msgstr "Alle geplanten Berichte verwalten"
 
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDB-Verbindungen verwalten"
+
+#, fuzzy
+msgid "Manage OAuth2 connections"
+msgstr "OAuth2-Verbindung"
 
 msgid "Manage OpenTelemetry configurations (experimental)"
 msgstr "Verwalte die OpenTelemetry-Konfigurationen (experimentell)"
@@ -74140,6 +74148,14 @@ msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für die Deadlocks in der "
 "Datenbank zu konfigurieren"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the the time since last AD "
+"Connect sync."
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für die Kosten der täglichen "
+"Auslastung zu konfigurieren."
+
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
@@ -75849,6 +75865,10 @@ msgstr ""
 "Zeit bis zum Alert, wenn der letzte Cronjob-Job länger als die eingestellte "
 "Zeit gelaufen ist"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "Verbleibende Zeit bis zum Ablauf der Berechtigungsnachweise"
+
 msgid "Time until credentials expiration"
 msgstr "Verbleibende Zeit bis zum Ablauf der Berechtigungsnachweise"
 
@@ -75857,6 +75877,10 @@ msgstr "Zeit bis zur erzwungenen Aktivierung von Änderungen nach Zyklusstart"
 
 msgid "Time until license expiration"
 msgstr "Verbleibende Zeit bis zum Ablauf der Lizenz"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "Verbleibende Zeit bis zum Ablauf der Berechtigungsnachweise"
 
 msgid "Time usage by phase"
 msgstr "Ausführungszeit nach Phase"
@@ -85226,6 +85250,11 @@ msgstr ""
 "unvollständige Baumansicht des Status."
 
 msgid ""
+"With this permission set, users can manage OAuth2 connections for "
+"authentication."
+msgstr ""
+
+msgid ""
 "With this rule you can set limits for the VACUUM and ANALYZE operation of a "
 "PostgreSQL database. Keep in mind that each table within a database is "
 "checked with this limits."
@@ -91974,6 +92003,26 @@ msgstr "OAuth2-Verbindung wurde erfolgreich erstellt!"
 
 msgid "Go back to restart authorization process"
 msgstr "Zurückgehen, um Autorisierungsprozess erneut zu starten"
+
+#, fuzzy
+msgid "Title is required."
+msgstr "Name ist erforderlich."
+
+#, fuzzy
+msgid "Tenant ID is required."
+msgstr "Eindeutige ID ist erforderlich."
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "Wert muss eine gültige URL sein"
+
+#, fuzzy
+msgid "Client ID is required."
+msgstr "Eindeutige ID ist erforderlich."
+
+#, fuzzy
+msgid "Client ID must be a valid UUID."
+msgstr "Wert muss eine gültige URL sein"
 
 msgid "Define OAuth2 parameter"
 msgstr "OAuth2-Parameter definieren"

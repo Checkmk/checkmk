@@ -9355,6 +9355,10 @@ msgid "Azure NAT Gateways datapath availability"
 msgstr "Vezi disponibilitatea"
 
 #, fuzzy
+msgid "Azure Network IO"
+msgstr "Rețea IO"
+
+#, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "GCP/Redis Utilizare CPU"
 
@@ -42008,6 +42012,10 @@ msgstr "Gestionați toate rapoartele programate"
 
 msgid "Manage InfluxDB connections"
 msgstr "Gestionați conexiunile InfluxDB"
+
+#, fuzzy
+msgid "Manage OAuth2 connections"
+msgstr "Adăugați o conexiune"
 
 #, fuzzy
 msgid "Manage OpenTelemetry configurations (experimental)"
@@ -77028,6 +77036,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for the the time since last AD "
+"Connect sync."
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
 msgstr ""
@@ -78768,6 +78784,10 @@ msgstr ""
 "Timpul până la alertă, în cazul în care ultima sarcină CronJob a fost "
 "executată mai mult decât timpul stabilit"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "Timpul până la expirarea acreditărilor"
+
 msgid "Time until credentials expiration"
 msgstr "Timpul până la expirarea acreditărilor"
 
@@ -78777,6 +78797,10 @@ msgstr "Comentariu pentru activarea modificărilor"
 
 msgid "Time until license expiration"
 msgstr "Timp până la expirarea licenței"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "Timpul până la expirarea acreditărilor"
 
 msgid "Time usage by phase"
 msgstr "Utilizarea timpului pe faze"
@@ -88917,6 +88941,11 @@ msgstr ""
 "elemente."
 
 msgid ""
+"With this permission set, users can manage OAuth2 connections for "
+"authentication."
+msgstr ""
+
+msgid ""
 "With this rule you can set limits for the VACUUM and ANALYZE operation of a "
 "PostgreSQL database. Keep in mind that each table within a database is "
 "checked with this limits."
@@ -95928,6 +95957,26 @@ msgstr "Agent %s a reușit"
 #, fuzzy
 msgid "Go back to restart authorization process"
 msgstr "Nu se poate crea o cerere de autentificare"
+
+#, fuzzy
+msgid "Title is required."
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Tenant ID is required."
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy
+msgid "Client ID is required."
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Client ID must be a valid UUID."
+msgstr "Valoarea trebuie să fie un șir de caractere"
 
 #, fuzzy
 msgid "Define OAuth2 parameter"

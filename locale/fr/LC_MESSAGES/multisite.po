@@ -9405,6 +9405,10 @@ msgid "Azure NAT Gateways datapath availability"
 msgstr "Voir la disponibilité"
 
 #, fuzzy
+msgid "Azure Network IO"
+msgstr "Réseau IO"
+
+#, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "Utilisation de l'unité centrale de GCP/Redis"
 
@@ -42206,6 +42210,10 @@ msgstr "Gérer tous les rapports programmés"
 
 msgid "Manage InfluxDB connections"
 msgstr "Gérer les connexions InfluxDB"
+
+#, fuzzy
+msgid "Manage OAuth2 connections"
+msgstr "Ajouter une connexion"
 
 #, fuzzy
 msgid "Manage OpenTelemetry configurations (experimental)"
@@ -77388,6 +77396,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for the the time since last AD "
+"Connect sync."
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
 msgstr ""
@@ -79152,6 +79168,10 @@ msgstr ""
 "Temps avant alerte, si le dernier travail CronJob est en cours depuis plus "
 "longtemps que le temps défini"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "Délai d'expiration des informations d'identification"
+
 msgid "Time until credentials expiration"
 msgstr "Délai d'expiration des informations d'identification"
 
@@ -79161,6 +79181,10 @@ msgstr "Commentaire pour l'activation des changements"
 
 msgid "Time until license expiration"
 msgstr "Temps jusqu'à l'expiration de la licence"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "Délai d'expiration des informations d'identification"
 
 msgid "Time usage by phase"
 msgstr "Utilisation du temps par phase"
@@ -89443,6 +89467,11 @@ msgstr ""
 "basés uniquement sur ces éléments."
 
 msgid ""
+"With this permission set, users can manage OAuth2 connections for "
+"authentication."
+msgstr ""
+
+msgid ""
 "With this rule you can set limits for the VACUUM and ANALYZE operation of a "
 "PostgreSQL database. Keep in mind that each table within a database is "
 "checked with this limits."
@@ -96486,6 +96515,26 @@ msgstr "Agent %s réussi"
 #, fuzzy
 msgid "Go back to restart authorization process"
 msgstr "Impossible de créer une demande d'authentification"
+
+#, fuzzy
+msgid "Title is required."
+msgstr "est nécessaire"
+
+#, fuzzy
+msgid "Tenant ID is required."
+msgstr "est nécessaire"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "La valeur doit être une chaîne de caractères"
+
+#, fuzzy
+msgid "Client ID is required."
+msgstr "est nécessaire"
+
+#, fuzzy
+msgid "Client ID must be a valid UUID."
+msgstr "La valeur doit être une chaîne de caractères"
 
 #, fuzzy
 msgid "Define OAuth2 parameter"

@@ -9348,6 +9348,10 @@ msgid "Azure NAT Gateways datapath availability"
 msgstr "Bekijk de beschikbaarheid"
 
 #, fuzzy
+msgid "Azure Network IO"
+msgstr "Netwerk IO"
+
+#, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "GCP/Redis CPU-gebruik"
 
@@ -41895,6 +41899,10 @@ msgstr "Alle geplande rapporten beheren"
 
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDB verbindingen beheren"
+
+#, fuzzy
+msgid "Manage OAuth2 connections"
+msgstr "Aansluiting toevoegen"
 
 #, fuzzy
 msgid "Manage OpenTelemetry configurations (experimental)"
@@ -76731,6 +76739,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for the the time since last AD "
+"Connect sync."
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
 msgstr ""
@@ -78469,6 +78485,10 @@ msgstr ""
 "Tijd tot waarschuwing, als de laatste CronJob-taak al langer loopt dan de "
 "ingestelde tijd"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "Tijd tot de vervaldatum van de referenties"
+
 msgid "Time until credentials expiration"
 msgstr "Tijd tot de vervaldatum van de referenties"
 
@@ -78478,6 +78498,10 @@ msgstr "Commentaar voor activering van wijzigingen"
 
 msgid "Time until license expiration"
 msgstr "Tijd tot licentievervaldatum"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "Tijd tot de vervaldatum van de referenties"
 
 msgid "Time usage by phase"
 msgstr "Tijdsgebruik per fase"
@@ -88667,6 +88691,11 @@ msgstr ""
 "gebaseerd."
 
 msgid ""
+"With this permission set, users can manage OAuth2 connections for "
+"authentication."
+msgstr ""
+
+msgid ""
 "With this rule you can set limits for the VACUUM and ANALYZE operation of a "
 "PostgreSQL database. Keep in mind that each table within a database is "
 "checked with this limits."
@@ -95656,6 +95685,26 @@ msgstr "Agent %s succesvol"
 #, fuzzy
 msgid "Go back to restart authorization process"
 msgstr "Kan geen authenticatieverzoek aanmaken"
+
+#, fuzzy
+msgid "Title is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Tenant ID is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "De waarde moet een string zijn"
+
+#, fuzzy
+msgid "Client ID is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Client ID must be a valid UUID."
+msgstr "De waarde moet een string zijn"
 
 #, fuzzy
 msgid "Define OAuth2 parameter"

@@ -9369,6 +9369,10 @@ msgid "Azure NAT Gateways datapath availability"
 msgstr "Ver a disponibilidade"
 
 #, fuzzy
+msgid "Azure Network IO"
+msgstr "IO de rede"
+
+#, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "Utilização da CPU do GCP/Redis"
 
@@ -41888,6 +41892,10 @@ msgstr "Gerir todos os relatórios agendados"
 
 msgid "Manage InfluxDB connections"
 msgstr "Gerir ligações InfluxDB"
+
+#, fuzzy
+msgid "Manage OAuth2 connections"
+msgstr "Adicionar conexão"
 
 #, fuzzy
 msgid "Manage OpenTelemetry configurations (experimental)"
@@ -76681,6 +76689,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for the the time since last AD "
+"Connect sync."
+msgstr ""
+"Esta regra permite que você configure níveis de inchaço para um espaço de "
+"tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
 msgstr ""
@@ -78411,6 +78427,10 @@ msgstr ""
 "Tempo até ao alerta, se a última tarefa CronJob estiver a ser executada há "
 "mais tempo do que o tempo definido"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "Tempo até à expiração das credenciais"
+
 msgid "Time until credentials expiration"
 msgstr "Tempo até à expiração das credenciais"
 
@@ -78420,6 +78440,10 @@ msgstr "Comentário para ativação das mudanças"
 
 msgid "Time until license expiration"
 msgstr "Tempo até a expiração da licença"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "Tempo até à expiração das credenciais"
 
 msgid "Time usage by phase"
 msgstr "Uso do tempo por fase"
@@ -88583,6 +88607,11 @@ msgstr ""
 "árvores de agregação incompletas com estado baseado apenas nesses itens."
 
 msgid ""
+"With this permission set, users can manage OAuth2 connections for "
+"authentication."
+msgstr ""
+
+msgid ""
 "With this rule you can set limits for the VACUUM and ANALYZE operation of a "
 "PostgreSQL database. Keep in mind that each table within a database is "
 "checked with this limits."
@@ -95549,6 +95578,26 @@ msgstr "Agente %s bem sucedido"
 #, fuzzy
 msgid "Go back to restart authorization process"
 msgstr "Não é possível criar um pedido de autenticação"
+
+#, fuzzy
+msgid "Title is required."
+msgstr "é necessário"
+
+#, fuzzy
+msgid "Tenant ID is required."
+msgstr "é necessário"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "O valor deve ser uma cadeia de caracteres"
+
+#, fuzzy
+msgid "Client ID is required."
+msgstr "é necessário"
+
+#, fuzzy
+msgid "Client ID must be a valid UUID."
+msgstr "O valor deve ser uma cadeia de caracteres"
 
 #, fuzzy
 msgid "Define OAuth2 parameter"

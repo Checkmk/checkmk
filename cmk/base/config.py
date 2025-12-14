@@ -1928,7 +1928,11 @@ class ConfigCache:
         ],
         *,
         filter_mode: FilterMode = FilterMode.NONE,
-        skip_ignored: bool = True,
+        # This was last set to `False` when computing the precompiled host
+        # checks for nagios in Checkmk 2.4.
+        # Let's keep this code around in the 2.5 branch in case changing that
+        # was a mistake.
+        skip_ignored: Literal[True] = True,
     ) -> HostCheckTable:
         # we blissfully ignore the plugins parameter here
         cache_key = (hostname, filter_mode, skip_ignored)

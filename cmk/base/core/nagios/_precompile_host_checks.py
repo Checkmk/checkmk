@@ -318,7 +318,6 @@ def _get_needed_plugins(
                 passive_service_name_config,
                 enforced_services_table,
                 filter_mode=FilterMode.INCLUDE_CLUSTERED,
-                skip_ignored=False,
             ).needed_check_names()
             if (plugin := agent_based_plugins.check_plugins.get(name))
         ),

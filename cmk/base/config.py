@@ -1927,15 +1927,13 @@ class ConfigCache:
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
         *,
-        use_cache: Literal[True] = True,
         filter_mode: FilterMode = FilterMode.NONE,
         skip_ignored: bool = True,
     ) -> HostCheckTable:
         # we blissfully ignore the plugins parameter here
-        cache_key = (hostname, filter_mode, skip_ignored) if use_cache else None
-        if cache_key:
-            with contextlib.suppress(KeyError):
-                return self._check_table_cache[cache_key]
+        cache_key = (hostname, filter_mode, skip_ignored)
+        with contextlib.suppress(KeyError):
+            return self._check_table_cache[cache_key]
 
         host_check_table = HostCheckTable(
             services=_aggregate_check_table_services(
@@ -1951,8 +1949,7 @@ class ConfigCache:
             )
         )
 
-        if cache_key:
-            self._check_table_cache[cache_key] = host_check_table
+        self._check_table_cache[cache_key] = host_check_table
 
         return host_check_table
 

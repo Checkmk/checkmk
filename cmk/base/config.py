@@ -1927,7 +1927,7 @@ class ConfigCache:
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
         *,
-        use_cache: bool = True,
+        use_cache: Literal[True] = True,
         filter_mode: FilterMode = FilterMode.NONE,
         skip_ignored: bool = True,
     ) -> HostCheckTable:

@@ -39,7 +39,7 @@ $(DEPS_INSTALL_BAZEL):
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
 	    //omd:deps_install_$(EDITION)
 	$(MKDIR) $(DESTDIR)
-	tar -C $(DESTDIR) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION).tar
+	tar -C $(DESTDIR) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION).tar.zst
 
 	#TODO: The following code should be executed by Bazel instead of make
 	# Fix sysconfigdata

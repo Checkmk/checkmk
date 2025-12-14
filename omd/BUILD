@@ -232,16 +232,8 @@ pkg_files(
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
     ],
-    # RPM packages are built different from debian packages
-    # The archive that is generated here will be packaed uncahnged
-    # whilst rpm packes are unpacked and repacked.
-    # Hence compression on sles is superfluous.
-    # Further, do to a bug in rules_pkg, we cannot set the extension via select and accept the output extension will
-    # always be .tar no matter if compression is used or not.
-    compressor = select({
-        "@cmk//distro:sles": None,
-        "//conditions:default": "@zstd//:zstd_cli",
-    }),
+    compressor = "@zstd//:zstd_cli",
+    extension = "tar.zst",
     package_dir_file = ":omd_root_dir",
     tags = ["manual"],
     deps = [

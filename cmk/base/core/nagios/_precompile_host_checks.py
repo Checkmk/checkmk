@@ -42,7 +42,6 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls_backend import load_special_agents
 from cmk.utils.ip_lookup import IPLookup, IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
@@ -252,7 +251,7 @@ def _make_needed_plugins_locations(
     plugins: AgentBasedPlugins,
 ) -> tuple[  # we need `list` for the weird template replacement technique
     list[PluginLocation],
-    list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
+    list[str],
 ]:
     needed_agent_based_plugins = _get_needed_plugins(
         config_cache, passive_service_name_config, enforced_services_table, hostname, plugins
@@ -272,8 +271,6 @@ def _make_needed_plugins_locations(
                 )
             )
 
-    needed_legacy_special_agents = _get_needed_legacy_special_agents(config_cache, hostname)
-
     needed_agent_based_sections = agent_based_register.filter_relevant_raw_sections(
         consumers=needed_agent_based_plugins,
         sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
@@ -285,7 +282,6 @@ def _make_needed_plugins_locations(
         ),
         _get_needed_legacy_check_files(
             itertools.chain(needed_agent_based_sections, needed_agent_based_plugins),
-            needed_legacy_special_agents,
         ),
     )
 
@@ -329,30 +325,13 @@ def _get_needed_plugins(
     ]
 
 
-def _get_needed_legacy_special_agents(config_cache: ConfigCache, host_name: HostName) -> set[str]:
-    ssc_api_special_agents = {
-        p.name for p in load_special_agents(raise_errors=cmk.ccc.debug.enabled()).values()
-    }
-    return {
-        f"agent_{name}"
-        for name, _p in config_cache.special_agents(host_name)
-        if name not in ssc_api_special_agents
-    }
-
-
 def _get_needed_legacy_check_files(
     # Note: we don't *have* any InventoryPlugins that match the condition below, but
     # it's easier to type it like this.
     plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
-    legacy_special_agent_names: set[str],
 ) -> list[str]:
     return sorted(
         {p.location.file_name for p in plugins if isinstance(p.location, LegacyPluginLocation)}
-        | {
-            f"{os.path.join(base, name)}.py"
-            for base in (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
-            for name in legacy_special_agent_names
-        }
     )
 
 

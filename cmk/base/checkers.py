@@ -141,15 +141,14 @@ class CheckerConfig:
     timeperiods_active: Mapping[str, bool]
 
 
-# TODO: inline.
 def _fetch_all(
     trigger: FetcherTrigger,
     sources: Iterable[Source],
-    *,
-    simulation: bool,
     file_cache_options: FileCacheOptions,
     mode: Mode,
-    secrets: AdHocSecrets | None = None,
+    secrets: AdHocSecrets | None,
+    *,
+    simulation: bool,
 ) -> Sequence[
     tuple[
         SourceInfo,
@@ -505,9 +504,10 @@ class CMKFetcher:
                     ),
                     metric_backend_fetcher=self.metric_backend_fetcher_factory(current_host_name),
                 ),
-                simulation=self.simulation_mode,
                 file_cache_options=self.file_cache_options,
                 mode=self.mode,
+                secrets=None,  # TODO: switch to ad-hoc secrets.
+                simulation=self.simulation_mode,
             )
         ]
 

@@ -1843,15 +1843,11 @@ def test_create_host_with_metrics_association(clients: ClientRegistry) -> None:
     metrics_association_attr = [
         "enabled",
         {
-            "attribute_filters": [
-                {"attribute_type": "resource", "attribute_key": "key1", "attribute_value": "val1"},
-                {"attribute_type": "scope", "attribute_key": "key2", "attribute_value": "val2"},
-                {
-                    "attribute_type": "data_point",
-                    "attribute_key": "key3",
-                    "attribute_value": "val3",
-                },
-            ],
+            "attribute_filters": {
+                "resource_attributes": [{"key": "key1", "value": "val1"}],
+                "scope_attributes": [{"key": "key2", "value": "val2"}],
+                "data_point_attributes": [{"key": "key3", "value": "val3"}],
+            },
             "host_name_resource_attribute_key": "service.name",
         },
     ]
@@ -1899,7 +1895,7 @@ VALID_CONFIG = {
                 "enabled",
                 {
                     # Missing 'host_name_resource_attribute_key'
-                    "attribute_filters": []
+                    "attribute_filters": {}
                 },
             ],
             "Missing data for required field",
@@ -1910,10 +1906,10 @@ VALID_CONFIG = {
                 "enabled",
                 {
                     "host_name_resource_attribute_key": "service.name",
-                    "attribute_filters": "not-a-list",  # Wrong type
+                    "attribute_filters": "not-a-dict",  # Wrong type
                 },
             ],
-            "Not a valid list",
+            "Invalid input type",
             id="filters_type_mismatch",
         ),
         pytest.param(
@@ -1921,32 +1917,35 @@ VALID_CONFIG = {
                 "enabled",
                 {
                     "host_name_resource_attribute_key": "service.name",
-                    "attribute_filters": [
-                        # Missing 'attribute_type'
-                        {"attribute_key": "k", "attribute_value": "v"}
-                    ],
+                    "attribute_filters": {
+                        # Missing 'data_point_attributes'
+                        "resource_attributes": [{"key": "k", "value": "v"}],
+                        "scope_attributes": [],
+                    },
                 },
             ],
             "Missing data for required field",
-            id="filter_item_missing_key",
+            id="filters_missing_key",
         ),
         pytest.param(
             [
                 "enabled",
                 {
                     "host_name_resource_attribute_key": "service.name",
-                    "attribute_filters": [
-                        # Invalid Enum for 'attribute_type'
-                        {
-                            "attribute_type": "INVALID_TYPE",
-                            "attribute_key": "k",
-                            "attribute_value": "v",
-                        }
-                    ],
+                    "attribute_filters": {
+                        "resource_attributes": [{"key": "k", "value": "v"}],
+                        "scope_attributes": [
+                            {
+                                "key": "k",
+                                # Missing 'value' key
+                            }
+                        ],
+                        "data_point_attributes": [],
+                    },
                 },
             ],
-            "is not one of the enum values: ['resource', 'scope', 'data_point']",
-            id="filter_item_enum_violation",
+            "Missing data for required field",
+            id="filter_item_missing_key",
         ),
     ],
 )

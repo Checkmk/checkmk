@@ -117,25 +117,41 @@ class BaseHostTagGroup(BaseSchema):
 
 
 class AttributeFilterSchema(BaseSchema):
-    attribute_type = fields.String(
+    key = fields.String(
         required=True,
-        enum=["resource", "scope", "data_point"],
-        description="The type of the attribute (resource, scope, or data_point)",
-        example="resource",
+        description="The key of the attribute",
+        example="os.type",
     )
-    attribute_key = fields.String(
-        required=True, description="The key of the attribute", example="os.type"
+    value = fields.String(
+        required=True,
+        description="The value to match",
+        example="linux",
     )
-    attribute_value = fields.String(
-        required=True, description="The value to match", example="linux"
+
+
+class AttributeFiltersSchema(BaseSchema):
+    resource_attributes = fields.List(
+        fields.Nested(AttributeFilterSchema),
+        required=True,
+        description="List of resource attribute filters",
+    )
+    scope_attributes = fields.List(
+        fields.Nested(AttributeFilterSchema),
+        required=True,
+        description="List of scope attribute filters",
+    )
+    data_point_attributes = fields.List(
+        fields.Nested(AttributeFilterSchema),
+        required=True,
+        description="List of data point attribute filters",
     )
 
 
 class MetricsAssociationConfig(BaseSchema):
-    attribute_filters = fields.List(
-        fields.Nested(AttributeFilterSchema),
+    attribute_filters = fields.Nested(
+        AttributeFiltersSchema,
         required=True,
-        metadata={"description": "List of filters to apply"},
+        description="List of filters to apply",
     )
     host_name_resource_attribute_key = fields.String(
         required=True,

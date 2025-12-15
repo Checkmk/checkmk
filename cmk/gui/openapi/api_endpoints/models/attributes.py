@@ -748,18 +748,28 @@ HostLabels = dict[
 
 
 @api_model
-class MetricsAssociationFilterModel:
-    attribute_type: Literal["resource", "scope", "data_point"] = api_field(
-        description="Type of the target attribute to filter on (resource, scope or data point)."
+class MetricsAssociationAttributeFilterModel:
+    key: str = api_field(description="Target attribute key to filter on.")
+    value: str = api_field(description="Target attribute value to match.")
+
+
+@api_model
+class MetricsAssociationAttributeFiltersModel:
+    resource_attributes: Sequence[MetricsAssociationAttributeFilterModel] = api_field(
+        description="A list of resource attribute filters."
     )
-    attribute_key: str = api_field(description="Target attribute key to filter on.")
-    attribute_value: str = api_field(description="Target attribute value to match.")
+    scope_attributes: Sequence[MetricsAssociationAttributeFilterModel] = api_field(
+        description="A list of scope attribute filters."
+    )
+    data_point_attributes: Sequence[MetricsAssociationAttributeFilterModel] = api_field(
+        description="A list of data point attribute filters."
+    )
 
 
 @api_model
 class MetricsAssociationEnabledModel:
-    attribute_filters: Sequence[MetricsAssociationFilterModel] = api_field(
-        description="A list of filters. All filters must match (logical AND)."
+    attribute_filters: MetricsAssociationAttributeFiltersModel = api_field(
+        description="Attribute filters. All filters must match (logical AND)."
     )
     host_name_resource_attribute_key: str = api_field(
         description="The resource attribute used to compute the host name.",

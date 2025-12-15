@@ -220,31 +220,10 @@ def _anonymize_host_attributes(
                     if attr_mode == "disabled":
                         anon_attributes["metrics_association"] = attr_value.copy()
                     else:
-                        anon_attr_filters = []
-                        for attr_filter in attr_metric_assoc["attribute_filters"]:
-                            anon_attr_filter_spec = {
-                                "attribute_type": attr_filter["attribute_type"],
-                                "attribute_value": (
-                                    anon_interface.get_generic_mapping(
-                                        attr_filter["attribute_value"],
-                                        "metric_association_attr_value",
-                                    )
-                                ),
-                                "attribute_key": anon_interface.get_generic_mapping(
-                                    attr_filter["attribute_key"], "metric_association_attr_key"
-                                ),
-                            }
-
-                            anon_attr_filters.append(anon_attr_filter_spec)
-
-                        anon_metrics_assoc = {
-                            "host_name_resource_attribute_key": anon_interface.get_generic_mapping(
-                                attr_metric_assoc["host_name_resource_attribute_key"],
-                                "metrics_association",
-                            ),
-                            "attribute_filters": anon_attr_filters,
-                        }
-                        anon_attributes["metrics_association"] = anon_metrics_assoc
+                        anon_attributes["metrics_association"] = _anonymize_metrics_association(
+                            anon_interface,
+                            attr_metric_assoc,
+                        )
 
                 case "meta_data":
                     anon_attributes["meta_data"] = {
@@ -270,6 +249,48 @@ def _anonymize_host_attributes(
 
         anon_host_attributes[HostAddress(anon_interface.get_host(host))] = anon_attributes
     return anon_host_attributes
+
+
+def _anonymize_metrics_association(
+    anon_interface: AnonInterface,
+    value: Any,
+) -> Any:
+    return {
+        "host_name_resource_attribute_key": anon_interface.get_generic_mapping(
+            value["host_name_resource_attribute_key"],
+            "metrics_association",
+        ),
+        "attribute_filters": {
+            "resource_attributes": [
+                _anonymize_metrics_association_attribute_filter(anon_interface, attribute_filter)
+                for attribute_filter in value["attribute_filters"]["resource_attributes"]
+            ],
+            "scope_attributes": [
+                _anonymize_metrics_association_attribute_filter(anon_interface, attribute_filter)
+                for attribute_filter in value["attribute_filters"]["scope_attributes"]
+            ],
+            "data_point_attributes": [
+                _anonymize_metrics_association_attribute_filter(anon_interface, attribute_filter)
+                for attribute_filter in value["attribute_filters"]["data_point_attributes"]
+            ],
+        },
+    }
+
+
+def _anonymize_metrics_association_attribute_filter(
+    anon_interface: AnonInterface,
+    value: Any,
+) -> Any:
+    return {
+        "attribute_value": anon_interface.get_generic_mapping(
+            value["attribute_value"],
+            "metric_association_attr_value",
+        ),
+        "attribute_key": anon_interface.get_generic_mapping(
+            value["attribute_key"],
+            "metric_association_attr_key",
+        ),
+    }
 
 
 def _anonymize_explicit_host_conf(
@@ -305,33 +326,11 @@ def _anonymize_explicit_host_conf(
                 anon_explicit_host_conf["metrics_association"] = {}
                 for host, metrics_association_serialized in attr_conf.items():
                     host_metrics_association = json.loads(metrics_association_serialized)
-
-                    anon_attr_filters = []
-                    for attr_filter in host_metrics_association["attribute_filters"]:
-                        anon_attr_filter_spec = {
-                            "attribute_type": attr_filter["attribute_type"],
-                            "attribute_value": anon_interface.get_generic_mapping(
-                                attr_filter["attribute_value"],
-                                "metric_association_attr_value",
-                            ),
-                            "attribute_key": anon_interface.get_generic_mapping(
-                                attr_filter["attribute_key"],
-                                "metric_association_attr_key",
-                            ),
-                        }
-                        anon_attr_filters.append(anon_attr_filter_spec)
-
-                    anon_host_metrics_association = {
-                        "host_name_resource_attribute_key": anon_interface.get_generic_mapping(
-                            host_metrics_association["host_name_resource_attribute_key"],
-                            "metrics_association",
-                        ),
-                        "attribute_filters": anon_attr_filters,
-                    }
-
                     anon_explicit_host_conf["metrics_association"][
                         anon_interface.get_host(host)
-                    ] = json.dumps(anon_host_metrics_association)
+                    ] = json.dumps(
+                        _anonymize_metrics_association(anon_interface, host_metrics_association)
+                    )
 
             case str() if attr_name.startswith("_"):
                 # custom host attributes

@@ -111,14 +111,19 @@ class MetaData(TypedDict):
     updated_at: NotRequired[float]
 
 
-class MetricsAssociationFilter(TypedDict):
-    attribute_type: Literal["resource", "scope", "data_point"]
-    attribute_key: str
-    attribute_value: str
+class MetricsAssociationAttributeFilter(TypedDict):
+    key: str
+    value: str
+
+
+class MetricsAssociationAttributeFilters(TypedDict):
+    resource_attributes: Sequence[MetricsAssociationAttributeFilter]
+    scope_attributes: Sequence[MetricsAssociationAttributeFilter]
+    data_point_attributes: Sequence[MetricsAssociationAttributeFilter]
 
 
 class MetricsAssociationEnabled(TypedDict):
-    attribute_filters: Sequence[MetricsAssociationFilter]
+    attribute_filters: MetricsAssociationAttributeFilters
     host_name_resource_attribute_key: str
 
 

@@ -21,15 +21,16 @@ class AttributeType(Enum):
 
 @dataclass(frozen=True)
 class AttributeFilter:
-    attribute_type: AttributeType
-    attribute_key: str
-    attribute_value: str
+    key: str
+    value: str
 
 
 @dataclass(frozen=True)
 class MetricBackendFetcherConfig:
     host_name_resource_attribute_key: str
-    attribute_filters: Sequence[AttributeFilter]
+    resource_attribute_filters: Sequence[AttributeFilter]
+    scope_attribute_filters: Sequence[AttributeFilter]
+    data_point_attribute_filters: Sequence[AttributeFilter]
     check_interval: float
 
     @classmethod
@@ -37,18 +38,21 @@ class MetricBackendFetcherConfig:
         metrics_association = json.loads(metrics_association_raw)
 
         host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
-
-        filter_args = [
-            AttributeFilter(
-                attribute_type=AttributeType(f["attribute_type"]),
-                attribute_key=f["attribute_key"],
-                attribute_value=f["attribute_value"],
-            )
-            for f in metrics_association["attribute_filters"]
-        ]
+        attribute_filters = metrics_association["attribute_filters"]
 
         return cls(
             host_name_resource_attribute_key=host_name_resource_attribute_key,
-            attribute_filters=filter_args,
+            resource_attribute_filters=[
+                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
+                for attribute_filter in attribute_filters["resource_attributes"]
+            ],
+            scope_attribute_filters=[
+                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
+                for attribute_filter in attribute_filters["scope_attributes"]
+            ],
+            data_point_attribute_filters=[
+                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
+                for attribute_filter in attribute_filters["data_point_attributes"]
+            ],
             check_interval=check_interval,
         )

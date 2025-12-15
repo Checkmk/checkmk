@@ -21,8 +21,9 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     IPMIParametersModel,
     LockedByModel,
     MetaDataModel,
+    MetricsAssociationAttributeFilterModel,
+    MetricsAssociationAttributeFiltersModel,
     MetricsAssociationEnabledModel,
-    MetricsAssociationFilterModel,
     MetricsAssociationModel,
     NetworkScanModel,
     NetworkScanResultModel,
@@ -40,8 +41,9 @@ from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import (
     HostAttributes,
+    MetricsAssociationAttributeFilter,
+    MetricsAssociationAttributeFilters,
     MetricsAssociationEnabled,
-    MetricsAssociationFilter,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import TagGroupID
@@ -319,14 +321,35 @@ class HostViewAttributeModel(
                 "disabled"
                 if metrics_assoc[0] == "disabled"
                 else MetricsAssociationEnabledModel(
-                    attribute_filters=[
-                        MetricsAssociationFilterModel(
-                            attribute_type=attribute_filter["attribute_type"],
-                            attribute_key=attribute_filter["attribute_key"],
-                            attribute_value=attribute_filter["attribute_value"],
-                        )
-                        for attribute_filter in metrics_assoc[1]["attribute_filters"]
-                    ],
+                    attribute_filters=MetricsAssociationAttributeFiltersModel(
+                        resource_attributes=[
+                            MetricsAssociationAttributeFilterModel(
+                                key=attribute_filter["key"],
+                                value=attribute_filter["value"],
+                            )
+                            for attribute_filter in metrics_assoc[1]["attribute_filters"][
+                                "resource_attributes"
+                            ]
+                        ],
+                        scope_attributes=[
+                            MetricsAssociationAttributeFilterModel(
+                                key=attribute_filter["key"],
+                                value=attribute_filter["value"],
+                            )
+                            for attribute_filter in metrics_assoc[1]["attribute_filters"][
+                                "scope_attributes"
+                            ]
+                        ],
+                        data_point_attributes=[
+                            MetricsAssociationAttributeFilterModel(
+                                key=attribute_filter["key"],
+                                value=attribute_filter["value"],
+                            )
+                            for attribute_filter in metrics_assoc[1]["attribute_filters"][
+                                "data_point_attributes"
+                            ]
+                        ],
+                    ),
                     host_name_resource_attribute_key=metrics_assoc[1][
                         "host_name_resource_attribute_key"
                     ],
@@ -410,14 +433,29 @@ class HostUpdateAttributeModel(
                 else (
                     "enabled",
                     MetricsAssociationEnabled(
-                        attribute_filters=[
-                            MetricsAssociationFilter(
-                                attribute_type=attribute_filter.attribute_type,
-                                attribute_key=attribute_filter.attribute_key,
-                                attribute_value=attribute_filter.attribute_value,
-                            )
-                            for attribute_filter in self.metrics_association.attribute_filters
-                        ],
+                        attribute_filters=MetricsAssociationAttributeFilters(
+                            resource_attributes=[
+                                MetricsAssociationAttributeFilter(
+                                    key=attribute_filter.key,
+                                    value=attribute_filter.value,
+                                )
+                                for attribute_filter in self.metrics_association.attribute_filters.resource_attributes
+                            ],
+                            scope_attributes=[
+                                MetricsAssociationAttributeFilter(
+                                    key=attribute_filter.key,
+                                    value=attribute_filter.value,
+                                )
+                                for attribute_filter in self.metrics_association.attribute_filters.scope_attributes
+                            ],
+                            data_point_attributes=[
+                                MetricsAssociationAttributeFilter(
+                                    key=attribute_filter.key,
+                                    value=attribute_filter.value,
+                                )
+                                for attribute_filter in self.metrics_association.attribute_filters.data_point_attributes
+                            ],
+                        ),
                         host_name_resource_attribute_key=self.metrics_association.host_name_resource_attribute_key,
                     ),
                 )

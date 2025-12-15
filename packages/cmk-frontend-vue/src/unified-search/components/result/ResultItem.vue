@@ -12,6 +12,7 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
+import CmkButton from '@/components/CmkButton.vue'
 import type { CmkIconProps, IconSizeNames } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon'
 import CmkZebra from '@/components/CmkZebra.vue'
@@ -100,6 +101,15 @@ immediateWatch(
 onBeforeUnmount(() => {
   searchUtils.shortCuts.remove(shortcutCallbackIds.value)
 })
+
+const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | undefined) => {
+  if (target) {
+    window.open(target.url, 'main')
+    if (target.transition) {
+      showLoadingTransition(target.transition, title)
+    }
+  }
+}
 </script>
 
 <template>
@@ -133,6 +143,26 @@ onBeforeUnmount(() => {
             :context="props.context ? props.context : ''"
           ></ResultItemTitle>
         </div>
+        <div
+          v-for="(ib, i) in props.inline_buttons"
+          ref="item-focus-inline"
+          :key="i"
+          class="inline"
+        >
+          <CmkButton
+            variant="secondary"
+            role="link"
+            @click="navigateToTarget(props.title, ib.target)"
+          >
+            <CmkIcon
+              v-if="ib.icon"
+              variant="inline"
+              :name="ib.icon.name"
+              :size="(ib.icon.size as IconSizeNames) || undefined"
+            />
+            {{ ib.title }}
+          </CmkButton>
+        </div>
       </a>
       <button v-else ref="item-focus" class="result-item-handler" :class="{ focus: props.focus }">
         <div v-if="props.icon" class="result-item-inner-start">
@@ -155,26 +185,6 @@ onBeforeUnmount(() => {
           ></ResultItemTitle>
         </div>
       </button>
-      <a
-        v-for="(ib, i) in props.inline_buttons"
-        ref="item-focus-inline"
-        :key="i"
-        :href="ib.target.url"
-        target="main"
-        class="result-item-handler inline"
-        @click="ib.target?.transition && showLoadingTransition(ib.target.transition, ib.title)"
-      >
-        <div v-if="ib.icon" class="result-item-inner-start">
-          <CmkIcon
-            :name="ib.icon.name"
-            :size="(ib.icon.size as IconSizeNames) || undefined"
-            class="result-item-icon"
-          ></CmkIcon>
-        </div>
-        <div class="result-item-inner-end">
-          <ResultItemTitle :title="ib.title" context=""></ResultItemTitle>
-        </div>
-      </a>
     </CmkZebra>
   </li>
 </template>

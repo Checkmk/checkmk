@@ -2563,7 +2563,7 @@ class ConfigCache:
                     if cmk.ccc.debug.enabled():
                         raise
                     config_warnings.warn(
-                        f"Config creation for special agent {agentname} failed on {host_name}: {exc}"
+                        f"Config creation for special agent {agentname} failed on host '{host_name}': {exc}"
                     )
 
     def collect_passwords(self) -> Mapping[str, Secret[str]]:

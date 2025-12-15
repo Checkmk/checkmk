@@ -14,7 +14,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import discover_families, PluginLocation
 from cmk.password_store.v1_unstable import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
-from cmk.utils import config_warnings, password_store
+from cmk.utils import password_store
 
 from ._commons import ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
@@ -33,6 +33,10 @@ class PluginFamily:
 class SpecialAgentCommandLine:
     cmdline: str
     stdin: str | None = None
+
+
+class NotSupportedError(ValueError):
+    pass
 
 
 class SpecialAgent:
@@ -114,9 +118,7 @@ class SpecialAgent:
 
         if self._for_relay:
             if self._make_family(name) not in self._relay_compatible_families:
-                msg = f"Config creation for special agent {agent_name} failed on {self.host_name}: Agent is not supported on relays."
-                config_warnings.warn(msg)
-                # Continue anyway. The datasource will fail on the relay side, and the Checkmk service will go CRIT.
+                raise NotSupportedError("This special agent is not supported on relays.")
 
         yield from self._iter_commands(special_agent, params)
 

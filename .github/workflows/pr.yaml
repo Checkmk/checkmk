@@ -12,7 +12,7 @@ on: [push, pull_request]
 
 jobs:
   testing:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       PIPENV_IGNORE_VIRTUALENVS: 1
       USE_EXTERNAL_PIPENV_MIRROR: true
@@ -64,8 +64,10 @@ jobs:
         # libsasl2-dev: Needed for building python-ldap.
         # libkrb5-dev: Needed for building pykerberos.
         # gettext: Needed for some "unit tests" (test_i18n.py)
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/ppa
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install ksh librrd-dev libldap2-dev libsasl2-dev libkrb5-dev gettext
+        sudo apt-get install ksh libfreetype-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev gettext "^g\+\+-14$"
         buildscripts/infrastructure/build-nodes/scripts/install-pipenv.sh
         make .venv
     - name: Run ${{ matrix.name  }}

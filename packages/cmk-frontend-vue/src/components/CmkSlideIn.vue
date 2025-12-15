@@ -34,6 +34,7 @@ const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
 
 const handleAnimationEnd = () => {
   document.body.style.overflow = ''
+  document.body.style.pointerEvents = ''
 }
 
 onMounted(() => {

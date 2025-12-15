@@ -314,7 +314,12 @@ def register(
     )
     vue_registration.register()
     gui_background_job.register(permission_section_registry, permission_registry)
-    agent_registration.register(permission_section_registry)
+    agent_registration.register(
+        permission_section_registry,
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )
     weblib.register(page_registry)
     openapi_registration.register(
         endpoint_registry,

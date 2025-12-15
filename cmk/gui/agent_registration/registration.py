@@ -4,11 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
 
+from .api import register_endpoints
 
-def register(permission_section_registry: PermissionSectionRegistry) -> None:
+
+def register(
+    permission_section_registry: PermissionSectionRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
+    ignore_duplicates: bool = False,
+) -> None:
     permission_section_registry.register(PERMISSION_SECTION_AGENT_REGISTRATION)
+    register_endpoints(
+        endpoint_family_registry, versioned_endpoint_registry, ignore_duplicates=ignore_duplicates
+    )
 
 
 PERMISSION_SECTION_AGENT_REGISTRATION = PermissionSection(

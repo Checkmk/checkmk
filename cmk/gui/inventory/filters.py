@@ -691,7 +691,11 @@ class FilterInvtableDualChoice(Filter):
         return ""
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        if selection := context.get(self._html_var, {}).get(self._html_var, "").strip().split("|"):
+        if selection := [
+            v
+            for v in context.get(self._html_var, {}).get(self._html_var, "").strip().split("|")
+            if v
+        ]:
             return [row for row in rows if str(row[self._html_var]) in selection]
         return rows  # No types selected, filter is unused
 

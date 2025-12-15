@@ -9,7 +9,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from cmk.product_telemetry.collection import collect_telemetry_data, store_telemetry_data
+from cmk.product_telemetry.collection import (
+    collect_telemetry_data,
+    store_telemetry_data,
+    telemetry_data_storage_path,
+)
 from cmk.product_telemetry.config import load_telemetry_config
 from cmk.product_telemetry.logger import init_logging
 from cmk.product_telemetry.schedule import (
@@ -92,21 +96,27 @@ def main(args: Sequence[str]) -> int:
 
 
 def parse_args(args: Sequence[str]) -> ProductTelemetryRequest:
+    storage_directory = telemetry_data_storage_path(paths.var_dir).absolute()
     parser = argparse.ArgumentParser(
         prog="cmk-telemetry",
         usage="cmk-telemetry [--collection | --upload | --dry-run]",
-        description="Collect and send telemetry data. You can collect and store data locally, upload telemetry files, or display telemetry data in a dry-run mode.",
+        description=(
+            "Collect and send telemetry data. "
+            f"You can collect and store data locally in `{storage_directory}`, "
+            "upload telemetry files, "
+            "or display telemetry data in a dry-run mode."
+        ),
     )
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument(
         "--collection",
         action="store_true",
-        help="Collect telemetry data and store it locally.",
+        help=f"Collect telemetry data and store it locally in `{storage_directory}`.",
     )
     group.add_argument(
         "--upload",
         action="store_true",
-        help="Send local telemetry data files.",
+        help=f"Send local telemetry data files from `{storage_directory}`.",
     )
     group.add_argument(
         "--dry-run",

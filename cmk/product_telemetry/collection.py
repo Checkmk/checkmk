@@ -36,8 +36,12 @@ def collect_telemetry_data(
 def store_telemetry_data(data: ProductTelemetryPayload, var_dir: Path) -> None:
     filename = f"telemetry_{data.timestamp}.json"
 
-    directory = var_dir / "telemetry"
+    directory = telemetry_data_storage_path(var_dir)
     directory.mkdir(parents=True, exist_ok=True)
 
     with (directory / filename).open("wb") as f:
         f.write(data.model_dump_with_metadata_json())
+
+
+def telemetry_data_storage_path(var_dir: Path) -> Path:
+    return var_dir / "telemetry"

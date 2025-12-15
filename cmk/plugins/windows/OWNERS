@@ -1,20 +1,11 @@
-# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+set noparent  # don't inherit owners information from parent folders
 
-# Component: windows monitoring
-#
-# These plugins are specific for windows monitoring
-# and need to be kept in sync with the windows agent.
-# Code ownership should be assigned to the developers
-# that own that component.
-#
-# Currently we just put that info here, without any
-# indirection or sophisticated include mechanism.
-# We rather aim to have a close connection between
-# component and package, and have one OWNERS file
-# per package.
-#
+file:/component_owners/windows_monitoring/OWNERS_DEFINITION
 
-set noparent
-sergey.kipnis@checkmk.com
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

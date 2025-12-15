@@ -51,8 +51,8 @@ class SelfDescribingModel(pydantic.BaseModel):
             "name": self.__name__,
         }
 
-    def model_dump_with_metadata_json(self) -> bytes:
-        return pydantic_core.to_json(self.model_dump_with_metadata())
+    def model_dump_with_metadata_json(self, indent: int = 0) -> bytes:
+        return pydantic_core.to_json(self.model_dump_with_metadata(), indent=indent)
 
 
 class SiteInfo(pydantic.BaseModel):

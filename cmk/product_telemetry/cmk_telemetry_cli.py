@@ -67,7 +67,7 @@ def main(args: Sequence[str]) -> int:
                 paths.omd_root,
                 logger,
             )
-            sys.stdout.write(data.model_dump_with_metadata_json().decode("utf-8") + "\n")
+            sys.stdout.write(data.model_dump_with_metadata_json(indent=2).decode("utf-8") + "\n")
             sys.stdout.flush()
 
             if request.store:

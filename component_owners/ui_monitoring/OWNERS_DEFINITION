@@ -1,11 +1,10 @@
-# UI - Monitoring
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
-
 ronny.bruska@checkmk.com  # component lead
 
 kenneth.okoh@checkmk.com
 leonardo.petrora@checkmk.com
 lukas.lengler@checkmk.com
+
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+

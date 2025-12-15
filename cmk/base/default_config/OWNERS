@@ -1,11 +1,12 @@
-# Component Notifications
-#
-# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
 
 per-file notify.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notify.py=set noparent
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

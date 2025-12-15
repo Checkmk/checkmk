@@ -1,10 +1,9 @@
-# Database Monitoring
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
-
 timotheus.bachinger@checkmk.com  # component lead
 
 benedikt.seidl@checkmk.com
 sergey.kipnis@checkmk.com
+
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+

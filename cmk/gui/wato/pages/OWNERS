@@ -1,13 +1,14 @@
-# Component Check and Discovery Engine, Distributed Monitoring, Liveproxyd
-#
-# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
 
 per-file services.py=file:/component_owners/check_and_discovery_engine/OWNERS_DEFINITION
 per-file services.py=set noparent
 per-file sites.py=file:/component_owners/distributed_monitoring_liveproxyd/OWNERS_DEFINITION
 per-file sites.py=set noparent
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

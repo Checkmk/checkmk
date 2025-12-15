@@ -1,11 +1,10 @@
-# MK-Oracle
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
-
 sergey.kipnis@checkmk.com  # component lead
 
 andreas.umbreit@checkmk.com
 anvar.umuraliev@checkmk.com
 benedikt.seidl@checkmk.com
+
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+

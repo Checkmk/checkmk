@@ -1,13 +1,14 @@
-# Component Database Monitoring
-#
-# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
 
 per-file test_mk_mongodb*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
 per-file test_mk_mongodb*=set noparent
 per-file test_mk_postgres*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
 per-file test_mk_postgres*=set noparent
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

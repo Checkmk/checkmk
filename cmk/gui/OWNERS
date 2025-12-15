@@ -1,11 +1,3 @@
-# Component Availability & SLA, Global Search, UI - Authentication, UI - Monitoring
-#
-# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
-
 set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/ui_monitoring/OWNERS_DEFINITION
@@ -16,3 +8,11 @@ per-file login.py=file:/component_owners/ui_authentication/OWNERS_DEFINITION
 per-file login.py=set noparent
 per-file search_menu.py=file:/component_owners/global_search/OWNERS_DEFINITION
 per-file search_menu.py=set noparent
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

@@ -1,9 +1,3 @@
-# CI Platform
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
-
 timotheus.bachinger@checkmk.com  # component lead
 
 alex.zurhake@checkmk.com
@@ -11,3 +5,8 @@ jonas.scharpf@checkmk.com
 mathias.laurin@checkmk.com
 nigel.banks@checkmk.com
 niko.wenselowski@checkmk.com
+
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+

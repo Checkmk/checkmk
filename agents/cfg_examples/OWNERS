@@ -1,10 +1,3 @@
-# Component Database Monitoring, MK-Oracle
-#
-# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
 
 per-file informix*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
@@ -17,3 +10,11 @@ per-file mk_redis*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
 per-file mk_redis*=set noparent
 per-file mysql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
 per-file mysql*=set noparent
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

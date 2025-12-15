@@ -1,10 +1,3 @@
-# Component Graphing & Metrics, Kubernetes - Check Plugins, Notifications
-#
-# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
-#
-# Find information about code-owners (+ find-owners syntax) here:
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
 
 per-file arch-comp-gui-metrics.rst=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
@@ -19,3 +12,11 @@ per-file arch-comp-mknotifyd-uc2-mknotifyd-remote.puml=file:/component_owners/no
 per-file arch-comp-mknotifyd-uc2-mknotifyd-remote.puml=set noparent
 per-file arch-comp-mknotifyd.rst=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file arch-comp-mknotifyd.rst=set noparent
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

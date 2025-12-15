@@ -15,7 +15,19 @@ Section = Mapping[str, Any]
 
 
 def parse_ibm_mq_queues(string_table: StringTable) -> Section:
-    return parse_ibm_mq(string_table, "QUEUE")
+    queue_status = parse_ibm_mq(string_table, "QSTATUS")
+    queue = parse_ibm_mq(string_table, "QUEUE")
+    return _deep_merge_sections(queue, queue_status)
+
+
+def _deep_merge_sections(priority_section: Section, additional_section: Section) -> Section:
+    result = dict(additional_section)
+    for key, value in priority_section.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge_sections(value, result[key])
+        else:
+            result[key] = value
+    return result
 
 
 register.agent_section(

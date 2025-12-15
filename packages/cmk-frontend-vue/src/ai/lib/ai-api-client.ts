@@ -6,14 +6,7 @@
 import { Api, type ApiResponseBody } from '@/lib/api-client'
 import { randomId } from '@/lib/randomId'
 
-export interface AiBaseRequestResponse {
-  user_id?: string | undefined
-  request_id?: string | undefined
-}
-
-export interface EnsuredAiBaseRequestResponse extends AiBaseRequestResponse {
-  request_id: string
-}
+export type AiBaseRequestResponse = object
 
 export interface AiBaseLlmResponse extends AiBaseRequestResponse {
   model: string
@@ -68,7 +61,7 @@ export interface AiInference extends AiBaseLlmResponse {
 }
 
 export class AiApiClient extends Api {
-  public constructor(private user_id: string | null = null) {
+  public constructor() {
     // no leading slash to use the given base url and path https://hostname.tld/sitename/check_mk/
     super('ai-service/v1/', [
       ['Content-Type', 'application/json'],
@@ -77,14 +70,12 @@ export class AiApiClient extends Api {
   }
 
   public async getInfo(): Promise<InfoResponse> {
-    return this.get(`info?request_id=${randomId()}`) as Promise<InfoResponse>
+    return this.get('info') as Promise<InfoResponse>
   }
 
   public async getUserActions(templateId: string): Promise<AiServiceAction[]> {
     return (
-      (await this.get(
-        `enumerate-actions?request_id=${randomId()}&template_id=${templateId}`
-      )) as EnumerateActionsResponse
+      (await this.get(`enumerate-actions?template_id=${templateId}`)) as EnumerateActionsResponse
     ).all_possible_action_types
   }
 
@@ -99,7 +90,7 @@ export class AiApiClient extends Api {
       history
     }
 
-    const res = (await this.post('inference', this.ensureAiRequest(options))) as AiInferenceResponse
+    const res = (await this.post('inference', options)) as AiInferenceResponse
 
     if (typeof res.response === 'string') {
       res.response = JSON.parse(res.response as string) as AiInference
@@ -109,18 +100,14 @@ export class AiApiClient extends Api {
   }
 
   public override get(url: string): Promise<AiBaseRequestResponse> {
-    return this.getRaw(url) as Promise<ApiResponseBody<AiBaseRequestResponse>>
+    return this.getRaw(url, {
+      headers: [['x-saas-request-id', randomId()]]
+    }) as Promise<ApiResponseBody<AiBaseRequestResponse>>
   }
 
   public override post(url: string, data: AiBaseRequestResponse): Promise<AiBaseRequestResponse> {
-    return this.postRaw(url, data) as Promise<ApiResponseBody<AiBaseRequestResponse>>
-  }
-
-  protected ensureAiRequest(data: AiBaseRequestResponse): EnsuredAiBaseRequestResponse {
-    if (this.user_id) {
-      data.user_id = this.user_id
-    }
-    data.request_id = data.request_id ?? randomId()
-    return data as EnsuredAiBaseRequestResponse
+    return this.postRaw(url, data, {
+      headers: [['x-saas-request-id', randomId()]]
+    }) as Promise<ApiResponseBody<AiBaseRequestResponse>>
   }
 }

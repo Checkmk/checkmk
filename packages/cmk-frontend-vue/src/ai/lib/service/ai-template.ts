@@ -118,7 +118,7 @@ export class AiTemplateService extends ServiceBase {
   ) {
     super(templateId, new KeyShortcutService(window))
 
-    this.api = new AiApiClient(this.userId)
+    this.api = new AiApiClient()
     this.config = {
       user_id: this.userId,
       context_data: this.context_data,

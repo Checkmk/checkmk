@@ -722,6 +722,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return " ".join(messages), "info"
 
         messages.extend(warnings)
+        if not progress_update_log:
+            return " ".join(messages).removeprefix("<br>"), "warning"
 
         with output_funnel.plugged():
             with foldable_container(

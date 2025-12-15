@@ -393,6 +393,8 @@ run_binary(
 pkg_tar(
     name = "license_info",
     srcs = [
+        # ToDo: Build BOM in the same Workspace
+        "bill-of-materials.csv",
         "bill-of-materials.json",
         ":build_bom_texts_pdf",
         ":generate_bom_csv",

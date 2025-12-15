@@ -14,7 +14,7 @@ from cmk.ccc.exceptions import MKTimeout
 from cmk.helper_interface import FetcherError
 
 from ._abstract import Fetcher, Mode
-from ._ad_hoc_secrets import ad_hoc_secrets_file, AdHocSecrets
+from ._secrets import ad_hoc_secrets_file, AdHocSecrets
 from .filecache import FileCache
 
 __all__ = [

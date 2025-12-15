@@ -11,8 +11,6 @@ See Also:
 
 from ._abstract import Fetcher as Fetcher
 from ._abstract import Mode as Mode
-from ._ad_hoc_secrets import ad_hoc_secrets_file as ad_hoc_secrets_file
-from ._ad_hoc_secrets import AdHocSecrets as AdHocSecrets
 from ._agentprtcl import decrypt_by_agent_protocol as decrypt_by_agent_protocol
 from ._agentprtcl import TCPEncryptionHandling as TCPEncryptionHandling
 from ._agentprtcl import TransportProtocol as TransportProtocol
@@ -23,6 +21,8 @@ from ._nofetcher import NoFetcher as NoFetcher
 from ._nofetcher import NoFetcherError as NoFetcherError
 from ._piggyback import PiggybackFetcher as PiggybackFetcher
 from ._program import ProgramFetcher as ProgramFetcher
+from ._secrets import ad_hoc_secrets_file as ad_hoc_secrets_file
+from ._secrets import AdHocSecrets as AdHocSecrets
 from ._snmp import NoSelectedSNMPSections as NoSelectedSNMPSections
 from ._snmp import SNMPFetcher as SNMPFetcher
 from ._snmp import SNMPFetcherConfig as SNMPFetcherConfig

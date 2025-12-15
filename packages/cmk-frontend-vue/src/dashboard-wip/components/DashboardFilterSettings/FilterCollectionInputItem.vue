@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkIcon from '@/components/CmkIcon'
 
@@ -17,6 +18,7 @@ interface Props {
   filterDefinitions: Record<string, FilterDefinition>
   allowRemove?: boolean
   showRequiredLabel?: boolean
+  label?: TranslatedString | undefined
 }
 
 interface Emits {
@@ -43,14 +45,17 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
       :show-required-label="showRequiredLabel"
       @update-filter-values="handleUpdateFilterValues"
     />
-    <button
-      v-if="allowRemove"
-      class="filter-collection-item__container__remove-button"
-      :aria-label="`Remove ${props.filterDefinitions[filterId]!.title} filter`"
-      @click="emit('remove-filter', props.filterId)"
-    >
-      <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
-    </button>
+    <div v-if="allowRemove || label" class="filter-collection-item__actions">
+      <span v-if="label" class="filter-collection-item__label">{{ label }}</span>
+      <button
+        v-if="allowRemove"
+        class="filter-collection-item__container__remove-button"
+        :aria-label="`Remove ${props.filterDefinitions[filterId]!.title} filter`"
+        @click="emit('remove-filter', props.filterId)"
+      >
+        <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
+      </button>
+    </div>
   </div>
 </template>
 
@@ -63,10 +68,26 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-collection-item__container__remove-button {
+.filter-collection-item__actions {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 2px;
+  right: var(--dimension-3);
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-2);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-collection-item__label {
+  padding: var(--dimension-2) var(--dimension-3);
+  border-radius: var(--dimension-2);
+  background-color: var(--ux-theme-7);
+  font-size: var(--font-size-small);
+  margin-top: var(--dimension-1);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-collection-item__container__remove-button {
   background: none;
   border: none;
   color: var(--font-color);

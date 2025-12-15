@@ -160,6 +160,7 @@ watch(
           :filter-definitions="filterDefinitions"
           :allow-remove="!mandatoryFilters.has(filterId)"
           :show-required-label="mandatoryFilters.has(filterId)"
+          :label="mandatoryFilters.has(filterId) ? _t('pre-selected') : undefined"
           @update-filter-values="handleUpdateFilterValues"
           @remove-filter="handleRemoveFilter"
         />
@@ -186,6 +187,7 @@ watch(
           :filter-definitions="filterDefinitions"
           :allow-remove="!mandatoryFilters.has(filterId)"
           :show-required-label="mandatoryFilters.has(filterId)"
+          :label="mandatoryFilters.has(filterId) ? _t('Pre-selected') : undefined"
           @update-filter-values="handleUpdateFilterValues"
           @remove-filter="handleRemoveFilter"
         />

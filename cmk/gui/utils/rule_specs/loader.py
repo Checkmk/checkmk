@@ -60,39 +60,43 @@ def load_api_v1_rule_specs(
     # right away. This is for convenience of the reviewer of a plugin migration only:
     # This way we can separate migration and moving.
     # For example:
-    not_yet_moved_plugins = []
+
+    not_yet_moved_plugins: set[str] = set()
     import cmk.gui.plugins.wato.check_parameters  # pylint: disable=cmk-module-layer-violation
 
-    cre_check_parameters_path = Path(list(cmk.gui.plugins.wato.check_parameters.__path__)[0])
-    for plugin in cre_check_parameters_path.glob("*.py"):
-        if plugin.stem != "__init__":
-            not_yet_moved_plugins.append(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
+    community_check_parameters_paths = set(cmk.gui.plugins.wato.check_parameters.__path__)
+    for community_check_parameters_path in community_check_parameters_paths:
+        for plugin in Path(community_check_parameters_path).glob("*.py"):
+            if plugin.stem != "__init__":
+                not_yet_moved_plugins.add(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
 
     try:
         import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
-        cee_bakery_ruleset_path = Path(
-            list(cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__)[0]
+        pro_bakery_ruleset_paths = set(
+            cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__
         )
-        for plugin in cee_bakery_ruleset_path.glob("*.py"):
-            if plugin.stem != "__init__":
-                not_yet_moved_plugins.append(
-                    f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
-                )
+        for pro_bakery_ruleset_path in pro_bakery_ruleset_paths:
+            for plugin in Path(pro_bakery_ruleset_path).glob("*.py"):
+                if plugin.stem != "__init__":
+                    not_yet_moved_plugins.add(
+                        f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
+                    )
     except ModuleNotFoundError:
         pass
 
     try:
         import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
-        cce_check_parameters_path = Path(
-            list(cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.__path__)[0]
+        ultimate_check_parameters_paths = set(
+            cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.__path__
         )
-        for plugin in cce_check_parameters_path.glob("*.py"):
-            if plugin.stem != "__init__":
-                not_yet_moved_plugins.append(
-                    f"cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.{plugin.stem}"
-                )
+        for ultimate_check_parameters_path in ultimate_check_parameters_paths:
+            for plugin in Path(ultimate_check_parameters_path).glob("*.py"):
+                if plugin.stem != "__init__":
+                    not_yet_moved_plugins.add(
+                        f"cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.{plugin.stem}"
+                    )
     except ModuleNotFoundError:
         pass
 

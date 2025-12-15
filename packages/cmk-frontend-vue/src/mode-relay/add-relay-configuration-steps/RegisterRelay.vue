@@ -5,16 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCode from '@/components/CmkCode.vue'
-import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
+import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+import GenerateRegistrationToken from '@/mode-host/agent-connection-test/components/GenerateRegistrationToken.vue'
 
 const { _t } = usei18n()
 
@@ -36,6 +38,7 @@ const props = defineProps<
   }
 >()
 
+const ott = ref<string | null | Error>(null)
 const relayImageReference = computed(() => `checkmk/check-mk-relay:${props.siteVersion}`)
 
 const registrationCommand = computed(() =>
@@ -47,7 +50,7 @@ const registrationCommand = computed(() =>
     `    --server ${props.domain} \\`,
     `    --site ${props.siteName} \\`,
     '    --user agent_registration \\',
-    '    --password [automation-secret] \\',
+    `    --password ${typeof ott.value === 'string' ? ott.value : '[automation-secret]'} \\`,
     '    --trust-cert \\',
     `    --relay-alias ${escapeShellArg(props.relayAlias)}"`
   ].join('\n')
@@ -75,27 +78,35 @@ const daemonCommand = computed(() =>
       <CmkParagraph>
         {{ _t('Register the Relay to authorize it for communication with your Checkmk site.') }}
       </CmkParagraph>
-      <CmkAlertBox variant="info">
-        {{ _t(' Go to ') }}
-        <a
-          :href="props.urlToGetAnAutomationSecret"
-          style="text-decoration: underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {{ _t('this page') }}
-        </a>
-        {{ _t(' and get an automation secret. Use it in place of [automation-secret]') }}
-      </CmkAlertBox>
-      <CmkCode :code_txt="registrationCommand"></CmkCode>
-      <CmkParagraph>
-        {{ _t('After successful registration, start the Relay daemon.') }}
-      </CmkParagraph>
-      <CmkCode :code_txt="daemonCommand"></CmkCode>
+
+      <GenerateRegistrationToken
+        v-model="ott"
+        :description="_t('This requires the generation of a registration token.')"
+        generate-comment="Agent registration token for agent slideout."
+      ></GenerateRegistrationToken>
+      <template v-if="ott !== null">
+        <CmkAlertBox v-if="ott instanceof Error" variant="info">
+          {{ _t(' Go to ') }}
+          <a
+            :href="props.urlToGetAnAutomationSecret"
+            style="text-decoration: underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ _t('this page') }}
+          </a>
+          {{ _t(' and get an automation secret. Use it in place of [automation-secret]') }}
+        </CmkAlertBox>
+        <CmkCode :code_txt="registrationCommand"></CmkCode>
+        <CmkParagraph>
+          {{ _t('After successful registration, start the Relay daemon.') }}
+        </CmkParagraph>
+        <CmkCode :code_txt="daemonCommand"></CmkCode>
+      </template>
     </template>
 
     <template #actions>
-      <CmkWizardButton type="next" />
+      <CmkWizardButton type="next" :disabled="ott === null" />
       <CmkWizardButton type="previous" />
     </template>
   </CmkWizardStep>

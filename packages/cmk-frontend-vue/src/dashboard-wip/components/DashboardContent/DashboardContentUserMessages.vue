@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, inject, onMounted, ref } from 'vue'
+import { type Ref, onMounted, ref } from 'vue'
 
 import { cmkAjax } from '@/lib/ajax'
 import usei18n from '@/lib/i18n'
@@ -13,7 +13,7 @@ import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
-import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
+import { useInjectCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
@@ -26,7 +26,7 @@ const { _t } = usei18n()
 const headers: string[] = [_t('Actions'), _t('Message'), _t('Sent on'), _t('Expires on')]
 
 defineProps<ContentProps>()
-const cmkToken = inject(cmkTokenKey) as string | undefined
+const cmkToken = useInjectCmkToken()
 
 type UserMessage = {
   id: string

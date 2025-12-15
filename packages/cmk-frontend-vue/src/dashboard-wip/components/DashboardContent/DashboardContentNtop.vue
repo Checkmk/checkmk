@@ -4,15 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { inject, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
+import { useInjectCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 
 import { NtopBase, getIfid } from './ntop.ts'
 import type { ContentProps, NtopType } from './types.ts'
 
 const props = defineProps<ContentProps>()
-const cmkToken = inject(cmkTokenKey) as string | undefined
+const cmkToken = useInjectCmkToken()
 
 let ntop: NtopBase | undefined = undefined
 const interfaceDivId: string = 'ntop_interface_quickstats'

@@ -4,18 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import useTimer from '@/lib/useTimer.ts'
 
-import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
+import { useInjectCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
-const cmkToken = inject(cmkTokenKey) as string | undefined
+const cmkToken = useInjectCmkToken()
 const dataEndpointUrl: Ref<string> = computed(() => {
   return cmkToken ? 'widget_graph_token_auth.py' : 'widget_graph.py'
 })

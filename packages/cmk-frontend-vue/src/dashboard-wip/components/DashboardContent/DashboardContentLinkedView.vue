@@ -4,16 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 
-import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys'
+import { useInjectCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 import type { IFrameContent, LinkedViewContent } from '@/dashboard-wip/types/widget.ts'
 
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
-const cmkToken = inject(cmkTokenKey) as string | undefined
+const cmkToken = useInjectCmkToken()
 
 const iFrameUrl = computed(() => {
   if (cmkToken !== undefined) {

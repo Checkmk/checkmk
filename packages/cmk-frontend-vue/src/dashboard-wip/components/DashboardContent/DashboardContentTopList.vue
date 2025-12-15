@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, computed, inject, onBeforeMount, ref } from 'vue'
+import { type Ref, computed, onBeforeMount, ref } from 'vue'
 
 import { cmkAjax } from '@/lib/ajax'
 import usei18n from '@/lib/i18n'
@@ -12,7 +12,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
-import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
+import { useInjectCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 import type {
   ComputedTopList,
   TopListContent,
@@ -26,7 +26,7 @@ import type { ContentProps } from './types.ts'
 
 const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()
-const cmkToken = inject(cmkTokenKey) as string | undefined
+const cmkToken = useInjectCmkToken()
 const isLoading = ref(false)
 const data = ref<ComputedTopList | undefined>(undefined)
 const fetchingErrorMessage = ref<string | null>(null)

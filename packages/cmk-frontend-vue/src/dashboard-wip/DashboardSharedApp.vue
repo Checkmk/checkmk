@@ -10,10 +10,11 @@ import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import SharedDashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/SharedDashboardMenuHeader.vue'
+import { useProvideCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
-import { cmkTokenKey, urlParamsKey } from '@/dashboard-wip/types/injectionKeys.ts'
+import { urlParamsKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import { createDashboardModel } from '@/dashboard-wip/utils.ts'
 
@@ -28,7 +29,7 @@ const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayo
 //         cmkToken only by the DashboardContentFigure component
 provide(urlParamsKey, props.url_params)
 // TODO: remove this hard coded "0:" once the backend can provide the token version
-provide(cmkTokenKey, `0:${props.token_value}`)
+useProvideCmkToken(`0:${props.token_value}`)
 
 const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))
 const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))

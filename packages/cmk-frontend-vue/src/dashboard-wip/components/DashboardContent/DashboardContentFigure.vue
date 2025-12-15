@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type Ref,
   computed,
-  inject,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -16,14 +15,14 @@ import {
   watch
 } from 'vue'
 
-import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
+import { useInjectCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
 
 import { type DashletSpec, FigureBase } from './cmk_figures.ts'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
-const cmkToken = inject(cmkTokenKey) as string | undefined
+const cmkToken = useInjectCmkToken()
 const dataEndpointUrl: Ref<string> = computed(() => {
   return cmkToken ? 'widget_figure_token_auth.py' : 'widget_figure.py'
 })

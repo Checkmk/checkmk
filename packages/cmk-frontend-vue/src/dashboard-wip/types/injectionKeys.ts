@@ -7,5 +7,4 @@ import type { InjectionKey } from 'vue'
 
 import type { FilterHTTPVars } from './widget.ts'
 
-export const cmkTokenKey: InjectionKey<string | undefined> = Symbol('cmkToken')
 export const urlParamsKey: InjectionKey<FilterHTTPVars> = Symbol('urlParams')

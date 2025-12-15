@@ -159,48 +159,28 @@ class DiscoveryResult(NamedTuple):
     config_warnings: Sequence[str]
 
     def serialize(self, for_cmk_version: Version) -> str:
-        if for_cmk_version < Version.from_str("2.5.0b1"):
-            return repr(
-                (
-                    self.job_status,
-                    self.check_table_created,
-                    [dataclasses.astuple(cpe) for cpe in self.check_table],
-                    {
-                        h: [dataclasses.astuple(cpe) for cpe in entries]
-                        for h, entries in self.nodes_check_table.items()
-                    },
-                    self.host_labels,
-                    self.new_labels,
-                    self.vanished_labels,
-                    self.changed_labels,
-                    {
-                        str(host_name): [label.serialize() for label in host_labels]
-                        for host_name, host_labels in self.labels_by_host.items()
-                    },
-                    self.sources,
-                )
-            )
-        return repr(
-            (
-                self.job_status,
-                self.check_table_created,
-                [dataclasses.astuple(cpe) for cpe in self.check_table],
-                {
-                    h: [dataclasses.astuple(cpe) for cpe in entries]
-                    for h, entries in self.nodes_check_table.items()
-                },
-                self.host_labels,
-                self.new_labels,
-                self.vanished_labels,
-                self.changed_labels,
-                {
-                    str(host_name): [label.serialize() for label in host_labels]
-                    for host_name, host_labels in self.labels_by_host.items()
-                },
-                self.sources,
-                self.config_warnings,
-            )
+        raw_tuple = (
+            self.job_status,
+            self.check_table_created,
+            [dataclasses.astuple(cpe) for cpe in self.check_table],
+            {
+                h: [dataclasses.astuple(cpe) for cpe in entries]
+                for h, entries in self.nodes_check_table.items()
+            },
+            self.host_labels,
+            self.new_labels,
+            self.vanished_labels,
+            self.changed_labels,
+            {
+                str(host_name): [label.serialize() for label in host_labels]
+                for host_name, host_labels in self.labels_by_host.items()
+            },
+            self.sources,
+            self.config_warnings,
         )
+        if for_cmk_version < Version.from_str("2.5.0b1"):
+            return repr(raw_tuple[:10])
+        return repr(raw_tuple)
 
     @classmethod
     def deserialize(cls, raw: str) -> DiscoveryResult:

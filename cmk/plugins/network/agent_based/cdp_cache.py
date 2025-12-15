@@ -390,15 +390,15 @@ def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResul
     path = path + ["neighbors"]
     for neighbor in section.cdp_neighbors:
         neighbor_id = neighbor.neighbor_id
-        if params["remove_domain"]:
-            if domain_name := params["domain_name"]:
+        if params.get("remove_domain", False):
+            if domain_name := params.get("domain_name", None):
                 neighbor_id = neighbor_id.replace(domain_name, "")
             else:
                 neighbor_id = neighbor_id.split(".")[0]
 
         neighbor_port = neighbor.neighbor_port
         local_port = neighbor.local_port
-        if params["use_short_if_name"]:
+        if params.get("use_short_if_name", False):
             neighbor_port = get_short_if_name(neighbor_port)
             local_port = get_short_if_name(local_port)
 
@@ -419,7 +419,7 @@ def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResul
             ("duplex", neighbor.duplex),
             ("power_consumption", neighbor.power_consumption),
         ]:
-            if key not in params["remove_columns"] and value is not None:
+            if key not in params.get("remove_columns", []) and value is not None:
                 inventory_columns[key] = value
 
         yield TableRow(

@@ -12,7 +12,6 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
-import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
@@ -21,28 +20,8 @@ import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizar
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import type { PackageOptions } from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
-
-export interface AgentSlideOutTabs {
-  id: string
-  title: string
-  installMsg?: TranslatedString
-  installCmd?: string | undefined
-  installDebCmd?: string
-  installRpmCmd?: string
-  installTgzCmd?: string | undefined
-  registrationMsg?: TranslatedString
-  registrationCmd?: string
-  installUrl?: InstallUrl | undefined
-  toggleButtonOptions?: PackageOptions
-}
-
-export interface InstallUrl {
-  title: TranslatedString
-  url: string
-  msg: TranslatedString
-  icon?: SimpleIcons
-}
+import type { AgentSlideOutTabs } from '../lib/type_def'
+import RegisterAgent from './steps/RegisterAgent.vue'
 
 const props = defineProps<{
   dialogMsg: TranslatedString
@@ -235,45 +214,14 @@ function getInitStep() {
             </template>
           </CmkWizardStep>
 
-          <CmkWizardStep :index="3" :is-completed="() => currentStep > 3 || !tab.registrationMsg">
-            <template #header>
-              <CmkHeading> {{ _t('Register agent') }}</CmkHeading>
-            </template>
-            <template #content>
-              <div v-if="currentStep === 3">
-                <div v-if="tab.registrationMsg && tab.registrationCmd">
-                  <div class="register-heading-row">
-                    <CmkParagraph>
-                      {{
-                        _t(
-                          `Agent registration will establish trust between the Agent Controller
-                    on the host and the Agent Receiver on the Checkmk server.`
-                        )
-                      }}
-                    </CmkParagraph>
-                  </div>
-                  <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
-                  <CmkCode :code_txt="tab.registrationCmd" class="code" />
-                </div>
-              </div>
-              <div v-else>
-                <CmkParagraph>
-                  {{ _t('Run this command to register the Checkmk agent controller.') }}
-                </CmkParagraph>
-              </div>
-            </template>
-            <template v-if="currentStep === 3" #actions>
-              <CmkWizardButton
-                v-if="!isPushMode"
-                type="finish"
-                :override-label="closeButtonTitle"
-                icon-name="connection-tests"
-                @click="close"
-              />
-              <CmkWizardButton v-else type="next" />
-              <CmkWizardButton type="previous" />
-            </template>
-          </CmkWizardStep>
+          <RegisterAgent
+            :index="3"
+            :is-completed="() => currentStep > 3 || !tab.registrationMsg"
+            :tab="tab"
+            :is-push-mode="isPushMode"
+            :close-button-title="closeButtonTitle"
+            @close="close"
+          ></RegisterAgent>
 
           <CmkWizardStep v-if="isPushMode" :index="4" :is-completed="() => currentStep > 4">
             <template #header>

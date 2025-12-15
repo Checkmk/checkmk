@@ -13,7 +13,8 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
-import type { AgentSlideOutTabs } from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
+
+import type { AgentSlideOutTabs, PackageOptions } from '../lib/type_def'
 
 const props = defineProps<{
   allAgentsUrl: string
@@ -33,11 +34,6 @@ const { _t } = usei18n()
 
 const legacyInstallTitle = _t('Install the legacy Checkmk agent')
 
-export type PackageOption = {
-  label: 'RPM' | 'DEB' | 'TGZ'
-  value: 'rpm' | 'deb' | 'tgz'
-}
-export type PackageOptions = PackageOption[]
 const toggleButtonOptions: PackageOptions = [
   { label: 'RPM', value: 'rpm' },
   { label: 'DEB', value: 'deb' },

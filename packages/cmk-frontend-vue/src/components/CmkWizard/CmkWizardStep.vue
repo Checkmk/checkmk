@@ -129,6 +129,7 @@ function onClickGoTo() {
   flex-direction: column;
   gap: var(--dimension-4);
   width: 100%;
+  align-items: flex-start;
 }
 
 .cmk-wizard-step__actions {

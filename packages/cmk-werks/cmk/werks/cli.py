@@ -209,6 +209,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_meisterwerk = subparsers.add_parser(
         "meisterwerk", help="Use the ai tool to evaluate or rewrite a Werk"
     )
+    parser_meisterwerk.set_defaults(func=lambda *_: parser_meisterwerk.print_usage())
     meisterwerk_subparser = parser_meisterwerk.add_subparsers(dest="meisterwerk_command")
 
     evaluate_parser = meisterwerk_subparser.add_parser("evaluate", help="Evaluate a Werk")

@@ -80,12 +80,6 @@ export class AiApiClient extends Api {
     return this.get(`info?request_id=${randomId()}`) as Promise<InfoResponse>
   }
 
-  public async getDataToBeProvidedToLlm(): Promise<DataToBeProvidedToLlmResponse> {
-    return this.get(
-      `data-availability?request_id=${randomId()}`
-    ) as Promise<DataToBeProvidedToLlmResponse>
-  }
-
   public async getUserActions(templateId: string): Promise<AiServiceAction[]> {
     return (
       (await this.get(

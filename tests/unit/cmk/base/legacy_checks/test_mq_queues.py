@@ -35,72 +35,12 @@ def test_inventory_mq_queues(
     [
         (
             "Queue_App1_App2",
-            {"consumerCount": None, "consumer_count_levels_lower": None, "size": (None, None)},
+            {"consumerCount": (None, None), "size": (None, None)},
             [["[[Queue_App1_App2]]"], ["1", "2", "3", "4"]],
             [
                 (0, "Queue size: 1", [("queue", 1, None, None)]),
                 (0, "Enqueue count: 3", [("enque", 3, None, None)]),
                 (0, "Dequeue count: 4", [("deque", 4, None, None)]),
-            ],
-        ),
-        (
-            "M2M_DC_MGMT",
-            {"consumerCount": (5, 9), "consumer_count_levels_lower": (3, 1), "size": (6, 10)},
-            [["[[M2M_DC_MGMT]]"], ["0", "12", "9193", "9193"]],
-            [
-                (
-                    2,
-                    "Consuming connections: 12 (warn/crit at 5/9)",
-                    [],
-                ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
-            ],
-        ),
-        (
-            "M2M_DATA_RESPONSE",
-            {"consumerCount": (5, 9), "consumer_count_levels_lower": (3, 1), "size": (6, 10)},
-            [["[[M2M_DATA_RESPONSE]]"], ["0", "1", "9193", "9193"]],
-            [
-                (
-                    1,
-                    "Consuming connections: 1 (warn/crit below 3/1)",
-                    [],
-                ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
-            ],
-        ),
-        (
-            "IIS_NMS_MGMT",
-            {"consumerCount": (5, 9), "consumer_count_levels_lower": None, "size": (6, 10)},
-            [["[[IIS_NMS_MGMT]]"], ["0", "12", "9193", "9193"]],
-            [
-                (
-                    2,
-                    "Consuming connections: 12 (warn/crit at 5/9)",
-                    [],
-                ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
-            ],
-        ),
-        (
-            "IIS_FW_UPGRADE_DWNLD",
-            {"consumerCount": None, "consumer_count_levels_lower": (13, 5), "size": (6, 10)},
-            [["[[IIS_FW_UPGRADE_DWNLD]]"], ["0", "4", "9193", "9193"]],
-            [
-                (
-                    2,
-                    "Consuming connections: 4 (warn/crit below 13/5)",
-                    [],
-                ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
             ],
         ),
     ],

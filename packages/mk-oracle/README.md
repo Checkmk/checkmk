@@ -48,6 +48,12 @@ Please install oracle instant client to be write-accessible only by admin user.
 
 After the Instant Client libraries are installed you may use WATO to configure type of deployment
 
+_Ubuntu Linux_ may require linking libaio
+
+```
+ln -sf "/lib/x86_64-linux-gnu/libaio.so.1t64" "/lib/x86_64-linux-gnu/libaio.so.1"
+```
+
 ### Windows
 
 Download and unzip Oracle Windows installation guide to configure your Oracle Instant Client in folder of your choice.

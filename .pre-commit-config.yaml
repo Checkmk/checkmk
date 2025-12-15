@@ -149,3 +149,7 @@ repos:
             files: pyproject.toml
             verbose: true
             require_serial: true
+          - id: qa-test-data submodule
+            name: Check qa-test-data submodule commit-id is not updated
+            entry: scripts/check-qa-test-data
+            language: script

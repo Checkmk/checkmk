@@ -167,9 +167,9 @@ attrs==25.4.0 \
     #   aiohttp
     #   jsonschema
     #   referencing
-azure-core==1.36.0 \
-    --hash=sha256:22e5605e6d0bf1d229726af56d9e92bc37b6e726b141a18be0b4d424131741b7 \
-    --hash=sha256:fee9923a3a753e94a259563429f3644aaf05c486d45b1215d098115102d91d3b
+azure-core==1.37.0 \
+    --hash=sha256:7064f2c11e4b97f340e8e8c6d923b822978be3016e46b7bc4aa4b337cfb48aee \
+    --hash=sha256:b3abe2c59e7d6bb18b38c275a5029ff80f98990e7c90a5e646249a56630fcc19
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -2536,9 +2536,9 @@ rfc3339-validator==0.1.4 \
     --hash=sha256:138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b \
     --hash=sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa
     # via openapi-schema-validator
-robotframework==7.3.2 \
-    --hash=sha256:14ef2afa905285cc073df6ce06d0cd3af4a113df6f815532718079e00c98cca4 \
-    --hash=sha256:3bb3e299831ecb1664f3d5082f6ff9f08ba82d61a745bef2227328ef3049e93a
+robotframework==7.4 \
+    --hash=sha256:5225ab52198001df4bb642b1a6869c046d726a61f3dd1a84b768587b7230d845 \
+    --hash=sha256:d559c8152cb39df8e62e6224d0c2c9146826ac74c0aa6fd51c82b843f05f0071
     # via -r _requirements_runtime.txt
 roman==4.0 \
     --hash=sha256:6caab7ba51b83c46b5bf8839e5d782769a6b08fdea8abdfa62a4197c041fd513 \
@@ -2897,9 +2897,9 @@ typing-extensions==4.15.0 \
     #   pydantic-core
     #   referencing
     #   starlette
-tzdata==2025.2 \
-    --hash=sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8 \
-    --hash=sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9
+tzdata==2025.3 \
+    --hash=sha256:06a47e5700f3081aab02b2e513160914ff0694bce9947d6b76ebd6bf57cfc5d1 \
+    --hash=sha256:de39c2ca5dc7b0344f2eba86f49d614019d29f060fc4ebc8a417896a620b56a7
     # via exchangelib
 tzlocal==5.3.1 \
     --hash=sha256:cceffc7edecefea1f595541dbd6e990cb1ea3d19bf01b2809f362a03dd7921fd \

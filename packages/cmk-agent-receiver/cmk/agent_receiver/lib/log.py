@@ -45,7 +45,7 @@ class ContextInjectingFilter(logging.Filter):
         for context_var in ctx:
             if context_var.name.startswith(_LOG_KEY_PREFIX):
                 key = context_var.name[_LOG_KEY_PREFIX_LEN:]
-                context[key] = ctx[context_var]
+                context[key] = repr(ctx[context_var])
                 # Also set as individual attributes for easy access
                 setattr(record, f"ctx_{key}", ctx[context_var])
 

@@ -123,3 +123,23 @@ def test_contextual_formatter_passes_through_messages_without_context() -> None:
     record = logging.LogRecord("test", logging.INFO, "", 0, "Test message", (), None)
     result = formatter.format(record)
     assert result == "Test message"
+
+
+class _NonSerializable:
+    def __repr__(self) -> str:
+        return "<non-serializable>"
+
+
+def test_non_serializable_context_values_are_stringified(
+    logger_with_context: logging.Logger, caplog: LogCaptureFixture
+) -> None:
+    non_serializable = _NonSerializable()
+
+    with caplog.at_level(logging.INFO, logger="test_context"):
+        with logger.bound_contextvars(non_serializable=non_serializable):
+            logger_with_context.info("Non serializable context")
+
+    record = caplog.records[0]
+
+    formatted = logger.ContextualFormatter().format(record)
+    assert formatted.endswith('[context: {"non_serializable":"<non-serializable>"}]')

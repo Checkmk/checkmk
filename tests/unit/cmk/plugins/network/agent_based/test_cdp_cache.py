@@ -24,7 +24,7 @@ from cmk.plugins.network.agent_based.cdp_cache import (
     parse_cdp_cache,
 )
 
-STRING_TABLE = [
+STRING_TABLE_1_NEIGHBOR = [
     [
         [
             "1",
@@ -40,6 +40,53 @@ STRING_TABLE = [
             "3",
             None,
         ]
+    ],  # cdp_info
+    [
+        [
+            "1",
+            "60",
+            "180",
+            "ip-enke-ch-bsk-r-005",
+        ]
+    ],  # cdp_global
+    [
+        [
+            "1",
+            "Gi0/0",
+        ]
+    ],  # if_info
+]
+
+STRING_TABLE_2_NEIGHBORS = [
+    [
+        [
+            "1",
+            "1",
+            "0A CD 0B 9A ",
+            "Cisco IOS Software, C3560 Software (C3560-IPBASE-M), Version 12.2(25)SEB4, RELEASE SOFTWARE (fc1)Copyright (c) 1986-2005 by Cisco Systems, Inc.Compiled Tue 30-Aug-05 14:19 by yenanh",
+            "SCHE-CH-BASEL-SW-1",
+            "FastEthernet0/1",
+            "cisco WS-C3560-24PS",
+            [0, 0, 0, 29],
+            "sche-ch-basel",
+            "2",
+            "3",
+            None,
+        ],
+        [
+            "1",
+            "1",
+            "0A CD 0B 9A ",
+            "Cisco IOS Software, C3560 Software (C3560-IPBASE-M), Version 12.2(25)SEB4, RELEASE SOFTWARE (fc1)Copyright (c) 1986-2005 by Cisco Systems, Inc.Compiled Tue 30-Aug-05 14:19 by yenanh",
+            "SCHE-CH-BASEL-SW-2",
+            "FastEthernet0/1",
+            "cisco WS-C3560-24PS",
+            [0, 0, 0, 29],
+            "sche-ch-basel",
+            "2",
+            "3",
+            None,
+        ],
     ],  # cdp_info
     [
         [
@@ -93,9 +140,31 @@ CDP = Cdp(
             [],
             None,
         ),
-        (STRING_TABLE, CDP),
+        (STRING_TABLE_1_NEIGHBOR, CDP),
+        (
+            STRING_TABLE_2_NEIGHBORS,
+            Cdp(
+                cdp_global=CDP_GLOBAL,
+                cdp_neighbors=CDP_NEIGHBORS
+                + [
+                    CdpNeighbor(
+                        neighbor_id="SCHE-CH-BASEL-SW-2",
+                        neighbor_port="FastEthernet0/1",
+                        local_port="Gi0/0",
+                        address=None,
+                        capabilities="Host, L2, L3, SB",
+                        duplex="full duplex",
+                        native_vlan="2",
+                        platform="cisco WS-C3560-24PS",
+                        platform_details="Cisco IOS Software, C3560 Software (C3560-IPBASE-M), Version 12.2(25)SEB4, RELEASE SOFTWARE (fc1)Copyright (c) 1986-2005 by Cisco Systems, Inc.Compiled Tue 30-Aug-05 14:19 by yenanh",
+                        power_consumption="None",
+                        vtp_mgmt_domain="sche-ch-basel",
+                    )
+                ],
+            ),
+        ),
     ],
-    ids=["no data", "no power consumption"],
+    ids=["no data", "with 1 neighbor", "with 2 neighbors"],
 )
 def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | None) -> None:
     parsed = parse_cdp_cache(string_table=data)
@@ -119,8 +188,34 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
                 HostLabel("cmk/cdp_neighbor", "SCHE-CH-BASEL-SW-1"),
             ],
         ),
+        (
+            Cdp(
+                cdp_global=CDP_GLOBAL,
+                cdp_neighbors=CDP_NEIGHBORS
+                + [
+                    CdpNeighbor(
+                        neighbor_id="SCHE-CH-BASEL-SW-2",
+                        neighbor_port="FastEthernet0/1",
+                        local_port="Gi0/0",
+                        address=None,
+                        capabilities="Host, L2, L3, SB",
+                        duplex="full duplex",
+                        native_vlan="2",
+                        platform="cisco WS-C3560-24PS",
+                        platform_details="Cisco IOS Software, C3560 Software (C3560-IPBASE-M), Version 12.2(25)SEB4, RELEASE SOFTWARE (fc1)Copyright (c) 1986-2005 by Cisco Systems, Inc.Compiled Tue 30-Aug-05 14:19 by yenanh",
+                        power_consumption="None",
+                        vtp_mgmt_domain="sche-ch-basel",
+                    )
+                ],
+            ),
+            [
+                HostLabel("cmk/has_cdp_neighbors", "yes"),
+                HostLabel("cmk/cdp_neighbor", "SCHE-CH-BASEL-SW-1"),
+                HostLabel("cmk/cdp_neighbor", "SCHE-CH-BASEL-SW-2"),
+            ],
+        ),
     ],
-    ids=["no neighbors", "with neighbors"],
+    ids=["no neighbors", "with 1 neighbor", "with 2 neighbor"],
 )
 def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> None:
     labels = list(host_label_cdp_cache(section=section))

@@ -1859,7 +1859,7 @@ ConfigVariableProductTelemetry = ConfigVariable(
         elements=[
             (
                 "enable_telemetry",
-                CascadingDropdown(
+                DropdownChoice(
                     title=_("Enable Product Telemetry"),
                     help=_(
                         "Consent to product telemetry data collection. "
@@ -1867,34 +1867,12 @@ ConfigVariableProductTelemetry = ConfigVariable(
                         "Run  <tt>cmk-telemetry --dry-run</tt> in the command line to see a preview of the data."
                     ),
                     choices=[
-                        (
-                            "enabled",
-                            _("Enabled"),
-                            FixedValue(
-                                value=True,
-                                totext=_("Allow sending telemetry data"),
-                            ),
-                        ),
-                        (
-                            "disabled",
-                            _("Disabled"),
-                            FixedValue(
-                                value=False,
-                                totext=_("Do not send telemetry data"),
-                            ),
-                        ),
-                        (
-                            "not_decided",
-                            _("Disabled. Reminder scheduled"),
-                            FixedValue(
-                                value=None,
-                                totext=_(
-                                    "Product telemetry is disabled. Admin users will be reminded to make a decision via popup."
-                                ),
-                            ),
-                        ),
+                        ("enabled", _("Allow collection and transmission of telemetry data")),
+                        ("disabled", _("Do not collect and transmit telemetry data")),
+                        ("not_decided", _("Disabled. Reminder scheduled")),
                     ],
-                    default_value=("not_decided", None),
+                    default_value="not_decided",
+                    html_attrs={"width": "fit-content"},
                 ),
             ),
             (

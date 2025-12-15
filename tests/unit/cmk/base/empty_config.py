@@ -92,7 +92,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     check_periods=(),
     relays={},
     product_telemetry={
-        "enable_telemetry": ("disabled", None),
+        "enable_telemetry": "disabled",
         "proxy_setting": ("environment", "environment"),
     },
     cmc_config_multiprocessing={"use_multiprocessing": True},

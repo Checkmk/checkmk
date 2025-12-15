@@ -13,7 +13,7 @@ void main() {
                 sh("""
                     bazel build @@//packages/cmk-frontend-vue:dist-demo-hosted
                 """);
-                // all files are "-r-xr-xr-x" aka "555"
+            // all files are "-r-xr-xr-x" aka "555"
             }
 
             stage("Deploy") {

@@ -39,8 +39,8 @@ def load_telemetry_config() -> TelemetryConfig:
     )
 
     return TelemetryConfig(
-        enabled=config.loaded_config.product_telemetry["enable_telemetry"][0] == "enabled",
-        state=config.loaded_config.product_telemetry["enable_telemetry"][0],
+        enabled=config.loaded_config.product_telemetry["enable_telemetry"] == "enabled",
+        state=config.loaded_config.product_telemetry["enable_telemetry"],
         proxy_config=proxy_config,
     )
 

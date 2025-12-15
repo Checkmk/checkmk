@@ -66,7 +66,7 @@ def _collapse_items(
                 case _:
                     other_items.append(item)
 
-        if host_items:
+        if len(host_items) >= 2:
             collapsed_results.append(_collapse_host_items(host_items))
             counts.monitoring -= len(host_items) - 2
 

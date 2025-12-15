@@ -88,8 +88,9 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 from cmk.fetchers import (
-    AdHocSecrets,
+    ActivatedSecrets,
     Fetcher,
+    FetcherSecrets,
     FetcherTrigger,
     Mode,
     ProgramFetcher,
@@ -146,7 +147,7 @@ def _fetch_all(
     sources: Iterable[Source],
     file_cache_options: FileCacheOptions,
     mode: Mode,
-    secrets: AdHocSecrets | None,
+    secrets: FetcherSecrets,
     *,
     simulation: bool,
 ) -> Sequence[
@@ -175,7 +176,7 @@ def _do_fetch(
     file_cache: FileCache,
     fetcher: Fetcher,
     mode: Mode,
-    secrets: AdHocSecrets | None,
+    secrets: FetcherSecrets,
 ) -> tuple[
     SourceInfo,
     result.Result[AgentRawData | SNMPRawData, Exception],
@@ -300,7 +301,7 @@ class SpecialAgentFetcher:
     def __init__(
         self,
         trigger: FetcherTrigger,
-        secrets: AdHocSecrets | None,
+        secrets: FetcherSecrets,
         *,
         agent_name: str,
         cmds: Iterator[SpecialAgentCommandLine],
@@ -506,7 +507,7 @@ class CMKFetcher:
                 ),
                 file_cache_options=self.file_cache_options,
                 mode=self.mode,
-                secrets=None,  # TODO: switch to ad-hoc secrets.
+                secrets=ActivatedSecrets(),  # FIXME: switch to ad-hoc / stored
                 simulation=self.simulation_mode,
             )
         ]

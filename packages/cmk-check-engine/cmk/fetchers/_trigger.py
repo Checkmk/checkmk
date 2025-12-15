@@ -5,7 +5,6 @@
 
 import abc
 from collections.abc import Mapping, Sized
-from contextlib import nullcontext
 from functools import partial
 from typing import final, Self, TypeVar
 
@@ -14,7 +13,7 @@ from cmk.ccc.exceptions import MKTimeout
 from cmk.helper_interface import FetcherError
 
 from ._abstract import Fetcher, Mode
-from ._secrets import ad_hoc_secrets_file, AdHocSecrets
+from ._secrets import FetcherSecrets
 from .filecache import FileCache
 
 __all__ = [
@@ -32,7 +31,7 @@ class FetcherTrigger(abc.ABC):
         file_cache: FileCache[_TRawData],
         fetcher: Fetcher[_TRawData],
         mode: Mode,
-        secrets: AdHocSecrets | None,
+        secrets: FetcherSecrets,
     ) -> result.Result[_TRawData, Exception]:
         try:
             cached = file_cache.read(mode)
@@ -57,7 +56,7 @@ class FetcherTrigger(abc.ABC):
 
     @abc.abstractmethod
     def _trigger(
-        self, fetcher: Fetcher[_TRawData], mode: Mode, secrets: AdHocSecrets | None
+        self, fetcher: Fetcher[_TRawData], mode: Mode, secrets: FetcherSecrets
     ) -> result.Result[_TRawData, Exception]:
         raise NotImplementedError()
 
@@ -80,10 +79,9 @@ class PlainFetcherTrigger(FetcherTrigger):
     """A simple trigger that fetches data without any additional logic."""
 
     def _trigger(
-        self, fetcher: Fetcher[_TRawData], mode: Mode, secrets: AdHocSecrets | None
+        self, fetcher: Fetcher[_TRawData], mode: Mode, secrets: FetcherSecrets
     ) -> result.Result[_TRawData, Exception]:
-        secrets_context = nullcontext() if not secrets else ad_hoc_secrets_file(secrets)
-        with secrets_context, fetcher:
+        with secrets.provide_file(), fetcher:
             return fetcher.fetch(mode)
 
     def serialized_params(self) -> Mapping[str, str]:

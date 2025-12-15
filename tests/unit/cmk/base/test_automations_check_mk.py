@@ -30,7 +30,13 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
-from cmk.fetchers import AdHocSecrets, Fetcher, Mode, PiggybackFetcher, PlainFetcherTrigger
+from cmk.fetchers import (
+    Fetcher,
+    FetcherSecrets,
+    Mode,
+    PiggybackFetcher,
+    PlainFetcherTrigger,
+)
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import paths
@@ -49,7 +55,7 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
         super().__init__()
         self._payload = payload
 
-    def _trigger(self, fetcher: Fetcher, mode: Mode, secret: AdHocSecrets | None) -> result.Result:
+    def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:
         if isinstance(fetcher, PiggybackFetcher):
             return result.OK(b"")
         return result.OK(self._payload)

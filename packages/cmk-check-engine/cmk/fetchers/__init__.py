@@ -21,8 +21,10 @@ from ._nofetcher import NoFetcher as NoFetcher
 from ._nofetcher import NoFetcherError as NoFetcherError
 from ._piggyback import PiggybackFetcher as PiggybackFetcher
 from ._program import ProgramFetcher as ProgramFetcher
-from ._secrets import ad_hoc_secrets_file as ad_hoc_secrets_file
+from ._secrets import ActivatedSecrets as ActivatedSecrets
 from ._secrets import AdHocSecrets as AdHocSecrets
+from ._secrets import FetcherSecrets as FetcherSecrets
+from ._secrets import StoredSecrets as StoredSecrets
 from ._snmp import NoSelectedSNMPSections as NoSelectedSNMPSections
 from ._snmp import SNMPFetcher as SNMPFetcher
 from ._snmp import SNMPFetcherConfig as SNMPFetcherConfig

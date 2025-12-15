@@ -160,13 +160,14 @@ from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
-    ad_hoc_secrets_file,
+    ActivatedSecrets,
     AdHocSecrets,
     Mode,
     NoSelectedSNMPSections,
     PlainFetcherTrigger,
     ProgramFetcher,
     SNMPFetcherConfig,
+    StoredSecrets,
     TCPEncryptionHandling,
     TCPFetcher,
     TLSConfig,
@@ -2998,7 +2999,7 @@ def _execute_diag_special_agent(
             raise
         yield 1, str(exc)
 
-    with ad_hoc_secrets_file(ad_hoc_secrets):
+    with ad_hoc_secrets.provide_file():
         for cmd in cmds:
             fetcher = ProgramFetcher(
                 cmdline=cmd.cmdline,
@@ -3118,7 +3119,7 @@ def automation_diag_cmk_agent(
             tls_config=tls_config,
         ),
         mode=Mode.CHECKING,
-        secrets=None,
+        secrets=ActivatedSecrets(),  # not used anyway.
     )
 
     if raw_data.is_ok():
@@ -3458,7 +3459,11 @@ class AutomationDiagHost:
                 ),
                 fetcher,
                 Mode.CHECKING,
-                AdHocSecrets(pending_passwords_file, passwords) if passwords else None,
+                (
+                    AdHocSecrets(pending_passwords_file, passwords)
+                    if passwords
+                    else ActivatedSecrets()
+                ),
             )
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
@@ -3922,12 +3927,17 @@ def automation_get_agent_output(
             active_secrets_path = cmk.utils.password_store.active_secrets_path_site(
                 active_config_path
             )
-            secrets_file_option = (
-                active_secrets_path
+            secrets = (
+                StoredSecrets(
+                    path=active_secrets_path,
+                    secrets=load_secrets_file(active_secrets_path),
+                )
                 if relay_id is None
-                else cmk.utils.password_store.active_secrets_path_relay(active_config_path)
+                else AdHocSecrets(
+                    path=cmk.utils.password_store.active_secrets_path_relay(active_config_path),
+                    secrets=load_secrets_file(active_secrets_path),
+                )
             )
-            secrets = load_secrets_file(active_secrets_path)
 
             for source in sources.make_sources(
                 plugins,
@@ -3987,8 +3997,8 @@ def automation_get_agent_output(
                     hostname,
                     ip_family,
                     ipaddress,
-                    secrets_file_option=secrets_file_option,
-                    secrets=secrets,
+                    secrets_file_option=secrets.path,
+                    secrets=secrets.secrets,
                     ip_address_of=ip_address_of_with_fallback,
                     executable_finder=ExecutableFinder(
                         # NOTE: we can't ignore these, they're an API promise.
@@ -4019,9 +4029,7 @@ def automation_get_agent_output(
                     ),
                     source.fetcher(),
                     Mode.CHECKING,
-                    secrets=None
-                    if relay_id is None
-                    else AdHocSecrets(secrets_file_option, secrets),
+                    secrets=secrets,
                 )
                 host_sections = parse_raw_data(
                     make_parser(

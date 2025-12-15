@@ -97,7 +97,13 @@ from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
-from cmk.fetchers import AdHocSecrets, NoSelectedSNMPSections, SNMPFetcherConfig, TLSConfig
+from cmk.fetchers import (
+    AdHocSecrets,
+    NoSelectedSNMPSections,
+    SNMPFetcherConfig,
+    StoredSecrets,
+    TLSConfig,
+)
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.config import (
     make_persisted_section_dir,
@@ -683,15 +689,18 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        pending_passwords_file = (
-            cmk.utils.password_store.pending_secrets_path_relay()
+        secrets = (
+            AdHocSecrets(
+                path=cmk.utils.password_store.pending_secrets_path_relay(),
+                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+            )
             if relay_id
-            else cmk.utils.password_store.pending_secrets_path_site()
+            else StoredSecrets(
+                path=cmk.utils.password_store.pending_secrets_path_site(),
+                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+            )
         )
-        secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-        ad_hoc_secrets = (
-            AdHocSecrets(pending_passwords_file, secrets) if relay_id and secrets else None
-        )
+
         for source in sources.make_sources(
             plugins,
             hostname,
@@ -740,8 +749,8 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
                 hostname,
                 ip_family,
                 ipaddress,
-                secrets=secrets,
-                secrets_file_option=pending_passwords_file,
+                secrets=secrets.secrets,
+                secrets_file_option=secrets.path,
                 ip_address_of=ConfiguredIPLookup(
                     ip_address_of_bare,
                     allow_empty=hosts_config.clusters,
@@ -775,7 +784,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
                 ),
                 source.fetcher(),
                 FetchMode.CHECKING,
-                ad_hoc_secrets,
+                secrets,
             )
             host_sections = parse_raw_data(
                 make_parser(

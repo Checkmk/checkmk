@@ -190,6 +190,7 @@ CmkEndpointName = Literal[
     "cmk/change_state",
     "cmk/verify",
     "cmk/register",
+    "cmk/register_token",
     "cmk/quick_setup",
     "cmk/save_quick_setup",
     "cmk/edit_quick_setup",

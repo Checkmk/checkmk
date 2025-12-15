@@ -55,7 +55,7 @@ def load_plugins(logger: logging.Logger, raise_errors: bool) -> list[AnonymizeSt
     plugins: dict[str, AnonymizeStep] = {}
     for filename in os.listdir(plugin_dir):
         if filename.endswith(".py") and filename != "__init__.py":
-            module_name = f"plugins.{filename[:-3]}"
+            module_name = f"cmk.config_anonymizer.plugins.{filename[:-3]}"
             module = _import_optionally(module_name, raise_errors=raise_errors)
 
             for key, value in vars(module).items():

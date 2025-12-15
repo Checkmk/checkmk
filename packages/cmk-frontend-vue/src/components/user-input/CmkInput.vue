@@ -118,6 +118,7 @@ input.cmk-input--number::-webkit-inner-spin-button {
 input.cmk-input--number {
   width: 5.8ex;
   appearance: textfield;
+  text-align: right;
 }
 
 input.cmk-input--text {

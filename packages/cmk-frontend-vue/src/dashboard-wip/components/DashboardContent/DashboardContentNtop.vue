@@ -31,8 +31,7 @@ onMounted(async () => {
       cmkToken
     )
   } catch (error) {
-    // Cant let the site crash as this causes XSS crawler to fail
-    console.error('Error initializing ntop content:', error)
+    // Can't let the site crash because of ntop errors, they are for the user
     errorMessage.value = (error as Error).message
   }
 })

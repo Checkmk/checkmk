@@ -2932,7 +2932,7 @@ def get_special_agent_commandline(
             ),
         ),
         for_relay=host_config.relay_id is not None,
-        relay_compatible_families=relay_compatible_plugin_families(),
+        relay_compatible_families=relay_compatible_plugin_families(cmk.utils.paths.local_root),
     )
 
     if not params:

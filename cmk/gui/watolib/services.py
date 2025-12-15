@@ -158,23 +158,6 @@ class DiscoveryResult(NamedTuple):
     sources: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: Version) -> str:
-        if for_cmk_version < Version.from_str("2.4.0b1"):
-            return repr(
-                (
-                    self.job_status,
-                    self.check_table_created,
-                    [dataclasses.astuple(cpe) for cpe in self.check_table],
-                    self.host_labels,
-                    self.new_labels,
-                    self.vanished_labels,
-                    self.changed_labels,
-                    {
-                        str(host_name): [label.serialize() for label in host_labels]
-                        for host_name, host_labels in self.labels_by_host.items()
-                    },
-                    self.sources,
-                )
-            )
         return repr(
             (
                 self.job_status,

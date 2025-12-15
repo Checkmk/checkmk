@@ -154,21 +154,6 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     source_results: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        if for_cmk_version < cmk_version.Version.from_str("2.4.0b1"):
-            raw = asdict(self)
-            raw.pop("nodes_check_table")
-            return SerializedResult(
-                repr(
-                    {
-                        **raw,
-                        "labels_by_host": {
-                            str(host_name): [label.serialize() for label in labels]
-                            for host_name, labels in self.labels_by_host.items()
-                        },
-                    }
-                )
-            )
-
         return self._serialize_as_dict()
 
     def _serialize_as_dict(self) -> SerializedResult:

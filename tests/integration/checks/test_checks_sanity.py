@@ -142,6 +142,7 @@ def test_shipped_ps_discovery(host_services: dict[str, ServiceInfo], site: Site)
         # f"Process {site.id} rabbitmq",
         f"Process {site.id} redis-server",
         f"Process {site.id} rrdcached",
+        f"Process {site.id} ui-job-scheduler",
     }
 
     if _runs_cmc(site):

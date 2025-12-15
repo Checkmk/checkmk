@@ -20,7 +20,7 @@ checks = {
     "": [
         (
             "Queue_App1_App2",
-            {"consumerCount": (None, None), "consumer_count_levels_lower": (None, None), "size": (None, None)},
+            {"consumerCount": (None, None), "size": (None, None)},
             [
                 (
                     0,

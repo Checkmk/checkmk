@@ -33,19 +33,9 @@ def _parameter_valuespec_mq_queues():
             (
                 "consumerCount",
                 SimpleLevels(
-                    title=_("Upper Levels for the consumer count"),
+                    title=_("Levels for the consumer count"),
                     help=_("Consumer Count is the size of connected consumers to a queue"),
                     spec=Integer,
-                    direction="upper",
-                ),
-            ),
-            (
-                "consumer_count_levels_lower",
-                SimpleLevels(
-                    title=_("Lower levels for the consumer count"),
-                    help=_("Consumer Count is the size of connected consumers to a queue"),
-                    spec=Integer,
-                    direction="lower",
                 ),
             ),
         ],

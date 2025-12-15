@@ -51,7 +51,6 @@ configure_make(
         "--without-wx",
     ],
     copts = [
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
         "-O2",
         "-g",
     ],
@@ -60,6 +59,13 @@ configure_make(
     },
     install_prefix = "$INSTALLDIR",
     lib_source = ":all_srcs",
+    linkopts = [
+        # lib/erlang/bin
+        # lib/erlang/erts-14.2.5.10/bin
+        # lib/erlang/lib/erl_interface-5.5.1/bin
+        # lib/erlang/lib/os_mon-2.9.1/priv/bin
+        "-Wl,-rpath,$ORIGIN_VAR/../lib:$ORIGIN_VAR/../../:$ORIGIN_VAR/../../../:$ORIGIN_VAR/../../../../:$ORIGIN_VAR/../../../../../",  # Include erlang lib directories and check_mk lib directories.
+    ],
     out_bin_dir = "%s/bin/" % PLACE_HOLDER,
     out_binaries = [
         "ct_run",

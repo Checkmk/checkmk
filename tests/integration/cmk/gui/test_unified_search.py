@@ -64,6 +64,12 @@ def test_result_payload_shape_and_metadata(session: CMKWebSession) -> None:
     assert resp_json["result"]["query"] == "host"
 
 
+@pytest.mark.skip_if_edition("cloud")  # CMK-27131
+def test_search_with_catch_all_regex(session: CMKWebSession) -> None:
+    resp_json = _SearchClient(session).search(".*").json()
+    assert resp_json["result_code"] == 0
+
+
 @dataclasses.dataclass
 class _SearchClient:
     _session: CMKWebSession

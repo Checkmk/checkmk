@@ -1,4 +1,4 @@
-# Component HW/SW Inventory, MKP Tool, Notifications, OpenTelemetry Integration
+# Component Command Line cmk, HW/SW Inventory, MKP Tool, Notifications, OpenTelemetry Integration
 #
 # Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
@@ -6,7 +6,9 @@
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
+
 per-file check_mk=file:/component_owners/command_line_cmk/OWNERS_DEFINITION
+per-file check_mk=set noparent
 per-file cmk-monitor-mknotifyd=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file cmk-monitor-mknotifyd=set noparent
 per-file cmk-monitor-otel-collector=file:/component_owners/opentelemetry_integration/OWNERS_DEFINITION

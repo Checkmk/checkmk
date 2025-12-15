@@ -1,4 +1,4 @@
-# Component Database Monitoring
+# Component Microcore & Livestatus
 #
 # Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
@@ -8,4 +8,4 @@
 
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/database_monitoring/OWNERS_DEFINITION
+file:/component_owners/microcore_and_livestatus/OWNERS_DEFINITION

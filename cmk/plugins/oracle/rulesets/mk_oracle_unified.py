@@ -7,7 +7,7 @@
 
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -202,50 +202,73 @@ def _auth_options(is_default_options: bool = True) -> CascadingSingleChoice:
     )
 
 
-def _connection_options() -> Dictionary:
+def _oracle_id() -> Dictionary:
     return Dictionary(
-        title=Title("Connection options"),
+        title=Title("Oracle Database Identification"),
         elements={
-            "host": DictElement(
-                parameter_form=String(
-                    title=Title("Hostname"),
-                    prefill=DefaultValue("localhost"),
-                ),
-                required=False,
-            ),
-            "port": DictElement(
-                parameter_form=Integer(
-                    title=Title("Port"),
-                    prefill=DefaultValue(1521),
-                ),
-                required=False,
-            ),
-            "timeout": DictElement(
-                parameter_form=Integer(
-                    title=Title("Connection timeout"),
-                    prefill=DefaultValue(5),
-                ),
-                required=False,
-            ),
-            "tns_admin": DictElement(
-                parameter_form=String(
-                    title=Title("Path to tnsnames.ora or sqlnet.ora file"),
-                    custom_validate=(
-                        validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
-                    ),
-                ),
-                required=False,
-            ),
             "service_name": DictElement(
                 parameter_form=String(
-                    title=Title(""),
-                    custom_validate=(
-                        validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+                    title=Title("Service Name"),
+                    help_text=Help("Oracle Service Name of the database instance."),
+                ),
+                required=True,
+            ),
+            "instance_name": DictElement(
+                parameter_form=String(
+                    title=Title("Instance Name(SID)"),
+                    help_text=Help(
+                        "Oracle Instance Name of the database instance. May be the same as SID."
                     ),
                 ),
                 required=False,
             ),
         },
+    )
+
+
+def _connection_options(*, with_service_name: bool) -> Dictionary:
+    base: dict[str, DictElement[Any]] = {
+        "host": DictElement(
+            parameter_form=String(
+                title=Title("Hostname"),
+                prefill=DefaultValue("localhost"),
+            ),
+            required=False,
+        ),
+        "port": DictElement(
+            parameter_form=Integer(
+                title=Title("Port"),
+                prefill=DefaultValue(1521),
+            ),
+            required=False,
+        ),
+        "timeout": DictElement(
+            parameter_form=Integer(
+                title=Title("Connection timeout"),
+                prefill=DefaultValue(5),
+            ),
+            required=False,
+        ),
+        "tns_admin": DictElement(
+            parameter_form=String(
+                title=Title("Path to tnsnames.ora or sqlnet.ora file"),
+                custom_validate=(
+                    validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+                ),
+            ),
+            required=False,
+        ),
+    }
+
+    extension: dict[str, DictElement[Any]] = {
+        "oracle_id": DictElement(
+            parameter_form=_oracle_id(),
+            required=False,
+        ),
+    }
+    return Dictionary(
+        title=Title("Connection options"),
+        elements=base | extension if with_service_name else base,
     )
 
 
@@ -432,18 +455,18 @@ def _additional_options(is_default_options: bool = True) -> Dictionary:
     )
 
 
-def _common_instance_options(is_default_options: bool = True) -> dict[str, DictElement]:
+def _common_instance_options(*, is_main_entry: bool) -> dict[str, DictElement]:
     return {
         "auth": DictElement(
-            parameter_form=_auth_options(is_default_options),
-            required=is_default_options,
+            parameter_form=_auth_options(is_default_options=is_main_entry),
+            required=is_main_entry,
         ),
         "connection": DictElement(
-            parameter_form=_connection_options(),
-            required=is_default_options,
+            parameter_form=_connection_options(with_service_name=is_main_entry),
+            required=is_main_entry,
         ),
         "options": DictElement(
-            parameter_form=_additional_options(is_default_options=is_default_options),
+            parameter_form=_additional_options(is_default_options=is_main_entry),
             required=False,
         ),
     }
@@ -453,7 +476,7 @@ def _main() -> Dictionary:
     return Dictionary(
         title=Title("Oracle Database default configuration"),
         elements={
-            **_common_instance_options(),
+            **_common_instance_options(is_main_entry=True),
             "cache_age": DictElement(
                 parameter_form=Integer(
                     title=Title("Cache age"),
@@ -491,7 +514,7 @@ def _instances() -> List:
                     ),
                     required=True,
                 ),
-                **_common_instance_options(is_default_options=False),
+                **_common_instance_options(is_main_entry=False),
             },
         ),
     )

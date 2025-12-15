@@ -81,11 +81,17 @@ class GuiInstanceAuthUserPasswordData(BaseModel):
     role: str | None = None
 
 
+class GuiOracleIdentificationConf(BaseModel):
+    service_name: str
+    instance_name: str | None = None
+
+
 class GuiConnectionConf(BaseModel):
     host: str = "localhost"
     port: int | None = None
     timeout: int | None = None
     tns_admin: str | None = None
+    oracle_id: GuiOracleIdentificationConf | None = None
 
 
 class GuiDiscoveryConf(BaseModel):
@@ -168,6 +174,8 @@ class OracleConnection(TypedDict):
     port: NotRequired[int]
     timeout: NotRequired[int]
     tns_admin: NotRequired[str]
+    service_name: NotRequired[str]
+    instance: NotRequired[str]
 
 
 class OracleInstanceAuth(TypedDict):
@@ -273,6 +281,10 @@ def _get_oracle_connection(conn: GuiConnectionConf) -> OracleConnection:
         connection["timeout"] = timeout
     if tns_admin := conn.tns_admin:
         connection["tns_admin"] = tns_admin
+    if oracle_id := conn.oracle_id:
+        connection["service_name"] = oracle_id.service_name
+        if oracle_id.instance_name:
+            connection["instance"] = oracle_id.instance_name
     return connection
 
 

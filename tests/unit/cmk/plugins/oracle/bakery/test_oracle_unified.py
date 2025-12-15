@@ -22,6 +22,7 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiInstanceConf,
     GuiMainConf,
     GuiOracleClientLibOptions,
+    GuiOracleIdentificationConf,
 )
 
 PLUGIN_NAME = "mk_oracle_unified"
@@ -113,6 +114,7 @@ oracle_config_min: GuiConfig = GuiConfig(
             port=None,
             timeout=None,
             tns_admin=None,
+            oracle_id=None,
         ),
         options=None,
         cache_age=None,
@@ -152,11 +154,13 @@ oracle_config_full: GuiConfig = GuiConfig(
             port=1521,
             timeout=10,
             tns_admin="/etc/oracle/tns",
+            oracle_id=None,
         ),
         options=GuiAdditionalOptionsConf(
             max_connections=10,
             max_queries=100,
             ignore_db_name=True,
+            oracle_client_library=None,
         ),
         cache_age=600,
         discovery=GuiDiscoveryConf(
@@ -208,6 +212,7 @@ oracle_config_full: GuiConfig = GuiConfig(
                 port=1522,
                 timeout=20,
                 tns_admin="/etc/oracle/tns2",
+                oracle_id=None,
             ),
             options=GuiInstanceAdditionalOptionsConf(
                 ignore_db_name=False,
@@ -280,6 +285,9 @@ oracle_config_section: GuiConfig = GuiConfig(
             port=1521,
             timeout=None,
             tns_admin=None,
+            oracle_id=GuiOracleIdentificationConf(
+                service_name="some_name", instance_name="some_instance"
+            ),
         ),
         options=None,
         cache_age=None,
@@ -320,7 +328,9 @@ expected_yaml_lines_section = [
     "    cache_age: 600",
     "    connection:",
     "      hostname: localhost",
+    "      instance: some_instance",
     "      port: 1521",
+    "      service_name: some_name",
     "    sections:",
     "    - instance:",
     "        is_async: false",

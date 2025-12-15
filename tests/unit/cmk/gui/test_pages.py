@@ -163,6 +163,7 @@ def test_registered_pages() -> None:
         "ajax_initial_topology_filters",
         "ajax_graph_images",
         "gui_timings",
+        "download_telemetry",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:

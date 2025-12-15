@@ -18,12 +18,14 @@ from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import GroupName
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, get_languages
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -1856,11 +1858,19 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     ),
 )
 
-
 ConfigVariableProductTelemetry = ConfigVariable(
     group=ConfigVariableGroupProductTelemetry,
     primary_domain=ConfigDomainCore,
     ident="product_telemetry",
+    hint=lambda: HTML.without_escaping(
+        _(
+            "Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download your data by %s."
+        )
+        % HTMLWriter.render_a(
+            content=_("clicking here"),
+            href="download_telemetry.py",
+        )
+    ),
     valuespec=lambda context: Dictionary(
         title=_("Product telemetry"),
         elements=[

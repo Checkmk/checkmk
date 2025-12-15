@@ -2,6 +2,9 @@
 common --registry="file:///%workspace%/bazel/thirdparty"
 common --registry=https://bcr.bazel.build
 
+# Add git hash to workspace status 
+build --workspace_status_command=bazel/tools/workspace_status.sh
+
 # Add mirrors for certain download URLs
 common --downloader_config=bazel_downloader.cfg
 

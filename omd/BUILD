@@ -8,6 +8,7 @@ load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
 load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
 
@@ -211,6 +212,17 @@ pkg_files(
     strip_prefix = strip_prefix.from_pkg(""),
 )
 
+git_hash_file(
+    name = "hash_file",
+    out = "COMMIT",
+)
+
+pkg_files(
+    name = "hash_file_pkg",
+    srcs = [":hash_file"],
+    prefix = "share/doc",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
@@ -223,6 +235,7 @@ pkg_files(
         ":agents_z_os",
         ":cmk_libexec",
         ":diskspace_cleanup_plugin",
+        ":hash_file_pkg",
         ":omd_hooks",
         ":rest_api_spec",
         ":share_doc_check-mk",

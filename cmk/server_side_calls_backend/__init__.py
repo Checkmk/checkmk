@@ -13,7 +13,12 @@ from ._commons import (
     SSCRules,
 )
 from ._loading import load_active_checks, load_special_agents
-from ._special_agents import SpecialAgent, SpecialAgentCommandLine
+from ._special_agents import (
+    PluginFamily,
+    relay_compatible_plugin_families,
+    SpecialAgent,
+    SpecialAgentCommandLine,
+)
 
 __all__ = [
     "ActiveCheck",
@@ -21,6 +26,8 @@ __all__ = [
     "load_active_checks",
     "load_secrets_file",
     "load_special_agents",
+    "PluginFamily",
+    "relay_compatible_plugin_families",
     "SpecialAgent",
     "SpecialAgentCommandLine",
     "SSCRules",

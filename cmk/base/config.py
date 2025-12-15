@@ -128,6 +128,7 @@ from cmk.server_side_calls_backend import (
     ExecutableFinderProtocol,
     load_active_checks,
     load_special_agents,
+    relay_compatible_plugin_families,
     SpecialAgent,
     SpecialAgentCommandLine,
     SSCRules,
@@ -2551,6 +2552,7 @@ class ConfigCache:
             secrets_file_option,
             executable_finder,
             for_relay=for_relay,
+            relay_compatible_families=relay_compatible_plugin_families(),
         )
         for agentname, params_seq in host_special_agents:
             for params in params_seq:

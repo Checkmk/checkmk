@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Container, Iterator, Mapping
 from dataclasses import dataclass
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -22,6 +22,11 @@ from .config_processing import (
     OAuth2Connection,
     process_configuration_to_parameters,
 )
+
+
+@dataclass(frozen=True)
+class PluginFamily:
+    name: str
 
 
 @dataclass(frozen=True)
@@ -44,6 +49,7 @@ class SpecialAgent:
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
         for_relay: bool,
+        relay_compatible_families: Container[PluginFamily],
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -57,9 +63,17 @@ class SpecialAgent:
         self.password_store_file = password_store_file
         self._finder = finder
         self._for_relay = for_relay
+        self._relay_compatible_families = relay_compatible_families
 
     def _make_source_path(self, agent_name: str) -> str:
         return self._finder(f"agent_{agent_name}", self._modules.get(agent_name))
+
+    def _make_family(self, agent_name: str) -> PluginFamily:
+        match self._modules[agent_name].split("."):
+            case ("cmk" | "cmk_addons", "plugins", family, *_):
+                return PluginFamily(family)
+            case _:
+                raise ValueError(f"Cannot determine family for special agent {agent_name}")
 
     def _iter_commands(
         self,
@@ -99,7 +113,7 @@ class SpecialAgent:
             return
 
         if self._for_relay:
-            if name not in _relay_compatible_plugin_families():
+            if self._make_family(name) not in self._relay_compatible_families:
                 msg = f"Config creation for special agent {agent_name} failed on {self.host_name}: Agent is not supported on relays."
                 config_warnings.warn(msg)
                 # Continue anyway. The datasource will fail on the relay side, and the Checkmk service will go CRIT.
@@ -107,5 +121,7 @@ class SpecialAgent:
         yield from self._iter_commands(special_agent, params)
 
 
-def _relay_compatible_plugin_families() -> list[str]:
-    return [ep.name for ep in entry_points(group="cmk.special_agent_supported_on_relay")]
+def relay_compatible_plugin_families() -> Container[PluginFamily]:
+    return [
+        PluginFamily(ep.name) for ep in entry_points(group="cmk.special_agent_supported_on_relay")
+    ]

@@ -186,6 +186,7 @@ from cmk.server_side_calls_backend import (
     ExecutableFinder,
     load_secrets_file,
     load_special_agents,
+    relay_compatible_plugin_families,
     SpecialAgent,
     SpecialAgentCommandLine,
 )
@@ -2931,6 +2932,7 @@ def get_special_agent_commandline(
             ),
         ),
         for_relay=host_config.relay_id is not None,
+        relay_compatible_families=relay_compatible_plugin_families(),
     )
 
     if not params:

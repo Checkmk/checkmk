@@ -179,7 +179,7 @@ def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
     ],
 )
 def test_iter_special_agent_commands(
-    plugins: Mapping[PluginLocation, SpecialAgentConfig],
+    plugins: Mapping[PluginLocation, SpecialAgentConfig[Mapping[str, object]]],
     parameters: Mapping[str, object],
     host_attrs: Mapping[str, str],
     host_config: HostConfig,
@@ -203,6 +203,7 @@ def test_iter_special_agent_commands(
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
         for_relay=False,
+        relay_compatible_families=(),
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
     assert commands == expected_result
@@ -249,6 +250,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
         for_relay=False,
+        relay_compatible_families=(),
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -278,6 +280,7 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
         for_relay=False,
+        relay_compatible_families=(),
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -315,6 +318,7 @@ def test_iter_special_agent_commands_crash() -> None:
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "/path/to/agent",
         for_relay=False,
+        relay_compatible_families=(),
     )
 
     with pytest.raises(

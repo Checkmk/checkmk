@@ -58,6 +58,7 @@ const selectedDualListElements = computed<DualListElement[]>({
   <CmkDualList
     v-if="component.choices"
     v-model:data="selectedDualListElements"
+    :width="'xsmall'"
     :elements="dualListElements"
     :title="component.id"
     :validators="[]"

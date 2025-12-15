@@ -555,14 +555,15 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
                     "margin-bottom: 10px",
                     "margin-right: 0px",
                     "margin-left: 18px",
+                    "border-spacing: 5px",
                 ],
                 id=table_uuid_str,
             )
 
             html.open_tr()
-            html.th(_("Attribute name"))
-            html.th(_("Attribute value"))
-            html.th(_("Attribute type"))
+            html.th(_("Attribute name"), style="text-align: left; width: 20%;")
+            html.th(_("Attribute value"), style="text-align: left")
+            html.th(_("Attribute type"), style="text-align: left; width: 10%;")
             html.close_tr()
 
             for attribute_type, attributes in sorted(

@@ -106,6 +106,11 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [  # sorted by descr
             "~.*cmk-automation-helper.*",
         ),
         (
+            "8b5616fb-a457-404e-a136-24065da7f170",
+            "ui-job-scheduler",
+            "~.*cmk-ui-job-scheduler.*",
+        ),
+        (
             "feaa2248-08b8-47a3-bc3c-a5502d2b9f3a",
             "checker helpers",
             "~python3 /omd/sites/[^/]+/bin/cmk .*--checker",

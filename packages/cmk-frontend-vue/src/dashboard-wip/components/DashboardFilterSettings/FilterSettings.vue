@@ -108,7 +108,12 @@ const handleUpdateRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
 }
 
 const handleResetRuntimeFilters = () => {
-  runtimeFilters.setFilters(JSON.parse(JSON.stringify(initialRuntimeFilters.value)))
+  const activeFilters = [...runtimeFilters.getSelectedFilters()]
+  activeFilters.forEach((filterId) => {
+    if (!mandatorySet.has(filterId)) {
+      runtimeFilters.removeFilter(filterId)
+    }
+  })
 }
 
 const handleSaveConfiguration = () => {

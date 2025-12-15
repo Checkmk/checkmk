@@ -122,7 +122,7 @@ watch(
           {{ _t('Apply') }}
         </CmkButton>
         <CmkButton variant="secondary" @click="resetRuntimeFilters">
-          {{ _t('Reset to pre-defined filters') }}
+          {{ _t('Reset to pre-selected filters') }}
         </CmkButton>
       </div>
       <CmkButton v-if="canEdit" variant="secondary" @click="openConfiguration">

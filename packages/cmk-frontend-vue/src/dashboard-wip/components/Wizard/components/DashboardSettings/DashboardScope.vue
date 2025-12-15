@@ -11,6 +11,8 @@ import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue
 
 import SelectorSingleInfo from '@/dashboard-wip/components/selectors/SelectorSingleInfo.vue'
 
+import ContentSpacer from '../../components/ContentSpacer.vue'
+
 const { _t } = usei18n()
 
 interface DashboardScopeProps {
@@ -25,6 +27,7 @@ const selectedIds = defineModel<string[]>('selectedIds', { required: true })
 <template>
   <div>
     <CmkLabel>{{ _t('Choose which objects this dashboard applies to') }}</CmkLabel>
+    <ContentSpacer :dimension="3" />
     <CmkInlineValidation v-if="selectionErrors" :validation="selectionErrors || []" />
     <SelectorSingleInfo v-model:selected-ids="selectedIds" />
   </div>

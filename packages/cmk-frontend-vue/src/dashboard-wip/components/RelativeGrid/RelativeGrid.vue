@@ -21,7 +21,7 @@ import { type ANCHOR_POSITION, type Dimensions, type Position, WIDGET_MIN_SIZE }
 import { calculateDashboardDimensions } from './utils.ts'
 
 /*
-This component provides the relative (legacy) grid layout for dashboard widgets.
+This component provides the anchored grid layout for dashboard widgets.
 
 Each content saves its own internal layout information consisting of size (width, height) and position (left, top).
 Those values also implicitly contain information about the anchor position (top-left, top-right, bottom-left, bottom-right)

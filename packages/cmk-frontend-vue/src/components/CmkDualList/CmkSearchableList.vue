@@ -64,7 +64,7 @@ watch(
 )
 
 const maxWidthMap: Record<SearchableListWidthVariants, number> = {
-  small: 25.3,
+  small: 24.2,
   medium: 50,
   large: 75
 }

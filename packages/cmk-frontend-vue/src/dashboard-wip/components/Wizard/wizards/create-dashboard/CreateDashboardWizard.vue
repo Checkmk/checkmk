@@ -9,13 +9,11 @@ import { ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkLabel from '@/components/CmkLabel.vue'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
-import BoxedSection from '../../components/BoxedSection.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import DashboardLayoutSelector from '../../components/DashboardSettings/DashboardLayoutSelector.vue'
 import DashboardScope from '../../components/DashboardSettings/DashboardScope.vue'
@@ -129,6 +127,7 @@ const cancel = () => {
   emit('cancel-creation')
 }
 
+const displayDashboardScope = ref<boolean>(true)
 const displayGeneralProperties = ref<boolean>(true)
 const displayVisibility = ref<boolean>(true)
 </script>
@@ -182,23 +181,25 @@ const displayVisibility = ref<boolean>(true)
           {{ _t('Dashboard type') }}
         </CmkLabel>
       </div>
+      <ContentSpacer :dimension="5" />
+
       <DashboardTypeSelector v-model:dashboard-type="dashboardType" />
 
       <ContentSpacer />
 
       <div v-if="dashboardType === DashboardType.CUSTOM">
-        <BoxedSection>
-          <template #header>
-            <CmkHeading type="h4">{{ _t('Dashboard scope') }}</CmkHeading>
-          </template>
-          <template #content>
-            <DashboardScope
-              v-model:selected-ids="dashboardScopeIds"
-              :selection-errors="scopeErrors"
-            />
-          </template>
-        </BoxedSection>
-        <ContentSpacer />
+        <CollapsibleTitle
+          :title="_t('Dashboard scope')"
+          :open="displayDashboardScope"
+          class="collapsible"
+          @toggle-open="displayDashboardScope = !displayDashboardScope"
+        />
+        <CollapsibleContent :open="displayDashboardScope">
+          <DashboardScope
+            v-model:selected-ids="dashboardScopeIds"
+            :selection-errors="scopeErrors"
+          />
+        </CollapsibleContent>
       </div>
 
       <CollapsibleTitle

@@ -282,7 +282,7 @@ const createDashboard = async (
   // avoid showing the new dashboard, while the dashboard list is loading
   const postCreateMode = nextStep === 'viewList' ? null : 'setDashboardAsActive'
   await dashboardsManager.createDashboard(dashboardId, settings, layout, scopeIds, postCreateMode)
-  isDashboardEditingMode.value = true
+  isDashboardEditingMode.value = false
 
   if (nextStep === 'setFilters') {
     openDashboardFilterSettings.value = true

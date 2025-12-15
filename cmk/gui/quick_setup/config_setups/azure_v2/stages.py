@@ -347,7 +347,7 @@ def azure_collect_params(
 
 
 quick_setup_azure = QuickSetup(
-    title=_("Microsoft Azure"),
+    title=_("Azure"),
     id=QuickSetupId(RuleGroup.SpecialAgents("azure_v2")),
     stages=[
         configure_authentication,

@@ -464,6 +464,11 @@ class ABCMainModuleQuickSetup(ABCMainModule, ABC):
     def rule_group_type(self) -> RuleGroupType:
         pass
 
+    @override
+    @classmethod
+    def main_menu_search_terms(cls) -> Sequence[str]:
+        return ["microsoft"]
+
 
 class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
     @property
@@ -520,7 +525,7 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @property
     @override
     def title(self) -> str:
-        return _("Microsoft Azure (deprecated)")
+        return _("Azure (deprecated)")
 
     @property
     @override
@@ -540,7 +545,7 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @classmethod
     @override
     def main_menu_search_terms(cls) -> Sequence[str]:
-        return ["azure"]
+        return ["azure", "microsoft"]
 
     @property
     @override
@@ -565,7 +570,7 @@ class MainModuleQuickSetupAzureV2(ABCMainModuleQuickSetup):
     @property
     @override
     def title(self) -> str:
-        return _("Microsoft Azure")
+        return _("Azure")
 
     @property
     @override

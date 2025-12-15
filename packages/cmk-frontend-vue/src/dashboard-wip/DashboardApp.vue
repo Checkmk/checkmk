@@ -432,11 +432,11 @@ function deepClone<T>(obj: T): T {
         v-if="openDashboardShareDialog && dashboardsManager.activeDashboardName.value"
         :dashboard-name="dashboardsManager.activeDashboardName.value"
         :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
-        :public-token="dashboardsManager.activeDashboard?.value?.public_token ?? null"
+        :public-token="dashboardsManager.activeDashboard?.value?.public_token || null"
+        :available-features="available_features"
         @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
         @close="openDashboardShareDialog = false"
       />
-
       <AddWidgetDialog
         v-model:open="openAddWidgetDialog"
         :workflow-items="dashboardWidgetWorkflows"

@@ -27,22 +27,20 @@ export const createToken = async (
   const payload: CreateDashboardToken = {
     dashboard_id: dashboardId,
     dashboard_owner: dashboardOwner,
-    comment: comment || ''
+    comment: comment || '',
+    expires_at: expiresAt?.toISOString() || null
   }
 
-  if (expiresAt) {
-    payload.expires_at = expiresAt.toISOString()
-  }
+  const resp = unwrap(
+    await client.POST('/domain-types/dashboard_token/collections/all', {
+      ...CONTENT_TYPE_HEADER,
+      body: payload
+    })
+  )
 
-  const resp = await client.POST('/domain-types/dashboard_token/collections/all', {
-    ...CONTENT_TYPE_HEADER,
-    body: payload
-  })
-
-  const tokenResp = unwrap(resp)
   return {
-    ...tokenResp.extensions,
-    token_id: tokenResp.id!
+    ...resp.extensions,
+    token_id: resp.id!
   }
 }
 
@@ -50,26 +48,27 @@ export const updateToken = async (
   dashboardId: string,
   dashboardOwner: string,
   isDisabled: boolean | undefined,
-  expiresAt: Date,
+  expiresAt: Date | null,
   comment: string | null | undefined
 ): Promise<DashboardTokenModel> => {
   const payload: EditDashboardToken = {
     dashboard_id: dashboardId,
     dashboard_owner: dashboardOwner,
     is_disabled: isDisabled || false,
-    expires_at: expiresAt.toISOString(),
+    expires_at: expiresAt?.toISOString() || null,
     comment: comment || ''
   }
 
-  const resp = await client.POST('/domain-types/dashboard_token/actions/edit/invoke', {
-    ...CONTENT_TYPE_HEADER,
-    body: payload
-  })
+  const resp = unwrap(
+    await client.POST('/domain-types/dashboard_token/actions/edit/invoke', {
+      ...CONTENT_TYPE_HEADER,
+      body: payload
+    })
+  )
 
-  const tokenResp = unwrap(resp)
   return {
-    ...tokenResp.extensions,
-    token_id: tokenResp.id!
+    ...resp.extensions,
+    token_id: resp.id!
   }
 }
 

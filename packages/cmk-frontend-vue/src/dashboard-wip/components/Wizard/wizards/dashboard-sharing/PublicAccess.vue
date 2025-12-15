@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Reactive, reactive, ref } from 'vue'
+import { type Reactive, reactive, toRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -14,12 +14,14 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import PopupDialog, { type PopupDialogProps } from '@/dashboard-wip/components/PopupDialog.vue'
+import type { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import { urlHandler } from '@/dashboard-wip/utils'
 
 import CollapsibleBox from '../../components/CollapsibleBox.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import PublicAccessSettings from './PublicAccessSettings.vue'
-import { type DashboardTokenModel, createToken, deleteToken, updateToken } from './api'
+import { type DashboardTokenModel } from './api'
+import { usePublicAccess } from './composables/usePublicAccess'
 
 const { _t } = usei18n()
 
@@ -27,6 +29,7 @@ interface PublicAccessLinkProps {
   dashboardName: string
   dashboardOwner: string
   publicToken: DashboardTokenModel | null
+  availableFeatures: DashboardFeatures
 }
 
 interface PublicAccessEmits {
@@ -43,144 +46,96 @@ const dialogData: Reactive<PopupDialogProps> = reactive({
   buttons: [{ title: _t('Enable access'), variant: 'warning', onclick: () => {} }]
 })
 
-const comment = ref<string>(props.publicToken?.comment || '')
-const expiresAt = ref<Date>(
-  props.publicToken?.expires_at ? new Date(props.publicToken.expires_at) : new Date()
+const handler = usePublicAccess(
+  props.dashboardName,
+  props.dashboardOwner,
+  toRef(props, 'publicToken'),
+  props.availableFeatures
 )
 
-const waitAPICall = ref<boolean>(false)
-const waitDeleteAPICall = ref<boolean>(false)
+const handleEnableAccess = async () => {
+  if (!handler.runningUpdateTokenCall.value && handler.validate()) {
+    dialogData.title = _t('Enable public link?')
+    dialogData.message = [_t('Anyone with the link can view this dashboard.')]
 
-const handleEnableAccess = () => {
-  if (waitAPICall.value) {
-    return
-  }
-
-  dialogData.title = _t('Enable public link?')
-  dialogData.message = [_t('Anyone with the link can view this dashboard.')]
-
-  if (expiresAt.value) {
-    const expiryDateStr = expiresAt.value.toISOString().split('T')[0]!
-    dialogData.message.push(
-      _t('Access will automatically expire on %{date}.', { date: expiryDateStr })
-    )
-  }
-
-  dialogData.buttons = [
-    {
-      title: _t('Enable access'),
-      variant: 'warning',
-      onclick: () => {
-        dialogData.open = false
-        waitAPICall.value = true
-        void updateToken(
-          props.dashboardName,
-          props.dashboardOwner,
-          false,
-          expiresAt.value ?? new Date(),
-          comment.value
-        ).then(() => {
-          waitAPICall.value = false
-          emit('refreshDashboardSettings')
-        })
-      }
+    if (handler.validUntil.value) {
+      const expiryDateStr = handler.validUntil.value.toISOString().split('T')[0]!
+      dialogData.message.push(
+        _t('Access will automatically expire on %{date}.', { date: expiryDateStr })
+      )
     }
-  ]
 
-  dialogData.open = true
+    dialogData.buttons = [
+      {
+        title: _t('Enable access'),
+        variant: 'warning',
+        onclick: async () => {
+          dialogData.open = false
+          handler.isDisabled.value = false
+          await handler.updateToken()
+          emit('refreshDashboardSettings')
+        }
+      }
+    ]
+
+    dialogData.open = true
+  }
 }
 
-const handleDisableAccess = () => {
-  if (waitAPICall.value) {
-    return
-  }
+const handleDisableAccess = async () => {
+  if (!handler.runningUpdateTokenCall.value && handler.validate()) {
+    dialogData.title = _t('Stop sharing public link?')
+    dialogData.message = _t('This will disable the link and revoke access for all viewers.')
 
-  dialogData.title = _t('Stop sharing public link?')
-  dialogData.message = _t('This will disable the link and revoke access for all viewers.')
-
-  dialogData.buttons = [
-    {
-      title: _t('Disable access'),
-      variant: 'warning',
-      onclick: () => {
-        dialogData.open = false
-        waitAPICall.value = true
-        void updateToken(
-          props.dashboardName,
-          props.dashboardOwner,
-          true,
-          expiresAt.value ?? new Date(),
-          comment.value
-        ).then(() => {
+    dialogData.buttons = [
+      {
+        title: _t('Disable access'),
+        variant: 'warning',
+        onclick: async () => {
+          dialogData.open = false
+          handler.isDisabled.value = true
+          await handler.updateToken()
           emit('refreshDashboardSettings')
-          waitAPICall.value = false
-        })
+        }
       }
-    }
-  ]
+    ]
 
-  dialogData.open = true
-}
-
-const handleUpdate = async (callback?: () => void) => {
-  if (waitAPICall.value) {
-    return
+    dialogData.open = true
   }
-  waitAPICall.value = true
-  void updateToken(
-    props.dashboardName,
-    props.dashboardOwner,
-    props.publicToken?.is_disabled,
-    expiresAt.value ?? new Date(),
-    comment.value
-  ).then(() => {
-    emit('refreshDashboardSettings')
-    waitAPICall.value = false
-    if (callback) {
-      callback()
-    }
-  })
 }
 
 const handleCreate = async () => {
-  if (waitAPICall.value) {
-    return
-  }
-
-  waitAPICall.value = true
-
-  await createToken(props.dashboardName!, props.dashboardOwner).then(() => {
+  if (!handler.runningCreateTokenCall.value) {
+    await handler.createToken()
     emit('refreshDashboardSettings')
-    waitAPICall.value = false
-  })
+  }
 }
 
 const handleDelete = () => {
-  if (waitDeleteAPICall.value) {
-    return
-  }
+  if (!handler.runningDeleteTokenCall.value) {
+    dialogData.title = _t('Delete public link?')
+    dialogData.message = _t('This will delete the link and revoke access for all viewers.')
 
-  dialogData.title = _t('Delete public link?')
-  dialogData.message = _t('This will delete the link and revoke access for all viewers.')
-
-  dialogData.buttons = [
-    {
-      title: _t('Delete public link?'),
-      variant: 'warning',
-      onclick: async () => {
-        dialogData.open = false
-
-        waitDeleteAPICall.value = true
-
-        await deleteToken(props.dashboardName!, props.dashboardOwner).then(() => {
+    dialogData.buttons = [
+      {
+        title: _t('Delete public link?'),
+        variant: 'warning',
+        onclick: async () => {
+          dialogData.open = false
+          await handler.deleteToken()
           emit('refreshDashboardSettings')
-          waitDeleteAPICall.value = false
-        })
+        }
       }
-    }
-  ]
+    ]
+    dialogData.open = true
+  }
+}
 
-  dialogData.open = true
+const handleUpdate = async () => {
+  if (!handler.runningUpdateTokenCall.value && handler.validate()) {
+    await handler.updateToken()
+    emit('refreshDashboardSettings')
+  }
 }
 </script>
 
@@ -203,7 +158,7 @@ const handleDelete = () => {
 
     <CmkButton
       v-if="!publicToken"
-      :class="{ 'shimmer-input-button': waitAPICall }"
+      :class="{ 'shimmer-input-button': handler.runningCreateTokenCall.value }"
       @click="handleCreate"
       >{{ _t('Generate public link') }}</CmkButton
     >
@@ -218,14 +173,14 @@ const handleDelete = () => {
         <div class="db-public-access__cell">
           <CmkButton
             v-if="publicToken.is_disabled"
-            :class="{ 'shimmer-input-button': waitAPICall }"
+            :class="{ 'shimmer-input-button': handler.runningUpdateTokenCall.value }"
             @click="handleEnableAccess"
             >{{ _t('Enable access') }}</CmkButton
           >
 
           <CmkButton
             v-else
-            :class="{ 'shimmer-input-button': waitAPICall }"
+            :class="{ 'shimmer-input-button': handler.runningUpdateTokenCall.value }"
             @click="handleDisableAccess"
             >{{ _t('Disable access') }}</CmkButton
           >
@@ -237,12 +192,15 @@ const handleDelete = () => {
       </div>
     </template>
 
-    <template v-if="!!publicToken">
+    <template v-if="handler.isShared.value">
       <ContentSpacer variant="line" />
-
       <PublicAccessSettings
-        v-model:valid-until="expiresAt"
-        v-model:comment="comment"
+        v-model:has-validity="handler.hasValidity.value"
+        v-model:valid-until="handler.validUntil.value"
+        v-model:comment="handler.comment.value"
+        :validate="handler.validate"
+        :validation-error="handler.validationError.value"
+        :available-features="availableFeatures"
         @update-settings="handleUpdate"
       />
     </template>

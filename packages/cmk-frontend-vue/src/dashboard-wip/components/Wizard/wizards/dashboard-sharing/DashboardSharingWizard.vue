@@ -12,6 +12,8 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import type { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
 import CloseButton from '../../components/CloseButton.vue'
@@ -27,6 +29,7 @@ interface ShareDashboardSettingsProps {
   dashboardName: string
   dashboardOwner: string
   publicToken: DashboardTokenModel | null
+  availableFeatures: DashboardFeatures
 }
 
 interface ShareDashboardSettingsEmits {
@@ -34,10 +37,11 @@ interface ShareDashboardSettingsEmits {
   refreshDashboardSettings: []
 }
 
-defineProps<ShareDashboardSettingsProps>()
+const props = defineProps<ShareDashboardSettingsProps>()
 defineEmits<ShareDashboardSettingsEmits>()
 
 const dashboardUrl = computed(() => window?.parent?.location?.href || window.location.href)
+const clonedToken = computed(() => (props.publicToken ? structuredClone(props.publicToken) : null))
 </script>
 
 <template>
@@ -64,7 +68,8 @@ const dashboardUrl = computed(() => window?.parent?.location?.href || window.loc
         <PublicAccess
           :dashboard-owner="dashboardOwner"
           :dashboard-name="dashboardName"
-          :public-token="publicToken ?? null"
+          :public-token="clonedToken"
+          :available-features="availableFeatures"
           @refresh-dashboard-settings="$emit('refreshDashboardSettings')"
         />
       </WizardStageContainer>

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -14,6 +14,8 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
+
+import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
@@ -26,19 +28,23 @@ import TableFormRow from '../../components/TableForm/TableFormRow.vue'
 const { _t } = usei18n()
 
 interface PublicAccessSettingsEmits {
-  updateSettings: [() => void]
+  updateSettings: []
 }
 
+interface PublicAccessSettingsProps {
+  validationError: TranslatedString[] | null
+  availableFeatures: DashboardFeatures
+  validate: () => boolean
+}
+
+const props = defineProps<PublicAccessSettingsProps>()
 const emit = defineEmits<PublicAccessSettingsEmits>()
 
-const validUntil = defineModel<Date>('validUntil', { required: true })
+const hasValidity = defineModel<boolean>('hasValidity', { required: true })
+const validUntil = defineModel<Date | null>('validUntil', { required: true, default: null })
 const comment = defineModel<string>('comment', { required: true })
-const displaySuccessMessage = ref<boolean>(false)
-const dateValidationError = ref<TranslatedString[]>([])
 
-watch([comment, validUntil], () => {
-  displaySuccessMessage.value = false
-})
+const displaySuccessMessage = ref<boolean>(false)
 
 const expiryDate = computed({
   get: (): string => {
@@ -46,26 +52,22 @@ const expiryDate = computed({
   },
 
   set: (dateStr: string | undefined): void => {
-    const date = new Date(dateStr ? dateStr : '')
-    date.setHours(23, 59, 59, 999)
-
-    const targetDate = new Date()
-
-    if (date < targetDate) {
-      dateValidationError.value = [_t('Expiration date cannot be in the past.')]
-      return
+    if (dateStr) {
+      const date = new Date(dateStr)
+      validUntil.value = date
+    } else {
+      validUntil.value = null
     }
-
-    targetDate.setFullYear(targetDate.getFullYear() + 2)
-    if (date > targetDate) {
-      dateValidationError.value = [_t('Expiration date cannot be more than 2 years in the future.')]
-      return
-    }
-
-    dateValidationError.value = []
-    validUntil.value = date
   }
 })
+
+const handleSave = () => {
+  displaySuccessMessage.value = false
+  if (props.validate()) {
+    emit('updateSettings')
+    displaySuccessMessage.value = true
+  }
+}
 </script>
 
 <template>
@@ -84,8 +86,18 @@ const expiryDate = computed({
     <TableFormRow>
       <FieldDescription>{{ _t('Validity') }}</FieldDescription>
       <FieldComponent>
-        <CmkCheckbox :model-value="true" :label="_t('Set expiration date')" />
-        <div v-if="true" class="db-public-access-settings__validity">
+        <CmkCheckbox
+          :model-value="hasValidity"
+          :disabled="props.availableFeatures === DashboardFeatures.RESTRICTED"
+          :label="_t('Set expiration date')"
+          @update:model-value="
+            (value: boolean) => {
+              hasValidity = value
+              displaySuccessMessage = false
+            }
+          "
+        />
+        <div v-if="hasValidity" class="db-public-access-settings__validity">
           <div>
             <CmkLabel>{{ _t('Public link expiration date') }}</CmkLabel>
           </div>
@@ -93,7 +105,8 @@ const expiryDate = computed({
             <CmkInput
               v-model="expiryDate as string"
               type="date"
-              :external-errors="dateValidationError"
+              :external-errors="validationError || []"
+              @update:model-value="displaySuccessMessage = false"
             />
           </div>
         </div>
@@ -106,6 +119,7 @@ const expiryDate = computed({
           v-model="comment as string"
           :placeholder="_t('Internal comment, not visible to viewers')"
           field-size="MEDIUM"
+          @update:model-value="displaySuccessMessage = false"
         />
       </FieldComponent>
     </TableFormRow>
@@ -114,16 +128,7 @@ const expiryDate = computed({
   <ContentSpacer />
 
   <ActionBar align-items="right">
-    <ActionButton
-      :label="_t('Save changes')"
-      :action="
-        () =>
-          emit('updateSettings', () => {
-            displaySuccessMessage = true
-          })
-      "
-      variant="optional"
-    />
+    <ActionButton :label="_t('Save changes')" :action="handleSave" variant="optional" />
   </ActionBar>
 </template>
 

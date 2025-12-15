@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 
 from cmk.ccc.version import Edition
 from cmk.gui.http import HTTPMethod
-from cmk.gui.openapi.framework._types import DataclassInstance
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model.response import ApiErrorDataclass, TypedResponse
 from cmk.gui.openapi.restful_objects.type_defs import (
@@ -26,6 +25,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 )
 from cmk.gui.token_auth import TokenType
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.utils.dataclasses import DataclassInstance
 
 # the generic argument T will currently not be used, but this is the only way to specify a bound
 # on dataclasses

@@ -25,12 +25,13 @@ from cmk.gui.openapi.restful_objects.validators import (
     ResponseValidator,
 )
 from cmk.gui.openapi.utils import EXT, RestAPIResponseException, RestAPIWatoDisabledException
+from cmk.gui.utils.dataclasses import DataclassInstance
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.utils.paths import configuration_lockfile
 
 from ._context import ApiContext
-from ._types import DataclassInstance, RawRequestData
+from ._types import RawRequestData
 from ._utils import get_stripped_origin, iter_dataclass_fields
 from .endpoint_model import EndpointModel
 from .model import json_dump_without_omitted

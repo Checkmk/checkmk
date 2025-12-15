@@ -18,10 +18,11 @@ from pydantic import BaseModel, ConfigDict, ValidationError, with_config
 
 from cmk import trace
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
+from cmk.gui.utils.dataclasses import DataclassInstance
 
 from .._type_adapter import get_cached_type_adapter
 from ._context import ApiContext
-from ._types import DataclassInstance, HeaderParam, PathParam, QueryParam, RawRequestData
+from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
 from ._utils import iter_dataclass_fields
 from .content_types import convert_request_body
 from .model import api_field

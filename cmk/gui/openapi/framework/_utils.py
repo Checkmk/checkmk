@@ -6,7 +6,7 @@ import dataclasses
 from collections.abc import Iterable
 from typing import Annotated, get_args, get_origin
 
-from cmk.gui.openapi.framework._types import DataclassInstance
+from cmk.gui.utils.dataclasses import DataclassInstance
 
 
 def strip_annotated(t: type) -> type:

@@ -7,9 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { GridLayout } from 'grid-layout-plus'
 import { computed, ref, watch } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
+import CmkDialog from '@/components/CmkDialog.vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import type { ContentPropsRecord } from '@/dashboard-wip/components/DashboardContent/types'
+import { useInjectMissingRuntimeFiltersAction } from '@/dashboard-wip/composables/useProvideMissingRuntimeFiltersAction.ts'
 import type { ContentResponsiveGrid, DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { ResponsiveGridWidgetLayouts } from '@/dashboard-wip/types/widget'
 
@@ -67,6 +71,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { _t } = usei18n()
 
 const content = defineModel<ContentResponsiveGrid>('content', {
   required: true
@@ -166,6 +171,8 @@ watch(
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary } = useCmkErrorBoundary()
+
+const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 </script>
 
 <template>
@@ -178,6 +185,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
           class="db-responsive-grid__edit-column"
         />
       </div>
+      <CmkDialog
+        v-if="enterMissingRuntimeFiltersAction !== null"
+        :message="_t('Runtime filters are required to load data.')"
+        class="db-responsive-grid__missing-filters-dialog"
+      />
       <GridLayout
         :key="gridKey"
         class="db-responsive-grid__layout"
@@ -222,6 +234,14 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   width: 100%;
   height: 100%;
   position: relative;
+
+  --column-z-index: 1;
+}
+
+.db-responsive-grid__missing-filters-dialog {
+  position: relative;
+  z-index: calc(var(--column-z-index) + 1);
+  margin: var(--dimension-4);
 }
 
 .db-responsive-grid__layout {
@@ -230,12 +250,12 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   position: relative;
 
   /* this must be above the edit columns */
-  z-index: 2;
+  z-index: calc(var(--column-z-index) + 1);
 }
 
 .db-responsive-grid__edit-columns {
   position: absolute;
-  z-index: 1;
+  z-index: var(--column-z-index);
   display: flex;
 
   /* using v-bind to keep in sync with the used margins */
@@ -274,6 +294,6 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 /* NOTE: third party CSS selector (grid-layout-plus), we have to use :deep for this */
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown,checkmk/vue-bem-naming-convention */
 :deep(.vgl-item__resizer) {
-  z-index: 5;
+  z-index: calc(var(--column-z-index) + 4);
 }
 </style>

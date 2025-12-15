@@ -30,6 +30,7 @@ import type {
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
+import { useProvideMissingRuntimeFiltersAction } from '@/dashboard-wip/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
 import {
   type ContentResponsiveGrid,
@@ -107,6 +108,10 @@ const dashboardFilters = useDashboardFilters(
 )
 const dashboardWidgets = useDashboardWidgets(
   computed(() => dashboardsManager.activeDashboard.value?.content.widgets)
+)
+useProvideMissingRuntimeFiltersAction(
+  dashboardFilters.areAllMandatoryFiltersApplied,
+  openDashboardFilterSettings
 )
 
 async function updateBreadcrumb(dashboardName: string): Promise<void> {

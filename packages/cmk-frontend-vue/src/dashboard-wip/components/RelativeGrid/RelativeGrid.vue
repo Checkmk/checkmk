@@ -6,12 +6,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
+import CmkDialog from '@/components/CmkDialog.vue'
+
 import type { ContentPropsRecord } from '@/dashboard-wip/components/DashboardContent/types'
 import RelativeWidgetFrame from '@/dashboard-wip/components/RelativeGrid/RelativeWidgetFrame.vue'
 import {
   type ResizeDirection,
   createResizeHelper
 } from '@/dashboard-wip/components/RelativeGrid/helpers/resizeHelper.ts'
+import { useInjectMissingRuntimeFiltersAction } from '@/dashboard-wip/composables/useProvideMissingRuntimeFiltersAction.ts'
 import type { ContentRelativeGrid, DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
 import type { WidgetLayout } from '@/dashboard-wip/types/widget'
 
@@ -46,6 +51,7 @@ interface RelativeGridDashboardProps {
 }
 
 const props = defineProps<RelativeGridDashboardProps>()
+const { _t } = usei18n()
 
 const content = defineModel<ContentRelativeGrid>('content', {
   required: true
@@ -167,10 +173,17 @@ const cloneRelativeGridWidget = (oldWidgetId: string) => {
     size: layoutConstant.initial_size
   })
 }
+
+const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 </script>
 
 <template>
   <div class="simplebar-content">
+    <CmkDialog
+      v-if="enterMissingRuntimeFiltersAction !== null"
+      :message="_t('Runtime filters are required to load data.')"
+      class="db-relative-grid__missing-filters-dialog"
+    />
     <div id="dashboard" ref="dashboard" class="dashboard dashboard_main">
       <div v-for="spec of contentProps" :key="spec.widget_id">
         <RelativeWidgetFrame
@@ -209,5 +222,9 @@ const cloneRelativeGridWidget = (oldWidgetId: string) => {
   position: relative;
   width: 100%;
   height: 90vh;
+}
+
+.db-relative-grid__missing-filters-dialog {
+  margin: var(--dimension-4);
 }
 </style>

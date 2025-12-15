@@ -8,6 +8,7 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import DashboardContent from '@/dashboard-wip/components/DashboardContent/DashboardContent.vue'
 import type { ContentProps } from '@/dashboard-wip/components/DashboardContent/types'
+import MissingRuntimeFiltersMsg from '@/dashboard-wip/components/DashboardFilterSettings/runtime-filter/MissingRuntimeFiltersMsg.vue'
 
 interface Props {
   spec: ContentProps
@@ -51,7 +52,9 @@ defineEmits<{
         />
       </div>
     </div>
-    <DashboardContent v-bind="spec" class="db-responsive-grid-widget__content" />
+    <MissingRuntimeFiltersMsg>
+      <DashboardContent v-bind="spec" class="db-responsive-grid-widget__content" />
+    </MissingRuntimeFiltersMsg>
   </div>
 </template>
 

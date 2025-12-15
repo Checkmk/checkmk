@@ -21,7 +21,7 @@ const emit = defineEmits<FilterSettingsEmits>()
 </script>
 
 <template>
-  <CmkSlideIn :open="open" @close="emit('close')">
+  <CmkSlideIn :open="open" class="db-filter-settings__slide-in" @close="emit('close')">
     <FilterSettings
       :can-edit="canEdit"
       :applied-runtime-filters="appliedRuntimeFilters"
@@ -35,3 +35,10 @@ const emit = defineEmits<FilterSettingsEmits>()
     />
   </CmkSlideIn>
 </template>
+
+<style scoped>
+.db-filter-settings__slide-in {
+  /* Hack to keep the filters slide in above the add widget one */
+  z-index: calc(var(--z-index-modal) + 1);
+}
+</style>

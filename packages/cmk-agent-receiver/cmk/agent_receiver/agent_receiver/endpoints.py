@@ -7,15 +7,25 @@ import os
 import tempfile
 from functools import cache
 from pathlib import Path
-from typing import assert_never
+from typing import Annotated, assert_never
 
 from cryptography.x509 import Certificate
-from fastapi import APIRouter, Depends, File, Header, HTTPException, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from pydantic import UUID4
+from pydantic import BaseModel, UUID4, ValidationError
 from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_500_INTERNAL_SERVER_ERROR,
@@ -31,6 +41,7 @@ from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     link_host_with_uuid,
     post_csr,
     register,
+    register_token,
 )
 from cmk.agent_receiver.agent_receiver.decompression import DecompressionError, Decompressor
 from cmk.agent_receiver.agent_receiver.models import (
@@ -98,6 +109,34 @@ def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
     )
 
 
+def token_auth_unauthorized_exception() -> HTTPException:
+    return HTTPException(
+        status_code=HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+    )
+
+
+class CmkToken(BaseModel):
+    version: int
+    uuid: UUID4
+
+
+def verify_cmk_token(req: Request) -> str:
+    auth_header = req.headers.get("Authorization")
+    if not auth_header:
+        raise token_auth_unauthorized_exception()
+    if not auth_header.startswith("CMK-TOKEN "):
+        raise token_auth_unauthorized_exception()
+
+    token = auth_header.removeprefix("CMK-TOKEN ").strip()
+    version, uuid = token.split(":")
+    try:
+        CmkToken.model_validate({"version": version, "uuid": uuid})
+    except ValidationError:
+        raise token_auth_unauthorized_exception()
+    return token
+
+
 @cache
 def _pem_serizialized_site_root_cert() -> str:
     return serialize_to_pem(site_root_certificate())
@@ -123,6 +162,41 @@ async def register_existing(
     register_response = register(
         f"uuid={registration_body.uuid} Registration failed",
         credentials,
+        registration_body.uuid,
+        registration_body.host_name,
+    )
+    logger.info(
+        "uuid=%s registered host %s",
+        registration_body.uuid,
+        registration_body.host_name,
+    )
+    return RegisterExistingResponse(
+        root_cert=root_cert,
+        agent_cert=agent_cert,
+        connection_mode=register_response.connection_mode,
+    )
+
+
+@AGENT_RECEIVER_ROUTER.post(
+    "/register_existing_token",
+    response_model=RegisterExistingResponse,
+)
+async def register_existing_token(
+    *,
+    token: Annotated[str, Depends(verify_cmk_token)],
+    registration_body: RegisterExistingBody,
+) -> RegisterExistingResponse:
+    _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
+    root_cert = _pem_serizialized_site_root_cert()
+    agent_cert = serialize_to_pem(
+        _sign_agent_csr(
+            registration_body.uuid,
+            registration_body.csr,
+        )
+    )
+    register_response = register_token(
+        f"uuid={registration_body.uuid} Registration failed",
+        token,
         registration_body.uuid,
         registration_body.host_name,
     )

@@ -97,6 +97,22 @@ def _forward_put(
     )
 
 
+def _forward_put_token(
+    endpoint: str,
+    token: str,
+    json_body: dict[str, object],
+) -> requests.Response:
+    return requests.put(
+        f"{_local_rest_api_url()}/{endpoint}",
+        headers={
+            "Authorization": f"CMK-TOKEN {token}",
+            "Accept": "application/json",
+        },
+        json=json_body,
+        timeout=30,
+    )
+
+
 _TEndpointParams = ParamSpec("_TEndpointParams")
 _TEndpointReturn = TypeVar("_TEndpointReturn")
 
@@ -155,6 +171,29 @@ def register(
     response = _forward_put(
         f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register/invoke",
         credentials,
+        {
+            "uuid": str(uuid),
+        },
+    )
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        # The REST API error message is a bit obscure in this case
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Host {host_name} does not exist.",
+        )
+    _verify_response(response, HTTPStatus.OK)
+    return RegisterResponse.model_validate(response.json())
+
+
+@log_http_exception
+def register_token(
+    token: str,
+    uuid: UUID4,
+    host_name: str,
+) -> RegisterResponse:
+    response = _forward_put_token(
+        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register_token/invoke",
+        token,
         {
             "uuid": str(uuid),
         },

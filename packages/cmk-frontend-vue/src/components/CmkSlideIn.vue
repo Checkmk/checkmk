@@ -54,7 +54,7 @@ watch(
 </script>
 
 <template>
-  <DialogRoot :open="open" :modal="!!isIndexPage">
+  <DialogRoot :open="open" :modal="!isIndexPage">
     <DialogPortal :to="isIndexPage ? '#content_area' : 'body'">
       <!-- @vue-ignore @click is not a property of DialogOverlay -->
       <div v-if="open" class="cmk-slide-in__overlay" @click="emit('close')" />

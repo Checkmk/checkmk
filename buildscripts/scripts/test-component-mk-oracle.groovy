@@ -43,8 +43,8 @@ void main() {
                     usernameVariable: "USER",
                 ),
                 string(
-                    credentialsId: "CI_ORA2_DB_TEST",
-                    variable:"CI_ORA2_DB_TEST",
+                    credentialsId: "CI_ORA2_DB_TEST_PASSWORD",
+                    variable: "CI_ORA2_DB_TEST_PASSWORD",
                 ),
                 string(
                     credentialsId: "CI_ORA2_DB_TEST_SERVER",
@@ -52,6 +52,7 @@ void main() {
                 ),
             ]) {
                 sh('''
+                    CI_ORA2_DB_TEST="127.0.0.1:system:$CI_ORA2_DB_TEST_PASSWORD:1521:FREE::FREE.cmkoratest:_:_:" \
                     ORACLE_HOME=/opt/oracle/product/23ai/dbhomeFree \
                     HOST_ADDRESS="$USER@$SERVER" \
                     TEST_BINARY_LOCAL_PATH=test_ora_sql_test \

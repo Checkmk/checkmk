@@ -6,12 +6,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
-import { ref } from 'vue'
+import { type Ref, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 import CmkLinkCard from '@/components/CmkLinkCard'
+import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
+import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
+import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
@@ -30,6 +35,12 @@ const props = defineProps<{
 }>()
 
 const useCseSlideout = ref<boolean>(false)
+const currentStep: Ref<number> = usePersistentRef<number>(
+  `${props.step}-currentStep`,
+  0,
+  (v) => v as number,
+  'local'
+)
 
 if (props.cards.add_host === 'cse-first-host-slideout') {
   useCseSlideout.value = true
@@ -55,76 +66,122 @@ if (props.cards.add_host === 'cse-first-host-slideout') {
       }}
     </StepParagraph>
 
-    <StepHeading>
-      {{ _t('On-premises hosts') }}
-    </StepHeading>
-    <StepCardsRow>
-      <CmkLinkCard
-        icon-name="folder"
-        :url="useCseSlideout ? undefined : cards.add_host"
-        :title="_t('Server (Linux, Windows, Solaris, ...)')"
-        :open-in-new-tab="false"
-        :callback="
-          () => {
-            if (useCseSlideout) {
-              cseSlideoutOpen = true
-            }
-          }
-        "
-      />
-      <CmkLinkCard
-        icon-name="networking"
-        :title="_t('Network devices and SNMP')"
-        :url="cards.network_devices"
-        :open-in-new-tab="false"
-      />
-    </StepCardsRow>
+    <CmkWizard v-model="currentStep" mode="guided">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
+        <template #header>
+          <CmkHeading type="h3">{{ _t('Run a service discovery') }}</CmkHeading>
+        </template>
+        <template #content>
+          <StepHeading>
+            {{ _t('On-premises hosts') }}
+          </StepHeading>
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="folder"
+              :url="useCseSlideout ? undefined : cards.add_host"
+              :title="_t('Server (Linux, Windows, Solaris, ...)')"
+              :open-in-new-tab="false"
+              :callback="
+                () => {
+                  if (useCseSlideout) {
+                    cseSlideoutOpen = true
+                  }
+                }
+              "
+            />
+            <CmkLinkCard
+              icon-name="networking"
+              :title="_t('Network devices and SNMP')"
+              :url="cards.network_devices"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
 
-    <StepHeading>
-      {{ _t('Cloud hosts') }}
-    </StepHeading>
-    <StepCardsRow>
-      <CmkLinkCard
-        icon-name="aws-logo"
-        :title="_t('Amazon Web Services (AWS)')"
-        :url="cards.aws_quick_setup"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="azure-vms"
-        :title="_t('Microsoft Azure')"
-        :url="cards.azure_quick_setup"
-        :open-in-new-tab="false"
-      />
-      <CmkLinkCard
-        icon-name="gcp"
-        :title="_t('Google Cloud Platform (GCP)')"
-        :url="cards.gcp_quick_setup"
-        :open-in-new-tab="false"
-      />
-    </StepCardsRow>
+          <StepHeading>
+            {{ _t('Cloud hosts') }}
+          </StepHeading>
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="aws-logo"
+              :title="_t('Amazon Web Services (AWS)')"
+              :url="cards.aws_quick_setup"
+              :open-in-new-tab="false"
+            />
+            <CmkLinkCard
+              icon-name="azure-vms"
+              :title="_t('Microsoft Azure')"
+              :url="cards.azure_quick_setup"
+              :open-in-new-tab="false"
+            />
+            <CmkLinkCard
+              icon-name="gcp"
+              :title="_t('Google Cloud Platform (GCP)')"
+              :url="cards.gcp_quick_setup"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
 
-    <template v-if="cards.synthetic_monitoring || cards.opentelemetry">
-      <StepHeading>
-        {{ _t('Application monitoring') }}
-      </StepHeading>
-      <StepCardsRow>
-        <CmkLinkCard
-          v-if="cards.synthetic_monitoring"
-          icon-name="synthetic-monitoring-yellow"
-          :title="_t('Synthetic monitoring')"
-          :url="cards.synthetic_monitoring"
-          :open-in-new-tab="false"
-        />
-        <CmkLinkCard
-          v-if="cards.opentelemetry"
-          icon-name="opentelemetry"
-          :title="_t('OpenTelemetry (Beta)')"
-          :url="cards.opentelemetry"
-          :open-in-new-tab="false"
-        />
-      </StepCardsRow>
-    </template>
+          <template v-if="cards.synthetic_monitoring || cards.opentelemetry">
+            <StepHeading>
+              {{ _t('Application monitoring') }}
+            </StepHeading>
+            <StepCardsRow>
+              <CmkLinkCard
+                v-if="cards.synthetic_monitoring"
+                icon-name="synthetic-monitoring-yellow"
+                :title="_t('Synthetic monitoring')"
+                :url="cards.synthetic_monitoring"
+                :open-in-new-tab="false"
+              />
+              <CmkLinkCard
+                v-if="cards.opentelemetry"
+                icon-name="opentelemetry"
+                :title="_t('OpenTelemetry (Beta)')"
+                :url="cards.opentelemetry"
+                :open-in-new-tab="false"
+              />
+            </StepCardsRow>
+          </template>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+        </template>
+      </CmkWizardStep>
+
+      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
+        <template #header>
+          <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
+        </template>
+        <template #content>
+          <StepParagraph>
+            {{
+              _t(
+                `Changes are saved in a temporary environment first,
+                letting you review and adjust them safely.`
+              )
+            }}
+            <br />
+            {{ _t('Activate changes to apply them to live monitoring.') }}
+          </StepParagraph>
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="main-changes"
+              :title="_t('Activate changes')"
+              :url="cards.activate_changes"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton
+            v-if="!accomplished && step"
+            type="finish"
+            :override-label="_t('Mark as complete')"
+          />
+          <CmkWizardButton type="previous" />
+        </template>
+      </CmkWizardStep>
+    </CmkWizard>
   </CmkAccordionStepPanelItem>
 
   <FirstHostSlideout v-if="useCseSlideout" v-model="cseSlideoutOpen" />

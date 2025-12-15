@@ -156,8 +156,30 @@ class DiscoveryResult(NamedTuple):
     changed_labels: Mapping[str, HostLabelValueDict]
     labels_by_host: Mapping[HostName, Sequence[HostLabel]]
     sources: Mapping[str, tuple[int, str]]
+    config_warnings: Sequence[str]
 
     def serialize(self, for_cmk_version: Version) -> str:
+        if for_cmk_version < Version.from_str("2.5.0b1"):
+            return repr(
+                (
+                    self.job_status,
+                    self.check_table_created,
+                    [dataclasses.astuple(cpe) for cpe in self.check_table],
+                    {
+                        h: [dataclasses.astuple(cpe) for cpe in entries]
+                        for h, entries in self.nodes_check_table.items()
+                    },
+                    self.host_labels,
+                    self.new_labels,
+                    self.vanished_labels,
+                    self.changed_labels,
+                    {
+                        str(host_name): [label.serialize() for label in host_labels]
+                        for host_name, host_labels in self.labels_by_host.items()
+                    },
+                    self.sources,
+                )
+            )
         return repr(
             (
                 self.job_status,
@@ -176,6 +198,7 @@ class DiscoveryResult(NamedTuple):
                     for host_name, host_labels in self.labels_by_host.items()
                 },
                 self.sources,
+                self.config_warnings,
             )
         )
 
@@ -192,6 +215,7 @@ class DiscoveryResult(NamedTuple):
             changed_labels,
             raw_labels_by_host,
             sources,
+            config_warnings,
         ) = ast.literal_eval(raw)
         return cls(
             job_status,
@@ -212,6 +236,7 @@ class DiscoveryResult(NamedTuple):
                 for raw_host_name, raw_host_labels in raw_labels_by_host.items()
             },
             sources,
+            config_warnings,
         )
 
     def is_active(self) -> bool:
@@ -1267,6 +1292,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 changed_labels={},
                 source_results={},
                 labels_by_host={},
+                config_warnings=[],
             ),
         )
 
@@ -1369,6 +1395,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             changed_labels=result.changed_labels,
             labels_by_host=result.labels_by_host,
             sources=result.source_results,
+            config_warnings=result.config_warnings,
         )
 
     def _get_discovery_preview(

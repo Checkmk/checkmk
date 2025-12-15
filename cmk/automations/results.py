@@ -9,7 +9,7 @@ import json
 import socket
 from abc import ABC, abstractmethod
 from ast import literal_eval
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass, field
 from enum import StrEnum
 from typing import Any, Literal, Self, TypedDict, TypeVar
@@ -152,16 +152,19 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     changed_labels: DiscoveredHostLabelsDict
     labels_by_host: Mapping[HostName, Sequence[HostLabel]]
     source_results: Mapping[str, tuple[int, str]]
+    config_warnings: Sequence[str]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        return self._serialize_as_dict()
+        if for_cmk_version < cmk_version.Version.from_str("2.5.0b1"):
+            return self._serialize_as_dict(skip_keys={"config_warnings"})
+        return self._serialize_as_dict(skip_keys=())
 
-    def _serialize_as_dict(self) -> SerializedResult:
+    def _serialize_as_dict(self, skip_keys: Container[str]) -> SerializedResult:
         raw = asdict(self)
         return SerializedResult(
             repr(
                 {
-                    **raw,
+                    **{k: v for k, v in raw.items() if k not in skip_keys},
                     "labels_by_host": {
                         str(host_name): [label.serialize() for label in labels]
                         for host_name, labels in self.labels_by_host.items()
@@ -191,6 +194,7 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
                 for raw_host_name, raw_host_labels in raw["labels_by_host"].items()
             },
             source_results=raw["source_results"],
+            config_warnings=raw["config_warnings"],
         )
 
     @staticmethod

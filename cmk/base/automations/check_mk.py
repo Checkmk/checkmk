@@ -748,6 +748,7 @@ def _get_discovery_preview(
                 k: (r.state, r.as_text()) for k, r in check_preview.source_results.items()
             },
             labels_by_host=check_preview.kept_labels,
+            config_warnings=config_warnings.get_configuration(additional_warnings=()),
         )
 
 

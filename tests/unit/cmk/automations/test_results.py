@@ -140,6 +140,7 @@ class TestTryDiscoveryResult:
             changed_labels={},
             source_results={"agent": (0, "Success")},
             labels_by_host={HostName("my_host"): [HostLabel("cmk/foo", "bar", SectionName("baz"))]},
+            config_warnings=["Don't leave your luggage unattended."],
         )
         assert (
             ServiceDiscoveryPreviewResult.deserialize(

@@ -941,6 +941,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
     labels_by_host={
         HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
     },
+    config_warnings=["Don't do this again!"],
 )
 
 

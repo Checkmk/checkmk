@@ -93,6 +93,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     labels_by_host={
         HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
     },
+    config_warnings=["Ihr Dualband ist gerissen. Bitte legen Sie ein neues ein."],
 )
 
 
@@ -121,7 +122,7 @@ def mock_add_service_change(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture(name="mock_check_transaction")
-def fixture_check_transaction():
+def fixture_check_transaction() -> object:
     return patch.object(
         transaction_manager.TransactionManager, "check_transaction", MagicMock(side_effect=[True])
     )
@@ -263,6 +264,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
                 ],
             },
+            config_warnings=["We're all alone."],
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -331,6 +333,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
             ],
         },
+        config_warnings=["Nothing lasts forever."],
     )
 
     discovery_result = perform_fix_all(
@@ -478,6 +481,7 @@ def test_perform_discovery_single_update(
                     HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
                 ],
             },
+            config_warnings=["Your feet have expired."],
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -591,6 +595,7 @@ def test_perform_discovery_single_update(
                 HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
             ],
         },
+        config_warnings=(),
     )
 
     discovery_result = perform_service_discovery(
@@ -728,6 +733,7 @@ def test_perform_discovery_single_update__ignore(
             labels_by_host={
                 HostName("host23"): [],
             },
+            config_warnings=(),
         ),
     )
 
@@ -801,6 +807,7 @@ def test_perform_discovery_single_update__ignore(
             "agent": (0, "[agent] Success"),
             "piggyback": (0, "[piggyback] Success (but no data found for this host)"),
         },
+        config_warnings=(),
     )
 
     perform_service_discovery(
@@ -885,6 +892,7 @@ def test_perform_discovery_action_update_services(
                     HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
                 ],
             },
+            config_warnings=["The end is near."],
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -987,6 +995,7 @@ def test_perform_discovery_action_update_services(
                 HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
             ],
         },
+        config_warnings=(),
     )
 
     discovery_result = perform_service_discovery(
@@ -1073,6 +1082,7 @@ def test_perform_discovery_action_update_host_labels(
                     HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
                 ],
             },
+            config_warnings=(),
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -1111,6 +1121,7 @@ def test_perform_discovery_action_update_host_labels(
                 HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
             ],
         },
+        config_warnings=(),
     )
 
     discovery_result = perform_host_label_discovery(
@@ -1174,6 +1185,7 @@ def _make_discovery_result(
         changed_labels={},
         labels_by_host={},
         sources={},
+        config_warnings=(),
     )
 
 

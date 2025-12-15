@@ -705,7 +705,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         progress_update_log = discovery_result.job_status["loginfo"]["JobProgressUpdate"]
-        warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
+        warnings = [
+            *(f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")),
+            *(f"<br>{line}" for line in discovery_result.config_warnings),
+        ]
 
         if discovery_result.job_status["state"] == JobStatusStates.FINISHED and not warnings:
             if not messages:

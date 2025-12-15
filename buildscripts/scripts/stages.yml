@@ -770,9 +770,9 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
-          - "CI_ORA2_DB_TEST"
+          - "CI_ORA2_DB_TEST_PASSWORD"
       DIR: "packages/mk-oracle"
-      COMMAND: "./run --build --unit-tests --lint=all &> ${RESULTS}/mk-oracle.txt"
+      COMMAND: "./run --build --unit-tests --component-tests --lint=all &> ${RESULTS}/mk-oracle.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-oracle files changed"
       RESULT_CHECK_FILE_PATTERN: "results/mk-oracle.txt"

@@ -25,10 +25,10 @@ if
     [ $? -eq 4 ]
 then
     # Provide better commandline with enhanced 'getopt' from util-linux
-    GETOPT_OPTIONS=(--options 'buFl:afDj:h' --long 'build,unit-tests,check-format,lint:,all,remote-host,format,documentation,jobs:,help' --name "$(basename "$0")" --)
+    GETOPT_OPTIONS=(--options 'buFl:aRCfDj:h' --long 'build,unit-tests,check-format,lint:,all,remote-host,component-tests,format,documentation,jobs:,help' --name "$(basename "$0")" --)
 else
     # Compatibility with basic 'getopt' as found on non-Linux systems.
-    GETOPT_OPTIONS=('buFl:afDj:h')
+    GETOPT_OPTIONS=('buFl:aRCfDj:h')
 fi
 
 failure() {
@@ -46,6 +46,7 @@ usage() {
     echo "  -F, --check-format          check for correct formatting"
     echo "  -l L,..., --lint=L,...      run linters, 'all' means '${ALL_LINTERS}'"
     echo "  -a, --all                   shortcut for -b -u -F -l all"
+    echo "  -C, --component-tests       run all component tests"
     echo "  -R, --remote-host           run tests on a remote host"
     echo "  -f, --format                format sources"
     echo "  -D, --documentation         generate documentation"
@@ -104,6 +105,10 @@ parse_options() {
                 RUN_COMPONENT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_CLIPPY=yes
+                shift
+                ;;
+            '-C' | '--component-tests')
+                RUN_COMPONENT_TESTS=yes
                 shift
                 ;;
             '-R' | '--remote-host')
@@ -183,6 +188,11 @@ setup_tests() {
 }
 
 run_test_component() {
+    if [[ -z "${CI_ORA2_DB_TEST_PASSWORD}" ]]; then
+        failure "CI_ORA2_DB_TEST_PASSWORD is not set in the environment, component testing will fail."
+    fi
+    export CI_ORA2_DB_TEST="ora-rocktest.dev.checkmk.net:system:$CI_ORA2_DB_TEST_PASSWORD:1521:FREE::FREE.cmkoratest:_:_:"
+    echo "CI_ORA2_DB_TEST is constructed and exported"
     setup_tests
 
     case "$(uname)" in

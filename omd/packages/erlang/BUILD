@@ -22,6 +22,10 @@ BIN_SYMLINKS = [
     "bin/typer",
 ]
 
+LIB_ERL_INTERFACE_BIN = [
+    "lib/erlang/lib/erl_interface-5.5.1/bin/erl_call",
+]
+
 LIB_OSMON_PRIV_BIN = [
     "lib/erlang/lib/os_mon-2.9.1/priv/bin/memsup",
     "lib/erlang/lib/os_mon-2.9.1/priv/bin/cpu_sup",
@@ -75,7 +79,7 @@ exclude_from_filegroup(
         "misc",
         "include",
         "src",
-    ] + OMD_ROOT_AWARE + LIB_OSMON_PRIV_BIN + LIB_ERTS_BIN + BIN_SYMLINKS,
+    ] + OMD_ROOT_AWARE + LIB_ERL_INTERFACE_BIN + LIB_OSMON_PRIV_BIN + LIB_ERTS_BIN + LIB_BIN + BIN_SYMLINKS,
     tags = ["manual"],
 )
 
@@ -96,6 +100,25 @@ genrule(
 )
 
 genrule(
+    name = "erlang_lib_erl_interface_bin",
+    srcs = [
+        "@erlang//:gen_dir",
+    ],
+    outs = LIB_ERL_INTERFACE_BIN,
+    cmd = """
+        #!/bin/bash
+        for F in $(OUTS); do
+            cp -L $(location @erlang//:gen_dir)/%s/$${F#$(RULEDIR)/} $$F
+            chmod 750 $$F
+            if file -L $$F | grep -q ELF; then
+                patchelf --force-rpath --set-rpath "\\$$ORIGIN/../../../../../lib" $$F
+            fi
+        done
+    """ % PLACE_HOLDER,
+    tags = ["manual"],
+)
+
+genrule(
     name = "erlang_lib_osmon_priv_bin",
     srcs = [
         "@erlang//:gen_dir",
@@ -106,6 +129,9 @@ genrule(
         for F in $(OUTS); do
             cp -L $(location @erlang//:gen_dir)/%s/$${F#$(RULEDIR)/} $$F
             chmod 750 $$F
+            if file -L $$F | grep -q ELF; then
+                patchelf --force-rpath --set-rpath "\\$$ORIGIN/../../../../../../lib" $$F
+            fi
         done
     """ % PLACE_HOLDER,
     tags = ["manual"],
@@ -122,6 +148,9 @@ genrule(
         for F in $(OUTS); do
             cp -L $(location @erlang//:gen_dir)/%s/$${F#$(RULEDIR)/} $$F
             chmod 750 $$F
+            if file -L $$F | grep -q ELF; then
+                patchelf --force-rpath --set-rpath "\\$$ORIGIN/../../../../lib" $$F
+            fi
         done
     """ % PLACE_HOLDER,
     tags = ["manual"],
@@ -138,6 +167,9 @@ genrule(
         for F in $(OUTS); do
             cp -L $(location @erlang//:gen_dir)/%s/$${F#$(RULEDIR)/} $$F
             chmod 750 $$F
+            if file -L $$F | grep -q ELF; then
+                patchelf --force-rpath --set-rpath "\\$$ORIGIN/../../../lib" $$F
+            fi
         done
     """ % PLACE_HOLDER,
     tags = ["manual"],
@@ -170,6 +202,16 @@ pkg_mklink(
     link_name = "lib/erlang/bin/epmd",
     tags = ["manual"],
     target = "../erts-14.2.5.10/bin/epmd",
+)
+
+pkg_files(
+    name = "lib_erl_interface_bin_pkg",
+    srcs = LIB_ERL_INTERFACE_BIN,
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "lib/erlang/lib/erl_interface-5.5.1/bin",
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -223,6 +265,7 @@ pkg_tar(
     srcs = [
         ":epmd_lib_link",
         ":lib_bin_pkg",
+        ":lib_erl_interface_bin_pkg",
         ":lib_erts_bin_pkg",
         ":lib_osmon_priv_bin_pkg",
         ":omd_root_aware_pkg",

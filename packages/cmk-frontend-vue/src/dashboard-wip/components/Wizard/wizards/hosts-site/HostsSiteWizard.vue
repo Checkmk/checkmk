@@ -11,6 +11,7 @@ import usei18n from '@/lib/i18n'
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+import { useInjectVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
 // Local components
 import type { DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
@@ -35,7 +36,7 @@ import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import type { ElementSelection } from '../../types'
-import { getDefaultsFromGraph } from './composables/useSelectGraphTypes'
+import { getInitialElementSelection } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -69,8 +70,16 @@ const widgetFilterManager = useWidgetFilterManager(
 
 const addFilters = useAddFilter()
 
+const visualInfos = useInjectVisualInfos()
 const hostFilterType = ref<ElementSelection>(
-  getDefaultsFromGraph(props?.editWidgetSpec?.content?.type)
+  getInitialElementSelection(
+    props.dashboardConstants,
+    filterDefinitions,
+    visualInfos,
+    null,
+    props.editWidgetSpec,
+    'host'
+  )
 )
 
 const wizardHandler = useWizard(2)

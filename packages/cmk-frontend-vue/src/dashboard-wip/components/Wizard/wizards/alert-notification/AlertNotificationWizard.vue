@@ -13,6 +13,7 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+import { useInjectVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
 // Local components
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
@@ -36,8 +37,8 @@ import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
-import { ElementSelection } from '../../types'
-import { getConfiguredFilters } from '../../utils'
+import type { ElementSelection } from '../../types'
+import { getConfiguredFilters, getInitialElementSelection } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -67,11 +68,26 @@ const widgetFilterManager = useWidgetFilterManager({}, filterDefinitions)
 
 const addFilters = useAddFilter()
 
+const visualInfos = useInjectVisualInfos()
 const hostFilterType = ref<ElementSelection>(
-  props.editWidgetSpec ? ElementSelection.MULTIPLE : ElementSelection.SPECIFIC
+  getInitialElementSelection(
+    props.dashboardConstants,
+    filterDefinitions,
+    visualInfos,
+    null,
+    props.editWidgetSpec,
+    'host'
+  )
 )
 const serviceFilterType = ref<ElementSelection>(
-  props.editWidgetSpec ? ElementSelection.MULTIPLE : ElementSelection.SPECIFIC
+  getInitialElementSelection(
+    props.dashboardConstants,
+    filterDefinitions,
+    visualInfos,
+    null,
+    props.editWidgetSpec,
+    'service'
+  )
 )
 
 const wizardHandler = useWizard(2)

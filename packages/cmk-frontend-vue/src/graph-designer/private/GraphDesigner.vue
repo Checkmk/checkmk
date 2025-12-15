@@ -923,7 +923,7 @@ const graphDesignerContentAsJson = computed(() => {
           <img
             v-if="props.create_services_available && graphLine.type === 'query'"
             :title="_t('Add rule: Metric backend (Custom query)')"
-            src="themes/facelift/images/icon_checkmk.svg"
+            src="themes/facelift/images/icon_move.png"
             class="icon iconbutton"
             @click="openSlideIn(graphLine)"
           />

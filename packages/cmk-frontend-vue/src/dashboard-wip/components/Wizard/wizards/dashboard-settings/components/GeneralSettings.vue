@@ -26,7 +26,7 @@ interface GeneralSettingsProps {
 
 defineProps<GeneralSettingsProps>()
 const name = defineModel<string>('name', { required: true })
-const description = defineModel<string | null>('description', { required: true })
+const description = defineModel<string>('description', { required: true, default: '' })
 const addFilterSuffix = defineModel<boolean>('addFilterSuffix', {
   required: false,
   default: undefined
@@ -60,8 +60,8 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
     v-model:dashboard-icon="dashboardIcon"
     v-model:dashboard-emblem="dashboardEmblem"
     v-model:add-filter-suffix="addFilterSuffix"
-    :name-validation-errors="[]"
-    :unique-id-validation-errors="[]"
+    :name-validation-errors="nameValidationErrors"
+    :unique-id-validation-errors="uniqueIdValidationErrors"
     :original-dashboard-id="originalDashboardId"
   />
 
@@ -72,13 +72,11 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
       <FieldDescription>{{ _t('Description') }}</FieldDescription>
       <FieldComponent>
         <CmkInput
+          v-model="description"
           :placeholder="_t('Enter description')"
           :aria-label="_t('Enter description')"
           type="text"
           field-size="LARGE"
-          :external-errors="nameValidationErrors"
-          required
-          @update:model-value="(name) => (description = name ?? '')"
         />
       </FieldComponent>
     </TableFormRow>

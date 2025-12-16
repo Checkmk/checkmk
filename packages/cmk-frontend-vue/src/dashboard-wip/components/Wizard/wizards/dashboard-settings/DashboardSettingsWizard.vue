@@ -158,7 +158,7 @@ const save = async () => {
               v-model:dashboard-icon="dashboardIcon"
               v-model:dashboard-emblem="dashboardEmblem"
               :name-validation-errors="nameErrors"
-              :description="generalSettings.description || null"
+              :description="generalSettings.description ?? ''"
               :unique-id-validation-errors="uniqueIdErrors"
               :dashboard-type="dashboardTypeString"
               :original-dashboard-id="originalId"

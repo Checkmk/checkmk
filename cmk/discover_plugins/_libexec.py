@@ -32,14 +32,6 @@ def family_libexec_dir(module_name: str) -> Path:
     if (file := import_module(module_name).__file__) is None:
         # should never happen: we know we loaded this from a file.
         raise TypeError(f"module does not have a __file__ attrbute: {module_name}")
-
-    file_path = Path(file)
-
-    if file_path.parent.parent.name == "nonfree" and file_path.name == "__init__.py":
-        # Handles e.g. cmk/plugins/otel/server_side_calls/nonfree/ultimate/__init__.py
-        return file_path.parent.parent.parent.parent / LIBEXEC_FOLDER
-
-    if file_path.name == "__init__.py":
+    if (file_path := Path(file)).name == "__init__.py":
         return file_path.parent.parent.parent / LIBEXEC_FOLDER
-
     return file_path.parent.parent / LIBEXEC_FOLDER

@@ -15,7 +15,7 @@ from cmk.ccc.user import UserId
 
 @dataclass(frozen=True)
 class Command(ABC):
-    type Arguments = int | str | datetime | bool | list[int] | Enum | None
+    type Arguments = int | str | datetime | bool | tuple[int, ...] | Enum | None
 
     @abstractmethod
     def name(self) -> str:
@@ -312,7 +312,7 @@ class DeleteServiceDowntime(BaseDeleteDowntime):
 
 @dataclass(frozen=True)
 class ECUpdate(Command):
-    event_ids: list[int]
+    event_ids: tuple[int, ...]
     acknowledgement: bool | None = None
     user: UserId = UserId.builtin()
     comment: str = ""
@@ -329,7 +329,7 @@ class ECUpdate(Command):
 
 @dataclass(frozen=True)
 class ECChangeState(Command):
-    event_ids: list[int]
+    event_ids: tuple[int, ...]
     user: UserId
     state: int | None = None
 
@@ -344,7 +344,7 @@ class ECChangeState(Command):
 
 @dataclass(frozen=True)
 class ECDelete(Command):
-    event_ids: list[int]
+    event_ids: tuple[int, ...]
     user: UserId
 
     @override
@@ -371,7 +371,7 @@ class ECResetCounters(Command):
 
 @dataclass(frozen=True)
 class ECAction(Command):
-    event_ids: list[int]
+    event_ids: tuple[int, ...]
     action_id: str
     user: UserId = UserId.builtin()
 

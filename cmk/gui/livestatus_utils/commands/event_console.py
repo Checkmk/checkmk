@@ -196,7 +196,7 @@ def update_and_acknowledge(
     ack = new_phase == "ack"
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
-        ids = list(map(int, event_ids))
+        ids = tuple(map(int, event_ids))
         LivestatusClient(connection).command(
             ECUpdate(
                 event_ids=ids,
@@ -218,7 +218,7 @@ def change_state(
 ) -> Mapping[str, list[str]]:
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
-        ids = list(map(int, event_ids))
+        ids = tuple(map(int, event_ids))
         LivestatusClient(connection).command(
             ECChangeState(event_ids=ids, user=user.ident, state=states_ints_reversed[state]),
             SiteId(site),
@@ -233,5 +233,5 @@ def archive_events(
 ) -> None:
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
-        ids = list(map(int, event_ids))
+        ids = tuple(map(int, event_ids))
         LivestatusClient(connection).command(ECDelete(event_ids=ids, user=user.ident), SiteId(site))

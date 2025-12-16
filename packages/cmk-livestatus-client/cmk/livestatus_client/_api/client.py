@@ -33,7 +33,7 @@ class LivestatusClient:
                 return str(value)
             if isinstance(value, datetime):
                 return str(int(value.timestamp()))
-            if isinstance(value, list) and all(isinstance(v, int) for v in value):
+            if isinstance(value, tuple) and all(isinstance(v, int) for v in value):
                 return ",".join(map(str, value))
             if isinstance(value, Enum):
                 return str(value.value)

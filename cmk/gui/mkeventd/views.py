@@ -1371,7 +1371,7 @@ def command_update_event_action(
         else:
             contact = ""
         ack = html.get_checkbox("_mkeventd_acknowledge")
-        events = [int(entry["event_id"]) for entry in action_rows]
+        events = tuple(int(entry["event_id"]) for entry in action_rows)
         return ECUpdate(events, ack, user.ident, comment, contact), command.confirm_dialog_options(
             cmdtag, row, action_rows
         )
@@ -1448,7 +1448,7 @@ def command_change_state_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_mkeventd_changestate"):
-        events = [int(entry["event_id"]) for entry in action_rows]
+        events = tuple(int(entry["event_id"]) for entry in action_rows)
         state = MonitoringState().from_html_vars("_mkeventd_state")
         return (
             ECChangeState(events, user.ident, state),
@@ -1502,7 +1502,7 @@ def command_custom_actions_action(
 ) -> CommandActionResult:
     for action_id, _title in action_choices(omit_hidden=True):
         if active_request.var("_action_" + action_id):
-            events = [int(entry["event_id"]) for entry in action_rows]
+            events = tuple(int(entry["event_id"]) for entry in action_rows)
             return (
                 ECAction(events, action_id, user.ident),
                 command.confirm_dialog_options(cmdtag, row, action_rows),
@@ -1549,7 +1549,7 @@ def command_archive_event_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_delete_event"):
-        events = [int(entry["event_id"]) for entry in action_rows]
+        events = tuple(int(entry["event_id"]) for entry in action_rows)
         cmd = ECDelete(events, user.ident)
         return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None

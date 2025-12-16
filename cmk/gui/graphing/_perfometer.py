@@ -188,7 +188,7 @@ def _evaluate_quantity(
         case metrics_api.Constant():
             return _EvaluatedQuantity(
                 parse_unit_from_api(quantity.unit),
-                parse_color_from_api(quantity.color),
+                parse_color_from_api(quantity.color).fallback,
                 quantity.value,
             )
         case metrics_api.WarningOf():
@@ -209,21 +209,21 @@ def _evaluate_quantity(
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
                 translated_metric.unit_spec,
-                parse_color_from_api(quantity.color),
+                parse_color_from_api(quantity.color).fallback,
                 translated_metric.scalar["min"],
             )
         case metrics_api.MaximumOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
                 translated_metric.unit_spec,
-                parse_color_from_api(quantity.color),
+                parse_color_from_api(quantity.color).fallback,
                 translated_metric.scalar["max"],
             )
         case metrics_api.Sum():
             evaluated_first_summand = _evaluate_quantity(quantity.summands[0], translated_metrics)
             return _EvaluatedQuantity(
                 evaluated_first_summand.unit_spec,
-                parse_color_from_api(quantity.color),
+                parse_color_from_api(quantity.color).fallback,
                 (
                     evaluated_first_summand.value
                     + sum(
@@ -238,7 +238,7 @@ def _evaluate_quantity(
                 product *= _evaluate_quantity(f, translated_metrics).value
             return _EvaluatedQuantity(
                 parse_unit_from_api(quantity.unit),
-                parse_color_from_api(quantity.color),
+                parse_color_from_api(quantity.color).fallback,
                 product,
             )
         case metrics_api.Difference():
@@ -246,13 +246,13 @@ def _evaluate_quantity(
             evaluated_subtrahend = _evaluate_quantity(quantity.subtrahend, translated_metrics)
             return _EvaluatedQuantity(
                 evaluated_minuend.unit_spec,
-                parse_color_from_api(quantity.color),
+                parse_color_from_api(quantity.color).fallback,
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
         case metrics_api.Fraction():
             return _EvaluatedQuantity(
                 parse_unit_from_api(quantity.unit),
-                parse_color_from_api(quantity.color),
+                parse_color_from_api(quantity.color).fallback,
                 (
                     _evaluate_quantity(quantity.dividend, translated_metrics).value
                     / _evaluate_quantity(quantity.divisor, translated_metrics).value

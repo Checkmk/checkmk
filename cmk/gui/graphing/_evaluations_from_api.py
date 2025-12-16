@@ -89,7 +89,7 @@ def _evaluate_quantity(
                 EvaluatedQuantity(
                     title=str(quantity.title.localize(translate_to_current_language)),
                     unit=parse_unit_from_api(quantity.unit),
-                    color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color).fallback,
                     value=quantity.value,
                 )
             )
@@ -185,7 +185,7 @@ def _evaluate_quantity(
                         % get_metric_spec(quantity.metric_name, registered_metrics).title
                     ),
                     unit=result.ok.unit,
-                    color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color).fallback,
                     value=min_value,
                 )
             )
@@ -217,7 +217,7 @@ def _evaluate_quantity(
                         % get_metric_spec(quantity.metric_name, registered_metrics).title
                     ),
                     unit=result.ok.unit,
-                    color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color).fallback,
                     value=max_value,
                 )
             )
@@ -233,7 +233,7 @@ def _evaluate_quantity(
                 EvaluatedQuantity(
                     title=str(quantity.title.localize(translate_to_current_language)),
                     unit=results[0].unit,
-                    color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color).fallback,
                     value=sum(r.value for r in results),
                 )
             )
@@ -252,7 +252,7 @@ def _evaluate_quantity(
                 EvaluatedQuantity(
                     title=str(quantity.title.localize(translate_to_current_language)),
                     unit=parse_unit_from_api(quantity.unit),
-                    color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color).fallback,
                     value=product,
                 )
             )
@@ -273,7 +273,7 @@ def _evaluate_quantity(
                 EvaluatedQuantity(
                     title=str(quantity.title.localize(translate_to_current_language)),
                     unit=result_minuend.ok.unit,
-                    color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color).fallback,
                     value=result_minuend.ok.value - result_subtrahend.ok.value,
                 )
             )
@@ -294,7 +294,7 @@ def _evaluate_quantity(
                 EvaluatedQuantity(
                     title=str(quantity.title.localize(translate_to_current_language)),
                     unit=parse_unit_from_api(quantity.unit),
-                    color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color).fallback,
                     value=result_dividend.ok.value / result_divisor.ok.value,
                 )
             )

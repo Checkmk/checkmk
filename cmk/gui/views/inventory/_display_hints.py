@@ -181,9 +181,11 @@ def _compute_td_styles(
             case AlignmentFromAPI() as alignment_from_api:
                 alignments.append(_parse_alignment_from_api(alignment_from_api))
             case BackgroundColorFromAPI() as bg_color_from_api:
-                colors.setdefault("background_color", parse_color_from_api(bg_color_from_api))
+                colors.setdefault(
+                    "background_color", parse_color_from_api(bg_color_from_api).fallback
+                )
             case LabelColorFromAPI() as label_color_from_api:
-                colors.setdefault("color", parse_color_from_api(label_color_from_api))
+                colors.setdefault("color", parse_color_from_api(label_color_from_api).fallback)
             case other:
                 assert_never(other)
     return TDStyles(

@@ -7,6 +7,7 @@ import colorsys
 import random
 from collections import Counter
 from dataclasses import dataclass
+from enum import Enum
 from typing import Literal
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -333,224 +334,260 @@ def get_gray_tone(color_counter: Counter[Literal["metric", "predictive"]]) -> st
     return _rgb_color_to_hex_color(value, value, value)
 
 
-@dataclass(frozen=True)
-class RGB:
-    red: int
-    green: int
-    blue: int
+@dataclass(frozen=True, kw_only=True)
+class ColorChoice:
+    brand: str
+    fallback: str
 
 
-def _color_to_rgb(
+class Color(Enum):
+    LIGHT_RED = ColorChoice(brand="#f37c7c", fallback="#ff7070")
+    RED = ColorChoice(brand="#ed3b3b", fallback="#ff2929")
+    DARK_RED = ColorChoice(brand="#a82a2a", fallback="#e62525")
+    LIGHT_ORANGE = ColorChoice(brand="#ffad54", fallback="#ff9664")
+    ORANGE = ColorChoice(brand="#ff8400", fallback="#ff6e21")
+    DARK_ORANGE = ColorChoice(brand="#b55e00", fallback="#cc5819")
+    LIGHT_YELLOW = ColorChoice(brand="#ffe456", fallback="#ffff78")
+    YELLOW = ColorChoice(brand="#ffd703", fallback="#f5f532")
+    DARK_YELLOW = ColorChoice(brand="#ac7c02", fallback="#aaaa00")
+    LIGHT_GREEN = ColorChoice(brand="#62e0bf", fallback="#a5ff55")
+    GREEN = ColorChoice(brand="#15d1a0", fallback="#37fa37")
+    DARK_GREEN = ColorChoice(brand="#0f9472", fallback="#288c0f")
+    LIGHT_BLUE = ColorChoice(brand="#6fc1f7", fallback="#87cefa")
+    BLUE = ColorChoice(brand="#28a2f3", fallback="#1e90ff")
+    DARK_BLUE = ColorChoice(brand="#1c73ad", fallback="#1873cc")
+    LIGHT_CYAN = ColorChoice(brand="#68eeee", fallback="#96ffff")
+    CYAN = ColorChoice(brand="#1ee6e6", fallback="#1ee6e6")
+    DARK_CYAN = ColorChoice(brand="#17b5b5", fallback="#14878c")
+    LIGHT_PURPLE = ColorChoice(brand="#acaaff", fallback="#e1b3f9")
+    PURPLE = ColorChoice(brand="#8380ff", fallback="#d28df6")
+    DARK_PURPLE = ColorChoice(brand="#5d5bb5", fallback="#b441f0")
+    LIGHT_PINK = ColorChoice(brand="#f9a8e2", fallback="#ffa0f0")
+    PINK = ColorChoice(brand="#ec48b6", fallback="#ff64ff")
+    DARK_PINK = ColorChoice(brand="#be187a", fallback="#d214be")
+    LIGHT_BROWN = ColorChoice(brand="#d4ad84", fallback="#e6b48c")
+    BROWN = ColorChoice(brand="#bf8548", fallback="#bf8548")
+    DARK_BROWN = ColorChoice(brand="#885e33", fallback="#996a3a")
+    LIGHT_GRAY = ColorChoice(brand="#acacac", fallback="#c8c8c8")
+    GRAY = ColorChoice(brand="#8c8c8c", fallback="#a4a4a4")
+    DARK_GRAY = ColorChoice(brand="#5d5d5d", fallback="#797979")
+
+    BLACK = ColorChoice(brand="#1e262e", fallback="#000000")
+    WHITE = ColorChoice(brand="#ffffff", fallback="#ffffff")
+
+    @property
+    def brand(self) -> str:
+        return self.value.brand
+
+    @property
+    def fallback(self) -> str:
+        return self.value.fallback
+
+
+def parse_color_from_api(
     color: metrics_api.Color | inventory_ui_api.BackgroundColor | inventory_ui_api.LabelColor,
-) -> RGB:
+) -> Color:
     match color:
         case (
             metrics_api.Color.LIGHT_RED
             | inventory_ui_api.BackgroundColor.LIGHT_RED
             | inventory_ui_api.LabelColor.LIGHT_RED
         ):
-            return RGB(255, 112, 112)
+            return Color.LIGHT_RED
         case (
             metrics_api.Color.RED
             | inventory_ui_api.BackgroundColor.RED
             | inventory_ui_api.LabelColor.RED
         ):
-            return RGB(255, 41, 41)
+            return Color.RED
         case (
             metrics_api.Color.DARK_RED
             | inventory_ui_api.BackgroundColor.DARK_RED
             | inventory_ui_api.LabelColor.DARK_RED
         ):
-            return RGB(230, 37, 37)
+            return Color.DARK_RED
 
         case (
             metrics_api.Color.LIGHT_ORANGE
             | inventory_ui_api.BackgroundColor.LIGHT_ORANGE
             | inventory_ui_api.LabelColor.LIGHT_ORANGE
         ):
-            return RGB(255, 150, 100)
+            return Color.LIGHT_ORANGE
         case (
             metrics_api.Color.ORANGE
             | inventory_ui_api.BackgroundColor.ORANGE
             | inventory_ui_api.LabelColor.ORANGE
         ):
-            return RGB(255, 110, 33)
+            return Color.ORANGE
         case (
             metrics_api.Color.DARK_ORANGE
             | inventory_ui_api.BackgroundColor.DARK_ORANGE
             | inventory_ui_api.LabelColor.DARK_ORANGE
         ):
-            return RGB(204, 88, 25)
+            return Color.DARK_ORANGE
 
         case (
             metrics_api.Color.LIGHT_YELLOW
             | inventory_ui_api.BackgroundColor.LIGHT_YELLOW
             | inventory_ui_api.LabelColor.LIGHT_YELLOW
         ):
-            return RGB(255, 255, 120)
+            return Color.LIGHT_YELLOW
         case (
             metrics_api.Color.YELLOW
             | inventory_ui_api.BackgroundColor.YELLOW
             | inventory_ui_api.LabelColor.YELLOW
         ):
-            return RGB(245, 245, 50)
+            return Color.YELLOW
         case (
             metrics_api.Color.DARK_YELLOW
             | inventory_ui_api.BackgroundColor.DARK_YELLOW
             | inventory_ui_api.LabelColor.DARK_YELLOW
         ):
-            return RGB(170, 170, 0)
+            return Color.DARK_YELLOW
 
         case (
             metrics_api.Color.LIGHT_GREEN
             | inventory_ui_api.BackgroundColor.LIGHT_GREEN
             | inventory_ui_api.LabelColor.LIGHT_GREEN
         ):
-            return RGB(165, 255, 85)
+            return Color.LIGHT_GREEN
         case (
             metrics_api.Color.GREEN
             | inventory_ui_api.BackgroundColor.GREEN
             | inventory_ui_api.LabelColor.GREEN
         ):
-            return RGB(55, 250, 55)
+            return Color.GREEN
         case (
             metrics_api.Color.DARK_GREEN
             | inventory_ui_api.BackgroundColor.DARK_GREEN
             | inventory_ui_api.LabelColor.DARK_GREEN
         ):
-            return RGB(40, 140, 15)
+            return Color.DARK_GREEN
 
         case (
             metrics_api.Color.LIGHT_BLUE
             | inventory_ui_api.BackgroundColor.LIGHT_BLUE
             | inventory_ui_api.LabelColor.LIGHT_BLUE
         ):
-            return RGB(135, 206, 250)
+            return Color.LIGHT_BLUE
         case (
             metrics_api.Color.BLUE
             | inventory_ui_api.BackgroundColor.BLUE
             | inventory_ui_api.LabelColor.BLUE
         ):
-            return RGB(30, 144, 255)
+            return Color.BLUE
         case (
             metrics_api.Color.DARK_BLUE
             | inventory_ui_api.BackgroundColor.DARK_BLUE
             | inventory_ui_api.LabelColor.DARK_BLUE
         ):
-            return RGB(24, 115, 204)
+            return Color.DARK_BLUE
 
         case (
             metrics_api.Color.LIGHT_CYAN
             | inventory_ui_api.BackgroundColor.LIGHT_CYAN
             | inventory_ui_api.LabelColor.LIGHT_CYAN
         ):
-            return RGB(150, 255, 255)
+            return Color.LIGHT_CYAN
         case (
             metrics_api.Color.CYAN
             | inventory_ui_api.BackgroundColor.CYAN
             | inventory_ui_api.LabelColor.CYAN
         ):
-            return RGB(30, 230, 230)
+            return Color.CYAN
         case (
             metrics_api.Color.DARK_CYAN
             | inventory_ui_api.BackgroundColor.DARK_CYAN
             | inventory_ui_api.LabelColor.DARK_CYAN
         ):
-            return RGB(20, 135, 140)
+            return Color.DARK_CYAN
 
         case (
             metrics_api.Color.LIGHT_PURPLE
             | inventory_ui_api.BackgroundColor.LIGHT_PURPLE
             | inventory_ui_api.LabelColor.LIGHT_PURPLE
         ):
-            return RGB(225, 179, 249)
+            return Color.LIGHT_PURPLE
         case (
             metrics_api.Color.PURPLE
             | inventory_ui_api.BackgroundColor.PURPLE
             | inventory_ui_api.LabelColor.PURPLE
         ):
-            return RGB(210, 141, 246)
+            return Color.PURPLE
         case (
             metrics_api.Color.DARK_PURPLE
             | inventory_ui_api.BackgroundColor.DARK_PURPLE
             | inventory_ui_api.LabelColor.DARK_PURPLE
         ):
-            return RGB(180, 65, 240)
+            return Color.DARK_PURPLE
 
         case (
             metrics_api.Color.LIGHT_PINK
             | inventory_ui_api.BackgroundColor.LIGHT_PINK
             | inventory_ui_api.LabelColor.LIGHT_PINK
         ):
-            return RGB(255, 160, 240)
+            return Color.LIGHT_PINK
         case (
             metrics_api.Color.PINK
             | inventory_ui_api.BackgroundColor.PINK
             | inventory_ui_api.LabelColor.PINK
         ):
-            return RGB(255, 100, 255)
+            return Color.PINK
         case (
             metrics_api.Color.DARK_PINK
             | inventory_ui_api.BackgroundColor.DARK_PINK
             | inventory_ui_api.LabelColor.DARK_PINK
         ):
-            return RGB(210, 20, 190)
+            return Color.DARK_PINK
 
         case (
             metrics_api.Color.LIGHT_BROWN
             | inventory_ui_api.BackgroundColor.LIGHT_BROWN
             | inventory_ui_api.LabelColor.LIGHT_BROWN
         ):
-            return RGB(230, 180, 140)
+            return Color.LIGHT_BROWN
         case (
             metrics_api.Color.BROWN
             | inventory_ui_api.BackgroundColor.BROWN
             | inventory_ui_api.LabelColor.BROWN
         ):
-            return RGB(191, 133, 72)
+            return Color.BROWN
         case (
             metrics_api.Color.DARK_BROWN
             | inventory_ui_api.BackgroundColor.DARK_BROWN
             | inventory_ui_api.LabelColor.DARK_BROWN
         ):
-            return RGB(153, 106, 58)
+            return Color.DARK_BROWN
 
         case (
             metrics_api.Color.LIGHT_GRAY
             | inventory_ui_api.BackgroundColor.LIGHT_GRAY
             | inventory_ui_api.LabelColor.LIGHT_GRAY
         ):
-            return RGB(200, 200, 200)
+            return Color.LIGHT_GRAY
         case (
             metrics_api.Color.GRAY
             | inventory_ui_api.BackgroundColor.GRAY
             | inventory_ui_api.LabelColor.GRAY
         ):
-            return RGB(164, 164, 164)
+            return Color.GRAY
         case (
             metrics_api.Color.DARK_GRAY
             | inventory_ui_api.BackgroundColor.DARK_GRAY
             | inventory_ui_api.LabelColor.DARK_GRAY
         ):
-            return RGB(121, 121, 121)
+            return Color.DARK_GRAY
 
         case (
             metrics_api.Color.BLACK
             | inventory_ui_api.BackgroundColor.BLACK
             | inventory_ui_api.LabelColor.BLACK
         ):
-            return RGB(0, 0, 0)
+            return Color.BLACK
         case (
             metrics_api.Color.WHITE
             | inventory_ui_api.BackgroundColor.WHITE
             | inventory_ui_api.LabelColor.WHITE
         ):
-            return RGB(255, 255, 255)
+            return Color.WHITE
     raise NotImplementedError(color)
-
-
-def parse_color_from_api(
-    color: metrics_api.Color | inventory_ui_api.BackgroundColor | inventory_ui_api.LabelColor,
-) -> str:
-    rgb = _color_to_rgb(color)
-    return f"#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}"

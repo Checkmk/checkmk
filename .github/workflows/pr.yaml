@@ -49,12 +49,12 @@ jobs:
     - name: Cache pip
       uses: actions/cache@v3
       with:
-        key: pip-${{ runner.os }}-${{ hashFiles('Pipfile.lock') }}
+        key: pip-$ImageOS-${{ hashFiles('Pipfile.lock') }}
         path: ${{ env.PIP_CACHE_DIR  }}
     - name: Cache pipenv
       uses: actions/cache@v3
       with:
-        key: pipenv-${{ runner.os }}-${{ hashFiles('Pipfile.lock') }}
+        key: pipenv-$ImageOS-${{ hashFiles('Pipfile.lock') }}
         path: ${{ env.PIPENV_CACHE_DIR  }}
     - name: Setup Environment
       run: |

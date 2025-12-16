@@ -155,7 +155,7 @@ def _link_with_uuid(
 ENDPOINT_REGISTER_HOST_VIA_TOKEN = VersionedEndpoint(
     metadata=EndpointMetadata(
         path=object_action_href(
-            "host_config_internal", "{host_name}", action_name="register_with_token"
+            "host_config_internal", "{host_name}", action_name="register_via_token"
         ),
         link_relation="cmk/register_token",
         method="put",

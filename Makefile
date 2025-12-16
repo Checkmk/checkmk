@@ -64,6 +64,8 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    echo "EDITION is not set!" ; exit 1 ; \
 	fi ; \
 	set -e -o pipefail ; EXCLUDES= ; \
+	# COMMIT can be created in bazel via "//omd:hash_file_pkg"
+	git rev-parse HEAD > COMMIT ; \
 	for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 		EXCLUDES+=" --exclude $${X%*/}" ; \
 	done ; \

@@ -16,7 +16,7 @@ defineProps<TooltipTriggerProps>()
 </script>
 
 <template>
-  <TooltipTrigger :as-child="!!asChild" @click="(event) => $emit('click', event)">
+  <TooltipTrigger :as-child="!!asChild" @click="(event: Event) => $emit('click', event)">
     <slot />
   </TooltipTrigger>
 </template>

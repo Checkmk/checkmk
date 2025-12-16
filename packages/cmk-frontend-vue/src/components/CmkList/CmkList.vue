@@ -47,7 +47,7 @@ immediateWatch(
   }
 )
 
-const { trContainerRef, dragStart, dragEnd: _dragEnd, dragging: _dragging } = useDragging()
+const { trContainerRef: _, dragStart, dragEnd: _dragEnd, dragging: _dragging } = useDragging()
 
 function dragging(event: DragEvent) {
   const dragReturn = _dragging(event)

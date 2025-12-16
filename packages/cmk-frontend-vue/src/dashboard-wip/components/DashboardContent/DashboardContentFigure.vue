@@ -28,7 +28,6 @@ const dataEndpointUrl: Ref<string> = computed(() => {
 })
 const emit = defineEmits(['vue:mounted', 'vue:updated'])
 
-const contentDiv = useTemplateRef<HTMLDivElement>('contentDiv')
 const wrapperDiv = useTemplateRef<HTMLDivElement>('wrapperDiv')
 
 const currentDimensions = ref({ width: 0, height: 0 })
@@ -177,7 +176,6 @@ onBeforeUnmount(() => {
   <div ref="wrapperDiv" class="db-content-figure__wrapper">
     <div
       :id="`db-content-figure-${widget_id}`"
-      ref="contentDiv"
       class="db-content-figure cmk_figure"
       :class="[
         {

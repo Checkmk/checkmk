@@ -31,7 +31,6 @@ const showDateTime = ref(true)
 let intervalId: number | null = null
 
 const menuShown = ref(false)
-const menuRef = ref<HTMLDivElement | null>(null)
 
 const updateUtcTime = () => {
   const now = new Date()
@@ -107,7 +106,6 @@ onUnmounted(() => {
 
         <div
           v-if="menuShown"
-          ref="menuRef"
           class="db-shared-dashboard-menu-header__icon-dropdown-menu--container"
         >
           <div class="db-shared-dashboard-menu-header__icon-dropdown-menu--content">

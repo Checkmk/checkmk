@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
-import type { TranslatedString } from '@/lib/i18nString'
+import { untranslated } from '@/lib/i18n'
 
 import CmkDialog from '@/components/CmkDialog.vue'
 
@@ -26,7 +26,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <CmkDialog :title="title" :message="message as TranslatedString" />
+  <CmkDialog
+    :title="title !== undefined ? untranslated(title) : undefined"
+    :message="untranslated(message)"
+  />
 </template>
 
 <style scoped>

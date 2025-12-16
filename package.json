@@ -18,7 +18,7 @@
     "vitest": "^3.2.4",
     "vitest-fail-on-console": "^0.7.1",
     "vue": "^3.5.25",
-    "vue-tsc": "^2.2.12",
+    "vue-tsc": "^3.1.8",
     "vue3-gettext": "4.0.0-alpha.8"
   },
   "pnpm": {

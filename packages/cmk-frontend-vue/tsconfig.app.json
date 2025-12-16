@@ -107,8 +107,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "vueCompilerOptions": {
-    "strictTemplates": true,
-    "fallthroughAttributes": true
-  }
+  "vueCompilerOptions": {}
 }

@@ -21,7 +21,7 @@ import { type IconEmblems, type IconSizeNames } from '../types'
 import CmkDynamicIconUserOrDefault from './CmkDynamicIconUserOrDefault.vue'
 
 interface CmkDynamicIconProps {
-  size?: IconSizeNames
+  size?: IconSizeNames | undefined
   spec: DynamicIcon
 }
 
@@ -33,8 +33,8 @@ const props = defineProps<CmkDynamicIconProps>()
     <CmkIconEmblem
       v-if="props.spec.type === 'emblem_icon'"
       :emblem="props.spec.emblem as IconEmblems"
-      ><CmkDynamicIconUserOrDefault :spec="props.spec.icon" :size="size"
+      ><CmkDynamicIconUserOrDefault :spec="props.spec.icon" :size="props.size"
     /></CmkIconEmblem>
-    <CmkDynamicIconUserOrDefault v-else :spec="props.spec" :size="size" />
+    <CmkDynamicIconUserOrDefault v-else :spec="props.spec" :size="props.size" />
   </div>
 </template>

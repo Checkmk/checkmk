@@ -17,7 +17,6 @@ py_library(
         "cmk/ec/actions.py",
         "cmk/ec/config.py",
         "cmk/ec/core_queries.py",
-        "cmk/ec/crash_reporting.py",
         "cmk/ec/defaults.py",
         "cmk/ec/event.py",
         "cmk/ec/export.py",

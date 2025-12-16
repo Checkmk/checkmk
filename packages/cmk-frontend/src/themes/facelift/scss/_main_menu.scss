@@ -497,6 +497,7 @@
   }
 
   #popup_shadow {
+    backdrop-filter: blur(1.5px);
     position: absolute;
     top: 0;
     right: 0;

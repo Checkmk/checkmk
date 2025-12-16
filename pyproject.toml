@@ -229,6 +229,8 @@ filterwarnings = [
   'ignore:^cannot collect test class .* because it has a __init__ constructor.*$:UserWarning:.*webtest.*:0',
   # openapi collector uses pkg resources
   'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*',
+  # ignore pysnmp warnings
+  'ignore:^(smiV1Relaxed|getReadersFromUrls) is deprecated:DeprecationWarning:pysnmp\.smi\..*:0',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

@@ -63,7 +63,7 @@ update_action_registry.register(
     UpdateSiteConfigurations(
         name="update_site_configurations",
         title="Updating site configurations",
-        sort_index=100,  # I am not aware of any constrains
+        sort_index=100,  # Runs after distributed_wato.mk renaming step (migrate_distributed_wato)
         expiry_version=ExpiryVersion.CMK_260,
     )
 )

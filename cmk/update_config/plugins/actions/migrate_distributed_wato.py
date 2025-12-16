@@ -49,7 +49,7 @@ update_action_registry.register(
     MigrateDistributedWato(
         name="migrate_distributed_wato",
         title="Migrate distributed_wato.mk variable names",
-        sort_index=120,  # Can run whenever
+        sort_index=95,  # Runs before update_site_configurations
         expiry_version=ExpiryVersion.CMK_260,
     )
 )

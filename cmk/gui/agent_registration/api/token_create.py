@@ -37,6 +37,10 @@ def create_agent_registration_token_v1(
     api_context: ApiContext, body: CreateAgentRegistrationToken
 ) -> ApiResponse[AgentRegistrationTokenObjectModel]:
     """Creates a new agent registration token and returns its metadata."""
+    user.may("wato.manage_hosts")
+    user.may("wato.edit_hosts")
+    user.may("wato.download_agents")
+    user.may("wato.download_all_agents")
     token_store = get_token_store()
     token = issue_agent_registration_token(
         expiration_time=body.expires_at,

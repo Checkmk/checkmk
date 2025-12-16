@@ -176,9 +176,6 @@ class Crawler:
             "application/x-tar",
             "application/x-tgz",
             "application/x-yaml; charset=utf-8",
-            "image/gif",
-            "image/png",
-            "image/svg+xml",
             "text/x-c++src",
             "text/x-chdr",
             "text/x-sh",
@@ -489,6 +486,7 @@ class Crawler:
             self.check_links(url, soup)
             self.check_frames(url, soup)
             self.check_iframes(url, soup)
+            self.check_images(url, soup)
             self.check_logs(url, logs)
 
         loop = asyncio.get_running_loop()
@@ -524,6 +522,9 @@ class Crawler:
 
     def check_iframes(self, url: Url, soup: BeautifulSoup) -> None:
         self.check_referenced(url, soup, "iframe", "src")
+
+    def check_images(self, url: Url, soup: BeautifulSoup) -> None:
+        self.check_referenced(url, soup, "img", "src")
 
     def check_links(self, url: Url, soup: BeautifulSoup) -> None:
         self.check_referenced(url, soup, "a", "href")

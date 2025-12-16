@@ -5,9 +5,9 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -38,6 +38,10 @@ class Affinity(StrEnum):
 
     def __repr__(self) -> str:
         return str(self).__repr__()
+
+
+type _AuthOptions = tuple[str, object]
+type _NamedOption = Mapping[str, object]
 
 
 class SectionOptions(BaseModel):
@@ -227,7 +231,7 @@ def _oracle_id() -> Dictionary:
 
 
 def _connection_options(*, with_service_name: bool) -> Dictionary:
-    base: dict[str, DictElement[Any]] = {
+    base: dict[str, DictElement[str] | DictElement[int]] = {
         "host": DictElement(
             parameter_form=String(
                 title=Title("Hostname"),
@@ -260,7 +264,7 @@ def _connection_options(*, with_service_name: bool) -> Dictionary:
         ),
     }
 
-    extension: dict[str, DictElement[Any]] = {
+    extension: dict[str, DictElement[_NamedOption]] = {
         "oracle_id": DictElement(
             parameter_form=_oracle_id(),
             required=False,
@@ -272,11 +276,7 @@ def _connection_options(*, with_service_name: bool) -> Dictionary:
     )
 
 
-def _section_options(
-    title: Title,
-    help_text: Help,
-    mode: str,
-) -> SingleChoice:
+def _section_options(title: Title, help_text: Help, mode: str) -> SingleChoice:
     return SingleChoice(
         title=title,
         help_text=help_text,
@@ -412,7 +412,7 @@ def _oracle_client_library_options() -> Dictionary:
 
 
 def _additional_options(is_default_options: bool = True) -> Dictionary:
-    elements: dict[str, DictElement] = {
+    elements: dict[str, DictElement[int] | DictElement[bool] | DictElement[_NamedOption]] = {
         "max_connections": DictElement(
             parameter_form=Integer(
                 title=Title("Maximum connections"),
@@ -447,15 +447,17 @@ def _additional_options(is_default_options: bool = True) -> Dictionary:
         ),
     }
     if not is_default_options:
-        elements.pop("max_connections")
-        elements.pop("max_queries")
+        _ = elements.pop("max_connections")
+        _ = elements.pop("max_queries")
     return Dictionary(
         title=Title("Additional options"),
         elements=elements,
     )
 
 
-def _common_instance_options(*, is_main_entry: bool) -> dict[str, DictElement]:
+def _common_instance_options(
+    *, is_main_entry: bool
+) -> Mapping[str, DictElement[_AuthOptions] | DictElement[_NamedOption]]:
     return {
         "auth": DictElement(
             parameter_form=_auth_options(is_default_options=is_main_entry),
@@ -497,7 +499,7 @@ def _main() -> Dictionary:
     )
 
 
-def _instances() -> List:
+def _instances() -> List[_NamedOption]:
     return List(
         title=Title("Database instances"),
         help_text=Help(

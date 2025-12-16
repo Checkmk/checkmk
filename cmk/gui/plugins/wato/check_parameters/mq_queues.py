@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -19,8 +20,31 @@ def _item_spec_mq_queues():
     )
 
 
+def _migrate_mq_queue_consumer_count_levels(
+    in_params: Mapping[str, object],
+) -> Mapping[str, object]:
+    """Migrate legacy consumerCount levels to separate upper/lower level fields.
+
+    The legacy consumerCount tuple (warn, crit) is interpreted as:
+    - upper levels if crit > warn
+    - lower levels if warn > crit
+
+    Non-tuple or malformed values are ignored.
+    """
+    match in_params:
+        case {"consumerCount": tuple((int(), int())) as levels, **rest}:
+            direction = "upper" if levels[1] > levels[0] else "lower"
+            return {
+                f"consumer_count_levels_{direction}": levels,
+                **rest,
+            }
+        case other:
+            return other
+
+
 def _parameter_valuespec_mq_queues():
     return Dictionary(
+        migrate=_migrate_mq_queue_consumer_count_levels,  # type: ignore[arg-type]
         elements=[
             (
                 "size",
@@ -31,11 +55,21 @@ def _parameter_valuespec_mq_queues():
                 ),
             ),
             (
-                "consumerCount",
+                "consumer_count_levels_upper",
                 SimpleLevels(
-                    title=_("Levels for the consumer count"),
+                    title=_("Upper Levels for the consumer count"),
                     help=_("Consumer Count is the size of connected consumers to a queue"),
                     spec=Integer,
+                    direction="upper",
+                ),
+            ),
+            (
+                "consumer_count_levels_lower",
+                SimpleLevels(
+                    title=_("Lower levels for the consumer count"),
+                    help=_("Consumer Count is the size of connected consumers to a queue"),
+                    spec=Integer,
+                    direction="lower",
                 ),
             ),
         ],

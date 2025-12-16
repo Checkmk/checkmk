@@ -92,6 +92,7 @@ def fetch_augmented_time_series(
                 graph_metric_title=graph_metric.title,
                 graph_metric_line_type=graph_metric.line_type,
                 graph_metric_color=graph_metric.color,
+                graph_metric_expression_name=graph_metric.operation.expression_name(),
                 fade_odd_color=graph_metric.operation.fade_odd_color(),
             )
 
@@ -102,6 +103,7 @@ def _refine_augmented_time_series(
     graph_metric_title: str,
     graph_metric_line_type: LineType | Literal["ref"],
     graph_metric_color: str,
+    graph_metric_expression_name: str,
     fade_odd_color: bool,
 ) -> Iterator[AugmentedTimeSeries]:
     multi = len(augmented_time_series) > 1
@@ -110,11 +112,12 @@ def _refine_augmented_time_series(
         line_type = graph_metric_line_type
         color = graph_metric_color
         if ats.meta_data:
-            if multi:
-                if ats.meta_data.title is not None:
-                    title = f"{graph_metric_title} - {ats.meta_data.title}"
-                if ats.meta_data.line_type is not None:
-                    line_type = ats.meta_data.line_type
+            if (
+                multi or graph_metric_expression_name == "query"
+            ) and ats.meta_data.title is not None:
+                title = f"{graph_metric_title} - {ats.meta_data.title}"
+            if multi and ats.meta_data.line_type is not None:
+                line_type = ats.meta_data.line_type
             if ats.meta_data.color:
                 color = ats.meta_data.color
 

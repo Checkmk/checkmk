@@ -519,7 +519,7 @@ def test_package_is_identifiable_by_commit(package_path: str, cmk_version: str) 
     commit = _get_file_from_package(
         package_path,
         cmk_version,
-        version_rel_path="share/doc/COMMIT",
+        version_rel_path="COMMIT" if package_path.endswith(".tar.gz") else "share/doc/COMMIT",
     )
     assert (
         subprocess.check_output(["git", "rev-parse", "HEAD"], encoding="utf-8").strip()

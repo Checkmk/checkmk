@@ -29,7 +29,7 @@ onMounted(async () => {
 const allElements = computed<DualListElement[]>(() => {
   const els: DualListElement[] = []
   for (const visualInfo of list.value) {
-    els.push({ name: visualInfo.id!, title: `${visualInfo.title!}` })
+    els.push({ name: visualInfo.id!, title: _t('Single %{title}', { title: visualInfo.title! }) })
   }
   return els
 })
@@ -53,7 +53,7 @@ const dataElements = computed<DualListElement[]>({
     return effective.map((id) => {
       const found = filteredElements.value.find((e) => e.name === id)
       const baseTitle = found!.title!
-      return { name: id, title: `${baseTitle}` }
+      return { name: id, title: _t('Single %{title}', { title: baseTitle }) }
     })
   },
   set(newEls) {

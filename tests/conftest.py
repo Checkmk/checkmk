@@ -13,6 +13,19 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+import pytest
+import pytest_check
+from playwright.sync_api import TimeoutError as PWTimeoutError
+from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
+
+# TODO: Can we somehow push some of the registrations below to the subdirectories?
+# Needs to be executed before the import of those modules
+pytest.register_assert_rewrite(
+    "tests.testlib",
+    "tests.unit.cmk.base.legacy_checks.checktestlib",
+    "tests.unit.checks.generictests.run",
+)
+
 try:
     from tests.testlib.site import Site
 
@@ -26,19 +39,6 @@ except Exception:
             pass
 
     Site = _SiteStub  # type: ignore[assignment,misc]
-
-import pytest
-import pytest_check
-from playwright.sync_api import TimeoutError as PWTimeoutError
-from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
-
-# TODO: Can we somehow push some of the registrations below to the subdirectories?
-# Needs to be executed before the import of those modules
-pytest.register_assert_rewrite(
-    "tests.testlib",
-    "tests.unit.cmk.base,legacy_checks.checktestlib",
-    "tests.unit.checks.generictests.run",
-)
 
 from tests.testlib.common.repo import (  # noqa: E402
     current_base_branch_name,

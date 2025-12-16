@@ -24,6 +24,7 @@ ENTERPRISE = r"""# Copyright \(C\) \d{4} Checkmk GmbH - License: Checkmk Enterpr
 # conditions defined in the file COPYING, which is part of this source code package."""
 
 ENTERPRISE_HEADER = re.compile(rf"#!/usr/bin/env python3\n{ENTERPRISE}")
+ENTERPRISE_HEADER_NO_SHEBANG = re.compile(rf"{ENTERPRISE}")
 ENTERPRISE_HEADER_CODING = re.compile(
     rf"""#!/usr/bin/env python3
 # -\*- coding: utf-8 -\*-
@@ -41,6 +42,7 @@ ENTERPRISE_HEADER_ALERT_HANDLERS = re.compile(
 OMD_HEADER = re.compile(rf"#!/omd/versions/###OMD_VERSION###/bin/python3\n{GPL}")
 
 GPL_HEADER = re.compile(rf"#!/usr/bin/env (python3|-S python3 -P)\n{GPL}")
+GPL_HEADER_NO_SHEBANG = re.compile(rf"{GPL}")
 
 GPL_HEADER_NOTIFICATION = re.compile(
     rf"""#!/usr/bin/env python3
@@ -95,7 +97,8 @@ def check_for_license_header_violation(rel_path, abs_path):
         if not ENTERPRISE_HEADER_ALERT_HANDLERS.match(get_file_header(abs_path, length=8)):
             yield "enterprise header with alert handler not matching", rel_path
     elif needs_enterprise_license(rel_path):
-        if not ENTERPRISE_HEADER.match(get_file_header(abs_path, length=4)):
+        header = get_file_header(abs_path, length=4)
+        if not (ENTERPRISE_HEADER.match(header) or ENTERPRISE_HEADER_NO_SHEBANG.match(header)):
             yield "enterprise header not matching", rel_path
     elif rel_path == "omd/packages/omd/omd.bin":
         if not OMD_HEADER.match(get_file_header(abs_path, length=23)):
@@ -103,8 +106,10 @@ def check_for_license_header_violation(rel_path, abs_path):
     elif rel_path.startswith("notifications/"):
         if not GPL_HEADER_NOTIFICATION.match(get_file_header(abs_path, length=10)):
             yield "gpl header with notification not matching", rel_path
-    elif not GPL_HEADER.match(get_file_header(abs_path, length=4)):
-        yield "gpl header not matching", rel_path
+    else:
+        header = get_file_header(abs_path, length=4)
+        if not (GPL_HEADER.match(header) or GPL_HEADER_NO_SHEBANG.match(header)):
+            yield "gpl header not matching", rel_path
 
 
 def test_license_headers(python_files: Sequence[str]) -> None:

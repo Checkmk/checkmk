@@ -31,6 +31,7 @@ from .dashlet import (
     dashlet_registry,
     DashletConfig,
 )
+from .metadata import dashboard_uses_relative_grid
 from .store import (
     add_dashlet,
     get_all_dashboards,
@@ -138,11 +139,11 @@ class VisualTypeDashboards(VisualType):
         dashlet_spec = DashletConfig(
             {
                 "type": add_type,
-                "position": dashlet_registry[add_type].initial_position(),
-                "size": dashlet_registry[add_type].initial_size(),
                 "show_title": True,
             }
         )
+
+        self._update_dashlet_spec(dashlet_spec, dashboard, add_type)
 
         dashlet_spec["context"] = context
         if add_type == "view":
@@ -217,6 +218,19 @@ class VisualTypeDashboards(VisualType):
             _("Graph specification '%s' is insufficient for dashboard.")
             % graph_specification.graph_type
         )
+
+    def _update_dashlet_spec(
+        self,
+        dashlet_spec: DashletConfig,
+        dashboard: DashboardConfig,
+        add_type: str,
+    ) -> None:
+        """Allow subclasses to update the dashlet spec before adding it to the dashboard."""
+        if dashboard_uses_relative_grid(dashboard):
+            dashlet_spec["position"] = dashlet_registry[add_type].initial_position()
+            dashlet_spec["size"] = dashlet_registry[add_type].initial_size()
+        else:
+            raise ValueError("Unexpected layout type for dashboard")
 
     @staticmethod
     def _create_embedded_view_spec_and_dashlet(

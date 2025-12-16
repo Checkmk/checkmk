@@ -70,6 +70,12 @@ jobs:
               with:
                   key: uv-$ImageOS-${{ hashFiles('requirements_all_lock.txt') }}
                   path: ${{ env.UV_CACHE_DIR  }}
+            - name: Cache bazelisk
+              uses: actions/cache@v3
+              with:
+                  key: ${{ hashFiles('.bazelversion', '.bazeliskrc') }}
+                  path: |
+                      ~/.cache/bazelisk
             - name: Cache bazel
               uses: actions/cache@v3
               with:

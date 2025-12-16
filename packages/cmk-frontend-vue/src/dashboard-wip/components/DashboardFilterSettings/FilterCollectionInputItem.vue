@@ -80,7 +80,7 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-collection-item__label {
   padding: var(--dimension-2) var(--dimension-3);
-  border-radius: var(--dimension-2);
+  border-radius: var(--border-radius-half);
   background-color: var(--ux-theme-7);
   font-size: var(--font-size-small);
   margin-top: var(--dimension-1);

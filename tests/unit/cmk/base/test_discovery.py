@@ -78,7 +78,14 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
-from cmk.fetchers import Mode, NoSelectedSNMPSections, PlainFetcherTrigger, SNMPFetcherConfig
+from cmk.fetchers import (
+    AdHocSecrets,
+    Mode,
+    NoSelectedSNMPSections,
+    PlainFetcherTrigger,
+    SNMPFetcherConfig,
+    StoredSecrets,
+)
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.helper_interface import SourceType
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
@@ -1547,9 +1554,14 @@ def test_commandline_discovery(
         ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
         simulation_mode=True,
-        secrets_file_option_relay=Path("/pw/store"),
-        secrets_file_option_site=Path("/pw/store"),
-        secrets={},
+        secrets_config_relay=AdHocSecrets(
+            path=Path("/pw/relay"),
+            secrets={},
+        ),
+        secrets_config_site=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={},
+        ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,

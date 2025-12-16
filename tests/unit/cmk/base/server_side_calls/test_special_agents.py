@@ -17,6 +17,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
+from cmk.fetchers import StoredSecrets
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls.v1 import (
     HostConfig,
@@ -199,8 +200,10 @@ def test_iter_special_agent_commands(
             global_proxies={}, password_lookup=lambda _name: None
         ),
         oauth2_connections={},
-        stored_passwords=stored_passwords,
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets=stored_passwords,
+        ),
         finder=lambda *_: "agent_path",
         for_relay=False,
         relay_compatible_families=(),
@@ -246,8 +249,10 @@ def test_iter_special_agent_commands_stored_password_with_hack(
             global_proxies={}, password_lookup=lambda _name: None
         ),
         oauth2_connections={},
-        stored_passwords={"1234": Secret("p4ssw0rd!")},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={"1234": Secret("p4ssw0rd!")},
+        ),
         finder=lambda *_: "agent_path",
         for_relay=False,
         relay_compatible_families=(),
@@ -276,8 +281,10 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
             global_proxies={}, password_lookup=lambda _name: None
         ),
         oauth2_connections={},
-        stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={"uuid1234": Secret("p4ssw0rd!")},
+        ),
         finder=lambda *_: "agent_path",
         for_relay=False,
         relay_compatible_families=(),
@@ -314,8 +321,10 @@ def test_iter_special_agent_commands_crash() -> None:
             global_proxies={}, password_lookup=lambda _name: None
         ),
         oauth2_connections={},
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={},
+        ),
         finder=lambda *_: "/path/to/agent",
         for_relay=False,
         relay_compatible_families=(),

@@ -32,11 +32,24 @@ def load_secrets_file(path: Path) -> Mapping[str, StoreSecret[str]]:
     )
 
 
+class SecretsConfig(Protocol):
+    @property
+    def secrets(self) -> Mapping[str, StoreSecret[str]]:
+        """The secrets (by ID) that the SSC can expect to be in the file."""
+        ...
+
+    @property
+    def path(self) -> Path:
+        """The path that should be baked into the command line.
+        This is where the SSC will look for the secrets.
+        """
+        ...
+
+
 def replace_passwords(
     host_name: str,
     arguments: Sequence[str | Secret],
-    passwords: Mapping[str, StoreSecret[str]],
-    password_store_file: Path,
+    secrets_config: SecretsConfig,
     surrogated_secrets: Mapping[int, str],
     *,
     apply_password_store_hack: bool,
@@ -56,7 +69,7 @@ def replace_passwords(
         secret_name = surrogated_secrets[secret.id]
 
         if secret.pass_safely:
-            formatted.append(shlex.quote(f"{secret_name}:{password_store_file}"))
+            formatted.append(shlex.quote(f"{secret_name}:{secrets_config.path}"))
             continue
 
         # we are meant to pass it as plain secret here, but we
@@ -69,7 +82,7 @@ def replace_passwords(
 
         # TODO: I think we can check this much earlier now.
         try:
-            secret_value = passwords[secret_name].reveal()
+            secret_value = secrets_config.secrets[secret_name].reveal()
         except KeyError:
             config_warnings.warn(
                 f'The stored password "{secret_name}" used by host "{host_name}" does not exist.'
@@ -80,8 +93,8 @@ def replace_passwords(
     return tuple(
         password_store.hack.apply_password_hack(
             formatted,
-            passwords,
-            password_store_file,
+            secrets_config.secrets,
+            secrets_config.path,
             config_warnings.warn,
             _make_log_label(host_name),
         ),

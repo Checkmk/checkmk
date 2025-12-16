@@ -36,6 +36,7 @@ from cmk.fetchers import (
     ProgramFetcher,
     SNMPFetcher,
     SNMPFetcherConfig,
+    StoredSecrets,
     TCPFetcher,
     TLSConfig,
 )
@@ -227,13 +228,16 @@ def dump_host(
         ca_store=Path(cmk.utils.paths.agent_cert_store),
         site_crt=Path(cmk.utils.paths.site_cert_file),
     )
-    # Which file will be used depends on who calls the fetcher in the end
-    # (core, relay, automations helper, ...).
+    # Which file will be used when the datasource is actually called
+    # depends on the context in which this is run (core, relay, automations helper, ...).
+    # We have to make up our mind here, which file we show to the user.
     # We assume that the locally available *pending* (a.k.a. WATO) password
-    # store is of most help to the caller.
-    used_password_store = cmk.utils.password_store.pending_secrets_path_site()
-    # Don't show the real passwords here!
-    passwords = defaultdict[str, Secret[str]](lambda: Secret("****"))
+    # store is of most help.
+    secrets_config = StoredSecrets(
+        path=cmk.utils.password_store.pending_secrets_path_site(),
+        # Don't show the real passwords here!
+        secrets=defaultdict[str, Secret[str]](lambda: Secret("****")),
+    )
 
     if hostname in hosts_config.clusters:
         agenttypes = list[str]()
@@ -287,8 +291,7 @@ def dump_host(
                     hostname,
                     primary_family,
                     ipaddress,
-                    secrets_file_option=used_password_store,
-                    secrets=passwords,
+                    secrets_config,
                     ip_address_of=ip_address_of,
                     executable_finder=ExecutableFinder(
                         # NOTE: we can't ignore these, they're an API promise.

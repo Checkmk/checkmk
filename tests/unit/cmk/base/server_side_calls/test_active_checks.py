@@ -17,6 +17,7 @@ import pytest
 import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
+from cmk.fetchers import StoredSecrets
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
@@ -98,8 +99,10 @@ def test_get_active_service_data_respects_finalizer(
         ),
         oauth2_connections={},
         service_name_finalizer=lambda x: x.upper(),
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={},
+        ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
     )
@@ -284,8 +287,10 @@ def test_get_active_service_data(
         ),
         oauth2_connections={},
         service_name_finalizer=lambda x: x,
-        stored_passwords=stored_passwords,
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets=stored_passwords,
+        ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
     )
@@ -331,8 +336,10 @@ def test_get_active_service_data_password_with_hack(
         ),
         oauth2_connections={},
         service_name_finalizer=lambda x: x,
-        stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={"uuid1234": Secret("p4ssw0rd!")},
+        ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
     )
@@ -380,8 +387,10 @@ def test_get_active_service_data_password_without_hack() -> None:
         ),
         oauth2_connections={},
         service_name_finalizer=lambda x: x,
-        stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={"uuid1234": Secret("p4ssw0rd!")},
+        ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
     )
@@ -456,8 +465,10 @@ def test_test_get_active_service_data_crash_with_debug(
         ),
         oauth2_connections={},
         service_name_finalizer=lambda x: x,
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={},
+        ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
     )
@@ -578,8 +589,10 @@ def test_get_active_service_data_warnings(
         ),
         oauth2_connections={},
         service_name_finalizer=lambda x: x,
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={},
+        ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
     )

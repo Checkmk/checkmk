@@ -42,7 +42,7 @@ from cmk.checkengine.plugin_backend import (
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig
+from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, StoredSecrets
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.ip_lookup import (
@@ -202,9 +202,16 @@ def inventory_as_check(
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
+        secrets_config_relay=StoredSecrets(
+            path=cmk.utils.password_store.active_secrets_path_relay(),
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+            ),
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.active_secrets_path_site(),
+            secrets=secrets,
+        ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,

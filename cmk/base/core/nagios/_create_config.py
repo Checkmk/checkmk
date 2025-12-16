@@ -56,6 +56,7 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     ServiceID,
 )
+from cmk.fetchers import StoredSecrets
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ActiveServiceData
 from cmk.utils import config_warnings, ip_lookup, password_store
@@ -725,8 +726,10 @@ def create_nagios_servicedefs(
         host_attrs,
         final_service_name_config,
         ip_address_of,
-        stored_passwords,
-        password_store.active_secrets_path_site(),
+        StoredSecrets(
+            path=password_store.active_secrets_path_site(),
+            secrets=stored_passwords,
+        ),
     ):
         active_service_labels = _get_service_labels(
             config_cache.label_manager, hostname, service_data.description

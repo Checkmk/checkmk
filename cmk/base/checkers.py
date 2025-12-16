@@ -89,17 +89,18 @@ from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 from cmk.fetchers import (
     ActivatedSecrets,
+    AdHocSecrets,
     Fetcher,
     FetcherSecrets,
     FetcherTrigger,
     Mode,
     ProgramFetcher,
+    StoredSecrets,
     TLSConfig,
 )
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
-from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -362,9 +363,8 @@ class CMKFetcher:
         ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
         ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
-        secrets_file_option_relay: Path,
-        secrets_file_option_site: Path,
-        secrets: Mapping[str, Secret[str]],
+        secrets_config_relay: AdHocSecrets | StoredSecrets,
+        secrets_config_site: StoredSecrets,
         simulation_mode: bool,
         metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],
         max_cachefile_age: MaxAge | None = None,
@@ -382,9 +382,8 @@ class CMKFetcher:
         self.ip_address_of_mandatory: Final = ip_address_of_mandatory
         self.ip_address_of_mgmt: Final = ip_address_of_mgmt
         self.mode: Final = mode
-        self.secrets_file_option_relay: Final = secrets_file_option_relay
-        self.secrets_file_option_site: Final = secrets_file_option_site
-        self.secrets: Final = secrets
+        self.secrets_config_relay: Final = secrets_config_relay
+        self.secrets_config_site: Final = secrets_config_site
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
         self.metric_backend_fetcher_factory: Final = metric_backend_fetcher_factory
@@ -478,11 +477,10 @@ class CMKFetcher:
                         current_host_name,
                         current_ip_family,
                         current_ip_address,
-                        self.secrets,
-                        (
-                            self.secrets_file_option_site
-                            if current_relay_id is None
-                            else self.secrets_file_option_relay
+                        secrets_config=(
+                            self.secrets_config_relay
+                            if current_relay_id
+                            else self.secrets_config_site
                         ),
                         ip_address_of=self.ip_address_of,
                         executable_finder=ExecutableFinder(

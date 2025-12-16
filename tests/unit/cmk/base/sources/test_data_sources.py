@@ -7,8 +7,9 @@
 
 import socket
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Never
 
 import pytest
 
@@ -34,6 +35,12 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+
+@dataclass(frozen=True)
+class _SecretsConfig:
+    path: Path
+    secrets: Mapping[str, Never]
 
 
 def _dummy_rule_spec(host_name: HostName, value: Mapping[str, object] | str) -> RuleSpec:
@@ -101,8 +108,7 @@ def _make_sources(
             hostname,
             ip_family,
             ipaddress,
-            secrets_file_option=Path("/pw/store"),
-            secrets={},
+            secrets_config=_SecretsConfig(path=Path("/pw/store"), secrets={}),
             ip_address_of=lambda *a: ipaddress,
             executable_finder=lambda name, module: "/yolo/bin/hurra",
             for_relay=False,

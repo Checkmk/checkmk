@@ -12,11 +12,10 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import discover_families, PluginLocation
-from cmk.password_store.v1_unstable import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import password_store
 
-from ._commons import ExecutableFinderProtocol, replace_passwords
+from ._commons import ExecutableFinderProtocol, replace_passwords, SecretsConfig
 from .config_processing import (
     GlobalProxiesWithLookup,
     OAuth2Connection,
@@ -49,8 +48,7 @@ class SpecialAgent:
         host_attrs: Mapping[str, str],
         global_proxies_with_lookup: GlobalProxiesWithLookup,
         oauth2_connections: Mapping[str, OAuth2Connection],
-        stored_passwords: Mapping[str, StoreSecret[str]],
-        password_store_file: Path,
+        secrets_config: SecretsConfig,
         finder: ExecutableFinderProtocol,
         for_relay: bool,
         relay_compatible_families: Container[PluginFamily],
@@ -63,8 +61,7 @@ class SpecialAgent:
         self.host_attrs = host_attrs
         self._global_proxies_with_lookup = global_proxies_with_lookup
         self._oauth2_connections = oauth2_connections
-        self.stored_passwords = stored_passwords
-        self.password_store_file = password_store_file
+        self._secrets_config = secrets_config
         self._finder = finder
         self._for_relay = for_relay
         self._relay_compatible_families = relay_compatible_families
@@ -97,8 +94,7 @@ class SpecialAgent:
                 replace_passwords(
                     self.host_name,
                     command.command_arguments,
-                    self.stored_passwords,
-                    self.password_store_file,
+                    self._secrets_config,
                     processed.surrogates,
                     apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
                         special_agent.name, False

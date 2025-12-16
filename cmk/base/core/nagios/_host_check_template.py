@@ -24,6 +24,7 @@ from cmk.checkengine.plugin_backend import (
     load_selected_plugins,
 )
 from cmk.discover_plugins import PluginLocation
+from cmk.fetchers import StoredSecrets
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.paths import omd_root
 
@@ -101,6 +102,8 @@ def main() -> int:
         config.ipaddresses = CONFIG.ipaddresses
         config.ipv6addresses = CONFIG.ipv6addresses
 
+        secrets = load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+
         return run_checking(
             app,
             loading_result.loaded_config,
@@ -119,9 +122,12 @@ def main() -> int:
             ),
             {},
             [CONFIG.hostname],
-            secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
-            secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
-            secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
+            secrets_config_relay=StoredSecrets(
+                path=cmk.utils.password_store.active_secrets_path_relay(), secrets=secrets
+            ),
+            secrets_config_site=StoredSecrets(
+                path=cmk.utils.password_store.active_secrets_path_site(), secrets=secrets
+            ),
         )
     except KeyboardInterrupt:
         with suppress(IOError):

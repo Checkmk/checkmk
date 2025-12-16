@@ -129,6 +129,7 @@ from cmk.server_side_calls_backend import (
     load_active_checks,
     load_special_agents,
     relay_compatible_plugin_families,
+    SecretsConfig,
     SpecialAgent,
     SpecialAgentCommandLine,
     SSCRules,
@@ -2376,8 +2377,7 @@ class ConfigCache:
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
         ip_address_of: IPLookupOptional,
-        passwords: Mapping[str, Secret[str]],
-        password_store_file: Path,
+        secrets_config: SecretsConfig,
         single_plugin: str | None = None,
     ) -> Iterator[ActiveServiceData]:
         plugin_configs = (
@@ -2426,8 +2426,7 @@ class ConfigCache:
                 for ident, entry in self._loaded_config.oauth2_connections.items()
             },
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
-            passwords,
-            password_store_file,
+            secrets_config,
             ExecutableFinder(
                 cmk.utils.paths.local_nagios_plugins_dir,
                 cmk.utils.paths.nagios_plugins_dir,
@@ -2510,8 +2509,7 @@ class ConfigCache:
         host_name: HostName,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
-        secrets: Mapping[str, Secret[str]],
-        secrets_file_option: Path,
+        secrets_config: SecretsConfig,
         ip_address_of: IPLookup,
         executable_finder: ExecutableFinderProtocol,
         for_relay: bool,
@@ -2549,8 +2547,7 @@ class ConfigCache:
                 ident: config_processing.OAuth2Connection(**entry)
                 for ident, entry in self._loaded_config.oauth2_connections.items()
             },
-            secrets,
-            secrets_file_option,
+            secrets_config,
             executable_finder,
             for_relay=for_relay,
             relay_compatible_families=relay_compatible_plugin_families(cmk.utils.paths.local_root),

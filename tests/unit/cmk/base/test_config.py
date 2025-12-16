@@ -12,6 +12,7 @@ import re
 import shutil
 import socket
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, NoReturn
 
@@ -77,6 +78,12 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+
+@dataclass(frozen=True)
+class _SecretsConfig:
+    path: Path
+    secrets: Mapping[str, Secret]
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -3116,8 +3123,7 @@ def test_get_active_service_data_crash(
             ),
             FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
             lambda *a, **kw: HostAddress(""),
-            {},
-            Path(),
+            _SecretsConfig(path=Path(), secrets={}),
         )
     )
 

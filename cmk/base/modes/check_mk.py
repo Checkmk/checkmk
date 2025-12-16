@@ -119,7 +119,6 @@ from cmk.inventory.structured_data import (
     RawIntervalFromConfig,
     SDPath,
 )
-from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls_backend import ExecutableFinder, load_active_checks, load_secrets_file
 from cmk.snmplib import (
@@ -749,8 +748,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
                 hostname,
                 ip_family,
                 ipaddress,
-                secrets=secrets.secrets,
-                secrets_file_option=secrets.path,
+                secrets_config=secrets,
                 ip_address_of=ConfiguredIPLookup(
                     ip_address_of_bare,
                     allow_empty=hosts_config.clusters,
@@ -2112,9 +2110,16 @@ def mode_check_discovery(
             discovery=discovery_file_cache_max_age,
             inventory=1.5 * check_interval,
         ),
-        secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
+        secrets_config_relay=AdHocSecrets(
+            path=cmk.utils.password_store.active_secrets_path_relay(),
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+            ),
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.active_secrets_path_site(),
+            secrets=secrets,
+        ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -2480,9 +2485,16 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+        secrets_config_relay=AdHocSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_relay(),
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+            ),
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets=secrets,
+        ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -2612,6 +2624,8 @@ def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) 
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
 
+    secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+
     return run_checking(
         app,
         loaded_config,
@@ -2627,9 +2641,12 @@ def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) 
         ),
         options,
         args,
-        secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+        secrets_config_relay=AdHocSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_relay(), secrets=secrets
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
+        ),
     )
 
 
@@ -2647,9 +2664,8 @@ def run_checking(
     options: _CheckingOptions,
     args: list[str],
     *,
-    secrets_file_option_relay: Path,
-    secrets_file_option_site: Path,
-    secrets: Mapping[str, Secret],
+    secrets_config_relay: AdHocSecrets | StoredSecrets,
+    secrets_config_site: StoredSecrets,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
     try:
@@ -2736,9 +2752,8 @@ def run_checking(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=secrets_file_option_relay,
-        secrets_file_option_site=secrets_file_option_site,
-        secrets=secrets,
+        secrets_config_relay=secrets_config_relay,
+        secrets_config_site=secrets_config_site,
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -3033,9 +3048,15 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+        secrets_config_relay=AdHocSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_relay(),
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+            ),
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
+        ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -3336,9 +3357,15 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
+        secrets_config_relay=StoredSecrets(
+            path=cmk.utils.password_store.active_secrets_path_relay(),
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+            ),
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.active_secrets_path_site(), secrets=secrets
+        ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,

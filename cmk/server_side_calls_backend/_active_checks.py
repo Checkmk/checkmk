@@ -7,16 +7,14 @@
 
 from collections.abc import Callable, Iterable, Mapping, Reversible, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
-from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings, password_store
 from cmk.utils.servicename import ServiceName
 
-from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords
+from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords, SecretsConfig
 from .config_processing import (
     GlobalProxiesWithLookup,
     OAuth2Connection,
@@ -42,8 +40,7 @@ class ActiveCheck:
         global_proxies_with_lookup: GlobalProxiesWithLookup,
         oauth2_connections: Mapping[str, OAuth2Connection],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
-        stored_passwords: Mapping[str, Secret[str]],
-        password_store_file: Path,
+        secrets_config: SecretsConfig,
         finder: ExecutableFinderProtocol,
         *,
         ip_lookup_failed: bool,
@@ -55,8 +52,7 @@ class ActiveCheck:
         self._global_proxies_with_lookup = global_proxies_with_lookup
         self._oauth2_connections = oauth2_connections
         self._service_name_finalizer = service_name_finalizer
-        self.stored_passwords = stored_passwords or {}
-        self.password_store_file = password_store_file
+        self._secrets_config = secrets_config
         self._finder = finder
         self._ip_lookup_failed = ip_lookup_failed
 
@@ -110,8 +106,7 @@ class ActiveCheck:
             arguments = replace_passwords(
                 self.host_name,
                 service.command_arguments,
-                self.stored_passwords,
-                self.password_store_file,
+                self._secrets_config,
                 surrogates,
                 apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
                     active_check.name, False

@@ -180,7 +180,6 @@ from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
-from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
     config_processing,
@@ -188,6 +187,7 @@ from cmk.server_side_calls_backend import (
     load_secrets_file,
     load_special_agents,
     relay_compatible_plugin_families,
+    SecretsConfig,
     SpecialAgent,
     SpecialAgentCommandLine,
 )
@@ -402,9 +402,16 @@ def automation_service_discovery(
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
-        secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
-        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+        secrets_config_relay=AdHocSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_relay(),
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+            ),
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets=secrets,
+        ),
         metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -511,8 +518,7 @@ def automation_special_agent_discovery_preview(
         run_settings.host_config,
         run_settings.agent_name,
         run_settings.params,
-        ad_hoc_secrets.path,
-        ad_hoc_secrets.secrets,
+        ad_hoc_secrets,
         config_processing.GlobalProxiesWithLookup(
             global_proxies={
                 name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
@@ -549,6 +555,7 @@ def automation_special_agent_discovery_preview(
         plugins,
         _disabled_ip_lookup,
         run_settings.host_config.ip_address,
+        secrets_config=ad_hoc_secrets,
     )
 
     return preview
@@ -600,6 +607,16 @@ def automation_discovery_preview(
 
     # We might be checking a cluster, but the relay ID is the same for all nodes.
     relay_id = config.get_relay_id(label_manager.labels_of_host(host_name))
+    secrets_config_relay = AdHocSecrets(
+        path=cmk.utils.password_store.pending_secrets_path_relay(),
+        secrets=(
+            secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+        ),
+    )
+    secrets_config_site = StoredSecrets(
+        path=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets=secrets,
+    )
 
     fetcher = CMKFetcher(
         config_cache,
@@ -642,9 +659,8 @@ def automation_discovery_preview(
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+        secrets_config_relay=secrets_config_relay,
+        secrets_config_site=secrets_config_site,
         # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
         # and tabula rasa)
         max_cachefile_age=MaxAge.zero(),
@@ -681,6 +697,7 @@ def automation_discovery_preview(
         plugins=plugins,
         ip_address_of=ip_address_of_with_fallback,
         ip_address=ip_address,
+        secrets_config=secrets_config_relay if relay_id else secrets_config_site,
     )
 
 
@@ -702,6 +719,7 @@ def _get_discovery_preview(
     plugins: AgentBasedPlugins,
     ip_address_of: ip_lookup.IPLookupOptional,
     ip_address: HostAddress | None,
+    secrets_config: SecretsConfig,
 ) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
 
@@ -724,6 +742,7 @@ def _get_discovery_preview(
             passive_service_name_config,
             config_cache,
             plugins=plugins,
+            secrets_config=secrets_config,
         )
 
         def make_discovered_host_labels(
@@ -769,6 +788,7 @@ def _active_check_preview_rows(
     host_ip_stack_config: ip_lookup.IPStackConfig,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ip_address_of: ip_lookup.IPLookupOptional,
+    secrets_config: SecretsConfig,
 ) -> Sequence[CheckPreviewEntry]:
     ignored_services = config.IgnoredActiveServices(config_cache, host_name)
 
@@ -778,8 +798,6 @@ def _active_check_preview_rows(
     def make_output(desc: str) -> str:
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
-
-    password_store_file = cmk.utils.password_store.pending_secrets_path_site()
 
     return [
         CheckPreviewEntry(
@@ -806,8 +824,7 @@ def _active_check_preview_rows(
             config_cache.get_host_attributes(host_name, host_ip_family, ip_address_of),
             final_service_name_config,
             ip_address_of,
-            load_secrets_file(password_store_file),
-            password_store_file,
+            secrets_config,
         )
     ]
 
@@ -864,6 +881,7 @@ def _execute_discovery(
     passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
+    secrets_config: SecretsConfig,
 ) -> CheckPreview:
     logger = logging.getLogger("cmk.base.discovery")
     hosts_config = config.make_hosts_config(loaded_config)
@@ -978,6 +996,7 @@ def _execute_discovery(
                     get_ip_stack_config(h),
                     default_address_family(h),
                     ip_address_of,
+                    secrets_config,
                 ),
                 *config_cache.custom_check_preview_rows(h),
             ]
@@ -1116,9 +1135,16 @@ def _execute_autodiscovery(
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
-        secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
-        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
+        secrets_config_relay=StoredSecrets(
+            path=cmk.utils.password_store.active_secrets_path_relay(),
+            secrets=(
+                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+            ),
+        ),
+        secrets_config_site=StoredSecrets(
+            path=cmk.utils.password_store.active_secrets_path_site(),
+            secrets=secrets,
+        ),
         metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -2204,7 +2230,10 @@ class AutomationAnalyseServices:
         ip_address_of: ip_lookup.IPLookup,
         servicedesc: str,
     ) -> Iterable[_FoundService]:
-        password_store_file = cmk.utils.password_store.pending_secrets_path_site()
+        secrets_config = StoredSecrets(
+            path=(p := cmk.utils.password_store.pending_secrets_path_site()),
+            secrets=load_secrets_file(p),
+        )
 
         for active_service in config_cache.active_check_services(
             host_name,
@@ -2213,8 +2242,7 @@ class AutomationAnalyseServices:
             config_cache.get_host_attributes(host_name, host_ip_family, ip_address_of),
             final_service_name_config,
             ip_address_of,
-            load_secrets_file(password_store_file),
-            password_store_file,
+            secrets_config=secrets_config,
         ):
             if active_service.description == servicedesc:
                 yield _FoundService(
@@ -2908,8 +2936,7 @@ def get_special_agent_commandline(
     host_config: DiagSpecialAgentHostConfig,
     agent_name: str,
     params: Mapping[str, object],
-    password_store_file: Path,
-    passwords: Mapping[str, Secret[str]],
+    secrets_config: SecretsConfig,
     global_proxies_with_lookup: config_processing.GlobalProxiesWithLookup,
     oauth2_connections: Mapping[str, config_processing.OAuth2Connection],
 ) -> Iterator[SpecialAgentCommandLine]:
@@ -2930,8 +2957,7 @@ def get_special_agent_commandline(
         host_config.host_attrs,
         global_proxies_with_lookup,
         oauth2_connections,
-        passwords,
-        password_store_file,
+        secrets_config,
         ExecutableFinder(
             # NOTE: we can't ignore these, they're an API promise.
             cmk.utils.paths.local_special_agents_dir,
@@ -2984,8 +3010,7 @@ def _execute_diag_special_agent(
             diag_special_agent_input.host_config,
             diag_special_agent_input.agent_name,
             diag_special_agent_input.params,
-            ad_hoc_secrets.path,
-            diag_special_agent_input.passwords,
+            ad_hoc_secrets,
             config_processing.GlobalProxiesWithLookup(
                 global_proxies={
                     name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
@@ -3342,12 +3367,17 @@ class AutomationDiagHost:
         state, output = 0, ""
         host_labels = label_manager.labels_of_host(host_name)
         host_relay_id = config.get_relay_id(host_labels)
-        pending_passwords_file = (
-            cmk.utils.password_store.pending_secrets_path_site()
-            if host_relay_id is None
-            else cmk.utils.password_store.pending_secrets_path_relay()
+        secrets_config = (
+            AdHocSecrets(
+                path=cmk.utils.password_store.pending_secrets_path_relay(),
+                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+            )
+            if host_relay_id
+            else StoredSecrets(
+                path=cmk.utils.password_store.pending_secrets_path_site(),
+                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
+            )
         )
-        passwords = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
 
         trigger = ctx.make_fetcher_trigger(host_relay_id)
         for source in sources.make_sources(
@@ -3408,8 +3438,7 @@ class AutomationDiagHost:
                 host_name,
                 ip_family,
                 ipaddress,
-                secrets_file_option=pending_passwords_file,
-                secrets=passwords,
+                secrets_config=secrets_config,
                 ip_address_of=ip_address_of,
                 executable_finder=ExecutableFinder(
                     # NOTE: we can't ignore these, they're an API promise.
@@ -3466,11 +3495,7 @@ class AutomationDiagHost:
                 ),
                 fetcher,
                 Mode.CHECKING,
-                (
-                    AdHocSecrets(pending_passwords_file, passwords)
-                    if passwords
-                    else ActivatedSecrets()
-                ),
+                secrets_config,
             )
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
@@ -3701,7 +3726,10 @@ class AutomationActiveCheck:
             # The redirect might not be needed anymore.
             host_attrs = config_cache.get_host_attributes(host_name, ip_family, ip_address_of)
 
-        password_store_file = cmk.utils.password_store.pending_secrets_path_site()
+        secrets_config = StoredSecrets(
+            path=(p := cmk.utils.password_store.pending_secrets_path_site()),
+            secrets=load_secrets_file(p),
+        )
         for service_data in config_cache.active_check_services(
             host_name,
             ip_lookup_config.ip_stack_config(host_name),
@@ -3715,8 +3743,7 @@ class AutomationActiveCheck:
                 translations=loading_result.loaded_config.service_description_translation,
             ),
             ip_address_of,
-            load_secrets_file(password_store_file),
-            password_store_file,
+            secrets_config=secrets_config,
             single_plugin=plugin,
         ):
             if service_data.description != item:
@@ -4004,8 +4031,7 @@ def automation_get_agent_output(
                     hostname,
                     ip_family,
                     ipaddress,
-                    secrets_file_option=secrets.path,
-                    secrets=secrets.secrets,
+                    secrets_config=secrets,
                     ip_address_of=ip_address_of_with_fallback,
                     executable_finder=ExecutableFinder(
                         # NOTE: we can't ignore these, they're an API promise.

@@ -56,6 +56,7 @@ class DashboardToken(BaseModel):
 
 class AgentRegistrationToken(BaseModel):
     type_: TokenType = "agent_registration"
+    comment: str = ""
 
 
 TokenId = NewType("TokenId", str)

@@ -13,12 +13,11 @@ from pydantic import AwareDatetime, FutureDatetime
 
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
-from cmk.gui.token_auth import AuthToken, DashboardToken
+from cmk.gui.token_auth import AgentRegistrationToken, AuthToken
 
 
 @api_model
 class AgentRegistrationTokenMetadata:
-    is_disabled: bool = api_field(description="Indicates whether the token is disabled.")
     comment: str = api_field(description="Internal comment for the token. Not displayed to users.")
     issued_at: Annotated[dt.datetime, AwareDatetime] = api_field(
         description="The date and time when the token was issued.",
@@ -31,10 +30,9 @@ class AgentRegistrationTokenMetadata:
 
     @classmethod
     def from_internal(cls, token: AuthToken) -> Self:
-        if not isinstance(token.details, DashboardToken):
-            raise ValueError("Token is not a dashboard token")
+        if not isinstance(token.details, AgentRegistrationToken):
+            raise ValueError("Token is not a agent registration token")
         return cls(
-            is_disabled=token.details.disabled,
             comment=token.details.comment,
             issued_at=token.issued_at,
             expires_at=token.valid_until,
@@ -50,7 +48,6 @@ class AgentRegistrationTokenModel(AgentRegistrationTokenMetadata):
         base = AgentRegistrationTokenMetadata.from_internal(token)
         return cls(
             token_id=token.token_id,
-            is_disabled=base.is_disabled,
             comment=base.comment,
             issued_at=base.issued_at,
             expires_at=base.expires_at,

@@ -57,13 +57,14 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
-    make_javascript_link,
     make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
+    PageMenuData,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuTopic,
+    PageMenuVue,
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
@@ -393,7 +394,10 @@ class UserTwoFactorOverview(Page):
                                 PageMenuEntry(
                                     title=_("Register security token"),
                                     icon_name=StaticIcon(IconNames.twofa),
-                                    item=make_javascript_link("cmk.webauthn.register()"),
+                                    item=PageMenuVue(
+                                        component_name="cmk-webauthn-register-button",
+                                        data=PageMenuData(),
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                     description=_(
@@ -654,7 +658,10 @@ class UserTwoFactorEnforce(Page):
                                 PageMenuEntry(
                                     title=_("Register security token"),
                                     icon_name=StaticIcon(IconNames.twofa),
-                                    item=make_javascript_link("cmk.webauthn.register()"),
+                                    item=PageMenuVue(
+                                        component_name="cmk-webauthn-register-button",
+                                        data=PageMenuData(),
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                     description=_(

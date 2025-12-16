@@ -62,7 +62,6 @@ import * as valuespecs from './modules/valuespecs'
 import * as views from './modules/views'
 import * as visibility_detection from './modules/visibility_detection'
 import * as wato from './modules/wato'
-import * as webauthn from './modules/webauthn'
 
 register()
 
@@ -139,8 +138,7 @@ export const cmk_export = {
     valuespecs: valuespecs,
     views: views,
     visibility_detection: visibility_detection,
-    wato: wato,
-    webauthn: webauthn
+    wato: wato
   }
 }
 

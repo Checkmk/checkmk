@@ -25,11 +25,27 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
+def _migrate_240_deployment(value: object) -> object:
+    match value:
+        case ("cached", None):
+            return ("sync", None)
+        case ("cached", iv):
+            return value
+        case ("sync", None):
+            return value
+        case ("sync", iv):
+            return ("cached", iv)
+        case ("do_not_deploy", _):
+            return ("do_not_deploy", None)
+        case _:
+            raise ValueError(value)
+
+
 def _migrate(value: object) -> Mapping[str, object]:
     if isinstance(value, dict) and "user" in value:
         iv = value.get("interval")
         return {
-            "deployment": ("cached", None) if not iv else ("sync", float(iv - iv % 60.0)),
+            "deployment": ("sync", None) if not iv else ("cached", float(iv - iv % 60.0)),
             "auth": {
                 "user": value["user"],
                 "password": ("cmk_postprocesed", "explicit_password", value["password"]),
@@ -38,10 +54,11 @@ def _migrate(value: object) -> Mapping[str, object]:
 
     match value:
         case None:
-            return {"deployment": ("do_not_deploy", 0.0)}
-        case dict():
-            return value
-    raise ValueError(value)
+            return {"deployment": ("do_not_deploy", None)}
+        case {"deployment": deployment} if isinstance(value, dict):
+            return {**value, "deployment": _migrate_240_deployment(deployment)}
+        case _:
+            raise ValueError(value)
 
 
 def _agent_config_mk_tsm() -> Dictionary:

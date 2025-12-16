@@ -9,6 +9,9 @@ filegroup(
         ["**"],
         exclude = [
             "BUILD",
+            "reference/**",
+            "scripts/**",
+            ".gitattributes",
             "**/OWNERS",
             ".f12",
         ],

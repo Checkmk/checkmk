@@ -46,7 +46,7 @@ jobs:
     - name: Cache uv
       uses: actions/cache@v3
       with:
-        key: uv-${{ runner.os }}-${{ hashFiles('requirements_all_lock.txt') }}
+        key: uv-$ImageOS-${{ hashFiles('requirements_all_lock.txt') }}
         path: ${{ env.UV_CACHE_DIR  }}
     - name: Setup Environment
       run: |

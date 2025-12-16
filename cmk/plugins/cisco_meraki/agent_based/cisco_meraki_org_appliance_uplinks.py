@@ -28,18 +28,19 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.cisco_meraki.lib.constants import DEFAULT_TIMESPAN
 from cmk.plugins.cisco_meraki.lib.schema import UplinkUsageByInterface
+from cmk.plugins.cisco_meraki.lib.type_defs import PossiblyMissing
 
 type Section = ApplianceStatus
 
 
 class Uplink(BaseModel, frozen=True):
-    gateway: str
+    gateway: str | None
     interface: str
-    ip: str
-    ip_assigned_by: str = Field(alias="ipAssignedBy")
-    primary_dns: str = Field(alias="primaryDns")
-    public_ip: str = Field(alias="publicIp")
-    secondary_dns: str = Field(alias="secondaryDns")
+    ip: str | None
+    ip_assigned_by: str | None = Field(alias="ipAssignedBy")
+    primary_dns: str | None = Field(alias="primaryDns")
+    public_ip: str | None = Field(alias="publicIp")
+    secondary_dns: str | None = Field(alias="secondaryDns")
     status: str
 
 
@@ -55,7 +56,9 @@ class ApplianceStatus(BaseModel, frozen=True):
     network_name: str = Field(alias="networkName")
     serial: str
     uplinks_list: list[Uplink] = Field(alias="uplinks")
-    usage_by_interface: UplinkUsageByInterface = Field(alias="usageByInterface")
+    usage_by_interface: PossiblyMissing[UplinkUsageByInterface] = Field(
+        None, alias="usageByInterface"
+    )
 
     @computed_field
     @property
@@ -118,6 +121,7 @@ def check_appliance_uplinks(item: str, params: CheckParams, section: Section) ->
     if (
         params["show_traffic"]
         and uplink.status == "active"
+        and section.usage_by_interface
         and (usage := section.usage_by_interface.get(uplink.interface))
     ):
         if (received := usage.get("received")) is not None:

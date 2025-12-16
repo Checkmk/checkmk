@@ -13,6 +13,7 @@ const { _t } = usei18n()
 
 defineProps<{
   activatingOnSites: string[] | string | undefined
+  restartInfo: boolean
 }>()
 </script>
 
@@ -24,6 +25,9 @@ defineProps<{
     >
     <span v-else class="mm-changes-activating__text">{{ _t('Activating changes... ') }} </span>
     <span>{{ _t("You can safely navigate away - we'll keep working in the background") }}</span>
+    <span v-if="restartInfo">{{
+      _t('This may take up to 30 seconds when a site restart is required.')
+    }}</span>
     <CmkProgressbar max="unknown"></CmkProgressbar>
   </div>
 </template>

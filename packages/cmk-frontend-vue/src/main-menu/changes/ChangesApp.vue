@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
+import { CmkError } from '@/lib/error'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -59,28 +60,64 @@ const { hasSitesWithChangesOrErrors } = useSiteStatus(sitesRef)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
+const activationPollStartTime = ref<number | null>(null)
+const restartInfoShown = ref(false)
+const siteRestartWaitTime = 30000
+
 async function pollActivationStatusUntilComplete(activationId: string) {
-  const response = (await restAPI.get(
-    `objects/activation_run/${activationId}`
-  )) as ActivationStatusResponse
+  try {
+    const response = (await restAPI.get(
+      `objects/activation_run/${activationId}`
+    )) as ActivationStatusResponse
 
-  const statusPerSite = response.extensions.status_per_site
-  sitesAndChanges.value.sites.forEach((site) => {
-    const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
-    if (siteStatus) {
-      site.lastActivationStatus = siteStatus
-      recentlyActivatedSites.value.push(site.siteId)
+    const statusPerSite = response.extensions.status_per_site
+    sitesAndChanges.value.sites.forEach((site) => {
+      const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
+      if (siteStatus) {
+        site.lastActivationStatus = siteStatus
+        recentlyActivatedSites.value.push(site.siteId)
+      }
+    })
+
+    if (response.extensions.is_running) {
+      setTimeout(() => {
+        void pollActivationStatusUntilComplete(activationId)
+      }, 100)
+    } else {
+      numberOfChangesLastActivation.value = response.extensions.changes.length
+      await fetchPendingChangesAjax()
+      activateChangesInProgress.value = false
     }
-  })
+  } catch (error) {
+    // TODO use some real Fetch class with return code
+    if (error instanceof CmkError) {
+      const cmkError = error as CmkError
+      const context = cmkError.getContext() || ''
+      const statusMatch = context.match(/STATUS\s+(\d+)/)
+      const statusCode = statusMatch ? Number(statusMatch[1]) : undefined
 
-  if (response.extensions.is_running) {
-    setTimeout(() => {
-      void pollActivationStatusUntilComplete(activationId)
-    }, 100)
-  } else {
-    numberOfChangesLastActivation.value = response.extensions.changes.length
-    await fetchPendingChangesAjax()
+      if (
+        statusCode === 503 &&
+        activationPollStartTime.value &&
+        Date.now() - activationPollStartTime.value <= siteRestartWaitTime
+      ) {
+        if (!restartInfoShown.value) {
+          restartInfoShown.value = true
+        }
+
+        setTimeout(() => {
+          void pollActivationStatusUntilComplete(activationId)
+        }, 1000)
+
+        return
+      }
+    }
+
     activateChangesInProgress.value = false
+    activationPollStartTime.value = null
+    restartInfoShown.value = false
+
+    throw new Error(`Polling of activation result failed: ${error}`)
   }
 }
 
@@ -111,6 +148,7 @@ async function activateAllChanges() {
       },
       { headers: [['If-Match', '*']] }
     )) as ActivatePendingChangesResponse
+    activationPollStartTime.value = Date.now()
     void pollActivationStatusUntilComplete(activateChangesResponse.id)
     return
   } catch (error) {
@@ -285,6 +323,7 @@ onMounted(async () => {
         :activating-on-sites="
           recentlyActivatedSites.length > 1 ? recentlyActivatedSites : recentlyActivatedSites[0]
         "
+        :restart-info="restartInfoShown"
       >
       </ChangesActivating>
 

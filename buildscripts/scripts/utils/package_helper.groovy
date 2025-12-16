@@ -199,7 +199,7 @@ void provide_agent_binaries(Map args) {
 
     def stages = upstream_job_details.collectEntries { job_name, details ->
         [("${job_name}".toString()) : {
-            def run_condition = details.get("condition", true);
+            def run_condition = details["condition"];
             def build_instance = null;
 
             if (! run_condition) {

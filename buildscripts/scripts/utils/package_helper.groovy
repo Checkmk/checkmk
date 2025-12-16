@@ -199,7 +199,7 @@ void provide_agent_binaries(Map args) {
             def build_instance = null;
 
             if (! run_condition) {
-                Utils.markStageSkippedForConditional("${distro}");
+                Utils.markStageSkippedForConditional("${job_name}");
             }
 
             smart_stage(

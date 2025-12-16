@@ -795,9 +795,9 @@ google-auth==2.37.0 \
     #   google-cloud-org-policy
     #   google-cloud-os-config
     #   kubernetes
-google-auth-httplib2==0.2.1 \
-    --hash=sha256:1be94c611db91c01f9703e7f62b0a59bbd5587a95571c7b6fade510d648bc08b \
-    --hash=sha256:5ef03be3927423c87fb69607b42df23a444e434ddb2555b73b3679793187b7de
+google-auth-httplib2==0.3.0 \
+    --hash=sha256:177898a0175252480d5ed916aeea183c2df87c1f9c26705d74ae6b951c268b0b \
+    --hash=sha256:426167e5df066e3f5a0fc7ea18768c08e7296046594ce4c8c409c2457dd1f776
     # via google-api-python-client
 google-cloud-access-context-manager==0.3.0 \
     --hash=sha256:5d15ad51547f06c281e35f16b4ffcb3e98bb2d898b01470f88b94edfb2eeb0a3 \

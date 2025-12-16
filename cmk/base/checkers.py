@@ -88,7 +88,6 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 from cmk.fetchers import (
-    ActivatedSecrets,
     AdHocSecrets,
     Fetcher,
     FetcherSecrets,
@@ -398,6 +397,10 @@ class CMKFetcher:
         ]
     ]:
         hosts_config = self.config_cache.hosts_config
+
+        # we might be checking a cluster, but the relay id is always the same.
+        relay_id = self.get_relay_id(host_name)
+
         is_cluster = host_name in hosts_config.clusters
         if not is_cluster:
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
@@ -416,7 +419,6 @@ class CMKFetcher:
                             host_name, self.default_address_family(host_name)
                         )
                     ),
-                    self.get_relay_id(host_name),
                 )
             ]
         else:
@@ -430,7 +432,6 @@ class CMKFetcher:
                         if ip_stack_config is IPStackConfig.NO_IP
                         else self.ip_address_of_mandatory(node, self.default_address_family(node))
                     ),
-                    self.get_relay_id(node),
                 )
                 for node in self.config_cache.nodes(host_name)
             ]
@@ -440,12 +441,13 @@ class CMKFetcher:
             ca_store=Path(cmk.utils.paths.agent_cert_store),
             site_crt=Path(cmk.utils.paths.site_cert_file),
         )
+        secrets_config = self.secrets_config_relay if relay_id else self.secrets_config_site
         console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA")
         return [
             fetched
-            for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address, current_relay_id in hosts
+            for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address in hosts
             for fetched in _fetch_all(
-                self.make_trigger(current_relay_id),
+                self.make_trigger(relay_id),
                 make_sources(
                     self.plugins,
                     current_host_name,
@@ -477,23 +479,17 @@ class CMKFetcher:
                         current_host_name,
                         current_ip_family,
                         current_ip_address,
-                        secrets_config=(
-                            self.secrets_config_relay
-                            if current_relay_id
-                            else self.secrets_config_site
-                        ),
+                        secrets_config=secrets_config,
                         ip_address_of=self.ip_address_of,
                         executable_finder=ExecutableFinder(
                             # NOTE: we can't ignore these, they're an API promise.
                             cmk.utils.paths.local_special_agents_dir,
                             cmk.utils.paths.special_agents_dir,
                             prefix_map=(
-                                ()
-                                if current_relay_id is None
-                                else ((cmk.utils.paths.omd_root, Path()),)
+                                () if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)
                             ),
                         ),
-                        for_relay=current_relay_id is not None,
+                        for_relay=relay_id is not None,
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(
                         current_host_name
@@ -505,7 +501,7 @@ class CMKFetcher:
                 ),
                 file_cache_options=self.file_cache_options,
                 mode=self.mode,
-                secrets=ActivatedSecrets(),  # FIXME: switch to ad-hoc / stored
+                secrets=secrets_config,
                 simulation=self.simulation_mode,
             )
         ]

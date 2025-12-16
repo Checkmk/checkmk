@@ -690,7 +690,9 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
         has_errors = False
         secrets = (
             AdHocSecrets(
-                path=cmk.utils.password_store.pending_secrets_path_relay(),
+                path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                    cmk.utils.paths.relative_tmp_dir
+                ),
                 secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
             )
             if relay_id
@@ -2486,7 +2488,9 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
         ),
         simulation_mode=config.simulation_mode,
         secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_relay(),
+            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                cmk.utils.paths.relative_tmp_dir
+            ),
             secrets=(
                 secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
             ),
@@ -2642,7 +2646,10 @@ def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) 
         options,
         args,
         secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_relay(), secrets=secrets
+            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                cmk.utils.paths.relative_tmp_dir
+            ),
+            secrets=secrets,
         ),
         secrets_config_site=StoredSecrets(
             path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
@@ -3049,7 +3056,9 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
         ),
         simulation_mode=config.simulation_mode,
         secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_relay(),
+            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                cmk.utils.paths.relative_tmp_dir
+            ),
             secrets=(
                 secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
             ),

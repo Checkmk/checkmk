@@ -403,7 +403,9 @@ def automation_service_discovery(
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
         secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_relay(),
+            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                cmk.utils.paths.relative_tmp_dir
+            ),
             secrets=(
                 secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
             ),
@@ -506,10 +508,10 @@ def automation_special_agent_discovery_preview(
     service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
     file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
     ad_hoc_secrets = AdHocSecrets(
-        path=(
-            Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
+        path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+            cmk.utils.paths.tmp_dir
             if run_settings.host_config.relay_id is None
-            else Path(cmk.utils.paths.relative_tmp_dir, f"passwords_temp_relay_{uuid.uuid4()}")
+            else cmk.utils.paths.relative_tmp_dir
         ),
         secrets=run_settings.passwords,
     )
@@ -608,7 +610,9 @@ def automation_discovery_preview(
     # We might be checking a cluster, but the relay ID is the same for all nodes.
     relay_id = config.get_relay_id(label_manager.labels_of_host(host_name))
     secrets_config_relay = AdHocSecrets(
-        path=cmk.utils.password_store.pending_secrets_path_relay(),
+        path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+            cmk.utils.paths.relative_tmp_dir
+        ),
         secrets=(
             secrets := load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
         ),
@@ -3369,7 +3373,9 @@ class AutomationDiagHost:
         host_relay_id = config.get_relay_id(host_labels)
         secrets_config = (
             AdHocSecrets(
-                path=cmk.utils.password_store.pending_secrets_path_relay(),
+                path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
+                    cmk.utils.paths.relative_tmp_dir
+                ),
                 secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
             )
             if host_relay_id

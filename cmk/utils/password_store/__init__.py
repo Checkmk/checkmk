@@ -18,6 +18,7 @@ from ._pwstore import active_secrets_path_site as active_secrets_path_site
 from ._pwstore import ad_hoc_password_id as ad_hoc_password_id
 from ._pwstore import extract as extract
 from ._pwstore import extract_formspec_password as extract_formspec_password
+from ._pwstore import generate_ad_hoc_secrets_path as generate_ad_hoc_secrets_path
 from ._pwstore import load as load
 from ._pwstore import lookup as lookup
 from ._pwstore import lookup_for_bakery as lookup_for_bakery
@@ -26,7 +27,6 @@ from ._pwstore import make_staged_passwords_lookup as make_staged_passwords_look
 from ._pwstore import Password as Password
 from ._pwstore import password_store_path as password_store_path
 from ._pwstore import PasswordId as PasswordId
-from ._pwstore import pending_secrets_path_relay as pending_secrets_path_relay
 from ._pwstore import pending_secrets_path_site as pending_secrets_path_site
 from ._pwstore import save as save
 from .hack import replace_passwords as replace_passwords

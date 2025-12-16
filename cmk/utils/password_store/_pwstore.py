@@ -84,9 +84,8 @@ def pending_secrets_path_site() -> Path:
     return cmk.utils.paths.var_dir / "passwords_merged"
 
 
-def pending_secrets_path_relay() -> Path:
-    """file where user-managed passwords and the ones extracted from the configuration are merged."""
-    return cmk.utils.paths.relative_var_dir / "passwords_merged"
+def generate_ad_hoc_secrets_path(tmpdir: Path) -> Path:
+    return tmpdir / f"passwords_adhoc_{uuid4()}"
 
 
 # COMING SOON:

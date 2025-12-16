@@ -68,16 +68,16 @@ jobs:
             - name: Cache uv
               uses: actions/cache@v3
               with:
-                  key: uv-${{ runner.os }}-${{ hashFiles('requirements_all_lock.txt') }}
+                  key: uv-$ImageOS-${{ hashFiles('requirements_all_lock.txt') }}
                   path: ${{ env.UV_CACHE_DIR  }}
             - name: Cache bazel
               uses: actions/cache@v3
               with:
-                  key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE.bazel') }}
+                  key: $ImageOS-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE.bazel') }}
                   path: |
                       ~/.cache/bazel
                   restore-keys: |
-                      ${{ runner.os }}-bazel-
+                      $ImageOS-bazel-
             - name: Setup Environment
               run: |
                   # ksh: Needed for some "unit test" (test_mk_errpt_aix).

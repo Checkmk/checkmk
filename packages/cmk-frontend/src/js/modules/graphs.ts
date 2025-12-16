@@ -1576,7 +1576,7 @@ function update_mouse_hovering(event: Event) {
 
     const canvas_rect = canvas.getBoundingClientRect();
     // With 'style.cursor: crosshair' we need to move the dotted line to the middle of the cursor.
-    // There's no possibility to find out the excat size of the cursor image.
+    // There's no possibility to find out the exact size of the cursor image.
     const cursorHalfSize = 6;
     update_mouse_indicator(
         canvas,

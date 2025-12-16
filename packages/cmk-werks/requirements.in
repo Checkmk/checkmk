@@ -3,3 +3,4 @@ lxml
 markdown
 pydantic
 rich
+httpx

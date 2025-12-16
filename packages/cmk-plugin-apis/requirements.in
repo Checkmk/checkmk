@@ -1,2 +1,5 @@
 pydantic
 vcrpy
+cryptography
+requests
+urllib3

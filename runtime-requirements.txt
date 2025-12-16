@@ -663,6 +663,7 @@ cryptography==46.0.3 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crypto/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
     #   azure-identity
     #   azure-storage-blob
     #   fido2
@@ -1093,6 +1094,7 @@ httpx==0.28.1 \
     #   -c requirements.txt
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-werks/requirements.in
 icalendar==6.3.2 \
     --hash=sha256:d400e9c9bb8c025e5a3c77c236941bb690494be52528a0b43cc7e8b7c9505064 \
     --hash=sha256:e0c10ecbfcebe958d33af7d491f6e6b7580d11d475f2eeb29532d0424f9110a1
@@ -1147,6 +1149,7 @@ jinja2==3.1.6 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-livestatus-client/requirements.in
     #   flask
     #   meraki
     #   pysmi
@@ -2460,6 +2463,7 @@ pydantic==2.10.6 \
     #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
+    #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
@@ -2570,6 +2574,8 @@ pydantic-core==2.27.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-mkp-tool/requirements.in
     #   pydantic
 pyghmi==1.6.11 \
     --hash=sha256:42aacee5564f0e4aaec572f3c250599f07334201e0f359c5506c56d74d1e4c4b \
@@ -2806,6 +2812,7 @@ pysmi==1.6.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-ec/requirements.in
     #   pysnmp
 pysnmp==6.2.6 \
     --hash=sha256:ce86b74d0ce4b74ffe9124993f2778c66111fe7523828ebe9bd1b067f9635c00 \
@@ -3049,8 +3056,10 @@ requests==2.32.5 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-core-helpers/requirements.in
     #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-plugins/requirements.in
     #   azure-core
     #   exchangelib
@@ -3525,6 +3534,7 @@ tenacity==9.1.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-agent-receiver/requirements.in
     #   opsgenie-sdk
 tqdm==4.67.1 \
     --hash=sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2 \
@@ -3578,6 +3588,8 @@ urllib3==2.6.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-core-helpers/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-plugins/requirements.in
     #   botocore
     #   clickhouse-connect

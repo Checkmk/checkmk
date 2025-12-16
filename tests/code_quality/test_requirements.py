@@ -85,6 +85,9 @@ class NormalizedPackageName:
     def __hash__(self) -> int:
         return hash(self.normalized)
 
+    def __repr__(self) -> str:
+        return f"NormalizedPackageName({self.original!r})"
+
 
 class Import(NamedTuple):
     name: ImportName
@@ -341,6 +344,41 @@ def get_unused_dependencies() -> Iterable[PackageName]:
     for packagename, import_names in requirements_libs.items():
         if set(import_names).isdisjoint(imported_libs):
             yield packagename
+
+
+def find_packages() -> Iterable[object]:
+    """Find all package paths in the repo"""
+    packages_paths = ["packages"]
+    if is_pro_repo():
+        packages_paths.append("non-free/packages")
+
+    for packages_path in packages_paths:
+        for package_path in (repo_path() / packages_path).iterdir():
+            if not package_path.is_dir():
+                continue
+            if not (package_path / "requirements.in").exists():
+                # No python package
+                continue
+            yield pytest.param(package_path, id=package_path.relative_to(repo_path()).as_posix())
+
+
+@pytest.mark.parametrize("package_path", find_packages())
+def test_package_declared_all_python_deps(package_path: Path) -> None:
+    if package_path.relative_to(repo_path()).as_posix() == "non-free/packages/cmk-core-helpers":
+        pytest.skip("cmk-core-helpers needs netsnmp which does not come from pypi")
+    venv_libs = get_requirements_libs(repo_path())
+    imported_libs = {d.normalized_name for d in get_imported_libs(package_path)}
+    required_packages = set(parse_requirements_file(package_path / "requirements.in"))
+
+    required_import_names = chain.from_iterable(
+        import_names
+        for packagename, import_names in venv_libs.items()
+        if packagename in required_packages
+    )
+    unknown_but_imported_libs = imported_libs - set(required_import_names)
+    assert not unknown_but_imported_libs, (
+        f"These libs are imported but not part of the requirements: {sorted(u.normalized for u in unknown_but_imported_libs)} in {package_path.relative_to(repo_path()).as_posix()}"
+    )
 
 
 def get_undeclared_dependencies() -> Iterable[Import]:

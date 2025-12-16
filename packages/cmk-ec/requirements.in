@@ -3,3 +3,4 @@ pymongo
 pysnmp
 python-dateutil
 setproctitle
+pysmi

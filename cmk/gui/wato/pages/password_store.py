@@ -8,8 +8,10 @@
 # mypy: disable-error-code="type-arg"
 
 import copy
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 
+from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -41,13 +43,17 @@ from cmk.gui.wato.pages._simple_modes import (
     SimpleListMode,
     SimpleModeType,
 )
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    PasswordChange,
+    SerializedSettings,
+)
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.passwords import sorted_contact_group_choices
+from cmk.gui.watolib.passwords import password_change_effect_registry, sorted_contact_group_choices
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.utils.password_store import Password
 
@@ -71,7 +77,8 @@ class PasswordStoreModeType(SimpleModeType[Password]):
         return False
 
     def affected_config_domains(self) -> list[ABCConfigDomain]:
-        return [ConfigDomainCore()]
+        # handled in _add_change
+        raise NotImplementedError()
 
 
 class ModePasswords(SimpleListMode[Password]):
@@ -182,6 +189,43 @@ class ModePasswords(SimpleListMode[Password]):
 
     def _contact_group_alias(self, name: str) -> str:
         return self._contact_groups.get(name, {"alias": name})["alias"]
+
+    def _add_change(
+        self,
+        *,
+        action: str,
+        text: str,
+        user_id: UserId | None,
+        affected_sites: list[SiteId] | None,
+        use_git: bool,
+    ) -> None:
+        """Add a Setup change entry for this object type modifications"""
+
+        affected_domains: Sequence[ABCConfigDomain] = []
+        domain_settings = {}
+        match action:
+            case "delete":
+                if (ident := request.get_ascii_input("_delete")) is None:
+                    return
+                affected_domains = password_change_effect_registry.affected_domains_delete
+                domain_settings = {
+                    domain.ident(): SerializedSettings(
+                        changed_passwords=[PasswordChange(change_type="DELETE", password_id=ident)]
+                    )
+                    for domain in password_change_effect_registry.affected_domains_delete
+                }
+            case _:
+                raise NotImplementedError(f"Unknown action {action} for mode {self.name()}")
+
+        add_change(
+            action_name=f"{action}-{self._mode_type.type_name()}",
+            text=text,
+            user_id=user_id,
+            domains=affected_domains,
+            domain_settings=domain_settings,
+            sites=affected_sites,
+            use_git=use_git,
+        )
 
 
 class ModeEditPassword(SimpleEditMode[Password]):
@@ -321,3 +365,53 @@ class ModeEditPassword(SimpleEditMode[Password]):
 
         elif self._clone_source and (locked_by := self._clone_source.get("locked_by")):
             quick_setup_duplication_warning(locked_by, self._mode_type.name_singular())
+
+    def _add_change(
+        self,
+        *,
+        action: str,
+        text: str,
+        user_id: UserId | None,
+        affected_sites: list[SiteId] | None,
+        use_git: bool,
+    ) -> None:
+        """Add a Setup change entry for this object type modifications"""
+
+        if self._ident is None:
+            return
+
+        affected_domains: Sequence[ABCConfigDomain] = []
+        domain_settings = None
+        match action:
+            case "add":
+                affected_domains = password_change_effect_registry.affected_domains_add
+                domain_settings = {
+                    domain.ident(): SerializedSettings(
+                        changed_passwords=[
+                            PasswordChange(change_type="ADD", password_id=self._ident)
+                        ]
+                    )
+                    for domain in password_change_effect_registry.affected_domains_add
+                }
+            case "edit":
+                affected_domains = password_change_effect_registry.affected_domains_edit
+                domain_settings = {
+                    domain.ident(): SerializedSettings(
+                        changed_passwords=[
+                            PasswordChange(change_type="EDIT", password_id=self._ident)
+                        ]
+                    )
+                    for domain in password_change_effect_registry.affected_domains_edit
+                }
+            case _:
+                raise NotImplementedError(f"Unknown action {action} for mode {self.name()}")
+
+        add_change(
+            action_name=f"{action}-{self._mode_type.type_name()}",
+            text=text,
+            user_id=user_id,
+            domains=affected_domains,
+            domain_settings=domain_settings,
+            sites=affected_sites,
+            use_git=use_git,
+        )

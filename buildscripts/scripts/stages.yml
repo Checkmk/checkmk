@@ -155,22 +155,22 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/\\|^requirements/rust' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/\\|^requirements/rust/site' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/\\|^requirements/rust' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/\\|^requirements/rust/site' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/\\|^requirements/rust' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/\\|^requirements/rust/host' || true"
 
     - NAME: CHANGED_MK_ORACLE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^requirements/rust' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^requirements/rust/host' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmc/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/\\|^requirements/rust' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/\\|^requirements/rust/host' || true"
 
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"

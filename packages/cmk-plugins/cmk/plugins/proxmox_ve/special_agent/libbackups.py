@@ -6,6 +6,7 @@
 # mypy: disable-error-code="misc"
 
 import argparse
+import itertools
 import json
 import logging
 import re
@@ -148,8 +149,10 @@ class BackupTask:
             storage.write(
                 f"erroneous-{task['upid']}.log",
                 "\n".join(
-                    *(line["t"] for line in logs),
-                    *("PARSE-ERROR: %d: %s" % (linenr, text) for linenr, text in errors),
+                    itertools.chain(
+                        (line["t"] for line in logs),
+                        ("PARSE-ERROR: %d: %s" % (linenr, text) for linenr, text in errors),
+                    )
                 ),
             )
             LOGGER.error(

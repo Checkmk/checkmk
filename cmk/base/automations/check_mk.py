@@ -594,9 +594,13 @@ def automation_discovery_preview(
     file_cache_options = FileCacheOptions(
         use_outdated=prevent_fetching, use_only_cache=prevent_fetching
     )
+
+    # We might be checking a cluster, but the relay ID is the same for all nodes.
+    relay_id = config.get_relay_id(label_manager.labels_of_host(host_name))
+
     fetcher = CMKFetcher(
         config_cache,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        get_relay_id=lambda hn: relay_id,
         make_trigger=ctx.make_fetcher_trigger,
         factory=config_cache.fetcher_factory(
             service_configurer,

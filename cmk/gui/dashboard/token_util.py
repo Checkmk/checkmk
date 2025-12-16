@@ -100,7 +100,7 @@ def _validate_expiration(
 @contextmanager
 def edit_dashboard_auth_token(
     dashboard: DashboardConfig, token_store: TokenStore | None = None
-) -> Generator[AuthToken]:
+) -> Generator[tuple[AuthToken, DashboardToken]]:
     """Context manager to edit the auth token of a dashboard."""
     if (token_id := dashboard.get("public_token_id")) is None:
         raise DashboardTokenNotFound(
@@ -113,7 +113,7 @@ def edit_dashboard_auth_token(
         token_store = get_token_store()
     with token_store.read_locked() as data:
         if (token := data.get(TokenId(token_id))) and isinstance(token.details, DashboardToken):
-            yield token
+            yield token, token.details
             return
 
     raise InvalidDashboardTokenReference()
@@ -124,7 +124,7 @@ def get_dashboard_auth_token(
 ) -> AuthToken | None:
     """Read access to the auth token of a dashboard."""
     try:
-        with edit_dashboard_auth_token(dashboard, token_store) as token:
+        with edit_dashboard_auth_token(dashboard, token_store) as (token, _details):
             return token
     except (DashboardTokenNotFound, InvalidDashboardTokenReference):
         return None
@@ -137,9 +137,8 @@ def disable_dashboard_token(
 
     This should be done whenever a dashboard is edited."""
     try:
-        with edit_dashboard_auth_token(dashboard_config, token_store) as token:
-            if isinstance(token.details, DashboardToken):
-                token.details.disabled = True
+        with edit_dashboard_auth_token(dashboard_config, token_store) as (_token, details):
+            details.disabled = True
     except (DashboardTokenNotFound, InvalidDashboardTokenReference):
         return None
 
@@ -187,16 +186,15 @@ def update_dashboard_token(
     """Update an existing dashboard token for the given dashboard."""
     now = dt.datetime.now(dt.UTC)
     expiration_time = _validate_expiration(now, expiration_time, allow_past=True)
-    with edit_dashboard_auth_token(dashboard, token_store) as token:
+    with edit_dashboard_auth_token(dashboard, token_store) as (token, details):
         token.valid_until = expiration_time
-        if isinstance(token.details, DashboardToken):
-            # name should be updated, just in case there was a rename
-            token.details.dashboard_name = dashboard["name"]
-            token.details.owner = dashboard["owner"]
-            token.details.comment = comment
-            token.details.disabled = disabled
-            token.details.view_owners = _get_view_owners(dashboard)
-            token.details.synced_at = now
+        # name should be updated, just in case there was a rename
+        details.dashboard_name = dashboard["name"]
+        details.owner = dashboard["owner"]
+        details.comment = comment
+        details.disabled = disabled
+        details.view_owners = _get_view_owners(dashboard)
+        details.synced_at = now
         return token
 
 

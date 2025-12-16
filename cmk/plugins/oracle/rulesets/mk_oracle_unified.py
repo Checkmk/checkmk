@@ -411,7 +411,7 @@ def _oracle_client_library_options() -> Dictionary:
     )
 
 
-def _additional_options(is_default_options: bool = True) -> Dictionary:
+def _options(is_default_options: bool = True) -> Dictionary:
     elements: dict[str, DictElement[int] | DictElement[bool] | DictElement[_NamedOption]] = {
         "max_connections": DictElement(
             parameter_form=Integer(
@@ -437,7 +437,7 @@ def _additional_options(is_default_options: bool = True) -> Dictionary:
                     "from the database instead of the database name."
                 ),
                 label=Label("Ignore database name and use instance name instead"),
-                value=True,
+                value=False,
             ),
             required=False,
         ),
@@ -466,10 +466,6 @@ def _common_instance_options(
         "connection": DictElement(
             parameter_form=_connection_options(with_service_name=is_main_entry),
             required=is_main_entry,
-        ),
-        "options": DictElement(
-            parameter_form=_additional_options(is_default_options=is_main_entry),
-            required=False,
         ),
     }
 
@@ -547,12 +543,16 @@ def _agent_config_mk_oracle() -> Dictionary:
                     ],
                 ),
             ),
-            "instances": DictElement(
-                parameter_form=_instances(),
+            "options": DictElement(
+                parameter_form=_options(),
                 required=True,
             ),
             "main": DictElement(
                 parameter_form=_main(),
+                required=True,
+            ),
+            "instances": DictElement(
+                parameter_form=_instances(),
                 required=True,
             ),
         },

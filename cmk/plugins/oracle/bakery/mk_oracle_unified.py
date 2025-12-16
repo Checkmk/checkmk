@@ -374,12 +374,12 @@ def _get_oracle_instances(
         inst_dict: OracleInstance = {
             "sid": instance.sid,
         }
+        if instance.options:
+            inst_dict["options"] = _get_oracle_instance_additional_options(instance.options)
         if instance.auth:
             inst_dict["authentication"] = _get_oracle_instance_authentication(instance.auth)
         if instance.connection:
             inst_dict["connection"] = _get_oracle_connection(instance.connection)
-        if instance.options:
-            inst_dict["options"] = _get_oracle_instance_additional_options(instance.options)
         result.append(inst_dict)
     return result
 

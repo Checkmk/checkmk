@@ -4,9 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
+import { useTemplateRef } from 'vue'
+
 import type { TranslatedString } from '@/lib/i18nString'
+import { immediateWatch } from '@/lib/watch'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
+import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 
 interface CollapsibleTitleProps {
   /**@property {TranslatedString} title - Text to display next to the chevron */
@@ -22,18 +27,36 @@ interface CollapsibleTitleProps {
 
   /**@property {TranslatedString} help_text - Help text to display next to the title */
   help_text?: TranslatedString | null
+
+  /**@property {CmkIconProps} icon - Icon to display before the title*/
+  icon?: DynamicIcon | null
+
+  /**@property {CmkIconProps} icon - Icon to display before the title*/
+  focus?: boolean | null
 }
 
-defineProps<CollapsibleTitleProps>()
+const focusRef = useTemplateRef('focus-ref')
+
+const props = defineProps<CollapsibleTitleProps>()
 defineEmits(['toggleOpen'])
+
+immediateWatch(
+  () => ({ newFocus: props.focus }),
+  async ({ newFocus }) => {
+    if (newFocus) {
+      focusRef.value?.focus()
+    }
+  }
+)
 </script>
 
 <template>
-  <button class="cmk-collapsible-title" @click.prevent="$emit('toggleOpen')">
+  <button ref="focus-ref" class="cmk-collapsible-title" @click.prevent="$emit('toggleOpen')">
     <span
       class="cmk-collapsible-title__chevron"
       :class="`cmk-collapsible-title__chevron--${open ? 'bottom' : 'right'}`"
     />
+    <CmkDynamicIcon v-if="icon" :spec="icon" class="cmk-collapsible-title__icon" />
     <span class="cmk-collapsible-title__text">
       {{ title }}
     </span>
@@ -65,6 +88,10 @@ defineEmits(['toggleOpen'])
   &:hover {
     background-color: transparent;
   }
+}
+
+.cmk-collapsible-title__icon {
+  margin-right: var(--spacing);
 }
 
 .cmk-collapsible-title__text {

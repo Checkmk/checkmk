@@ -121,7 +121,7 @@ const searchResult = ref<UnifiedSearchApiResponse>()
 const searchError = ref<UnifiedSearchError>()
 const historyResult = ref<SearchHistorySearchResult>()
 const waitForSearchResults = ref<boolean>(true)
-const searchUtils = initSearchUtils()
+const searchUtils = initSearchUtils(searchId)
 
 searchUtils.search = search
 searchUtils.history = searchHistoryService

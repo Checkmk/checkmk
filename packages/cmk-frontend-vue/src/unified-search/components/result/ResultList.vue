@@ -3,12 +3,71 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { computed, onMounted, useTemplateRef } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import CmkButton from '@/components/CmkButton.vue'
+
+const { _t } = usei18n()
+const props = defineProps<{
+  useShowAll?: boolean | undefined
+  maxShowAll?: number | undefined
+}>()
+
+const showAll = defineModel<boolean>({ default: false })
+
+const resultList = useTemplateRef('result-list')
+
+const showAllBtnText = computed(() => {
+  if (showAll.value) {
+    return _t('Show less')
+  }
+
+  return _t('Show all')
+})
+
+function toggleList() {
+  showAll.value = !showAll.value
+
+  if (resultList.value) {
+    const items: HTMLLinkElement[] = [].slice
+      .call(resultList.value.children)
+      .slice(props.maxShowAll)
+    for (const item of items) {
+      if (showAll.value) {
+        item.classList.remove('unified-search-result-list--hide')
+      } else {
+        item.classList.add('unified-search-result-list--hide')
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  if (props.useShowAll) {
+    toggleList()
+  }
+})
+</script>
 
 <template>
-  <ul class="unified-search-result-list">
+  <ul ref="result-list" class="unified-search-result-list">
     <slot />
   </ul>
+  <CmkButton
+    v-if="useShowAll"
+    size="small"
+    class="unified-search-result-list__show-all"
+    @click="toggleList"
+  >
+    <span
+      class="unified-search-result-list__chevron"
+      :class="`unified-search-result-list__chevron--${showAll ? 'top' : 'bottom'}`"
+    />
+    {{ showAllBtnText }}
+  </CmkButton>
 </template>
 
 <style scoped>
@@ -19,5 +78,49 @@ conditions defined in the file COPYING, which is part of this source code packag
   width: 100%;
   height: 100%;
   position: relative;
+}
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+:deep(.unified-search-result-list--hide) {
+  display: none;
+}
+
+.unified-search-result-list__show-all {
+  margin-top: var(--spacing-half);
+  height: 20px;
+}
+
+.unified-search-result-list__chevron {
+  display: inline-block;
+  width: 8px;
+  margin-right: var(--spacing);
+
+  &::before {
+    border-color: var(--success-dimmed);
+    border-style: solid;
+    border-width: 1px 1px 0 0;
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    position: relative;
+    top: 4px;
+    transform: rotate(-45deg);
+    vertical-align: top;
+  }
+
+  &.unified-search-result-list__chevron--bottom {
+    &::before {
+      top: 3px;
+      transform: rotate(135deg);
+      transition: transform 100ms linear;
+    }
+  }
+
+  &.unified-search-result-list__chevron--top::before {
+    top: 6px;
+    transform: rotate(-45deg);
+    transition: transform 100ms linear;
+  }
 }
 </style>

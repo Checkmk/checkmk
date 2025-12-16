@@ -5,10 +5,11 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ProviderName } from 'cmk-shared-typing/typescript/unified_search'
-import { type InjectionKey, inject, provide, ref } from 'vue'
+import { type InjectionKey, type Ref, inject, provide, ref } from 'vue'
 
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { randomId } from '@/lib/randomId'
+import usePersistentRef from '@/lib/usePersistentRef'
 
 import type { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import type { UnifiedSearch } from '@/unified-search/lib/unified-search'
@@ -144,6 +145,14 @@ function onHideSuggestions(cb: typeof hideSuggestions): string {
   return pushCallBack('hideSuggestions', cb)
 }
 
+function setResultGrouping(grouping: boolean) {
+  dispatchCallback('setResultGrouping', grouping)
+}
+
+function onSetResultGrouping(cb: typeof setResultGrouping): string {
+  return pushCallBack('setResultGrouping', cb)
+}
+
 function openSearch() {
   cmk.popup_menu.close_popup()
   cmk.handle_main_menu('search')
@@ -213,6 +222,22 @@ function onCtrlArrowRight(cb: typeof ctrlArrowRight): string {
   return pushCallBack('ctrlArrowRight', cb)
 }
 
+function ctrlArrowUp() {
+  dispatchCallback('ctrlArrowUp')
+}
+
+function onCtrlArrowUp(cb: typeof ctrlArrowUp): string {
+  return pushCallBack('ctrlArrowUp', cb)
+}
+
+function ctrlArrowDown() {
+  dispatchCallback('ctrlArrowDown')
+}
+
+function onCtrlArrowDown(cb: typeof ctrlArrowDown): string {
+  return pushCallBack('ctrlArrowDown', cb)
+}
+
 function ctrlK() {
   dispatchCallback('ctrlK')
 }
@@ -255,6 +280,14 @@ function enableShortCuts() {
   shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowLeft'], ctrl: true }, ctrlArrowLeft))
 
   shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowRight'], ctrl: true }, ctrlArrowRight))
+
+  shortCutEventIds.value.push(
+    shortcuts.on({ key: ['ArrowUp'], ctrl: true, preventDefault: true }, ctrlArrowUp)
+  )
+
+  shortCutEventIds.value.push(
+    shortcuts.on({ key: ['ArrowDown'], ctrl: true, preventDefault: true }, ctrlArrowDown)
+  )
 }
 
 function disableShortCuts() {
@@ -279,6 +312,15 @@ function breadcrumb(provider: ProviderName, topic: string): string[] {
   return breadcrumb
 }
 
+function getGroupPersistentRef(searchId: string, groupId: string): Ref<boolean> {
+  return usePersistentRef<boolean>(
+    searchId.concat('-grouping-open-').concat(groupId),
+    true,
+    (v) => v as boolean,
+    'local'
+  )
+}
+
 export interface SearchShortCuts {
   enable: typeof enableShortCuts
   disable: typeof disableShortCuts
@@ -289,6 +331,8 @@ export interface SearchShortCuts {
   onArrowRight: typeof onArrowRight
   onCtrlArrowLeft: typeof onCtrlArrowLeft
   onCtrlArrowRight: typeof onCtrlArrowRight
+  onCtrlArrowUp: typeof onCtrlArrowUp
+  onCtrlArrowDown: typeof onCtrlArrowDown
   onCtrlK: typeof onCtrlK
   onEscape: typeof onEscape
   onCtrlEnter: typeof onCtrlEnter
@@ -316,6 +360,12 @@ export interface SearchInputUtils {
   searchOperatorSelectActive: typeof searchOperatorSelectActive
 }
 
+export interface SearchResultOptions {
+  getGroupPersistentRef: typeof getGroupPersistentRef
+  setResultGrouping: typeof setResultGrouping
+  onSetResultGrouping: typeof onSetResultGrouping
+  grouping: Ref<boolean>
+}
 export interface InitSearchUtils {
   openSearch: typeof openSearch
   resetSearch: typeof resetSearch
@@ -325,9 +375,11 @@ export interface InitSearchUtils {
   shortCuts: SearchShortCuts
   query: typeof query
   input: SearchInputUtils
+  result: SearchResultOptions
 }
 
 export interface SearchUtils extends InitSearchUtils {
+  id: string
   highlightQuery: typeof highlightQuery
   breadcrumb: typeof breadcrumb
   search?: UnifiedSearch
@@ -336,8 +388,9 @@ export interface SearchUtils extends InitSearchUtils {
 
 export const searchUtilsProvider = Symbol() as InjectionKey<SearchUtils>
 
-export function initSearchUtils(): SearchUtils {
+export function initSearchUtils(id: string): SearchUtils {
   return {
+    id,
     openSearch,
     resetSearch,
     onResetSearch,
@@ -353,6 +406,8 @@ export function initSearchUtils(): SearchUtils {
       onArrowRight,
       onCtrlArrowLeft,
       onCtrlArrowRight,
+      onCtrlArrowUp,
+      onCtrlArrowDown,
       onCtrlK,
       onEscape,
       onCtrlEnter
@@ -380,6 +435,17 @@ export function initSearchUtils(): SearchUtils {
       suggestionsActive,
       providerSelectActive,
       searchOperatorSelectActive
+    },
+    result: {
+      getGroupPersistentRef,
+      setResultGrouping,
+      onSetResultGrouping,
+      grouping: usePersistentRef<boolean>(
+        id.concat('-grouping'),
+        false,
+        (v) => v as boolean,
+        'local'
+      )
     }
   }
 }

@@ -158,7 +158,7 @@ filegroup(
     name = "checkman",
     srcs = glob(
         [
-            "**/checkman/*",
+            "**/checkman/**",
         ],
         exclude = ["**/OWNERS"],
     ),

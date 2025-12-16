@@ -145,59 +145,59 @@ export function useDashboardsManager() {
     }
     const id = rename ?? activeDashboardName.value!
 
-    if (dashboard.content.layout.type === DashboardLayout.RELATIVE_GRID) {
-      const widgets = Object.fromEntries(
-        Object.entries(dashboard.content.widgets).map(
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          ([id, { general_settings, content, filter_context, layout }]) => [
-            id,
-            { general_settings, content, filters: filter_context.filters, layout }
-          ]
-        )
+    const widgets = Object.fromEntries(
+      Object.entries(dashboard.content.widgets).map(
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        ([id, { general_settings, content, filter_context, layout }]) => [
+          id,
+          { general_settings, content, filters: filter_context.filters, layout }
+        ]
       )
-      const filterContext = dashboard.filter_context
+    )
+    const currentFilterContext = dashboard.filter_context
+    const filterContext = {
+      restricted_to_single: currentFilterContext.restricted_to_single,
+      filters: currentFilterContext.filters,
+      mandatory_context_filters: currentFilterContext.mandatory_context_filters
+    }
+
+    let layoutType: DashboardLayout
+    let response: EditRelativeGridResult | EditResponsiveGridResult
+    if (dashboard.content.layout.type === DashboardLayout.RELATIVE_GRID) {
+      layoutType = DashboardLayout.RELATIVE_GRID
       const relativeDashboard: RelativeGridDashboardRequest = {
         id,
         general_settings: dashboard.general_settings,
-        filter_context: {
-          restricted_to_single: filterContext.restricted_to_single,
-          filters: filterContext.filters,
-          mandatory_context_filters: filterContext.mandatory_context_filters
-        },
+        filter_context: filterContext,
         layout: dashboard.content.layout,
         widgets
       }
-      return await dashboardAPI.editRelativeGridDashboard(
+      response = await dashboardAPI.editRelativeGridDashboard(
         activeDashboardName.value!,
         relativeDashboard
       )
     } else {
-      const widgets = Object.fromEntries(
-        Object.entries(dashboard.content.widgets).map(
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          ([id, { general_settings, content, filter_context, layout }]) => [
-            id,
-            { general_settings, content, filters: filter_context.filters, layout }
-          ]
-        )
-      )
-      const filterContext = dashboard.filter_context
+      layoutType = DashboardLayout.RESPONSIVE_GRID
       const responsiveDashboard: ResponsiveGridDashboardRequest = {
         id,
         general_settings: dashboard.general_settings,
-        filter_context: {
-          restricted_to_single: filterContext.restricted_to_single,
-          filters: filterContext.filters,
-          mandatory_context_filters: filterContext.mandatory_context_filters
-        },
+        filter_context: filterContext,
         layout: dashboard.content.layout,
         widgets
       }
-      return await dashboardAPI.editResponsiveGridDashboard(
+      response = await dashboardAPI.editResponsiveGridDashboard(
         activeDashboardName.value!,
         responsiveDashboard
       )
     }
+    if (response.success && rename) {
+      // remove the old dashboard name
+      dashboards.value.delete(activeDashboardName.value!)
+
+      const newDashboard = createDashboardModel(response.data.extensions, layoutType)
+      setActiveDashboard(rename, newDashboard)
+    }
+    return response
   }
 
   return {

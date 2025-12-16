@@ -284,7 +284,8 @@ oracle_config_section: GuiConfig = GuiConfig(
             host="localhost",
             port=1521,
             timeout=None,
-            tns_admin=None,
+            tns_admin="some_tns_admin",
+            oracle_local_registry="some_registry",
             oracle_id=GuiOracleIdentificationConf(
                 service_name="some_name", instance_name="some_instance"
             ),
@@ -329,8 +330,10 @@ expected_yaml_lines_section = [
     "    connection:",
     "      hostname: localhost",
     "      instance: some_instance",
+    "      oracle_local_registry: some_registry",
     "      port: 1521",
     "      service_name: some_name",
+    "      tns_admin: some_tns_admin",
     "    sections:",
     "    - instance:",
     "        is_async: false",
@@ -490,6 +493,7 @@ oracle_config_use_host_client_always: GuiConfig = GuiConfig(
             port=1521,
             timeout=None,
             tns_admin=None,
+            oracle_local_registry=None,
         ),
         options=GuiAdditionalOptionsConf(
             oracle_client_library=GuiOracleClientLibOptions(
@@ -536,6 +540,7 @@ oracle_config_use_host_client_path: GuiConfig = GuiConfig(
             port=1521,
             timeout=None,
             tns_admin=None,
+            oracle_local_registry=None,
         ),
         options=GuiAdditionalOptionsConf(
             oracle_client_library=GuiOracleClientLibOptions(
@@ -583,6 +588,7 @@ oracle_config_deploy_oracle_binaries: GuiConfig = GuiConfig(
             port=1521,
             timeout=None,
             tns_admin=None,
+            oracle_local_registry=None,
         ),
         options=GuiAdditionalOptionsConf(
             oracle_client_library=GuiOracleClientLibOptions(

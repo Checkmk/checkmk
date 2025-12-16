@@ -91,6 +91,7 @@ class GuiConnectionConf(BaseModel):
     port: int | None = None
     timeout: int | None = None
     tns_admin: str | None = None
+    oracle_local_registry: str | None = None
     oracle_id: GuiOracleIdentificationConf | None = None
 
 
@@ -174,6 +175,7 @@ class OracleConnection(TypedDict):
     port: NotRequired[int]
     timeout: NotRequired[int]
     tns_admin: NotRequired[str]
+    oracle_local_registry: NotRequired[str]
     service_name: NotRequired[str]
     instance: NotRequired[str]
 
@@ -281,6 +283,8 @@ def _get_oracle_connection(conn: GuiConnectionConf) -> OracleConnection:
         connection["timeout"] = timeout
     if tns_admin := conn.tns_admin:
         connection["tns_admin"] = tns_admin
+    if oracle_local_registry := conn.oracle_local_registry:
+        connection["oracle_local_registry"] = oracle_local_registry
     if oracle_id := conn.oracle_id:
         connection["service_name"] = oracle_id.service_name
         if oracle_id.instance_name:
@@ -336,7 +340,7 @@ def _get_oracle_discovery(discovery: GuiDiscoveryConf) -> OracleDiscovery:
 def _get_oracle_sections(
     sections: GuiSectionOptions,
 ) -> Sequence[Mapping[str, OracleSection]]:
-    result = []
+    result: list[dict[str, OracleSection]] = []
     for section_name, mode in sections.items():
         oracle_section: OracleSection = {}
         match mode:
@@ -366,10 +370,8 @@ def _get_oracle_instance_authentication(
     return auth
 
 
-def _get_oracle_instances(
-    instances: list[GuiInstanceConf],
-) -> list[OracleInstance]:
-    result = []
+def _get_oracle_instances(instances: list[GuiInstanceConf]) -> list[OracleInstance]:
+    result: list[OracleInstance] = []
     for instance in instances:
         inst_dict: OracleInstance = {
             "sid": instance.sid,

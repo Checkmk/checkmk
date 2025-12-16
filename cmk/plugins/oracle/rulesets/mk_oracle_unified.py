@@ -262,6 +262,15 @@ def _connection_options(*, with_service_name: bool) -> Dictionary:
             ),
             required=False,
         ),
+        "oracle_local_registry": DictElement(
+            parameter_form=String(
+                title=Title("Folder of oracle configuration files(oratab,  for example)"),
+                custom_validate=(
+                    validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+                ),
+            ),
+            required=False,
+        ),
     }
 
     extension: dict[str, DictElement[_NamedOption]] = {
@@ -298,7 +307,7 @@ def _section_options(title: Title, help_text: Help, mode: str) -> SingleChoice:
     )
 
 
-def _sections_options() -> Dictionary:
+def _sections() -> Dictionary:
     return Dictionary(
         title=Title("Data to collect (Sections)"),
         help_text=Help("Select which data(sections) should be collected from the Oracle database."),
@@ -316,7 +325,7 @@ def _sections_options() -> Dictionary:
     )
 
 
-def _discovery_options() -> Dictionary:
+def _discovery() -> Dictionary:
     return Dictionary(
         title=Title("Discovery options"),
         elements={
@@ -455,7 +464,7 @@ def _options(is_default_options: bool = True) -> Dictionary:
     )
 
 
-def _common_instance_options(
+def _endpoint(
     *, is_main_entry: bool
 ) -> Mapping[str, DictElement[_AuthOptions] | DictElement[_NamedOption]]:
     return {
@@ -474,7 +483,7 @@ def _main() -> Dictionary:
     return Dictionary(
         title=Title("Oracle Database default configuration"),
         elements={
-            **_common_instance_options(is_main_entry=True),
+            **_endpoint(is_main_entry=True),
             "cache_age": DictElement(
                 parameter_form=Integer(
                     title=Title("Cache age"),
@@ -484,11 +493,11 @@ def _main() -> Dictionary:
                 required=False,
             ),
             "discovery": DictElement(
-                parameter_form=_discovery_options(),
+                parameter_form=_discovery(),
                 required=False,
             ),
             "sections": DictElement(
-                parameter_form=_sections_options(),
+                parameter_form=_sections(),
                 required=False,
             ),
         },
@@ -512,7 +521,7 @@ def _instances() -> List[_NamedOption]:
                     ),
                     required=True,
                 ),
-                **_common_instance_options(is_main_entry=False),
+                **_endpoint(is_main_entry=False),
             },
         ),
     )
@@ -545,7 +554,7 @@ def _agent_config_mk_oracle() -> Dictionary:
             ),
             "options": DictElement(
                 parameter_form=_options(),
-                required=True,
+                required=False,
             ),
             "main": DictElement(
                 parameter_form=_main(),

@@ -3,66 +3,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 include omd.make
-include $(BUILD_BASE_DIR)/build-helper-files.make
-
-# You can build single packages by calling make <PACKAGENAME>
-# e.g.: make nagios rrdtool
-#
-# You can select a subset of the packages by overriding this
-# variable, e.g. make PACKAGES='nagios rrdtool' pack
-#
-# If you just want to test package building, you can reduce the
-# number of packages to just "omd" - to speed up your tests.
-# PACKAGES="omd"
-#
-# Alternatively,
-# ```
-# cd omd
-# PACKAGE=check-cert; make $PWD/build/stamps/$PACKAGE-build
-# ```
-#
-# You can also create a file named .config and override the
-# PACKAGES variable there to customzie the list of packages.
-
-PACKAGES := \
-    apache-omd \
-
-BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
-INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
-INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))
-CACHE_PKG_PROCESS_TARGETS := $(foreach package,$(addsuffix _CACHE_PKG_PROCESS,$(BUILD_TARGET_VARS)),$($(package)))
-
-PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
-INSTALL := $(BUILD_HELPER_DIR)/install
-INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
-
 include packages/packages.make
-
-# Workaround: Makefiles evaluate Variables the first time they are read. If a variable is not set the
-# moment it is read, it is replaced with an empty string. Therefor our dependencies get lost, if the
-# inlcuded Makefiles are not ordered correctly. For that reason, we parse the Makefiles for certain
-# variable definitions and write them to an extra Makefile, which we include before the package Makefile.
-$(BUILD_BASE_DIR)/build-helper-files.make:
-	$(MKDIR) $(BUILD_BASE_DIR)
-	$(RM) $@
-	for P in $(PACKAGES); do \
-	  inc_path=$$(test -f "$(NON_FREE_PACKAGE_DIR)/$$P/$$P.make" && echo "$(NON_FREE_PACKAGE_DIR)/$$P/$$P.make" || echo "$(PACKAGE_DIR)/$$P/$$P.make"); \
-	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
-	  grep -E -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
-	  grep -E -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
-	  grep -E -h "^$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
-	  grep -E -h "^$${P_VAR}_BUILD(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
-	  grep -E -h "^$${P_VAR}_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
-	  grep -E -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
-	  grep -E -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
-	done || true
-
 
 -include .config
 
 # debian/rules and RPM specfile (omd.spec) set DESTDIR to install files to
 # the package build directories
 DESTDIR ?= $(BUILD_BASE_DIR)/dest
+
+PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
+INSTALL := $(BUILD_HELPER_DIR)/install
+INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
 
 RPM_TOPDIR := $(BUILD_BASE_DIR)/rpm/topdir
 RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
@@ -105,18 +56,15 @@ $(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(call log_time,$@,done)
 	touch $@
 
-$(INSTALL_TARGETS) $(CACHE_PKG_PROCESS_TARGETS): $(PRE_INSTALL)
-
 $(INSTALL_LOG_TARGETS): %-log: %
 	$(call log_time,$@,done)
 
-$(INSTALL): $(INSTALL_LOG_TARGETS)
-# Repair packages that install with silly modes (such as Nagios)
-	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
+$(INSTALL): $(PRE_INSTALL) $(INSTALL_LOG_TARGETS)
 	$(TOUCH) $@
 
-$(INSTALL_GLOBAL): $(INSTALL)  $(BOM)
+$(INSTALL_GLOBAL): $(INSTALL) $(BOM)
 	# Create link to default version
+	$(MKDIR) $(DESTDIR)$(OMD_BASE)/versions
 	ln -sf $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
 	# Create global symbolic links. Those links are share between

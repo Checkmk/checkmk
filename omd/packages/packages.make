@@ -1,21 +1,7 @@
 # Paths to necessary Tools
-ECHO := $(shell which echo)
-FIND := $(shell which find)
-GCC_SYSTEM := $(shell which gcc)
-LN := $(shell which ln)
-LS := $(shell which ls)
 MKDIR := $(shell which mkdir) -p
-MV := $(shell which mv)
-PATCH := $(shell which patch)
-PERL := $(shell which perl)
 RSYNC := $(shell which rsync) -a
-SED := $(shell which sed)
-TAR_BZ2 := $(shell which tar) xjf
-TAR_XZ := $(shell which tar) xJf
-TAR_GZ := $(shell which tar) xzf
-TEST := $(shell which test)
 TOUCH := $(shell which touch)
-UNZIP := $(shell which unzip) -o
 
 # Intermediate Install Target
 # intermediate_install used to be necessary to link external dependecies with each other.
@@ -46,114 +32,14 @@ $(DEPS_INSTALL_BAZEL):
 	touch $@
 
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
-HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
 
-.PHONY: $(HUMAN_INSTALL_TARGETS) $(HUMAN_BUILD_TARGETS)
+.PHONY: $(HUMAN_INSTALL_TARGETS)
 
 # Provide some targets for convenience: [pkg] instead of /abs/path/to/[pkg]/[pkg]-[version]-install
 $(HUMAN_INSTALL_TARGETS): %-install:
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _INSTALL, $(call package_target_prefix,$*)))
 
-$(HUMAN_BUILD_TARGETS): %-build: $(BUILD_HELPER_DIR)
-# TODO: Can we make this work as real dependency without submake?
-	$(MAKE) $($(addsuffix _BUILD, $(call package_target_prefix,$*)))
-
-# Each package may have a packages/[pkg]/skel directory which contents will be
-# packed into destdir/skel. These files will be installed, e.g. [site]/etc/...
-# and may contain macros that are replaced during site creation/update.
-#
-# These files here need to be installed into skel/ before the install target is
-# executed, because the install target is allowed to do modifications to the
-# files.
-$(INSTALL_TARGETS): $(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-dir
-$(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
-	set -e ; \
-	    PACKAGE_NAME="$$(echo "$*" | sed 's/-[0-9.]\+.*//')" ; \
-	    if [ -d "$(NON_FREE_PACKAGE_DIR)/$$PACKAGE_NAME" ]; then \
-	        PACKAGE_PATH="$(NON_FREE_PACKAGE_DIR)/$$PACKAGE_NAME" ; \
-	    elif [ -d "$(PACKAGE_DIR)/$$PACKAGE_NAME" ]; then \
-	        PACKAGE_PATH="$(PACKAGE_DIR)/$$PACKAGE_NAME" ; \
-	    else \
-	        echo "ERROR: Package directory does not exist" ; \
-	        exit 1 ; \
-	    fi ; \
-	    if [ ! -d "$$PACKAGE_PATH" ]; then \
-	        echo "ERROR: Package directory does not exist" ; \
-	        exit 1 ; \
-	    fi ; \
-	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
-	        tar cf - -C "$$PACKAGE_PATH/skel" \
-	            --exclude="BUILD" \
-	            --exclude="*~" \
-	            --exclude=".gitignore" \
-	            --exclude=".f12" \
-	            . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
-	    fi
-
-# Rules for patching
-$(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
-	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//') ; \
-	if [ -d "$(NON_FREE_PACKAGE_DIR)/$$DIR" ]; then \
-	    DIR_PATH="$(NON_FREE_PACKAGE_DIR)/$$DIR" ; \
-	elif [ -d "$(PACKAGE_DIR)/$$DIR" ]; then \
-	    DIR_PATH="$(PACKAGE_DIR)/$$DIR" ; \
-	else \
-	    echo "ERROR: Package directory does not exist" ; \
-	    exit 1 ; \
-	fi ; \
-	for P in $$($(LS) $$DIR_PATH/patches/*.dif); do \
-	    $(ECHO) "applying $$P..." ; \
-	    $(PATCH) -p1 -b -d $(PACKAGE_BUILD_DIR)/$* < $$P ; \
-	done
-	$(TOUCH) $@
-
-# Rules for unpacking
-$(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.xz
-	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
-	$(MKDIR) $(PACKAGE_BUILD_DIR)
-	$(TAR_XZ) $< -C $(PACKAGE_BUILD_DIR)
-
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
-
-$(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.gz
-	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
-	$(MKDIR) $(PACKAGE_BUILD_DIR)
-	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
-
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
-
-$(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tgz
-	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
-	$(MKDIR) $(PACKAGE_BUILD_DIR)
-	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
-
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
-
-$(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.bz2
-	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
-	$(MKDIR) $(PACKAGE_BUILD_DIR)
-	$(TAR_BZ2) $< -C $(PACKAGE_BUILD_DIR)
-
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
-
-$(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.zip
-	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
-	$(MKDIR) $(PACKAGE_BUILD_DIR)
-	$(UNZIP) $< -d $(PACKAGE_BUILD_DIR)
-
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
-
-debug:
-	echo "PACKAGE_DIR: $(PACKAGE_DIR), NON_FREE_PACKAGE_DIR: $(NON_FREE_PACKAGE_DIR)"
-
 # Include rules to make packages
 include \
-    packages/apache-omd/apache-omd.make \
-    packages/appliance/appliance.make \
+    packages/appliance/appliance.make

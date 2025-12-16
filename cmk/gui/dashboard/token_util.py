@@ -67,6 +67,12 @@ class DashboardTokenExpirationInvalid(MKUserError):
     """The token expiration time is invalid."""
 
 
+def max_expiration_time_community_edition(now: dt.datetime) -> dt.datetime:
+    """Get the maximum expiration time for dashboard tokens in the Community Edition."""
+    maximum = now + dt.timedelta(days=31)
+    return maximum.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+
 def _validate_expiration(
     now: dt.datetime, expiration_time: dt.datetime | None, *, allow_past: bool = False
 ) -> dt.datetime | None:
@@ -79,7 +85,7 @@ def _validate_expiration(
 
     if edition(paths.omd_root) == Edition.COMMUNITY:
         # please consider buying commercial editions :)
-        upper_bound = now + relativedelta(months=1)
+        upper_bound = max_expiration_time_community_edition(now)
         if expiration_time is None or expiration_time > upper_bound:
             raise DashboardTokenExpirationInvalid(
                 varname="expiration_time",

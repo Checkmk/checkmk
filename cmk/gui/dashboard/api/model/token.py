@@ -8,9 +8,9 @@
 import datetime as dt
 from typing import Annotated, Literal, Self
 
-from dateutil.relativedelta import relativedelta
 from pydantic import AwareDatetime, FutureDatetime
 
+from cmk.gui.dashboard.token_util import max_expiration_time_community_edition
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.token_auth import AuthToken, DashboardToken
@@ -82,7 +82,7 @@ class CreateDashboardToken(_BaseDashboardTokenRequestWithComment):
     expires_at: Annotated[dt.datetime, AwareDatetime, FutureDatetime] | None = api_field(
         description="The date and time when the token will expire. Defaults to one month from now.",
         example="2025-12-31T23:59:59Z",
-        default_factory=lambda: dt.datetime.now(dt.UTC) + relativedelta(months=1),
+        default_factory=lambda: max_expiration_time_community_edition(dt.datetime.now(dt.UTC)),
     )
 
 

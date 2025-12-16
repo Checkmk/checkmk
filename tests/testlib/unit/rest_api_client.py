@@ -3776,15 +3776,6 @@ class RelayClient(RestApiClient):
             api_version=APIVersion.UNSTABLE,
         )
 
-    def download_installation_script(self, expect_ok: bool = True) -> Response:
-        return self.request(
-            "get",
-            url=f"/objects/{self.domain}/download_installation_script",
-            headers={"Accept": "application/x-shellscript"},
-            expect_ok=expect_ok,
-            api_version=APIVersion.UNSTABLE,
-        )
-
 
 class MetricBackendClient(RestApiClient):
     domain: DomainType = "metric_backend"

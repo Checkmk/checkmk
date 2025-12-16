@@ -84,6 +84,15 @@ def test_cmk_agents_access(site: Site) -> None:
     assert "Index of" in body
 
 
+@pytest.mark.skip_if_not_edition("cloud", "ultimate", "ultimatemt")
+def test_cmk_relay_installation_script_access(site: Site) -> None:
+    web = CMKWebSession(site)
+    response = web.get("/%s/check_mk/relays/install_relay.sh" % site.id)
+    assert response.headers["Content-Type"] == "text/x-sh"
+    # Verify it's a shell script
+    assert response.text.startswith("#!")
+
+
 def test_cmk_local_agents_access(site: Site) -> None:
     web = CMKWebSession(site)
     body = web.get("/%s/check_mk/local/agents" % site.id, expected_code=404).text

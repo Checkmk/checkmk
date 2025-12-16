@@ -35,7 +35,7 @@ import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
-import type { ElementSelection } from '../../types'
+import { ElementSelection } from '../../types'
 import { extractConfiguredFilters, getInitialElementSelection } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
@@ -71,6 +71,12 @@ const widgetFilterManager = useWidgetFilterManager(
 const addFilters = useAddFilter()
 
 const visualInfos = useInjectVisualInfos()
+
+const defaultSelection =
+  props.editWidgetSpec === null || props.editWidgetSpec?.content?.type === 'host_state'
+    ? ElementSelection.SPECIFIC
+    : ElementSelection.MULTIPLE
+
 const hostFilterType = ref<ElementSelection>(
   getInitialElementSelection(
     props.dashboardConstants,
@@ -78,7 +84,8 @@ const hostFilterType = ref<ElementSelection>(
     visualInfos,
     null,
     props.editWidgetSpec,
-    'host'
+    'host',
+    defaultSelection
   )
 )
 

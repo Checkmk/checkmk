@@ -24,7 +24,7 @@ import WizardContainer from '@/dashboard-wip/components/Wizard/components/Wizard
 import WizardStageContainer from '@/dashboard-wip/components/Wizard/components/WizardStageContainer.vue'
 import WizardStepsContainer from '@/dashboard-wip/components/Wizard/components/WizardStepsContainer.vue'
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
-import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
+import { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
 import {
   extractConfiguredFilters,
   getInitialElementSelection
@@ -85,7 +85,8 @@ const hostFilterType = ref<ElementSelection>(
     visualInfos,
     null,
     props.editWidgetSpec,
-    'host'
+    'host',
+    props.editWidgetSpec ? ElementSelection.MULTIPLE : ElementSelection.SPECIFIC
   )
 )
 const serviceFilterType = ref<ElementSelection>(
@@ -95,9 +96,18 @@ const serviceFilterType = ref<ElementSelection>(
     visualInfos,
     null,
     props.editWidgetSpec,
-    'service'
+    'service',
+    props.editWidgetSpec ? ElementSelection.MULTIPLE : ElementSelection.SPECIFIC
   )
 )
+
+if (
+  props?.editWidgetSpec?.content?.type === 'service_state' &&
+  hostFilterType.value === ElementSelection.SPECIFIC &&
+  serviceFilterType.value === ElementSelection.SPECIFIC
+) {
+  hostFilterType.value = ElementSelection.MULTIPLE
+}
 
 const wizardHandler = useWizard(2)
 const wizardStages: QuickSetupStageSpec[] = [

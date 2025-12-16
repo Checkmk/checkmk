@@ -21,7 +21,8 @@ const model = ref<string>('1')
       { label: 'label1', value: '1' },
       { label: 'label2', value: '2' },
       { label: 'label3 (disabled)', value: '3', disabled: true },
-      { label: 'label4', value: '4' }
+      { label: 'label4 (disabled)', value: '5', disabled: true },
+      { label: 'label5', value: '4' }
     ]"
   />
 

@@ -30,7 +30,10 @@ function setSelectedOption(value: string) {
       v-for="option in options"
       :key="option.value"
       class="toggle_option"
-      :class="{ selected: isSelected(option.value) }"
+      :class="{
+        selected: isSelected(option.value),
+        disabled: option.disabled === true || option.disabled === 'true'
+      }"
       :aria-label="`Toggle ${option.label}`"
       :disabled="option.disabled === true || option.disabled === 'true'"
       @click.prevent="setSelectedOption(option.value)"
@@ -60,11 +63,24 @@ function setSelectedOption(value: string) {
   color: var(--toggle-button-group-inactive-text-color);
   margin: 0 2px;
   padding: 3px;
+  font-weight: var(--font-weight-default);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.toggle_option:hover:not(.selected) {
-  background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
+.toggle_option:is(:disabled) {
+  color: var(--toggle-button-group-disabled-text-color);
+  cursor: not-allowed;
+  background-color: var(--toggle-button-group-inactive-bg-color);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.toggle_option:is(:disabled:hover) {
+  background-color: var(--toggle-button-group-inactive-bg-color);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.toggle_option:hover:not(:is(.selected, .disabled)) {
+  background-color: rgb(from var(--toggle-button-group-hover-bg-color) r g b / 60%);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -72,5 +88,6 @@ function setSelectedOption(value: string) {
   border: 1px solid var(--toggle-button-group-border-color);
   background-color: var(--toggle-button-group-active-bg-color);
   color: var(--toggle-button-group-active-text-color);
+  font-weight: var(--font-weight-bold);
 }
 </style>

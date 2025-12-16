@@ -134,6 +134,8 @@
     --toggle-button-group-border-color: var(--color-mid-grey-50);
     --toggle-button-group-active-text-color: var(--color-white-100);
     --toggle-button-group-inactive-text-color: var(--color-conference-grey-100);
+    --toggle-button-group-disabled-text-color: var(--color-conference-grey-70);
+    --toggle-button-group-hover-bg-color: var(--color-daylight-grey-80);
 
     /* Cmk Inline Validation */
     --inline-error-border-color: var(--color-light-red-50);
@@ -252,6 +254,8 @@
     --toggle-button-group-border-color: var(--color-mid-grey-60);
     --toggle-button-group-active-text-color: var(--color-white-100);
     --toggle-button-group-inactive-text-color: var(--color-white-100);
+    --toggle-button-group-disabled-text-color: var(--color-white-50);
+    --toggle-button-group-hover-bg-color: var(--color-midnight-grey-50);
 
     /* Cmk Inline Validation */
     --inline-error-border-color: var(--color-light-red-40);

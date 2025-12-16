@@ -23,8 +23,8 @@ def test_list_rule_form_specs(clients: ClientRegistry) -> None:
     )
 
     assert resp.status_code == 200, resp.json
-    assert set(entry["title"] for entry in resp.json["value"]) == {"Elasticsearch"}
-    assert set(entry["id"] for entry in resp.json["value"]) == {"special_agents:elasticsearch"}
+    assert {entry["title"] for entry in resp.json["value"]} == {"Elasticsearch"}
+    assert {entry["id"] for entry in resp.json["value"]} == {"special_agents:elasticsearch"}
 
 
 def test_list_rule_form_specs_without_perm(set_config: SetConfig, clients: ClientRegistry) -> None:

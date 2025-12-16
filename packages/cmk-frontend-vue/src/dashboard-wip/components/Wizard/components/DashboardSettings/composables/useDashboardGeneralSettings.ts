@@ -10,13 +10,14 @@ import usei18n from '@/lib/i18n'
 import { type DashboardGeneralSettings } from '@/dashboard-wip/types/dashboard'
 
 import type { DashboardIcon } from '../types'
-import { isIdInUse, isValidSnakeCase } from '../utils'
+import { generateUniqueId, isIdInUse, isValidSnakeCase } from '../utils'
 
 const { _t } = usei18n()
 
-export function useDashboardGeneralSettings(
+export async function useDashboardGeneralSettings(
   initialSettings?: DashboardGeneralSettings,
-  dashboardId?: string
+  dashboardId?: string,
+  avoidInitialCollision: boolean = false
 ) {
   // shorthand
   const s = initialSettings
@@ -111,6 +112,10 @@ export function useDashboardGeneralSettings(
 
     // description is optional and not managed here
     return { title, menu, visibility }
+  }
+
+  if (avoidInitialCollision && (await isIdInUse(uniqueId.value))) {
+    uniqueId.value = await generateUniqueId(uniqueId.value)
   }
 
   return {

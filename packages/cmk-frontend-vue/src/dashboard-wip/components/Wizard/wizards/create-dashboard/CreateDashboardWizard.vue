@@ -63,7 +63,7 @@ const {
   sortIndexError,
   validateGeneralSettings,
   buildSettings
-} = useDashboardGeneralSettings()
+} = await useDashboardGeneralSettings()
 
 const dashboardLayout = ref<DashboardLayout>(
   props.availableLayouts.includes(DashboardLayout.RESPONSIVE_GRID)

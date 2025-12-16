@@ -24,6 +24,13 @@ def transmit_telemetry_data(
 ) -> None:
     logger.info("Data transmission starts")
 
+    if not _is_telemetry_transmission_enabled():
+        logger.info(
+            "Data transmission is disabled, "
+            "see CMK_TELEMETRY_TRANSMISSION_ENABLE environment variable"
+        )
+        return
+
     directory = var_dir / "telemetry"
 
     # Ignored mypy error: it only checks filenames that already match the pattern, so it will never call group() on None
@@ -46,6 +53,14 @@ def transmit_telemetry_data(
         if transmission_results.get(newest_file.name):
             logger.info("Removing Grafana usage data")
             remove_grafana_usage_data(var_dir)
+
+
+def _is_telemetry_transmission_enabled() -> bool:
+    return _strtobool(os.environ.get("CMK_TELEMETRY_TRANSMISSION_ENABLE", "True"))
+
+
+def _strtobool(value: str) -> bool:
+    return value.lower() in ("y", "yes", "t", "true", "on", "1")
 
 
 def _transmit_single_telemetry_file(

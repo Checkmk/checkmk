@@ -125,3 +125,16 @@ def test_get_api_url(url: str, valid: bool, monkeypatch: pytest.MonkeyPatch) -> 
     else:
         with pytest.raises(InvalidTelemetryEndpointError):
             _get_api_url()
+
+
+def test_transmission_feature_flag(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    mocked_telemetry_dir = tmp_path / "telemetry"
+    mocked_telemetry_dir.mkdir(parents=True, exist_ok=True)
+    (mocked_telemetry_dir / "telemetry_1.json").write_text("{}")
+
+    monkeypatch.setenv("CMK_TELEMETRY_TRANSMISSION_ENABLE", "FALSE")
+
+    with patch("requests.post") as mock_post:
+        transmit_telemetry_data(tmp_path, logger=mock.Mock())
+
+    assert not mock_post.called

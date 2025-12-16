@@ -182,6 +182,8 @@ class Crawler:
             "text/x-c++src",
             "text/x-chdr",
             "text/x-sh",
+            "text/plain",
+            "text/csv",
         }
         self._ignored_urls: dict[SkipReason, list[RelativeUrl]] = {}
         # limit minimum value to 0.
@@ -381,7 +383,7 @@ class Crawler:
             )
             return False
 
-        content_type = response.headers.get("content-type")
+        content_type = response.headers.get("content-type", "").split(";", 1)[0].strip()
         expected_content_type = "application/x-tgz"
         if content_type != expected_content_type:
             self.handle_error(
@@ -436,17 +438,18 @@ class Crawler:
         ):
             self.handle_skipped_reference(url, reason="ignored url", message=ignore_reason)
             return self.handle_page_done(url, duration=time.time() - start)
-        content_type = self.requests_session.head(url.url).headers["content-type"]
+        content_type = (
+            self.requests_session.head(url.url)
+            .headers.get("content-type", "")
+            .split(";", 1)[0]
+            .strip()
+        )
         if content_type.startswith("text/html"):
             try:
                 page_content = await self.get_page_content(browser_context, url)
                 await self.validate(url, page_content.content, page_content.logs)
             except playwright.async_api.Error as e:
                 self.handle_error(url, "BrowserError", repr(e))
-        elif any(
-            content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"]
-        ):
-            self.handle_skipped_reference(url, reason="content-type", message=content_type)
         elif content_type in self._ignored_content_types:
             self.handle_skipped_reference(url, reason="content-type", message=content_type)
         else:

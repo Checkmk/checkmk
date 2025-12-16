@@ -11,11 +11,12 @@
       "type": "object",
       "properties": {
         "redirect": { "type": "string" },
+        "back": { "type": "string" },
         "ms_graph_api": {
           "$ref": "#/$urls/ms_graph_api_urls"
         }
       },
-      "required": ["ms_graph_api", "redirect"]
+      "required": ["ms_graph_api", "redirect", "back"]
     }
   },
   "$urls": {

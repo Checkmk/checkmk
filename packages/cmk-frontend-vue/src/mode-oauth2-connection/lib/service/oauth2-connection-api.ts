@@ -5,6 +5,13 @@
  */
 import { Api } from '@/lib/api-client'
 
+import type { SetDataResult } from '@/form/FormEditAsync.vue'
+import {
+  type EntityDescription,
+  type Payload,
+  configEntityAPI
+} from '@/form/private/forms/FormSingleChoiceEditable/configuration_entity'
+
 export interface OAuth2FormData {
   ident: string
   title: string
@@ -48,5 +55,15 @@ export class Oauth2ConnectionApi extends Api {
       'ajax_request_ms_graph_access_token.py',
       requestObject
     )) as Promise<MsGraphAjaxResponse>
+  }
+
+  public async saveOAuth2Connection(
+    requestObject: OAuth2FormData
+  ): Promise<SetDataResult<EntityDescription>> {
+    return await configEntityAPI.createEntity(
+      'oauth2_connection',
+      'all',
+      requestObject as unknown as Payload
+    )
   }
 }

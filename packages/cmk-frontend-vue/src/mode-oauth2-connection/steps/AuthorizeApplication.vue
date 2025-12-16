@@ -164,6 +164,17 @@ function resetProcess() {
   countDownValue.value = TIMEOUT
 }
 
+async function saveConnection() {
+  if (props.oAuth2Type === 'ms_graph_api') {
+    const res = await api.saveOAuth2Connection(dataRef.value)
+    if (res.type === 'success') {
+      window.location.href = props.urls.back
+    } else {
+      errorTitle.value = _t(`Failed to save OAuth2 connection`)
+    }
+  }
+}
+
 function countDown() {
   if (countDownValue.value > 0 && loading.value) {
     countDownValue.value -= 1000
@@ -225,7 +236,12 @@ immediateWatch(
     </template>
 
     <template #actions>
-      <CmkWizardButton type="finish" :override-label="_t('Save')" :disabled="!authSucceeded" />
+      <CmkWizardButton
+        type="finish"
+        :override-label="_t('Save')"
+        :disabled="!authSucceeded"
+        @click="saveConnection"
+      />
       <CmkWizardButton
         type="previous"
         :override-label="_t('Go back to restart authorization process')"

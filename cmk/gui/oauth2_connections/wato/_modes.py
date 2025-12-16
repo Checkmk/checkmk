@@ -152,6 +152,7 @@ def get_oauth2_connection_config() -> Oauth2ConnectionConfig:
     return Oauth2ConnectionConfig(
         urls=Oauth2Urls(
             redirect=makeuri(request, [("mode", "redirect_oauth2_connection")]),
+            back=makeuri(request, [("mode", "oauth2_connections")]),
             ms_graph_api=MsGraphApiUrls(
                 global_=AuthorityUrls(
                     base_url="https://login.microsoftonline.com/###tenant_id###/oauth2/v2.0"

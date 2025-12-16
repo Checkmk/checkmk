@@ -28,11 +28,11 @@ const props = defineProps<{
 
 const vClickOutside = useClickOutside()
 function handleOperatorSelect(selected: FilterOption): void {
-  let newInput = searchUtils.query.input.value
+  let newInput = searchUtils.query.input.value.trim()
   if (newInput.length === 0) {
     newInput = selected.value
   } else {
-    newInput = newInput.concat(selected.value)
+    newInput = newInput.concat(' ').concat(selected.value)
   }
 
   searchUtils.input.setInputValue(newInput)

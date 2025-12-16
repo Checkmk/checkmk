@@ -38,7 +38,7 @@ import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import type { ElementSelection } from '../../types'
-import { getConfiguredFilters, getInitialElementSelection } from '../../utils'
+import { extractConfiguredFilters, getInitialElementSelection } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -115,14 +115,17 @@ const recapAndNext = () => {
   widgetFilterManager.closeSelectionMenu()
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     contextConfiguredFilters: contextConfiguredFilters.value,
-    widgetFilters: getConfiguredFilters(widgetFilterManager)
+    widgetFilters: extractConfiguredFilters(widgetFilterManager)
   })
   addFilters.close()
   wizardHandler.next()
 }
 
 const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(contextConfiguredFilters.value, getConfiguredFilters(widgetFilterManager))
+  return squashFilters(
+    contextConfiguredFilters.value,
+    extractConfiguredFilters(widgetFilterManager)
+  )
 })
 
 const handleObjectTypeSwitch = (objectType: string): void => {
@@ -187,7 +190,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :host-filter-type="hostFilterType"
           :service-filter-type="serviceFilterType"
           :filters="appliedFilters"
-          :widget-filters="getConfiguredFilters(widgetFilterManager)"
+          :widget-filters="extractConfiguredFilters(widgetFilterManager)"
           :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"
           @add-widget="

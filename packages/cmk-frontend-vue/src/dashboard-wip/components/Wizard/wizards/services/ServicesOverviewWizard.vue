@@ -26,7 +26,7 @@ import WizardStepsContainer from '@/dashboard-wip/components/Wizard/components/W
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
 import {
-  getConfiguredFilters,
+  extractConfiguredFilters,
   getInitialElementSelection
 } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
@@ -124,14 +124,17 @@ const recapAndNext = () => {
     singleMetric: null,
     combinedMetric: null,
     contextConfiguredFilters: contextConfiguredFilters.value,
-    widgetFilters: getConfiguredFilters(widgetFilterManager)
+    widgetFilters: extractConfiguredFilters(widgetFilterManager)
   })
   addFilters.close()
   wizardHandler.next()
 }
 
 const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(contextConfiguredFilters.value, getConfiguredFilters(widgetFilterManager))
+  return squashFilters(
+    contextConfiguredFilters.value,
+    extractConfiguredFilters(widgetFilterManager)
+  )
 })
 
 const handleObjectTypeSwitch = (objectType: string): void => {
@@ -197,7 +200,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :host-filter-type="hostFilterType"
           :service-filter-type="serviceFilterType"
           :filters="appliedFilters"
-          :widget-filters="getConfiguredFilters(widgetFilterManager)"
+          :widget-filters="extractConfiguredFilters(widgetFilterManager)"
           :edit-widget-spec="editWidgetSpec ?? null"
           :available-features="availableFeatures"
           @go-prev="wizardHandler.prev"

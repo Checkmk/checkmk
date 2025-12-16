@@ -36,7 +36,7 @@ import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import type { ElementSelection } from '../../types'
-import { getInitialElementSelection } from '../../utils'
+import { extractConfiguredFilters, getInitialElementSelection } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -96,15 +96,6 @@ const wizardStages: QuickSetupStageSpec[] = [
   }
 ]
 
-const _getConfiguredFilters = (): ConfiguredFilters => {
-  const configuredActiveFilters: ConfiguredFilters = {}
-  const configuredFilters = widgetFilterManager.getConfiguredFilters()
-  for (const flt of widgetFilterManager.getSelectedFilters()) {
-    configuredActiveFilters[flt] = configuredFilters[flt] || {}
-  }
-  return configuredActiveFilters
-}
-
 const contextConfiguredFilters = computed((): ConfiguredFilters => {
   return parseContextConfiguredFilters(props.contextFilters)
 })
@@ -116,14 +107,17 @@ const recapAndNext = () => {
     singleMetric: null,
     combinedMetric: null,
     contextConfiguredFilters: contextConfiguredFilters.value,
-    widgetFilters: _getConfiguredFilters()
+    widgetFilters: extractConfiguredFilters(widgetFilterManager)
   })
   addFilters.close()
   wizardHandler.next()
 }
 
 const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(contextConfiguredFilters.value, _getConfiguredFilters())
+  return squashFilters(
+    contextConfiguredFilters.value,
+    extractConfiguredFilters(widgetFilterManager)
+  )
 })
 
 const handleObjectTypeSwitch = (objectType: string): void => {
@@ -186,7 +180,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :dashboard-name="dashboardName"
           :host-filter-type="hostFilterType"
           :filters="appliedFilters"
-          :widget-filters="_getConfiguredFilters()"
+          :widget-filters="extractConfiguredFilters(widgetFilterManager)"
           :dashboard-constants="dashboardConstants"
           :edit-widget-spec="editWidgetSpec ?? null"
           :available-features="availableFeatures"

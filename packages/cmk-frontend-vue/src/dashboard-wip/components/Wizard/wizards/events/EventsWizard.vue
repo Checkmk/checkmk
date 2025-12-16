@@ -33,6 +33,7 @@ import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
+import { extractConfiguredFilters } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -78,16 +79,6 @@ const wizardStages: QuickSetupStageSpec[] = [
   }
 ]
 
-// TODO: is this necessary? this seems to be getConfiguredFilters
-const _getConfiguredFilters = (): ConfiguredFilters => {
-  const configuredActiveFilters: ConfiguredFilters = {}
-  const configuredFilters = widgetFilterManager.getConfiguredFilters()
-  for (const flt of widgetFilterManager.getSelectedFilters()) {
-    configuredActiveFilters[flt] = configuredFilters[flt] || {}
-  }
-  return configuredActiveFilters
-}
-
 const contextConfiguredFilters = computed((): ConfiguredFilters => {
   return parseContextConfiguredFilters(props.contextFilters)
 })
@@ -96,14 +87,17 @@ const recapAndNext = () => {
   widgetFilterManager.closeSelectionMenu()
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     contextConfiguredFilters: contextConfiguredFilters.value,
-    widgetFilters: _getConfiguredFilters()
+    widgetFilters: extractConfiguredFilters(widgetFilterManager)
   })
   addFilters.close()
   wizardHandler.next()
 }
 
 const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(contextConfiguredFilters.value, _getConfiguredFilters())
+  return squashFilters(
+    contextConfiguredFilters.value,
+    extractConfiguredFilters(widgetFilterManager)
+  )
 })
 </script>
 
@@ -164,7 +158,7 @@ const appliedFilters = computed((): ConfiguredFilters => {
             (content, generalSettings, filterUsesInfos) =>
               emit('addWidget', content, generalSettings, {
                 uses_infos: filterUsesInfos,
-                filters: _getConfiguredFilters()
+                filters: extractConfiguredFilters(widgetFilterManager)
               })
           "
         />

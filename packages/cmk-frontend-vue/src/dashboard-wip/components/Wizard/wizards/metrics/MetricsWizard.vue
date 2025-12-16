@@ -35,6 +35,7 @@ import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import { ElementSelection } from '../../types'
+import { extractConfiguredFilters } from '../../utils'
 import { type MetricSelection, getDefaultsFromGraph } from './composables/useSelectGraphTypes'
 import { useMetric } from './stage1/MetricSelector/useMetric'
 import Stage1 from './stage1/StageContents.vue'
@@ -122,16 +123,6 @@ const wizardStages: QuickSetupStageSpec[] = [
   }
 ]
 
-// TODO: is this necessary? this seems to be getConfiguredFilters
-const _getConfiguredFilters = (): ConfiguredFilters => {
-  const configuredActiveFilters: ConfiguredFilters = {}
-  const configuredFilters = widgetFilterManager.getConfiguredFilters()
-  for (const flt of widgetFilterManager.getSelectedFilters()) {
-    configuredActiveFilters[flt] = configuredFilters[flt] || {}
-  }
-  return configuredActiveFilters
-}
-
 const contextConfiguredFilters = computed((): ConfiguredFilters => {
   return parseContextConfiguredFilters(props.contextFilters)
 })
@@ -142,14 +133,17 @@ const recapAndNext = () => {
     metricType: metricType.value,
     metric: metricHandler.metric.value,
     contextConfiguredFilters: contextConfiguredFilters.value,
-    widgetFilters: _getConfiguredFilters()
+    widgetFilters: extractConfiguredFilters(widgetFilterManager)
   })
   addFilters.close()
   wizardHandler.next()
 }
 
 const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(contextConfiguredFilters.value, _getConfiguredFilters())
+  return squashFilters(
+    contextConfiguredFilters.value,
+    extractConfiguredFilters(widgetFilterManager)
+  )
 })
 
 const handleObjectTypeSwitch = (objectType: string): void => {
@@ -218,7 +212,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :service-filter-type="serviceFilterType"
           :metric-type="metricType"
           :filters="appliedFilters"
-          :widget-filters="_getConfiguredFilters()"
+          :widget-filters="extractConfiguredFilters(widgetFilterManager)"
           :metric="metricHandler.metric.value!"
           :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"

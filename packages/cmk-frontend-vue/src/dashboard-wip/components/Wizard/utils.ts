@@ -58,7 +58,7 @@ export const generateEffectiveFilterContext = (filters: ConfiguredFilters) => {
   }
 }
 
-export const getConfiguredFilters = (manager: WidgetFilterManager): ConfiguredFilters => {
+export const extractConfiguredFilters = (manager: WidgetFilterManager): ConfiguredFilters => {
   const configuredActiveFilters: ConfiguredFilters = {}
   const configuredFilters = manager.getConfiguredFilters()
   for (const flt of manager.getSelectedFilters()) {

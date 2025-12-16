@@ -1,0 +1,18 @@
+@startuml
+
+component "[[../arch-comp-metric-backend.html Metric backend]]" as metric_backend
+interface "HTTP" as http_metric_backend
+
+component "[[../arch-comp-gui.html GUI]]" as gui {
+    component "Custom graph editor" as custom_graph_editor
+    component "agent_custom_query rules" as agent_custom_query_rules
+}
+
+component "agent_custom_query" as agent_custom_query
+
+metric_backend - http_metric_backend
+custom_graph_editor -left-> http_metric_backend: query
+custom_graph_editor --> agent_custom_query_rules: create via slide-in
+agent_custom_query -up-> http_metric_backend: query
+
+@enduml

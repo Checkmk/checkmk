@@ -3,5 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-redef"
+
 # This file is only here to make pytest and mypy find the agent plugins.
 # It will not be shipped nor synced into the site. It must not contain code.

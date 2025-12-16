@@ -203,7 +203,10 @@ class Summarizer:
         return not any(self._node_results.results.values())
 
     def is_preferred_node_active(self) -> bool:
-        return self._preferred is None or self._preferred == self._active
+        # FYI: In order to be really active, the node has to produce a result, too.
+        return self._preferred is None or (
+            self._preferred == self._active and len(self._node_results.results[self._preferred]) > 0
+        )
 
     def raise_for_ignores(self) -> None:
         if msgs := [
@@ -226,6 +229,12 @@ class Summarizer:
 
         yield Result(state=State.OK, notice="Cluster details", details=", ".join(details_header))
 
+        if not self.is_preferred_node_active():
+            yield Result(
+                state=self._unpreferred_node_state,
+                notice="Preferred node is not active",
+            )
+
         if not self._secondary_nodes:
             return
 
@@ -245,11 +254,8 @@ class Summarizer:
             self._add_state_marker_to_details(r.details, state_markers[int(r.state)])
             for r in results
         ]
-        best_possible_state = (
-            State.OK if self.is_preferred_node_active() else self._unpreferred_node_state
-        )
 
-        state = State.worst(best_possible_state, *(r.state for r in results))
+        state = State.worst(*(r.state for r in results))
         summary = ", ".join(self._remove_state_markers(r.summary) for r in results if r.summary)
 
         if state is State.OK and not summary:

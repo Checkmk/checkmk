@@ -464,6 +464,10 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(
                     notice="Cluster details",
                     details="Cluster mode: Best, Best node: Nodett, Preferred node: Nodebert",
                 ),
+                Result(
+                    state=State.OK,
+                    notice="Preferred node is not active",
+                ),
                 Result(state=State.OK, notice="\nAdditional results from: Nodebert, Nodett"),
             ],
             [
@@ -502,6 +506,10 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(
                     state=State.OK,
                     notice="Cluster details",
                     details="Cluster mode: Best, Best node: Nodett, Preferred node: Nodebert",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Preferred node is not active",
                 ),
                 Result(state=State.OK, notice="\nAdditional results from: Nodebert, Nodett"),
             ],
@@ -545,6 +553,10 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(
                     notice="Cluster details",
                     details="Cluster mode: Best, Best node: Nodett, Preferred node: Nodebert",
                 ),
+                Result(
+                    state=State.OK,
+                    notice="Preferred node is not active",
+                ),
                 Result(state=State.OK, notice="\nAdditional results from: Nodebert, Nodett"),
             ],
             [
@@ -578,7 +590,7 @@ def test_summarizer_result_generation(
         cluster_mode="best",
         selector=State.best,
         preferred=clusterization_parameters.get("primary_node"),
-        unpreferred_node_state=State.WARN,
+        unpreferred_node_state=State.OK,
         levels_additional_nodes_count=levels,
     )
 
@@ -590,6 +602,7 @@ def test_summarizer_result_generation(
 @pytest.mark.parametrize(
     [
         "node_results",
+        "levels",
         "expected_general_results",
         "expected_primary_result",
         "expected_secondary_result",
@@ -607,6 +620,7 @@ def test_summarizer_result_generation(
                 },
                 ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
             ),
+            (0.0, 0.0),
             [
                 Result(
                     state=State.OK,
@@ -635,10 +649,43 @@ def test_summarizer_result_generation(
             ],
             id="notice only",
         ),
+        pytest.param(
+            cluster_mode.NodeResults(
+                results={
+                    HostName("Nodett"): [Result(state=State.OK, summary="CPU load: 0.00")],
+                },
+                metrics={
+                    HostName("Nodett"): [Metric("CPULoad", 0.00387467)],
+                },
+                ignore_results={HostName("Nodett"): []},
+            ),
+            (1.0, float("inf")),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Cluster details",
+                    details="Cluster mode: Failover, Worst node: Nodett, Preferred node: Nodebert",
+                ),
+                Result(
+                    state=State.WARN,
+                    notice="Preferred node is not active",
+                ),
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    summary="CPU load: 0.00",
+                    details="\nResults from node: Nodett\nCPU load: 0.00",
+                ),
+            ],
+            [],
+            id="no results from preferred node",
+        ),
     ],
 )
 def test_summarizer_result_generation_for_failover(
     node_results: cluster_mode.NodeResults,
+    levels: tuple[float, float],
     expected_general_results: CheckResult,
     expected_primary_result: CheckResult,
     expected_secondary_result: CheckResult,
@@ -651,7 +698,7 @@ def test_summarizer_result_generation_for_failover(
         selector=State.worst,
         preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=State.WARN,
-        levels_additional_nodes_count=(0.0, 0.0),
+        levels_additional_nodes_count=levels,
     )
 
     assert expected_general_results == list(summarizer.general_results())

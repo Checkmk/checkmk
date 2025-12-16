@@ -564,6 +564,9 @@ def automation_discovery_preview(
     raise_errors, args = _extract_directive("@raiseerrors", args)
     host_name = HostName(args[0])
 
+    # We intend to report the config warnings. Clear the global state :-(
+    config_warnings.initialize()
+
     if plugins is None:
         plugins = load_plugins()
     if loading_result is None:

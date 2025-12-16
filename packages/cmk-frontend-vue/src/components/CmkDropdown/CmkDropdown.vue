@@ -4,13 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 import useClickOutside from '@/lib/useClickOutside'
-import { immediateWatch } from '@/lib/watch'
 
-import CmkSuggestions, { ErrorResponse, type Suggestions } from '@/components/CmkSuggestions'
+import CmkSuggestions, {
+  ErrorResponse,
+  type Suggestion,
+  type Suggestions
+} from '@/components/CmkSuggestions'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
@@ -52,40 +55,47 @@ const vClickOutside = useClickOutside()
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const buttonLabel = ref<string>(inputHint)
 
-immediateWatch(
-  () => ({ newOptions: options, newSelectedOption: selectedOption }),
-  async ({ newOptions, newSelectedOption }) => {
-    async function getDropdownButtonLabel(): Promise<string> {
-      // function makes sure that all branches return a value
-      if (newSelectedOption.value === null) {
-        return inputHint
-      }
-      if (newOptions.type === 'filtered' || newOptions.type === 'fixed') {
-        if (newOptions.suggestions.length === 0) {
-          return noElementsText
-        } else {
-          return (
-            newOptions.suggestions.find(({ name }) => name === newSelectedOption.value)?.title ??
-            inputHint
-          )
-        }
+watch(selectedOption, (newValue) => {
+  if (newValue === null) {
+    buttonLabel.value = inputHint
+  }
+})
+
+onMounted(async () => {
+  buttonLabel.value = await getButtonLabel(options, selectedOption.value)
+})
+
+/**
+ * This function might have a performance impact as it might trigger a callback to fetch
+ * suggestions. It should only be called when necessary.
+ */
+async function getButtonLabel(options: Suggestions, selected: string | null): Promise<string> {
+  if (selected === null) {
+    return inputHint
+  }
+  let currentOptions: Suggestion[]
+  switch (options.type) {
+    case 'filtered':
+    case 'fixed':
+      currentOptions = options.suggestions
+      break
+    case 'callback-filtered': {
+      const result = await options.querySuggestions(selected)
+      if (result instanceof ErrorResponse) {
+        throw new Error(`Error fetching suggestions: ${result.error}`)
       } else {
-        if (newOptions.getTitle !== undefined) {
-          const result = await newOptions.getTitle(newSelectedOption.value)
-          if (result instanceof ErrorResponse) {
-            console.error('CmkDropdown: internal: getTtitle returned an error:', result.error)
-            return `id: ${newSelectedOption.value}`
-          }
-          return result
-        }
-        // return the internal id, if we have no chance to look up the value
-        return newSelectedOption.value
+        currentOptions = result.choices
       }
+      break
     }
-    buttonLabel.value = await getDropdownButtonLabel()
-  },
-  { deep: 2 }
-)
+  }
+  if (currentOptions.length === 0) {
+    return noElementsText
+  } else {
+    const selectedSuggestion = currentOptions.find((s: Suggestion) => s.name === selected)
+    return selectedSuggestion ? selectedSuggestion.title : selected
+  }
+}
 
 const canOpenDropdown = computed(() => {
   if (options.type === 'filtered' || options.type === 'fixed') {
@@ -130,8 +140,9 @@ function hideSuggestions(): void {
   comboboxButtonRef.value?.focus()
 }
 
-function handleUpdate(selected: string | null): void {
-  selectedOption.value = selected
+function handleUpdate(selected: Suggestion | null): void {
+  selectedOption.value = selected?.name || null
+  buttonLabel.value = selected?.title || inputHint
   hideSuggestions()
 }
 
@@ -180,10 +191,10 @@ const truncatedButtonLabel = computed(() =>
       ref="suggestionsRef"
       role="option"
       :suggestions="options"
-      :selected-option="selectedOption"
+      :selected-suggestion="selectedOption"
       :no-results-hint="noResultsHint"
       @request-close-suggestions="hideSuggestions"
-      @update:selected-option="handleUpdate"
+      @select-suggestion="handleUpdate"
     />
   </div>
 </template>

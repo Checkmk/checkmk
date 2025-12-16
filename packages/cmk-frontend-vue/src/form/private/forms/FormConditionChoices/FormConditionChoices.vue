@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as typing from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
@@ -54,7 +54,9 @@ function addElement(selected: string | null) {
     value: { oper_eq: group.conditions[0]!.name }
   })
   validation.value = validateValue(data.value, props.spec.validators)
-  selectedConditionGroup.value = null
+  void nextTick(() => {
+    selectedConditionGroup.value = null
+  })
 }
 
 function deleteElement(index: number) {

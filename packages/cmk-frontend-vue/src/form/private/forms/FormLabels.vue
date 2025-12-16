@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { onBeforeUpdate, ref, watch } from 'vue'
+import { nextTick, onBeforeUpdate, ref, watch } from 'vue'
 
 import CmkList from '@/components/CmkList'
 import { type Suggestion } from '@/components/CmkSuggestions'
@@ -93,7 +93,9 @@ const addItem = (item: string | null) => {
   if (validate(item)) {
     keyValuePairs.value = [...keyValuePairs.value, item]
   }
-  selectedValue.value = null
+  void nextTick(() => {
+    selectedValue.value = null
+  })
 }
 
 function filterKeyValuePairs(element: Suggestion) {

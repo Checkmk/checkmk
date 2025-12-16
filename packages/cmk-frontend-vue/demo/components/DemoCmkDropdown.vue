@@ -154,13 +154,15 @@ const defaultEmpty8 = ref<string | null>(null)
     v-model:selected-option="defaultEmpty7"
     :options="{
       type: 'callback-filtered',
-      querySuggestions: async (_) => {
-        return new Response([
-          { name: 'one', title: 'one' },
-          { name: null, title: 'unselectable' },
-          { name: 'three', title: 'three' },
-          { name: 'four', title: 'four' }
-        ])
+      querySuggestions: async (v) => {
+        return new Response(
+          [
+            { name: 'one', title: 'one' },
+            { name: null, title: 'unselectable' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ].filter((s) => s.title.includes(v))
+        )
       }
     }"
     input-hint="long dropdown"
@@ -173,13 +175,15 @@ const defaultEmpty8 = ref<string | null>(null)
     v-model:selected-option="defaultEmpty3"
     :options="{
       type: 'callback-filtered',
-      querySuggestions: async (_) => {
-        return new Response([
-          { name: null, title: 'unselectable' },
-          { name: 'two', title: 'two' },
-          { name: 'three', title: 'three' },
-          { name: 'four', title: 'four' }
-        ])
+      querySuggestions: async (v) => {
+        return new Response(
+          [
+            { name: null, title: 'unselectable' },
+            { name: 'two', title: 'two' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ].filter((s) => s.title.includes(v))
+        )
       }
     }"
     input-hint="long dropdown"

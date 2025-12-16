@@ -6,6 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
+import type { ComponentProps } from 'vue-component-type-helpers'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import { Response } from '@/components/CmkSuggestions'
@@ -138,6 +139,77 @@ test('dropdown shows and hides options', async () => {
   await fireEvent.click(screen.getByText('Option 1'))
 
   expect(screen.queryByText('Option 2')).toBeNull()
+})
+
+test('dropdown keeps label even if options change', async () => {
+  const testComponent = defineComponent({
+    components: { CmkDropdown },
+    setup() {
+      const options = ref<ComponentProps<typeof CmkDropdown>['options']>({
+        type: 'fixed',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      })
+      const selectedOption = ref<string | null>('option1')
+      return { options, selectedOption }
+    },
+    template: `
+      <button @click="options = {
+        type: 'fixed',
+        suggestions: [
+          { title: 'Option 3', name: 'option3' },
+          { title: 'Option 4', name: 'option4' }
+        ]
+      }">Change Options</button>
+      <CmkDropdown
+        :options="options"
+        :selected-option="selectedOption"
+        input-hint="Select an option"
+        label="some aria label"
+      />
+    `
+  })
+
+  render(testComponent)
+
+  await userEvent.click(screen.getByRole('button', { name: 'Change Options' }))
+
+  // Label is still that of selected option even if options are changed
+  await screen.findByText('Option 1')
+})
+
+test('dropdown resets label if option is reset', async () => {
+  const testComponent = defineComponent({
+    components: { CmkDropdown },
+    setup() {
+      const selectedOption = ref<string | null>('option1')
+      return { selectedOption }
+    },
+    template: `
+      <button @click="selectedOption = null">Reset</button>
+      <CmkDropdown
+        v-model:selected-option="selectedOption"
+        :options="{
+          type: 'fixed',
+          suggestions: [
+            { title: 'Option 1', name: 'option1' },
+            { title: 'Option 2', name: 'option2' }
+          ]
+        }"
+        input-hint="Select an option"
+        label="some aria label"
+      />
+    `
+  })
+
+  render(testComponent)
+
+  await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+  // Input hint is shown
+  await screen.findByText('Select an option')
 })
 
 test('dropdown hides after clicking already selected option', async () => {
@@ -514,6 +586,48 @@ test('dropdown with callback and unselectable suggestion shows title', async () 
   await screen.findByText('unselectable')
 })
 
+test('dropdown with callback doesnt call callback unnecessarily', async () => {
+  let selectedOption: string = 'one'
+  const callbackDummy = vi.fn()
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          callbackDummy()
+          return new Response([
+            { name: 'one', title: '1' },
+            { name: 'two', title: '2' },
+            { name: 'three', title: '3' },
+            { name: 'four', title: '4' }
+          ])
+        }
+      },
+      selectedOption,
+      inputHint: 'Select an option',
+      label: 'dropdown-label',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option!
+      }
+    }
+  })
+
+  // Getting the title calls the callback once
+  expect(callbackDummy).toHaveBeenCalledTimes(1)
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  // Opening the dropdown calls the callback again to get all suggestions
+  expect(callbackDummy).toHaveBeenCalledTimes(2)
+
+  await userEvent.keyboard('[ArrowDown][Enter]')
+  expect(selectedOption).toBe('two')
+
+  // Selecting an option does not call the callback again
+  expect(callbackDummy).toHaveBeenCalledTimes(2)
+})
+
 test('dropdown with callback and unselectable selects first selectable suggestion', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {
@@ -543,6 +657,37 @@ test('dropdown with callback and unselectable selects first selectable suggestio
 
   await userEvent.keyboard('[Enter]')
   expect(selectedOption).toBe('one')
+})
+
+test('dropdown with callback and unselectable selects wraps up', async () => {
+  let selectedOption: string | null = ''
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new Response([
+            { name: null, title: 'unselectable' },
+            { name: 'one', title: 'one' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ])
+        }
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'dropdown-label',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option
+      }
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  await userEvent.keyboard('[ArrowUp][Enter]')
+  expect(selectedOption).toBe('four')
 })
 
 test('dropdown with callback skips unselectable with keyboard', async () => {

@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
@@ -30,16 +29,17 @@ type SuggestionsFiltered = {
 type SuggestionsCallbackFiltered = {
   type: 'callback-filtered'
   querySuggestions: (query: string) => Promise<ErrorResponse | Response>
-  getTitle?: (name: string) => Promise<ErrorResponse | TranslatedString>
 }
 
 export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered
 
 const {
-  noResultsHint = '',
+  selectedSuggestion,
   suggestions,
-  role
+  role,
+  noResultsHint = ''
 } = defineProps<{
+  selectedSuggestion: string | null
   suggestions: Suggestions
   role: 'suggestion' | 'option'
   noResultsHint?: string
@@ -50,35 +50,24 @@ const showFilter = computed<boolean>(() => {
 })
 
 const emit = defineEmits<{
+  'select-suggestion': [Suggestion | null]
   'request-close-suggestions': []
   blur: []
 }>()
 
-const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const error = ref<string>('')
 const suggestionRefs = useTemplateRef('suggestionRefs')
 const filterString = ref<string>('')
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
-const firstSelectableIndex = ref(0)
 
 const filteredSuggestions = ref<Array<Suggestion>>([])
-const highlightedOption: Ref<Suggestion | null> = ref(null) // null means no selection, (no selectable elements)
+const activeSuggestion: Ref<Suggestion | null> = ref(null) // null means no suggestion is highlighted, (no suggestions are selectable)
 
-function isSuggestionHighlighted(suggestion: Suggestion, index: number): boolean {
-  if (
-    index === firstSelectableIndex.value &&
-    (highlightedOption.value === null || highlightedOption.value.name === null)
-  ) {
-    return true
-  }
-  return suggestion.name === highlightedOption.value?.name
-}
-
-function scrollCurrentlySelectedIntoView(): void {
+function scrollCurrentActiveIntoView(): void {
   if (suggestionRefs.value === null) {
     return
   }
-  const index = findSuggestionAsIndex(filteredSuggestions.value, highlightedOption.value)
+  const index = findSuggestionAsIndex(filteredSuggestions.value, activeSuggestion.value)
   if (index === null) {
     return
   }
@@ -123,8 +112,12 @@ async function getSuggestions(
 }
 
 immediateWatch(
-  () => ({ newSuggestions: suggestions, newFilterString: filterString }),
-  async ({ newSuggestions, newFilterString }) => {
+  () => ({
+    newSuggestions: suggestions,
+    newFilterString: filterString,
+    newSelectedSuggestion: selectedSuggestion
+  }),
+  async ({ newSuggestions, newFilterString, newSelectedSuggestion }) => {
     const result = await getSuggestions(newSuggestions, newFilterString.value)
 
     if (result instanceof ErrorResponse) {
@@ -132,19 +125,13 @@ immediateWatch(
     } else {
       error.value = ''
       filteredSuggestions.value = result.choices
-      highlightedOption.value = null
-      selectSibilingElement(0)
+      activeSuggestion.value = null
+      setSiblingOrFirstActive(0)
     }
 
-    firstSelectableIndex.value = filteredSuggestions.value.findIndex((s) => s.name !== null)
-
-    const selectedFilteredSuggestion = filteredSuggestions.value.filter(
-      (s: Suggestion) => s.name === selectedOption.value && selectedOption.value !== null
-    )
-    if (selectedFilteredSuggestion.length === 1 && newFilterString.value === '') {
-      highlightedOption.value = selectedFilteredSuggestion[0] || null
-    } else {
-      highlightedOption.value = filteredSuggestions.value[0] || null
+    if (newSelectedSuggestion !== null) {
+      activeSuggestion.value =
+        filteredSuggestions.value.find((s: Suggestion) => s.name === newSelectedSuggestion) || null
     }
   },
   { deep: 2 }
@@ -152,43 +139,38 @@ immediateWatch(
 
 function onKeyEnter(event: InputEvent): void {
   event.stopPropagation()
-  if (highlightedOption.value === null) {
-    selectSibilingElement(0)
+  if (activeSuggestion.value === null) {
+    return
   }
-  selectSuggestion(highlightedOption.value)
-
-  if (highlightedOption.value?.name === selectedOption.value) {
-    emit('request-close-suggestions')
-  }
+  selectSuggestion(activeSuggestion.value)
 }
 
 function selectSuggestion(suggestion: Suggestion | null) {
-  if (suggestion?.name === null) {
-    selectSibilingElement(0)
-    selectedOption.value = highlightedOption.value?.name || null
+  if (suggestion && suggestion.name === null) {
+    // do not select non-selectable elements
     return
   }
-  if (suggestion && suggestion.name === selectedOption.value) {
+  if (suggestion && suggestion.name === selectedSuggestion) {
     emit('request-close-suggestions')
     return
   }
-  selectedOption.value = suggestion?.name || null
+  emit('select-suggestion', suggestion)
 }
 
-function selectSibilingElement(direction: number) {
+function setSiblingOrFirstActive(offset: number) {
   const selectableElements = filteredSuggestions.value.filter(
     (suggestion) => suggestion.name !== null
   )
 
   if (!selectableElements.length) {
-    highlightedOption.value = null
+    activeSuggestion.value = null
     return
   }
 
-  const currentIndex = findSuggestionAsIndex(selectableElements, highlightedOption.value) ?? 0
+  const currentActiveIndex = findSuggestionAsIndex(selectableElements, activeSuggestion.value) ?? 0
 
-  highlightedOption.value =
-    selectableElements[wrap(currentIndex + direction, filteredSuggestions.value.length)] || null
+  activeSuggestion.value =
+    selectableElements[wrap(currentActiveIndex + offset, selectableElements.length)] || null
 }
 
 function wrap(index: number, length: number): number {
@@ -196,12 +178,12 @@ function wrap(index: number, length: number): number {
 }
 
 function selectNextElement() {
-  selectSibilingElement(+1)
-  scrollCurrentlySelectedIntoView()
+  setSiblingOrFirstActive(+1)
+  scrollCurrentActiveIntoView()
 }
 function selectPreviousElement() {
-  selectSibilingElement(-1)
-  scrollCurrentlySelectedIntoView()
+  setSiblingOrFirstActive(-1)
+  scrollCurrentActiveIntoView()
 }
 
 async function focus(): Promise<void> {
@@ -263,13 +245,13 @@ defineExpose({
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
       <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
       <li
-        v-for="(suggestion, index) in filteredSuggestions"
+        v-for="suggestion in filteredSuggestions"
         ref="suggestionRefs"
         tabindex="-1"
         :role="role"
         :class="{
           selectable: suggestion.name !== null,
-          selected: isSuggestionHighlighted(suggestion, index)
+          selected: suggestion.name === activeSuggestion?.name
         }"
         @click="selectSuggestion(suggestion)"
       >

@@ -17,7 +17,7 @@ genrule(
     ),
     outs = ["dependencies.txt"],
     cmd = """
-            grep -e "^OS_PACKAGES\\s\\++" $< | sed 's/^OS_PACKAGES\\s\\++=\\s\\([^[:space:]]*\\).*/\\1/' | tr '\n\r' ', ' > $@
+            grep -e "^OS_PACKAGES\\s\\++" $< | sed 's/^OS_PACKAGES\\s\\++=\\s\\([^[:space:]]*\\).*/\\1/' | tr '\n\r' ',' | sed 's/,$$//' > $@
         """,
     visibility = ["//omd:__pkg__"],
 )

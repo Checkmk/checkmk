@@ -69,6 +69,12 @@ String safe_branch_name() {
     return branch_name().replaceAll("/", "-").replaceAll("\\+security", "");
 }
 
+String distro_code() {
+    dir("${checkout_dir}") {
+        return cmd_output("omd/distro '-'");
+    }
+}
+
 /* groovylint-disable DuplicateListLiteral */
 String get_cmk_version(branch_name, branch_version, version) {
     return (

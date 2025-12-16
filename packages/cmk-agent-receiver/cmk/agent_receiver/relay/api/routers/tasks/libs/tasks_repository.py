@@ -184,6 +184,3 @@ class TimedTaskStore:
     def __contains__(self, key: TaskID) -> bool:
         self._cleanup_expired()
         return key in self._tasks
-
-    def __len__(self) -> int:
-        return len(self._tasks)

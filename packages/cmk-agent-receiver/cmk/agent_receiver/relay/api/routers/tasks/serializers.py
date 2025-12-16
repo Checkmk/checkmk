@@ -28,7 +28,7 @@ class TaskResponseSerializer:
                     payload=task.spec.payload,
                     timeout=task.spec.timeout,
                 )
-            case _:
+            case _:  # pragma: no cover
                 assert_never(task)
 
         return tasks_protocol.TaskResponse(

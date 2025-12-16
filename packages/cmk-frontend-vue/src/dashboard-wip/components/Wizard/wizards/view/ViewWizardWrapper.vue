@@ -6,14 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon'
 
-import type { ContentProps } from '@/dashboard-wip/components/DashboardContent/types'
 import ViewWizardInner from '@/dashboard-wip/components/Wizard/wizards/view/ViewWizardInner.vue'
 import { useProvideViews } from '@/dashboard-wip/composables/useProvideViews'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
   WidgetFilterContext,
-  WidgetGeneralSettings
+  WidgetGeneralSettings,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
 const { byId, ready } = useProvideViews()
@@ -22,10 +22,11 @@ interface ViewWizardProps {
   dashboardName: string
   dashboardOwner: string
   contextFilters: ContextFilters
-  editWidget?: ContentProps | null
+  editWidgetSpec?: WidgetSpec | null
+  editWidgetId?: string | null
 }
 
-const { editWidget = null } = defineProps<ViewWizardProps>()
+const { editWidgetSpec = null, editWidgetId = null } = defineProps<ViewWizardProps>()
 
 defineEmits<{
   goBack: []
@@ -44,7 +45,8 @@ defineEmits<{
       :dashboard-owner="dashboardOwner"
       :views-by-id="byId"
       :context-filters="contextFilters"
-      :edit-widget="editWidget"
+      :edit-widget-spec="editWidgetSpec"
+      :edit-widget-id="editWidgetId"
       @go-back="$emit('goBack')"
       @add-widget="
         (content, generalSettings, filterContext) =>

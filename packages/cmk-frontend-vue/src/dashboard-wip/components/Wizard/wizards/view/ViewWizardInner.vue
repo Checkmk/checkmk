@@ -9,7 +9,6 @@ import { computed, h, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { randomId } from '@/lib/randomId'
 
-import type { ContentProps } from '@/dashboard-wip/components/DashboardContent/types'
 import AddFilters from '@/dashboard-wip/components/Wizard/components/AddFilters/AddFilters.vue'
 import {
   parseContextConfiguredFilters,
@@ -26,7 +25,8 @@ import type {
   LinkedViewContent,
   WidgetContent,
   WidgetFilterContext,
-  WidgetGeneralSettings
+  WidgetGeneralSettings,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
@@ -51,11 +51,13 @@ interface ViewWizardProps {
   dashboardOwner: string
   viewsById: Record<string, ViewModel>
   contextFilters: ContextFilters
-  editWidget?: ContentProps | null
+  editWidgetSpec?: WidgetSpec | null
+  editWidgetId?: string | null
 }
 
 const props = withDefaults(defineProps<ViewWizardProps>(), {
-  editWidget: null
+  editWidgetSpec: null,
+  editWidgetId: null
 })
 
 const emit = defineEmits<{
@@ -68,50 +70,50 @@ const emit = defineEmits<{
 }>()
 
 function getDefaultWidgetId(): string {
-  if (props.editWidget) {
-    return props.editWidget.widget_id
+  if (props.editWidgetId) {
+    return props.editWidgetId
   }
   return randomId()
 }
 
 function getDefaultDatasource(): string | null {
-  if (props.editWidget && props.editWidget.content.type === 'embedded_view') {
-    return props.editWidget.content.datasource
+  if (props.editWidgetSpec && props.editWidgetSpec.content.type === 'embedded_view') {
+    return props.editWidgetSpec.content.datasource
   }
   return null
 }
 
 function getDefaultRestrictedToSingle(): string[] {
-  if (props.editWidget) {
-    if (props.editWidget.content.type === 'linked_view') {
-      const view = props.viewsById[props.editWidget.content.view_name]
+  if (props.editWidgetSpec) {
+    if (props.editWidgetSpec.content.type === 'linked_view') {
+      const view = props.viewsById[props.editWidgetSpec.content.view_name]
       if (view) {
         return view.extensions.restricted_to_single
       }
-    } else if (props.editWidget.content.type === 'embedded_view') {
-      return props.editWidget.content.restricted_to_single
+    } else if (props.editWidgetSpec.content.type === 'embedded_view') {
+      return props.editWidgetSpec.content.restricted_to_single
     }
   }
   return []
 }
 
 function getDefaultReferencedViewName(): string | null {
-  if (props.editWidget && props.editWidget.content.type === 'linked_view') {
-    return props.editWidget.content.view_name
+  if (props.editWidgetSpec && props.editWidgetSpec.content.type === 'linked_view') {
+    return props.editWidgetSpec.content.view_name
   }
   return null
 }
 
 function getConfigMode(mode: DataConfigurationMode): DataConfigurationMode {
-  if (props.editWidget) {
+  if (props.editWidgetSpec) {
     return DataConfigurationMode.EDIT
   }
   return mode
 }
 
 function getDefaultContent(): EmbeddedViewContent | LinkedViewContent | undefined {
-  if (props.editWidget) {
-    return props.editWidget.content as EmbeddedViewContent | LinkedViewContent
+  if (props.editWidgetSpec) {
+    return props.editWidgetSpec.content as EmbeddedViewContent | LinkedViewContent
   }
   return undefined
 }
@@ -120,7 +122,7 @@ const widgetId = ref<string>(getDefaultWidgetId())
 
 // Stage 1
 const filterDefinitions = useFilterDefinitions()
-const initialFilters = props.editWidget ? props.editWidget.effective_filter_context.filters : {}
+const initialFilters = props.editWidgetSpec ? props.editWidgetSpec.filter_context.filters : {}
 const widgetFilterManager = useWidgetFilterManager(initialFilters, filterDefinitions)
 
 const selectedDatasource = ref<string | null>(getDefaultDatasource())

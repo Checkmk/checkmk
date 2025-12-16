@@ -186,6 +186,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :dashboard-name="dashboardName"
           :host-filter-type="hostFilterType"
           :filters="appliedFilters"
+          :widget-filters="_getConfiguredFilters()"
           :dashboard-constants="dashboardConstants"
           :edit-widget-spec="editWidgetSpec ?? null"
           :available-features="availableFeatures"

@@ -73,7 +73,7 @@ const editWidget = computed<WidgetProps | null>(() => {
 
 const filterDefinitions = useFilterDefinitions()
 const widgetFilterManager = useWidgetFilterManager(
-  editWidget.value?.effective_filter_context.filters || {},
+  props.editWidgetSpec?.filter_context.filters || {},
   filterDefinitions
 )
 
@@ -184,6 +184,7 @@ const handleAddWidget = (
           v-if="wizardHandler.stage.value === 1"
           :dashboard-name="dashboardName"
           :filters="appliedFilters"
+          :widget-filters="widgetFilterManager.getConfiguredFilters()"
           :edit-widget="editWidget"
           :dashboard-constants="dashboardConstants"
           @go-prev="wizardHandler.prev"

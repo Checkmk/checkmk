@@ -197,6 +197,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :host-filter-type="hostFilterType"
           :service-filter-type="serviceFilterType"
           :filters="appliedFilters"
+          :widget-filters="getConfiguredFilters(widgetFilterManager)"
           :edit-widget-spec="editWidgetSpec ?? null"
           :available-features="availableFeatures"
           @go-prev="wizardHandler.prev"

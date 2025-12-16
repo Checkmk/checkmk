@@ -17,6 +17,7 @@ import { useInventory } from './InventoryWidget/useInventory'
 
 interface Stage2Props {
   filters: ConfiguredFilters
+  widgetFilters: ConfiguredFilters
   dashboardName: string
   dashboardConstants: DashboardConstants
   editWidget: WidgetProps | null
@@ -45,7 +46,7 @@ const gotoNextStage = () => {
     const generalSettings: WidgetGeneralSettings =
       inventoryHandler.widgetProps.value!.general_settings
 
-    emit('addWidget', content, generalSettings, props.filters)
+    emit('addWidget', content, generalSettings, props.widgetFilters)
   }
 }
 

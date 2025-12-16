@@ -63,11 +63,6 @@ const handleAddEditWidget = (
   generalSettings: WidgetGeneralSettings,
   filterContext: WidgetFilterContext
 ) => {
-  console.log('handleAddEditWidget called with:', {
-    content,
-    generalSettings,
-    filterContext
-  })
   if (props.editWidgetId) {
     emit('edit-widget', props.editWidgetId, content, generalSettings, filterContext)
   } else {
@@ -138,6 +133,8 @@ const handleAddEditWidget = (
         :dashboard-name="dashboardName"
         :dashboard-owner="dashboardOwner"
         :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        :edit-widget-id="editWidgetId"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />

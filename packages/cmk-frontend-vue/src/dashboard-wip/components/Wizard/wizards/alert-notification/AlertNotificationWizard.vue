@@ -64,7 +64,10 @@ const emit = defineEmits<{
 
 const filterDefinitions = useFilterDefinitions()
 
-const widgetFilterManager = useWidgetFilterManager({}, filterDefinitions)
+const widgetFilterManager = useWidgetFilterManager(
+  props.editWidgetSpec?.filter_context.filters || {},
+  filterDefinitions
+)
 
 const addFilters = useAddFilter()
 
@@ -184,6 +187,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :host-filter-type="hostFilterType"
           :service-filter-type="serviceFilterType"
           :filters="appliedFilters"
+          :widget-filters="getConfiguredFilters(widgetFilterManager)"
           :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"
           @add-widget="

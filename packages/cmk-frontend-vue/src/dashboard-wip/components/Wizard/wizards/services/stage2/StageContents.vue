@@ -43,6 +43,7 @@ interface Stage2Props {
   hostFilterType: ElementSelection
   serviceFilterType: ElementSelection
   filters: ConfiguredFilters
+  widgetFilters: ConfiguredFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
   availableFeatures: DashboardFeatures
@@ -68,12 +69,10 @@ const addWidget = () => {
 
   if (isValid) {
     const widgetPops = activeHandler!.widgetProps.value
-    emit(
-      'addWidget',
-      toValue(widgetPops.content),
-      toValue(widgetPops.general_settings),
-      toValue(widgetPops.effective_filter_context)
-    )
+    emit('addWidget', toValue(widgetPops.content), toValue(widgetPops.general_settings), {
+      uses_infos: toValue(widgetPops.effective_filter_context.uses_infos),
+      filters: props.widgetFilters
+    } as WidgetFilterContext)
   }
 }
 

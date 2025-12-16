@@ -218,6 +218,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :service-filter-type="serviceFilterType"
           :metric-type="metricType"
           :filters="appliedFilters"
+          :widget-filters="_getConfiguredFilters()"
           :metric="metricHandler.metric.value!"
           :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"

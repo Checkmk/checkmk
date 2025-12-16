@@ -11,6 +11,33 @@ Python functions that are called when the endpoint is accessed. They also define
 the supported request parameters and the request and response schemas, through
 the use of type annotations.
 
+Supported API versions are defined in `APIVersion` enum:
+
+- `v1`: The stable public API.
+- `unstable`: For new features, considered higher than `v1`.
+- `internal`: For internal use, considered highest.
+
+Versioning follows a bottom-up inheritance model. Higher versions inherit handlers
+from lower versions if not explicitly overridden.
+
+### Generating and inspecting the specification
+
+The specification is now static and is independent of any running Checkmk site hence the specification can be rendered using the current state of your branch.
+
+To generate the specification file (`spec.yaml`), run the following command:
+
+```bash
+bazel run //cmk:generate_api_spec -- generate --version <internal, unstable, v1> --out spec.yaml --format yaml
+```
+
+Then use `redocly` to preview and inspect the documentation:
+
+```bash
+redocly preview-docs spec.yaml
+```
+
+You can use any tool of your preference to inspect the specification hence you may have to install `redocly` locally
+
 ### Code structure
 
 The recommended package structure for endpoints is as follows:
@@ -214,6 +241,9 @@ individual classes for more details.
 
 ```python
 from cmk.gui.openapi.framework import *
+from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
+from cmk.gui.token_auth import TokenType
+from cmk.gui.utils import permission_verification as permissions
 
 def handler() -> None:
     return
@@ -221,24 +251,76 @@ def handler() -> None:
 my_endpoint = VersionedEndpoint(
     metadata=EndpointMetadata(
         path="/test",
+        # unique identifier for linking
         link_relation=".../default",
         method="get",
+        # optional, defaults to application/json
+        content_type="application/json",
     ),
-    permissions=EndpointPermissions(),  # declare all checked permissions
+    permissions=EndpointPermissions(
+        # See "Permissions" section below
+        required=permissions.Perm("wato.edit"),
+    ),
     doc=EndpointDoc(
         family="FamilyName",  # ideally, get the name via the family object
+        # optional group for documentation
+        # group=TagGroup.SETUP,
     ),
     versions={
-        APIVersion.V1: EndpointHandler(handler=handler),
+        APIVersion.V1: EndpointHandler(
+            handler=handler,
+            # Document potential error responses
+            error_schemas={
+                404: ApiErrorDataclass,
+            },
+        ),
     },
     # optional
-    behavior=EndpointBehavior(),
+    behavior=EndpointBehavior(
+        # See "ETags" section for etag behavior
+        etag=None,
+    ),
+    # optional: list of allowed token types
+    allowed_tokens={TokenType("dashboard")},
     removed_in_version=None,
 )
 ```
 
 Once you have your versioned endpoint defined, you can register it in the
 `VersionedEndpointRegistry`.
+
+#### Permissions
+
+Permissions are defined using `EndpointPermissions`. The `required` argument takes
+a permission object. Available permission classes are in
+`cmk.gui.utils.permission_verification` (usually imported as `permissions`):
+
+- `Perm("name")`: a single permission.
+- `AnyPerm([p1, p2])`: matches if _any_ of the permissions are present.
+- `AllPerm([p1, p2])`: matches if _all_ of the permissions are present.
+- `NoPerm()`: never matches (useful for disabling access).
+- `Optional(p)`: always matches (documenting that a permission _might_ be checked; usually relevant when a permission gets checked inside an if-statement).
+- `PrefixPerm("name")`: matches any permission starting with the given prefix.
+
+```python
+from cmk.gui.utils import permission_verification as permissions
+
+permissions=EndpointPermissions(
+    required=permissions.AnyPerm([
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.access"),
+    ]),
+    # Optional descriptions for documentation
+    descriptions={"wato.supermode": "Override description"},
+)
+```
+
+#### Error Handling
+
+You can document expected error codes using `error_schemas` in `EndpointHandler`.
+The keys are HTTP status codes (e.g. 404, 409) and values are error classes
+(usually `ApiErrorDataclass`). You can also provide `status_descriptions` for
+non-error codes.
 
 ## Advanced models
 

@@ -624,7 +624,7 @@ class HTMLGenerator(HTMLWriter):
             if waiting_message
             else ""
         )
-        remove_parent_action = "this.parent().remove();" if remove_parent else ""
+        remove_parent_action = "this.parentNode.remove();" if remove_parent else ""
         redirect = f"location.href='{url}';"
         disable_self = "this.onclick='return false;';"
         return self.render_input(

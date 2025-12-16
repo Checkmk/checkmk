@@ -263,7 +263,9 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                 logger.warning("Did not reload liveproxyd (PID not found)")
             except FileNotFoundError:
                 # ENOENT: No liveproxyd running: No reload needed.
-                logger.warning("Did not reload liveproxyd (Missing PID file)")
+                # Reduced log level, as otherwise it would be displayed in the output
+                # of cmk-update-config, where all daemons are stopped.
+                logger.info("Did not reload liveproxyd (Missing PID file)")
             except ValueError:
                 # ignore empty pid file (may happen during locking in
                 # cmk.ccc.daemon.lock_with_pid_file().  We are in the

@@ -155,12 +155,12 @@ def check_wireless_ethernet_statuses(
     yield Result(state=State(power_mode_state), notice=f"Power mode: {port.power.mode}")
 
     power_ac_summary = "connected" if port.power.ac.is_connected else "not connected"
-    yield Result(state=State.OK, notice=f"AC: {power_ac_summary}")
+    yield Result(state=State.OK, notice=f"Power AC: {power_ac_summary}")
 
     power_poe_summary = "connected" if port.power.poe.is_connected else "not connected"
     yield Result(state=State.OK, notice=f"PoE: {power_poe_summary}")
 
-    yield Result(state=State.OK, notice=f"PoE standard: {port.poe}")
+    yield Result(state=State.OK, notice=f"Standard: {port.poe}")
 
 
 check_plugin_cisco_meraki_org_wireless_ethernet_statuses = CheckPlugin(

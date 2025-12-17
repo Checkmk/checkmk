@@ -13,7 +13,13 @@ from pydantic import AwareDatetime, FutureDatetime
 
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.converter import (
+    HostConverter,
+    TypedPlainValidator,
+)
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken
+from cmk.gui.watolib.automations import AnnotatedHostName
+from cmk.gui.watolib.hosts_and_folders import Host
 
 
 @api_model
@@ -27,6 +33,9 @@ class AgentRegistrationTokenMetadata:
         description="The date and time when the token will expire.",
         example="2025-12-31T23:59:59Z",
     )
+    host_name: AnnotatedHostName = api_field(
+        description="Name of an existing host the token was issued for"
+    )
 
     @classmethod
     def from_internal(cls, token: AuthToken) -> Self:
@@ -34,6 +43,7 @@ class AgentRegistrationTokenMetadata:
             raise ValueError("Token is not a agent registration token")
         return cls(
             comment=token.details.comment,
+            host_name=token.details.host_name,
             issued_at=token.issued_at,
             expires_at=token.valid_until,
         )
@@ -49,6 +59,7 @@ class AgentRegistrationTokenModel(AgentRegistrationTokenMetadata):
         return cls(
             token_id=token.token_id,
             comment=base.comment,
+            host_name=base.host_name,
             issued_at=base.issued_at,
             expires_at=base.expires_at,
         )
@@ -72,3 +83,7 @@ class CreateAgentRegistrationToken:
         example="2025-12-31T23:59:59Z",
         default_factory=lambda: dt.datetime.now(dt.UTC) + relativedelta(months=1),
     )
+    host: Annotated[
+        Host,
+        TypedPlainValidator(str, HostConverter().host),
+    ] = api_field(description="The name of the host the token should be issued for")

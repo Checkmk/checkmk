@@ -8,11 +8,12 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Final, Literal, NewType
+from typing import Annotated, Final, Literal, NewType
 
 from dateutil.relativedelta import relativedelta
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, PlainValidator, RootModel, WithJsonSchema
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import AnnotatedUserId
@@ -56,6 +57,11 @@ class DashboardToken(BaseModel):
 
 class AgentRegistrationToken(BaseModel):
     type_: TokenType = "agent_registration"
+    host_name: Annotated[
+        HostName,
+        PlainValidator(HostName),
+        WithJsonSchema({"type": "string"}, mode="serialization"),
+    ]
     comment: str = ""
 
 

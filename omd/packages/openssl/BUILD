@@ -5,6 +5,8 @@ load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_attributes", "pkg_
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:binreplace_version_from_flag.bzl", "binreplace_version_from_flag")
 
+exports_files(["skel.permissions"])
+
 bin_paths = [
     "bin/c_rehash",
     "bin/openssl",

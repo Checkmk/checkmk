@@ -157,7 +157,10 @@ edition_skel_permissions = {
         "//omd/packages/pnp4nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/redis:skel.permissions",
+        "//omd/packages/rrdtool:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
+        "//omd/packages/openssl:skel.permissions",
+        "//omd/packages/perl-modules:skel.permissions",
     ],
     "community": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -170,7 +173,10 @@ edition_skel_permissions = {
         "//omd/packages/pnp4nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/redis:skel.permissions",
+        "//omd/packages/rrdtool:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
+        "//omd/packages/openssl:skel.permissions",
+        "//omd/packages/perl-modules:skel.permissions",
     ],
     "pro": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -188,7 +194,10 @@ edition_skel_permissions = {
         "//omd/packages/pnp4nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/redis:skel.permissions",
+        "//omd/packages/rrdtool:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
+        "//omd/packages/openssl:skel.permissions",
+        "//omd/packages/perl-modules:skel.permissions",
     ],
     "ultimate": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -210,7 +219,10 @@ edition_skel_permissions = {
         "//omd/packages/pnp4nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/redis:skel.permissions",
+        "//omd/packages/rrdtool:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
+        "//omd/packages/openssl:skel.permissions",
+        "//omd/packages/perl-modules:skel.permissions",
     ],
     "ultimatemt": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -232,6 +244,9 @@ edition_skel_permissions = {
         "//omd/packages/pnp4nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/redis:skel.permissions",
+        "//omd/packages/rrdtool:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
+        "//omd/packages/openssl:skel.permissions",
+        "//omd/packages/perl-modules:skel.permissions",
     ],
 }

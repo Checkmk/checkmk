@@ -243,6 +243,7 @@ pkg_files(
         ":share_doc_check-mk",
         ":share_doc_check-mk_agents",
         ":share_doc_check-mk_documentation",
+        ":skel_permissions_pkg_" + edition,
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
@@ -341,6 +342,19 @@ pkg_files(
     outs = ["skel.permissions_" + edition],
     cmd = "cat $(SRCS) > $@",
     tags = ["manual"],
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
+[pkg_files(
+    name = "skel_permissions_pkg_" + edition,
+    srcs = [":skel_permissions_" + edition],
+    prefix = "share/omd",
+    renames = {"skel_permissions_" + edition: "skel.permissions"},
 ) for edition in [
     "community",
     "ultimate",

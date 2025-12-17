@@ -410,6 +410,7 @@ onMounted(async () => {
 .cmk-div-activation-result-container {
   position: relative;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .cmk-div-activation-result {

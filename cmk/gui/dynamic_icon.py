@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from pathlib import Path
+
 from cmk.gui.theme import Theme
 from cmk.gui.type_defs import DynamicIcon
 from cmk.shared_typing import icon as st
@@ -21,15 +23,24 @@ def resolve_icon_name(icon: DynamicIcon, theme: Theme) -> st.DynamicIcon:
         icon_name = icon
         emblem_name = None
 
-    icon_resolved = theme.detect_icon_path(icon_name, "icon_")
-
     icon_result: st.DefaultIcon | st.UserIcon
-    if icon_resolved.startswith("themes/"):
-        icon_result = st.DefaultIcon(id=icon_name.replace("_", "-"))
-    elif icon_resolved.startswith("images/"):
-        icon_result = st.UserIcon(id=icon_name, path=icon_resolved)
+
+    if icon_name.startswith("themes/"):
+        if Path(icon_name).name.startswith("emblem"):
+            # this is a hack for being able to show emblem icons in the valuespec icon selector
+            icon_id = Path(icon_name).stem
+            icon_result = st.UserIcon(id=icon_id, path=str(icon_name))
+        else:
+            raise RuntimeError("only emblem icons are allowed to use paths as icon name.")
     else:
-        return st.DefaultIcon(id="missing")
+        icon_resolved = theme.detect_icon_path(icon_name, "icon_")
+
+        if icon_resolved.startswith("themes/"):
+            icon_result = st.DefaultIcon(id=icon_name.replace("_", "-"))
+        elif icon_resolved.startswith("images/"):
+            icon_result = st.UserIcon(id=icon_name, path=icon_resolved)
+        else:
+            return st.DefaultIcon(id="missing")
 
     if emblem_name:
         # we don't have to solve the emblem name in any special way,

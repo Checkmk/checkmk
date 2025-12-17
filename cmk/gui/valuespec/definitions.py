@@ -7770,7 +7770,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             icon = self._empty_img
 
         if id_.endswith("_emblem_img"):
-            icon_tag = html.render_static_icon(StaticIcon(IconNames[icon]), title=title, id_=id_)
+            icon_tag = html.render_icon(DynamicIconName(icon), title=title, id_=id_)
             html.write_text_permissive(" + ")
         else:
             icon_tag = html.render_icon(DynamicIconName(icon), title=title, id_=id_)

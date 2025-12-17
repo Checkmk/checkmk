@@ -3,56 +3,64 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_DATADOMAIN
 
-check_info = {}
+
+def discover_emc_datadomain_nvbat(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=f"{line[0]}-{line[1]}")
 
 
-def inventory_emc_datadomain_nvbat(info):
-    inventory = []
-    for line in info:
-        item = line[0] + "-" + line[1]
-        inventory.append((item, None))
-    return inventory
-
-
-def check_emc_datadomain_nvbat(item, _no_params, info):
+def check_emc_datadomain_nvbat(item: str, section: StringTable) -> CheckResult:
     state_table = {
-        "0": ("OK", 0),
-        "1": ("Disabled", 1),
-        "2": ("Discharged", 2),
-        "3": ("Softdisabled", 1),
+        "0": ("OK", State.OK),
+        "1": ("Disabled", State.WARN),
+        "2": ("Discharged", State.CRIT),
+        "3": ("Softdisabled", State.WARN),
     }
-    for line in info:
-        if item == line[0] + "-" + line[1]:
+    for line in section:
+        if item == f"{line[0]}-{line[1]}":
             dev_charge = line[3]
             dev_state = line[2]
-            dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
-            dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
-            infotext = f"Status {dev_state_str} Charge Level {dev_charge}%"
-            perfdata = [("battery_capacity", dev_charge + "%")]
-            return dev_state_rc, infotext, perfdata
-    return None
+            dev_state_str, dev_state_rc = state_table.get(dev_state, ("Unknown", State.UNKNOWN))
+            yield Result(
+                state=dev_state_rc, summary=f"Status {dev_state_str} Charge Level {dev_charge}%"
+            )
+            yield Metric("battery_capacity", float(dev_charge))
+            return
 
 
 def parse_emc_datadomain_nvbat(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["emc_datadomain_nvbat"] = LegacyCheckDefinition(
+snmp_section_emc_datadomain_nvbat = SimpleSNMPSection(
     name="emc_datadomain_nvbat",
-    parse_function=parse_emc_datadomain_nvbat,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.2.3.1.1",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_emc_datadomain_nvbat,
+)
+
+
+check_plugin_emc_datadomain_nvbat = CheckPlugin(
+    name="emc_datadomain_nvbat",
     service_name="NVRAM Battery %s",
-    discovery_function=inventory_emc_datadomain_nvbat,
+    discovery_function=discover_emc_datadomain_nvbat,
     check_function=check_emc_datadomain_nvbat,
 )

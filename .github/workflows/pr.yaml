@@ -12,7 +12,7 @@ on: [push, pull_request]
 
 jobs:
     testing:
-        runs-on: ubuntu-24.04
+        runs-on: ${{ matrix.os }}
         env:
             PYTHONWARNINGS: ignore:DeprecationWarning
             # Avoid falling back to our internal bazel remote cache on github actions
@@ -21,6 +21,7 @@ jobs:
             EDITION: community
         strategy:
             matrix:
+                os: [ubuntu-24.04]
                 include:
                     - name: Bandit tests
                       target: test-bandit
@@ -68,7 +69,7 @@ jobs:
             - name: Cache uv
               uses: actions/cache@v3
               with:
-                  key: uv-$ImageOS-${{ hashFiles('requirements_all_lock.txt') }}
+                  key: uv-${{ matrix.os }}-${{ hashFiles('requirements_all_lock.txt') }}
                   path: ${{ env.UV_CACHE_DIR  }}
             - name: Cache bazelisk
               uses: actions/cache@v3
@@ -79,11 +80,11 @@ jobs:
             - name: Cache bazel
               uses: actions/cache@v3
               with:
-                  key: $ImageOS-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE.bazel') }}
+                  key: ${{ matrix.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE.bazel') }}
                   path: |
                       ~/.cache/bazel
                   restore-keys: |
-                      $ImageOS-bazel-
+                      ${{ matrix.os }}-bazel-
             - name: Setup Environment
               run: |
                   # ksh: Needed for some "unit test" (test_mk_errpt_aix).

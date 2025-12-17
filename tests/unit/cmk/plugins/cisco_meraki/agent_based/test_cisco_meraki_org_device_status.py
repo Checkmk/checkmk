@@ -109,6 +109,18 @@ def test_check_device_status_ps() -> None:
     assert value == expected
 
 
+def test_check_device_status_ps_not_powering() -> None:
+    device_status = _RawDevicesStatusFactory.build()
+    device_status["components"]["powerSupplies"][0].update({"slot": 1, "status": "off"})
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+
+    value = list(check_device_status_ps("1", {}, section))[0]
+    expected = Result(state=State.WARN, summary="Status: off")
+
+    assert value == expected
+
+
 def test_inventory_power_supplies() -> None:
     device_status = _RawDevicesStatusFactory.build(
         components={

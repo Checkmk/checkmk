@@ -241,7 +241,7 @@ def _validate_graph_template(value: str) -> str:
     except ValueError as exc:
         original_exception = exc
 
-    if value.removeprefix("METRIC_") != value:
+    if value.startswith("METRIC_"):
         # NOTE: currently no way to easily validate metrics, especially without host/service info
         return value
 
@@ -377,7 +377,7 @@ class PerformanceGraphContent(_BaseGraphContent):
         description="Displays a performance graph of a host or service."
     )
     source: (
-        Annotated[str, AfterValidator(RegistryConverter(graphs_from_api).validate)]
+        Annotated[str, AfterValidator(_validate_graph_template)]
         | Annotated[int, Ge(1), AfterValidator(_only_str_on_input)]
     ) = api_field(description="Graph id or number of the performance graph.")
 

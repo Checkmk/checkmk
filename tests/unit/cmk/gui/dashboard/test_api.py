@@ -424,7 +424,7 @@ class TestPerformanceGraphContent:
         )
         assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
         assert resp.json["fields"][
-            "body.widgets.test_widget.content.performance_graph.source.function-after[validate(), str]"
+            "body.widgets.test_widget.content.performance_graph.source.function-after[_validate_graph_template(), str]"
         ]["msg"].startswith(
             "Value error, Value 'non_existent_source' is not allowed, valid options are:"
         )

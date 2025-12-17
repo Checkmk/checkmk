@@ -9,6 +9,7 @@ import urllib.parse
 from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -22,8 +23,6 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     Proxy,
     ProxySchema,
-    SingleChoice,
-    SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
@@ -103,8 +102,8 @@ def recompose(
         )
 
     global_proxies = config_domains.ConfigDomainCore().load().get("http_proxies", {}).values()
-    global_proxy_choices: list[SingleChoiceElement] = [
-        SingleChoiceElement(
+    global_proxy_choices: list[SingleChoiceElementExtended[str]] = [
+        SingleChoiceElementExtended(
             name=p["ident"],
             title=Title("%s") % p["title"],
         )
@@ -140,7 +139,7 @@ def recompose(
         CascadingSingleChoiceElement(
             name="global_",
             title=Title("Globally configured proxy"),
-            parameter_form=SingleChoice(
+            parameter_form=SingleChoiceExtended(
                 elements=global_proxy_choices,
                 no_elements_text=Message("There are no elements defined for this selection yet."),
             ),

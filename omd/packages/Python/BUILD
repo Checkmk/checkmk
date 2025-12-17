@@ -201,7 +201,7 @@ string_replace(
     },
     replace_pattern = "/replace-me",
     tags = ["manual"],
-    value = "/omd/versions/{cmk_version}.{cmk_edition}",
+    value = "/opt/omd/versions/{cmk_version}.{cmk_edition}",
 )
 
 pkg_files(

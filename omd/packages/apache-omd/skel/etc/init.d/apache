@@ -34,9 +34,9 @@ apache_bin() {
 # If you change this, you also have to change etc/apache/php-wrapper
 php_cgi_bin() {
     if [ -e /usr/bin/php5-cgi ]; then
-        echo /usr/bin/php5-cgi
+        echo php5-cgi
     elif [ -e /usr/bin/php-cgi ]; then
-        echo /usr/bin/php-cgi
+        echo php-cgi
     else
         echo "ERROR: Failed to locate php binary"
         exit 1

@@ -37,16 +37,26 @@ pkg_files(
 
 # SUP-10161: our openssl is incompatible with some system executables on various sles15sp*
 # SUP-26565: Getting an exception error when baking agent almalinux-9+
+# SUP-26879: Wrap other tools commonly used by users that require linking to the system openssl
 # etc.
 WRAPPED_EXECUTABLES = [
-    "ssh",
-    "scp",
-    "pdftoppm",
     "curl",
-    "zypper",
-    "rpmbuild",
+    "dig",
+    "host",
+    "nc",
+    "nmap",
     "nslookup",
+    "pdftoppm",
+    "php",
+    "php-cgi",
+    "php5",
+    "php5-cgi",
+    "resolvectl",
+    "rpmbuild",
+    "scp",
+    "ssh",
     "systemctl",
+    "zypper",
 ]
 
 [pkg_files(

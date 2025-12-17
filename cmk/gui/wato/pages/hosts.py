@@ -515,7 +515,6 @@ class ModeEditHost(ABCHostMode):
         super().ensure_permissions()
         self._host.permissions.need_permission("read")
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, host: str) -> str: ...

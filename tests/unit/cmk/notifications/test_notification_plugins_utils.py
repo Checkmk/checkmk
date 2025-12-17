@@ -562,7 +562,6 @@ class RequestsSessionMock:
 
     def send(self, request: object, timeout: int) -> ResponseMock:
         if self.side_effect:
-            # pylint thinks this could be None here but it cannot...
             raise self.side_effect
         return ResponseMock(self.data)
 

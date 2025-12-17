@@ -2648,7 +2648,6 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditUser
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, user: str) -> str: ...

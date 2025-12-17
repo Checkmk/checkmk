@@ -37,8 +37,6 @@ except ImportError as e:
 
 
 def connect():
-    # Fix pylint issues in case MySQLdb is not present
-
     try:
         return MySQLdb.connect(
             host="localhost",

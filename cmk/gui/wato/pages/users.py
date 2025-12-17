@@ -756,7 +756,6 @@ class ModeEditUser(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeUsers
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, edit: str) -> str: ...

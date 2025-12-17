@@ -1438,8 +1438,6 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     @abc.abstractmethod
     def _init_folder(self) -> Folder:
-        # TODO: Needed to make pylint know the correct type of the return value.
-        # Will be cleaned up in future when typing is established
         return folder_tree().root_folder()
 
     @abc.abstractmethod

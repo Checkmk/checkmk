@@ -2269,7 +2269,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, rule_pack: str) -> str: ...

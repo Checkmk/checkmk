@@ -287,7 +287,6 @@ class ModeTags(ABCTagMode):
                 flash(message)
         return redirect(makeuri(request, [], delvars=["_del_aux"]))
 
-    # Mypy wants the explicit return, pylint does not like it.
     def _move_tag_group(self, *, pprint_value: bool, use_git: bool) -> ActionResult:
         move_nr = request.get_integer_input_mandatory("_move")
         move_to = request.get_integer_input_mandatory("_index")

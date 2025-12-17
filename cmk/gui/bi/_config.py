@@ -692,7 +692,6 @@ class ModeBIRules(ABCBIMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, pack: str) -> str: ...
@@ -2074,7 +2073,6 @@ class BIModeAggregations(ABCBIMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, pack: str) -> str: ...

@@ -78,9 +78,6 @@ def _file_list(os_type: _OsType) -> list[File]:
         case _OsType.lnx:
             return _lin_file_list()
 
-    # the only way to satisfy pylint, which is not smart enough to support match correctly
-    return []
-
 
 def _main_dir(os_type: _OsType) -> str:
     return (

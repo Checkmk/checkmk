@@ -7,7 +7,6 @@ checks and tells the user what could be improved."""
 
 # mypy: disable-error-code="no-any-return"
 
-# See https://github.com/pylint-dev/pylint/issues/3488
 from __future__ import annotations
 
 import dataclasses

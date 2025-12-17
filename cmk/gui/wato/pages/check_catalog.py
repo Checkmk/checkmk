@@ -226,7 +226,6 @@ class ModeCheckPluginTopic(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCheckPlugins
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, topic: str) -> str: ...

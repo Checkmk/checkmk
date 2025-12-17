@@ -680,7 +680,6 @@ class ModeRulesetGroup(ABCRulesetMode):
     def name(cls) -> str:
         return "rulesets"
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, group: str, host: str, item: str, service: str) -> str: ...
@@ -899,7 +898,6 @@ class ModeEditRuleset(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRulesetGroup
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, varname: str) -> str: ...

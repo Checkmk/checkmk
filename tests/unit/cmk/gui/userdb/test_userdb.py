@@ -14,8 +14,6 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.ccc.version
-import cmk.gui.userdb._user_attribute._registry
-import cmk.gui.userdb.session  # pylint: disable-unused-import
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto import password_hashing

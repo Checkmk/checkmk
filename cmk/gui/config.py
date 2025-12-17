@@ -229,7 +229,7 @@ def make_config_object(raw_config: dict[str, Any]) -> Config:
 
     In case there are some custom extensions installed which introduce new config variables, we make
     us compatible by creating a dynamic class which makes the Config class accept the required
-    values. Since it is dynamic, pylint / mypy will complain about call sites accessing these config
+    values. Since it is dynamic, mypy will complain about call sites accessing these config
     variables.
     """
     default_keys = {f.name for f in fields(Config())}

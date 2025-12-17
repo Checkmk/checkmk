@@ -183,7 +183,6 @@ class ModeEditSite(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeDistributedMonitoring
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, site: str) -> str: ...
@@ -662,7 +661,6 @@ class ModeEditBrokerConnection(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeDistributedMonitoring
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, site: str) -> str: ...
@@ -1603,7 +1601,6 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSite
 
-    # pylint does not understand this overloading
     @overload
     @classmethod
     def mode_url(cls, *, site: str) -> str: ...

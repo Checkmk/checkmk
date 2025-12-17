@@ -153,11 +153,9 @@ class IndexBuilder:
 
         with self._redis_client.pipeline() as pipeline:
             self._add_language_independent_item_generators_to_redis(
-                iter(  # to make pylint happy
-                    filter(
-                        lambda match_item_gen: not match_item_gen.is_localization_dependent,
-                        match_item_generators,
-                    )
+                filter(
+                    lambda match_item_gen: not match_item_gen.is_localization_dependent,
+                    match_item_generators,
                 ),
                 pipeline,
                 user_permissions,

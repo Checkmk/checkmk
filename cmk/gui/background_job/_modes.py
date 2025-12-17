@@ -111,7 +111,6 @@ class ModeBackgroundJobsOverview(WatoMode):
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
         job_manager.show_status_of_job_classes(job_registry.values(), job_details_back_url=back_url)
 
-    # Mypy requires the explicit return, pylint does not like it.
     @override
     def action(self, config: Config) -> ActionResult:
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())

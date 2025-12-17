@@ -2195,7 +2195,7 @@ class StatusServer(ECServerThread):
                     response = self.handle_replicate(query.method_arg, client_ip)
                 elif isinstance(query, QueryCOMMAND):
                     self.handle_command_request(query.method_arg, allow_commands)
-                    response = None  # pylint and mypy are braindead and don't understand that None is a value
+                    response = None
                 else:
                     raise NotImplementedError  # can never happen
 

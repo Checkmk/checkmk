@@ -1194,8 +1194,6 @@ def _unpack_operator(v: HostOrServiceConditions) -> ApiOperator:
     """
     if isinstance(v, dict):
         _key = next(iter(v.keys()))
-        # Thank you pylint, but these things need to be returned like this,
-        # because otherwise mypy won't recognize the Literal values.
         if _key == "$ne":
             return "is_not"
         elif _key == "$or":

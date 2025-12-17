@@ -105,7 +105,6 @@ def _fetch_certificate_chain_verify_results(
     with contextlib.closing(
         SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))
     ) as sock:
-        # pylint does not get the object type of sock right
         sock.connect(address)
         sock.do_handshake()
         certificate_store = sock.get_context().get_cert_store()

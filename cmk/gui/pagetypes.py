@@ -245,7 +245,7 @@ class Base(abc.ABC, Generic[_T_BaseConfig]):
     # "add_to"       : Text like "Add to foo bar..."
     # TODO: Refactor this to different indepentent class methods. For example
     # the "add_to" phrase is not relevant for non container elements. In the
-    # moment we use dedicated methods, wrong usage will be found by pylint.
+    # moment we use dedicated methods, wrong usage will be found by linters.
     @classmethod
     def phrase(cls, phrase: PagetypePhrase) -> str:
         return _("MISSING '%s'") % phrase

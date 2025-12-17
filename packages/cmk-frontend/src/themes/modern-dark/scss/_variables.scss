@@ -214,7 +214,7 @@ $ntop-protocol-painter-padding-top: 4px;
 // The main dashboard shows the hosts and services stats dashlets right next to the total host and
 // service problems graphs. Therefore, we should keep the colors in sync.
 // metrics counterpart: cmk_hosts_down, cmk_services_critical
-$hexagon-critical-color: $color-dark-red-40;
+$hexagon-critical-color: $color-dark-red-50;
 // metrics counterpart: cmk_hosts_unreachable, cmk_services_unknown
 $hexagon-unknown-color: $color-orange-50;
 // metrics counterpart: cmk_hosts_in_downtime, cmk_services_in_downtime

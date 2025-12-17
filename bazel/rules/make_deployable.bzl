@@ -97,5 +97,6 @@ string_replace = rule(
         "replace_pattern": attr.string(),
         "value": attr.string(),
         "replace_labels": attr.string_keyed_label_dict(mandatory = True),
+        "strip_prefix": attr.string(default = "", mandatory = False),
     },
 )

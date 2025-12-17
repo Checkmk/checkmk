@@ -1,7 +1,7 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
-load("//bazel/rules:make_deployable.bzl", "make_deployable_dir")
+load("//bazel/rules:make_deployable.bzl", "make_deployable_dir", "string_replace")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
 
 exports_files([
@@ -191,12 +191,25 @@ exclude_from_filegroup(
     tags = ["manual"],
 )
 
+string_replace(
+    name = "python_rest_with_version",
+    src = ":python_rest",
+    filepattern = ["_sysconfigdata__linux_x86_64-linux-gnu.py"],
+    replace_labels = {
+        "cmk_version": "@cmk//version",
+        "cmk_edition": "@cmk//edition",
+    },
+    replace_pattern = "/replace-me",
+    tags = ["manual"],
+    value = "/omd/versions/{cmk_version}.{cmk_edition}",
+)
+
 pkg_files(
     name = "python_rest_pkg",
     srcs = [
-        ":python_rest",
+        ":python_rest_with_version",
     ],
-    strip_prefix = "rest",
+    strip_prefix = strip_prefix.from_pkg("python_rest_with_version"),
     tags = ["manual"],
 )
 

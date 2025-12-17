@@ -263,10 +263,10 @@ def parse_arguments(argv):
         parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for Jira login"
     )
     parser.add_argument(
-        "--project-workflows-key", nargs=1, action="append", help="The full project name"
+        "--project-workflows-project", nargs=1, action="append", help="The full project name"
     )
     parser.add_argument(
-        "--project-workflows-values",
+        "--project-workflows-workflows",
         nargs="+",
         action="append",
         help="The names of workflows of the given project",

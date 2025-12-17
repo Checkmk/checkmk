@@ -7,8 +7,9 @@ import json
 
 from polyfactory.factories import TypedDictFactory
 
-from cmk.agent_based.v2 import Attributes
+from cmk.agent_based.v2 import Attributes, HostLabel
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_info import (
+    host_label_meraki_device_info,
     inventory_device_info,
     parse_device_info,
 )
@@ -17,6 +18,30 @@ from cmk.plugins.cisco_meraki.lib.schema import Device
 
 class _DeviceFactory(TypedDictFactory[Device]):
     __check_model__ = False
+
+
+def test_host_label_meraki_device_info() -> None:
+    device = _DeviceFactory.build(
+        name="My AP",
+        productType="appliance",
+        organisation_id="123",
+        organisation_name="org-name",
+        networkId="N_24329156",
+    )
+    string_table = [[f"[{json.dumps(device)}]"]]
+    section = parse_device_info(string_table)
+    assert section
+
+    value = list(host_label_meraki_device_info(section))
+    expected = [
+        HostLabel("cmk/meraki", "yes"),
+        HostLabel("cmk/meraki/device_type", "appliance"),
+        HostLabel("cmk/meraki/net_id", "N_24329156"),
+        HostLabel("cmk/meraki/org_id", "123"),
+        HostLabel("cmk/meraki/org_name", "org-name"),
+    ]
+
+    assert value == expected
 
 
 def test_inventory_device_info() -> None:

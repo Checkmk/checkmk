@@ -343,8 +343,8 @@ Context "mk_inventory.ps1 Tests" {
 
             $output = GetSoftwareFromRegistry
 
-            # The output should contain the fields joined by ASCII 31
-            $sep = [char]31
+            # The output should contain the fields joined by ASCII 0
+            $sep = [char]0
             $expected = "Git${sep}The Git Development Community${sep}C:\Program Files\Git${sep}Git_is1${sep}2.47.1.2${sep}20250206${sep}${sep}"
             $output | Should -Contain $expected
         }

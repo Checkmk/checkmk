@@ -322,7 +322,12 @@ function GetSoftwareFromRegistry {
                     }
 
                     if ($null -ne $value -and $value -is [string]) {
-                        $values += $value
+                        $values += $value.Replace(
+                            # We have seen output that contains ASCII control characters.
+                            # If we don't replace them, they will break the parsing later on.
+                            # Replacing NUL with the empty string does not affect the output shown in the HW/SW inventory, since NUL is anyway rendered as the empty string.
+                            "$([char]0)", ""
+                        )
                         if ($var -ne "PSChildName") {
                             $booleanContent = $true
                         }
@@ -333,7 +338,7 @@ function GetSoftwareFromRegistry {
                 }
 
                 if ($booleanContent) {
-                    Write-Output ($values -join "$([char]31)")
+                    Write-Output ($values -join "$([char]0)")
                 }
             }
         }
@@ -432,7 +437,7 @@ StartSection "win_wmi_updates" 44 $timeUntil
 GetUpdates
 
 # Search Registry
-StartSection "win_reg_uninstall" 31 $timeUntil
+StartSection "win_reg_uninstall" 0 $timeUntil
 GetSoftwareFromRegistry
 
 # Search exes

@@ -58,15 +58,8 @@ class OrganizationsClient:
             log.LOGGER.debug(f"Get API response codes {id}: {e}")
             return []
 
-    def get_devices(self, id: str, name: str, /) -> dict[str, schema.Device]:
-        return {
-            raw_device["serial"]: schema.Device(
-                organisation_id=id,
-                organisation_name=name,
-                **raw_device,
-            )
-            for raw_device in self._sdk.getOrganizationDevices(id, total_pages="all")
-        }
+    def get_devices(self, id: str, /) -> Sequence[schema.RawDevice]:
+        return self._sdk.getOrganizationDevices(id, total_pages="all")
 
     def get_device_statuses(self, id: str, /) -> Sequence[schema.RawDevicesStatus]:
         try:

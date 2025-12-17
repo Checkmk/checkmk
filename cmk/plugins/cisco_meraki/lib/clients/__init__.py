@@ -57,10 +57,10 @@ class MerakiClient:
     def get_appliance_performance(self, serial: str) -> Sequence[schema.RawAppliancePerformance]:
         return self._appliance_client.get_appliance_performance(serial)
 
-    def get_devices(self, id: str, name: str) -> dict[str, schema.Device]:
+    def get_devices(self, id: str) -> Sequence[schema.RawDevice]:
         fn = self._org_client.get_devices
         fetch = fn if self._no_cache else self._cache.devices(fn)
-        return fetch(id, name)
+        return fetch(id)
 
     def get_devices_statuses(self, id: str) -> Sequence[schema.RawDevicesStatus]:
         fn = self._org_client.get_device_statuses

@@ -118,10 +118,17 @@ class MerakiOrganisation:
                     data=licenses_overview,
                 )
 
+        devices_by_serial = {}
+
         if self.config.required.devices:
-            devices_by_serial = self.client.get_devices(self.id, self.name)
-        else:
-            devices_by_serial = {}
+            for raw_device in self.client.get_devices(self.id):
+                serial = raw_device["serial"]
+
+                devices_by_serial[serial] = Device(
+                    organisation_id=self.id,
+                    organisation_name=self.name,
+                    **raw_device,
+                )
 
         # If no devices are available for organization, it doesn't make sense to continue.
         if not devices_by_serial:

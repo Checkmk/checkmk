@@ -71,7 +71,7 @@ type _CacheDecorator[**P, R] = Callable[[Callable[P, R]], Callable[P, R]]
 class _CacheConfig:
     appliance_uplinks: _CacheDecorator[[str], Sequence[schema.RawUplinkStatuses]]
     appliance_vpns: _CacheDecorator[[str], Sequence[schema.RawUplinkVpnStatuses]]
-    devices: _CacheDecorator[[str, str], dict[str, schema.Device]]
+    devices: _CacheDecorator[[str], Sequence[schema.RawDevice]]
     device_statuses: _CacheDecorator[[str], Sequence[schema.RawDevicesStatus]]
     device_uplinks_info: _CacheDecorator[[str], Sequence[schema.RawDeviceUplinksAddress]]
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]

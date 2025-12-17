@@ -154,11 +154,11 @@ def check_wireless_ethernet_statuses(
     power_mode_state = 0 if port.power.mode == "full" else params["state_not_on_fill_power"]
     yield Result(state=State(power_mode_state), notice=f"Power mode: {port.power.mode}")
 
-    power_ac_summary = "AC: connected" if port.power.ac.is_connected else "AC: not connected"
-    yield Result(state=State.OK, notice=power_ac_summary)
+    power_ac_summary = "connected" if port.power.ac.is_connected else "not connected"
+    yield Result(state=State.OK, notice=f"AC: {power_ac_summary}")
 
-    power_poe_summary = "PoE: connected" if port.power.poe.is_connected else "PoE: not connected"
-    yield Result(state=State.OK, notice=power_poe_summary)
+    power_poe_summary = "connected" if port.power.poe.is_connected else "not connected"
+    yield Result(state=State.OK, notice=f"PoE: {power_poe_summary}")
 
     yield Result(state=State.OK, notice=f"PoE standard: {port.poe}")
 

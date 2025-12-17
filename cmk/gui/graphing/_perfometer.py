@@ -16,7 +16,7 @@ from typing import assert_never, Self
 
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.gui.color import parse_color_from_api
+from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.log import logger
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.view_utils import get_perfometer_bg_color
@@ -195,14 +195,14 @@ def _evaluate_quantity(
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
                 translated_metric.unit_spec,
-                "#ffff00",
+                Color.WARN.fallback,
                 translated_metric.scalar["warn"],
             )
         case metrics_api.CriticalOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
                 translated_metric.unit_spec,
-                "#ff0000",
+                Color.CRIT.fallback,
                 translated_metric.scalar["crit"],
             )
         case metrics_api.MinimumOf():

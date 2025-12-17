@@ -22,7 +22,7 @@ from pydantic import (
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.gui.color import scalar_colors
+from cmk.gui.color import Color
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -61,7 +61,7 @@ def compute_warn_crit_rules_from_translated_metric(
             HorizontalRule(
                 value=warn_value,
                 rendered_value=user_specific_unit.formatter.render(warn_value),
-                color=scalar_colors["warn"],
+                color=Color.WARN.fallback,
                 title=_("Warning"),
             )
         )
@@ -70,7 +70,7 @@ def compute_warn_crit_rules_from_translated_metric(
             HorizontalRule(
                 value=crit_value,
                 rendered_value=user_specific_unit.formatter.render(crit_value),
-                color=scalar_colors["crit"],
+                color=Color.CRIT.fallback,
                 title=_("Critical"),
             )
         )

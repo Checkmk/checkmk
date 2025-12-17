@@ -15,7 +15,7 @@ from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
-from cmk.gui.color import parse_color_from_api, scalar_colors
+from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
@@ -121,7 +121,7 @@ def _evaluate_quantity(
                         % get_metric_spec(quantity.metric_name, registered_metrics).title
                     ),
                     unit=result.ok.unit,
-                    color=scalar_colors["warn"],
+                    color=Color.WARN.fallback,
                     value=warn_value,
                 )
             )
@@ -153,7 +153,7 @@ def _evaluate_quantity(
                         % get_metric_spec(quantity.metric_name, registered_metrics).title
                     ),
                     unit=result.ok.unit,
-                    color=scalar_colors["crit"],
+                    color=Color.CRIT.fallback,
                     value=crit_value,
                 )
             )

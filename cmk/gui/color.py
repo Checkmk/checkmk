@@ -173,22 +173,6 @@ def _hex_color_to_rgb_color(color: str) -> tuple[int, int, int]:
         raise MKGeneralException(_("Invalid color specification '%s'") % color)
 
 
-# These colors are also used in the CSS stylesheets, do not change one without changing the other.
-MONITORING_STATUS_COLORS = {
-    "critical/down": _rgb_color_to_hex_color(255, 50, 50),
-    "unknown/unreachable": _rgb_color_to_hex_color(255, 136, 0),
-    "warning": _rgb_color_to_hex_color(255, 208, 0),
-    "in_downtime": _rgb_color_to_hex_color(60, 194, 255),
-    "on_down_host": _rgb_color_to_hex_color(16, 99, 176),
-    "ok/up": _rgb_color_to_hex_color(19, 211, 137),
-}
-
-scalar_colors = {
-    "warn": MONITORING_STATUS_COLORS["warning"],
-    "crit": MONITORING_STATUS_COLORS["critical/down"],
-}
-
-
 def get_palette_color_by_index(
     i: int,
     shading: Literal["a", "b"] = "a",
@@ -406,6 +390,9 @@ class Color(Enum):
     BLACK = ColorChoice(brand="#1e262e", fallback="#000000")
     # white.100
     WHITE = ColorChoice(brand="#ffffff", fallback="#ffffff")
+
+    WARN = ColorChoice(brand="#ffd000", fallback="#ffd000")
+    CRIT = ColorChoice(brand="#ff3232", fallback="#ff3232")
 
     @property
     def brand(self) -> str:

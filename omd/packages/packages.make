@@ -42,11 +42,6 @@ $(DEPS_INSTALL_BAZEL):
 	bazel run @zstd//:zstd_cli -- -d -o `pwd`/deps_install_$(EDITION).tar $(BAZEL_BIN)/omd/deps_install_$(EDITION).tar.zst
 	tar -C $(DESTDIR) -xf `pwd`/deps_install_$(EDITION).tar
 
-	#TODO: The following code should be executed by Bazel instead of make
-	# Fix sysconfigdata
-	$(SED) -i "s|/replace-me|$(OMD_ROOT)|g" \
-	    $(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/_sysconfigdata__linux_x86_64-linux-gnu.py
-
 	mkdir -p $(BUILD_HELPER_DIR)/
 	touch $@
 

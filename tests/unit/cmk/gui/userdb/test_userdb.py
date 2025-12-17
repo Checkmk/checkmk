@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -510,22 +510,6 @@ def test_create_session_id_is_correct_type() -> None:
 
 def test_create_session_id_changes() -> None:
     assert userdb.session.create_session_id() != userdb.session.create_session_id()
-
-
-def test_refresh_session_success(single_auth_request: SingleRequest) -> None:
-    user_id, old_session_info = single_auth_request()
-    session_valid = old_session_info.session_id
-
-    last_activity = old_session_info.last_activity
-
-    old_session_info.refresh(datetime.now() - timedelta(minutes=30))
-    assert old_session_info.last_activity < last_activity
-    userdb.session.save_session_infos(user_id, {session_valid: old_session_info})
-
-    new_session_info = load_session_infos(user_id)[session_valid]
-    new_session_info.refresh()
-    assert new_session_info.session_id == old_session_info.session_id
-    assert new_session_info.last_activity > old_session_info.last_activity
 
 
 def test_invalidate_session(single_auth_request: SingleRequest) -> None:

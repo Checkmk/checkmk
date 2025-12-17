@@ -10,7 +10,6 @@ from __future__ import annotations
 import uuid
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import (
     Annotated,
@@ -140,24 +139,6 @@ class SessionInfo:
         """Called when a user logged out"""
         self.auth_type = None
         self.logged_out = True
-
-    def refresh(self, now: datetime | None = None) -> None:
-        """Called on any user activity.
-
-        >>> now = datetime(2022, 1, 1, 0, 0, 0)
-        >>> info = SessionInfo(session_id="", started_at=0, last_activity=0)
-        >>> info.refresh(now)
-        >>> assert info.last_activity == int(now.timestamp())
-
-        Args:
-            now:
-
-        Returns:
-
-        """
-        if now is None:
-            now = datetime.now()
-        self.last_activity = int(now.timestamp())
 
 
 class LastLoginInfo(TypedDict, total=False):

@@ -50,6 +50,7 @@ from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
 from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
 from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
 from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
 from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
@@ -2508,7 +2509,31 @@ def test_render_text() -> None:
         style=lambda _: [LabelColorFromAPI.PINK],
     )
     assert _PaintText(text_field)(123, "world") == (
-        TDStyles(css_class="", text_align="left", background_color="", color="#ff64ff"),
+        TDStyles(css_class="", text_align="left", background_color="", color="#ec48b6"),
+        "hello world",
+    )
+
+
+def test_render_text_with_background_color() -> None:
+    text_field = TextFieldFromAPI(
+        TitleFromAPI("A title"),
+        render=lambda v: f"hello {v}",
+        style=lambda _: [BackgroundColorFromAPI.BLUE],
+    )
+    assert _PaintText(text_field)(123, "world") == (
+        TDStyles(css_class="", text_align="left", background_color="#28a2f3", color="#1e262e"),
+        "hello world",
+    )
+
+
+def test_render_text_with_background_and_text_color() -> None:
+    text_field = TextFieldFromAPI(
+        TitleFromAPI("A title"),
+        render=lambda v: f"hello {v}",
+        style=lambda _: [LabelColorFromAPI.PINK, BackgroundColorFromAPI.BLUE],
+    )
+    assert _PaintText(text_field)(123, "world") == (
+        TDStyles(css_class="", text_align="left", background_color="#28a2f3", color="#ec48b6"),
         "hello world",
     )
 

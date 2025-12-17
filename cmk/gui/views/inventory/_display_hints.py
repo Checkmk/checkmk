@@ -29,7 +29,7 @@ from typing import assert_never, Literal, TypeAlias
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui import inventory
-from cmk.gui.color import parse_color_from_api
+from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.inventory.filters import (
@@ -170,29 +170,44 @@ def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
     return _wrap
 
 
+def _set_text_color(bg_color: Color) -> Color:
+    if bg_color.name.startswith("LIGHT_"):
+        return Color.BLACK
+    if bg_color.name == "DARK_CYAN":
+        return Color.BLACK
+    if bg_color.name.startswith("DARK_"):
+        return Color.WHITE
+    if "RED" in bg_color.name:
+        return Color.WHITE
+    return Color.BLACK
+
+
 def _compute_td_styles(
     styles: Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI],
     default_alignment: AlignmentFromAPI,
 ) -> TDStyles:
-    alignments: list[Literal["left", "center", "right"]] = []
-    colors: dict[str, str] = {}
+    alignments = []
+    background_colors = []
+    text_colors = []
     for style in styles:
         match style:
             case AlignmentFromAPI() as alignment_from_api:
-                alignments.append(_parse_alignment_from_api(alignment_from_api))
+                alignments.append(alignment_from_api)
             case BackgroundColorFromAPI() as bg_color_from_api:
-                colors.setdefault(
-                    "background_color", parse_color_from_api(bg_color_from_api).fallback
-                )
+                background_colors.append(parse_color_from_api(bg_color_from_api))
             case LabelColorFromAPI() as label_color_from_api:
-                colors.setdefault("color", parse_color_from_api(label_color_from_api).fallback)
+                text_colors.append(parse_color_from_api(label_color_from_api))
             case other:
                 assert_never(other)
+    if text_colors:
+        color = text_colors[0].brand
+    else:
+        color = _set_text_color(background_colors[0]).brand if background_colors else ""
     return TDStyles(
         css_class="",
-        text_align=alignments[0] if alignments else _parse_alignment_from_api(default_alignment),
-        background_color=colors.get("background_color", ""),
-        color=colors.get("color", ""),
+        text_align=_parse_alignment_from_api(alignments[0] if alignments else default_alignment),
+        background_color=background_colors[0].brand if background_colors else "",
+        color=color,
     )
 
 

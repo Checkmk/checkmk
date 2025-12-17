@@ -7,7 +7,7 @@
 
 from typing import get_args
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk import fields
 from cmk.gui.fields import SiteField, Timestamp
 from cmk.gui.fields.utils import BaseSchema

@@ -25,7 +25,7 @@ def create_regex(
             MatchRegex(
                 regex=validate_pattern,
                 error_msg=error_message
-                or Message(f"Invalid regex pattern. Expected: {validate_pattern}"),  # pylint: disable=localization-checker
+                or (Message("Invalid regex pattern. Expected: %s") % validate_pattern),
             ),
         ]
         if validate_pattern

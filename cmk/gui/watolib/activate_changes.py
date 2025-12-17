@@ -52,7 +52,7 @@ from setproctitle import setthreadtitle
 from livestatus import BrokerConnections, SiteConfiguration, SiteConfigurations
 
 import cmk.bi.filesystem
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.gui.utils
 import cmk.gui.watolib.automations
 import cmk.gui.watolib.git

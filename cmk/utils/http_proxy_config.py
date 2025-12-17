@@ -12,7 +12,7 @@
 from collections.abc import Callable, Mapping
 from typing import Literal, NotRequired, TypedDict
 
-from cmk.utils.password_store import (  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.password_store import (  # astrein: disable=cmk-module-layer-violation
     extract_formspec_password,
 )
 

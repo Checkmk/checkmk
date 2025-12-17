@@ -50,7 +50,7 @@ from cmk.bi.type_defs import (
 from cmk.ccc import plugin_registry
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.submitters import (  # astrein: disable=cmk-module-layer-violation
     ServiceDetails,
     ServiceState,
 )

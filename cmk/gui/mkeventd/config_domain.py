@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Final, override
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.gui import sites

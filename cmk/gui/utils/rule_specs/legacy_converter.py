@@ -87,7 +87,7 @@ RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None
 RulespecGroupMonitoringAgentsWindowsAgent: type[RulespecSubGroup] | None
 
 try:
-    from cmk.gui.nonfree.pro.agent_bakery import (  # type: ignore[no-redef, import-not-found, import-untyped, unused-ignore]  # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.nonfree.pro.agent_bakery import (  # type: ignore[no-redef, import-not-found, import-untyped, unused-ignore]  # astrein: disable=cmk-module-layer-violation
         RulespecGroupMonitoringAgentsAgentPlugins,
         RulespecGroupMonitoringAgentsLinuxUnixAgent,
         RulespecGroupMonitoringAgentsWindowsAgent,

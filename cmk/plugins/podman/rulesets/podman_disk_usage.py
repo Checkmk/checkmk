@@ -36,7 +36,9 @@ def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:
         "total": DictElement(
             required=False,
             parameter_form=SimpleLevels(
-                title=Title(f"Total number of {property} upper levels"),  # pylint: disable=localization-checker
+                title=Title(  # astrein: disable=localization-checker
+                    f"Total number of {property} upper levels"
+                ),
                 form_spec_template=Integer(),
                 level_direction=LevelDirection.UPPER,
                 prefill_fixed_levels=InputHint((0, 0)),
@@ -45,7 +47,9 @@ def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:
         "active": DictElement(
             required=False,
             parameter_form=SimpleLevels(
-                title=Title(f"Total number of active {property} upper levels"),  # pylint: disable=localization-checker
+                title=Title(  # astrein: disable=localization-checker
+                    f"Total number of active {property} upper levels"
+                ),
                 form_spec_template=Integer(),
                 level_direction=LevelDirection.UPPER,
                 prefill_fixed_levels=InputHint((0, 0)),
@@ -67,7 +71,7 @@ def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:
     return DictElement(
         required=False,
         parameter_form=Dictionary(
-            title=Title(f"{property.capitalize()} "),  # pylint: disable=localization-checker
+            title=Title(f"{property.capitalize()} "),  # astrein: disable=localization-checker
             elements=elements,
         ),
     )

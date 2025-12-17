@@ -28,7 +28,9 @@ def recompose(form_spec: FormSpec[Any]) -> SingleChoiceExtended[Any]:
         elements=[
             SingleChoiceElementExtended(
                 name=timePeriodName,
-                title=Title(f"{timePeriodName} - {timePeriodSpec['alias']}"),  # pylint: disable=localization-checker
+                title=Title(  # astrein: disable=localization-checker
+                    f"{timePeriodName} - {timePeriodSpec['alias']}"
+                ),
             )
             for timePeriodName, timePeriodSpec in timeperiods.load_timeperiods().items()
         ],

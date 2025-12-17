@@ -18,7 +18,7 @@ from typing import override
 
 from livestatus import SiteConfigurations
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId

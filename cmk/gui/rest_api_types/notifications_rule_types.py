@@ -17,7 +17,7 @@ from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import cast, Literal, NotRequired, Required, TypedDict
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.watolib.tags import load_all_tag_config_read_only
 from cmk.utils import password_store
 from cmk.utils.notify_types import (

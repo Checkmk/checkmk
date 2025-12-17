@@ -12,7 +12,7 @@ from typing import get_args, Literal
 
 from livestatus import MultiSiteConnection, OnlySites
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
 from cmk.livestatus_client import ECChangeState, ECDelete, ECUpdate, LivestatusClient

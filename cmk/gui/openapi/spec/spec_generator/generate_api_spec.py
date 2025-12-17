@@ -94,7 +94,7 @@ def _import_community_endpoints() -> None:
 
 def _import_pro_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.nonfree.pro.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        from cmk.gui.nonfree.pro.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
             register as pro_registration,
         )
 
@@ -103,7 +103,7 @@ def _import_pro_endpoints() -> None:
 
 def _import_ultimate_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.nonfree.ultimate.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        from cmk.gui.nonfree.ultimate.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
             register as ultimate_registration,
         )
 
@@ -112,7 +112,7 @@ def _import_ultimate_endpoints() -> None:
 
 def _import_ultimatemt_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.nonfree.ultimatemt.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        from cmk.gui.nonfree.ultimatemt.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
             register as ultimatemt_registration,
         )
 

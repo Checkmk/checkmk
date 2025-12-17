@@ -20,7 +20,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
 from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
-from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
+from cmk.plugins.aws.constants import (  # astrein: disable=cmk-module-layer-violation
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
@@ -235,9 +235,11 @@ def _fs_elements_http_errors(
     return {
         "levels_http_%s_perc" % http_err_code: DictElement(
             parameter_form=TupleLevels(
-                title=Title(f"Upper percentual levels for HTTP {http_err_code.upper()} errors")  # pylint: disable=localization-checker
+                title=Title(  # astrein: disable=localization-checker
+                    f"Upper percentual levels for HTTP {http_err_code.upper()} errors"
+                )
                 + title_add(http_err_code),
-                help_text=Help(  # pylint: disable=localization-checker
+                help_text=Help(  # astrein: disable=localization-checker
                     f"Specify levels for HTTP {http_err_code.upper()} errors in percent "
                     "which refer to the total number of requests."
                 ),
@@ -761,7 +763,7 @@ def _vs_limits_inst_types() -> List:
             elements=[
                 CascadingSingleChoiceElementExtended(
                     name=inst_type,
-                    title=Title(inst_type),  # pylint: disable=localization-checker
+                    title=Title(inst_type),  # astrein: disable=localization-checker
                     parameter_form=fs_aws_limits(
                         Title("%s instances") % inst_type,
                         AWSEC2LimitsSpecial.get(inst_type, AWSEC2LimitsDefault)[0],

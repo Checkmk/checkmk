@@ -54,7 +54,7 @@ def _make_form() -> Dictionary:
                     elements=[
                         SingleChoiceElement(
                             name=state,
-                            title=Title(state),  # pylint: disable=localization-checker
+                            title=Title(state),  # astrein: disable=localization-checker
                         )
                         for state in sorted(ConnectionState)
                     ],

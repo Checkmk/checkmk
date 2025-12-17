@@ -100,7 +100,7 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.painter.v0.helpers as painter_helpers
     import cmk.gui.painter.v0.registry as gui_painter_registry
     import cmk.gui.painter.v1.helpers as painter_v1_helpers
-    import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.views as api_module  # astrein: disable=cmk-module-layer-violation
     from cmk.gui import (
         data_source,
         display_options,
@@ -108,7 +108,7 @@ def _register_pre_21_plugin_api() -> None:
         painter_options,
         visual_link,
     )
-    from cmk.gui.plugins.views import (  # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.plugins.views import (  # astrein: disable=cmk-module-layer-violation
         icons,
     )
 

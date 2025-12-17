@@ -55,9 +55,9 @@ def test_inline_suppression_support() -> None:
     repo_root = test_file.parent.parent.parent.parent.parent
 
     # Test code with suppressed and unsuppressed violations
-    source_code = """from cmk.base.config import something  # pylint: disable=cmk-module-layer-violation
+    source_code = """from cmk.base.config import something  # astrein: disable=cmk-module-layer-violation
 
-# pylint: disable=cmk-module-layer-violation
+# astrein: disable=cmk-module-layer-violation
 from cmk.gui.something import other
 
 from cmk.checkengine.plugins import Plugin

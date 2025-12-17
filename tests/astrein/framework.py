@@ -55,14 +55,14 @@ class ASTVisitorChecker(ABC, ast.NodeVisitor):
             return False
 
         current_line = self.source_lines[line_idx]
-        if f"pylint: disable={self.checker_id()}" in current_line:
+        if f"astrein: disable={self.checker_id()}" in current_line:
             return True
 
         if line_idx > 0:
             prev_line = self.source_lines[line_idx - 1]
             if (
                 prev_line.strip().startswith("#")
-                and f"pylint: disable={self.checker_id()}" in prev_line
+                and f"astrein: disable={self.checker_id()}" in prev_line
             ):
                 return True
 

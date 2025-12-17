@@ -23,11 +23,15 @@ def _simple_levels_element(property: str) -> DictElement:
     return DictElement(
         required=False,
         parameter_form=Dictionary(
-            title=Title(f"{property.capitalize()} Podman containers"),  # pylint: disable=localization-checker
+            title=Title(  # astrein: disable=localization-checker
+                f"{property.capitalize()} Podman containers"
+            ),
             elements={
                 "levels_lower": DictElement(
                     parameter_form=SimpleLevels(
-                        title=Title(f"Lower threshold on {property} number of Podman containers"),  # pylint: disable=localization-checker
+                        title=Title(  # astrein: disable=localization-checker
+                            f"Lower threshold on {property} number of Podman containers"
+                        ),
                         form_spec_template=Integer(),
                         level_direction=LevelDirection.LOWER,
                         prefill_fixed_levels=InputHint((0, 0)),
@@ -35,7 +39,9 @@ def _simple_levels_element(property: str) -> DictElement:
                 ),
                 "levels_upper": DictElement(
                     parameter_form=SimpleLevels(
-                        title=Title(f"Upper threshold on {property} number of Podman containers"),  # pylint: disable=localization-checker
+                        title=Title(  # astrein: disable=localization-checker
+                            f"Upper threshold on {property} number of Podman containers"
+                        ),
                         form_spec_template=Integer(),
                         level_direction=LevelDirection.UPPER,
                         prefill_fixed_levels=InputHint((0, 0)),

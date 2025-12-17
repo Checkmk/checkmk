@@ -114,8 +114,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.plugins.dashboard as api_module  # pylint: disable=cmk-module-layer-violation
-    import cmk.gui.plugins.dashboard.utils as plugin_utils  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.dashboard as api_module  # astrein: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.dashboard.utils as plugin_utils  # astrein: disable=cmk-module-layer-violation
 
     for name, val in (
         ("ABCFigureDashlet", ABCFigureDashlet),

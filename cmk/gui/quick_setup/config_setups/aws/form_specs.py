@@ -9,7 +9,7 @@ from collections.abc import Mapping
 
 from cmk.gui.form_specs.unstable.validators import HostAddress
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
-from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
+from cmk.plugins.aws.lib import aws_region_to_monitor  # astrein: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -67,7 +67,7 @@ def _formspec_aws_api_access() -> dict[str, DictElement]:
                                 ),
                                 *(
                                     SingleChoiceElement(
-                                        title=Title(  # pylint: disable=localization-checker
+                                        title=Title(  # astrein: disable=localization-checker
                                             region
                                         ),
                                         name=region.replace("-", "_"),
@@ -192,7 +192,7 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
                 elements=[
                     MultipleChoiceElement(
                         name=name.replace("-", "_"),
-                        title=Title(title),  # pylint: disable=localization-checker
+                        title=Title(title),  # astrein: disable=localization-checker
                     )
                     for name, title in aws_region_to_monitor()
                 ],
@@ -202,7 +202,7 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
                         max_value=max_regions,
                         error_msg=Message("Please select at least one or more regions to continue.")
                         if max_regions is None
-                        else Message(  # pylint: disable=localization-checker
+                        else Message(  # astrein: disable=localization-checker
                             f"Please select at least one and at most {max_regions} regions to continue"
                         ),
                     ),

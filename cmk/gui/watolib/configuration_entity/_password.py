@@ -114,7 +114,12 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                     title=Title("Members of the contact group:"),
                                     parameter_form=SingleChoice(
                                         elements=[
-                                            SingleChoiceElement(name=name, title=Title(title))  # pylint: disable=localization-checker
+                                            SingleChoiceElement(
+                                                name=name,
+                                                title=Title(  # astrein: disable=localization-checker
+                                                    title
+                                                ),
+                                            )
                                             for name, title in sorted_contact_group_choices(
                                                 only_own=True
                                             )
@@ -138,7 +143,10 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                 "other groups of users to make them able to use a password in checks."
                             ),
                             elements=[
-                                MultipleChoiceElement(name=name, title=Title(title))  # pylint: disable=localization-checker
+                                MultipleChoiceElement(
+                                    name=name,
+                                    title=Title(title),  # astrein: disable=localization-checker
+                                )
                                 for name, title in sorted_contact_group_choices(only_own=True)
                             ],
                         ),

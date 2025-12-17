@@ -13,7 +13,7 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
-from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers.snmp_backend import (  # astrein: disable=cmk-module-layer-violation
     ClassicSNMPBackend,
     StoredWalkSNMPBackend,
 )
@@ -27,7 +27,7 @@ from cmk.snmplib import (
 )
 
 if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
-    from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore] # astrein: disable=cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:

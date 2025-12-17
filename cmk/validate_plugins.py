@@ -15,33 +15,33 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
-from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
+from cmk.base.config import (  # astrein: disable=cmk-module-layer-violation
     load_all_pluginX,
 )
 from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.checkresults import (  # astrein: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
-from cmk.checkengine.plugin_backend import (  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.plugin_backend import (  # astrein: disable=cmk-module-layer-violation
     extract_known_discovery_rulesets,
 )
-from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation  # astrein: disable=cmk-module-layer-violation
     AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
     InventoryPluginName,
 )
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from cmk.gui import main_modules  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.form_specs import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui import main_modules  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.form_specs import (  # astrein: disable=cmk-module-layer-violation
     get_visitor,
     RawDiskData,
     VisitorOptions,
 )
-from cmk.gui.utils.rule_specs.types import RuleSpec  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.rule_specs.types import RuleSpec  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.utils.script_helpers import gui_context  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulespecs import (  # astrein: disable=cmk-module-layer-violation
     FormSpecNotImplementedError,
     rulespec_registry,
 )
@@ -53,7 +53,7 @@ from cmk.rulesets.v1.rule_specs import (
     InventoryParameters,
     SpecialAgent,
 )
-from cmk.server_side_calls_backend import (  # pylint: disable=cmk-module-layer-violation
+from cmk.server_side_calls_backend import (  # astrein: disable=cmk-module-layer-violation
     load_active_checks,
     load_special_agents,
 )

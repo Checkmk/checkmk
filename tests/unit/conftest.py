@@ -33,7 +33,7 @@ import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.site import omd_site, SiteId
-from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation
     AgentBasedPlugins,
 )
 from cmk.livestatus_client.testing import (
@@ -431,7 +431,7 @@ def clear_caches_per_function() -> Generator[None]:
 @pytest.fixture(scope="session")
 def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[AgentBasedPlugins]:
     # Local import to have faster pytest initialization
-    from cmk.base import config  # pylint: disable=cmk-module-layer-violation
+    from cmk.base import config  # astrein: disable=cmk-module-layer-violation
 
     with patch(
         "cmk.base.config.cmk.utils.paths.precompiled_checks_dir",

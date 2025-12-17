@@ -39,7 +39,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec.definitions import RegExp
 from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
-from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
+from cmk.plugins.aws.lib import aws_region_to_monitor  # astrein: disable=cmk-module-layer-violation
 from cmk.rulesets.v1.form_specs import migrate_to_password
 from cmk.utils.rulesets.definition import RuleGroup
 

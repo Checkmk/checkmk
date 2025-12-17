@@ -46,7 +46,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.plugins.azure_v2.rulesets import (  # pylint: disable=cmk-module-layer-violation  # TODO: acceptable?
+from cmk.plugins.azure_v2.rulesets import (  # astrein: disable=cmk-module-layer-violation  # TODO: acceptable?
     azure,
 )
 from cmk.rulesets.v1 import Title

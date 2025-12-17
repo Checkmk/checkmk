@@ -81,7 +81,7 @@ class RelayField(fields.String):
         super()._validate(value)
 
         # FYI: The pylint suppression was chosen to keep the logic of this method clear.
-        # pylint: disable=cmk-module-layer-violation
+        # astrein: disable=cmk-module-layer-violation
         from cmk.gui.nonfree.ultimate.relay.watolib.relay_config import (  # type: ignore[import-not-found,unused-ignore]
             validate_relay_id,
         )

@@ -43,7 +43,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
-from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import SNMPCredentials  # astrein: disable=cmk-module-layer-violation
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
@@ -1077,13 +1077,13 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
     def form_spec(self) -> SingleChoiceExtended:
         choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
         return SingleChoiceExtended(
-            title=Title(  # pylint: disable=localization-checker
+            title=Title(  # astrein: disable=localization-checker
                 self._tag_group.title
             ),
             elements=[
                 SingleChoiceElementExtended(
                     name=choice[0],
-                    title=Title(choice[1]),  # pylint: disable=localization-checker
+                    title=Title(choice[1]),  # astrein: disable=localization-checker
                 )
                 for choice in choices
             ],
@@ -1122,10 +1122,10 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return TransformDataForLegacyFormatOrRecomposeFunction(
             wrapped_form_spec=BooleanChoice(
-                title=Title(  # pylint: disable=localization-checker
+                title=Title(  # astrein: disable=localization-checker
                     self._tag_group.title
                 ),
-                label=Label(  # pylint: disable=localization-checker
+                label=Label(  # astrein: disable=localization-checker
                     self._tag_group.get_tag_choices()[0][1]
                 ),
             ),

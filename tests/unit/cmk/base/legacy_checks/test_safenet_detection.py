@@ -9,7 +9,7 @@ import pytest
 
 from cmk.checkengine.plugins import AgentBasedPlugins, SectionName
 
-# pylint: disable=cmk-module-layer-violation
+# astrein: disable=cmk-module-layer-violation
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
 
 

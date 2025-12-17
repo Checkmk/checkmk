@@ -7,7 +7,7 @@ import sys
 from typing import Final
 
 import cmk.ccc.store
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc.version import __version__, parse_check_mk_version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (

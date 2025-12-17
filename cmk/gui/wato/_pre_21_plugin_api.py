@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.plugins.wato as api_module  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.plugins.wato.utils as wato_utils  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato as api_module  # astrein: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato.utils as wato_utils  # astrein: disable=cmk-module-layer-violation
 import cmk.gui.valuespec
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
@@ -22,8 +22,8 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 from cmk.gui.hooks import register_hook
-from cmk.gui.plugins.wato import datasource_programs  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.wato.utils import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.wato import datasource_programs  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.plugins.wato.utils import (  # astrein: disable=cmk-module-layer-violation
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,

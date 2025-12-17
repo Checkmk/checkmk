@@ -32,7 +32,7 @@ from livestatus import (
 import cmk.ccc.translations
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.gui.watolib.changes as _changes
 import cmk.mkp_tool
 import cmk.utils.paths

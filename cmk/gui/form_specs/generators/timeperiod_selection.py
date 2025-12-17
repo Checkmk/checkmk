@@ -17,7 +17,7 @@ def _get_timeperiod_choices() -> Sequence[SingleChoiceElementExtended[Timeperiod
     elements = [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(  # pylint: disable=localization-checker
+            title=Title(  # astrein: disable=localization-checker
                 "{} - {}".format(name, tp["alias"])
             ),
         )

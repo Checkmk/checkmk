@@ -62,7 +62,7 @@ def load_api_v1_rule_specs(
     # For example:
 
     not_yet_moved_plugins: set[str] = set()
-    import cmk.gui.plugins.wato.check_parameters  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.wato.check_parameters  # astrein: disable=cmk-module-layer-violation
 
     community_check_parameters_paths = set(cmk.gui.plugins.wato.check_parameters.__path__)
     for community_check_parameters_path in community_check_parameters_paths:
@@ -71,7 +71,7 @@ def load_api_v1_rule_specs(
                 not_yet_moved_plugins.add(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
 
     try:
-        import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
 
         pro_bakery_ruleset_paths = set(
             cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__
@@ -86,7 +86,7 @@ def load_api_v1_rule_specs(
         pass
 
     try:
-        import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
 
         ultimate_check_parameters_paths = set(
             cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.__path__

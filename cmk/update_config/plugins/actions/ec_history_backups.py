@@ -7,7 +7,7 @@ from logging import Logger
 from typing import override
 
 import cmk.utils.paths
-from cmk.ec.settings import create_paths  # pylint: disable=cmk-module-layer-violation
+from cmk.ec.settings import create_paths  # astrein: disable=cmk-module-layer-violation
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 

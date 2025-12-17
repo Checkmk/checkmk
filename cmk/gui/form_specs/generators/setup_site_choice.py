@@ -40,7 +40,7 @@ def _compute_site_choices() -> Sequence[SingleChoiceElementExtended[str]]:
     return [
         SingleChoiceElementExtended(
             name=choice[0],
-            title=Title(choice[1]),  # pylint: disable=localization-checker
+            title=Title(choice[1]),  # astrein: disable=localization-checker
         )
         for choice in site_choices(activation_sites(active_config.sites))
     ]

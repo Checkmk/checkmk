@@ -44,7 +44,7 @@ def _formspec_aws():
                     elements=[
                         MultipleChoiceElement(
                             name=name.replace("-", "_"),
-                            title=Title(  # pylint: disable=localization-checker
+                            title=Title(  # astrein: disable=localization-checker
                                 title
                             ),
                         )

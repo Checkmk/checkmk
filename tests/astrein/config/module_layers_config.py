@@ -3,11 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Configuration for module layer architecture checker.
-
-This file contains all the configuration data extracted from the original
-pylint checker: component definitions, allowed dependencies, plugin families, etc.
-"""
+"""Configuration for module layer architecture checker"""
 
 from __future__ import annotations
 

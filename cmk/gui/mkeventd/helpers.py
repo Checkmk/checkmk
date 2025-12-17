@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.utils.paths
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize

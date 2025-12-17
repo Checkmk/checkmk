@@ -13,7 +13,7 @@ from omdlib.utils import get_site_distributed_setup, SiteDistributedSetup
 # TODO: The diskspace tool depends on `check_mk` as a cli tool. Therefore, having the
 # "site context" as a dependency is probably appropriate. It could be moved to `cmk/diskspace`,
 # but that is also suboptimal, since the tool depends on `omdlib`.
-# pylint: disable=cmk-module-layer-violation
+# astrein: disable=cmk-module-layer-violation
 from cmk.diskspace.abandoned import do_cleanup_abandoned_host_files
 from cmk.diskspace.config import read_config
 from cmk.diskspace.file import cleanup_aged, cleanup_oldest_files, load_plugins

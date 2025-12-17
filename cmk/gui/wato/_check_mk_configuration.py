@@ -124,7 +124,7 @@ from cmk.gui.watolib.translation import (
 )
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
-from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 

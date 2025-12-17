@@ -33,9 +33,9 @@ class Dict2CatalogConverter:
             for header in headers:
                 if isinstance(header, tuple):
                     if len(header) == 2:
-                        use_headers.append((Title(header[0]), list(header[1])))  # pylint: disable=localization-of-non-literal-string
+                        use_headers.append((Title(header[0]), list(header[1])))  # pylint: disable=localization-checker
                     elif len(header) == 3:
-                        use_headers.append((Title(header[0]), list(header[2])))  # pylint: disable=localization-of-non-literal-string
+                        use_headers.append((Title(header[0]), list(header[2])))  # pylint: disable=localization-checker
                     else:
                         raise MKGeneralException(f"Invalid header type for catalog {headers}")
                 else:

@@ -72,7 +72,7 @@ DOCKERABLE_TESTS := \
 	test-requirements \
 	test-ruff \
 	test-plugins-siteless \
-	test-pylint \
+	test-astrein \
 	test-shellcheck \
 	test-unit-all \
 	test-unit-shell \
@@ -80,9 +80,6 @@ DOCKERABLE_TESTS := \
 	test-werks \
 	test-semgrep \
 	test-medium-chain
-
-# HINT: the "layering_violation" checker is not production ready and left out on purpose
-PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
@@ -99,7 +96,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
-	test-mypy test-mypy-gpl test-mypy-docker test-packaging test-pylint test-pylint-docker test-ruff test-ruff-docker \
+	test-mypy test-mypy-gpl test-mypy-docker test-packaging test-astrein test-astrein-docker test-ruff test-ruff-docker \
 	test-unit test-unit-all test-unit-docker \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
@@ -368,17 +365,19 @@ test-packaging:
 	export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path); \
 	$(PYTEST) --log-cli-level=INFO packaging
 
-test-pylint:
-	cd ..; $(UVENV) pylint --disable=all --enable=useless-suppression,$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
-	cd .. && $(PYTEST) \
-	    --config-file=pyproject.toml \
-	    --override-ini="pythonpath=." \
-	    --random-order-bucket=global \
-	    --numprocesses=4 \
-	    --dist=loadfile \
-	    -- \
-	    tests/unit/test_pylint_checker_cmk_module_layers.py \
-	    tests/unit/test_pylint_checker_localization.py
+test-astrein:
+	bazel build \
+	    --aspects //bazel/tools:aspects.bzl%astrein \
+	    --output_groups=rules_lint_human \
+	    //cmk:lib_cmk_repo \
+	    && cat ../bazel-bin/cmk/lib_cmk_repo.AspectRulesLintAstrein.out \
+	    && exit $$(cat ../bazel-bin/cmk/lib_cmk_repo.AspectRulesLintAstrein.out.exit_code)
+	bazel run //tests/astrein:astrein -- \
+	    --checker all \
+	    --repo-root /home/lm/git/checkmk \
+	    $$(realpath -L ..)/omd/packages/omd/omdlib \
+	    $$(realpath -L ..)/tests
+	cd .. && bazel test //tests/astrein/tests:all
 
 test-ruff:
 	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check

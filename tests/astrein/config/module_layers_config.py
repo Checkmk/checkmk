@@ -1109,12 +1109,21 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.base.app.make_app",
         "cmk.base.config",
         "cmk.base.checkers",
+        "cmk.base.sources",
         "cmk.checkengine",
         "cmk.discover_plugins",
+        "cmk.fetchers",
         "cmk.gui",
         "cmk.helper_interface",
+        "cmk.piggyback",
         "cmk.server_side_calls_backend",
         "cmk.utils",
+    ),
+    Component("tests.integration.cmk.base.nonfree.pro.helper_bake_and_sign"): (
+        lambda *_a, **_kw: True
+    ),
+    Component("tests.integration.cmk.base.nonfree.pro.helper_bake_without_sign"): (
+        lambda *_a, **_kw: True
     ),
     Component("tests.integration.cmk.base"): _allow(
         *PACKAGE_CCC,
@@ -1122,6 +1131,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.base",
         "cmk.nonfree.pro.bakery",
         "cmk.checkengine",
+        "cmk.crypto",
         "cmk.discover_plugins",
         "cmk.utils",
     ),

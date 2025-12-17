@@ -1440,7 +1440,7 @@ def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
         UniqueSingleChoiceElement(
             parameter_form=SingleChoiceElementExtended(
                 name=ident,
-                title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                title=Title(title),  # pylint: disable=localization-checker
             ),
         )
         for ident, title in sorted_contact_group_choices()
@@ -1530,7 +1530,7 @@ def recipient() -> QuickSetupStage:
                                 UniqueSingleChoiceElement(
                                     parameter_form=SingleChoiceElementExtended(
                                         name=ident,
-                                        title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                        title=Title(title),  # pylint: disable=localization-checker
                                     )
                                 )
                                 for ident, title in _get_sorted_users()
@@ -1741,7 +1741,7 @@ def sending_conditions() -> QuickSetupStage:
                                             elements=[
                                                 SingleChoiceElementExtended(
                                                     name=name,
-                                                    title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                                    title=Title(title),  # pylint: disable=localization-checker
                                                 )
                                                 for name, title in _get_time_periods()
                                             ],

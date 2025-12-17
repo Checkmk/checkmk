@@ -30,7 +30,7 @@ def _regions_to_monitor() -> Sequence[MultipleChoiceElement]:
     return [
         MultipleChoiceElement(
             name=id_,
-            title=Title(f"{region} ({id_})"),  # pylint: disable=localization-of-non-literal-string
+            title=Title(f"{region} ({id_})"),  # pylint: disable=localization-checker
         )
         for id_, region in regions_by_display_order
     ]

@@ -219,7 +219,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=name,
-                                    title=Title(name),  # pylint: disable=localization-of-non-literal-string
+                                    title=Title(name),  # pylint: disable=localization-checker
                                     parameter_form=FixedValue(value=value),
                                 )
                                 for value, name in syslog_facilities
@@ -238,7 +238,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=name,
-                                    title=Title(name),  # pylint: disable=localization-of-non-literal-string
+                                    title=Title(name),  # pylint: disable=localization-checker
                                     parameter_form=FixedValue(value=value),
                                 )
                                 for value, name in syslog_priorities
@@ -253,7 +253,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=_format_service_level(value),
-                                    title=Title(name),  # pylint: disable=localization-of-non-literal-string
+                                    title=Title(name),  # pylint: disable=localization-checker
                                     parameter_form=FixedValue(value=value),
                                 )
                                 for value, name in service_levels()
@@ -358,7 +358,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=name,
-                                    title=Title(name),  # pylint: disable=localization-of-non-literal-string
+                                    title=Title(name),  # pylint: disable=localization-checker
                                     parameter_form=FixedValue(value=value),
                                 )
                                 for value, name in syslog_facilities
@@ -373,7 +373,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             elements=[
                                 CascadingSingleChoiceElement(
                                     name=_format_service_level(value),
-                                    title=Title(name),  # pylint: disable=localization-of-non-literal-string
+                                    title=Title(name),  # pylint: disable=localization-checker
                                     parameter_form=FixedValue(value=value),
                                 )
                                 for value, name in service_levels()

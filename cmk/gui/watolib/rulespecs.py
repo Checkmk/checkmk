@@ -1197,7 +1197,7 @@ def _get_check_type_group_choice(
                 elements.append(
                     SingleChoiceElementExtended[str](
                         name=str(checkname),
-                        title=Title(f"{checkname} - {check['title']}"),  # pylint: disable=localization-of-non-literal-string
+                        title=Title(f"{checkname} - {check['title']}"),  # pylint: disable=localization-checker
                     )
                 )
         return elements

@@ -67,7 +67,7 @@ def _get_url_prefix_setting(
 ) -> DictElement[Any]:
     return DictElement(
         group=DictGroupExtended(
-            title=Title(group_title) if group_title else None,  # pylint: disable=localization-of-non-literal-string
+            title=Title(group_title) if group_title else None,  # pylint: disable=localization-checker
             layout=DictionaryGroupLayout.vertical,
         ),
         parameter_form=CascadingSingleChoice(

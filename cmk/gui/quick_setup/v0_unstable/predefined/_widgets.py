@@ -155,7 +155,7 @@ def site_formspec_wrapper() -> FormSpecWrapper:
                         elements=[
                             SingleChoiceElement(
                                 name=site_id,
-                                title=Title(  # pylint: disable=localization-of-non-literal-string
+                                title=Title(  # pylint: disable=localization-checker
                                     title
                                 ),
                             )

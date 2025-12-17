@@ -427,7 +427,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             [
                 SingleChoiceElementExtended(
                     name=f.name,
-                    title=Title(  # pylint: disable=localization-of-non-literal-string
+                    title=Title(  # pylint: disable=localization-checker
                         f.name
                         if f.name != "wato_audit.log"
                         else "wato_audit.log (%s)" % _("current"),
@@ -691,7 +691,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             SingleChoiceElementExtended[Any](name="", title=Title("All object types")),
             SingleChoiceElementExtended[Any](name=None, title=Title("No object type")),
         ] + [
-            SingleChoiceElementExtended[Any](name=t.name, title=Title(t.name))  # pylint: disable=localization-of-non-literal-string
+            SingleChoiceElementExtended[Any](name=t.name, title=Title(t.name))  # pylint: disable=localization-checker
             for t in ObjectRefType
         ]
 
@@ -701,7 +701,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         ] + sorted(
             [SingleChoiceElementExtended(name="-", title=Title("internal"))]
             + [
-                SingleChoiceElementExtended(name=name, title=Title(name))  # pylint: disable=localization-of-non-literal-string
+                SingleChoiceElementExtended(name=name, title=Title(name))  # pylint: disable=localization-checker
                 for (name, us) in users.items()
             ],
             key=lambda x: str(x.title),

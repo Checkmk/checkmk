@@ -121,7 +121,7 @@ def _parameter_valuespec_oracle_performance():
     memory_choices = [
         CascadingSingleChoiceElement(
             name=ga.metric,
-            title=Title(ga.name),  # pylint: disable=localization-of-non-literal-string
+            title=Title(ga.name),  # pylint: disable=localization-checker
             parameter_form=SimpleLevels(
                 form_spec_template=DataSize(
                     displayed_magnitudes=(
@@ -149,7 +149,7 @@ def _parameter_valuespec_oracle_performance():
                 target_array.append(
                     CascadingSingleChoiceElement(
                         name=f"oracle_ios_f_{iofile.id}_{size_code}_{io_code}",
-                        title=Title(f" {iofile.name} {size_text} {io_text}"),  # pylint: disable=localization-of-non-literal-string
+                        title=Title(f" {iofile.name} {size_text} {io_text}"),  # pylint: disable=localization-checker
                         parameter_form=SimpleLevels(
                             form_spec_template=Integer(unit_symbol=io_unit),
                             level_direction=LevelDirection.UPPER,
@@ -235,7 +235,7 @@ def _parameter_valuespec_oracle_performance():
                         elements=[
                             CascadingSingleChoiceElement(
                                 name=name,
-                                title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                title=Title(title),  # pylint: disable=localization-checker
                                 parameter_form=_PERSEC_LEVELS,
                             )
                             for name, title in waitclasses_choices

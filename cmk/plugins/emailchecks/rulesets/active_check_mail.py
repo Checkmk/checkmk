@@ -223,7 +223,7 @@ def _forward_to_ec_form() -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name=name,
-                            title=Title(  # pylint: disable=localization-of-non-literal-string  # we have no choice here.
+                            title=Title(  # pylint: disable=localization-checker  # we have no choice here.
                                 name
                             ),
                             parameter_form=FixedValue(value=value),

@@ -67,7 +67,7 @@ def _formspec_aws_api_access() -> dict[str, DictElement]:
                                 ),
                                 *(
                                     SingleChoiceElement(
-                                        title=Title(  # pylint: disable=localization-of-non-literal-string
+                                        title=Title(  # pylint: disable=localization-checker
                                             region
                                         ),
                                         name=region.replace("-", "_"),
@@ -192,7 +192,7 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
                 elements=[
                     MultipleChoiceElement(
                         name=name.replace("-", "_"),
-                        title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                        title=Title(title),  # pylint: disable=localization-checker
                     )
                     for name, title in aws_region_to_monitor()
                 ],
@@ -202,7 +202,7 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
                         max_value=max_regions,
                         error_msg=Message("Please select at least one or more regions to continue.")
                         if max_regions is None
-                        else Message(  # pylint: disable=localization-of-non-literal-string
+                        else Message(  # pylint: disable=localization-checker
                             f"Please select at least one and at most {max_regions} regions to continue"
                         ),
                     ),

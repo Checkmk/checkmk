@@ -31,7 +31,7 @@ def podman_container_status() -> Dictionary:
         elements={
             status: DictElement(
                 parameter_form=ServiceState(
-                    title=Title(status.capitalize().replace("_", " ")),  # pylint: disable=localization-of-non-literal-string
+                    title=Title(status.capitalize().replace("_", " ")),  # pylint: disable=localization-checker
                     prefill=DefaultValue(state),
                 )
             )

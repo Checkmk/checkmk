@@ -43,7 +43,7 @@ def create_full_path_folder_choice(
         elements=[
             SingleChoiceElementExtended(
                 name=choice[0],
-                title=Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
+                title=Title(choice[1]),  # pylint: disable=localization-checker
             )
             for choice in choices
         ],

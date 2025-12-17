@@ -1077,13 +1077,13 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
     def form_spec(self) -> SingleChoiceExtended:
         choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
         return SingleChoiceExtended(
-            title=Title(  # pylint: disable=localization-of-non-literal-string
+            title=Title(  # pylint: disable=localization-checker
                 self._tag_group.title
             ),
             elements=[
                 SingleChoiceElementExtended(
                     name=choice[0],
-                    title=Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
+                    title=Title(choice[1]),  # pylint: disable=localization-checker
                 )
                 for choice in choices
             ],
@@ -1122,10 +1122,10 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return TransformDataForLegacyFormatOrRecomposeFunction(
             wrapped_form_spec=BooleanChoice(
-                title=Title(  # pylint: disable=localization-of-non-literal-string
+                title=Title(  # pylint: disable=localization-checker
                     self._tag_group.title
                 ),
-                label=Label(  # pylint: disable=localization-of-non-literal-string
+                label=Label(  # pylint: disable=localization-checker
                     self._tag_group.get_tag_choices()[0][1]
                 ),
             ),

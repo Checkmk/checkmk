@@ -361,7 +361,7 @@ def _message_spec(users: Mapping[str, UserSpec]) -> Dictionary:
                                 title=Title("A list of specific users"),
                                 parameter_form=MultipleChoice(
                                     elements=[
-                                        MultipleChoiceElement(name=key, title=Title(value))  # pylint: disable=localization-of-non-literal-string
+                                        MultipleChoiceElement(name=key, title=Title(value))  # pylint: disable=localization-checker
                                         for key, value in sorted(
                                             [
                                                 (uid, u.get("alias", uid))
@@ -397,7 +397,7 @@ def _message_spec(users: Mapping[str, UserSpec]) -> Dictionary:
                 parameter_form=MultipleChoice(
                     title=Title("Messaging methods"),
                     elements=[
-                        MultipleChoiceElement(name=k, title=Title(v["title"]))  # pylint: disable=localization-of-non-literal-string
+                        MultipleChoiceElement(name=k, title=Title(v["title"]))  # pylint: disable=localization-checker
                         for k, v in _messaging_methods().items()
                     ],
                     prefill=DefaultValue(["gui_popup"]),

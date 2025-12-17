@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-# pylint: disable=cmk-module-layer-violation
 import json
 import logging
 import os

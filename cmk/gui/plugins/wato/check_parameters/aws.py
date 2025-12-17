@@ -235,9 +235,9 @@ def _fs_elements_http_errors(
     return {
         "levels_http_%s_perc" % http_err_code: DictElement(
             parameter_form=TupleLevels(
-                title=Title(f"Upper percentual levels for HTTP {http_err_code.upper()} errors")  # pylint: disable=localization-of-non-literal-string
+                title=Title(f"Upper percentual levels for HTTP {http_err_code.upper()} errors")  # pylint: disable=localization-checker
                 + title_add(http_err_code),
-                help_text=Help(  # pylint: disable=localization-of-non-literal-string
+                help_text=Help(  # pylint: disable=localization-checker
                     f"Specify levels for HTTP {http_err_code.upper()} errors in percent "
                     "which refer to the total number of requests."
                 ),
@@ -761,7 +761,7 @@ def _vs_limits_inst_types() -> List:
             elements=[
                 CascadingSingleChoiceElementExtended(
                     name=inst_type,
-                    title=Title(inst_type),  # pylint: disable=localization-of-non-literal-string
+                    title=Title(inst_type),  # pylint: disable=localization-checker
                     parameter_form=fs_aws_limits(
                         Title("%s instances") % inst_type,
                         AWSEC2LimitsSpecial.get(inst_type, AWSEC2LimitsDefault)[0],

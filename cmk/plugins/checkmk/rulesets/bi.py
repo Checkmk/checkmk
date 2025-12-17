@@ -150,7 +150,7 @@ def _bi_aggregate() -> Dictionary:
                                     elements=[
                                         SingleChoiceElementExtended(
                                             name=value,
-                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                            title=Title(title),  # pylint: disable=localization-checker
                                         )
                                         for value, title in bi.aggregation_group_choices()
                                     ],

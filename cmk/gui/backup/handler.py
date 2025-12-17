@@ -992,7 +992,7 @@ class PageEditBackupJob:
 
     def backup_key_choices(self) -> Sequence[SingleChoiceElementExtended]:
         return [
-            SingleChoiceElementExtended(name=ident, title=Title(title))  # pylint: disable=localization-of-non-literal-string
+            SingleChoiceElementExtended(name=ident, title=Title(title))  # pylint: disable=localization-checker
             for ident, title in self.key_store.choices()
         ]
 
@@ -1000,7 +1000,7 @@ class PageEditBackupJob:
         return [
             SingleChoiceElement(
                 name=target.ident,
-                title=Title(target.title),  # pylint: disable=localization-of-non-literal-string
+                title=Title(target.title),  # pylint: disable=localization-checker
             )
             for target in sorted(
                 backup_config.all_targets.values(),
@@ -1921,7 +1921,7 @@ class PageEditBackupTarget:
                         elements=[
                             CascadingSingleChoiceElement(
                                 name=target_type.ident(),
-                                title=Title(target_type.title()),  # pylint: disable=localization-of-non-literal-string
+                                title=Title(target_type.title()),  # pylint: disable=localization-checker
                                 parameter_form=target_type.form_spec(),
                             )
                             for target_type in target_type_registry.values()

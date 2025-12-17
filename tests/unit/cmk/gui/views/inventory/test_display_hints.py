@@ -118,6 +118,7 @@ def test_paths() -> None:
             ("networking", "routes"),
             ("networking", "sip_interfaces"),
             ("networking", "tunnels"),
+            ("networking", "uplinks"),
             ("networking", "wlan"),
             ("networking", "wlan", "controller"),
             ("networking", "wlan", "controller", "accesspoints"),
@@ -1016,6 +1017,14 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "system_description",
     ],
     ("networking", "routes"): ["target", "device", "type", "gateway"],
+    ("networking", "uplinks"): [
+        "interface",
+        "protocol",
+        "address",
+        "gateway",
+        "public_address",
+        "assignment_mode",
+    ],
     ("networking", "wlan", "controller", "accesspoints"): [
         "name",
         "group",

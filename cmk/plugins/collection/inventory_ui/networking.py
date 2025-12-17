@@ -594,3 +594,20 @@ node_networking_interfaces_name = Node(
     path=["networking", "interfaces", "name"],
     title=Title("Name"),
 )
+
+node_networking_device_uplinks = Node(
+    name="networking_device_uplinks",
+    path=["networking", "uplinks"],
+    title=Title("Device uplinks"),
+    table=Table(
+        view=View(name="invdeviceuplinks", title=Title("Device uplinks")),
+        columns={
+            "interface": TextField(Title("Interface")),
+            "protocol": TextField(Title("Protocol")),
+            "address": TextField(Title("Address")),
+            "gateway": TextField(Title("Gateway")),
+            "public_address": TextField(Title("Public address")),
+            "assignment_mode": TextField(Title("Assignment mode")),
+        },
+    ),
+)

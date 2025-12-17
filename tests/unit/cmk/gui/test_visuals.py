@@ -267,6 +267,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invcmksites",
         "invcmkversions",
         "invcontainer",
+        "invdeviceuplinks",
         "invdockercontainers",
         "invdockerimages",
         "invfan",

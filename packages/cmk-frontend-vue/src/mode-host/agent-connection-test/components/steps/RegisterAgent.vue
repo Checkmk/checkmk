@@ -27,6 +27,7 @@ const props = defineProps<{
   tab: AgentSlideOutTabs
   isPushMode: boolean
   closeButtonTitle: TranslatedString
+  hostName: string
 }>()
 
 const emit = defineEmits(['close'])
@@ -36,7 +37,7 @@ const ott = ref<string | null | Error>(null)
 const regAgentCmd = computed(() => {
   if (props.tab.registrationCmd) {
     if (ott.value && !(ott.value instanceof Error)) {
-      return props.tab.registrationCmd?.replace('--user agent_registration', `--ott ${ott.value}`)
+      return props.tab.registrationCmd?.replace('--user agent_registration', `--ott 0:${ott.value}`)
     }
 
     return props.tab.registrationCmd
@@ -71,6 +72,7 @@ function reset() {
           <GenerateRegistrationToken
             v-model="ott"
             :description="_t('This requires the generation of a registration token.')"
+            :host-name="hostName"
             generate-comment="Agent registration token for agent slideout."
           ></GenerateRegistrationToken>
           <template v-if="ott !== null">

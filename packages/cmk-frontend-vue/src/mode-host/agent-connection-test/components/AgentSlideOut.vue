@@ -220,6 +220,7 @@ function getInitStep() {
             :tab="tab"
             :is-push-mode="isPushMode"
             :close-button-title="closeButtonTitle"
+            :host-name="hostName"
             @close="close"
           ></RegisterAgent>
 

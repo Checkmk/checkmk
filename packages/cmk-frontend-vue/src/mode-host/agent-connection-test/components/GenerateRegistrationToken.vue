@@ -30,6 +30,7 @@ const { _t } = usei18n()
 const props = defineProps<{
   description?: TranslatedString | undefined
   generateComment: string
+  hostName: string
   expiresAt?: string | null | undefined
 }>()
 
@@ -45,6 +46,7 @@ async function generateOTT() {
   try {
     const res = (await api.post('domain-types/agent_registration_token/collections/all', {
       comment: props.generateComment,
+      host: props.hostName,
       expires_at: props.expiresAt || null
     } as IAgentTokenGenerationRequest)) as IAgentTokenGenerationResponse
 

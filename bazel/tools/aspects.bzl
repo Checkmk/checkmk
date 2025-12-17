@@ -3,6 +3,7 @@ load("@aspect_rules_lint//lint:ruff.bzl", "lint_ruff_aspect")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@cmk_types//:types.bzl", "types")
 load("@rules_mypy//mypy:mypy.bzl", "mypy")
+load("//bazel/tools:lint_astrein.bzl", "lint_astrein_aspect")
 
 mypy_aspect = mypy(
     mypy_cli = Label("@//bazel/tools:mypy_cli"),
@@ -39,4 +40,8 @@ clang_tidy = lint_clang_tidy_aspect(
     global_config = [Label("//:.clang-tidy")],
     gcc_install_dir = [Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu")],
     deps = [Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu")],
+)
+
+astrein = lint_astrein_aspect(
+    binary = Label("//tests/astrein:astrein"),
 )

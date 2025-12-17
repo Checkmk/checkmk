@@ -311,6 +311,7 @@ py_library(
     srcs = glob(["**/*.py"]),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
+    tags = ["lint-with-astrein"],
     visibility = [
         "//doc/plugin-api:__pkg__",
         "//tests/unit:__pkg__",

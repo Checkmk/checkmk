@@ -11,11 +11,13 @@ import argparse
 import os
 import sys
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from tests.astrein.checker_localization import LocalizationChecker
 from tests.astrein.checker_module_layers import ModuleLayersChecker
-from tests.astrein.framework import ASTVisitorChecker, run_checkers
+from tests.astrein.framework import ASTVisitorChecker, CheckerError, run_checkers
+from tests.astrein.sarif import format_sarif
 
 
 def main() -> int:
@@ -32,6 +34,17 @@ def main() -> int:
         choices=sorted(["all", *checkers.keys()]),
         default="all",
         help="Which checker(s) to run (default: all)",
+    )
+    parser.add_argument(
+        "--format",
+        choices=["gcc", "sarif"],
+        default="gcc",
+        help="Output format: gcc (default) for IDE integration, sarif for CI systems",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Output file for results (used by Bazel aspect)",
     )
     parser.add_argument(
         "paths",
@@ -52,7 +65,11 @@ def main() -> int:
         print(str(e), file=sys.stderr)
         return 1
 
-    return _run_checkers(files_to_check, workspace_dir, checker_classes)
+    return _handle_results(
+        _run_checkers(files_to_check, workspace_dir, checker_classes),
+        args.format,
+        args.output,
+    )
 
 
 def _checkers() -> dict[str, type[ASTVisitorChecker]]:
@@ -113,28 +130,64 @@ def _collect_files(paths: Sequence[Path], workspace_dir: Path) -> list[Path]:
     return files_to_check
 
 
+@dataclass
+class CheckerResults:
+    errors: Sequence[CheckerError]
+    files_with_errors: int
+
+
 def _run_checkers(
     files_to_check: list[Path],
     workspace_dir: Path,
     checker_classes: list[type[ASTVisitorChecker]],
-) -> int:
-    total_errors = 0
+) -> CheckerResults:
+    all_errors: list[CheckerError] = []
     files_with_errors = 0
+
     for file_path in files_to_check:
         errors = run_checkers(file_path, workspace_dir, checker_classes)
 
         if errors:
             files_with_errors += 1
+            all_errors.extend(errors)
 
-        for error in errors:
-            print(error.format_gcc())
-            total_errors += 1
+    return CheckerResults(all_errors, files_with_errors)
 
-    if total_errors > 0:
-        print(
-            f"\nFound {total_errors} error(s) across {files_with_errors} file(s)",
-            file=sys.stderr,
-        )
+
+def _handle_results(
+    results: CheckerResults,
+    output_format: str,
+    output_file: Path | None,
+) -> int:
+    summary = "\n" + (
+        (f"Found {len(results.errors)} error(s) across {results.files_with_errors} file(s)\n")
+        if results.errors
+        else "No errors found\n"
+    )
+
+    if output_format == "sarif":
+        output = format_sarif(results.errors)
+        if output_file is not None:
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            output_file.write_text(output)
+        else:
+            print(output)
+        return 1
+
+    elif output_format == "gcc":
+        output = "\n".join(error.format_gcc() for error in results.errors)
+
+        if output_file is not None:
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            output_file.write_text(output + summary)
+        else:
+            print(output)
+    else:
+        print(f"Error: Unknown output format: {output_format}", file=sys.stderr)
+        return 1
+
+    if results.errors:
+        print(summary)
         return 1
 
     return 0

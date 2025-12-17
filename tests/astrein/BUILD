@@ -6,6 +6,12 @@ py_library(
 )
 
 py_library(
+    name = "sarif",
+    srcs = ["sarif.py"],
+    deps = [":framework"],
+)
+
+py_library(
     name = "module_layers_config",
     srcs = ["config/module_layers_config.py"],
 )
@@ -37,5 +43,6 @@ py_binary(
         ":checker_module_layers",
         ":framework",
         ":module_layers_config",
+        ":sarif",
     ],
 )

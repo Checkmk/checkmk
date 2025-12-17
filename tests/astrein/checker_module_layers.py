@@ -75,6 +75,12 @@ class ModuleLayersChecker(ASTVisitorChecker):
         if p.is_below("omd/packages/omd/omdlib"):
             return ModuleName(".".join(p.parts[3:]))
 
+        if p.is_below("packages"):
+            return ModuleName(".".join(p.parts[2:]))
+
+        if p.is_below("non-free/packages"):
+            return ModuleName(".".join(p.parts[3:]))
+
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
         return ModuleName(p.parts[-1] if p.parts else self.file_path.stem)
 

@@ -77,7 +77,7 @@ class ASTVisitorChecker(ABC, ast.NodeVisitor):
                 message=message,
                 line=node.lineno if hasattr(node, "lineno") else 0,
                 column=node.col_offset if hasattr(node, "col_offset") else 0,
-                file_path=self.file_path,
+                file_path=self.file_path.relative_to(self.repo_root),
                 checker_id=self.checker_id(),
             )
         )
@@ -101,7 +101,7 @@ def run_checkers(
                 message=f"Failed to read file: {e}",
                 line=0,
                 column=0,
-                file_path=file_path,
+                file_path=file_path.relative_to(repo_root),
                 checker_id="file-read-error",
             )
         ]
@@ -115,7 +115,7 @@ def run_checkers(
                 message=f"Syntax error: {e.msg}",
                 line=e.lineno or 0,
                 column=e.offset or 0,
-                file_path=file_path,
+                file_path=file_path.relative_to(repo_root),
                 checker_id="syntax-error",
             )
         ]

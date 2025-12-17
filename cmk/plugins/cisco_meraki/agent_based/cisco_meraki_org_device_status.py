@@ -113,7 +113,7 @@ def check_device_status(params: Parameters, section: Section) -> CheckResult:
 
 check_plugin_cisco_meraki_org_device_status = CheckPlugin(
     name="cisco_meraki_org_device_status",
-    service_name="Cisco Meraki Device Status",
+    service_name="Device Status",
     discovery_function=discover_device_status,
     check_function=check_device_status,
     check_default_parameters=Parameters(),
@@ -144,7 +144,7 @@ def check_device_status_ps(item: str, params: Mapping[str, int], section: Sectio
 
 check_plugin_cisco_meraki_org_device_status_ps = CheckPlugin(
     name="cisco_meraki_org_device_status_ps",
-    service_name="Cisco Meraki Power Supply Slot %s",
+    service_name="Power Supply %s",
     sections=["cisco_meraki_org_device_status"],
     discovery_function=discover_device_status_ps,
     check_function=check_device_status_ps,

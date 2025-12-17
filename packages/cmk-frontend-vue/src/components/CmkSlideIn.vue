@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import { DialogContent, DialogPortal, DialogRoot } from 'radix-vue'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
+import { nextTick, ref, watch } from 'vue'
 
 const slideInVariants = cva('', {
   variants: {
@@ -32,19 +32,9 @@ const props = defineProps<CmkSlideInProps>()
 const emit = defineEmits(['close'])
 const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
 
-const handleAnimationEnd = () => {
-  document.body.style.overflow = ''
-  document.body.style.pointerEvents = ''
-}
-
-onMounted(() => {
-  dialogContentRef.value?.$el.addEventListener('animationend', handleAnimationEnd)
-})
-
 watch(
   () => props.open,
   async (isOpen) => {
-    document.body.style.overflow = 'hidden'
     if (isOpen) {
       await nextTick(() => {
         dialogContentRef.value?.$el.focus()
@@ -57,14 +47,22 @@ watch(
 <template>
   <DialogRoot :open="open" :modal="!isIndexPage">
     <DialogPortal :to="isIndexPage ? '#content_area' : 'body'">
-      <!-- @vue-ignore @click is not a property of DialogOverlay -->
-      <div v-if="open" class="cmk-slide-in__overlay" @click="emit('close')" />
+      <!--
+        Two different variants of SlideIn overlay are required
+         * div for index page [CMK-27892 / CMK-26086]
+         * DialogOverlay for inner iframe [CMK-28534]
+        div: inner iframe html-body will keep `pointer-events: none` forever after closing
+        DialogOverlay: the SlideIn blocks the whole page including sidebar and menubar
+      -->
+      <DialogOverlay v-if="!isIndexPage" class="cmk-slide-in__overlay" @click="emit('close')" />
+      <div v-else-if="open" class="cmk-slide-in__overlay" @click="emit('close')" />
+
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
       <!-- @vue-ignore aria-describedby it not a property of DialogContent -->
       <DialogContent
         ref="dialogContentRef"
         class="cmk-vue-app cmk-slide-in__container"
-        :class="slideInVariants({ size: props.size })"
+        :class="slideInVariants({ size: size })"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
@@ -75,6 +73,12 @@ watch(
     </DialogPortal>
   </DialogRoot>
 </template>
+
+<style v-if="!isIndexPage">
+body:has(.cmk-slide-in__container) {
+  overflow: hidden;
+}
+</style>
 
 <style scoped>
 .cmk-slide-in__container {

@@ -89,3 +89,67 @@ test.each([{ addTooltip: true }, { addTooltip: false }])(
     expect(document.activeElement).toBe(autoFocusElement)
   }
 )
+
+test('Multiple slide-ins opened sequentially: body styles are managed correctly [CMK-28534]', async () => {
+  render(
+    defineComponent({
+      components: { CmkSlideInDialog },
+      setup() {
+        const openFirst = ref(false)
+        const openSecond = ref(false)
+        return { openFirst, openSecond }
+      },
+      template: `
+        <div>
+          <button @click="openFirst = true">Open First</button>
+          <CmkSlideInDialog
+            :open="openFirst"
+            :header="{ title: 'First Slide-in', closeButton: true }"
+            @close="openFirst = false"
+          >
+            <div data-testid="first-content">First Content</div>
+            <button @click="openSecond = true; openFirst = false">Open Second</button>
+          </CmkSlideInDialog>
+          <CmkSlideInDialog
+            :open="openSecond"
+            :header="{ title: 'Second Slide-in', closeButton: true }"
+            @close="openSecond = false; openFirst = true"
+          >
+            <div data-testid="second-content">Second Content</div>
+          </CmkSlideInDialog>
+        </div>
+      `
+    })
+  )
+
+  expect(document.body.style.pointerEvents).toBe('')
+  expect(document.body.style.overflow).toBe('')
+
+  const firstButton = screen.getByRole('button', { name: 'Open First' })
+  await fireEvent.click(firstButton)
+  await screen.findByTestId('first-content')
+  expect(screen.getByTestId('first-content')).toBeInTheDocument()
+
+  expect(document.body.style.pointerEvents).toBe('none')
+
+  const secondButton = screen.getByRole('button', { name: 'Open Second' })
+  await fireEvent.click(secondButton)
+  await screen.findByTestId('second-content')
+  expect(screen.getByTestId('second-content')).toBeInTheDocument()
+
+  const closeButton = screen.getByRole('button', { name: 'Close' })
+  await fireEvent.click(closeButton)
+  await waitForElementToBeRemoved(() => screen.queryByTestId('second-content'))
+
+  await screen.findByTestId('first-content')
+  expect(screen.getByTestId('first-content')).toBeInTheDocument()
+
+  expect(document.body.style.pointerEvents).toBe('none')
+
+  const remainingCloseButton = screen.getByRole('button', { name: 'Close' })
+  await fireEvent.click(remainingCloseButton)
+  await waitForElementToBeRemoved(() => screen.queryByTestId('first-content'))
+
+  expect(document.body.style.pointerEvents).toBe('')
+  expect(document.body.style.overflow).toBe('')
+})

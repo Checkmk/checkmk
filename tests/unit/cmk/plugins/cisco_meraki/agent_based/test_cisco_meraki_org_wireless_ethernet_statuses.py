@@ -123,7 +123,7 @@ def test_check_wireless_ethernet_statuses_power_mode(
     section = parse_wireless_ethernet_statuses(string_table)
 
     value = list(check_wireless_ethernet_statuses("port 1", params, section))[3]
-    expected = Result(state=State(state), summary=f"Power mode: {mode}")
+    expected = Result(state=State(state), notice=f"Power mode: {mode}")
 
     assert value == expected
 
@@ -144,8 +144,8 @@ def test_check_wireless_ethernet_statuses_power(
 
     value = list(check_wireless_ethernet_statuses("port 1", params, section))[4:-1]
     expected = [
-        Result(state=State.OK, summary=f"AC: {summary}"),
-        Result(state=State.OK, summary=f"PoE: {summary}"),
+        Result(state=State.OK, notice=f"AC: {summary}"),
+        Result(state=State.OK, notice=f"PoE: {summary}"),
     ]
 
     assert value == expected
@@ -159,7 +159,7 @@ def test_check_wireless_ethernet_statuses_poe_standard(params: CheckParams) -> N
     section = parse_wireless_ethernet_statuses(string_table)
 
     value = list(check_wireless_ethernet_statuses("port 1", params, section))[-1]
-    expected = Result(state=State.OK, summary="PoE standard: 802.3at")
+    expected = Result(state=State.OK, notice="PoE standard: 802.3at")
 
     assert value == expected
 

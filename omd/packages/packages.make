@@ -47,20 +47,6 @@ $(DEPS_INSTALL_BAZEL):
 	$(SED) -i "s|/replace-me|$(OMD_ROOT)|g" \
 	    $(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/_sysconfigdata__linux_x86_64-linux-gnu.py
 
-	# This will replace forced absolute paths determined at build time by
-	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
-	# each time
-	# Note: Concurrent builds with dependency to OpenSSL seem to trigger the
-	#openssl-install-intermediate target simultaneously enough to run into
-	#string-replacements which have been done before. So we don't add `--strict`
-	# for now
-	$(REPO_PATH)/omd/run-binreplace \
-	    --regular-expression \
-	    --inplace \
-	    "/home/.*?/openssl.build_tmpdir/openssl/" \
-	    "$(OMD_ROOT)/" \
-	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.3"
-
 	mkdir -p $(BUILD_HELPER_DIR)/
 	touch $@
 

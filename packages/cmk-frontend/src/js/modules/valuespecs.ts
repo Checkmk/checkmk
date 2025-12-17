@@ -820,11 +820,11 @@ export function iconselector_select(_event: Event, varprefix: string, value: str
   ) as HTMLInputElement
   obj.value = value
 
-  const src_img = document.getElementById(varprefix + '_i_' + value) as HTMLImageElement
+  const src_img = document.getElementById(varprefix + '_i_' + value) as HTMLElement
 
   // Set the new choosen icon in the valuespecs image
-  const img = document.getElementById(varprefix + '_img') as HTMLImageElement
-  img.src = src_img.src
+  const img = document.getElementById(varprefix + '_img') as HTMLElement
+  img.setAttribute('data', src_img.getAttribute('data') || '{}')
 
   close_popup()
 }

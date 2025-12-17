@@ -1289,6 +1289,7 @@ class HTMLGenerator(HTMLWriter):
                 size=size,
                 title=title,
                 css_classes=css_classes,
+                id_=id_,
             )
 
         return HTMLGenerator.render_vue_component(
@@ -1322,7 +1323,6 @@ class HTMLGenerator(HTMLWriter):
         size: IconSizes | None = None,
         title: str | None = None,
         theme: Theme = theme,
-        # don't use the following arguments unless you really have to:
         id_: str | None = None,
         css_classes: list[str] | None = None,
     ) -> HTML:
@@ -1332,6 +1332,8 @@ class HTMLGenerator(HTMLWriter):
                 DynamicIconAppProps(spec=resolve_icon_name(icon, theme), size=size)
             ),
             class_=css_classes,
+            id_=id_,
+            css_classes=css_classes,
         )
 
     def dynamic_icon(

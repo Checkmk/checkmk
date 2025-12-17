@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Component, defineCustomElement, h } from 'vue'
+import { type Component, computed, defineCustomElement, h } from 'vue'
 
 import CmkApp, { type CmkAppProps } from './CmkApp.vue'
 
@@ -32,7 +32,7 @@ export default function defineCmkComponent(
         data: String
       },
       setup(props: { data: string }) {
-        const appData = JSON.parse(props.data)
+        const appData = computed(() => JSON.parse(props.data))
         return { appData }
       },
       render() {

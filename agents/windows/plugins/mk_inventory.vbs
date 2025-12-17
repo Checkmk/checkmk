@@ -335,7 +335,7 @@ Do While Not objExecObject.StdOut.AtEndOfStream
 Loop
 
 ' Search Registry
-Call startSection("win_reg_uninstall",31,timeUntil)
+Call startSection("win_reg_uninstall",0,timeUntil)
 Set rego = GetObject("WinMgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
 regVars = Array("DisplayName", "Publisher", "InstallLocation", "PSChildName", "DisplayVersion", "EstimatedSize", "InstallDate", "Language")
 
@@ -359,13 +359,16 @@ For Each path in regPaths
                 End If
                 ' Only allow vartypes which can be represented as a string
                 If VarType(value) <= 8 and VarType(value) > 1 Then
-                    strOut = strOut & Chr(31) & CStr(value)
+                    ' We have seen output that contains ASCII control characters.
+                    ' If we don't replace them, they will break the parsing later on.
+                    ' Replacing NUL with the empty string does not affect the output shown in the HW/SW inventory, since NUL is anyway rendered as the empty string.
+                    strOut = strOut & Chr(0) & Replace(CStr(value), Chr(0), "")
                     ' Only print a line when more than only PSChildName is present
                     If var <> "PSChildName" Then
                         boleanContent = True
                     End If
                 Else
-                    strOut = strOut & Chr(31)
+                    strOut = strOut & Chr(0)
                 End If
             Next
             If boleanContent Then

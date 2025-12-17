@@ -73,6 +73,7 @@ class Perfometer:
         if not (
             renderer := get_first_matching_perfometer(
                 self._translated_metrics,
+                self._registered_metrics,
                 self._registered_perfometers,
             )
         ):
@@ -95,6 +96,7 @@ class Perfometer:
         if not (
             renderer := get_first_matching_perfometer(
                 self._translated_metrics,
+                self._registered_metrics,
                 self._registered_perfometers,
             )
         ):
@@ -108,6 +110,7 @@ class Perfometer:
         if not (
             renderer := get_first_matching_perfometer(
                 self._translated_metrics,
+                self._registered_metrics,
                 self._registered_perfometers,
             )
         ):

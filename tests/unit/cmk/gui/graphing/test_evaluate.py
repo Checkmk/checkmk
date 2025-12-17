@@ -10,7 +10,8 @@ import pytest
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import Title
-from cmk.gui.graphing._perfometer import _evaluate_quantity, _perfometer_plugin_matches
+from cmk.gui.graphing._evaluations_from_api import evaluate_quantity
+from cmk.gui.graphing._perfometer import _perfometer_plugin_matches
 from cmk.gui.graphing._translated_metrics import (
     Original,
     ScalarBounds,
@@ -260,7 +261,7 @@ def test__perfometer_plugin_matches(
 
 
 @pytest.mark.parametrize(
-    "quantity, translated_metrics, result",
+    "quantity, translated_metrics, expected_value",
     [
         pytest.param(
             "name",
@@ -527,7 +528,7 @@ def test__perfometer_plugin_matches(
         ),
     ],
 )
-def test__evaluate_quantity(
+def test_evaluate_quantity(
     quantity: (
         str
         | metrics_api.Constant
@@ -541,6 +542,8 @@ def test__evaluate_quantity(
         | metrics_api.Fraction
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
-    result: float,
+    expected_value: float,
 ) -> None:
-    assert _evaluate_quantity(quantity, translated_metrics).value == result
+    result = evaluate_quantity({}, quantity, translated_metrics)
+    assert result.is_ok()
+    assert result.ok.value == expected_value

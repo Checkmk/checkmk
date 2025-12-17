@@ -45,6 +45,7 @@ def test_get_first_matching_perfometer_testable_without_superseding() -> None:
                     color="#111111",
                 ),
             },
+            {},
             {
                 "active_connections": perfometers_api.Perfometer(
                     name="active_connections",
@@ -86,6 +87,7 @@ def test_get_first_matching_perfometer_testable_with_superseding() -> None:
                     color="#111111",
                 ),
             },
+            {},
             {
                 "active_connections": perfometers_api.Perfometer(
                     name="active_connections",
@@ -144,6 +146,7 @@ def test_get_first_matching_perfometer_testable_with_superseding() -> None:
 )
 def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) -> None:
     projection = _make_projection(
+        {},
         focus_range,
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -167,6 +170,7 @@ def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) ->
 )
 def test_perfometer_projection_closed_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
+        {},
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -187,6 +191,7 @@ def test_perfometer_projection_closed_closed_exceeds(
     value: int | float, result: int | float
 ) -> None:
     projection = _make_projection(
+        {},
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -207,6 +212,7 @@ def test_perfometer_projection_closed_closed_exceeds(
 )
 def test_perfometer_projection_open_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
+        {},
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -224,6 +230,7 @@ def test_perfometer_projection_open_closed(value: int | float, result: float) ->
 )
 def test_perfometer_projection_open_closed_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
+        {},
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -244,6 +251,7 @@ def test_perfometer_projection_open_closed_exceeds(value: int | float, result: i
 )
 def test_perfometer_projection_closed_open(value: int | float, result: float) -> None:
     projection = _make_projection(
+        {},
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -261,6 +269,7 @@ def test_perfometer_projection_closed_open(value: int | float, result: float) ->
 )
 def test_perfometer_projection_closed_open_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
+        {},
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -282,6 +291,7 @@ def test_perfometer_projection_closed_open_exceeds(value: int | float, result: i
 )
 def test_perfometer_projection_open_open(value: int | float, result: float) -> None:
     projection = _make_projection(
+        {},
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Open(20)),
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
@@ -407,6 +417,7 @@ def test_perfometer_renderer_stack(
     patch_theme: None,
 ) -> None:
     assert MetricometerRendererPerfometer(
+        {},
         perfometers_api.Perfometer(
             name="name",
             focus_range=perfometers_api.FocusRange(
@@ -421,6 +432,7 @@ def test_perfometer_renderer_stack(
 
 def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
     assert MetricometerRendererPerfometer(
+        {},
         perfometers_api.Perfometer(
             name="name",
             focus_range=perfometers_api.FocusRange(
@@ -535,6 +547,7 @@ def test_perfometer_renderer_exceeds_limit(
     label: str,
 ) -> None:
     metricometer = MetricometerRendererPerfometer(
+        {},
         perfometers_api.Perfometer(
             name="name",
             focus_range=perfometers_api.FocusRange(
@@ -551,6 +564,7 @@ def test_perfometer_renderer_exceeds_limit(
 
 def test_metricometer_renderer_stacked(request_context: None, patch_theme: None) -> None:
     metricometer = MetricometerRendererStacked(
+        {},
         perfometers_api.Stacked(
             name="stacked",
             lower=perfometers_api.Perfometer(

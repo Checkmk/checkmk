@@ -16,15 +16,17 @@ from typing import assert_never, Self
 
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.gui.color import Color, parse_color_from_api
+from cmk.gui.color import Color
 from cmk.gui.log import logger
+from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.view_utils import get_perfometer_bg_color
 
-from ._from_api import parse_unit_from_api
+from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity
+from ._from_api import RegisteredMetric
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
 from ._translated_metrics import TranslatedMetric
-from ._unit import ConvertibleUnitSpecification, user_specific_unit
+from ._unit import ConvertibleUnitSpecification, DecimalNotation, user_specific_unit
 
 type Quantity = (
     str
@@ -167,99 +169,6 @@ def _perfometer_plugin_matches(
     return True
 
 
-@dataclass(frozen=True)
-class _EvaluatedQuantity:
-    unit_spec: ConvertibleUnitSpecification
-    color: str
-    value: int | float
-
-
-def _evaluate_quantity(
-    quantity: Quantity, translated_metrics: Mapping[str, TranslatedMetric]
-) -> _EvaluatedQuantity:
-    match quantity:
-        case str():
-            translated_metric = translated_metrics[quantity]
-            return _EvaluatedQuantity(
-                translated_metric.unit_spec,
-                translated_metric.color,
-                translated_metrics[quantity].value,
-            )
-        case metrics_api.Constant():
-            return _EvaluatedQuantity(
-                parse_unit_from_api(quantity.unit),
-                parse_color_from_api(quantity.color).fallback,
-                quantity.value,
-            )
-        case metrics_api.WarningOf():
-            translated_metric = translated_metrics[quantity.metric_name]
-            return _EvaluatedQuantity(
-                translated_metric.unit_spec,
-                Color.WARN.fallback,
-                translated_metric.scalar["warn"],
-            )
-        case metrics_api.CriticalOf():
-            translated_metric = translated_metrics[quantity.metric_name]
-            return _EvaluatedQuantity(
-                translated_metric.unit_spec,
-                Color.CRIT.fallback,
-                translated_metric.scalar["crit"],
-            )
-        case metrics_api.MinimumOf():
-            translated_metric = translated_metrics[quantity.metric_name]
-            return _EvaluatedQuantity(
-                translated_metric.unit_spec,
-                parse_color_from_api(quantity.color).fallback,
-                translated_metric.scalar["min"],
-            )
-        case metrics_api.MaximumOf():
-            translated_metric = translated_metrics[quantity.metric_name]
-            return _EvaluatedQuantity(
-                translated_metric.unit_spec,
-                parse_color_from_api(quantity.color).fallback,
-                translated_metric.scalar["max"],
-            )
-        case metrics_api.Sum():
-            evaluated_first_summand = _evaluate_quantity(quantity.summands[0], translated_metrics)
-            return _EvaluatedQuantity(
-                evaluated_first_summand.unit_spec,
-                parse_color_from_api(quantity.color).fallback,
-                (
-                    evaluated_first_summand.value
-                    + sum(
-                        _evaluate_quantity(s, translated_metrics).value
-                        for s in quantity.summands[1:]
-                    )
-                ),
-            )
-        case metrics_api.Product():
-            product = 1.0
-            for f in quantity.factors:
-                product *= _evaluate_quantity(f, translated_metrics).value
-            return _EvaluatedQuantity(
-                parse_unit_from_api(quantity.unit),
-                parse_color_from_api(quantity.color).fallback,
-                product,
-            )
-        case metrics_api.Difference():
-            evaluated_minuend = _evaluate_quantity(quantity.minuend, translated_metrics)
-            evaluated_subtrahend = _evaluate_quantity(quantity.subtrahend, translated_metrics)
-            return _EvaluatedQuantity(
-                evaluated_minuend.unit_spec,
-                parse_color_from_api(quantity.color).fallback,
-                evaluated_minuend.value - evaluated_subtrahend.value,
-            )
-        case metrics_api.Fraction():
-            return _EvaluatedQuantity(
-                parse_unit_from_api(quantity.unit),
-                parse_color_from_api(quantity.color).fallback,
-                (
-                    _evaluate_quantity(quantity.dividend, translated_metrics).value
-                    / _evaluate_quantity(quantity.divisor, translated_metrics).value
-                ),
-            )
-
-
 MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 
@@ -389,6 +298,7 @@ class _ProjectionParameters:
 
 
 def _make_projection(
+    registered_metrics: Mapping[str, RegisteredMetric],
     focus_range: perfometers_api.FocusRange,
     projection_parameters: _ProjectionParameters,
     translated_metrics: Mapping[str, TranslatedMetric],
@@ -412,13 +322,27 @@ def _make_projection(
 
     if isinstance(focus_range.lower.value, int | float):
         lower_x = conversion(float(focus_range.lower.value))
+    elif (
+        result_lower_x := evaluate_quantity(
+            registered_metrics, focus_range.lower.value, translated_metrics
+        )
+    ).is_ok():
+        lower_x = result_lower_x.ok.value
     else:
-        lower_x = _evaluate_quantity(focus_range.lower.value, translated_metrics).value
+        # Should not happen
+        lower_x = 0
 
     if isinstance(focus_range.upper.value, int | float):
         upper_x = conversion(float(focus_range.upper.value))
+    elif (
+        result_upper_x := evaluate_quantity(
+            registered_metrics, focus_range.upper.value, translated_metrics
+        )
+    ).is_ok():
+        upper_x = result_upper_x.ok.value
     else:
-        upper_x = _evaluate_quantity(focus_range.upper.value, translated_metrics).value
+        # Should not happen
+        upper_x = 0
 
     if lower_x >= upper_x:
         logger.debug(
@@ -519,7 +443,7 @@ def _make_projection(
 
 def _project_segments(
     projection: _ProjectionFromMetricValueToPerfFillLevel,
-    segments: Sequence[_EvaluatedQuantity],
+    segments: Sequence[EvaluatedQuantity],
     fully_filled_at: float,
     themed_perfometer_bg_color: str,
 ) -> list[tuple[float, str]]:
@@ -604,10 +528,12 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
     def __init__(
         self,
+        registered_metrics: Mapping[str, RegisteredMetric],
         perfometer: perfometers_api.Perfometer,
         translated_metrics: Mapping[str, TranslatedMetric],
         themed_perfometer_bg_color: str,
     ) -> None:
+        self.registered_metrics = registered_metrics
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
@@ -620,13 +546,20 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
     def get_stack(self, temperature_unit: TemperatureUnit) -> MetricRendererStack:
         if projections := _project_segments(
             _make_projection(
+                self.registered_metrics,
                 self.perfometer.focus_range,
                 self._PROJECTION_PARAMETERS,
                 self.translated_metrics,
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            [_evaluate_quantity(s, self.translated_metrics) for s in self.perfometer.segments],
+            [
+                result.ok
+                for s in self.perfometer.segments
+                if (
+                    result := evaluate_quantity(self.registered_metrics, s, self.translated_metrics)
+                ).is_ok()
+            ],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
@@ -634,18 +567,40 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
         return []
 
     def get_label(self, temperature_unit: TemperatureUnit) -> str:
-        first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return user_specific_unit(first_segment.unit_spec, temperature_unit).formatter.render(
+        if (
+            first_result := evaluate_quantity(
+                self.registered_metrics, self.perfometer.segments[0], self.translated_metrics
+            )
+        ).is_ok():
+            first_segment = first_result.ok
+        else:
+            first_segment = EvaluatedQuantity(
+                title="",
+                unit=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color=Color.BLACK.fallback,
+                value=0,
+            )
+        return user_specific_unit(first_segment.unit, temperature_unit).formatter.render(
             first_segment.value
             + sum(
-                _evaluate_quantity(s, self.translated_metrics).value
+                result.ok.value
                 for s in self.perfometer.segments[1:]
+                if (
+                    result := evaluate_quantity(self.registered_metrics, s, self.translated_metrics)
+                ).is_ok()
             )
         )
 
     def get_sort_value(self) -> float:
         return sum(
-            _evaluate_quantity(s, self.translated_metrics).value for s in self.perfometer.segments
+            result.ok.value
+            for s in self.perfometer.segments
+            if (
+                result := evaluate_quantity(self.registered_metrics, s, self.translated_metrics)
+            ).is_ok()
         )
 
 
@@ -659,10 +614,12 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
     def __init__(
         self,
+        registered_metrics: Mapping[str, RegisteredMetric],
         perfometer: perfometers_api.Bidirectional,
         translated_metrics: Mapping[str, TranslatedMetric],
         themed_perfometer_bg_color: str,
     ) -> None:
+        self.registered_metrics = registered_metrics
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
@@ -677,6 +634,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
         if left_projections := _project_segments(
             _make_projection(
+                self.registered_metrics,
                 perfometers_api.FocusRange(
                     perfometers_api.Closed(0),
                     self.perfometer.left.focus_range.upper,
@@ -686,7 +644,13 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            [_evaluate_quantity(s, self.translated_metrics) for s in self.perfometer.left.segments],
+            [
+                result.ok
+                for s in self.perfometer.left.segments
+                if (
+                    result := evaluate_quantity(self.registered_metrics, s, self.translated_metrics)
+                ).is_ok()
+            ],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
@@ -694,6 +658,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
         if right_projections := _project_segments(
             _make_projection(
+                self.registered_metrics,
                 perfometers_api.FocusRange(
                     perfometers_api.Closed(0),
                     self.perfometer.right.focus_range.upper,
@@ -704,8 +669,11 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 temperature_unit=temperature_unit,
             ),
             [
-                _evaluate_quantity(s, self.translated_metrics)
+                result.ok
                 for s in self.perfometer.right.segments
+                if (
+                    result := evaluate_quantity(self.registered_metrics, s, self.translated_metrics)
+                ).is_ok()
             ],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
@@ -717,14 +685,14 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
     def get_label(self, temperature_unit: TemperatureUnit) -> str:
         labels = []
 
-        if left_label := _get_renderer(self.perfometer.left, self.translated_metrics).get_label(
-            temperature_unit
-        ):
+        if left_label := _get_renderer(
+            self.registered_metrics, self.perfometer.left, self.translated_metrics
+        ).get_label(temperature_unit):
             labels.append(left_label)
 
-        if right_label := _get_renderer(self.perfometer.right, self.translated_metrics).get_label(
-            temperature_unit
-        ):
+        if right_label := _get_renderer(
+            self.registered_metrics, self.perfometer.right, self.translated_metrics
+        ).get_label(temperature_unit):
             labels.append(right_label)
 
         return " / ".join(labels)
@@ -732,8 +700,12 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
     def get_sort_value(self) -> float:
         return max(
             [
-                _get_renderer(self.perfometer.left, self.translated_metrics).get_sort_value(),
-                _get_renderer(self.perfometer.right, self.translated_metrics).get_sort_value(),
+                _get_renderer(
+                    self.registered_metrics, self.perfometer.left, self.translated_metrics
+                ).get_sort_value(),
+                _get_renderer(
+                    self.registered_metrics, self.perfometer.right, self.translated_metrics
+                ).get_sort_value(),
             ]
         )
 
@@ -741,9 +713,11 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 class MetricometerRendererStacked(MetricometerRenderer):
     def __init__(
         self,
+        registered_metrics: Mapping[str, RegisteredMetric],
         perfometer: perfometers_api.Stacked,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
+        self.registered_metrics = registered_metrics
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self.translated_metrics = translated_metrics
@@ -756,12 +730,12 @@ class MetricometerRendererStacked(MetricometerRenderer):
         projections: list[Sequence[tuple[float, str]]] = []
 
         if upper_projections := _get_renderer(
-            self.perfometer.upper, self.translated_metrics
+            self.registered_metrics, self.perfometer.upper, self.translated_metrics
         ).get_stack(temperature_unit):
             projections.append(upper_projections[0])
 
         if lower_projections := _get_renderer(
-            self.perfometer.lower, self.translated_metrics
+            self.registered_metrics, self.perfometer.lower, self.translated_metrics
         ).get_stack(temperature_unit):
             projections.append(lower_projections[0])
 
@@ -770,23 +744,26 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def get_label(self, temperature_unit: TemperatureUnit) -> str:
         labels = []
 
-        if upper_label := _get_renderer(self.perfometer.upper, self.translated_metrics).get_label(
-            temperature_unit
-        ):
+        if upper_label := _get_renderer(
+            self.registered_metrics, self.perfometer.upper, self.translated_metrics
+        ).get_label(temperature_unit):
             labels.append(upper_label)
 
-        if lower_label := _get_renderer(self.perfometer.lower, self.translated_metrics).get_label(
-            temperature_unit
-        ):
+        if lower_label := _get_renderer(
+            self.registered_metrics, self.perfometer.lower, self.translated_metrics
+        ).get_label(temperature_unit):
             labels.append(lower_label)
 
         return " / ".join(labels)
 
     def get_sort_value(self) -> float:
-        return _get_renderer(self.perfometer.upper, self.translated_metrics).get_sort_value()
+        return _get_renderer(
+            self.registered_metrics, self.perfometer.upper, self.translated_metrics
+        ).get_sort_value()
 
 
 def _get_renderer(
+    registered_metrics: Mapping[str, RegisteredMetric],
     perfometer_plugin: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
@@ -797,22 +774,29 @@ def _get_renderer(
     match perfometer_plugin:
         case perfometers_api.Perfometer():
             return MetricometerRendererPerfometer(
+                registered_metrics,
                 perfometer_plugin,
                 translated_metrics,
                 get_perfometer_bg_color(),
             )
         case perfometers_api.Bidirectional():
             return MetricometerRendererBidirectional(
+                registered_metrics,
                 perfometer_plugin,
                 translated_metrics,
                 get_perfometer_bg_color(),
             )
         case perfometers_api.Stacked():
-            return MetricometerRendererStacked(perfometer_plugin, translated_metrics)
+            return MetricometerRendererStacked(
+                registered_metrics,
+                perfometer_plugin,
+                translated_metrics,
+            )
 
 
 def _get_first_matching_perfometer_testable(
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_metrics: Mapping[str, RegisteredMetric],
     registered_perfometers: Mapping[
         str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ],
@@ -833,15 +817,16 @@ def _get_first_matching_perfometer_testable(
                 and (superseder := registered_perfometers.get(superseder_name))
                 and _perfometer_plugin_matches(superseder, translated_metrics)
             ):
-                return _get_renderer(superseder, translated_metrics)
+                return _get_renderer(registered_metrics, superseder, translated_metrics)
 
-            return _get_renderer(perfometer_plugin, translated_metrics)
+            return _get_renderer(registered_metrics, perfometer_plugin, translated_metrics)
 
     return None
 
 
 def get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_metrics: Mapping[str, RegisteredMetric],
     registered_perfometers: Mapping[
         str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ],
@@ -853,6 +838,7 @@ def get_first_matching_perfometer(
 ):
     return _get_first_matching_perfometer_testable(
         translated_metrics,
+        registered_metrics,
         registered_perfometers,
         PERFOMETER_SUPERSEDED_TO_SUPERSEDER,
     )

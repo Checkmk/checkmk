@@ -6,7 +6,6 @@
 import colorsys
 import random
 from collections import Counter
-from dataclasses import dataclass
 from enum import Enum
 from typing import Literal
 
@@ -318,89 +317,75 @@ def get_gray_tone(color_counter: Counter[Literal["metric", "predictive"]]) -> st
     return _rgb_color_to_hex_color(value, value, value)
 
 
-@dataclass(frozen=True, kw_only=True)
-class ColorChoice:
-    brand: str
-    fallback: str
-
-
 class Color(Enum):
     # light-red.30
-    LIGHT_RED = ColorChoice(brand="#f37c7c", fallback="#ff7070")
+    LIGHT_RED = "#f37c7c"
     # light-red.50
-    RED = ColorChoice(brand="#ed3b3b", fallback="#ff2929")
+    RED = "#ed3b3b"
     # light-red.70
-    DARK_RED = ColorChoice(brand="#a82a2a", fallback="#e62525")
+    DARK_RED = "#a82a2a"
     # orange.30
-    LIGHT_ORANGE = ColorChoice(brand="#ffad54", fallback="#ff9664")
+    LIGHT_ORANGE = "#ffad54"
     # orange.50
-    ORANGE = ColorChoice(brand="#ff8400", fallback="#ff6e21")
+    ORANGE = "#ff8400"
     # orange.70
-    DARK_ORANGE = ColorChoice(brand="#b55e00", fallback="#cc5819")
+    DARK_ORANGE = "#b55e00"
     # yellow.30
-    LIGHT_YELLOW = ColorChoice(brand="#ffe456", fallback="#ffff78")
+    LIGHT_YELLOW = "#ffe456"
     # yellow.50
-    YELLOW = ColorChoice(brand="#ffd703", fallback="#f5f532")
+    YELLOW = "#ffd703"
     # yellow.70
-    DARK_YELLOW = ColorChoice(brand="#ac7c02", fallback="#aaaa00")
+    DARK_YELLOW = "#ac7c02"
     # corporate-green.30
-    LIGHT_GREEN = ColorChoice(brand="#62e0bf", fallback="#a5ff55")
+    LIGHT_GREEN = "#62e0bf"
     # corporate-green.50
-    GREEN = ColorChoice(brand="#15d1a0", fallback="#37fa37")
+    GREEN = "#15d1a0"
     # corporate-green.70
-    DARK_GREEN = ColorChoice(brand="#0f9472", fallback="#288c0f")
+    DARK_GREEN = "#0f9472"
     # light-blue.30
-    LIGHT_BLUE = ColorChoice(brand="#6fc1f7", fallback="#87cefa")
+    LIGHT_BLUE = "#6fc1f7"
     # light-blue.50
-    BLUE = ColorChoice(brand="#28a2f3", fallback="#1e90ff")
+    BLUE = "#28a2f3"
     # light-blue.70
-    DARK_BLUE = ColorChoice(brand="#1c73ad", fallback="#1873cc")
+    DARK_BLUE = "#1c73ad"
     # cyan.30
-    LIGHT_CYAN = ColorChoice(brand="#68eeee", fallback="#96ffff")
+    LIGHT_CYAN = "#68eeee"
     # cyan.50
-    CYAN = ColorChoice(brand="#1ee6e6", fallback="#1ee6e6")
+    CYAN = "#1ee6e6"
     # cyan.70
-    DARK_CYAN = ColorChoice(brand="#17b5b5", fallback="#14878c")
+    DARK_CYAN = "#17b5b5"
     # purple.30
-    LIGHT_PURPLE = ColorChoice(brand="#acaaff", fallback="#e1b3f9")
+    LIGHT_PURPLE = "#acaaff"
     # purple.50
-    PURPLE = ColorChoice(brand="#8380ff", fallback="#d28df6")
+    PURPLE = "#8380ff"
     # purple.70
-    DARK_PURPLE = ColorChoice(brand="#5d5bb5", fallback="#b441f0")
+    DARK_PURPLE = "#5d5bb5"
     # pink.30
-    LIGHT_PINK = ColorChoice(brand="#f9a8e2", fallback="#ffa0f0")
+    LIGHT_PINK = "#f9a8e2"
     # pink.50
-    PINK = ColorChoice(brand="#ec48b6", fallback="#ff64ff")
+    PINK = "#ec48b6"
     # pink.70
-    DARK_PINK = ColorChoice(brand="#be187a", fallback="#d214be")
+    DARK_PINK = "#be187a"
     # brown.30
-    LIGHT_BROWN = ColorChoice(brand="#d4ad84", fallback="#e6b48c")
+    LIGHT_BROWN = "#d4ad84"
     # brown.50
-    BROWN = ColorChoice(brand="#bf8548", fallback="#bf8548")
+    BROWN = "#bf8548"
     # brown.70
-    DARK_BROWN = ColorChoice(brand="#885e33", fallback="#996a3a")
+    DARK_BROWN = "#885e33"
     # mist-grey.30
-    LIGHT_GRAY = ColorChoice(brand="#acacac", fallback="#c8c8c8")
+    LIGHT_GRAY = "#acacac"
     # mist-grey.50
-    GRAY = ColorChoice(brand="#8c8c8c", fallback="#a4a4a4")
+    GRAY = "#8c8c8c"
     # mist-grey.70
-    DARK_GRAY = ColorChoice(brand="#5d5d5d", fallback="#797979")
+    DARK_GRAY = "#5d5d5d"
 
     # conference-grey.100
-    BLACK = ColorChoice(brand="#1e262e", fallback="#000000")
+    BLACK = "#1e262e"
     # white.100
-    WHITE = ColorChoice(brand="#ffffff", fallback="#ffffff")
+    WHITE = "#ffffff"
 
-    WARN = ColorChoice(brand="#ffd000", fallback="#ffd000")
-    CRIT = ColorChoice(brand="#ff3232", fallback="#ff3232")
-
-    @property
-    def brand(self) -> str:
-        return self.value.brand
-
-    @property
-    def fallback(self) -> str:
-        return self.value.fallback
+    WARN = "#ffd000"
+    CRIT = "#ff3232"
 
 
 def parse_color_from_api(

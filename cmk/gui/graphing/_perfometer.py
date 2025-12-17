@@ -580,7 +580,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                     notation=DecimalNotation(symbol=""),
                     precision=AutoPrecision(digits=2),
                 ),
-                color=Color.BLACK.fallback,
+                color=Color.BLACK.value,
                 value=0,
             )
         return user_specific_unit(first_segment.unit, temperature_unit).formatter.render(

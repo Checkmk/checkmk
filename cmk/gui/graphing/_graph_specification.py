@@ -61,7 +61,7 @@ def compute_warn_crit_rules_from_translated_metric(
             HorizontalRule(
                 value=warn_value,
                 rendered_value=user_specific_unit.formatter.render(warn_value),
-                color=Color.WARN.fallback,
+                color=Color.WARN.value,
                 title=_("Warning"),
             )
         )
@@ -70,7 +70,7 @@ def compute_warn_crit_rules_from_translated_metric(
             HorizontalRule(
                 value=crit_value,
                 rendered_value=user_specific_unit.formatter.render(crit_value),
-                color=Color.CRIT.fallback,
+                color=Color.CRIT.value,
                 title=_("Critical"),
             )
         )

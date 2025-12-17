@@ -25,7 +25,7 @@ def test_add_graphing_plugins() -> None:
         notation=DecimalNotation(symbol=""),
         precision=StrictPrecision(digits=2),
     )
-    assert idle_connections.color == "#b441f0"
+    assert idle_connections.color == "#5d5bb5"
 
     active_connections = get_metric_spec("active_connections", metrics_from_api)
     assert active_connections.name == "active_connections"
@@ -34,7 +34,7 @@ def test_add_graphing_plugins() -> None:
         notation=DecimalNotation(symbol=""),
         precision=StrictPrecision(digits=2),
     )
-    assert active_connections.color == "#d28df6"
+    assert active_connections.color == "#8380ff"
 
     assert "check_mk-citrix_serverload" in check_metrics
     assert check_metrics["check_mk-citrix_serverload"] == {

@@ -38,7 +38,7 @@ def parse_metric_from_api(metric_from_api: metrics_api.Metric) -> RegisteredMetr
         name=metric_from_api.name,
         title_localizer=metric_from_api.title.localize,
         unit_spec=parse_unit_from_api(metric_from_api.unit),
-        color=parse_color_from_api(metric_from_api.color).fallback,
+        color=parse_color_from_api(metric_from_api.color).value,
     )
 
 

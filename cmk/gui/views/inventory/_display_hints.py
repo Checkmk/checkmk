@@ -200,13 +200,13 @@ def _compute_td_styles(
             case other:
                 assert_never(other)
     if text_colors:
-        color = text_colors[0].brand
+        color = text_colors[0].value
     else:
-        color = _set_text_color(background_colors[0]).brand if background_colors else ""
+        color = _set_text_color(background_colors[0]).value if background_colors else ""
     return TDStyles(
         css_class="",
         text_align=_parse_alignment_from_api(alignments[0] if alignments else default_alignment),
-        background_color=background_colors[0].brand if background_colors else "",
+        background_color=background_colors[0].value if background_colors else "",
         color=color,
     )
 

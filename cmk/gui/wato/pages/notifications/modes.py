@@ -2213,7 +2213,11 @@ class ModeTestNotifications(ModeNotifications):
         resp: LivestatusResponse,
         prefix: Literal["HOST", "SERVICE"],
     ) -> None:
-        custom_vars = dict(zip(resp[0][1], resp[0][2]))
+        custom_vars = (
+            dict(zip(resp[0][1], resp[0][2]))
+            if prefix == "HOST"
+            else dict(zip(resp[0][0], resp[0][1]))
+        )
         for key, value in custom_vars.items():
             # Special case for service level
             if key == "EC_SL":

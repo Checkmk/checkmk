@@ -30,6 +30,7 @@ class DeviceInfo(BaseModel, frozen=True):
     description: str = Field(alias="name")
     mac_address: str = Field(alias="mac")
     network_id: str = Field(alias="networkId")
+    network_name: str = Field(alias="networkName")
     product: str = Field(default="", alias="productType")
 
 
@@ -46,6 +47,9 @@ def host_label_meraki_device_info(section: Section) -> HostLabelGenerator:
         cmk/meraki/net_id:
             This label is set to the network id the Meraki device belongs to.
 
+        cmk/meraki/net_name:
+            This label is set to the network name the Meraki device belongs to.
+
         cmk/meraki/org_id:
             This label is set to the organisation id the Meraki device belongs to.
 
@@ -55,6 +59,7 @@ def host_label_meraki_device_info(section: Section) -> HostLabelGenerator:
     yield HostLabel("cmk/meraki", "yes")
     yield HostLabel("cmk/meraki/device_type", section.product)
     yield HostLabel("cmk/meraki/net_id", section.network_id)
+    yield HostLabel("cmk/meraki/net_name", section.network_name)
     yield HostLabel("cmk/meraki/org_id", section.organisation_id)
     yield HostLabel("cmk/meraki/org_name", section.organisation_name)
 
@@ -83,6 +88,7 @@ def inventory_device_info(section: Section) -> InventoryResult:
             "model": section.model,
             "description": section.description,
             "mac_address": section.mac_address,
+            "manufacturer": "Cisco Meraki",
         },
     )
     yield Attributes(
@@ -97,6 +103,7 @@ def inventory_device_info(section: Section) -> InventoryResult:
             "organisation_id": section.organisation_id,
             "organisation_name": section.organisation_name,
             "network_id": section.network_id,
+            "network_name": section.network_name,
             "address": section.address,
         },
     )

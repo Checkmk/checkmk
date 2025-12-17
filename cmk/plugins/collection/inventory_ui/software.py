@@ -1137,6 +1137,7 @@ node_software_configuration_organisation = Node(
         "organisation_id": TextField(Title("Organisation ID")),
         "organisation_name": TextField(Title("Organisation name")),
         "network_id": TextField(Title("Network ID")),
+        "network_name": TextField(Title("Network name")),
         "address": TextField(Title("Address")),
     },
 )

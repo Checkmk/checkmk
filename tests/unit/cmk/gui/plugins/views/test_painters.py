@@ -508,6 +508,7 @@ def test_registered_painters() -> None:
         "inv_software_configuration_organisation",
         "inv_software_configuration_organisation_address",
         "inv_software_configuration_organisation_network_id",
+        "inv_software_configuration_organisation_network_name",
         "inv_software_configuration_organisation_organisation_id",
         "inv_software_configuration_organisation_organisation_name",
         "inv_software_configuration_snmp_info",

@@ -417,6 +417,7 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "organisation_id",
         "organisation_name",
         "network_id",
+        "network_name",
         "address",
     ],
     ("software", "firmware"): ["vendor", "version", "platform_level"],

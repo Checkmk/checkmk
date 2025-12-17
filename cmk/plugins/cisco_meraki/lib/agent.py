@@ -118,15 +118,20 @@ class MerakiOrganisation:
                     data=licenses_overview,
                 )
 
+        if networks := {net["id"]: net for net in self.client.get_networks(self.id, self.name)}:
+            yield Section(name="cisco_meraki_org_networks", data=networks)
+
         devices_by_serial = {}
 
         if self.config.required.devices:
             for raw_device in self.client.get_devices(self.id):
+                network = networks.get(raw_device["networkId"])
                 serial = raw_device["serial"]
 
                 devices_by_serial[serial] = Device(
                     organisation_id=self.id,
                     organisation_name=self.name,
+                    networkName=network["name"] if network else "",
                     **raw_device,
                 )
 
@@ -182,9 +187,6 @@ class MerakiOrganisation:
                             data=sensor_reading,
                             piggyback=piggyback or None,
                         )
-
-        if networks := {net["id"]: net for net in self.client.get_networks(self.id, self.name)}:
-            yield Section(name="cisco_meraki_org_networks", data=networks)
 
         if devices_by_type.get("appliance"):
             if self.config.required.appliance_uplinks:

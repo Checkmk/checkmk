@@ -27,6 +27,7 @@ def test_host_label_meraki_device_info() -> None:
         organisation_id="123",
         organisation_name="org-name",
         networkId="N_24329156",
+        networkName="work",
     )
     string_table = [[f"[{json.dumps(device)}]"]]
     section = parse_device_info(string_table)
@@ -37,6 +38,7 @@ def test_host_label_meraki_device_info() -> None:
         HostLabel("cmk/meraki", "yes"),
         HostLabel("cmk/meraki/device_type", "appliance"),
         HostLabel("cmk/meraki/net_id", "N_24329156"),
+        HostLabel("cmk/meraki/net_name", "work"),
         HostLabel("cmk/meraki/org_id", "123"),
         HostLabel("cmk/meraki/org_name", "org-name"),
     ]
@@ -55,6 +57,7 @@ def test_inventory_device_info() -> None:
         organisation_id="123",
         organisation_name="org-name",
         networkId="N_24329156",
+        networkName="work",
         address="1600 Pennsylvania Ave",
     )
     string_table = [[f"[{json.dumps(device)}]"]]
@@ -71,6 +74,7 @@ def test_inventory_device_info() -> None:
                 "model": "MR34",
                 "description": "My AP",
                 "mac_address": "00:11:22:33:44:55",
+                "manufacturer": "Cisco Meraki",
             },
         ),
         Attributes(
@@ -85,6 +89,7 @@ def test_inventory_device_info() -> None:
                 "organisation_id": "123",
                 "organisation_name": "org-name",
                 "network_id": "N_24329156",
+                "network_name": "work",
                 "address": "1600 Pennsylvania Ave",
             },
         ),

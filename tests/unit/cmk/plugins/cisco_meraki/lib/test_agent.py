@@ -98,12 +98,13 @@ class TestMerakiAgentOutput:
 
         assert value == expected
 
+    # TODO: reevaluate this test. It's a bit clunky because some sections are always written.
     def test_section_specified(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
         updated_ctx = _update_section_names(ctx, sections={"licenses-overview"})
         agent.run(updated_ctx)
 
         value = re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out)
-        expected = ["organisations", "licenses_overview"]
+        expected = ["organisations", "licenses_overview", "networks"]
 
         assert value == expected
 

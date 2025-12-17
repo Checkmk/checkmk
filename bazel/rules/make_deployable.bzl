@@ -76,7 +76,7 @@ def _string_replace_impl(ctx):
         inputs = [ctx.file.src],
         outputs = [output_dir],
         command = """
-        cp -a --dereference {src_path} {dst_path}
+        cp -a --dereference {src_path}/. {dst_path}
         find {dst_path} -type f {filepattern} -exec sed -i 's|{replace_pattern}|{value}|' {{}} \\;
         """.format(
             src_path = ctx.file.src.path,

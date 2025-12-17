@@ -87,6 +87,7 @@ pkg_files(
     name = "lib_pkg",
     srcs = [":lib_with_omdroot_filegroup"],
     attributes = pkg_attributes(mode = "0755"),
+    prefix = "lib",
     strip_prefix = strip_prefix.from_pkg("lib_with_omdroot_filegroup"),
     tags = ["manual"],
 )

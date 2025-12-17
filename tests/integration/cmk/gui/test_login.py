@@ -375,6 +375,18 @@ def enable_2fa(site: Site, username: str) -> Iterator[None]:
         site.delete_file(f"var/check_mk/web/{username}/two_factor_credentials.mk")
 
 
+@contextlib.contextmanager
+def require_password_change(site: Site, username: str) -> Iterator[None]:
+    """Requires password change for username; unconditionally unsets the flag on exit!"""
+    pw_change_marker = f"var/check_mk/web/{username}/enforce_pw_change.mk"
+
+    site.write_file(pw_change_marker, "1\n")
+    try:
+        yield
+    finally:
+        site.delete_file(pw_change_marker)
+
+
 def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
     """you're not supposed to access the rest api if you have 2fa enabled (except for cookie auth)
 
@@ -440,3 +452,20 @@ def test_invalid_remote_site_login(site: Site) -> None:
         allow_redirect_to_login=True,
     )
     assert "check_mk/login.py" in response.url
+
+
+def test_rest_api_requires_password_change(site: Site) -> None:
+    """test that rest api access is blocked when user is required to change password"""
+
+    username = "cmkadmin"
+    password = site.admin_password
+
+    with require_password_change(site, username):
+        session = CMKWebSession(site)
+        response = session.get(
+            f"/{site.id}/check_mk/api/1.0/version",
+            headers={"Authorization": f"Bearer {username} {password}"},
+            expected_code=401,
+        )
+        assert not session.is_logged_in()
+        assert response.json()["detail"] == "Password change is required."

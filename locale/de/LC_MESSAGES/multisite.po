@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-12-15 22:04+0000\n"
+"PO-Revision-Date: 2025-12-16 21:04+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -15868,7 +15868,7 @@ msgid ""
 "custom macros"
 msgstr ""
 "Separate Bulk-Benachrichtigungen erstellen für unterschiedliche Werte der "
-"folgenden Benutzermakros"
+"folgenden benutzerdefinierten Makros"
 
 msgid "Create separate service for DB time"
 msgstr "Separaten Service für DB-Time erstellen"
@@ -16411,7 +16411,7 @@ msgid "Custom"
 msgstr "Benutzerdefiniert"
 
 msgid "Custom Action"
-msgstr "Angepasste Aktion"
+msgstr "Benutzerdefinierte Aktion"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -16424,22 +16424,22 @@ msgid "Custom HTML section (e.g. title, description…)"
 msgstr "Benutzerdefinierte HTML-Sektion (z. B. Titel, Beschreibung...)"
 
 msgid "Custom Icons"
-msgstr "Benutzericons"
+msgstr "Benutzerdefinierte Symbole"
 
 msgid "Custom MBeans"
-msgstr "Eigene MBeans"
+msgstr "Benutzerdefinierte MBeans"
 
 msgid "Custom MIBs"
-msgstr "Eigene MIBs"
+msgstr "Benutzerdefinierte MIBs"
 
 msgid "Custom SQL"
 msgstr "Benutzerdefiniertes SQL"
 
 msgid "Custom Time Span:"
-msgstr "Benutzer-Zeitspanne:"
+msgstr "Benutzerdefinierte Zeitspanne:"
 
 msgid "Custom URL"
-msgstr "Benutzer-URL"
+msgstr "Benutzerdefinierte URL"
 
 msgid "Custom action"
 msgstr "Benutzerdefinierte Aktion"
@@ -16454,10 +16454,10 @@ msgid "Custom attributes"
 msgstr "Benutzerdefinierte Attribute"
 
 msgid "Custom checks - defined via rule"
-msgstr "Benutzerdefinierter Check - definiert über eine Regel"
+msgstr "Benutzerdefinierte Checks - definiert über eine Regel"
 
 msgid "Custom event limit"
-msgstr "Individuelle Ereignislimit"
+msgstr "Benutzerdefiniertes Ereignislimit"
 
 msgid "Custom fields"
 msgstr "Benutzerdefinierte Felder"
@@ -16487,22 +16487,22 @@ msgid "Custom host name prefix"
 msgstr "Benutzerdefiniertes Host-Namen-Präfix"
 
 msgid "Custom host notes"
-msgstr "Spezifische Anmerkungen zu Hosts"
+msgstr "Benutzerdefinierte Anmerkungen zu Hosts"
 
 msgid "Custom host/service notes URL"
-msgstr "URL für Benutzernotizen zu Hosts und Services"
+msgstr "URL für benutzerdefinierte Anmerkungen zu Hosts und Services"
 
 msgid "Custom icons"
-msgstr "Benutzericons"
+msgstr "Benutzerdefinierte Symbole"
 
 msgid "Custom icons and actions"
-msgstr "Benutzericons und -aktionen"
+msgstr "Benutzerdefinierte Symbole und Aktionen"
 
 msgid "Custom icons or actions for hosts in status GUI"
-msgstr "Benutzersymbole/Aktionen für Hosts in der Status-GUI"
+msgstr "Benutzerdefinierte Symbole/Aktionen für Hosts in der Status-GUI"
 
 msgid "Custom icons or actions for services in status GUI"
-msgstr "Benutzersymbole/Aktionen für Services in der Status-GUI"
+msgstr "Benutzerdefinierte Symbole/Aktionen für Services in der Status-GUI"
 
 msgid "Custom incident summary for host alerts"
 msgstr "Benutzerdefinierte Ereigniszusammenfassung für Host-Alerts"
@@ -16520,7 +16520,7 @@ msgid "Custom label"
 msgstr "Benutzerdefiniertes Label"
 
 msgid "Custom localizations"
-msgstr "Angepasste Lokalisierungen"
+msgstr "Benutzerdefinierte Lokalisierungen"
 
 msgid "Custom logos"
 msgstr "Benutzerdefinierte Logos"
@@ -16542,7 +16542,7 @@ msgid "Custom port"
 msgstr "Benutzerdefinierter Port"
 
 msgid "Custom probe state"
-msgstr "Individueller Zustand der Messung"
+msgstr "Benutzerdefinierter Sonden-Zustand"
 
 msgid "Custom profile"
 msgstr "Benutzerdefiniertes Profil"
@@ -16566,35 +16566,35 @@ msgid "Custom service name"
 msgstr "Benutzerdefinierter Service-Name"
 
 msgid "Custom services notes"
-msgstr "Angepasste Serviceanmerkungen"
+msgstr "Benutzerdefinierte Serviceanmerkungen"
 
 msgid "Custom settings"
-msgstr "Individuelle Einstellungen"
+msgstr "Benutzerdefinierte Einstellungen"
 
 msgid "Custom sidebar element"
-msgstr "Benutzerseitenleistenelement"
+msgstr "Benutzerdefiniertes Seitenleistenelement"
 
 msgid "Custom sidebar elements"
-msgstr "Benutzerseitenleistenelemente"
+msgstr "Benutzerdefinierte Seitenleistenelemente"
 
 msgid "Custom states"
-msgstr "Individuelle Zustände"
+msgstr "Benutzerdefinierte Zustände"
 
 msgid "Custom time span"
 msgstr "Benutzerdefinierte Zeitspanne"
 
 msgid "Custom title"
-msgstr "Angepasster Titel"
+msgstr "Benutzerdefinierter Titel"
 
 msgid "Custom user attributes"
 msgstr "Benutzerdefinierte Benutzer-Attribute"
 
 #, python-format
 msgid "Custom variable: %s"
-msgstr "Benutzervariable: %s"
+msgstr "Benutzerdefinierte Variable: %s"
 
 msgid "Customcheck"
-msgstr "Individueller Check"
+msgstr "Benutzerdefinierter Check"
 
 msgid "Customer"
 msgstr "Kunde"
@@ -18109,7 +18109,7 @@ msgid "Delete custom attribute #%d"
 msgstr "Benutzerdefiniertes Attribut #%d löschen"
 
 msgid "Delete custom logo"
-msgstr "Angepasstes Logo löschen"
+msgstr "Benutzerdefiniertes Logo löschen"
 
 #, python-format
 msgid "Delete customer #%d"
@@ -18419,11 +18419,11 @@ msgstr "Verbindung %s löschen"
 
 #, python-format
 msgid "Deleted custom GUI logo %s"
-msgstr "Angepasstes GUI-Logo gelöscht %s"
+msgstr "Benutzerdefiniertes GUI-Logo gelöscht %s"
 
 #, python-format
 msgid "Deleted custom logo %s"
-msgstr "Angepasstes Logo %s gelöscht"
+msgstr "Benutzerdefiniertes Logo %s gelöscht"
 
 #, python-format
 msgid "Deleted folder %s"
@@ -19955,7 +19955,7 @@ msgstr ""
 "Tabelle an."
 
 msgid "Displays the content of a custom website."
-msgstr "Zeigt den Inhalt einer beliebigen Webseite."
+msgstr "Zeigt den Inhalt einer benutzerdefinierten Website."
 
 msgid "Displays the content of a view"
 msgstr "Zeigt den Inhalt einer View an"
@@ -21768,7 +21768,7 @@ msgid ""
 "Either a title is customized for all graphs of this element or per graph the "
 "related title is used as a header."
 msgstr ""
-"Entweder wird ein Titel für alle Graphen dieses Elements definiert oder für "
+"Entweder wird ein Titel für alle Graphen dieses Elements angepasst oder für "
 "jeden Graph wird der zugehörige Titel als Header verwendet."
 
 msgid ""
@@ -23782,7 +23782,7 @@ msgid "Extend downtimes by..."
 msgstr "Wartungszeit verlängern um..."
 
 msgid "Extend the Checkmk GUI with your custom icons"
-msgstr "Erweitern Sie die Checkmk-GUI mit eigenen benutzerdefinierten Icons"
+msgstr "Erweitern Sie die Checkmk-GUI mit eigenen benutzerdefinierten Symbolen"
 
 msgid "Extended perfdata"
 msgstr "Erweiterte Metriken"
@@ -25590,7 +25590,7 @@ msgstr ""
 "ausgewählt sein."
 
 msgid "Found <tt>omdadmin</tt> using custom password."
-msgstr "Nutzer <tt>omdadmin</tt> mit angepasstem Passwort gefunden."
+msgstr "Nutzer <tt>omdadmin</tt> mit benutzerdefiniertem Passwort gefunden."
 
 msgid ""
 "Found <tt>omdadmin</tt> with default password. It is highly recommended to "
@@ -29286,10 +29286,10 @@ msgid "Host custom attributes"
 msgstr "Benutzerdefinierte Attribute des Hosts"
 
 msgid "Host custom field ID"
-msgstr "ID des benutzerdefinierten Host Feldes"
+msgstr "ID des benutzerdefinierten Host-Feldes"
 
 msgid "Host customer"
-msgstr "Host Kunde"
+msgstr "Host-Kunde"
 
 msgid "Host details"
 msgstr "Host-Details"
@@ -31925,14 +31925,14 @@ msgid ""
 "to add the variables <tt>NOTIFY_HOST_FOO</tt> and <tt>NOTIFY_SERVICE_FOO</"
 "tt>."
 msgstr ""
-"Wenn Sie hier die Namen von Host-/Dienstmakros eingeben, wird für jede "
-"unterschiedliche Kombination von Werten dieser Makros ein eigener Bulk "
-"erstellt. Servicemakros werden zuerst abgeglichen, wenn kein Servicemakro "
-"gefunden wird, werden die Hostmakros durchsucht. Dies kann in Kombination "
-"mit der Gruppierung nach Ordner, Host usw. verwendet werden. Lassen Sie "
-"jeden führenden Unterstrich weg. <b>Hinweis</b>: Wenn Sie als Kern Nagios "
-"verwenden, dann müssen Sie sicherstellen, dass diese Makros auch im "
-"Benachrichtigungskontext verfügbar sind. Dies wird in "
+"Wenn Sie hier die Namen von benutzerdefinierten Host-/Service-Makros "
+"eingeben, wird für jede unterschiedliche Kombination von Werten dieser "
+"Makros ein eigener Bulk erstellt. Service-Makros werden zuerst abgeglichen, "
+"wenn kein Service-Makro gefunden wird, werden die Host-Makros durchsucht. "
+"Dies kann in Kombination mit der Gruppierung nach Ordner, Host usw. "
+"verwendet werden. Lassen Sie jeden führenden Unterstrich weg. <b>Hinweis</b>:"
+" Wenn Sie als Kern Nagios verwenden, dann müssen Sie sicherstellen, dass "
+"diese Makros auch im Benachrichtigungskontext verfügbar sind. Dies wird in "
 "<tt>check_mk_templates.cfg</tt> konfiguriert. Wenn Ihr Makro <tt>_FOO</tt> "
 "ist, dann müssen Sie die beiden Variablen <tt>NOTIFY_HOST_FOO</tt> und "
 "<tt>NOTIFY_SERVICE_FOO</tt> hinzufügen."
@@ -32275,9 +32275,9 @@ msgid ""
 "shipped agent plug-ins will continue to work!<br><br>Specify the extensions "
 "in lower case and without a leading dot."
 msgstr ""
-"Wenn Sie Ihre eigenen Agenten-Plugins unter Windows ausführen wollen, "
-"schieben Sie diese einfach in den Unterordner <tt>plugins</tt> des "
-"Installationsverzeichnisses Ihres Agenten. <i>Lokale Checks</i> "
+"Wenn Sie Ihre eigenen benutzerdefinierten Agenten-Plugins unter Windows "
+"ausführen wollen, schieben Sie diese einfach in den Unterordner <tt>plugins</"
+"tt> des Installationsverzeichnisses Ihres Agenten. <i>Lokale Checks</i> "
 "funktionieren genauso, werden aber in <tt>local</tt> installiert. Von der "
 "Agentenbäckerei verteilte Plugins werden vom MSI-Installer in dasselbe "
 "Verzeichnis installiert. Dieser Regelsatz schränkt die Dateiendungen ein, "
@@ -32997,10 +32997,10 @@ msgid ""
 "Celsius. With this setting you can force the reading of the sensor to be "
 "interpreted as customized. "
 msgstr ""
-"In einigen seltenen Fällen ist die Einheit, die vom Sensor gemeldet wird, "
-"falsch und der Sensor meldet Werte in Fahrenheit, die eigentlich in Celsius "
-"sind. Mit dieser Einstellungen können Sie eine Interpretation einer "
-"bestimmten Einheit erzwingen. "
+"In seltenen Fällen ist die vom Sensor gemeldete Einheit falsch, und der "
+"Sensor sendet beispielsweise Werte in Fahrenheit, die fälschlicherweise als "
+"Celsius interpretiert werden. Mit dieser Einstellung können Sie festlegen, "
+"dass die Messwerte des Sensors als benutzerdefiniert interpretiert werden. "
 
 msgid "In termination"
 msgstr "Wird beendet"
@@ -34918,7 +34918,7 @@ msgid "Jira URL"
 msgstr "Jira-URL"
 
 msgid "Jira custom service"
-msgstr "Jira Custom Service"
+msgstr "Benutzerdefinierter Jira-Service"
 
 msgid "Jira instance to query"
 msgstr "Abzufragende Jira-Instanz"
@@ -36138,9 +36138,8 @@ msgstr "Levels für die Tablespace-Grösse"
 msgid "Levels for the Tablespace usage"
 msgstr "Levels für die Tablespacebelegung"
 
-#, fuzzy
 msgid "Levels for the consumer count"
-msgstr "Levels für die Anzahl der Consumer"
+msgstr "Levels für die Consumer-Zählung"
 
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Levels für den Stromverbrauch eines Gerätes "
@@ -36952,7 +36951,7 @@ msgid "List of users and password allowed to use this endpoint"
 msgstr "Liste der Benutzer und Passwörter, die diesen Endpunkt nutzen dürfen"
 
 msgid "List unpackaged files"
-msgstr "Entpackte Dateien auflisten"
+msgstr "Unpaketierte Dateien auflisten"
 
 msgid "Listen for incoming messages via"
 msgstr "Auf eingehende Meldungen horchen"
@@ -42444,7 +42443,7 @@ msgid "No contact groups assigned."
 msgstr "Keine Kontakt-Gruppen zugewiesen."
 
 msgid "No custom attributes are defined yet."
-msgstr "Es wurden noch keine Benutzer-Attribute definiert."
+msgstr "Es wurden noch keine benutzerdefinierten Attribute definiert."
 
 msgid "No data"
 msgstr "Keine Daten"
@@ -47054,8 +47053,7 @@ msgstr "Paket %s"
 msgid ""
 "Package customized monitoring agents for Windows, Linux, Solaris and AIX."
 msgstr ""
-"Individuelle Monitoring-Agenten für Windows, Linux, Solaris und AIX "
-"paketieren."
+"Angepasste Monitoring-Agenten für Windows, Linux, Solaris und AIX paketieren."
 
 msgid "Package name"
 msgstr "Paketname"
@@ -49977,10 +49975,10 @@ msgstr ""
 "Informationen zu holen"
 
 msgid "Prometheus custom service"
-msgstr "kundenspezifischer Prometheus-Service"
+msgstr "Benutzerdefinierter Prometheus-Service"
 
 msgid "Prometheus custom services"
-msgstr "kundenspezifische Prometheus-Dienstleistungen"
+msgstr "Benutzerdefinierte Prometheus-Services"
 
 msgid "Prometheus scrape configurations"
 msgstr "Prometheus scrape Konfiguration"
@@ -51588,7 +51586,7 @@ msgid "Release"
 msgstr "Release"
 
 msgid "Release package"
-msgstr "Release-Paket"
+msgstr "Paket freigeben"
 
 msgid "Reliability"
 msgstr "Zuverlässigkeit"
@@ -52710,7 +52708,7 @@ msgid "Restrict by contact groups"
 msgstr "Anhand von Kontaktgruppe einschränken"
 
 msgid "Restrict by custom macros"
-msgstr "Anhand von Benutzermakros einschränken"
+msgstr "Anhand von benutzerdefinierten Makros einschränken"
 
 msgid "Restrict by description"
 msgstr "Nach Beschreibung einschränken"
@@ -53604,7 +53602,7 @@ msgstr "SAML-Verbindungen"
 #, python-format
 msgid "SAML custom encryption certificate for the connection '%s'"
 msgstr ""
-"benutzerdefiniertes SAML Verschlüsselungszertifikat für die Verbindung '%s'"
+"Benutzerdefiniertes SAML Verschlüsselungszertifikat für die Verbindung '%s'"
 
 #, python-format
 msgid "SAML custom signing certificate for the connection '%s'"
@@ -54741,7 +54739,7 @@ msgstr "Hinweise zur Verbesserung der Checkmk-Installation sehen"
 
 #, python-format
 msgid "See packaged %s"
-msgstr "Siehe verpackte %s"
+msgstr "Siehe paketierte %s"
 
 msgid "See stale objects in tactical overview"
 msgstr "Veraltete Objekte in taktischer Übersicht sehen"
@@ -55211,10 +55209,10 @@ msgid "Send HTTP POST data"
 msgstr "HTTP POST Daten senden"
 
 msgid "Send custom notification"
-msgstr "Individuelle Benachrichtigung senden"
+msgstr "Benutzerdefinierte Benachrichtigung senden"
 
 msgid "Send custom notification?"
-msgstr "Individuelle Benachrichtigung senden?"
+msgstr "Benutzerdefinierte Benachrichtigung senden?"
 
 msgid "Send data"
 msgstr "Daten senden"
@@ -55575,7 +55573,7 @@ msgid "Service custom attributes"
 msgstr "Benutzerdefinierte Attribute des Services"
 
 msgid "Service custom field ID"
-msgstr "ID des benutzerdefinierten Service Feldes"
+msgstr "ID des benutzerdefinierten Service-Feldes"
 
 msgid "Service description"
 msgstr "Service-Name"
@@ -62519,7 +62517,7 @@ msgid ""
 "specify these tags."
 msgstr ""
 "Die von der Agentenbäckerei erstellten Linux-RPM-Pakete werden unabhängig "
-"von einer Linux-Distribution gepackt. Daher sind die Merkmale "
+"von einer Linux-Distribution paketiert. Daher sind die Merkmale "
 "<tt>DISTRIBUTION</tt> und <tt>DISTTAG</tt> innerhalb der RPM-Spec-Datei "
 "leer. Hier können Sie diese Merkmale manuell angeben."
 
@@ -67719,7 +67717,7 @@ msgstr ""
 
 #, python-format
 msgid "This %s can be packaged with the extension packages module"
-msgstr "Dieses %s kann mit dem Modul für Erweiterungspakete verpackt werden"
+msgstr "Dieses %s kann mit dem Modul für Erweiterungspakete paketiert werden"
 
 #, python-format
 msgid "This %s does not exist."
@@ -70633,7 +70631,7 @@ msgstr "Diese Regel trifft zu: %s"
 
 msgid "This rule pack can be packaged with the Extension Packages module."
 msgstr ""
-"Dieser Regelsatz kann mit dem Modul Erweiterungspakete verpackt werden."
+"Dieser Regelsatz kann mit dem Modul Erweiterungspakete paketiert werden."
 
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
@@ -82957,8 +82955,8 @@ msgstr ""
 
 msgid "You can only create a new package if there are unpackaged files."
 msgstr ""
-"Sie können erst dann ein neues Paket erstellen, wenn unverpackte Dateien "
-"exisitieren."
+"Sie können erst dann ein neues Paket erstellen, wenn unpaketierte Dateien "
+"existieren."
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "

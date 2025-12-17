@@ -23,6 +23,7 @@ def test_inventory_device_info() -> None:
     device = _DeviceFactory.build(
         name="My AP",
         serial="Q234-ABCD-5678",
+        productType="appliance",
         model="MR34",
         mac="00:11:22:33:44:55",
         firmware="wireless-25-14",
@@ -40,7 +41,7 @@ def test_inventory_device_info() -> None:
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={
-                "product": "",
+                "product": "appliance",
                 "serial": "Q234-ABCD-5678",
                 "model": "MR34",
                 "description": "My AP",

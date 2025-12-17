@@ -30,7 +30,7 @@ class DeviceInfo(BaseModel, frozen=True):
     description: str = Field(alias="name")
     mac_address: str = Field(alias="mac")
     network_id: str = Field(alias="networkId")
-    product: str = Field(default="")
+    product: str = Field(default="", alias="productType")
 
 
 def host_label_meraki_device_info(section: Section) -> HostLabelGenerator:

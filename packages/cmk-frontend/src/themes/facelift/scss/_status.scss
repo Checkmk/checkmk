@@ -93,11 +93,12 @@ td.count.hstate0,
 div.statea,
 div.stated,
 table.job_details td.state.state0 {
+  border: 1px solid $color-state-success-border !important;
+
   &,
   a {
     color: $font-color-black !important;
     background-color: $color-state-success-background !important;
-    border: 1px solid $color-state-success-border !important;
   }
 }
 
@@ -120,11 +121,12 @@ td.fillbackground.state1,
 .timeline .state1,
 .hostmatrix .state1,
 table.job_details td.state.state1 {
+  border: 1px solid $color-state-1-border !important;
+
   &,
   a {
     color: $font-color-black !important;
     background-color: $color-state-1-background !important;
-    border: 1px solid $color-state-1-border !important;
   }
 }
 
@@ -145,11 +147,12 @@ td.fillbackground.state2,
 .hstate1 span,
 td.count.hstate1,
 table.job_details td.state.state2 {
+  border: 1px solid $color-state-2-border !important;
+
   &,
   a {
     color: $font-color-white !important;
     background-color: $color-state-2-background !important;
-    border: 1px solid $color-state-2-border !important;
   }
 }
 
@@ -168,11 +171,12 @@ td.fillbackground.state3,
 .hostmatrix .state3,
 .hstate2 span,
 td.count.hstate2 {
+  border: 1px solid $color-state-3-border !important;
+
   &,
   a {
     color: $font-color-white !important;
     background-color: $color-state-3-background !important;
-    border: 1px solid $color-state-3-border !important;
   }
 }
 

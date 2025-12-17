@@ -72,6 +72,10 @@ const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 
+const dashboardFilterSettingsStartingWindow = ref<'runtime-filters' | 'filter-configuration'>(
+  'runtime-filters'
+)
+
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
 
@@ -293,6 +297,7 @@ const createDashboard = async (
   isDashboardEditingMode.value = false
 
   if (nextStep === 'setFilters') {
+    dashboardFilterSettingsStartingWindow.value = 'filter-configuration'
     openDashboardFilterSettings.value = true
     const updatedDashboardUrl = urlHandler.getDashboardUrl(dashboardId, {})
     urlHandler.updateCurrentUrl(updatedDashboardUrl)
@@ -358,6 +363,11 @@ const handleSaveFilterSettings = async (payload: {
   dashboardFilters.handleSaveDashboardFilters(payload.dashboardFilters)
   dashboardFilters.handleSaveMandatoryRuntimeFilters(payload.mandatoryRuntimeFilters)
   await dashboardsManager.persistDashboard()
+}
+
+function closeFilterSettings() {
+  openDashboardFilterSettings.value = false
+  dashboardFilterSettingsStartingWindow.value = 'runtime-filters'
 }
 
 const updateDashboardSettings = async (
@@ -476,10 +486,10 @@ function deepClone<T>(obj: T): T {
           dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
         "
         :can-edit="can_edit_dashboards"
-        starting-window="runtime-filters"
+        :starting-window="dashboardFilterSettingsStartingWindow"
         @apply-runtime-filters="handleApplyRuntimeFilters"
         @save-filter-settings="handleSaveFilterSettings"
-        @close="openDashboardFilterSettings = false"
+        @close="closeFilterSettings"
       />
       <DashboardSettingsWizard
         v-if="openDashboardSettings && dashboardsManager.activeDashboard.value"

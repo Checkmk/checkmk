@@ -5,6 +5,7 @@
 use super::{certs, config, types};
 use anyhow::{bail, Context, Result as AnyhowResult};
 use http::StatusCode;
+use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
 
@@ -239,8 +240,12 @@ impl Registration for Api {
         csr: &str,
         host_name: &str,
     ) -> AnyhowResult<RegisterExistingResponse> {
+        let endpoint = match credentials {
+            types::Credentials::OneTimeToken { .. } => "register_existing_token",
+            _ => "register_existing",
+        };
         self.call_registration_init_endpoint(
-            Self::endpoint_url(base_url, &["register_existing"])?,
+            Self::endpoint_url(base_url, &[endpoint])?,
             root_cert,
             credentials,
             &RegisterExistingBody {
@@ -282,18 +287,20 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
     ) -> AnyhowResult<RegisterNewOngoingResponse> {
         Self::deserialize_json_response(
-            certs::client(
-                Some(certs::HandshakeCredentials {
-                    server_root_cert: root_cert,
-                    client_identity: None,
-                }),
-                self.use_proxy,
-            )?
-            .post(Self::endpoint_url(
-                base_url,
-                &["register_new_ongoing", &uuid.to_string()],
-            )?)
-            .basic_auth(&credentials.username, Some(&credentials.password))
+            Self::apply_registration_auth(
+                certs::client(
+                    Some(certs::HandshakeCredentials {
+                        server_root_cert: root_cert,
+                        client_identity: None,
+                    }),
+                    self.use_proxy,
+                )?
+                .post(Self::endpoint_url(
+                    base_url,
+                    &["register_new_ongoing", &uuid.to_string()],
+                )?),
+                credentials,
+            )
             .send()
             .context("Calling register_new_ongoing endpoint failed")?,
             |body| serde_json::from_str::<RegisterNewOngoingResponse>(body),
@@ -314,20 +321,36 @@ impl Api {
         T: Deserialize<'a>,
     {
         Self::deserialize_json_response(
-            certs::client(
-                root_cert.map(|r| certs::HandshakeCredentials {
-                    server_root_cert: r,
-                    client_identity: None,
-                }),
-                self.use_proxy,
-            )?
-            .post(url)
-            .basic_auth(&credentials.username, Some(&credentials.password))
+            Self::apply_registration_auth(
+                certs::client(
+                    root_cert.map(|r| certs::HandshakeCredentials {
+                        server_root_cert: r,
+                        client_identity: None,
+                    }),
+                    self.use_proxy,
+                )?
+                .post(url),
+                credentials,
+            )
             .json(body)
             .send()
             .context("Calling registration endpoint failed")?,
             deserializer,
         )
+    }
+
+    fn apply_registration_auth(
+        builder: reqwest::blocking::RequestBuilder,
+        credentials: &types::Credentials,
+    ) -> reqwest::blocking::RequestBuilder {
+        match credentials {
+            types::Credentials::UsernamePassword { username, password } => {
+                builder.basic_auth(username, Some(password))
+            }
+            types::Credentials::OneTimeToken { ott } => {
+                builder.header(AUTHORIZATION, format!("CMK-TOKEN {ott}"))
+            }
+        }
     }
 }
 

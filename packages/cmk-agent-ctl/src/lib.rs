@@ -59,7 +59,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
         ),
         cli::Mode::RegisterNew(reg_new_opts) => registration::register_new(
             &config::RegisterNewConfig::new(
-                config::RegistrationConnectionConfig::new(
+                config::RegistrationConnectionConfig::from_register_new_opts(
                     runtime_config,
                     reg_new_opts.connection_opts,
                 )?,

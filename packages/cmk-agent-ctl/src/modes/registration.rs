@@ -4,6 +4,7 @@
 
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::site_spec::Protocol;
+use crate::types::Credentials;
 use crate::{
     agent_receiver_api::{self, RegistrationStatusV2},
     certs, config, misc, site_spec, types, version,
@@ -119,13 +120,20 @@ fn prepare_registration<'a>(
     let uuid = uuid::Uuid::new_v4();
     let (csr, private_key) = certs::make_csr(&uuid.to_string()).context("Error creating CSR.")?;
     let root_cert = registration_server_cert(config, trust_establisher)?;
-    let credentials = types::Credentials {
-        username: config.username.clone(),
-        password: if let Some(password) = &config.password {
-            String::from(password)
+    let credentials = if let Some(token) = &config.one_time_token {
+        types::Credentials::one_time_token(token.clone())
+    } else {
+        let username = config
+            .username
+            .as_ref()
+            .context("Username missing while no one-time token provided")?
+            .clone();
+        let password = if let Some(password) = &config.password {
+            password.clone()
         } else {
-            trust_establisher.prompt_password(&config.username)?
-        },
+            trust_establisher.prompt_password(&username)?
+        };
+        types::Credentials::username_password(username, password)
     };
     Ok(RegistrationInput {
         root_cert,
@@ -356,11 +364,17 @@ pub fn register_existing(
             &config.connection_config.site_id,
             &config.connection_config.client_config,
         )?;
+        let Credentials::UsernamePassword { username, password } = registration_input.credentials
+        else {
+            bail!(
+                    "Automatic updates require username/password credentials. Please omit --automatic-updates when using --ott."
+                );
+        };
         register_updater_subprocess(
             &UpdaterRegistrationInput {
                 site_id: config.connection_config.site_id.clone(),
-                username: config.connection_config.username.clone(),
-                password: registration_input.credentials.password.clone(),
+                username,
+                password,
                 hostname: config.host_name.clone(),
                 protocol,
             },
@@ -518,12 +532,20 @@ fn process_pre_configured_connection(
         }
     }
 
+    let (username, password, one_time_token) = match &pre_configured.credentials {
+        types::Credentials::UsernamePassword { username, password } => {
+            (Some(username.clone()), Some(password.clone()), None)
+        }
+        types::Credentials::OneTimeToken { ott } => (None, None, Some(ott.clone())),
+    };
+
     let registration_config = config::RegisterNewConfig::new(
         config::RegistrationConnectionConfig {
             site_id: site_id.clone(),
             receiver_port,
-            username: pre_configured.credentials.username.clone(),
-            password: Some(pre_configured.credentials.password.clone()),
+            username: username.clone(),
+            password: password.clone(),
+            one_time_token,
             root_certificate: Some(pre_configured.root_cert.clone()),
             trust_server_cert: false,
             client_config: client_config.clone(),
@@ -553,11 +575,17 @@ fn process_pre_configured_connection(
             }
         };
 
+        if username.is_none() || password.is_none() {
+            bail!(
+                "Automatic updates for pre-configured connections require username/password credentials"
+            );
+        };
+
         register_updater_subprocess(
             &UpdaterRegistrationInput {
                 site_id: site_id.clone(),
-                username: pre_configured.credentials.username.clone(),
-                password: pre_configured.credentials.password.clone(),
+                username: username.unwrap(),
+                password: password.unwrap(),
                 hostname,
                 protocol,
             },
@@ -864,8 +892,9 @@ mod tests {
         config::RegistrationConnectionConfig {
             site_id: site_id(),
             receiver_port: PORT,
-            username: String::from(USERNAME),
+            username: Some(String::from(USERNAME)),
             password,
+            one_time_token: None,
             root_certificate,
             trust_server_cert,
             client_config: config::ClientConfig {
@@ -900,6 +929,31 @@ mod tests {
                 },
             )
             .is_ok());
+        }
+
+        #[test]
+        fn test_prepare_registration_with_token() {
+            let mut config = registration_connection_config(
+                None, None, true, /* blind trust to avoid prompt */
+            );
+            config.username = None;
+            config.one_time_token = Some(String::from("ott-token"));
+
+            let registration = prepare_registration(
+                &config,
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: false,
+                },
+            )
+            .expect("token-based registration should succeed");
+
+            match registration.credentials {
+                types::Credentials::OneTimeToken { ref ott } => {
+                    assert_eq!(ott, "ott-token");
+                }
+                _ => panic!("expected one-time-token credentials"),
+            }
         }
 
         #[test]
@@ -1058,10 +1112,7 @@ mod tests {
                         site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
                         config::PreConfiguredConnection {
                             port: Some(1001),
-                            credentials: types::Credentials {
-                                username: String::from("user"),
-                                password: String::from("password"),
-                            },
+                            credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
                             enable_auto_update: Some(false),
                         },
@@ -1070,10 +1121,7 @@ mod tests {
                         site_spec::SiteID::from_str("server/pre-baked-pull-site-2").unwrap(),
                         config::PreConfiguredConnection {
                             port: Some(1002),
-                            credentials: types::Credentials {
-                                username: String::from("user"),
-                                password: String::from("password"),
-                            },
+                            credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
                             enable_auto_update: Some(false),
                         },
@@ -1082,10 +1130,7 @@ mod tests {
                         site_spec::SiteID::from_str("server/pre-baked-push-site").unwrap(),
                         config::PreConfiguredConnection {
                             port: Some(1003),
-                            credentials: types::Credentials {
-                                username: String::from("user"),
-                                password: String::from("password"),
-                            },
+                            credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
                             enable_auto_update: Some(false),
                         },
@@ -1094,10 +1139,7 @@ mod tests {
                         site_spec::SiteID::from_str("server/pre-baked-push-site-2").unwrap(),
                         config::PreConfiguredConnection {
                             port: Some(1004),
-                            credentials: types::Credentials {
-                                username: String::from("user"),
-                                password: String::from("password"),
-                            },
+                            credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
                             enable_auto_update: Some(false),
                         },
@@ -1287,10 +1329,7 @@ mod tests {
                     site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
                     config::PreConfiguredConnection {
                         port: Some(1001),
-                        credentials: types::Credentials {
-                            username: String::from("user"),
-                            password: String::from("password"),
-                        },
+                        credentials: types::Credentials::username_password("user", "password"),
                         root_cert: String::from("root_cert"),
                         enable_auto_update: Some(false),
                     },

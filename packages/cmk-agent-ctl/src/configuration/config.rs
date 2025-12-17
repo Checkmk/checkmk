@@ -60,7 +60,7 @@ impl RegisterExistingConfig {
         register_opts: cli::RegisterOpts,
     ) -> AnyhowResult<Self> {
         Ok(Self {
-            connection_config: RegistrationConnectionConfig::new(
+            connection_config: RegistrationConnectionConfig::from_register_opts(
                 runtime_config,
                 register_opts.connection_opts,
             )?,
@@ -116,39 +116,73 @@ impl RegisterNewConfig {
 pub struct RegistrationConnectionConfig {
     pub site_id: site_spec::SiteID,
     pub receiver_port: u16,
-    pub username: String,
+    pub username: Option<String>,
     pub password: Option<String>,
+    pub one_time_token: Option<String>,
     pub root_certificate: Option<String>,
     pub trust_server_cert: bool,
     pub client_config: ClientConfig,
 }
 
 impl RegistrationConnectionConfig {
-    pub fn new(
+    pub fn from_register_opts(
         runtime_config: RuntimeConfig,
-        registration_connection_opts: cli::RegistrationConnectionOpts,
+        connection_opts: cli::RegisterConnectionOpts,
+    ) -> AnyhowResult<Self> {
+        Self::from_parts(
+            runtime_config,
+            connection_opts.target,
+            connection_opts.auth.user,
+            connection_opts.auth.password,
+            connection_opts.auth.one_time_token,
+        )
+    }
+
+    pub fn from_register_new_opts(
+        runtime_config: RuntimeConfig,
+        connection_opts: cli::RegisterNewConnectionOpts,
+    ) -> AnyhowResult<Self> {
+        Self::from_parts(
+            runtime_config,
+            connection_opts.target,
+            Some(connection_opts.auth.user),
+            connection_opts.auth.password,
+            None,
+        )
+    }
+
+    fn from_parts(
+        runtime_config: RuntimeConfig,
+        endpoint_opts: cli::RegistrationEndpointOpts,
+        username: Option<String>,
+        password: Option<String>,
+        one_time_token: Option<String>,
     ) -> AnyhowResult<Self> {
         let site_id = site_spec::SiteID {
-            server: registration_connection_opts.server_spec.server,
-            site: registration_connection_opts.site,
+            server: endpoint_opts.server_spec.server,
+            site: endpoint_opts.site,
         };
         let client_config = ClientConfig::new(
             runtime_config,
-            registration_connection_opts.client_opts,
-            Some(registration_connection_opts.reg_client_opts),
+            endpoint_opts.client_opts,
+            Some(endpoint_opts.reg_client_opts),
         );
-        let receiver_port = (if let Some(p) = registration_connection_opts.server_spec.port {
+        let receiver_port = (if let Some(p) = endpoint_opts.server_spec.port {
             Ok(p)
         } else {
             site_spec::discover_receiver_port(&site_id, &client_config)
         })?;
+        if one_time_token.is_none() && username.is_none() {
+            bail!("Either username/password or a one-time token must be provided");
+        }
         Ok(Self {
             site_id,
             receiver_port,
-            username: registration_connection_opts.user,
-            password: registration_connection_opts.password,
+            username,
+            password,
+            one_time_token,
             root_certificate: None,
-            trust_server_cert: registration_connection_opts.trust_server_cert,
+            trust_server_cert: endpoint_opts.trust_server_cert,
             client_config,
         })
     }
@@ -783,21 +817,40 @@ pub mod test_helpers {
 mod test_registration_config {
     use super::*;
 
-    fn registration_connection_opts() -> cli::RegistrationConnectionOpts {
-        cli::RegistrationConnectionOpts {
+    fn endpoint_opts() -> cli::RegistrationEndpointOpts {
+        cli::RegistrationEndpointOpts {
             server_spec: site_spec::ServerSpec {
                 server: String::from("server"),
                 port: Some(8000),
             },
             site: String::from("site"),
-            user: String::from("user"),
-            password: None,
             trust_server_cert: false,
             client_opts: cli::ClientOpts {
                 detect_proxy: false,
             },
             reg_client_opts: cli::RegistrationClientOpts {
                 validate_api_cert: false,
+            },
+        }
+    }
+
+    fn register_connection_opts() -> cli::RegisterConnectionOpts {
+        cli::RegisterConnectionOpts {
+            target: endpoint_opts(),
+            auth: cli::RegisterAuthOpts {
+                user: Some(String::from("user")),
+                password: None,
+                one_time_token: None,
+            },
+        }
+    }
+
+    fn register_new_connection_opts() -> cli::RegisterNewConnectionOpts {
+        cli::RegisterNewConnectionOpts {
+            target: endpoint_opts(),
+            auth: cli::RegisterNewAuthOpts {
+                user: String::from("user"),
+                password: None,
             },
         }
     }
@@ -813,14 +866,17 @@ mod test_registration_config {
 
     #[test]
     fn test_connection_config() {
-        let connection_config =
-            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
-                .unwrap();
+        let connection_config = RegistrationConnectionConfig::from_register_opts(
+            runtime_config(),
+            register_connection_opts(),
+        )
+        .unwrap();
         assert_eq!(connection_config.site_id.server, "server");
         assert_eq!(connection_config.site_id.site, "site");
         assert_eq!(connection_config.receiver_port, 8000);
-        assert_eq!(connection_config.username, "user");
+        assert_eq!(connection_config.username.as_deref(), Some("user"));
         assert!(connection_config.password.is_none());
+        assert!(connection_config.one_time_token.is_none());
     }
 
     #[test]
@@ -829,7 +885,7 @@ mod test_registration_config {
             RegisterExistingConfig::new(
                 runtime_config(),
                 cli::RegisterOpts {
-                    connection_opts: registration_connection_opts(),
+                    connection_opts: register_connection_opts(),
                     hostname: String::from("host_name"),
                     automatic_updates: false,
                 },
@@ -843,8 +899,11 @@ mod test_registration_config {
     #[test]
     fn test_automatic_agent_labels() {
         let agent_labels = RegisterNewConfig::new(
-            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
-                .unwrap(),
+            RegistrationConnectionConfig::from_register_new_opts(
+                runtime_config(),
+                register_new_connection_opts(),
+            )
+            .unwrap(),
             types::AgentLabels::new(),
         )
         .unwrap()
@@ -858,8 +917,11 @@ mod test_registration_config {
     #[test]
     fn test_user_defined_labels() {
         let agent_labels = RegisterNewConfig::new(
-            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
-                .unwrap(),
+            RegistrationConnectionConfig::from_register_new_opts(
+                runtime_config(),
+                register_new_connection_opts(),
+            )
+            .unwrap(),
             types::AgentLabels::from([
                 (
                     String::from("cmk/hostname-simple"),

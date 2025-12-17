@@ -93,7 +93,7 @@ pub enum Mode {
 // #[command(author, version, about, long_about = None)]
 pub struct RegisterOpts {
     #[clap(flatten)]
-    pub connection_opts: RegistrationConnectionOpts,
+    pub connection_opts: RegisterConnectionOpts,
 
     /// Name of this host in the monitoring site
     // We are consistent with agent updater, which uses "hostname", not "host-name".
@@ -106,7 +106,25 @@ pub struct RegisterOpts {
 }
 
 #[derive(Parser)]
-pub struct RegistrationConnectionOpts {
+pub struct RegisterConnectionOpts {
+    #[clap(flatten)]
+    pub target: RegistrationEndpointOpts,
+
+    #[clap(flatten)]
+    pub auth: RegisterAuthOpts,
+}
+
+#[derive(Parser)]
+pub struct RegisterNewConnectionOpts {
+    #[clap(flatten)]
+    pub target: RegistrationEndpointOpts,
+
+    #[clap(flatten)]
+    pub auth: RegisterNewAuthOpts,
+}
+
+#[derive(Parser)]
+pub struct RegistrationEndpointOpts {
     /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
     ///
     /// "<server>" can be an IPv4/6 address or a hostname. IPv6 addresses must be enclosed in square brackets.
@@ -118,14 +136,6 @@ pub struct RegistrationConnectionOpts {
     #[arg(long, short = 'i')]
     pub site: String,
 
-    /// API user to use for registration
-    #[arg(long, short = 'U')]
-    pub user: String,
-
-    /// Password for API user. Can also be entered interactively.
-    #[arg(long, short = 'P')]
-    pub password: Option<String>,
-
     /// Blindly trust the server certificate of the Checkmk site
     // We are consistent with agent updater, which uses "trust-cert"
     #[arg(long = "trust-cert")]
@@ -136,6 +146,42 @@ pub struct RegistrationConnectionOpts {
 
     #[clap(flatten)]
     pub reg_client_opts: RegistrationClientOpts,
+}
+
+#[derive(Parser)]
+pub struct RegisterAuthOpts {
+    /// API user to use for registration. Mutually exclusive with one-time token.
+    #[arg(
+        long,
+        short = 'U',
+        required_unless_present = "one_time_token",
+        conflicts_with = "one_time_token"
+    )]
+    pub user: Option<String>,
+
+    /// Password for API user. Can also be entered interactively.
+    #[arg(
+        long,
+        short = 'P',
+        conflicts_with = "one_time_token",
+        requires = "user"
+    )]
+    pub password: Option<String>,
+
+    /// One-time token that authorizes this registration. Mutually exclusive with username/password.
+    #[arg(long = "ott", value_name = "TOKEN", conflicts_with_all = ["user", "password"])]
+    pub one_time_token: Option<String>,
+}
+
+#[derive(Parser)]
+pub struct RegisterNewAuthOpts {
+    /// API user to use for registration
+    #[arg(long, short = 'U')]
+    pub user: String,
+
+    /// Password for API user. Can also be entered interactively.
+    #[arg(long, short = 'P')]
+    pub password: Option<String>,
 }
 
 #[derive(Parser)]
@@ -158,7 +204,7 @@ pub struct RegistrationClientOpts {
 #[derive(Parser)]
 pub struct RegisterNewOpts {
     #[clap(flatten)]
-    pub connection_opts: RegistrationConnectionOpts,
+    pub connection_opts: RegisterNewConnectionOpts,
 
     /// User-defined agent labels in the form KEY:VALUE. These labels supersede the automatic labels.
     #[arg(long = "agent-labels", name = "KEY:VALUE",  value_parser = parse_agent_labels, )]

@@ -83,8 +83,38 @@ impl AgentChannel {
     }
 }
 
-#[derive(serde::Deserialize, Clone)]
-pub struct Credentials {
-    pub username: String,
-    pub password: String,
+#[derive(serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(untagged)]
+pub enum Credentials {
+    UsernamePassword { username: String, password: String },
+    OneTimeToken { ott: String },
+}
+
+impl Credentials {
+    pub fn username_password(username: impl Into<String>, password: impl Into<String>) -> Self {
+        Self::UsernamePassword {
+            username: username.into(),
+            password: password.into(),
+        }
+    }
+
+    pub fn one_time_token(token: impl Into<String>) -> Self {
+        Self::OneTimeToken { ott: token.into() }
+    }
+
+    pub fn as_basic_auth(&self) -> Option<(&str, &str)> {
+        match self {
+            Self::UsernamePassword { username, password } => {
+                Some((username.as_str(), password.as_str()))
+            }
+            Self::OneTimeToken { .. } => None,
+        }
+    }
+
+    pub fn as_token(&self) -> Option<&str> {
+        match self {
+            Self::UsernamePassword { .. } => None,
+            Self::OneTimeToken { ott } => Some(ott.as_str()),
+        }
+    }
 }

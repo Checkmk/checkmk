@@ -1419,14 +1419,11 @@ function update_mouse_hovering(event: Event) {
   if (!graph.render_config.interaction) return // don't do anything when this graph is not allowed to set the pin
 
   const canvas_rect = canvas.getBoundingClientRect()
-  // With 'style.cursor: crosshair' we need to move the dotted line to the middle of the cursor.
-  // There's no possibility to find out the exact size of the cursor image.
-  const cursorHalfSize = 6
   update_mouse_indicator(
     canvas,
     graph,
     graph_node,
-    (event as MouseEvent).clientX + cursorHalfSize - canvas_rect.left
+    (event as MouseEvent).clientX + canvas.offsetLeft - canvas_rect.left
   )
   update_graph_hover_popup(event, graph)
 }

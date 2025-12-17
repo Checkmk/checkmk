@@ -7,6 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch, watchEffect } from 'vue'
 
+import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
+
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
@@ -18,11 +21,12 @@ import {
   splitToUnits as utilsSplitToUnits
 } from './timeSpan'
 
+const { _t } = usei18n()
+
 const props = defineProps<{
   label: string | null
   title: string
   inputHint: number | null
-  i18n: Record<Magnitude | 'validation_negative_number', string>
   displayedMagnitudes: Magnitude[]
   validators: Validator[]
   backendValidation: ValidationMessages
@@ -37,6 +41,15 @@ const data = defineModel<number | null>('data', { required: true })
 const values = ref<Partial<Record<Magnitude, number>>>(splitToUnits(0))
 
 const [validation, value] = useValidation(data, props.validators, () => props.backendValidation)
+
+const i18n: Record<Magnitude | 'validation_negative_number', TranslatedString | string> = {
+  day: _t('Days'),
+  hour: _t('Hours'),
+  minute: _t('Minutes'),
+  second: _t('Seconds'),
+  millisecond: _t('Milliseconds'),
+  validation_negative_number: _t('The time span cannot be negative.')
+}
 
 watch(
   value,
@@ -62,7 +75,7 @@ watch(
     localValidation.value = []
     for (const [_magnitude, value] of Object.entries(newValue)) {
       if (value < 0 && localValidation.value.length === 0) {
-        localValidation.value = [props.i18n.validation_negative_number]
+        localValidation.value = [i18n.validation_negative_number]
       }
     }
   },
@@ -103,7 +116,7 @@ const localValidation = ref<Array<string>>([])
         size="5"
         type="number"
       />
-      {{ props.i18n[magnitude] }}
+      {{ i18n[magnitude] }}
     </label>
   </span>
 </template>

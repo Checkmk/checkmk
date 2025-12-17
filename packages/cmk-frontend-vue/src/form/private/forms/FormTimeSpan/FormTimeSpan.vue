@@ -27,7 +27,6 @@ const data = defineModel<number | null>('data', { required: true })
     :label="spec.label"
     :title="spec.title"
     :input-hint="spec.input_hint"
-    :i18n="spec.i18n"
     :displayed-magnitudes="spec.displayed_magnitudes"
     :validators="spec.validators"
     :backend-validation="backendValidation"

@@ -21,16 +21,8 @@ function getSpec(
     displayed_magnitudes: displayedMagnitudes,
     validators: validators,
     label: 'utLabel',
-    input_hint: null,
-    i18n: {
-      minute: 'ut_minute',
-      second: 'ut_second',
-      millisecond: 'ut_ms',
-      hour: 'ut_h',
-      day: 'ut_d',
-      validation_negative_number: 'some negative error message'
-    }
-  }
+    input_hint: null
+  } as TimeSpan
 }
 
 test('FormTimeSpan renders value', () => {
@@ -41,8 +33,8 @@ test('FormTimeSpan renders value', () => {
       backendValidation: []
     }
   })
-  expect(screen.getByLabelText<HTMLInputElement>('ut_ms').value).toBe('600')
-  expect(screen.getByLabelText<HTMLInputElement>('ut_second').value).toBe('66')
+  expect(screen.getByLabelText<HTMLInputElement>('Milliseconds').value).toBe('600')
+  expect(screen.getByLabelText<HTMLInputElement>('Seconds').value).toBe('66')
 })
 
 test('FormTimeSpan updates data', async () => {
@@ -52,10 +44,10 @@ test('FormTimeSpan updates data', async () => {
     backendValidation: []
   })
 
-  const secondsInput = screen.getByLabelText<HTMLInputElement>('ut_second')
-  const minutesInput = screen.getByLabelText<HTMLInputElement>('ut_minute')
+  const secondsInput = screen.getByLabelText<HTMLInputElement>('Seconds')
+  const minutesInput = screen.getByLabelText<HTMLInputElement>('Minutes')
 
-  expect(screen.getByLabelText<HTMLInputElement>('ut_ms').value).toBe('600')
+  expect(screen.getByLabelText<HTMLInputElement>('Milliseconds').value).toBe('600')
   expect(secondsInput.value).toBe('6')
   expect(minutesInput.value).toBe('1')
 
@@ -84,7 +76,7 @@ test('FormTimeSpan shows frontend validation', async () => {
     backendValidation: []
   })
 
-  const hoursInput = screen.getByLabelText<HTMLInputElement>('ut_h')
+  const hoursInput = screen.getByLabelText<HTMLInputElement>('Hours')
   await fireEvent.update(hoursInput, `${8 * 60 * 60}`)
   // there is not further value interpolation in the frontend: it just shows the error message of the backend
   screen.getByText('some_error_message')
@@ -97,9 +89,9 @@ test('FormTimeSpan shows error for negative values', async () => {
     backendValidation: []
   })
 
-  const minutesInput = screen.getByLabelText<HTMLInputElement>('ut_minute')
+  const minutesInput = screen.getByLabelText<HTMLInputElement>('Minutes')
   await fireEvent.update(minutesInput, '-1')
 
   expect(getCurrentData()).toMatch(`${1 * 60 * 60 - 60}`)
-  screen.getByText('some negative error message')
+  screen.getByText('The time span cannot be negative.')
 })

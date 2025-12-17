@@ -227,6 +227,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     def _exclude_paths(self) -> set[str]:
         exclude = super()._exclude_paths()
         exclude.add("/cfg_examples/systemd")
+        exclude.add("/__pycache__")
         exclude.add("/sap")
         exclude.add("/scripts")
         exclude.add("/linux")

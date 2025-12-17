@@ -1228,7 +1228,8 @@ msgstr "3.3ボルト出力の上位レベル"
 msgid "30 minutes"
 msgstr "30分"
 
-msgid "32bit packaged binary"
+#, fuzzy
+msgid "32-bit packaged binary"
 msgstr "32ビット パッケージ バイナリ"
 
 msgid "389 Directory Server"
@@ -1288,7 +1289,8 @@ msgstr "5xxエラー率"
 msgid "6 months"
 msgstr "6ヶ月"
 
-msgid "64bit packaged binary"
+#, fuzzy
+msgid "64-bit packaged binary"
 msgstr "64ビットパッケージバイナリ"
 
 #, no-python-format
@@ -1496,15 +1498,6 @@ msgid ""
 msgstr ""
 "<b>注意</b>: <i>htpasswd</i>コネクタに移行した場合、ユーザーは次回ログイン時"
 "にパスワードを変更する必要があります。"
-
-msgid ""
-"<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
-"Python 3.7 installation (or newer) with installed python packages "
-"\"pyOpenSSL\", \"requests\" and \"PySocks\" is required on the target hosts."
-msgstr ""
-"<b>注意<sup>3</sup>:</b> このプラグインをSolarisにデプロイするには、Python "
-"3.7（またはそれ以降）がインストールされ、pythonパッケージ \"pyOpenSSL\"、"
-"\"requests\"、\"PySocks \"がインストールされている必要があります。"
 
 #, python-format
 msgid ""
@@ -3342,6 +3335,10 @@ msgstr "ホストグループとサービスグループを管理するモジュ
 
 msgid "Access to the setup menu with only icons (saves space)"
 msgstr "アイコンのみのセットアップメニューへのアクセス(スペースを節約)"
+
+#, fuzzy
+msgid "Access token"
+msgstr "APIアクセストークン"
 
 msgid "Access via TCP"
 msgstr "TCP経由のアクセス"
@@ -5233,13 +5230,6 @@ msgstr "エージェントアップデーター(Linux、Windows、Solaris)"
 msgid "Agent updater ruleset"
 msgstr "エージェントアップデータルールセット"
 
-msgid ""
-"Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
-"the host."
-msgstr ""
-"エージェントアップデーターは、ホスト上の変数 \"HTTP_PROXY\"および"
-"\"HTTPS_PROXY\"に従います。"
-
 msgid "Agent updates"
 msgstr "エージェントの更新"
 
@@ -6081,6 +6071,9 @@ msgstr "TCP経由のアクセスを許可する"
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "すべてのユーザーがこのパックに含まれるルールを参照することを許可する"
 
+msgid "Allow collection and transmission of telemetry data"
+msgstr ""
+
 msgid "Allow growing here"
 msgstr "ここで育つことを許可する"
 
@@ -6096,9 +6089,6 @@ msgstr "パスワード認証を許可する"
 
 msgid "Allow self-signed certificates"
 msgstr "自己署名証明書を許可する"
-
-msgid "Allow sending telemetry data"
-msgstr ""
 
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr "ダウンタイムを\"すべて削除 \"のアクションを許可する"
@@ -7212,10 +7202,6 @@ msgstr "Checkmk AIに聞く"
 
 msgid "Ask for an optional comment"
 msgstr "オプションのコメントを求める"
-
-#, fuzzy
-msgid "Ask user for consent via popup"
-msgstr "連絡先グループへのサービスの割り当て"
 
 msgid "Assertion Consumer Service endpoint"
 msgstr "Assertion Consumer Service のエンドポイント"
@@ -8616,6 +8602,10 @@ msgid "Azure"
 msgstr "Azure"
 
 #, fuzzy
+msgid "Azure (deprecated)"
+msgstr "Azure VMディスク"
+
+#, fuzzy
 msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
 
@@ -8810,6 +8800,10 @@ msgstr "Azure SQLデータベーススループット"
 #, fuzzy
 msgid "Azure SQL database throughput (deprecated)"
 msgstr "Azure SQLデータベーススループット"
+
+#, fuzzy
+msgid "Azure Status"
+msgstr "Apacheステータス"
 
 msgid "Azure Storage"
 msgstr "Azureストレージ"
@@ -10773,6 +10767,10 @@ msgstr "CA"
 msgid "CA certificate"
 msgstr "CA証明書"
 
+#, fuzzy
+msgid "CA or self-signed certificate"
+msgstr "CAまたは自己署名証明書を追加します"
+
 msgid "CA port indices"
 msgstr "CAポートインデックス"
 
@@ -12178,6 +12176,10 @@ msgstr "2,4GHz帯域のチャネル使用率"
 msgid "Channel utilization for 5GHz band"
 msgstr "5GHz帯域のチャネル使用率"
 
+#, fuzzy
+msgid "Channel width"
+msgstr "チャネル"
+
 msgid "Channels"
 msgstr "チャンネル"
 
@@ -12621,9 +12623,6 @@ msgstr "Checkmkログファイル"
 
 msgid "Checkmk Log files"
 msgstr "Checkmkログファイル"
-
-msgid "Checkmk Logo"
-msgstr "Checkmkロゴ"
 
 msgid "Checkmk Micro Core"
 msgstr "Checkmkマイクロコア"
@@ -13411,6 +13410,10 @@ msgstr "Cisco Meraki power supply"
 
 #, fuzzy
 msgid "Cisco Meraki switch port statuses"
+msgstr "Cisco Meraki デバイスステータス"
+
+#, fuzzy
+msgid "Cisco Meraki wireless device statuses"
 msgstr "Cisco Meraki デバイスステータス"
 
 msgid "Cisco Nexus Supervisor memory usage"
@@ -14378,9 +14381,6 @@ msgstr "完全なツリー"
 
 msgid "Complete variable list (for testing)"
 msgstr "完全な変数リスト(テスト用)"
-
-msgid "Completely ignore connection via proxy. This is the default."
-msgstr "プロキシ経由の接続は完全に無視してください。これがデフォルトです。"
 
 msgid "Completion"
 msgstr "完了"
@@ -15392,6 +15392,12 @@ msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
 msgid "Consecutive reachability failures (up to 8)"
+msgstr ""
+
+msgid ""
+"Consent to product telemetry data collection. By default, this is disabled, "
+"the user will be asked for consent via pop-up. Run  <tt>cmk-telemetry --dry-"
+"run</tt> in the command line to see a preview of the data."
 msgstr ""
 
 msgid "Consider alerts for Prism Central only"
@@ -17419,6 +17425,10 @@ msgstr "%s をカスタマイズして使用する"
 msgid "Customize GUI design"
 msgstr "GUIデザインをカスタマイズする"
 
+#, fuzzy
+msgid "Customize Linux agent controller deployment"
+msgstr "エージェントコントローラーデプロイ"
+
 msgid "Customize agent package (Linux)"
 msgstr "カスタマイズエージェントパッケージ(Linux)"
 
@@ -17857,6 +17867,10 @@ msgstr "データパスの可用性下位レベル"
 #, fuzzy
 msgid "Data point"
 msgstr "送信データ"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "ダウンタイム属性:"
 
 msgid "Data range"
 msgstr "データ範囲"
@@ -20164,6 +20178,10 @@ msgstr "無効なサービス"
 msgid "Disabled via master control"
 msgstr "マスターコントロールにより無効化"
 
+#, fuzzy
+msgid "Disabled. Reminder scheduled"
+msgstr "アクティブチェックを無効にしました"
+
 #, fuzzy, python-format
 msgid "Disabling extension package \"%s\"."
 msgstr "拡張パッケージ%s %sを無効化"
@@ -20844,6 +20862,10 @@ msgstr "アドレスをチェックしない"
 msgid "Do not check the node"
 msgstr "ノードを確認しない"
 
+#, fuzzy
+msgid "Do not collect and transmit telemetry data"
+msgstr "リモートホストに送信しないでください"
+
 msgid "Do not configure Windows Firewall"
 msgstr "Windowsファイアウォールを設定しないでください"
 
@@ -21231,10 +21253,6 @@ msgstr "何も削除しないでください"
 
 msgid "Do not rotate based on the time"
 msgstr "時間に基づいてローテーションしないでください"
-
-#, fuzzy
-msgid "Do not send telemetry data"
-msgstr "リモートホストに送信しないでください"
 
 msgid "Do not send to remote host"
 msgstr "リモートホストに送信しないでください"
@@ -21803,6 +21821,7 @@ msgstr ""
 "トは、最後の実行中にすでにフェッチされたログを記憶します。この値をホストの"
 "チェック間隔より低く設定すると、ログが欠落することになります。 "
 
+#, fuzzy
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -21812,10 +21831,7 @@ msgid ""
 "another or deleting a host manually from the configuration.<br>The "
 "performance data (RRDs) and HW/SW Inventory archive are never deleted during "
 "host deletion. They are only deleted automatically when you enable this "
-"option and after the configured period. This option also affects the "
-"retention of `Agent update status` files. These files can be created without "
-"a corresponding host, but should be cleaned up after a grace period if the "
-"user never creates the host."
+"option and after the configured period."
 msgstr ""
 "監視中に、ホストごとにいくつかの専用ファイルが作成されます。たとえば、検出さ"
 "れたサービス、パフォーマンスデータ、および作成されたさまざまな一時ファイルが"
@@ -22876,11 +22892,6 @@ msgstr "通知ログを有効にする"
 msgid "Enable notifications?"
 msgstr "通知を有効にしますか?"
 
-msgid ""
-"Enable or disable product telemetry data collection. If not decided, the "
-"user will be asked for consent via a popup."
-msgstr ""
-
 #, fuzzy
 msgid "Enable package"
 msgstr "このパッケージを有効にする"
@@ -23613,6 +23624,18 @@ msgstr ""
 msgid "Error rate"
 msgstr "エラーレート"
 
+#, fuzzy
+msgid "Error rate over the last day"
+msgstr "前回の更新中にエラーが発生しました"
+
+#, fuzzy
+msgid "Error rate over the last hour"
+msgstr "直近4時間のイベント。"
+
+#, fuzzy
+msgid "Error rate over the last minute"
+msgstr "過去60分間のログスイッチ"
+
 msgid "Error rates"
 msgstr "エラーレート"
 
@@ -24212,9 +24235,6 @@ msgstr "排他的ロック"
 
 msgid "Exclusive locks"
 msgstr "専用ロック"
-
-msgid "Executable Python script"
-msgstr "実行可能なPythonスクリプト"
 
 msgid "Executable format (Linux)"
 msgstr "実行可能フォーマット(Linux)"
@@ -34001,6 +34021,10 @@ msgstr "5ボルト出力の上位レベル"
 msgid "Incident"
 msgstr "インシデント"
 
+#, fuzzy
+msgid "Include ARM version"
+msgstr "バージョンを無視する"
+
 msgid "Include Pattern"
 msgstr "パターンを含める"
 
@@ -34080,6 +34104,10 @@ msgstr "監視されていない時間を含める"
 
 msgid "Include vanished clustered services during removal"
 msgstr "削除時に消滅したクラスタ化サービスを含める"
+
+#, fuzzy
+msgid "Include x86 version"
+msgstr "バージョンを無視する"
 
 msgid "Inclusion patterns"
 msgstr "包含パターン"
@@ -34566,6 +34594,10 @@ msgstr "インスタンスとテーブルスペースの名前"
 
 msgid "Instance ID"
 msgstr "インスタンスID"
+
+#, fuzzy
+msgid "Instance Name(SID)"
+msgstr "インスタンス名"
 
 msgid "Instance error state"
 msgstr "インスタンスエラー状態"
@@ -37059,6 +37091,10 @@ msgstr "表領域サイズのレベル"
 msgid "Levels for the Tablespace usage"
 msgstr "表領域の使用レベル"
 
+#, fuzzy
+msgid "Levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
+
 msgid "Levels for the electrical power consumption of a device "
 msgstr "デバイスの電力消費量のレベル "
 
@@ -38755,6 +38791,18 @@ msgstr "公開メッセージレートの下位レベル"
 msgid "Lower level for rate of memory reclaimed by GC"
 msgstr "GCによって回収されたメモリレートの下位レベル"
 
+#, fuzzy
+msgid "Lower level for request rate over last day"
+msgstr "リクエスト使用率の下位レベル"
+
+#, fuzzy
+msgid "Lower level for request rate over last hour"
+msgstr "リクエスト使用率の下位レベル"
+
+#, fuzzy
+msgid "Lower level for request rate over last minute"
+msgstr "リクエスト使用率の下位レベル"
+
 msgid "Lower level for runtime run queue"
 msgstr "ランタイム実行キューの下位レベル"
 
@@ -38790,6 +38838,18 @@ msgstr "準備完了メッセージ総数の下位レベル"
 
 msgid "Lower level for total number of unacknowledged messages"
 msgstr "未承認メッセージ総数の下位レベル"
+
+#, fuzzy
+msgid "Lower level for total requests over last day"
+msgstr "総エラーレートの下位レベル"
+
+#, fuzzy
+msgid "Lower level for total requests over last hour"
+msgstr "総エラーレートの下位レベル"
+
+#, fuzzy
+msgid "Lower level for total requests over last minute"
+msgstr "総エラーレートの下位レベル"
 
 msgid "Lower levels"
 msgstr "下位レベル"
@@ -38878,10 +38938,6 @@ msgstr "予約使用率の下位レベル"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "アクティブな接続の下位レベル"
-
-#, fuzzy
-msgid "Lower levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
@@ -41103,6 +41159,9 @@ msgstr "メトリックのラベル"
 msgid "Metric levels"
 msgstr "メートリックレベル"
 
+msgid "Metric name"
+msgstr "メトリック名"
+
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
 
@@ -41153,19 +41212,9 @@ msgstr "メトリクスパス"
 msgid "MiB"
 msgstr "MiB"
 
-msgid "Microsoft Azure"
-msgstr "Microsoft Azure"
-
 #, fuzzy
 msgid "Microsoft Azure (Deprecated)"
 msgstr "Microsoft SQL サーバー(非推奨)"
-
-#, fuzzy
-msgid "Microsoft Azure (deprecated)"
-msgstr "Microsoft SQL サーバー(非推奨)"
-
-msgid "Microsoft Azure Status"
-msgstr "Microsoft Azureの状態"
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V ServerのVMの状態"
@@ -41461,10 +41510,6 @@ msgstr "前提条件の欠落"
 
 #, fuzzy, python-format
 msgid "Missing request variable '%s'"
-msgstr "変数siteidがありません"
-
-#, fuzzy
-msgid "Missing request variable 'widget_id'"
 msgstr "変数siteidがありません"
 
 msgid "Missing required \"Host name\" selection."
@@ -41999,6 +42044,10 @@ msgstr "LED色が%sの場合、監視状態"
 #, python-format
 msgid "Monitoring state if MTree state is '%s'"
 msgstr "MTreeの状態が '%s'の場合の状態の監視"
+
+#, fuzzy
+msgid "Monitoring state if SSID is not enabled"
+msgstr "タスクが有効になっていない場合の状態の監視"
 
 #, python-format
 msgid "Monitoring state if VM state is %s"
@@ -43910,6 +43959,10 @@ msgid "No re-executions"
 msgstr "再実行なし"
 
 #, fuzzy
+msgid "No relay"
+msgstr "結果なし"
+
+#, fuzzy
 msgid "No relay ID specified."
 msgstr "まだリレーが設定されていません。"
 
@@ -44441,10 +44494,6 @@ msgstr "構成されていません。"
 
 msgid "Not contained in any group"
 msgstr "どのグループにも含まれていません"
-
-#, fuzzy
-msgid "Not decided"
-msgstr "不要"
 
 msgid "Not enabled"
 msgstr "有効になっていません"
@@ -45923,6 +45972,70 @@ msgid "OTLP endpoint"
 msgstr "OTLPエンドポイント"
 
 #, fuzzy
+msgid "OTel RED Error: Error rate"
+msgstr "エラー率のレベル"
+
+msgid "OTel RED Error: Error rate over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Error rate over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Error rate over the last minute"
+msgstr ""
+
+msgid "OTel RED Error: Errors over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Errors over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Errors over the last minute"
+msgstr ""
+
+msgid "OTel RED Error: Requests over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Requests over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Requests over the last minute"
+msgstr ""
+
+msgid "OTel RED Error: Total errors over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Total errors over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Total errors over the last minute"
+msgstr ""
+
+msgid "OTel RED Requests: Request over last day"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate over the last day"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate over the last hour"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate over the last minute"
+msgstr ""
+
+msgid "OTel RED Requests: Requests over the last day"
+msgstr ""
+
+msgid "OTel RED Requests: Requests over the last hour"
+msgstr ""
+
+msgid "OTel RED Requests: Requests over the last minute"
+msgstr ""
+
+#, fuzzy
 msgid "OTel collector memory usage"
 msgstr "Netscalerのメモリ使用量"
 
@@ -46624,6 +46737,14 @@ msgid "OpenTelemetry Collector Memory Limit"
 msgstr "OpenTelemetryコレクター（実験的）"
 
 #, fuzzy
+msgid "OpenTelemetry RED Errors"
+msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry RED Requests"
+msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
 msgid "OpenTelemetry collector prometheus scraping configurations"
 msgstr "Open Telemetryコレクターの構成"
 
@@ -46935,6 +47056,10 @@ msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Stats"
 
 #, fuzzy
+msgid "Oracle Database Identification"
+msgstr "デフォルト設定"
+
+#, fuzzy
 msgid "Oracle Database default configuration"
 msgstr "デフォルト設定"
 
@@ -46975,6 +47100,10 @@ msgid "Oracle IOSTAT write bytes"
 msgstr "Oracle IOSTAT書き込みバイト"
 
 #, fuzzy
+msgid "Oracle Instance Name of the database instance. May be the same as SID."
+msgstr "センサーの識別子。"
+
+#, fuzzy
 msgid "Oracle Instant Client options"
 msgstr "Oracleヒット率"
 
@@ -47011,6 +47140,10 @@ msgstr "Oracle SGAメモリ統計"
 
 msgid "Oracle SID of the remote database"
 msgstr "リモートデータベースのOracle SID"
+
+#, fuzzy
+msgid "Oracle Service Name of the database instance."
+msgstr "センサーの識別子。"
 
 #, fuzzy
 msgid "Oracle System Identifier of the database instance."
@@ -51364,6 +51497,10 @@ msgstr "レベルを提供する"
 msgid "Provide proxy settings"
 msgstr "プロキシ設定を提供する"
 
+#, fuzzy
+msgid "Provide settings"
+msgstr "プロキシ設定を提供する"
+
 #, python-format
 msgid ""
 "Provide the base URL for Docker API engine calls. By default we are trying "
@@ -51474,6 +51611,10 @@ msgstr "プロキシURL"
 
 msgid "Proxy host"
 msgstr "プロキシホスト"
+
+#, fuzzy
+msgid "Proxy protocol"
+msgstr "プライバシープロトコル"
 
 msgid "Proxy server"
 msgstr "プロキシサーバー"
@@ -52664,6 +52805,10 @@ msgstr "更新間隔"
 #, fuzzy
 msgid "Refresh status"
 msgstr "サービスステータス"
+
+#, fuzzy
+msgid "Refresh token"
+msgstr "リフレッシュ"
 
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
@@ -54141,6 +54286,10 @@ msgstr "リソース名"
 msgid "Resource attribute for hostname computation"
 msgstr "カスタムホスト名算出"
 
+#, fuzzy
+msgid "Resource attributes"
+msgstr "属性をリセット"
+
 msgid "Resource consumption of Windows processes"
 msgstr "Windowsプロセスのリソース消費"
 
@@ -55541,6 +55690,12 @@ msgstr "SNMPv3資格情報"
 msgid "SNMPv3 credentials (SNMPv2 community was discarded)"
 msgstr "SNMPv3資格情報(SNMPv2コミュニティは破棄されました)"
 
+msgid "SOCKS4"
+msgstr ""
+
+msgid "SOCKS5"
+msgstr ""
+
 msgid "SOFT"
 msgstr "柔らかい"
 
@@ -55579,6 +55734,9 @@ msgstr "リモートログイン用のSSHキーペア"
 
 msgid "SSH user name on remote host"
 msgstr "リモートホストのSSHユーザー名"
+
+msgid "SSID"
+msgstr ""
 
 msgid "SSL"
 msgstr "SSL"
@@ -55863,6 +56021,10 @@ msgstr "スコープ"
 #, fuzzy
 msgid "Scope ID"
 msgstr "スコープ"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "役割属性"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -56581,6 +56743,10 @@ msgid ""
 msgstr ""
 "値を表示する範囲を選択します。これは、「履歴値を表示する」が選択されている場"
 "合にのみダッシュレットに影響します"
+
+#, fuzzy
+msgid "Select the relay that should monitor this host."
+msgstr "このホストを監視するサイトを指定します。"
 
 msgid ""
 "Select the sections that you want to include in the agent output.<p><b>Note:"
@@ -58864,9 +59030,6 @@ msgstr "ホストコレクションの時間範囲の選択を含むホストグ
 msgid "Shows number of alerts grouped for each service."
 msgstr "サービスごとにグループ化されたアラートの数を表示します。"
 
-msgid "Shows the Checkmk logo."
-msgstr "Checkmkのロゴを表示します。"
-
 msgid ""
 "Shows the percentage of services that are not OK in relation to the total "
 "number of services. This dashlet is not respecting the full fillter context "
@@ -58933,6 +59096,10 @@ msgid ""
 msgstr ""
 "Linux、Windows、およびその他のオペレーティング・システム用のベイクエージェン"
 "ト・パッケージに署名します"
+
+#, fuzzy
+msgid "Signal power"
+msgstr "RX信号パワー"
 
 msgid "Signal quality of Wireless device"
 msgstr "ワイヤレスデバイスの信号品質"
@@ -62795,9 +62962,6 @@ msgstr "TCPポート"
 msgid "TCP Port Number"
 msgstr "TCPポート番号"
 
-msgid "TCP Port for connection"
-msgstr "接続用のTCPポート"
-
 msgid "TCP Port number"
 msgstr "TCPポート番号"
 
@@ -64082,6 +64246,18 @@ msgstr ""
 "まになります。ここでは、これらのタグを手動で指定できます。"
 
 msgid ""
+"The Linux agent controller is available as x86 64bit (x86-64) and ARM 64-bit "
+"(aarch644) executables.\n"
+"By default, only the x86-64 version will be included in Linux agent "
+"packages.\n"
+"Here you can choose to alternatively or additionally include the ARM "
+"executable, or none at all.\n"
+"The agent package installation scripts will automatically select the correct "
+"binary, depending on the target system's architecture and the available "
+"binaries."
+msgstr ""
+
+msgid ""
 "The Livestatus Proxy is not only good for remote sites, enable it for your "
 "central site"
 msgstr ""
@@ -64373,6 +64549,10 @@ msgstr ""
 "TCPを介したイベントステータスへのアクセスは、この送信元IPアドレス、または"
 "X.X.X.X/Bits、IPv6 の場合は X:X:.../Bits、という表記のIPv4/IPv6ネットワークか"
 "らのみ許可されます"
+
+#, fuzzy
+msgid "The access token for this OAuth2 connection."
+msgstr "このアクションの説明的なタイトル。"
 
 #, fuzzy
 msgid "The access token is invalid or revoked or expired."
@@ -67317,6 +67497,10 @@ msgstr ""
 "じでない場合は、ユーザー設定の「アイデンティティ」でntopngユーザー名を"
 "「ntopngユーザー名」として定義することができます。"
 
+#, fuzzy
+msgid "The refresh token for this OAuth2 connection."
+msgstr "このアクションの説明的なタイトル。"
+
 #, python-format
 msgid ""
 "The relay '%s' is still assigned to one or more hosts. To delete it, first "
@@ -69914,23 +70098,6 @@ msgstr ""
 "よって引き起こされます。"
 
 msgid ""
-"This is essentially the raw agent updater script that gets packaged within "
-"the binary versions. You have to care for the dependencies by yourself. The "
-"script requires a Python 3.7 (or greater) installation and matching python "
-"packages \"requests\", \"PySocks\" and \"cryptography\" installed on the "
-"target hosts. Requirements may change eventually without announcement. "
-"However, this might be the right choice for experienced users or users that "
-"want to run the agent updater on architectures like ARM, ppc or others."
-msgstr ""
-"これは基本的に、バイナリバージョンにパッケージされる生のエージェントアップ"
-"データスクリプトです。依存関係は自分で管理する必要があります。このスクリプト"
-"は、Python 3.7(またはそれ以上)のインストールと、ターゲットホストにマッチする"
-"pythonパッケージ \"requests\", \"PySocks\", \"cryptography\"がインストールさ"
-"れている必要があります。要件はアナウンスなしに変更されるかもしれません。しか"
-"し、経験豊富なユーザや、ARM、ppcなどのアーキテクチャでエージェントアップデー"
-"タを実行したいユーザには、このスクリプトが適しているかもしれません。"
-
-msgid ""
 "This is identical to a normal agent deployment, but with a custom agent "
 "controller user instead of <i>cmk-agent</i>."
 msgstr ""
@@ -72102,6 +72269,7 @@ msgstr ""
 "このルールセットを使用すると、Pythonスクリプトの実行に使用するPythonインター"
 "プリターを選択できます。"
 
+#, fuzzy
 msgid ""
 "This ruleset allows to deploy an agent plug-in that updates the Checkmk "
 "agent for Linux, Solaris and Windows on a regular base. The agent will look "
@@ -72114,6 +72282,9 @@ msgid ""
 "<tt>cmk-update-agent register -H <i>HOST</i></tt> (UNIX), or "
 "<tt>check_mk_agent.exe updater register -H <i>HOST</i></tt> (Windows), where "
 "<i>HOST</i> must be the name of that host in your monitoring."
+"<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+"Python 3.7 installation (or newer) with installed python packages "
+"\"pyOpenSSL\", \"requests\" and \"PySocks\" is required on the target hosts."
 msgstr ""
 "このルールセットを使用すると、Linux、Solaris、およびWindows用のCheckmkエー"
 "ジェントを定期的に更新するエージェントプラグインを展開できます。エージェント"
@@ -74281,10 +74452,10 @@ msgstr ""
 "このチェックに必要なデータを取得するには、データソースプログラム"
 "\"MicrosoftAzure\"を構成してください。"
 
-#, python-brace-format
+#, fuzzy, python-format
 msgid ""
 "To prevent the agent updater from being locked out, the maximum allowed "
-"update interval is set to {bound} (You entered {actual})"
+"update interval is set to %s seconds (30 days)"
 msgstr ""
 "エージェントアップデータがロックアウトされないように、最大許容更新間隔を"
 "{bound}に設定します（{actual}を入力しました）"
@@ -74633,6 +74804,18 @@ msgid "Total duration: "
 msgstr "総所要時間: "
 
 msgid "Total error rate"
+msgstr "総エラー率"
+
+#, fuzzy
+msgid "Total errors over the last day"
+msgstr "総エラー率"
+
+#, fuzzy
+msgid "Total errors over the last hour"
+msgstr "総エラー率"
+
+#, fuzzy
+msgid "Total errors over the last minute"
 msgstr "総エラー率"
 
 msgid "Total events count lower levels"
@@ -77954,10 +78137,6 @@ msgstr "アップロードされたファイル"
 msgid "Upper"
 msgstr "アッパー"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
-
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
 
@@ -78015,6 +78194,18 @@ msgstr "キューの長さの上位レベル"
 msgid "Upper level for rate of memory reclaimed by GC"
 msgstr "GCによって回収されたメモリレートの上位レベル"
 
+#, fuzzy
+msgid "Upper level for request rate over last day"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "Upper level for request rate over last hour"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "Upper level for request rate over last minute"
+msgstr "リクエスト利用率の上位レベル"
+
 msgid "Upper level for runtime run queue"
 msgstr "ランタイム実行キューの上位レベル"
 
@@ -78053,6 +78244,18 @@ msgstr "準備完了メッセージ総数の上位レベル"
 
 msgid "Upper level for total number of unacknowledged messages"
 msgstr "未承認メッセージ総数の上位レベル"
+
+#, fuzzy
+msgid "Upper level for total requests over last day"
+msgstr "リクエストの合計レイテンシの上位レベル"
+
+#, fuzzy
+msgid "Upper level for total requests over last hour"
+msgstr "リクエストの合計レイテンシの上位レベル"
+
+#, fuzzy
+msgid "Upper level for total requests over last minute"
+msgstr "リクエストの合計レイテンシの上位レベル"
 
 msgid "Upper levels"
 msgstr "上位レベル"
@@ -78857,9 +79060,6 @@ msgstr "バックアップコードを使用"
 
 msgid "Use bold font"
 msgstr "太字を使用する"
-
-msgid "Use credentials"
-msgstr "資格情報を使用する"
 
 msgid "Use custom connection parameters"
 msgstr "カスタム接続パラメータを使用する"
@@ -82918,6 +83118,10 @@ msgid "Windows: MSI (.msi)"
 msgstr "Windows: MSI (.msi)"
 
 #, fuzzy
+msgid "Wireless device statuses"
+msgstr "状態を無視する"
+
+#, fuzzy
 msgid "Wireless ethernet statuses"
 msgstr "状態を無視する"
 
@@ -83871,6 +84075,10 @@ msgstr ""
 
 msgid "You can choose from different aggregation modes of clustered services:"
 msgstr "クラスタ化されたサービスのアグリゲーションモードが選べます。"
+
+#, fuzzy
+msgid "You can choose only one agent signature key."
+msgstr "エージェントの署名キーをダウンロードする"
 
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP "
@@ -84991,10 +85199,8 @@ msgstr ""
 msgid "You have not configured any peer-to-peer connections."
 msgstr "ピアツーピア接続を設定していません。"
 
-#, python-format
-msgid ""
-"You have not created any agent <a href='%s' target='_blank'>signature keys</"
-"a> yet. This is necessary."
+#, fuzzy
+msgid "You have not created any agent signature keys yet. This is necessary."
 msgstr ""
 "エージェントの<a href='%s' target='_blank'>署名キー</a>をまだ作成していませ"
 "ん。これは必須です。"
@@ -86641,9 +86847,6 @@ msgstr "iSCSI操作"
 msgid "iSCSI traffic"
 msgstr "iSCSIトラフィック"
 
-msgid "icon not found"
-msgstr "アイコンが見つかりません"
-
 msgid "idle"
 msgstr ""
 
@@ -88199,7 +88402,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Reset to pre-defined filters"
+msgid "Reset to pre-selected filters"
 msgstr "フィルタを取り外します"
 
 #, fuzzy
@@ -88212,6 +88415,14 @@ msgstr "関連ダッシュボード"
 
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
+
+#, fuzzy
+msgid "pre-selected"
+msgstr "選択済み"
+
+#, fuzzy
+msgid "Pre-selected"
+msgstr "選択済み"
 
 msgid "Dashboard"
 msgstr "ダッシュボード"
@@ -88403,6 +88614,10 @@ msgstr "データソースを読み込み中..."
 msgid "Choose from available datasources"
 msgstr ""
 
+#, fuzzy
+msgid "Single %{title}"
+msgstr "シングル"
+
 msgid "Loading…"
 msgstr "読み込んでいます…"
 
@@ -88540,8 +88755,8 @@ msgid "Responsive"
 msgstr "反応時間"
 
 #, fuzzy
-msgid "Relative (Legacy)"
-msgstr "相対的"
+msgid "Anchored"
+msgstr "無視"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
@@ -88857,6 +89072,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Select none"
+msgstr "アイコンを選択してください"
+
+#, fuzzy
+msgid "No icon selected"
+msgstr "何も選択されていません"
+
+#, fuzzy
 msgid "Data selection"
 msgstr "サイト選択"
 
@@ -89064,6 +89287,21 @@ msgid "Dashboard settings of %{name}"
 msgstr "ダッシュボードのプロパティ"
 
 #, fuzzy
+msgid "Expiration date is missing"
+msgstr "有効期限なし"
+
+#, fuzzy
+msgid "Expiration date cannot be in the past."
+msgstr "過去の有効期限を設定することはできません："
+
+#, fuzzy
+msgid "Expiration date cannot be more than 30 days in the future."
+msgstr "過去の有効期限を設定することはできません："
+
+msgid "Expiration date cannot be more than 2 years in the future."
+msgstr ""
+
+#, fuzzy
 msgid "Users with access permissions can view this dashboard"
 msgstr "この権限を持たないユーザは入れない"
 
@@ -89120,13 +89358,6 @@ msgstr "公衆"
 #, fuzzy
 msgid "Public dashboard URL"
 msgstr "問題のダッシュボード"
-
-#, fuzzy
-msgid "Expiration date cannot be in the past."
-msgstr "過去の有効期限を設定することはできません："
-
-msgid "Expiration date cannot be more than 2 years in the future."
-msgstr ""
 
 #, fuzzy
 msgid "Link settings"
@@ -89394,9 +89625,6 @@ msgstr "もっと表示"
 msgid "Preview of matches:"
 msgstr "ルール一致"
 
-msgid "Metric name"
-msgstr "メトリック名"
-
 #, fuzzy
 msgid "Aggregation lookback"
 msgstr "集約チェック"
@@ -89435,6 +89663,10 @@ msgstr "グラフオプション"
 
 msgid "Graph lines (OpenTelemetry)"
 msgstr ""
+
+#, fuzzy
+msgid "Cannot change rule value for rules managed by custom graph editor."
+msgstr "クイックセットアップで管理されているルールの条件を変更できません。"
 
 msgid "Mirrored"
 msgstr "ミラーリングされた"
@@ -89598,18 +89830,6 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "属性をリセット"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "役割属性"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "ダウンタイム属性:"
-
-#, fuzzy
 msgid "Agent connection test running"
 msgstr "接続タイムアウトを設定する"
 
@@ -89754,14 +89974,6 @@ msgid "Next step: Register agent"
 msgstr "次のステップ：受信者"
 
 msgid ""
-"Agent registration will establish trust between the Agent Controller\n"
-"                    on the host and the Agent Receiver on the Checkmk server."
-msgstr ""
-
-msgid "Run this command to register the Checkmk agent controller."
-msgstr ""
-
-msgid ""
 "Test if you have configured everything correctly with pasting the following\n"
 "                  command into the CLI of the target system."
 msgstr ""
@@ -89830,6 +90042,33 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Generate registration token"
+msgstr "エージェント登録ユーザー"
+
+#, fuzzy
+msgid "Generating registration token"
+msgstr "エージェント登録ユーザー"
+
+msgid "Error on generating registration token: ${ottError.message}"
+msgstr ""
+
+#, fuzzy
+msgid "Successfully generated registration token"
+msgstr "クリップボードへのコピーに成功しました。"
+
+msgid ""
+"Agent registration will establish trust between the Agent Controller\n"
+"                    on the host and the Agent Receiver on the Checkmk server."
+msgstr ""
+
+#, fuzzy
+msgid "This requires the generation of a registration token."
+msgstr "この権限は、任意の既存ホストの登録を許可する。"
+
+msgid "Run this command to register the Checkmk agent controller."
+msgstr ""
+
+#, fuzzy
 msgid "Application successfully authorized!"
 msgstr "通知ルールが正常に修正されました！"
 
@@ -89862,6 +90101,10 @@ msgid "Failed to request and save access token: ${e}"
 msgstr "Adressbookファイルへのリクエストの失敗"
 
 #, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "接続を追加"
+
+#, fuzzy
 msgid "Authorization was not completed. Please try again."
 msgstr "何か問題が発生しました: %s"
 
@@ -89874,7 +90117,7 @@ msgid "seconds remaining"
 msgstr " 秒 残)"
 
 #, fuzzy
-msgid "OAuth2 connection created successfully!"
+msgid "OAuth2 connection parameters requested successfully!"
 msgstr "エージェント%sが成功しました"
 
 #, fuzzy
@@ -89948,16 +90191,9 @@ msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
-msgid "Download the relay to your environment"
-msgstr ""
-
 #, fuzzy
-msgid "Download the Relay container image."
-msgstr "Dockerコンテナプラグインをデプロイする"
-
-#, fuzzy
-msgid "Name the relay"
-msgstr "プロキシの名前"
+msgid "Configure the Relay registration"
+msgstr "ホストとリージョンを設定"
 
 #, fuzzy
 msgid "Provide a display alias for your Relay."
@@ -89967,6 +90203,13 @@ msgid ""
 "The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+msgid "Download the relay to your environment"
+msgstr ""
+
+#, fuzzy
+msgid "Download the Relay container image."
+msgstr "Dockerコンテナプラグインをデプロイする"
 
 #, fuzzy
 msgid "Register the relay with your Checkmk site and run it"
@@ -90036,14 +90279,14 @@ msgid "We strictly limit data collection to aggregated, non-personal metrics."
 msgstr ""
 
 #, fuzzy
-msgid "We Collect:"
+msgid "We collect:"
 msgstr "コレクション"
 
 msgid "Quantity metrics (e.g., count of hosts, folders, and services)."
 msgstr ""
 
 #, fuzzy
-msgid "We Do NOT Collect:"
+msgid "We do NOT collect:"
 msgstr "コアのサイズ"
 
 msgid ""
@@ -90057,11 +90300,11 @@ msgstr ""
 msgid ""
 "No! We firmly believe in only receiving data you are happy to share with us. "
 "For this reason, on default product telemetry is turned off. To make a "
-"decision now, please click on the \"Decide on product telemetry\" button."
+"decision now, please click on the \"Enable in global settings\" button."
 msgstr ""
 
 #, fuzzy
-msgid "Ask me again"
+msgid "Ask me later"
 msgstr "ホストが再び上がる"
 
 #, fuzzy
@@ -90327,6 +90570,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Run a service discovery"
+msgstr "サービスディスカバリ実行"
+
+#, fuzzy
 msgid "On-premises hosts"
 msgstr "レベルホスト"
 
@@ -90338,9 +90585,24 @@ msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Window
 msgid "Network devices and SNMP"
 msgstr "ネットワークスキャン"
 
+msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
 #, fuzzy
 msgid "OpenTelemetry (Beta)"
 msgstr "OpenTelemetry（実験的）"
+
+msgid ""
+"Changes are saved in a temporary environment first,\n"
+"                letting you review and adjust them safely."
+msgstr ""
+
+msgid "Activate changes to apply them to live monitoring."
+msgstr "変更を有効化して、ライブ監視に適用します。"
+
+#, fuzzy
+msgid "Mark as complete"
+msgstr "PGs 未完了"
 
 #, fuzzy
 msgid "Adjust services"
@@ -90358,10 +90620,6 @@ msgid ""
 "            To find the right ruleset for a service,\n"
 "            start with the Service discovery page of a host."
 msgstr ""
-
-#, fuzzy
-msgid "Run a service discovery"
-msgstr "サービスディスカバリ実行"
 
 msgid "To adjust parameters for a host, start by running a service discovery."
 msgstr ""
@@ -90403,18 +90661,6 @@ msgstr ""
 msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
-
-msgid ""
-"Changes are saved in a temporary environment first,\n"
-"                letting you review and adjust them safely."
-msgstr ""
-
-msgid "Activate changes to apply them to live monitoring."
-msgstr "変更を有効化して、ライブ監視に適用します。"
-
-#, fuzzy
-msgid "Mark as complete"
-msgstr "PGs 未完了"
 
 #, fuzzy
 msgid "Assign responsibilities"
@@ -90536,6 +90782,95 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Microsoft Azure (deprecated)"
+#~ msgstr "Microsoft SQL サーバー(非推奨)"
+
+#~ msgid "Microsoft Azure Status"
+#~ msgstr "Microsoft Azureの状態"
+
+#~ msgid "icon not found"
+#~ msgstr "アイコンが見つかりません"
+
+#, fuzzy
+#~ msgid "Name the relay"
+#~ msgstr "プロキシの名前"
+
+#~ msgid ""
+#~ "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+#~ "Python 3.7 installation (or newer) with installed python packages "
+#~ "\"pyOpenSSL\", \"requests\" and \"PySocks\" is required on the target "
+#~ "hosts."
+#~ msgstr ""
+#~ "<b>注意<sup>3</sup>:</b> このプラグインをSolarisにデプロイするには、"
+#~ "Python 3.7（またはそれ以降）がインストールされ、pythonパッケージ "
+#~ "\"pyOpenSSL\"、\"requests\"、\"PySocks \"がインストールされている必要があ"
+#~ "ります。"
+
+#~ msgid ""
+#~ "Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
+#~ "the host."
+#~ msgstr ""
+#~ "エージェントアップデーターは、ホスト上の変数 \"HTTP_PROXY\"および"
+#~ "\"HTTPS_PROXY\"に従います。"
+
+#, fuzzy
+#~ msgid "Ask user for consent via popup"
+#~ msgstr "連絡先グループへのサービスの割り当て"
+
+#~ msgid "Checkmk Logo"
+#~ msgstr "Checkmkロゴ"
+
+#~ msgid "Completely ignore connection via proxy. This is the default."
+#~ msgstr "プロキシ経由の接続は完全に無視してください。これがデフォルトです。"
+
+#~ msgid "Executable Python script"
+#~ msgstr "実行可能なPythonスクリプト"
+
+#, fuzzy
+#~ msgid "Lower levels for the consumer count"
+#~ msgstr "コンシューマーカウントのレベル"
+
+#, fuzzy
+#~ msgid "Missing request variable 'widget_id'"
+#~ msgstr "変数siteidがありません"
+
+#, fuzzy
+#~ msgid "Not decided"
+#~ msgstr "不要"
+
+#~ msgid "Shows the Checkmk logo."
+#~ msgstr "Checkmkのロゴを表示します。"
+
+#~ msgid "TCP Port for connection"
+#~ msgstr "接続用のTCPポート"
+
+#~ msgid ""
+#~ "This is essentially the raw agent updater script that gets packaged "
+#~ "within the binary versions. You have to care for the dependencies by "
+#~ "yourself. The script requires a Python 3.7 (or greater) installation and "
+#~ "matching python packages \"requests\", \"PySocks\" and \"cryptography\" "
+#~ "installed on the target hosts. Requirements may change eventually without "
+#~ "announcement. However, this might be the right choice for experienced "
+#~ "users or users that want to run the agent updater on architectures like "
+#~ "ARM, ppc or others."
+#~ msgstr ""
+#~ "これは基本的に、バイナリバージョンにパッケージされる生のエージェントアップ"
+#~ "データスクリプトです。依存関係は自分で管理する必要があります。このスクリプ"
+#~ "トは、Python 3.7(またはそれ以上)のインストールと、ターゲットホストにマッチ"
+#~ "するpythonパッケージ \"requests\", \"PySocks\", \"cryptography\"がインス"
+#~ "トールされている必要があります。要件はアナウンスなしに変更されるかもしれま"
+#~ "せん。しかし、経験豊富なユーザや、ARM、ppcなどのアーキテクチャでエージェン"
+#~ "トアップデータを実行したいユーザには、このスクリプトが適しているかもしれま"
+#~ "せん。"
+
+#~ msgid "Use credentials"
+#~ msgstr "資格情報を使用する"
+
+#, fuzzy
+#~ msgid "Relative (Legacy)"
+#~ msgstr "相対的"
 
 #~ msgid "SNAT Usage"
 #~ msgstr "SNAT使用量"

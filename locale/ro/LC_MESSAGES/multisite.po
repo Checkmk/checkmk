@@ -1272,7 +1272,8 @@ msgstr "Niveluri superioare de ieșire de 3,3 volți"
 msgid "30 minutes"
 msgstr "30 de minute"
 
-msgid "32bit packaged binary"
+#, fuzzy
+msgid "32-bit packaged binary"
 msgstr "32bit binar împachetat"
 
 msgid "389 Directory Server"
@@ -1337,7 +1338,8 @@ msgstr "Rata de eroare 5xx"
 msgid "6 months"
 msgstr "6 luni"
 
-msgid "64bit packaged binary"
+#, fuzzy
+msgid "64-bit packaged binary"
 msgstr "64bit binar împachetat"
 
 #, no-python-format
@@ -1559,16 +1561,6 @@ msgid ""
 msgstr ""
 "<b>Nota</b>: Dacă migrați la conectorul <i>htpasswd</i>, utilizatorii vor "
 "trebui să își schimbe parola la următoarea autentificare."
-
-#, fuzzy
-msgid ""
-"<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
-"Python 3.7 installation (or newer) with installed python packages "
-"\"pyOpenSSL\", \"requests\" and \"PySocks\" is required on the target hosts."
-msgstr ""
-"<b>Nota<sup>3</sup>:</b> Pentru a implementa acest plugin pe Solaris, este "
-"necesară o instalare Python 3.4 (sau mai nouă) cu pachetele python instalate "
-"\"pyOpenSSL\", \"requests\" și \"PySocks\" pe gazdele țintă."
 
 #, python-format
 msgid ""
@@ -3518,6 +3510,10 @@ msgstr "Acces la modulele de gestionare a grupurilor de gazde și de servicii."
 msgid "Access to the setup menu with only icons (saves space)"
 msgstr ""
 "Acces la meniul de configurare numai cu pictograme (economisește spațiu)"
+
+#, fuzzy
+msgid "Access token"
+msgstr "Token de acces la API"
 
 msgid "Access via TCP"
 msgstr "Acces prin TCP"
@@ -5543,13 +5539,6 @@ msgstr "Agent de actualizare (Linux, Windows, Solaris)"
 msgid "Agent updater ruleset"
 msgstr "Set de reguli pentru actualizatorul de agenți"
 
-msgid ""
-"Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
-"the host."
-msgstr ""
-"Agent updater va urmări variabilele \"HTTP_PROXY\" și \"HTTPS_PROXY\" de pe "
-"gazdă."
-
 msgid "Agent updates"
 msgstr "Actualizări agent"
 
@@ -6446,6 +6435,9 @@ msgstr ""
 "Permiteți tuturor utilizatorilor să se refere la regulile conținute în acest "
 "pachet"
 
+msgid "Allow collection and transmission of telemetry data"
+msgstr ""
+
 msgid "Allow growing here"
 msgstr "Permiteți creșterea aici"
 
@@ -6463,9 +6455,6 @@ msgstr "Permiteți autentificarea cu parolă"
 
 msgid "Allow self-signed certificates"
 msgstr "Permiteți certificatele autofirmate"
-
-msgid "Allow sending telemetry data"
-msgstr ""
 
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr ""
@@ -7654,10 +7643,6 @@ msgstr "Agent Checkmk"
 
 msgid "Ask for an optional comment"
 msgstr "Cereți un comentariu opțional"
-
-#, fuzzy
-msgid "Ask user for consent via popup"
-msgstr "Atribuirea serviciilor la grupurile de contact"
 
 msgid "Assertion Consumer Service endpoint"
 msgstr "Punct final al serviciului de consum al afirmațiilor"
@@ -9230,6 +9215,10 @@ msgid "Azure"
 msgstr "Azure"
 
 #, fuzzy
+msgid "Azure (deprecated)"
+msgstr "Azure VM Disk"
+
+#, fuzzy
 msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
 
@@ -9425,6 +9414,10 @@ msgstr "Unitatea de debit a bazei de date"
 #, fuzzy
 msgid "Azure SQL database throughput (deprecated)"
 msgstr "Unitatea de debit a bazei de date"
+
+#, fuzzy
+msgid "Azure Status"
+msgstr "Starea Apache"
 
 msgid "Azure Storage"
 msgstr "Azure Storage"
@@ -11512,6 +11505,10 @@ msgstr "CA"
 msgid "CA certificate"
 msgstr "Certificat CA"
 
+#, fuzzy
+msgid "CA or self-signed certificate"
+msgstr "Adăugați un certificat CA sau un certificat auto-semnat"
+
 msgid "CA port indices"
 msgstr "Indicii porturilor CA"
 
@@ -12981,6 +12978,10 @@ msgstr "Utilizarea canalelor pentru banda de 2,4GHz"
 msgid "Channel utilization for 5GHz band"
 msgstr "Utilizarea canalelor pentru banda de 5GHz"
 
+#, fuzzy
+msgid "Channel width"
+msgstr "Canal"
+
 msgid "Channels"
 msgstr "Canale"
 
@@ -13444,9 +13445,6 @@ msgstr "Fișiere jurnal Checkmk"
 
 msgid "Checkmk Log files"
 msgstr "Checkmk Fișiere jurnal"
-
-msgid "Checkmk Logo"
-msgstr "Checkmk Logo"
 
 msgid "Checkmk Micro Core"
 msgstr "Checkmk Micro Core"
@@ -14290,6 +14288,10 @@ msgstr "Cisco Meraki"
 
 #, fuzzy
 msgid "Cisco Meraki switch port statuses"
+msgstr "Afișați starea serviciului"
+
+#, fuzzy
+msgid "Cisco Meraki wireless device statuses"
 msgstr "Afișați starea serviciului"
 
 #, fuzzy
@@ -15283,9 +15285,6 @@ msgstr "Arbore complet"
 
 msgid "Complete variable list (for testing)"
 msgstr "Lista completă de variabile (pentru testare)"
-
-msgid "Completely ignore connection via proxy. This is the default."
-msgstr "Ignoră complet conexiunea prin proxy. Aceasta este valoarea implicită."
 
 msgid "Completion"
 msgstr "Finalizare"
@@ -16355,6 +16354,12 @@ msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
 msgid "Consecutive reachability failures (up to 8)"
+msgstr ""
+
+msgid ""
+"Consent to product telemetry data collection. By default, this is disabled, "
+"the user will be asked for consent via pop-up. Run  <tt>cmk-telemetry --dry-"
+"run</tt> in the command line to see a preview of the data."
 msgstr ""
 
 msgid "Consider alerts for Prism Central only"
@@ -18469,6 +18474,10 @@ msgid "Customize GUI design"
 msgstr "Personalizați designul GUI"
 
 #, fuzzy
+msgid "Customize Linux agent controller deployment"
+msgstr "Implementarea controlerului de agent"
+
+#, fuzzy
 msgid "Customize agent package (Linux)"
 msgstr "Numele pachetelor agentului (Linux, UNIX)"
 
@@ -18922,6 +18931,10 @@ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 #, fuzzy
 msgid "Data point"
 msgstr "Date trimise"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributele timpilor morți:"
 
 msgid "Data range"
 msgstr "Intervalul de date"
@@ -21396,6 +21409,10 @@ msgstr "Servicii pentru persoane cu handicap"
 msgid "Disabled via master control"
 msgstr "Dezactivați controlerul"
 
+#, fuzzy
+msgid "Disabled. Reminder scheduled"
+msgstr "Controale active dezactivate"
+
 #, fuzzy, python-format
 msgid "Disabling extension package \"%s\"."
 msgstr "Pachet de extensie dezactivat %s %s"
@@ -22123,6 +22140,10 @@ msgstr "Verificați o adresă"
 msgid "Do not check the node"
 msgstr "Nu verificați nodul"
 
+#, fuzzy
+msgid "Do not collect and transmit telemetry data"
+msgstr "Nu trimiteți la gazda de la distanță"
+
 msgid "Do not configure Windows Firewall"
 msgstr "Nu configurați Windows Firewall"
 
@@ -22597,10 +22618,6 @@ msgstr "Nu îndepărtați nimic"
 
 msgid "Do not rotate based on the time"
 msgstr "Nu se rotesc în funcție de timp"
-
-#, fuzzy
-msgid "Do not send telemetry data"
-msgstr "Nu trimiteți la gazda de la distanță"
 
 msgid "Do not send to remote host"
 msgstr "Nu trimiteți la gazda de la distanță"
@@ -23189,10 +23206,7 @@ msgid ""
 "another or deleting a host manually from the configuration.<br>The "
 "performance data (RRDs) and HW/SW Inventory archive are never deleted during "
 "host deletion. They are only deleted automatically when you enable this "
-"option and after the configured period. This option also affects the "
-"retention of `Agent update status` files. These files can be created without "
-"a corresponding host, but should be cleaned up after a grace period if the "
-"user never creates the host."
+"option and after the configured period."
 msgstr ""
 "În timpul monitorizării, sunt create mai multe fișiere dedicate pentru "
 "fiecare gazdă. Sunt, de exemplu, serviciile descoperite, datele de "
@@ -24305,11 +24319,6 @@ msgstr "Activați jurnalizarea notificărilor"
 msgid "Enable notifications?"
 msgstr "Activați notificările?"
 
-msgid ""
-"Enable or disable product telemetry data collection. If not decided, the "
-"user will be asked for consent via a popup."
-msgstr ""
-
 #, fuzzy
 msgid "Enable package"
 msgstr "Activați acest pachet"
@@ -25087,6 +25096,18 @@ msgstr ""
 msgid "Error rate"
 msgstr "Rata de eroare"
 
+#, fuzzy
+msgid "Error rate over the last day"
+msgstr "A apărut o eroare în timpul ultimei actualizări"
+
+#, fuzzy
+msgid "Error rate over the last hour"
+msgstr "Evenimentele din ultimele 4 ore."
+
+#, fuzzy
+msgid "Error rate over the last minute"
+msgstr "Comutații de jurnal în ultimele 60 de minute"
+
 msgid "Error rates"
 msgstr "Ratele de eroare"
 
@@ -25702,9 +25723,6 @@ msgstr "Încuietori exclusive"
 
 msgid "Exclusive locks"
 msgstr "Încuietori exclusive"
-
-msgid "Executable Python script"
-msgstr "Script Python executabil"
 
 msgid "Executable format (Linux)"
 msgstr "Format executabil (Linux)"
@@ -36281,6 +36299,10 @@ msgstr "Niveluri superioare de ieșire de 5 volți"
 msgid "Incident"
 msgstr "Incident"
 
+#, fuzzy
+msgid "Include ARM version"
+msgstr "Ignorați versiunea"
+
 msgid "Include Pattern"
 msgstr "Includeți modelul"
 
@@ -36361,6 +36383,10 @@ msgstr "Includeți timpul nemonitorizat"
 
 msgid "Include vanished clustered services during removal"
 msgstr "Includeți serviciile grupate dispărute în timpul eliminării"
+
+#, fuzzy
+msgid "Include x86 version"
+msgstr "Ignorați versiunea"
 
 msgid "Inclusion patterns"
 msgstr "Modele de incluziune"
@@ -36871,6 +36897,10 @@ msgstr "Numele instanței și al spațiului tabelar"
 
 msgid "Instance ID"
 msgstr "ID-ul instanței"
+
+#, fuzzy
+msgid "Instance Name(SID)"
+msgstr "Numele instanței"
 
 msgid "Instance error state"
 msgstr "Starea de eroare a instanței"
@@ -39505,6 +39535,10 @@ msgstr "Niveluri pentru dimensiunea Tablespace"
 msgid "Levels for the Tablespace usage"
 msgstr "Niveluri pentru utilizarea Tablespace"
 
+#, fuzzy
+msgid "Levels for the consumer count"
+msgstr "Niveluri pentru numărul de consumatori"
+
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveluri pentru consumul de energie electrică al unui dispozitiv "
 
@@ -41284,6 +41318,18 @@ msgstr "Nivelul inferior pentru rata mesajelor publicate"
 msgid "Lower level for rate of memory reclaimed by GC"
 msgstr "Nivelul inferior pentru rata de memorie recuperată de GC"
 
+#, fuzzy
+msgid "Lower level for request rate over last day"
+msgstr "Niveluri inferioare de utilizare a cererilor"
+
+#, fuzzy
+msgid "Lower level for request rate over last hour"
+msgstr "Niveluri inferioare de utilizare a cererilor"
+
+#, fuzzy
+msgid "Lower level for request rate over last minute"
+msgstr "Niveluri inferioare de utilizare a cererilor"
+
 msgid "Lower level for runtime run queue"
 msgstr "Nivel inferior pentru coada de execuție în timpul execuției"
 
@@ -41319,6 +41365,18 @@ msgstr "Nivelul inferior pentru numărul total de mesaje pregătite"
 
 msgid "Lower level for total number of unacknowledged messages"
 msgstr "Nivelul inferior pentru numărul total de mesaje neacceptate"
+
+#, fuzzy
+msgid "Lower level for total requests over last day"
+msgstr "Niveluri inferioare pentru rata totală de eroare"
+
+#, fuzzy
+msgid "Lower level for total requests over last hour"
+msgstr "Niveluri inferioare pentru rata totală de eroare"
+
+#, fuzzy
+msgid "Lower level for total requests over last minute"
+msgstr "Niveluri inferioare pentru rata totală de eroare"
 
 msgid "Lower levels"
 msgstr "Niveluri inferioare"
@@ -41413,10 +41471,6 @@ msgstr "Niveluri mai mici de utilizare a rezervărilor"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "Niveluri pentru conexiuni active"
-
-#, fuzzy
-msgid "Lower levels for the consumer count"
-msgstr "Niveluri pentru numărul de consumatori"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -43752,6 +43806,10 @@ msgid "Metric levels"
 msgstr "Niveluri metrice"
 
 #, fuzzy
+msgid "Metric name"
+msgstr "Etichetă metrică"
+
+#, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Numele gazdei (potrivire exactă)"
 
@@ -43804,19 +43862,9 @@ msgstr "Metrici"
 msgid "MiB"
 msgstr "MiB"
 
-msgid "Microsoft Azure"
-msgstr "Microsoft Azure"
-
 #, fuzzy
 msgid "Microsoft Azure (Deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
-
-#, fuzzy
-msgid "Microsoft Azure (deprecated)"
-msgstr "Microsoft SQL Server (Windows)"
-
-msgid "Microsoft Azure Status"
-msgstr "Starea Microsoft Azure"
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Starea VM Microsoft Hyper-V Server"
@@ -44122,10 +44170,6 @@ msgstr "Precondiții lipsă"
 
 #, fuzzy, python-format
 msgid "Missing request variable '%s'"
-msgstr "Variabila lipsă siteid"
-
-#, fuzzy
-msgid "Missing request variable 'widget_id'"
 msgstr "Variabila lipsă siteid"
 
 msgid "Missing required \"Host name\" selection."
@@ -44693,6 +44737,10 @@ msgstr "Starea de monitorizare dacă culoarea LED-ului este %s"
 #, python-format
 msgid "Monitoring state if MTree state is '%s'"
 msgstr "Monitorizarea stării dacă starea MTree este \"%s"
+
+#, fuzzy
+msgid "Monitoring state if SSID is not enabled"
+msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
 
 #, python-format
 msgid "Monitoring state if VM state is %s"
@@ -46762,6 +46810,10 @@ msgid "No re-executions"
 msgstr "Fără re-executări"
 
 #, fuzzy
+msgid "No relay"
+msgstr "Nu există rezultate"
+
+#, fuzzy
 msgid "No relay ID specified."
 msgstr "Configurație gazdă"
 
@@ -47334,10 +47386,6 @@ msgstr "Nu este configurat."
 
 msgid "Not contained in any group"
 msgstr "Nu sunt incluse în nicio grupă"
-
-#, fuzzy
-msgid "Not decided"
-msgstr "este necesară"
 
 msgid "Not enabled"
 msgstr "Neactivat"
@@ -48906,6 +48954,70 @@ msgid "OTLP endpoint"
 msgstr "Punct final"
 
 #, fuzzy
+msgid "OTel RED Error: Error rate"
+msgstr "Niveluri pentru ratele de eroare"
+
+msgid "OTel RED Error: Error rate over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Error rate over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Error rate over the last minute"
+msgstr ""
+
+msgid "OTel RED Error: Errors over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Errors over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Errors over the last minute"
+msgstr ""
+
+msgid "OTel RED Error: Requests over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Requests over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Requests over the last minute"
+msgstr ""
+
+msgid "OTel RED Error: Total errors over the last day"
+msgstr ""
+
+msgid "OTel RED Error: Total errors over the last hour"
+msgstr ""
+
+msgid "OTel RED Error: Total errors over the last minute"
+msgstr ""
+
+msgid "OTel RED Requests: Request over last day"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate over the last day"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate over the last hour"
+msgstr ""
+
+msgid "OTel RED Requests: Request rate over the last minute"
+msgstr ""
+
+msgid "OTel RED Requests: Requests over the last day"
+msgstr ""
+
+msgid "OTel RED Requests: Requests over the last hour"
+msgstr ""
+
+msgid "OTel RED Requests: Requests over the last minute"
+msgstr ""
+
+#, fuzzy
 msgid "OTel collector memory usage"
 msgstr "Utilizarea memoriei Netscaler"
 
@@ -49648,6 +49760,14 @@ msgid "OpenTelemetry Collector Memory Limit"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
+msgid "OpenTelemetry RED Errors"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "OpenTelemetry RED Requests"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
 msgid "OpenTelemetry collector prometheus scraping configurations"
 msgstr "Configurația stilului selectat"
 
@@ -49971,6 +50091,10 @@ msgid "Oracle Data-Guard Stats"
 msgstr "Statistici Oracle Data-Guard"
 
 #, fuzzy
+msgid "Oracle Database Identification"
+msgstr "Configurație implicită"
+
+#, fuzzy
 msgid "Oracle Database default configuration"
 msgstr "Configurație implicită"
 
@@ -50023,6 +50147,10 @@ msgid "Oracle IOSTAT write bytes"
 msgstr "ORACLE IOSTAT Bytes"
 
 #, fuzzy
+msgid "Oracle Instance Name of the database instance. May be the same as SID."
+msgstr "Identificatorul senzorului."
+
+#, fuzzy
 msgid "Oracle Instant Client options"
 msgstr "Rata de accesare a memoriei cache"
 
@@ -50065,6 +50193,10 @@ msgstr "Statistici de memorie ORACLE SGA"
 #, fuzzy
 msgid "Oracle SID of the remote database"
 msgstr "ORACLE SID al bazei de date la distanță"
+
+#, fuzzy
+msgid "Oracle Service Name of the database instance."
+msgstr "Identificatorul senzorului."
 
 #, fuzzy
 msgid "Oracle System Identifier of the database instance."
@@ -54875,6 +55007,10 @@ msgstr "Furnizarea de niveluri"
 msgid "Provide proxy settings"
 msgstr "Furnizați setările proxy"
 
+#, fuzzy
+msgid "Provide settings"
+msgstr "Furnizați setările proxy"
+
 #, fuzzy, python-format
 msgid ""
 "Provide the base URL for Docker API engine calls. By default we are trying "
@@ -54990,6 +55126,10 @@ msgstr "URL-ul Proxy"
 
 msgid "Proxy host"
 msgstr "Gazdă proxy"
+
+#, fuzzy
+msgid "Proxy protocol"
+msgstr "Protocol de confidențialitate"
 
 msgid "Proxy server"
 msgstr "Server Proxy"
@@ -56259,6 +56399,10 @@ msgstr "Interval de reîmprospătare"
 #, fuzzy
 msgid "Refresh status"
 msgstr "Starea serviciului"
+
+#, fuzzy
+msgid "Refresh token"
+msgstr "Reîmprospătare"
 
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
@@ -57799,6 +57943,10 @@ msgid "Resource attribute for hostname computation"
 msgstr "Calcularea numelui de gazdă"
 
 #, fuzzy
+msgid "Resource attributes"
+msgstr "Resetarea atributelor"
+
+#, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Consumul de resurse al proceselor Windows"
 
@@ -59303,6 +59451,12 @@ msgstr "Acreditive SNMPv3"
 msgid "SNMPv3 credentials (SNMPv2 community was discarded)"
 msgstr "credențiale SNMPv3 (comunitatea SNMPv2 a fost eliminată)"
 
+msgid "SOCKS4"
+msgstr ""
+
+msgid "SOCKS5"
+msgstr ""
+
 msgid "SOFT"
 msgstr "SOFT"
 
@@ -59343,6 +59497,9 @@ msgstr "Pereche de chei SSH pentru conectarea la distanță"
 
 msgid "SSH user name on remote host"
 msgstr "Numele de utilizator SSH pe gazda la distanță"
+
+msgid "SSID"
+msgstr ""
 
 msgid "SSL"
 msgstr "SSL"
@@ -59635,6 +59792,10 @@ msgstr ""
 #, fuzzy
 msgid "Scope ID"
 msgstr "ID-ul nodului"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Atributul rolului"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -60386,6 +60547,10 @@ msgid ""
 msgstr ""
 "Selectați intervalul între care sunt afișate valorile. Acest lucru afectează "
 "dashlet-ul numai dacă 'Show historical values' este selectat"
+
+#, fuzzy
+msgid "Select the relay that should monitor this host."
+msgstr "Specificați site-ul care trebuie să monitorizeze această gazdă."
 
 msgid ""
 "Select the sections that you want to include in the agent output.<p><b>Note:"
@@ -62861,9 +63026,6 @@ msgstr ""
 msgid "Shows number of alerts grouped for each service."
 msgstr "Afișează numărul de alerte grupate pentru fiecare serviciu."
 
-msgid "Shows the Checkmk logo."
-msgstr "Afișează sigla Checkmk."
-
 msgid ""
 "Shows the percentage of services that are not OK in relation to the total "
 "number of services. This dashlet is not respecting the full fillter context "
@@ -62931,6 +63093,10 @@ msgid ""
 msgstr ""
 "Semnați pachete de agenți copți pentru Linux, Windows și alte sisteme de "
 "operare"
+
+#, fuzzy
+msgid "Signal power"
+msgstr "Puterea semnalului RX"
 
 msgid "Signal quality of Wireless device"
 msgstr "Calitatea semnalului dispozitivului fără fir"
@@ -67033,9 +67199,6 @@ msgstr "Port TCP"
 msgid "TCP Port Number"
 msgstr "Numărul portului TCP"
 
-msgid "TCP Port for connection"
-msgstr "Port TCP pentru conexiune"
-
 msgid "TCP Port number"
 msgstr "Numărul portului TCP"
 
@@ -68417,6 +68580,18 @@ msgstr ""
 "fișierului de specificații RPM. Aici, puteți specifica manual aceste "
 "etichete."
 
+msgid ""
+"The Linux agent controller is available as x86 64bit (x86-64) and ARM 64-bit "
+"(aarch644) executables.\n"
+"By default, only the x86-64 version will be included in Linux agent "
+"packages.\n"
+"Here you can choose to alternatively or additionally include the ARM "
+"executable, or none at all.\n"
+"The agent package installation scripts will automatically select the correct "
+"binary, depending on the target system's architecture and the available "
+"binaries."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The Livestatus Proxy is not only good for remote sites, enable it for your "
@@ -68704,6 +68879,10 @@ msgstr ""
 "Accesul la starea evenimentului prin TCP va fi permis numai de la această "
 "adresă IP sursă sau de la o rețea IPv4/IPv6 în notația X.X.X.X.X/Bits sau "
 "X:X:.../Bits pentru IPv6."
+
+#, fuzzy
+msgid "The access token for this OAuth2 connection."
+msgstr "Un titlu descriptiv despre această acțiune."
 
 msgid "The access token is invalid or revoked or expired."
 msgstr ""
@@ -71770,6 +71949,10 @@ msgstr ""
 "defini numele dvs. de utilizator ntopng ca 'ntopng Username' în setările "
 "dvs. de utilizator în 'Identity'."
 
+#, fuzzy
+msgid "The refresh token for this OAuth2 connection."
+msgstr "Un titlu descriptiv despre această acțiune."
+
 #, python-format
 msgid ""
 "The relay '%s' is still assigned to one or more hosts. To delete it, first "
@@ -74460,25 +74643,6 @@ msgid ""
 "service in the following table."
 msgstr ""
 
-#, fuzzy
-msgid ""
-"This is essentially the raw agent updater script that gets packaged within "
-"the binary versions. You have to care for the dependencies by yourself. The "
-"script requires a Python 3.7 (or greater) installation and matching python "
-"packages \"requests\", \"PySocks\" and \"cryptography\" installed on the "
-"target hosts. Requirements may change eventually without announcement. "
-"However, this might be the right choice for experienced users or users that "
-"want to run the agent updater on architectures like ARM, ppc or others."
-msgstr ""
-"Acesta este, în esență, scriptul de actualizare a agentului brut care este "
-"inclus în versiunile binare. Trebuie să vă ocupați singur de dependențe. "
-"Scriptul necesită o instalare Python 3.4 (sau mai mare) și pachete python "
-"corespunzătoare \"requests\", \"PySocks\" și \"pyOpenSSL\" instalate pe "
-"gazdele țintă. Cerințele se pot schimba eventual fără a fi anunțate. Cu "
-"toate acestea, aceasta ar putea fi alegerea potrivită pentru utilizatorii "
-"experimentați sau pentru utilizatorii care doresc să ruleze actualizatorul "
-"de agenți pe arhitecturi precum ARM, ppc sau altele."
-
 msgid ""
 "This is identical to a normal agent deployment, but with a custom agent "
 "controller user instead of <i>cmk-agent</i>."
@@ -76794,6 +76958,9 @@ msgid ""
 "<tt>cmk-update-agent register -H <i>HOST</i></tt> (UNIX), or "
 "<tt>check_mk_agent.exe updater register -H <i>HOST</i></tt> (Windows), where "
 "<i>HOST</i> must be the name of that host in your monitoring."
+"<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+"Python 3.7 installation (or newer) with installed python packages "
+"\"pyOpenSSL\", \"requests\" and \"PySocks\" is required on the target hosts."
 msgstr ""
 "Acest set de reguli permite implementarea unui plugin de agent care "
 "actualizează în mod regulat agentul Checkmk pentru Linux, Solaris și "
@@ -79100,10 +79267,10 @@ msgstr ""
 "Pentru a obține datele necesare pentru această verificare, vă rugăm să "
 "configurați programul datasource \"Microsoft Azure\"."
 
-#, python-brace-format
+#, fuzzy, python-format
 msgid ""
 "To prevent the agent updater from being locked out, the maximum allowed "
-"update interval is set to {bound} (You entered {actual})"
+"update interval is set to %s seconds (30 days)"
 msgstr ""
 "Pentru a preveni blocarea agentului de actualizare, intervalul maxim de "
 "actualizare permis este setat la {bound} (Ați introdus {actual})"
@@ -79467,6 +79634,18 @@ msgid "Total duration: "
 msgstr "Durata totală"
 
 msgid "Total error rate"
+msgstr "Rata totală de eroare"
+
+#, fuzzy
+msgid "Total errors over the last day"
+msgstr "Rata totală de eroare"
+
+#, fuzzy
+msgid "Total errors over the last hour"
+msgstr "Rata totală de eroare"
+
+#, fuzzy
+msgid "Total errors over the last minute"
 msgstr "Rata totală de eroare"
 
 msgid "Total events count lower levels"
@@ -83301,10 +83480,6 @@ msgstr "Încărcați fișierul MIB"
 msgid "Upper"
 msgstr "Partea superioară"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Niveluri pentru numărul de consumatori"
-
 msgid "Upper Temperature Levels"
 msgstr "Niveluri superioare de temperatură"
 
@@ -83368,6 +83543,18 @@ msgstr "Nivelul superior pentru lungimea cozii de așteptare"
 msgid "Upper level for rate of memory reclaimed by GC"
 msgstr "Nivelul superior pentru rata de memorie recuperată de GC"
 
+#, fuzzy
+msgid "Upper level for request rate over last day"
+msgstr "Niveluri superioare de utilizare a cererilor"
+
+#, fuzzy
+msgid "Upper level for request rate over last hour"
+msgstr "Niveluri superioare de utilizare a cererilor"
+
+#, fuzzy
+msgid "Upper level for request rate over last minute"
+msgstr "Niveluri superioare de utilizare a cererilor"
+
 msgid "Upper level for runtime run queue"
 msgstr "Nivelul superior pentru coada de execuție în timp de execuție"
 
@@ -83406,6 +83593,18 @@ msgstr "Nivelul superior pentru numărul total de mesaje pregătite"
 
 msgid "Upper level for total number of unacknowledged messages"
 msgstr "Nivelul superior pentru numărul total de mesaje neacceptate"
+
+#, fuzzy
+msgid "Upper level for total requests over last day"
+msgstr "Niveluri superioare ale latenței totale a cererilor"
+
+#, fuzzy
+msgid "Upper level for total requests over last hour"
+msgstr "Niveluri superioare ale latenței totale a cererilor"
+
+#, fuzzy
+msgid "Upper level for total requests over last minute"
+msgstr "Niveluri superioare ale latenței totale a cererilor"
 
 msgid "Upper levels"
 msgstr "Niveluri superioare"
@@ -84267,9 +84466,6 @@ msgstr "Utilizați codul de rezervă"
 
 msgid "Use bold font"
 msgstr "Folosiți fontul bold"
-
-msgid "Use credentials"
-msgstr "Utilizați acreditările"
 
 msgid "Use custom connection parameters"
 msgstr "Utilizați parametri de conectare personalizați"
@@ -88709,6 +88905,10 @@ msgid "Windows: MSI (.msi)"
 msgstr "Ferestre: MSI (.msi)"
 
 #, fuzzy
+msgid "Wireless device statuses"
+msgstr "ignorați statul"
+
+#, fuzzy
 msgid "Wireless ethernet statuses"
 msgstr "ignorați statul"
 
@@ -89707,6 +89907,10 @@ msgstr ""
 
 msgid "You can choose from different aggregation modes of clustered services:"
 msgstr "Puteți alege între diferite moduri de agregare a serviciilor grupate:"
+
+#, fuzzy
+msgid "You can choose only one agent signature key."
+msgstr "Descărcați cheia de semnătură a agentului"
 
 #, fuzzy
 msgid ""
@@ -90903,10 +91107,8 @@ msgstr ""
 msgid "You have not configured any peer-to-peer connections."
 msgstr "Nu ați creat încă nicio regulă."
 
-#, python-format
-msgid ""
-"You have not created any agent <a href='%s' target='_blank'>signature keys</"
-"a> yet. This is necessary."
+#, fuzzy
+msgid "You have not created any agent signature keys yet. This is necessary."
 msgstr ""
 "Nu ați creat încă niciun agent <a href='%s' target='_blank'>signature keys</"
 "a>. Acest lucru este necesar."
@@ -92606,9 +92808,6 @@ msgstr "Operațiuni NFS"
 msgid "iSCSI traffic"
 msgstr "%s trafic"
 
-msgid "icon not found"
-msgstr "pictograma nu a fost găsită"
-
 msgid "idle"
 msgstr ""
 
@@ -94222,7 +94421,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Reset to pre-defined filters"
+msgid "Reset to pre-selected filters"
 msgstr "Eliminați filtrul"
 
 #, fuzzy
@@ -94235,6 +94434,14 @@ msgstr "Tablouri de bord conexe"
 
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
+
+#, fuzzy
+msgid "pre-selected"
+msgstr "Selectată"
+
+#, fuzzy
+msgid "Pre-selected"
+msgstr "Selectată"
 
 msgid "Dashboard"
 msgstr "Tabloul de bord"
@@ -94434,6 +94641,10 @@ msgid "Choose from available datasources"
 msgstr ""
 
 #, fuzzy
+msgid "Single %{title}"
+msgstr "Single"
+
+#, fuzzy
 msgid "Loading…"
 msgstr "Încărcare..."
 
@@ -94576,8 +94787,8 @@ msgid "Responsive"
 msgstr "Timp de răspuns"
 
 #, fuzzy
-msgid "Relative (Legacy)"
-msgstr "Relativ"
+msgid "Anchored"
+msgstr "ignorat"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
@@ -94897,6 +95108,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Select none"
+msgstr "Selectați o pictogramă"
+
+#, fuzzy
+msgid "No icon selected"
+msgstr "Niciuna selectată"
+
+#, fuzzy
 msgid "Data selection"
 msgstr "Selecția fișierelor"
 
@@ -95108,6 +95327,21 @@ msgid "Dashboard settings of %{name}"
 msgstr "Proprietățile tabloului de bord"
 
 #, fuzzy
+msgid "Expiration date is missing"
+msgstr "Fără dată de expirare"
+
+#, fuzzy
+msgid "Expiration date cannot be in the past."
+msgstr "Nu puteți seta o dată și o oră de expirare care se află în trecut:"
+
+#, fuzzy
+msgid "Expiration date cannot be more than 30 days in the future."
+msgstr "Nu puteți seta o dată și o oră de expirare care se află în trecut:"
+
+msgid "Expiration date cannot be more than 2 years in the future."
+msgstr ""
+
+#, fuzzy
 msgid "Users with access permissions can view this dashboard"
 msgstr ""
 "Utilizatorii care nu au această permisiune nu sunt lăsați să intre deloc."
@@ -95165,13 +95399,6 @@ msgstr "Public"
 #, fuzzy
 msgid "Public dashboard URL"
 msgstr "Tablou de bord cu probleme"
-
-#, fuzzy
-msgid "Expiration date cannot be in the past."
-msgstr "Nu puteți seta o dată și o oră de expirare care se află în trecut:"
-
-msgid "Expiration date cannot be more than 2 years in the future."
-msgstr ""
 
 #, fuzzy
 msgid "Link settings"
@@ -95446,10 +95673,6 @@ msgid "Preview of matches:"
 msgstr "Această regulă se potrivește cu"
 
 #, fuzzy
-msgid "Metric name"
-msgstr "Etichetă metrică"
-
-#, fuzzy
 msgid "Aggregation lookback"
 msgstr "Controale de agregare"
 
@@ -95492,6 +95715,9 @@ msgid "Graph options"
 msgstr "Opțiuni grafice"
 
 msgid "Graph lines (OpenTelemetry)"
+msgstr ""
+
+msgid "Cannot change rule value for rules managed by custom graph editor."
 msgstr ""
 
 #, fuzzy
@@ -95669,18 +95895,6 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributul rolului"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributele timpilor morți:"
-
-#, fuzzy
 msgid "Agent connection test running"
 msgstr "Setați timeout-ul conexiunii"
 
@@ -95829,14 +96043,6 @@ msgid "Next step: Register agent"
 msgstr "Destinatarul"
 
 msgid ""
-"Agent registration will establish trust between the Agent Controller\n"
-"                    on the host and the Agent Receiver on the Checkmk server."
-msgstr ""
-
-msgid "Run this command to register the Checkmk agent controller."
-msgstr ""
-
-msgid ""
 "Test if you have configured everything correctly with pasting the following\n"
 "                  command into the CLI of the target system."
 msgstr ""
@@ -95905,6 +96111,33 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Generate registration token"
+msgstr "Utilizator de înregistrare agent"
+
+#, fuzzy
+msgid "Generating registration token"
+msgstr "Utilizator de înregistrare agent"
+
+msgid "Error on generating registration token: ${ottError.message}"
+msgstr ""
+
+#, fuzzy
+msgid "Successfully generated registration token"
+msgstr "Copiat cu succes în clipboard."
+
+msgid ""
+"Agent registration will establish trust between the Agent Controller\n"
+"                    on the host and the Agent Receiver on the Checkmk server."
+msgstr ""
+
+#, fuzzy
+msgid "This requires the generation of a registration token."
+msgstr "Această permisiune permite înregistrarea oricărei gazde existente."
+
+msgid "Run this command to register the Checkmk agent controller."
+msgstr ""
+
+#, fuzzy
 msgid "Application successfully authorized!"
 msgstr "Gazdă creată cu succes"
 
@@ -95937,6 +96170,10 @@ msgid "Failed to request and save access token: ${e}"
 msgstr "Solicitări eșuate la fișierele Adressbook"
 
 #, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "Adăugați o conexiune"
+
+#, fuzzy
 msgid "Authorization was not completed. Please try again."
 msgstr ""
 "Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
@@ -95951,7 +96188,7 @@ msgid "seconds remaining"
 msgstr "Credite rămase"
 
 #, fuzzy
-msgid "OAuth2 connection created successfully!"
+msgid "OAuth2 connection parameters requested successfully!"
 msgstr "Agent %s a reușit"
 
 #, fuzzy
@@ -96030,16 +96267,9 @@ msgstr ""
 "Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
 "istoricul evenimentelor."
 
-msgid "Download the relay to your environment"
-msgstr ""
-
 #, fuzzy
-msgid "Download the Relay container image."
-msgstr "Implementați plugin-ul containerului docker"
-
-#, fuzzy
-msgid "Name the relay"
-msgstr "Numele reprezentantului"
+msgid "Configure the Relay registration"
+msgstr "Configurație"
 
 #, fuzzy
 msgid "Provide a display alias for your Relay."
@@ -96049,6 +96279,13 @@ msgid ""
 "The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+msgid "Download the relay to your environment"
+msgstr ""
+
+#, fuzzy
+msgid "Download the Relay container image."
+msgstr "Implementați plugin-ul containerului docker"
 
 #, fuzzy
 msgid "Register the relay with your Checkmk site and run it"
@@ -96121,14 +96358,14 @@ msgid "We strictly limit data collection to aggregated, non-personal metrics."
 msgstr ""
 
 #, fuzzy
-msgid "We Collect:"
+msgid "We collect:"
 msgstr "Colecții"
 
 msgid "Quantity metrics (e.g., count of hosts, folders, and services)."
 msgstr ""
 
 #, fuzzy
-msgid "We Do NOT Collect:"
+msgid "We do NOT collect:"
 msgstr "Dimensiunea fișierelor jurnal"
 
 msgid ""
@@ -96142,11 +96379,11 @@ msgstr ""
 msgid ""
 "No! We firmly believe in only receiving data you are happy to share with us. "
 "For this reason, on default product telemetry is turned off. To make a "
-"decision now, please click on the \"Decide on product telemetry\" button."
+"decision now, please click on the \"Enable in global settings\" button."
 msgstr ""
 
 #, fuzzy
-msgid "Ask me again"
+msgid "Ask me later"
 msgstr "Gazda se ridică din nou"
 
 #, fuzzy
@@ -96419,6 +96656,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Run a service discovery"
+msgstr "Rulați descoperirea serviciilor"
+
+#, fuzzy
 msgid "On-premises hosts"
 msgstr "Niveluri Gazde"
 
@@ -96430,9 +96671,25 @@ msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
 msgid "Network devices and SNMP"
 msgstr "Scanarea rețelei"
 
+msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
 #, fuzzy
 msgid "OpenTelemetry (Beta)"
 msgstr "Configurația stilului selectat"
+
+msgid ""
+"Changes are saved in a temporary environment first,\n"
+"                letting you review and adjust them safely."
+msgstr ""
+
+#, fuzzy
+msgid "Activate changes to apply them to live monitoring."
+msgstr "Activați modificările pentru consola de evenimente"
+
+#, fuzzy
+msgid "Mark as complete"
+msgstr "complet"
 
 #, fuzzy
 msgid "Adjust services"
@@ -96450,10 +96707,6 @@ msgid ""
 "            To find the right ruleset for a service,\n"
 "            start with the Service discovery page of a host."
 msgstr ""
-
-#, fuzzy
-msgid "Run a service discovery"
-msgstr "Rulați descoperirea serviciilor"
 
 msgid "To adjust parameters for a host, start by running a service discovery."
 msgstr ""
@@ -96496,19 +96749,6 @@ msgstr ""
 msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
-
-msgid ""
-"Changes are saved in a temporary environment first,\n"
-"                letting you review and adjust them safely."
-msgstr ""
-
-#, fuzzy
-msgid "Activate changes to apply them to live monitoring."
-msgstr "Activați modificările pentru consola de evenimente"
-
-#, fuzzy
-msgid "Mark as complete"
-msgstr "complet"
 
 # georgem ##############
 #, fuzzy
@@ -96634,6 +96874,97 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Microsoft Azure (deprecated)"
+#~ msgstr "Microsoft SQL Server (Windows)"
+
+#~ msgid "Microsoft Azure Status"
+#~ msgstr "Starea Microsoft Azure"
+
+#~ msgid "icon not found"
+#~ msgstr "pictograma nu a fost găsită"
+
+#, fuzzy
+#~ msgid "Name the relay"
+#~ msgstr "Numele reprezentantului"
+
+#, fuzzy
+#~ msgid ""
+#~ "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+#~ "Python 3.7 installation (or newer) with installed python packages "
+#~ "\"pyOpenSSL\", \"requests\" and \"PySocks\" is required on the target "
+#~ "hosts."
+#~ msgstr ""
+#~ "<b>Nota<sup>3</sup>:</b> Pentru a implementa acest plugin pe Solaris, "
+#~ "este necesară o instalare Python 3.4 (sau mai nouă) cu pachetele python "
+#~ "instalate \"pyOpenSSL\", \"requests\" și \"PySocks\" pe gazdele țintă."
+
+#~ msgid ""
+#~ "Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
+#~ "the host."
+#~ msgstr ""
+#~ "Agent updater va urmări variabilele \"HTTP_PROXY\" și \"HTTPS_PROXY\" de "
+#~ "pe gazdă."
+
+#, fuzzy
+#~ msgid "Ask user for consent via popup"
+#~ msgstr "Atribuirea serviciilor la grupurile de contact"
+
+#~ msgid "Checkmk Logo"
+#~ msgstr "Checkmk Logo"
+
+#~ msgid "Completely ignore connection via proxy. This is the default."
+#~ msgstr ""
+#~ "Ignoră complet conexiunea prin proxy. Aceasta este valoarea implicită."
+
+#~ msgid "Executable Python script"
+#~ msgstr "Script Python executabil"
+
+#, fuzzy
+#~ msgid "Lower levels for the consumer count"
+#~ msgstr "Niveluri pentru numărul de consumatori"
+
+#, fuzzy
+#~ msgid "Missing request variable 'widget_id'"
+#~ msgstr "Variabila lipsă siteid"
+
+#, fuzzy
+#~ msgid "Not decided"
+#~ msgstr "este necesară"
+
+#~ msgid "Shows the Checkmk logo."
+#~ msgstr "Afișează sigla Checkmk."
+
+#~ msgid "TCP Port for connection"
+#~ msgstr "Port TCP pentru conexiune"
+
+#, fuzzy
+#~ msgid ""
+#~ "This is essentially the raw agent updater script that gets packaged "
+#~ "within the binary versions. You have to care for the dependencies by "
+#~ "yourself. The script requires a Python 3.7 (or greater) installation and "
+#~ "matching python packages \"requests\", \"PySocks\" and \"cryptography\" "
+#~ "installed on the target hosts. Requirements may change eventually without "
+#~ "announcement. However, this might be the right choice for experienced "
+#~ "users or users that want to run the agent updater on architectures like "
+#~ "ARM, ppc or others."
+#~ msgstr ""
+#~ "Acesta este, în esență, scriptul de actualizare a agentului brut care "
+#~ "este inclus în versiunile binare. Trebuie să vă ocupați singur de "
+#~ "dependențe. Scriptul necesită o instalare Python 3.4 (sau mai mare) și "
+#~ "pachete python corespunzătoare \"requests\", \"PySocks\" și \"pyOpenSSL\" "
+#~ "instalate pe gazdele țintă. Cerințele se pot schimba eventual fără a fi "
+#~ "anunțate. Cu toate acestea, aceasta ar putea fi alegerea potrivită pentru "
+#~ "utilizatorii experimentați sau pentru utilizatorii care doresc să ruleze "
+#~ "actualizatorul de agenți pe arhitecturi precum ARM, ppc sau altele."
+
+#~ msgid "Use credentials"
+#~ msgstr "Utilizați acreditările"
+
+#, fuzzy
+#~ msgid "Relative (Legacy)"
+#~ msgstr "Relativ"
 
 #~ msgid "SNAT Usage"
 #~ msgstr "Utilizarea SNAT"

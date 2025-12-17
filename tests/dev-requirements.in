@@ -1,4 +1,3 @@
-astroid  # used by testlib.pylint_checker_localization
 azure-mgmt-resource  # used by the release process to publish the azure image to the marketplace
 azure-mgmt-compute  # used by the release process to add a new image version
 bandit  # used by test/Makefile's test-bandit target
@@ -33,8 +32,6 @@ pre-commit  # used to fix / find issues before committing changes
 prometheus-client # used for testing otel integration
 psycopg # used by performance test plotting
 py-import-cycles  # used in tests/Makefile
-pylint  # used by test/Makefile's test-pylint target
-pylint-pydantic
 pylsp-mypy  # mypy plugin for python-lsp-server
 pymongo  # used by mk_mongodb agent plugin
 pytest

@@ -207,8 +207,6 @@ astroid==4.0.2 \
     --hash=sha256:d7546c00a12efc32650b19a2bb66a153883185d3179ab0d4868086f807338b9b
     # via
     #   -c requirements.txt
-    #   -r tests/dev-requirements.in
-    #   pylint
     #   sphinx-autoapi
 attrs==25.4.0 \
     --hash=sha256:16d5969b87f0859ef33a48b35d55ac1be6e42ae49d5e853b597db70c35c57e11 \
@@ -1061,7 +1059,6 @@ dill==0.4.0 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-    #   pylint
 distlib==0.4.0 \
     --hash=sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16 \
     --hash=sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d
@@ -1870,7 +1867,6 @@ isort==7.0.0 \
     # via
     #   -c requirements.txt
     #   datamodel-code-generator
-    #   pylint
 itsdangerous==2.2.0 \
     --hash=sha256:c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef \
     --hash=sha256:e0050c0b7da1eea53ffaf149c0cfbb5c6e2e2b69c4bef22c81fa6eb73e5f6173
@@ -2794,12 +2790,6 @@ matplotlib==3.10.8 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-mccabe==0.7.0 \
-    --hash=sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325 \
-    --hash=sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e
-    # via
-    #   -c requirements.txt
-    #   pylint
 mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
@@ -3593,7 +3583,6 @@ platformdirs==4.5.1 \
     # via
     #   -c requirements.txt
     #   black
-    #   pylint
     #   virtualenv
 playwright==1.57.0 \
     --hash=sha256:1dd93b265688da46e91ecb0606d36f777f8eadcf7fbef12f6426b20bf0c9137c \
@@ -3975,7 +3964,6 @@ pydantic==2.10.6 \
     #   checkmk-dev-tools
     #   datamodel-code-generator
     #   fastapi
-    #   pylint-pydantic
 pydantic-core==2.27.2 \
     --hash=sha256:00bad2484fa6bda1e216e7345a798bd37c68fb2d97558edd584942aa41b7d278 \
     --hash=sha256:0296abcb83a797db256b773f45773da397da75a08f5fcaef41f2044adec05f50 \
@@ -4122,25 +4110,6 @@ pyjwt[crypto]==2.10.1 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   msal
-pylint==4.0.4 \
-    --hash=sha256:63e06a37d5922555ee2c20963eb42559918c20bd2b21244e4ef426e7c43b92e0 \
-    --hash=sha256:d9b71674e19b1c36d79265b5887bf8e55278cbe236c9e95d22dc82cf044fdbd2
-    # via
-    #   -c requirements.txt
-    #   -r tests/dev-requirements.in
-    #   pylint-plugin-utils
-    #   pylint-pydantic
-pylint-plugin-utils==0.9.0 \
-    --hash=sha256:16e9b84e5326ba893a319a0323fcc8b4bcc9c71fc654fcabba0605596c673818 \
-    --hash=sha256:5468d763878a18d5cc4db46eaffdda14313b043c962a263a7d78151b90132055
-    # via
-    #   -c requirements.txt
-    #   pylint-pydantic
-pylint-pydantic==0.4.1 \
-    --hash=sha256:d1b937abe5c346d38de69ee1ada80c93d38ee2356addbabb687e2eb44036ac93
-    # via
-    #   -c requirements.txt
-    #   -r tests/dev-requirements.in
 pylsp-mypy==0.7.0 \
     --hash=sha256:756377d05d251d2e31d1963397654149b9c1ea5b0ba1aedd74adef76decd32e9 \
     --hash=sha256:e94f531d4ce523222c2af7471abe396cfeb4cc3c4b181d54462fb6d553e1e0b3
@@ -5800,12 +5769,6 @@ tomli-w==1.2.0 \
     # via
     #   -c requirements.txt
     #   schemathesis
-tomlkit==0.13.3 \
-    --hash=sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1 \
-    --hash=sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0
-    # via
-    #   -c requirements.txt
-    #   pylint
 tqdm==4.67.1 \
     --hash=sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2 \
     --hash=sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2

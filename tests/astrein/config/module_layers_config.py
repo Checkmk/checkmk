@@ -1198,7 +1198,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("tests.plugins_integration"): _allow(
         *PACKAGE_CRYPTO,
     ),
-    Component("tests.pylint"): _allow("cmk.utils.escaping"),
     # Tests are allowed to import everything for now. Should be cleaned up soon (TM)
     Component("tests.testlib"): lambda *_a, **_kw: True,
     Component("tests.unit.cmk.base.legacy_checks"): _allow(

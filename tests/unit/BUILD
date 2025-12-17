@@ -72,8 +72,6 @@ py_test(
         include = ["**/*.py"],
         exclude = [
             "omdlib/**/*.py",
-            "**/*pylint*.py",
-            "**/*pylint*/**/*.py",
         ],
     ),
     args = [
@@ -96,7 +94,6 @@ py_test(
         allow_empty = True,
         exclude = ["**/*.py"],
     ) + select({
-        "@//:gpl_repo": [],
         "@//:gpl+nonfree_repo": glob(
             [
                 "**/*.xml",
@@ -104,11 +101,11 @@ py_test(
             ],
             allow_empty = True,
         ),
+        "@//:gpl_repo": [],
     }),
     main = ":__test__.py",
     deps = [
         ":__test__",
-        requirement("astroid"),
         requirement("coverage"),
         requirement("fastapi"),
         requirement("httpx"),
@@ -116,7 +113,6 @@ py_test(
         requirement("mypy-extensions"),
         requirement("pika"),
         requirement("polyfactory"),
-        requirement("pylint"),
         requirement("pytest-asyncio"),
         requirement("pytest-mock"),
         requirement("pytest-random-order"),
@@ -126,10 +122,10 @@ py_test(
         "//tests:testlib",
         "//tests/unit:conftest",
     ] + select({
-        "@//:gpl_repo": [],
         "@//:gpl+nonfree_repo": [
             requirement("python-multipart"),
             "//non-free/packages/cmk-mknotifyd",
         ],
+        "@//:gpl_repo": [],
     }),
 )

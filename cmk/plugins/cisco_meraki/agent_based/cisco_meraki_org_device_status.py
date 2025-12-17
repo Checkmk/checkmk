@@ -32,17 +32,11 @@ from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 type Section = DeviceStatus
 
 
-class PowerOverEthernet(BaseModel, frozen=True):
-    maximum: int
-    unit: str
-
-
 class PowerSupply(BaseModel, frozen=True):
     slot: int
     model: str
     serial: str
     status: str
-    poe: PowerOverEthernet
 
 
 class Components(BaseModel, frozen=True):
@@ -134,12 +128,10 @@ def check_device_status_ps(item: str, params: Mapping[str, int], section: Sectio
         state = State.OK
     else:
         state = State(params.get("state_not_powering", State.WARN.value))
-    yield Result(state=state, summary=f"Status: {power_supply.status}")
 
-    yield Result(
-        state=State.OK,
-        notice=(f"PoE: {power_supply.poe.maximum} {power_supply.poe.unit} maximum"),
-    )
+    yield Result(state=state, summary=f"Status: {power_supply.status}")
+    yield Result(state=State.OK, notice=f"Model: {power_supply.model}")
+    yield Result(state=State.OK, notice=f"Serial: {power_supply.serial}")
 
 
 check_plugin_cisco_meraki_org_device_status_ps = CheckPlugin(

@@ -92,7 +92,8 @@ def test_check_device_status_ps() -> None:
         {
             "slot": 1,
             "status": "powering",
-            "poe": {"unit": "watts", "maximum": 740},
+            "model": "PWR-MS320-1025WAC",
+            "serial": "QABC-1234-5678",
         }
     )
     string_table = _get_string_table_from_device_status(device_status)
@@ -101,7 +102,8 @@ def test_check_device_status_ps() -> None:
     value = list(check_device_status_ps("1", {}, section))
     expected = [
         Result(state=State.OK, summary="Status: powering"),
-        Result(state=State.OK, notice="PoE: 740 watts maximum"),
+        Result(state=State.OK, notice="Model: PWR-MS320-1025WAC"),
+        Result(state=State.OK, notice="Serial: QABC-1234-5678"),
     ]
 
     assert value == expected

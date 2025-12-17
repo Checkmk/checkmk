@@ -40,8 +40,10 @@
       "properties": {
         "host_name": { "type": "string" },
         "service_name": { "type": "string" },
-        "host_state": { "enum": ["Up", "Down", "Unknown"] },
-        "service_state": { "enum": ["Critical", "Warning", "OK"] }
+        "host_state": { "enum": ["Up", "Down", "Unreach"] },
+        "service_state": {
+          "enum": ["Unknown", "Critical", "Warning", "OK"]
+        }
       },
       "required": ["host_name", "service_name", "service_state"]
     }

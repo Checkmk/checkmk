@@ -143,7 +143,7 @@ def test_minimal_configuration(
     )
     logger.info("Validate Azure rule is setup.")
     list_azure_rules_page = Ruleset(
-        list_hosts_page.page, "Microsoft Azure", "VM, cloud, container", exact_rule=True
+        list_hosts_page.page, "Azure", "VM, cloud, container", exact_rule=True
     )
     expect(
         list_azure_rules_page.rule_source(rule_id=0),

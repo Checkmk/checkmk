@@ -73,5 +73,5 @@ class BackgroundJobDetails(CmkPage):
     def _detail_row(self, name: str, exact: bool = False) -> Locator:
         """Return the web-element corresponding to a row of detail: 'name'."""
         return self.main_area.locator("tr").filter(
-            has=self.main_area.locator().get_by_role("cell", name=name, exact=exact)
+            has=self.main_area.locator().get_by_role("rowheader", name=name, exact=exact)
         )

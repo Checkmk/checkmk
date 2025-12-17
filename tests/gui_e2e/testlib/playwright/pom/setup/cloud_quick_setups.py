@@ -430,14 +430,14 @@ class GCPAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
 
 
 class AzureConfigurationList(BaseQuickSetupConfigurationList):
-    """Represent the page 'Microsoft Azure', which lists the configuration setup.
+    """Represent the page 'Azure', which lists the configuration setup.
 
     Accessible at,
-    Setup > Quick Setup > Microsoft Azure
+    Setup > Quick Setup > Azure
     """
 
     suffix = "azure_v2"
-    page_title = "Microsoft Azure"
+    page_title = "Azure"
 
 
 class Authority(DropdownOptions):
@@ -456,16 +456,15 @@ class SubscriptionOptions(DropdownOptions):
 
 
 class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
-    """Represent the page 'Add Microsoft Azure configuration' to add a GCP
+    """Represent the page 'Add Azure configuration' to add a GCP
     configuration.
 
     Accessible at,
-    Setup > Quick Setup > Microsoft Azure
-        > Add Microsoft Azure configuration
+    Setup > Quick Setup > Azure > Add Azure configuration
     """
 
     suffix = "azure_v2"
-    page_title = "Add Microsoft Azure configuration"
+    page_title = "Add Azure configuration"
     _go_to_next_stage_buttons_text = {
         1: "Configure host and authority",
         2: "Configure services to monitor",

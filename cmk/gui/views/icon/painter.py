@@ -300,7 +300,8 @@ def _process_icon(
     title: str | None = None
     url: None | tuple[str, str] | str = None
     icon_name: StaticIcon | DynamicIcon = StaticIcon(IconNames.trans)
-    if isinstance(result, DynamicIcon | StaticIcon):
+    # DynamicIcon is an alias to str
+    if isinstance(result, (str, StaticIcon)):
         icon_name = result
     elif isinstance(result, HTML):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
@@ -324,9 +325,9 @@ def _process_icon(
                     yield IconEntry(sort_index=icon.sort_index, icon_name=n)
             return
     elif len(result) == 2:
-        icon_name, title = result
+        icon_name, title = result  # type: ignore[misc]
     elif len(result) == 3:
-        icon_name, title, url = result
+        icon_name, title, url = result  # type: ignore[misc]
     else:
         raise NotImplementedError()
 

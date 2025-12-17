@@ -24,6 +24,7 @@ genrule(
         "bin/redis-server",
     ],
     cmd = """
+        export LDFLAGS="-Wl,--strip-all"
         make -C $$(dirname $(execpath :package_root))
         make -C $$(dirname $(execpath :package_root)) PREFIX=$$(realpath $(RULEDIR)) install
     """,

@@ -160,6 +160,7 @@ cc_binary(
     copts = [
         "-O2",
     ],
+    features = ["strip_debug"],
     linkopts = [
         "-lpthread",
     ],
@@ -175,6 +176,7 @@ cc_binary(
         "-Wno-format-truncation",
         "-O2",
     ],
+    features = ["strip_debug"],
     linkopts = [
         "-lpthread",
     ],
@@ -191,6 +193,7 @@ cc_binary(
         "-Wno-format-truncation",
         "-O2",
     ],
+    features = ["strip_debug"],
     linkopts = [
         "-lpthread",
     ],
@@ -226,6 +229,7 @@ cc_library(
         "-Wno-unknown-warning",
         "-O2",
     ],
+    features = ["strip_debug"],
     deps = [
         ":rrd_config",
         ":rrdgraph",

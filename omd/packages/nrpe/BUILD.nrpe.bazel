@@ -23,6 +23,7 @@ configure_make(
         "--with-ssl=$$EXT_BUILD_DEPS/openssl",
     ],
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_bin_dir = "lib/nagios/plugins",
     out_binaries = [
         "check_nrpe",

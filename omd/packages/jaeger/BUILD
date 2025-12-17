@@ -26,6 +26,8 @@ genrule(
 	    -C $${target_path} \
 	    -f $(SRCS) \
 	    jaeger-%s-linux-amd64/jaeger
+        strip -s $@ -o $@.tmp
+        mv $@.tmp $@
     """ % JAEGER_VERSION,
     tags = ["manual"],
 )

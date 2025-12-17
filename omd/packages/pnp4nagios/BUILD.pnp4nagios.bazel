@@ -42,6 +42,7 @@ configure_make(
         ]),
     },
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_binaries = ["npcd"],
     out_data_dirs = [
         "share",

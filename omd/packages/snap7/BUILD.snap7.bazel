@@ -19,6 +19,7 @@ make(
         "LibInstall=$INSTALLDIR",
     ],
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_lib_dir = "",
     out_shared_libs = [
         "libsnap7.so",

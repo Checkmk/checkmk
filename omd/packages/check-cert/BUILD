@@ -2,9 +2,16 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:make_deployable.bzl", "make_deployable_file")
 
+genrule(
+    name = "check-cert-strip",
+    srcs = ["//packages/check-cert"],
+    outs = ["check-cert.strip"],
+    cmd = "strip -s $< -o $@",
+)
+
 make_deployable_file(
     name = "deployable_check-cert",
-    src = "//packages/check-cert",
+    src = ":check-cert-strip",
     out = "check-cert",
     rpath = "\\$ORIGIN/../../../lib",
     tags = ["manual"],

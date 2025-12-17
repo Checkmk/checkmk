@@ -56,6 +56,7 @@ configure_make(
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",  # expands to "$ORIGIN", lol
     },
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
 
     # Those are the directories we want to copied
     out_data_dirs = [

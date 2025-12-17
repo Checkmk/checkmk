@@ -61,6 +61,7 @@ configure_make(
     # rules_foreign_cc defaults the install_prefix to "python". This conflicts with the "python" executable that is generated.
     install_prefix = INSTALL_PREFIX,
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_binaries = out_binaries,
     out_data_dirs = [
         "lib",

@@ -48,6 +48,7 @@ configure_make(
     },
     lib_name = "xmlsec1",
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_binaries = ["xmlsec1"],
     # Looks like Bazel doesn't know .la files, but we need them.
     #  see https://stackoverflow.com/questions/75282435

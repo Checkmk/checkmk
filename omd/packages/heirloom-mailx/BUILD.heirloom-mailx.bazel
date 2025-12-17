@@ -11,6 +11,7 @@ make(
     name = "heirloom-mailx",
     args = ["UCBINSTALL=install"],  # We need this in order to override the install command of heirloom's Makefile
     lib_source = ":mailxsrc",
+    linkopts = ["-Wl,--strip-all"],
     out_bin_dir = "",
     out_binaries = [
         "bin/mailx",

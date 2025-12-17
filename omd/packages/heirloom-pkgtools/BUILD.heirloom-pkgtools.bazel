@@ -15,6 +15,7 @@ make(
     name = "heirloom-pkgtools",
     args = ["-j4"],
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_bin_dir = "bin",
     out_binaries = [
         "pkgmk",

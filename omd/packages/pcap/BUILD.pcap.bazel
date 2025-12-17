@@ -27,6 +27,7 @@ cmake(
     },
     generate_args = ["-GNinja"],
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_static_libs = ["libpcap.a"],
     targets = ["pcap_static"],
     visibility = ["//visibility:public"],

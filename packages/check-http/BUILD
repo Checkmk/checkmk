@@ -66,16 +66,21 @@ rust_binary(
     deps = all_crate_deps() + [":check-http-lib"],
 )
 
+genrule(
+    name = "check-http-strip",
+    srcs = [":check-http"],
+    outs = ["check-http.strip"],
+    cmd = "strip -s $< -o $@",
+)
+
 pkg_files(
     name = "check_http_pkg",
-    srcs = [
-        "check-http",
-    ],
+    srcs = [":check-http-strip"],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "lib/nagios/plugins/",
-    renames = {"check-http": "check_httpv2"},
+    renames = {"check-http.strip": "check_httpv2"},
     visibility = ["//omd:__pkg__"],
 )
 

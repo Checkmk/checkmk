@@ -21,6 +21,7 @@ configure_make(
     },
     install_prefix = "lcab_dir",
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_bin_dir = "bin",
     out_binaries = [
         "lcab",

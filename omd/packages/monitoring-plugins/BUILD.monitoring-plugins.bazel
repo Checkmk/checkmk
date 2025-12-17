@@ -119,6 +119,7 @@ configure_make(
     copts = COPTS,
     env = ENV,
     lib_source = LIB_SOURCE,
+    linkopts = ["-Wl,--strip-all"],
     out_data_dirs = OUT_DATA_DIRS,
     out_headers_only = OUT_HEADERS_ONLY,
     postfix_script = POSTFIX_SCRIPT,

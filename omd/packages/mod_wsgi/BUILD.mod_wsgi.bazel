@@ -32,6 +32,7 @@ configure_make(
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
     },
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_shared_libs = [
         "mod_wsgi.so",
     ],

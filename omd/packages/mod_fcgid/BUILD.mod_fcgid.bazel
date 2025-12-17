@@ -27,6 +27,7 @@ configure_make(
         "CPATH": "/usr/include/apache2-worker",
     },
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_shared_libs = [
         "mod_fcgid.so",
     ],

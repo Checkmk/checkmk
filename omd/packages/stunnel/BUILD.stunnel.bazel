@@ -27,6 +27,7 @@ configure_make(
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
     },
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_binaries = [
         "stunnel",
         "stunnel3",

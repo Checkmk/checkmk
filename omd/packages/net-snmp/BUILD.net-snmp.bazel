@@ -54,6 +54,7 @@ configure_make(
         "PYTHONPATH": "$$(dirname $(execpath @@//omd/packages/python3-modules:compiled_setuptools.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
     },
     lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
     out_binaries = [
         "encode_keychange",
         "snmpbulkwalk",

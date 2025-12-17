@@ -16,8 +16,8 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 from cmk.plugins.mssql.agent_based.mssql_instance import (
+    check_plugin_mssql_instance,
     inventory_mssql_instance,
     parse_mssql_instance,
 )
@@ -145,13 +145,11 @@ _AGENT_OUTPUT_2 = [
     ],
 )
 def test_discover_mssql_instance(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     expected_result: DiscoveryResult,
 ) -> None:
-    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
-    assert sorted(check_plugin.discovery_function(section)) == expected_result
+    assert sorted(check_plugin_mssql_instance.discovery_function(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -281,15 +279,14 @@ def test_discover_mssql_instance(
     ],
 )
 def test_check_mssql_instance(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     item: str,
     expected_result: CheckResult,
 ) -> None:
-    check_plugin: CheckPlugin = agent_based_plugins.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
     assert (
-        list(check_plugin.check_function(item=item, params={}, section=section)) == expected_result
+        list(check_plugin_mssql_instance.check_function(item=item, params={}, section=section))
+        == expected_result
     )
 
 

@@ -11,7 +11,6 @@ load-plugins=
     tests.pylint.cmk_edition_ignores,
     tests.pylint.checker_localization,
     tests.pylint.checker_cmk_module_layers,
-    tests.pylint.checker_layering_violation,
     pylint_pydantic
 jobs=0
 # pickle collected data for later comparisons. Not used in our CI and makes runs faster

@@ -341,38 +341,70 @@ class ColorChoice:
 
 
 class Color(Enum):
+    # light-red.30
     LIGHT_RED = ColorChoice(brand="#f37c7c", fallback="#ff7070")
+    # light-red.50
     RED = ColorChoice(brand="#ed3b3b", fallback="#ff2929")
+    # light-red.70
     DARK_RED = ColorChoice(brand="#a82a2a", fallback="#e62525")
+    # orange.30
     LIGHT_ORANGE = ColorChoice(brand="#ffad54", fallback="#ff9664")
+    # orange.50
     ORANGE = ColorChoice(brand="#ff8400", fallback="#ff6e21")
+    # orange.70
     DARK_ORANGE = ColorChoice(brand="#b55e00", fallback="#cc5819")
+    # yellow.30
     LIGHT_YELLOW = ColorChoice(brand="#ffe456", fallback="#ffff78")
+    # yellow.50
     YELLOW = ColorChoice(brand="#ffd703", fallback="#f5f532")
+    # yellow.70
     DARK_YELLOW = ColorChoice(brand="#ac7c02", fallback="#aaaa00")
+    # corporate-green.30
     LIGHT_GREEN = ColorChoice(brand="#62e0bf", fallback="#a5ff55")
+    # corporate-green.50
     GREEN = ColorChoice(brand="#15d1a0", fallback="#37fa37")
+    # corporate-green.70
     DARK_GREEN = ColorChoice(brand="#0f9472", fallback="#288c0f")
+    # light-blue.30
     LIGHT_BLUE = ColorChoice(brand="#6fc1f7", fallback="#87cefa")
+    # light-blue.50
     BLUE = ColorChoice(brand="#28a2f3", fallback="#1e90ff")
+    # light-blue.70
     DARK_BLUE = ColorChoice(brand="#1c73ad", fallback="#1873cc")
+    # cyan.30
     LIGHT_CYAN = ColorChoice(brand="#68eeee", fallback="#96ffff")
+    # cyan.50
     CYAN = ColorChoice(brand="#1ee6e6", fallback="#1ee6e6")
+    # cyan.70
     DARK_CYAN = ColorChoice(brand="#17b5b5", fallback="#14878c")
+    # purple.30
     LIGHT_PURPLE = ColorChoice(brand="#acaaff", fallback="#e1b3f9")
+    # purple.50
     PURPLE = ColorChoice(brand="#8380ff", fallback="#d28df6")
+    # purple.70
     DARK_PURPLE = ColorChoice(brand="#5d5bb5", fallback="#b441f0")
+    # pink.30
     LIGHT_PINK = ColorChoice(brand="#f9a8e2", fallback="#ffa0f0")
+    # pink.50
     PINK = ColorChoice(brand="#ec48b6", fallback="#ff64ff")
+    # pink.70
     DARK_PINK = ColorChoice(brand="#be187a", fallback="#d214be")
+    # brown.30
     LIGHT_BROWN = ColorChoice(brand="#d4ad84", fallback="#e6b48c")
+    # brown.50
     BROWN = ColorChoice(brand="#bf8548", fallback="#bf8548")
+    # brown.70
     DARK_BROWN = ColorChoice(brand="#885e33", fallback="#996a3a")
+    # mist-grey.30
     LIGHT_GRAY = ColorChoice(brand="#acacac", fallback="#c8c8c8")
+    # mist-grey.50
     GRAY = ColorChoice(brand="#8c8c8c", fallback="#a4a4a4")
+    # mist-grey.70
     DARK_GRAY = ColorChoice(brand="#5d5d5d", fallback="#797979")
 
+    # conference-grey.100
     BLACK = ColorChoice(brand="#1e262e", fallback="#000000")
+    # white.100
     WHITE = ColorChoice(brand="#ffffff", fallback="#ffffff")
 
     @property

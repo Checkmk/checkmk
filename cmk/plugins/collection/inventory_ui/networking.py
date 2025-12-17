@@ -52,10 +52,8 @@ def _render_route_type(value: str) -> Label | str:
 def _style_if_available(value: bool) -> Iterable[Alignment | BackgroundColor | LabelColor]:
     yield Alignment.CENTER
     if value:
-        yield LabelColor.BLACK
         yield BackgroundColor.LIGHT_GREEN
     else:
-        yield LabelColor.WHITE
         yield BackgroundColor.DARK_GRAY
 
 
@@ -63,10 +61,8 @@ def _style_if_state(value: int) -> Iterable[Alignment | BackgroundColor | LabelC
     yield Alignment.CENTER
     match value:
         case 1:
-            yield LabelColor.BLACK
             yield BackgroundColor.LIGHT_GREEN
         case 2:
-            yield LabelColor.WHITE
             yield BackgroundColor.DARK_RED
         case _:
             yield BackgroundColor.PURPLE

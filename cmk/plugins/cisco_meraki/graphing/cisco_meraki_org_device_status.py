@@ -14,7 +14,7 @@ metric_meraki_last_reported = metrics.Metric(
 
 graph_meraki_device_status = graphs.Graph(
     name="meraki_device_status",
-    title=Title("Last reported"),
+    title=Title("Time since last reported"),
     compound_lines=["last_reported"],
     simple_lines=[
         metrics.WarningOf("last_reported"),

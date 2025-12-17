@@ -10,8 +10,8 @@ import { ref } from 'vue'
 
 import CmkWizard from '@/components/CmkWizard'
 
-import ConfigureRelay from './add-relay-configuration-steps/ConfigureRelay.vue'
 import DeployRelay from './add-relay-configuration-steps/DeployRelay.vue'
+import NameRelay from './add-relay-configuration-steps/NameRelay.vue'
 import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
 
@@ -38,7 +38,7 @@ const openRelayOverviewPage = () => {
         :index="1"
         :is-completed="() => currentStep > 1"
       />
-      <ConfigureRelay
+      <NameRelay
         v-model="relayAlias"
         :index="2"
         :is-completed="() => currentStep > 2"

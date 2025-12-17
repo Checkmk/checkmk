@@ -57,20 +57,20 @@ async function validate(): Promise<boolean> {
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2"> {{ _t('Configure the Relay registration') }}</CmkHeading>
+      <CmkHeading type="h2"> {{ _t('Name the relay') }}</CmkHeading>
     </template>
 
     <template #content>
       <CmkParagraph>
         {{ _t('Provide a display alias for your Relay.') }}
       </CmkParagraph>
-      <div class="mode-relay-configure-relay__form-row">
+      <div class="mode-relay-name-relay__form-row">
         <CmkLabel>
           {{ _t('Relay display alias') }}
           <CmkLabelRequired />
         </CmkLabel>
         <CmkInput
-          v-model="relayAlias as string"
+          v-model="relayAlias"
           type="text"
           field-size="MEDIUM"
           :external-errors="aliasErrors"
@@ -93,7 +93,7 @@ async function validate(): Promise<boolean> {
 </template>
 
 <style scoped>
-.mode-relay-configure-relay__form-row {
+.mode-relay-name-relay__form-row {
   display: flex;
   flex-direction: row;
   align-items: center;

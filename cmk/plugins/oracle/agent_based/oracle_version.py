@@ -25,7 +25,7 @@ from .liboracle import (
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
 
 
-def inventory_oracle_version(section: StringTable) -> DiscoveryResult:
+def discover_oracle_version(section: StringTable) -> DiscoveryResult:
     oracle_handle_ora_errors_discovery(section)
     yield from [Service(item=line[0]) for line in section if len(line) >= 2]
 
@@ -60,6 +60,6 @@ agent_section_oracle_version = AgentSection(
 check_plugin_oracle_version = CheckPlugin(
     name="oracle_version",
     service_name="ORA Version %s",
-    discovery_function=inventory_oracle_version,
+    discovery_function=discover_oracle_version,
     check_function=check_oracle_version,
 )

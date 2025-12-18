@@ -89,6 +89,8 @@ genrule(
         mkdir -p perl-modules/lib/perl5/CPAN
         cp $(execpath //omd/packages/perl-modules:MyConfig.pm) perl-modules/lib/perl5/CPAN/MyConfig.skel
 
+        chmod +w -R perl-modules
+
         tar cf $@ -C perl-modules .
     """,
     tags = ["manual"],

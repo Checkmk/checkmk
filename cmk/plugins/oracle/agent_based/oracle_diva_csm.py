@@ -285,7 +285,7 @@ check_plugin_oracle_diva_csm_objects = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_oracle_diva_csm_tapes(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_oracle_diva_csm_tapes(section: Sequence[StringTable]) -> DiscoveryResult:
     if len(section) > 5 and len(section[5]) > 0 and len(section[5][0]) > 0:
         yield Service()
 
@@ -317,7 +317,7 @@ check_plugin_oracle_diva_csm_tapes = CheckPlugin(
     name="oracle_diva_csm_tapes",
     service_name="DIVA Blank Tapes",
     sections=["oracle_diva_csm"],
-    discovery_function=inventory_oracle_diva_csm_tapes,
+    discovery_function=discover_oracle_diva_csm_tapes,
     check_function=check_oracle_diva_csm_tapes,
     check_ruleset_name="blank_tapes",
     check_default_parameters={"levels_lower": (5, 1)},

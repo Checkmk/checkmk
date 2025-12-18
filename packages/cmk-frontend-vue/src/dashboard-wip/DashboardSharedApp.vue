@@ -13,6 +13,7 @@ import SharedDashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuH
 import { useProvideCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
+import { useProvideMissingRuntimeFiltersAction } from '@/dashboard-wip/composables/useProvideMissingRuntimeFiltersAction'
 import { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
 import { urlParamsKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard-wip/types/page.ts'
@@ -33,6 +34,7 @@ useProvideCmkToken(`0:${props.token_value}`)
 
 const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))
 const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))
+useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {})
 </script>
 
 <template>

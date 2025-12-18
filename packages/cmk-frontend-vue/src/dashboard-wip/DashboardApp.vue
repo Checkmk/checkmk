@@ -113,10 +113,9 @@ const dashboardFilters = useDashboardFilters(
 const dashboardWidgets = useDashboardWidgets(
   computed(() => dashboardsManager.activeDashboard.value?.content.widgets)
 )
-useProvideMissingRuntimeFiltersAction(
-  dashboardFilters.areAllMandatoryFiltersApplied,
-  openDashboardFilterSettings
-)
+useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {
+  openDashboardFilterSettings.value = true
+})
 
 async function updateBreadcrumb(dashboardName: string): Promise<void> {
   const metadata = await dashboardAPI.showDashboardMetadata(dashboardName)

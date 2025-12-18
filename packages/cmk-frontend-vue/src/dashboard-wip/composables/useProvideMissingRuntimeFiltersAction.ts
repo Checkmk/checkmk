@@ -9,14 +9,12 @@ const missingRuntimeFiltersActionKey = Symbol() as InjectionKey<Ref<null | (() =
 
 export function useProvideMissingRuntimeFiltersAction(
   areAllMandatoryFiltersApplied: Ref<boolean>,
-  openDashboardFilterSettings: Ref<boolean>
+  missingRuntimeFiltersAction: () => void
 ) {
   provide(
     missingRuntimeFiltersActionKey,
     computed(() => {
-      return areAllMandatoryFiltersApplied.value
-        ? null
-        : () => (openDashboardFilterSettings.value = true)
+      return areAllMandatoryFiltersApplied.value ? null : missingRuntimeFiltersAction
     })
   )
 }

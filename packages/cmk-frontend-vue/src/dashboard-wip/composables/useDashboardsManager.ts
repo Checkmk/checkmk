@@ -15,9 +15,14 @@ import {
   type RelativeGridDashboardRequest,
   type ResponsiveGridDashboardRequest
 } from '@/dashboard-wip/types/dashboard'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
+import type { DashboardConstants, DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
 import type { EditRelativeGridResult, EditResponsiveGridResult } from '@/dashboard-wip/utils'
 import { createDashboardModel, dashboardAPI } from '@/dashboard-wip/utils.ts'
+
+type DashboardData = {
+  model: DashboardModel
+  metadata: DashboardMetadata
+}
 
 export function useDashboardsManager() {
   const constants = ref<DashboardConstants>()
@@ -26,10 +31,10 @@ export function useDashboardsManager() {
     constants.value = await dashboardAPI.getDashboardConstants()
   })
 
-  const dashboards = ref<Map<string, DashboardModel>>(new Map())
+  const dashboards = ref<Map<string, DashboardData>>(new Map())
   const activeDashboardName: Ref<string | undefined> = ref(undefined)
 
-  const activeDashboard = computed<DashboardModel | undefined>(() => {
+  const activeDashboard = computed<DashboardData | undefined>(() => {
     return activeDashboardName.value ? dashboards.value.get(activeDashboardName.value) : undefined
   })
 
@@ -37,31 +42,37 @@ export function useDashboardsManager() {
     return constants.value !== undefined && activeDashboard.value !== undefined
   })
 
-  function setActiveDashboard(name: string, dashboard: DashboardModel): DashboardModel {
-    dashboards.value.set(name, dashboard)
+  function setActiveDashboard(
+    name: string,
+    model: DashboardModel,
+    metadata: DashboardMetadata
+  ): void {
+    dashboards.value.set(name, {
+      model,
+      metadata
+    })
     activeDashboardName.value = name
-    return dashboard
   }
 
-  async function loadDashboard(name: string, layoutType: DashboardLayout): Promise<DashboardModel> {
-    let dashboardResp
-
+  async function loadDashboard(name: string, layoutType: DashboardLayout): Promise<void> {
+    let dashboardPromise
     if (layoutType === DashboardLayout.RELATIVE_GRID) {
-      const resp = await dashboardAPI.getRelativeDashboard(name)
-      dashboardResp = resp.extensions
+      dashboardPromise = dashboardAPI.getRelativeDashboard(name)
     } else {
-      const resp = await dashboardAPI.getResponsiveDashboard(name)
-      dashboardResp = resp.extensions
+      dashboardPromise = dashboardAPI.getResponsiveDashboard(name)
     }
+    // fetch in parallel, make sure all promises are created before awaiting any of them
+    const metadata = await dashboardAPI.showDashboardMetadata(name)
+    const dashboardResp = (await dashboardPromise).extensions
 
     const dashboard = createDashboardModel(dashboardResp, layoutType)
-    return setActiveDashboard(name, dashboard)
+    setActiveDashboard(name, dashboard, metadata)
   }
 
   async function refreshActiveDashboard(): Promise<void> {
     if (activeDashboardName.value) {
       const layout =
-        activeDashboard.value?.content.layout.type === 'responsive_grid'
+        activeDashboard.value?.model.content.layout.type === 'responsive_grid'
           ? DashboardLayout.RESPONSIVE_GRID
           : DashboardLayout.RELATIVE_GRID
       await loadDashboard(activeDashboardName.value, layout)
@@ -132,14 +143,15 @@ export function useDashboardsManager() {
     }
 
     if (postCreateMode === 'setDashboardAsActive') {
-      setActiveDashboard(dashboardName, dashboard)
+      const metadata = await dashboardAPI.showDashboardMetadata(dashboardName)
+      setActiveDashboard(dashboardName, dashboard, metadata)
     }
   }
 
   async function persistDashboard(
     rename?: string
   ): Promise<EditRelativeGridResult | EditResponsiveGridResult> {
-    const dashboard = activeDashboard.value
+    const dashboard = activeDashboard.value?.model
     if (!dashboard) {
       throw new Error('No active dashboard to persist')
     }
@@ -195,7 +207,9 @@ export function useDashboardsManager() {
       dashboards.value.delete(activeDashboardName.value!)
 
       const newDashboard = createDashboardModel(response.data.extensions, layoutType)
-      setActiveDashboard(rename, newDashboard)
+
+      const metadata = await dashboardAPI.showDashboardMetadata(rename)
+      setActiveDashboard(rename, newDashboard, metadata)
     }
     return response
   }

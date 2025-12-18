@@ -108,10 +108,10 @@ onBeforeMount(async () => {
 })
 
 const dashboardFilters = useDashboardFilters(
-  computed(() => dashboardsManager.activeDashboard.value?.filter_context)
+  computed(() => dashboardsManager.activeDashboard.value?.model.filter_context)
 )
 const dashboardWidgets = useDashboardWidgets(
-  computed(() => dashboardsManager.activeDashboard.value?.content.widgets)
+  computed(() => dashboardsManager.activeDashboard.value?.model.content.widgets)
 )
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {
   openDashboardFilterSettings.value = true
@@ -160,8 +160,8 @@ const selectedDashboard = computed(() => {
 
   return {
     name: dashboardsManager.activeDashboardName.value!,
-    title: dashboardsManager.activeDashboard.value.general_settings.title.text,
-    type: dashboardsManager.activeDashboard.value.type
+    title: dashboardsManager.activeDashboard.value.model.general_settings.title.text,
+    type: dashboardsManager.activeDashboard.value.model.type
   }
 })
 
@@ -199,7 +199,7 @@ async function cancelEdit() {
   // we overwrite all changes by reloading the dashboard
   await dashboardsManager.loadDashboard(
     dashboardsManager.activeDashboardName.value!,
-    dashboardsManager.activeDashboard.value!.content.layout.type as DashboardLayout
+    dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
   )
   isDashboardEditingMode.value = false
 }
@@ -209,7 +209,7 @@ function addWidget(
   generalSettings: WidgetGeneralSettings,
   filterContext: WidgetFilterContext
 ) {
-  const activeDashboard = dashboardsManager.activeDashboard.value as DashboardModel
+  const activeDashboard = dashboardsManager.activeDashboard.value?.model as DashboardModel
   if (!activeDashboard) {
     throw new Error('No active dashboard')
   }
@@ -238,7 +238,7 @@ function addWidget(
 
 function editWidget(widgetId: string) {
   widgetToEdit.value = widgetId
-  const widgetSpec = dashboardsManager.activeDashboard.value!.content.widgets[widgetId]
+  const widgetSpec = dashboardsManager.activeDashboard.value!.model.content.widgets[widgetId]
   if (!widgetSpec) {
     throw new Error(`Widget with id ${widgetId} not found`)
   }
@@ -271,7 +271,7 @@ function getWidgetSpecToEdit(widgetId: string | null): WidgetSpec | null {
   if (!widgetId) {
     return null
   }
-  const widget = dashboardsManager.activeDashboard.value!.content.widgets[widgetId]
+  const widget = dashboardsManager.activeDashboard.value!.model.content.widgets[widgetId]
   if (!widget) {
     throw new Error(`Widget with id ${widgetId} not found`)
   }
@@ -373,7 +373,7 @@ const updateDashboardSettings = async (
   dashboardName: string,
   generalSettings: DashboardGeneralSettings
 ) => {
-  dashboardsManager.activeDashboard.value!.general_settings = generalSettings
+  dashboardsManager.activeDashboard.value!.model.general_settings = generalSettings
   await dashboardsManager.persistDashboard(dashboardName)
   openDashboardSettings.value = false
 
@@ -402,7 +402,7 @@ function deepClone<T>(obj: T): T {
         :selected-dashboard="selectedDashboard"
         :link-user-guide="props.links.user_guide"
         :link-navigation-embedding-page="props.links.navigation_embedding_page"
-        :public-token="dashboardsManager.activeDashboard.value?.public_token ?? null"
+        :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
         :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
         @open-filter="openDashboardFilterSettings = true"
         @open-settings="openDashboardSettings = true"
@@ -428,25 +428,25 @@ function deepClone<T>(obj: T): T {
         :active-dashboard-id="dashboardsManager.activeDashboardName.value || ''"
         :available-layouts="available_layouts"
         :reference-dashboard-general-settings="
-          deepClone(dashboardsManager.activeDashboard.value!.general_settings)
+          deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
         "
         :reference-dashboard-restricted-to-single="
           deepClone(
-            dashboardsManager.activeDashboard.value!.filter_context.restricted_to_single || []
+            dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single || []
           )
         "
         :reference-dashboard-layout-type="
-          dashboardsManager.activeDashboard.value!.content.layout.type as DashboardLayout
+          dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
         "
-        :reference-dashboard-type="dashboardsManager.activeDashboard.value!.type"
+        :reference-dashboard-type="dashboardsManager.activeDashboard.value!.model.type"
         @clone-dashboard="(...args) => cloneDashboard(...args)"
         @cancel-clone="openDashboardCloneDialog = false"
       />
       <DashboardSharingWizard
         v-if="openDashboardShareDialog && dashboardsManager.activeDashboardName.value"
         :dashboard-name="dashboardsManager.activeDashboardName.value"
-        :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
-        :public-token="dashboardsManager.activeDashboard?.value?.public_token || null"
+        :dashboard-owner="dashboardsManager.activeDashboard.value?.model.owner || ''"
+        :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
         :available-features="available_features"
         @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
         @close="openDashboardShareDialog = false"
@@ -462,7 +462,7 @@ function deepClone<T>(obj: T): T {
         :is-open="openWizard"
         :selected-wizard="selectedWizard"
         :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
-        :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
+        :dashboard-owner="dashboardsManager.activeDashboard.value?.model.owner || ''"
         :context-filters="dashboardFilters.contextFilters.value || {}"
         :dashboard-constants="dashboardsManager.constants.value!"
         :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
@@ -494,10 +494,10 @@ function deepClone<T>(obj: T): T {
         v-if="openDashboardSettings && dashboardsManager.activeDashboard.value"
         :active-dashboard-id="dashboardsManager.activeDashboardName.value!"
         :dashboard-general-settings="
-          deepClone(dashboardsManager.activeDashboard.value!.general_settings)
+          deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
         "
         :dashboard-restricted-to-single="
-          dashboardsManager.activeDashboard.value!.filter_context.restricted_to_single!
+          dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single!
         "
         @cancel="openDashboardSettings = false"
         @save="updateDashboardSettings"
@@ -513,7 +513,7 @@ function deepClone<T>(obj: T): T {
       <DashboardComponent
         v-else-if="dashboardsManager.isInitialized.value"
         :key="`${dashboardsManager.activeDashboardName.value}`"
-        v-model:dashboard="dashboardsManager.activeDashboard.value!"
+        v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
         :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
         :base-filters="dashboardFilters.baseFilters"
         :widget-cores="dashboardWidgets.widgetCores"

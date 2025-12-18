@@ -204,7 +204,6 @@ LEGACY_CHECKS = [
     "emc_isilon_power",
     "emc_isilon_temp",
     "emc_vplex_cpu",
-    "emerson_stat",
     "emerson_temp",
     "emka_modules",
     "enterasys_cpu_util",

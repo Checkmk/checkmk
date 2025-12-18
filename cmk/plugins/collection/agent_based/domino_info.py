@@ -24,7 +24,7 @@ from cmk.plugins.domino.lib import DETECT
 # .1.3.6.1.4.1.334.72.1.1.6.2.4.0 Release 8.5.3FP5 HF89
 
 
-def inventory_domino_info(section: StringTable) -> DiscoveryResult:
+def discover_domino_info(section: StringTable) -> DiscoveryResult:
     if section and len(section[0]) != 0:
         yield Service()
 
@@ -64,6 +64,6 @@ snmp_section_domino_info = SimpleSNMPSection(
 check_plugin_domino_info = CheckPlugin(
     name="domino_info",
     service_name="Domino Info",
-    discovery_function=inventory_domino_info,
+    discovery_function=discover_domino_info,
     check_function=check_domino_info,
 )

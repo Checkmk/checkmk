@@ -32,7 +32,7 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_apc_inrow_fanspeed(section: StringTable) -> DiscoveryResult:
+def discover_apc_inrow_fanspeed(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -60,6 +60,6 @@ snmp_section_apc_inrow_fanspeed = SimpleSNMPSection(
 check_plugin_apc_inrow_fanspeed = CheckPlugin(
     name="apc_inrow_fanspeed",
     service_name="Fanspeed",
-    discovery_function=inventory_apc_inrow_fanspeed,
+    discovery_function=discover_apc_inrow_fanspeed,
     check_function=check_apc_inrow_fanspeed,
 )

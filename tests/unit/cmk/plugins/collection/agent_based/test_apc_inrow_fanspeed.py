@@ -9,7 +9,7 @@
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.apc_inrow_fanspeed import (
     check_apc_inrow_fanspeed,
-    inventory_apc_inrow_fanspeed,
+    discover_apc_inrow_fanspeed,
     parse_apc_inrow_fanspeed,
 )
 
@@ -18,7 +18,7 @@ INFO = [["518"]]
 
 def test_discovery_function() -> None:
     assert (parsed := parse_apc_inrow_fanspeed(INFO)) is not None
-    assert list(inventory_apc_inrow_fanspeed(parsed)) == [Service()]
+    assert list(discover_apc_inrow_fanspeed(parsed)) == [Service()]
 
 
 def test_check_function() -> None:

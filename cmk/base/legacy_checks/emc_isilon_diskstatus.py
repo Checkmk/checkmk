@@ -3,46 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_ISILON
 
-check_info = {}
+
+def discover_emc_isilon_diskstatus(section: StringTable) -> DiscoveryResult:
+    for disk_id, _name, _disk_status, _serial in section:
+        yield Service(item=disk_id)
 
 
-def inventory_emc_isilon_diskstatus(info):
-    for disk_id, _name, _disk_status, _serial in info:
-        yield disk_id, None
-
-
-def check_emc_isilon_diskstatus(item, _no_params, info):
-    for disk_id, name, disk_status, serial in info:
+def check_emc_isilon_diskstatus(item: str, section: StringTable) -> CheckResult:
+    for disk_id, name, disk_status, serial in section:
         if disk_id == item:
-            message = f"Disk {name}, serial number {serial} status is {disk_status}"
-            if disk_status in ["HEALTHY", "L3"]:
-                status = 0
-            else:
-                status = 2
-            return status, message
-    return None
+            status = State.OK if disk_status in ["HEALTHY", "L3"] else State.CRIT
+            yield Result(
+                state=status, summary=f"Disk {name}, serial number {serial} status is {disk_status}"
+            )
+            return
 
 
 def parse_emc_isilon_diskstatus(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["emc_isilon_diskstatus"] = LegacyCheckDefinition(
+snmp_section_emc_isilon_diskstatus = SimpleSNMPSection(
     name="emc_isilon_diskstatus",
-    parse_function=parse_emc_isilon_diskstatus,
     detect=DETECT_ISILON,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.52.1",
         oids=["1", "4", "5", "7"],
     ),
+    parse_function=parse_emc_isilon_diskstatus,
+)
+
+
+check_plugin_emc_isilon_diskstatus = CheckPlugin(
+    name="emc_isilon_diskstatus",
     service_name="Disk bay %s Status",
-    discovery_function=inventory_emc_isilon_diskstatus,
+    discovery_function=discover_emc_isilon_diskstatus,
     check_function=check_emc_isilon_diskstatus,
 )

@@ -56,7 +56,7 @@ def number_of_blowers(info: StringTable) -> int:
     return n
 
 
-def inventory_blade_blowers(section: StringTable) -> DiscoveryResult:
+def discover_blade_blowers(section: StringTable) -> DiscoveryResult:
     n = number_of_blowers(section)
     for i in range(0, n):
         if section[i + n][0] != "0":  # skip unknown blowers
@@ -116,6 +116,6 @@ snmp_section_blade_blowers = SimpleSNMPSection(
 check_plugin_blade_blowers = CheckPlugin(
     name="blade_blowers",
     service_name="Blower %s",
-    discovery_function=inventory_blade_blowers,
+    discovery_function=discover_blade_blowers,
     check_function=check_blade_blowers,
 )

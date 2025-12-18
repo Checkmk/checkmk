@@ -1,4 +1,17 @@
 #TODO: Replace those *.mk files with bazel files and replace these genrules: CMK-24412
+exports_files([
+    "ALMALINUX_8.mk",
+    "ALMALINUX_9.mk",
+    "ALMALINUX_10.mk",
+    "DEBIAN_12.mk",
+    "DEBIAN_13.mk",
+    "SLES_15SP5.mk",
+    "SLES_15SP6.mk",
+    "SLES_15SP7.mk",
+    "UBUNTU_22.04.mk",
+    "UBUNTU_24.04.mk",
+])
+
 genrule(
     name = "dependencies",
     srcs = select(

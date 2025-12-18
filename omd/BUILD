@@ -225,6 +225,50 @@ pkg_files(
     prefix = "share/doc",
 )
 
+file_from_flag(
+    name = "omd_info_file",
+    out = "omd.info",
+    content = [
+        "OMD_VERSION = {cmk_version}.{cmk_edition}",
+        "OMD_PHYSICAL_BASE = /opt/omd",
+        "",
+    ],
+    replace_labels = {
+        "cmk_edition": "@cmk//edition",
+        "cmk_version": "@cmk//version",
+    },
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "info_files",
+    srcs = [":omd_info_file"] + select({
+        "@cmk//distro:almalinux-10": ["//omd/distros:ALMALINUX_10.mk"],
+        "@cmk//distro:almalinux-8": ["//omd/distros:ALMALINUX_8.mk"],
+        "@cmk//distro:almalinux-9": ["//omd/distros:ALMALINUX_9.mk"],
+        "@cmk//distro:debian-12": ["//omd/distros:DEBIAN_12.mk"],
+        "@cmk//distro:debian-13": ["//omd/distros:DEBIAN_13.mk"],
+        "@cmk//distro:sles-15sp5": ["//omd/distros:SLES_15SP5.mk"],
+        "@cmk//distro:sles-15sp6": ["//omd/distros:SLES_15SP6.mk"],
+        "@cmk//distro:sles-15sp7": ["//omd/distros:SLES_15SP7.mk"],
+        "@cmk//distro:ubuntu-22.04": ["//omd/distros:UBUNTU_22.04.mk"],
+        "@cmk//distro:ubuntu-24.04": ["//omd/distros:UBUNTU_24.04.mk"],
+    }),
+    prefix = "share/omd",
+    renames = select({
+        "@cmk//distro:almalinux-10": {"//omd/distros:ALMALINUX_10.mk": "distro.info"},
+        "@cmk//distro:almalinux-8": {"//omd/distros:ALMALINUX_8.mk": "distro.info"},
+        "@cmk//distro:almalinux-9": {"//omd/distros:ALMALINUX_9.mk": "distro.info"},
+        "@cmk//distro:debian-12": {"//omd/distros:DEBIAN_12.mk": "distro.info"},
+        "@cmk//distro:debian-13": {"//omd/distros:DEBIAN_13.mk": "distro.info"},
+        "@cmk//distro:sles-15sp5": {"//omd/distros:SLES_15SP5.mk": "distro.info"},
+        "@cmk//distro:sles-15sp6": {"//omd/distros:SLES_15SP6.mk": "distro.info"},
+        "@cmk//distro:sles-15sp7": {"//omd/distros:SLES_15SP7.mk": "distro.info"},
+        "@cmk//distro:ubuntu-22.04": {"//omd/distros:UBUNTU_22.04.mk": "distro.info"},
+        "@cmk//distro:ubuntu-24.04": {"//omd/distros:UBUNTU_24.04.mk": "distro.info"},
+    }),
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
@@ -238,6 +282,7 @@ pkg_files(
         ":cmk_libexec",
         ":diskspace_cleanup_plugin",
         ":hash_file_pkg",
+        ":info_files",
         ":omd_hooks",
         ":rest_api_spec",
         ":share_doc_check-mk",

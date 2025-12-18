@@ -13,8 +13,6 @@ DESTDIR ?= $(BUILD_BASE_DIR)/dest
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 INSTALL := $(BUILD_HELPER_DIR)/install
-INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
-
 RPM_TOPDIR := $(BUILD_BASE_DIR)/rpm/topdir
 RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
@@ -26,7 +24,7 @@ BOM := bill-of-materials.json
 .PHONY: install cma rpm deb clean install-clean venv
 
 # Called while building the .rpm/.deb packages
-install: $(INSTALL_GLOBAL) $(DEPS_INSTALL_BAZEL)
+install: $(INSTALL) $(DEPS_INSTALL_BAZEL)
 	python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
 
 # Called by our release system to build appliance packages
@@ -61,12 +59,6 @@ $(INSTALL_LOG_TARGETS): %-log: %
 
 $(INSTALL): $(PRE_INSTALL) $(INSTALL_LOG_TARGETS)
 	$(TOUCH) $@
-
-$(INSTALL_GLOBAL): $(INSTALL)
-	# Information about distribution and OMD
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
-	install -m 644 distros/$(DISTRO_NAME)_$(DISTRO_VERSION).mk $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
-	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
 omd.spec: omd.spec.in
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \

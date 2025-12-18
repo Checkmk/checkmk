@@ -7,5 +7,12 @@ from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 
 
 def test_health_check(agent_receiver: AgentReceiverClient) -> None:
+    """Verify that the agent receiver application is running and responds to health check requests.
+
+    Test steps:
+    1. Send request to openapi.json endpoint
+    2. Verify successful response
+    3. Confirm agent receiver is running
+    """
     response = agent_receiver.client.get(f"/{agent_receiver.site_name}/agent-receiver/openapi.json")
     assert response.status_code == 200

@@ -18,6 +18,13 @@ def test_create_task_unknown_relay(
     site: SiteMock,
     site_context: Config,
 ) -> None:
+    """Verify that tasks can be created for unknown relay IDs as the site is responsible for handling such cases.
+
+    Test steps:
+    1. Register relay and configure agent receiver
+    2. Push task to unknown relay ID
+    3. Verify task is created successfully
+    """
     # We allow creating tasks for unknown relays. For now it's the site's responsibility
     # to handle such cases.
     relay_id = random_relay_id()

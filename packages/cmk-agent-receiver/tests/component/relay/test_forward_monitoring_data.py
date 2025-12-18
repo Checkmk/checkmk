@@ -41,6 +41,13 @@ def test_forward_monitoring_data(
     agent_receiver: AgentReceiverClient,
     service_name: str,
 ) -> None:
+    """Verify that monitoring data is correctly forwarded to the socket with proper header and payload formatting.
+
+    Test steps:
+    1. Create monitoring data with payload and service name
+    2. Forward data to agent receiver
+    3. Verify header and payload are correctly received at socket
+    """
     payload = b"monitoring payload"
     timestamp = int(time.time())
     expected_header = (
@@ -70,7 +77,13 @@ def test_forward_monitoring_data_huge_payload(
     serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
-    """Test that large payloads (exceeding socket buffer size) are successfully transmitted."""
+    """Verify that large payloads exceeding the socket buffer size are successfully transmitted without data loss.
+
+    Test steps:
+    1. Generate large payload (256KB) exceeding socket buffer
+    2. Forward data to agent receiver
+    3. Verify complete payload is received correctly
+    """
     # Generate payload without newlines to avoid complicating the header/payload split
     # Keep generating until we get a payload without newlines (very rare to have \n in random bytes)
     payload = secrets.token_bytes(128 * 1024 * 2)  # 256KB - exceeds typical socket buffer
@@ -114,9 +127,12 @@ def test_forward_monitoring_data_with_delay(
     serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
-    """
-    If the socket is slower in accepting data, the data can still be forwarded.
-    Note: the configured socket timeouts don't seem to have an effect (on UNIX sockets at least).
+    """Verify that data can still be forwarded successfully even when the socket is slower in accepting data.
+
+    Test steps:
+    1. Create socket with delay exceeding timeout
+    2. Forward monitoring data to agent receiver
+    3. Verify data is successfully received despite delay
     """
     delay = TEST_SOCKET_TIMEOUT + TIMEOUT_MARGIN
     payload = b"monitoring payload"
@@ -160,11 +176,12 @@ def test_connection_refused(
     serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
-    """
-    Test that connection refused (ECONNREFUSED) is handled correctly.
+    """Verify that connection refused errors (ECONNREFUSED) are handled correctly and return a 502 BAD_GATEWAY response.
 
-    When the socket exists but is not listening (no accept() call),
-    connect() fails with ECONNREFUSED, which should return 502 BAD_GATEWAY.
+    Test steps:
+    1. Create socket without accepting connections
+    2. Attempt to forward monitoring data
+    3. Verify 502 BAD_GATEWAY response is returned
     """
     payload = b"monitoring payload"
     monitoring_data = create_monitoring_data(serial, payload)
@@ -183,11 +200,12 @@ def test_socket_path_not_exists(
     agent_receiver: AgentReceiverClient,
     tmpdir: Path,
 ) -> None:
-    """
-    Test that missing socket path (ENOENT) is handled correctly.
+    """Verify that missing socket path errors (ENOENT) are handled correctly and return a 502 BAD_GATEWAY response.
 
-    When the socket path doesn't exist, connect() fails with FileNotFoundError,
-    which should return 502 BAD_GATEWAY.
+    Test steps:
+    1. Configure nonexistent socket path
+    2. Attempt to forward monitoring data
+    3. Verify 502 BAD_GATEWAY response is returned
     """
     payload = b"monitoring payload"
     monitoring_data = create_monitoring_data(serial, payload)
@@ -209,15 +227,12 @@ def test_sendall_timeout_unresponsive_server(
     serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
-    """
-    Test that sendall() timeout is handled correctly.
+    """Verify that sendall() timeout with an unresponsive server is handled correctly and returns a 502 BAD_GATEWAY response.
 
-    When the CMC server accepts a connection but never calls recv(), and the
-    payload is large enough to exceed the socket buffer, sendall() will block
-    and eventually timeout. This should return 502 BAD_GATEWAY.
-
-    This tests the actual error path: sendall() → socket.timeout (OSError) →
-    FailedToSendMonitoringDataError → 502 response.
+    Test steps:
+    1. Create unresponsive socket that accepts but never receives
+    2. Forward large payload that exceeds socket buffer
+    3. Verify 502 BAD_GATEWAY response after timeout
     """
     # Large payload that will exceed socket send buffer (typically 64KB-128KB)
     # Using 256kb to ensure it blocks waiting for the server to recv()
@@ -239,15 +254,12 @@ def test_broken_pipe_during_send(
     serial: Serial,
     agent_receiver: AgentReceiverClient,
 ) -> None:
-    """
-    Test that broken pipe (EPIPE) is handled correctly.
+    """Verify that broken pipe errors (EPIPE) during send are handled correctly and return a 502 BAD_GATEWAY response.
 
-    When the CMC server accepts a connection but immediately closes it,
-    the client's sendall() will raise BrokenPipeError. This should return
-    502 BAD_GATEWAY.
-
-    This tests the error path: sendall() → BrokenPipeError (OSError) →
-    FailedToSendMonitoringDataError → 502 response.
+    Test steps:
+    1. Create socket that accepts then immediately closes connection
+    2. Forward large payload to trigger broken pipe
+    3. Verify 502 BAD_GATEWAY response is returned
     """
     # Use a large payload (256KB) to ensure sendall() doesn't complete instantly.
     # Small payloads fit entirely in the socket send buffer, making it impossible

@@ -18,6 +18,13 @@ def test_get_task_returns_version_header(
     site_context: Config,
     agent_receiver: AgentReceiverClient,
 ) -> None:
+    """Verify that the get task endpoint includes the version header in the response.
+
+    Test steps:
+    1. Register relay and create a task
+    2. Retrieve specific task via endpoint
+    3. Verify response includes version header
+    """
     # register a relay and create a task
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])

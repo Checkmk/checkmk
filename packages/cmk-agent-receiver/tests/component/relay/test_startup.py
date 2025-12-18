@@ -27,12 +27,12 @@ from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 def test_startup_with_relays(
     site: SiteMock, site_context: Config, user: User, edition: str
 ) -> None:
-    """
-    Given:
-    - the cmk edition is in the accepted list,
-    - the config folders have the right structure .../latest/relays/relay_n
-    Then:
-    - starting the application will create relay config tasks for the relays
+    """Verify that starting the agent receiver application with a supported edition creates relay config tasks for all configured relays.
+
+    Test steps:
+    1. Configure supported edition and relay folders
+    2. Start the application
+    3. Verify relay config tasks are created
     """
     relays = [str(uuid.uuid4()), str(uuid.uuid4())]
 
@@ -50,12 +50,12 @@ def test_startup_with_relays(
 
 @pytest.mark.parametrize("edition", ["ultimatemt", "ultimate", "cloud"])
 def test_no_relays_folder(site: SiteMock, site_context: Config, user: User, edition: str) -> None:
-    """
-    Given:
-    - the cmk edition is in the accepted list,
-    - the config folders have not defined the relays folder .../latest/404
-    Then:
-    - starting the application will not create relay config tasks
+    """Verify that starting the application does not create relay config tasks when the relays folder is missing.
+
+    Test steps:
+    1. Configure supported edition but remove relays folder
+    2. Start the application
+    3. Verify no relay config tasks are created
     """
     relays = [str(uuid.uuid4()), str(uuid.uuid4())]
 
@@ -73,12 +73,12 @@ def test_no_relays_folder(site: SiteMock, site_context: Config, user: User, edit
 def test_empty_relays_folder(
     site: SiteMock, site_context: Config, user: User, edition: str
 ) -> None:
-    """
-    Given:
-    - the cmk edition is in the accepted list,
-    - the relays folder is defined, but it's empty .../latest/relays/404
-    Then:
-    - starting the application will not create relay config tasks
+    """Verify that starting the application does not create relay config tasks when the relays folder exists but is empty.
+
+    Test steps:
+    1. Configure supported edition with empty relays folder
+    2. Start the application
+    3. Verify no relay config tasks are created
     """
     relays = [str(uuid.uuid4()), str(uuid.uuid4())]
 
@@ -98,11 +98,12 @@ def test_empty_relays_folder(
 def test_unsupported_editions(
     site: SiteMock, site_context: Config, user: User, edition: str
 ) -> None:
-    """
-    Given:
-    - the cmk edition is not in the accepted list,
-    Then:
-    - starting the application will not create relay config tasks
+    """Verify that starting the application with an unsupported edition does not create relay config tasks.
+
+    Test steps:
+    1. Configure unsupported edition with relays
+    2. Start the application
+    3. Verify no relay config tasks are created
     """
     relays = [str(uuid.uuid4()), str(uuid.uuid4())]
 

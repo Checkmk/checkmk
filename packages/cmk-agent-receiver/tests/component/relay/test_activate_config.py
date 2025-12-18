@@ -40,6 +40,13 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
+    """Verify that user-triggered config activation creates a relay config task for each configured relay.
+
+    Test steps:
+    1. Configure agent receiver with two relays
+    2. Perform config activation
+    3. Verify each relay has exactly one pending config task
+    """
     # Start AR with two relays configured in the site
     relay_id_a = str(uuid.uuid4())
     relay_id_b = str(uuid.uuid4())
@@ -62,6 +69,13 @@ def test_activation_performed_twice_with_same_config(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
+    """Verify that performing config activation twice with the same configuration does not create duplicate tasks.
+
+    Test steps:
+    1. Configure agent receiver and perform first activation
+    2. Perform second activation with same config
+    3. Verify each relay still has only one pending config task
+    """
     # Start AR with two relays configured in the site
     relay_id_a = str(uuid.uuid4())
     relay_id_b = str(uuid.uuid4())
@@ -92,6 +106,13 @@ def test_activation_performed_twice_with_new_config(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
+    """Verify that performing activation with a new configuration creates new config tasks with the updated serial.
+
+    Test steps:
+    1. Configure agent receiver and perform first activation
+    2. Create new config and perform second activation
+    3. Verify each relay has pending task with new config serial
+    """
     # Start AR with two relays configured in the site
     relay_id_a = str(uuid.uuid4())
     relay_id_b = str(uuid.uuid4())
@@ -127,6 +148,13 @@ def test_new_relays_when_activation_performed(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
+    """Verify that activation creates config tasks for newly added relays while maintaining tasks for existing relays.
+
+    Test steps:
+    1. Configure agent receiver with two relays and activate
+    2. Add a third relay and perform second activation
+    3. Verify all three relays have pending config tasks
+    """
     # Start AR with two relays configured in the site
     relay_id_a = str(uuid.uuid4())
     relay_id_b = str(uuid.uuid4())
@@ -176,6 +204,13 @@ def test_removed_relays_when_activation_performed(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
+    """Verify that activation correctly handles scenarios where relays have been removed from the configuration.
+
+    Test steps:
+    1. Configure agent receiver with two relays and activate
+    2. Remove one relay and perform second activation
+    3. Verify remaining relay has pending task and removed relay tasks persist
+    """
     # Start AR with two relays configured in the site
     relay_id_a = str(uuid.uuid4())
     relay_id_b = str(uuid.uuid4())
@@ -215,7 +250,13 @@ def test_activation_with_no_relays(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
-    """Test behavior when no relays are configured."""
+    """Verify that config activation succeeds gracefully when no relays are configured.
+
+    Test steps:
+    1. Configure agent receiver with no relays
+    2. Perform config activation
+    3. Verify endpoint responds successfully with no tasks created
+    """
     # Start AR with no relays configured in the site
     site.set_scenario([])
 
@@ -235,7 +276,13 @@ def test_activation_with_mixed_relay_task_states(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
-    """Test activation when some relays already have tasks in different states."""
+    """Verify that activation creates new pending tasks only for relays whose previous config tasks are finished, not for those with pending tasks.
+
+    Test steps:
+    1. Activate config creating pending tasks for two relays
+    2. Complete one relay's task, leaving the other pending
+    3. Verify second activation creates new task only for completed relay
+    """
     # Start AR with two relays configured in the site
     relay_id_a = str(uuid.uuid4())
     relay_id_b = str(uuid.uuid4())

@@ -20,8 +20,12 @@ def test_cannot_push_more_pending_tasks_than_allowed(
     site: SiteMock,
     site_context: Config,
 ) -> None:
-    """
-    We should not be able to push more tasks than maximum allowed.
+    """Verify that pushing more tasks than the maximum allowed is rejected with a FORBIDDEN status.
+
+    Test steps:
+    1. Configure relay with max task limit and push to limit
+    2. Attempt to push additional task
+    3. Verify request is rejected with FORBIDDEN status
     """
     task_count = 3
     create_relay_config(max_number_of_tasks=task_count)
@@ -57,8 +61,12 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     site: SiteMock,
     site_context: Config,
 ) -> None:
-    """
-    After we reach the max pending task limit we can push new tasks again to the relay.
+    """Verify that after marking a task as finished, new tasks can be pushed even when the limit was previously reached.
+
+    Test steps:
+    1. Push tasks to limit and mark one as finished
+    2. Attempt to push new task
+    3. Verify new task is accepted successfully
     """
     task_count = 3
     create_relay_config(max_number_of_tasks=task_count)
@@ -89,8 +97,12 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
 
 
 def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site: SiteMock) -> None:
-    """
-    Other relays should not be affected when one relay is "full".
+    """Verify that each relay has its own independent task limit and filling one relay does not affect others.
+
+    Test steps:
+    1. Fill relay A to task limit
+    2. Push task to relay B
+    3. Verify relay B accepts task despite relay A being full
     """
     task_count = 5
     create_relay_config(max_number_of_tasks=task_count)

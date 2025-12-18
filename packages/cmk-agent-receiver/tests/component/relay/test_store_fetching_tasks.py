@@ -19,6 +19,13 @@ def test_store_fetching_task(
     site: SiteMock,
     site_context: Config,
 ) -> None:
+    """Verify that a fetching task can be stored and later retrieved with the correct payload.
+
+    Test steps:
+    1. Push a fetching task to a relay
+    2. Retrieve relay tasks
+    3. Verify task is stored with correct payload
+    """
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
@@ -41,6 +48,13 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     site: SiteMock,
     site_context: Config,
 ) -> None:
+    """Verify that storing tasks for one relay does not affect the tasks of other relays.
+
+    Test steps:
+    1. Push tasks to relay A
+    2. Verify relay B has no tasks
+    3. Verify relay A maintains its tasks independently
+    """
     relay_id_A = str(uuid.uuid4())
     relay_id_B = str(uuid.uuid4())
     site.set_scenario([relay_id_A, relay_id_B])
@@ -77,6 +91,13 @@ def test_store_fetching_task_non_existent_relay(
     site: SiteMock,
     site_context: Config,
 ) -> None:
+    """Verify that tasks can be stored for a relay even when the relay does not have a configured folder.
+
+    Test steps:
+    1. Push task to relay without configured folder
+    2. Verify task is created successfully
+    3. Verify task is retrievable with correct payload
+    """
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
     cf = create_config_folder(root=site_context.omd_root, relays=[])

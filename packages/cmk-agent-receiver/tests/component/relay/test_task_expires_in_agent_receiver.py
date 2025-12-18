@@ -20,12 +20,13 @@ def test_task_expires_in_agent_receiver(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
-    """
-    1. Configure agent receiver to a short expiration time.
-    2. Register relay
-    3. Add task
-    4. Wait for expiration time
-    5. Verify task is no longer present
+    """Verify that tasks expire and are automatically removed after the configured TTL (time-to-live) period.
+
+    Test steps:
+    1. Configure agent receiver with short expiration time
+    2. Register relay and add task
+    3. Wait for expiration time
+    4. Verify task is no longer present
     """
 
     # Configure short expiration time
@@ -62,15 +63,14 @@ def test_task_expires_in_agent_receiver(
 def test_task_expiration_resets_on_update(
     site: SiteMock, agent_receiver: AgentReceiverClient, site_context: Config
 ) -> None:
-    """
-    Test that verifies that task expiration time resets when a task is updated.
+    """Verify that the task expiration timer is reset when a task is updated, extending its lifetime.
 
-    1. Configure agent receiver to a short expiration time.
-    2. Add a task.
-    3. Wait until just before the task would expire.
-    4. Update the task.
-    5. Wait a short time (less than the remaining expiration time).
-    6. Verify the task has expired (proving that update did not reset expiration time).
+    Test steps:
+    1. Configure agent receiver with short expiration time
+    2. Add task and wait until half expiration time
+    3. Update the task
+    4. Verify task remains present after additional half expiration
+    5. Verify task expires after full expiration from update
     """
     # Configure short expiration time
     expiration_time = 1.0
@@ -125,8 +125,14 @@ def test_completed_tasks_expiration(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
-    """
-    Test that verifies that tasks expire regardless of their status.
+    """Verify that tasks expire after their TTL regardless of whether they are pending, finished, or failed.
+
+    Test steps:
+    1. Configure agent receiver with short expiration time
+    2. Add tasks and update them with different result types
+    3. Verify tasks are present initially
+    4. Wait for expiration time
+    5. Verify all tasks have expired
     """
     # Configure short expiration time
     expiration_time = 1.0

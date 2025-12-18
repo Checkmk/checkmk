@@ -11,6 +11,13 @@ from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 def test_middleware_adds_request_id_to_logs(
     agent_receiver: AgentReceiverClient,
 ) -> None:
+    """Verify that the middleware correctly binds the request ID to the logging context for request tracing.
+
+    Test steps:
+    1. Send request with custom trace ID header
+    2. Verify response includes matching request ID
+    3. Verify trace ID appears in log file
+    """
     trace_id = "test-logging-integration-12345"
     response = agent_receiver.client.get(
         f"/{agent_receiver.site_name}/agent-receiver/openapi.json", headers={"x-trace-id": trace_id}

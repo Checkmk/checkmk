@@ -16,6 +16,13 @@ def test_get_tasks_works_if_no_serial_is_given(
     site_context: Config,
     agent_receiver: AgentReceiverClient,
 ) -> None:
+    """Verify that requesting tasks without providing a serial succeeds and returns an empty task list.
+
+    Test steps:
+    1. Configure relay without setting serial
+    2. Request tasks for the relay
+    3. Verify request succeeds with empty task list
+    """
     relay_id_1 = str(uuid.uuid4())
     site.set_scenario([relay_id_1])
     _ = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])

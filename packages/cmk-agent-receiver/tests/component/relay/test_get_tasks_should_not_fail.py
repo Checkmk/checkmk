@@ -16,13 +16,12 @@ def test_relay_without_folder(
     site_context: Config,
     site: SiteMock,
 ) -> None:
-    """
-    Given:
-    - the relay is registered
-    - the relay has not corresponding folder in the file system
-    Then:
-    - "get tasks" for that relay should not fail, although no config tasks can be created
-    - No config tasks are created.
+    """Verify that retrieving tasks for a relay without a corresponding filesystem folder succeeds without errors.
+
+    Test steps:
+    1. Register relay without corresponding folder in filesystem
+    2. Request tasks for the relay
+    3. Verify request succeeds with no tasks created
     """
 
     stale_serial = Serial.default()

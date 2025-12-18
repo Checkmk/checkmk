@@ -18,8 +18,12 @@ def test_a_relay_can_be_registered(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
-    """
-    Register a relay and check if we can obtain a list of pending tasks for it.
+    """Verify that a relay can be registered with the agent receiver and tasks can be retrieved for it.
+
+    Test steps:
+    1. Register a relay with the agent receiver
+    2. Create a config folder for the relay
+    3. Verify that tasks can be retrieved for the registered relay
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
@@ -38,6 +42,13 @@ def test_registering_a_relay_does_not_affect_other_relays(
     site: SiteMock,
     site_context: Config,
 ) -> None:
+    """Verify that registering a new relay does not affect tasks belonging to other already registered relays.
+
+    Test steps:
+    1. Register first relay and push a task to it
+    2. Register second relay
+    3. Verify first relay's task remains unaffected
+    """
     relay_1_id = random_relay_id()
     relay_2_id = random_relay_id()
     site.set_scenario([], [(relay_1_id, OP.ADD), (relay_2_id, OP.ADD)])

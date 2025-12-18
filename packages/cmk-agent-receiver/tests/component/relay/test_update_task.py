@@ -38,9 +38,12 @@ def test_updating_task_should_change_stored_task_object(
     expected_status: TaskStatus,
     site_context: Config,
 ) -> None:
-    """
-    The stored task object should be modified so that it contains the result.
-    The task status should reflect the type of the attached result.
+    """Verify that updating a task with a result modifies the stored task object and sets the correct task status based on the result type.
+
+    Test steps:
+    1. Create a task for the relay
+    2. Update the task with a result
+    3. Verify the stored task contains the result and correct status
     """
 
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
@@ -85,8 +88,12 @@ def test_updating_task_should_change_stored_task_object(
 def test_task_no_longer_pending(
     agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str, site_context: Config
 ) -> None:
-    """
-    Once a task has been updated with a result, it should no longer appear in the list of pending tasks.
+    """Verify that once a task has been updated with a result, it no longer appears in the list of pending tasks.
+
+    Test steps:
+    1. Create tasks and verify one is pending
+    2. Update the task with a result
+    3. Verify the task no longer appears in pending tasks list
     """
 
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
@@ -117,9 +124,12 @@ def test_task_no_longer_pending(
 def test_timestamps_are_handled(
     agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str, site_context: Config
 ) -> None:
-    """
-    A call to update task should modify the "update_timestamp" values and it should not
-    modify the "creation_timestamp" value.
+    """Verify that updating a task modifies the update_timestamp but preserves the creation_timestamp.
+
+    Test steps:
+    1. Create a task and record its timestamps
+    2. Update the task after a delay
+    3. Verify creation_timestamp unchanged and update_timestamp increased
     """
 
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
@@ -155,8 +165,12 @@ def test_the_other_tasks_are_not_changed(
     result_type_input: str,
     site_context: Config,
 ) -> None:
-    """
-    A call to update task should not modify any other possible tasks that belong to the relay.
+    """Verify that updating one task does not modify any other tasks that belong to the same relay.
+
+    Test steps:
+    1. Create multiple tasks for a relay
+    2. Update one task with a result
+    3. Verify other tasks remain unchanged
     """
 
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])

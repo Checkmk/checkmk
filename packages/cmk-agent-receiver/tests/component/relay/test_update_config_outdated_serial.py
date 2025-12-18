@@ -20,6 +20,13 @@ def test_config_update_triggered_by_outdated_serial(
     site_context: Config,
     agent_receiver: AgentReceiverClient,
 ) -> None:
+    """Verify that requesting tasks with an outdated serial automatically triggers creation of a config update task with the current serial.
+
+    Test steps:
+    1. Register two relays with current config
+    2. Request tasks with outdated serial
+    3. Verify config task is created with correct serial
+    """
     # register two relays
     relay_id_1 = str(uuid.uuid4())
     relay_id_2 = str(uuid.uuid4())
@@ -47,6 +54,13 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     site_context: Config,
     agent_receiver: AgentReceiverClient,
 ) -> None:
+    """Verify that a config update task is created only once when an outdated serial is detected, not on every request.
+
+    Test steps:
+    1. Register relay and request tasks with outdated serial
+    2. Verify config task is created
+    3. Request tasks again and verify same task is returned
+    """
     # register one relay
     relay_id_1 = str(uuid.uuid4())
     site.set_scenario([relay_id_1])
@@ -72,6 +86,14 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     site_context: Config,
     agent_receiver: AgentReceiverClient,
 ) -> None:
+    """Verify that when the configuration changes, requesting with an outdated serial creates a new config task with the updated serial.
+
+    Test steps:
+    1. Create initial config and trigger task with outdated serial
+    2. Create new config with different serial
+    3. Request tasks with outdated serial again
+    4. Verify both config tasks exist with different serials
+    """
     # register one relay
     relay_id_1 = str(uuid.uuid4())
     site.set_scenario([relay_id_1])

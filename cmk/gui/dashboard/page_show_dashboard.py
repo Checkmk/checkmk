@@ -129,8 +129,6 @@ def page_dashboard_app(ctx: PageContext) -> None:
         # TODO: consider adding initial title as well due to context generation
         "dashboard": loaded_dashboard_properties,
         "mode": mode,
-        # required for edit, clone and new dashboard creation
-        "can_edit_dashboards": user.may("general.edit_dashboards"),
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
         "links": {
             "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",

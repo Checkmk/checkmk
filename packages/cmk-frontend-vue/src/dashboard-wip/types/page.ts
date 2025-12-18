@@ -37,7 +37,6 @@ export interface DashboardPageProperties {
   initial_breadcrumb: BreadcrumbItem[]
   dashboard: LoadedDashboardProperties | null
   mode: 'display' | 'create' | 'clone' | 'edit_settings' | 'edit_layout'
-  can_edit_dashboards: boolean
   url_params: FilterHTTPVars
   links: {
     list_dashboards: string

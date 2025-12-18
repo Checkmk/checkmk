@@ -105,6 +105,10 @@ class QuickSetupStageAction:
 
             load_wait_label:
                 The label of the loading spinner. If not set, the default label is used.
+
+            permissions:
+                The required permission name to be checked by the Quick Setup endpoint. By default
+                it is set to None and no permission check is performed
     """
 
     id: ActionId
@@ -112,6 +116,7 @@ class QuickSetupStageAction:
     recap: Iterable[CallableRecap]
     next_button_label: str | None = None
     load_wait_label: str | None = None
+    permissions: list[str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -203,6 +208,9 @@ class QuickSetupAction:
 
             Therefore, relevant custom validators should be included again here (especially
             if the 'overview' mode is enabled)
+        permissions:
+            The required permission name to be checked by the Quick Setup endpoint. By default
+            it is set to None and no permission check is performed
     """
 
     id: ActionId
@@ -210,6 +218,7 @@ class QuickSetupAction:
     action: CallableAction
     icon: QuickSetupActionButtonIcon | None = None
     custom_validators: Iterable[CallableValidator] = ()
+    permissions: list[str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -248,13 +248,20 @@ def quick_setup_get_stage_structure(params: Mapping[str, Any]) -> Response:
         303: "The stage validation and recap action has been started in the background. "
         "Redirecting to the 'Get background job status snapshot' endpoint."
     },
-    additional_status_codes=[303],
+    additional_status_codes=[303, 403],
     path_params=[QUICKSETUP_ID],
     request_schema=QuickSetupStageActionRequest,
     response_schema=QuickSetupStageActionResponse,
 )
 def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
-    """Run a Quick setup stage validation and recap action"""
+    """Run a Quick setup stage validation and recap action
+
+    This endpoint performs permission validation but since permissions depend on dynamic actions
+    and each action has its own required permission, they cannot be statically defined. If the
+    required permissions for an action are not met, the endpoint returns a 403 Forbidden error
+    informing the action ID and the missing permission.
+    """
+
     language = user.language
     body = params["body"]
     quick_setup_id = params["quick_setup_id"]
@@ -268,6 +275,15 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
 
     stage_index = StageIndex(len(body["stages"]) - 1)
     stage_action = matching_stage_action(quick_setup.stages[stage_index](), stage_action_id)
+
+    if stage_action.permissions is not None and not all(
+        user.may(perm) for perm in stage_action.permissions
+    ):
+        return _serve_error(
+            title="Action not allowed",
+            detail=f"Action with id '{stage_action_id}' requires {', '.join(f"'{x}'" for x in stage_action.permissions)} permissions.",
+            status_code=403,
+        )
 
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
     form_spec_map = build_formspec_map_from_stages(built_stages)
@@ -401,7 +417,7 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_MODE],
-    additional_status_codes=[201, 303, 429],
+    additional_status_codes=[201, 303, 403, 429],
     status_descriptions={
         303: "The validation and complete action has been started in the background. "
         "Redirecting to the 'Get background job status snapshot' endpoint.",
@@ -422,7 +438,7 @@ def quick_setup_run_action(params: Mapping[str, Any]) -> Response:
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
-    additional_status_codes=[201, 303, 429],
+    additional_status_codes=[201, 303, 403, 429],
     status_descriptions={
         303: "The validation and complete action has been started in the background. "
         "Redirecting to the 'Get background job status snapshot' endpoint.",
@@ -465,6 +481,13 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         return _serve_error(
             title="Action not found",
             detail=f"Action with id '{action_id}' does not exist.",
+        )
+
+    if action.permissions is not None and not all(user.may(perm) for perm in action.permissions):
+        return _serve_error(
+            title="Action not allowed",
+            detail=f"Action with id '{action_id}' requires {', '.join(f"'{x}'" for x in action.permissions)} permissions.",
+            status_code=403,
         )
 
     form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages])

@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_aruba_clients(section: StringTable) -> DiscoveryResult:
+def discover_aruba_clients(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -51,6 +51,6 @@ snmp_section_aruba_clients = SimpleSNMPSection(
 check_plugin_aruba_clients = CheckPlugin(
     name="aruba_clients",
     service_name="WLAN Clients",
-    discovery_function=inventory_aruba_clients,
+    discovery_function=discover_aruba_clients,
     check_function=check_aruba_clients,
 )

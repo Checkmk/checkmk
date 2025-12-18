@@ -27,6 +27,7 @@ pkg_files(
 pkg_tar(
     name = "mk-oracle",
     srcs = [":mk-oracle_pkg"],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__subpackages__"],
 )

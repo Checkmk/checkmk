@@ -31,5 +31,6 @@ pkg_files(
 pkg_tar(
     name = "pkg_tar",
     srcs = [":active_checks_bin"],
+    stamp = 1,
     visibility = ["//visibility:public"],
 )

@@ -54,6 +54,7 @@ pkg_mklink(
 pkg_tar(
     name = "rabbitmq_lib",
     package_dir = "lib/rabbitmq",
+    stamp = 1,
     tags = ["manual"],
     deps = [
         "@rabbitmq//:rabbitmq.tar.gz",
@@ -68,6 +69,7 @@ pkg_tar(
         ":skel",
         ":skel_755",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
     deps = [

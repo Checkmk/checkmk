@@ -103,6 +103,7 @@ pkg_tar(
         "liblivestatus.so.0",
         ":livestatus_shared_files",
     ],
+    stamp = 1,
     visibility = ["//visibility:public"],
 )
 

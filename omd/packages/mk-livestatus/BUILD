@@ -57,6 +57,7 @@ pkg_tar(
         ":nagios_cfg",
         ":skel",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

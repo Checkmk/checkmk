@@ -277,5 +277,6 @@ pkg_files(
 pkg_tar(
     name = "cmk-frontend-vue",
     srcs = [":frontend_vue_dist_pkg"],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )

@@ -96,6 +96,7 @@ pkg_files(
 pkg_tar(
     name = "neb_pkg",
     srcs = [":neb_shared_files"],
+    stamp = 1,
     visibility = ["//visibility:public"],
 )
 

@@ -172,6 +172,7 @@ pkg_tar(
         "userfiles_empty_dirs",
         "var_dir",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

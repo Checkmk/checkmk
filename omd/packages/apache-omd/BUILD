@@ -150,5 +150,6 @@ pkg_tar(
             "apache_module_log_config",
         ],
     }),
+    stamp = 1,
     visibility = ["//omd:__subpackages__"],
 )

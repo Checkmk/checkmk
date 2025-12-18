@@ -108,6 +108,7 @@ pkg_tar(
         ":cmk-telemetry",
         ":cmk_link",
     ],
+    stamp = 1,
     visibility = ["//visibility:public"],
 )
 

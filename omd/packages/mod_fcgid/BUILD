@@ -25,6 +25,7 @@ pkg_tar(
         ":lib_pkg",
         ":skel_pkg",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

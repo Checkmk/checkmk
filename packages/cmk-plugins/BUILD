@@ -650,6 +650,7 @@ filegroup(
 
 pkg_tar(
     name = "pkg_tar",
+    stamp = 1,
     visibility = ["//visibility:public"],
     deps = [":pkg_tar-%s" % family for family in FAMILIES],
 )

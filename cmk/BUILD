@@ -416,5 +416,6 @@ pkg_files(
 pkg_tar(
     name = "legacy_checks",
     srcs = ["legacy_checks_pkg"],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )

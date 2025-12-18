@@ -180,6 +180,7 @@ pkg_tar(
         "//agents/windows/plugins",
     ],
     package_dir = "share/check_mk",
+    stamp = 1,
     strip_prefix = ".",
 )
 
@@ -195,6 +196,7 @@ pkg_tar(
     srcs = ["//agents:super-server"],
     mode = "0755",
     package_dir = "share/check_mk",
+    stamp = 1,
     strip_prefix = "scripts",
 )
 
@@ -415,6 +417,7 @@ pkg_tar(
     ],
     package_dir = "share/doc/",
     package_file_name = "license_info_archive.tar",
+    stamp = 1,
     tags = ["manual"],
 )
 

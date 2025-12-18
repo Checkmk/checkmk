@@ -24,6 +24,7 @@ pkg_tar(
         ":patch_bin_pkg",
         ":patch_man_pkg",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

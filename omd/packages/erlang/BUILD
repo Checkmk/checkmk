@@ -228,6 +228,7 @@ pkg_tar(
         ":omd_root_aware_pkg",
         ":rest",
     ] + [bin + "_link" for bin in BIN_SYMLINKS],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

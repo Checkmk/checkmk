@@ -61,6 +61,7 @@ pkg_tar(
         ":plugins_linux",
         ":plugins_windows",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

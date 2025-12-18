@@ -37,6 +37,7 @@ pkg_tar(
         "bin_pkg",
         "share_pkg",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

@@ -103,6 +103,7 @@ pkg_tar(
     srcs = [
         ":freetds_pkg",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

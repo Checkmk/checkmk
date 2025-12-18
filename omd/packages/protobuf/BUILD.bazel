@@ -66,6 +66,7 @@ pkg_tar(
     name = "protobuf_tar",
     srcs = [":protobuf"],
     package_file_name = "protobuf.tar",
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

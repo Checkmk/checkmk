@@ -110,6 +110,7 @@ pkg_tar(
         ":skel_755",
         ":skel_dirs",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

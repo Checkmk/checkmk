@@ -38,5 +38,6 @@ pkg_tar(
     srcs = [
         "mo_files_pkg",
     ],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )

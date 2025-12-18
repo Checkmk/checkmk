@@ -15,6 +15,7 @@ pkg_tar(
     srcs = [
         ":lib_pkg",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

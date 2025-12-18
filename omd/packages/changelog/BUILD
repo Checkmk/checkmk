@@ -142,6 +142,7 @@ pkg_tar(
             "werks_pkg_ultimatemt",
         ],
     }),
+    stamp = 1,
     tags = ["manual"],
     visibility = ["@@//omd:__subpackages__"],
 )

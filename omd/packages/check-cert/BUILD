@@ -21,6 +21,7 @@ pkg_files(
 pkg_tar(
     name = "check-cert",
     srcs = [":check-cert_pkg"],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

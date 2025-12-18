@@ -82,6 +82,7 @@ pkg_files(
 pkg_tar(
     name = "check_http_tar",
     srcs = [":check_http_pkg"],
+    stamp = 1,
 )
 
 rust_doc(

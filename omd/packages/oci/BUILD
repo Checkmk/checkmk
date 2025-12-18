@@ -20,6 +20,7 @@ pkg_files(
 pkg_tar(
     name = "oci_light_win_x64.tar",
     srcs = [":oci_light_win_x64_pkg"],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
@@ -104,6 +105,7 @@ pkg_files(
 pkg_tar(
     name = "oci_light_lin_x64.tar",
     srcs = [":oci_light_lin_x64_files"],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

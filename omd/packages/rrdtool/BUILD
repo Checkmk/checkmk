@@ -82,6 +82,7 @@ pkg_tar(
     name = "rrdtool_tar",
     srcs = [":rrdtool_pkg"],
     package_file_name = "rrdtool.tar",
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
@@ -112,6 +113,7 @@ pkg_files(
 pkg_tar(
     name = "rrdtool_perl_bindings",
     srcs = ["rrdtool_perl_bindings_files"],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
@@ -167,5 +169,6 @@ pkg_filegroup(
 pkg_tar(
     name = "rrdtool_skel_tar",
     srcs = [":rrdtool_skel_pkg"],
+    stamp = 1,
     tags = ["manual"],
 )

@@ -219,5 +219,6 @@ pkg_tar(
         ":skel",
         ":skel_755",
     ],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )

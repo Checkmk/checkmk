@@ -76,6 +76,7 @@ pkg_tar(
         ":libexec",
         ":share_doc",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

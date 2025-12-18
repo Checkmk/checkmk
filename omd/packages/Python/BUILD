@@ -232,6 +232,7 @@ pkg_tar(
     name = "python_tar",
     srcs = [":python_files_pkg"],
     package_file_name = "python.tar",
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

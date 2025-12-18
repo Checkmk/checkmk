@@ -71,6 +71,7 @@ pkg_tar(
         ":skel_crontab",
         ":skel_diskspace",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

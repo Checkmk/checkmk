@@ -39,6 +39,7 @@ pkg_tar(
         ":share",
         ":xinetd_bin",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

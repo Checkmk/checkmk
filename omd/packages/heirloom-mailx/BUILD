@@ -28,6 +28,7 @@ pkg_tar(
     ],
     extension = "tar.gz",
     package_file_name = "share/man/man1/heirloom-mailx.1.gz",
+    stamp = 1,
     tags = ["manual"],
 )
 
@@ -55,6 +56,7 @@ pkg_tar(
         ":mailx_link",
         ":share_pkg",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

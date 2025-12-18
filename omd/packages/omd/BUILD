@@ -269,5 +269,6 @@ pkg_tar(
         "skel/tmp/lock",
         "skel/tmp/run",
     ],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )

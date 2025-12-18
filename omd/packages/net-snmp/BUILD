@@ -104,6 +104,7 @@ pkg_tar(
         ":net-snmp_files_pkg",
     ],
     package_file_name = "net-snmp.tar",
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__subpackages__"],
 )

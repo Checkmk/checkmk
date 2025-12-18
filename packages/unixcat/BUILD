@@ -34,6 +34,7 @@ pkg_tar(
     srcs = [
         ":unixcat_pkg",
     ],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )
 

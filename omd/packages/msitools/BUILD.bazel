@@ -65,6 +65,7 @@ pkg_tar(
         ":bin",
         ":without_bin",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

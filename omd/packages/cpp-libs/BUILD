@@ -15,6 +15,7 @@ pkg_tar(
     srcs = [
         "cpp-libs-pkg",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

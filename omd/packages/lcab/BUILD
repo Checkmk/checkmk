@@ -16,6 +16,7 @@ pkg_tar(
     srcs = [
         "lcab_bin",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

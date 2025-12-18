@@ -165,6 +165,7 @@ pkg_tar(
         ":xmlsec1_additional_libs",
         ":xmlsec1_libs_base",
     ] + [":lib_symlink_%s" % link for link in lib_symlinks],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

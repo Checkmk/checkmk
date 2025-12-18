@@ -111,6 +111,7 @@ pkg_files(
 pkg_tar(
     name = "cmk-frontend",
     srcs = [":frontend_dist_pkg"],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )
 

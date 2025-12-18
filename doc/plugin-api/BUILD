@@ -32,6 +32,7 @@ pkg_tar(
         ":plugin-api",
     ],
     package_dir = "share/doc/check_mk/plugin-api/html",
+    stamp = 1,
     strip_prefix = "plugin-api_html",
     visibility = ["//omd:__pkg__"],
 )

@@ -164,6 +164,7 @@ package_wheel(
 
 pkg_tar(
     name = "pkg_tar",
+    stamp = 1,
     visibility = ["//omd:__subpackages__"],
     deps = [
         ":wheel_pkg",

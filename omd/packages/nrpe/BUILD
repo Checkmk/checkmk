@@ -18,6 +18,7 @@ pkg_tar(
     srcs = [
         ":check_nrpe",
     ],
+    stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )

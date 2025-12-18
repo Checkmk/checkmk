@@ -37,5 +37,6 @@ pkg_tar(
         ":readme",
         ":templates",
     ],
+    stamp = 1,
     visibility = ["//omd:__pkg__"],
 )

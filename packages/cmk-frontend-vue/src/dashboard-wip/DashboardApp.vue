@@ -60,9 +60,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const props = defineProps<DashboardPageProperties>()
 
-const isDashboardEditingMode = ref(false)
+const isDashboardEditingMode = ref(props.mode === 'edit_layout')
 const openDashboardFilterSettings = ref(false)
-const openDashboardSettings = ref(props.mode === 'settings')
+const openDashboardSettings = ref(props.mode === 'edit_settings')
 const openAddWidgetDialog = ref(false)
 const openDashboardCreationDialog = ref(props.mode === 'create')
 const openDashboardCloneDialog = ref(props.mode === 'clone')

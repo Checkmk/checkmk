@@ -55,7 +55,7 @@ def _render_dashboard_buttons(request: Request) -> Callable[[DashboardName, Dash
                         [
                             ("owner", owner),
                             ("name", dashboard_name),
-                            ("edit", "1"),
+                            ("mode", "edit_layout"),
                         ],
                         "dashboard.py",
                     ),

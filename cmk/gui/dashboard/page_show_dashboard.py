@@ -69,24 +69,28 @@ __all__ = ["ajax_dashlet", "AjaxInitialDashboardFilters"]
 
 
 def page_dashboard_app(ctx: PageContext) -> None:
-    mode: Literal["display", "create", "clone", "settings"] = (
-        "display"  # edit mode lives within the page
-    )
+    # edit mode lives within the page
+    mode: Literal["display", "create", "clone", "edit_settings", "edit_layout"] = "display"
 
     if ctx.request.var("mode") == "create":
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to create dashboards."))
         mode = "create"
 
-    elif ctx.request.var("mode") == "edit_settings":
-        if not user.may("general.edit_dashboards"):
-            raise MKAuthException(_("You are not allowed to edit dashboards."))
-        mode = "settings"
-
     elif ctx.request.var("mode") == "clone":
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to clone dashboards."))
         mode = "clone"
+
+    elif ctx.request.var("mode") == "edit_settings":
+        if not user.may("general.edit_dashboards"):
+            raise MKAuthException(_("You are not allowed to edit dashboards."))
+        mode = "edit_settings"
+
+    elif ctx.request.var("mode") == "edit_layout":
+        if not user.may("general.edit_dashboards"):
+            raise MKAuthException(_("You are not allowed to edit dashboards."))
+        mode = "edit_layout"
 
     name = ctx.request.get_ascii_input_mandatory("name", "")
 
@@ -95,7 +99,11 @@ def page_dashboard_app(ctx: PageContext) -> None:
         ctx.request.set_var("name", name)  # TODO: this must be done on the frontend side
 
     loaded_dashboard_properties = None
-    if mode in {"display", "settings", "clone"}:
+    if mode == "create":
+        visual_name: VisualTypeName = "dashboards"
+        title = _("Create dashboard")
+        breadcrumb = visual_page_breadcrumb(visual_name, title, "create")
+    else:
         permitted_dashboards = get_permitted_dashboards()
         board = load_dashboard(permitted_dashboards, name)
         requested_context = requested_context_from_request(["host", "service"])
@@ -124,10 +132,6 @@ def page_dashboard_app(ctx: PageContext) -> None:
                 "application_mode": "overwrite" if ctx.request.has_var("active_") else "merge",
             },
         }
-    else:
-        visual_name: VisualTypeName = "dashboards"
-        title = _("Create dashboard")
-        breadcrumb = visual_page_breadcrumb(visual_name, title, "create")
 
     html.body_start()
     html.begin_page_content(enable_scrollbar=True)

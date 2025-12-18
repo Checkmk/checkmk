@@ -162,7 +162,7 @@ class VisualTypeDashboards(VisualType):
             add_dashlet(embedded_view_dashlet, dashboard)
             # Directly go to the dashboard in edit mode. We send the URL as an answer
             # to the AJAX request
-            response.set_data("OK dashboard.py?name=" + target_visual_name + "&edit=1")
+            response.set_data("OK dashboard.py?name=" + target_visual_name + "&mode=edit_layout")
             return None
 
         # We don't know if what we get as parameters actually fits a DashletConfig.
@@ -178,7 +178,7 @@ class VisualTypeDashboards(VisualType):
 
         # Directly go to the dashboard in edit mode. We send the URL as an answer
         # to the AJAX request
-        response.set_data("OK dashboard.py?name=" + target_visual_name + "&edit=1")
+        response.set_data("OK dashboard.py?name=" + target_visual_name + "&mode=edit_layout")
 
     @override
     def visuals(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:

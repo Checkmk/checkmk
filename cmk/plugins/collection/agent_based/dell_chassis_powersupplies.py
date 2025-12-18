@@ -35,7 +35,7 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_dell_chassis_powersupplies(section: StringTable) -> DiscoveryResult:
+def discover_dell_chassis_powersupplies(section: StringTable) -> DiscoveryResult:
     inventory = []
     for line in section:
         item = re.sub(r"\.", "-", line[0])
@@ -76,6 +76,6 @@ snmp_section_dell_chassis_powersupplies = SimpleSNMPSection(
 check_plugin_dell_chassis_powersupplies = CheckPlugin(
     name="dell_chassis_powersupplies",
     service_name="Power Supply %s",
-    discovery_function=inventory_dell_chassis_powersupplies,
+    discovery_function=discover_dell_chassis_powersupplies,
     check_function=check_dell_chassis_powersupplies,
 )

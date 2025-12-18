@@ -764,3 +764,73 @@ class TestCompleteAction:
             expect_ok=True,
         )
         assert "objects/background_job" in resp.headers["Location"]
+
+
+@pytest.mark.parametrize(
+    "perm",
+    [(["general.use"]), (None)],
+)
+def test_validate_permission(clients: ClientRegistry, perm: list[str] | None) -> None:
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                configure_components=[
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
+                ],
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[recaps.recaps_form_spec],
+                        next_button_label="Next",
+                        permissions=perm,
+                    )
+                ],
+            ),
+        ],
+    )
+    res = clients.QuickSetup.run_stage_action(
+        quick_setup_id="quick_setup_test",
+        stage_action_id="action",
+        stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],
+    )
+    assert res.json["validation_errors"] is None
+    assert res.json["background_job_exception"] is None
+    assert res.json["stage_recap"][0]["id"] == "formspec_unique_id"
+    assert res.json["stage_recap"][0]["form_spec"]["data"]["bundle_id"] == "test_account_name"
+
+
+def test_fail_validate_permission(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                configure_components=[
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
+                ],
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[recaps.recaps_form_spec],
+                        next_button_label="Next",
+                        permissions=["impossible_permisson"],
+                    )
+                ],
+            ),
+        ],
+    )
+    resp = clients.QuickSetup.run_stage_action(
+        quick_setup_id="quick_setup_test",
+        stage_action_id="action",
+        stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],
+        expect_ok=False,
+    )
+
+    assert resp.status_code == 403
+    assert resp.json["title"] == "Action not allowed"
+    assert (
+        resp.json["detail"]
+        == "Action with id 'action' requires 'impossible_permisson' permissions."
+    )

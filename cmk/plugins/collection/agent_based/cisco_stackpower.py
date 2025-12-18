@@ -56,7 +56,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_cisco_stackpower(section: StringTable) -> DiscoveryResult:
+def discover_cisco_stackpower(section: StringTable) -> DiscoveryResult:
     yield from (
         Service(item="{} {}".format(oid.split(".")[0], port_name))
         for oid, port_oper_status, _port_link_status, port_name in section
@@ -97,6 +97,6 @@ snmp_section_cisco_stackpower = SimpleSNMPSection(
 check_plugin_cisco_stackpower = CheckPlugin(
     name="cisco_stackpower",
     service_name="Stackpower Interface %s",
-    discovery_function=inventory_cisco_stackpower,
+    discovery_function=discover_cisco_stackpower,
     check_function=check_cisco_stackpower,
 )

@@ -100,6 +100,9 @@ genrule(
             $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
+
+        chmod +w python3-modules
+
 	tar cf $@ -C python3-modules .
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
     tags = ["manual"],

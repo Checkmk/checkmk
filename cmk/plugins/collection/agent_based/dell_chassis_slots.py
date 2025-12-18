@@ -31,7 +31,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_dell_chassis_slots(section: StringTable) -> DiscoveryResult:
+def discover_dell_chassis_slots(section: StringTable) -> DiscoveryResult:
     inventory = []
     for line in section:
         number = line[3]
@@ -77,6 +77,6 @@ snmp_section_dell_chassis_slots = SimpleSNMPSection(
 check_plugin_dell_chassis_slots = CheckPlugin(
     name="dell_chassis_slots",
     service_name="Slot %s",
-    discovery_function=inventory_dell_chassis_slots,
+    discovery_function=discover_dell_chassis_slots,
     check_function=check_dell_chassis_slots,
 )

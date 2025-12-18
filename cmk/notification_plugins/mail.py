@@ -673,6 +673,8 @@ def _get_bulk_summary(all_contexts_updated: list[dict[str, str]]) -> list[dict[s
         "SERVICESTATE",
         "LINKEDSERVICEDESC",
         "SHORTDATETIME",
+        "LASTHOSTSTATECHANGE",
+        "LASTSERVICESTATECHANGE",
     }
 
     keys_to_substitute = {"HOSTNAME_AND_ALIAS_HTML", "LINKEDSERVICEDESC"}

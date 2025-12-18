@@ -33,7 +33,7 @@ def parse_statgrab_cpu(string_table: StringTable) -> CPUInfo | None:
     )
 
 
-def inventory_statgrab_cpu(section: CPUInfo) -> DiscoveryResult:
+def discover_statgrab_cpu(section: CPUInfo) -> DiscoveryResult:
     yield Service()
 
 
@@ -56,7 +56,7 @@ agent_section_statgrab_cpu = AgentSection(
 check_plugin_statgrab_cpu = CheckPlugin(
     name="statgrab_cpu",
     service_name="CPU utilization",
-    discovery_function=inventory_statgrab_cpu,
+    discovery_function=discover_statgrab_cpu,
     check_function=check_statgrab_cpu,
     check_ruleset_name="cpu_iowait",
     check_default_parameters={},

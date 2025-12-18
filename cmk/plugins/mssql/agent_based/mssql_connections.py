@@ -43,7 +43,7 @@ def parse_mssql_connections(string_table: StringTable) -> MSSQLConnections:
     return MSSQLConnections(parsed)
 
 
-def inventory_mssql_connections(section: MSSQLConnections) -> DiscoveryResult:
+def discover_mssql_connections(section: MSSQLConnections) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
@@ -72,7 +72,7 @@ agent_section_mssql_connections = AgentSection(
 check_plugin_mssql_connections = CheckPlugin(
     name="mssql_connections",
     service_name="MSSQL Connections %s",
-    discovery_function=inventory_mssql_connections,
+    discovery_function=discover_mssql_connections,
     check_function=check_mssql_connections,
     check_ruleset_name="mssql_connections",
     check_default_parameters=CheckParams(

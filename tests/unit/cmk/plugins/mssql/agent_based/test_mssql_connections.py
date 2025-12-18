@@ -10,7 +10,7 @@ from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.mssql.agent_based.mssql_connections import (
     check_plugin_mssql_connections,
     CheckParams,
-    inventory_mssql_connections,
+    discover_mssql_connections,
     MSSQLConnections,
     parse_mssql_connections,
 )
@@ -46,9 +46,9 @@ def test_parse_mssql_connections(string_table: StringTable, expected: MSSQLConne
     assert parsed == expected
 
 
-def test_inventory_mssql_connections() -> None:
+def test_discover_mssql_connections() -> None:
     section = parse_mssql_connections(STRING_TABLE)
-    assert {service.item for service in inventory_mssql_connections(section)} == {
+    assert {service.item for service in discover_mssql_connections(section)} == {
         "FOO DBa",
         "FOO DBb",
     }

@@ -207,7 +207,6 @@ LEGACY_CHECKS = [
     "emerson_temp",
     "emka_modules",
     "enterasys_cpu_util",
-    "enterasys_fans",
     "enterasys_lsnat",
     "enterasys_powersupply",
     "enterasys_temp",

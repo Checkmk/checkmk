@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.casa.lib import DETECT_CASA
 
 
-def inventory_casa_power(section: StringTable) -> DiscoveryResult:
+def discover_casa_power(section: StringTable) -> DiscoveryResult:
     yield from (Service(item=str(idx)) for idx in range(len(section)))
 
 
@@ -58,6 +58,6 @@ snmp_section_casa_power = SimpleSNMPSection(
 check_plugin_casa_power = CheckPlugin(
     name="casa_power",
     service_name="Power %s",
-    discovery_function=inventory_casa_power,
+    discovery_function=discover_casa_power,
     check_function=check_casa_power,
 )

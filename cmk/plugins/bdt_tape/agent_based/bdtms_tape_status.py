@@ -18,11 +18,11 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_bdtms_tape_info(section: StringTable) -> DiscoveryResult:
+def discover_bdtms_tape_status(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
-def check_bdtms_tape_info(section: StringTable) -> CheckResult:
+def check_bdtms_tape_status(section: StringTable) -> CheckResult:
     _activity_id, health_id = section[0]
 
     health = {
@@ -58,6 +58,6 @@ snmp_section_bdtms_tape_status = SimpleSNMPSection(
 check_plugin_bdtms_tape_status = CheckPlugin(
     name="bdtms_tape_status",
     service_name="Tape Library Status",
-    discovery_function=inventory_bdtms_tape_info,
-    check_function=check_bdtms_tape_info,
+    discovery_function=discover_bdtms_tape_status,
+    check_function=check_bdtms_tape_status,
 )

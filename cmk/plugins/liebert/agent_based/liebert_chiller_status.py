@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_liebert_chiller_status(section: StringTable) -> DiscoveryResult:
+def discover_liebert_chiller_status(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -45,6 +45,6 @@ snmp_section_liebert_chiller_status = SimpleSNMPSection(
 check_plugin_liebert_chiller_status = CheckPlugin(
     name="liebert_chiller_status",
     service_name="Chiller status",
-    discovery_function=inventory_liebert_chiller_status,
+    discovery_function=discover_liebert_chiller_status,
     check_function=check_liebert_chiller_status,
 )

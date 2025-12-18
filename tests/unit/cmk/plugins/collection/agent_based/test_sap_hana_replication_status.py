@@ -9,7 +9,10 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
+from cmk.plugins.collection.agent_based.sap_hana_replication_status import (
+    check_plugin_sap_hana_replication_status,
+    parse_sap_hana_replication_status,
+)
 from cmk.plugins.sap_hana.lib import ParsedSection
 
 
@@ -46,12 +49,10 @@ from cmk.plugins.sap_hana.lib import ParsedSection
     ],
 )
 def test_parse_sap_hana_replication_status(
-    agent_based_plugins: AgentBasedPlugins,
     info: StringTable,
     expected_result: ParsedSection,
 ) -> None:
-    section_plugin = agent_based_plugins.agent_sections[SectionName("sap_hana_replication_status")]
-    assert section_plugin.parse_function(info) == expected_result
+    assert parse_sap_hana_replication_status(info) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -84,13 +85,13 @@ def test_parse_sap_hana_replication_status(
     ],
 )
 def test_discovery_sap_hana_replication_status(
-    agent_based_plugins: AgentBasedPlugins, info: StringTable, expected_result: DiscoveryResult
+    info: StringTable, expected_result: DiscoveryResult
 ) -> None:
-    section = agent_based_plugins.agent_sections[
-        SectionName("sap_hana_replication_status")
-    ].parse_function(info)
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_replication_status")]
-    assert list(plugin.discovery_function(section)) == expected_result
+    section = parse_sap_hana_replication_status(info)
+    assert (
+        list(check_plugin_sap_hana_replication_status.discovery_function(section))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -119,13 +120,12 @@ def test_discovery_sap_hana_replication_status(
     ],
 )
 def test_check_sap_hana_replication_status(
-    agent_based_plugins: AgentBasedPlugins,
     item: str,
     info: StringTable,
     expected_result: CheckResult,
 ) -> None:
-    section = agent_based_plugins.agent_sections[
-        SectionName("sap_hana_replication_status")
-    ].parse_function(info)
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_replication_status")]
-    assert list(plugin.check_function(item, {}, section)) == expected_result
+    section = parse_sap_hana_replication_status(info)
+    assert (
+        list(check_plugin_sap_hana_replication_status.check_function(item, {}, section))
+        == expected_result
+    )

@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
 
-from cmk.agent_based.v2 import Service
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
+from cmk.base.legacy_checks.ucs_c_rack_server_psu import (
+    inventory_ucs_c_rack_server_psu_voltage,
+    parse_ucs_c_rack_server_psu,
+)
 
 SECTION = """
 equipmentPsu	dn sys/rack-unit-7/psu-2	id 2	model UCSC-PSU1-1050W	operability operable	voltage ok
@@ -13,16 +16,9 @@ equipmentPsu	dn sys/switch-B/psu-1	id 1	model UCS-PSU-6332-AC	operability operab
 """
 
 
-def test_discovery_does_not_discover_UCS_voltage_unknown(
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
+def test_discovery_does_not_discover_UCS_voltage_unknown() -> None:
     # see SUP-11285
     string_table = [line.split("\t") for line in SECTION.strip().split("\n")]
-    discovery_function = agent_based_plugins.check_plugins[
-        CheckPluginName("ucs_c_rack_server_psu_voltage")
-    ].discovery_function
-    parse_function = agent_based_plugins.agent_sections[
-        SectionName("ucs_c_rack_server_psu")
-    ].parse_function
-    section = parse_function(string_table)
-    assert list(discovery_function(section)) == [Service(item="Rack Unit 7 PSU 2")]
+    section = parse_ucs_c_rack_server_psu(string_table)
+    result = list(inventory_ucs_c_rack_server_psu_voltage(section))
+    assert result == [("Rack Unit 7 PSU 2", {})]

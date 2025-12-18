@@ -55,7 +55,7 @@ snmp_section_brocade_mlx_power = SNMPSection(
 )
 
 
-def inventory_brocade_mlx_power(section: Section) -> DiscoveryResult:
+def discover_brocade_mlx_power(section: Section) -> DiscoveryResult:
     yield from (Service(item=powersupply_id) for powersupply_id in section)
 
 
@@ -80,6 +80,6 @@ def check_brocade_mlx_power(item: str, section: Section) -> CheckResult:
 check_plugin_brocade_mlx_power = CheckPlugin(
     name="brocade_mlx_power",
     service_name="Power supply %s",
-    discovery_function=inventory_brocade_mlx_power,
+    discovery_function=discover_brocade_mlx_power,
     check_function=check_brocade_mlx_power,
 )

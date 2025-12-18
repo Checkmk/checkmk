@@ -10,7 +10,7 @@ import pytest
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State, StringTable
 from cmk.plugins.oracle.agent_based.oracle_jobs import (
     check_oracle_jobs,
-    inventory_oracle_jobs,
+    discover_oracle_jobs,
     parse_oracle_jobs,
 )
 
@@ -29,7 +29,7 @@ _broken_info = [
     ],
 )
 def test_oracle_jobs_discovery_error(info: StringTable) -> None:
-    assert not list(inventory_oracle_jobs(parse_oracle_jobs(info)))
+    assert not list(discover_oracle_jobs(parse_oracle_jobs(info)))
 
 
 @pytest.mark.parametrize(
@@ -73,7 +73,7 @@ _STRING_TABLE_CDB_NONCDB = [
 
 
 def test_discovery_cdb_noncdb() -> None:
-    assert list(inventory_oracle_jobs(parse_oracle_jobs(_STRING_TABLE_CDB_NONCDB))) == [
+    assert list(discover_oracle_jobs(parse_oracle_jobs(_STRING_TABLE_CDB_NONCDB))) == [
         Service(item="CDB.CDB$ROOT.SYS.AUTO_SPACE_ADVISOR_JOB"),
         Service(item="NONCDB.SYS.AUTO_SPACE_ADVISOR_JOB"),
     ]
@@ -144,7 +144,7 @@ INFO = [
 
 
 def test_discovery() -> None:
-    assert list(inventory_oracle_jobs(parse_oracle_jobs(INFO))) == [
+    assert list(discover_oracle_jobs(parse_oracle_jobs(INFO))) == [
         Service(item="DB19.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB")
     ]
 
@@ -211,7 +211,7 @@ INFO2 = [
 
 
 def test_discovery2() -> None:
-    assert list(inventory_oracle_jobs(parse_oracle_jobs(INFO2))) == [
+    assert list(discover_oracle_jobs(parse_oracle_jobs(INFO2))) == [
         Service(item="ORCLCDB.CDB$ROOT.SYS.PURGE_LOG"),
         Service(item="ORCLCDB.CDB$ROOT.SYS.CLEANUP_ONLINE_PMO"),
     ]

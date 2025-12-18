@@ -51,7 +51,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_oracle_jobs(section: StringTable) -> DiscoveryResult:
+def discover_oracle_jobs(section: StringTable) -> DiscoveryResult:
     for line in section:
         if len(line) <= 2:
             continue
@@ -286,7 +286,7 @@ agent_section_oracle_jobs = AgentSection(
 check_plugin_oracle_jobs = CheckPlugin(
     name="oracle_jobs",
     service_name="ORA %s Job",
-    discovery_function=inventory_oracle_jobs,
+    discovery_function=discover_oracle_jobs,
     check_function=check_oracle_jobs,
     check_ruleset_name="oracle_jobs",
     check_default_parameters={

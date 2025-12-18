@@ -74,7 +74,7 @@ def parse_ibm_tl_media_access_devices(string_table: Sequence[StringTable]) -> Se
     return parsed
 
 
-def inventory_ibm_tl_media_access_devices(section: Section) -> DiscoveryResult:
+def discover_ibm_tl_media_access_devices(section: Section) -> DiscoveryResult:
     for device in section:
         yield Service(item=device)
 
@@ -114,6 +114,6 @@ snmp_section_ibm_tl_media_access_devices = SNMPSection(
 check_plugin_ibm_tl_media_access_devices = CheckPlugin(
     name="ibm_tl_media_access_devices",
     service_name="Media access device %s",
-    discovery_function=inventory_ibm_tl_media_access_devices,
+    discovery_function=discover_ibm_tl_media_access_devices,
     check_function=check_ibm_tl_media_access_devices,
 )

@@ -53,7 +53,7 @@ def parse_cisco_asa_conn(string_table: Sequence[StringTable]) -> Section:
     return network_interfaces
 
 
-def inventory_cisco_asa_conn(section: Section) -> DiscoveryResult:
+def discover_cisco_asa_conn(section: Section) -> DiscoveryResult:
     for if_index, if_data in section.items():
         if if_data.admin_status == "1" and if_data.ip_address is not None:
             yield Service(item=if_index)
@@ -133,6 +133,6 @@ snmp_section_cisco_asa_conn = SNMPSection(
 check_plugin_cisco_asa_conn = CheckPlugin(
     name="cisco_asa_conn",
     service_name="Connection %s",
-    discovery_function=inventory_cisco_asa_conn,
+    discovery_function=discover_cisco_asa_conn,
     check_function=check_cisco_asa_conn,
 )

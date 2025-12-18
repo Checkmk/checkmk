@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.cisco_asa_conn import (
     check_cisco_asa_conn,
-    inventory_cisco_asa_conn,
+    discover_cisco_asa_conn,
     NetworkInterfaceData,
     parse_cisco_asa_conn,
     Section,
@@ -46,8 +46,8 @@ def test_parse_cisco_asa_conn() -> None:
     assert parsed_section == parse_cisco_asa_conn(string_table)
 
 
-def test_inventory_cisco_asa_conn() -> None:
-    inventory: Sequence[Service] = list(inventory_cisco_asa_conn(parsed_section))
+def test_discover_cisco_asa_conn() -> None:
+    inventory: Sequence[Service] = list(discover_cisco_asa_conn(parsed_section))
 
     assert len(inventory) == 3
     assert inventory[0].item == "14"

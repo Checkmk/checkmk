@@ -26,7 +26,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_dmraid_ldisks(section: StringTable) -> DiscoveryResult:
+def discover_dmraid_ldisks(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=line[2]) for line in section if line[0] == "name"]
 
 
@@ -81,7 +81,7 @@ check_plugin_dmraid_ldisks = CheckPlugin(
     name="dmraid_ldisks",
     service_name="RAID LDisk %s",
     sections=["dmraid"],
-    discovery_function=inventory_dmraid_ldisks,
+    discovery_function=discover_dmraid_ldisks,
     check_function=check_dmraid_ldisks,
 )
 check_plugin_dmraid_pdisks = CheckPlugin(

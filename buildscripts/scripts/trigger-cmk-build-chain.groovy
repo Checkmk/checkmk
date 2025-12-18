@@ -182,7 +182,7 @@ void main() {
                     raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        relative_job_name: "${branch_base_folder}/builders/test-component-mk-oracle",
+                        relative_job_name: "${edition_base_folder}/test-component-mk-oracle",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,

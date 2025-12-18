@@ -13,7 +13,7 @@ import pytest
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.aws.agent_based.aws_dynamodb_table_latency import (
     check_aws_dynamodb_latency,
-    inventory_aws_dynamodb_latency,
+    discover_aws_dynamodb_latency,
 )
 
 test_section = {
@@ -35,8 +35,8 @@ test_params: Mapping[str, tuple[float, float]] = {
 }
 
 
-def test_inventory_aws_dynamodb_latency():
-    inventory = list(inventory_aws_dynamodb_latency(test_section))
+def test_discover_aws_dynamodb_latency():
+    inventory = list(discover_aws_dynamodb_latency(test_section))
     assert len(inventory) == 1  # Always only one Service
     assert isinstance(inventory[0], Service)
 

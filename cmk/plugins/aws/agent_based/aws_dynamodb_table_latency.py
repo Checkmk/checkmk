@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.aws.lib import discover_aws_generic_single
 
 
-def inventory_aws_dynamodb_latency(section: Mapping[str, float]) -> DiscoveryResult:
+def discover_aws_dynamodb_latency(section: Mapping[str, float]) -> DiscoveryResult:
     yield from discover_aws_generic_single(
         section,
         [
@@ -69,7 +69,7 @@ check_plugin_aws_dynamodb_table_latency = CheckPlugin(
     name="aws_dynamodb_table_latency",
     service_name="AWS/DynamoDB Latency",
     sections=["aws_dynamodb_table"],
-    discovery_function=inventory_aws_dynamodb_latency,
+    discovery_function=discover_aws_dynamodb_latency,
     check_function=check_aws_dynamodb_latency,
     check_ruleset_name="aws_dynamodb_latency",
     check_default_parameters={},

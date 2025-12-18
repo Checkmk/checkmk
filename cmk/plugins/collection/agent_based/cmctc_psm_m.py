@@ -71,7 +71,7 @@ def parse_cmctc_psm_m(string_table: Sequence[StringTable]) -> Section:
     return section
 
 
-def inventory_cmctc_psm_m(section: Section) -> DiscoveryResult:
+def discover_cmctc_psm_m(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
@@ -114,6 +114,6 @@ snmp_section_cmctc_psm_m = SNMPSection(
 check_plugin_cmctc_psm_m = CheckPlugin(
     name="cmctc_psm_m",
     service_name="CMC %s",
-    discovery_function=inventory_cmctc_psm_m,
+    discovery_function=discover_cmctc_psm_m,
     check_function=check_cmctc_psm_m,
 )

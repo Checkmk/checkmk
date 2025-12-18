@@ -334,7 +334,7 @@ def test_registered_configvar_groups() -> None:
         "User management",
         "Support",
         "Developer Tools",
-        "Product Telemetry",
+        "Product telemetry",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:

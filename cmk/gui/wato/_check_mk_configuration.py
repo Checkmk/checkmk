@@ -116,7 +116,10 @@ from cmk.gui.watolib.rulespecs import (
     ServiceRulespec,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
-from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
+from cmk.gui.watolib.translation import (
+    HostnameTranslation,
+    ServiceDescriptionTranslation,
+)
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
@@ -124,7 +127,11 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 from ._check_plugin_selection import CheckPluginSelection
-from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
+from ._group_selection import (
+    ContactGroupSelection,
+    HostGroupSelection,
+    ServiceGroupSelection,
+)
 from ._http_proxy import HTTPProxyInput
 
 
@@ -1855,12 +1862,12 @@ ConfigVariableProductTelemetry = ConfigVariable(
     primary_domain=ConfigDomainCore,
     ident="product_telemetry",
     valuespec=lambda context: Dictionary(
-        title=_("Product Telemetry"),
+        title=_("Product telemetry"),
         elements=[
             (
                 "enable_telemetry",
                 DropdownChoice(
-                    title=_("Enable Product Telemetry"),
+                    title=_("Enable product telemetry"),
                     help=_(
                         "Consent to product telemetry data collection. "
                         "By default, this is disabled, the user will be asked for consent via pop-up. "

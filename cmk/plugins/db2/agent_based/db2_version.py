@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_db2_version(section: StringTable) -> DiscoveryResult:
+def discover_db2_version(section: StringTable) -> DiscoveryResult:
     for line in section:
         yield Service(item=line[0].split(" ", 1)[0])
 
@@ -48,6 +48,6 @@ agent_section_db2_version = AgentSection(name="db2_version", parse_function=pars
 check_plugin_db2_version = CheckPlugin(
     name="db2_version",
     service_name="DB2 Instance %s",
-    discovery_function=inventory_db2_version,
+    discovery_function=discover_db2_version,
     check_function=check_db2_version,
 )

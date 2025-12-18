@@ -5,17 +5,16 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Container, Iterable, Iterator, Mapping
+from collections.abc import Container, Iterator, Mapping
 from dataclasses import dataclass
-from importlib.metadata import entry_points
-from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.discover_plugins import discover_families, PluginLocation
+from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import internal, v1
 from cmk.utils import password_store
 
 from ._commons import ExecutableFinderProtocol, replace_passwords, SecretsConfig
+from ._relay_compatibility import NotSupportedError, PluginFamily
 from .config_processing import (
     GlobalProxiesWithLookup,
     OAuth2Connection,
@@ -24,18 +23,9 @@ from .config_processing import (
 
 
 @dataclass(frozen=True)
-class PluginFamily:
-    name: str
-
-
-@dataclass(frozen=True)
 class SpecialAgentCommandLine:
     cmdline: str
     stdin: str | None = None
-
-
-class NotSupportedError(ValueError):
-    pass
 
 
 class SpecialAgent:
@@ -117,21 +107,3 @@ class SpecialAgent:
                 raise NotSupportedError("This special agent is not supported on relays.")
 
         yield from self._iter_commands(special_agent, params)
-
-
-def relay_compatible_plugin_families(local_root: Path) -> Container[PluginFamily]:
-    return [
-        *(
-            PluginFamily(ep.name)
-            for ep in entry_points(group="cmk.special_agent_supported_on_relay")
-        ),
-        *_discover_local_plugin_families(local_root),
-    ]
-
-
-def _discover_local_plugin_families(local_root: Path) -> Iterable[PluginFamily]:
-    return [
-        PluginFamily(module.split(".")[2])
-        for module, (first_path, *_) in discover_families(raise_errors=False).items()
-        if first_path.startswith(str(local_root))
-    ]

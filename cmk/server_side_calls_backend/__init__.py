@@ -14,7 +14,10 @@ from ._commons import SecretsConfig as SecretsConfig
 from ._commons import SSCRules as SSCRules
 from ._loading import load_active_checks as load_active_checks
 from ._loading import load_special_agents as load_special_agents
-from ._special_agents import PluginFamily as PluginFamily
-from ._special_agents import relay_compatible_plugin_families as relay_compatible_plugin_families
+from ._relay_compatibility import NotSupportedError as NotSupportedError
+from ._relay_compatibility import PluginFamily as PluginFamily
+from ._relay_compatibility import (
+    relay_compatible_plugin_families as relay_compatible_plugin_families,
+)
 from ._special_agents import SpecialAgent as SpecialAgent
 from ._special_agents import SpecialAgentCommandLine as SpecialAgentCommandLine

@@ -19,11 +19,6 @@ from .builtin_dashboards import builtin_dashboards
 from .community_dashboards import register_builtin_dashboards
 from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
 from .page_create_dashboard import page_create_dashboard
-from .page_create_view_dashlet import (
-    page_create_link_view_dashlet,
-    page_create_view_dashlet,
-    page_create_view_dashlet_infos,
-)
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_edit_dashlet import EditDashletPage
@@ -70,11 +65,6 @@ def register(
     page_registry.register(PageEndpoint("edit_dashboard", page_edit_dashboard))
     page_registry.register(PageEndpoint(PAGE_EDIT_DASHBOARDS_LINK, page_edit_dashboards))
     page_registry.register(PageEndpoint("create_dashboard", page_create_dashboard))
-    page_registry.register(PageEndpoint("create_link_view_dashlet", page_create_link_view_dashlet))
-    page_registry.register(PageEndpoint("create_view_dashlet", page_create_view_dashlet))
-    page_registry.register(
-        PageEndpoint("create_view_dashlet_infos", page_create_view_dashlet_infos)
-    )
 
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint(FigureWidgetTokenAuthPage.ident(), FigureWidgetTokenAuthPage())

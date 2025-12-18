@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_dell_eql_storage(section: StringTable) -> DiscoveryResult:
+def discover_dell_eql_storage(section: StringTable) -> DiscoveryResult:
     for line in section:
         yield Service(item=line[0])
 
@@ -120,6 +120,6 @@ snmp_section_dell_eql_storage = SimpleSNMPSection(
 check_plugin_dell_eql_storage = CheckPlugin(
     name="dell_eql_storage",
     service_name="Storage %s",
-    discovery_function=inventory_dell_eql_storage,
+    discovery_function=discover_dell_eql_storage,
     check_function=check_dell_eql_storage,
 )

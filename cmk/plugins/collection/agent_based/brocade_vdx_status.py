@@ -26,7 +26,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_brocade_vdx_status(section: StringTable) -> DiscoveryResult:
+def discover_brocade_vdx_status(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -75,6 +75,6 @@ snmp_section_brocade_vdx_status = SimpleSNMPSection(
 check_plugin_brocade_vdx_status = CheckPlugin(
     name="brocade_vdx_status",
     service_name="Status",
-    discovery_function=inventory_brocade_vdx_status,
+    discovery_function=discover_brocade_vdx_status,
     check_function=check_brocade_vdx_status,
 )

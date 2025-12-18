@@ -18,6 +18,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     DictGroup,
     Dictionary,
+    FieldSize,
     FixedValue,
     InputHint,
     Integer,
@@ -834,6 +835,7 @@ def _valuespec_endpoints() -> List:
                 "url": DictElement(
                     parameter_form=String(
                         title=Title("URL"),
+                        field_size=FieldSize.LARGE,
                         help_text=Help(
                             "The URL to monitor. This URL must include the protocol (HTTP or "
                             "HTTPS), the full address and, if needed, also the port of the endpoint "

@@ -20,6 +20,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     DictGroup,
     Dictionary,
+    FieldSize,
     FixedValue,
     InputHint,
     Integer,
@@ -125,6 +126,7 @@ def _valuespec_specific_values() -> Dictionary:
             "serialnumber": DictElement[str](
                 parameter_form=String(
                     title=Title("Serial number"),
+                    field_size=FieldSize.LARGE,
                     help_text=Help(
                         "The serial number needs to be in colon-separated hex format, as also "
                         "shown by 'openssl x509'. The format is not case sensitive."

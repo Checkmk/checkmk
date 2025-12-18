@@ -197,7 +197,6 @@ LEGACY_CHECKS = [
     "eltek_outdoor_temp",
     "emc_datadomain_fs",
     "emc_datadomain_mtree",
-    "emc_datadomain_power",
     "emc_datadomain_temps",
     "emc_isilon_cpu",
     "emc_isilon_diskstatus",

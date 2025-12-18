@@ -26,21 +26,17 @@ from cmk.gui.crash_handler import GUIDetails
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
 from cmk.gui.graphing import MKCombinedGraphLimitExceededError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import (
-    make_simple_link,
-    PageMenuLink,
-)
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualContext, VisualTypeName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
@@ -361,52 +357,6 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
             }
 
         return _minimal_context(_get_mandatory_filters(board, set()), board["context"])
-
-
-def _dashboard_add_dashlet_back_http_var(request: Request) -> tuple[str, str]:
-    return "back", makeuri(request, [("edit", "1")])
-
-
-def _dashboard_add_view_dashlet_link(
-    request: Request,
-    owner: UserId,
-    name: DashboardName,
-    create: Literal["0", "1"],
-    filename: str,
-) -> PageMenuLink:
-    return make_simple_link(
-        makeuri_contextless(
-            request,
-            [
-                ("owner", owner),
-                ("name", name),
-                ("create", create),
-                _dashboard_add_dashlet_back_http_var(request),
-            ],
-            filename=filename,
-        )
-    )
-
-
-def _dashboard_add_non_view_dashlet_link(
-    request: Request,
-    owner: UserId,
-    name: DashboardName,
-    dashlet_type: str,
-) -> PageMenuLink:
-    return make_simple_link(
-        makeuri_contextless(
-            request,
-            [
-                ("owner", owner),
-                ("name", name),
-                ("create", "0"),
-                _dashboard_add_dashlet_back_http_var(request),
-                ("type", dashlet_type),
-            ],
-            filename="edit_dashlet.py",
-        )
-    )
 
 
 def get_dashlet_type(dashlet_spec: DashletConfig) -> type[Dashlet]:

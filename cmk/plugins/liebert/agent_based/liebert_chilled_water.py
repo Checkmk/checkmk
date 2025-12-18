@@ -28,7 +28,7 @@ from cmk.plugins.liebert.agent_based.lib import (
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.100.4980 Inactive Event
 
 
-def inventory_liebert_chilled_water(section: SectionWithoutUnit[str]) -> DiscoveryResult:
+def discover_liebert_chilled_water(section: SectionWithoutUnit[str]) -> DiscoveryResult:
     for key in section:
         if key:
             yield Service(item=key)
@@ -62,6 +62,6 @@ snmp_section_liebert_chilled_water = SimpleSNMPSection(
 check_plugin_liebert_chilled_water = CheckPlugin(
     name="liebert_chilled_water",
     service_name="%s",
-    discovery_function=inventory_liebert_chilled_water,
+    discovery_function=discover_liebert_chilled_water,
     check_function=check_liebert_chilled_water,
 )

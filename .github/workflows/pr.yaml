@@ -69,7 +69,7 @@ jobs:
             - name: Cache uv
               uses: actions/cache@v3
               with:
-                  key: uv-${{ matrix.os }}-${{ hashFiles('requirements_all_lock.txt') }}
+                  key: uv-${{ matrix.os }}-${{ hashFiles('community-requirements.txt') }}
                   path: ${{ env.UV_CACHE_DIR  }}
             - name: Cache bazelisk
               uses: actions/cache@v3

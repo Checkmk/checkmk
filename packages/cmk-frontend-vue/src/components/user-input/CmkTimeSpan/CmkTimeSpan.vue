@@ -98,7 +98,7 @@ const localValidation = ref<Array<string>>([])
       <input
         v-model="values[magnitude]"
         :placeholder="getPlaceholder(magnitude)"
-        class="form-time-span__number form-time-span__no-spinner"
+        class="cmk-time-span__number cmk-time-span__no-spinner"
         step="any"
         size="5"
         type="number"
@@ -111,20 +111,15 @@ const localValidation = ref<Array<string>>([])
 <style scoped>
 .cmk-time-span__no-spinner::-webkit-outer-spin-button,
 .cmk-time-span__no-spinner::-webkit-inner-spin-button {
-  appearance: none;
-  margin: 0;
+  display: none;
 }
 
 .cmk-time-span__number {
   text-align: right;
 }
 
-.cmk-time-span__no-spinner[type='number'] {
-  appearance: textfield;
-}
-
 input {
-  width: 4.8ex;
+  width: 5.8ex;
 }
 
 label {

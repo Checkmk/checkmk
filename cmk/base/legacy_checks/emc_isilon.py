@@ -3,25 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 from collections.abc import Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_ISILON
-
-check_info = {}
 
 
 def parse_emc_isilon(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
     return string_table if any(string_table) else None
 
 
-check_info["emc_isilon"] = LegacyCheckDefinition(
+snmp_section_emc_isilon = SNMPSection(
     name="emc_isilon",
-    parse_function=parse_emc_isilon,
     detect=DETECT_ISILON,
     fetch=[
         SNMPTree(
@@ -33,34 +37,35 @@ check_info["emc_isilon"] = LegacyCheckDefinition(
             oids=["1", "2"],
         ),
     ],
+    parse_function=parse_emc_isilon,
 )
 
 
 #   .--ClusterHealth------------------------------------------------------.
 
 
-def inventory_emc_isilon_clusterhealth(info):
-    return [(None, None)]
+def discover_emc_isilon_clusterhealth(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield Service()
 
 
-def check_emc_isilon_clusterhealth(item, _no_params, info):
-    status = int(info[0][0][1])
+def check_emc_isilon_clusterhealth(section: Sequence[StringTable]) -> CheckResult:
+    status = int(section[0][0][1])
     statusmap = ("ok", "attn", "down", "invalid")
     if status >= len(statusmap):
-        return 3, "ClusterHealth reports unidentified status %s" % status
+        yield Result(
+            state=State.UNKNOWN, summary=f"ClusterHealth reports unidentified status {status}"
+        )
+        return
 
-    if status == 0:
-        rc = 0
-    else:
-        rc = 2
-    return rc, "ClusterHealth reports status %s" % statusmap[status]
+    state = State.OK if status == 0 else State.CRIT
+    yield Result(state=state, summary=f"ClusterHealth reports status {statusmap[status]}")
 
 
-check_info["emc_isilon.clusterhealth"] = LegacyCheckDefinition(
+check_plugin_emc_isilon_clusterhealth = CheckPlugin(
     name="emc_isilon_clusterhealth",
     service_name="Cluster Health",
     sections=["emc_isilon"],
-    discovery_function=inventory_emc_isilon_clusterhealth,
+    discovery_function=discover_emc_isilon_clusterhealth,
     check_function=check_emc_isilon_clusterhealth,
 )
 
@@ -68,29 +73,31 @@ check_info["emc_isilon.clusterhealth"] = LegacyCheckDefinition(
 #   .--NodeHealth------------------------------------------------------.
 
 
-def inventory_emc_isilon_nodehealth(info):
-    return [(None, None)]
+def discover_emc_isilon_nodehealth(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield Service()
 
 
-def check_emc_isilon_nodehealth(item, _no_params, info):
-    status = int(info[1][0][1])
+def check_emc_isilon_nodehealth(section: Sequence[StringTable]) -> CheckResult:
+    status = int(section[1][0][1])
     statusmap = ("ok", "attn", "down", "invalid")
-    nodename = info[1][0][0]
+    nodename = section[1][0][0]
     if status >= len(statusmap):
-        return 3, "nodeHealth reports unidentified status %s" % status
+        yield Result(
+            state=State.UNKNOWN, summary=f"nodeHealth reports unidentified status {status}"
+        )
+        return
 
-    if status == 0:
-        rc = 0
-    else:
-        rc = 2
-    return rc, f"nodeHealth for {nodename} reports status {statusmap[status]}"
+    state = State.OK if status == 0 else State.CRIT
+    yield Result(
+        state=state, summary=f"nodeHealth for {nodename} reports status {statusmap[status]}"
+    )
 
 
-check_info["emc_isilon.nodehealth"] = LegacyCheckDefinition(
+check_plugin_emc_isilon_nodehealth = CheckPlugin(
     name="emc_isilon_nodehealth",
     service_name="Node Health",
     sections=["emc_isilon"],
-    discovery_function=inventory_emc_isilon_nodehealth,
+    discovery_function=discover_emc_isilon_nodehealth,
     check_function=check_emc_isilon_nodehealth,
 )
 
@@ -98,24 +105,23 @@ check_info["emc_isilon.nodehealth"] = LegacyCheckDefinition(
 #   .--Nodes------------------------------------------------------.
 
 
-def inventory_emc_isilon_nodes(info):
-    return [(None, None)]
+def discover_emc_isilon_nodes(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield Service()
 
 
-def check_emc_isilon_nodes(item, _no_params, info):
-    _cluster_name, _cluster_health, configured_nodes, online_nodes = info[0][0]
-    if configured_nodes == online_nodes:
-        rc = 0
-    else:
-        rc = 2
-    return rc, f"Configured Nodes: {configured_nodes} / Online Nodes: {online_nodes}"
+def check_emc_isilon_nodes(section: Sequence[StringTable]) -> CheckResult:
+    _cluster_name, _cluster_health, configured_nodes, online_nodes = section[0][0]
+    state = State.OK if configured_nodes == online_nodes else State.CRIT
+    yield Result(
+        state=state, summary=f"Configured Nodes: {configured_nodes} / Online Nodes: {online_nodes}"
+    )
 
 
-check_info["emc_isilon.nodes"] = LegacyCheckDefinition(
+check_plugin_emc_isilon_nodes = CheckPlugin(
     name="emc_isilon_nodes",
     service_name="Nodes",
     sections=["emc_isilon"],
-    discovery_function=inventory_emc_isilon_nodes,
+    discovery_function=discover_emc_isilon_nodes,
     check_function=check_emc_isilon_nodes,
 )
 
@@ -123,19 +129,22 @@ check_info["emc_isilon.nodes"] = LegacyCheckDefinition(
 #   .--Cluster- and Node Name-------------------------------------------.
 
 
-def inventory_emc_isilon_names(info):
-    return [(None, None)]
+def discover_emc_isilon_names(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield Service()
 
 
-def check_emc_isilon_names(item, _no_params, info):
-    return 0, f"Cluster Name is {info[0][0][0]}, Node Name is {info[1][0][0]}"
+def check_emc_isilon_names(section: Sequence[StringTable]) -> CheckResult:
+    yield Result(
+        state=State.OK,
+        summary=f"Cluster Name is {section[0][0][0]}, Node Name is {section[1][0][0]}",
+    )
 
 
-check_info["emc_isilon.names"] = LegacyCheckDefinition(
+check_plugin_emc_isilon_names = CheckPlugin(
     name="emc_isilon_names",
     service_name="Isilon Info",
     sections=["emc_isilon"],
-    discovery_function=inventory_emc_isilon_names,
+    discovery_function=discover_emc_isilon_names,
     check_function=check_emc_isilon_names,
 )
 

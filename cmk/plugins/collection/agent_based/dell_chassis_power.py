@@ -32,7 +32,7 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_dell_chassis_power(section: StringTable) -> DiscoveryResult:
+def discover_dell_chassis_power(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -70,6 +70,6 @@ snmp_section_dell_chassis_power = SimpleSNMPSection(
 check_plugin_dell_chassis_power = CheckPlugin(
     name="dell_chassis_power",
     service_name="Chassis Power",
-    discovery_function=inventory_dell_chassis_power,
+    discovery_function=discover_dell_chassis_power,
     check_function=check_dell_chassis_power,
 )

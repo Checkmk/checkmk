@@ -26,7 +26,7 @@ avaya_chassis_card_operstatus_codes = {
 }
 
 
-def inventory_avaya_chassis_card(section: StringTable) -> DiscoveryResult:
+def discover_avaya_chassis_card(section: StringTable) -> DiscoveryResult:
     for line in section:
         yield Service(item=line[0])
 
@@ -55,6 +55,6 @@ snmp_section_avaya_chassis_card = SimpleSNMPSection(
 check_plugin_avaya_chassis_card = CheckPlugin(
     name="avaya_chassis_card",
     service_name="Card %s",
-    discovery_function=inventory_avaya_chassis_card,
+    discovery_function=discover_avaya_chassis_card,
     check_function=check_avaya_chassis_card,
 )

@@ -45,7 +45,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_aironet_clients(section: StringTable) -> DiscoveryResult:
+def discover_aironet_clients(section: StringTable) -> DiscoveryResult:
     if not section:
         return
     yield Service(item="strength")
@@ -123,6 +123,6 @@ snmp_section_aironet_clients = SimpleSNMPSection(
 check_plugin_aironet_clients = CheckPlugin(
     name="aironet_clients",
     service_name="Average client signal %s",
-    discovery_function=inventory_aironet_clients,
+    discovery_function=discover_aironet_clients,
     check_function=check_aironet_clients,
 )

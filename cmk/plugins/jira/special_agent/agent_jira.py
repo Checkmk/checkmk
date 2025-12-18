@@ -71,7 +71,7 @@ def _handle_jira_connection(args):
 
 
 def _handle_request(args, jira):
-    if args.project_workflows_key:
+    if args.project_workflows_project:
         logging.info("Retrieving workflow data")
         workflow_output = _handle_project(jira, args)
         if workflow_output is not None:
@@ -88,8 +88,8 @@ def _handle_project(jira, args):
     projects = [
         {"Name": k, "Workflow": v}
         for k, v in zip(
-            args.project_workflows_key,
-            args.project_workflows_values,
+            args.project_workflows_project,
+            args.project_workflows_workflows,
         )
     ]
 

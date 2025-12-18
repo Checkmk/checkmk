@@ -1,4 +1,4 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:replace_string_in_file.bzl", "replace_string_in_file")
@@ -234,26 +234,9 @@ pkg_mklink(
     target = "../init.d/xinetd",
 )
 
-pkg_tar(
-    name = "omd",
-    srcs = [
-        ":bash_completion_link",
-        ":doc",
-        ":hooks",
-        ":lib",
-        ":lib_755",
-        ":man",
-        ":omd_init_pkg",
-        ":omd_main_pkg",
-        ":omd_service",
-        ":omdlib",
-        ":skel",
-        ":xinetd_link",
-    ] + select({
-        "@cmk//distro:incompatible-openssl": ["wrapper_" + executable for executable in WRAPPED_EXECUTABLES],
-        "//conditions:default": [],
-    }),
-    empty_dirs = [
+pkg_mkdirs(
+    name = "empty_dirs",
+    dirs = [
         "lib/omd/scripts/post-create",
         "skel/.restore_working_dir",
         "skel/etc/omd",
@@ -269,6 +252,28 @@ pkg_tar(
         "skel/tmp/lock",
         "skel/tmp/run",
     ],
+)
+
+pkg_tar(
+    name = "omd",
+    srcs = [
+        ":bash_completion_link",
+        ":doc",
+        ":empty_dirs",
+        ":hooks",
+        ":lib",
+        ":lib_755",
+        ":man",
+        ":omd_init_pkg",
+        ":omd_main_pkg",
+        ":omd_service",
+        ":omdlib",
+        ":skel",
+        ":xinetd_link",
+    ] + select({
+        "@cmk//distro:incompatible-openssl": ["wrapper_" + executable for executable in WRAPPED_EXECUTABLES],
+        "//conditions:default": [],
+    }),
     stamp = 1,
     visibility = ["//omd:__pkg__"],
 )

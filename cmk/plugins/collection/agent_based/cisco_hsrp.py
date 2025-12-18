@@ -72,7 +72,7 @@ from cmk.agent_based.v2 import (
 hsrp_states = {1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby", 6: "active"}
 
 
-def inventory_cisco_hsrp(section: StringTable) -> DiscoveryResult:
+def discover_cisco_hsrp(section: StringTable) -> DiscoveryResult:
     for line in section:
         hsrp_grp_entry, vip, _actrouter, _sbrouter, r_hsrp_state, _vmac = line
         _interface_index, hsrp_grp = hsrp_grp_entry.split(".")
@@ -140,7 +140,7 @@ snmp_section_cisco_hsrp = SimpleSNMPSection(
 check_plugin_cisco_hsrp = CheckPlugin(
     name="cisco_hsrp",
     service_name="HSRP Group %s",
-    discovery_function=inventory_cisco_hsrp,
+    discovery_function=discover_cisco_hsrp,
     check_function=check_cisco_hsrp,
     check_default_parameters={},
 )

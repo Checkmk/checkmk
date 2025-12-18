@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.dell.lib import DETECT_CHASSIS
 
 
-def inventory_dell_chassis_kvm(section: StringTable) -> DiscoveryResult:
+def discover_dell_chassis_kvm(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -54,6 +54,6 @@ snmp_section_dell_chassis_kvm = SimpleSNMPSection(
 check_plugin_dell_chassis_kvm = CheckPlugin(
     name="dell_chassis_kvm",
     service_name="Overall KVM Status",
-    discovery_function=inventory_dell_chassis_kvm,
+    discovery_function=discover_dell_chassis_kvm,
     check_function=check_dell_chassis_kvm,
 )

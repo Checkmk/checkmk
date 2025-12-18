@@ -73,7 +73,7 @@ snmp_section_blade_blades = SimpleSNMPSection(
 )
 
 
-def inventory_blade_blades(section: Section) -> DiscoveryResult:
+def discover_blade_blades(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item, blade in section.items() if blade.power == "1")
 
 
@@ -124,6 +124,6 @@ def check_blade_blades(item: str, section: Section) -> CheckResult:
 check_plugin_blade_blades = CheckPlugin(
     name="blade_blades",
     service_name="Blade %s",
-    discovery_function=inventory_blade_blades,
+    discovery_function=discover_blade_blades,
     check_function=check_blade_blades,
 )

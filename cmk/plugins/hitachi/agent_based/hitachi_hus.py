@@ -101,7 +101,7 @@ def parse_hitachi_hus_dku(string_table: StringTable) -> Section:
     }
 
 
-def inventory_hitachi_hus(section: Section) -> DiscoveryResult:
+def discover_hitachi_hus(section: Section) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
@@ -128,7 +128,7 @@ snmp_section_hitachi_hus_dkc = SimpleSNMPSection(
 check_plugin_hitachi_hus_dkc = CheckPlugin(
     name="hitachi_hus_dkc",
     service_name="HUS DKC Chassis %s",
-    discovery_function=inventory_hitachi_hus,
+    discovery_function=discover_hitachi_hus,
     check_function=check_hitachi_hus,
 )
 
@@ -147,6 +147,6 @@ snmp_section_hitachi_hus_dku = SimpleSNMPSection(
 check_plugin_hitachi_hus_dku = CheckPlugin(
     name="hitachi_hus_dku",
     service_name="HUS DKU Chassis %s",
-    discovery_function=inventory_hitachi_hus,
+    discovery_function=discover_hitachi_hus,
     check_function=check_hitachi_hus,
 )

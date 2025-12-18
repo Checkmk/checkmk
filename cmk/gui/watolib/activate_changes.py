@@ -245,11 +245,6 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
-            ident="auth.secret",
-            site_path=os.path.relpath(cmk.utils.paths.auth_secret_file, cmk.utils.paths.omd_root),
-        ),
-        ReplicationPath.make(
-            ty=ReplicationPathType.FILE,
             ident="password_store.secret",
             site_path=os.path.relpath(
                 cmk.utils.paths.password_store_secret_file, cmk.utils.paths.omd_root

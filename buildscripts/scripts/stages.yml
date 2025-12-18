@@ -213,6 +213,12 @@ VARIABLES:
 
     - NAME: CHANGED_CMK_PLUGIN_APIS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugin-apis/' || true"
+    - NAME: CHANGED_OTEL_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/otel-collector/' || true"
+
+    - NAME: CHANGED_GO_MOD
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^go.mod' || true"
+
 
     - NAME: CHANGED_CMK_PLUGINS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugins/' || true"
@@ -713,6 +719,14 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-otel-collector files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-otel-collector.txt"
+
+    - NAME: "Package otel-collector"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_OTEL_FILES, CHANGED_GO_MOD
+      DIR: "non-free/packages/otel-collector"
+      COMMAND: "./run --all &> ${RESULTS}/otel-collector.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No otel-collector files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/otel-collector.txt"
 
     - NAME: "Package cmk-werks"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS

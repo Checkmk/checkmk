@@ -6,7 +6,7 @@
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.dell_om_processors import (
     check_dell_om_processors,
-    inventory_dell_om_processors,
+    discover_dell_om_processors,
     parse_dell_om_processors,
 )
 
@@ -29,7 +29,7 @@ def _section() -> Section:
 
 
 def test_discovery() -> None:
-    assert list(inventory_dell_om_processors(_section())) == [
+    assert list(discover_dell_om_processors(_section())) == [
         Service(item="1"),
         Service(item="2"),
         Service(item="3"),

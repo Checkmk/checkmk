@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 
 
-def inventory_dell_om_processors(section: StringTable) -> DiscoveryResult:
+def discover_dell_om_processors(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=x[0]) for x in section if x[1] != "4" and x[0] != ""]
 
 
@@ -91,6 +91,6 @@ snmp_section_dell_om_processors = SimpleSNMPSection(
 check_plugin_dell_om_processors = CheckPlugin(
     name="dell_om_processors",
     service_name="Processor %s",
-    discovery_function=inventory_dell_om_processors,
+    discovery_function=discover_dell_om_processors,
     check_function=check_dell_om_processors,
 )

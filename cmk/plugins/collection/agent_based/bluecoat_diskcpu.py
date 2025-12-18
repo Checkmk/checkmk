@@ -52,7 +52,7 @@ snmp_section_bluecoat_diskcpu = SimpleSNMPSection(
 )
 
 
-def inventory_bluecoat_diskcpu(section: Section) -> DiscoveryResult:
+def discover_bluecoat_diskcpu(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name in section)
 
 
@@ -71,6 +71,6 @@ def check_bluecoat_diskcpu(item: str, section: Section) -> CheckResult:
 check_plugin_bluecoat_diskcpu = CheckPlugin(
     name="bluecoat_diskcpu",
     service_name="%s",  # will be "Disk" or "CPU" :-(
-    discovery_function=inventory_bluecoat_diskcpu,
+    discovery_function=discover_bluecoat_diskcpu,
     check_function=check_bluecoat_diskcpu,
 )

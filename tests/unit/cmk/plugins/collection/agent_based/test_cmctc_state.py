@@ -6,7 +6,7 @@
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.cmctc_state import (
     check_cmctc_state,
-    inventory_cmctc_state,
+    discover_cmctc_state,
     parse_cmctc_state,
 )
 
@@ -27,7 +27,7 @@ def _section_unknown() -> StringTable:
 
 
 def test_discovery_ok() -> None:
-    assert list(inventory_cmctc_state(_section_ok())) == [Service()]
+    assert list(discover_cmctc_state(_section_ok())) == [Service()]
 
 
 def test_check_ok() -> None:

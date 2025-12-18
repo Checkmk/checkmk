@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from .detection import DETECT_BLADE_BX
 
 
-def inventory_blade_bx_blades(section: StringTable) -> DiscoveryResult:
+def discover_blade_bx_blades(section: StringTable) -> DiscoveryResult:
     for id_, status, _serial, _name in section:
         if status != "3":  # blade not present
             yield Service(item=id_)
@@ -62,6 +62,6 @@ snmp_section_blade_bx_blades = SimpleSNMPSection(
 check_plugin_blade_bx_blades = CheckPlugin(
     name="blade_bx_blades",
     service_name="Blade %s",
-    discovery_function=inventory_blade_bx_blades,
+    discovery_function=discover_blade_bx_blades,
     check_function=check_blade_bx_blades,
 )

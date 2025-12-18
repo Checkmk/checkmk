@@ -147,6 +147,7 @@ const getSearchInputPlaceholder = computed(() => {
             class="unified-search-input"
             :aria-label="getSearchInputPlaceholder"
             :placeholder="getSearchInputPlaceholder"
+            autocomplete="one-time-code"
             @input="onInput"
             @keydown.delete="checkEmptyBackspace"
             @keydown.enter="onInputEnter"

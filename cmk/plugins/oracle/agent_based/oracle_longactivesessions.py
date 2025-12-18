@@ -28,7 +28,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_oracle_longactivesessions(section: StringTable) -> DiscoveryResult:
+def discover_oracle_longactivesessions(section: StringTable) -> DiscoveryResult:
     yield from (Service(item=line[0]) for line in section)
 
 
@@ -79,7 +79,7 @@ agent_section_oracle_longactivesessions = AgentSection(
 check_plugin_oracle_longactivesessions = CheckPlugin(
     name="oracle_longactivesessions",
     service_name="ORA %s Long Active Sessions",
-    discovery_function=inventory_oracle_longactivesessions,
+    discovery_function=discover_oracle_longactivesessions,
     check_function=check_oracle_longactivesessions,
     check_ruleset_name="oracle_longactivesessions",
     check_default_parameters={

@@ -6,7 +6,7 @@
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.oracle.agent_based.oracle_longactivesessions import (
     check_oracle_longactivesessions,
-    inventory_oracle_longactivesessions,
+    discover_oracle_longactivesessions,
     parse_oracle_longactivesessions,
 )
 
@@ -38,7 +38,7 @@ INFO = [
 
 
 def test_discovery() -> None:
-    assert list(inventory_oracle_longactivesessions(parse_oracle_longactivesessions(INFO))) == [
+    assert list(discover_oracle_longactivesessions(parse_oracle_longactivesessions(INFO))) == [
         Service(item="orcl"),
         Service(item="orcl"),
         Service(item="orcl1"),

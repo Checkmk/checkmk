@@ -9,8 +9,14 @@
 
 import re
 from collections.abc import Callable, Mapping
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.sap_hana import lib as sap_hana
 
 check_info = {}
@@ -22,8 +28,19 @@ _SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
 }
 
 
-def parse_sap_hana_connect(string_table):
-    parsed: dict[str, dict] = {}
+class Instance(TypedDict):
+    server_node: str
+    driver_version: str
+    timestamp: str
+    cmk_state: int
+    message: str
+
+
+type Section = Mapping[str, Instance]
+
+
+def parse_sap_hana_connect(string_table: StringTable) -> Section:
+    parsed: dict[str, Instance] = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         inst = parsed.setdefault(
             sid_instance,
@@ -56,7 +73,7 @@ def parse_sap_hana_connect(string_table):
     return parsed
 
 
-def check_sap_hana_connect(item, params, parsed):
+def check_sap_hana_connect(item: str, _no_params: object, parsed: Section) -> LegacyCheckResult:
     if not (data := parsed.get(item)):
         return
     state = data["cmk_state"]
@@ -69,7 +86,7 @@ def check_sap_hana_connect(item, params, parsed):
     yield state, message
 
 
-def discover_sap_hana_connect(section):
+def discover_sap_hana_connect(section: Section) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 

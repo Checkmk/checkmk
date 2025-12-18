@@ -4,68 +4,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable
-
-import pytest
-
-from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
-from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
-    CheckFunction,
-    CheckPlugin,
-    CheckPluginName,
+from cmk.base.legacy_checks.fireeye_quarantine import (
+    check_fireeye_quarantine,
+    discover_fireeye_quarantine,
 )
-
-type DiscoveryFunction = Callable[..., DiscoveryResult]
-
-_PLUGIN = CheckPluginName("fireeye_quarantine")
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name="plugin")
-def _get_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
-    return agent_based_plugins.check_plugins[_PLUGIN]
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name=f"discover_{_PLUGIN}")
-def _get_discovery_function(plugin: CheckPlugin) -> DiscoveryFunction:
-    return lambda s: plugin.discovery_function(section=s)
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name=f"check_{_PLUGIN}")
-def _get_check_function(plugin: CheckPlugin) -> CheckFunction:
-    return lambda p, s: plugin.check_function(params=p, section=s)
-
 
 SECTION = [["42"]]
 
 
-def test_discover_nothing(discover_fireeye_quarantine: DiscoveryFunction) -> None:
+def test_discover_nothing() -> None:
     assert not list(discover_fireeye_quarantine([]))
 
 
-def test_discover_somehting(discover_fireeye_quarantine: DiscoveryFunction) -> None:
-    assert list(discover_fireeye_quarantine(SECTION)) == [Service()]
+def test_discover_somehting() -> None:
+    assert list(discover_fireeye_quarantine(SECTION)) == [(None, {})]
 
 
-def test_check_ok(check_fireeye_quarantine: CheckFunction) -> None:
-    assert list(check_fireeye_quarantine({"usage": (50, 100)}, SECTION)) == [
-        Result(state=State.OK, summary="Usage: 42.00%"),
-        Metric("quarantine", 42.0, levels=(50.0, 100.0)),
+def test_check_ok() -> None:
+    result = list(check_fireeye_quarantine(None, {"usage": (50, 100)}, SECTION))
+    assert result == [(0, "Usage: 42.00%", [("quarantine", 42.0, 50.0, 100.0)])]
+
+
+def test_check_warn() -> None:
+    result = list(check_fireeye_quarantine(None, {"usage": (23, 50)}, SECTION))
+    assert result == [
+        (
+            1,
+            "Usage: 42.00% (warn/crit at 23.00%/50.00%)",
+            [("quarantine", 42.0, 23.0, 50.0)],
+        )
     ]
 
 
-def test_check_warn(check_fireeye_quarantine: CheckFunction) -> None:
-    assert list(check_fireeye_quarantine({"usage": (23, 50)}, SECTION)) == [
-        Result(state=State.WARN, summary="Usage: 42.00% (warn/crit at 23.00%/50.00%)"),
-        Metric("quarantine", 42.0, levels=(23.0, 50.0)),
-    ]
-
-
-def test_check_crit(check_fireeye_quarantine: CheckFunction) -> None:
-    assert list(check_fireeye_quarantine({"usage": (23, 36)}, SECTION)) == [
-        Result(state=State.CRIT, summary="Usage: 42.00% (warn/crit at 23.00%/36.00%)"),
-        Metric("quarantine", 42.0, levels=(23.0, 36.0)),
+def test_check_crit() -> None:
+    result = list(check_fireeye_quarantine(None, {"usage": (23, 36)}, SECTION))
+    assert result == [
+        (
+            2,
+            "Usage: 42.00% (warn/crit at 23.00%/36.00%)",
+            [("quarantine", 42.0, 23.0, 36.0)],
+        )
     ]

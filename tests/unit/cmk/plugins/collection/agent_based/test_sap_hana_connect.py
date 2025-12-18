@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.checkengine.plugins import AgentBasedPlugins, SectionName
+from cmk.base.legacy_checks.sap_hana_connect import parse_sap_hana_connect
 
 INFO_0 = [
     ["[[YYY 11]]"],
@@ -37,13 +37,8 @@ INFO_1 = [
 
 
 @pytest.mark.parametrize("info", [INFO_0, INFO_1])
-def test_sap_hana_connect_missing_serverdb(
-    agent_based_plugins: AgentBasedPlugins, info: StringTable
-) -> None:
-    parse_function = agent_based_plugins.agent_sections[
-        SectionName("sap_hana_connect")
-    ].parse_function
-    assert parse_function(info) == {
+def test_sap_hana_connect_missing_serverdb(info: StringTable) -> None:
+    assert parse_sap_hana_connect(info) == {
         "YYY 11": {
             "cmk_state": 0,
             "driver_version": "02.12.0025 (2022-05-06).",

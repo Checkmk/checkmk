@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.fireeye.lib import DETECT
 
@@ -14,15 +18,19 @@ check_info = {}
 
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
+type Section = StringTable
 
-def discover_fireeye_quarantine(string_table):
-    if string_table:
+
+def discover_fireeye_quarantine(section: Section) -> LegacyDiscoveryResult:
+    if section:
         yield None, {}
 
 
-def check_fireeye_quarantine(_no_item, params, info):
+def check_fireeye_quarantine(
+    _no_item: None, params: Mapping[str, tuple[float, float] | None], info: Section
+) -> LegacyCheckResult:
     usage = int(info[0][0])
-    return check_levels(
+    yield check_levels(
         usage,
         "quarantine",
         params["usage"],
@@ -31,7 +39,7 @@ def check_fireeye_quarantine(_no_item, params, info):
     )
 
 
-def parse_fireeye_quarantine(string_table: StringTable) -> StringTable:
+def parse_fireeye_quarantine(string_table: StringTable) -> Section:
     return string_table
 
 

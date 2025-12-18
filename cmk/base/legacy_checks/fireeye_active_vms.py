@@ -3,24 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.fireeye import lib as fireeye
 
 check_info = {}
 
+type Section = StringTable
 
-def discover_fireeye_active_vms(string_table):
-    if string_table:
+
+def discover_fireeye_active_vms(section: Section) -> LegacyDiscoveryResult:
+    if section:
         yield None, {}
 
 
-def check_fireeye_active_vms(_no_item, params, info):
+def check_fireeye_active_vms(
+    _no_item: None, params: Mapping[str, tuple[float, float] | None], info: Section
+) -> LegacyCheckResult:
     value = int(info[0][0])
-    return check_levels(
+    yield check_levels(
         value,
         "active_vms",
         params["vms"],
@@ -29,7 +38,7 @@ def check_fireeye_active_vms(_no_item, params, info):
     )
 
 
-def parse_fireeye_active_vms(string_table: StringTable) -> StringTable:
+def parse_fireeye_active_vms(string_table: StringTable) -> Section:
     return string_table
 
 

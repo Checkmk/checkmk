@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_dell_idrac_power(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_dell_idrac_power(section: Sequence[StringTable]) -> DiscoveryResult:
     for index, _status, _count in section[0]:
         yield Service(item=index)
 
@@ -66,12 +66,12 @@ snmp_section_dell_idrac_power = SNMPSection(
 check_plugin_dell_idrac_power = CheckPlugin(
     name="dell_idrac_power",
     service_name="Power Supply Redundancy %s",
-    discovery_function=inventory_dell_idrac_power,
+    discovery_function=discover_dell_idrac_power,
     check_function=check_dell_idrac_power,
 )
 
 
-def inventory_dell_idrac_power_unit(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_dell_idrac_power_unit(section: Sequence[StringTable]) -> DiscoveryResult:
     for index, _status, _psu_type, _location in section[1]:
         yield Service(item=index)
 
@@ -115,6 +115,6 @@ check_plugin_dell_idrac_power_unit = CheckPlugin(
     name="dell_idrac_power_unit",
     service_name="Power Supply %s",
     sections=["dell_idrac_power"],
-    discovery_function=inventory_dell_idrac_power_unit,
+    discovery_function=discover_dell_idrac_power_unit,
     check_function=check_dell_idrac_power_unit,
 )

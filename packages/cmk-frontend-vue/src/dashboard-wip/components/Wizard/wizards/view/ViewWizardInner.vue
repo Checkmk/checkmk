@@ -80,6 +80,17 @@ const emit = defineEmits<{
   ]
 }>()
 
+// Stage 1
+const filterDefinitions = useFilterDefinitions()
+const initialFilters = props.editWidgetSpec ? props.editWidgetSpec.filter_context.filters : {}
+const widgetFilterManager = useWidgetFilterManager(initialFilters, filterDefinitions)
+
+const selectedDatasource = ref<string | null>(getDefaultDatasource())
+const contextInfos = ref<string[]>([])
+const restrictedToSingleInfos = ref<string[]>(getDefaultRestrictedToSingle())
+const originalViewName = ref<string | null>(null)
+const referencedViewName = ref<string | null>(getDefaultReferencedViewName())
+
 watchEffect(() => {
   if (props.editWidgetSpec) {
     let datasourceName: string | undefined
@@ -158,17 +169,6 @@ function getDefaultContent(): EmbeddedViewContent | LinkedViewContent | undefine
 }
 
 const widgetId = ref<string>(getDefaultWidgetId())
-
-// Stage 1
-const filterDefinitions = useFilterDefinitions()
-const initialFilters = props.editWidgetSpec ? props.editWidgetSpec.filter_context.filters : {}
-const widgetFilterManager = useWidgetFilterManager(initialFilters, filterDefinitions)
-
-const selectedDatasource = ref<string | null>(getDefaultDatasource())
-const contextInfos = ref<string[]>([])
-const restrictedToSingleInfos = ref<string[]>(getDefaultRestrictedToSingle())
-const originalViewName = ref<string | null>(null)
-const referencedViewName = ref<string | null>(getDefaultReferencedViewName())
 
 // Stage 2
 const dataConfigurationMode = ref<DataConfigurationMode>(

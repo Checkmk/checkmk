@@ -22,7 +22,7 @@ def parse_zebra_printer_status(string_table: StringTable) -> str | None:
     return string_table[0][0] if string_table else None
 
 
-def inventory_zebra_printer_status(section: str) -> DiscoveryResult:
+def discover_zebra_printer_status(section: str) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -58,6 +58,6 @@ snmp_section_zebra_printer_status = SimpleSNMPSection(
 check_plugin_zebra_printer_status = CheckPlugin(
     name="zebra_printer_status",
     service_name="Zebra Printer Status",
-    discovery_function=inventory_zebra_printer_status,
+    discovery_function=discover_zebra_printer_status,
     check_function=check_zebra_printer_status,
 )

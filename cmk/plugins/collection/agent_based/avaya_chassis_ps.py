@@ -27,7 +27,7 @@ avaya_chassis_ps_status_codes = {
 }
 
 
-def inventory_avaya_chassis_ps(section: StringTable) -> DiscoveryResult:
+def discover_avaya_chassis_ps(section: StringTable) -> DiscoveryResult:
     for line in section:
         # Discover only installed power supplies
         if line[1] != "2":
@@ -59,6 +59,6 @@ snmp_section_avaya_chassis_ps = SimpleSNMPSection(
 check_plugin_avaya_chassis_ps = CheckPlugin(
     name="avaya_chassis_ps",
     service_name="Power Supply %s",
-    discovery_function=inventory_avaya_chassis_ps,
+    discovery_function=discover_avaya_chassis_ps,
     check_function=check_avaya_chassis_ps,
 )

@@ -701,7 +701,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 and isinstance(wsgi_endpoint, VersionedEndpointAdapter)
                 and token.details.type_ in wsgi_endpoint.endpoint.allowed_tokens
             ):
-                wsgi_endpoint.handle_token_request(token, environ, start_response)
+                return wsgi_endpoint.handle_token_request(token, environ, start_response)
 
             # Only the GUI will persist sessions. You can log into the REST API using GUI
             # credentials, but accessing the REST API will never touch the session store. We also

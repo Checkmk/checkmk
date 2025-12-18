@@ -32,7 +32,7 @@ from cmk.agent_based.v2 import (
 DETECT_NEVER = not_matches(".1.3.6.1.2.1.1.1.0", ".*")
 
 
-def inventory_carel_uniflair_cooling(section: StringTable) -> DiscoveryResult:
+def discover_carel_uniflair_cooling(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -77,6 +77,6 @@ snmp_section_carel_uniflair_cooling = SimpleSNMPSection(
 check_plugin_carel_uniflair_cooling = CheckPlugin(
     name="carel_uniflair_cooling",
     service_name="Carel uniflair cooling",
-    discovery_function=inventory_carel_uniflair_cooling,
+    discovery_function=discover_carel_uniflair_cooling,
     check_function=check_carel_uniflair_cooling,
 )

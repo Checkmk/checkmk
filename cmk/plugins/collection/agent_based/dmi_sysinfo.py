@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_dmi_sysinfo(section: StringTable) -> DiscoveryResult:
+def discover_dmi_sysinfo(section: StringTable) -> DiscoveryResult:
     if len(section) > 0 and section[0] == ["System", "Information"]:
         yield Service()
 
@@ -56,6 +56,6 @@ agent_section_dmi_sysinfo = AgentSection(name="dmi_sysinfo", parse_function=pars
 check_plugin_dmi_sysinfo = CheckPlugin(
     name="dmi_sysinfo",
     service_name="DMI Sysinfo",
-    discovery_function=inventory_dmi_sysinfo,
+    discovery_function=discover_dmi_sysinfo,
     check_function=check_dmi_sysinfo,
 )

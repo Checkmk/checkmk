@@ -227,8 +227,8 @@ class GraphApiClient:
     def _update_tokens_after_refresh(
         self, access_token: str, refresh_token: str, access_token_expires_in: int
     ) -> None:
-        self.refresh_token = Secret(access_token)
-        self.access_token = Secret(refresh_token)
+        self.refresh_token = Secret(refresh_token)
+        self.access_token = Secret(access_token)
         self._storage.write("access_token_expiry", str(access_token_expires_in + int(time.time())))
         self._storage.write("refresh_token_expiry", str(ONE_DAY_IN_SECONDS + int(time.time())))
         self._headers.update(

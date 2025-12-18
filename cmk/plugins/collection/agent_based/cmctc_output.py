@@ -180,7 +180,7 @@ def parse_cmctc_output(string_table: Sequence[StringTable]) -> Section:
     return parsed
 
 
-def inventory_cmctc_output(section: Section) -> DiscoveryResult:
+def discover_cmctc_output(section: Section) -> DiscoveryResult:
     for entry in section:
         yield Service(item=entry)
 
@@ -233,6 +233,6 @@ snmp_section_cmctc_output = SNMPSection(
 check_plugin_cmctc_output = CheckPlugin(
     name="cmctc_output",
     service_name="%s",
-    discovery_function=inventory_cmctc_output,
+    discovery_function=discover_cmctc_output,
     check_function=check_cmctc_output,
 )

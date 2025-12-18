@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_arc_raid_status(section: StringTable) -> DiscoveryResult:
+def discover_arc_raid_status(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=x[0], parameters={"n_disks": int(x[-5])}) for x in section]
 
 
@@ -70,7 +70,7 @@ agent_section_arc_raid_status = AgentSection(
 check_plugin_arc_raid_status = CheckPlugin(
     name="arc_raid_status",
     service_name="Raid Array #%s",
-    discovery_function=inventory_arc_raid_status,
+    discovery_function=discover_arc_raid_status,
     check_function=check_arc_raid_status,
     check_default_parameters={},
 )

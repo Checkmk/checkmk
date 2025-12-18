@@ -106,7 +106,7 @@ export const cmkMultitoneIconVariants = cva('', {
   }
 })
 
-export const unthemedIcons: Partial<Record<IconNames, string>> = {
+export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes', string>> = {
   abort: 'icon_abort.png',
   'about-checkmk': 'icon_about_checkmk.svg',
   accept: 'icon_accept.svg',
@@ -623,6 +623,8 @@ export const unthemedIcons: Partial<Record<IconNames, string>> = {
   'topic-visualization': 'icon_topic_visualization.png',
   trans: 'icon_trans.svg',
   trust: 'icon_trust.png',
+  '2fa': 'icon_2fa.svg',
+  '2fa-backup-codes': 'icon_2fa_backup_codes.svg',
   twofa: 'icon_2fa.svg',
   'twofa-backup-codes': 'icon_2fa_backup_codes.svg',
   'unacknowledge-test': 'icon_unacknowledge_test.png',

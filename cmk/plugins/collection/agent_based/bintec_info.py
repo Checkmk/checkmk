@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_bintec_info(section: StringTable) -> DiscoveryResult:
+def discover_bintec_info(section: StringTable) -> DiscoveryResult:
     if section and section[0]:
         yield Service()
 
@@ -58,6 +58,6 @@ snmp_section_bintec_info = SimpleSNMPSection(
 check_plugin_bintec_info = CheckPlugin(
     name="bintec_info",
     service_name="Bintec Info",
-    discovery_function=inventory_bintec_info,
+    discovery_function=discover_bintec_info,
     check_function=check_bintec_info,
 )

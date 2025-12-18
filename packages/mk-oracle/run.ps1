@@ -77,7 +77,7 @@ function Write-Help() {
     Write-Host "  -f, --format         format  $package_name sources"
     Write-Host "  -F, --check-format   check for  $package_name correct formatting"
     Write-Host "  -B, --build          build binary $package_name"
-    Write-Host "  -T, --test           run  $package_name unit tests"
+    Write-Host "  -T, --component-tests execute  $package_name component tests"
     Write-Host "  -O, --oci            repackage Oracle Instant Client"
     Write-Host "  --shorten link path  change dir from current using link"
     Write-Host ""
@@ -102,7 +102,7 @@ else {
             { $("-F", "--check-format") -contains $_ } { $packCheckFormat = $true }
             { $("-B", "--build") -contains $_ } { $packBuild = $true }
             { $("-C", "--clippy") -contains $_ } { $packClippy = $true }
-            { $("-T", "--test") -contains $_ } { $packTest = $true }
+            { $("-T", "--component-tests") -contains $_ } { $packTest = $true }
             { $("-D", "--documentation") -contains $_ } { $packDoc = $true }
             { $("-O", "--oci") -contains $_ } { $packOci = $true }
             "--clean" { $packClean = $true }
@@ -206,10 +206,6 @@ $result = 1
 try {
     $mainStartTime = Get-Date
 
-    if ( "$env:CI_ORA2_DB_TEST" -eq "" ) {
-        Write-Error "CI_ORA2_DB_TEST environment variable is not set. Please set it to the test registry name." -ErrorAction Stop
-    }
-
     & rustup --version > nul
     if ($LASTEXITCODE -ne 0) {
         Write-Error "rustup not found, please install it and/or add to PATH" -ErrorAction Stop
@@ -244,7 +240,6 @@ try {
                 Set-Content "$runtime_path/.hash" $source_hash -ErrorAction Stop
             }
             Expand-Archive -Path "$arte_dir/$packaged" -DestinationPath "$runtime_path" -Force -ErrorAction Stop
-
         }
         else {
             Write-Host "Failed Oracle runtime light/win/x64: $oci_light_win_x64" -ForegroundColor Red
@@ -273,9 +268,16 @@ try {
         Invoke-Cargo-With-Explicit-Package "fmt" "--" "--check"
     }
     if ($packTest) {
-        # TODO(timi): move it to CI
-        Write-Host "TEST INTEGRATION!" -Foreground White
-        # Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
+        # for local test you may add this
+        # $env:CI_ORA1_DB_TEST="localhost:SYS:Oracle-dba:1521:XE:sysdba::_:_:"
+        Write-Host "Component test!" -Foreground White
+        if ($env:CI_ORA2_DB_TEST_PASSWORD -eq "") {
+            Write-Host "CI_ORA2_DB_TEST_PASSWORD is absent, component testing may fail" -ForegroundColor Red
+        }
+        $pass = $env:CI_ORA2_DB_TEST_PASSWORD
+        $env:CI_ORA2_DB_TEST = "ora-rocktest.dev.checkmk.net:system:${pass}:1521:FREE::FREE.cmkoratest:_:_:"
+        Write-Host "CI_ORA2_DB_TEST set from CI_ORA2_DB_TEST_PASSWORD" -ForegroundColor Green
+        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
     }
     if ($packDoc) {
         Invoke-Cargo-With-Explicit-Package "doc"

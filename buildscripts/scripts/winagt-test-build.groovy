@@ -19,8 +19,8 @@ void main() {
                 credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
                 variable:"CI_TEST_SQL_DB_ENDPOINT"),
             string(
-                credentialsId: "CI_ORA2_DB_TEST",
-                variable:"CI_ORA2_DB_TEST"),
+                credentialsId: "CI_ORA2_DB_TEST_PASSWORD",
+                variable:"CI_ORA2_DB_TEST_PASSWORD"),
         ]) {
             windows.build(
                 TARGET: 'agent_no_sign'

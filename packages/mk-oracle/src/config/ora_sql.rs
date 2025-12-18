@@ -1013,6 +1013,7 @@ oracle:
                 ("backup", SectionKind::Disabled),
             ]
         );
+        // ping the gerrit
         assert_eq!(
             config
                 .valid_sections()

@@ -21,7 +21,6 @@ from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
 from .page_create_dashboard import page_create_dashboard
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
-from .page_edit_dashlet import EditDashletPage
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
 from .page_graph_widget import GraphWidgetPage, GraphWidgetTokenAuthPage
 from .page_show_dashboard import AjaxInitialDashboardFilters, page_dashboard_app
@@ -57,7 +56,6 @@ def register(
     page_registry.register(
         PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters())
     )
-    page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage()))
     page_registry.register(PageEndpoint("dashboard", page_dashboard_app))
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("shared_dashboard", SharedDashboardPage())

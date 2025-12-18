@@ -93,7 +93,6 @@ def test_registered_pages() -> None:
         "edit_bookmark_list",
         "edit_dashboard",
         "edit_dashboards",
-        "edit_dashlet",
         "edit_view",
         "edit_views",
         "export_views",

@@ -22,10 +22,10 @@ const resultList = useTemplateRef('result-list')
 
 const showAllBtnText = computed(() => {
   if (showAll.value) {
-    return _t('Show less')
+    return _t('Show all')
   }
 
-  return _t('Show all')
+  return _t('Show less')
 })
 
 function toggleList() {
@@ -64,7 +64,7 @@ onMounted(() => {
   >
     <span
       class="unified-search-result-list__chevron"
-      :class="`unified-search-result-list__chevron--${showAll ? 'top' : 'bottom'}`"
+      :class="`unified-search-result-list__chevron--${showAll ? 'bottom' : 'top'}`"
     />
     {{ showAllBtnText }}
   </CmkButton>

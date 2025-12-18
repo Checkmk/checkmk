@@ -15,8 +15,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkCollapsible from '@/components/CmkCollapsible'
-import CmkCollapsibleTitle from '@/components/CmkCollapsible/CmkCollapsibleTitle.vue'
+import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -106,7 +105,12 @@ function calcCurrentlySelectedGroup(d: number, set: boolean = false) {
     currentlySelectedGroup.value = curGroupLength - 1
   }
 
-  currentlySelected.value = -1
+  if (d < 0) {
+    const nextGroupLength = getGroupItemLength(currentlySelectedGroup.value)
+    currentlySelected.value = nextGroupLength - 1
+  } else {
+    currentlySelected.value = 0
+  }
 }
 
 function getGroupItemLength(gdx: number): number {
@@ -138,8 +142,10 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
   if (currentlySelected.value === -1 || currentlySelected.value > curGroupLength - 1) {
     currentlySelected.value = -1
 
-    if (searchUtils.result.grouping.value && d > 0) {
+    if (searchUtils.result.grouping.value) {
       calcCurrentlySelectedGroup(d)
+      const nextGroupLength = getGroupItemLength(currentlySelectedGroup.value)
+      currentlySelected.value = d < 0 ? nextGroupLength - 1 : 0
     } else {
       searchUtils.input?.setFocus()
     }
@@ -150,8 +156,6 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
   // Handle out of bounds - too low
   if (currentlySelected.value < -1) {
     if (searchUtils.result.grouping.value) {
-      currentlySelectedGroup.value -= 1
-
       if (currentlySelectedGroup.value === -1) {
         currentlySelected.value = -1
         searchUtils.input?.setFocus()
@@ -266,16 +270,13 @@ function searchResultNotEmpty(): boolean {
     <CmkScrollContainer max-height="calc(100vh - 210px)">
       <template v-if="searchUtils.result.grouping.value">
         <template v-for="(group, gdx) of groupedResults" :key="group.id">
-          <CmkCollapsibleTitle
-            :title="group.title.concat(` (${group.items.length})`) as TranslatedString"
-            :open="group.ref"
-            :icon="group.icon || null"
-            :focus="isFocused(null, gdx)"
-            class="result-group-heading"
-            @toggle-open="group.ref = !group.ref"
-          ></CmkCollapsibleTitle>
-
-          <CmkCollapsible :open="group.ref">
+          <CmkHeading type="h4" class="result-group-heading">
+            <div class="result-group-heading__icon">
+              <CmkDynamicIcon v-if="group.icon" :spec="group.icon" />
+            </div>
+            <span>{{ group.title.concat(` (${group.items.length})`) as TranslatedString }}</span>
+          </CmkHeading>
+          <div>
             <ResultList
               v-model="group.showAll"
               :use-show-all="group.items.length > MAX_ITEMS_SHOW_ALL"
@@ -304,7 +305,7 @@ function searchResultNotEmpty(): boolean {
                 "
               ></ResultItem>
             </ResultList>
-          </CmkCollapsible>
+          </div>
         </template>
       </template>
 
@@ -432,14 +433,13 @@ function searchResultNotEmpty(): boolean {
 
 .result-group-heading {
   text-transform: capitalize;
-  margin-top: var(--dimension-6);
+  margin: var(--dimension-6) 0 var(--dimension-3);
   border: 1px solid transparent;
   display: flex;
   align-items: center;
 
-  &:focus-visible {
-    border: 1px solid var(--success);
-    outline: none;
+  .result-group-heading__icon {
+    margin-right: var(--dimension-4);
   }
 }
 </style>

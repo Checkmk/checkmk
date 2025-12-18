@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.datapower.lib import DETECT
 
 
-def inventory_datapower_ldrive(section: StringTable) -> DiscoveryResult:
+def discover_datapower_ldrive(section: StringTable) -> DiscoveryResult:
     for controller, ldrive, _raid_level, _num_drives, _status in section:
         item = f"{controller}-{ldrive}"
         yield Service(item=item)
@@ -70,6 +70,6 @@ snmp_section_datapower_ldrive = SimpleSNMPSection(
 check_plugin_datapower_ldrive = CheckPlugin(
     name="datapower_ldrive",
     service_name="Logical Drive %s",
-    discovery_function=inventory_datapower_ldrive,
+    discovery_function=discover_datapower_ldrive,
     check_function=check_datapower_ldrive,
 )

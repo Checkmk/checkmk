@@ -249,7 +249,6 @@ LEGACY_CHECKS = [
     "fortigate_sessions_base",
     "fortigate_sessions",
     "fortigate_sslvpn",
-    "fortinet_controller_aps",
     "fortisandbox_cpu_util",
     "fortisandbox_queues",
     "fsc_fans",

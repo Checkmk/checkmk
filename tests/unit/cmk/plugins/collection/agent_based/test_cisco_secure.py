@@ -8,7 +8,7 @@
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.collection.agent_based.cisco_secure import (
     check_cisco_secure,
-    inventory_cisco_secure,
+    discover_cisco_secure,
     parse_cisco_secure,
     Section,
 )
@@ -290,7 +290,7 @@ def _section() -> Section:
 
 
 def test_discovery_cisco_secure() -> None:
-    assert list(inventory_cisco_secure(_section())) == [Service()] * 72
+    assert list(discover_cisco_secure(_section())) == [Service()] * 72
 
 
 def test_check_cisco_secure() -> None:

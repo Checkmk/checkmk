@@ -78,7 +78,7 @@ def parse_cisco_secure(string_table: Sequence[StringTable]) -> Section:
     return parsed
 
 
-def inventory_cisco_secure(section: Section) -> DiscoveryResult:
+def discover_cisco_secure(section: Section) -> DiscoveryResult:
     # search for at least one port with security
     for _name, op_state, is_enabled, status, _violation_count, _lastmac in section:
         # if portsecurity enabled and port up OR currently there is sercurity issue`
@@ -144,6 +144,6 @@ snmp_section_cisco_secure = SNMPSection(
 check_plugin_cisco_secure = CheckPlugin(
     name="cisco_secure",
     service_name="Port Security",
-    discovery_function=inventory_cisco_secure,
+    discovery_function=discover_cisco_secure,
     check_function=check_cisco_secure,
 )

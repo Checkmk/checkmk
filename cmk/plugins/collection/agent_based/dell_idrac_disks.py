@@ -34,7 +34,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 # .1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.55.2 Disk 1 in Backplane 1 of Integrated RAID Controller 1 --> IDRAC-MIB::physicalDiskDisplayName.2
 
 
-def inventory_dell_idrac_disks(section: StringTable) -> DiscoveryResult:
+def discover_dell_idrac_disks(section: StringTable) -> DiscoveryResult:
     inventory = []
     for line in section:
         inventory.append((line[0], None))
@@ -126,6 +126,6 @@ snmp_section_dell_idrac_disks = SimpleSNMPSection(
 check_plugin_dell_idrac_disks = CheckPlugin(
     name="dell_idrac_disks",
     service_name="Disk %s",
-    discovery_function=inventory_dell_idrac_disks,
+    discovery_function=discover_dell_idrac_disks,
     check_function=check_dell_idrac_disks,
 )

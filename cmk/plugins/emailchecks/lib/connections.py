@@ -289,18 +289,18 @@ class GraphApi(_Connection):
         self,
         authority_urls: AuthorityURLs,
         auth: OAuth2WithTokens,
-        user_id: str,
+        storage_id: str,
     ) -> None:
         self.authority_urls = authority_urls
         self._resource_url = authority_urls.resource
         self._login_url = authority_urls.login
         self.auth = auth
-        self.user_id = user_id
+        self.storage_id = storage_id
 
     def _build_api_client(self) -> GraphApiClient:
         if (store_secret := _read_store_secret()) is None:
             raise PasswordStoreError("Password store key file not found.")
-        storage = Storage(program_ident="graph_api_emailchecks", host=self.user_id)
+        storage = Storage(program_ident="graph_api_emailchecks", host=self.storage_id)
         return GraphApiClient(
             tenant=self.auth.tenant_id,
             client=self.auth.client_id,
@@ -848,7 +848,7 @@ def _make_connection(config: TRXConfig, timeout: int) -> POP3 | IMAP | EWS | Gra
                 return GraphApi(
                     authority_urls=get_graph_authority_urls(config.authority),
                     auth=config.auth,
-                    user_id=config.address,
+                    storage_id=config.auth.initial_access_token.split(":")[0],
                 )
 
             case "SMTP":

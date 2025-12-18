@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_oracle_crs_version(section: StringTable) -> DiscoveryResult:
+def discover_oracle_crs_version(section: StringTable) -> DiscoveryResult:
     for _line in section:
         yield Service()
 
@@ -44,6 +44,6 @@ agent_section_oracle_crs_version = AgentSection(
 check_plugin_oracle_crs_version = CheckPlugin(
     name="oracle_crs_version",
     service_name="ORA-GI Version",
-    discovery_function=inventory_oracle_crs_version,
+    discovery_function=discover_oracle_crs_version,
     check_function=check_oracle_crs_version,
 )

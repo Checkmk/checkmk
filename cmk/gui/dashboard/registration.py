@@ -30,7 +30,7 @@ from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LIN
 from .page_edit_dashlet import EditDashletPage
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
 from .page_graph_widget import GraphWidgetPage, GraphWidgetTokenAuthPage
-from .page_show_dashboard import ajax_dashlet, AjaxInitialDashboardFilters, page_dashboard_app
+from .page_show_dashboard import AjaxInitialDashboardFilters, page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
 from .page_view_widget import (
     ViewWidgetEditPage,
@@ -70,7 +70,6 @@ def register(
         TokenAuthenticatedEndpoint("shared_dashboard", SharedDashboardPage())
     )
     page_registry.register(PageEndpoint("edit_dashboard", page_edit_dashboard))
-    page_registry.register(PageEndpoint("dashboard_dashlet", ajax_dashlet))
     page_registry.register(PageEndpoint(PAGE_EDIT_DASHBOARDS_LINK, page_edit_dashboards))
     page_registry.register(PageEndpoint("create_dashboard", page_create_dashboard))
     page_registry.register(PageEndpoint("create_link_view_dashlet", page_create_link_view_dashlet))

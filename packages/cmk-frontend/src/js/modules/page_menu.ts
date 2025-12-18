@@ -167,7 +167,7 @@ function do_open_popup(popup: HTMLElement | undefined | null | string) {
   // The whole dashboard will do this anyway, but having no error on the
   // console and in the gui crawler is nice.
   if (
-    window.location.pathname.endsWith('/check_mk/dashboard_dashlet.py') &&
+    window.location.pathname.endsWith('/check_mk/widget_iframe_view.py') &&
     popup === 'popup_filters'
   ) {
     return

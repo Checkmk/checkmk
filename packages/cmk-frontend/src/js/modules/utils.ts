@@ -624,9 +624,6 @@ function do_reload(url: string) {
 
     params['_do_actions'] = get_url_param('_do_actions')
 
-    // For dashlet reloads add a parameter to mark this request as reload
-    if (window.location.href.indexOf('dashboard_dashlet.py') != -1) params['_reload'] = '1'
-
     if (is_selection_enabled()) params['selection'] = get_selection_id()
 
     call_ajax(makeuri(params), {

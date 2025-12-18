@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.datapower.lib import DETECT
 
 
-def inventory_datapower_pdrive(section: StringTable) -> DiscoveryResult:
+def discover_datapower_pdrive(section: StringTable) -> DiscoveryResult:
     for (
         controller,
         device,
@@ -93,6 +93,6 @@ snmp_section_datapower_pdrive = SimpleSNMPSection(
 check_plugin_datapower_pdrive = CheckPlugin(
     name="datapower_pdrive",
     service_name="Physical Drive %s",
-    discovery_function=inventory_datapower_pdrive,
+    discovery_function=discover_datapower_pdrive,
     check_function=check_datapower_pdrive,
 )

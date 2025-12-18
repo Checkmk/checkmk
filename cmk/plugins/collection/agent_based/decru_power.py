@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.decru.lib import DETECT_DECRU
 
 
-def inventory_decru_power(section: StringTable) -> DiscoveryResult:
+def discover_decru_power(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=l[0]) for l in section]
 
 
@@ -51,6 +51,6 @@ snmp_section_decru_power = SimpleSNMPSection(
 check_plugin_decru_power = CheckPlugin(
     name="decru_power",
     service_name="POWER %s",
-    discovery_function=inventory_decru_power,
+    discovery_function=discover_decru_power,
     check_function=check_decru_power,
 )

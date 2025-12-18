@@ -21,8 +21,6 @@ void main() {
         "CIPARAM_CLEANUP_WORKSPACE",
     ]);
 
-    // groovylint-disable-next-line UnusedVariable
-    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
 

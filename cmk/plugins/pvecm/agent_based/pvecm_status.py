@@ -80,7 +80,7 @@ def parse_pvecm_status(string_table: StringTable) -> Section:
     return parsed
 
 
-def inventory_pvecm_status(section: Section) -> DiscoveryResult:
+def discover_pvecm_status(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -118,6 +118,6 @@ agent_section_pvecm_status = AgentSection(
 check_plugin_pvecm_status = CheckPlugin(
     name="pvecm_status",
     service_name="PVE Cluster State",
-    discovery_function=inventory_pvecm_status,
+    discovery_function=discover_pvecm_status,
     check_function=check_pvecm_status,
 )

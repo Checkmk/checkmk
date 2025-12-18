@@ -145,9 +145,10 @@ boolean download_hot_cache(Map args) {
 void upload_hot_cache(Map args) {
     sh("""
         cd ${args.download_dest}
-        if [ -d ".cache" ]; then
-            du -sh .cache
-            time tar -cf - .cache | lz4 > ${args.file_pattern}
+        if [ -d ".cache" ] || [ -d ".java-caller" ]; then
+            [ -d ".cache" ] && du -sh .cache
+            [ -d ".java-caller" ] && du -sh .java-caller
+            time tar -cf - .cache .java-caller 2>/dev/null | lz4 > ${args.file_pattern}
         fi
     """);
 
@@ -181,7 +182,7 @@ void withHotCache(Map args, Closure body) {
     if (args.remove_existing_cache == null ? false : args.remove_existing_cache.asBoolean()) {
         // remove may existing cache shipped with the container
         sh("""
-            rm -rf ~/.cache/
+            rm -rf ~/.cache/ ~/.java-caller/
         """);
     }
 

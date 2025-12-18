@@ -40,7 +40,8 @@ void execute_test(Map config = [:]) {
                             '.bazelversion',
                             'WORKSPACE',
                             'MODULE.bazel.lock',
-                            'requirements.txt'
+                            'requirements.txt',
+                            'bazel/tools/package.json',
                         ],
                     ]) {
                         run_sh_command(cmd);

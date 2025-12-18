@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_aruba_aps(section: StringTable) -> DiscoveryResult:
+def discover_aruba_aps(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -52,6 +52,6 @@ snmp_section_aruba_aps = SimpleSNMPSection(
 check_plugin_aruba_aps = CheckPlugin(
     name="aruba_aps",
     service_name="Access Points",
-    discovery_function=inventory_aruba_aps,
+    discovery_function=discover_aruba_aps,
     check_function=check_aruba_aps,
 )

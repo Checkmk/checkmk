@@ -47,7 +47,7 @@ snmp_section_blade_powermod = SimpleSNMPSection(
 )
 
 
-def inventory_blade_powermod(section: Section) -> DiscoveryResult:
+def discover_blade_powermod(section: Section) -> DiscoveryResult:
     yield from (Service(item=pm.name) for pm in section.values() if pm.present == "1")
 
 
@@ -68,6 +68,6 @@ def check_blade_powermod(item: str, section: Section) -> CheckResult:
 check_plugin_blade_powermod = CheckPlugin(
     name="blade_powermod",
     service_name="Power Module %s",
-    discovery_function=inventory_blade_powermod,
+    discovery_function=discover_blade_powermod,
     check_function=check_blade_powermod,
 )

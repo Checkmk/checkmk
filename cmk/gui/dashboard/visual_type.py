@@ -136,12 +136,10 @@ class VisualTypeDashboards(VisualType):
         permitted_dashboards = get_permitted_dashboards()
         dashboard = load_dashboard(permitted_dashboards, target_visual_name)
 
-        dashlet_spec = DashletConfig(
-            {
-                "type": add_type,
-                "show_title": True,
-            }
-        )
+        dashlet_spec: DashletConfig = {
+            "type": add_type,
+            "show_title": True,
+        }
 
         self._update_dashlet_spec(dashlet_spec, dashboard, add_type)
 
@@ -277,14 +275,21 @@ class VisualTypeDashboards(VisualType):
         embedded_view_dashlet = EmbeddedViewDashletConfig(
             {
                 "type": "embedded_view",
-                # We use the defaults for embedded views
-                "position": dashlet_registry["embedded_view"].initial_position(),
-                "size": dashlet_registry["embedded_view"].initial_size(),
                 "show_title": True,  # Defaults to True for now
                 "name": embedded_view_id,
                 "datasource": dashlet_spec["datasource"],
             }
         )
+
+        if "size" in dashlet_spec and "position" in dashlet_spec:
+            embedded_view_dashlet["size"] = dashlet_spec["size"]
+            embedded_view_dashlet["position"] = dashlet_spec["position"]
+        elif "responsive_grid_layouts" in dashlet_spec:
+            embedded_view_dashlet["responsive_grid_layouts"] = dashlet_spec[
+                "responsive_grid_layouts"
+            ]
+        else:
+            raise ValueError("Dashlet spec has no layout information")
 
         if "context" in dashlet_spec:
             embedded_view_dashlet["context"] = dashlet_spec["context"]

@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from .detection import DETECT_BLADE
 
 
-def inventory_blade_mediatray(section: StringTable) -> DiscoveryResult:
+def discover_blade_mediatray(section: StringTable) -> DiscoveryResult:
     if len(section) == 1 and section[0][0] == "1":
         yield Service()
 
@@ -56,6 +56,6 @@ snmp_section_blade_mediatray = SimpleSNMPSection(
 check_plugin_blade_mediatray = CheckPlugin(
     name="blade_mediatray",
     service_name="Media tray",
-    discovery_function=inventory_blade_mediatray,
+    discovery_function=discover_blade_mediatray,
     check_function=check_blade_mediatray,
 )

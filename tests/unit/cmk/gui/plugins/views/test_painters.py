@@ -666,7 +666,7 @@ def test_registered_painters() -> None:
         "invinterface_vlantype",
         "invipaddresses_address",
         "invipaddresses_broadcast",
-        "invipaddresses_cidr",
+        "invipaddresses_prefixlength",
         "invipaddresses_device",
         "invipaddresses_netmask",
         "invipaddresses_network",

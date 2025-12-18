@@ -219,7 +219,7 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
                     key_columns={"address": "10.86.60.1", "device": "16"},
                     inventory_columns={
                         "broadcast": "10.86.60.31",
-                        "cidr": 27,
+                        "prefixlength": 27,
                         "netmask": "255.255.255.224",
                         "network": "10.86.60.0",
                         "type": "ipv4",
@@ -231,7 +231,7 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
                     key_columns={"address": "fe80::200:5efe:515c:6232", "device": "20"},
                     inventory_columns={
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
-                        "cidr": 64,
+                        "prefixlength": 64,
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "network": "fe80::",
                         "type": "ipv6",
@@ -243,7 +243,7 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
                     key_columns={"address": "12.12.12.1", "device": "if_index1"},
                     inventory_columns={
                         "broadcast": "31.255.255.255",
-                        "cidr": 3,
+                        "prefixlength": 3,
                         "netmask": "224.0.0.0",
                         "network": "0.0.0.0",
                         "type": "ipv4",

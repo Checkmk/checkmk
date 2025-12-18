@@ -216,7 +216,7 @@ def inventory_ip_addresses(section: Section) -> InventoryResult:
                 "type": address_type.get(ip_data.version, ""),
                 "network": str(ip_data.network.network_address),
                 "netmask": str(ip_data.network.netmask),
-                "cidr": ip_data.network.prefixlen,
+                "prefixlength": ip_data.network.prefixlen,
                 "broadcast": str(ip_data.network.broadcast_address),
                 **(
                     {"scope_id": str(scope_id)}

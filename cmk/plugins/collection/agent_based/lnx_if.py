@@ -497,7 +497,7 @@ def _inventorize_addresses(ip_stats: SectionInventory) -> InventoryResult:
                     },
                     inventory_columns={
                         "broadcast": str(interface_ip.network.broadcast_address),
-                        "cidr": interface_ip.network.prefixlen,
+                        "prefixlength": interface_ip.network.prefixlen,
                         "netmask": str(interface_ip.network.netmask),
                         "network": str(interface_ip.network.network_address),
                         "type": ty,

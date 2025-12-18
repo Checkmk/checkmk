@@ -173,7 +173,7 @@ __adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
                     },
                     inventory_columns={
                         "broadcast": "192.168.10.255",
-                        "cidr": 24,
+                        "prefixlength": 24,
                         "netmask": "255.255.255.0",
                         "network": "192.168.10.0",
                         "type": "ipv4",
@@ -188,7 +188,7 @@ __adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
                     },
                     inventory_columns={
                         "broadcast": "169.254.255.255",
-                        "cidr": 16,
+                        "prefixlength": 16,
                         "netmask": "255.255.0.0",
                         "network": "169.254.0.0",
                         "type": "ipv4",
@@ -203,7 +203,7 @@ __adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
                     },
                     inventory_columns={
                         "broadcast": "192.168.1.255",
-                        "cidr": 24,
+                        "prefixlength": 24,
                         "netmask": "255.255.255.0",
                         "network": "192.168.1.0",
                         "type": "ipv4",
@@ -218,7 +218,7 @@ __adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
                     },
                     inventory_columns={
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
-                        "cidr": 64,
+                        "prefixlength": 64,
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "network": "fe80::",
                         "type": "ipv6",

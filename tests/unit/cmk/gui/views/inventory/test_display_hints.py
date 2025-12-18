@@ -969,7 +969,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "type",
         "network",
         "netmask",
-        "cidr",
+        "prefixlength",
         "broadcast",
         "scope_id",
     ],

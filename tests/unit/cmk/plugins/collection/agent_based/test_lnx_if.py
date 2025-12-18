@@ -1329,7 +1329,7 @@ def test_host_label_lnx_ip_address(
                     key_columns={"address": "127.0.0.1", "device": "lo"},
                     inventory_columns={
                         "broadcast": "127.255.255.255",
-                        "cidr": 8,
+                        "prefixlength": 8,
                         "netmask": "255.0.0.0",
                         "network": "127.0.0.0",
                         "type": "ipv4",
@@ -1341,7 +1341,7 @@ def test_host_label_lnx_ip_address(
                     key_columns={"address": "192.168.10.144", "device": "ens32"},
                     inventory_columns={
                         "broadcast": "192.168.10.255",
-                        "cidr": 24,
+                        "prefixlength": 24,
                         "netmask": "255.255.255.0",
                         "network": "192.168.10.0",
                         "type": "ipv4",
@@ -1353,7 +1353,7 @@ def test_host_label_lnx_ip_address(
                     key_columns={"address": "fe80::20c:29ff:fe82:fd72", "device": "ens32"},
                     inventory_columns={
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
-                        "cidr": 64,
+                        "prefixlength": 64,
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "network": "fe80::",
                         "type": "ipv6",

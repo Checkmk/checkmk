@@ -236,7 +236,7 @@ def inventory_win_ip_address(section: Section) -> InventoryResult:
     ...    "ipv6_subnet": "",
     ...    "ipv4_subnet": "255.255.255.0",
     ... }]))
-    [TableRow(path=['networking', 'addresses'], key_columns={'address': '1.2.3.4', 'device': 'Adaptor'}, inventory_columns={'type': 'ipv4', 'network': '1.2.3.0', 'netmask': '255.255.255.0', 'cidr': 24, 'broadcast': '1.2.3.255'}, status_columns={})]
+    [TableRow(path=['networking', 'addresses'], key_columns={'address': '1.2.3.4', 'device': 'Adaptor'}, inventory_columns={'type': 'ipv4', 'network': '1.2.3.0', 'netmask': '255.255.255.0', 'prefixlength': 24, 'broadcast': '1.2.3.255'}, status_columns={})]
     """
     # Original author: thl-cmk[at]outlook[dot]com
     #
@@ -258,7 +258,7 @@ def inventory_win_ip_address(section: Section) -> InventoryResult:
                 "type": address_type.get(interface.version, "").lower(),
                 "network": str(interface.network.network_address),
                 "netmask": str(interface.network.netmask),
-                "cidr": interface.network.prefixlen,
+                "prefixlength": interface.network.prefixlen,
                 "broadcast": str(interface.network.broadcast_address),
             },
             status_columns={},

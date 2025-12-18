@@ -92,7 +92,7 @@ node_networking_addresses = Node(
             "type": TextField(Title("Address type"), render=_render_ip_address_type),
             "network": TextField(Title("Network")),
             "netmask": TextField(Title("Netmask")),
-            "cidr": TextField(Title("Prefix length")),
+            "prefixlength": TextField(Title("Prefix length")),
             "broadcast": TextField(Title("Broadcast")),
             "scope_id": TextField(Title("Scope ID")),
         },

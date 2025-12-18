@@ -58,7 +58,7 @@ snmp_section_blade_powerfan = SimpleSNMPSection(
 )
 
 
-def inventory_blade_powerfan(section: Section) -> DiscoveryResult:
+def discover_blade_powerfan(section: Section) -> DiscoveryResult:
     yield from (Service(item=f.index) for f in section.values() if f.index and f.present == "1")
 
 
@@ -94,6 +94,6 @@ def check_blade_powerfan(item: str, section: Section) -> CheckResult:
 check_plugin_blade_powerfan = CheckPlugin(
     name="blade_powerfan",
     service_name="Power Module Cooling Device %s",
-    discovery_function=inventory_blade_powerfan,
+    discovery_function=discover_blade_powerfan,
     check_function=check_blade_powerfan,
 )

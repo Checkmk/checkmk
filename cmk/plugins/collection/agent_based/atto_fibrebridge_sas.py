@@ -59,7 +59,7 @@ def parse_atto_fibrebridge_sas(string_table: StringTable) -> Section:
     return parsed
 
 
-def inventory_atto_fibrebridge_sas(section: Section) -> DiscoveryResult:
+def discover_atto_fibrebridge_sas(section: Section) -> DiscoveryResult:
     for item, port_info in section.items():
         if port_info["admin_state"] == "enabled":
             yield Service(item=item)
@@ -99,6 +99,6 @@ snmp_section_atto_fibrebridge_sas = SimpleSNMPSection(
 check_plugin_atto_fibrebridge_sas = CheckPlugin(
     name="atto_fibrebridge_sas",
     service_name="SAS Port %s",
-    discovery_function=inventory_atto_fibrebridge_sas,
+    discovery_function=discover_atto_fibrebridge_sas,
     check_function=check_atto_fibrebridge_sas,
 )

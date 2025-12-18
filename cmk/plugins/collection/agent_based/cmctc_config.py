@@ -24,7 +24,7 @@ from cmk.plugins.cmctc.lib import DETECT_CMCTC
 # .1.3.6.1.4.1.2606.4.3.1.5.0 2
 
 
-def inventory_cmctc_config(section: StringTable) -> DiscoveryResult:
+def discover_cmctc_config(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -88,6 +88,6 @@ snmp_section_cmctc_config = SimpleSNMPSection(
 check_plugin_cmctc_config = CheckPlugin(
     name="cmctc_config",
     service_name="TC configuration",
-    discovery_function=inventory_cmctc_config,
+    discovery_function=discover_cmctc_config,
     check_function=check_cmctc_config,
 )

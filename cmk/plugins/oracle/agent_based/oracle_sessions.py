@@ -43,7 +43,7 @@ def parse_oracle_sessions(string_table):
     return parsed
 
 
-def inventory_oracle_sessions(section: Any) -> DiscoveryResult:
+def discover_oracle_sessions(section: Any) -> DiscoveryResult:
     for sid in section:
         yield Service(item=sid)
 
@@ -94,7 +94,7 @@ agent_section_oracle_sessions = AgentSection(
 check_plugin_oracle_sessions = CheckPlugin(
     name="oracle_sessions",
     service_name="ORA %s Sessions",
-    discovery_function=inventory_oracle_sessions,
+    discovery_function=discover_oracle_sessions,
     check_function=check_oracle_sessions,
     check_ruleset_name="oracle_sessions",
     check_default_parameters={

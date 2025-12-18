@@ -8,12 +8,12 @@
 
 
 from cmk.plugins.oracle.agent_based.oracle_sessions import (
-    inventory_oracle_sessions,
+    discover_oracle_sessions,
     parse_oracle_sessions,
 )
 
 
-def test_inventory_oracle_sessions_fail():
+def test_discover_oracle_sessions_fail():
     assert not list(
-        inventory_oracle_sessions(parse_oracle_sessions([["foo", "FAILURE"], ["bar", "FAILURE"]]))
+        discover_oracle_sessions(parse_oracle_sessions([["foo", "FAILURE"], ["bar", "FAILURE"]]))
     )

@@ -132,6 +132,7 @@ def prepare_aws() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host and regions"),
+                permissions=["wato.passwords"],
             )
         ],
     )
@@ -163,6 +164,7 @@ def configure_host_and_regions() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure services to monitor"),
+                permissions=["wato.hosts"],
             )
         ],
         prev_button_label=PREV_BUTTON_LABEL,
@@ -445,6 +447,7 @@ quick_setup_aws = QuickSetup(
             action=action,
             icon=QuickSetupActionButtonIcon(name="save-to-services"),
             custom_validators=[qs_validators.validate_host_name_doesnt_exists],
+            permissions=["wato.passwords", "wato.rulesets", "wato.hosts"],
         ),
     ],
 )

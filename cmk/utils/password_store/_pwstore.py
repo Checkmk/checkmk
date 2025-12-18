@@ -76,7 +76,7 @@ def active_secrets_path_relay(config_path: Path | None = None) -> Path:
     if config_path is None:
         # TODO: Make non-optional
         config_path = VersionedConfigPath.make_latest_path(Path())
-    return config_path / "stored_passwords"
+    return config_path / "secrets/active_secrets"
 
 
 def pending_secrets_path_site() -> Path:

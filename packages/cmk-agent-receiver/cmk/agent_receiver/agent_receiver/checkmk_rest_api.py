@@ -44,6 +44,11 @@ def _local_rest_api_url() -> str:
     return config.rest_api_url
 
 
+def _local_internal_rest_api_url() -> str:
+    config = get_config()
+    return config.internal_rest_api_url
+
+
 def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:
     """
     >>> _credentials_to_rest_api_auth(HTTPBasicCredentials(username="hans", password="dampf"))
@@ -103,7 +108,7 @@ def _forward_put_token(
     json_body: dict[str, object],
 ) -> requests.Response:
     return requests.put(
-        f"{_local_rest_api_url()}/{endpoint}",
+        f"{_local_internal_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": f"CMK-TOKEN {token}",
             "Accept": "application/json",
@@ -192,7 +197,7 @@ def register_token(
     host_name: str,
 ) -> RegisterResponse:
     response = _forward_put_token(
-        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register_token/invoke",
+        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register_via_token/invoke",
         token,
         {
             "uuid": str(uuid),

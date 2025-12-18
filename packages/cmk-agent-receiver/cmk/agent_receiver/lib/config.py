@@ -88,7 +88,7 @@ class Config(BaseModel):
         return self.omd_root / "tmp/run/raw-data"
 
     @property
-    def rest_api_url(self) -> str:
+    def base_url(self) -> str:
         address = "localhost"
         port = 80
         for site_config_line in self.site_config_path.read_text().splitlines():
@@ -97,7 +97,15 @@ class Config(BaseModel):
                 port = int(value.strip("'"))
             if key == "CONFIG_APACHE_TCP_ADDR":
                 address = value.strip("'")
-        return f"http://{address}:{port}/{self.site_name}/check_mk/api/unstable"
+        return f"http://{address}:{port}/{self.site_name}"
+
+    @property
+    def rest_api_url(self) -> str:
+        return f"{self.base_url}/check_mk/api/unstable"
+
+    @property
+    def internal_rest_api_url(self) -> str:
+        return f"{self.base_url}/check_mk/api/internal"
 
 
 @cache

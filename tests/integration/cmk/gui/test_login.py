@@ -425,7 +425,8 @@ def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
                 "_login": "Login",
             },
         )
-        assert "Enter the six-digit code from your authenticator app to log in." in response.text
+        assert "cmk-two-factor-authentication" in response.text
+        assert "'totp_credentials': true" in response.text
 
         response = session.get(
             f"/{site.id}/check_mk/api/1.0/version",

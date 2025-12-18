@@ -645,11 +645,13 @@ class BulkEmailContent(EmailContent):
             extend_context(escaped_context, is_bulk=True)
             all_contexts_updated.append(escaped_context)
 
+        bulk_summary = _get_bulk_summary(all_contexts_updated)
+
         for i, c in enumerate(all_contexts_updated, 1):
             txt, html, att = construct_content(
                 c,
                 is_bulk=True,
-                bulk_summary=all_contexts_updated if i == 1 else None,
+                bulk_summary=bulk_summary if i == 1 else None,
                 last_bulk_entry=i == len(all_contexts_updated),
                 notification_number=i,
             )
@@ -685,6 +687,34 @@ class BulkEmailContent(EmailContent):
             content_html=content_html,
             attachments=attachments,
         )
+
+
+def _get_bulk_summary(all_contexts_updated: list[dict[str, str]]) -> list[dict[str, str]]:
+    keys_to_include = {
+        "WHAT",
+        "PREVIOUSHOSTHARDSTATE",
+        "HOSTSTATE",
+        "HOSTNAME_AND_ALIAS_HTML",
+        "PREVIOUSSERVICEHARDSTATE",
+        "SERVICESTATE",
+        "LINKEDSERVICEDESC",
+        "SHORTDATETIME",
+        "LASTHOSTSTATECHANGE",
+        "LASTSERVICESTATECHANGE",
+    }
+
+    keys_to_substitute = {"HOSTNAME_AND_ALIAS_HTML", "LINKEDSERVICEDESC"}
+
+    return [
+        {
+            key: utils.substitute_context(part[key], part)
+            if key in keys_to_substitute
+            else part[key]
+            for key in keys_to_include
+            if key in part
+        }
+        for part in all_contexts_updated
+    ]
 
 
 class SingleEmailContent(EmailContent):

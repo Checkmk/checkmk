@@ -69,7 +69,13 @@
                                 {% endif %}
                             </div>
                         </td>
-                        <td align="right" width="100%" style="padding: 0; vertical-align: middle">{{ entry.SHORTDATETIME }}</td>
+                        <td align="right" width="100%" style="padding: 0; vertical-align: middle">
+                            {% if bulk_service_notification %}
+                                {{ entry.LASTSERVICESTATECHANGE | timestamp() if entry.get('LASTSERVICESTATECHANGE') else entry.SHORTDATETIME }}
+                            {% else %}
+                                {{ entry.LASTHOSTSTATECHANGE | timestamp() if entry.get('LASTHOSTSTATECHANGE') else entry.SHORTDATETIME }}
+                            {% endif %}
+                        </td>
                     </tr>
                 </table>
                 <table>

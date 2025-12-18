@@ -7,9 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-from cmk.plugins.collection.agent_based.lsi import parse_lsi
+from cmk.agent_based.v2 import CheckResult, Result, Service, State
+from cmk.plugins.collection.agent_based.lsi import (
+    check_plugin_lsi_array,
+    check_plugin_lsi_disk,
+    parse_lsi,
+)
 
 INFO = [
     ["VolumeID", "286"],
@@ -29,51 +32,35 @@ def test_lsi_parsing() -> None:
     assert result["disks"]["1"] == "OPT"
 
 
-@pytest.mark.parametrize(
-    "plugin_name,expected",
-    [
-        (
-            "lsi_array",
-            [
-                Service(item="286"),
-            ],
-        ),
-        (
-            "lsi_disk",
-            [
-                Service(item="15", parameters={"expected_state": "OPT"}),
-                Service(item="1", parameters={"expected_state": "OPT"}),
-            ],
-        ),
-    ],
-)
-def test_lsi_discovery(
-    agent_based_plugins: AgentBasedPlugins, plugin_name: str, expected: DiscoveryResult
-) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName(plugin_name)]
+def test_lsi_array_discovery() -> None:
     section = parse_lsi(INFO)
-    assert list(plugin.discovery_function(section=section)) == expected
+    assert list(check_plugin_lsi_array.discovery_function(section=section)) == [Service(item="286")]
 
 
-def test_lsi_array(agent_based_plugins: AgentBasedPlugins) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("lsi_array")]
+def test_lsi_disk_discovery() -> None:
     section = parse_lsi(INFO)
-    assert list(plugin.check_function(item="286", params={}, section=section)) == [
+    assert list(check_plugin_lsi_disk.discovery_function(section=section)) == [
+        Service(item="15", parameters={"expected_state": "OPT"}),
+        Service(item="1", parameters={"expected_state": "OPT"}),
+    ]
+
+
+def test_lsi_array() -> None:
+    section = parse_lsi(INFO)
+    assert list(check_plugin_lsi_array.check_function(item="286", params={}, section=section)) == [
         Result(state=State.OK, summary="Status is 'Okay(OKY)'")
     ]
 
 
 @pytest.mark.parametrize(
-    "plugin_name,item,params,expected",
+    "item,params,expected",
     [
         (
-            "lsi_disk",
             "1",
             {"expected_state": "OPT"},
             [Result(state=State.OK, summary="Disk has state 'OPT'")],
         ),
         (
-            "lsi_disk",
             "15",
             {"expected_state": "OPT"},
             [Result(state=State.OK, summary="Disk has state 'OPT'")],
@@ -81,17 +68,14 @@ def test_lsi_array(agent_based_plugins: AgentBasedPlugins) -> None:
     ],
 )
 def test_lsi(
-    agent_based_plugins: AgentBasedPlugins,
-    plugin_name: str,
     item: str,
     params: Mapping[str, str],
     expected: CheckResult,
 ) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName(plugin_name)]
     section = parse_lsi(INFO)
     assert (
         list(
-            plugin.check_function(
+            check_plugin_lsi_disk.check_function(
                 item=item,
                 params=params,
                 section=section,

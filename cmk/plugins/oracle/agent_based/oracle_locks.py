@@ -27,7 +27,7 @@ from .liboracle import oracle_handle_ora_errors
 # newdb|25|15231|ol6131|sqlplus@ol6131 (TNS V1-V3)|13275|oracle|SYS|3782|VALID|1|407|1463|ol6131|sqlplus@ol6131 (TNS V1-V3)|13018|oracle|SYS
 
 
-def inventory_oracle_locks(section: StringTable) -> DiscoveryResult:
+def discover_oracle_locks(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=line[0]) for line in section if len(line) >= 10]
 
 
@@ -137,7 +137,7 @@ agent_section_oracle_locks = AgentSection(
 check_plugin_oracle_locks = CheckPlugin(
     name="oracle_locks",
     service_name="ORA %s Locks",
-    discovery_function=inventory_oracle_locks,
+    discovery_function=discover_oracle_locks,
     check_function=check_oracle_locks,
     check_ruleset_name="oracle_locks",
     check_default_parameters={

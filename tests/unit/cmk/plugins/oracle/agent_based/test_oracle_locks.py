@@ -6,7 +6,7 @@
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.oracle.agent_based.oracle_locks import (
     check_oracle_locks,
-    inventory_oracle_locks,
+    discover_oracle_locks,
     parse_oracle_locks,
 )
 
@@ -267,7 +267,7 @@ INFO = [
 
 
 def test_discovery() -> None:
-    assert list(inventory_oracle_locks(parse_oracle_locks(INFO))) == [
+    assert list(discover_oracle_locks(parse_oracle_locks(INFO))) == [
         Service(item="TUX12C"),
         Service(item="newdb"),
         Service(item="newdb1"),

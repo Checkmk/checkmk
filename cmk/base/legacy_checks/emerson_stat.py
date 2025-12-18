@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # EES-POWER-MIB::SYSTEMSTATUS.0  .1.3.6.1.4.1.6302.2.1.2.1.0
 # OPERATIONAL VALUES:
@@ -34,19 +33,27 @@
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-
-def discover_emerson_stat(string_table: StringTable) -> DiscoveryResult:
-    if string_table:
+def discover_emerson_stat(section: StringTable) -> DiscoveryResult:
+    if section:
         yield Service()
 
 
-def check_emerson_stat(_no_item, _no_params, info):
-    if not info:
+def check_emerson_stat(section: StringTable) -> CheckResult:
+    if not section:
         return
 
     status_text = {
@@ -61,30 +68,36 @@ def check_emerson_stat(_no_item, _no_params, info):
         9: "testing",
         10: "disabled",
     }
-    status = int(info[0][0])
-    infotext = "Status: " + status_text[status]
+    status = int(section[0][0])
+    infotext = f"Status: {status_text[status]}"
 
-    state = 0
     if status in [5, 6, 10]:
-        state = 2
+        state = State.CRIT
     elif status in [1, 3, 4, 7, 8, 9]:
-        state = 1
+        state = State.WARN
+    else:
+        state = State.OK
 
-    yield state, infotext
+    yield Result(state=state, summary=infotext)
 
 
 def parse_emerson_stat(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["emerson_stat"] = LegacyCheckDefinition(
+snmp_section_emerson_stat = SimpleSNMPSection(
     name="emerson_stat",
-    parse_function=parse_emerson_stat,
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2.1",
         oids=["0"],
     ),
+    parse_function=parse_emerson_stat,
+)
+
+
+check_plugin_emerson_stat = CheckPlugin(
+    name="emerson_stat",
     service_name="Status",
     discovery_function=discover_emerson_stat,
     check_function=check_emerson_stat,

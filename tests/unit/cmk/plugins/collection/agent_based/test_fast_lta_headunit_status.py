@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+# mypy: disable-error-code="no-untyped-call"
+
+from collections.abc import Sequence
 
 import pytest
 
@@ -11,47 +13,21 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
-from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
-    CheckFunction,
-    CheckPlugin,
-    CheckPluginName,
+from cmk.base.legacy_checks.fast_lta_headunit import (
+    check_fast_lta_headunit_status,
+    inventory_fast_lta_headunit_status,
 )
 
-type DiscoveryFunction = Callable[..., DiscoveryResult]
 
-check_name = "fast_lta_headunit_status"
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name="plugin")
-def _get_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
-    return agent_based_plugins.check_plugins[CheckPluginName(check_name)]
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name=f"discover_{check_name}")
-def _get_discovery_function(plugin: CheckPlugin) -> DiscoveryFunction:
-    return lambda s: plugin.discovery_function(section=s)
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name=f"check_{check_name}")
-def _get_check_function(plugin: CheckPlugin) -> CheckFunction:
-    return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
-
-
-@pytest.mark.parametrize("info, expected", [([[["60", "1", "1"]]], [Service()])])
+@pytest.mark.parametrize("info, expected", [([["60", "1", "1"]], [(None, None)])])
 def test_discovery_fast_lta_headunit_status(
-    discover_fast_lta_headunit_status: DiscoveryFunction,
     info: Sequence[StringTable],
     expected: DiscoveryResult,
 ) -> None:
-    assert list(discover_fast_lta_headunit_status(info)) == expected
+    assert inventory_fast_lta_headunit_status(info) == expected
 
 
 @pytest.mark.parametrize(
@@ -76,8 +52,8 @@ def test_discovery_fast_lta_headunit_status(
     ],
 )
 def test_check_fast_lta_headunit_status(
-    check_fast_lta_headunit_status: CheckFunction,
     info: Sequence[StringTable],
     expected: CheckResult,
 ) -> None:
-    assert list(check_fast_lta_headunit_status(None, {}, info)) == expected
+    result = check_fast_lta_headunit_status(None, {}, info)
+    assert [Result(state=State(result[0]), summary=result[1])] == expected

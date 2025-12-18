@@ -7,7 +7,17 @@ import pytest
 
 import cmk.plugins.collection.agent_based.cpu_utilization_os
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
+from cmk.plugins.collection.agent_based.cpu_utilization_os import check_plugin_cpu_utilization_os
+from cmk.plugins.collection.agent_based.docker_container_cpu import (
+    agent_section_docker_container_cpu,
+)
+from cmk.plugins.collection.agent_based.docker_container_cpu_cgroupv2 import (
+    agent_section_docker_container_cpu_cgroupv2,
+)
+from cmk.plugins.collection.agent_based.lxc_container_cpu import agent_section_lxc_container_cpu
+from cmk.plugins.collection.agent_based.lxc_container_cpu_cgroupv2 import (
+    agent_section_lxc_container_cpu_cgroupv2,
+)
 
 # the following string tables should display 150% cpu usage
 # two cpus were working at 75% `stress-ng -c2 -l75`
@@ -242,19 +252,27 @@ def test_container_cpu_cgroupv1(
     string_table_0: StringTable,
     string_table_10: StringTable,
     util: float,
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    agent_section = agent_based_plugins.agent_sections[SectionName(section_name)]
-    plugin = agent_based_plugins.check_plugins[CheckPluginName(plugin_name)]
+    section_map = {
+        "docker_container_cpu": agent_section_docker_container_cpu,
+        "docker_container_cpu_cgroupv2": agent_section_docker_container_cpu_cgroupv2,
+        "lxc_container_cpu": agent_section_lxc_container_cpu,
+        "lxc_container_cpu_cgroupv2": agent_section_lxc_container_cpu_cgroupv2,
+    }
+    agent_section = section_map[section_name]
 
     # assert plugin
     section_0_seconds = agent_section.parse_function(string_table_0)
     section_10_seconds = agent_section.parse_function(string_table_10)
     with pytest.raises(GetRateError):
         # first run, no rate metrics yet:
-        _ = list(plugin.check_function(params={}, section=section_0_seconds))
+        _ = list(
+            check_plugin_cpu_utilization_os.check_function(params={}, section=section_0_seconds)
+        )
     # now we have a rate:
-    assert list(plugin.check_function(params={}, section=section_10_seconds)) == [
+    assert list(
+        check_plugin_cpu_utilization_os.check_function(params={}, section=section_10_seconds)
+    ) == [
         Result(state=State.OK, summary=f"Total CPU: {util:.2f}%"),
         Metric("util", util, boundaries=(0.0, None)),
     ]

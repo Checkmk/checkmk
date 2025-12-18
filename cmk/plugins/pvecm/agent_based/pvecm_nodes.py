@@ -129,7 +129,7 @@ def _parse_version_gt_2_with_qdevice(
     return name, dict(zip(header[:3], line[:3]))
 
 
-def inventory_pvecm_nodes(section: Section) -> DiscoveryResult:
+def discover_pvecm_nodes(section: Section) -> DiscoveryResult:
     for name in section:
         yield Service(item=name)
 
@@ -166,6 +166,6 @@ agent_section_pvecm_nodes = AgentSection(
 check_plugin_pvecm_nodes = CheckPlugin(
     name="pvecm_nodes",
     service_name="PVE Node %s",
-    discovery_function=inventory_pvecm_nodes,
+    discovery_function=discover_pvecm_nodes,
     check_function=check_pvecm_nodes,
 )

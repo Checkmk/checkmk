@@ -30,7 +30,7 @@ def discover_dmraid_ldisks(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=line[2]) for line in section if line[0] == "name"]
 
 
-def inventory_dmraid_pdisks(section: StringTable) -> DiscoveryResult:
+def discover_dmraid_pdisks(section: StringTable) -> DiscoveryResult:
     yield from [
         Service(item=line[0].split(":")[0]) for line in section if line[0].startswith("/dev/sd")
     ]
@@ -88,6 +88,6 @@ check_plugin_dmraid_pdisks = CheckPlugin(
     name="dmraid_pdisks",
     service_name="RAID PDisk %s",
     sections=["dmraid"],
-    discovery_function=inventory_dmraid_pdisks,
+    discovery_function=discover_dmraid_pdisks,
     check_function=check_dmraid_pdisks,
 )

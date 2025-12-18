@@ -240,7 +240,7 @@ check_plugin_oracle_diva_csm_archive = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_oracle_diva_csm_objects(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_oracle_diva_csm_objects(section: Sequence[StringTable]) -> DiscoveryResult:
     if len(section) > 4 and len(section[4]) > 0:
         yield Service()
 
@@ -270,7 +270,7 @@ check_plugin_oracle_diva_csm_objects = CheckPlugin(
     name="oracle_diva_csm_objects",
     service_name="DIVA Managed Objects",
     sections=["oracle_diva_csm"],
-    discovery_function=inventory_oracle_diva_csm_objects,
+    discovery_function=discover_oracle_diva_csm_objects,
     check_function=check_oracle_diva_csm_objects,
 )
 

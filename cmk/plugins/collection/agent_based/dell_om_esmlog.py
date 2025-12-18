@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 
 
-def inventory_dell_om_esmlog(section: StringTable) -> DiscoveryResult:
+def discover_dell_om_esmlog(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -48,6 +48,6 @@ snmp_section_dell_om_esmlog = SimpleSNMPSection(
 check_plugin_dell_om_esmlog = CheckPlugin(
     name="dell_om_esmlog",
     service_name="ESM Log",
-    discovery_function=inventory_dell_om_esmlog,
+    discovery_function=discover_dell_om_esmlog,
     check_function=check_dell_om_esmlog,
 )

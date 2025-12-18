@@ -8,19 +8,29 @@
 
 from collections.abc import Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, exists, SNMPTree, startswith, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    exists,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
 
 
 def parse_fast_lta_headunit(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
 
-check_info["fast_lta_headunit"] = LegacyCheckDefinition(
+snmp_section_fast_lta_headunit = SNMPSection(
     name="fast_lta_headunit",
-    parse_function=parse_fast_lta_headunit,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         any_of(exists(".1.3.6.1.4.1.27417.2.1"), exists(".1.3.6.1.4.1.27417.2.1.0")),
@@ -31,6 +41,7 @@ check_info["fast_lta_headunit"] = LegacyCheckDefinition(
             oids=["1", "2", "5"],
         )
     ],
+    parse_function=parse_fast_lta_headunit,
 )
 
 
@@ -44,17 +55,16 @@ check_info["fast_lta_headunit"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fast_lta_headunit_status(info):
-    if len(info[0]) > 0:
-        return [(None, None)]
-    return []
+def inventory_fast_lta_headunit_status(section: Sequence[StringTable]) -> DiscoveryResult:
+    if section[0]:
+        yield Service()
 
 
-def check_fast_lta_headunit_status(item, _no_params, info):
+def check_fast_lta_headunit_status(section: Sequence[StringTable]) -> CheckResult:
     try:
-        head_unit_status, app_read_only_status = info[0][0][:2]
+        head_unit_status, app_read_only_status = section[0][0][:2]
     except IndexError:
-        return None
+        return
 
     head_unit_status_map = {
         "-1": "workerDefect",
@@ -75,22 +85,22 @@ def check_fast_lta_headunit_status(item, _no_params, info):
     }
 
     if head_unit_status == "60":
-        status = 0
+        state = State.OK
     elif head_unit_status == "70" and app_read_only_status == "0":
         # on Slave node appReadOnly is also an ok state
-        status = 0
+        state = State.OK
     else:
-        status = 2
+        state = State.CRIT
 
     if head_unit_status in head_unit_status_map:
-        message = "Head Unit status is %s." % head_unit_status_map[head_unit_status]
+        message = f"Head Unit status is {head_unit_status_map[head_unit_status]}."
     else:
-        message = "Head Unit status is %s." % head_unit_status
+        message = f"Head Unit status is {head_unit_status}."
 
-    return status, message
+    yield Result(state=state, summary=message)
 
 
-check_info["fast_lta_headunit.status"] = LegacyCheckDefinition(
+check_plugin_fast_lta_headunit_status = CheckPlugin(
     name="fast_lta_headunit_status",
     service_name="Fast LTA Headunit Status",
     sections=["fast_lta_headunit"],
@@ -109,17 +119,16 @@ check_info["fast_lta_headunit.status"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fast_lta_headunit_replication(info):
-    if len(info[0]) > 0:
-        return [(None, None)]
-    return []
+def inventory_fast_lta_headunit_replication(section: Sequence[StringTable]) -> DiscoveryResult:
+    if section[0]:
+        yield Service()
 
 
-def check_fast_lta_headunit_replication(item, _no_params, info):
+def check_fast_lta_headunit_replication(section: Sequence[StringTable]) -> CheckResult:
     try:
-        node_replication_mode, replication_status = info[0][0][1:3]
+        node_replication_mode, replication_status = section[0][0][1:3]
     except IndexError:
-        return None
+        return
 
     head_unit_replication_map = {
         "0": "Slave",
@@ -129,20 +138,20 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
 
     if replication_status == "1":
         message = "Replication is running."
-        status = 0
+        state = State.OK
     else:
         message = "Replication is not running (!!)."
-        status = 2
+        state = State.CRIT
 
     if node_replication_mode in head_unit_replication_map:
-        message += " This node is %s." % head_unit_replication_map[node_replication_mode]
+        message += f" This node is {head_unit_replication_map[node_replication_mode]}."
     else:
-        message += " Replication mode of this node is %s." % node_replication_mode
+        message += f" Replication mode of this node is {node_replication_mode}."
 
-    return status, message
+    yield Result(state=state, summary=message)
 
 
-check_info["fast_lta_headunit.replication"] = LegacyCheckDefinition(
+check_plugin_fast_lta_headunit_replication = CheckPlugin(
     name="fast_lta_headunit_replication",
     service_name="Fast LTA Replication",
     sections=["fast_lta_headunit"],

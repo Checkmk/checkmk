@@ -13,6 +13,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     Result,
+    Service,
     State,
     StringTable,
 )
@@ -22,12 +23,12 @@ from cmk.base.legacy_checks.fast_lta_headunit import (
 )
 
 
-@pytest.mark.parametrize("info, expected", [([["60", "1", "1"]], [(None, None)])])
+@pytest.mark.parametrize("info, expected", [([["60", "1", "1"]], [Service()])])
 def test_discovery_fast_lta_headunit_replication(
     info: Sequence[StringTable],
     expected: DiscoveryResult,
 ) -> None:
-    assert inventory_fast_lta_headunit_replication(info) == expected
+    assert list(inventory_fast_lta_headunit_replication(info)) == expected
 
 
 @pytest.mark.parametrize(
@@ -70,5 +71,4 @@ def test_check_fast_lta_headunit_replication(
     info: Sequence[StringTable],
     expected: CheckResult,
 ) -> None:
-    result = check_fast_lta_headunit_replication(None, {}, info)
-    assert [Result(state=State(result[0]), summary=result[1])] == expected
+    assert list(check_fast_lta_headunit_replication(info)) == expected

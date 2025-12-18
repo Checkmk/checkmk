@@ -19,13 +19,28 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, render, SNMPTree
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 
-def parse_fortinet_controller_aps(string_table):
+def parse_fortinet_controller_aps(
+    string_table: Sequence[StringTable],
+) -> Mapping[str, Mapping[str, Any]]:
     map_oper_state = {
         "0": "unknown",
         "1": "enabled",
@@ -75,54 +90,57 @@ def parse_fortinet_controller_aps(string_table):
     return parsed
 
 
-def inventory_fortinet_controller_aps(parsed):
-    for key, values in parsed.items():
+def inventory_fortinet_controller_aps(
+    section: Mapping[str, Mapping[str, Any]],
+) -> DiscoveryResult:
+    for key, values in section.items():
         if values["availability"] != "not installed":
-            yield key, {}
+            yield Service(item=key)
 
 
-def check_fortinet_controller_aps(item, params, parsed):
-    data = parsed.get(item)
+def check_fortinet_controller_aps(
+    item: str, params: Mapping[str, Any], section: Mapping[str, Mapping[str, Any]]
+) -> CheckResult:
+    data = section.get(item)
     if data is None:
         return
 
     oper_state = data["operational"]
-    state = 0
+    state = State.OK
     if oper_state == "unknown":
-        state = 3
+        state = State.UNKNOWN
     elif oper_state in ["disabled", "no license", "power down"]:
-        state = 1
-    yield state, "[{}] Operational: {}".format(data["descr"], oper_state)
+        state = State.WARN
+    yield Result(state=state, summary=f"[{data['descr']}] Operational: {oper_state}")
 
     avail_state = data["availability"]
-    state = 0
+    state = State.OK
     if avail_state == "failed":
-        state = 2
+        state = State.CRIT
     elif avail_state in ["power off", "offline", "in test", "not installed"]:
-        state = 1
-    yield state, "Availability: %s" % avail_state
+        state = State.WARN
+    yield Result(state=state, summary=f"Availability: {avail_state}")
 
     client_count_24 = data["clients_count_24"]
     client_count_5 = data["clients_count_5"]
-    yield (
-        0,
-        f"Connected clients (2,4 ghz/5 ghz): {client_count_24}/{client_count_5}",
-        [
-            ("5ghz_clients", client_count_5),
-            ("24ghz_clients", client_count_24),
-        ],
+    yield Result(
+        state=State.OK,
+        summary=f"Connected clients (2,4 ghz/5 ghz): {client_count_24}/{client_count_5}",
     )
+    yield Metric("5ghz_clients", client_count_5)
+    yield Metric("24ghz_clients", client_count_24)
 
     uptime = data["uptime"]
     if uptime:
-        yield 0, "Up since %s" % render.datetime(uptime), [("uptime", uptime)]
+        yield Result(state=State.OK, summary=f"Up since {render.datetime(uptime)}")
+        yield Metric("uptime", uptime)
 
     location = data.get("location")
     if location:
-        yield 0, "Located at %s" % location
+        yield Result(state=State.OK, summary=f"Located at {location}")
 
 
-check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
+snmp_section_fortinet_controller_aps = SNMPSection(
     name="fortinet_controller_aps",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15983"),
     fetch=[
@@ -136,7 +154,13 @@ check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_fortinet_controller_aps,
+)
+
+
+check_plugin_fortinet_controller_aps = CheckPlugin(
+    name="fortinet_controller_aps",
     service_name="AP %s",
     discovery_function=inventory_fortinet_controller_aps,
     check_function=check_fortinet_controller_aps,
+    check_default_parameters={},
 )

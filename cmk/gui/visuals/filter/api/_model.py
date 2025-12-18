@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
+
+from pydantic import Discriminator
 
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, DynamicParamsCallbackName
@@ -191,7 +193,7 @@ class TagFilterComponentModel:
     variable_prefix: str = api_field(description="Prefix for the variables used in the filter.")
 
 
-type FilterComponentModel = (
+type FilterComponentModel = Annotated[
     HorizontalGroupComponentModel
     | DropdownComponentModel
     | DynamicDropdownComponentModel
@@ -204,8 +206,9 @@ type FilterComponentModel = (
     | HiddenComponentModel
     | DualListComponentModel
     | LabelGroupFilterComponentModel
-    | TagFilterComponentModel
-)
+    | TagFilterComponentModel,
+    Discriminator("component_type"),
+]
 
 
 def filter_component_from_internal(component: FilterComponent) -> FilterComponentModel:

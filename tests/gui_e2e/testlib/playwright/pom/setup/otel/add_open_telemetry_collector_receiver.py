@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
-from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, LocatorHelper
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 from tests.gui_e2e.testlib.playwright.pom.setup.otel.open_telemetry_collector_receiver import (
     OpenTelemetryCollectorReceiver,
@@ -34,6 +34,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     ) -> None:
         self.page_title = "Add OpenTelemetry collector: Receiver (experimental)"
         super().__init__(page, navigate_to_page)
+        self.new_password_slide_in = NewPasswordSlideIn(self.page)
 
     @override
     def navigate(self) -> None:
@@ -138,6 +139,9 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
             .locator("input[type='text']")
         )
 
+    def create_password_button(self, receiver_type: str) -> Locator:
+        return self._receiver(receiver_type).get_by_role("button", name="Create")
+
     def send_logs_to_event_console_checkbox(self, receiver_type: str) -> Locator:
         return self._receiver(receiver_type).get_by_label("Send log messages to event")
 
@@ -151,11 +155,31 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         target_index = locator.count() - 1
         locator.nth(target_index).fill(value)
 
+    def add_new_password(self, receiver_type: str, password_data: dict[str, str]) -> None:
+        self.create_password_button(receiver_type).click()
+        expect(
+            self.new_password_slide_in.title,
+            "The slide-in didn't open after clicking on 'Create' button",
+        ).to_be_visible()
+        self.new_password_slide_in.password_id_textfield.fill(password_data["id"])
+        self.new_password_slide_in.password_title_textfield.fill(password_data["title"])
+        self.new_password_slide_in.password_textfield.fill(password_data["password"])
+        self.new_password_slide_in.editable_by_dropdown.click()
+        self.new_password_slide_in.editable_by_option("Administrators").click()
+        self.new_password_slide_in.save_button.click()
+        expect(
+            self.new_password_slide_in.title,
+            "The slide-in didn't collapse after clicking on 'Save' button",
+        ).not_to_be_visible()
+
     def _fill_collector_receiver_properties(
         self,
         receiver_type: str,
         properties: dict[str, Any],
+        new_password_data: list[dict[str, str]] | None = None,
     ) -> None:
+        """Fill in receiver properties form and create new passwords if needed."""
+        new_passwords_created = False
         self.receiver_protocol_endpoint_checkbox(receiver_type).check()
         if properties["endpoint"]["encryption"]:
             self.encrypt_communication_with_tls_checkbox(receiver_type).check()
@@ -169,6 +193,10 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
                 self.fill_last_locator(
                     self.username_textfield(receiver_type), user_data["username"]
                 )
+                if not new_passwords_created and new_password_data:
+                    for password_data in new_password_data:
+                        self.add_new_password(receiver_type, password_data)
+                    new_passwords_created = True
                 self.click_on_last_locator(self.password_dropdown(receiver_type))
                 self.dropdown_option(
                     receiver_type, user_data["password"]["value"], exact=True
@@ -204,23 +232,67 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         collector_id: str,
         collector_title: str,
         site_id: str,
-        http_receiver_properties: dict[str, Any] | None = None,
         grpc_receiver_properties: dict[str, Any] | None = None,
+        grpc_password_data: list[dict[str, str]] | None = None,
+        http_receiver_properties: dict[str, Any] | None = None,
+        http_password_data: list[dict[str, str]] | None = None,
     ) -> None:
         logger.info("Fill in the 'OpenTelemetry Collector: Receiver (Experimental)' form")
         self.unique_id_textfield.fill(collector_id)
         self.title_textfield.fill(collector_title)
         self.site_restriction_checkbox(site_id).check()
-        if http_receiver_properties:
-            self._fill_collector_receiver_properties(
-                "Receiver protocol HTTP",
-                http_receiver_properties,
-            )
         if grpc_receiver_properties:
             self._fill_collector_receiver_properties(
                 "Receiver protocol GRPC",
                 grpc_receiver_properties,
+                grpc_password_data,
             )
-
+        if http_receiver_properties:
+            self._fill_collector_receiver_properties(
+                "Receiver protocol HTTP",
+                http_receiver_properties,
+                http_password_data,
+            )
         logger.info("Save the OpenTelemetry Collector configuration")
         self.save_configuration_button.click()
+
+
+class NewPasswordSlideIn(LocatorHelper):
+    """Represents 'Setup > Hosts > OpenTelemetry collector: Receiver (experimental)
+    > Add OpenTelemetry collector: Receiver (experimental)' slid-in for adding new password."""
+
+    @override
+    def locator(self, selector: str | None = None) -> Locator:
+        _loc = self.page.frame_locator("iframe[name='main']").locator(
+            "div[class*='slide-in__container']"
+        )
+        if selector is None:
+            return _loc
+        return _loc.locator(selector)
+
+    @property
+    def title(self) -> Locator:
+        return self.locator("h2[class*='slide-in__title']")
+
+    @property
+    def save_button(self) -> Locator:
+        return self.locator().get_by_role("button", name="Save")
+
+    @property
+    def password_id_textfield(self) -> Locator:
+        return self.locator().get_by_role("textbox", name="Unique ID")
+
+    @property
+    def password_title_textfield(self) -> Locator:
+        return self.locator().get_by_role("textbox", name="Title")
+
+    @property
+    def password_textfield(self) -> Locator:
+        return self.locator().get_by_role("textbox", name="Password")
+
+    @property
+    def editable_by_dropdown(self) -> Locator:
+        return self.locator().get_by_label("Editable by")
+
+    def editable_by_option(self, option: str) -> Locator:
+        return self.locator().get_by_role("option", name=option)

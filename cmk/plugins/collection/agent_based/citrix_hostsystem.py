@@ -57,7 +57,7 @@ def parse_citrix_hostsystem(string_table: StringTable) -> Section:
 #   '----------------------------------------------------------------------'
 
 
-def inventory_citrix_hostsystem_vms(section: Section) -> DiscoveryResult:
+def discover_citrix_hostsystem_vms(section: Section) -> DiscoveryResult:
     if section["vms"]:
         yield Service()
 
@@ -71,7 +71,7 @@ check_plugin_citrix_hostsystem_vms = CheckPlugin(
     name="citrix_hostsystem_vms",
     service_name="Citrix VMs",
     sections=["citrix_hostsystem"],
-    discovery_function=inventory_citrix_hostsystem_vms,
+    discovery_function=discover_citrix_hostsystem_vms,
     check_function=check_citrix_hostsystem_vms,
 )
 

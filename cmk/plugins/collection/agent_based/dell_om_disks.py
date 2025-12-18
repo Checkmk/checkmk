@@ -32,7 +32,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_dell_om_disks(section: StringTable) -> DiscoveryResult:
+def discover_dell_om_disks(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=f"{x[3]}:{x[4]}:{x[5]}") for x in section]
 
 
@@ -145,6 +145,6 @@ snmp_section_dell_om_disks = SimpleSNMPSection(
 check_plugin_dell_om_disks = CheckPlugin(
     name="dell_om_disks",
     service_name="Physical Disk %s",
-    discovery_function=inventory_dell_om_disks,
+    discovery_function=discover_dell_om_disks,
     check_function=check_dell_om_disks,
 )

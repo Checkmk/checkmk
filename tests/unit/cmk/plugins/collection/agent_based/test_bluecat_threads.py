@@ -3,21 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, State
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.base.legacy_checks.bluecat_threads import check_bluecat_threads, parse_bluecat_threads
 
 
-def test_make_sure_bluecat_threads_can_handle_new_params_format(
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("bluecat_threads")]
-    assert plugin
+def test_make_sure_bluecat_threads_can_handle_new_params_format() -> None:
     assert list(
-        plugin.check_function(
-            params={"levels": ("levels", (10, 20))},
-            section=[["1234"]],
+        check_bluecat_threads(
+            None,
+            {"levels": ("levels", (10, 20))},
+            parse_bluecat_threads([["1234"]]),
         )
-    ) == [
-        Result(state=State.CRIT, summary="1234 threads (critical at 20)"),
-        Metric("threads", 1234.0, levels=(10.0, 20.0), boundaries=(0.0, None)),
-    ]
+    ) == [(2, "1234 (warn/crit at 10/20)", [("threads", 1234.0, 10.0, 20.0, 0.0, None)])]

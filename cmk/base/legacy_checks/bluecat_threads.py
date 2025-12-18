@@ -3,39 +3,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 check_info = {}
 
+type Section = int
+
 threads_default_levels = {"levels": ("levels", (2000, 4000))}
 
 
-def discover_bluecat_threads(info):
+def discover_bluecat_threads(info: StringTable) -> LegacyDiscoveryResult:
     if info:
         return [(None, threads_default_levels)]
     return []
 
 
-def check_bluecat_threads(item, params, info):
-    nthreads = int(info[0][0])
+def check_bluecat_threads(
+    _no_item: None, params: Mapping[str, Any], section: Section
+) -> LegacyCheckResult:
+    nthreads = section
     warn, crit = None, None
     if "levels" in params and params["levels"] != "no_levels":
         warn, crit = params["levels"][1]
-    perfdata = [("threads", nthreads, warn, crit, 0)]
 
-    if crit is not None and nthreads >= crit:
-        return 2, "%d threads (critical at %d)" % (nthreads, crit), perfdata
-    if warn is not None and nthreads >= warn:
-        return 1, "%d threads (warning at %d)" % (nthreads, warn), perfdata
-    return 0, "%d threads" % (nthreads,), perfdata
+    yield check_levels(
+        nthreads, "threads", params=(warn, crit), human_readable_func=str, boundaries=(0.0, None)
+    )
 
 
-def parse_bluecat_threads(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_bluecat_threads(string_table: StringTable) -> Section:
+    return int(string_table[0][0])
 
 
 check_info["bluecat_threads"] = LegacyCheckDefinition(

@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_dell_idrac_raid(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_dell_idrac_raid(section: Sequence[StringTable]) -> DiscoveryResult:
     for index, _name, _status in section[0]:
         yield Service(item=index)
 
@@ -63,12 +63,12 @@ snmp_section_dell_idrac_raid = SNMPSection(
 check_plugin_dell_idrac_raid = CheckPlugin(
     name="dell_idrac_raid",
     service_name="Raid Controller %s",
-    discovery_function=inventory_dell_idrac_raid,
+    discovery_function=discover_dell_idrac_raid,
     check_function=check_dell_idrac_raid,
 )
 
 
-def inventory_dell_idrac_raid_bbu(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_dell_idrac_raid_bbu(section: Sequence[StringTable]) -> DiscoveryResult:
     for index, _status, _comp_status, _name in section[1]:
         yield Service(item=index)
 
@@ -94,6 +94,6 @@ check_plugin_dell_idrac_raid_bbu = CheckPlugin(
     name="dell_idrac_raid_bbu",
     service_name="Raid BBU %s",
     sections=["dell_idrac_raid"],
-    discovery_function=inventory_dell_idrac_raid_bbu,
+    discovery_function=discover_dell_idrac_raid_bbu,
     check_function=check_dell_idrac_raid_bbu,
 )

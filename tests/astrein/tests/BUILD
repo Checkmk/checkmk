@@ -9,3 +9,12 @@ py_test(
         requirement("pytest"),
     ],
 )
+
+py_test(
+    name = "test_module_layers",
+    srcs = ["test_module_layers.py"],
+    deps = [
+        "//tests/astrein:checker_module_layers",
+        requirement("pytest"),
+    ],
+)

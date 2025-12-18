@@ -14,6 +14,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from tests.astrein.checker_localization import LocalizationChecker
+from tests.astrein.checker_module_layers import ModuleLayersChecker
 from tests.astrein.framework import ASTVisitorChecker, run_checkers
 
 
@@ -51,12 +52,13 @@ def main() -> int:
         print(str(e), file=sys.stderr)
         return 1
 
-    return _run_checkers(files_to_check, checker_classes)
+    return _run_checkers(files_to_check, workspace_dir, checker_classes)
 
 
 def _checkers() -> dict[str, type[ASTVisitorChecker]]:
     return {
         "localization": LocalizationChecker,
+        "module-layers": ModuleLayersChecker,
     }
 
 
@@ -113,12 +115,13 @@ def _collect_files(paths: Sequence[Path], workspace_dir: Path) -> list[Path]:
 
 def _run_checkers(
     files_to_check: list[Path],
+    workspace_dir: Path,
     checker_classes: list[type[ASTVisitorChecker]],
 ) -> int:
     total_errors = 0
     files_with_errors = 0
     for file_path in files_to_check:
-        errors = run_checkers(file_path, checker_classes)
+        errors = run_checkers(file_path, workspace_dir, checker_classes)
 
         if errors:
             files_with_errors += 1

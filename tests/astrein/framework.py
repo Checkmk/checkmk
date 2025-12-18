@@ -34,9 +34,11 @@ class CheckerError:
 
 
 class ASTVisitorChecker(ABC, ast.NodeVisitor):
-    def __init__(self, file_path: Path, source_code: str):
+    def __init__(self, file_path: Path, repo_root: Path, source_code: str):
         self.file_path = file_path
+        self.repo_root = repo_root
         self.source_code = source_code
+        self.source_lines = source_code.splitlines()
         self.errors: list[CheckerError] = []
 
     @abstractmethod
@@ -44,7 +46,32 @@ class ASTVisitorChecker(ABC, ast.NodeVisitor):
         """Return unique identifier for this checker."""
         ...
 
+    def _is_suppressed(self, node: ast.AST) -> bool:
+        if not hasattr(node, "lineno") or node.lineno is None:
+            return False
+
+        line_idx = node.lineno - 1
+        if line_idx < 0 or line_idx >= len(self.source_lines):
+            return False
+
+        current_line = self.source_lines[line_idx]
+        if f"pylint: disable={self.checker_id()}" in current_line:
+            return True
+
+        if line_idx > 0:
+            prev_line = self.source_lines[line_idx - 1]
+            if (
+                prev_line.strip().startswith("#")
+                and f"pylint: disable={self.checker_id()}" in prev_line
+            ):
+                return True
+
+        return False
+
     def add_error(self, message: str, node: ast.AST) -> None:
+        if self._is_suppressed(node):
+            return
+
         self.errors.append(
             CheckerError(
                 message=message,
@@ -62,7 +89,7 @@ class ASTVisitorChecker(ABC, ast.NodeVisitor):
 
 
 def run_checkers(
-    file_path: Path, checker_classes: list[type[ASTVisitorChecker]]
+    file_path: Path, repo_root: Path, checker_classes: list[type[ASTVisitorChecker]]
 ) -> list[CheckerError]:
     """Run multiple checkers on a Python file"""
     try:
@@ -95,7 +122,7 @@ def run_checkers(
 
     all_errors: list[CheckerError] = []
     for checker_class in checker_classes:
-        checker = checker_class(file_path, source_code)
+        checker = checker_class(file_path, repo_root, source_code)
         errors = checker.check(tree)
         all_errors.extend(errors)
 

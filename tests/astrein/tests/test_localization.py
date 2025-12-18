@@ -27,7 +27,7 @@ def test_literal_string_checker(
     is_error: bool,
 ) -> None:
     """Test that localization functions must be called with literal strings."""
-    checker = LocalizationChecker(Path("test.py"), code)
+    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
     tree = ast.parse(code)
     errors = checker.check(tree)
 
@@ -61,7 +61,7 @@ def test_html_tags_checker(
     is_error: bool,
 ) -> None:
     """Test that HTML tags in localization strings must be from allowed set."""
-    checker = LocalizationChecker(Path("test.py"), code)
+    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
     tree = ast.parse(code)
     errors = checker.check(tree)
 
@@ -80,7 +80,7 @@ _(variable)
 _l('<script>bad</script>')
 _('another valid string')
 """
-    checker = LocalizationChecker(Path("test.py"), code)
+    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
     tree = ast.parse(code)
     errors = checker.check(tree)
 
@@ -94,7 +94,7 @@ def test_non_translation_function() -> None:
 print(variable)
 some_function(x)
 """
-    checker = LocalizationChecker(Path("test.py"), code)
+    checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
     tree = ast.parse(code)
     errors = checker.check(tree)
 
@@ -115,7 +115,7 @@ def test_all_translation_functions() -> None:
 
     for func_name in translation_functions:
         code = f"{func_name}(variable)"
-        checker = LocalizationChecker(Path("test.py"), code)
+        checker = LocalizationChecker(Path("test/test.py"), Path("test"), code)
         tree = ast.parse(code)
         errors = checker.check(tree)
 

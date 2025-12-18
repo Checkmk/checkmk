@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_brocade_info(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_brocade_info(section: Sequence[StringTable]) -> DiscoveryResult:
     data = "".join(brocade_info_try_it(section))
     if data != "----":
         yield Service()
@@ -108,6 +108,6 @@ snmp_section_brocade_info = SNMPSection(
 check_plugin_brocade_info = CheckPlugin(
     name="brocade_info",
     service_name="Brocade Info",
-    discovery_function=inventory_brocade_info,
+    discovery_function=discover_brocade_info,
     check_function=check_brocade_info,
 )

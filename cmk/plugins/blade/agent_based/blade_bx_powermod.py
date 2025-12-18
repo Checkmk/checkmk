@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from .detection import DETECT_BLADE_BX
 
 
-def inventory_blade_bx_powermod(section: StringTable) -> DiscoveryResult:
+def discover_blade_bx_powermod(section: StringTable) -> DiscoveryResult:
     for line in section:
         yield Service(item=line[0])
 
@@ -60,6 +60,6 @@ snmp_section_blade_bx_powermod = SimpleSNMPSection(
 check_plugin_blade_bx_powermod = CheckPlugin(
     name="blade_bx_powermod",
     service_name="Power Module %s",
-    discovery_function=inventory_blade_bx_powermod,
+    discovery_function=discover_blade_bx_powermod,
     check_function=check_blade_bx_powermod,
 )

@@ -40,7 +40,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_oracle_recovery_status(section: StringTable) -> DiscoveryResult:
+def discover_oracle_recovery_status(section: StringTable) -> DiscoveryResult:
     yield from (Service(item=line[0]) for line in section)
 
 
@@ -234,7 +234,7 @@ agent_section_oracle_recovery_status = AgentSection(
 check_plugin_oracle_recovery_status = CheckPlugin(
     name="oracle_recovery_status",
     service_name="ORA %s Recovery Status",
-    discovery_function=inventory_oracle_recovery_status,
+    discovery_function=discover_oracle_recovery_status,
     check_function=check_oracle_recovery_status,
     check_default_parameters={},
     check_ruleset_name="oracle_recovery_status",

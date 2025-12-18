@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.decru.lib import DETECT_DECRU
 
 
-def inventory_decru_cpu(section: StringTable) -> DiscoveryResult:
+def discover_decru_cpu(section: StringTable) -> DiscoveryResult:
     if len(section) == 5:
         yield Service()
 
@@ -53,6 +53,6 @@ snmp_section_decru_cpu = SimpleSNMPSection(
 check_plugin_decru_cpu = CheckPlugin(
     name="decru_cpu",
     service_name="CPU utilization",
-    discovery_function=inventory_decru_cpu,
+    discovery_function=discover_decru_cpu,
     check_function=check_decru_cpu,
 )

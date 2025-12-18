@@ -12,16 +12,16 @@ import CmkIndent from '@/components/CmkIndent.vue'
 
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import SingleInfosSpecifier from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/SingleInfosSpecifier.vue'
+import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import SelectorView from '@/dashboard-wip/components/selectors/SelectorView.vue'
 import { useDataSourcesCollection } from '@/dashboard-wip/composables/api/useDataSourcesCollection.ts'
 import { useInjectViews } from '@/dashboard-wip/composables/useProvideViews'
-import type { ContextFilters } from '@/dashboard-wip/types/filter'
 import { RestrictedToSingle } from '@/dashboard-wip/types/shared.ts'
 
 const { _t } = usei18n()
 
 const emit = defineEmits<{
-  (e: 'overwrite-filters', filters: ContextFilters): void
+  (e: 'overwrite-filters', filters: ConfiguredFilters): void
 }>()
 
 const referencedView = defineModel<string | null>('referencedView', { default: null })
@@ -72,7 +72,7 @@ watch(
       singleInfosMode.value = RestrictedToSingle.NO
     }
     restrictedToSingleInfos.value = restrictedToSingle
-    emit('overwrite-filters', (view!.extensions?.filters ?? {}) as unknown as ContextFilters)
+    emit('overwrite-filters', (view!.extensions?.filters ?? {}) as unknown as ConfiguredFilters)
   },
   { immediate: true }
 )

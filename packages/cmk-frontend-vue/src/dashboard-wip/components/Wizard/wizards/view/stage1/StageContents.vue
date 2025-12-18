@@ -59,7 +59,7 @@ const emit = defineEmits<{
   (e: 'reset-all-filters'): void
   (e: 'remove-filter', filterId: string): void
   (e: 'goNext', selectedView: ViewSelection): void
-  (e: 'overwrite-filters', filters: ContextFilters): void
+  (e: 'overwrite-filters', filters: ConfiguredFilters): void
 }>()
 
 const visualInfosById = useInjectVisualInfos()

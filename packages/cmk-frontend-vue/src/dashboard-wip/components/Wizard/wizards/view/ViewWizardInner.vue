@@ -16,6 +16,7 @@ import {
 } from '@/dashboard-wip/components/Wizard/components/FiltersRecap/utils.ts'
 import { useWidgetVisualizationProps } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
+import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import type { DataSourceModel, ViewModel } from '@/dashboard-wip/types/api'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
@@ -303,14 +304,14 @@ const handleResetAllFilters = (): void => {
   widgetFilterManager.resetFilterValuesOfObjectType()
 }
 
-async function handleOverwriteFilters(newFilters: ContextFilters) {
+async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
   // Use nextTick to ensure any pending DOM updates (e.g., from contextInfos watcher
   // emitting reset-all-filters) are processed before applying new filters,
   // preventing a race condition where filters might be reset after being set.
   await nextTick()
   handleResetAllFilters()
   if (newFilters) {
-    Object.entries(newFilters).forEach(([filterId, { configuredValues }]) => {
+    Object.entries(newFilters).forEach(([filterId, configuredValues]) => {
       widgetFilterManager.updateFilterValues(filterId, configuredValues)
     })
   }

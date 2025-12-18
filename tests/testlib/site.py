@@ -1685,6 +1685,14 @@ class Site:
             if re.search("SectionVMInfo", crash_detail):
                 logger.warning("Ignored crash report due to CMK-27875.")
                 continue
+            if re.search(
+                (
+                    "[Errno 2] No such file or directory: "
+                    f"'{self.root}/var/check_mk/web/download_user/automation.secret'"
+                ),
+                crash_detail,
+            ):
+                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""

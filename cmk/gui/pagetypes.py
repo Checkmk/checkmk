@@ -183,7 +183,7 @@ class PageRendererConfig(OverridableContainerConfig):
 
 
 class PagetypeTopicModel(OverridableModel):
-    icon_name: StaticIcon  # TODO: are we sure about this?
+    icon_name: DynamicIcon
     sort_index: int
     max_entries: int = 10
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
@@ -191,7 +191,7 @@ class PagetypeTopicModel(OverridableModel):
 
 @dataclass(kw_only=True)
 class PagetypeTopicConfig(OverridableConfig):
-    icon_name: StaticIcon  # TODO: are we sure about this?
+    icon_name: DynamicIcon
     sort_index: int
     max_entries: int = 10
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
@@ -2196,7 +2196,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     @override
     def render_extra_columns(self, table: Table) -> None:
         """Show some specific useful columns in the list view"""
-        table.cell(_("Icon"), html.render_static_icon(self.config.icon_name))
+        table.cell(_("Icon"), html.render_dynamic_icon(self.config.icon_name))
         table.cell(_("Nr. of items"), str(self.max_entries()))
         table.cell(_("Sort index"), str(self.config.sort_index))
 
@@ -2207,7 +2207,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "overview": PagetypeTopicConfig(
                 name="overview",
                 title=_("Overview"),
-                icon_name=StaticIcon(IconNames.topic_overview),
+                icon_name=DynamicIconName("topic_overview"),
                 public=True,
                 sort_index=20,
                 owner=UserId.builtin(),
@@ -2215,7 +2215,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "monitoring": PagetypeTopicConfig(
                 name="monitoring",
                 title=_("Monitoring"),
-                icon_name=StaticIcon(IconNames.topic_monitoring),
+                icon_name=DynamicIconName("topic_monitoring"),
                 public=True,
                 sort_index=30,
                 owner=UserId.builtin(),
@@ -2223,7 +2223,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "problems": PagetypeTopicConfig(
                 name="problems",
                 title=_("Problems"),
-                icon_name=StaticIcon(IconNames.topic_problems),
+                icon_name=DynamicIconName("topic_problems"),
                 public=True,
                 sort_index=40,
                 owner=UserId.builtin(),
@@ -2231,7 +2231,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "history": PagetypeTopicConfig(
                 name="history",
                 title=_("History"),
-                icon_name=StaticIcon(IconNames.topic_history),
+                icon_name=DynamicIconName("topic_history"),
                 public=True,
                 sort_index=50,
                 owner=UserId.builtin(),
@@ -2239,7 +2239,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "analyze": PagetypeTopicConfig(
                 name="analyze",
                 title=_("System"),
-                icon_name=StaticIcon(IconNames.topic_checkmk),
+                icon_name=DynamicIconName("topic_checkmk"),
                 public=True,
                 sort_index=60,
                 owner=UserId.builtin(),
@@ -2247,7 +2247,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "cloud": PagetypeTopicConfig(
                 name="cloud",
                 title=_("Cloud"),
-                icon_name=StaticIcon(IconNames.plugins_cloud),
+                icon_name=DynamicIconName("plugins_cloud"),
                 public=True,
                 sort_index=75,
                 owner=UserId.builtin(),
@@ -2255,7 +2255,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "bi": PagetypeTopicConfig(
                 name="bi",
                 title=_("Business Intelligence"),
-                icon_name=StaticIcon(IconNames.topic_bi),
+                icon_name=DynamicIconName("topic_bi"),
                 sort_index=80,
                 public=True,
                 hide=_no_bi_aggregate_active(),
@@ -2264,7 +2264,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "applications": PagetypeTopicConfig(
                 name="applications",
                 title=_("Applications"),
-                icon_name=StaticIcon(IconNames.topic_applications),
+                icon_name=DynamicIconName("topic_applications"),
                 public=True,
                 sort_index=85,
                 owner=UserId.builtin(),
@@ -2272,7 +2272,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "inventory": PagetypeTopicConfig(
                 name="inventory",
                 title=_("HW/SW Inventory"),
-                icon_name=StaticIcon(IconNames.topic_inventory),
+                icon_name=DynamicIconName("topic_inventory"),
                 public=True,
                 sort_index=90,
                 owner=UserId.builtin(),
@@ -2280,7 +2280,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "network_statistics": PagetypeTopicConfig(
                 name="network_statistics",
                 title=_("Network statistics"),
-                icon_name=StaticIcon(IconNames.topic_network),
+                icon_name=DynamicIconName("topic_network"),
                 sort_index=95,
                 public=True,
                 hide=not is_ntop_configured(),
@@ -2289,7 +2289,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "it_efficiency": PagetypeTopicConfig(
                 name="it_efficiency",
                 title=_("IT infrastructure efficiency"),
-                icon_name=StaticIcon(IconNames.topic_analyze),
+                icon_name=DynamicIconName("topic_analyze"),
                 description=_("Analyze the utilization of your IT infrastructure data center."),
                 public=True,
                 sort_index=100,
@@ -2298,7 +2298,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "synthetic_monitoring": PagetypeTopicConfig(
                 name="synthetic_monitoring",
                 title=_("Synthetic Monitoring"),
-                icon_name=StaticIcon(IconNames.synthetic_monitoring_topic),
+                icon_name=DynamicIconName("synthetic_monitoring_topic"),
                 public=True,
                 sort_index=105,
                 owner=UserId.builtin(),
@@ -2306,7 +2306,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "my_workplace": PagetypeTopicConfig(
                 name="my_workplace",
                 title=_("Workplace"),
-                icon_name=StaticIcon(IconNames.topic_my_workplace),
+                icon_name=DynamicIconName("topic_my_workplace"),
                 public=True,
                 sort_index=110,
                 owner=UserId.builtin(),
@@ -2315,7 +2315,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "other": PagetypeTopicConfig(
                 name="other",
                 title=_("Other"),
-                icon_name=StaticIcon(IconNames.topic_other),
+                icon_name=DynamicIconName("topic_other"),
                 public=True,
                 sort_index=115,
                 owner=UserId.builtin(),
@@ -2327,7 +2327,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
                     "events": PagetypeTopicConfig(
                         name="events",
                         title=_("Event Console"),
-                        icon_name=StaticIcon(IconNames.topic_events),
+                        icon_name=DynamicIconName("topic_events"),
                         public=True,
                         sort_index=70,
                         owner=UserId.builtin(),
@@ -2343,7 +2343,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     def sort_index(self) -> int:
         return self.config.sort_index
 
-    def icon_name(self) -> StaticIcon:
+    def icon_name(self) -> DynamicIcon:
         return self.config.icon_name
 
     def hide(self) -> bool:

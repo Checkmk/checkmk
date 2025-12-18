@@ -31,7 +31,7 @@ from cmk.agent_based.v2 import (
 # .1.3.6.1.4.1.31560.0.0.3.1.1.1.50 8861118                --> ARTEC-MIB::artecDocumentsValues.1.50
 
 
-def inventory_artec_documents(section: StringTable) -> DiscoveryResult:
+def discover_artec_documents(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -65,6 +65,6 @@ snmp_section_artec_documents = SimpleSNMPSection(
 check_plugin_artec_documents = CheckPlugin(
     name="artec_documents",
     service_name="Documents",
-    discovery_function=inventory_artec_documents,
+    discovery_function=discover_artec_documents,
     check_function=check_artec_documents,
 )

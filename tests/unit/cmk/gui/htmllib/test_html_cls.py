@@ -61,7 +61,7 @@ def test_render_help_html() -> None:
         html.render_help(HTML.without_escaping("<abc>")),
         HTML.without_escaping(
             '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
-            'data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+            'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
             'class="help_text"><abc></div></div>'
         ),
     )
@@ -74,7 +74,7 @@ def test_render_help_text() -> None:
         html.render_help("äbc"),
         HTML.without_escaping(
             '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
-            'data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+            'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
             'class="help_text">äbc</div></div>'
         ),
     )
@@ -88,7 +88,7 @@ def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
         html.render_help("äbc"),
         HTML.without_escaping(
             '<div style="display:flex;" class="help"><div class="info_icon"><cmk-static-icon '
-            'data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+            'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
             'class="help_text">äbc</div></div>'
         ),
     )
@@ -101,7 +101,7 @@ def test_add_manual_link() -> None:
         html.render_help("[welcome|Welcome]"),
         HTML.without_escaping(
             '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
-            'data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+            'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
             'class="help_text"><a href="https://docs.checkmk.com/master/en/welcome.html" '
             'target="_blank">Welcome</a></div></div>'
         ),
@@ -116,7 +116,7 @@ def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
             html.render_help("[welcome|Welcome]"),
             HTML.without_escaping(
                 '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
-                'data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+                'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
                 'class="help_text"><a href="https://docs.checkmk.com/master/de/welcome.html" '
                 'target="_blank">Welcome</a></div></div>'
             ),
@@ -131,7 +131,7 @@ def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
             html.render_help("[graphing#rrds|RRDs]"),
             HTML.without_escaping(
                 '<div style="display:none;" class="help"><div class="info_icon"><cmk-static-icon '
-                'data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
+                'class="icon" data="{&quot;icon&quot;: &quot;info&quot;}"></cmk-static-icon></div><div '
                 'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
                 'target="_blank">RRDs</a></div></div>'
             ),

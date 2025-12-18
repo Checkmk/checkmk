@@ -14,7 +14,11 @@ defineProps<{
 <template>
   <span class="cmk-icon-emblem">
     <slot />
-    <img v-if="emblem" :class="['cmk-icon-emblem__emblem', `cmk-icon-emblem__emblem--${emblem}`]" />
+    <!-- "emblem" is coming from legacy css -->
+    <img
+      v-if="emblem"
+      :class="['emblem', 'cmk-icon-emblem__emblem', `cmk-icon-emblem__emblem--${emblem}`]"
+    />
   </span>
 </template>
 

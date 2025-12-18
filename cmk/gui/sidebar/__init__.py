@@ -37,7 +37,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import IconNames, StaticIcon
+from cmk.gui.type_defs import IconNames, IconSizes, StaticIcon
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import load_custom_attr
 from cmk.gui.utils import load_web_plugins
@@ -708,8 +708,10 @@ class SidebarRenderer:
             title=_("Toggle the sidebar"),
             onclick="cmk.sidebar.toggle_sidebar()",
         )
-        html.static_icon(StaticIcon(IconNames.sidebar_folded), css_classes=["folded"])
-        html.static_icon(StaticIcon(IconNames.sidebar))
+        html.static_icon(
+            StaticIcon(IconNames.sidebar_folded), size=IconSizes.xlarge, css_classes=["folded"]
+        )
+        html.static_icon(StaticIcon(IconNames.sidebar), size=IconSizes.xlarge)
         if not user.get_attribute("nav_hide_icons_title"):
             html.div(_("Sidebar"))
         html.close_div()

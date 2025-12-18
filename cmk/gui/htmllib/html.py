@@ -1292,6 +1292,11 @@ class HTMLGenerator(HTMLWriter):
                 id_=id_,
             )
 
+        if css_classes is not None:
+            css_classes.append("icon")
+        else:
+            css_classes = ["icon"]
+
         return HTMLGenerator.render_vue_component(
             component_name="cmk-static-icon",
             data=asdict_strip_none(StaticIconAppProps(icon=icon.icon, title=title, size=size)),
@@ -1326,6 +1331,11 @@ class HTMLGenerator(HTMLWriter):
         id_: str | None = None,
         css_classes: list[str] | None = None,
     ) -> HTML:
+        if css_classes is not None:
+            css_classes.append("icon")
+        else:
+            css_classes = ["icon"]
+
         return HTMLGenerator.render_vue_component(
             component_name="cmk-dynamic-icon",
             data=asdict_strip_none(

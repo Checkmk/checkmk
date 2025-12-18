@@ -31,7 +31,6 @@ from cmk.gui.type_defs import (
     DynamicIconName,
     HTTPVariables,
     IconNames,
-    IconSizes,
     StaticIcon,
 )
 from cmk.gui.utils import escaping
@@ -953,11 +952,11 @@ class DropdownEntryRenderer:
     ) -> None:
         html.open_a(href=url, onclick=onclick, target=target)
         if isinstance(icon, StaticIcon):
-            html.static_icon(icon, size=IconSizes.xlarge)
+            html.static_icon(icon)
         elif not icon:
-            html.static_icon(StaticIcon(IconNames.trans), size=IconSizes.xlarge)
+            html.static_icon(StaticIcon(IconNames.trans))
         else:
-            html.dynamic_icon(icon, size=IconSizes.xlarge)
+            html.dynamic_icon(icon)
         html.span(title)
         html.close_a()
 

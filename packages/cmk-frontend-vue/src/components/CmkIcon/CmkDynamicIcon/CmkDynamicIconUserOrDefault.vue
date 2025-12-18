@@ -30,14 +30,13 @@ const props = defineProps<{
     :size="size"
     :title="props.title"
   />
-  <div v-else-if="props.spec.type === 'user_icon'">
-    <img
-      :src="props.spec.path"
-      :width="iconSize"
-      :height="iconSize"
-      :title="props.title"
-      :alt="props.title"
-    />
-  </div>
+  <img
+    v-else-if="props.spec.type === 'user_icon'"
+    :src="props.spec.path"
+    :width="iconSize"
+    :height="iconSize"
+    :title="props.title"
+    :alt="props.title"
+  />
   <div v-else>{{ untranslated('ERROR') }}</div>
 </template>

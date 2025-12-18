@@ -72,7 +72,7 @@ def parse_stormshield_cluster_node(string_table: StringTable) -> Section:
     }
 
 
-def inventory_stormshield_cluster_node(section: Section) -> DiscoveryResult:
+def discover_stormshield_cluster_node(section: Section) -> DiscoveryResult:
     yield from (Service(item=index) for index in section)
 
 
@@ -122,7 +122,7 @@ snmp_section_stormshield_cluster_node = SimpleSNMPSection(
 check_plugin_stormshield_cluster_node = CheckPlugin(
     name="stormshield_cluster_node",
     service_name="HA Member %s",
-    discovery_function=inventory_stormshield_cluster_node,
+    discovery_function=discover_stormshield_cluster_node,
     check_function=check_stormshield_cluster_node,
     check_ruleset_name="stormshield_quality",
     check_default_parameters={

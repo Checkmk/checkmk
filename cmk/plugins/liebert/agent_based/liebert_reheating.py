@@ -26,7 +26,7 @@ from cmk.plugins.liebert.agent_based.lib import DETECT_LIEBERT, parse_liebert_fl
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5080 %
 
 
-def inventory_liebert_reheating(section: Section[float]) -> DiscoveryResult:
+def discover_liebert_reheating(section: Section[float]) -> DiscoveryResult:
     if any("Reheat" in key for key in section):
         yield Service()
 
@@ -55,7 +55,7 @@ snmp_section_liebert_reheating = SimpleSNMPSection(
 check_plugin_liebert_reheating = CheckPlugin(
     name="liebert_reheating",
     service_name="Reheating Utilization",
-    discovery_function=inventory_liebert_reheating,
+    discovery_function=discover_liebert_reheating,
     check_function=check_liebert_reheating,
     check_default_parameters={
         "levels": (80, 90),

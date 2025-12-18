@@ -47,7 +47,7 @@ def parse_ibm_tl_changer_devices(string_table: StringTable) -> Section:
     }
 
 
-def inventory_ibm_tl_changer_devices(section: Section) -> DiscoveryResult:
+def discover_ibm_tl_changer_devices(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name in section)
 
 
@@ -74,6 +74,6 @@ snmp_section_ibm_tl_changer_devices = SimpleSNMPSection(
 check_plugin_ibm_tl_changer_devices = CheckPlugin(
     name="ibm_tl_changer_devices",
     service_name="Changer device %s",
-    discovery_function=inventory_ibm_tl_changer_devices,
+    discovery_function=discover_ibm_tl_changer_devices,
     check_function=check_ibm_tl_changer_devices,
 )

@@ -2,7 +2,7 @@ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 
 def _file_from_flag_impl(ctx):
     if (ctx.attr.content) and not (ctx.file.src):
-        template = ctx.actions.declare_file("template")
+        template = ctx.actions.declare_file(ctx.label.name + "_tmpl")
         content = "\n".join(ctx.attr.content)
         ctx.actions.write(
             output = template,

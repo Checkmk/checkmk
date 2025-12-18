@@ -4,7 +4,7 @@ per-file test_add_notification_rule.py=file:/component_owners/notifications/OWNE
 per-file test_add_notification_rule.py=set noparent
 per-file test_email_notifications.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file test_email_notifications.py=set noparent
-per-file test_login.py=file:/component_owners/ui_authentication/OWNERS_DEFINITION
+per-file test_login.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file test_login.py=set noparent
 
 # Please

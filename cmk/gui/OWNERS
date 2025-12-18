@@ -4,7 +4,7 @@ file:/component_owners/ui_monitoring/OWNERS_DEFINITION
 
 per-file availability.py=file:/component_owners/availability_and_sla/OWNERS_DEFINITION
 per-file availability.py=set noparent
-per-file login.py=file:/component_owners/ui_authentication/OWNERS_DEFINITION
+per-file login.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file login.py=set noparent
 per-file search_menu.py=file:/component_owners/global_search/OWNERS_DEFINITION
 per-file search_menu.py=set noparent

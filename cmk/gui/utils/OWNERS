@@ -1,6 +1,6 @@
 
 
-per-file login.py=file:/component_owners/ui_authentication/OWNERS_DEFINITION
+per-file login.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file login.py=set noparent
 per-file notifications.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notifications.py=set noparent

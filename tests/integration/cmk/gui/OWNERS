@@ -2,7 +2,7 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/ui_monitoring/OWNERS_DEFINITION
 
-per-file test_login.py=file:/component_owners/ui_authentication/OWNERS_DEFINITION
+per-file test_login.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file test_login.py=set noparent
 
 # Please

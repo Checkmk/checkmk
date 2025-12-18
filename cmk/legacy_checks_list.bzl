@@ -202,7 +202,6 @@ LEGACY_CHECKS = [
     "emc_isilon_fans",
     "emc_isilon_ifs",
     "emc_isilon_power",
-    "emc_isilon",
     "emc_isilon_temp",
     "emc_vplex_cpu",
     "emerson_stat",

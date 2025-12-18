@@ -56,13 +56,9 @@ class DashboardMetadataObject:
             "relative_grid" if dashboard_uses_relative_grid(dashboard) else "responsive_grid"
         )
         is_built_in = dashboard["owner"] == UserId.builtin()
-        # Note: from legacy build page header code it seems that permission edit_foreign_dashboards
-        # are not taken into account to determine if the user is allowed to edit a dashboard.
-        # This could be changed in the future.
-        is_editable = (
-            not is_built_in
-            and user.may("general.edit_dashboards")
-            and dashboard["owner"] == user.id
+        is_editable = not is_built_in and (
+            (user.id == dashboard["owner"] and user.may("general.edit_dashboards"))
+            or user.may("dashboards.edit_foreign_dashboards")
         )
         return cls(
             name=dashboard["name"],

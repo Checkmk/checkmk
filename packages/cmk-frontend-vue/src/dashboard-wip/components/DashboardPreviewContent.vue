@@ -35,5 +35,6 @@ defineProps<ContentProps>()
 
 .db-preview-content__click-shield {
   pointer-events: none;
+  height: 240px; /* "parent node" is used for figure height calculation */
 }
 </style>

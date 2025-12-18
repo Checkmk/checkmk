@@ -278,7 +278,7 @@ agent_section_zfs_arc_cache = AgentSection(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_zfs_arc_cache(section: Section) -> DiscoveryResult:
+def discover_zfs_arc_cache(section: Section) -> DiscoveryResult:
     if section.get("hits") and section.get("misses"):
         yield Service()
 
@@ -327,7 +327,7 @@ def check_zfs_arc_cache(section: Section) -> CheckResult:
 check_plugin_zfs_arc_cache = CheckPlugin(
     name="zfs_arc_cache",
     service_name="ZFS arc cache",
-    discovery_function=inventory_zfs_arc_cache,
+    discovery_function=discover_zfs_arc_cache,
     check_function=check_zfs_arc_cache,
 )
 
@@ -342,7 +342,7 @@ check_plugin_zfs_arc_cache = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_zfs_arc_cache_l2(section: Section) -> DiscoveryResult:
+def discover_zfs_arc_cache_l2(section: Section) -> DiscoveryResult:
     # if l2_size == 0 there is no l2 cache available at all
     if "l2_size" in section and section["l2_size"] > 0:
         yield Service()
@@ -369,6 +369,6 @@ check_plugin_zfs_arc_cache_l2 = CheckPlugin(
     name="zfs_arc_cache_l2",
     service_name="ZFS arc cache L2",
     sections=["zfs_arc_cache"],
-    discovery_function=inventory_zfs_arc_cache_l2,
+    discovery_function=discover_zfs_arc_cache_l2,
     check_function=check_zfs_arc_cache_l2,
 )

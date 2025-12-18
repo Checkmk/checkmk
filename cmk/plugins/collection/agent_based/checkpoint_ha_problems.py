@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.checkpoint.lib import DETECT
 
 
-def inventory_checkpoint_ha_problems(section: StringTable) -> DiscoveryResult:
+def discover_checkpoint_ha_problems(section: StringTable) -> DiscoveryResult:
     for name, _dev_status, _description in section:
         yield Service(item=name)
 
@@ -49,6 +49,6 @@ snmp_section_checkpoint_ha_problems = SimpleSNMPSection(
 check_plugin_checkpoint_ha_problems = CheckPlugin(
     name="checkpoint_ha_problems",
     service_name="HA Problem %s",
-    discovery_function=inventory_checkpoint_ha_problems,
+    discovery_function=discover_checkpoint_ha_problems,
     check_function=check_checkpoint_ha_problems,
 )

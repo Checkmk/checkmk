@@ -33,7 +33,7 @@ from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 # .1.3.6.1.4.1.674.10892.1.600.12.1.8.1.2 PS2 Status
 
 
-def inventory_dell_om_power(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_dell_om_power(section: Sequence[StringTable]) -> DiscoveryResult:
     for index, _status, _count in section[0]:
         yield Service(item=index)
 
@@ -77,12 +77,12 @@ snmp_section_dell_om_power = SNMPSection(
 check_plugin_dell_om_power = CheckPlugin(
     name="dell_om_power",
     service_name="Power Supply Redundancy %s",
-    discovery_function=inventory_dell_om_power,
+    discovery_function=discover_dell_om_power,
     check_function=check_dell_om_power,
 )
 
 
-def inventory_dell_om_power_unit(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_dell_om_power_unit(section: Sequence[StringTable]) -> DiscoveryResult:
     for line in section[1]:
         yield Service(item=line[0])
 
@@ -125,6 +125,6 @@ check_plugin_dell_om_power_unit = CheckPlugin(
     name="dell_om_power_unit",
     service_name="Power Supply %s",
     sections=["dell_om_power"],
-    discovery_function=inventory_dell_om_power_unit,
+    discovery_function=discover_dell_om_power_unit,
     check_function=check_dell_om_power_unit,
 )

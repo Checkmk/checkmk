@@ -24,7 +24,7 @@ def parse_zebra_model(string_table: Sequence[StringTable]) -> Sequence[StringTab
     return string_table
 
 
-def inventory_zebra_model(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_zebra_model(section: Sequence[StringTable]) -> DiscoveryResult:
     if any(section):
         yield Service()
 
@@ -74,6 +74,6 @@ snmp_section_zebra_model = SNMPSection(
 check_plugin_zebra_model = CheckPlugin(
     name="zebra_model",
     service_name="Zebra Printer Model",
-    discovery_function=inventory_zebra_model,
+    discovery_function=discover_zebra_model,
     check_function=check_zebra_model,
 )

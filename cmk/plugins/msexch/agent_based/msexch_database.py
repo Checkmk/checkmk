@@ -172,7 +172,7 @@ def parse_msexch_database(string_table: StringTable) -> Section:
     return {item: DbPerfData(**values) for item, values in parsed.items() if values}
 
 
-def inventory_msexch_database(section: Section) -> DiscoveryResult:
+def discover_msexch_database(section: Section) -> DiscoveryResult:
     for instance in section:
         yield Service(item=instance)
 
@@ -235,7 +235,7 @@ agent_section_msexch_database = AgentSection(
 check_plugin_msexch_database = CheckPlugin(
     name="msexch_database",
     service_name="Exchange Database %s",
-    discovery_function=inventory_msexch_database,
+    discovery_function=discover_msexch_database,
     check_function=check_msexch_database,
     check_ruleset_name="msx_database",
     check_default_parameters=Params(

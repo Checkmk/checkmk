@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.msexch.agent_based.msexch_database import (
     _normalize_decimal,
     check_msexch_database,
-    inventory_msexch_database,
+    discover_msexch_database,
     Params,
     parse_msexch_database,
 )
@@ -331,7 +331,7 @@ _DE_AGENT_OUTPUT = [
 )
 def test_parse_msexch_database(string_table: StringTable, expected_result: DiscoveryResult) -> None:
     section = parse_msexch_database(string_table)
-    assert sorted(inventory_msexch_database(section)) == expected_result
+    assert sorted(discover_msexch_database(section)) == expected_result
 
 
 @pytest.mark.parametrize(

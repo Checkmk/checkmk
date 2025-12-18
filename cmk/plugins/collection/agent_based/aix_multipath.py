@@ -28,7 +28,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_aix_multipath(section: StringTable) -> DiscoveryResult:
+def discover_aix_multipath(section: StringTable) -> DiscoveryResult:
     disks = {}
     for disk, _controller, _status in section:
         # filtering here to only see disks. there are other multipath devices,
@@ -77,7 +77,7 @@ agent_section_aix_multipath = AgentSection(
 check_plugin_aix_multipath = CheckPlugin(
     name="aix_multipath",
     service_name="Multipath %s",
-    discovery_function=inventory_aix_multipath,
+    discovery_function=discover_aix_multipath,
     check_function=check_aix_multipath,
     check_default_parameters={},
 )

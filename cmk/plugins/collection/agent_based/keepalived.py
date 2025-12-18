@@ -36,7 +36,7 @@ def hex2ip(hexstr: str) -> str:
     return str(ipaddress.ip_address(bytes.fromhex(hexstr.replace(" ", ""))))
 
 
-def inventory_keepalived(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_keepalived(section: Sequence[StringTable]) -> DiscoveryResult:
     for entry in section[0]:
         vrrp_id = entry[0]
         yield Service(item=vrrp_id)
@@ -88,7 +88,7 @@ snmp_section_keepalived = SNMPSection(
 check_plugin_keepalived = CheckPlugin(
     name="keepalived",
     service_name="VRRP Instance %s",
-    discovery_function=inventory_keepalived,
+    discovery_function=discover_keepalived,
     check_function=check_keepalived,
     check_ruleset_name="keepalived",
     check_default_parameters={

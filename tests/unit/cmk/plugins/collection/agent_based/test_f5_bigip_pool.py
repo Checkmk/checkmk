@@ -12,8 +12,8 @@ import pytest
 from cmk.agent_based.v2 import LevelsT, Result, Service, State
 from cmk.plugins.collection.agent_based.f5_bigip_pool import (
     check_f5_bigip_pool,
+    discover_f5_bigip_pool,
     f5_bigip_pool_get_down_members,
-    inventory_f5_bigip_pool,
     parse_f5_bigip_pool,
     PoolMember,
     Section,
@@ -92,18 +92,18 @@ def test_parse_f5_bigip_pool_break_on_second_member_block() -> None:
     assert "pool2" not in result
 
 
-def test_inventory_f5_bigip_pool() -> None:
+def test_discover_f5_bigip_pool() -> None:
     section: Mapping[str, Section] = _make_section()
-    services = list(inventory_f5_bigip_pool(section))
+    services = list(discover_f5_bigip_pool(section))
 
     assert len(services) == 1
     assert isinstance(services[0], Service)
     assert services[0].item == "pool1"
 
 
-def test_inventory_f5_bigip_pool_skips_empty_item() -> None:
+def test_discover_f5_bigip_pool_skips_empty_item() -> None:
     section: Mapping[str, Section] = {"": Section(2, 2, [])}
-    services = list(inventory_f5_bigip_pool(section))
+    services = list(discover_f5_bigip_pool(section))
     assert services == []
 
 

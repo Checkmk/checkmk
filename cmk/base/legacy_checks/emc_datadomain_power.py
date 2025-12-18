@@ -3,57 +3,62 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_DATADOMAIN
 
-check_info = {}
+
+def discover_emc_datadomain_power(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=f"{line[0]}-{line[1]}")
 
 
-def inventory_emc_datadomain_power(info):
-    inventory = []
-    for line in info:
-        item = line[0] + "-" + line[1]
-        inventory.append((item, None))
-    return inventory
-
-
-def check_emc_datadomain_power(item, _no_params, info):
+def check_emc_datadomain_power(item: str, section: StringTable) -> CheckResult:
     state_table = {
-        "0": ("Absent", 0),
-        "1": ("OK", 0),
-        "2": ("Failed", 2),
-        "3": ("Faulty", 2),
-        "4": ("Acnone", 1),
-        "99": ("Unknown", 3),
+        "0": ("Absent", State.OK),
+        "1": ("OK", State.OK),
+        "2": ("Failed", State.CRIT),
+        "3": ("Faulty", State.CRIT),
+        "4": ("Acnone", State.WARN),
+        "99": ("Unknown", State.UNKNOWN),
     }
-    for line in info:
-        if item == line[0] + "-" + line[1]:
+    for line in section:
+        if item == f"{line[0]}-{line[1]}":
             dev_descr = line[2]
             dev_state = line[3]
-            dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
-            dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
-            infotext = f"{dev_descr} Status {dev_state_str}"
-            return dev_state_rc, infotext
-    return None
+            dev_state_str, dev_state_rc = state_table.get(dev_state, ("Unknown", State.UNKNOWN))
+            yield Result(state=dev_state_rc, summary=f"{dev_descr} Status {dev_state_str}")
+            return
 
 
 def parse_emc_datadomain_power(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["emc_datadomain_power"] = LegacyCheckDefinition(
+snmp_section_emc_datadomain_power = SimpleSNMPSection(
     name="emc_datadomain_power",
-    parse_function=parse_emc_datadomain_power,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.1.1.1.1.1",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_emc_datadomain_power,
+)
+
+
+check_plugin_emc_datadomain_power = CheckPlugin(
+    name="emc_datadomain_power",
     service_name="Power Module %s",
-    discovery_function=inventory_emc_datadomain_power,
+    discovery_function=discover_emc_datadomain_power,
     check_function=check_emc_datadomain_power,
 )

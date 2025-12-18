@@ -98,7 +98,7 @@ def parse_cmctc_ports(string_table: Sequence[StringTable]) -> Section | None:
     return parsed
 
 
-def inventory_cmctc_ports(section: Section) -> DiscoveryResult:
+def discover_cmctc_ports(section: Section) -> DiscoveryResult:
     for entry in section:
         yield Service(item=entry)
 
@@ -144,6 +144,6 @@ snmp_section_cmctc_ports = SNMPSection(
 check_plugin_cmctc_ports = CheckPlugin(
     name="cmctc_ports",
     service_name="Port %s",
-    discovery_function=inventory_cmctc_ports,
+    discovery_function=discover_cmctc_ports,
     check_function=check_cmctc_ports,
 )

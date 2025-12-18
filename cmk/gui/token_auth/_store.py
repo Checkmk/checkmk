@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Annotated, Final, Literal, NewType
 
 from dateutil.relativedelta import relativedelta
-from pydantic import BaseModel, Field, PlainValidator, RootModel, WithJsonSchema
+from pydantic import BaseModel, Discriminator, Field, PlainValidator, RootModel, WithJsonSchema
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import RealIo
@@ -19,6 +19,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.utils import paths
 
+# NOTE: must be kept in sync with the `type_` fields in the token models below
 TokenType = Literal["dashboard", "agent_registration"]
 
 
@@ -45,7 +46,7 @@ class TokenRevoked(TokenTypeError):
 
 
 class DashboardToken(BaseModel):
-    type_: TokenType = "dashboard"
+    type_: Literal["dashboard"] = "dashboard"
     owner: AnnotatedUserId
     dashboard_name: str
     comment: str = ""
@@ -56,7 +57,7 @@ class DashboardToken(BaseModel):
 
 
 class AgentRegistrationToken(BaseModel):
-    type_: TokenType = "agent_registration"
+    type_: Literal["agent_registration"] = "agent_registration"
     host_name: Annotated[
         HostName,
         PlainValidator(HostName),
@@ -67,7 +68,7 @@ class AgentRegistrationToken(BaseModel):
 
 TokenId = NewType("TokenId", str)
 
-type TokenDetails = DashboardToken | AgentRegistrationToken
+type TokenDetails = Annotated[DashboardToken | AgentRegistrationToken, Discriminator("type_")]
 
 
 class AuthToken(BaseModel):
@@ -83,7 +84,7 @@ class AuthToken(BaseModel):
     issuer: AnnotatedUserId
     issued_at: datetime
     valid_until: datetime | None
-    details: TokenDetails = Field(discriminator="type_")
+    details: TokenDetails
     token_id: TokenId
     revoked: bool = False
     last_successful_verification: datetime | None = None

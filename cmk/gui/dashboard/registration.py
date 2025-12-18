@@ -25,7 +25,6 @@ from .page_create_view_dashlet import (
     page_create_view_dashlet_infos,
 )
 from .page_edit_dashboard import page_edit_dashboard
-from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_edit_dashlet import EditDashletPage
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
@@ -64,7 +63,6 @@ def register(
         PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters())
     )
     page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage()))
-    page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
     page_registry.register(PageEndpoint("dashboard", page_dashboard_app))
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("shared_dashboard", SharedDashboardPage())
@@ -77,9 +75,6 @@ def register(
     page_registry.register(
         PageEndpoint("create_view_dashlet_infos", page_create_view_dashlet_infos)
     )
-    page_registry.register(PageEndpoint("clone_dashlet", page_clone_dashlet))
-    page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
-    page_registry.register(PageEndpoint("ajax_dashlet_pos", ajax_dashlet_pos))
 
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint(FigureWidgetTokenAuthPage.ident(), FigureWidgetTokenAuthPage())

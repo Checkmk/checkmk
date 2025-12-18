@@ -22,7 +22,7 @@ def parse_alcatel_cpu(string_table: StringTable) -> float | None:
     return int(string_table[0][0]) if string_table else None
 
 
-def inventory_alcatel_cpu(section: float) -> DiscoveryResult:
+def discover_alcatel_cpu(section: float) -> DiscoveryResult:
     yield Service()
 
 
@@ -48,7 +48,7 @@ snmp_section_alcatel_cpu = SimpleSNMPSection(
 check_plugin_alcatel_cpu = CheckPlugin(
     name="alcatel_cpu",
     service_name="CPU utilization",
-    discovery_function=inventory_alcatel_cpu,
+    discovery_function=discover_alcatel_cpu,
     check_function=check_alcatel_cpu,
 )
 snmp_section_alcatel_cpu_aos7 = SimpleSNMPSection(
@@ -63,6 +63,6 @@ snmp_section_alcatel_cpu_aos7 = SimpleSNMPSection(
 check_plugin_alcatel_cpu_aos7 = CheckPlugin(
     name="alcatel_cpu_aos7",
     service_name="CPU utilization",
-    discovery_function=inventory_alcatel_cpu,
+    discovery_function=discover_alcatel_cpu,
     check_function=check_alcatel_cpu,
 )

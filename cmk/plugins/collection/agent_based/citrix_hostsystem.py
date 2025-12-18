@@ -86,7 +86,7 @@ check_plugin_citrix_hostsystem_vms = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_citrix_hostsystem(section: Section) -> DiscoveryResult:
+def discover_citrix_hostsystem(section: Section) -> DiscoveryResult:
     if section["pool"]:
         yield Service()
 
@@ -103,6 +103,6 @@ agent_section_citrix_hostsystem = AgentSection(
 check_plugin_citrix_hostsystem = CheckPlugin(
     name="citrix_hostsystem",
     service_name="Citrix Host Info",
-    discovery_function=inventory_citrix_hostsystem,
+    discovery_function=discover_citrix_hostsystem,
     check_function=check_citrix_hostsystem,
 )

@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.base.legacy_checks.fast_lta_headunit import (
+from cmk.plugins.fast_lta.agent_based.fast_lta_headunit import (
     check_fast_lta_headunit_replication,
     inventory_fast_lta_headunit_replication,
 )

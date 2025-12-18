@@ -223,7 +223,6 @@ LEGACY_CHECKS = [
     "f5_bigip_psu",
     "f5_bigip_snat",
     "f5_bigip_vserver",
-    "fast_lta_headunit",
     "fast_lta_silent_cubes",
     "fast_lta_volumes",
     "fc_port",

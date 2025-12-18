@@ -250,7 +250,7 @@ def get_welcome_data() -> WelcomePage:
             add_custom_dashboard=makeuri(
                 request,
                 addvars=[],
-                filename="create_dashboard.py",
+                filename="dashboard.py?mode=create",
             ),
             all_dashboards=makeuri(
                 request,

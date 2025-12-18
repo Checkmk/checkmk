@@ -79,7 +79,6 @@ def test_registered_pages() -> None:
         "bookmark_lists",
         "change_log",
         "clear_failed_notifications",
-        "create_dashboard",
         "create_view",
         "create_view_infos",
         "custom_snapins",

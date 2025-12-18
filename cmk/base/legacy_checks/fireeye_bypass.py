@@ -6,11 +6,21 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.plugins.fireeye.lib import DETECT
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.fireeye.lib import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.41.0 0
 # .1.3.6.1.4.1.25597.13.1.42.0 0
@@ -23,27 +33,33 @@ def discover_bypass(section: StringTable) -> DiscoveryResult:
         yield Service(parameters={"value": value})
 
 
-def check_fireeye_bypass(_no_item, params, info):
+def check_fireeye_bypass(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     expected_value = params.get("value", 0)
-    current_value = int(info[0][0])
-    yield 0, "Bypass E-Mail count: %d" % current_value
+    current_value = int(section[0][0])
+    yield Result(state=State.OK, summary=f"Bypass E-Mail count: {current_value}")
     if current_value != expected_value:
-        yield 2, " (was %d before)" % expected_value
+        yield Result(state=State.CRIT, summary=f" (was {expected_value} before)")
 
 
 def parse_fireeye_bypass(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["fireeye_bypass"] = LegacyCheckDefinition(
+snmp_section_fireeye_bypass = SimpleSNMPSection(
     name="fireeye_bypass",
-    parse_function=parse_fireeye_bypass,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=["41"],
     ),
+    parse_function=parse_fireeye_bypass,
+)
+
+
+check_plugin_fireeye_bypass = CheckPlugin(
+    name="fireeye_bypass",
     service_name="Bypass Mail Rate",
     discovery_function=discover_bypass,
     check_function=check_fireeye_bypass,
+    check_default_parameters={"value": 0},
 )

@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.cmciii.lib import DETECT_CMCIII_LCP
 
 
-def inventory_cmciii_lcp_fans(section: StringTable) -> DiscoveryResult:
+def discover_cmciii_lcp_fans(section: StringTable) -> DiscoveryResult:
     inventory = []
     # FAN infos have 4 elements. Split the single info line we get
     # into even sized chunks of 4 elements. In some cases there might
@@ -110,6 +110,6 @@ snmp_section_cmciii_lcp_fans = SimpleSNMPSection(
 check_plugin_cmciii_lcp_fans = CheckPlugin(
     name="cmciii_lcp_fans",
     service_name="LCP Fanunit FAN %s",
-    discovery_function=inventory_cmciii_lcp_fans,
+    discovery_function=discover_cmciii_lcp_fans,
     check_function=check_cmciii_lcp_fans,
 )

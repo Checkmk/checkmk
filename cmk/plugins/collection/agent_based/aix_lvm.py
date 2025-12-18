@@ -92,7 +92,7 @@ def parse_aix_lvm(info):
     return lvmconf
 
 
-def inventory_aix_lvm(section: Any) -> DiscoveryResult:
+def discover_aix_lvm(section: Any) -> DiscoveryResult:
     yield from (Service(item=f"{vg}/{lv}") for vg, volumes in section.items() for lv in volumes)
 
 
@@ -151,6 +151,6 @@ agent_section_aix_lvm = AgentSection(
 check_plugin_aix_lvm = CheckPlugin(
     name="aix_lvm",
     service_name="Logical Volume %s",
-    discovery_function=inventory_aix_lvm,
+    discovery_function=discover_aix_lvm,
     check_function=check_aix_lvm,
 )

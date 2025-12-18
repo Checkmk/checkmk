@@ -38,7 +38,7 @@ akcp_sensor_level_states = {
 Section = list[list[str]]
 
 
-def inventory_akcp_sensor_no_params(section: Section) -> DiscoveryResult:
+def discover_akcp_sensor_no_params(section: Section) -> DiscoveryResult:
     for line in section:
         # "1" means online, "2" offline
         if line[-1] == "1":

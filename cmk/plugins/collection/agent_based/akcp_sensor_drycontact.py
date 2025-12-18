@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.akcp.lib import DETEC_AKCP_SP2PLUS
 from cmk.plugins.akcp.lib_sensor import (
     check_akcp_sensor_drycontact,
-    inventory_akcp_sensor_no_params,
+    discover_akcp_sensor_no_params,
     parse_akcp_sensor,
 )
 
@@ -56,5 +56,5 @@ check_plugin_akcp_sensor_drycontact = CheckPlugin(
     name="akcp_sensor_drycontact",
     service_name="Dry Contact %s",
     check_function=check_akcp_sensor_drycontact,
-    discovery_function=inventory_akcp_sensor_no_params,
+    discovery_function=discover_akcp_sensor_no_params,
 )

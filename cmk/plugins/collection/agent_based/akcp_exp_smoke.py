@@ -8,7 +8,7 @@ from cmk.agent_based.v2 import CheckPlugin, SimpleSNMPSection, SNMPTree
 from cmk.plugins.akcp.lib import DETEC_AKCP_SP2PLUS, DETECT_AKCP_EXP
 from cmk.plugins.akcp.lib_sensor import (
     check_akcp_sensor_relay,
-    inventory_akcp_sensor_no_params,
+    discover_akcp_sensor_no_params,
     parse_akcp_sensor,
 )
 
@@ -51,5 +51,5 @@ check_plugin_akcp_exp_smoke = CheckPlugin(
     name="akcp_exp_smoke",
     service_name="Smoke %s",
     check_function=check_akcp_sensor_relay,
-    discovery_function=inventory_akcp_sensor_no_params,
+    discovery_function=discover_akcp_sensor_no_params,
 )

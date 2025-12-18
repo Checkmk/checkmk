@@ -1672,9 +1672,10 @@ class ModeTestNotifications(ModeNotifications):
             except Exception as e:
                 raise MKUserError(None, "Failed to parse context from request.") from e
 
-            self._add_missing_host_context(context)
+            event_date = time.time()
+            self._add_missing_host_context(context, event_date)
             if context["WHAT"] == "SERVICE":
-                self._add_missing_service_context(context)
+                self._add_missing_service_context(context, event_date)
 
             site_id = SiteId(context["SITEOFHOST"])
             remote_spooling = (
@@ -2009,7 +2010,7 @@ class ModeTestNotifications(ModeNotifications):
 
         return context, dispatch, test_type
 
-    def _add_missing_host_context(self, context: NotificationContext) -> None:
+    def _add_missing_host_context(self, context: NotificationContext, event_date: float) -> None:
         """We don't want to transport all possible informations via HTTP vars
         so we enrich the context after fetching all user defined options"""
         hostname = context["HOSTNAME"]
@@ -2037,6 +2038,7 @@ class ModeTestNotifications(ModeNotifications):
         context["HOSTALIAS"] = resp[0][6]
         context["HOSTADDRESS"] = resp[0][7]
         context["CONTACTS"] = ",".join(resp[0][8])
+        context["LASTHOSTSTATECHANGE"] = str(int(event_date))
 
     def _set_custom_variables(
         self,
@@ -2062,7 +2064,7 @@ class ModeTestNotifications(ModeNotifications):
             # For now we just set both.
             context[f"{prefix}{key}"] = value
 
-    def _add_missing_service_context(self, context: NotificationContext) -> None:
+    def _add_missing_service_context(self, context: NotificationContext, event_date: float) -> None:
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
             "GET services\n"
@@ -2084,7 +2086,8 @@ class ModeTestNotifications(ModeNotifications):
         context["CONTACTS"] = ",".join(resp[0][6])
         context["SERVICEDISPLAYNAME"] = resp[0][7]
 
-        context["SERVICEPROBLEMID"] = "notify_test_" + str(int(time.time() * 1000000))
+        context["LASTSERVICESTATECHANGE"] = str(int(event_date))
+        context["SERVICEPROBLEMID"] = "notify_test_" + str(int(event_date * 1000000))
 
     def _set_labels(
         self,

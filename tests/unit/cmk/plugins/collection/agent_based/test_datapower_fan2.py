@@ -9,8 +9,8 @@ import pytest
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.collection.agent_based.datapower_fan import (
     check_datapower_fan,
+    discover_datapower_fan,
     Fan,
-    inventory_datapower_fan,
 )
 
 _SECTION = {
@@ -38,7 +38,7 @@ _SECTION = {
 
 
 def test_discover_datapower_fan() -> None:
-    assert list(inventory_datapower_fan(_SECTION)) == [
+    assert list(discover_datapower_fan(_SECTION)) == [
         Service(item="Tray 1 Fan 1"),
         Service(item="Tray 1 Fan 2"),
         Service(item="Tray 1 Fan 3"),

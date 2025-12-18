@@ -108,7 +108,7 @@ snmp_section_datapower_fan = SimpleSNMPSection(
 )
 
 
-def inventory_datapower_fan(section: Section) -> DiscoveryResult:
+def discover_datapower_fan(section: Section) -> DiscoveryResult:
     yield from (Service(item=fan_name) for fan_name in section)
 
 
@@ -137,6 +137,6 @@ def check_datapower_fan(item: str, section: Section) -> CheckResult:
 check_plugin_datapower_fan = CheckPlugin(
     name="datapower_fan",
     service_name="Fan %s",
-    discovery_function=inventory_datapower_fan,
+    discovery_function=discover_datapower_fan,
     check_function=check_datapower_fan,
 )

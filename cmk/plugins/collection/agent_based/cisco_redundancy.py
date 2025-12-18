@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_cisco_redundancy(section: StringTable) -> DiscoveryResult:
+def discover_cisco_redundancy(section: StringTable) -> DiscoveryResult:
     try:
         swact_reason = section[0][5]
     except IndexError:
@@ -136,7 +136,7 @@ snmp_section_cisco_redundancy = SimpleSNMPSection(
 check_plugin_cisco_redundancy = CheckPlugin(
     name="cisco_redundancy",
     service_name="Redundancy Framework Status",
-    discovery_function=inventory_cisco_redundancy,
+    discovery_function=discover_cisco_redundancy,
     check_function=check_cisco_redundancy,
     check_default_parameters={},
 )

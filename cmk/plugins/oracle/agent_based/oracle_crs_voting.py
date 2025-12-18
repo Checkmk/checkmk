@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_oracle_crs_voting(section: StringTable) -> DiscoveryResult:
+def discover_oracle_crs_voting(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -65,6 +65,6 @@ agent_section_oracle_crs_voting = AgentSection(
 check_plugin_oracle_crs_voting = CheckPlugin(
     name="oracle_crs_voting",
     service_name="ORA-GI Voting",
-    discovery_function=inventory_oracle_crs_voting,
+    discovery_function=discover_oracle_crs_voting,
     check_function=check_oracle_crs_voting,
 )

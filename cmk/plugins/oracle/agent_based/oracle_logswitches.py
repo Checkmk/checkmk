@@ -31,7 +31,7 @@ from .liboracle import (
 # hirni  22
 
 
-def inventory_oracle_logswitches(section: StringTable) -> DiscoveryResult:
+def discover_oracle_logswitches(section: StringTable) -> DiscoveryResult:
     oracle_handle_ora_errors_discovery(section)
     yield from [Service(item=line[0]) for line in section if len(line) == 2]
 
@@ -92,7 +92,7 @@ agent_section_oracle_logswitches = AgentSection(
 check_plugin_oracle_logswitches = CheckPlugin(
     name="oracle_logswitches",
     service_name="ORA %s Logswitches",
-    discovery_function=inventory_oracle_logswitches,
+    discovery_function=discover_oracle_logswitches,
     check_function=check_oracle_logswitches,
     check_ruleset_name="oracle_logswitches",
     check_default_parameters={

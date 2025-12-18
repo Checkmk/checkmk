@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.casa.lib import DETECT_CASA
 
 
-def inventory_casa_fan(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_casa_fan(section: Sequence[StringTable]) -> DiscoveryResult:
     inventory = []
     for nr, _speed in section[0]:
         inventory.append((nr, None))
@@ -75,6 +75,6 @@ snmp_section_casa_fan = SNMPSection(
 check_plugin_casa_fan = CheckPlugin(
     name="casa_fan",
     service_name="Fan %s",
-    discovery_function=inventory_casa_fan,
+    discovery_function=discover_casa_fan,
     check_function=check_casa_fan,
 )

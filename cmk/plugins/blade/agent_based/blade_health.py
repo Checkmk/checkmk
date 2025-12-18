@@ -25,7 +25,7 @@ from .detection import DETECT_BLADE
 # .1.3.6.1.4.1.2.3.51.2.2.7.2.1.4.1  "No timestamp"
 
 
-def inventory_blade_health(section: StringTable) -> DiscoveryResult:
+def discover_blade_health(section: StringTable) -> DiscoveryResult:
     if len(section) == 1:
         yield Service()
 
@@ -66,6 +66,6 @@ snmp_section_blade_health = SimpleSNMPSection(
 check_plugin_blade_health = CheckPlugin(
     name="blade_health",
     service_name="Summary health state",
-    discovery_function=inventory_blade_health,
+    discovery_function=discover_blade_health,
     check_function=check_blade_health,
 )

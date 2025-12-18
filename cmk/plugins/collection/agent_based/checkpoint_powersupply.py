@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.checkpoint.lib import DETECT
 
 
-def inventory_checkpoint_powersupply(section: StringTable) -> DiscoveryResult:
+def discover_checkpoint_powersupply(section: StringTable) -> DiscoveryResult:
     for index, _dev_status in section:
         yield Service(item=index)
 
@@ -51,6 +51,6 @@ snmp_section_checkpoint_powersupply = SimpleSNMPSection(
 check_plugin_checkpoint_powersupply = CheckPlugin(
     name="checkpoint_powersupply",
     service_name="Power Supply %s",
-    discovery_function=inventory_checkpoint_powersupply,
+    discovery_function=discover_checkpoint_powersupply,
     check_function=check_checkpoint_powersupply,
 )

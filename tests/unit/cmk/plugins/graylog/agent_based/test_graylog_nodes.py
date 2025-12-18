@@ -104,8 +104,8 @@ def time_to_set(_test_data: GraylogNodeTestdata) -> datetime:
     return _test_data.time_to_set
 
 
-def test_inventory_graylog_nodes(section: graylog_nodes.Section, node_id: str) -> None:
-    returned_items = list(graylog_nodes.inventory_graylog_nodes(section))
+def test_discover_graylog_nodes(section: graylog_nodes.Section, node_id: str) -> None:
+    returned_items = list(graylog_nodes.discover_graylog_nodes(section))
     expected_items = [Service(item=node_id)]
 
     assert returned_items == expected_items

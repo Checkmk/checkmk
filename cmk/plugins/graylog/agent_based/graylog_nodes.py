@@ -97,7 +97,7 @@ def parse_graylog_nodes(string_table: StringTable) -> Section:
     return parsed
 
 
-def inventory_graylog_nodes(section: Section) -> DiscoveryResult:
+def discover_graylog_nodes(section: Section) -> DiscoveryResult:
     for node in section:
         yield Service(item=node)
 
@@ -246,7 +246,7 @@ agent_section_graylog_nodes = AgentSection(
 check_plugin_graylog_nodes = CheckPlugin(
     name="graylog_nodes",
     service_name="Graylog Node %s",
-    discovery_function=inventory_graylog_nodes,
+    discovery_function=discover_graylog_nodes,
     check_function=check_graylog_nodes,
     check_default_parameters=DEFAULT_CHECK_PARAMS,
     check_ruleset_name="graylog_nodes",

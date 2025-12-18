@@ -199,7 +199,6 @@ LEGACY_CHECKS = [
     "emc_datadomain_mtree",
     "emc_datadomain_temps",
     "emc_isilon_cpu",
-    "emc_isilon_diskstatus",
     "emc_isilon_fans",
     "emc_isilon_ifs",
     "emc_isilon_power",

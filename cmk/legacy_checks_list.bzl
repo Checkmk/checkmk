@@ -229,7 +229,6 @@ LEGACY_CHECKS = [
     "filehandler",
     "filestats",
     "fireeye_active_vms",
-    "fireeye_bypass",
     "fireeye_content",
     "fireeye_fans",
     "fireeye_lic_active",

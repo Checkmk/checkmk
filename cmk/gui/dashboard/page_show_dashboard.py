@@ -73,12 +73,12 @@ def page_dashboard_app(ctx: PageContext) -> None:
         "display"  # edit mode lives within the page
     )
 
-    if ctx.request.var("create") == "1":
+    if ctx.request.var("mode") == "create":
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to create dashboards."))
         mode = "create"
 
-    elif ctx.request.var("mode") == "edit":
+    elif ctx.request.var("mode") == "edit_settings":
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
         mode = "settings"
@@ -88,9 +88,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
             raise MKAuthException(_("You are not allowed to clone dashboards."))
         mode = "clone"
 
-    name = ctx.request.get_ascii_input_mandatory(
-        "name", ctx.request.get_ascii_input_mandatory("load_name", "")
-    )
+    name = ctx.request.get_ascii_input_mandatory("name", "")
 
     if not name:
         name = _get_default_dashboard_name()

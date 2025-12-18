@@ -95,7 +95,7 @@ def page_list(
                 PageMenuEntry(
                     title=_("Add dashboard"),
                     icon_name=StaticIcon(IconNames.new),
-                    item=make_simple_link("dashboard.py?create=1"),
+                    item=make_simple_link("dashboard.py?mode=create"),
                     is_shortcut=True,
                     is_suggested=True,
                 ),
@@ -191,17 +191,30 @@ def page_list(
                     owner == user.id
                     or (owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what))
                 ) and not is_packaged:
-                    edit_vars: HTTPVariables = [
-                        ("mode", "edit"),
-                        ("load_name", visual_name),
-                        ("back", backurl),
-                    ]
+                    edit_vars: HTTPVariables
+                    if what == "dashboards":
+                        edit_vars = [
+                            ("mode", "edit_settings"),
+                            ("name", visual_name),
+                            ("back", backurl),
+                        ]
+                        filename = "dashboard.py"
+
+                    else:
+                        edit_vars = [
+                            ("mode", "edit"),
+                            ("load_name", visual_name),
+                            ("back", backurl),
+                        ]
+                        filename = "edit_%s.py" % what_s
+
                     if owner != user.id:
                         edit_vars.append(("owner", owner))
+
                     edit_url = makeuri_contextless(
                         request,
                         edit_vars,
-                        filename="edit_%s.py" % what_s,
+                        filename=filename,
                     )
                     html.icon_button(edit_url, _("Edit"), StaticIcon(IconNames.edit))
 
@@ -211,16 +224,29 @@ def page_list(
 
                 # Clone / Customize
                 buttontext = _("Create a private copy of this")
-                clone_url = makeuri_contextless(
-                    request,
-                    [
-                        ("mode", "clone"),
-                        ("owner", owner),
-                        ("load_name", visual_name),
-                        ("back", backurl),
-                    ],
-                    filename="edit_%s.py" % what_s,
-                )
+
+                if what == "dashboards":
+                    clone_url = makeuri_contextless(
+                        request,
+                        [
+                            ("mode", "clone"),
+                            ("owner", owner),
+                            ("name", visual_name),
+                            ("back", backurl),
+                        ],
+                        filename="dashboard.py",
+                    )
+                else:
+                    clone_url = makeuri_contextless(
+                        request,
+                        [
+                            ("mode", "clone"),
+                            ("owner", owner),
+                            ("load_name", visual_name),
+                            ("back", backurl),
+                        ],
+                        filename="edit_%s.py" % what_s,
+                    )
                 html.icon_button(clone_url, buttontext, StaticIcon(IconNames.clone))
 
                 # Packaged visuals have built-in user as owner, so we have to

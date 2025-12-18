@@ -43,7 +43,7 @@ def parse_liebert_maintenence(string_table: StringTable) -> Section | None:
     return parse_liebert_without_unit([string_table], int) or None
 
 
-def inventory_liebert_maintenance(section: Section) -> DiscoveryResult:
+def discover_liebert_maintenance(section: Section) -> DiscoveryResult:
     yield Service()
 
 
@@ -89,7 +89,7 @@ snmp_section_liebert_maintenance = SimpleSNMPSection(
 check_plugin_liebert_maintenance = CheckPlugin(
     name="liebert_maintenance",
     service_name="Maintenance",
-    discovery_function=inventory_liebert_maintenance,
+    discovery_function=discover_liebert_maintenance,
     check_function=check_liebert_maintenance,
     check_default_parameters={"levels": (10, 5)},
 )

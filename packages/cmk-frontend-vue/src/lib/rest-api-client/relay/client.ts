@@ -28,7 +28,7 @@ interface ApiRelay {
  * Returns array of relays (may be empty).
  */
 export async function getRelayCollection(): Promise<Relay[]> {
-  const API_ROOT = 'api/1.0'
+  const API_ROOT = 'api/unstable'
   const url = `${API_ROOT}/domain-types/relay/collections/all`
   const response = await fetchRestAPI(url, 'GET')
   await response.raiseForStatus()

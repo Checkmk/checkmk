@@ -25,7 +25,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.apc.lib_ats import DETECT
 
 
-def inventory_apc_inputs(section: StringTable) -> DiscoveryResult:
+def discover_apc_inputs(section: StringTable) -> DiscoveryResult:
     yield from (
         Service(item=line[0], parameters={"state": line[2]})
         for line in section
@@ -85,7 +85,7 @@ snmp_section_apc_inputs = SimpleSNMPSection(
 check_plugin_apc_inputs = CheckPlugin(
     name="apc_inputs",
     service_name="Input %s",
-    discovery_function=inventory_apc_inputs,
+    discovery_function=discover_apc_inputs,
     check_function=check_apc_inputs,
     check_default_parameters={},
 )

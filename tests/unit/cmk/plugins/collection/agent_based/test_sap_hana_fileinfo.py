@@ -9,7 +9,10 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, State
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.plugins.collection.agent_based.sap_hana_fileinfo import (
+    check_plugin_sap_hana_fileinfo,
+    check_plugin_sap_hana_fileinfo_groups,
+)
 from cmk.plugins.fileinfo.lib.fileinfo_lib import Fileinfo, FileinfoItem
 
 
@@ -47,13 +50,13 @@ from cmk.plugins.fileinfo.lib.fileinfo_lib import Fileinfo, FileinfoItem
     ],
 )
 def test_sap_hana_fileinfo(
-    agent_based_plugins: AgentBasedPlugins,
     item: str,
     parsed: Fileinfo,
     expected_result: CheckResult,
 ) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo")]
-    result = list(plugin.check_function(item=item, params={}, section=parsed))
+    result = list(
+        check_plugin_sap_hana_fileinfo.check_function(item=item, params={}, section=parsed)
+    )
 
     assert result == expected_result
 
@@ -67,12 +70,9 @@ def test_sap_hana_fileinfo(
         ),
     ],
 )
-def test_sap_hana_fileinfo_stale(
-    agent_based_plugins: AgentBasedPlugins, item: str, parsed: Fileinfo
-) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo")]
+def test_sap_hana_fileinfo_stale(item: str, parsed: Fileinfo) -> None:
     with pytest.raises(IgnoreResultsError) as e:
-        list(plugin.check_function(item=item, params={}, section=parsed))
+        list(check_plugin_sap_hana_fileinfo.check_function(item=item, params={}, section=parsed))
 
     assert e.value.args[0] == "Login into database failed."
 
@@ -106,15 +106,16 @@ def test_sap_hana_fileinfo_stale(
     ],
 )
 def test_sap_hana_fileinfo_groups(
-    agent_based_plugins: AgentBasedPlugins,
     item: str,
     parsed: Fileinfo,
     params: Mapping[str, object],
     expected_result: CheckResult,
 ) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
-
-    result = list(plugin.check_function(item=item, params=params, section=parsed))
+    result = list(
+        check_plugin_sap_hana_fileinfo_groups.check_function(
+            item=item, params=params, section=parsed
+        )
+    )
     assert result == expected_result
 
 
@@ -127,11 +128,12 @@ def test_sap_hana_fileinfo_groups(
         ),
     ],
 )
-def test_sap_hana_fileinfo_groups_stale(
-    agent_based_plugins: AgentBasedPlugins, item: str, parsed: Fileinfo
-) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
+def test_sap_hana_fileinfo_groups_stale(item: str, parsed: Fileinfo) -> None:
     with pytest.raises(IgnoreResultsError) as e:
-        list(plugin.check_function(item=item, params={}, section=parsed))
+        list(
+            check_plugin_sap_hana_fileinfo_groups.check_function(
+                item=item, params={}, section=parsed
+            )
+        )
 
     assert e.value.args[0] == "Login into database failed."

@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-check_info = {}
+check_info = dict[str, LegacyCheckDefinition]()
 
 
 def inventory_cisco_cpu(info):

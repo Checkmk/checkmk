@@ -7,8 +7,15 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.checkengine.plugins import AgentBasedPlugins, SectionName
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import SNMPSection, StringTable
+from cmk.base.legacy_checks.cisco_cpu import check_info as cisco_cpu_check_info
+from cmk.base.legacy_checks.cisco_nexus_cpu import check_info as cisco_nexus_cpu_check_info
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
+from cmk.plugins.collection.agent_based.cisco_cpu_multiitem import (
+    Section,
+    snmp_section_cisco_cpu_multiitem,
+)
 
 
 @pytest.mark.parametrize(
@@ -71,16 +78,22 @@ from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_det
     ],
 )
 def test_cisco_related_snmp_detection(
-    agent_based_plugins: AgentBasedPlugins,
     oid_data: Mapping[str, str],
     detected: set[str],
     not_detected: set[str],
 ) -> None:
+    sections: Mapping[str, SNMPSection[StringTable, Section] | LegacyCheckDefinition] = {
+        "cisco_cpu_multiitem": snmp_section_cisco_cpu_multiitem,
+        "cisco_cpu": cisco_cpu_check_info["cisco_cpu"],
+        "cisco_nexus_cpu": cisco_nexus_cpu_check_info["cisco_nexus_cpu"],
+    }
+
     for name in detected | not_detected:
-        section = agent_based_plugins.snmp_sections[SectionName(name)]
+        detect_spec = sections[name].detect
+        assert detect_spec is not None
 
         assert evaluate_snmp_detection(
-            detect_spec=section.detect_spec,
+            detect_spec=detect_spec,
             oid_value_getter=oid_data.get,
         ) == (name in detected), (
             f"make sure that {name} is{'' if name in detected else ' not'} detected"

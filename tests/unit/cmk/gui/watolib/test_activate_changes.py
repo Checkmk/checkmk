@@ -77,11 +77,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
-            ident="auth.secret",
-            site_path="etc/auth.secret",
-        ),
-        ReplicationPath.make(
-            ty=ReplicationPathType.FILE,
             ident="password_store.secret",
             site_path="etc/password_store.secret",
         ),

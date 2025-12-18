@@ -1340,6 +1340,18 @@ msgstr "802.dot11n5"
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1.5 標準偏差"
 
+#, fuzzy
+msgid "90th percentile latency over last day"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "90th percentile latency over last hour"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "90th percentile latency over last minute"
+msgstr "リクエスト利用率の上位レベル"
+
 #, no-python-format
 msgid "95% - Two standard deviations"
 msgstr "95% - 2つの標準偏差"
@@ -1347,8 +1359,32 @@ msgstr "95% - 2つの標準偏差"
 msgid "95th percentile"
 msgstr "95パーセンタイル"
 
+#, fuzzy
+msgid "95th percentile latency over last day"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "95th percentile latency over last minute"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "95th percentile over last hour"
+msgstr "95パーセンタイル"
+
 msgid "99th percentile"
 msgstr "99パーセンタイル"
+
+#, fuzzy
+msgid "99th percentile latency over last day"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "99th percentile latency over last hour"
+msgstr "リクエスト利用率の上位レベル"
+
+#, fuzzy
+msgid "99th percentile latency over last minute"
+msgstr "リクエスト利用率の上位レベル"
 
 msgid "< Remove"
 msgstr "< 削除する"
@@ -2270,15 +2306,6 @@ msgstr "グラフの見出し"
 
 msgid "A heading for the view"
 msgstr "ビューの見出し"
-
-msgid ""
-"A host filter requires an attribute key. Please choose one (e.g., host.name)"
-msgstr ""
-
-msgid ""
-"A host filter requires an attribute value. Please choose one (e.g., "
-"example.com)"
-msgstr ""
 
 #, python-format
 msgid ""
@@ -6483,6 +6510,13 @@ msgstr "期間のエイリアスまたは説明"
 msgid "An alias or description of this group."
 msgstr "このグループのエイリアスまたは説明。"
 
+msgid "An attribute filter requires a key. Please choose one (e.g., host.name)"
+msgstr ""
+
+msgid ""
+"An attribute filter requires a value. Please choose one (e.g., example.com)"
+msgstr ""
+
 #, python-format
 msgid "An connection error occurred: %s"
 msgstr "接続エラーが発生しました: %s"
@@ -7271,6 +7305,10 @@ msgid "Assigned to host"
 msgstr "グループに割り当てる"
 
 msgid "Assignee"
+msgstr "受任者"
+
+#, fuzzy
+msgid "Assignment mode"
 msgstr "受任者"
 
 msgid "Assignment of hosts to contact groups"
@@ -8068,6 +8106,18 @@ msgstr "成功したPutItemリクエストの平均レイテンシ"
 
 msgid "Average latency of successful query requests"
 msgstr "成功したクエリーリクエストの平均待ち時間"
+
+#, fuzzy
+msgid "Average latency over last day"
+msgstr "ストアリクエストの平均レイテンシ"
+
+#, fuzzy
+msgid "Average latency over last hour"
+msgstr "ストアリクエストの平均レイテンシ"
+
+#, fuzzy
+msgid "Average latency over last minute"
+msgstr "ストアリクエストの平均レイテンシ"
 
 msgid "Average latency used by Azure Storage to process a successful request"
 msgstr "成功したリクエストを処理するためにAzureStorageが使用する平均レイテンシ"
@@ -17869,6 +17919,10 @@ msgid "Data point"
 msgstr "送信データ"
 
 #, fuzzy
+msgid "Data point attribute filters"
+msgstr "ダウンタイム属性:"
+
+#, fuzzy
 msgid "Data point attributes"
 msgstr "ダウンタイム属性:"
 
@@ -26043,6 +26097,9 @@ msgstr "フォルダは存在しません"
 #, python-format
 msgid "Folder level %d"
 msgstr "フォルダレベル %d"
+
+msgid "Folder of oracle configuration files(oratab,  for example)"
+msgstr ""
 
 msgid "Folder path"
 msgstr "フォルダパス"
@@ -39520,6 +39577,10 @@ msgstr "CheckmkエージェントのWindowsファイアウォールルールを�
 msgid "Manage and create Checkmk extension packages (MKPs)."
 msgstr "Checkmk拡張パッケージ(MKP)を管理および作成します。"
 
+#, fuzzy
+msgid "Manage any relay"
+msgstr "プロキシの名前"
+
 msgid "Manage background jobs"
 msgstr "バックグラウンドジョブとして管理"
 
@@ -41146,12 +41207,12 @@ msgid "Metric backend (Custom query)"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
-msgid "Metric configuration"
-msgstr "テスト構成"
+msgid "Metric backend filter criteria"
+msgstr "Oracleインスタンス"
 
 #, fuzzy
-msgid "Metric filters"
-msgstr "サービスフィルター"
+msgid "Metric configuration"
+msgstr "テスト構成"
 
 msgid "Metric label"
 msgstr "メトリックのラベル"
@@ -41442,11 +41503,6 @@ msgstr "間違ってスケジュールされたレプリカ"
 msgid "Missing Residual current on the PDUs"
 msgstr "PDUにおける残留電流の欠落"
 
-msgid ""
-"Missing attribute filter configuration. Please configure at least one "
-"attribute filter"
-msgstr ""
-
 #, python-format
 msgid "Missing config file for agent %s%s"
 msgstr "エージェント %s%s の構成ファイルがありません"
@@ -41469,6 +41525,11 @@ msgstr "ホスト名がありません"
 msgid ""
 "Missing hostname attribute. Please configure a resource attribute (e.g., "
 "host.name) so the system can determine the hostname"
+msgstr ""
+
+msgid ""
+"Missing hostname attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the hostname."
 msgstr ""
 
 msgid "Missing identity provider information in metadata"
@@ -46011,6 +46072,61 @@ msgstr ""
 msgid "OTel RED Error: Total errors over the last minute"
 msgstr ""
 
+#, fuzzy
+msgid "OTel RED Latency: 90th percentile latency"
+msgstr "リクエストレイテンシー(50パーセンタイル)"
+
+msgid "OTel RED Latency: 90th percentile latency over the last day"
+msgstr ""
+
+msgid "OTel RED Latency: 90th percentile latency over the last hour"
+msgstr ""
+
+msgid "OTel RED Latency: 90th percentile latency over the last minute"
+msgstr ""
+
+#, fuzzy
+msgid "OTel RED Latency: 95th percentile latency"
+msgstr "リクエストレイテンシー(95パーセンタイル)"
+
+msgid "OTel RED Latency: 95th percentile latency over the last day"
+msgstr ""
+
+msgid "OTel RED Latency: 95th percentile latency over the last hour"
+msgstr ""
+
+msgid "OTel RED Latency: 95th percentile latency over the last minute"
+msgstr ""
+
+#, fuzzy
+msgid "OTel RED Latency: 99th percentile latency"
+msgstr "リクエストレイテンシー(99パーセンタイル)"
+
+msgid "OTel RED Latency: 99th percentile latency over last hour"
+msgstr ""
+
+msgid "OTel RED Latency: 99th percentile latency over the last day"
+msgstr ""
+
+msgid "OTel RED Latency: 99th percentile latency over the last minute"
+msgstr ""
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency"
+msgstr "I/Oログ書き込み平均レイテンシ"
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency over the last day"
+msgstr "前回の更新中にエラーが発生しました"
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency over the last hour"
+msgstr "直近4時間のイベント。"
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency over the last minute"
+msgstr "過去60分間のログスイッチ"
+
 msgid "OTel RED Requests: Request over last day"
 msgstr ""
 
@@ -46738,6 +46854,10 @@ msgstr "OpenTelemetryコレクター（実験的）"
 
 #, fuzzy
 msgid "OpenTelemetry RED Errors"
+msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry RED Latency"
 msgstr "OpenTelemetry（実験的）"
 
 #, fuzzy
@@ -51635,6 +51755,10 @@ msgstr "公衆"
 msgid "Public IPs"
 msgstr "パブリックIP"
 
+#, fuzzy
+msgid "Public address"
+msgstr "フルアクセス"
+
 msgid "Public key algorithm"
 msgstr "公開鍵アルゴリズム"
 
@@ -54283,6 +54407,10 @@ msgid "Resource Name"
 msgstr "リソース名"
 
 #, fuzzy
+msgid "Resource attribute filters"
+msgstr "属性をリセット"
+
+#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "カスタムホスト名算出"
 
@@ -56021,6 +56149,10 @@ msgstr "スコープ"
 #, fuzzy
 msgid "Scope ID"
 msgstr "スコープ"
+
+#, fuzzy
+msgid "Scope attribute filters"
+msgstr "役割属性"
 
 #, fuzzy
 msgid "Scope attributes"
@@ -70887,6 +71019,11 @@ msgid ""
 msgstr "この権限により、イベント相関ルールの作成、変更、削除が可能になります。"
 
 msgid ""
+"This permission allows the management of any relay. Users with this "
+"permission can register, edit, and delete relays."
+msgstr ""
+
+msgid ""
 "This permission allows the registration of any existing host the user is a "
 "contact of."
 msgstr "この権限は、ユーザーが連絡している既存のホストの登録を許可します。"
@@ -70941,6 +71078,11 @@ msgid ""
 msgstr ""
 "この権限により、ユーザーはウェブインターフェイスを使用して、本機 のユーザーに"
 "メッセージを送信することができます。"
+
+msgid ""
+"This permission allows viewing relay configurations. Users with this "
+"permission can list and view relay details."
+msgstr ""
 
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
@@ -73990,6 +74132,10 @@ msgstr "最後のチェックポイントからの時間"
 
 msgid "Time since last garbage collection"
 msgstr "最後のガベージコレクションからの時間"
+
+#, fuzzy
+msgid "Time since last reported"
+msgstr "最後のチェックポイントからの時間"
 
 msgid "Time since last successful build"
 msgstr "最後に成功したビルドからの時間"
@@ -81137,6 +81283,10 @@ msgstr "このサービスのパラメーターを表示および編集する"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集する"
+
+#, fuzzy
+msgid "View any relay"
+msgstr "レイアウトを表示"
 
 msgid "View extension package manager"
 msgstr "拡張パッケージマネージャを見る"
@@ -88385,6 +88535,18 @@ msgid "Select from list"
 msgstr "リストからタイプを選択"
 
 #, fuzzy
+msgid "Enter runtime filter"
+msgstr "必要なコンテキストフィルター"
+
+#, fuzzy
+msgid "to load preview"
+msgstr "もっと表示"
+
+#, fuzzy
+msgid "to load data"
+msgstr "無効なデータを取得しました"
+
+#, fuzzy
 msgid "%{n} filters"
 msgstr "適用されたフィルター:"
 
@@ -89547,6 +89709,10 @@ msgid "Show summary for not OK states"
 msgstr "%s状態以外の概要の表示"
 
 #, fuzzy
+msgid "Linked to view"
+msgstr "表示するためのリンク"
+
+#, fuzzy
 msgid "Specific object type"
 msgstr "特定のオブジェクトタイプを選択します"
 
@@ -90191,9 +90357,16 @@ msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
+msgid "Download the relay to your environment"
+msgstr ""
+
 #, fuzzy
-msgid "Configure the Relay registration"
-msgstr "ホストとリージョンを設定"
+msgid "Download the Relay container image."
+msgstr "Dockerコンテナプラグインをデプロイする"
+
+#, fuzzy
+msgid "Name the relay"
+msgstr "プロキシの名前"
 
 #, fuzzy
 msgid "Provide a display alias for your Relay."
@@ -90203,13 +90376,6 @@ msgid ""
 "The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
-
-msgid "Download the relay to your environment"
-msgstr ""
-
-#, fuzzy
-msgid "Download the Relay container image."
-msgstr "Dockerコンテナプラグインをデプロイする"
 
 #, fuzzy
 msgid "Register the relay with your Checkmk site and run it"
@@ -90544,12 +90710,12 @@ msgstr ""
 msgid "All steps completed"
 msgstr "サイトのすべてのホスト"
 
+msgid "What's next"
+msgstr "次"
+
 #, fuzzy
 msgid "Continue setup"
 msgstr "検索を続ける"
-
-msgid "What's next"
-msgstr "次"
 
 #, fuzzy
 msgid "Next steps with Checkmk"
@@ -90784,6 +90950,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Metric filters"
+#~ msgstr "サービスフィルター"
+
+#, fuzzy
+#~ msgid "Configure the Relay registration"
+#~ msgstr "ホストとリージョンを設定"
+
+#, fuzzy
 #~ msgid "Microsoft Azure (deprecated)"
 #~ msgstr "Microsoft SQL サーバー(非推奨)"
 
@@ -90792,10 +90966,6 @@ msgstr ""
 
 #~ msgid "icon not found"
 #~ msgstr "アイコンが見つかりません"
-
-#, fuzzy
-#~ msgid "Name the relay"
-#~ msgstr "プロキシの名前"
 
 #~ msgid ""
 #~ "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
@@ -91029,10 +91199,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Apply to dashboard"
 #~ msgstr "ダッシュボードに追加"
-
-#, fuzzy
-#~ msgid "Edit required runtime filters"
-#~ msgstr "必要なコンテキストフィルター"
 
 #~ msgid "Cannot change folder of rules managed by Quick setup."
 #~ msgstr ""

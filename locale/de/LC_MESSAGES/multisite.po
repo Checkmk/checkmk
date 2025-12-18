@@ -1366,6 +1366,18 @@ msgstr "802.dot11n5"
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1,5 Standardabweichungen"
 
+#, fuzzy
+msgid "90th percentile latency over last day"
+msgstr "Obergrenzen für die Requests-Auslastung"
+
+#, fuzzy
+msgid "90th percentile latency over last hour"
+msgstr "Obergrenzen für die Requests-Auslastung"
+
+#, fuzzy
+msgid "90th percentile latency over last minute"
+msgstr "Obergrenzen für die Requests-Auslastung"
+
 #, no-python-format
 msgid "95% - Two standard deviations"
 msgstr "95% - Zwei Standardabweichungen"
@@ -1373,8 +1385,32 @@ msgstr "95% - Zwei Standardabweichungen"
 msgid "95th percentile"
 msgstr "95. Perzentil"
 
+#, fuzzy
+msgid "95th percentile latency over last day"
+msgstr "Obergrenzen für die Requests-Auslastung"
+
+#, fuzzy
+msgid "95th percentile latency over last minute"
+msgstr "Obergrenzen für die Requests-Auslastung"
+
+#, fuzzy
+msgid "95th percentile over last hour"
+msgstr "95. Perzentil"
+
 msgid "99th percentile"
 msgstr "99. Perzentil"
+
+#, fuzzy
+msgid "99th percentile latency over last day"
+msgstr "Obergrenzen für die Requests-Auslastung"
+
+#, fuzzy
+msgid "99th percentile latency over last hour"
+msgstr "Obergrenzen für die Requests-Auslastung"
+
+#, fuzzy
+msgid "99th percentile latency over last minute"
+msgstr "Obergrenzen für die Requests-Auslastung"
 
 msgid "< Remove"
 msgstr "< Entfernen"
@@ -2385,19 +2421,6 @@ msgstr "Eine Überschrift für die Graphen"
 
 msgid "A heading for the view"
 msgstr "Eine Überschrift für die Ansicht"
-
-msgid ""
-"A host filter requires an attribute key. Please choose one (e.g., host.name)"
-msgstr ""
-"Ein Host-Filter benötigt einen Attribut-Schlüssel. Bitte wählen Sie einen "
-"(z.B. host.name)"
-
-msgid ""
-"A host filter requires an attribute value. Please choose one (e.g., "
-"example.com)"
-msgstr ""
-"Ein Host-Filter benötigt einen Attribut-Wert. Bitte wählen Sie einen (z.B. "
-"example.com)"
 
 #, python-format
 msgid ""
@@ -6715,6 +6738,19 @@ msgstr "Ein Alias oder eine Beschreibung der Zeitperiode"
 msgid "An alias or description of this group."
 msgstr "Ein Alias oder eine Beschreibung dieser Gruppe."
 
+#, fuzzy
+msgid "An attribute filter requires a key. Please choose one (e.g., host.name)"
+msgstr ""
+"Ein Host-Filter benötigt einen Attribut-Schlüssel. Bitte wählen Sie einen "
+"(z.B. host.name)"
+
+#, fuzzy
+msgid ""
+"An attribute filter requires a value. Please choose one (e.g., example.com)"
+msgstr ""
+"Ein Host-Filter benötigt einen Attribut-Wert. Bitte wählen Sie einen (z.B. "
+"example.com)"
+
 #, python-format
 msgid "An connection error occurred: %s"
 msgstr "Es ist ein Verbindungsfehler aufgetreten: %s"
@@ -7523,6 +7559,10 @@ msgstr "Zugewiesen zu Host"
 msgid "Assignee"
 msgstr "Adressat"
 
+#, fuzzy
+msgid "Assignment mode"
+msgstr "Adressat"
+
 msgid "Assignment of hosts to contact groups"
 msgstr "Zuweisung von Hosts zu Kontaktgruppen"
 
@@ -8323,6 +8363,18 @@ msgstr "Durchschnittliche Latenz erfolgreicher PutItem-Anfragen"
 
 msgid "Average latency of successful query requests"
 msgstr "Durchschnittliche Latenz erfolgreicher Query-Anfragen"
+
+#, fuzzy
+msgid "Average latency over last day"
+msgstr "urchschnittliche Latenz von Storage-Anfragen"
+
+#, fuzzy
+msgid "Average latency over last hour"
+msgstr "urchschnittliche Latenz von Storage-Anfragen"
+
+#, fuzzy
+msgid "Average latency over last minute"
+msgstr "urchschnittliche Latenz von Storage-Anfragen"
 
 msgid "Average latency used by Azure Storage to process a successful request"
 msgstr ""
@@ -18197,6 +18249,10 @@ msgstr "Untergrenzen für Datenpfadverfügbarkeit"
 msgid "Data point"
 msgstr "Datenpunkt"
 
+#, fuzzy
+msgid "Data point attribute filters"
+msgstr "Attribute des Datenpunkts"
+
 msgid "Data point attributes"
 msgstr "Attribute des Datenpunkts"
 
@@ -26494,6 +26550,9 @@ msgstr "Dieser Ordner existiert nicht"
 #, python-format
 msgid "Folder level %d"
 msgstr "Ordner-Level %d"
+
+msgid "Folder of oracle configuration files(oratab,  for example)"
+msgstr ""
 
 msgid "Folder path"
 msgstr "Ordner Pfad"
@@ -40286,6 +40345,10 @@ msgstr "Verwalten von Windows-Firewall-Regeln für den Checkmk-Agenten"
 msgid "Manage and create Checkmk extension packages (MKPs)."
 msgstr "Checkmk-Erweiterungspakete (MKPs) verwalten und erstellen."
 
+#, fuzzy
+msgid "Manage any relay"
+msgstr "Benennen Sie das Relais"
+
 msgid "Manage background jobs"
 msgstr "Hintergrund-Prozesse verwalten"
 
@@ -41931,11 +41994,12 @@ msgstr "Metrik-Backend"
 msgid "Metric backend (Custom query)"
 msgstr "Metrik-Backend (benutzerdefinierte Anfrage)"
 
+#, fuzzy
+msgid "Metric backend filter criteria"
+msgstr "Metrik-Backend ist deaktiviert."
+
 msgid "Metric configuration"
 msgstr "Metrik-Konfiguration"
-
-msgid "Metric filters"
-msgstr "Metrikfilter"
 
 msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
@@ -42222,13 +42286,6 @@ msgstr "Fehlgeplante Repliken"
 msgid "Missing Residual current on the PDUs"
 msgstr "Fehlender Fehlerstrom an den Stromverteilern (PDUs)"
 
-msgid ""
-"Missing attribute filter configuration. Please configure at least one "
-"attribute filter"
-msgstr ""
-"Fehlende Konfiguration des Attribut-Filters. Bitte konfigurieren Sie "
-"mindestens einen Attribut-Filter"
-
 #, python-format
 msgid "Missing config file for agent %s%s"
 msgstr "Fehlende Konfigurationsdatei für Agent %s%s"
@@ -42251,6 +42308,14 @@ msgstr "Fehlender Host-Name"
 msgid ""
 "Missing hostname attribute. Please configure a resource attribute (e.g., "
 "host.name) so the system can determine the hostname"
+msgstr ""
+"Fehlendes Attribut des Host-Namen. Bitte konfigurieren Sie ein Ressourcen-"
+"Attribut (z.B. host.name), damit das System den Host-Namen bestimmen kann"
+
+#, fuzzy
+msgid ""
+"Missing hostname attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the hostname."
 msgstr ""
 "Fehlendes Attribut des Host-Namen. Bitte konfigurieren Sie ein Ressourcen-"
 "Attribut (z.B. host.name), damit das System den Host-Namen bestimmen kann"
@@ -46833,6 +46898,61 @@ msgstr ""
 msgid "OTel RED Error: Total errors over the last minute"
 msgstr ""
 
+#, fuzzy
+msgid "OTel RED Latency: 90th percentile latency"
+msgstr "Latenz abfragen (50te Perzentile)"
+
+msgid "OTel RED Latency: 90th percentile latency over the last day"
+msgstr ""
+
+msgid "OTel RED Latency: 90th percentile latency over the last hour"
+msgstr ""
+
+msgid "OTel RED Latency: 90th percentile latency over the last minute"
+msgstr ""
+
+#, fuzzy
+msgid "OTel RED Latency: 95th percentile latency"
+msgstr "Latenz abfragen (95te Perzentile)"
+
+msgid "OTel RED Latency: 95th percentile latency over the last day"
+msgstr ""
+
+msgid "OTel RED Latency: 95th percentile latency over the last hour"
+msgstr ""
+
+msgid "OTel RED Latency: 95th percentile latency over the last minute"
+msgstr ""
+
+#, fuzzy
+msgid "OTel RED Latency: 99th percentile latency"
+msgstr "Latenz abfragen (99te Perzentile)"
+
+msgid "OTel RED Latency: 99th percentile latency over last hour"
+msgstr ""
+
+msgid "OTel RED Latency: 99th percentile latency over the last day"
+msgstr ""
+
+msgid "OTel RED Latency: 99th percentile latency over the last minute"
+msgstr ""
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency"
+msgstr "E/A-Log-Schreibzugriffe, durchschnittliche Latenz"
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency over the last day"
+msgstr "Beim letzten Update ist ein Fehler aufgetreten"
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency over the last hour"
+msgstr "Ereignisse der letzten vier Stunden."
+
+#, fuzzy
+msgid "OTel RED Latency: Average latency over the last minute"
+msgstr "Logswitche in den letzten 60 Sekunden"
+
 msgid "OTel RED Requests: Request over last day"
 msgstr ""
 
@@ -47578,6 +47698,10 @@ msgstr "OpenTelemetry Collector Speicherlimit"
 #, fuzzy
 msgid "OpenTelemetry RED Errors"
 msgstr "OpenTelemetry"
+
+#, fuzzy
+msgid "OpenTelemetry RED Latency"
+msgstr "OpenTelemetry (Beta)"
 
 #, fuzzy
 msgid "OpenTelemetry RED Requests"
@@ -52560,6 +52684,10 @@ msgstr "Öffentlich"
 msgid "Public IPs"
 msgstr "Öffentliche IPs"
 
+#, fuzzy
+msgid "Public address"
+msgstr "Öffentlicher Zugang"
+
 msgid "Public key algorithm"
 msgstr "Algorithmus des öffentlichen Schlüssels"
 
@@ -55187,6 +55315,10 @@ msgstr "Ressourcengruppe"
 msgid "Resource Name"
 msgstr "Ressourcenname"
 
+#, fuzzy
+msgid "Resource attribute filters"
+msgstr "Ressource-Attribute"
+
 msgid "Resource attribute for hostname computation"
 msgstr "Ressource-Attribut für die Erstellung von Host-Namen"
 
@@ -56933,6 +57065,10 @@ msgstr "Umfang"
 
 msgid "Scope ID"
 msgstr "Umfang-ID"
+
+#, fuzzy
+msgid "Scope attribute filters"
+msgstr "Umfang-Attribute"
 
 msgid "Scope attributes"
 msgstr "Umfang-Attribute"
@@ -72538,6 +72674,11 @@ msgstr ""
 "der Event Console."
 
 msgid ""
+"This permission allows the management of any relay. Users with this "
+"permission can register, edit, and delete relays."
+msgstr ""
+
+msgid ""
 "This permission allows the registration of any existing host the user is a "
 "contact of."
 msgstr ""
@@ -72597,6 +72738,11 @@ msgid ""
 msgstr ""
 "Mit dieser Berechtigung können Benutzer über die Weboberfläche Meldungen an "
 "die Benutzer des Monitoring-Systems senden."
+
+msgid ""
+"This permission allows viewing relay configurations. Users with this "
+"permission can list and view relay details."
+msgstr ""
 
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
@@ -75770,6 +75916,10 @@ msgstr "Zeit seit letztem Checkpoint"
 
 msgid "Time since last garbage collection"
 msgstr "Zeit seit der letzten Müllsammlung"
+
+#, fuzzy
+msgid "Time since last reported"
+msgstr "Zeit seit letztem Checkpoint"
 
 msgid "Time since last successful build"
 msgstr "Zeit seit dem letzten erfolgreichen Build"
@@ -83026,6 +83176,10 @@ msgstr "Parameter für diesen Service ansehen und bearbeiten"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Regeln und Aggregationen in diesem BI-Paket anzeigen und bearbeiten"
+
+#, fuzzy
+msgid "View any relay"
+msgstr "Ansicht Layout"
 
 msgid "View extension package manager"
 msgstr "Erweiterungspaket-Manager anzeigen"
@@ -90565,6 +90719,18 @@ msgstr ""
 msgid "Select from list"
 msgstr "Aus der Liste auswählen"
 
+#, fuzzy
+msgid "Enter runtime filter"
+msgstr "Erforderliche Laufzeitfilter bearbeiten"
+
+#, fuzzy
+msgid "to load preview"
+msgstr "Vorschau anzeigen"
+
+#, fuzzy
+msgid "to load data"
+msgstr "Ungültige Daten empfangen"
+
 msgid "%{n} filters"
 msgstr "%{n} Filter"
 
@@ -91567,6 +91733,10 @@ msgstr "Nicht-OK-Zustände einfärben"
 msgid "Show summary for not OK states"
 msgstr "Zusammenfassung für Nicht-OK-Zustände anzeigen"
 
+#, fuzzy
+msgid "Linked to view"
+msgstr "Link zur Ansicht"
+
 msgid "Specific object type"
 msgstr "Spezifischer Objekttyp"
 
@@ -92186,9 +92356,14 @@ msgstr ""
 msgid "Select the folder your host(s) will be created in."
 msgstr "Wählen Sie den Ordner, in dem Ihre Hosts angelegt werden."
 
-#, fuzzy
-msgid "Configure the Relay registration"
-msgstr "Host und Regionen konfigurieren"
+msgid "Download the relay to your environment"
+msgstr "Laden Sie das Relais in Ihre Umgebung herunter"
+
+msgid "Download the Relay container image."
+msgstr "Das Image des Relais-Containers verteilen."
+
+msgid "Name the relay"
+msgstr "Benennen Sie das Relais"
 
 msgid "Provide a display alias for your Relay."
 msgstr "Geben Sie einen Anzeige-Alias für Ihr Relais an."
@@ -92199,12 +92374,6 @@ msgid ""
 msgstr ""
 "Der hier eingegebene Alias wird im nächsten Schritt automatisch in den "
 "Terminalcode eingefügt."
-
-msgid "Download the relay to your environment"
-msgstr "Laden Sie das Relais in Ihre Umgebung herunter"
-
-msgid "Download the Relay container image."
-msgstr "Das Image des Relais-Containers verteilen."
 
 msgid "Register the relay with your Checkmk site and run it"
 msgstr ""
@@ -92538,11 +92707,11 @@ msgstr ""
 msgid "All steps completed"
 msgstr "Alle Schritte abgeschlossen"
 
-msgid "Continue setup"
-msgstr "Setup fortsetzen"
-
 msgid "What's next"
 msgstr "Was kommt als Nächstes"
+
+msgid "Continue setup"
+msgstr "Setup fortsetzen"
 
 msgid "Next steps with Checkmk"
 msgstr "Nächste Schritte in Checkmk"
@@ -92813,6 +92982,20 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Metric filters"
+#~ msgstr "Metrikfilter"
+
+#~ msgid ""
+#~ "Missing attribute filter configuration. Please configure at least one "
+#~ "attribute filter"
+#~ msgstr ""
+#~ "Fehlende Konfiguration des Attribut-Filters. Bitte konfigurieren Sie "
+#~ "mindestens einen Attribut-Filter"
+
+#, fuzzy
+#~ msgid "Configure the Relay registration"
+#~ msgstr "Host und Regionen konfigurieren"
+
 #~ msgid "Microsoft Azure (deprecated)"
 #~ msgstr "Microsoft Azure (veraltet)"
 
@@ -92828,9 +93011,6 @@ msgstr ""
 
 #~ msgid "icon not found"
 #~ msgstr "Icon nicht gefunden"
-
-#~ msgid "Name the relay"
-#~ msgstr "Benennen Sie das Relais"
 
 #~ msgid ""
 #~ "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
@@ -93094,9 +93274,6 @@ msgstr ""
 
 #~ msgid "Apply to dashboard"
 #~ msgstr "Auf das Dashboard anwenden"
-
-#~ msgid "Edit required runtime filters"
-#~ msgstr "Erforderliche Laufzeitfilter bearbeiten"
 
 #~ msgid "Cannot change folder of rules managed by Quick setup."
 #~ msgstr ""

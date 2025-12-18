@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_bdtms_tape_info(section: StringTable) -> DiscoveryResult:
+def discover_bdtms_tape_info(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -45,6 +45,6 @@ snmp_section_bdtms_tape_info = SimpleSNMPSection(
 check_plugin_bdtms_tape_info = CheckPlugin(
     name="bdtms_tape_info",
     service_name="Tape Library Info",
-    discovery_function=inventory_bdtms_tape_info,
+    discovery_function=discover_bdtms_tape_info,
     check_function=check_bdtms_tape_info,
 )

@@ -21,7 +21,7 @@ from cmk.plugins.akcp.lib import DETEC_AKCP_SP2PLUS
 from cmk.plugins.akcp.lib_sensor import (
     AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
     check_akcp_humidity,
-    inventory_akcp_humidity,
+    discover_akcp_humidity,
     parse_akcp_sensor,
 )
 
@@ -64,7 +64,7 @@ check_plugin_akcp_sensor_humidity = CheckPlugin(
     name="akcp_sensor_humidity",
     service_name="Humidity %s",
     check_function=check_akcp_humidity,
-    discovery_function=inventory_akcp_humidity,
+    discovery_function=discover_akcp_humidity,
     check_ruleset_name="humidity",
     check_default_parameters=AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
 )

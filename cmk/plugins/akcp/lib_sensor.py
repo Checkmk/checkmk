@@ -65,7 +65,7 @@ AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def inventory_akcp_humidity(section: Section) -> DiscoveryResult:
+def discover_akcp_humidity(section: Section) -> DiscoveryResult:
     for description, _percent, _status, online in section:
         if online == "1":
             yield Service(item=description)

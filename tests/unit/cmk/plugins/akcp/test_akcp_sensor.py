@@ -37,7 +37,7 @@ def test_akcp_humidity_discover(
     string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     assert (
-        list(akcp_sensor.inventory_akcp_humidity(akcp_sensor.parse_akcp_sensor(string_table)))
+        list(akcp_sensor.discover_akcp_humidity(akcp_sensor.parse_akcp_sensor(string_table)))
         == expected_result
     )
 

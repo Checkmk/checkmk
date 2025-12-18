@@ -27,6 +27,7 @@ import type { SelectedDashboard } from './types'
 
 interface Props {
   selectedDashboard: SelectedDashboard | null
+  canEditDashboard: boolean
   linkUserGuide: string
   linkNavigationEmbeddingPage: string
   isEditMode: boolean
@@ -173,12 +174,12 @@ const pageNavigation = parsePageNavigation()
               action: () => {
                 emit('open-share-workflow')
               },
-              hidden: isBuiltInDashboard
+              hidden: isBuiltInDashboard || !canEditDashboard
             },
             {
               label: _t('Clone dashboard to generate public link'),
               action: () => emit('open-clone-workflow'),
-              hidden: !isBuiltInDashboard
+              hidden: !isBuiltInDashboard || !canEditDashboard
             }
           ]"
         />
@@ -190,7 +191,7 @@ const pageNavigation = parsePageNavigation()
             {
               label: _t('Dashboard settings'),
               action: () => emit('open-settings'),
-              hidden: isBuiltInDashboard
+              hidden: isBuiltInDashboard || !canEditDashboard
             },
             { label: _t('Clone dashboard'), action: () => emit('open-clone-workflow') },
             {
@@ -215,7 +216,7 @@ const pageNavigation = parsePageNavigation()
         </MenuButton>
 
         <MenuButton
-          v-else
+          v-else-if="canEditDashboard"
           class="menu-btn"
           @click="isEmptyDashboard ? handleAddWidget() : enterEditMode()"
         >

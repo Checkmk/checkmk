@@ -400,6 +400,7 @@ function deepClone<T>(obj: T): T {
       <DashboardMenuHeader
         v-model:is-edit-mode="isDashboardEditingMode"
         :selected-dashboard="selectedDashboard"
+        :can-edit-dashboard="dashboardsManager.activeDashboard.value?.metadata.is_editable ?? false"
         :link-user-guide="props.links.user_guide"
         :link-navigation-embedding-page="props.links.navigation_embedding_page"
         :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"

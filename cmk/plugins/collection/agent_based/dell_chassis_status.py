@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.dell.lib import DETECT_CHASSIS
 
 
-def inventory_dell_chassis_status(section: StringTable) -> DiscoveryResult:
+def discover_dell_chassis_status(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -67,6 +67,6 @@ snmp_section_dell_chassis_status = SimpleSNMPSection(
 check_plugin_dell_chassis_status = CheckPlugin(
     name="dell_chassis_status",
     service_name="Chassis Health",
-    discovery_function=inventory_dell_chassis_status,
+    discovery_function=discover_dell_chassis_status,
     check_function=check_dell_chassis_status,
 )

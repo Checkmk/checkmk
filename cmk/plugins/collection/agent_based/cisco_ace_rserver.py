@@ -42,7 +42,7 @@ def parse_framework_mib_inet_address(ip_address_type, ip_address):
     return None
 
 
-def inventory_cisco_ace_rserver(section: StringTable) -> DiscoveryResult:
+def discover_cisco_ace_rserver(section: StringTable) -> DiscoveryResult:
     for name, ip_address_type, ip_address, descr, _admin_status, _oper_status, _conns in section:
         ip = parse_framework_mib_inet_address(int(ip_address_type), ip_address)
         if name != "":
@@ -112,6 +112,6 @@ snmp_section_cisco_ace_rserver = SimpleSNMPSection(
 check_plugin_cisco_ace_rserver = CheckPlugin(
     name="cisco_ace_rserver",
     service_name="ACE RServer %s",
-    discovery_function=inventory_cisco_ace_rserver,
+    discovery_function=discover_cisco_ace_rserver,
     check_function=check_cisco_ace_rserver,
 )

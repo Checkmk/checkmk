@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.emc.lib import DETECT_DATADOMAIN
 
 
-def inventory_emc_datadomain_fans(section: StringTable) -> DiscoveryResult:
+def discover_emc_datadomain_fans(section: StringTable) -> DiscoveryResult:
     for line in section:
         yield Service(item=f"{line[0]}-{line[1]}")
 
@@ -62,6 +62,6 @@ snmp_section_emc_datadomain_fans = SimpleSNMPSection(
 check_plugin_emc_datadomain_fans = CheckPlugin(
     name="emc_datadomain_fans",
     service_name="FAN %s",
-    discovery_function=inventory_emc_datadomain_fans,
+    discovery_function=discover_emc_datadomain_fans,
     check_function=check_emc_datadomain_fans,
 )

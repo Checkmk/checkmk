@@ -64,7 +64,7 @@ def parse_cmciii_lcp_waterflow(string_table: StringTable) -> Section | None:
     )
 
 
-def inventory_cmciii_lcp_waterflow(section: Section) -> DiscoveryResult:
+def discover_cmciii_lcp_waterflow(section: Section) -> DiscoveryResult:
     yield Service()
 
 
@@ -97,6 +97,6 @@ snmp_section_cmciii_lcp_waterflow = SimpleSNMPSection(
 check_plugin_cmciii_lcp_waterflow = CheckPlugin(
     name="cmciii_lcp_waterflow",
     service_name="LCP Fanunit WATER FLOW",
-    discovery_function=inventory_cmciii_lcp_waterflow,
+    discovery_function=discover_cmciii_lcp_waterflow,
     check_function=check_cmciii_lcp_waterflow,
 )

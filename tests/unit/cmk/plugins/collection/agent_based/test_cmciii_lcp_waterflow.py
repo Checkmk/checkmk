@@ -13,7 +13,7 @@ import pytest
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.cmciii_lcp_waterflow import (
     check_cmciii_lcp_waterflow,
-    inventory_cmciii_lcp_waterflow,
+    discover_cmciii_lcp_waterflow,
     parse_cmciii_lcp_waterflow,
     Section,
 )
@@ -75,7 +75,7 @@ def test_parse_cmciii_lcp_waterflow_empty_section() -> None:
 def test_discover_cmciii_lcp_waterflow(
     section: Section, discovered_items: Sequence[Service]
 ) -> None:
-    assert list(inventory_cmciii_lcp_waterflow(section)) == discovered_items
+    assert list(discover_cmciii_lcp_waterflow(section)) == discovered_items
 
 
 @pytest.mark.parametrize(

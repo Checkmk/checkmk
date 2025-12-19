@@ -284,6 +284,7 @@ py_test(
         ":__test__",
         ":server_side_programs",
         requirement("pytest"),
+        requirement("requests"),
     ],
 )
 

@@ -62,7 +62,7 @@ def test_parse_invalid_phyiscal_class() -> None:
 
 def test_discover() -> None:
     assert list(
-        cisco_fru_module_status.inventory_cisco_fru_module_status(
+        cisco_fru_module_status.discover_cisco_fru_module_status(
             {
                 "32": cisco_fru_module_status.Module(state="2", name="Fabric card module"),
             }

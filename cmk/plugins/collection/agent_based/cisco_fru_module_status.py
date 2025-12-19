@@ -163,7 +163,7 @@ snmp_section_cisco_fru_module_status = SNMPSection(
 )
 
 
-def inventory_cisco_fru_module_status(section: Section) -> DiscoveryResult:
+def discover_cisco_fru_module_status(section: Section) -> DiscoveryResult:
     for module_index in section:
         yield Service(item=module_index)
 
@@ -180,6 +180,6 @@ def check_cisco_fru_module_status(item: str, section: Section) -> CheckResult:
 check_plugin_cisco_fru_module_status = CheckPlugin(
     name="cisco_fru_module_status",
     service_name="FRU Module Status %s",
-    discovery_function=inventory_cisco_fru_module_status,
+    discovery_function=discover_cisco_fru_module_status,
     check_function=check_cisco_fru_module_status,
 )

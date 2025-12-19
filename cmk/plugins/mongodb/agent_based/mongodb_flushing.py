@@ -32,7 +32,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_mongodb_flushing(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_flushing(section: StringTable) -> DiscoveryResult:
     # This check has no default parameters
     # The average/last flush time highly depends on the size of the mongodb setup
     yield Service()
@@ -116,7 +116,7 @@ agent_section_mongodb_flushing = AgentSection(
 check_plugin_mongodb_flushing = CheckPlugin(
     name="mongodb_flushing",
     service_name="MongoDB Flushing",
-    discovery_function=inventory_mongodb_flushing,
+    discovery_function=discover_mongodb_flushing,
     check_function=check_mongodb_flushing,
     check_ruleset_name="mongodb_flushing",
     check_default_parameters={},

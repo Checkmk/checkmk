@@ -22,6 +22,8 @@ void main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
+
     def safe_branch_name = versioning.safe_branch_name();
 
     def env_var_list = [];
@@ -199,8 +201,21 @@ void main() {
                             if (params.CIPARAM_DIR) {
                                 extended_cmd = "cd ${params.CIPARAM_DIR}; ${extended_cmd}";
                             }
-                            cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
-
+                            artifacts_helper.withHotCache([
+                                download_dest: "~",
+                                remove_existing_cache: true,
+                                target_name: params.CIPARAM_NAME,
+                                cache_prefix: versioning.distro_code(),
+                                // When we mount the shared repository cache, we won't pack the repository cache under ~/.cache
+                                // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
+                                files_to_consider: [
+                                    '.bazelversion',
+                                    'requirements.txt',
+                                    'bazel/tools/package.json',
+                                ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
+                            ]) {
+                                cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
+                            }
                             archiveArtifacts(
                                 artifacts: "${result_dir}/**",
                                 fingerprint: true,

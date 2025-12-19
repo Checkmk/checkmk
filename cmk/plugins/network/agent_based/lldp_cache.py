@@ -312,13 +312,14 @@ def host_label_lldp_cache(section: Lldp) -> HostLabelGenerator:
         cmk/has_lldp_neighbors:
             This label is set to "yes" for all devices with at least one LLDP neighbor
 
-        cmk/lldp_neighbor:
-             This label is set to 'neighbor_name' for each LLDP neighbor of the device.
+        cmk/lldp_neighbor/{neighbor_id}:
+            This label is set to 'yes' for each LLDP neighbor of the device.
     """
     if len(section.lldp_neighbors) > 0:
         yield HostLabel(name="cmk/has_lldp_neighbors", value="yes")
         for neighbor in section.lldp_neighbors:
-            yield HostLabel(name="cmk/lldp_neighbor", value=neighbor.neighbor_name)
+            neighbor_id = neighbor.neighbor_name
+            yield HostLabel(name=f"cmk/lldp_neighbor/{neighbor_id}", value="yes")
 
 
 def inventory_lldp_cache(params: InventoryParams, section: Lldp) -> InventoryResult:

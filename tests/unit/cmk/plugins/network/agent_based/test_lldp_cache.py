@@ -198,7 +198,7 @@ def test_parse_lldp_cache(data: Sequence[StringByteTable], expected: Lldp | None
             LLDP,
             [
                 HostLabel("cmk/has_lldp_neighbors", "yes"),
-                HostLabel("cmk/lldp_neighbor", "sys name"),
+                HostLabel("cmk/lldp_neighbor/sys name", "yes"),
             ],
         ),
         (
@@ -222,8 +222,8 @@ def test_parse_lldp_cache(data: Sequence[StringByteTable], expected: Lldp | None
             ),
             [
                 HostLabel("cmk/has_lldp_neighbors", "yes"),
-                HostLabel("cmk/lldp_neighbor", "sys name"),
-                HostLabel("cmk/lldp_neighbor", "sys name 2"),
+                HostLabel("cmk/lldp_neighbor/sys name", "yes"),
+                HostLabel("cmk/lldp_neighbor/sys name 2", "yes"),
             ],
         ),
     ],

@@ -11,15 +11,19 @@ from cmk.gui.openapi.framework import (
     EndpointMetadata,
     EndpointPermissions,
     PathParam,
+    QueryParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 
 from ..metadata import dashboard_uses_relative_grid
-from ..store import get_permitted_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
+    dashboard_owner_description,
+    DashboardOwnerWithBuiltin,
+    get_dashboard_for_read,
     PERMISSIONS_DASHBOARD,
     serialize_relative_grid_dashboard,
 )
@@ -32,16 +36,16 @@ def show_relative_grid_dashboard_v1(
         str,
         PathParam(description="Dashboard ID", example="main"),
     ],
+    owner: Annotated[
+        DashboardOwnerWithBuiltin,
+        QueryParam(
+            description=dashboard_owner_description("The owner of the dashboard."),
+            example="admin",
+        ),
+    ] = ApiOmitted(),
 ) -> RelativeGridDashboardDomainObject:
     """Show a dashboard."""
-    dashboards = get_permitted_dashboards()
-    if dashboard_id not in dashboards:
-        raise ProblemException(
-            status=404,
-            title="Dashboard not found",
-            detail=f"The dashboard with ID '{dashboard_id}' does not exist or you do not have permission to view it.",
-        )
-    dashboard = dashboards[dashboard_id]
+    dashboard = get_dashboard_for_read(owner, dashboard_id)
     if not dashboard_uses_relative_grid(dashboard):
         raise ProblemException(
             status=400,

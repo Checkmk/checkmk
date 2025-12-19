@@ -17,11 +17,16 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 
-from .. import DashboardConfig
+from .. import DashboardConfig, get_all_dashboards
 from ..metadata import dashboard_uses_relative_grid
-from ..store import get_permitted_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._utils import PERMISSIONS_DASHBOARD, save_dashboard_to_file
+from ._utils import (
+    dashboard_owner_description,
+    DashboardOwnerWithBuiltin,
+    get_dashboard_for_read,
+    PERMISSIONS_DASHBOARD,
+    save_dashboard_to_file,
+)
 from .model.dashboard import DashboardGeneralSettings, DashboardIcon
 
 
@@ -30,6 +35,11 @@ class CloneDashboardV1:
     reference_dashboard_id: str = api_field(
         description="The ID of the dashboard to clone.",
         example="existing_dashboard",
+    )
+    reference_dashboard_owner: DashboardOwnerWithBuiltin = api_field(
+        description=dashboard_owner_description("The owner of the dashboard to clone."),
+        example="admin",
+        default_factory=ApiOmitted,
     )
     dashboard_id: str = api_field(
         description="Unique identifier for the dashboard.",
@@ -47,30 +57,25 @@ def clone_as_relative_grid_dashboard_v1(
     body: CloneDashboardV1,
 ) -> None:
     """Clone as relative dashboard"""
-    dashboards = get_permitted_dashboards()
-    reference_dashboard_id = body.reference_dashboard_id
-    if reference_dashboard_id not in dashboards:
-        raise ProblemException(
-            status=404,
-            title="Dashboard not found",
-            detail=f"The dashboard with ID '{reference_dashboard_id}' does not exist or you do not have permission to view it.",
-        )
-    if body.dashboard_id in dashboards:
+    user.need_permission("general.edit_dashboards")
+    dashboard_to_clone = get_dashboard_for_read(
+        body.reference_dashboard_owner, body.reference_dashboard_id
+    )
+    owner = user.ident
+    if (owner, body.dashboard_id) in get_all_dashboards():
         raise ProblemException(
             status=400,
             title="Dashboard ID already exists",
-            detail=f"A dashboard with ID '{body.dashboard_id}' already exists.",
+            detail=f"A dashboard with ID '{body.dashboard_id}' already exists for you.",
         )
 
-    dashboard_to_clone = dashboards[reference_dashboard_id]
     if not dashboard_uses_relative_grid(dashboard_to_clone):
         raise ProblemException(
             status=400,
             title="Invalid dashboard layout",
-            detail=f"The dashboard with ID '{reference_dashboard_id}' is not a relative grid dashboard.",
+            detail=f"The dashboard with ID '{body.reference_dashboard_id}' is not a relative grid dashboard.",
         )
 
-    owner = user.ident
     general_settings = body.general_settings
     if not isinstance(general_settings, ApiOmitted):
         description = (

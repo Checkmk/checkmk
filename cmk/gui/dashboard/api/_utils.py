@@ -18,7 +18,7 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.framework.utils import dump_dict_without_omitted
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.type_defs import VisualTypeName
+from cmk.gui.type_defs import AnnotatedUserId, VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
 from cmk.gui.userdb import load_user
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
@@ -29,7 +29,13 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 from cmk.utils.automation_config import RemoteAutomationConfig
 
-from ..store import DashboardStore, get_all_dashboards, save_all_dashboards
+from ..store import (
+    DashboardStore,
+    get_all_dashboards,
+    get_permitted_dashboards,
+    get_permitted_dashboards_by_owners,
+    save_all_dashboards,
+)
 from .model.constants import (
     DashboardConstantsResponse,
     FilterContextConstants,
@@ -134,6 +140,15 @@ PERMISSIONS_DASHBOARD_EDIT = permissions.AllPerm(
     ]
 )
 
+type DashboardOwnerWithBuiltin = Literal[""] | AnnotatedUserId | ApiOmitted
+
+
+def dashboard_owner_description(description: str) -> str:
+    return (
+        f"{description} Use an empty string for built-in dashboards. If not provided, the best "
+        "matching dashboard for the current user is assumed."
+    )
+
 
 def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", "edit"]) -> UserId:
     """Get the user ID from the owner field, defaulting to the current user.
@@ -170,6 +185,27 @@ def get_dashboard_for_edit(owner: UserId | ApiOmitted, dashboard_id: str) -> Das
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{dashboard_owner}'.",
         )
     return dashboards[key]
+
+
+def get_dashboard_for_read(owner: DashboardOwnerWithBuiltin, dashboard_id: str) -> DashboardConfig:
+    """Load a dashboard for reading, verifying permissions."""
+    if isinstance(owner, ApiOmitted):
+        dashboards = get_permitted_dashboards()
+        dashboard = dashboards.get(dashboard_id)
+        owner_msg = ""
+    else:
+        user_id = UserId.builtin() if owner == "" else owner
+        dashboards_by_owners = get_permitted_dashboards_by_owners()
+        dashboard = dashboards_by_owners.get(dashboard_id, {}).get(user_id)
+        owner_msg = " for the specified owner"
+
+    if dashboard is None:
+        raise ProblemException(
+            status=404,
+            title="Dashboard not found",
+            detail=f"The dashboard with ID '{dashboard_id}' does not exist{owner_msg} or you do not have permission to view it.",
+        )
+    return dashboard
 
 
 def serialize_relative_grid_dashboard(

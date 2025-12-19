@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Annotated, Literal
+from typing import Annotated
 
-from cmk.ccc.user import UserId
-from cmk.gui.dashboard.store import get_permitted_dashboards, get_permitted_dashboards_by_owners
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -20,12 +18,15 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import object_href
-from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.type_defs import AnnotatedUserId
 
 from ..metadata import DashboardMetadataObject
 from ._family import DASHBOARD_FAMILY
-from ._utils import PERMISSIONS_DASHBOARD
+from ._utils import (
+    dashboard_owner_description,
+    DashboardOwnerWithBuiltin,
+    get_dashboard_for_read,
+    PERMISSIONS_DASHBOARD,
+)
 from .model.metadata import DashboardMetadata, DashboardMetadataModel
 
 
@@ -36,38 +37,15 @@ def show_dashboard_metadata_v1(
         PathParam(description="Dashboard ID", example="main"),
     ],
     owner: Annotated[
-        Literal[""] | AnnotatedUserId | ApiOmitted,
+        DashboardOwnerWithBuiltin,
         QueryParam(
-            description="The owner of the dashboard. If not provided, the current user is assumed. Use an empty string to indicate a built-in dashboard.",
+            description=dashboard_owner_description("The owner of the dashboard."),
             example="admin",
         ),
     ] = ApiOmitted(),
 ) -> DashboardMetadataModel:
     """Show a dashboard's metadata."""
-
-    if isinstance(owner, ApiOmitted):
-        dashboards = get_permitted_dashboards()
-        dashboard = dashboards.get(dashboard_id)
-    else:
-        user_id = UserId.builtin() if owner == "" else owner
-        dashboards_by_owners = get_permitted_dashboards_by_owners()
-        if dashboard_id not in dashboards_by_owners:
-            raise ProblemException(
-                status=404,
-                title="Dashboard not found",
-                detail=f"The dashboard with ID '{dashboard_id}' does not exist or you do not have permission to view it.",
-            )
-
-        owner_dashboards = dashboards_by_owners[dashboard_id]
-        dashboard = owner_dashboards.get(user_id)
-
-    if dashboard is None:
-        raise ProblemException(
-            status=404,
-            title="Dashboard not found",
-            detail=f"The dashboard with ID '{dashboard_id}' does not exist{'' if isinstance(owner, ApiOmitted) else 'for the specified owner'} or you do not have permission to view it.",
-        )
-
+    dashboard = get_dashboard_for_read(owner, dashboard_id)
     user_permissions = api_context.config.user_permissions()
     return DashboardMetadataModel(
         id=dashboard_id,

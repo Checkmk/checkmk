@@ -7,6 +7,7 @@ import type { DashboardOwnerType } from '@/dashboard-wip/types/dashboard'
 
 export interface SelectedDashboard {
   name: string
+  owner: string
   title: string
   type: DashboardOwnerType
 }

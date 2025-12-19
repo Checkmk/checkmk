@@ -15,6 +15,7 @@ import DashboardBreadcrumb from '@/dashboard-wip/components/DashboardBreadcrumb/
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import DashboardFilterSettings from '@/dashboard-wip/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
+import type { SelectedDashboard } from '@/dashboard-wip/components/DashboardMenuHeader/types'
 import { createWidgetLayout } from '@/dashboard-wip/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import AddWidgetPage from '@/dashboard-wip/components/WidgetWorkflow/StarterPage/AddWidgetPage.vue'
@@ -152,9 +153,10 @@ const selectedDashboard = computed(() => {
 
   return {
     name: dashboardsManager.activeDashboardKey.value!.name,
+    owner: dashboardsManager.activeDashboardKey.value!.owner,
     title: dashboardsManager.activeDashboard.value.model.general_settings.title.text,
     type: dashboardsManager.activeDashboard.value.model.type
-  }
+  } as SelectedDashboard
 })
 
 const handleWizardSelectorGoBack = () => {

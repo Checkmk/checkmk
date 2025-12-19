@@ -7,7 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import type { SelectedDashboard } from '@/dashboard-wip/components/DashboardMenuHeader/types'
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { BreadcrumbItem } from '@/dashboard-wip/types/page'
+import { urlHandler } from '@/dashboard-wip/utils'
 
 interface Props {
   selectedDashboard: SelectedDashboard | null
@@ -18,8 +20,11 @@ interface Props {
 const props = defineProps<Props>()
 const activeBreadcrumb = computed<BreadcrumbItem[]>(() => {
   if (props.selectedDashboardBreadcrumb) {
-    const link = new URL(location.href)
-    link.searchParams.set('name', props.selectedDashboard?.name ?? '')
+    const key: DashboardKey = {
+      name: props.selectedDashboard?.name ?? '',
+      owner: props.selectedDashboard?.owner ?? ''
+    }
+    const link = urlHandler.getDashboardUrl(key, {})
     return [
       ...props.selectedDashboardBreadcrumb,
       {

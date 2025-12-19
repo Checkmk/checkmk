@@ -43,6 +43,7 @@ configure_make(
         "--enable-optimizations",
         "--enable-shared",
         "--with-lto",
+        "--without-static-libpython",
         "DESTDIR=%s" % INSTALL_PREFIX,
     ],
     data = [

@@ -462,8 +462,7 @@ function deepClone<T>(obj: T): T {
       />
       <DashboardSharingWizard
         v-if="openDashboardShareDialog && dashboardsManager.activeDashboardKey.value"
-        :dashboard-name="dashboardsManager.activeDashboardKey.value!.name"
-        :dashboard-owner="dashboardsManager.activeDashboardKey.value!.owner"
+        :dashboard-key="dashboardsManager.activeDashboardKey.value!"
         :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
         :available-features="available_features"
         @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"

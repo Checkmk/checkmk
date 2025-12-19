@@ -12,7 +12,7 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import type { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+import type { DashboardFeatures, DashboardKey } from '@/dashboard-wip/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
@@ -26,8 +26,7 @@ import type { DashboardTokenModel } from './api'
 const { _t } = usei18n()
 
 interface ShareDashboardSettingsProps {
-  dashboardName: string
-  dashboardOwner: string
+  dashboardKey: DashboardKey
   publicToken: DashboardTokenModel | null
   availableFeatures: DashboardFeatures
 }
@@ -66,8 +65,7 @@ const clonedToken = computed(() => (props.publicToken ? structuredClone(props.pu
         <ContentSpacer />
 
         <PublicAccess
-          :dashboard-owner="dashboardOwner"
-          :dashboard-name="dashboardName"
+          :dashboard-key="dashboardKey"
           :public-token="clonedToken"
           :available-features="availableFeatures"
           @refresh-dashboard-settings="$emit('refreshDashboardSettings')"

@@ -14,7 +14,7 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import PopupDialog, { type PopupDialogProps } from '@/dashboard-wip/components/PopupDialog.vue'
-import type { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+import type { DashboardFeatures, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import { urlHandler } from '@/dashboard-wip/utils'
 
 import CollapsibleBox from '../../components/CollapsibleBox.vue'
@@ -26,8 +26,7 @@ import { usePublicAccess } from './composables/usePublicAccess'
 const { _t } = usei18n()
 
 interface PublicAccessLinkProps {
-  dashboardName: string
-  dashboardOwner: string
+  dashboardKey: DashboardKey
   publicToken: DashboardTokenModel | null
   availableFeatures: DashboardFeatures
 }
@@ -47,8 +46,8 @@ const dialogData: Reactive<PopupDialogProps> = reactive({
 })
 
 const handler = usePublicAccess(
-  props.dashboardName,
-  props.dashboardOwner,
+  props.dashboardKey.name,
+  props.dashboardKey.owner,
   toRef(props, 'publicToken'),
   props.availableFeatures
 )

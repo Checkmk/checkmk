@@ -44,7 +44,7 @@ def parse_esx_vsphere_vm_mounted_devices(section: SectionESXVm) -> Mapping[str, 
     return parsed
 
 
-def inventory_esx_vsphere_vm_mounted_devices(section: SectionESXVm) -> DiscoveryResult:
+def discover_esx_vsphere_vm_mounted_devices(section: SectionESXVm) -> DiscoveryResult:
     if parse_esx_vsphere_vm_mounted_devices(section):
         yield Service()
 
@@ -71,6 +71,6 @@ check_plugin_esx_vsphere_vm_mounted_devices = CheckPlugin(
     name="esx_vsphere_vm_mounted_devices",
     service_name="ESX Mounted Devices",
     sections=["esx_vsphere_vm"],
-    discovery_function=inventory_esx_vsphere_vm_mounted_devices,
+    discovery_function=discover_esx_vsphere_vm_mounted_devices,
     check_function=check_esx_vsphere_vm_mounted_devices,
 )

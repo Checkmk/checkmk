@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.bvip.lib import DETECT_BVIP
 
 
-def inventory_bvip_info(section: StringTable) -> DiscoveryResult:
+def discover_bvip_info(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -48,6 +48,6 @@ snmp_section_bvip_info = SimpleSNMPSection(
 check_plugin_bvip_info = CheckPlugin(
     name="bvip_info",
     service_name="System Info",
-    discovery_function=inventory_bvip_info,
+    discovery_function=discover_bvip_info,
     check_function=check_bvip_info,
 )

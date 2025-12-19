@@ -389,5 +389,6 @@ def _get_oracle_instances(instances: list[GuiInstanceConf]) -> list[OracleInstan
 bakery_plugin_oracle = BakeryPlugin(
     name="mk_oracle_unified",
     parameter_parser=GuiConfig.model_validate,
+    default_parameters=None,
     files_function=get_oracle_plugin_files,
 )

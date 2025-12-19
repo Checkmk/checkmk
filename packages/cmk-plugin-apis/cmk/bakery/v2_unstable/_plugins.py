@@ -75,6 +75,14 @@ class BakeryPlugin[ConfigType]:
             It will be passed the preprocessed plugin parameters and can return any python object.
             The parser parameters will be passed to the other functions.
 
+        default_parameters: Default parameters for the plugin.
+            These parameters will be used if no parameters are provided by the user.
+            If they are `None` and the user has no rule configured, this bakelet will not be called at all.
+            If they are not `None`, they must be in the format expected by the `parameter_parser`, and they
+            will be merged with the user-provided parameters (or passed on their own).
+            Choose wisely if the plugin should be deployed or not by default.
+            If you are a Checkmk developer, you might want to align with the product management on this.
+
         files_function: Function that creates file artifacts.
             It will be passed the plugins configuration as parsed by the `parameters_parser` and must create artifacts of types
             :class:`Plugin`, :class:`PluginConfig`, :class:`SystemConfig`, or :class:`SystemBinary`.
@@ -91,6 +99,9 @@ class BakeryPlugin[ConfigType]:
 
     name: str
     parameter_parser: Callable[[Mapping[str, object]], ConfigType]
+    # Note: We allow `None` here, because forcing the user to provide a full valid set of parameters
+    #       just to disable the plugin by default is cumbersome. Consider mk_oracle.py for an example.
+    default_parameters: Mapping[str, object] | None
     files_function: Callable[
         [ConfigType], Iterable[Plugin | PluginConfig | SystemBinary | SystemConfig]
     ] = _nothing
@@ -107,6 +118,8 @@ class BakeryPlugin[ConfigType]:
 
     def __post_init__(self) -> None:
         self.name = _parse_valid_plugin_name(self.name)
+        if self.default_parameters is not None:
+            _parse = self.parameter_parser(self.default_parameters)
 
 
 def entry_point_prefixes() -> Mapping[type[BakeryPlugin], str]:

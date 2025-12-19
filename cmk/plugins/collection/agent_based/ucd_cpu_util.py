@@ -89,7 +89,7 @@ def parse_ucd_cpu_util(string_table: StringTable) -> Section | None:
     return Section(error=error or None, cpu_ticks=cpu_ticks, io=io)
 
 
-def inventory_ucd_cpu_util(section: Section) -> DiscoveryResult:
+def discover_ucd_cpu_util(section: Section) -> DiscoveryResult:
     yield Service()
 
 
@@ -135,7 +135,7 @@ snmp_section_ucd_cpu_util = SimpleSNMPSection(
 check_plugin_ucd_cpu_util = CheckPlugin(
     name="ucd_cpu_util",
     service_name="CPU utilization",
-    discovery_function=inventory_ucd_cpu_util,
+    discovery_function=discover_ucd_cpu_util,
     check_function=check_ucd_cpu_util,
     check_ruleset_name="cpu_iowait",
     check_default_parameters={},

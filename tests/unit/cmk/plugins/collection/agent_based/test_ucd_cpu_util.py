@@ -30,7 +30,7 @@ def _section() -> ucu.Section:
 
 
 def test_discovery() -> None:
-    assert list(ucu.inventory_ucd_cpu_util(_section())) == [Service()]
+    assert list(ucu.discover_ucd_cpu_util(_section())) == [Service()]
 
 
 def test_check() -> None:

@@ -441,7 +441,6 @@ function searchResultNotEmpty(): boolean {
   margin: var(--dimension-6) 0 var(--dimension-3);
   border: 1px solid transparent;
   display: flex;
-  align-items: center;
 
   .result-group-heading__icon {
     margin-right: var(--dimension-4);

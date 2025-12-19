@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
             <CmkDynamicIcon :spec="ib.icon" size="small" class="result-item-icon" />
           </div>
           <div class="result-item-inner-end">
-            <ResultItemTitle :title="ib.title" context=""></ResultItemTitle>
+            {{ ib.title }}
           </div>
         </CmkButton>
       </div>
@@ -179,8 +179,13 @@ onBeforeUnmount(() => {
 
 <style scoped>
 /* stylelint-disable checkmk/vue-bem-naming-convention */
+
 .result-item {
   list-style-type: none;
+
+  .result-item-icon {
+    margin-right: var(--spacing);
+  }
 
   .result-item-handler-wrapper {
     position: relative;
@@ -236,6 +241,10 @@ onBeforeUnmount(() => {
           border: 1px solid var(--success);
           outline: none;
         }
+
+        .result-item-icon {
+          margin-right: var(--dimension-4);
+        }
       }
     }
 
@@ -275,9 +284,5 @@ onBeforeUnmount(() => {
   }
 
   font-weight: bold;
-}
-
-.result-item-icon {
-  margin-right: var(--spacing);
 }
 </style>

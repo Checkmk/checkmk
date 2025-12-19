@@ -116,7 +116,7 @@ def parse_arcserve_backup(string_table: StringTable) -> Section:
     return parsed
 
 
-def inventory_arcserve_backup(section: Any) -> DiscoveryResult:
+def discover_arcserve_backup(section: Any) -> DiscoveryResult:
     inventory = []
     for backup in section:
         inventory.append((backup, None))
@@ -172,6 +172,6 @@ agent_section_arcserve_backup = AgentSection(
 check_plugin_arcserve_backup = CheckPlugin(
     name="arcserve_backup",
     service_name="Arcserve Backup %s",
-    discovery_function=inventory_arcserve_backup,
+    discovery_function=discover_arcserve_backup,
     check_function=check_arcserve_backup,
 )

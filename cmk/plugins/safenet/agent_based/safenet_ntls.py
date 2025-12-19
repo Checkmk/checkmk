@@ -74,7 +74,7 @@ def parse_safenet_ntls(string_table: StringTable) -> Section | None:
 #   '----------------------------------------------------------------------'
 
 
-def inventory_safenet_ntls_connrate(section: Section) -> DiscoveryResult:
+def discover_safenet_ntls_connrate(section: Section) -> DiscoveryResult:
     if section:
         yield Service(item="successful")
         yield Service(item="failed")
@@ -106,7 +106,7 @@ check_plugin_safenet_ntls_connrate = CheckPlugin(
     name="safenet_ntls_connrate",
     service_name="NTLS Connection Rate: %s",
     sections=["safenet_ntls"],
-    discovery_function=inventory_safenet_ntls_connrate,
+    discovery_function=discover_safenet_ntls_connrate,
     check_function=check_safenet_ntls_connrate,
 )
 

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onBeforeMount, provide, ref } from 'vue'
+import { computed, onBeforeMount, provide, ref, watch } from 'vue'
 
 import { randomId } from '@/lib/randomId'
 
@@ -117,22 +117,12 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
   openDashboardFilterSettings.value = true
 })
 
-async function updateBreadcrumb(dashboardName: string): Promise<void> {
-  const metadata = await dashboardAPI.showDashboardMetadata(dashboardName)
-  selectedDashboardBreadcrumb.value = metadata.display?.topic?.breadcrumb ?? null
-}
+watch(dashboardsManager.activeDashboard, (value) => {
+  selectedDashboardBreadcrumb.value = value?.metadata.display.topic.breadcrumb ?? null
+})
 
-const setAsActiveDashboard = async (
-  dashboardName: string,
-  layout: DashboardLayout,
-  breadcrumb: BreadcrumbItem[] | null = null
-) => {
+const setAsActiveDashboard = async (dashboardName: string, layout: DashboardLayout) => {
   await dashboardsManager.loadDashboard(dashboardName, layout)
-  if (breadcrumb) {
-    selectedDashboardBreadcrumb.value = breadcrumb
-  } else {
-    await updateBreadcrumb(dashboardName)
-  }
 
   const updatedDashboardUrl = urlHandler.getDashboardUrl(
     dashboardName,
@@ -142,11 +132,7 @@ const setAsActiveDashboard = async (
 }
 
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
-  await setAsActiveDashboard(
-    dashboard.name,
-    dashboard.layout_type as DashboardLayout,
-    dashboard.display?.topic?.breadcrumb ?? null
-  )
+  await setAsActiveDashboard(dashboard.name, dashboard.layout_type as DashboardLayout)
 
   if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
     openDashboardFilterSettings.value = true
@@ -300,7 +286,6 @@ const createDashboard = async (
     openDashboardFilterSettings.value = true
     const updatedDashboardUrl = urlHandler.getDashboardUrl(dashboardId, {})
     urlHandler.updateCurrentUrl(updatedDashboardUrl)
-    await updateBreadcrumb(dashboardId)
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
   } else {
@@ -329,7 +314,7 @@ const cloneDashboard = async (
     )
   }
   if (nextStep === 'setFilters') {
-    await setAsActiveDashboard(dashboardId, layout, null)
+    await setAsActiveDashboard(dashboardId, layout)
     openDashboardFilterSettings.value = true
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()

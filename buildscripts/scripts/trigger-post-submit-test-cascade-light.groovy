@@ -19,7 +19,7 @@ void main() {
         "test-groovy-lint",
         "test-python3-bandit",
         "test-python3-code-quality",
-        "test-python3-pylint",
+        "test-python3-astrein",
         "test-python3-ruff",
         "test-python3-typing",
         "test-python3-unit-all",

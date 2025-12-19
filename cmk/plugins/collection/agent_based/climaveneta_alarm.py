@@ -75,7 +75,7 @@ climaveneta_alarms = {
 }
 
 
-def inventory_climaveneta_alarm(section: StringTable) -> DiscoveryResult:
+def discover_climaveneta_alarm(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -107,6 +107,6 @@ snmp_section_climaveneta_alarm = SimpleSNMPSection(
 check_plugin_climaveneta_alarm = CheckPlugin(
     name="climaveneta_alarm",
     service_name="Alarm Status",
-    discovery_function=inventory_climaveneta_alarm,
+    discovery_function=discover_climaveneta_alarm,
     check_function=check_climaveneta_alarm,
 )

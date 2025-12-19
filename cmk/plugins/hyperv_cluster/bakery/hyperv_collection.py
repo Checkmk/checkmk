@@ -34,5 +34,6 @@ def get_hyperv_multiple_files(conf: Config) -> FileGenerator:
 bakery_plugin_hyperv_collection = BakeryPlugin(
     name="hyperv_collection",
     parameter_parser=Config.model_validate,
+    default_parameters=None,
     files_function=get_hyperv_multiple_files,
 )

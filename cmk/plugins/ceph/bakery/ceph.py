@@ -42,5 +42,6 @@ def get_ceph_files(confm: CephConfig) -> Iterable[Plugin | PluginConfig]:
 bakery_plugin_ceph = BakeryPlugin(
     name="ceph",
     parameter_parser=CephConfig.model_validate,
+    default_parameters=None,
     files_function=get_ceph_files,
 )

@@ -143,7 +143,7 @@ def esx_vsphere_multipath_convert(data: HostSystemSection) -> Mapping[str, list[
     return paths
 
 
-def inventory_esx_vsphere_hostsystem_multipath(section: HostSystemSection) -> DiscoveryResult:
+def discover_esx_vsphere_hostsystem_multipath(section: HostSystemSection) -> DiscoveryResult:
     yield from [Service(item=x) for x in esx_vsphere_multipath_convert(section)]
 
 
@@ -235,7 +235,7 @@ check_plugin_esx_vsphere_hostsystem_multipath = CheckPlugin(
     name="esx_vsphere_hostsystem_multipath",
     service_name="Multipath %s",
     sections=["esx_vsphere_hostsystem"],
-    discovery_function=inventory_esx_vsphere_hostsystem_multipath,
+    discovery_function=discover_esx_vsphere_hostsystem_multipath,
     check_function=check_esx_vsphere_hostsystem_multipath,
     check_ruleset_name="multipath_count",
     check_default_parameters={"levels_map": None},

@@ -47,6 +47,7 @@ else {
 }
 
 if ($testExt -or $testIntegration -or $testComponent -or $testUnit) {
+    Write-Host "Build is required" -ForegroundColor Green
     $testBuild = $true
 }
 
@@ -409,7 +410,8 @@ $result = 1
 try {
     $mainStartTime = Get-Date
     if ($testBuild) {
-        & pwsh ./run.ps1 --build
+        Write-Host "Main build starting..." -ForegroundColor Green
+        & pwsh ./run.ps1 --win-agent --build
         if ($LASTEXITCODE -ne 0) {
             Write-Error "[-] Unable to rebuild" -ErrorAction Stop
         }

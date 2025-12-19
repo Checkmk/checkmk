@@ -68,7 +68,7 @@ function Write-Help() {
     Write-Host "  -C, --ctl               make controller"
     Write-Host "  -Q, --mk-sql            make mk-sql"
     Write-Host "  -R, --mk-oracle         make mk-oracle"
-    Write-Host "  -B, --build-only        do not test, just build"
+    Write-Host "  -B, --build             do not test, just build"
     Write-Host "  -W, --win-agent         make windows agent"
     Write-Host "  -M, --msi               make msi"
     Write-Host "  -O, --ohm               make ohm"

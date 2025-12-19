@@ -36,6 +36,7 @@ def get_unified_search_config(request: Request) -> UnifiedSearchMainMenuData:
         ),
         user_id=str(user.id),
         edition=Edition(edition(paths.omd_root).short),
+        icons_per_item=bool(user.get_attribute("icons_per_item")),
     )
 
 

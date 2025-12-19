@@ -16,6 +16,8 @@ INSTALL := $(BUILD_HELPER_DIR)/install
 RPM_TOPDIR := $(BUILD_BASE_DIR)/rpm/topdir
 RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
+# $(SKEL) used in `omd/packages/appliance/appliance.make`.
+SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "bookworm" ]; then echo "-4" ; elif [ "$(DISTRO_CODE)" = "buster" ]; then echo "-3"; fi )
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma

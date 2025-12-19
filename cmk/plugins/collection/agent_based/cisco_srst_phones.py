@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_cisco_srst_phones(section: StringTable) -> DiscoveryResult:
+def discover_cisco_srst_phones(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -52,6 +52,6 @@ snmp_section_cisco_srst_phones = SimpleSNMPSection(
 check_plugin_cisco_srst_phones = CheckPlugin(
     name="cisco_srst_phones",
     service_name="SRST Phones",
-    discovery_function=inventory_cisco_srst_phones,
+    discovery_function=discover_cisco_srst_phones,
     check_function=check_cisco_srst_phones,
 )

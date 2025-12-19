@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_cisco_temp(section: StringTable) -> DiscoveryResult:
+def discover_cisco_temp(section: StringTable) -> DiscoveryResult:
     for name, state in section:
         if state != "5":
             yield Service(item=name)
@@ -64,6 +64,6 @@ snmp_section_cisco_temp = SimpleSNMPSection(
 check_plugin_cisco_temp = CheckPlugin(
     name="cisco_temp",
     service_name="Temperature %s",
-    discovery_function=inventory_cisco_temp,
+    discovery_function=discover_cisco_temp,
     check_function=check_cisco_temp,
 )

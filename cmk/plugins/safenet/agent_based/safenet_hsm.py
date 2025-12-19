@@ -100,7 +100,7 @@ def parse_safenet_hsm(string_table: StringTable) -> Section | None:
 #   '----------------------------------------------------------------------'
 
 
-def inventory_safenet_hsm_events(section: Section) -> DiscoveryResult:
+def discover_safenet_hsm_events(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -132,7 +132,7 @@ check_plugin_safenet_hsm_events = CheckPlugin(
     name="safenet_hsm_events",
     service_name="HSM Safenet Event Stats",
     sections=["safenet_hsm"],
-    discovery_function=inventory_safenet_hsm_events,
+    discovery_function=discover_safenet_hsm_events,
     check_function=check_safenet_hsm_events,
     check_ruleset_name="safenet_hsm_eventstats",
     check_default_parameters=EventStatCheckParamT(

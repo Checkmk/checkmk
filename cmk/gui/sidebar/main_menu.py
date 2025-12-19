@@ -36,7 +36,7 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
-from cmk.shared_typing.unified_search import UnifiedSearchProps
+from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchProps
 
 
 class MainMenuPopupTrigger(NamedTuple):
@@ -51,41 +51,35 @@ class MainMenuRenderer:
 
     def show(self, user_permissions: UserPermissions) -> None:
         html.open_ul(id_="main_menu")
-        self._modify_unified_search_config()
         self._show_main_menu_content(user_permissions)
         render_product_telemetry_popup(
             active_config=active_config, user=user, request=request, response=response
         )
         html.close_ul()
 
-    def _modify_unified_search_config(
-        self,
-    ) -> None:
+    def _add_unified_searchprovider(self, trigger: MainMenuPopupTrigger) -> None:
         if search_item := main_menu_registry.get("search"):
             if search_item.vue_app and isinstance(search_item.vue_app.data, UnifiedSearchProps):
-                if mon_item := main_menu_registry.get("monitoring"):
-                    search_item.vue_app.data.providers.monitoring.active = bool(
-                        mon_item.topics and mon_item.topics()
-                    )
-                    search_item.vue_app.data.providers.setup.sort = mon_item.sort_index
-
-                if customize_item := main_menu_registry.get("customize"):
-                    search_item.vue_app.data.providers.customize.active = bool(
-                        customize_item.topics and customize_item.topics()
-                    )
-                    search_item.vue_app.data.providers.customize.sort = customize_item.sort_index
-
-                if search_item.vue_app.data.providers.setup.active:
-                    if setup_item := main_menu_registry.get("setup"):
-                        search_item.vue_app.data.providers.setup.active = bool(
-                            setup_item.topics and setup_item.topics()
-                        )
-                        search_item.vue_app.data.providers.setup.sort = setup_item.sort_index
-
-                search_item.vue_app.data = asdict(search_item.vue_app.data)
+                if provider_item := main_menu_registry.get(trigger.name):
+                    match provider_item.name:
+                        case ProviderName.monitoring:
+                            search_item.vue_app.data.providers.monitoring.active = True
+                            search_item.vue_app.data.providers.monitoring.sort = (
+                                provider_item.sort_index
+                            )
+                        case ProviderName.customize:
+                            search_item.vue_app.data.providers.customize.active = True
+                            search_item.vue_app.data.providers.customize.sort = (
+                                provider_item.sort_index
+                            )
+                        case ProviderName.setup:
+                            search_item.vue_app.data.providers.setup.active = True
+                            search_item.vue_app.data.providers.setup.sort = provider_item.sort_index
 
     def _show_main_menu_content(self, user_permissions: UserPermissions) -> None:
         for popup_trigger in self._get_main_menu_popup_triggers(user_permissions):
+            self._add_unified_searchprovider(popup_trigger)
+
             # TODO: those active icons should be defined explicitly in the MainMenuPopupTrigger
             if isinstance(popup_trigger.icon, dict):
                 active_icon: DynamicIcon = {

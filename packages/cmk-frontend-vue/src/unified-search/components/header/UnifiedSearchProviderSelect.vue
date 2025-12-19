@@ -9,6 +9,7 @@ import { ref, useTemplateRef } from 'vue'
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
+import type { UnifiedSearchProvider } from '@/unified-search/lib/providers/unified'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { ProviderOption, QueryProvider } from '@/unified-search/providers/search-utils.types'
 
@@ -19,7 +20,13 @@ import { availableProviderOptions } from './QueryOptions'
 const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const providerDropdownBtn = useTemplateRef('unified-search-provider-btn')
-const providerOptions = ref<ProviderOption[]>(availableProviderOptions)
+const availableUnifiedProviders =
+  (searchUtils.search?.get('unified') as UnifiedSearchProvider)?.providers ?? []
+const providerOptions = ref<ProviderOption[]>(
+  availableProviderOptions.filter(
+    (o) => o.value === 'all' || availableUnifiedProviders.indexOf(o.value) >= 0
+  )
+)
 
 const props = defineProps<{
   provider?: QueryProvider
@@ -120,7 +127,7 @@ const provideri18n: Record<QueryProvider, string> = {
 </script>
 
 <template>
-  <div class="unified-search-provider-switch">
+  <div v-if="availableUnifiedProviders.length > 1" class="unified-search-provider-switch">
     <button
       ref="unified-search-provider-btn"
       class="unified-search-provider-switch-button"

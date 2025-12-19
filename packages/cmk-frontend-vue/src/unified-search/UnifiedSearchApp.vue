@@ -34,6 +34,7 @@ import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
 import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
 import UnifiedSearchWaitForResults from './components/view/UnifiedSearchWaitForResults.vue'
 import { getIconForTopic } from './lib/icon-mapping'
+import { setRecentSearch } from './lib/search-debug'
 import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
 import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 
@@ -96,6 +97,7 @@ search.onSearch((result?: UnifiedSearchResult) => {
 
         searchError.value = undefined
         searchResult.value = usprRes as UnifiedSearchApiResponse
+        setRecentSearch(searchResult.value)
       }
       waitForSearchResults.value = false
     } else {

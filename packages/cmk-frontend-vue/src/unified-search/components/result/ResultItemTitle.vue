@@ -15,7 +15,7 @@ export default defineComponent({
   },
   render() {
     return h('div', [
-      h('span', { innerHTML: this.title }),
+      h('span', { innerHTML: this.title, class: 'title' }),
       h('span', { class: 'context' }, this.context)
     ])
   }
@@ -33,20 +33,25 @@ export default defineComponent({
 }
 
 div {
-  width: auto;
+  width: 100%;
   display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 span {
-  max-width: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   position: relative;
   display: inline-block;
 
   &::first-letter {
     text-transform: capitalize;
   }
+}
+
+.title {
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .context {

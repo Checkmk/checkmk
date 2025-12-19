@@ -203,9 +203,10 @@ onBeforeUnmount(() => {
     border-radius: 0;
     display: flex;
     flex-direction: row;
-    box-sizing: content-box;
     border: 1px solid var(--default-bg-color);
     flex: 10;
+    width: 100%;
+    box-sizing: border-box;
 
     &:hover {
       background-color: var(--ux-theme-5);
@@ -228,6 +229,7 @@ onBeforeUnmount(() => {
 
       .inline-button {
         height: 20px;
+        width: 100%;
 
         &:active,
         &:focus {

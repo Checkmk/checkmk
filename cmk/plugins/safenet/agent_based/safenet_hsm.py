@@ -161,7 +161,7 @@ check_plugin_safenet_hsm_events = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_safenet_hsm(section: Section) -> DiscoveryResult:
+def discover_safenet_hsm(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -194,7 +194,7 @@ check_plugin_safenet_hsm = CheckPlugin(
     name="safenet_hsm",
     service_name="HSM Operation Stats",
     sections=["safenet_hsm"],
-    discovery_function=inventory_safenet_hsm,
+    discovery_function=discover_safenet_hsm,
     check_function=check_safenet_hsm,
     check_ruleset_name="safenet_hsm_operstats",
     check_default_parameters=OperationStatCheckParamT(

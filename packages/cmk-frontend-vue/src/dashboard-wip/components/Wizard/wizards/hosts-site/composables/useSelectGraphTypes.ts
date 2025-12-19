@@ -15,13 +15,9 @@ const graphSelector = {
     Graph.SITE_OVERVIEW,
     Graph.HOST_STATE,
     Graph.HOST_STATE_SUMMARY,
-    Graph.HOST_STATISTICS
+    Graph.HOST_STATS
   ],
-  [ElementSelection.MULTIPLE]: [
-    Graph.SITE_OVERVIEW,
-    Graph.HOST_STATE_SUMMARY,
-    Graph.HOST_STATISTICS
-  ]
+  [ElementSelection.MULTIPLE]: [Graph.SITE_OVERVIEW, Graph.HOST_STATE_SUMMARY, Graph.HOST_STATS]
 }
 
 type UseAvailableGraphs = Ref<Graph[]>
@@ -48,7 +44,7 @@ export const getAvailableGraphs = (
   availableFeatures: DashboardFeatures
 ): Graph[] => {
   if (availableFeatures === DashboardFeatures.RESTRICTED) {
-    return [Graph.HOST_STATISTICS]
+    return [Graph.HOST_STATS]
   }
 
   return [...graphSelector[hostSelection]]

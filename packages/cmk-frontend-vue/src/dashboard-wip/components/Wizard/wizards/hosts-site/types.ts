@@ -5,8 +5,8 @@
  */
 
 export enum Graph {
-  SITE_OVERVIEW = 'SITE_OVERVIEW',
-  HOST_STATE = 'HOST_STATE',
-  HOST_STATE_SUMMARY = 'HOST_STATE_SUMMARY',
-  HOST_STATISTICS = 'HOST_STATISTICS'
+  SITE_OVERVIEW = 'site_overview',
+  HOST_STATE = 'host_state',
+  HOST_STATE_SUMMARY = 'host_state_summary',
+  HOST_STATS = 'host_stats'
 }

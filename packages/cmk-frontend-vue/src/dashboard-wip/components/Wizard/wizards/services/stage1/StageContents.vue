@@ -63,7 +63,7 @@ const enabledWidgets = useSelectGraphTypes(
 const availableWidgets: WidgetItemList = [
   { id: Graph.SERVICE_STATE, label: _t('Service state'), icon: 'graph' },
   { id: Graph.SERVICE_STATE_SUMMARY, label: _t('Service state summary'), icon: 'gauge' },
-  { id: Graph.SERVICE_STATISTICS, label: _t('Service statistics'), icon: 'single-metric' }
+  { id: Graph.SERVICE_STATS, label: _t('Service statistics'), icon: 'single-metric' }
 ]
 
 // Filters

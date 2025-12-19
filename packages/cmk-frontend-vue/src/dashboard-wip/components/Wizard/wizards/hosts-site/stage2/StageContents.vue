@@ -86,7 +86,7 @@ const gotoPrevStage = () => {
 const enabledWidgets = getAvailableGraphs(props.hostFilterType, props.availableFeatures)
 const availableWidgets: WidgetItemList = [
   { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
-  { id: Graph.HOST_STATISTICS, label: _t('Host statistics'), icon: 'folder' },
+  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'folder' },
   { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'folder' },
   { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'folder' }
 ]
@@ -96,7 +96,7 @@ function getSelectedWidget(): Graph {
     case 'site_overview':
       return Graph.SITE_OVERVIEW
     case 'host_stats':
-      return Graph.HOST_STATISTICS
+      return Graph.HOST_STATS
     case 'host_state':
       return Graph.HOST_STATE
     case 'host_state_summary':
@@ -107,7 +107,7 @@ function getSelectedWidget(): Graph {
 const selectedWidget = ref<Graph>(getSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.HOST_STATISTICS]: await useHostStatistics(
+  [Graph.HOST_STATS]: await useHostStatistics(
     props.filters,
     props.dashboardConstants,
     props.editWidgetSpec
@@ -161,8 +161,8 @@ const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTE
   />
 
   <HostStatistics
-    v-if="selectedWidget === Graph.HOST_STATISTICS"
-    v-model:handler="handler[Graph.HOST_STATISTICS] as unknown as UseHostStatistics"
+    v-if="selectedWidget === Graph.HOST_STATS"
+    v-model:handler="handler[Graph.HOST_STATS] as unknown as UseHostStatistics"
     :dashboard-name="dashboardName"
   />
 

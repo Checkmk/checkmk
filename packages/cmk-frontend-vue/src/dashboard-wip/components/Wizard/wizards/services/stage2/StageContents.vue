@@ -88,7 +88,7 @@ const enabledWidgets = getAvailableGraphs(
 const availableWidgets: WidgetItemList = [
   { id: Graph.SERVICE_STATE, label: _t('Service state'), icon: 'graph' },
   { id: Graph.SERVICE_STATE_SUMMARY, label: _t('Service state summary'), icon: 'gauge' },
-  { id: Graph.SERVICE_STATISTICS, label: _t('Service statistics'), icon: 'single-metric' }
+  { id: Graph.SERVICE_STATS, label: _t('Service statistics'), icon: 'single-metric' }
 ]
 
 function getDefaultSelectedWidget(): Graph | null {
@@ -105,8 +105,8 @@ function getDefaultSelectedWidget(): Graph | null {
         }
         break
       case 'service_stats':
-        if (enabledWidgets.includes(Graph.SERVICE_STATISTICS)) {
-          return Graph.SERVICE_STATISTICS
+        if (enabledWidgets.includes(Graph.SERVICE_STATS)) {
+          return Graph.SERVICE_STATS
         }
         break
     }
@@ -116,7 +116,7 @@ function getDefaultSelectedWidget(): Graph | null {
 const selectedWidget = ref<Graph | null>(getDefaultSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.SERVICE_STATISTICS]: await useServiceStatistics(
+  [Graph.SERVICE_STATS]: await useServiceStatistics(
     props.filters,
     props.dashboardConstants,
     props.editWidgetSpec
@@ -163,8 +163,8 @@ const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTE
   />
 
   <ServiceStatistics
-    v-if="selectedWidget === Graph.SERVICE_STATISTICS"
-    v-model:handler="handler[Graph.SERVICE_STATISTICS] as unknown as UseServiceStatistics"
+    v-if="selectedWidget === Graph.SERVICE_STATS"
+    v-model:handler="handler[Graph.SERVICE_STATS] as unknown as UseServiceStatistics"
     :dashboard-name="dashboardName"
   />
 </template>

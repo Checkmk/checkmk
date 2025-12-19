@@ -112,7 +112,7 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
     props.dashboardConstants,
     props.editWidgetSpec
   ),
-  [Graph.PERCENTAGE_OF_SERVICE_PROBLEMS]: await usePercentageOfServiceProblems(
+  [Graph.PROBLEM_GRAPH]: await usePercentageOfServiceProblems(
     props.filters,
     props.dashboardConstants,
     props.editWidgetSpec
@@ -150,10 +150,8 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   />
 
   <PercentageOfServiceProblems
-    v-if="selectedWidget === Graph.PERCENTAGE_OF_SERVICE_PROBLEMS"
-    v-model:handler="
-      handler[Graph.PERCENTAGE_OF_SERVICE_PROBLEMS] as unknown as UsePercentageOfServiceProblems
-    "
+    v-if="selectedWidget === Graph.PROBLEM_GRAPH"
+    v-model:handler="handler[Graph.PROBLEM_GRAPH] as unknown as UsePercentageOfServiceProblems"
     :dashboard-name="dashboardName"
   />
 </template>

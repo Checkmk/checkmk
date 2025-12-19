@@ -30,7 +30,7 @@ const props = defineProps<AvaliableGraphsProps>()
 
 const graphDirectory: GraphDirectory = [
   { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'graph' },
-  { id: Graph.HOST_STATISTICS, label: _t('Host statistics'), icon: 'graph' },
+  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'graph' },
   { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'graph' },
   { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'graph' }
 ]

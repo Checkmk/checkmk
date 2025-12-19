@@ -9,9 +9,9 @@ import { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
 import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 
 export enum Graph {
-  SERVICE_STATE = 'SERVICE_STATE',
-  SERVICE_STATE_SUMMARY = 'SERVICE_STATE_SUMMARY',
-  SERVICE_STATISTICS = 'SERVICE_STATISTICS'
+  SERVICE_STATE = 'service_state',
+  SERVICE_STATE_SUMMARY = 'service_state_summary',
+  SERVICE_STATS = 'service_stats'
 }
 
 const graphSelector = {
@@ -21,16 +21,16 @@ const graphSelector = {
     [ElementSelection.SPECIFIC]: [
       Graph.SERVICE_STATE,
       Graph.SERVICE_STATE_SUMMARY,
-      Graph.SERVICE_STATISTICS
+      Graph.SERVICE_STATS
     ],
-    [ElementSelection.MULTIPLE]: [Graph.SERVICE_STATE_SUMMARY, Graph.SERVICE_STATISTICS]
+    [ElementSelection.MULTIPLE]: [Graph.SERVICE_STATE_SUMMARY, Graph.SERVICE_STATS]
   },
 
   //host
   [ElementSelection.MULTIPLE]: {
     //service
-    [ElementSelection.SPECIFIC]: [Graph.SERVICE_STATE_SUMMARY, Graph.SERVICE_STATISTICS],
-    [ElementSelection.MULTIPLE]: [Graph.SERVICE_STATE_SUMMARY, Graph.SERVICE_STATISTICS]
+    [ElementSelection.SPECIFIC]: [Graph.SERVICE_STATE_SUMMARY, Graph.SERVICE_STATS],
+    [ElementSelection.MULTIPLE]: [Graph.SERVICE_STATE_SUMMARY, Graph.SERVICE_STATS]
   }
 }
 
@@ -64,7 +64,7 @@ export const getAvailableGraphs = (
   availableFeatures: DashboardFeatures
 ): Graph[] => {
   if (availableFeatures === DashboardFeatures.RESTRICTED) {
-    return [Graph.SERVICE_STATISTICS]
+    return [Graph.SERVICE_STATS]
   }
   return [...graphSelector[hostSelection][serviceSelection]]
 }

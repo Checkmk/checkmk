@@ -58,7 +58,7 @@ from cmk.plugins.vsphere.lib.esx_vsphere import SectionCounter
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_counters_uptime(section: SectionCounter) -> DiscoveryResult:
+def discover_esx_vsphere_counters_uptime(section: SectionCounter) -> DiscoveryResult:
     if "sys.uptime" in section:
         yield Service()
 
@@ -78,7 +78,7 @@ check_plugin_esx_vsphere_counters_uptime = CheckPlugin(
     name="esx_vsphere_counters_uptime",
     service_name="Uptime",
     sections=["esx_vsphere_counters"],
-    discovery_function=inventory_esx_vsphere_counters_uptime,
+    discovery_function=discover_esx_vsphere_counters_uptime,
     check_function=check_esx_vsphere_counters_uptime,
     check_default_parameters={},
     check_ruleset_name="uptime",

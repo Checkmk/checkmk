@@ -14,7 +14,7 @@ import { useProvideCmkToken } from '@/dashboard-wip/composables/useCmkToken'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard-wip/composables/useProvideMissingRuntimeFiltersAction'
-import { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
+import { type DashboardKey, DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
 import { urlParamsKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import { createDashboardModel } from '@/dashboard-wip/utils.ts'
@@ -23,6 +23,13 @@ import { createDashboardModel } from '@/dashboard-wip/utils.ts'
 const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const props = defineProps<SharedDashboardPageProperties>()
+
+const dashboardKey = computed(() => {
+  return {
+    name: props.dashboard.name,
+    owner: props.dashboard.owner
+  } as DashboardKey
+})
 
 const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayout.RELATIVE_GRID)
 
@@ -44,7 +51,7 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
     </div>
     <DashboardComponent
       v-model:dashboard="sharedDashboard"
-      :dashboard-name="dashboard.name"
+      :dashboard-name="dashboardKey.name"
       :base-filters="dashboardFilters.baseFilters"
       :widget-cores="dashboardWidgets.widgetCores"
       :constants="dashboard_constants"

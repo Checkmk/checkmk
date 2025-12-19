@@ -72,6 +72,7 @@ def page_shared_dashboard(
     dashboard_properties = {
         "spec": internal_spec,
         "name": token_details.dashboard_name,
+        "owner": token_details.owner,
         "title": title,
     }
 

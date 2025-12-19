@@ -50,6 +50,7 @@ export interface SharedDashboardPageProperties {
   dashboard: {
     spec: RelativeGridDashboardResponse | ResponsiveGridDashboardResponse
     name: string
+    owner: string
     title: string
   }
   dashboard_constants: DashboardConstants

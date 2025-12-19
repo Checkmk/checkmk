@@ -77,6 +77,7 @@ function goToSearch(e: Event, provider: ProviderName) {
   position: relative;
   display: flex;
   align-items: center;
+  z-index: +1;
 
   &:focus-within {
     border: 1px solid var(--success);

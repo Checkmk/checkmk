@@ -82,7 +82,7 @@ def item_name_from(description: str) -> str:
     return device_description.replace("#", " ") or "supply"
 
 
-def inventory_cisco_power(section: StringTable) -> DiscoveryResult:
+def discover_cisco_power(section: StringTable) -> DiscoveryResult:
     # Note: the name of the power supply is not unique. We have seen
     # a Cisco with four entries in the MIB. So we force uniqueness
     # by appending a "/4" for ID 4 if the name is not unique
@@ -131,6 +131,6 @@ snmp_section_cisco_power = SimpleSNMPSection(
 check_plugin_cisco_power = CheckPlugin(
     name="cisco_power",
     service_name="Power %s",
-    discovery_function=inventory_cisco_power,
+    discovery_function=discover_cisco_power,
     check_function=check_cisco_power,
 )

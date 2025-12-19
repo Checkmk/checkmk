@@ -200,7 +200,7 @@ check_plugin_safenet_ntls_links = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_safenet_ntls_clients(section: Section) -> DiscoveryResult:
+def discover_safenet_ntls_clients(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -219,7 +219,7 @@ check_plugin_safenet_ntls_clients = CheckPlugin(
     name="safenet_ntls_clients",
     service_name="NTLS Clients",
     sections=["safenet_ntls"],
-    discovery_function=inventory_safenet_ntls_clients,
+    discovery_function=discover_safenet_ntls_clients,
     check_function=check_safenet_ntls_clients,
     check_ruleset_name="safenet_ntls_clients",
     check_default_parameters=CheckParamT(levels=("no_levels", None)),

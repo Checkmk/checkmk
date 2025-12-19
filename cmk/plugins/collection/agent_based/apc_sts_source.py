@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_apc_sts_source(section: StringTable) -> DiscoveryResult:
+def discover_apc_sts_source(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service(parameters={"source1": section[0][0], "source2": section[0][1]})
 
@@ -63,7 +63,7 @@ snmp_section_apc_sts_source = SimpleSNMPSection(
 check_plugin_apc_sts_source = CheckPlugin(
     name="apc_sts_source",
     service_name="Source",
-    discovery_function=inventory_apc_sts_source,
+    discovery_function=discover_apc_sts_source,
     check_function=check_apc_sts_source,
     check_default_parameters={},
 )

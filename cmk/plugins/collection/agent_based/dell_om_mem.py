@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 
 
-def inventory_dell_om_mem(section: StringTable) -> DiscoveryResult:
+def discover_dell_om_mem(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=x[0]) for x in section]
 
 
@@ -77,6 +77,6 @@ snmp_section_dell_om_mem = SimpleSNMPSection(
 check_plugin_dell_om_mem = CheckPlugin(
     name="dell_om_mem",
     service_name="Memory Module %s",
-    discovery_function=inventory_dell_om_mem,
+    discovery_function=discover_dell_om_mem,
     check_function=check_dell_om_mem,
 )

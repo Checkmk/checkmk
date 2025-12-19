@@ -45,7 +45,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_apc_mod_pdu_modules(section: StringTable) -> DiscoveryResult:
+def discover_apc_mod_pdu_modules(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=x[0]) for x in section if x[0] != ""]
 
 
@@ -98,6 +98,6 @@ snmp_section_apc_mod_pdu_modules = SimpleSNMPSection(
 check_plugin_apc_mod_pdu_modules = CheckPlugin(
     name="apc_mod_pdu_modules",
     service_name="Module %s",
-    discovery_function=inventory_apc_mod_pdu_modules,
+    discovery_function=discover_apc_mod_pdu_modules,
     check_function=check_apc_mod_pdu_modules,
 )

@@ -6,7 +6,7 @@
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.apc_mod_pdu_modules import (
     check_apc_mod_pdu_modules,
-    inventory_apc_mod_pdu_modules,
+    discover_apc_mod_pdu_modules,
     parse_apc_mod_pdu_modules,
 )
 
@@ -37,7 +37,7 @@ def _section() -> StringTable:
 
 
 def test_discover_apc_mod_pdu_modules() -> None:
-    assert list(inventory_apc_mod_pdu_modules(_section())) == [
+    assert list(discover_apc_mod_pdu_modules(_section())) == [
         Service(item="Circuit 1a"),
         Service(item="Circuit 1b"),
         Service(item="Circuit 1c"),
@@ -48,7 +48,7 @@ def test_discover_apc_mod_pdu_modules() -> None:
 
 
 def test_discover_apc_mod_pdu_modules_no_items() -> None:
-    assert not list(inventory_apc_mod_pdu_modules(parse_apc_mod_pdu_modules([])))
+    assert not list(discover_apc_mod_pdu_modules(parse_apc_mod_pdu_modules([])))
 
 
 def test_check_apc_mod_pdu_modules() -> None:

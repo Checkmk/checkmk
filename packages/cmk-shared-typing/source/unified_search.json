@@ -17,7 +17,8 @@
       "properties": {
         "providers": { "$ref": "#/$defs/providers" },
         "user_id": { "type": "string" },
-        "edition": { "$ref": "#/$defs/edition" }
+        "edition": { "$ref": "#/$defs/edition" },
+        "icons_per_item": { "type": "boolean", "default": false }
       },
       "required": ["providers", "user_id", "edition"]
     },
@@ -114,9 +115,9 @@
           "$ref": "#/$defs/provider_name"
         },
         "context": { "type": "string" },
-        "icon": { "$ref": "icon.json#/$defs/icon_names" }
+        "icon": { "$ref": "icon.json#/$defs/dynamic_icon" }
       },
-      "required": ["title", "target", "topic", "provider", "icon"]
+      "required": ["title", "target", "topic", "provider"]
     },
     "unified_search_result_target": {
       "type": "object",
@@ -131,22 +132,11 @@
     "unified_search_result_item_inline_button": {
       "type": "object",
       "properties": {
-        "icon": {
-          "oneOf": [{ "$ref": "#/$defs/cmk_icon_props" }, { "type": "null" }]
-        },
         "title": { "type": "string" },
-        "target": { "$ref": "#/$defs/unified_search_result_target" }
+        "target": { "$ref": "#/$defs/unified_search_result_target" },
+        "icon": { "$ref": "icon.json#/$defs/dynamic_icon" }
       },
       "required": ["title", "target"]
-    },
-
-    "cmk_icon_props": {
-      "type": "object",
-      "properties": {
-        "name": { "$ref": "icon.json#/$defs/icon_names" },
-        "size": { "type": "string" }
-      },
-      "required": ["name"]
     }
   }
 }

@@ -13,7 +13,6 @@ import { onBeforeUnmount, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
@@ -125,7 +124,7 @@ function searchResultNotEmpty(): boolean {
           :idx="idx"
           :title="item.title"
           :context="item.context"
-          :icon="{ name: item.icon as SimpleIcons }"
+          :icon="item.icon"
           :inline_buttons="item.inline_buttons"
           :target="item.target"
           :html="searchUtils.highlightQuery(item.title)"

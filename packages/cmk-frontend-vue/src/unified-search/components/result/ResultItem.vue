@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
 import type {
   UnifiedSearchResultItemInlineButton,
   UnifiedSearchResultTarget
@@ -13,8 +14,7 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkButton from '@/components/CmkButton.vue'
-import type { CmkIconProps, IconSizeNames } from '@/components/CmkIcon'
-import CmkIcon from '@/components/CmkIcon'
+import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 
 import { showLoadingTransition } from '@/loading-transition/loadingTransition'
@@ -24,7 +24,7 @@ import ResultItemTitle from './ResultItemTitle.vue'
 
 export interface ResultItemProps {
   idx: number
-  icon?: CmkIconProps | undefined
+  icon?: DynamicIcon | undefined
   title: string
   html?: string | undefined
   target?: UnifiedSearchResultTarget | undefined
@@ -125,12 +125,9 @@ const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | un
         @click="target?.transition && showLoadingTransition(target.transition, props.title)"
       >
         <div v-if="props.icon" class="result-item-inner-start">
-          <CmkIcon
-            :name="props.icon.name"
-            :rotate="props.icon.rotate"
-            :size="props.icon.size"
-            class="result-item-icon"
-          ></CmkIcon>
+          <div class="result-item-icon">
+            <CmkDynamicIcon :spec="props.icon" />
+          </div>
         </div>
         <div class="result-item-inner-end">
           <span
@@ -154,24 +151,15 @@ const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | un
             role="link"
             @click="navigateToTarget(props.title, ib.target)"
           >
-            <CmkIcon
-              v-if="ib.icon"
-              variant="inline"
-              :name="ib.icon.name"
-              :size="(ib.icon.size as IconSizeNames) || undefined"
-            />
             {{ ib.title }}
           </CmkButton>
         </div>
       </a>
       <button v-else ref="item-focus" class="result-item-handler" :class="{ focus: props.focus }">
         <div v-if="props.icon" class="result-item-inner-start">
-          <CmkIcon
-            :name="props.icon.name"
-            :rotate="props.icon.rotate"
-            :size="props.icon.size"
-            class="result-item-icon"
-          ></CmkIcon>
+          <div class="result-item-icon">
+            <CmkDynamicIcon :spec="props.icon" />
+          </div>
         </div>
         <div class="result-item-inner-end">
           <span

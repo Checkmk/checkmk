@@ -13,8 +13,6 @@ from cmk.shared_typing.unified_search import (
     UnifiedSearchResultTarget,
 )
 
-from ..icon_mapping import get_icon_for_topic
-
 
 class CustomizeSearchEngine:
     def __init__(self) -> None:
@@ -59,7 +57,6 @@ class CustomizeSearchEngine:
                     if loading_transition
                     else None,
                 ),
-                icon=get_icon_for_topic(topic, ProviderName.customize),
             )
             for topic, title, url, loading_transition in self._result_store
             if query.lower() in title.lower()

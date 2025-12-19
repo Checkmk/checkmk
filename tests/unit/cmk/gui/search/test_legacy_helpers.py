@@ -9,7 +9,7 @@ from cmk.gui.search.legacy_helpers import (
     transform_legacy_results_to_unified,
 )
 from cmk.gui.type_defs import SearchResult
-from cmk.shared_typing.unified_search import IconNames, LoadingTransition, ProviderName
+from cmk.shared_typing.unified_search import LoadingTransition, ProviderName
 
 
 def test_transform_legacy_results_to_unified() -> None:
@@ -37,8 +37,8 @@ def test_transform_legacy_results_to_unified() -> None:
                 "url": "/hosts",
                 "transition": None,
             },
-            "icon": IconNames.main_setup_active,
             "inline_buttons": None,
+            "icon": None,
         },
         {
             "context": "",
@@ -49,8 +49,8 @@ def test_transform_legacy_results_to_unified() -> None:
                 "url": "/notifications",
                 "transition": None,
             },
-            "icon": IconNames.main_setup_active,
             "inline_buttons": None,
+            "icon": None,
         },
         {
             "context": "",
@@ -61,8 +61,8 @@ def test_transform_legacy_results_to_unified() -> None:
                 "url": "/users",
                 "transition": None,
             },
-            "icon": IconNames.main_setup_active,
             "inline_buttons": None,
+            "icon": None,
         },
         {
             "context": "",
@@ -73,8 +73,8 @@ def test_transform_legacy_results_to_unified() -> None:
                 "url": "/foo",
                 "transition": LoadingTransition.table,
             },
-            "icon": IconNames.main_setup_active,
             "inline_buttons": None,
+            "icon": None,
         },
     ]
 

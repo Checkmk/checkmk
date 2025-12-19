@@ -8,8 +8,6 @@ from typing import Final, Protocol
 
 from cmk.gui.i18n import _
 from cmk.shared_typing.unified_search import (
-    CmkIconProps,
-    IconNames,
     ProviderName,
     UnifiedSearchResultCounts,
     UnifiedSearchResultItem,
@@ -86,12 +84,10 @@ def _collapse_host_items(host_items: list[UnifiedSearchResultItem]) -> UnifiedSe
         title=setup_item.title,
         target=monitoring_items[0].target,
         provider=ProviderName.monitoring,
-        icon=monitoring_items[0].icon,
         topic=_HOST_TOPIC_TITLE,
         context=", ".join(item.topic for item in monitoring_items),
         inline_buttons=[
             UnifiedSearchResultItemInlineButton(
-                icon=CmkIconProps(name=IconNames.edit),
                 target=setup_item.target,
                 title=_EDIT_TITLE,
             )

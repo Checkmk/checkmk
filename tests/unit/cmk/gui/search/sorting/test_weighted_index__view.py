@@ -7,7 +7,6 @@ import functools
 
 from cmk.gui.search.sorting import get_sorter
 from cmk.shared_typing.unified_search import (
-    IconNames,
     ProviderName,
     SortType,
     UnifiedSearchResultItem,
@@ -18,7 +17,6 @@ I = functools.partial(
     UnifiedSearchResultItem,
     target=UnifiedSearchResultTarget(url=""),
     provider=ProviderName.setup,
-    icon=IconNames.main_setup_active,
 )
 
 

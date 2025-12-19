@@ -10,7 +10,6 @@ import { ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ResultItem from '@/unified-search/components/result/ResultItem.vue'
@@ -71,7 +70,7 @@ immediateWatch(
         :idx="idx"
         :title="item.element.title"
         :context="item.element.context"
-        :icon="{ name: item.element.icon as SimpleIcons }"
+        :icon="item.element.icon"
         :inline_buttons="item.element.inline_buttons"
         :target="item.element.target"
         :html="searchUtils.highlightQuery(item.element.title)"

@@ -9,7 +9,6 @@ import pytest
 
 from cmk.gui.search.unified import UnifiedSearch
 from cmk.shared_typing.unified_search import (
-    IconNames,
     ProviderName,
     UnifiedSearchResultItem,
     UnifiedSearchResultTarget,
@@ -65,11 +64,7 @@ def _generate_fake_result_items(
 ) -> list[UnifiedSearchResultItem]:
     def build_item(title: str) -> UnifiedSearchResultItem:
         return UnifiedSearchResultItem(
-            provider=provider,
-            title=title,
-            topic="",
-            target=UnifiedSearchResultTarget(url=title),
-            icon=IconNames.main_setup_active,
+            provider=provider, title=title, topic="", target=UnifiedSearchResultTarget(url=title)
         )
 
     return [build_item(title) for title in ["hosts", "notifications", "users"]]

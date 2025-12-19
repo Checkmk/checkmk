@@ -7,7 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type {
   ProviderName,
   UnifiedSearchApiResponse,
-  UnifiedSearchProps
+  UnifiedSearchProps,
+  UnifiedSearchResultItem
 } from 'cmk-shared-typing/typescript/unified_search'
 import { onMounted, ref } from 'vue'
 
@@ -32,6 +33,7 @@ import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
 import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
 import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
 import UnifiedSearchWaitForResults from './components/view/UnifiedSearchWaitForResults.vue'
+import { getIconForTopic } from './lib/icon-mapping'
 import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
 import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 
@@ -87,6 +89,11 @@ search.onSearch((result?: UnifiedSearchResult) => {
         searchError.value = usprRes
         searchResult.value = undefined
       } else {
+        usprRes.results = usprRes.results.map((i: UnifiedSearchResultItem) => {
+          i.icon = getIconForTopic(i.topic, i.provider, props.icons_per_item)
+          return i
+        })
+
         searchError.value = undefined
         searchResult.value = usprRes as UnifiedSearchApiResponse
       }

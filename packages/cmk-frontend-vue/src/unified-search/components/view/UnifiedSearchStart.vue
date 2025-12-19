@@ -138,9 +138,6 @@ onBeforeUnmount(() => {
         :idx="idx"
         :title="q.input"
         :breadcrumb="q.filters.map((f) => f.value)"
-        :icon="{
-          name: 'topic-history'
-        }"
         :html="searchUtils.highlightQuery(q.input)"
         :focus="isFocused(idx + recentlyViewed.length)"
         @click.stop="

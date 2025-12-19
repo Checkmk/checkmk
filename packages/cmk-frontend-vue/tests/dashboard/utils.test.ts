@@ -5,6 +5,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import { urlHandler } from '@/dashboard-wip/utils'
 
 describe('urlHandler', () => {
@@ -53,14 +54,23 @@ describe('urlHandler', () => {
   describe('getDashboardUrl', () => {
     it('constructs a dashboard URL with name and runtime filters', () => {
       defineLocation(window, 'https://example.com/site/check_mk/edit_dashboard.py?old=x')
-      const dashboardName = 'my_dashboard'
+      const dashboardKey: DashboardKey = { name: 'my_dashboard', owner: 'user' }
       const runtimeFilters = { filter1: 'val1', filter2: 'val2' }
-      const url = urlHandler.getDashboardUrl(dashboardName, runtimeFilters)
+      const url = urlHandler.getDashboardUrl(dashboardKey, runtimeFilters)
       expect(url.pathname).toBe('/site/check_mk/dashboard.py')
-      expect(url.searchParams.get('name')).toBe(dashboardName)
+      expect(url.searchParams.get('name')).toBe(dashboardKey.name)
+      expect(url.searchParams.get('owner')).toBe(dashboardKey.owner)
       expect(url.searchParams.get('filter1')).toBe('val1')
       expect(url.searchParams.get('filter2')).toBe('val2')
       expect(url.searchParams.has('old')).toBe(false)
+    })
+    it('sets an empty owner for builtin dashboards', () => {
+      defineLocation(window, 'https://example.com/site/check_mk/edit_dashboard.py')
+      const dashboardKey: DashboardKey = { name: 'my_dashboard', owner: '' }
+      const url = urlHandler.getDashboardUrl(dashboardKey, {})
+      expect(url.pathname).toBe('/site/check_mk/dashboard.py')
+      expect(url.searchParams.get('name')).toBe(dashboardKey.name)
+      expect(url.searchParams.get('owner')).toBe(dashboardKey.owner)
     })
   })
 

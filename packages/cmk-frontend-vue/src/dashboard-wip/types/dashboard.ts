@@ -5,6 +5,11 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
+export type DashboardKey = {
+  name: string
+  owner: string // "" for built-in dashboards
+}
+
 export interface Thresholds {
   height: number
   width: number

@@ -28,7 +28,6 @@ export interface FilterContext {
 }
 
 export interface LoadedDashboardProperties {
-  name: string
   metadata: DashboardMetadata
   filter_context: FilterContext
 }

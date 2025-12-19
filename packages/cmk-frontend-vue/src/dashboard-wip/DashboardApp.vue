@@ -35,6 +35,7 @@ import { useProvideVisualInfos } from '@/dashboard-wip/composables/useProvideVis
 import {
   type ContentResponsiveGrid,
   type DashboardGeneralSettings,
+  type DashboardKey,
   DashboardLayout,
   type DashboardMetadata,
   type DashboardModel
@@ -96,10 +97,11 @@ onBeforeMount(async () => {
 
   if (props.dashboard) {
     const dashboard = props.dashboard
-    await dashboardsManager.loadDashboard(
-      dashboard.name,
-      dashboard.metadata.layout_type as DashboardLayout
-    )
+    const key: DashboardKey = {
+      name: dashboard.metadata.name,
+      owner: dashboard.metadata.owner || '' // built-in conversion: null -> ""
+    }
+    await dashboardsManager.loadDashboard(key, dashboard.metadata.layout_type as DashboardLayout)
     dashboardFilters.handleApplyRuntimeFilters(dashboard.filter_context.context)
     if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
       openDashboardFilterSettings.value = true
@@ -121,18 +123,22 @@ watch(dashboardsManager.activeDashboard, (value) => {
   selectedDashboardBreadcrumb.value = value?.metadata.display.topic.breadcrumb ?? null
 })
 
-const setAsActiveDashboard = async (dashboardName: string, layout: DashboardLayout) => {
-  await dashboardsManager.loadDashboard(dashboardName, layout)
+const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
+  await dashboardsManager.loadDashboard(dashboardKey, layout)
 
   const updatedDashboardUrl = urlHandler.getDashboardUrl(
-    dashboardName,
+    dashboardKey,
     dashboardFilters.getRuntimeFiltersSearchParams()
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
 
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
-  await setAsActiveDashboard(dashboard.name, dashboard.layout_type as DashboardLayout)
+  const key: DashboardKey = {
+    name: dashboard.name,
+    owner: dashboard.owner || '' // built-in conversion: null -> ""
+  }
+  await setAsActiveDashboard(key, dashboard.layout_type as DashboardLayout)
 
   if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
     openDashboardFilterSettings.value = true
@@ -145,7 +151,7 @@ const selectedDashboard = computed(() => {
   }
 
   return {
-    name: dashboardsManager.activeDashboardName.value!,
+    name: dashboardsManager.activeDashboardKey.value!.name,
     title: dashboardsManager.activeDashboard.value.model.general_settings.title.text,
     type: dashboardsManager.activeDashboard.value.model.type
   }
@@ -169,11 +175,11 @@ const handleAddWidget = (widgetIdent: string) => {
 }
 
 function generateWidgetId(widgetContentType: string): string {
-  const dashboardName = dashboardsManager.activeDashboardName.value
-  if (!dashboardName) {
+  const key = dashboardsManager.activeDashboardKey.value
+  if (!key) {
     throw new Error('No active dashboard')
   }
-  return randomId(16, `${dashboardName}-${widgetContentType}`)
+  return randomId(16, `${key.name}-${widgetContentType}`)
 }
 
 async function saveDashboard() {
@@ -184,7 +190,7 @@ async function saveDashboard() {
 async function cancelEdit() {
   // we overwrite all changes by reloading the dashboard
   await dashboardsManager.loadDashboard(
-    dashboardsManager.activeDashboardName.value!,
+    dashboardsManager.activeDashboardKey.value!,
     dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
   )
   isDashboardEditingMode.value = false
@@ -278,13 +284,19 @@ const createDashboard = async (
   openDashboardCreationDialog.value = false
   // avoid showing the new dashboard, while the dashboard list is loading
   const postCreateMode = nextStep === 'viewList' ? null : 'setDashboardAsActive'
-  await dashboardsManager.createDashboard(dashboardId, settings, layout, scopeIds, postCreateMode)
+  const key = await dashboardsManager.createDashboard(
+    dashboardId,
+    settings,
+    layout,
+    scopeIds,
+    postCreateMode
+  )
   isDashboardEditingMode.value = false
 
   if (nextStep === 'setFilters') {
     dashboardFilterSettingsStartingWindow.value = 'filter-configuration'
     openDashboardFilterSettings.value = true
-    const updatedDashboardUrl = urlHandler.getDashboardUrl(dashboardId, {})
+    const updatedDashboardUrl = urlHandler.getDashboardUrl(key, {})
     urlHandler.updateCurrentUrl(updatedDashboardUrl)
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
@@ -299,22 +311,35 @@ const cloneDashboard = async (
   layout: DashboardLayout,
   nextStep: 'setFilters' | 'viewList'
 ) => {
+  const key = dashboardsManager.activeDashboardKey.value
+  if (!key) {
+    throw new Error('No active dashboard to clone from')
+  }
   openDashboardCloneDialog.value = false
+  let newOwner
   if (layout === DashboardLayout.RELATIVE_GRID) {
-    await dashboardAPI.cloneAsRelativeGridDashboard(
-      dashboardsManager.activeDashboardName.value!,
+    const response = await dashboardAPI.cloneAsRelativeGridDashboard(
+      key.name,
+      key.owner,
       dashboardId,
       generalSettings
     )
+    newOwner = response.extensions.owner
   } else {
-    await dashboardAPI.cloneAsResponsiveGridDashboard(
-      dashboardsManager.activeDashboardName.value!,
+    const response = await dashboardAPI.cloneAsResponsiveGridDashboard(
+      key.name,
+      key.owner,
       dashboardId,
       generalSettings
     )
+    newOwner = response.extensions.owner
   }
   if (nextStep === 'setFilters') {
-    await setAsActiveDashboard(dashboardId, layout)
+    const newKey: DashboardKey = {
+      name: dashboardId,
+      owner: newOwner
+    }
+    await setAsActiveDashboard(newKey, layout)
     openDashboardFilterSettings.value = true
   } else if (nextStep === 'viewList') {
     redirectToListDashboardsPage()
@@ -358,12 +383,17 @@ const updateDashboardSettings = async (
   dashboardName: string,
   generalSettings: DashboardGeneralSettings
 ) => {
+  const key = dashboardsManager.activeDashboardKey.value!
+  const newKey: DashboardKey = {
+    name: dashboardName,
+    owner: key.owner
+  }
   dashboardsManager.activeDashboard.value!.model.general_settings = generalSettings
   await dashboardsManager.persistDashboard(dashboardName)
   openDashboardSettings.value = false
 
   const updatedDashboardUrl = urlHandler.getDashboardUrl(
-    dashboardName,
+    newKey,
     dashboardFilters.getRuntimeFiltersSearchParams()
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
@@ -411,7 +441,7 @@ function deepClone<T>(obj: T): T {
       <CloneDashboardWizard
         v-if="dashboardsManager.isInitialized.value"
         v-model:open="openDashboardCloneDialog"
-        :active-dashboard-id="dashboardsManager.activeDashboardName.value || ''"
+        :active-dashboard-id="dashboardsManager.activeDashboardKey.value?.name ?? ''"
         :available-layouts="available_layouts"
         :reference-dashboard-general-settings="
           deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
@@ -429,9 +459,9 @@ function deepClone<T>(obj: T): T {
         @cancel-clone="openDashboardCloneDialog = false"
       />
       <DashboardSharingWizard
-        v-if="openDashboardShareDialog && dashboardsManager.activeDashboardName.value"
-        :dashboard-name="dashboardsManager.activeDashboardName.value"
-        :dashboard-owner="dashboardsManager.activeDashboard.value?.model.owner || ''"
+        v-if="openDashboardShareDialog && dashboardsManager.activeDashboardKey.value"
+        :dashboard-name="dashboardsManager.activeDashboardKey.value!.name"
+        :dashboard-owner="dashboardsManager.activeDashboardKey.value!.owner"
         :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
         :available-features="available_features"
         @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
@@ -447,8 +477,8 @@ function deepClone<T>(obj: T): T {
       <WizardSelector
         :is-open="openWizard"
         :selected-wizard="selectedWizard"
-        :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
-        :dashboard-owner="dashboardsManager.activeDashboard.value?.model.owner || ''"
+        :dashboard-name="dashboardsManager.activeDashboardKey.value?.name ?? ''"
+        :dashboard-owner="dashboardsManager.activeDashboardKey.value?.owner ?? ''"
         :context-filters="dashboardFilters.contextFilters.value || {}"
         :dashboard-constants="dashboardsManager.constants.value!"
         :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
@@ -478,7 +508,7 @@ function deepClone<T>(obj: T): T {
       />
       <DashboardSettingsWizard
         v-if="openDashboardSettings && dashboardsManager.activeDashboard.value"
-        :active-dashboard-id="dashboardsManager.activeDashboardName.value!"
+        :active-dashboard-id="dashboardsManager.activeDashboardKey.value!.name"
         :dashboard-general-settings="
           deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
         "
@@ -498,9 +528,9 @@ function deepClone<T>(obj: T): T {
       />
       <DashboardComponent
         v-else-if="dashboardsManager.isInitialized.value"
-        :key="`${dashboardsManager.activeDashboardName.value}`"
+        :key="`${dashboardsManager.activeDashboardKey.value?.owner}-${dashboardsManager.activeDashboardKey.value?.name}`"
         v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
-        :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
+        :dashboard-name="dashboardsManager.activeDashboardKey.value?.name ?? ''"
         :base-filters="dashboardFilters.baseFilters"
         :widget-cores="dashboardWidgets.widgetCores"
         :constants="dashboardsManager.constants.value!"

@@ -13,6 +13,7 @@ import type {
   ContentResponsiveGrid,
   DashboardConstants,
   DashboardGeneralSettings,
+  DashboardKey,
   DashboardMainMenuTopic,
   DashboardMetadata,
   DashboardModel,
@@ -66,35 +67,47 @@ function processEditResponse<T>(result: {
 
 export const dashboardAPI = {
   getRelativeDashboard: async (
-    dashboardName: string
+    dashboardName: string,
+    dashboardOwner: string
   ): Promise<RelativeGridDashboardDomainObject> => {
     return unwrap(
       await client.GET('/objects/dashboard_relative_grid/{dashboard_id}', {
         params: {
-          path: { dashboard_id: dashboardName }
+          path: { dashboard_id: dashboardName },
+          query: {
+            owner: dashboardOwner
+          }
         }
       })
     )
   },
   getResponsiveDashboard: async (
-    dashboardName: string
+    dashboardName: string,
+    dashboardOwner: string
   ): Promise<ResponsiveGridDashboardDomainObject> => {
     return unwrap(
       await client.GET('/objects/dashboard_responsive_grid/{dashboard_id}', {
         params: {
-          path: { dashboard_id: dashboardName }
+          path: { dashboard_id: dashboardName },
+          query: {
+            owner: dashboardOwner
+          }
         }
       })
     )
   },
   editRelativeGridDashboard: async (
     dashboardName: string,
+    dashboardOwner: string,
     dashboard: RelativeGridDashboardRequest
   ): Promise<EditRelativeGridResult> => {
     const result = await client.PUT('/objects/dashboard_relative_grid/{dashboard_id}', {
       params: {
         ...CONTENT_TYPE_HEADER.params,
-        path: { dashboard_id: dashboardName }
+        path: { dashboard_id: dashboardName },
+        query: {
+          owner: dashboardOwner
+        }
       },
       body: dashboard
     })
@@ -102,12 +115,16 @@ export const dashboardAPI = {
   },
   editResponsiveGridDashboard: async (
     dashboardName: string,
+    dashboardOwner: string,
     dashboard: ResponsiveGridDashboardRequest
   ): Promise<EditResponsiveGridResult> => {
     const result = await client.PUT('/objects/dashboard_responsive_grid/{dashboard_id}', {
       params: {
         ...CONTENT_TYPE_HEADER.params,
-        path: { dashboard_id: dashboardName }
+        path: { dashboard_id: dashboardName },
+        query: {
+          owner: dashboardOwner
+        }
       },
       body: dashboard
     })
@@ -135,15 +152,17 @@ export const dashboardAPI = {
   },
   cloneAsRelativeGridDashboard: async (
     referenceDashboardId: string,
+    referenceDashboardOwner: string,
     dashboardId: string,
     generalSettings: DashboardGeneralSettings
-  ): Promise<void> => {
-    unwrap(
+  ): Promise<RelativeGridDashboardDomainObject> => {
+    return unwrap(
       await client.POST('/domain-types/dashboard_relative_grid/actions/clone/invoke', {
         ...CONTENT_TYPE_HEADER,
         body: {
           dashboard_id: dashboardId,
           reference_dashboard_id: referenceDashboardId,
+          reference_dashboard_owner: referenceDashboardOwner,
           general_settings: generalSettings
         }
       })
@@ -151,15 +170,17 @@ export const dashboardAPI = {
   },
   cloneAsResponsiveGridDashboard: async (
     referenceDashboardId: string,
+    referenceDashboardOwner: string,
     dashboardId: string,
     generalSettings: DashboardGeneralSettings
-  ): Promise<void> => {
-    unwrap(
+  ): Promise<ResponsiveGridDashboardDomainObject> => {
+    return unwrap(
       await client.POST('/domain-types/dashboard_responsive_grid/actions/clone/invoke', {
         ...CONTENT_TYPE_HEADER,
         body: {
           dashboard_id: dashboardId,
           reference_dashboard_id: referenceDashboardId,
+          reference_dashboard_owner: referenceDashboardOwner,
           general_settings: generalSettings
         }
       })
@@ -175,18 +196,15 @@ export const dashboardAPI = {
   },
   showDashboardMetadata: async (
     dashboardId: string,
-    dashboardOwner: string | null = null
+    dashboardOwner: string
   ): Promise<DashboardMetadata> => {
-    const queryParams: Record<string, string> = {}
-    if (dashboardOwner !== null) {
-      queryParams.owner = dashboardOwner
-    }
-
     const data = unwrap(
       await client.GET('/objects/dashboard_metadata/{dashboard_id}', {
         params: {
           path: { dashboard_id: dashboardId },
-          query: queryParams
+          query: {
+            owner: dashboardOwner
+          }
         }
       })
     )
@@ -300,14 +318,15 @@ const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
 
 export const urlHandler = {
   /** Construct a dashboard URL with the given name and runtime filters.
-   * @param dashboardName - The name of the dashboard.
+   * @param dashboardKey - The name and owner of the dashboard.
    * @param runtimeFilters - A record of runtime filter key-value pairs.
    * @returns A URL object representing the constructed dashboard URL.
    */
-  getDashboardUrl(dashboardName: string, runtimeFilters: Record<string, string>): URL {
+  getDashboardUrl(dashboardKey: DashboardKey, runtimeFilters: Record<string, string>): URL {
     // replace path, remove all existing query params
     const url = replaceFileName(window.location.origin + window.location.pathname, FILE_DASHBOARD)
-    url.searchParams.set('name', dashboardName)
+    url.searchParams.set('name', dashboardKey.name)
+    url.searchParams.set('owner', dashboardKey.owner)
     for (const [k, v] of Object.entries(runtimeFilters)) {
       url.searchParams.set(k, v)
     }

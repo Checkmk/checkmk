@@ -99,7 +99,6 @@ def page_dashboard_app(ctx: PageContext) -> None:
         breadcrumb = dashboard_breadcrumb(name, board, title, board_context, user_permissions)
 
         loaded_dashboard_properties = {
-            "name": name,
             "metadata": asdict(
                 DashboardMetadataObject.from_dashboard_config(board, user_permissions)
             ),

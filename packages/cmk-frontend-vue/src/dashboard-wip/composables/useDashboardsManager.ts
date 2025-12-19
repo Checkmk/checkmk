@@ -8,14 +8,16 @@ import { type Ref, computed, onBeforeMount, ref } from 'vue'
 import {
   type ContentRelativeGrid,
   type ContentResponsiveGrid,
+  type DashboardConstants,
   type DashboardGeneralSettings,
+  type DashboardKey,
   DashboardLayout,
+  type DashboardMetadata,
   type DashboardModel,
   DashboardOwnerType,
   type RelativeGridDashboardRequest,
   type ResponsiveGridDashboardRequest
-} from '@/dashboard-wip/types/dashboard'
-import type { DashboardConstants, DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
+} from '@/dashboard-wip/types/dashboard.ts'
 import type { EditRelativeGridResult, EditResponsiveGridResult } from '@/dashboard-wip/utils'
 import { createDashboardModel, dashboardAPI } from '@/dashboard-wip/utils.ts'
 
@@ -31,11 +33,11 @@ export function useDashboardsManager() {
     constants.value = await dashboardAPI.getDashboardConstants()
   })
 
-  const dashboards = ref<Map<string, DashboardData>>(new Map())
-  const activeDashboardName: Ref<string | undefined> = ref(undefined)
+  const dashboards = ref<Map<DashboardKey, DashboardData>>(new Map())
+  const activeDashboardKey: Ref<DashboardKey | undefined> = ref(undefined)
 
   const activeDashboard = computed<DashboardData | undefined>(() => {
-    return activeDashboardName.value ? dashboards.value.get(activeDashboardName.value) : undefined
+    return activeDashboardKey.value ? dashboards.value.get(activeDashboardKey.value) : undefined
   })
 
   const isInitialized = computed<boolean>(() => {
@@ -43,39 +45,40 @@ export function useDashboardsManager() {
   })
 
   function setActiveDashboard(
-    name: string,
+    key: DashboardKey,
     model: DashboardModel,
     metadata: DashboardMetadata
   ): void {
-    dashboards.value.set(name, {
+    dashboards.value.set(key, {
       model,
       metadata
     })
-    activeDashboardName.value = name
+    activeDashboardKey.value = key
   }
 
-  async function loadDashboard(name: string, layoutType: DashboardLayout): Promise<void> {
+  async function loadDashboard(key: DashboardKey, layoutType: DashboardLayout): Promise<void> {
     let dashboardPromise
     if (layoutType === DashboardLayout.RELATIVE_GRID) {
-      dashboardPromise = dashboardAPI.getRelativeDashboard(name)
+      dashboardPromise = dashboardAPI.getRelativeDashboard(key.name, key.owner)
     } else {
-      dashboardPromise = dashboardAPI.getResponsiveDashboard(name)
+      dashboardPromise = dashboardAPI.getResponsiveDashboard(key.name, key.owner)
     }
     // fetch in parallel, make sure all promises are created before awaiting any of them
-    const metadata = await dashboardAPI.showDashboardMetadata(name)
+    const metadata = await dashboardAPI.showDashboardMetadata(key.name, key.owner)
     const dashboardResp = (await dashboardPromise).extensions
 
     const dashboard = createDashboardModel(dashboardResp, layoutType)
-    setActiveDashboard(name, dashboard, metadata)
+    setActiveDashboard(key, dashboard, metadata)
   }
 
   async function refreshActiveDashboard(): Promise<void> {
-    if (activeDashboardName.value) {
+    const key = activeDashboardKey.value
+    if (key) {
       const layout =
         activeDashboard.value?.model.content.layout.type === 'responsive_grid'
           ? DashboardLayout.RESPONSIVE_GRID
           : DashboardLayout.RELATIVE_GRID
-      await loadDashboard(activeDashboardName.value, layout)
+      await loadDashboard(key, layout)
     }
   }
 
@@ -85,7 +88,7 @@ export function useDashboardsManager() {
     layoutType: DashboardLayout,
     restrictedToSingle: string[] = [],
     postCreateMode: 'setDashboardAsActive' | null = 'setDashboardAsActive'
-  ): Promise<void> {
+  ): Promise<DashboardKey> {
     const filterContext = {
       restricted_to_single: restrictedToSingle,
       filters: {},
@@ -141,11 +144,12 @@ export function useDashboardsManager() {
       content,
       type: DashboardOwnerType.CUSTOM
     }
-
+    const key: DashboardKey = { name: dashboardName, owner: dashboard.owner }
     if (postCreateMode === 'setDashboardAsActive') {
-      const metadata = await dashboardAPI.showDashboardMetadata(dashboardName)
-      setActiveDashboard(dashboardName, dashboard, metadata)
+      const metadata = await dashboardAPI.showDashboardMetadata(dashboardName, dashboard.owner)
+      setActiveDashboard(key, dashboard, metadata)
     }
+    return key
   }
 
   async function persistDashboard(
@@ -155,7 +159,8 @@ export function useDashboardsManager() {
     if (!dashboard) {
       throw new Error('No active dashboard to persist')
     }
-    const id = rename ?? activeDashboardName.value!
+    const key = activeDashboardKey.value!
+    const id = rename ?? key.name
 
     const widgets = Object.fromEntries(
       Object.entries(dashboard.content.widgets).map(
@@ -185,7 +190,8 @@ export function useDashboardsManager() {
         widgets
       }
       response = await dashboardAPI.editRelativeGridDashboard(
-        activeDashboardName.value!,
+        key.name,
+        key.owner,
         relativeDashboard
       )
     } else {
@@ -198,18 +204,20 @@ export function useDashboardsManager() {
         widgets
       }
       response = await dashboardAPI.editResponsiveGridDashboard(
-        activeDashboardName.value!,
+        key.name,
+        key.owner,
         responsiveDashboard
       )
     }
     if (response.success && rename) {
-      // remove the old dashboard name
-      dashboards.value.delete(activeDashboardName.value!)
+      // remove the old dashboard entry
+      dashboards.value.delete(key)
 
+      const newKey: DashboardKey = { name: rename, owner: key.owner }
       const newDashboard = createDashboardModel(response.data.extensions, layoutType)
 
-      const metadata = await dashboardAPI.showDashboardMetadata(rename)
-      setActiveDashboard(rename, newDashboard, metadata)
+      const metadata = await dashboardAPI.showDashboardMetadata(newKey.name, newKey.owner)
+      setActiveDashboard(newKey, newDashboard, metadata)
     }
     return response
   }
@@ -218,7 +226,7 @@ export function useDashboardsManager() {
     constants,
     dashboards,
     activeDashboard,
-    activeDashboardName,
+    activeDashboardKey,
     isInitialized,
 
     createDashboard,

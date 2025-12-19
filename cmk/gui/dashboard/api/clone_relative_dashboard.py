@@ -17,6 +17,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 
+from ...openapi.framework.model.response import ApiResponse
 from .. import DashboardConfig, get_all_dashboards
 from ..metadata import dashboard_uses_relative_grid
 from ._family import DASHBOARD_FAMILY
@@ -57,7 +58,7 @@ class CloneDashboardV1:
 def clone_as_relative_grid_dashboard_v1(
     api_context: ApiContext,
     body: CloneDashboardV1,
-) -> RelativeGridDashboardDomainObject:
+) -> ApiResponse[RelativeGridDashboardDomainObject]:
     """Clone as relative dashboard"""
     user.need_permission("general.edit_dashboards")
     dashboard_to_clone = get_dashboard_for_read(
@@ -114,8 +115,11 @@ def clone_as_relative_grid_dashboard_v1(
 
     save_dashboard_to_file(api_context.config.sites, cloned_dashboard, owner)
 
-    return serialize_relative_grid_dashboard(
-        body.dashboard_id, RelativeGridDashboardResponse.from_internal(cloned_dashboard)
+    return ApiResponse(
+        serialize_relative_grid_dashboard(
+            body.dashboard_id, RelativeGridDashboardResponse.from_internal(cloned_dashboard)
+        ),
+        status_code=201,
     )
 
 

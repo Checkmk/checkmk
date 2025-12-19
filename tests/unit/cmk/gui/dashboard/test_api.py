@@ -155,7 +155,7 @@ def test_clone_relative_dashboard(clients: ClientRegistry) -> None:
     resp = clients.DashboardClient.clone_as_relative_grid_dashboard(
         {"reference_dashboard_id": "test_dashboard", "dashboard_id": "clone_dashboard"}
     )
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
+    assert resp.status_code == 201, f"Expected 201, got {resp.status_code}"
     assert resp.json["id"] == "clone_dashboard", (
         "Expected cloned dashboard ID to be 'clone_dashboard'"
     )

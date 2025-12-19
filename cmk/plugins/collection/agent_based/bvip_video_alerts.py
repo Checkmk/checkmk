@@ -37,7 +37,7 @@ snmp_section_bvip_video_alerts = SimpleSNMPSection(
 )
 
 
-def inventory_bvip_video_alerts(section: Section) -> DiscoveryResult:
+def discover_bvip_video_alerts(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
@@ -54,6 +54,6 @@ def check_bvip_video_alerts(item: str, section: Section) -> CheckResult:
 check_plugin_bvip_video_alerts = CheckPlugin(
     name="bvip_video_alerts",
     service_name="Video Alerts %s",
-    discovery_function=inventory_bvip_video_alerts,
+    discovery_function=discover_bvip_video_alerts,
     check_function=check_bvip_video_alerts,
 )

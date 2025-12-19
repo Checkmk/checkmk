@@ -13,7 +13,6 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
-import CmkButton from '@/components/CmkButton.vue'
 import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 
@@ -101,15 +100,6 @@ immediateWatch(
 onBeforeUnmount(() => {
   searchUtils.shortCuts.remove(shortcutCallbackIds.value)
 })
-
-const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | undefined) => {
-  if (target) {
-    window.open(target.url, 'main')
-    if (target.transition) {
-      showLoadingTransition(target.transition, title)
-    }
-  }
-}
 </script>
 
 <template>
@@ -140,20 +130,6 @@ const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | un
             :context="props.context ? props.context : ''"
           ></ResultItemTitle>
         </div>
-        <div
-          v-for="(ib, i) in props.inline_buttons"
-          ref="item-focus-inline"
-          :key="i"
-          class="inline"
-        >
-          <CmkButton
-            variant="secondary"
-            role="link"
-            @click="navigateToTarget(props.title, ib.target)"
-          >
-            {{ ib.title }}
-          </CmkButton>
-        </div>
       </a>
       <button v-else ref="item-focus" class="result-item-handler" :class="{ focus: props.focus }">
         <div v-if="props.icon" class="result-item-inner-start">
@@ -173,6 +149,22 @@ const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | un
           ></ResultItemTitle>
         </div>
       </button>
+      <a
+        v-for="(ib, i) in props.inline_buttons"
+        ref="item-focus-inline"
+        :key="i"
+        :href="ib.target.url"
+        target="main"
+        class="result-item-handler inline"
+        @click="ib.target?.transition && showLoadingTransition(ib.target.transition, ib.title)"
+      >
+        <div v-if="ib.icon" class="result-item-inner-start">
+          <CmkDynamicIcon :spec="ib.icon" class="result-item-icon" />
+        </div>
+        <div class="result-item-inner-end">
+          <ResultItemTitle :title="ib.title" context=""></ResultItemTitle>
+        </div>
+      </a>
     </CmkZebra>
   </li>
 </template>
@@ -220,7 +212,6 @@ const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | un
     &.inline {
       flex: 1;
       margin-left: 1px;
-      min-height: 54px;
       box-sizing: border-box;
     }
   }

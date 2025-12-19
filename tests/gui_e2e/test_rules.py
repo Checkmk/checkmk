@@ -212,6 +212,7 @@ def test_create_rules(
             ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
 
 
+@pytest.mark.xfail(reason="CMK-28671; broken Werk#18887.", strict=True)
 @pytest.mark.parametrize(
     "created_host",
     [
@@ -249,37 +250,40 @@ def test_periodic_service_discovery_rule(
         navigate_to_page=False,
     )
     ruleset_page.main_area.check_success(ruleset_page.created_new_rule_message)
-    expect(
-        ruleset_page.rule_position(rule_description),
-        message="Unexpected position of the new rule after creation.",
-    ).to_have_text("1")
+    try:
+        expect(
+            ruleset_page.rule_position(rule_description),
+            message="Unexpected position of the new rule after creation.",
+        ).to_have_text("1")
 
-    logger.info("Move the new rule to the top")
-    new_rule_move_icon = ruleset_page.move_icon(rule_description)
-    new_rule_move_icon.drag_to(ruleset_page.rules_table_header())
-    expect(
-        ruleset_page.rule_position(rule_description),
-        message="Unexpected position of the new rule after moving it to the top",
-    ).to_have_text("0")
-    ruleset_page.activate_changes(test_site)
+        logger.info("Move the new rule to the top")
+        new_rule_move_icon = ruleset_page.move_icon(rule_description)
+        new_rule_move_icon.drag_to(ruleset_page.rules_table_header())
+        expect(
+            ruleset_page.rule_position(rule_description),
+            message="Unexpected position of the new rule after moving it to the top",
+        ).to_have_text("0")
+        ruleset_page.activate_changes(test_site)
 
-    logger.info(
-        "Check that the new rule is present in the 'Effective parameters of %s' page",
-        created_host.name,
-    )
-    effective_parameters_page = HostEffectiveParameters(ruleset_page.page, created_host)
-    effective_parameters_page.expand_section("Service discovery rules")
-    assert (
-        effective_parameters_page.service_discovery_period.inner_text()
-        == f"{period_in_hours} hours"
-    ), "Unexpected service discovery period after adding a new rule"
+        logger.info(
+            "Check that the new rule is present in the 'Effective parameters of %s' page",
+            created_host.name,
+        )
+        effective_parameters_page = HostEffectiveParameters(ruleset_page.page, created_host)
+        effective_parameters_page.expand_section("Service discovery rules")
+        assert (
+            effective_parameters_page.service_discovery_period.inner_text()
+            == f"{period_in_hours} hours"
+        ), "Unexpected service discovery period after adding a new rule"
 
-    logger.info("Delete the new rule")
-    ruleset_page = Ruleset(effective_parameters_page.page, "Periodic service discovery")
-    ruleset_page.delete_icon(rule_description).click()
-    ruleset_page.delete_button.click()
+    finally:
+        logger.info("Delete the new rule")
+        ruleset_page = Ruleset(effective_parameters_page.page, "Periodic service discovery")
+        ruleset_page.delete_icon(rule_description).click()
+        ruleset_page.delete_button.click()
 
 
+@pytest.mark.xfail(reason="CMK-28671; broken Werk#18887.", strict=True)
 @pytest.mark.parametrize(
     "created_host",
     [

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_mongodb_instance(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_instance(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -47,6 +47,6 @@ agent_section_mongodb_instance = AgentSection(
 check_plugin_mongodb_instance = CheckPlugin(
     name="mongodb_instance",
     service_name="MongoDB Instance",
-    discovery_function=inventory_mongodb_instance,
+    discovery_function=discover_mongodb_instance,
     check_function=check_mongodb_instance,
 )

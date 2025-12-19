@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.mongodb.agent_based.mongodb_instance import (
     check_mongodb_instance,
-    inventory_mongodb_instance,
+    discover_mongodb_instance,
     parse_mongodb_instance,
 )
 
@@ -33,12 +33,12 @@ from cmk.plugins.mongodb.agent_based.mongodb_instance import (
         ),
     ],
 )
-def test_inventory_mongodb_instance(
+def test_discover_mongodb_instance(
     string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for mongodb_instance check."""
     parsed = parse_mongodb_instance(string_table)
-    assert list(inventory_mongodb_instance(parsed)) == expected_discoveries
+    assert list(discover_mongodb_instance(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(

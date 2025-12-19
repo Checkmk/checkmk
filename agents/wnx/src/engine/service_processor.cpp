@@ -667,10 +667,10 @@ void WaitForNetwork(std::chrono::seconds period) noexcept {
 std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
     std::chrono::milliseconds validate_process_delay) {
     if (ac ::IsRunController(cfg::GetLoadedConfig())) {
+        OpenFirewall(FirewallController::with);
         if (const auto pid = ac::StartAgentController()) {
             std::this_thread::sleep_for(validate_process_delay);
             if (!wtools::GetProcessPath(*pid).empty()) {
-                OpenFirewall(FirewallController::with);
                 return ServiceProcessor::ControllerParam{
                     .port = ac::GetConfiguredAgentChannelPort(GetModus()),
                     .pid = *pid,

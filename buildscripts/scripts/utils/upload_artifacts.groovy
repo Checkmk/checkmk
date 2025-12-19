@@ -143,12 +143,13 @@ boolean download_hot_cache(Map args) {
 }
 
 void upload_hot_cache(Map args) {
+    def exclude_bazel = env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? "--exclude='.cache/bazel'" : "";
     sh("""
         cd ${args.download_dest}
         if [ -d ".cache" ] || [ -d ".java-caller" ]; then
             [ -d ".cache" ] && du -sh .cache
             [ -d ".java-caller" ] && du -sh .java-caller
-            time tar -cf - .cache .java-caller 2>/dev/null | lz4 > ${args.file_pattern}
+            time tar -cf - ${exclude_bazel} .cache .java-caller 2>/dev/null | lz4 > ${args.file_pattern}
         fi
     """);
 

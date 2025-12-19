@@ -36,13 +36,13 @@ void execute_test(Map config = [:]) {
                         remove_existing_cache: true,
                         target_name: defaultDict.name,
                         cache_prefix: versioning.distro_code(),
+                        // When we mount the shared repository cache, we won't pack the repository cache under ~/.cache
+                        // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
                         files_to_consider: [
                             '.bazelversion',
-                            'WORKSPACE',
-                            'MODULE.bazel.lock',
                             'requirements.txt',
                             'bazel/tools/package.json',
-                        ],
+                        ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
                     ]) {
                         run_sh_command(cmd);
                     }

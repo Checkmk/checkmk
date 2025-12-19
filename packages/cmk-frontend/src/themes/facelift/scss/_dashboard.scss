@@ -877,29 +877,36 @@ div.servicestats {
         padding: 0;
         background-color: $font-color;
         border-radius: $theme-border-radius;
+        box-sizing: border-box;
 
         &.critical {
           background-color: $hexagon-critical-color;
+          border: 1px solid $label-box-critical-border-color;
         }
 
         &.unknown {
           background-color: $hexagon-unknown-color;
+          border: 1px solid $label-box-unknown-border-color;
         }
 
         &.warning {
           background-color: $color-state-1-background;
+          border: 1px solid $color-state-1-border;
         }
 
         &.downtime {
           background-color: $hexagon-downtime-color;
+          border: 1px solid $label-box-downtime-border-color;
         }
 
         &.host_down {
           background-color: $hexagon-host-down-color;
+          border: 1px solid $label-box-host-down-border-color;
         }
 
         &.ok {
           background-color: $success;
+          border: 1px solid $label-box-ok-border-color;
         }
       }
 

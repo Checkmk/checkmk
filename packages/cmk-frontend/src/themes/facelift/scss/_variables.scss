@@ -216,12 +216,18 @@ $ntop-protocol-painter-padding-top: null;
 // service problems graphs. Therefore, we should keep the colors in sync.
 // metrics counterpart: cmk_hosts_down, cmk_services_critical
 $hexagon-critical-color: $color-dark-red-50;
+$label-box-critical-border-color: $color-dark-red-50;
 // metrics counterpart: cmk_hosts_unreachable, cmk_services_unknown
 $hexagon-unknown-color: $color-orange-50;
+$label-box-unknown-border-color: $color-orange-70;
 // metrics counterpart: cmk_hosts_in_downtime, cmk_services_in_downtime
 $hexagon-downtime-color: $color-light-blue-50;
+$label-box-downtime-border-color: $color-light-blue-70;
 // metrics counterpart: cmk_services_on_down_hosts
 $hexagon-host-down-color: $color-dark-blue-50;
+$label-box-host-down-border-color: $color-dark-blue-50;
+
+$label-box-ok-border-color: $color-corporate-green-70;
 // =============================
 $hexagon-empty-color: $ux-theme-4;
 $hexagon-empty-fill-opacity: 0.4;

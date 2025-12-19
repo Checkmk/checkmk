@@ -187,7 +187,7 @@ def check_cbl_airlaser_hw(params: Mapping[str, Any], section: Section) -> CheckR
     yield from perfdata
 
 
-def inventory_cbl_airlaser(section: Section) -> DiscoveryResult:
+def discover_cbl_airlaser(section: Section) -> DiscoveryResult:
     # start passing parameters, but since we might also need some for optics
     # this may change to using factory settings.
     # Or we just hardcode the margins we got from the vendor.
@@ -252,7 +252,7 @@ check_plugin_cbl_airlaser_status = CheckPlugin(
     name="cbl_airlaser_status",
     service_name="CBL Airlaser Status",
     sections=["cbl_airlaser"],
-    discovery_function=inventory_cbl_airlaser,
+    discovery_function=discover_cbl_airlaser,
     check_function=check_cbl_airlaser_status,
 )
 
@@ -261,7 +261,7 @@ check_plugin_cbl_airlaser_hardware = CheckPlugin(
     name="cbl_airlaser_hardware",
     service_name="CBL Airlaser Hardware",
     sections=["cbl_airlaser"],
-    discovery_function=inventory_cbl_airlaser,
+    discovery_function=discover_cbl_airlaser,
     check_function=check_cbl_airlaser_hw,
     check_default_parameters={},
 )

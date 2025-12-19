@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.acme.agent_based.lib import DETECT_ACME
 
 
-def inventory_acme_agent_sessions(section: StringTable) -> DiscoveryResult:
+def discover_acme_agent_sessions(section: StringTable) -> DiscoveryResult:
     yield from (Service(item=hostname) for hostname, _agent_ty, _state in section)
 
 
@@ -55,6 +55,6 @@ snmp_section_acme_agent_sessions = SimpleSNMPSection(
 check_plugin_acme_agent_sessions = CheckPlugin(
     name="acme_agent_sessions",
     service_name="Agent sessions %s",
-    discovery_function=inventory_acme_agent_sessions,
+    discovery_function=discover_acme_agent_sessions,
     check_function=check_acme_agent_sessions,
 )

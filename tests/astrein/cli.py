@@ -55,12 +55,13 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    # When running via bazel run, use BUILD_WORKSPACE_DIRECTORY to resolve paths
-    workspace_dir = Path(os.environ.get("BUILD_WORKSPACE_DIRECTORY", os.getcwd()))
+    # When running via bazel run, use environment variables to determine workspace
+    work_dir = Path(os.environ.get("BUILD_WORKING_DIRECTORY", os.getcwd()))
+    workspace_dir = Path(os.environ.get("BUILD_WORKSPACE_DIRECTORY", work_dir))
 
     checker_classes = _select_checkers(args.checker, checkers)
     try:
-        files_to_check = _collect_files(args.paths, workspace_dir)
+        files_to_check = _collect_files(args.paths, work_dir)
     except ValueError as e:
         print(str(e), file=sys.stderr)
         return 1

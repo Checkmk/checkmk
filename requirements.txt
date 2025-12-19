@@ -350,24 +350,24 @@ blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via flask
-boto3==1.42.12 \
-    --hash=sha256:649b134d25b278c24fcc8b3f94519de3884283b7848dc32f42b0ffdd9d19ce99 \
-    --hash=sha256:8112e1beb5978bb455ea4b41a9ef26fc408f6340d8ff69ef93dded4f80fd53e9
+boto3==1.42.13 \
+    --hash=sha256:4c9a62dcb5c3f905630fe99fb4b81131da84c5c92eedcc81a89cbd924c1c524f \
+    --hash=sha256:9d6aad3fa8b90567006bf7b32efa26489fc306fbe63946eaf57b72356a45761d
     # via -r cmk/requirements.in
-boto3-stubs[logs]==1.42.12 \
-    --hash=sha256:18a9a970fd9d8867558f091608f2d9944d6f55143d23cb11785f1c143d91aa54 \
-    --hash=sha256:f69f12c884519a62a6e6d7f296932d4cdc14f47ea987b1eb7b226337f1127d13
+boto3-stubs[logs]==1.42.13 \
+    --hash=sha256:2683835a105262e1d7404f638383c230d58178a31ffcd88ad70db941a8274427 \
+    --hash=sha256:de769f1e414ce4a69fa2f79c21054242501c27fbe964c69cde797fcc18e681c1
     # via -r tests/dev-requirements.in
-botocore==1.42.12 \
-    --hash=sha256:1f9f63c3d6bb1f768519da30d6018706443c5d8af5472274d183a4945f3d81f8 \
-    --hash=sha256:4f163880350f6d831857ce5d023875b7c6534be862e5affd9fcf82b8d1ab3537
+botocore==1.42.13 \
+    --hash=sha256:7e4cf14bd5719b60600fb45d2bb3ae140feb3c182a863b93093aafce7f93cfee \
+    --hash=sha256:b750b2de4a2478db9718a02395cb9da8698901ba02378d60037d6369ecb6bb88
     # via
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.42.12 \
-    --hash=sha256:0eaac8852441794f14bdb823b0b0dc1c7220cf024e506031d5e0d2c4855e277f \
-    --hash=sha256:7353c5c41478cc41a70beb9545cc0a5e487fe75b5b322ed5802ce0c177e49dac
+botocore-stubs==1.42.13 \
+    --hash=sha256:7a1d5749a5088fa3184add28efad1e6548039b40d8d00413c69021c0c31501ee \
+    --hash=sha256:d565f01c31034e7fd86193c0f4937179a67a971098947c0d1e83d81973a9ec4c
     # via
     #   -r tests/dev-requirements.in
     #   boto3-stubs
@@ -5041,9 +5041,9 @@ sortedcontainers==2.4.0 \
     # via
     #   fakeredis
     #   hypothesis
-soupsieve==2.8 \
-    --hash=sha256:0cc76456a30e20f5d7f2e14a98a4ae2ee4e5abdc7c5ea0aafe795f344bc7984c \
-    --hash=sha256:e2dd4a40a628cb5f28f6d4b0db8800b8f581b65bb380b97de22ba5ca8d72572f
+soupsieve==2.8.1 \
+    --hash=sha256:4cf733bc50fa805f5df4b8ef4740fc0e0fa6218cf3006269afd3f9d6d80fd350 \
+    --hash=sha256:a11fe2a6f3d76ab3cf2de04eb339c1be5b506a8a47f2ceb6d139803177f85434
     # via beautifulsoup4
 sphinx==8.2.3 \
     --hash=sha256:398ad29dee7f63a75888314e9424d40f52ce5a6a87ae88e7071e80af296ec348 \

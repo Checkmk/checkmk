@@ -196,6 +196,7 @@ const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | un
 
   .result-item-handler-wrapper {
     width: 100%;
+    overflow: hidden;
     height: auto;
     display: flex;
     flex-direction: row;
@@ -248,6 +249,7 @@ const navigateToTarget = (title: string, target?: UnifiedSearchResultTarget | un
     flex: 5;
     justify-content: center;
     align-items: flex-start;
+    font-weight: var(--font-weight-default);
   }
 }
 

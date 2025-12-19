@@ -32,7 +32,18 @@ export default defineComponent({
   line-height: 14px;
 }
 
+div {
+  width: auto;
+  display: flex;
+}
+
 span {
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  display: inline-block;
+
   &::first-letter {
     text-transform: capitalize;
   }

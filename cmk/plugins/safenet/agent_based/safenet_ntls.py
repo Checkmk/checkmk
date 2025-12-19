@@ -158,7 +158,7 @@ check_plugin_safenet_ntls_expiration = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_safenet_ntls_links(section: Section) -> DiscoveryResult:
+def discover_safenet_ntls_links(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -177,7 +177,7 @@ check_plugin_safenet_ntls_links = CheckPlugin(
     name="safenet_ntls_links",
     service_name="NTLS Links",
     sections=["safenet_ntls"],
-    discovery_function=inventory_safenet_ntls_links,
+    discovery_function=discover_safenet_ntls_links,
     check_function=check_safenet_ntls_links,
     check_ruleset_name="safenet_ntls_links",
     check_default_parameters=CheckParamT(levels=("no_levels", None)),

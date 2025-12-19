@@ -77,7 +77,7 @@ check_plugin_esx_vsphere_hostsystem_state = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_hostsystem_maintenance(section: HostSystemSection) -> DiscoveryResult:
+def discover_esx_vsphere_hostsystem_maintenance(section: HostSystemSection) -> DiscoveryResult:
     if "runtime.inMaintenanceMode" in section:
         current_state = str(section["runtime.inMaintenanceMode"][0]).lower()
         yield Service(parameters={"target_state": current_state})
@@ -106,7 +106,7 @@ check_plugin_esx_vsphere_hostsystem_maintenance = CheckPlugin(
     name="esx_vsphere_hostsystem_maintenance",
     service_name="Maintenance Mode",
     sections=["esx_vsphere_hostsystem"],
-    discovery_function=inventory_esx_vsphere_hostsystem_maintenance,
+    discovery_function=discover_esx_vsphere_hostsystem_maintenance,
     check_function=check_esx_vsphere_hostsystem_maintenance,
     check_default_parameters={},
     check_ruleset_name="esx_hostystem_maintenance",

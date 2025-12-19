@@ -78,7 +78,7 @@ cisco_vss_operstatus_names = {
 }
 
 
-def inventory_cisco_vss(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_cisco_vss(section: Sequence[StringTable]) -> DiscoveryResult:
     for _switch_id, chassis_role in section[0]:
         if chassis_role in ["2", "3"]:  # active, standby
             yield Service()
@@ -145,6 +145,6 @@ snmp_section_cisco_vss = SNMPSection(
 check_plugin_cisco_vss = CheckPlugin(
     name="cisco_vss",
     service_name="VSS Status",
-    discovery_function=inventory_cisco_vss,
+    discovery_function=discover_cisco_vss,
     check_function=check_cisco_vss,
 )

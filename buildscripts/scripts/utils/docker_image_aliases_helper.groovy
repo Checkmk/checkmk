@@ -129,7 +129,7 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 mkdir -p "${container_shadow_workspace}/home_cache/bazel"
 
                 mkdir -p "${container_shadow_workspace}/home/.cache"
-                ${mount_shared_repository_cache} && mkdir -p "${container_shadow_workspace}/tmp/shared_repository_cache"
+                ${mount_shared_repository_cache} && mkdir -p "${container_shadow_workspace}/tmp/shared_repository_cache" || true
 
                 # create mount dirs for <checkout_dir>/.cache
                 mkdir -p "${checkout_dir}/.cache"
@@ -139,7 +139,7 @@ inside_container = { Map arg1=[:], Closure arg2 ->
                 # probably not needed, but kept here because things are somehow working..
                 mkdir -p "${checkout_dir}/shared_cargo_folder"
 
-                ${mount_shared_repository_cache} && mkdir -p "/tmp/shared_repository_cache"
+                ${mount_shared_repository_cache} && mkdir -p "/tmp/shared_repository_cache" || true
                 # END COMMON CODE with run-in-docker.sh
             """);
             /* groovylint-enable LineLength */

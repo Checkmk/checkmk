@@ -242,7 +242,7 @@ check_plugin_safenet_ntls_clients = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_safenet_ntls(section: Section) -> DiscoveryResult:
+def discover_safenet_ntls(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -276,6 +276,6 @@ check_plugin_safenet_ntls = CheckPlugin(
     name="safenet_ntls",
     service_name="NTLS Operation Status",
     sections=["safenet_ntls"],
-    discovery_function=inventory_safenet_ntls,
+    discovery_function=discover_safenet_ntls,
     check_function=check_safenet_ntls,
 )

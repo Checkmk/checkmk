@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import type { ElementSelection, UseWidgetHandler } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -51,7 +51,7 @@ import {
 const { _t } = usei18n()
 
 interface Stage2Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   hostFilterType: ElementSelection
   serviceFilterType: ElementSelection
   filters: ConfiguredFilters
@@ -137,24 +137,24 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   <AlertOverview
     v-if="selectedWidget === Graph.ALERT_OVERVIEW"
     v-model:handler="handler[Graph.ALERT_OVERVIEW] as unknown as UseAlertOverview"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <AlertTimeline
     v-if="selectedWidget === Graph.ALERT_TIMELINE"
     v-model:handler="handler[Graph.ALERT_TIMELINE] as unknown as UseAlertTimeline"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <NotificationTimeline
     v-if="selectedWidget === Graph.NOTIFICATION_TIMELINE"
     v-model:handler="handler[Graph.NOTIFICATION_TIMELINE] as unknown as UseNotificationTimeline"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <PercentageOfServiceProblems
     v-if="selectedWidget === Graph.PROBLEM_GRAPH"
     v-model:handler="handler[Graph.PROBLEM_GRAPH] as unknown as UsePercentageOfServiceProblems"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 </template>

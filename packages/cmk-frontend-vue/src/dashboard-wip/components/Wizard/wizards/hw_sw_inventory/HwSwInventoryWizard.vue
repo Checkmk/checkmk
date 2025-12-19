@@ -14,7 +14,7 @@ import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import type { ConfiguredFilters } from '../../../../components/filter/types'
 import { useFilterDefinitions } from '../../../../components/filter/utils'
-import type { DashboardConstants } from '../../../../types/dashboard'
+import type { DashboardConstants, DashboardKey } from '../../../../types/dashboard'
 import type { ContextFilters } from '../../../../types/filter'
 import type {
   WidgetContent,
@@ -41,7 +41,7 @@ import Stage2 from './stage2/StageContents.vue'
 const { _t } = usei18n()
 
 interface HwSwInventoryWizardProps {
-  dashboardName: string
+  dashboardKey: DashboardKey
   contextFilters: ContextFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
@@ -182,7 +182,7 @@ const handleAddWidget = (
       <Suspense>
         <Stage2
           v-if="wizardHandler.stage.value === 1"
-          :dashboard-name="dashboardName"
+          :dashboard-key="dashboardKey"
           :filters="appliedFilters"
           :widget-filters="widgetFilterManager.getConfiguredFilters()"
           :edit-widget="editWidget"

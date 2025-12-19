@@ -15,7 +15,7 @@ import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionBut
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import SelectableWidgets from '@/dashboard-wip/components/Wizard/components/WidgetSelection/SelectableWidgets.vue'
 import type { WidgetItemList } from '@/dashboard-wip/components/Wizard/components/WidgetSelection/types'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -33,7 +33,7 @@ import UserMessages from './UserMessages/UserMessages.vue'
 const { _t } = usei18n()
 
 interface Stage1Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
 }
@@ -129,7 +129,7 @@ function gotoNextStage() {
   <UserMessages
     v-show="selectedWidget === OtherWidgetType.USER_MESSAGES"
     ref="userMessagesRef"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
     :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />
@@ -137,7 +137,7 @@ function gotoNextStage() {
   <SidebarWidget
     v-show="selectedWidget === OtherWidgetType.SIDEBAR_WIDGET"
     ref="sidebarWidgetRef"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
     :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />
@@ -145,7 +145,7 @@ function gotoNextStage() {
   <EmbeddedURL
     v-show="selectedWidget === OtherWidgetType.EMBEDDED_URL"
     ref="embeddedURLRef"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
     :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />
@@ -153,7 +153,7 @@ function gotoNextStage() {
   <StaticText
     v-show="selectedWidget === OtherWidgetType.STATIC_TEXT"
     ref="staticTextRef"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
     :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />

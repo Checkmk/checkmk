@@ -38,7 +38,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
   <DashboardPreviewContent
     :key="`site-overview-preview-${handler.showStateOf.value}`"
     widget_id="site-overview-preview"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
     :effective_filter_context="widgetProps.value!.effective_filter_context!"

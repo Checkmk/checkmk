@@ -10,7 +10,11 @@ import usei18n from '@/lib/i18n'
 
 import type { ElementSelection, UseWidgetHandler } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import { type DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+import {
+  type DashboardConstants,
+  DashboardFeatures,
+  type DashboardKey
+} from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -39,7 +43,7 @@ import {
 const { _t } = usei18n()
 
 interface Stage2Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   hostFilterType: ElementSelection
   serviceFilterType: ElementSelection
   filters: ConfiguredFilters
@@ -155,18 +159,18 @@ const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTE
   <ServiceState
     v-if="selectedWidget === Graph.SERVICE_STATE && isUnrestricted"
     v-model:handler="handler[Graph.SERVICE_STATE] as unknown as UseServiceState"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <ServiceStateSummary
     v-if="selectedWidget === Graph.SERVICE_STATE_SUMMARY && isUnrestricted"
     v-model:handler="handler[Graph.SERVICE_STATE_SUMMARY] as unknown as UseServiceStateSummary"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <ServiceStatistics
     v-if="selectedWidget === Graph.SERVICE_STATS"
     v-model:handler="handler[Graph.SERVICE_STATS] as unknown as UseServiceStatistics"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 </template>

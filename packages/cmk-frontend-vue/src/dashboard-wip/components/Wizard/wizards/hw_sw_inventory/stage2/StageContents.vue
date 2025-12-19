@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import DashboardPreviewContent from '@/dashboard-wip/components/DashboardPreviewContent.vue'
 import type { WidgetProps } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings } from '@/dashboard-wip/types/widget'
 
 import ContentSpacer from '../../../components/ContentSpacer.vue'
@@ -18,7 +18,7 @@ import { useInventory } from './InventoryWidget/useInventory'
 interface Stage2Props {
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
-  dashboardName: string
+  dashboardKey: DashboardKey
   dashboardConstants: DashboardConstants
   editWidget: WidgetProps | null
 }
@@ -69,7 +69,7 @@ const inventoryHandler = await useInventory(
     v-if="inventoryHandler.widgetProps.value"
     widget_id="inventory-preview"
     class="inventory-widget__preview"
-    :dashboard-name="props.dashboardName"
+    :dashboard-key="dashboardKey"
     :general_settings="inventoryHandler.widgetProps.value.general_settings"
     :content="inventoryHandler.widgetProps.value.content"
     :effective_filter_context="inventoryHandler.widgetProps.value.effective_filter_context"

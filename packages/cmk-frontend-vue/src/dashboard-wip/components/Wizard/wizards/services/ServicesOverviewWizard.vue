@@ -32,7 +32,11 @@ import {
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import { useInjectVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
-import type { DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+import type {
+  DashboardConstants,
+  DashboardFeatures,
+  DashboardKey
+} from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
@@ -50,7 +54,7 @@ import Stage2 from './stage2/StageContents.vue'
 const { _t } = usei18n()
 
 interface ServicesOverviewWizardProps {
-  dashboardName: string
+  dashboardKey: DashboardKey
   contextFilters: ContextFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
@@ -207,7 +211,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
       <Suspense>
         <Stage2
           v-if="wizardHandler.stage.value === 1"
-          :dashboard-name="dashboardName"
+          :dashboard-key="dashboardKey"
           :dashboard-constants="dashboardConstants"
           :host-filter-type="hostFilterType"
           :service-filter-type="serviceFilterType"

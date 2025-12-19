@@ -11,6 +11,7 @@ import CmkIcon from '@/components/CmkIcon'
 import ViewWizardInner from '@/dashboard-wip/components/Wizard/wizards/view/ViewWizardInner.vue'
 import { useDataSourcesCollection } from '@/dashboard-wip/composables/api/useDataSourcesCollection'
 import { useProvideViews } from '@/dashboard-wip/composables/useProvideViews'
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
@@ -29,8 +30,7 @@ onMounted(async () => {
 })
 
 interface ViewWizardProps {
-  dashboardName: string
-  dashboardOwner: string
+  dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
   editWidgetId?: string | null
@@ -51,8 +51,7 @@ defineEmits<{
 <template>
   <template v-if="viewsReady && dataSourcesReady">
     <ViewWizardInner
-      :dashboard-name="dashboardName"
-      :dashboard-owner="dashboardOwner"
+      :dashboard-key="dashboardKey"
       :views-by-id="viewsById"
       :context-filters="contextFilters"
       :edit-widget-spec="editWidgetSpec"

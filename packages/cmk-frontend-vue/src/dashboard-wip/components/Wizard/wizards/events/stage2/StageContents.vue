@@ -17,7 +17,7 @@ import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/colla
 import type { EventStatsContent, WidgetProps } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce.ts'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings, WidgetSpec } from '@/dashboard-wip/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard-wip/utils.ts'
 
@@ -26,7 +26,7 @@ import Stage2Header from '../../../components/Stage2Header.vue'
 const { _t } = usei18n()
 
 interface Stage2Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   filters: ConfiguredFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
@@ -108,7 +108,7 @@ const widgetProps = computed(() => configuredWidgetProps)
 
   <DashboardPreviewContent
     widget_id="event-stats-preview"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
     :effective_filter_context="widgetProps.value!.effective_filter_context!"

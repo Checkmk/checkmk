@@ -19,6 +19,7 @@ import WidgetVisualization from '@/dashboard-wip/components/Wizard/components/Wi
 import type { UseWidgetVisualizationProps } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type {
   EffectiveWidgetFilterContext,
   EmbeddedViewContent,
@@ -29,7 +30,7 @@ import type {
 const { _t } = usei18n()
 
 interface Stage3Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
 
   widget_id: string
   content: EmbeddedViewContent | LinkedViewContent
@@ -58,7 +59,7 @@ const widgetContentProps = computed<ContentProps>(
       widget_id: props.widget_id,
       content: props.content,
       effective_filter_context: props.effective_filter_context,
-      dashboardName: props.dashboardName,
+      dashboardKey: props.dashboardKey,
       general_settings: generalSettings.value
     }) as ContentProps
 )

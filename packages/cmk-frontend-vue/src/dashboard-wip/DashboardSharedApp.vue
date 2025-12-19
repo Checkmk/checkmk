@@ -51,7 +51,7 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
     </div>
     <DashboardComponent
       v-model:dashboard="sharedDashboard"
-      :dashboard-name="dashboardKey.name"
+      :dashboard-key="dashboardKey"
       :base-filters="dashboardFilters.baseFilters"
       :widget-cores="dashboardWidgets.widgetCores"
       :constants="dashboard_constants"

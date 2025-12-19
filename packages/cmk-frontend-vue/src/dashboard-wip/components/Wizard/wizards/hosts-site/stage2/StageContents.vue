@@ -9,7 +9,11 @@ import { ref, toValue } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import { type DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+import {
+  type DashboardConstants,
+  DashboardFeatures,
+  type DashboardKey
+} from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -42,7 +46,7 @@ import { type UseSiteOverview, useSiteOverview } from './SiteOverview/composable
 const { _t } = usei18n()
 
 interface Stage2Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   hostFilterType: ElementSelection
 
   filters: ConfiguredFilters
@@ -153,24 +157,24 @@ const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTE
   <HostState
     v-if="selectedWidget === Graph.HOST_STATE && isUnrestricted"
     v-model:handler="handler[Graph.HOST_STATE] as unknown as UseHostState"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <HostStateSummary
     v-if="selectedWidget === Graph.HOST_STATE_SUMMARY && isUnrestricted"
     v-model:handler="handler[Graph.HOST_STATE_SUMMARY] as unknown as UseHostStateSummary"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <HostStatistics
     v-if="selectedWidget === Graph.HOST_STATS"
     v-model:handler="handler[Graph.HOST_STATS] as unknown as UseHostStatistics"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 
   <SiteOverview
     v-if="selectedWidget === Graph.SITE_OVERVIEW && isUnrestricted"
     v-model:handler="handler[Graph.SITE_OVERVIEW] as unknown as UseSiteOverview"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 </template>

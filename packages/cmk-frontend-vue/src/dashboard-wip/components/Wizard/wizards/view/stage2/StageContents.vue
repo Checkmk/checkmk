@@ -22,6 +22,7 @@ import {
   DataConfigurationMode,
   ViewSelectionMode
 } from '@/dashboard-wip/components/Wizard/wizards/view/types'
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { EmbeddedViewContent } from '@/dashboard-wip/types/widget'
 
 // These must be kept in sync with the Python side
@@ -43,8 +44,7 @@ interface SaveCompletedMessage {
 type MessageEventData = ConfigurationErrorMessage | ValidationErrorMessage | SaveCompletedMessage
 
 interface Stage2Props {
-  dashboardName: string
-  dashboardOwner: string
+  dashboardKey: DashboardKey
   embeddedId: string
   configurationMode: DataConfigurationMode
   viewSelection: NewViewSelection | CopyExistingViewSelection
@@ -61,8 +61,8 @@ const { _t } = usei18n()
 const iframeUrl = computed(() => {
   const baseUrl = 'widget_edit_view.py'
   const params = new URLSearchParams({
-    dashboard: props.dashboardName,
-    owner: props.dashboardOwner,
+    dashboard: props.dashboardKey.name,
+    owner: props.dashboardKey.owner,
     embedded_id: props.embeddedId
   })
   if (props.configurationMode === DataConfigurationMode.EDIT) {

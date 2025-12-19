@@ -479,8 +479,7 @@ function deepClone<T>(obj: T): T {
       <WizardSelector
         :is-open="openWizard"
         :selected-wizard="selectedWizard"
-        :dashboard-name="dashboardsManager.activeDashboardKey.value?.name ?? ''"
-        :dashboard-owner="dashboardsManager.activeDashboardKey.value?.owner ?? ''"
+        :dashboard-key="dashboardsManager.activeDashboardKey.value!"
         :context-filters="dashboardFilters.contextFilters.value || {}"
         :dashboard-constants="dashboardsManager.constants.value!"
         :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
@@ -532,7 +531,7 @@ function deepClone<T>(obj: T): T {
         v-else-if="dashboardsManager.isInitialized.value"
         :key="`${dashboardsManager.activeDashboardKey.value?.owner}-${dashboardsManager.activeDashboardKey.value?.name}`"
         v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
-        :dashboard-name="dashboardsManager.activeDashboardKey.value?.name ?? ''"
+        :dashboard-key="dashboardsManager.activeDashboardKey.value!"
         :base-filters="dashboardFilters.baseFilters"
         :widget-cores="dashboardWidgets.widgetCores"
         :constants="dashboardsManager.constants.value!"

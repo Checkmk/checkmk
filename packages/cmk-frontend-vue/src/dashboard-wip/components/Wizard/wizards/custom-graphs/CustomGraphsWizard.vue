@@ -12,7 +12,7 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 // Local components
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter'
 import type {
   WidgetContent,
@@ -36,7 +36,7 @@ import StageContents from './stage1/StageContents.vue'
 const { _t } = usei18n()
 
 interface CustomGraphsWizardProps {
-  dashboardName: string
+  dashboardKey: DashboardKey
   dashboardConstants: DashboardConstants
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
@@ -93,7 +93,7 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
       <CloseButton @close="() => emit('goBack')" />
       <Suspense>
         <StageContents
-          :dashboard-name="props.dashboardName"
+          :dashboard-key="dashboardKey"
           :filters="contextConfiguredFilters"
           :dashboard-constants="props.dashboardConstants"
           :edit-widget-spec="props.editWidgetSpec || null"

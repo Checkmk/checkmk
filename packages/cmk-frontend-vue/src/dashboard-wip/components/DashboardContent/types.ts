@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type {
   EffectiveWidgetFilterContext,
   WidgetContent,
@@ -15,7 +16,7 @@ export interface ContentProps<T = WidgetContent> {
   general_settings: WidgetGeneralSettings
   content: T
   effective_filter_context: EffectiveWidgetFilterContext
-  dashboardName: string
+  dashboardKey: DashboardKey
 }
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 

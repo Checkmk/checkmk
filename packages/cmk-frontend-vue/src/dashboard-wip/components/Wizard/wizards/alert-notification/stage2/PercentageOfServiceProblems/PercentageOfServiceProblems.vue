@@ -36,7 +36,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 <template>
   <DashboardPreviewContent
     widget_id="notification-timeline-preview"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
     :effective_filter_context="widgetProps.value!.effective_filter_context!"

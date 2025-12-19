@@ -8,6 +8,7 @@ import type { Ref } from 'vue'
 
 import type { SimpleIcons } from '@/components/CmkIcon'
 
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type {
   EffectiveWidgetFilterContext,
   SidebarElementContent,
@@ -57,7 +58,7 @@ export enum ElementSelection {
 }
 
 export interface BaseWidgetProp {
-  dashboardName: string
+  dashboardKey: DashboardKey
 }
 
 export type WidgetFiltersType = {

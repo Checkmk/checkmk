@@ -15,7 +15,7 @@ import {
   getAvailableGraphs
 } from '@/dashboard-wip/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -55,7 +55,7 @@ import { type UseTopList, useTopList } from './TopListWidget/composables/useTopL
 const { _t } = usei18n()
 
 interface Stage2Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   hostFilterType: ElementSelection
   serviceFilterType: ElementSelection
   metricType: MetricSelection
@@ -217,48 +217,48 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
     <GaugeWidget
       v-if="selectedWidget === Graph.GAUGE"
       v-model:handler="handler[Graph.GAUGE] as unknown as UseGauge"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
     <GraphWidget
       v-if="selectedWidget === Graph.SINGLE_GRAPH"
       v-model:handler="handler[Graph.SINGLE_GRAPH] as unknown as UseGraph"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
     <MetricWidget
       v-if="selectedWidget === Graph.SINGLE_METRIC"
       v-model:handler="handler[Graph.SINGLE_METRIC] as unknown as UseMetric"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
 
     <BarplotWidget
       v-if="selectedWidget === Graph.BARPLOT"
       v-model:handler="handler[Graph.BARPLOT] as unknown as UseBarplot"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
 
     <ScatterplotWidget
       v-if="selectedWidget === Graph.SCATTERPLOT"
       v-model:handler="handler[Graph.SCATTERPLOT] as unknown as UseScatterplot"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
 
     <TopListWidget
       v-if="selectedWidget === Graph.TOP_LIST"
       v-model:handler="handler[Graph.TOP_LIST] as unknown as UseTopList"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
   </div>
   <div v-else>
     <PerformanceGraphWidget
       v-if="selectedWidget === Graph.PERFORMANCE_GRAPH"
       v-model:handler="handler[Graph.ANY_GRAPH] as unknown as UsePerformanceGraph"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
 
     <CombinedGraphWidget
       v-if="selectedWidget === Graph.COMBINED_GRAPH"
       v-model:handler="handler[Graph.ANY_GRAPH] as unknown as UseCombinedGraph"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
     />
   </div>
 </template>

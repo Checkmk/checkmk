@@ -12,7 +12,7 @@ import CloseButton from '@/dashboard-wip/components/Wizard/components/CloseButto
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
@@ -40,7 +40,7 @@ import Stage2 from './stage2/StageContents.vue'
 const { _t } = usei18n()
 
 interface MetricsWizardProps {
-  dashboardName: string
+  dashboardKey: DashboardKey
   contextFilters: ContextFilters
   // TODO: widgetFilters?: ConfiguredFilters (during edit mode)
   dashboardConstants: DashboardConstants
@@ -149,7 +149,7 @@ const appliedFilters = computed((): ConfiguredFilters => {
       <Suspense>
         <Stage2
           v-if="wizardHandler.stage.value === 1"
-          :dashboard-name="dashboardName"
+          :dashboard-key="dashboardKey"
           :dashboard-constants="dashboardConstants"
           :filters="appliedFilters"
           :edit-widget-spec="editWidgetSpec ?? null"

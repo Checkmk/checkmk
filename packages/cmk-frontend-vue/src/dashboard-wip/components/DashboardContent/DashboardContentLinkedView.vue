@@ -27,7 +27,8 @@ const iFrameUrl = computed(() => {
 
   const content = props.content as LinkedViewContent
   const urlParams = new URLSearchParams({
-    dashboard: props.dashboardName,
+    dashboard_name: props.dashboardKey.name,
+    dashboard_owner: props.dashboardKey.owner,
     widget_id: props.widget_id,
     view_name: content.view_name,
     context: JSON.stringify(props.effective_filter_context.filters)

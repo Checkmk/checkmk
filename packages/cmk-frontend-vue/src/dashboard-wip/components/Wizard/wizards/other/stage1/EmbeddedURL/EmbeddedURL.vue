@@ -54,7 +54,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
     <DashboardPreviewContent
       widget_id="embedded-url-preview"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
       :general_settings="handler.widgetProps.value.general_settings!"
       :content="handler.widgetProps.value.content!"
       :effective_filter_context="handler.widgetProps.value.effective_filter_context!"

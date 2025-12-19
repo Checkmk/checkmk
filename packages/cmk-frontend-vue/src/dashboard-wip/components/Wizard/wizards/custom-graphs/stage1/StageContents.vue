@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -28,7 +28,7 @@ import { useCustomGraph } from './composables/useCustomGraph'
 const { _t } = usei18n()
 
 interface Stage1Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   filters: ConfiguredFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
@@ -82,5 +82,5 @@ const isUpdate = computed(() => props.editWidgetSpec !== null)
 
   <ContentSpacer />
 
-  <CustomGraphWidget v-model:handler="handler" :dashboard-name="dashboardName" />
+  <CustomGraphWidget v-model:handler="handler" :dashboard-key="dashboardKey" />
 </template>

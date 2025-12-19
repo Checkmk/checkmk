@@ -19,6 +19,7 @@ import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/compon
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import type { DataSourceModel, ViewModel } from '@/dashboard-wip/types/api'
+import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   EffectiveWidgetFilterContext,
@@ -48,8 +49,7 @@ import { DataConfigurationMode } from './types'
 const { _t } = usei18n()
 
 interface ViewWizardProps {
-  dashboardName: string
-  dashboardOwner: string
+  dashboardKey: DashboardKey
   viewsById: Record<string, ViewModel>
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
@@ -374,8 +374,7 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
       />
       <Stage2
         v-if="wizardHandler.stage.value === 1"
-        :dashboard-name="dashboardName"
-        :dashboard-owner="dashboardOwner"
+        :dashboard-key="dashboardKey"
         :embedded-id="embeddedId!"
         :configuration-mode="dataConfigurationMode"
         :view-selection="viewSelection!"
@@ -386,7 +385,7 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
         v-if="wizardHandler.stage.value === 2"
         v-model:visualization="visualizationProps"
         :is-edit-mode="!!editWidgetSpec"
-        :dashboard-name="dashboardName"
+        :dashboard-key="dashboardKey"
         :widget_id="widgetId"
         :content="content!"
         :effective_filter_context="effectiveFilterContext"

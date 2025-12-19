@@ -20,13 +20,14 @@ import type {
   ContentRelativeGrid,
   ContentResponsiveGrid,
   DashboardConstants,
+  DashboardKey,
   DashboardModel
 } from '@/dashboard-wip/types/dashboard'
 import type { WidgetLayout } from '@/dashboard-wip/types/widget'
 
 interface DashboardProps {
   constants: DashboardConstants
-  dashboardName: string
+  dashboardKey: DashboardKey
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
   isEditing: boolean
@@ -66,7 +67,7 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
           ...widget.filter_context.filters
         }
       },
-      dashboardName: props.dashboardName
+      dashboardKey: props.dashboardKey
     }
   }
   return record
@@ -81,7 +82,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
     <ResponsiveGrid
       v-if="dashboard.content.layout.type === 'responsive_grid'"
       v-model:content="dashboard.content as ContentResponsiveGrid"
-      :dashboard-name="props.dashboardName"
+      :dashboard-name="props.dashboardKey.name"
       :responsive-grid-breakpoints="props.constants.responsive_grid_breakpoints"
       :content-props="widgetContentProps"
       :is-editing="isEditing"

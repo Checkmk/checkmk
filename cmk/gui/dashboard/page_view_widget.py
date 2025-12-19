@@ -12,7 +12,7 @@ from pydantic import BaseModel, Json, model_validator, ValidationError
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig, get_all_dashboards
 from cmk.gui.dashboard.page_show_shared_dashboard import SharedDashboardPageComponents
-from cmk.gui.dashboard.store import get_permitted_dashboards, save_all_dashboards
+from cmk.gui.dashboard.store import get_permitted_dashboards_by_owners, save_all_dashboards
 from cmk.gui.dashboard.token_util import (
     DashboardTokenAuthenticatedPage,
     get_dashboard_widget_by_id,
@@ -33,7 +33,13 @@ from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.token_auth import AuthToken, DashboardToken
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec, SingleInfos, ViewSpec, VisualContext
+from cmk.gui.type_defs import (
+    AnnotatedUserId,
+    DashboardEmbeddedViewSpec,
+    SingleInfos,
+    ViewSpec,
+    VisualContext,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
@@ -243,6 +249,7 @@ class _ViewWidgetIFrameAuthTokenRequestParameters(BaseModel):
 
 class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParameters):
     dashboard_name: str
+    dashboard_owner: Literal[""] | AnnotatedUserId
     view_name: str | None
     embedded_id: str | None
     raw_context: Annotated[VisualContext, Json]
@@ -255,7 +262,8 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
         try:
             return cls.model_validate(
                 dict(
-                    dashboard_name=request.get_str_input("dashboard"),
+                    dashboard_name=request.get_str_input("dashboard_name"),
+                    dashboard_owner=request.get_str_input("dashboard_owner"),
                     widget_id=request.get_str_input("widget_id"),
                     view_name=request.get_str_input("view_name"),
                     embedded_id=request.get_str_input("embedded_id"),
@@ -283,7 +291,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
         return self.raw_debug == "1"
 
     def unique_widget_name(self) -> str:
-        return f"{self.dashboard_name}_{self.widget_id}"
+        return f"{self.dashboard_owner}_{self.dashboard_name}_{self.widget_id}"
 
     def load_view_spec(self) -> ViewSpec:
         """Load the requested view spec, either embedded in the dashboard or a normal view."""
@@ -306,16 +314,19 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
         if not self.dashboard_name:
             raise MKUserError("dashboard", _("No dashboard name provided."))
 
-        dashboards = get_permitted_dashboards()
-        if self.dashboard_name not in dashboards:
+        dashboards = get_permitted_dashboards_by_owners()
+        owner = UserId.builtin() if self.dashboard_owner == "" else self.dashboard_owner
+        try:
+            dashboard = dashboards[self.dashboard_name][owner]
+        except KeyError:
             raise MKUserError(
                 "dashboard",
                 _("The dashboard '%s' does not exist or you do not have permission to view it.")
                 % self.dashboard_name,
-            )
+            ) from None
 
         return EmbeddedViewSpecManager.get_embedded_view_spec(
-            dashboards[self.dashboard_name],
+            dashboard,
             embedded_id,
             f"{self.dashboard_name}_{embedded_id}",
         )

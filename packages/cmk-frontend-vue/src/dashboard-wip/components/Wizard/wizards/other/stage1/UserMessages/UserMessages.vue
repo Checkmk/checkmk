@@ -43,7 +43,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
   <div>
     <DashboardPreviewContent
       widget_id="user-messages-preview"
-      :dashboard-name="dashboardName"
+      :dashboard-key="dashboardKey"
       :general_settings="handler.widgetProps.value.general_settings!"
       :content="handler.widgetProps.value.content!"
       :effective_filter_context="handler.widgetProps.value.effective_filter_context!"

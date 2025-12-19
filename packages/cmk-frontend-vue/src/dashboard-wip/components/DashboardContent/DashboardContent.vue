@@ -69,6 +69,6 @@ function componentKey(content: WidgetContent): string {
     :general_settings="general_settings"
     :content="content"
     :effective_filter_context="effective_filter_context"
-    :dashboard-name="dashboardName"
+    :dashboard-key="dashboardKey"
   />
 </template>

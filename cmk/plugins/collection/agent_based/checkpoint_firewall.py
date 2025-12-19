@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.checkpoint.lib import DETECT
 
 
-def inventory_checkpoint_firewall(section: StringTable) -> DiscoveryResult:
+def discover_checkpoint_firewall(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -51,6 +51,6 @@ snmp_section_checkpoint_firewall = SimpleSNMPSection(
 check_plugin_checkpoint_firewall = CheckPlugin(
     name="checkpoint_firewall",
     service_name="Firewall Module",
-    discovery_function=inventory_checkpoint_firewall,
+    discovery_function=discover_checkpoint_firewall,
     check_function=check_checkpoint_firewall,
 )

@@ -1687,11 +1687,12 @@ class Site:
                 continue
             if re.search(
                 (
-                    "[Errno 2] No such file or directory: "
+                    r"\[Errno 2\] No such file or directory: "
                     f"'{self.root}/var/check_mk/web/download_user/automation.secret'"
                 ),
                 crash_detail,
             ):
+                logger.warning("Ignored crash report due to CMK-28625 and CMK-28588")
                 continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.

@@ -213,13 +213,25 @@ def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
             f"Failed to find folder 'scripts' in '{src_root}'. Is this really the check_mk repo?"
         )
 
-    def _format_output(output: bytes) -> Sequence[str]:
+    def _format_output(output: bytes) -> list[str]:
         return output.strip().decode("utf-8").split("\n")
 
     run_find_files = "./scripts/find-python-files"
     files = _format_output(
         subprocess.run(run_find_files, cwd=src_root, check=False, capture_output=True).stdout
-    )
+    )  # returns absolute paths
+
+    # Search for packages separately, as because find-python-files script ignores it.
+    packages_search = subprocess.run(
+        ["find", "-L", "packages", "-type", "f", "-name", "*.py"],
+        cwd=src_root,
+        check=False,
+        capture_output=True,
+    )  # returns relative paths
+    if packages_search.returncode == 0:
+        # convert to absolute paths
+        files.extend([str(src_root / f) for f in _format_output(packages_search.stdout)])
+
     logging.info(
         f"Checking {len(files)} python files in '{src_root}'"
         + (f" excluding '{', '.join(map(str, excluded))}'." if excluded else "")

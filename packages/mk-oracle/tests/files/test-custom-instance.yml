@@ -4,7 +4,7 @@
 oracle:
   main: # mandatory, to be used if no specific config
     connection: # mandatory
-      hostname: absent.oracle-win.dev.checkmk.net # non exists/disabled
+      hostname: absent.oracle-rocktest.dev.checkmk.net # non exists/disabled
     authentication: # mandatory
       username: $CI_ORA2_DB_TEST
       password: $CI_ORA2_DB_TEST
@@ -14,12 +14,12 @@ oracle:
       - instance: # special section
     discovery: # optional, defines instances to be monitored
       detect: no # optional
-      include: ["FREE"] # optional
+      include: ["FREE.cmkoratest"] # optional
       exclude: [] # optional
     instances: # optional
-      - service_name: FREE
+      - service_name: FREE.cmkoratest
         connection: # mandatory
-          hostname: oracle-win.dev.checkmk.net
+          hostname: ora-rocktest.dev.checkmk.net
         authentication: # mandatory
           username: $CI_ORA2_DB_TEST
           password: $CI_ORA2_DB_TEST

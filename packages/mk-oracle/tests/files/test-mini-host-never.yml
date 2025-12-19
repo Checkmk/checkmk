@@ -7,7 +7,7 @@ oracle:
     options: # optional
       use_host_client: never # optional, default: no, values: auto, never, always, "path-to-oci-lib"
     connection: # mandatory
-      hostname: oracle-win.dev.checkmk.net
+      hostname: ora-rocktest.dev.checkmk.net
     authentication: # mandatory
       username: $CI_ORA2_DB_TEST
       password: $CI_ORA2_DB_TEST

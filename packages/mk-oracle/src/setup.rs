@@ -17,10 +17,10 @@
 use crate::args::Args;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
-use crate::constants;
 use crate::platform::get_local_instances;
 use crate::types::{SectionFilter, UseHostClient};
 use crate::version::VERSION;
+use crate::{constants, setup};
 use anyhow::Result;
 use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
@@ -630,6 +630,45 @@ fn make_cached_subdir(dir: &Path, cache_age: u32) -> Option<PathBuf> {
             log::error!("Failed to create parent directory of plugin dir: {e}");
             None
         })
+}
+
+pub fn create_plugins(p: &Path, cache_age: u32) -> i32 {
+    log::info!("PLUGINS GENERATED for path {p:?}");
+    if !p.is_dir() {
+        return 1;
+    }
+    log::info!("PLUGINS DIR={}", p.display());
+
+    if cfg!(windows) {
+        setup::create_plugin("oracle_unified_sync.ps1", p, None);
+        setup::create_plugin("oracle_unified_async.ps1", p, Some(cache_age));
+    } else {
+        setup::create_plugin("oracle_unified_sync", p, None);
+        setup::create_plugin("oracle_unified_async", p, Some(cache_age));
+    }
+
+    0
+}
+
+pub fn display_and_log(e: impl std::fmt::Display) {
+    log::error!("{e}",);
+    eprintln!("Stop on error: `{e}`",);
+}
+
+pub fn spawn_new_process(args: Vec<String>, old_path: std::path::PathBuf) -> i32 {
+    let mut new_args = args.clone();
+    new_args.push("--runtime-ready".to_string());
+    let exe = std::env::current_exe().expect("Failed to get current exe");
+    let status = std::process::Command::new(exe)
+        .args(&new_args[1..]) // skip the old program name
+        .status()
+        .unwrap_or_else(|e| {
+            display_and_log(e);
+            setup::reset_env(&old_path, None);
+            std::process::exit(1);
+        });
+    setup::reset_env(&old_path, None);
+    status.code().unwrap_or_default()
 }
 
 #[cfg(test)]

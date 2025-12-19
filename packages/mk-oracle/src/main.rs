@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-use mk_oracle::setup;
+use mk_oracle::{config, setup};
 
 #[tokio::main]
 async fn main() {
@@ -21,87 +21,50 @@ async fn main() {
     let result = setup::init(std::env::args_os());
     let code = if let Ok((config, environment)) = result {
         if let Some(p) = environment.generate_plugins() {
-            log::info!("PLUGINS GENERATED for path {p:?}");
             let cache_age = config.ora_sql().unwrap().cache_age();
-            if cfg!(windows) {
-                setup::create_plugin("oracle_unified_sync.ps1", p, None);
-                setup::create_plugin("oracle_unified_async.ps1", p, Some(cache_age));
-            } else {
-                setup::create_plugin("oracle_unified_sync", p, None);
-                setup::create_plugin("oracle_unified_async", p, Some(cache_age));
-            }
-
-            if p.is_dir() {
-                log::info!("PLUGINS DIR={}", p.display());
-            } else {
-                log::info!("{} is not a directory", p.display());
-                std::process::exit(1);
-            }
-            std::process::exit(0);
+            std::process::exit(setup::create_plugins(p, cache_age));
         };
 
-        if args.contains(&"--runtime-ready".to_string()) {
-            log::info!("SKIP RUNTIME ADDING");
-            log::info!("Current PATH={}", std::env::var("PATH").unwrap_or_default());
-            log::info!(
-                "Current LD_LIBRARY_PATH={}",
-                std::env::var("LD_LIBRARY_PATH").unwrap_or_default()
-            );
-            match config.exec(&environment).await {
-                Ok(output) => {
-                    print!("{output}");
-                    log::info!("Success");
-                    0
-                }
-                Err(e) => {
-                    display_and_log(e);
-                    1
-                }
-            }
-        } else if args.contains(&"--detect-only".to_string())
-            || args.contains(&"--find-runtime".to_string())
-        {
-            match config.exec(&environment).await {
-                Ok(output) => {
-                    print!("{output}");
-                    0
-                }
-                Err(e) => {
-                    display_and_log(e);
-                    1
-                }
-            }
+        if need_execution(args.as_slice()) {
+            execute(config, environment).await
         } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None, None) {
             log::info!("Spawn new process");
-            spawn_new_process(args, old_path)
+            setup::spawn_new_process(args, old_path)
         } else {
             log::error!("No runtime");
             1
         }
     } else {
-        display_and_log(result.err().unwrap());
+        setup::display_and_log(result.err().unwrap());
         1
     };
     std::process::exit(code);
 }
 
-fn display_and_log(e: impl std::fmt::Display) {
-    log::error!("{e}",);
-    eprintln!("Stop on error: `{e}`",);
+fn need_execution(args: &[String]) -> bool {
+    ["--detect-only", "--find-runtime", "--runtime-ready"]
+        .into_iter()
+        .map(String::from)
+        .any(|c| args.contains(&c))
 }
 
-fn spawn_new_process(args: Vec<String>, old_path: std::path::PathBuf) -> i32 {
-    let mut new_args = args.clone();
-    new_args.push("--runtime-ready".to_string());
-    let exe = std::env::current_exe().expect("Failed to get current exe");
-    let status = std::process::Command::new(exe)
-        .args(&new_args[1..]) // skip the old program name
-        .status()
-        .unwrap_or_else(|e| {
-            display_and_log(e);
-            setup::reset_env(&old_path, None);
-            std::process::exit(1);
-        });
-    setup::reset_env(&old_path, None);
-    status.code().unwrap_or_default()
+async fn execute(config: config::OracleConfig, environment: setup::Env) -> i32 {
+    let env_var = if cfg!(windows) {
+        "PATH"
+    } else {
+        "LD_LIBRARY_PATH"
+    };
+    let env_var_value = std::env::var(env_var).unwrap_or_default();
+    log::info!("Current {env_var}={env_var_value}");
+    match config.exec(&environment).await {
+        Ok(output) => {
+            print!("{output}");
+            log::info!("Success");
+            0
+        }
+        Err(e) => {
+            setup::display_and_log(e);
+            1
+        }
+    }
 }

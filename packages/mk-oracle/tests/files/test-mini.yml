@@ -2,7 +2,7 @@
 oracle:
   main: # mandatory, to be used if no specific config
     connection: # mandatory
-      hostname: oracle-win.dev.checkmk.net
+      hostname: ora-rocktest.dev.checkmk.net
     authentication: # mandatory
       username: $CI_ORA2_DB_TEST
       password: $CI_ORA2_DB_TEST

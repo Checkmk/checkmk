@@ -4,8 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, getCurrentInstance } from 'vue'
-
 import AvailableWidget from './AvailableWidget.vue'
 import type { WidgetItemList } from './types'
 
@@ -14,20 +12,12 @@ interface AvailableWidgetsProps {
   enabledWidgets: string[]
 }
 
-interface AvailableWidgetEmits {
+interface AvailableWidgetsEmits {
   (e: 'selectWidget', itemId: string): void
 }
 
 defineProps<AvailableWidgetsProps>()
-const emit = defineEmits<AvailableWidgetEmits>()
-
-const isClickable = computed(() => !!getCurrentInstance()?.vnode.props?.onSelectWidget)
-
-const handleClick = (itemId: string) => {
-  if (isClickable.value) {
-    emit('selectWidget', itemId)
-  }
-}
+const emit = defineEmits<AvailableWidgetsEmits>()
 </script>
 
 <template>
@@ -36,13 +26,18 @@ const handleClick = (itemId: string) => {
       v-for="(item, index) in availableItems"
       :key="index"
       class="db-available-widgets__item"
-      @click="() => handleClick(item.id)"
+      @click="
+        () => {
+          if (enabledWidgets.includes(item.id)) {
+            emit('selectWidget', item.id)
+          }
+        }
+      "
     >
       <AvailableWidget
         :label="item.label"
         :icon="item.icon"
         :disabled="!enabledWidgets.includes(item.id)"
-        :is-button="isClickable"
       />
     </div>
   </div>

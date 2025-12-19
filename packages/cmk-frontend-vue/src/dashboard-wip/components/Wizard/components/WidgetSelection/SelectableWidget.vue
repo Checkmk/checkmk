@@ -80,7 +80,9 @@ const modifierClass = computed(() => {
   overflow-wrap: break-word;
 }
 
-.db-selectable-widget__item-available {
+.db-selectable-widget__item-available,
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.db-selectable-widget__item-available:deep(label) {
   cursor: pointer;
 }
 

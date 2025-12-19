@@ -14,17 +14,13 @@ interface AvailableWidgetProps {
   label: TranslatedString
   icon: SimpleIcons
   disabled?: boolean
-  isButton?: boolean
 }
 
 defineProps<AvailableWidgetProps>()
 </script>
 
 <template>
-  <div
-    class="db-available-widget__item"
-    :class="isButton && !disabled ? 'db-available-widget__item-button' : ''"
-  >
+  <div class="db-available-widget__item" :class="{ 'db-available-widget__item-button': !disabled }">
     <div class="db-available-widget__item-icon">
       <CmkIcon :name="icon" size="xxlarge" :colored="!disabled" />
     </div>
@@ -55,6 +51,11 @@ defineProps<AvailableWidgetProps>()
 
   &:hover {
     background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
+  }
+
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(label) {
+    cursor: pointer;
   }
 }
 

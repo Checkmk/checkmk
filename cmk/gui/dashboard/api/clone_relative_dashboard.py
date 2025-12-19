@@ -26,8 +26,10 @@ from ._utils import (
     get_dashboard_for_read,
     PERMISSIONS_DASHBOARD,
     save_dashboard_to_file,
+    serialize_relative_grid_dashboard,
 )
-from .model.dashboard import DashboardGeneralSettings, DashboardIcon
+from .model.dashboard import DashboardGeneralSettings, DashboardIcon, RelativeGridDashboardResponse
+from .model.response_model import RelativeGridDashboardDomainObject
 
 
 @api_model
@@ -55,7 +57,7 @@ class CloneDashboardV1:
 def clone_as_relative_grid_dashboard_v1(
     api_context: ApiContext,
     body: CloneDashboardV1,
-) -> None:
+) -> RelativeGridDashboardDomainObject:
     """Clone as relative dashboard"""
     user.need_permission("general.edit_dashboards")
     dashboard_to_clone = get_dashboard_for_read(
@@ -112,13 +114,16 @@ def clone_as_relative_grid_dashboard_v1(
 
     save_dashboard_to_file(api_context.config.sites, cloned_dashboard, owner)
 
+    return serialize_relative_grid_dashboard(
+        body.dashboard_id, RelativeGridDashboardResponse.from_internal(cloned_dashboard)
+    )
+
 
 ENDPOINT_CLONE_AS_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(
     metadata=EndpointMetadata(
         path=domain_type_action_href("dashboard_relative_grid", "clone"),
         link_relation="cmk/clone_dashboard_relative_grid",
         method="post",
-        content_type=None,
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),

@@ -39,14 +39,14 @@ interface Emits {
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
   (e: 'reset-object-type-filters', objectType: ObjectType): void
   (e: 'remove-filter', filterId: string): void
-  (e: 'goNext'): void
+  (e: 'goNext', preselectedWidgetType: string | null): void
 }
 
 const props = defineProps<Stage1Props>()
 const emit = defineEmits<Emits>()
 
-const gotoNextStage = () => {
-  emit('goNext')
+const gotoNextStage = (preselectedWidgetType: string | null = null) => {
+  emit('goNext', preselectedWidgetType)
 }
 
 const hostObjectType = 'host'
@@ -89,6 +89,10 @@ const configuredFiltersByObjectType = computed(() =>
   </SectionBlock>
 
   <SectionBlock :title="_t('Available visualization type')">
-    <AvailableWidgets :available-items="availableWidgets" :enabled-widgets="enabledWidgets" />
+    <AvailableWidgets
+      :available-items="availableWidgets"
+      :enabled-widgets="enabledWidgets"
+      @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"
+    />
   </SectionBlock>
 </template>

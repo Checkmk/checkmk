@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, h, ref } from 'vue'
+import { type Ref, computed, h, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -127,7 +127,9 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
   return parseContextConfiguredFilters(props.contextFilters)
 })
 
-const recapAndNext = () => {
+const preselectedWidgetType: Ref<string | null> = ref(null)
+const recapAndNext = (selectedWidgetType: string | null) => {
+  preselectedWidgetType.value = selectedWidgetType
   widgetFilterManager.closeSelectionMenu()
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     metricType: null,
@@ -213,6 +215,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :widget-filters="extractConfiguredFilters(widgetFilterManager)"
           :edit-widget-spec="editWidgetSpec ?? null"
           :available-features="availableFeatures"
+          :preselected-widget-type="preselectedWidgetType"
           @go-prev="wizardHandler.prev"
           @add-widget="
             (content, generalSettings, filterContext) =>

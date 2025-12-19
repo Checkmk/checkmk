@@ -58,6 +58,7 @@ interface Stage2Props {
   widgetFilters: ConfiguredFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
+  preselectedWidgetType?: string | null
 }
 
 const props = defineProps<Stage2Props>()
@@ -94,7 +95,9 @@ const gotoPrevStage = () => {
 const enabledWidgets = getAvailableGraphs()
 const availableWidgets = getAvailableWidgets()
 
-const selectedWidget = ref<Graph>(getGraphFromWidgetType(props.editWidgetSpec?.content.type ?? ''))
+const selectedWidget = ref<Graph>(
+  getGraphFromWidgetType(props.preselectedWidgetType || props.editWidgetSpec?.content.type || '')
+)
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   [Graph.ALERT_OVERVIEW]: await useAlertOverview(

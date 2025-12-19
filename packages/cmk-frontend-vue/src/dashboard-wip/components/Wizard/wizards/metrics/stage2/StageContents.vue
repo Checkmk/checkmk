@@ -66,6 +66,7 @@ interface Stage2Props {
   dashboardConstants: DashboardConstants
 
   editWidgetSpec: WidgetSpec | null
+  preselectedWidgetType?: string | null
 }
 
 const props = defineProps<Stage2Props>()
@@ -122,7 +123,7 @@ const availableWidgetsBottom: WidgetItemList = [
 ]
 
 const selectedWidget = ref<Graph | null>(
-  getGraph(enabledWidgets, props.editWidgetSpec?.content?.type)
+  getGraph(enabledWidgets, props.preselectedWidgetType || props.editWidgetSpec?.content?.type)
 )
 
 let handler: Partial<Record<Graph, UseWidgetHandler>> = {}
@@ -171,12 +172,15 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
       props.editWidgetSpec
     )
   }
+
+  selectedWidget.value =
+    selectedWidget.value === Graph.ANY_GRAPH ? Graph.SINGLE_GRAPH : selectedWidget.value
 } else {
-  const graphHandler =
+  const isPerformanceGraph: boolean =
     props.hostFilterType === ElementSelection.SPECIFIC &&
     props.serviceFilterType === ElementSelection.SPECIFIC
-      ? usePerformanceGraph
-      : useCombinedGraph
+  const graphHandler = isPerformanceGraph ? usePerformanceGraph : useCombinedGraph
+  selectedWidget.value = isPerformanceGraph ? Graph.PERFORMANCE_GRAPH : Graph.COMBINED_GRAPH
 
   handler = {
     [Graph.ANY_GRAPH]: await graphHandler(

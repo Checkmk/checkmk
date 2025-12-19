@@ -50,6 +50,7 @@ interface Stage2Props {
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
   availableFeatures: DashboardFeatures
+  preselectedWidgetType?: string | null
 }
 
 const props = defineProps<Stage2Props>()
@@ -92,7 +93,8 @@ const availableWidgets: WidgetItemList = [
 ]
 
 function getSelectedWidget(): Graph {
-  switch (props.editWidgetSpec?.content?.type) {
+  const widgetType = props.preselectedWidgetType || props.editWidgetSpec?.content?.type
+  switch (widgetType) {
     case 'site_overview':
       return Graph.SITE_OVERVIEW
     case 'host_stats':

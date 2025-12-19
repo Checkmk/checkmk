@@ -40,13 +40,13 @@ interface Emits {
   (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
   (e: 'reset-object-type-filters', objectType: ObjectType): void
   (e: 'remove-filter', filterId: string): void
-  (e: 'goNext'): void
+  (e: 'goNext', preselectedWidgetType: string | null): void
 }
 
 const props = defineProps<Stage1Props>()
 const emit = defineEmits<Emits>()
 
-const gotoNextStage = () => {
+const gotoNextStage = (preselectedWidgetType: string | null = null) => {
   /*
   TODOs:
   - Filter validation
@@ -55,7 +55,7 @@ const gotoNextStage = () => {
 
   const isValid = metricHandler.value.validate()
   if (isValid) {
-    emit('goNext')
+    emit('goNext', preselectedWidgetType)
   }
 }
 
@@ -158,6 +158,10 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
   </SectionBlock>
 
   <SectionBlock :title="_t('Available visualization type')">
-    <AvailableWidgets :available-items="availableWidgets" :enabled-widgets="enabledWidgets" />
+    <AvailableWidgets
+      :available-items="availableWidgets"
+      :enabled-widgets="enabledWidgets"
+      @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"
+    />
   </SectionBlock>
 </template>

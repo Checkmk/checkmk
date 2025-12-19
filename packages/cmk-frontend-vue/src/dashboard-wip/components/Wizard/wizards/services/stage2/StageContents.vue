@@ -47,6 +47,7 @@ interface Stage2Props {
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
   availableFeatures: DashboardFeatures
+  preselectedWidgetType?: string | null
 }
 
 const props = defineProps<Stage2Props>()
@@ -92,8 +93,9 @@ const availableWidgets: WidgetItemList = [
 ]
 
 function getDefaultSelectedWidget(): Graph | null {
-  if (props.editWidgetSpec) {
-    switch (props.editWidgetSpec.content.type) {
+  const widgetType = props.preselectedWidgetType || props.editWidgetSpec?.content?.type
+  if (widgetType) {
+    switch (widgetType) {
       case 'service_state':
         if (enabledWidgets.includes(Graph.SERVICE_STATE)) {
           return Graph.SERVICE_STATE

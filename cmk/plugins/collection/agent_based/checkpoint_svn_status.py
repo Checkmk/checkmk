@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.checkpoint.lib import DETECT
 
 
-def inventory_checkpoint_svn_status(section: StringTable) -> DiscoveryResult:
+def discover_checkpoint_svn_status(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -49,6 +49,6 @@ snmp_section_checkpoint_svn_status = SimpleSNMPSection(
 check_plugin_checkpoint_svn_status = CheckPlugin(
     name="checkpoint_svn_status",
     service_name="SVN Status",
-    discovery_function=inventory_checkpoint_svn_status,
+    discovery_function=discover_checkpoint_svn_status,
     check_function=check_checkpoint_svn_status,
 )

@@ -41,7 +41,7 @@ _SENSOR_STATES: Final = {
 }
 
 
-def inventory_esx_vsphere_sensors(section: _Section) -> DiscoveryResult:
+def discover_esx_vsphere_sensors(section: _Section) -> DiscoveryResult:
     yield Service()
 
 
@@ -95,7 +95,7 @@ agent_section_esx_vsphere_sensors = AgentSection(
 check_plugin_esx_vsphere_sensors = CheckPlugin(
     name="esx_vsphere_sensors",
     service_name="Hardware Sensors",
-    discovery_function=inventory_esx_vsphere_sensors,
+    discovery_function=discover_esx_vsphere_sensors,
     check_function=check_esx_vsphere_sensors,
     check_ruleset_name="hostsystem_sensors",
     check_default_parameters={"rules": []},

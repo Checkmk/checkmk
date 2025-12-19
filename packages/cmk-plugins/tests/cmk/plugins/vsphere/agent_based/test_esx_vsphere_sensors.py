@@ -12,7 +12,7 @@ import pytest
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.vsphere.agent_based.esx_vsphere_sensors import (
     check_esx_vsphere_sensors,
-    inventory_esx_vsphere_sensors,
+    discover_esx_vsphere_sensors,
     parse_esx_vsphere_sensors,
 )
 
@@ -61,12 +61,12 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_sensors import (
         ),
     ],
 )
-def test_inventory_esx_vsphere_sensors(
+def test_discover_esx_vsphere_sensors(
     string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for esx_vsphere_sensors check."""
     parsed = parse_esx_vsphere_sensors(string_table)
-    result = list(inventory_esx_vsphere_sensors(parsed))
+    result = list(discover_esx_vsphere_sensors(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

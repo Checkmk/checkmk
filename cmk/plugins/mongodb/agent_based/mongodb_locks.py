@@ -28,7 +28,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_mongodb_locks(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_locks(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -59,7 +59,7 @@ agent_section_mongodb_locks = AgentSection(
 check_plugin_mongodb_locks = CheckPlugin(
     name="mongodb_locks",
     service_name="MongoDB Locks",
-    discovery_function=inventory_mongodb_locks,
+    discovery_function=discover_mongodb_locks,
     check_function=check_mongodb_locks,
     check_ruleset_name="mongodb_locks",
     check_default_parameters={},

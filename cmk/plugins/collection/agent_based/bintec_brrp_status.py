@@ -28,7 +28,7 @@ def bintec_brrp_status_compose_item(brrp_id):
     return re.sub(r"\..*", "", brrp_id)
 
 
-def inventory_bintec_brrp_status(section: StringTable) -> DiscoveryResult:
+def discover_bintec_brrp_status(section: StringTable) -> DiscoveryResult:
     inventory = []
     for brrp_id, _brrp_status in section:
         inventory.append((bintec_brrp_status_compose_item(brrp_id), None))
@@ -75,6 +75,6 @@ snmp_section_bintec_brrp_status = SimpleSNMPSection(
 check_plugin_bintec_brrp_status = CheckPlugin(
     name="bintec_brrp_status",
     service_name="BRRP Status %s",
-    discovery_function=inventory_bintec_brrp_status,
+    discovery_function=discover_bintec_brrp_status,
     check_function=check_bintec_brrp_status,
 )

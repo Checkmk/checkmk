@@ -37,7 +37,7 @@ snmp_section_arbor_peakflow_tms_updates = SimpleSNMPSection(
 )
 
 
-def inventory_peakflow_tms_updates(section: Mapping[str, str]) -> DiscoveryResult:
+def discover_peakflow_tms_updates(section: Mapping[str, str]) -> DiscoveryResult:
     yield from (Service(item=name) for name in section)
 
 
@@ -50,6 +50,6 @@ def check_peakflow_tms_updates(item: str, section: Mapping[str, str]) -> CheckRe
 check_plugin_arbor_peakflow_tms_updates = CheckPlugin(
     name="arbor_peakflow_tms_updates",
     service_name="Config Update %s",
-    discovery_function=inventory_peakflow_tms_updates,
+    discovery_function=discover_peakflow_tms_updates,
     check_function=check_peakflow_tms_updates,
 )

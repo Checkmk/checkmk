@@ -22,7 +22,9 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def edition = JOB_BASE_NAME.split("-")[-1];
-    def edition_base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
+    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}";
+    def builder_base_folder = "${base_folder}/builder";
+    def edition_base_folder = "${base_folder}/nightly-${edition}";
 
     def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily";
     def safe_branch_name = versioning.safe_branch_name();
@@ -182,7 +184,7 @@ void main() {
                     raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        relative_job_name: "${edition_base_folder}/test-component-mk-oracle",
+                        relative_job_name: "${builder_base_folder}/test-component-mk-oracle",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
                         download: false,

@@ -116,7 +116,11 @@ function calcCurrentlySelectedGroup(d: number, set: boolean = false) {
 function getGroupItemLength(gdx: number): number {
   if (searchUtils.result.grouping.value) {
     const curGroup = groupedResults.value[gdx]
-    return curGroup?.ref ? (curGroup?.showAll ? MAX_ITEMS_SHOW_ALL : curGroup.items.length) : 0
+    return curGroup?.ref
+      ? curGroup?.showAll || curGroup.items.length <= MAX_ITEMS_SHOW_ALL
+        ? curGroup.items.length
+        : MAX_ITEMS_SHOW_ALL
+      : 0
   } else {
     return results.value.length || 0
   }
@@ -149,13 +153,14 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
     } else {
       searchUtils.input?.setFocus()
     }
-
     return
   }
 
   // Handle out of bounds - too low
   if (currentlySelected.value < -1) {
     if (searchUtils.result.grouping.value) {
+      currentlySelectedGroup.value -= 1
+
       if (currentlySelectedGroup.value === -1) {
         currentlySelected.value = -1
         searchUtils.input?.setFocus()

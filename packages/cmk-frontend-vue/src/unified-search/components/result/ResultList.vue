@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onMounted, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -22,15 +22,13 @@ const resultList = useTemplateRef('result-list')
 
 const showAllBtnText = computed(() => {
   if (showAll.value) {
-    return _t('Show all')
+    return _t('Show less')
   }
 
-  return _t('Show less')
+  return _t('Show all')
 })
 
-function toggleList() {
-  showAll.value = !showAll.value
-
+function applyShowAll() {
   if (resultList.value) {
     const items: HTMLLinkElement[] = [].slice
       .call(resultList.value.children)
@@ -45,9 +43,16 @@ function toggleList() {
   }
 }
 
+function toggleList() {
+  showAll.value = !showAll.value
+  void nextTick(() => {
+    applyShowAll()
+  })
+}
+
 onMounted(() => {
   if (props.useShowAll) {
-    toggleList()
+    applyShowAll()
   }
 })
 </script>
@@ -64,7 +69,7 @@ onMounted(() => {
   >
     <span
       class="unified-search-result-list__chevron"
-      :class="`unified-search-result-list__chevron--${showAll ? 'bottom' : 'top'}`"
+      :class="`unified-search-result-list__chevron--${showAll ? 'top' : 'bottom'}`"
     />
     {{ showAllBtnText }}
   </CmkButton>

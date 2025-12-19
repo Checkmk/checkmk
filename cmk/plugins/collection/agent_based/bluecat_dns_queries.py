@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.bluecat.lib import DETECT_BLUECAT
 
 
-def inventory_bluecat_dns_queries(section: StringTable) -> DiscoveryResult:
+def discover_bluecat_dns_queries(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -52,6 +52,6 @@ snmp_section_bluecat_dns_queries = SimpleSNMPSection(
 check_plugin_bluecat_dns_queries = CheckPlugin(
     name="bluecat_dns_queries",
     service_name="DNS Queries",
-    discovery_function=inventory_bluecat_dns_queries,
+    discovery_function=discover_bluecat_dns_queries,
     check_function=check_bluecat_dns_queries,
 )

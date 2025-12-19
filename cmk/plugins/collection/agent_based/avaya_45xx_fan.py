@@ -37,7 +37,7 @@ snmp_section_avaya_45xx_fan = SimpleSNMPSection(
 )
 
 
-def inventory_avaya_45xx_fan(section: Section) -> DiscoveryResult:
+def discover_avaya_45xx_fan(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
@@ -68,6 +68,6 @@ def check_avaya_45xx_fan(item: str, section: Section) -> CheckResult:
 check_plugin_avaya_45xx_fan = CheckPlugin(
     name="avaya_45xx_fan",
     service_name="Fan Chassis %s",
-    discovery_function=inventory_avaya_45xx_fan,
+    discovery_function=discover_avaya_45xx_fan,
     check_function=check_avaya_45xx_fan,
 )

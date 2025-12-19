@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_cpsecure_sessions(section: StringTable) -> DiscoveryResult:
+def discover_cpsecure_sessions(section: StringTable) -> DiscoveryResult:
     for service, enabled, _sessions in section:
         if enabled == "1":
             yield Service(item=service)
@@ -66,6 +66,6 @@ snmp_section_cpsecure_sessions = SimpleSNMPSection(
 check_plugin_cpsecure_sessions = CheckPlugin(
     name="cpsecure_sessions",
     service_name="Number of %s sessions",
-    discovery_function=inventory_cpsecure_sessions,
+    discovery_function=discover_cpsecure_sessions,
     check_function=check_cpsecure_sessions,
 )

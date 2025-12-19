@@ -13,12 +13,12 @@ from pydantic import AwareDatetime, FutureDatetime
 
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
+from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import (
     HostConverter,
     TypedPlainValidator,
 )
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken
-from cmk.gui.watolib.automations import AnnotatedHostName
 from cmk.gui.watolib.hosts_and_folders import Host
 
 

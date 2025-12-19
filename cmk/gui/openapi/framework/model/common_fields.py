@@ -21,6 +21,7 @@ from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema, CoreSchema
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.openapi.framework import QueryParam
@@ -29,6 +30,12 @@ from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.valuespec import TimerangeValue
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+
+type AnnotatedHostName = Annotated[
+    HostName,
+    TypedPlainValidator(str, HostName.parse),
+    PlainSerializer(str, return_type=str),
+]
 
 
 def _validate_regex(value: str) -> str:

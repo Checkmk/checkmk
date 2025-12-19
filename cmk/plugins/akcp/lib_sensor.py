@@ -101,7 +101,7 @@ AKCP_TEMP_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def inventory_akcp_sensor_temp(section: Section) -> DiscoveryResult:
+def discover_akcp_sensor_temp(section: Section) -> DiscoveryResult:
     for line in section:
         # sensorProbeTempOnline or sensorTemperatureGoOffline has to be at last index
         # "1" means online, "2" offline

@@ -9,7 +9,7 @@ from cmk.plugins.akcp.lib import DETECT_AKCP_EXP
 from cmk.plugins.akcp.lib_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
-    inventory_akcp_sensor_temp,
+    discover_akcp_sensor_temp,
     parse_akcp_sensor,
 )
 
@@ -32,7 +32,7 @@ check_plugin_akcp_exp_temp = CheckPlugin(
     name="akcp_exp_temp",
     service_name="Temperature %s",
     check_function=check_akcp_sensor_temp,
-    discovery_function=inventory_akcp_sensor_temp,
+    discovery_function=discover_akcp_sensor_temp,
     check_ruleset_name="temperature",
     check_default_parameters=AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

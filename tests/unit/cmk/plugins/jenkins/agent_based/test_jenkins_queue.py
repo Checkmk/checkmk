@@ -29,7 +29,7 @@ def _section() -> jq.JenkinsQueue:
 
 
 def test_discovery(section: jq.JenkinsQueue) -> None:
-    assert list(jq.inventory_jenkins_queue(section)) == [Service()]
+    assert list(jq.discover_jenkins_queue(section)) == [Service()]
 
 
 def test_check_jenkins_queue(section: jq.JenkinsQueue) -> None:

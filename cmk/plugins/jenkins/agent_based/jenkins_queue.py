@@ -74,7 +74,7 @@ def parse_jenkins_queue(string_table: StringTable) -> JenkinsQueue:
     return parsed
 
 
-def inventory_jenkins_queue(section: JenkinsQueue) -> DiscoveryResult:
+def discover_jenkins_queue(section: JenkinsQueue) -> DiscoveryResult:
     yield Service()
 
 
@@ -210,7 +210,7 @@ agent_section_jenkins_queue = AgentSection(
 check_plugin_jenkins_queue = CheckPlugin(
     name="jenkins_queue",
     service_name="Jenkins Queue",
-    discovery_function=inventory_jenkins_queue,
+    discovery_function=discover_jenkins_queue,
     check_function=check_jenkins_queue,
     check_ruleset_name="jenkins_queue",
     check_default_parameters={

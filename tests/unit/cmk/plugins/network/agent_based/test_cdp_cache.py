@@ -185,7 +185,7 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
             CDP,
             [
                 HostLabel("cmk/has_cdp_neighbors", "yes"),
-                HostLabel("cmk/cdp_neighbor", "SCHE-CH-BASEL-SW-1"),
+                HostLabel("cmk/cdp_neighbor/SCHE-CH-BASEL-SW-1", "yes"),
             ],
         ),
         (
@@ -210,8 +210,8 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
             ),
             [
                 HostLabel("cmk/has_cdp_neighbors", "yes"),
-                HostLabel("cmk/cdp_neighbor", "SCHE-CH-BASEL-SW-1"),
-                HostLabel("cmk/cdp_neighbor", "SCHE-CH-BASEL-SW-2"),
+                HostLabel("cmk/cdp_neighbor/SCHE-CH-BASEL-SW-1", "yes"),
+                HostLabel("cmk/cdp_neighbor/SCHE-CH-BASEL-SW-2", "yes"),
             ],
         ),
     ],

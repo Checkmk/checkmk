@@ -7644,9 +7644,6 @@ msgstr "認証タイプ"
 msgid "Authentication with TLS"
 msgstr "TLS認証"
 
-msgid "Authenticator app"
-msgstr "認証App"
-
 msgid "Authenticator app has been added"
 msgstr "認証アプリが追加されました"
 
@@ -9232,9 +9229,6 @@ msgstr "バックアップとリストア"
 
 msgid "Backup age"
 msgstr "バックアップ経過数"
-
-msgid "Backup code"
-msgstr "バックアップコード"
 
 msgid "Backup codes"
 msgstr "バックアップコード"
@@ -22835,10 +22829,6 @@ msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にす
 msgid "Enable OpenTelemetry collector (experimental)"
 msgstr "OpenTelemetryコレクター（実験的）"
 
-#, fuzzy
-msgid "Enable Product Telemetry"
-msgstr "レポート要素"
-
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
 
@@ -22973,6 +22963,10 @@ msgstr "パッシブチェック結果の処理を有効にする"
 
 msgid "Enable processing of perfdata"
 msgstr "perfdataの処理を有効にする"
+
+#, fuzzy
+msgid "Enable product telemetry"
+msgstr "レポート要素"
 
 msgid "Enable profiling by request"
 msgstr "リクエストによるプロファイリングを有効にする"
@@ -23523,9 +23517,6 @@ msgid ""
 msgstr ""
 "共有のプレーン名のみを入力します。<tt>\\\\servername\\iso</tt>のような完全な"
 "UNC<b>ではなく</b> <tt>iso</tt>のみ"
-
-msgid "Enter the six-digit code from your authenticator app to log in."
-msgstr "認証アプリから6桁のコードを入力してログインします。"
 
 msgid ""
 "Enter the technical name of the field as defined in the ServiceNow database."
@@ -25732,9 +25723,6 @@ msgstr "ホスト/サービスラベルとしてインポートされたタグ�
 
 msgid "Filter aggregations"
 msgstr "集計をフィルタリングする"
-
-msgid "Filter context missing"
-msgstr "フィルタコンテキストがありません"
 
 msgid "Filter files by age"
 msgstr "経過時間でファイルをフィルタリングする"
@@ -43425,6 +43413,10 @@ msgstr "ネットワークロードバランサー"
 msgid "Network monitoring"
 msgstr "ネットワーク監視"
 
+#, fuzzy
+msgid "Network name"
+msgstr "ネットワーク in"
+
 msgid "Network out"
 msgstr "ネットワーク out"
 
@@ -50290,9 +50282,6 @@ msgstr ""
 msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr "最初にいくつかの<a href='%s'>連絡先グループ</a>を作成してください"
 
-msgid "Please follow your browser's instructions for authentication."
-msgstr "ブラウザの指示に従って認証を行ってください。"
-
 msgid "Please leave either both from and until empty or enter two times."
 msgstr "fromとuntilの両方を空けるか、2回入力してください。"
 
@@ -51374,14 +51363,6 @@ msgstr "問題は承認されているが、定期的に発生するように設
 msgid "Problem notifications"
 msgstr "問題の通知"
 
-#, python-format
-msgid ""
-"Problem while rendering dashboard element %d of type %s: %s. Have a look at "
-"<tt>var/log/web.log</tt> for further information."
-msgstr ""
-"ダッシュボードエレメント %d タイプ %s: %s のレンダリング中に問題が発生しまし"
-"た。詳細については、<tt>var/log/web.log</tt>をご覧ください。"
-
 msgid "Problems"
 msgstr "問題"
 
@@ -51495,7 +51476,7 @@ msgid "Product"
 msgstr "製品"
 
 #, fuzzy
-msgid "Product Telemetry"
+msgid "Product telemetry"
 msgstr "レポート要素"
 
 msgid "Profile"
@@ -56486,9 +56467,6 @@ msgstr "セキュリティメッセージ #%d"
 
 msgid "Security name"
 msgstr "セキュリティ名"
-
-msgid "Security token"
-msgstr "セキュリティトークン"
 
 msgid "Security tokens"
 msgstr "セキュリティトークン"
@@ -65662,9 +65640,6 @@ msgid ""
 msgstr ""
 "eWONルーターは、セカンダリ非snmpデバイスからのメトリックへのプロキシとして機"
 "能できます。ここで、プロキシされたデバイスの監視を設定できます。"
-
-msgid "The element can not be found on the dashboard."
-msgstr "ダッシュボードに要素が見つかりません。"
 
 msgid "The element does not exist."
 msgstr "エレメントが存在しません。"
@@ -77116,9 +77091,6 @@ msgstr "二要素認証が削除されました"
 msgid "Two-factor authentication not enabled"
 msgstr "2要素認証が無効"
 
-msgid "Two-factor code"
-msgstr "二要素認証コード"
-
 msgid "Tx"
 msgstr "Tx"
 
@@ -77576,15 +77548,6 @@ msgstr ""
 "一部の必要なコンテキスト情報 (%s)が欠落しているため、この可用性ビューをレンダ"
 "リングできません。ソースビューのフィルターを更新するか、不足しているHTTPリク"
 "エスト変数をリクエストに追加してください"
-
-#, python-format
-msgid ""
-"Unable to render this element, because we miss some required context "
-"information (%s). Please update the form on the right to make this element "
-"render."
-msgstr ""
-"必要なコンテキスト情報(%s)が不足しているため、この要素をレンダリングできませ"
-"ん。この要素をレンダリングするには、右側のフォームを更新してください。"
 
 #, python-format
 msgid ""
@@ -79198,12 +79161,6 @@ msgstr "ネットワークアドレスを使用"
 msgid "Use attribute value"
 msgstr "属性値を使用"
 
-msgid "Use authenticator app"
-msgstr "認証アプリを使用する"
-
-msgid "Use backup code"
-msgstr "バックアップコードを使用"
-
 msgid "Use bold font"
 msgstr "太字を使用する"
 
@@ -79352,9 +79309,6 @@ msgstr "通常状態を使用、承認は無視"
 
 msgid "Use normal state, ignore downtime"
 msgstr "通常の状態を使用し、ダウンタイムを無視します"
-
-msgid "Use one of your backup codes to sign in."
-msgstr "バックアップコードを使用してサインインしてください。"
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
@@ -85313,13 +85267,6 @@ msgstr ""
 "要があります。"
 
 msgid ""
-"You have multiple methods enabled. Please select the security method you "
-"want to use to log in."
-msgstr ""
-"複数の方法が有効になっています。ログインに使用するセキュリティ方法を選択して"
-"ください。"
-
-msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
 "missing. Please install Postfix, Qmail, Nullmailer or Sendmail."
 msgstr ""
@@ -88491,6 +88438,10 @@ msgid "Loading Top list content"
 msgstr "ラベル付けオプション"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "ダッシュボード要素"
+
+#, fuzzy
 msgid "Remove row"
 msgstr "削除：%r"
 
@@ -89006,10 +88957,6 @@ msgstr "継承された"
 #, fuzzy
 msgid "Overriden"
 msgstr "概要"
-
-#, fuzzy
-msgid "Dashboard filter"
-msgstr "ダッシュボード要素"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -89753,6 +89700,10 @@ msgid "Copy existing view: %{viewName}"
 msgstr "既存のビューをコピーする"
 
 #, fuzzy
+msgid "Add widget to dashboard"
+msgstr "ダッシュボードに追加"
+
+#, fuzzy
 msgid "Select operator"
 msgstr "オプション選択"
 
@@ -89958,6 +89909,9 @@ msgid "Activating changes... "
 msgstr "変更のアクティブ化: "
 
 msgid "You can safely navigate away - we'll keep working in the background"
+msgstr ""
+
+msgid "This may take up to 30 seconds when a site restart is required."
 msgstr ""
 
 #, fuzzy
@@ -90507,6 +90461,175 @@ msgstr "サービスディスカバリの実行と保存"
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
 
+#, fuzzy
+msgid "Backup code:"
+msgstr "バックアップコード"
+
+#, fuzzy
+msgid "Enter backup code"
+msgstr "バックアップコードを使用"
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
+"複数の方法が有効になっています。ログインに使用するセキュリティ方法を選択して"
+"ください。"
+
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr "認証アプリから6桁のコードを入力してログインします。"
+
+msgid "Use one of your backup codes to sign in."
+msgstr "バックアップコードを使用してサインインしてください。"
+
+msgid "Please follow your browser's instructions for authentication."
+msgstr "ブラウザの指示に従って認証を行ってください。"
+
+#, fuzzy
+msgid "Switch to authenticator app"
+msgstr "認証アプリ"
+
+msgid "Use authenticator app"
+msgstr "認証アプリを使用する"
+
+#, fuzzy
+msgid "Switch to backup codes"
+msgstr "テイクオーバーモードに切り替えてください!"
+
+msgid "Use backup code"
+msgstr "バックアップコードを使用"
+
+#, fuzzy
+msgid "Switch to security token"
+msgstr "セキュリティトークン"
+
+#, fuzzy
+msgid "Use security token"
+msgstr "セキュリティトークン"
+
+msgid "OTP Digit %{count}"
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate using authenticator app"
+msgstr "認証アプリの登録"
+
+#, fuzzy
+msgid "Use Authenticator app"
+msgstr "認証アプリを使用する"
+
+#, fuzzy
+msgid "Authenticate using security token"
+msgstr "セキュリティトークン登録"
+
+#, fuzzy
+msgid "Use Security token"
+msgstr "セキュリティトークン"
+
+#, fuzzy
+msgid "Authenticate using backup codes"
+msgstr "バックアップコードを作成する"
+
+#, fuzzy
+msgid "Use Backup Codes"
+msgstr "バックアップコードを使用"
+
+#, fuzzy
+msgid "WebAuthn Error"
+msgstr "エージェントエラー"
+
+#, fuzzy
+msgid "Incorrect or expired authenticator code"
+msgstr "認証コードを入力"
+
+#, fuzzy
+msgid "Use the latest generated code."
+msgstr "コードの再生成"
+
+#, fuzzy
+msgid "Invalid backup code"
+msgstr "全てのバックアップコードを無効にする"
+
+msgid ""
+"Try a different backup code or contact your Checkmk admin to restore your "
+"account."
+msgstr ""
+
+#, fuzzy
+msgid "Please try again."
+msgstr "名前を入力してください。"
+
+#, fuzzy
+msgid "Verifying..."
+msgstr "待機..."
+
+#, fuzzy
+msgid "Your authenticator has been registered successfully."
+msgstr "アクティベートされたことがない"
+
+#, fuzzy
+msgid "Registration failed"
+msgstr "登録状態"
+
+msgid ""
+"${text}. A Checkmk administrator may have a look at var/log/web.log to get "
+"additional information."
+msgstr ""
+
+#, fuzzy
+msgid "Security Error"
+msgstr "セキュリティ"
+
+msgid ""
+"Can not enable two-factor authentication. You have to use HTTPS and access "
+"the GUI through a valid domain name (See #13325 for further information)."
+msgstr ""
+
+#, fuzzy
+msgid "Possible reasons are:"
+msgstr "応答を配信する"
+
+#, fuzzy
+msgid "- You have aborted the registration"
+msgstr "ホストとリージョンを設定"
+
+msgid "- Your browser does not support the WebAuthn standard"
+msgstr ""
+
+msgid "- The browser configuration has disabled WebAuthn"
+msgstr ""
+
+msgid ""
+"The given authenticator is not usable. This may be due to the repeated use "
+"of an already registered authenticator."
+msgstr ""
+
+#, fuzzy
+msgid "An unknown error occurred"
+msgstr "接続エラーが発生しました: %s"
+
+#, fuzzy
+msgid "Login successful"
+msgstr "成功したベーキング"
+
+#, fuzzy
+msgid "You have been authenticated successfully."
+msgstr "アクティベートされたことがない"
+
+#, fuzzy
+msgid "Login failed"
+msgstr "ログインが無効です"
+
+msgid "Your WebAuthn authentication could not be verified."
+msgstr ""
+
+msgid "2FA not possible (See #13325 for details)"
+msgstr ""
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "認証失敗"
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -90949,13 +91072,38 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Authenticator app"
+#~ msgstr "認証App"
+
+#~ msgid "Filter context missing"
+#~ msgstr "フィルタコンテキストがありません"
+
+#, python-format
+#~ msgid ""
+#~ "Problem while rendering dashboard element %d of type %s: %s. Have a look "
+#~ "at <tt>var/log/web.log</tt> for further information."
+#~ msgstr ""
+#~ "ダッシュボードエレメント %d タイプ %s: %s のレンダリング中に問題が発生しま"
+#~ "した。詳細については、<tt>var/log/web.log</tt>をご覧ください。"
+
+#~ msgid "The element can not be found on the dashboard."
+#~ msgstr "ダッシュボードに要素が見つかりません。"
+
+#~ msgid "Two-factor code"
+#~ msgstr "二要素認証コード"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to render this element, because we miss some required context "
+#~ "information (%s). Please update the form on the right to make this "
+#~ "element render."
+#~ msgstr ""
+#~ "必要なコンテキスト情報(%s)が不足しているため、この要素をレンダリングできま"
+#~ "せん。この要素をレンダリングするには、右側のフォームを更新してください。"
+
 #, fuzzy
 #~ msgid "Metric filters"
 #~ msgstr "サービスフィルター"
-
-#, fuzzy
-#~ msgid "Configure the Relay registration"
-#~ msgstr "ホストとリージョンを設定"
 
 #, fuzzy
 #~ msgid "Microsoft Azure (deprecated)"
@@ -93406,10 +93554,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Go to \"All hosts\""
 #~ msgstr "すべてのホスト"
-
-#, fuzzy
-#~ msgid "The changes have been activated successfully."
-#~ msgstr "アクティベートされたことがない"
 
 #~ msgid "Another omd config change job is already running."
 #~ msgstr "別のomd config変更ジョブがすでに実行されています。"

@@ -8097,9 +8097,6 @@ msgstr "Tipuri de autentificare"
 msgid "Authentication with TLS"
 msgstr "Autentificare cu TLS"
 
-msgid "Authenticator app"
-msgstr "Aplicația Authenticator"
-
 #, fuzzy
 msgid "Authenticator app has been added"
 msgstr "Aplicații de autentificare"
@@ -9863,9 +9860,6 @@ msgstr "Backup & Restaurare"
 
 msgid "Backup age"
 msgstr "Vârsta de rezervă"
-
-msgid "Backup code"
-msgstr "Cod de rezervă"
 
 msgid "Backup codes"
 msgstr "Coduri de rezervă"
@@ -24256,10 +24250,6 @@ msgstr "Activarea accesului la Livestatus prin rețea (TCP)"
 msgid "Enable OpenTelemetry collector (experimental)"
 msgstr "Configurația stilului selectat"
 
-#, fuzzy
-msgid "Enable Product Telemetry"
-msgstr "element de raport"
-
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activați SMTP AUTH (LOGIN)"
 
@@ -24401,6 +24391,10 @@ msgstr "Activarea procesării rezultatelor verificărilor pasive"
 
 msgid "Enable processing of perfdata"
 msgstr "Activați procesarea datelor de performanță"
+
+#, fuzzy
+msgid "Enable product telemetry"
+msgstr "element de raport"
 
 msgid "Enable profiling by request"
 msgstr "Activați profilarea la cerere"
@@ -24983,11 +24977,6 @@ msgid ""
 msgstr ""
 "Introduceți doar numele simplu al acțiunii, de exemplu <tt>iso</tt>, <b>nu</"
 "b> UNC-ul complet, cum ar fi <tt>\\\\servername\\iso</tt>."
-
-msgid "Enter the six-digit code from your authenticator app to log in."
-msgstr ""
-"Introduceți codul din șase cifre din aplicația de autentificare pentru a vă "
-"conecta."
 
 msgid ""
 "Enter the technical name of the field as defined in the ServiceNow database."
@@ -27299,9 +27288,6 @@ msgstr "Utilizați numele portului ca nume de serviciu"
 
 msgid "Filter aggregations"
 msgstr "Agregări de filtre"
-
-msgid "Filter context missing"
-msgstr "Contextul filtrului lipsește"
 
 msgid "Filter files by age"
 msgstr "Filtrați fișierele în funcție de vârstă"
@@ -46226,6 +46212,10 @@ msgstr "Balansatoare de sarcină în rețea"
 msgid "Network monitoring"
 msgstr "Monitorizarea rețelei"
 
+#, fuzzy
+msgid "Network name"
+msgstr "Rețea în"
+
 msgid "Network out"
 msgstr "Rețea afară"
 
@@ -53689,11 +53679,6 @@ msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr ""
 "Vă rugăm să creați mai întâi niște <a href='%s'>grupuri de contact</a>."
 
-msgid "Please follow your browser's instructions for authentication."
-msgstr ""
-"Vă rugăm să urmați instrucțiunile de autentificare ale browserului "
-"dumneavoastră."
-
 msgid "Please leave either both from and until empty or enter two times."
 msgstr ""
 "Vă rugăm să lăsați fie de la și până la gol, fie să introduceți de două ori."
@@ -54866,14 +54851,6 @@ msgstr "Problema este recunoscută, dar este configurată pentru a fi periodică
 msgid "Problem notifications"
 msgstr "Notificări de probleme"
 
-#, python-format
-msgid ""
-"Problem while rendering dashboard element %d of type %s: %s. Have a look at "
-"<tt>var/log/web.log</tt> for further information."
-msgstr ""
-"Problemă la redarea elementului de tablou de bord %d de tip %s: %s. Aruncați "
-"o privire la <tt>var/log/web.log</tt> pentru informații suplimentare."
-
 msgid "Problems"
 msgstr "Probleme"
 
@@ -55000,7 +54977,7 @@ msgid "Product"
 msgstr "Produs"
 
 #, fuzzy
-msgid "Product Telemetry"
+msgid "Product telemetry"
 msgstr "element de raport"
 
 msgid "Profile"
@@ -60284,9 +60261,6 @@ msgstr "Denumire de securitate"
 
 msgid "Security name"
 msgstr "Denumire de securitate"
-
-msgid "Security token"
-msgstr "Jeton de securitate"
 
 msgid "Security tokens"
 msgstr "Jetoane de securitate"
@@ -70026,9 +70000,6 @@ msgstr ""
 "Routerul eWON poate acționa ca un proxy pentru metricele de la un dispozitiv "
 "secundar non-snmp.Aici puteți face setări pentru monitorizarea "
 "dispozitivului proxiat."
-
-msgid "The element can not be found on the dashboard."
-msgstr "Elementul nu poate fi găsit în tabloul de bord."
 
 msgid "The element does not exist."
 msgstr "Elementul nu există."
@@ -82408,9 +82379,6 @@ msgstr "Autentificarea cu doi factori nu este activată"
 msgid "Two-factor authentication not enabled"
 msgstr "Autentificarea cu doi factori nu este activată"
 
-msgid "Two-factor code"
-msgstr "Cod cu doi factori"
-
 msgid "Tx"
 msgstr "Tx"
 
@@ -82886,16 +82854,6 @@ msgstr ""
 "unele informații de context necesare (%s). Vă rugăm să actualizați filtrele "
 "de pe vizualizarea sursă sau să adăugați variabilele de cerere HTTP care "
 "lipsesc în cerere"
-
-#, python-format
-msgid ""
-"Unable to render this element, because we miss some required context "
-"information (%s). Please update the form on the right to make this element "
-"render."
-msgstr ""
-"Nu se poate reda acest element, deoarece ne lipsesc unele informații de "
-"context necesare (%s). Vă rugăm să actualizați formularul din dreapta pentru "
-"a face ca acest element să fie redat."
 
 #, python-format
 msgid ""
@@ -84603,12 +84561,6 @@ msgstr "Utilizați orice adresă de rețea"
 msgid "Use attribute value"
 msgstr "Utilizați valoarea atributului"
 
-msgid "Use authenticator app"
-msgstr "Utilizați aplicația Authenticator"
-
-msgid "Use backup code"
-msgstr "Utilizați codul de rezervă"
-
 msgid "Use bold font"
 msgstr "Folosiți fontul bold"
 
@@ -84767,9 +84719,6 @@ msgstr "Utilizați starea normală, ignorați confirmarea"
 
 msgid "Use normal state, ignore downtime"
 msgstr "Utilizați starea normală, ignorați timpul de nefuncționare"
-
-msgid "Use one of your backup codes to sign in."
-msgstr "Utilizați unul dintre codurile de rezervă pentru a vă conecta."
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
@@ -91217,13 +91166,6 @@ msgstr ""
 "notificări de rezervă."
 
 msgid ""
-"You have multiple methods enabled. Please select the security method you "
-"want to use to log in."
-msgstr ""
-"Aveți mai multe metode activate. Vă rugăm să selectați metoda de securitate "
-"pe care doriți să o utilizați pentru a vă autentifica."
-
-msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
 "missing. Please install Postfix, Qmail, Nullmailer or Sendmail."
 msgstr ""
@@ -94509,6 +94451,10 @@ msgid "Loading Top list content"
 msgstr "Opțiuni de etichetare"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Element de tablou de bord"
+
+#, fuzzy
 msgid "Remove row"
 msgstr "Eliminat: %s"
 
@@ -95040,10 +94986,6 @@ msgstr "Moștenit din "
 #, fuzzy
 msgid "Overriden"
 msgstr "Prezentare generală"
-
-#, fuzzy
-msgid "Dashboard filter"
-msgstr "Element de tablou de bord"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -95799,6 +95741,10 @@ msgid "Copy existing view: %{viewName}"
 msgstr "Copierea vizualizării existente"
 
 #, fuzzy
+msgid "Add widget to dashboard"
+msgstr "Adăugați la tabloul de bord"
+
+#, fuzzy
 msgid "Select operator"
 msgstr "Conexiuni respinse"
 
@@ -96019,6 +95965,9 @@ msgid "Activating changes... "
 msgstr "A activat modificările"
 
 msgid "You can safely navigate away - we'll keep working in the background"
+msgstr ""
+
+msgid "This may take up to 30 seconds when a site restart is required."
 msgstr ""
 
 #, fuzzy
@@ -96587,6 +96536,179 @@ msgstr "Salvați & rulați descoperirea serviciilor"
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
 
+#, fuzzy
+msgid "Backup code:"
+msgstr "Cod de rezervă"
+
+#, fuzzy
+msgid "Enter backup code"
+msgstr "Utilizați codul de rezervă"
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
+"Aveți mai multe metode activate. Vă rugăm să selectați metoda de securitate "
+"pe care doriți să o utilizați pentru a vă autentifica."
+
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+"Introduceți codul din șase cifre din aplicația de autentificare pentru a vă "
+"conecta."
+
+msgid "Use one of your backup codes to sign in."
+msgstr "Utilizați unul dintre codurile de rezervă pentru a vă conecta."
+
+msgid "Please follow your browser's instructions for authentication."
+msgstr ""
+"Vă rugăm să urmați instrucțiunile de autentificare ale browserului "
+"dumneavoastră."
+
+#, fuzzy
+msgid "Switch to authenticator app"
+msgstr "aplicație autentificator"
+
+msgid "Use authenticator app"
+msgstr "Utilizați aplicația Authenticator"
+
+#, fuzzy
+msgid "Switch to backup codes"
+msgstr "Treci la modul Takeover!"
+
+msgid "Use backup code"
+msgstr "Utilizați codul de rezervă"
+
+#, fuzzy
+msgid "Switch to security token"
+msgstr "jeton de securitate"
+
+#, fuzzy
+msgid "Use security token"
+msgstr "jeton de securitate"
+
+msgid "OTP Digit %{count}"
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate using authenticator app"
+msgstr "Înregistrați aplicația Authenticator App"
+
+#, fuzzy
+msgid "Use Authenticator app"
+msgstr "Utilizați aplicația Authenticator"
+
+#, fuzzy
+msgid "Authenticate using security token"
+msgstr "Înregistrarea jetonului de securitate"
+
+#, fuzzy
+msgid "Use Security token"
+msgstr "Jeton de securitate"
+
+#, fuzzy
+msgid "Authenticate using backup codes"
+msgstr "Generarea codurilor de rezervă"
+
+#, fuzzy
+msgid "Use Backup Codes"
+msgstr "Utilizați codul de rezervă"
+
+#, fuzzy
+msgid "WebAuthn Error"
+msgstr "Eroare agent"
+
+#, fuzzy
+msgid "Incorrect or expired authenticator code"
+msgstr "Introduceți codul de autentificare"
+
+#, fuzzy
+msgid "Use the latest generated code."
+msgstr "Regenerarea codurilor"
+
+#, fuzzy
+msgid "Invalid backup code"
+msgstr "Invalidarea tuturor codurilor de rezervă"
+
+msgid ""
+"Try a different backup code or contact your Checkmk admin to restore your "
+"account."
+msgstr ""
+
+#, fuzzy
+msgid "Please try again."
+msgstr "Vă rugăm să introduceți un nume de fișier."
+
+#, fuzzy
+msgid "Verifying..."
+msgstr "Așteptare"
+
+#, fuzzy
+msgid "Your authenticator has been registered successfully."
+msgstr "Nu a fost niciodată activat"
+
+#, fuzzy
+msgid "Registration failed"
+msgstr "Statul de înregistrare"
+
+msgid ""
+"${text}. A Checkmk administrator may have a look at var/log/web.log to get "
+"additional information."
+msgstr ""
+
+#, fuzzy
+msgid "Security Error"
+msgstr "Securitate"
+
+msgid ""
+"Can not enable two-factor authentication. You have to use HTTPS and access "
+"the GUI through a valid domain name (See #13325 for further information)."
+msgstr ""
+
+#, fuzzy
+msgid "Possible reasons are:"
+msgstr "Distribuie răspunsul"
+
+#, fuzzy
+msgid "- You have aborted the registration"
+msgstr "Configurație"
+
+msgid "- Your browser does not support the WebAuthn standard"
+msgstr ""
+
+msgid "- The browser configuration has disabled WebAuthn"
+msgstr ""
+
+msgid ""
+"The given authenticator is not usable. This may be due to the repeated use "
+"of an already registered authenticator."
+msgstr ""
+
+#, fuzzy
+msgid "An unknown error occurred"
+msgstr "S-a produs o excepție: %s"
+
+#, fuzzy
+msgid "Login successful"
+msgstr "Coacerea cu succes"
+
+#, fuzzy
+msgid "You have been authenticated successfully."
+msgstr "Nu a fost niciodată activat"
+
+#, fuzzy
+msgid "Login failed"
+msgstr "Login dezactivat"
+
+msgid "Your WebAuthn authentication could not be verified."
+msgstr ""
+
+msgid "2FA not possible (See #13325 for details)"
+msgstr ""
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "Autentificarea a eșuat"
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -97040,14 +97162,41 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Authenticator app"
+#~ msgstr "Aplicația Authenticator"
+
+#~ msgid "Filter context missing"
+#~ msgstr "Contextul filtrului lipsește"
+
+#, python-format
+#~ msgid ""
+#~ "Problem while rendering dashboard element %d of type %s: %s. Have a look "
+#~ "at <tt>var/log/web.log</tt> for further information."
+#~ msgstr ""
+#~ "Problemă la redarea elementului de tablou de bord %d de tip %s: %s. "
+#~ "Aruncați o privire la <tt>var/log/web.log</tt> pentru informații "
+#~ "suplimentare."
+
+#~ msgid "The element can not be found on the dashboard."
+#~ msgstr "Elementul nu poate fi găsit în tabloul de bord."
+
+#~ msgid "Two-factor code"
+#~ msgstr "Cod cu doi factori"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to render this element, because we miss some required context "
+#~ "information (%s). Please update the form on the right to make this "
+#~ "element render."
+#~ msgstr ""
+#~ "Nu se poate reda acest element, deoarece ne lipsesc unele informații de "
+#~ "context necesare (%s). Vă rugăm să actualizați formularul din dreapta "
+#~ "pentru a face ca acest element să fie redat."
+
 # georgem ##############
 #, fuzzy
 #~ msgid "Metric filters"
 #~ msgstr "Filtre de service"
-
-#, fuzzy
-#~ msgid "Configure the Relay registration"
-#~ msgstr "Configurație"
 
 #, fuzzy
 #~ msgid "Microsoft Azure (deprecated)"
@@ -99473,10 +99622,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Go to \"All hosts\""
 #~ msgstr "Toate gazdele"
-
-#, fuzzy
-#~ msgid "The changes have been activated successfully."
-#~ msgstr "Nu a fost niciodată activat"
 
 #~ msgid "Another omd config change job is already running."
 #~ msgstr ""

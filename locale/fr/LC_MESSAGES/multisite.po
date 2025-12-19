@@ -8140,10 +8140,6 @@ msgid "Authentication with TLS"
 msgstr "Authentification avec TLS"
 
 #, fuzzy
-msgid "Authenticator app"
-msgstr "Ajouter Application d'Authentification"
-
-#, fuzzy
 msgid "Authenticator app has been added"
 msgstr "Ajouter Application d'Authentification"
 
@@ -9913,9 +9909,6 @@ msgstr "Sauvegarde et restauration"
 
 msgid "Backup age"
 msgstr "Âge de sauvegarde"
-
-msgid "Backup code"
-msgstr "Code de sauvegarde"
 
 msgid "Backup codes"
 msgstr "Modes de sauvegarde"
@@ -24363,10 +24356,6 @@ msgstr "Activer l'accès au Livestatus via le réseau (TCP)"
 msgid "Enable OpenTelemetry collector (experimental)"
 msgstr "Ajouter une configuration d'état"
 
-#, fuzzy
-msgid "Enable Product Telemetry"
-msgstr "élément de rapport"
-
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activer SMTP AUTH (LOGIN)"
 
@@ -24512,6 +24501,10 @@ msgstr "Permettre le traitement des résultats des contrôles passifs"
 
 msgid "Enable processing of perfdata"
 msgstr "Activer le traitement des données de perforation"
+
+#, fuzzy
+msgid "Enable product telemetry"
+msgstr "élément de rapport"
 
 msgid "Enable profiling by request"
 msgstr "Activer le profilage par demande"
@@ -25075,9 +25068,6 @@ msgid ""
 msgstr ""
 "Saisissez uniquement le nom simple du partage, par exemple <tt>iso</tt>, "
 "<b>non</b> l'UNC complet comme <tt>\\servername\\iso</tt>"
-
-msgid "Enter the six-digit code from your authenticator app to log in."
-msgstr ""
 
 msgid ""
 "Enter the technical name of the field as defined in the ServiceNow database."
@@ -27400,9 +27390,6 @@ msgstr "Utiliser le nom du port comme nom de service"
 
 msgid "Filter aggregations"
 msgstr "Filtrer les agrégations"
-
-msgid "Filter context missing"
-msgstr "Absence de contexte de filtrage"
 
 msgid "Filter files by age"
 msgstr "Filtrer les fichiers par âge"
@@ -46444,6 +46431,10 @@ msgstr "Équilibreurs de charge réseau"
 msgid "Network monitoring"
 msgstr "Surveillance du réseau"
 
+#, fuzzy
+msgid "Network name"
+msgstr "Réseau en"
+
 msgid "Network out"
 msgstr "Sortie de réseau"
 
@@ -53972,9 +53963,6 @@ msgstr "Veuillez saisir l'URL multisite du site esclave."
 msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr "Veuillez d'abord créer quelques <a href='%s'>groupes de contacts</a>"
 
-msgid "Please follow your browser's instructions for authentication."
-msgstr ""
-
 msgid "Please leave either both from and until empty or enter two times."
 msgstr ""
 "Veuillez laisser les deux champs \"de\" et \"jusqu'à\" vides ou entrer deux "
@@ -55166,14 +55154,6 @@ msgstr "Le problème est reconnu, mais il est configuré pour être périodique"
 msgid "Problem notifications"
 msgstr "Notifications de problèmes"
 
-#, python-format
-msgid ""
-"Problem while rendering dashboard element %d of type %s: %s. Have a look at "
-"<tt>var/log/web.log</tt> for further information."
-msgstr ""
-"Problème lors du rendu de l'élément de tableau de bord %d de type %s : %s. "
-"Jetez un coup d'œil à <tt>var/log/web.log</tt> pour plus d'informations."
-
 msgid "Problems"
 msgstr "Problèmes"
 
@@ -55299,7 +55279,7 @@ msgid "Product"
 msgstr "Produit"
 
 #, fuzzy
-msgid "Product Telemetry"
+msgid "Product telemetry"
 msgstr "élément de rapport"
 
 msgid "Profile"
@@ -60639,10 +60619,6 @@ msgid "Security message #%d"
 msgstr "Nom de sécurité"
 
 msgid "Security name"
-msgstr "Nom de sécurité"
-
-#, fuzzy
-msgid "Security token"
 msgstr "Nom de sécurité"
 
 #, fuzzy
@@ -70396,9 +70372,6 @@ msgstr ""
 "Le routeur eWON peut agir comme un proxy pour les métriques d'un "
 "périphérique secondaire non-nmp. Ici, vous pouvez effectuer des réglages "
 "pour la surveillance du périphérique proxié."
-
-msgid "The element can not be found on the dashboard."
-msgstr "L'élément ne peut être trouvé sur le tableau de bord."
 
 msgid "The element does not exist."
 msgstr "L'élément n'existe pas."
@@ -82860,10 +82833,6 @@ msgstr "L'authentification à deux facteurs n'est pas activée"
 msgid "Two-factor authentication not enabled"
 msgstr "L'authentification à deux facteurs n'est pas activée"
 
-#, fuzzy
-msgid "Two-factor code"
-msgstr "Authentification à deux facteurs"
-
 msgid "Tx"
 msgstr "Tx"
 
@@ -83345,16 +83314,6 @@ msgstr ""
 "certaines informations contextuelles requises (%s). Veuillez mettre à jour "
 "les filtres de la vue source ou ajouter les variables de requête HTTP "
 "manquantes à votre requête"
-
-#, python-format
-msgid ""
-"Unable to render this element, because we miss some required context "
-"information (%s). Please update the form on the right to make this element "
-"render."
-msgstr ""
-"Impossible de rendre cet élément, car il nous manque certaines informations "
-"contextuelles requises (%s). Veuillez mettre à jour le formulaire de droite "
-"pour que cet élément soit rendu."
 
 #, python-format
 msgid ""
@@ -85087,13 +85046,6 @@ msgstr "Adresse du réseau"
 msgid "Use attribute value"
 msgstr "Attribut User-ID"
 
-#, fuzzy
-msgid "Use authenticator app"
-msgstr "Authentification du système"
-
-msgid "Use backup code"
-msgstr "Utiliser le code de sauvegarde"
-
 msgid "Use bold font"
 msgstr "Utilisez une police en gras"
 
@@ -85254,9 +85206,6 @@ msgstr "Utiliser l'état normal, ignorer l'accusé de réception"
 
 msgid "Use normal state, ignore downtime"
 msgstr "Utiliser l'état normal, ignorer les temps d'arrêt"
-
-msgid "Use one of your backup codes to sign in."
-msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr ""
@@ -91798,11 +91747,6 @@ msgstr ""
 "afin de pouvoir recevoir les notifications de repli."
 
 msgid ""
-"You have multiple methods enabled. Please select the security method you "
-"want to use to log in."
-msgstr ""
-
-msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
 "missing. Please install Postfix, Qmail, Nullmailer or Sendmail."
 msgstr ""
@@ -95071,6 +95015,10 @@ msgid "Loading Top list content"
 msgstr "Options d'étiquetage"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Élément du tableau de bord"
+
+#, fuzzy
 msgid "Remove row"
 msgstr "Supprimé : %s"
 
@@ -95600,10 +95548,6 @@ msgstr "Hérité de "
 #, fuzzy
 msgid "Overriden"
 msgstr "Vue d'ensemble"
-
-#, fuzzy
-msgid "Dashboard filter"
-msgstr "Élément du tableau de bord"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -96358,6 +96302,10 @@ msgid "Copy existing view: %{viewName}"
 msgstr "Copier la vue existante"
 
 #, fuzzy
+msgid "Add widget to dashboard"
+msgstr "Lien vers le tableau de bord"
+
+#, fuzzy
 msgid "Select operator"
 msgstr "Connexions rejetées"
 
@@ -96578,6 +96526,9 @@ msgid "Activating changes... "
 msgstr "Activé les changements : "
 
 msgid "You can safely navigate away - we'll keep working in the background"
+msgstr ""
+
+msgid "This may take up to 30 seconds when a site restart is required."
 msgstr ""
 
 #, fuzzy
@@ -97142,6 +97093,174 @@ msgstr "Sauvegarder & ; lancer la découverte des services"
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
 
+#, fuzzy
+msgid "Backup code:"
+msgstr "Code de sauvegarde"
+
+#, fuzzy
+msgid "Enter backup code"
+msgstr "Utiliser le code de sauvegarde"
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
+
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+
+msgid "Use one of your backup codes to sign in."
+msgstr ""
+
+msgid "Please follow your browser's instructions for authentication."
+msgstr ""
+
+#, fuzzy
+msgid "Switch to authenticator app"
+msgstr "Ajouter Application d'Authentification"
+
+#, fuzzy
+msgid "Use authenticator app"
+msgstr "Authentification du système"
+
+#, fuzzy
+msgid "Switch to backup codes"
+msgstr "Passez en mode Takeover !"
+
+msgid "Use backup code"
+msgstr "Utiliser le code de sauvegarde"
+
+#, fuzzy
+msgid "Switch to security token"
+msgstr "Nom de sécurité"
+
+#, fuzzy
+msgid "Use security token"
+msgstr "Nom de sécurité"
+
+msgid "OTP Digit %{count}"
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate using authenticator app"
+msgstr "Authentification du système"
+
+#, fuzzy
+msgid "Use Authenticator app"
+msgstr "Authentification du système"
+
+#, fuzzy
+msgid "Authenticate using security token"
+msgstr "Nom de sécurité"
+
+#, fuzzy
+msgid "Use Security token"
+msgstr "Nom de sécurité"
+
+#, fuzzy
+msgid "Authenticate using backup codes"
+msgstr "Régénérer les codes de sauvegarde"
+
+#, fuzzy
+msgid "Use Backup Codes"
+msgstr "Utiliser le code de sauvegarde"
+
+#, fuzzy
+msgid "WebAuthn Error"
+msgstr "Erreur de l'agent"
+
+#, fuzzy
+msgid "Incorrect or expired authenticator code"
+msgstr "Authentification du VCenter"
+
+#, fuzzy
+msgid "Use the latest generated code."
+msgstr "Régénérer les codes de sauvegarde"
+
+#, fuzzy
+msgid "Invalid backup code"
+msgstr "Régénérer les codes de sauvegarde"
+
+msgid ""
+"Try a different backup code or contact your Checkmk admin to restore your "
+"account."
+msgstr ""
+
+#, fuzzy
+msgid "Please try again."
+msgstr "Veuillez entrer un nom de fichier."
+
+#, fuzzy
+msgid "Verifying..."
+msgstr "Attente"
+
+#, fuzzy
+msgid "Your authenticator has been registered successfully."
+msgstr "N'a jamais été activé"
+
+#, fuzzy
+msgid "Registration failed"
+msgstr "État d'enregistrement"
+
+msgid ""
+"${text}. A Checkmk administrator may have a look at var/log/web.log to get "
+"additional information."
+msgstr ""
+
+#, fuzzy
+msgid "Security Error"
+msgstr "Sécurité"
+
+msgid ""
+"Can not enable two-factor authentication. You have to use HTTPS and access "
+"the GUI through a valid domain name (See #13325 for further information)."
+msgstr ""
+
+#, fuzzy
+msgid "Possible reasons are:"
+msgstr "Distribuer la réponse"
+
+#, fuzzy
+msgid "- You have aborted the registration"
+msgstr "Configuration"
+
+msgid "- Your browser does not support the WebAuthn standard"
+msgstr ""
+
+msgid "- The browser configuration has disabled WebAuthn"
+msgstr ""
+
+msgid ""
+"The given authenticator is not usable. This may be due to the repeated use "
+"of an already registered authenticator."
+msgstr ""
+
+#, fuzzy
+msgid "An unknown error occurred"
+msgstr "Une exception s'est produite : %s"
+
+#, fuzzy
+msgid "Login successful"
+msgstr "Cuisson réussie"
+
+#, fuzzy
+msgid "You have been authenticated successfully."
+msgstr "N'a jamais été activé"
+
+#, fuzzy
+msgid "Login failed"
+msgstr "Connexion désactivée"
+
+msgid "Your WebAuthn authentication could not be verified."
+msgstr ""
+
+msgid "2FA not possible (See #13325 for details)"
+msgstr ""
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "Échec de l'authentification"
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -97595,12 +97714,41 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "Metric filters"
-#~ msgstr "Filtres de service"
+#~ msgid "Authenticator app"
+#~ msgstr "Ajouter Application d'Authentification"
+
+#~ msgid "Filter context missing"
+#~ msgstr "Absence de contexte de filtrage"
+
+#, python-format
+#~ msgid ""
+#~ "Problem while rendering dashboard element %d of type %s: %s. Have a look "
+#~ "at <tt>var/log/web.log</tt> for further information."
+#~ msgstr ""
+#~ "Problème lors du rendu de l'élément de tableau de bord %d de type %s : "
+#~ "%s. Jetez un coup d'œil à <tt>var/log/web.log</tt> pour plus "
+#~ "d'informations."
+
+#~ msgid "The element can not be found on the dashboard."
+#~ msgstr "L'élément ne peut être trouvé sur le tableau de bord."
 
 #, fuzzy
-#~ msgid "Configure the Relay registration"
-#~ msgstr "Configuration"
+#~ msgid "Two-factor code"
+#~ msgstr "Authentification à deux facteurs"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to render this element, because we miss some required context "
+#~ "information (%s). Please update the form on the right to make this "
+#~ "element render."
+#~ msgstr ""
+#~ "Impossible de rendre cet élément, car il nous manque certaines "
+#~ "informations contextuelles requises (%s). Veuillez mettre à jour le "
+#~ "formulaire de droite pour que cet élément soit rendu."
+
+#, fuzzy
+#~ msgid "Metric filters"
+#~ msgstr "Filtres de service"
 
 #, fuzzy
 #~ msgid "Microsoft Azure (deprecated)"
@@ -99954,10 +100102,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Go to \"All hosts\""
 #~ msgstr "Tous les hôtes"
-
-#, fuzzy
-#~ msgid "The changes have been activated successfully."
-#~ msgstr "N'a jamais été activé"
 
 #~ msgid "Another omd config change job is already running."
 #~ msgstr ""

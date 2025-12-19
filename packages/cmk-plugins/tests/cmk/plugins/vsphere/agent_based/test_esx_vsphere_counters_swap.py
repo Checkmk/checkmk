@@ -12,7 +12,7 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_counters import (
 )
 from cmk.plugins.vsphere.agent_based.esx_vsphere_counters_2 import (
     check_esx_vsphere_counters_swap,
-    inventory_esx_vsphere_counters_swap,
+    discover_esx_vsphere_counters_swap,
 )
 
 _STRING_TABLE: Final = [
@@ -22,19 +22,19 @@ _STRING_TABLE: Final = [
 ]
 
 
-def test_inventory_esx_vsphere_counters_swap() -> None:
+def test_discover_esx_vsphere_counters_swap() -> None:
     """Test discovery function for ESX vSphere counters swap check."""
-    assert list(inventory_esx_vsphere_counters_swap(parse_esx_vsphere_counters(_STRING_TABLE))) == [
+    assert list(discover_esx_vsphere_counters_swap(parse_esx_vsphere_counters(_STRING_TABLE))) == [
         Service()
     ]
 
 
-def test_inventory_esx_vsphere_counters_swap_no_data() -> None:
+def test_discover_esx_vsphere_counters_swap_no_data() -> None:
     """Test discovery function with no swap data."""
-    assert not list(inventory_esx_vsphere_counters_swap(parse_esx_vsphere_counters([])))
+    assert not list(discover_esx_vsphere_counters_swap(parse_esx_vsphere_counters([])))
 
 
-def test_inventory_esx_vsphere_counters_swap_all_empty() -> None:
+def test_discover_esx_vsphere_counters_swap_all_empty() -> None:
     """Test discovery function with all empty swap values."""
     string_table = [
         ["mem.swapin", "", "", "kiloBytes"],
@@ -42,7 +42,7 @@ def test_inventory_esx_vsphere_counters_swap_all_empty() -> None:
         ["mem.swapused", "", "", "kiloBytes"],
     ]
     parsed = parse_esx_vsphere_counters(string_table)
-    result = list(inventory_esx_vsphere_counters_swap(parsed))
+    result = list(discover_esx_vsphere_counters_swap(parsed))
     assert not result
 
 

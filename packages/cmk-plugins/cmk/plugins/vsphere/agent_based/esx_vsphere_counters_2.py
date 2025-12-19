@@ -107,7 +107,7 @@ def _parse_esx_vsphere_counters_swap(parsed: SectionCounter) -> Mapping[str, str
     return swap_values
 
 
-def inventory_esx_vsphere_counters_swap(section: SectionCounter) -> DiscoveryResult:
+def discover_esx_vsphere_counters_swap(section: SectionCounter) -> DiscoveryResult:
     SWAP = _parse_esx_vsphere_counters_swap(section)
 
     if any(elem for elem in SWAP.values()):
@@ -126,6 +126,6 @@ check_plugin_esx_vsphere_counters_swap = CheckPlugin(
     name="esx_vsphere_counters_swap",
     service_name="VMKernel Swap",
     sections=["esx_vsphere_counters"],
-    discovery_function=inventory_esx_vsphere_counters_swap,
+    discovery_function=discover_esx_vsphere_counters_swap,
     check_function=check_esx_vsphere_counters_swap,
 )

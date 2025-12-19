@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.datapower.lib import DETECT
 
 
-def inventory_datapower_raid_bat(section: StringTable) -> DiscoveryResult:
+def discover_datapower_raid_bat(section: StringTable) -> DiscoveryResult:
     for controller_id, _bat_type, _serial, _name, _status in section:
         yield Service(item=controller_id)
 
@@ -75,6 +75,6 @@ snmp_section_datapower_raid_bat = SimpleSNMPSection(
 check_plugin_datapower_raid_bat = CheckPlugin(
     name="datapower_raid_bat",
     service_name="Raid Battery %s",
-    discovery_function=inventory_datapower_raid_bat,
+    discovery_function=discover_datapower_raid_bat,
     check_function=check_datapower_raid_bat,
 )

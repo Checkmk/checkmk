@@ -30,7 +30,7 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_hostsystem_section import HostS
 #   +----------------------------------------------------------------------+
 
 
-def inventory_esx_vsphere_hostsystem_state(section: HostSystemSection) -> DiscoveryResult:
+def discover_esx_vsphere_hostsystem_state(section: HostSystemSection) -> DiscoveryResult:
     if "runtime.inMaintenanceMode" in section:
         yield Service()
 
@@ -60,7 +60,7 @@ check_plugin_esx_vsphere_hostsystem_state = CheckPlugin(
     name="esx_vsphere_hostsystem_state",
     service_name="Overall state",
     sections=["esx_vsphere_hostsystem"],
-    discovery_function=inventory_esx_vsphere_hostsystem_state,
+    discovery_function=discover_esx_vsphere_hostsystem_state,
     check_function=check_esx_vsphere_hostsystem_state,
 )
 

@@ -30,7 +30,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 # .1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.34.3 1 --> IDRAC-MIB::virtualDiskRemainingRedundancy.3
 
 
-def inventory_dell_idrac_virtdisks(section: StringTable) -> DiscoveryResult:
+def discover_dell_idrac_virtdisks(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=line[0]) for line in section]
 
 
@@ -91,6 +91,6 @@ snmp_section_dell_idrac_virtdisks = SimpleSNMPSection(
 check_plugin_dell_idrac_virtdisks = CheckPlugin(
     name="dell_idrac_virtdisks",
     service_name="Virtual Disk %s",
-    discovery_function=inventory_dell_idrac_virtdisks,
+    discovery_function=discover_dell_idrac_virtdisks,
     check_function=check_dell_idrac_virtdisks,
 )

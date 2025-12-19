@@ -18,7 +18,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 
 from ..metadata import DashboardMetadataObject
-from ..store import get_permitted_dashboards
+from ..store import get_permitted_dashboards_by_owners
 from ._family import DASHBOARD_FAMILY
 from ._utils import PERMISSIONS_DASHBOARD
 from .model.metadata import (
@@ -32,17 +32,18 @@ def list_dashboard_metadata_v1(api_context: ApiContext) -> DashboardMetadataColl
     """List permitted dashboard metadata."""
     dashboards = []
     user_permissions = api_context.config.user_permissions()
-    for dashboard_id, dashboard in get_permitted_dashboards().items():
-        dashboard_model = DashboardMetadataModel(
-            id=dashboard_id,
-            domainType="dashboard_metadata",
-            extensions=DashboardMetadata.from_dashboard_metadata_object(
-                DashboardMetadataObject.from_dashboard_config(dashboard, user_permissions)
-            ),
-            links=[],
-        )
+    for owner, owner_dashboards in get_permitted_dashboards_by_owners().items():
+        for dashboard_id, dashboard in owner_dashboards.items():
+            dashboard_model = DashboardMetadataModel(
+                id=dashboard_id,
+                domainType="dashboard_metadata",
+                extensions=DashboardMetadata.from_dashboard_metadata_object(
+                    DashboardMetadataObject.from_dashboard_config(dashboard, user_permissions)
+                ),
+                links=[],
+            )
 
-        dashboards.append(dashboard_model)
+            dashboards.append(dashboard_model)
 
     return DashboardMetadataCollectionModel(
         id="dashboard_metadata", domainType="dashboard_metadata", links=[], value=dashboards

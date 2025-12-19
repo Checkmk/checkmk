@@ -37,7 +37,7 @@ def parse_mongodb_collections(string_table: StringTable) -> Section:
     return {}
 
 
-def inventory_mongodb_collections(section: Section) -> DiscoveryResult:
+def discover_mongodb_collections(section: Section) -> DiscoveryResult:
     for db_name, db in section.items():
         yield from (Service(item=f"{db_name}.{coll_name}") for coll_name in db.get("collstats", []))
 
@@ -232,7 +232,7 @@ agent_section_mongodb_collections = AgentSection(
 check_plugin_mongodb_collections = CheckPlugin(
     name="mongodb_collections",
     service_name="MongoDB Collection: %s",
-    discovery_function=inventory_mongodb_collections,
+    discovery_function=discover_mongodb_collections,
     check_function=check_mongodb_collections,
     check_ruleset_name="mongodb_collections",
     check_default_parameters={},

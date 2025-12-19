@@ -12,6 +12,7 @@ filegroup(
             "reference/**",
             "scripts/**",
             ".gitattributes",
+            ".gitignore",
             "**/OWNERS",
             ".f12",
         ],

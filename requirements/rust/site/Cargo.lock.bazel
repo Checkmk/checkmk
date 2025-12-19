@@ -1,5 +1,5 @@
 {
-  "checksum": "173f95d64475fd7c0e8002a84afa59c906f1f397958d9e7e3da06e8e0f07f7c7",
+  "checksum": "f2f19b11762c44d65aef889d51eca48fffacf331813dee3aefcea8f02de03d60",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -8082,7 +8082,7 @@
                 "target": "getrandom"
               },
               {
-                "id": "ring 0.17.9",
+                "id": "ring 0.17.14",
                 "target": "ring"
               },
               {
@@ -8877,14 +8877,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "ring 0.17.9": {
+    "ring 0.17.14": {
       "name": "ring",
-      "version": "0.17.9",
+      "version": "0.17.14",
       "package_url": "https://github.com/briansmith/ring",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/ring/0.17.9/download",
-          "sha256": "e75ec5e92c4d8aede845126adc388046234541629e76029599ed35a003c7ed24"
+          "url": "https://static.crates.io/crates/ring/0.17.14/download",
+          "sha256": "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
         }
       },
       "targets": [
@@ -8937,7 +8937,7 @@
               "target": "getrandom"
             },
             {
-              "id": "ring 0.17.9",
+              "id": "ring 0.17.14",
               "target": "build_script_build"
             },
             {
@@ -8967,7 +8967,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.17.9"
+        "version": "0.17.14"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -8988,10 +8988,13 @@
           ],
           "selects": {}
         },
-        "links": "ring_core_0_17_9_"
+        "links": "ring_core_0_17_14_"
       },
-      "license": null,
-      "license_ids": [],
+      "license": "Apache-2.0 AND ISC",
+      "license_ids": [
+        "Apache-2.0",
+        "ISC"
+      ],
       "license_file": "LICENSE"
     },
     "rustc-demangle 0.1.24": {
@@ -9297,7 +9300,7 @@
               "target": "once_cell"
             },
             {
-              "id": "ring 0.17.9",
+              "id": "ring 0.17.14",
               "target": "ring"
             },
             {
@@ -9340,7 +9343,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "ring 0.17.9",
+              "id": "ring 0.17.14",
               "target": "ring"
             }
           ],
@@ -9568,7 +9571,7 @@
         "deps": {
           "common": [
             {
-              "id": "ring 0.17.9",
+              "id": "ring 0.17.14",
               "target": "ring"
             },
             {

@@ -51,7 +51,7 @@ def parse_esx_vsphere_licenses(string_table: StringTable) -> _Section:
     return parsed
 
 
-def inventory_esx_vsphere_licenses(section: _Section) -> DiscoveryResult:
+def discover_esx_vsphere_licenses(section: _Section) -> DiscoveryResult:
     yield from (Service(item=key) for key in section)
 
 
@@ -100,7 +100,7 @@ agent_section_esx_vsphere_licenses = AgentSection(
 check_plugin_esx_vsphere_licenses = CheckPlugin(
     name="esx_vsphere_licenses",
     service_name="License %s",
-    discovery_function=inventory_esx_vsphere_licenses,
+    discovery_function=discover_esx_vsphere_licenses,
     check_function=check_esx_vsphere_licenses,
     check_ruleset_name="esx_licenses",
     check_default_parameters={"levels": ("crit_on_all", None)},

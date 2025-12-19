@@ -58,7 +58,7 @@ agent_section_jenkins_instance = AgentSection(
 )
 
 
-def inventory_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:
+def discover_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:
     yield Service()
 
 
@@ -91,7 +91,7 @@ def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResul
 check_plugin_jenkins_instance = CheckPlugin(
     name="jenkins_instance",
     service_name="Jenkins Instance",
-    discovery_function=inventory_jenkins_instance,
+    discovery_function=discover_jenkins_instance,
     check_function=check_jenkins_instance,
     check_default_parameters={},
 )

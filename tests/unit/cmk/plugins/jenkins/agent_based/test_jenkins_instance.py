@@ -23,7 +23,7 @@ def _section() -> ji.JenkinsInstance:
 
 
 def test_discovery(section: ji.JenkinsInstance) -> None:
-    assert list(ji.inventory_jenkins_instance(section)) == [Service()]
+    assert list(ji.discover_jenkins_instance(section)) == [Service()]
 
 
 def test_check_jenkins_instance(section: ji.JenkinsInstance) -> None:

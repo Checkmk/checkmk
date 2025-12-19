@@ -13,6 +13,7 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
+import CmkButton from '@/components/CmkButton.vue'
 import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 
@@ -86,6 +87,15 @@ function setFocus() {
   }
 }
 
+function navigateToTarget(title: string, target?: UnifiedSearchResultTarget | undefined) {
+  if (target) {
+    window.open(target.url, 'main')
+    if (target.transition) {
+      showLoadingTransition(target.transition, title)
+    }
+  }
+}
+
 immediateWatch(
   () => ({ newFocus: props.focus }),
   async ({ newFocus }) => {
@@ -149,22 +159,20 @@ onBeforeUnmount(() => {
           ></ResultItemTitle>
         </div>
       </button>
-      <a
-        v-for="(ib, i) in props.inline_buttons"
-        ref="item-focus-inline"
-        :key="i"
-        :href="ib.target.url"
-        target="main"
-        class="result-item-handler inline"
-        @click="ib.target?.transition && showLoadingTransition(ib.target.transition, ib.title)"
-      >
-        <div v-if="ib.icon" class="result-item-inner-start">
-          <CmkDynamicIcon :spec="ib.icon" class="result-item-icon" />
-        </div>
-        <div class="result-item-inner-end">
-          <ResultItemTitle :title="ib.title" context=""></ResultItemTitle>
-        </div>
-      </a>
+      <div v-for="(ib, i) in props.inline_buttons" :key="i" class="result-item-handler inline">
+        <CmkButton
+          ref="item-focus-inline"
+          class="inline-button"
+          @click="navigateToTarget(ib.title, ib.target)"
+        >
+          <div v-if="ib.icon" class="result-item-inner-start">
+            <CmkDynamicIcon :spec="ib.icon" size="small" class="result-item-icon" />
+          </div>
+          <div class="result-item-inner-end">
+            <ResultItemTitle :title="ib.title" context=""></ResultItemTitle>
+          </div>
+        </CmkButton>
+      </div>
     </CmkZebra>
   </li>
 </template>
@@ -175,12 +183,13 @@ onBeforeUnmount(() => {
   list-style-type: none;
 
   .result-item-handler-wrapper {
+    position: relative;
     width: 100%;
     overflow: hidden;
     height: auto;
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     justify-content: space-between;
   }
 
@@ -203,16 +212,35 @@ onBeforeUnmount(() => {
       border: 1px solid var(--ux-theme-5);
     }
 
+    &.inline {
+      padding: 0 var(--spacing);
+      flex: 1;
+      margin-left: 1px;
+      box-sizing: border-box;
+      height: auto;
+      position: relative;
+      align-items: center;
+
+      &:hover {
+        background-color: var(--default-bg-color);
+        border: 1px solid var(--default-bg-color);
+      }
+
+      .inline-button {
+        height: 20px;
+
+        &:active,
+        &:focus {
+          border: 1px solid var(--success);
+          outline: none;
+        }
+      }
+    }
+
     &:active,
     &:focus {
       border: 1px solid var(--success);
       outline: none;
-    }
-
-    &.inline {
-      flex: 1;
-      margin-left: 1px;
-      box-sizing: border-box;
     }
   }
 

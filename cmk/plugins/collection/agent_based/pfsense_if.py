@@ -41,7 +41,7 @@ def parse_pfsense_if(string_table: StringTable) -> Section:
     return {name: Packets(ip4_in_blocked=int(value)) for name, value in string_table}
 
 
-def inventory_pfsense_if(section: Section) -> DiscoveryResult:
+def discover_pfsense_if(section: Section) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
@@ -94,7 +94,7 @@ DEFAULT_PARAMETERS = Params(
 check_plugin_pfsense_if = CheckPlugin(
     name="pfsense_if",
     service_name="Firewall Interface %s",
-    discovery_function=inventory_pfsense_if,
+    discovery_function=discover_pfsense_if,
     check_function=check_firewall_if,
     check_ruleset_name="firewall_if",
     check_default_parameters=DEFAULT_PARAMETERS,

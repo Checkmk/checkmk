@@ -8,7 +8,7 @@ from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.pfsense_if import (
     check_firewall_if_testable,
     DEFAULT_PARAMETERS,
-    inventory_pfsense_if,
+    discover_pfsense_if,
     parse_pfsense_if,
     Section,
 )
@@ -18,8 +18,8 @@ def _section() -> Section:
     return parse_pfsense_if([["WAN", "9000"], ["LAN", "120"]])
 
 
-def test_inventory_pfsense_if() -> None:
-    assert list(inventory_pfsense_if(_section())) == [Service(item="WAN"), Service(item="LAN")]
+def test_discover_pfsense_if() -> None:
+    assert list(discover_pfsense_if(_section())) == [Service(item="WAN"), Service(item="LAN")]
 
 
 def test_check_firewall_if_ok() -> None:

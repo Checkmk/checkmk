@@ -127,7 +127,7 @@ check_plugin_safenet_ntls_connrate = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_safenet_ntls_expiration(section: Section) -> DiscoveryResult:
+def discover_safenet_ntls_expiration(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -143,7 +143,7 @@ check_plugin_safenet_ntls_expiration = CheckPlugin(
     name="safenet_ntls_expiration",
     service_name="NTLS Expiration Date",
     sections=["safenet_ntls"],
-    discovery_function=inventory_safenet_ntls_expiration,
+    discovery_function=discover_safenet_ntls_expiration,
     check_function=check_safenet_ntls_expiration,
 )
 

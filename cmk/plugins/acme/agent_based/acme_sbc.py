@@ -66,7 +66,7 @@ def acme_sbc_parse_function(string_table: StringTable) -> Section:
     return states, settings
 
 
-def inventory_acme_sbc(section: Section) -> DiscoveryResult:
+def discover_acme_sbc(section: Section) -> DiscoveryResult:
     yield Service()
 
 
@@ -88,12 +88,12 @@ agent_section_acme_sbc = AgentSection(
 check_plugin_acme_sbc = CheckPlugin(
     name="acme_sbc",
     service_name="Status",
-    discovery_function=inventory_acme_sbc,
+    discovery_function=discover_acme_sbc,
     check_function=check_acme_sbc,
 )
 
 
-def inventory_acme_sbc_settings(section: Section) -> DiscoveryResult:
+def discover_acme_sbc_settings(section: Section) -> DiscoveryResult:
     yield Service(parameters=section[1])
 
 
@@ -113,7 +113,7 @@ check_plugin_acme_sbc_settings = CheckPlugin(
     name="acme_sbc_settings",
     service_name="Settings",
     sections=["acme_sbc"],
-    discovery_function=inventory_acme_sbc_settings,
+    discovery_function=discover_acme_sbc_settings,
     check_function=check_acme_sbc_settings,
     check_default_parameters={},
 )

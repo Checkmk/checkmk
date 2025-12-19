@@ -82,7 +82,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
     <ResponsiveGrid
       v-if="dashboard.content.layout.type === 'responsive_grid'"
       v-model:content="dashboard.content as ContentResponsiveGrid"
-      :dashboard-name="props.dashboardKey.name"
+      :dashboard-key="props.dashboardKey"
       :responsive-grid-breakpoints="props.constants.responsive_grid_breakpoints"
       :content-props="widgetContentProps"
       :is-editing="isEditing"

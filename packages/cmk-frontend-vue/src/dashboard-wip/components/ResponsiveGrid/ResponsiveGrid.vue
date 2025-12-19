@@ -14,7 +14,11 @@ import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import type { ContentPropsRecord } from '@/dashboard-wip/components/DashboardContent/types'
 import { useInjectMissingRuntimeFiltersAction } from '@/dashboard-wip/composables/useProvideMissingRuntimeFiltersAction.ts'
-import type { ContentResponsiveGrid, DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type {
+  ContentResponsiveGrid,
+  DashboardConstants,
+  DashboardKey
+} from '@/dashboard-wip/types/dashboard'
 import type { ResponsiveGridWidgetLayouts } from '@/dashboard-wip/types/widget'
 
 import ResponsiveGridWidget from './ResponsiveGridWidget.vue'
@@ -64,7 +68,7 @@ Layout changes:
 */
 
 interface Props {
-  dashboardName: string
+  dashboardKey: DashboardKey
   responsiveGridBreakpoints: DashboardConstants['responsive_grid_breakpoints']
   contentProps: ContentPropsRecord
   isEditing: boolean
@@ -89,7 +93,8 @@ const composable = useResponsiveGridLayout(internalBreakpointConfig, content)
 
 // unique key for the grid layout component to force reloading `responsive-layouts`
 const gridKey = computed(
-  () => `responsive-grid-${props.dashboardName}-${composable.selectedLayoutName.value}`
+  () =>
+    `responsive-grid-${props.dashboardKey.owner}-${props.dashboardKey.name}-${composable.selectedLayoutName.value}`
 )
 
 // This is used to filter out unnecessary updates.

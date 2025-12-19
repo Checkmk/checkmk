@@ -75,8 +75,8 @@ const handleAddWidget = () => {
 }
 
 const setStartUrl = async (): Promise<void> => {
-  const dashboardName = props.selectedDashboard?.name
-  if (!dashboardName) {
+  const dashboard = props.selectedDashboard
+  if (!dashboard) {
     console.error('No dashboard selected to set as start URL')
     return
   }
@@ -84,7 +84,8 @@ const setStartUrl = async (): Promise<void> => {
     const url = 'ajax_set_dashboard_start_url.py'
     const response = await axios.post(url, null, {
       params: {
-        name: dashboardName,
+        name: dashboard.name,
+        owner: dashboard.owner,
         // @ts-expect-error  TODO change if something is implemented to use CSRF token
         _csrf_token: global_csrf_token
       }

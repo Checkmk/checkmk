@@ -16,7 +16,7 @@ from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainM
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import IconNames, StaticIcon
+from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -231,7 +231,10 @@ class ModeAjaxSetStartURL(AjaxPage):
                 if name == "welcome.py":
                     set_user_attribute("start_url", repr(name))
                 else:
-                    url = makeuri_contextless(ctx.request, [("name", name)], "dashboard.py")
+                    variables: HTTPVariables = [("name", name)]
+                    if (owner := ctx.request.get_str_input("owner")) is not None:
+                        variables.append(("owner", owner))
+                    url = makeuri_contextless(ctx.request, variables, "dashboard.py")
                     validate_start_url(url, "")
                     set_user_attribute("start_url", repr(url))
             else:

@@ -59,7 +59,7 @@ agent_section_mongodb_counters = AgentSection(
 )
 
 
-def inventory_mongodb_counters(section: Section) -> DiscoveryResult:
+def discover_mongodb_counters(section: Section) -> DiscoveryResult:
     yield Service(item="Operations")
     if "opcountersRepl" in section:
         yield Service(item="Replica Operations")
@@ -85,6 +85,6 @@ def check_mongodb_counters(item: str, section: Section) -> CheckResult:
 check_plugin_mongodb_counters = CheckPlugin(
     name="mongodb_counters",
     service_name="MongoDB Counters %s",
-    discovery_function=inventory_mongodb_counters,
+    discovery_function=discover_mongodb_counters,
     check_function=check_mongodb_counters,
 )

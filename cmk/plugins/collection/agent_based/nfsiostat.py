@@ -104,7 +104,7 @@ def parse_nfsiostat(string_table: StringTable) -> Section:
 agent_section_nfsiostat = AgentSection(name="nfsiostat", parse_function=parse_nfsiostat)
 
 
-def inventory_nfsiostat(section: Section) -> DiscoveryResult:
+def discover_nfsiostat(section: Section) -> DiscoveryResult:
     for mountname in section:
         yield Service(item=mountname)
 
@@ -216,7 +216,7 @@ def check_nfsiostat(item: str, params: Mapping[str, Any], section: Section) -> C
 check_plugin_nfsiostat = CheckPlugin(
     name="nfsiostat",
     service_name="NFS IO stats %s",
-    discovery_function=inventory_nfsiostat,
+    discovery_function=discover_nfsiostat,
     check_function=check_nfsiostat,
     check_ruleset_name="nfsiostats",
     check_default_parameters={},

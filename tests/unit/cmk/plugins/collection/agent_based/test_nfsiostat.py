@@ -131,7 +131,7 @@ def _section2():
     ],
 )
 def test_item(section, item, request):
-    services = list(nfsiostat.inventory_nfsiostat(request.getfixturevalue(section)))
+    services = list(nfsiostat.discover_nfsiostat(request.getfixturevalue(section)))
     assert len(services) == 1
     assert services[0][0] == item
 
@@ -197,7 +197,7 @@ def test_nfsiostat_parse_newer_nfsiostat_output_format():
 def test_nfsiostat_check(
     section1: Section,
 ) -> None:
-    services = list(nfsiostat.inventory_nfsiostat(section1))
+    services = list(nfsiostat.discover_nfsiostat(section1))
     item = services[0][0]
     assert isinstance(item, str)
     results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section1))
@@ -236,7 +236,7 @@ def test_nfsiostat_check(
 def test_nfsiostat_check2(
     section1: Section,
 ) -> None:
-    services = list(nfsiostat.inventory_nfsiostat(section1))
+    services = list(nfsiostat.discover_nfsiostat(section1))
     item = services[0][0]
     assert isinstance(item, str)
     results = list(
@@ -263,7 +263,7 @@ def test_nfsiostat_check2(
 def test_nfsiostat_check3(
     section2: Section,
 ) -> None:
-    services = list(nfsiostat.inventory_nfsiostat(section2))
+    services = list(nfsiostat.discover_nfsiostat(section2))
     item = services[0][0]
     assert isinstance(item, str)
     results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section2))
@@ -352,7 +352,7 @@ def test_mount_name_ends_with_number():
         ]
     )
 
-    services = list(nfsiostat.inventory_nfsiostat(section))
+    services = list(nfsiostat.discover_nfsiostat(section))
     item = services[0][0]
     assert isinstance(item, str)
     results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section))
@@ -412,7 +412,7 @@ def test_mount_name_with_no_beginning_slash():
         ]
     )
 
-    services = list(nfsiostat.inventory_nfsiostat(section))
+    services = list(nfsiostat.discover_nfsiostat(section))
     item = services[0][0]
     assert item == "'10.61.241.85:ucs',"
     results = list(nfsiostat.check_nfsiostat(item=item, params={}, section=section))

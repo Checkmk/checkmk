@@ -26,7 +26,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_mongodb_connections(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_connections(section: StringTable) -> DiscoveryResult:
     yield Service(item="Connections")
 
 
@@ -101,7 +101,7 @@ agent_section_mongodb_connections = AgentSection(
 check_plugin_mongodb_connections = CheckPlugin(
     name="mongodb_connections",
     service_name="MongoDB %s",
-    discovery_function=inventory_mongodb_connections,
+    discovery_function=discover_mongodb_connections,
     check_function=check_mongodb_connections,
     check_ruleset_name="db_connections_mongodb",
     check_default_parameters={

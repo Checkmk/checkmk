@@ -24,7 +24,7 @@ Section = dict[str, str]
 # .1.3.6.1.4.1.9148.3.3.1.5.1.1.4.2 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyState.2
 
 
-def inventory_acme_powersupply(section: Section) -> DiscoveryResult:
+def discover_acme_powersupply(section: Section) -> DiscoveryResult:
     if section:
         yield from [Service(item=descr) for descr, state in section.items() if state != "7"]
 
@@ -54,6 +54,6 @@ snmp_section_acme_powersupply = SimpleSNMPSection(
 check_plugin_acme_powersupply = CheckPlugin(
     name="acme_powersupply",
     service_name="Power supply %s",
-    discovery_function=inventory_acme_powersupply,
+    discovery_function=discover_acme_powersupply,
     check_function=check_acme_powersupply,
 )

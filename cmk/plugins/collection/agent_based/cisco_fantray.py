@@ -102,7 +102,7 @@ def parse_cisco_fantray(string_table):
     return parsed
 
 
-def inventory_cisco_fantray(section: Any) -> DiscoveryResult:
+def discover_cisco_fantray(section: Any) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
@@ -133,6 +133,6 @@ snmp_section_cisco_fantray = SNMPSection(
 check_plugin_cisco_fantray = CheckPlugin(
     name="cisco_fantray",
     service_name="Fan %s",
-    discovery_function=inventory_cisco_fantray,
+    discovery_function=discover_cisco_fantray,
     check_function=check_cisco_fantray,
 )

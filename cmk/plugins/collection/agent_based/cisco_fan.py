@@ -29,7 +29,7 @@ cisco_fan_state_mapping = {
 }
 
 
-def inventory_cisco_fan(section: StringTable) -> DiscoveryResult:
+def discover_cisco_fan(section: StringTable) -> DiscoveryResult:
     yield from [
         Service(item=cisco_sensor_item(line[0], line[-1]))
         for line in section
@@ -64,6 +64,6 @@ snmp_section_cisco_fan = SimpleSNMPSection(
 check_plugin_cisco_fan = CheckPlugin(
     name="cisco_fan",
     service_name="FAN %s",
-    discovery_function=inventory_cisco_fan,
+    discovery_function=discover_cisco_fan,
     check_function=check_cisco_fan,
 )

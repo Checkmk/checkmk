@@ -63,7 +63,7 @@ Section = dict[str, tuple[str, str]]
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.14 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.14
 
 
-def inventory_acme_voltage(section: StringTable) -> DiscoveryResult:
+def discover_acme_voltage(section: StringTable) -> DiscoveryResult:
     if section:
         yield from [Service(item=descr) for descr, _value_str, state in section if state != "7"]
 
@@ -102,7 +102,7 @@ snmp_section_acme_voltage = SimpleSNMPSection(
 check_plugin_acme_voltage = CheckPlugin(
     name="acme_voltage",
     service_name="Voltage %s",
-    discovery_function=inventory_acme_voltage,
+    discovery_function=discover_acme_voltage,
     check_function=check_acme_voltage,
     check_ruleset_name="el_inphase",
     check_default_parameters={},

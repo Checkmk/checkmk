@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.ups_modulys.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
-def inventory_ups_modulys_alarms(section: StringTable) -> DiscoveryResult:
+def discover_ups_modulys_alarms(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -85,6 +85,6 @@ snmp_section_ups_modulys_alarms = SimpleSNMPSection(
 check_plugin_ups_modulys_alarms = CheckPlugin(
     name="ups_modulys_alarms",
     service_name="UPS Alarms",
-    discovery_function=inventory_ups_modulys_alarms,
+    discovery_function=discover_ups_modulys_alarms,
     check_function=check_ups_modulys_alarms,
 )

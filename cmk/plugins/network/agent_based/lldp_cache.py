@@ -198,7 +198,7 @@ def _render_chassis_id(chassis_id_sub_type: str, chassis_id: list[int] | str) ->
         return None
 
     match chassis_id_sub_type:
-        case "4":  # mac address
+        case "4" | "7":  # mac address
             return _render_mac_address(chassis_id)
         case "5":  # network address
             return _render_networkaddress(chassis_id)

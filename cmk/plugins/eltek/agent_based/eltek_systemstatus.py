@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.eltek.lib import DETECT_ELTEK
 
 
-def inventory_eltek_systemstatus(section: StringTable) -> DiscoveryResult:
+def discover_eltek_systemstatus(section: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -54,6 +54,6 @@ snmp_section_eltek_systemstatus = SimpleSNMPSection(
 check_plugin_eltek_systemstatus = CheckPlugin(
     name="eltek_systemstatus",
     service_name="System Status",
-    discovery_function=inventory_eltek_systemstatus,
+    discovery_function=discover_eltek_systemstatus,
     check_function=check_eltek_systemstatus,
 )

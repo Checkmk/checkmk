@@ -27,7 +27,7 @@ def brocade_mlx_fan_combine_item(id_, descr):
     return f"{id_} {descr}"
 
 
-def inventory_brocade_mlx_fan(section: StringTable) -> DiscoveryResult:
+def discover_brocade_mlx_fan(section: StringTable) -> DiscoveryResult:
     inventory = []
     for fan_id, fan_descr, fan_state in section:
         # Only add Fans who are present
@@ -72,6 +72,6 @@ snmp_section_brocade_mlx_fan = SimpleSNMPSection(
 check_plugin_brocade_mlx_fan = CheckPlugin(
     name="brocade_mlx_fan",
     service_name="Fan %s",
-    discovery_function=inventory_brocade_mlx_fan,
+    discovery_function=discover_brocade_mlx_fan,
     check_function=check_brocade_mlx_fan,
 )

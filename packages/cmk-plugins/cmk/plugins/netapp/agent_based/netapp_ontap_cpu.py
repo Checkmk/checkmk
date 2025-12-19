@@ -37,7 +37,7 @@ agent_section_netapp_ontap_cpu = AgentSection(
 )
 
 
-def inventory_netapp_ontap_cpu(section: Section) -> DiscoveryResult:
+def discover_netapp_ontap_cpu(section: Section) -> DiscoveryResult:
     yield from (Service(item=item_name) for item_name in section)
 
 
@@ -61,7 +61,7 @@ def check_netapp_ontap_cpu_utilization(
 check_plugin_netapp_ontap_cpu = CheckPlugin(
     name="netapp_ontap_cpu",
     service_name="CPU utilization Node %s",
-    discovery_function=inventory_netapp_ontap_cpu,
+    discovery_function=discover_netapp_ontap_cpu,
     sections=["netapp_ontap_node"],
     check_function=check_netapp_ontap_cpu_utilization,
     check_ruleset_name="cpu_utilization_multiitem",

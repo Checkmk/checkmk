@@ -110,6 +110,13 @@ const handleClickOutside = (event: Event) => {
   }
 }
 
+const isActiveDashboard = (dashboard: DashboardMetadata) => {
+  return (
+    dashboard?.name === props.selectedDashboard?.name &&
+    dashboard?.owner === props.selectedDashboard?.owner
+  )
+}
+
 watch(
   () => props.selectedDashboard,
   (newValue) => {
@@ -165,9 +172,9 @@ onUnmounted(() => {
             <div class="group-header">{{ _t('Custom dashboards') }}</div>
             <div
               v-for="dashboard in groupedDashboards.custom"
-              :key="dashboard.name"
+              :key="`${dashboard.owner}-${dashboard.name}`"
               class="dropdown-item"
-              :class="{ active: dashboard?.display?.title === props.selectedDashboard?.title }"
+              :class="{ active: isActiveDashboard(dashboard) }"
               @click="handleDashboardSelect(dashboard)"
             >
               {{ dashboard?.display?.title || 'Unnamed Dashboard' }}
@@ -183,7 +190,7 @@ onUnmounted(() => {
               v-for="dashboard in groupedDashboards.builtIn"
               :key="dashboard.name"
               class="dropdown-item"
-              :class="{ active: dashboard?.display?.title === props.selectedDashboard?.title }"
+              :class="{ active: isActiveDashboard(dashboard) }"
               @click="handleDashboardSelect(dashboard)"
             >
               <CmkLabel>{{ dashboard?.display?.title || _t('Unnamed Dashboard') }}</CmkLabel>

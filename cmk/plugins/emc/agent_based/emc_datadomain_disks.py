@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.emc.lib import DETECT_DATADOMAIN
 
 
-def inventory_emc_datadomain_disks(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_emc_datadomain_disks(section: Sequence[StringTable]) -> DiscoveryResult:
     for line in section[0]:
         yield Service(item=f"{line[0]}-{line[1]}")
 
@@ -83,6 +83,6 @@ snmp_section_emc_datadomain_disks = SNMPSection(
 check_plugin_emc_datadomain_disks = CheckPlugin(
     name="emc_datadomain_disks",
     service_name="Hard Disk %s",
-    discovery_function=inventory_emc_datadomain_disks,
+    discovery_function=discover_emc_datadomain_disks,
     check_function=check_emc_datadomain_disks,
 )

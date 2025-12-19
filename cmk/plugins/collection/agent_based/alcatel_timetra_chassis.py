@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_alcatel_timetra_chassis(section: StringTable) -> DiscoveryResult:
+def discover_alcatel_timetra_chassis(section: StringTable) -> DiscoveryResult:
     for name, _adminstate, operstate, _alarmstate in section:
         # Only add active devices
         if operstate in ["2", "8"]:
@@ -93,6 +93,6 @@ snmp_section_alcatel_timetra_chassis = SimpleSNMPSection(
 check_plugin_alcatel_timetra_chassis = CheckPlugin(
     name="alcatel_timetra_chassis",
     service_name="Device %s",
-    discovery_function=inventory_alcatel_timetra_chassis,
+    discovery_function=discover_alcatel_timetra_chassis,
     check_function=check_alcatel_timetra_chassis,
 )

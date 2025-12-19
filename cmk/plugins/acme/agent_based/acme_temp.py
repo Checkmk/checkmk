@@ -43,7 +43,7 @@ Section = dict[str, tuple[str, str]]
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.5.6 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureState.6
 
 
-def inventory_acme_temp(section: Section) -> DiscoveryResult:
+def discover_acme_temp(section: Section) -> DiscoveryResult:
     if section:
         yield from [
             Service(item=descr) for descr, (_value_str, state) in section.items() if state != "7"
@@ -85,7 +85,7 @@ snmp_section_acme_temp = SimpleSNMPSection(
 check_plugin_acme_temp = CheckPlugin(
     name="acme_temp",
     service_name="Temperature %s",
-    discovery_function=inventory_acme_temp,
+    discovery_function=discover_acme_temp,
     check_function=check_acme_temp,
     check_ruleset_name="temperature",
     check_default_parameters={},

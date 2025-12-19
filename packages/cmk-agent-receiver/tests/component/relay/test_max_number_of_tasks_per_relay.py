@@ -40,10 +40,11 @@ def test_cannot_push_more_pending_tasks_than_allowed(
 
     # An additional task cannot be pushed
 
-    response = agent_receiver.push_task(
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload=".."),
-    )
+    with agent_receiver.with_client_ip("127.0.0.1"):
+        response = agent_receiver.push_task(
+            relay_id=relay_id,
+            spec=FetchAdHocTask(payload=".."),
+        )
 
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text
     assert response.json() == {
@@ -85,10 +86,11 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
         result_payload="done",
     )
 
-    response = agent_receiver.push_task(
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload=".."),
-    )
+    with agent_receiver.with_client_ip("127.0.0.1"):
+        response = agent_receiver.push_task(
+            relay_id=relay_id,
+            spec=FetchAdHocTask(payload=".."),
+        )
 
     assert response.status_code == HTTPStatus.OK, response.text
 
@@ -115,10 +117,11 @@ def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site:
 
     # we should still be able to add tasks to relay B
 
-    response = agent_receiver.push_task(
-        relay_id=relay_id_B,
-        spec=FetchAdHocTask(payload=".."),
-    )
+    with agent_receiver.with_client_ip("127.0.0.1"):
+        response = agent_receiver.push_task(
+            relay_id=relay_id_B,
+            spec=FetchAdHocTask(payload=".."),
+        )
     assert response.status_code == HTTPStatus.OK, response.text
 
 

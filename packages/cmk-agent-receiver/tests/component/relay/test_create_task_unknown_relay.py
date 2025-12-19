@@ -33,6 +33,9 @@ def test_create_task_unknown_relay(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
-    response = agent_receiver.push_task(relay_id="bad_relay_id", spec=FetchAdHocTask(payload=".."))
+    with agent_receiver.with_client_ip("127.0.0.1"):
+        response = agent_receiver.push_task(
+            relay_id="bad_relay_id", spec=FetchAdHocTask(payload="..")
+        )
     assert response.status_code == HTTPStatus.OK
     assert response.json()["task_id"] is not None

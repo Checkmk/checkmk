@@ -14,14 +14,24 @@ from cmk.relay_protocols.tasks import (
 )
 
 from .agent_receiver import AgentReceiverClient
+from .certs import SITE_CN
 
 
 def push_task(
-    agent_receiver: AgentReceiverClient, relay_id: str, spec: TaskCreateRequestSpec
+    agent_receiver: AgentReceiverClient,
+    relay_id: str,
+    spec: TaskCreateRequestSpec,
+    site_cn: str = SITE_CN,
 ) -> TaskCreateResponse:
-    """helper to push tasks for a relay.
-    It abstracts away the reponses and gives you a reasonable type to work with."""
-    response = agent_receiver.push_task(relay_id=relay_id, spec=spec)
+    """Helper to push tasks for a relay from localhost (site operations).
+
+    This function automatically wraps the request in a localhost context since
+    pushing tasks requires localhost access.
+
+    It abstracts away the responses and gives you a reasonable type to work with.
+    """
+    with agent_receiver.with_client_ip("127.0.0.1"):
+        response = agent_receiver.push_task(relay_id=relay_id, spec=spec, site_cn=site_cn)
     assert response.status_code == HTTPStatus.OK, response.text
     return TaskCreateResponse.model_validate(response.json())
 

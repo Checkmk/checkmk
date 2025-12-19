@@ -61,7 +61,9 @@ def test_task_expires_in_agent_receiver(
 
 
 def test_task_expiration_resets_on_update(
-    site: SiteMock, agent_receiver: AgentReceiverClient, site_context: Config
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
 ) -> None:
     """Verify that the task expiration timer is reset when a task is updated, extending its lifetime.
 

@@ -53,7 +53,6 @@ def test_updating_task_should_change_stored_task_object(
     task_id = task_ids[0]
 
     # do the update
-
     update_response = agent_receiver.update_task(
         relay_id=relay_id,
         task_id=task_id,
@@ -86,7 +85,10 @@ def test_updating_task_should_change_stored_task_object(
 
 @pytest.mark.parametrize("result_type_input", ["OK", "ERROR"])
 def test_task_no_longer_pending(
-    agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str, site_context: Config
+    agent_receiver: AgentReceiverClient,
+    relay_id: str,
+    result_type_input: str,
+    site_context: Config,
 ) -> None:
     """Verify that once a task has been updated with a result, it no longer appears in the list of pending tasks.
 
@@ -122,7 +124,10 @@ def test_task_no_longer_pending(
 
 @pytest.mark.parametrize("result_type_input", ["OK", "ERROR"])
 def test_timestamps_are_handled(
-    agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str, site_context: Config
+    agent_receiver: AgentReceiverClient,
+    relay_id: str,
+    result_type_input: str,
+    site_context: Config,
 ) -> None:
     """Verify that updating a task modifies the update_timestamp but preserves the creation_timestamp.
 

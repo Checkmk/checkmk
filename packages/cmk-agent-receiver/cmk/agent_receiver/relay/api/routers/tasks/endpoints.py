@@ -16,6 +16,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_relay_tasks_handler,
     get_update_task_handler,
     get_version_handler,
+    site_cn_authorization,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     ActivateConfigHandler,
@@ -24,6 +25,9 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     GetRelayTasksHandler,
     GetVersionHandler,
     UpdateTaskHandler,
+)
+from cmk.agent_receiver.relay.api.routers.tasks.libs.localhost_authorization import (
+    validate_localhost_authorization,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     FetchSpec,
@@ -47,10 +51,14 @@ router = fastapi.APIRouter()
     responses={
         200: {"model": tasks_protocol.TaskCreateResponse},
     },
+    dependencies=[
+        fastapi.Depends(validate_localhost_authorization),
+        fastapi.Depends(site_cn_authorization),
+    ],
 )
 async def create_task_endpoint(
     relay_id: str,
-    request: tasks_protocol.TaskCreateRequest,
+    request_body: tasks_protocol.TaskCreateRequest,
     handler: Annotated[CreateTaskHandler, fastapi.Depends(get_create_task_handler)],
 ) -> tasks_protocol.TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
@@ -60,7 +68,7 @@ async def create_task_endpoint(
 
     Args:
         relay_id: UUID of the relay to assign the task to
-        request: TaskCreateRequest containing task type and payload
+        request_body: TaskCreateRequest containing task type and payload
 
     Returns:
         TaskCreateResponse with the generated task ID
@@ -73,12 +81,11 @@ async def create_task_endpoint(
         - Task IDs are unique
         - Maximum number of stored tasks has limits
     """
-
     # In case a new TaskCreateRequestSpec is added in the future, extend this match-case
-    # match request.spec:
+    # match request_body.spec:
     spec = FetchSpec(
-        payload=request.spec.payload,
-        timeout=request.spec.timeout,
+        payload=request_body.spec.payload,
+        timeout=request_body.spec.timeout,
     )
 
     try:

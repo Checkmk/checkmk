@@ -6,8 +6,10 @@
 from typing import Annotated
 
 import fastapi
+from fastapi import Header
 
 from cmk.agent_receiver.lib.config import Config, get_config
+from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_relays_repository
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     ActivateConfigHandler,
@@ -18,6 +20,9 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
+from cmk.agent_receiver.relay.api.routers.tasks.libs.site_cn_authorization import (
+    validate_site_cn_authorization,
+)
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
@@ -86,3 +91,17 @@ def get_activate_config_handler(
 
 def get_version_handler() -> GetVersionHandler:
     return GetVersionHandler()
+
+
+def site_cn_authorization(
+    client_cn: Annotated[str, Header(alias=INJECTED_UUID_HEADER)],
+) -> None:
+    """FastAPI dependency for authorizing requests based on local site CN.
+
+    Validates that the client certificate CN matches the local site's CN.
+    Use this in the dependencies parameter of route decorators.
+
+    Example:
+        @router.post("/endpoint", dependencies=[fastapi.Depends(site_cn_authorization)])
+    """
+    validate_site_cn_authorization(client_cn)

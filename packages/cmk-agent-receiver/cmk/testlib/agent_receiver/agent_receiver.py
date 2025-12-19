@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from typing import final
+from collections.abc import Iterator
+from contextlib import contextmanager
+from typing import Any, final
 
 import httpx
 from fastapi.testclient import TestClient
@@ -16,7 +18,7 @@ from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
 
-from .certs import generate_csr_pair
+from .certs import generate_csr_pair, SITE_CN
 from .relay import random_relay_id
 from .site_mock import User
 
@@ -35,6 +37,44 @@ class AgentReceiverClient:
         self.site_name = site_name
         self.client.headers["Authorization"] = user.bearer
         self.set_serial(serial)
+        self._client_ip_override: tuple[str, int] | None = None
+
+    @contextmanager
+    def with_client_ip(self, client_ip: str = "127.0.0.1", client_port: int = 0) -> Iterator[None]:
+        """Context manager to temporarily set the client IP for requests.
+
+        This is useful for testing endpoints that have IP-based access control,
+        such as localhost_only_dependency which requires requests from 127.0.0.1.
+
+        Args:
+            client_ip: The IP address to set as the request origin (default: "127.0.0.1")
+            client_port: The port to set as the request origin (default: 0)
+
+        Example:
+            with agent_receiver.with_client_ip("127.0.0.1"):
+                response = agent_receiver.push_task(relay_id=relay_id, spec=spec)
+        """
+        # TestClient uses a _TestClientTransport from starlette
+        # We need to wrap the transport's app
+        original_transport = self.client._transport  # noqa: SLF001
+        original_app = original_transport.app  # type: ignore[attr-defined]
+        client_tuple = (client_ip, client_port)
+
+        # Create wrapper that injects client IP into scope
+        async def client_ip_wrapper(scope: Any, receive: Any, send: Any) -> None:
+            # https://asgi.readthedocs.io/en/latest/specs/main.html#connection-scope
+            # https://asgi.readthedocs.io/en/latest/specs/www.html#http-connection-scope
+            if scope["type"] == "http":
+                scope["client"] = client_tuple
+            await original_app(scope, receive, send)
+
+        # Replace the app in the transport
+        original_transport.app = client_ip_wrapper  # type: ignore[attr-defined]
+        try:
+            yield
+        finally:
+            # Restore original app
+            original_transport.app = original_app  # type: ignore[attr-defined]
 
     def set_serial(self, serial: Serial | None) -> None:
         if serial:
@@ -56,9 +96,15 @@ class AgentReceiverClient:
             },
         )
 
-    def push_task(self, *, relay_id: str, spec: TaskCreateRequestSpec) -> httpx.Response:
+    def push_task(
+        self, *, relay_id: str, spec: TaskCreateRequestSpec, site_cn: str = SITE_CN
+    ) -> httpx.Response:
+        headers = {
+            INJECTED_UUID_HEADER: site_cn,
+        }
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/tasks",
+            headers=headers,
             json=TaskCreateRequest(
                 spec=spec,
             ).model_dump(),

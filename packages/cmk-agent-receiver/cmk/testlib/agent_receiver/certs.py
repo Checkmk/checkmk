@@ -19,6 +19,9 @@ from cryptography.x509.oid import NameOID
 
 from cmk.agent_receiver.lib.config import Config
 
+# Common Name extracted from the CA_CERT below
+SITE_CN = "Site 'heute' local CA"
+
 CA_CERT = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
 xHdURADCMYS/jIpYAJzT0zTHwbP54gGA0ADqJoXIrfZdcZWJWEsHJqC6WnJsxGRN

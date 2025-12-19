@@ -69,8 +69,11 @@ def site_context(
 
 @pytest.fixture()
 def test_client(site_context: Config) -> Iterator[TestClient]:
-    # setting up some checkmk stuff required by the agent receiver
-    # start the app
+    """Test client for agent receiver.
+
+    Use this with AgentReceiverClient.with_client_ip() context manager
+    for endpoints that require localhost access.
+    """
     app = main_app()
 
     # Override the ForwardMonitoringDataHandler to use a shorter timeout for tests
@@ -83,6 +86,7 @@ def test_client(site_context: Config) -> Iterator[TestClient]:
 
     client = TestClient(app)
     yield client
+
     print(site_context.log_path.read_text())
 
 
@@ -121,4 +125,13 @@ def site(wiremock: Wiremock, user: User, site_context: Config) -> SiteMock:
 def agent_receiver(
     test_client: TestClient, site_context: Config, user: User
 ) -> AgentReceiverClient:
+    """Agent receiver client with dynamic IP control.
+
+    Use with_client_ip() context manager for localhost-only operations:
+        with agent_receiver.with_client_ip("127.0.0.1"):
+            agent_receiver.push_task(...)
+
+    Use directly for relay operations:
+        agent_receiver.get_relay_tasks(...)
+    """
     return AgentReceiverClient(test_client, site_context.site_name, user)

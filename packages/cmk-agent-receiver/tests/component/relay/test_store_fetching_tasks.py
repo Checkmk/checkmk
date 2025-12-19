@@ -103,10 +103,11 @@ def test_store_fetching_task_non_existent_relay(
     cf = create_config_folder(root=site_context.omd_root, relays=[])
     agent_receiver.set_serial(cf.serial)
 
-    response = agent_receiver.push_task(
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload=".."),
-    )
+    with agent_receiver.with_client_ip("127.0.0.1"):
+        response = agent_receiver.push_task(
+            relay_id=relay_id,
+            spec=FetchAdHocTask(payload=".."),
+        )
 
     assert response.status_code == HTTPStatus.OK
     tasks = get_relay_tasks(agent_receiver, relay_id)

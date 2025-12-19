@@ -268,7 +268,6 @@ onUnmounted(() => {
   padding: var(--dimension-4) var(--dimension-6) var(--dimension-3);
   font-size: var(--font-size-normal);
   font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 

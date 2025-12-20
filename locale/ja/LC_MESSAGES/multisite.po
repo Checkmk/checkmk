@@ -4088,10 +4088,6 @@ msgstr "diskstateルールを追加します"
 msgid "Add element"
 msgstr "エレメントを追加"
 
-#, python-format
-msgid "Add element: %s"
-msgstr "エレメントを追加:%s"
-
 msgid "Add elements to your sidebar"
 msgstr "サイドバーに要素を追加する"
 
@@ -6297,6 +6293,9 @@ msgstr ""
 #, python-format
 msgid "Allows to view and edit %s created by other users."
 msgstr "他のユーザが作成した %s の表示および編集を許可する。"
+
+msgid "Allows users to download the product telemetry data as a JSON file."
+msgstr ""
 
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
@@ -14098,9 +14097,6 @@ msgstr "散らばった点の色"
 msgid "Color theme"
 msgstr "カラーテーマ"
 
-msgid "Colored background"
-msgstr "色付きのバックグラウンド"
-
 msgid "Coloring"
 msgstr "着色"
 
@@ -15783,9 +15779,6 @@ msgstr "コードをクリップボードにコピーする"
 
 msgid "Copy connection value representation to clipboard"
 msgstr "接続値の表現をクリップボードにコピーする"
-
-msgid "Copy existing view"
-msgstr "既存のビューをコピーする"
 
 msgid "Copy rule value representation to clipboard"
 msgstr "ルール値表記をクリップボードにコピーする"
@@ -21502,9 +21495,6 @@ msgstr "要約を表示しない"
 msgid "Don't show and check"
 msgstr "表示して確認しないでください"
 
-msgid "Don't show any header"
-msgstr "ヘッダーを表示しない"
-
 msgid "Don't show graph title"
 msgstr "グラフのタイトルを表示しない"
 
@@ -21597,6 +21587,10 @@ msgstr "フォルダ %s 用の汎用Checkmkエージェントをダウンロー�
 
 msgid "Download license usage report"
 msgstr "ライセンス使用状況レポートをダウンロードする"
+
+#, fuzzy
+msgid "Download product telemetry"
+msgstr "レポート要素"
 
 msgid "Download snmp walk"
 msgstr "snmpwalkをダウンロードする"
@@ -22288,10 +22282,6 @@ msgstr "ダウンタイムを編集しますか?"
 msgid "Edit element"
 msgstr "要素を編集する"
 
-#, python-format
-msgid "Edit element: %s"
-msgstr "要素を編集: %s"
-
 msgid "Edit forecast graph"
 msgstr "予測グラフを編集する"
 
@@ -22719,9 +22709,6 @@ msgstr "電気張力の正常値に対する%割合"
 msgid "Electrical voltage"
 msgstr "電圧"
 
-msgid "Element"
-msgstr "要素"
-
 #, python-format
 msgid "Element %r does not exist anymore"
 msgstr "要素 %rはもう存在しません"
@@ -22784,9 +22771,6 @@ msgstr "1秒あたり 悪意のあるURL を含むメール"
 
 msgid "Emails containing malicious attachment per second"
 msgstr "1秒あたり悪意のある添付ファイルを含むメール"
-
-msgid "Embed existing view"
-msgstr "既存のビューを埋め込む"
 
 msgid "Embedded image"
 msgstr "埋め込み画像"
@@ -35235,9 +35219,9 @@ msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr ""
 "無効なプロキシスキームが指定されました。次のいずれかである必要があります：%s"
 
-#, python-brace-format
-msgid "Invalid regex pattern. Expected: {validate_pattern}"
-msgstr ""
+#, fuzzy, python-format
+msgid "Invalid regex pattern. Expected: %s"
+msgstr "無効な正規表現: %s"
 
 msgid "Invalid regular expression"
 msgstr "無効な正規表現"
@@ -37136,10 +37120,6 @@ msgstr "表領域サイズのレベル"
 msgid "Levels for the Tablespace usage"
 msgstr "表領域の使用レベル"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "デバイスの電力消費量のレベル "
 
@@ -37832,9 +37812,6 @@ msgstr "リンク障害エラー"
 
 msgid "Link failures"
 msgstr "リンク障害"
-
-msgid "Link of Title"
-msgstr "タイトルのリンク"
 
 msgid "Link priority"
 msgstr "リンクの優先度"
@@ -38983,6 +38960,10 @@ msgstr "予約使用率の下位レベル"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "アクティブな接続の下位レベル"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
@@ -42244,15 +42225,6 @@ msgstr "その他のオプション"
 #, python-format
 msgid "More than %d results"
 msgstr "%dを超える結果"
-
-msgid ""
-"Most elements have a hard coded static title and some are aware of their "
-"content and set the title dynamically, like the view snap-in, which displays "
-"the title of the view. If you like to use any other title, set it here."
-msgstr ""
-"ほとんどの要素にはハードコードされた静的タイトルがあり、ビューのタイトルを表"
-"示するビュースナップインのように、コンテンツを認識して動的にタイトルを設定す"
-"る要素もあります。 他のタイトルを使用する場合は、ここで設定してください。"
 
 msgid "Most recent events"
 msgstr "最新のイベント"
@@ -51212,6 +51184,12 @@ msgid "Preview generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "プレビューの生成はバックグラウンドジョブ<a href=\"%s\">%s</a>で開始されました"
 
+#, python-format
+msgid ""
+"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download "
+"your data by %s."
+msgstr ""
+
 msgid "Preview this report"
 msgstr "このレポートをプレビューする"
 
@@ -53772,17 +53750,8 @@ msgstr "%sの名前変更 -> %s"
 msgid "Render an error message into the document"
 msgstr "エラーメッセージをドキュメントにレンダリングします"
 
-msgid "Render background"
-msgstr "レンダリングの背景"
-
-msgid "Render gray background color behind the elements content."
-msgstr "要素のコンテンツのバックグラウンドに灰色の背景色をレンダリングします。"
-
 msgid "Render horizontal rules between rows"
 msgstr "行間の水平ルールをレンダリングする"
-
-msgid "Render the titlebar including title and link above the element."
-msgstr "要素の上にタイトルとリンクを含むタイトルバーをレンダリングします。"
 
 msgid "Render vertical rules between columns"
 msgstr "列間に垂直ルールをレンダリングする"
@@ -56912,9 +56881,6 @@ msgstr "リストからタイプを選択"
 msgid "Select user"
 msgstr "ユーザーを選択"
 
-msgid "Select view"
-msgstr "ビューを選択"
-
 msgid ""
 "Select where to send OpenTelemetry traces of Checkmk services to. The most "
 "basic approach is to send traces to the site's local Jaeger instance. To be "
@@ -58822,9 +58788,6 @@ msgstr "最初のグラフを表示する"
 msgid "Show gravity configuration"
 msgstr "重要度の設定を表示"
 
-msgid "Show header with highlighted background"
-msgstr "背景が強調表示されたヘッダーを表示する"
-
 msgid "Show hint in the 'User' menu"
 msgstr "ユーザー' メニューにヒントを表示する"
 
@@ -59093,12 +59056,6 @@ msgstr ""
 
 msgid "Show title"
 msgstr "タイトルを表示"
-
-msgid "Show title header"
-msgstr "タイトルヘッダーを表示"
-
-msgid "Show title without any background"
-msgstr "背景なしでタイトルを表示"
 
 msgid "Show unacknowledged incompatible werks"
 msgstr "未承認の互換性のない作業を表示"
@@ -64542,9 +64499,6 @@ msgstr ""
 msgid "The URL must begin with https://"
 msgstr "URLはhttps://で開始する必要があります"
 
-msgid "The URL of the target page the link of the element should link to."
-msgstr "要素のリンクがリンクする必要のあるターゲットページのURL。"
-
 msgid "The URL prefix must end with a slash."
 msgstr "URLプレフィックスはスラッシュで終了する必要があります。"
 
@@ -65956,9 +65910,6 @@ msgstr ""
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "指定されたベースオブジェクト \"%s\"はLDAPに存在しません (%s))"
 
-msgid "The given datasource is not supported"
-msgstr "指定されたデータソースはサポートされていません"
-
 msgid "The given datasource is not supported."
 msgstr "指定されたデータソースはサポートされていません。"
 
@@ -66870,9 +66821,6 @@ msgstr ""
 
 msgid "The name of the cluster resource as shown in the service name."
 msgstr "サービス名に示されているクラスターリソースの名前。"
-
-msgid "The name of the dashboard is missing."
-msgstr "ダッシュボードの名前がありません。"
 
 msgid "The name of the database on the DBMS"
 msgstr "DBMS上のデータベースの名前"
@@ -70754,13 +70702,6 @@ msgid ""
 msgstr ""
 "このオプションはテスト用です。将来的には削除されます。指示がない限り使用しな"
 "いでください！"
-
-msgid ""
-"This option is macro-capable, please check the inline help for more "
-"information."
-msgstr ""
-"このオプションはマクロ対応です。詳細については、インラインヘルプを確認してく"
-"ださい。"
 
 msgid "This option is needed in case you work without the Agent Bakery"
 msgstr "このオプションは、エージェントベーカリーなしで作業する場合に必要です"
@@ -78246,6 +78187,10 @@ msgstr "アップロードされたファイル"
 msgid "Upper"
 msgstr "アッパー"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
+
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
 
@@ -84062,9 +84007,6 @@ msgstr ""
 msgid "You are not permitted to view this page"
 msgstr "このページを閲覧することは許可されていません"
 
-msgid "You are required to change your password before proceeding."
-msgstr "続行する前にパスワードを変更する必要があります。"
-
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "存在しないルールを編集しようとしています。"
 
@@ -85569,6 +85511,10 @@ msgstr ""
 "定義済み条件を作成するには、少なくとも１つの連絡先グループのメンバーである必"
 "要があります。"
 
+#, fuzzy
+msgid "You need to change your password before proceeding. Reason: {}."
+msgstr "続行する前にパスワードを変更する必要があります。"
+
 msgid "You need to change your password."
 msgstr "パスワードを変更する必要があります。"
 
@@ -85737,6 +85683,9 @@ msgstr "WebAuthn認証はすでに使用されています"
 msgid "Your account has been accessed using a backup code."
 msgstr "ご登録のアカウントがバックアップコードを使用してアクセスされました。"
 
+msgid "Your administrator has enforced a password change"
+msgstr ""
+
 msgid ""
 "Your administrator has enforced two-factor authentication for your account. "
 "Kindly register one of the following two-factor mechanisms:"
@@ -85901,8 +85850,9 @@ msgstr "変更は一部のオブジェクトに影響します"
 msgid "Your old password is wrong."
 msgstr "古いパスワードが間違っています。"
 
-msgid "Your password is too old, you need to choose a new password."
-msgstr "パスワードが古すぎるため、新しいパスワードを選択する必要があります。"
+#, fuzzy
+msgid "Your password has expired"
+msgstr "パスワードが提供されていません"
 
 msgid "Your personal notification rules"
 msgstr "あなたの個人的な通知ルール"
@@ -86346,6 +86296,10 @@ msgstr "確認。"
 
 msgid "children"
 msgstr "子"
+
+#, fuzzy
+msgid "clicking here"
+msgstr "ブロック率"
 
 msgid "clients"
 msgstr "クライアント"
@@ -88749,6 +88703,9 @@ msgstr "オプションの読み込み中…"
 msgid "Loading views..."
 msgstr "読み込んでいます..."
 
+msgid "Select view"
+msgstr "ビューを選択"
+
 #, fuzzy
 msgid "Choose from available views"
 msgstr "利用可能なユーザーはいません"
@@ -90716,6 +90673,10 @@ msgid "Recently searched"
 msgstr "最近変更されたサービス"
 
 #, fuzzy
+msgid "Group results by topic"
+msgstr "によるグループワーク"
+
+#, fuzzy
 msgid "Add your first host"
 msgstr "現ホストに対するルールを追加"
 
@@ -91072,6 +91033,82 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "Add element: %s"
+#~ msgstr "エレメントを追加:%s"
+
+#~ msgid "Colored background"
+#~ msgstr "色付きのバックグラウンド"
+
+#~ msgid "Copy existing view"
+#~ msgstr "既存のビューをコピーする"
+
+#~ msgid "Don't show any header"
+#~ msgstr "ヘッダーを表示しない"
+
+#, python-format
+#~ msgid "Edit element: %s"
+#~ msgstr "要素を編集: %s"
+
+#~ msgid "Element"
+#~ msgstr "要素"
+
+#~ msgid "Embed existing view"
+#~ msgstr "既存のビューを埋め込む"
+
+#~ msgid "Link of Title"
+#~ msgstr "タイトルのリンク"
+
+#~ msgid ""
+#~ "Most elements have a hard coded static title and some are aware of their "
+#~ "content and set the title dynamically, like the view snap-in, which "
+#~ "displays the title of the view. If you like to use any other title, set "
+#~ "it here."
+#~ msgstr ""
+#~ "ほとんどの要素にはハードコードされた静的タイトルがあり、ビューのタイトルを"
+#~ "表示するビュースナップインのように、コンテンツを認識して動的にタイトルを設"
+#~ "定する要素もあります。 他のタイトルを使用する場合は、ここで設定してくださ"
+#~ "い。"
+
+#~ msgid "Render background"
+#~ msgstr "レンダリングの背景"
+
+#~ msgid "Render gray background color behind the elements content."
+#~ msgstr ""
+#~ "要素のコンテンツのバックグラウンドに灰色の背景色をレンダリングします。"
+
+#~ msgid "Render the titlebar including title and link above the element."
+#~ msgstr "要素の上にタイトルとリンクを含むタイトルバーをレンダリングします。"
+
+#~ msgid "Show header with highlighted background"
+#~ msgstr "背景が強調表示されたヘッダーを表示する"
+
+#~ msgid "Show title header"
+#~ msgstr "タイトルヘッダーを表示"
+
+#~ msgid "Show title without any background"
+#~ msgstr "背景なしでタイトルを表示"
+
+#~ msgid "The URL of the target page the link of the element should link to."
+#~ msgstr "要素のリンクがリンクする必要のあるターゲットページのURL。"
+
+#~ msgid "The given datasource is not supported"
+#~ msgstr "指定されたデータソースはサポートされていません"
+
+#~ msgid "The name of the dashboard is missing."
+#~ msgstr "ダッシュボードの名前がありません。"
+
+#~ msgid ""
+#~ "This option is macro-capable, please check the inline help for more "
+#~ "information."
+#~ msgstr ""
+#~ "このオプションはマクロ対応です。詳細については、インラインヘルプを確認して"
+#~ "ください。"
+
+#~ msgid "Your password is too old, you need to choose a new password."
+#~ msgstr ""
+#~ "パスワードが古すぎるため、新しいパスワードを選択する必要があります。"
+
 #~ msgid "Authenticator app"
 #~ msgstr "認証App"
 
@@ -91145,10 +91182,6 @@ msgstr ""
 
 #~ msgid "Executable Python script"
 #~ msgstr "実行可能なPythonスクリプト"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "コンシューマーカウントのレベル"
 
 #, fuzzy
 #~ msgid "Missing request variable 'widget_id'"

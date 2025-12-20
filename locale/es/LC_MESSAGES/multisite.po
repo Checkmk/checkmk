@@ -4313,10 +4313,6 @@ msgstr "Añadir regla de estado de disco"
 msgid "Add element"
 msgstr "Añadir elemento"
 
-#, python-format
-msgid "Add element: %s"
-msgstr "Añade el elemento: %s"
-
 msgid "Add elements to your sidebar"
 msgstr "Añade elementos a tu barra lateral"
 
@@ -6716,6 +6712,9 @@ msgstr ""
 #, python-format
 msgid "Allows to view and edit %s created by other users."
 msgstr "Permite ver y editar %s creados por otros usuarios."
+
+msgid "Allows users to download the product telemetry data as a JSON file."
+msgstr ""
 
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
@@ -15051,9 +15050,6 @@ msgstr "Color de los puntos dispersos"
 msgid "Color theme"
 msgstr "Tema del color"
 
-msgid "Colored background"
-msgstr "Fondo de color"
-
 msgid "Coloring"
 msgstr "Colorear"
 
@@ -16853,9 +16849,6 @@ msgstr "Secreto copiado en el portapapeles"
 #, fuzzy
 msgid "Copy connection value representation to clipboard"
 msgstr "Copiar la representación del valor de la regla en el portapapeles"
-
-msgid "Copy existing view"
-msgstr "Copiar la vista existente"
 
 msgid "Copy rule value representation to clipboard"
 msgstr "Copiar la representación del valor de la regla en el portapapeles"
@@ -22985,9 +22978,6 @@ msgstr "No mostrar Resumen"
 msgid "Don't show and check"
 msgstr "No mostrar y comprobar"
 
-msgid "Don't show any header"
-msgstr "No mostrar ninguna cabecera"
-
 msgid "Don't show graph title"
 msgstr "No mostrar el título del gráfico"
 
@@ -23084,6 +23074,10 @@ msgstr "Descarga genérica del agente Checkmk para la carpeta %s"
 
 msgid "Download license usage report"
 msgstr "Descargar el informe de uso de licencias"
+
+#, fuzzy
+msgid "Download product telemetry"
+msgstr "elemento de informe"
 
 msgid "Download snmp walk"
 msgstr "Descargar snmp walk"
@@ -23796,10 +23790,6 @@ msgstr "Editar los tiempos de inactividad"
 msgid "Edit element"
 msgstr "Editar elemento"
 
-#, python-format
-msgid "Edit element: %s"
-msgstr "Editar elemento: %s"
-
 msgid "Edit forecast graph"
 msgstr "Editar gráfico de previsión"
 
@@ -24237,9 +24227,6 @@ msgstr "Tensión eléctrica en % del valor normal"
 msgid "Electrical voltage"
 msgstr "Tensión eléctrica"
 
-msgid "Element"
-msgstr "Elemento"
-
 #, python-format
 msgid "Element %r does not exist anymore"
 msgstr "El elemento %r ya no existe"
@@ -24313,9 +24300,6 @@ msgstr "Correos electrónicos que contienen %s por segundo"
 #, fuzzy
 msgid "Emails containing malicious attachment per second"
 msgstr "Correos electrónicos que contienen %s por segundo"
-
-msgid "Embed existing view"
-msgstr "Incrustar la vista existente"
 
 msgid "Embedded image"
 msgstr "Imagen incrustada"
@@ -37713,9 +37697,9 @@ msgstr ""
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Esquema de URL inválido. Debe ser uno de los siguientes: %s"
 
-#, python-brace-format
-msgid "Invalid regex pattern. Expected: {validate_pattern}"
-msgstr ""
+#, fuzzy, python-format
+msgid "Invalid regex pattern. Expected: %s"
+msgstr "Expresión regular inválida: %s"
 
 msgid "Invalid regular expression"
 msgstr "Expresión regular no válida"
@@ -39732,10 +39716,6 @@ msgstr "Niveles para el tamaño del Tablespace"
 msgid "Levels for the Tablespace usage"
 msgstr "Niveles de uso del Tablespace"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Niveles para el recuento de consumidores"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveles de consumo de energía eléctrica de un dispositivo "
 
@@ -40501,9 +40481,6 @@ msgstr "Errores de enlace"
 
 msgid "Link failures"
 msgstr "Fallos en los enlaces"
-
-msgid "Link of Title"
-msgstr "Enlace del título"
 
 #, fuzzy
 msgid "Link priority"
@@ -41714,6 +41691,10 @@ msgstr "Niveles más bajos para la utilización de solicitudes"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "Niveles para conexiones activas"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveles para el recuento de consumidores"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -45186,17 +45167,6 @@ msgstr "Opciones de montaje"
 #, python-format
 msgid "More than %d results"
 msgstr "Más de %d resultados"
-
-#, fuzzy
-msgid ""
-"Most elements have a hard coded static title and some are aware of their "
-"content and set the title dynamically, like the view snap-in, which displays "
-"the title of the view. If you like to use any other title, set it here."
-msgstr ""
-"La mayoría de los elementos tienen un título estático codificado y algunos "
-"son conscientes de su contenido y establecen el título dinámicamente, como "
-"el snapin de la vista, que muestra el título de la vista. Si quieres "
-"utilizar cualquier otro título, establécelo aquí."
 
 msgid "Most recent events"
 msgstr "Acontecimientos más recientes"
@@ -55005,6 +54975,12 @@ msgstr ""
 "Se ha iniciado la generación de la vista previa en el trabajo de fondo <a "
 "href=\"%s\">%s</a>"
 
+#, python-format
+msgid ""
+"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download "
+"your data by %s."
+msgstr ""
+
 msgid "Preview this report"
 msgstr "Vista previa de este informe"
 
@@ -57730,20 +57706,8 @@ msgstr "Cambio de nombre de %s -> %s"
 msgid "Render an error message into the document"
 msgstr "Renderizar un mensaje de error en el documento"
 
-msgid "Render background"
-msgstr "Renderizar el fondo"
-
-msgid "Render gray background color behind the elements content."
-msgstr ""
-"Renderiza el color de fondo gris detrás del contenido de los elementos."
-
 msgid "Render horizontal rules between rows"
 msgstr "Renderizar reglas horizontales entre filas"
-
-msgid "Render the titlebar including title and link above the element."
-msgstr ""
-"Renderiza la barra de título incluyendo el título y el enlace sobre el "
-"elemento."
 
 msgid "Render vertical rules between columns"
 msgstr "Renderizar reglas verticales entre columnas"
@@ -61064,9 +61028,6 @@ msgstr "Seleccionar archivos individuales de la lista"
 msgid "Select user"
 msgstr "Borrar usuario"
 
-msgid "Select view"
-msgstr "Seleccione la vista"
-
 msgid ""
 "Select where to send OpenTelemetry traces of Checkmk services to. The most "
 "basic approach is to send traces to the site's local Jaeger instance. To be "
@@ -63125,9 +63086,6 @@ msgstr "Muestre los gráficos de la primera"
 msgid "Show gravity configuration"
 msgstr "Configuración del servicio"
 
-msgid "Show header with highlighted background"
-msgstr "Mostrar la cabecera con el fondo resaltado"
-
 msgid "Show hint in the 'User' menu"
 msgstr "Mostrar pista en el menú \"Usuario"
 
@@ -63419,12 +63377,6 @@ msgstr ""
 
 msgid "Show title"
 msgstr "Mostrar título"
-
-msgid "Show title header"
-msgstr "Mostrar la cabecera del título"
-
-msgid "Show title without any background"
-msgstr "Mostrar el título sin fondo"
 
 msgid "Show unacknowledged incompatible werks"
 msgstr "Mostrar los trabajos incompatibles no reconocidos"
@@ -69247,9 +69199,6 @@ msgstr ""
 msgid "The URL must begin with https://"
 msgstr "La URL debe comenzar con <tt>https</tt>."
 
-msgid "The URL of the target page the link of the element should link to."
-msgstr "La URL de la página de destino a la que debe enlazar el elemento."
-
 msgid "The URL prefix must end with a slash."
 msgstr "El prefijo de la URL debe terminar con una barra."
 
@@ -70708,9 +70657,6 @@ msgstr ""
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "El objeto base dado \"%s\" no existe en LDAP (%s))"
 
-msgid "The given datasource is not supported"
-msgstr "La fuente de datos dada no es compatible"
-
 msgid "The given datasource is not supported."
 msgstr "La fuente de datos dada no es compatible."
 
@@ -71667,9 +71613,6 @@ msgid "The name of the cluster resource as shown in the service name."
 msgstr ""
 "El nombre del recurso del clúster tal y como aparece en la descripción del "
 "servicio."
-
-msgid "The name of the dashboard is missing."
-msgstr "Falta el nombre del cuadro de mandos."
 
 msgid "The name of the database on the DBMS"
 msgstr "El nombre de la base de datos en el SGBD"
@@ -75689,13 +75632,6 @@ msgid ""
 msgstr ""
 "Esta opción es sólo de prueba. Se eliminará en el futuro. No la utilice a "
 "menos que se lo indiquen!"
-
-msgid ""
-"This option is macro-capable, please check the inline help for more "
-"information."
-msgstr ""
-"Esta opción es compatible con las macros, por favor, consulte la ayuda en "
-"línea para obtener más información."
 
 msgid "This option is needed in case you work without the Agent Bakery"
 msgstr ""
@@ -84022,6 +83958,10 @@ msgstr "Cargar el archivo MIB"
 msgid "Upper"
 msgstr "OK"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveles para el recuento de consumidores"
+
 msgid "Upper Temperature Levels"
 msgstr "Niveles de temperatura superiores"
 
@@ -90349,9 +90289,6 @@ msgstr ""
 msgid "You are not permitted to view this page"
 msgstr "No tiene permiso para ver esta página"
 
-msgid "You are required to change your password before proceeding."
-msgstr "Es necesario que cambie su contraseña antes de continuar."
-
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "Está intentando editar una regla que ya no existe."
 
@@ -91935,6 +91872,10 @@ msgstr ""
 "Es necesario ser miembro de al menos un grupo de contactos para poder crear "
 "una condición predefinida."
 
+#, fuzzy
+msgid "You need to change your password before proceeding. Reason: {}."
+msgstr "Es necesario que cambie su contraseña antes de continuar."
+
 msgid "You need to change your password."
 msgstr "Tienes que cambiar tu contraseña."
 
@@ -92113,6 +92054,9 @@ msgstr "Su credencial WebAuthn ya está en uso"
 msgid "Your account has been accessed using a backup code."
 msgstr ""
 
+msgid "Your administrator has enforced a password change"
+msgstr ""
+
 msgid ""
 "Your administrator has enforced two-factor authentication for your account. "
 "Kindly register one of the following two-factor mechanisms:"
@@ -92286,9 +92230,9 @@ msgstr "Sus modificaciones afectan a algunos objetos"
 msgid "Your old password is wrong."
 msgstr "Tu antigua contraseña es incorrecta."
 
-msgid "Your password is too old, you need to choose a new password."
-msgstr ""
-"Su contraseña es demasiado antigua, necesita elegir una nueva contraseña."
+#, fuzzy
+msgid "Your password has expired"
+msgstr "Desde el almacén de contraseñas"
 
 msgid "Your personal notification rules"
 msgstr "Sus reglas personales de notificación"
@@ -92750,6 +92694,10 @@ msgstr "comprobarlo."
 
 msgid "children"
 msgstr "hijos"
+
+#, fuzzy
+msgid "clicking here"
+msgstr "Tasa de bloqueo"
 
 msgid "clients"
 msgstr "clientes"
@@ -95256,6 +95204,9 @@ msgstr "Opciones de etiquetado"
 msgid "Loading views..."
 msgstr "Cargando..."
 
+msgid "Select view"
+msgstr "Seleccione la vista"
+
 #, fuzzy
 msgid "Choose from available views"
 msgstr "Puertos disponibles"
@@ -97270,6 +97221,10 @@ msgid "Recently searched"
 msgstr "Servicios modificados recientemente"
 
 #, fuzzy
+msgid "Group results by topic"
+msgstr "Trabajos en grupo de"
+
+#, fuzzy
 msgid "Add your first host"
 msgstr "Añadir regla para el host actual"
 
@@ -97632,6 +97587,85 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "Add element: %s"
+#~ msgstr "Añade el elemento: %s"
+
+#~ msgid "Colored background"
+#~ msgstr "Fondo de color"
+
+#~ msgid "Copy existing view"
+#~ msgstr "Copiar la vista existente"
+
+#~ msgid "Don't show any header"
+#~ msgstr "No mostrar ninguna cabecera"
+
+#, python-format
+#~ msgid "Edit element: %s"
+#~ msgstr "Editar elemento: %s"
+
+#~ msgid "Element"
+#~ msgstr "Elemento"
+
+#~ msgid "Embed existing view"
+#~ msgstr "Incrustar la vista existente"
+
+#~ msgid "Link of Title"
+#~ msgstr "Enlace del título"
+
+#, fuzzy
+#~ msgid ""
+#~ "Most elements have a hard coded static title and some are aware of their "
+#~ "content and set the title dynamically, like the view snap-in, which "
+#~ "displays the title of the view. If you like to use any other title, set "
+#~ "it here."
+#~ msgstr ""
+#~ "La mayoría de los elementos tienen un título estático codificado y "
+#~ "algunos son conscientes de su contenido y establecen el título "
+#~ "dinámicamente, como el snapin de la vista, que muestra el título de la "
+#~ "vista. Si quieres utilizar cualquier otro título, establécelo aquí."
+
+#~ msgid "Render background"
+#~ msgstr "Renderizar el fondo"
+
+#~ msgid "Render gray background color behind the elements content."
+#~ msgstr ""
+#~ "Renderiza el color de fondo gris detrás del contenido de los elementos."
+
+#~ msgid "Render the titlebar including title and link above the element."
+#~ msgstr ""
+#~ "Renderiza la barra de título incluyendo el título y el enlace sobre el "
+#~ "elemento."
+
+#~ msgid "Show header with highlighted background"
+#~ msgstr "Mostrar la cabecera con el fondo resaltado"
+
+#~ msgid "Show title header"
+#~ msgstr "Mostrar la cabecera del título"
+
+#~ msgid "Show title without any background"
+#~ msgstr "Mostrar el título sin fondo"
+
+#~ msgid "The URL of the target page the link of the element should link to."
+#~ msgstr "La URL de la página de destino a la que debe enlazar el elemento."
+
+#~ msgid "The given datasource is not supported"
+#~ msgstr "La fuente de datos dada no es compatible"
+
+#~ msgid "The name of the dashboard is missing."
+#~ msgstr "Falta el nombre del cuadro de mandos."
+
+#~ msgid ""
+#~ "This option is macro-capable, please check the inline help for more "
+#~ "information."
+#~ msgstr ""
+#~ "Esta opción es compatible con las macros, por favor, consulte la ayuda en "
+#~ "línea para obtener más información."
+
+#~ msgid "Your password is too old, you need to choose a new password."
+#~ msgstr ""
+#~ "Su contraseña es demasiado antigua, necesita elegir una nueva contraseña."
+
 #, fuzzy
 #~ msgid "Authenticator app"
 #~ msgstr "Autenticación"
@@ -97710,10 +97744,6 @@ msgstr ""
 
 #~ msgid "Executable Python script"
 #~ msgstr "Script Python ejecutable"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Niveles para el recuento de consumidores"
 
 #, fuzzy
 #~ msgid "Missing request variable 'widget_id'"

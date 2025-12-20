@@ -4311,10 +4311,6 @@ msgstr "Adăugați regula diskstate"
 msgid "Add element"
 msgstr "Adaugă element"
 
-#, python-format
-msgid "Add element: %s"
-msgstr "Adăugați un element: %s"
-
 msgid "Add elements to your sidebar"
 msgstr "Adăugați elemente la bara laterală"
 
@@ -6677,6 +6673,9 @@ msgstr ""
 #, python-format
 msgid "Allows to view and edit %s created by other users."
 msgstr "Permite vizualizarea și editarea %s create de alți utilizatori."
+
+msgid "Allows users to download the product telemetry data as a JSON file."
+msgstr ""
 
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
@@ -14994,9 +14993,6 @@ msgstr "Culoarea punctelor împrăștiate"
 msgid "Color theme"
 msgstr "Tema de culoare"
 
-msgid "Colored background"
-msgstr "Fond colorat"
-
 msgid "Coloring"
 msgstr "Colorare"
 
@@ -16772,9 +16768,6 @@ msgstr "Copiați codurile în clipboard"
 #, fuzzy
 msgid "Copy connection value representation to clipboard"
 msgstr "Copiați reprezentarea valorii regulii în clipboard"
-
-msgid "Copy existing view"
-msgstr "Copierea vizualizării existente"
 
 msgid "Copy rule value representation to clipboard"
 msgstr "Copiați reprezentarea valorii regulii în clipboard"
@@ -22874,9 +22867,6 @@ msgstr "Nu arăta Rezumat"
 msgid "Don't show and check"
 msgstr "Don't arată și verifică"
 
-msgid "Don't show any header"
-msgstr "Don't arată nici un antet"
-
 msgid "Don't show graph title"
 msgstr "Nu afișați titlul graficului"
 
@@ -22973,6 +22963,10 @@ msgstr "Descărcați Checkmk Agent generic pentru folderul %s."
 
 msgid "Download license usage report"
 msgstr "Descărcați raportul de utilizare a licențelor"
+
+#, fuzzy
+msgid "Download product telemetry"
+msgstr "element de raport"
 
 msgid "Download snmp walk"
 msgstr "Descărcați snmp walk"
@@ -23688,10 +23682,6 @@ msgstr "Edit Downtimes?"
 msgid "Edit element"
 msgstr "Editați elementul"
 
-#, python-format
-msgid "Edit element: %s"
-msgstr "Editați elementul: %s"
-
 # georgem ##############
 msgid "Edit forecast graph"
 msgstr "Editați graficul de prognoză"
@@ -24130,9 +24120,6 @@ msgstr "Tensiunea electrică în % din valoarea normală"
 msgid "Electrical voltage"
 msgstr "Tensiune electrică"
 
-msgid "Element"
-msgstr "Element"
-
 #, python-format
 msgid "Element %r does not exist anymore"
 msgstr "Elementul %r nu mai există"
@@ -24204,9 +24191,6 @@ msgstr "E-mailuri care conțin %s pe secundă"
 #, fuzzy
 msgid "Emails containing malicious attachment per second"
 msgstr "E-mailuri care conțin %s pe secundă"
-
-msgid "Embed existing view"
-msgstr "Integrați vizualizarea existentă"
 
 msgid "Embedded image"
 msgstr "Imagine încorporată"
@@ -37566,9 +37550,9 @@ msgstr ""
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
 
-#, python-brace-format
-msgid "Invalid regex pattern. Expected: {validate_pattern}"
-msgstr ""
+#, fuzzy, python-format
+msgid "Invalid regex pattern. Expected: %s"
+msgstr "Expresie regulată invalidă: %s."
 
 msgid "Invalid regular expression"
 msgstr "Expresie regulată invalidă"
@@ -39578,10 +39562,6 @@ msgstr "Niveluri pentru dimensiunea Tablespace"
 msgid "Levels for the Tablespace usage"
 msgstr "Niveluri pentru utilizarea Tablespace"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Niveluri pentru numărul de consumatori"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveluri pentru consumul de energie electrică al unui dispozitiv "
 
@@ -40319,9 +40299,6 @@ msgstr "Erorile de eșec al legăturii"
 
 msgid "Link failures"
 msgstr "Eșecurile legăturilor"
-
-msgid "Link of Title"
-msgstr "Legătura cu titlul"
 
 #, fuzzy
 msgid "Link priority"
@@ -41514,6 +41491,10 @@ msgstr "Niveluri mai mici de utilizare a rezervărilor"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "Niveluri pentru conexiuni active"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveluri pentru numărul de consumatori"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -44949,17 +44930,6 @@ msgstr "Mai multe opțiuni"
 #, python-format
 msgid "More than %d results"
 msgstr "Mai mult de %d rezultate"
-
-#, fuzzy
-msgid ""
-"Most elements have a hard coded static title and some are aware of their "
-"content and set the title dynamically, like the view snap-in, which displays "
-"the title of the view. If you like to use any other title, set it here."
-msgstr ""
-"Cele mai multe elemente au un titlu static codificat, iar unele sunt "
-"conștiente de conținutul lor și își stabilesc titlul în mod dinamic, cum ar "
-"fi snapin-ul de vizualizare, care afișează titlul vizualizării. Dacă doriți "
-"să utilizați un alt titlu, setați-l aici."
 
 msgid "Most recent events"
 msgstr "Cele mai recente evenimente"
@@ -54698,6 +54668,12 @@ msgid "Preview generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "Generarea previzualizării a început în jobul de fundal <a href=\"%s\">%s</a>"
 
+#, python-format
+msgid ""
+"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download "
+"your data by %s."
+msgstr ""
+
 msgid "Preview this report"
 msgstr "Previzualizați acest raport"
 
@@ -57405,18 +57381,8 @@ msgstr "Redenumirea lui %s -> %s"
 msgid "Render an error message into the document"
 msgstr "Redă un mesaj de eroare în document"
 
-msgid "Render background"
-msgstr "Redarea fundalului"
-
-msgid "Render gray background color behind the elements content."
-msgstr "Redă culoarea de fundal gri în spatele conținutului elementelor."
-
 msgid "Render horizontal rules between rows"
 msgstr "Redă regulile orizontale între rânduri"
-
-msgid "Render the titlebar including title and link above the element."
-msgstr ""
-"Redă bara de titlu, inclusiv titlul și legătura de deasupra elementului."
 
 msgid "Render vertical rules between columns"
 msgstr "Redă regulile verticale între coloane"
@@ -60717,9 +60683,6 @@ msgstr "Selectați tipul din listă"
 msgid "Select user"
 msgstr "Ștergeți utilizatorul"
 
-msgid "Select view"
-msgstr "Selectați vizualizarea"
-
 msgid ""
 "Select where to send OpenTelemetry traces of Checkmk services to. The most "
 "basic approach is to send traces to the site's local Jaeger instance. To be "
@@ -62791,9 +62754,6 @@ msgstr "Afișați graficele pentru prima"
 msgid "Show gravity configuration"
 msgstr "Afișați configurația gravitațională"
 
-msgid "Show header with highlighted background"
-msgstr "Afișați antetul cu fundal evidențiat"
-
 msgid "Show hint in the 'User' menu"
 msgstr "Afișați indicii în meniul 'Utilizator' meniu"
 
@@ -63080,12 +63040,6 @@ msgstr ""
 
 msgid "Show title"
 msgstr "Arată titlul"
-
-msgid "Show title header"
-msgstr "Afișați antetul titlului"
-
-msgid "Show title without any background"
-msgstr "Afișați titlul fără fundal"
 
 msgid "Show unacknowledged incompatible werks"
 msgstr "Arată lucrările incompatibile nerecunoscute"
@@ -68868,10 +68822,6 @@ msgstr ""
 msgid "The URL must begin with https://"
 msgstr "URL-ul trebuie să înceapă cu <tt>https</tt>."
 
-msgid "The URL of the target page the link of the element should link to."
-msgstr ""
-"URL-ul paginii țintă către care ar trebui să se lege link-ul elementului."
-
 msgid "The URL prefix must end with a slash."
 msgstr "Prefixul URL trebuie să se termine cu o bară oblică."
 
@@ -70329,9 +70279,6 @@ msgstr ""
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "Obiectul de bază dat \"%s\" nu există în LDAP (%s))"
 
-msgid "The given datasource is not supported"
-msgstr "Sursa de date dată nu este acceptată"
-
 msgid "The given datasource is not supported."
 msgstr "Sursa de date dată nu este acceptată."
 
@@ -71298,9 +71245,6 @@ msgstr ""
 msgid "The name of the cluster resource as shown in the service name."
 msgstr ""
 "Numele resursei de cluster, așa cum este indicat în descrierea serviciului."
-
-msgid "The name of the dashboard is missing."
-msgstr "Lipsește numele tabloului de bord."
 
 msgid "The name of the database on the DBMS"
 msgstr "Numele bazei de date din SGBD"
@@ -75332,13 +75276,6 @@ msgid ""
 msgstr ""
 "Această opțiune este doar pentru testare. Ea va fi eliminată în viitor. Nu o "
 "utilizați decât dacă vi se spune să o faceți!"
-
-msgid ""
-"This option is macro-capable, please check the inline help for more "
-"information."
-msgstr ""
-"Această opțiune este capabilă de macrocapacitate, vă rugăm să consultați "
-"ajutorul în linie pentru mai multe informații."
 
 msgid "This option is needed in case you work without the Agent Bakery"
 msgstr ""
@@ -83583,6 +83520,10 @@ msgstr "Încărcați fișierul MIB"
 msgid "Upper"
 msgstr "Partea superioară"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveluri pentru numărul de consumatori"
+
 msgid "Upper Temperature Levels"
 msgstr "Niveluri superioare de temperatură"
 
@@ -89884,9 +89825,6 @@ msgstr ""
 msgid "You are not permitted to view this page"
 msgstr "Nu aveți voie să vizualizați această pagină"
 
-msgid "You are required to change your password before proceeding."
-msgstr "Vi se cere să vă schimbați parola înainte de a continua."
-
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "Încercați să editați o regulă care nu mai există."
 
@@ -91459,6 +91397,10 @@ msgstr ""
 "Trebuie să fiți membru al cel puțin unui grup de contacte pentru a putea "
 "crea o condiție predefinită."
 
+#, fuzzy
+msgid "You need to change your password before proceeding. Reason: {}."
+msgstr "Vi se cere să vă schimbați parola înainte de a continua."
+
 msgid "You need to change your password."
 msgstr "Trebuie să vă schimbați parola."
 
@@ -91636,6 +91578,9 @@ msgstr "Credențialul dvs. WebAuthn este deja în uz"
 msgid "Your account has been accessed using a backup code."
 msgstr ""
 
+msgid "Your administrator has enforced a password change"
+msgstr ""
+
 msgid ""
 "Your administrator has enforced two-factor authentication for your account. "
 "Kindly register one of the following two-factor mechanisms:"
@@ -91809,8 +91754,9 @@ msgstr "Modificările dumneavoastră afectează unele obiecte"
 msgid "Your old password is wrong."
 msgstr "Vechea dvs. parolă este greșită."
 
-msgid "Your password is too old, you need to choose a new password."
-msgstr "Parola dvs. este prea veche, trebuie să alegeți o parolă nouă."
+#, fuzzy
+msgid "Your password has expired"
+msgstr "Din magazinul de parole"
 
 msgid "Your personal notification rules"
 msgstr "Regulile dumneavoastră personale de notificare"
@@ -92271,6 +92217,10 @@ msgstr "verificați."
 
 msgid "children"
 msgstr "copii"
+
+#, fuzzy
+msgid "clicking here"
+msgstr "Rata de blocare"
 
 msgid "clients"
 msgstr "clienți"
@@ -94771,6 +94721,9 @@ msgstr "Opțiuni de etichetare"
 msgid "Loading views..."
 msgstr "Încărcare..."
 
+msgid "Select view"
+msgstr "Selectați vizualizarea"
+
 #, fuzzy
 msgid "Choose from available views"
 msgstr "Porturi disponibile"
@@ -96798,6 +96751,10 @@ msgid "Recently searched"
 msgstr "Servicii schimbate recent"
 
 #, fuzzy
+msgid "Group results by topic"
+msgstr "Lucrări în grup de"
+
+#, fuzzy
 msgid "Add your first host"
 msgstr "Adăugați o regulă pentru gazda curentă"
 
@@ -97162,6 +97119,83 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "Add element: %s"
+#~ msgstr "Adăugați un element: %s"
+
+#~ msgid "Colored background"
+#~ msgstr "Fond colorat"
+
+#~ msgid "Copy existing view"
+#~ msgstr "Copierea vizualizării existente"
+
+#~ msgid "Don't show any header"
+#~ msgstr "Don't arată nici un antet"
+
+#, python-format
+#~ msgid "Edit element: %s"
+#~ msgstr "Editați elementul: %s"
+
+#~ msgid "Element"
+#~ msgstr "Element"
+
+#~ msgid "Embed existing view"
+#~ msgstr "Integrați vizualizarea existentă"
+
+#~ msgid "Link of Title"
+#~ msgstr "Legătura cu titlul"
+
+#, fuzzy
+#~ msgid ""
+#~ "Most elements have a hard coded static title and some are aware of their "
+#~ "content and set the title dynamically, like the view snap-in, which "
+#~ "displays the title of the view. If you like to use any other title, set "
+#~ "it here."
+#~ msgstr ""
+#~ "Cele mai multe elemente au un titlu static codificat, iar unele sunt "
+#~ "conștiente de conținutul lor și își stabilesc titlul în mod dinamic, cum "
+#~ "ar fi snapin-ul de vizualizare, care afișează titlul vizualizării. Dacă "
+#~ "doriți să utilizați un alt titlu, setați-l aici."
+
+#~ msgid "Render background"
+#~ msgstr "Redarea fundalului"
+
+#~ msgid "Render gray background color behind the elements content."
+#~ msgstr "Redă culoarea de fundal gri în spatele conținutului elementelor."
+
+#~ msgid "Render the titlebar including title and link above the element."
+#~ msgstr ""
+#~ "Redă bara de titlu, inclusiv titlul și legătura de deasupra elementului."
+
+#~ msgid "Show header with highlighted background"
+#~ msgstr "Afișați antetul cu fundal evidențiat"
+
+#~ msgid "Show title header"
+#~ msgstr "Afișați antetul titlului"
+
+#~ msgid "Show title without any background"
+#~ msgstr "Afișați titlul fără fundal"
+
+#~ msgid "The URL of the target page the link of the element should link to."
+#~ msgstr ""
+#~ "URL-ul paginii țintă către care ar trebui să se lege link-ul elementului."
+
+#~ msgid "The given datasource is not supported"
+#~ msgstr "Sursa de date dată nu este acceptată"
+
+#~ msgid "The name of the dashboard is missing."
+#~ msgstr "Lipsește numele tabloului de bord."
+
+#~ msgid ""
+#~ "This option is macro-capable, please check the inline help for more "
+#~ "information."
+#~ msgstr ""
+#~ "Această opțiune este capabilă de macrocapacitate, vă rugăm să consultați "
+#~ "ajutorul în linie pentru mai multe informații."
+
+#~ msgid "Your password is too old, you need to choose a new password."
+#~ msgstr "Parola dvs. este prea veche, trebuie să alegeți o parolă nouă."
+
 #~ msgid "Authenticator app"
 #~ msgstr "Aplicația Authenticator"
 
@@ -97239,10 +97273,6 @@ msgstr ""
 
 #~ msgid "Executable Python script"
 #~ msgstr "Script Python executabil"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Niveluri pentru numărul de consumatori"
 
 #, fuzzy
 #~ msgid "Missing request variable 'widget_id'"

@@ -4290,10 +4290,6 @@ msgstr "Voeg diskstate regel toe"
 msgid "Add element"
 msgstr "Element toevoegen"
 
-#, python-format
-msgid "Add element: %s"
-msgstr "Voeg element toe: %s"
-
 msgid "Add elements to your sidebar"
 msgstr "Voeg elementen toe aan uw zijbalk"
 
@@ -6659,6 +6655,9 @@ msgid "Allows to view and edit %s created by other users."
 msgstr ""
 "Maakt het mogelijk %s te bekijken en te bewerken die door andere gebruikers "
 "zijn gemaakt."
+
+msgid "Allows users to download the product telemetry data as a JSON file."
+msgstr ""
 
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
@@ -14942,9 +14941,6 @@ msgstr "Kleur van de verspreide stippen"
 msgid "Color theme"
 msgstr "Kleurenthema"
 
-msgid "Colored background"
-msgstr "Gekleurde achtergrond"
-
 msgid "Coloring"
 msgstr "Kleurplaten"
 
@@ -16740,9 +16736,6 @@ msgstr "Geheim gekopieerd naar klembord"
 #, fuzzy
 msgid "Copy connection value representation to clipboard"
 msgstr "Weergave van regelwaarde kopiëren naar klembord"
-
-msgid "Copy existing view"
-msgstr "Bestaand uitzicht kopiëren"
 
 msgid "Copy rule value representation to clipboard"
 msgstr "Weergave van regelwaarde kopiëren naar klembord"
@@ -22811,9 +22804,6 @@ msgstr "Niet laten zien Samenvatting"
 msgid "Don't show and check"
 msgstr "Laat je niet zien en controleer"
 
-msgid "Don't show any header"
-msgstr "Toon geen koptekst"
-
 msgid "Don't show graph title"
 msgstr "Toon de grafiektitel niet"
 
@@ -22911,6 +22901,10 @@ msgstr "Download generieke Checkmk Agent voor map %s"
 
 msgid "Download license usage report"
 msgstr "Licentie gebruiksrapport downloaden"
+
+#, fuzzy
+msgid "Download product telemetry"
+msgstr "rapportelement"
 
 msgid "Download snmp walk"
 msgstr "Download snmp wandeling"
@@ -23623,10 +23617,6 @@ msgstr "Downtimes bewerken"
 msgid "Edit element"
 msgstr "Element bewerken"
 
-#, python-format
-msgid "Edit element: %s"
-msgstr "Bewerk element: %s"
-
 msgid "Edit forecast graph"
 msgstr "Wijzig voorspellingsgrafiek"
 
@@ -24061,9 +24051,6 @@ msgstr "Elektrische spanning in % van de normale waarde"
 msgid "Electrical voltage"
 msgstr "Elektrische spanning"
 
-msgid "Element"
-msgstr "Element"
-
 #, python-format
 msgid "Element %r does not exist anymore"
 msgstr "Element %r bestaat niet meer"
@@ -24136,9 +24123,6 @@ msgstr "E-mails met %s per seconde"
 #, fuzzy
 msgid "Emails containing malicious attachment per second"
 msgstr "E-mails met %s per seconde"
-
-msgid "Embed existing view"
-msgstr "Bestaande weergave insluiten"
 
 msgid "Embedded image"
 msgstr "Ingesloten afbeelding"
@@ -37433,9 +37417,9 @@ msgstr ""
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Ongeldig URL-schema. Moet een van zijn: %s"
 
-#, python-brace-format
-msgid "Invalid regex pattern. Expected: {validate_pattern}"
-msgstr ""
+#, fuzzy, python-format
+msgid "Invalid regex pattern. Expected: %s"
+msgstr "Ongeldige reguliere expressie: %s"
 
 msgid "Invalid regular expression"
 msgstr "Ongeldige reguliere uitdrukking"
@@ -39454,10 +39438,6 @@ msgstr "Niveaus voor de Tablespace grootte"
 msgid "Levels for the Tablespace usage"
 msgstr "Niveaus voor het gebruik van de Tablespace"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Niveaus voor de consumententelling"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveaus voor het elektriciteitsverbruik van een apparaat "
 
@@ -40213,9 +40193,6 @@ msgstr "Fouten in de verbinding"
 
 msgid "Link failures"
 msgstr "Link mislukkingen"
-
-msgid "Link of Title"
-msgstr "Link van titel"
 
 #, fuzzy
 msgid "Link priority"
@@ -41410,6 +41387,10 @@ msgstr "Hogere niveaus voor verzoeken gebruik"
 #, fuzzy
 msgid "Lower levels for successful connections"
 msgstr "Niveaus voor actieve verbindingen"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveaus voor de consumententelling"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Lagere niveaus voor de ventilatorsnelheid van een hardwareapparaat"
@@ -44833,17 +44814,6 @@ msgstr "Montagemogelijkheden"
 #, python-format
 msgid "More than %d results"
 msgstr "Meer dan %d resultaten"
-
-#, fuzzy
-msgid ""
-"Most elements have a hard coded static title and some are aware of their "
-"content and set the title dynamically, like the view snap-in, which displays "
-"the title of the view. If you like to use any other title, set it here."
-msgstr ""
-"De meeste elementen hebben een hard gecodeerde statische titel en sommige "
-"zijn zich bewust van hun inhoud en stellen de titel dynamisch in, zoals de "
-"view snapin, die de titel van de view weergeeft. Als u een andere titel wilt "
-"gebruiken, stel die dan hier in."
 
 msgid "Most recent events"
 msgstr "Meest recente gebeurtenissen"
@@ -54584,6 +54554,12 @@ msgstr "Preview generatie aan de gang..."
 msgid "Preview generation started in background job <a href=\"%s\">%s</a>"
 msgstr "Preview generatie gestart in achtergrondjob <a href=\"%s\">%s</a>"
 
+#, python-format
+msgid ""
+"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download "
+"your data by %s."
+msgstr ""
+
 msgid "Preview this report"
 msgstr "Bekijk een voorbeeld van dit verslag"
 
@@ -57292,17 +57268,8 @@ msgstr "Hernoemen van %s -> %s"
 msgid "Render an error message into the document"
 msgstr "Een foutmelding in het document weergeven"
 
-msgid "Render background"
-msgstr "Achtergrond weergeven"
-
-msgid "Render gray background color behind the elements content."
-msgstr "Render grijze achtergrond kleur achter de elementen inhoud."
-
 msgid "Render horizontal rules between rows"
 msgstr "Horizontale regels tussen rijen weergeven"
-
-msgid "Render the titlebar including title and link above the element."
-msgstr "Render de titelbalk inclusief titel en link boven het element."
 
 msgid "Render vertical rules between columns"
 msgstr "Verticale regels tussen kolommen weergeven"
@@ -60576,9 +60543,6 @@ msgstr "Selecteer individuele bestanden uit de lijst"
 msgid "Select user"
 msgstr "Gebruikers verwijderen"
 
-msgid "Select view"
-msgstr "Weergave kiezen"
-
 msgid ""
 "Select where to send OpenTelemetry traces of Checkmk services to. The most "
 "basic approach is to send traces to the site's local Jaeger instance. To be "
@@ -62607,9 +62571,6 @@ msgstr "Toon grafieken voor de eerste"
 msgid "Show gravity configuration"
 msgstr "Configuratie van de dienst"
 
-msgid "Show header with highlighted background"
-msgstr "Toon koptekst met gemarkeerde achtergrond"
-
 msgid "Show hint in the 'User' menu"
 msgstr "Toon hint in het \"Gebruiker\" menu"
 
@@ -62895,12 +62856,6 @@ msgstr ""
 
 msgid "Show title"
 msgstr "Titel tonen"
-
-msgid "Show title header"
-msgstr "Titel koptekst tonen"
-
-msgid "Show title without any background"
-msgstr "Titel tonen zonder achtergrond"
 
 msgid "Show unacknowledged incompatible werks"
 msgstr "Toon niet-erkende onverenigbare werkjes"
@@ -68670,9 +68625,6 @@ msgstr ""
 msgid "The URL must begin with https://"
 msgstr "De URL moet beginnen met <tt>https</tt>."
 
-msgid "The URL of the target page the link of the element should link to."
-msgstr "De URL van de doelpagina waarnaar de link van het element moet linken."
-
 msgid "The URL prefix must end with a slash."
 msgstr "De URL prefix moet eindigen met een schuine streep."
 
@@ -70126,9 +70078,6 @@ msgstr ""
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "Het gegeven basisobject \"%s\" bestaat niet in LDAP (%s))"
 
-msgid "The given datasource is not supported"
-msgstr "De gegeven gegevensbron wordt niet ondersteund"
-
 msgid "The given datasource is not supported."
 msgstr "De opgegeven gegevensbron wordt niet ondersteund."
 
@@ -71080,9 +71029,6 @@ msgstr ""
 msgid "The name of the cluster resource as shown in the service name."
 msgstr ""
 "De naam van de cluster resource zoals weergegeven in de service beschrijving."
-
-msgid "The name of the dashboard is missing."
-msgstr "De naam van het dashboard ontbreekt."
 
 msgid "The name of the database on the DBMS"
 msgstr "De naam van de database op het DBMS"
@@ -75080,12 +75026,6 @@ msgid ""
 msgstr ""
 "Deze optie is alleen voor testen. Ze zal in de toekomst worden verwijderd. "
 "Gebruik het niet, tenzij het u wordt verteld te doen!"
-
-msgid ""
-"This option is macro-capable, please check the inline help for more "
-"information."
-msgstr ""
-"Deze optie is macro-geschikt, raadpleeg de inline help voor meer informatie."
 
 msgid "This option is needed in case you work without the Agent Bakery"
 msgstr "Deze optie is nodig voor het geval u werkt zonder de Agent Bakkerij"
@@ -83363,6 +83303,10 @@ msgstr "Upload MIB-bestand"
 msgid "Upper"
 msgstr "Boven"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveaus voor de consumententelling"
+
 msgid "Upper Temperature Levels"
 msgstr "Bovenste temperatuurniveaus"
 
@@ -89645,9 +89589,6 @@ msgstr ""
 msgid "You are not permitted to view this page"
 msgstr "U heeft geen toestemming om deze pagina te bekijken"
 
-msgid "You are required to change your password before proceeding."
-msgstr "U bent verplicht uw wachtwoord te wijzigen voordat u verder gaat."
-
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "U probeert een regel te bewerken die niet meer bestaat."
 
@@ -91223,6 +91164,10 @@ msgstr ""
 "U moet lid zijn van minstens één contactgroep om een voorgedefinieerde "
 "voorwaarde te kunnen creëren."
 
+#, fuzzy
+msgid "You need to change your password before proceeding. Reason: {}."
+msgstr "U bent verplicht uw wachtwoord te wijzigen voordat u verder gaat."
+
 msgid "You need to change your password."
 msgstr "Je moet je wachtwoord veranderen."
 
@@ -91398,6 +91343,9 @@ msgstr "Uw WebAuthn referentie is al in gebruik"
 msgid "Your account has been accessed using a backup code."
 msgstr ""
 
+msgid "Your administrator has enforced a password change"
+msgstr ""
+
 msgid ""
 "Your administrator has enforced two-factor authentication for your account. "
 "Kindly register one of the following two-factor mechanisms:"
@@ -91561,8 +91509,9 @@ msgstr "Uw wijzigingen beïnvloeden sommige objecten"
 msgid "Your old password is wrong."
 msgstr "Je oude wachtwoord is fout."
 
-msgid "Your password is too old, you need to choose a new password."
-msgstr "Uw wachtwoord is te oud, u moet een nieuw wachtwoord kiezen."
+#, fuzzy
+msgid "Your password has expired"
+msgstr "Van wachtwoord opslag"
 
 msgid "Your personal notification rules"
 msgstr "Uw persoonlijke meldingsregels"
@@ -92020,6 +91969,10 @@ msgstr "cheque."
 
 msgid "children"
 msgstr "kinderen"
+
+#, fuzzy
+msgid "clicking here"
+msgstr "Blokkeringspercentage"
 
 msgid "clients"
 msgstr "klanten"
@@ -94512,6 +94465,9 @@ msgstr "Etiketteringsopties"
 msgid "Loading views..."
 msgstr "Laden..."
 
+msgid "Select view"
+msgstr "Weergave kiezen"
+
 #, fuzzy
 msgid "Choose from available views"
 msgstr "Beschikbare poorten"
@@ -96521,6 +96477,10 @@ msgid "Recently searched"
 msgstr "Onlangs gewijzigde diensten"
 
 #, fuzzy
+msgid "Group results by topic"
+msgstr "Group Werks by"
+
+#, fuzzy
 msgid "Add your first host"
 msgstr "Regel toevoegen voor huidige host"
 
@@ -96882,6 +96842,82 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "Add element: %s"
+#~ msgstr "Voeg element toe: %s"
+
+#~ msgid "Colored background"
+#~ msgstr "Gekleurde achtergrond"
+
+#~ msgid "Copy existing view"
+#~ msgstr "Bestaand uitzicht kopiëren"
+
+#~ msgid "Don't show any header"
+#~ msgstr "Toon geen koptekst"
+
+#, python-format
+#~ msgid "Edit element: %s"
+#~ msgstr "Bewerk element: %s"
+
+#~ msgid "Element"
+#~ msgstr "Element"
+
+#~ msgid "Embed existing view"
+#~ msgstr "Bestaande weergave insluiten"
+
+#~ msgid "Link of Title"
+#~ msgstr "Link van titel"
+
+#, fuzzy
+#~ msgid ""
+#~ "Most elements have a hard coded static title and some are aware of their "
+#~ "content and set the title dynamically, like the view snap-in, which "
+#~ "displays the title of the view. If you like to use any other title, set "
+#~ "it here."
+#~ msgstr ""
+#~ "De meeste elementen hebben een hard gecodeerde statische titel en sommige "
+#~ "zijn zich bewust van hun inhoud en stellen de titel dynamisch in, zoals "
+#~ "de view snapin, die de titel van de view weergeeft. Als u een andere "
+#~ "titel wilt gebruiken, stel die dan hier in."
+
+#~ msgid "Render background"
+#~ msgstr "Achtergrond weergeven"
+
+#~ msgid "Render gray background color behind the elements content."
+#~ msgstr "Render grijze achtergrond kleur achter de elementen inhoud."
+
+#~ msgid "Render the titlebar including title and link above the element."
+#~ msgstr "Render de titelbalk inclusief titel en link boven het element."
+
+#~ msgid "Show header with highlighted background"
+#~ msgstr "Toon koptekst met gemarkeerde achtergrond"
+
+#~ msgid "Show title header"
+#~ msgstr "Titel koptekst tonen"
+
+#~ msgid "Show title without any background"
+#~ msgstr "Titel tonen zonder achtergrond"
+
+#~ msgid "The URL of the target page the link of the element should link to."
+#~ msgstr ""
+#~ "De URL van de doelpagina waarnaar de link van het element moet linken."
+
+#~ msgid "The given datasource is not supported"
+#~ msgstr "De gegeven gegevensbron wordt niet ondersteund"
+
+#~ msgid "The name of the dashboard is missing."
+#~ msgstr "De naam van het dashboard ontbreekt."
+
+#~ msgid ""
+#~ "This option is macro-capable, please check the inline help for more "
+#~ "information."
+#~ msgstr ""
+#~ "Deze optie is macro-geschikt, raadpleeg de inline help voor meer "
+#~ "informatie."
+
+#~ msgid "Your password is too old, you need to choose a new password."
+#~ msgstr "Uw wachtwoord is te oud, u moet een nieuw wachtwoord kiezen."
+
 #, fuzzy
 #~ msgid "Authenticator app"
 #~ msgstr "Authenticatie"
@@ -96960,10 +96996,6 @@ msgstr ""
 
 #~ msgid "Executable Python script"
 #~ msgstr "Uitvoerbaar Python script"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Niveaus voor de consumententelling"
 
 #, fuzzy
 #~ msgid "Missing request variable 'widget_id'"

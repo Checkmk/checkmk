@@ -7798,6 +7798,10 @@ msgstr "Restringimento automatico spento"
 msgid "Auto shrink on"
 msgstr "Restringimento automatico su"
 
+#, fuzzy
+msgid "Auto-detect proxy settings for this network"
+msgstr "Impostazioni di rilevamento dei flap per gli host"
+
 msgid "Auto-disconnect time"
 msgstr "Tempo di disconnessione automatica"
 
@@ -14953,6 +14957,11 @@ msgid "Connect directly (not available in CRE)"
 msgstr "Collegarsi direttamente (non disponibile in CRE)"
 
 msgid "Connect directly to the destination instead of using a proxy."
+msgstr ""
+"Collegarsi direttamente alla destinazione invece di utilizzare un proxy."
+
+#, fuzzy
+msgid "Connect directly to the license server instead of using a proxy."
 msgstr ""
 "Collegarsi direttamente alla destinazione invece di utilizzare un proxy."
 
@@ -26956,6 +26965,10 @@ msgstr "Impostazioni globali corrispondenti a \"%s"
 msgid "GlobalProtect Utilization"
 msgstr "Utilizzo di GlobalProtect"
 
+#, fuzzy
+msgid "Globally configured proxy"
+msgstr "Utilizzare il proxy configurato globalmente"
+
 msgid "Globbing pattern for input files"
 msgstr "Modello di globbing per i file di input"
 
@@ -37199,10 +37212,6 @@ msgstr "Livelli per la dimensione del Tablespace"
 msgid "Levels for the Tablespace usage"
 msgstr "Livelli per l'uso del Tablespace"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Livelli per il conteggio dei consumatori"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Livelli per il consumo di energia elettrica di un dispositivo "
 
@@ -39040,6 +39049,10 @@ msgstr "Livelli superiori di utilizzo del disco"
 
 msgid "Lower levels for reservation utilization"
 msgstr "Livelli più bassi per l'utilizzo delle prenotazioni"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Livelli per il conteggio dei consumatori"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -74475,6 +74488,11 @@ msgstr ""
 "ripristinato.<br>Le seguenti chiavi non sono ancora state scaricate: %s"
 
 msgid ""
+"To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
+"proxy settings there."
+msgstr ""
+
+msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
 msgstr ""
 
@@ -78655,6 +78673,10 @@ msgstr "Pacchetto di estensione caricato %s-%s (%s)"
 
 msgid "Upper"
 msgstr "Superiore"
+
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Livelli per il conteggio dei consumatori"
 
 msgid "Upper Temperature Levels"
 msgstr "Livelli superiori di temperatura"
@@ -89079,10 +89101,6 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "⚠ <b>non disponibile</b> poiché lo MKP di Robotmk Core è stato installato"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Livelli per il conteggio dei consumatori"
 
 #, fuzzy
 #~ msgid "Return WARNING if found, OK if not"

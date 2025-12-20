@@ -7390,6 +7390,10 @@ msgstr "自動シュリンクオフ"
 msgid "Auto shrink on"
 msgstr "自動縮小オン"
 
+#, fuzzy
+msgid "Auto-detect proxy settings for this network"
+msgstr "ホストのフラップ検出設定"
+
 msgid "Auto-disconnect time"
 msgstr "自動切断時間"
 
@@ -14146,6 +14150,10 @@ msgid "Connect directly (not available in CRE)"
 msgstr "直接接続します(CREでは使用できません)"
 
 msgid "Connect directly to the destination instead of using a proxy."
+msgstr "プロキシを使用せずに、宛先に直接接続します。"
+
+#, fuzzy
+msgid "Connect directly to the license server instead of using a proxy."
 msgstr "プロキシを使用せずに、宛先に直接接続します。"
 
 msgid "Connect directly, without Livestatus Proxy"
@@ -25598,6 +25606,10 @@ msgstr "グローバル設定'%s'に一致する"
 msgid "GlobalProtect Utilization"
 msgstr "グローバルプロテクトの使用率"
 
+#, fuzzy
+msgid "Globally configured proxy"
+msgstr "グローバルに設定されたプロキシを使用する"
+
 msgid "Globbing pattern for input files"
 msgstr "入力ファイルのグロブパターン"
 
@@ -35162,10 +35174,6 @@ msgstr "表領域サイズのレベル"
 msgid "Levels for the Tablespace usage"
 msgstr "表領域の使用レベル"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "デバイスの電力消費量のレベル "
 
@@ -36929,6 +36937,10 @@ msgstr "リクエスト使用率の下位レベル"
 
 msgid "Lower levels for reservation utilization"
 msgstr "予約使用率の下位レベル"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
@@ -70635,6 +70647,11 @@ msgstr ""
 "ドされていません: %s"
 
 msgid ""
+"To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
+"proxy settings there."
+msgstr ""
+
+msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
 msgstr ""
 "FlashArray全体の容量に関するルールを設定するには、項目として「Overall」を使用"
@@ -74307,6 +74324,10 @@ msgstr "アップロードされた拡張パッケージ %s-%s (%s)"
 
 msgid "Upper"
 msgstr "アッパー"
+
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
 
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
@@ -84206,10 +84227,6 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "コンシューマーカウントのレベル"
 
 #~ msgid "Return WARNING if found, OK if not"
 #~ msgstr "見つかった場合はWARNING を返し、見つからなかった場合はOKを返します"

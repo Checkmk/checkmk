@@ -299,7 +299,14 @@ def register(
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
-    product_telemetry.register(page_registry, permission_registry)
+    product_telemetry.register(
+        page_registry,
+        permission_registry,
+        config_domain_registry,
+        config_variable_registry,
+        config_variable_group_registry,
+        replication_path_registry,
+    )
     quick_setup_registration.register(
         automation_command_registry,
         main_module_registry,

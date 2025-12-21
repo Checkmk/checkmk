@@ -30,6 +30,7 @@ def test_registered_config_domains() -> None:
         "omd",
         "rrdcached",
         "site-certificate",
+        "telemetry",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:

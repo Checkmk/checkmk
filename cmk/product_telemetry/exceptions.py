@@ -26,3 +26,7 @@ class InvalidTelemetryEndpointError(Exception):
 
 class InvalidTimestampError(Exception):
     pass
+
+
+class TelemetryConfigError(Exception):
+    pass

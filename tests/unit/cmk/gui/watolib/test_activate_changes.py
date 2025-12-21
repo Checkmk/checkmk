@@ -96,6 +96,11 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="var/check_mk/stored_passwords",
         ),
         ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="telemetry",
+            site_path="etc/check_mk/telemetry.mk",
+        ),
+        ReplicationPath.make(
             ty=ReplicationPathType.DIR,
             ident="usersettings",
             site_path="var/check_mk/web",

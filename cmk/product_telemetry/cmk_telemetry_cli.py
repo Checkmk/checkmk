@@ -40,7 +40,7 @@ def main(args: Sequence[str]) -> int:
     request = parse_args(args)
     logger = init_logging(paths.log_dir)
     now = datetime.now()
-    config = load_telemetry_config()
+    config = load_telemetry_config(logger)
     next_run_file_path = next_telemetry_run_file_path(paths.var_dir)
 
     try:

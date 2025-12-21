@@ -18,14 +18,12 @@ from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import GroupName
-from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, get_languages
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -66,7 +64,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.wato._http_proxy import HTTPProxyReference
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.check_mk_automations import get_section_information_cached
@@ -87,7 +84,6 @@ from cmk.gui.watolib.config_domains import (
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupDeveloperTools,
-    ConfigVariableGroupProductTelemetry,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -188,7 +184,6 @@ def register(
     config_variable_registry.register(ConfigVariableDefaultTemperatureUnit)
     config_variable_registry.register(ConfigVariableTrustedCertificateAuthorities)
     config_variable_registry.register(ConfigVariableSiteSubjectAlternativeNames)
-    config_variable_registry.register(ConfigVariableProductTelemetry)
     config_variable_registry.register(ConfigVariableAgentControllerCertificates)
     config_variable_registry.register(RestAPIETagLocking)
     config_variable_registry.register(ConfigVariableWATOMaxSnapshots)
@@ -1858,49 +1853,6 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     ),
 )
 
-ConfigVariableProductTelemetry = ConfigVariable(
-    group=ConfigVariableGroupProductTelemetry,
-    primary_domain=ConfigDomainCore,
-    ident="product_telemetry",
-    hint=lambda: HTML.without_escaping(
-        _(
-            "Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> on the command line as site user, or download your data by %s."
-        )
-        % HTMLWriter.render_a(
-            content=_("clicking here"),
-            href="download_telemetry.py",
-        )
-    ),
-    valuespec=lambda context: Dictionary(
-        title=_("Product telemetry"),
-        elements=[
-            (
-                "enable_telemetry",
-                DropdownChoice(
-                    title=_("Enable product telemetry"),
-                    help=_(
-                        "Consent to product telemetry data collection. "
-                        "By default, this is disabled, the user will be asked for consent via pop-up. "
-                        "Run  <tt>cmk-telemetry --dry-run</tt> in the command line to see a preview of the data."
-                    ),
-                    choices=[
-                        ("enabled", _("Allow collection and transmission of telemetry data")),
-                        ("disabled", _("Do not collect and transmit telemetry data")),
-                        ("not_decided", _("Disabled. Reminder scheduled")),
-                    ],
-                    default_value="not_decided",
-                    html_attrs={"width": "fit-content"},
-                ),
-            ),
-            (
-                "proxy_setting",
-                HTTPProxyReference(),
-            ),
-        ],
-        optional_keys=[],
-        default_keys=["enable_telemetry", "proxy_setting"],
-    ),
-)
 
 ConfigVariableAgentControllerCertificates = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,

@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.base.legacy_checks.emc_datadomain_mtree import (
     check_emc_datadomain_mtree,
     discover_emc_datadomain_mtree,
@@ -30,16 +26,16 @@ from cmk.base.legacy_checks.emc_datadomain_mtree import (
                 ["something", "0.0", "-1"],
             ],
             [
-                ("/data/col1/boost_vmware", {}),
-                ("/data/col1/repl_cms_dc1", {}),
-                ("/data/col1/nfs_cms_dc1", {}),
-                ("something", {}),
+                Service(item="/data/col1/boost_vmware"),
+                Service(item="/data/col1/repl_cms_dc1"),
+                Service(item="/data/col1/nfs_cms_dc1"),
+                Service(item="something"),
             ],
         ),
     ],
 )
 def test_discover_emc_datadomain_mtree(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for emc_datadomain_mtree check."""
     parsed = parse_emc_datadomain_mtree(string_table)
@@ -67,7 +63,10 @@ def test_discover_emc_datadomain_mtree(
                 ["/data/col1/nfs_cms_dc1", "0.0", "1"],
                 ["something", "0.0", "-1"],
             ],
-            [(0, "Status: read-write, Precompiled: 3.85 TiB", [("precompiled", 4234086134579)])],
+            [
+                Result(state=State.OK, summary="Status: read-write, Precompiled: 3.85 TiB"),
+                Metric("precompiled", 4234086134579),
+            ],
         ),
         (
             "/data/col1/repl_cms_dc1",
@@ -86,7 +85,10 @@ def test_discover_emc_datadomain_mtree(
                 ["/data/col1/nfs_cms_dc1", "0.0", "1"],
                 ["something", "0.0", "-1"],
             ],
-            [(1, "Status: read-only, Precompiled: 33.3 GiB", [("precompiled", 35755602739)])],
+            [
+                Result(state=State.WARN, summary="Status: read-only, Precompiled: 33.3 GiB"),
+                Metric("precompiled", 35755602739),
+            ],
         ),
         (
             "/data/col1/nfs_cms_dc1",
@@ -105,7 +107,10 @@ def test_discover_emc_datadomain_mtree(
                 ["/data/col1/nfs_cms_dc1", "0.0", "1"],
                 ["something", "0.0", "-1"],
             ],
-            [(2, "Status: deleted, Precompiled: 0 B", [("precompiled", 0)])],
+            [
+                Result(state=State.CRIT, summary="Status: deleted, Precompiled: 0 B"),
+                Metric("precompiled", 0),
+            ],
         ),
         (
             "something",
@@ -124,12 +129,18 @@ def test_discover_emc_datadomain_mtree(
                 ["/data/col1/nfs_cms_dc1", "0.0", "1"],
                 ["something", "0.0", "-1"],
             ],
-            [(3, "Status: invalid code -1, Precompiled: 0 B", [("precompiled", 0)])],
+            [
+                Result(state=State.UNKNOWN, summary="Status: invalid code -1, Precompiled: 0 B"),
+                Metric("precompiled", 0),
+            ],
         ),
     ],
 )
 def test_check_emc_datadomain_mtree(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, int],
+    string_table: StringTable,
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for emc_datadomain_mtree check."""
     parsed = parse_emc_datadomain_mtree(string_table)

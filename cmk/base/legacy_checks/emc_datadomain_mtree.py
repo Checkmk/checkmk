@@ -3,25 +3,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_DATADOMAIN
 
-check_info = {}
+
+class MTreeData(TypedDict):
+    precompiled: int
+    status_code: str
 
 
-def parse_emc_datadomain_mtree(string_table):
+type Section = Mapping[str, MTreeData]
+
+
+def parse_emc_datadomain_mtree(string_table: StringTable) -> Section:
     return {
-        line[0]: {"precompiled": int(float(line[1]) * 1024**3), "status_code": line[2]}
+        line[0]: MTreeData(precompiled=int(float(line[1]) * 1024**3), status_code=line[2])
         for line in string_table
     }
 
 
-def check_emc_datadomain_mtree(item, params, parsed):
-    if not (mtree_data := parsed.get(item)):
+def check_emc_datadomain_mtree(
+    item: str, params: Mapping[str, int], section: Section
+) -> CheckResult:
+    if not (mtree_data := section.get(item)):
         return
     state_table = {
         "0": "unknown",
@@ -33,22 +53,22 @@ def check_emc_datadomain_mtree(item, params, parsed):
         "6": "retention lock disabled",
     }
     dev_state_str = state_table.get(
-        mtree_data["status_code"], "invalid code %s" % mtree_data["status_code"]
+        mtree_data["status_code"], f"invalid code {mtree_data['status_code']}"
     )
-    yield (
-        params.get(dev_state_str, 3),
-        "Status: {}, Precompiled: {}".format(
-            dev_state_str, render.bytes(mtree_data["precompiled"])
-        ),
-        [("precompiled", mtree_data["precompiled"])],
+    state_int = params.get(dev_state_str, 3)
+    state = State(state_int) if state_int in (0, 1, 2, 3) else State.UNKNOWN
+    yield Result(
+        state=state,
+        summary=f"Status: {dev_state_str}, Precompiled: {render.bytes(mtree_data['precompiled'])}",
     )
+    yield Metric("precompiled", mtree_data["precompiled"])
 
 
-def discover_emc_datadomain_mtree(section):
-    yield from ((item, {}) for item in section)
+def discover_emc_datadomain_mtree(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
+snmp_section_emc_datadomain_mtree = SimpleSNMPSection(
     name="emc_datadomain_mtree",
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
@@ -56,6 +76,11 @@ check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
         oids=["2", "3", "4"],
     ),
     parse_function=parse_emc_datadomain_mtree,
+)
+
+
+check_plugin_emc_datadomain_mtree = CheckPlugin(
+    name="emc_datadomain_mtree",
     service_name="MTree %s",
     discovery_function=discover_emc_datadomain_mtree,
     check_function=check_emc_datadomain_mtree,

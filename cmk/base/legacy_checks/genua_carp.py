@@ -8,11 +8,18 @@
 
 from collections.abc import Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.genua.lib import DETECT_GENUA
-
-check_info = {}
 
 # Example Agent Output:
 # GENUA-MIB:
@@ -25,17 +32,17 @@ check_info = {}
 # .1.3.6.1.4.1.3137.2.1.2.1.7.10 = INTEGER: 2
 
 
-def inventory_genua_carp(info):
+def inventory_genua_carp(section: Sequence[StringTable]) -> DiscoveryResult:
     inventory = []
 
     # remove empty elements due to two alternative enterprise ids in snmp_info
-    info = [_f for _f in info if _f]
+    section = [_f for _f in section if _f]
 
-    if info and info[0]:
-        for ifName, _ifLinkState, ifCarpState in info[0]:
+    if section and section[0]:
+        for ifName, _ifLinkState, ifCarpState in section[0]:
             if ifCarpState in ["0", "1", "2"]:
                 inventory.append((ifName, None))
-    return inventory
+    yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 
 
 def genua_linkstate(st):
@@ -58,14 +65,15 @@ def genua_carpstate(st):
     return names.get(st, st)
 
 
-def check_genua_carp(item, _no_params, info):
+def check_genua_carp(item: str, section: Sequence[StringTable]) -> CheckResult:
     # remove empty elements due to two alternative enterprise ids in snmp_info
-    info = [_f for _f in info if _f]
+    section = [_f for _f in section if _f]
 
-    if not info[0]:
-        return (3, "Invalid Output from Agent")
+    if not section[0]:
+        yield Result(state=State.UNKNOWN, summary="Invalid Output from Agent")
+        return
     state = 0
-    nodes = len(info)
+    nodes = len(section)
     masters = 0
     output = ""
     if nodes > 1:
@@ -74,7 +82,7 @@ def check_genua_carp(item, _no_params, info):
         prefix = "Node test: "
 
     # Loop over all nodes, just one line if not a cluster
-    for line in info:
+    for line in section:
         # Loop over interfaces on node
         for ifName, ifLinkState, ifCarpState in line:
             ifLinkStateStr = genua_linkstate(str(ifLinkState))
@@ -100,11 +108,7 @@ def check_genua_carp(item, _no_params, info):
                         state = 3
                 else:
                     state = 2
-                    output = "%d nodes in carp state %s on cluster with %d nodes" % (
-                        masters,
-                        ifCarpStateStr,
-                        nodes,
-                    )
+                    output = f"{masters} nodes in carp state {ifCarpStateStr} on cluster with {nodes} nodes"
             # look for non-masters, only interesting if no cluster
             elif ifName == item and nodes == 1:
                 output = f"node in carp state {ifCarpStateStr} with IfLinkState {ifLinkStateStr}"
@@ -117,19 +121,19 @@ def check_genua_carp(item, _no_params, info):
     # no masters found in cluster
     if nodes > 1 and masters == 0:
         state = 2
-        output = "No master found on cluster with %d nodes" % nodes
+        output = f"No master found on cluster with {nodes} nodes"
 
     output = prefix + output
-    return (state, output)
+    yield Result(state=State(state), summary=output)
+    return
 
 
 def parse_genua_carp(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
 
-check_info["genua_carp"] = LegacyCheckDefinition(
+snmp_section_genua_carp = SNMPSection(
     name="genua_carp",
-    parse_function=parse_genua_carp,
     detect=DETECT_GENUA,
     fetch=[
         SNMPTree(
@@ -141,6 +145,12 @@ check_info["genua_carp"] = LegacyCheckDefinition(
             oids=["2", "4", "7"],
         ),
     ],
+    parse_function=parse_genua_carp,
+)
+
+
+check_plugin_genua_carp = CheckPlugin(
+    name="genua_carp",
     service_name="Carp Interface %s",
     discovery_function=inventory_genua_carp,
     check_function=check_genua_carp,

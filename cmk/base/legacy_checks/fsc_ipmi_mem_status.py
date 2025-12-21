@@ -21,10 +21,16 @@
 # 05 = Prefail (module exceeded the correctable errors threshold)
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 fsc_ipmi_mem_status_levels = [
     # Status Code, Label
@@ -37,33 +43,46 @@ fsc_ipmi_mem_status_levels = [
 ]
 
 
-def inventory_fsc_ipmi_mem_status(info):
+def inventory_fsc_ipmi_mem_status(section: StringTable) -> DiscoveryResult:
     # Skip all lines which have
     # a) An error (Begin with "E")
     # b) Don't have a status (line[2])
     # c) Don't have a module
-    return [
-        (line[1], None) for line in info if line[0] != "E" and len(line) > 2 and line[2] != "00"
+    yield from [
+        Service(item=line[1])
+        for line in section
+        if line[0] != "E" and len(line) > 2 and line[2] != "00"
     ]
 
 
-def check_fsc_ipmi_mem_status(name, _no_params, info):
-    for line in info:
+def check_fsc_ipmi_mem_status(item: str, section: StringTable) -> CheckResult:
+    for line in section:
         if line[0] == "E":
-            return (3, "Error in agent plug-in output (%s)" % " ".join(line[1:]))
-        if line[1] == name:
-            return fsc_ipmi_mem_status_levels[int(line[2])]
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"Error in agent plug-in output ({' '.join(line[1:])})",
+            )
+            return
+        if line[1] == item:
+            status_code, status_label = fsc_ipmi_mem_status_levels[int(line[2])]
+            yield Result(state=State(status_code), summary=status_label)
+            return
 
-    return (3, "item %s not found" % name)
+    yield Result(state=State.UNKNOWN, summary=f"item {item} not found")
 
 
 def parse_fsc_ipmi_mem_status(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["fsc_ipmi_mem_status"] = LegacyCheckDefinition(
+agent_section_fsc_ipmi_mem_status = AgentSection(
     name="fsc_ipmi_mem_status",
     parse_function=parse_fsc_ipmi_mem_status,
+)
+
+
+check_plugin_fsc_ipmi_mem_status = CheckPlugin(
+    name="fsc_ipmi_mem_status",
     service_name="IPMI Memory status %s",
     discovery_function=inventory_fsc_ipmi_mem_status,
     check_function=check_fsc_ipmi_mem_status,

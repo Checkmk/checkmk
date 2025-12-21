@@ -261,7 +261,6 @@ LEGACY_CHECKS = [
     "fsc_temp",
     "genua_fan",
     "genua_pfstate",
-    "genua_state_correlation",
     "genua_vpn",
     "graylog_cluster_stats",
     "graylog_cluster_traffic",

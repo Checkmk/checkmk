@@ -250,7 +250,6 @@ LEGACY_CHECKS = [
     "fortisandbox_cpu_util",
     "fortisandbox_queues",
     "fsc_fans",
-    "fsc_ipmi_mem_status",
     "fsc_sc2_cpu_status",
     "fsc_sc2_fans",
     "fsc_sc2_info",

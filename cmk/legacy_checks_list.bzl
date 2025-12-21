@@ -258,7 +258,6 @@ LEGACY_CHECKS = [
     "fsc_sc2_psu",
     "fsc_sc2_temp",
     "fsc_sc2_voltage",
-    "fsc_subsystems",
     "fsc_temp",
     "genua_carp",
     "genua_fan",

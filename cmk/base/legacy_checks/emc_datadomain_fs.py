@@ -3,49 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_DATADOMAIN
-from cmk.plugins.lib.df import EXCLUDED_MOUNTPOINTS
-
-check_info = {}
-
-
-def inventory_emc_datadomain_fs(info):
-    mplist = []
-    for line in info:
-        if line[1] in EXCLUDED_MOUNTPOINTS:
-            continue
-        mplist.append((line[1], None))
-    return mplist
+from cmk.plugins.lib.df import (
+    df_check_filesystem_list,
+    EXCLUDED_MOUNTPOINTS,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
 
 
-def check_emc_datadomain_fs(item, params, info):
+def inventory_emc_datadomain_fs(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[1] not in EXCLUDED_MOUNTPOINTS:
+            yield Service(item=line[1])
+
+
+def check_emc_datadomain_fs(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
     fslist = []
-    for line in info:
+    for line in section:
         if item == line[1] or "patterns" in params:
             size_mb = float(line[2]) * 1024.0
             avail_mb = float(line[4]) * 1024.0
             fslist.append((item, size_mb, avail_mb, 0))
-    return df_check_filesystem_list(item, params, fslist)
+    yield from df_check_filesystem_list(
+        get_value_store(), item, params, fslist, this_time=time.time()
+    )
 
 
 def parse_emc_datadomain_fs(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["emc_datadomain_fs"] = LegacyCheckDefinition(
+snmp_section_emc_datadomain_fs = SimpleSNMPSection(
     name="emc_datadomain_fs",
-    parse_function=parse_emc_datadomain_fs,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.3.2.1.1",
         oids=["1", "3", "4", "5", "6", "7", "8"],
     ),
+    parse_function=parse_emc_datadomain_fs,
+)
+
+
+check_plugin_emc_datadomain_fs = CheckPlugin(
+    name="emc_datadomain_fs",
     service_name="DD-Filesystem %s",
     discovery_function=inventory_emc_datadomain_fs,
     check_function=check_emc_datadomain_fs,

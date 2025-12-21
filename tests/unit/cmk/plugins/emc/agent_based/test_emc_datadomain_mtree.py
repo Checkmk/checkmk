@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.base.legacy_checks.emc_datadomain_mtree import (
+from cmk.plugins.emc.agent_based.emc_datadomain_mtree import (
     check_emc_datadomain_mtree,
     discover_emc_datadomain_mtree,
     parse_emc_datadomain_mtree,

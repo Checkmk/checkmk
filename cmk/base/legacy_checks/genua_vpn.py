@@ -3,13 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.genua.lib import DETECT_GENUA
-
-check_info = {}
 
 # .1.3.6.1.4.1.3717.2.1.3.1.1.1 1
 # .1.3.6.1.4.1.3717.2.1.3.1.1.2 2
@@ -37,12 +43,12 @@ check_info = {}
 # .1.3.6.1.4.1.3717.2.1.3.1.6.4 2
 
 
-def inventory_genua_vpn(info):
-    return [(line[0], None) for line in info]
+def inventory_genua_vpn(section: StringTable) -> DiscoveryResult:
+    yield from [Service(item=line[0]) for line in section]
 
 
-def check_genua_vpn(item, params, info):
-    for vpn_id, hostname_opposite, ip_opposite, vpn_private, vpn_remote, vpn_state in info:
+def check_genua_vpn(item: str, section: StringTable) -> CheckResult:
+    for vpn_id, hostname_opposite, ip_opposite, vpn_private, vpn_remote, vpn_state in section:
         if vpn_id == item:
             ip_info = ""
             if ip_opposite:
@@ -51,8 +57,10 @@ def check_genua_vpn(item, params, info):
             infotext = f"Hostname: {hostname_opposite}{ip_info}, VPN private: {vpn_private}, VPN remote: {vpn_remote}"
 
             if vpn_state == "2":
-                return 0, "Connected, %s" % infotext
-            return 2, "Disconnected, %s" % infotext
+                yield Result(state=State.OK, summary="Connected, %s" % infotext)
+                return
+            yield Result(state=State.CRIT, summary="Disconnected, %s" % infotext)
+            return
     return None
 
 
@@ -60,14 +68,19 @@ def parse_genua_vpn(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["genua_vpn"] = LegacyCheckDefinition(
+snmp_section_genua_vpn = SimpleSNMPSection(
     name="genua_vpn",
-    parse_function=parse_genua_vpn,
     detect=DETECT_GENUA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3717.2.1.3.1",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
+    parse_function=parse_genua_vpn,
+)
+
+
+check_plugin_genua_vpn = CheckPlugin(
+    name="genua_vpn",
     service_name="VPN %s",
     discovery_function=inventory_genua_vpn,
     check_function=check_genua_vpn,

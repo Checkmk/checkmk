@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.base.legacy_checks.genua_carp import (
+from cmk.plugins.genua.agent_based.genua_carp import (
     check_genua_carp,
     inventory_genua_carp,
     parse_genua_carp,

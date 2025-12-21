@@ -705,7 +705,6 @@ def _perform_post_config_loading_actions(
         timeperiods=timeperiods,
         check_periods=check_periods,
         relays=relays,
-        product_telemetry=product_telemetry,
         cmc_config_multiprocessing=cmc_config_multiprocessing,
     )
 

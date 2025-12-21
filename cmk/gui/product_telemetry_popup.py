@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, Response
+from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.utils.product_telemetry_popup_cookie import (
@@ -51,7 +52,7 @@ def render_product_telemetry_popup(
 
     if "admin" in user.role_ids:
         if is_not_distributed_setup or is_central_site_in_distributed_setup:
-            telemetry_choice = load_telemetry_config().state == "not_decided"
+            telemetry_choice = load_telemetry_config(logger).state == "not_decided"
 
             if telemetry_choice:
                 popup_timestamp_cookie = product_telemetry_popup_timestamp_cookie(request)

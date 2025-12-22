@@ -23,6 +23,7 @@ import CmkDynamicIconUserOrDefault from './CmkDynamicIconUserOrDefault.vue'
 interface CmkDynamicIconProps {
   spec: DynamicIcon
   size?: IconSizeNames | undefined
+  title?: string | undefined
 }
 
 defineOptions({ inheritAttrs: false })
@@ -32,7 +33,17 @@ const props = defineProps<CmkDynamicIconProps>()
 
 <template>
   <CmkIconEmblem v-if="props.spec.type === 'emblem_icon'" :emblem="props.spec.emblem as IconEmblems"
-    ><CmkDynamicIconUserOrDefault :spec="props.spec.icon" :size="props.size" v-bind="$attrs"
+    ><CmkDynamicIconUserOrDefault
+      :spec="props.spec.icon"
+      :size="props.size"
+      v-bind="$attrs"
+      :title="props.title"
   /></CmkIconEmblem>
-  <CmkDynamicIconUserOrDefault v-else :spec="props.spec" :size="props.size" v-bind="$attrs" />
+  <CmkDynamicIconUserOrDefault
+    v-else
+    :spec="props.spec"
+    :size="props.size"
+    v-bind="$attrs"
+    :title="props.title"
+  />
 </template>

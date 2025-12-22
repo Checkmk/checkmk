@@ -19,6 +19,7 @@ const iconSize = computed(() => iconSizeNametoNumber(props.size))
 const props = defineProps<{
   spec: DefaultIcon | UserIcon
   size?: IconSizeNames | undefined
+  title?: string | undefined
 }>()
 </script>
 
@@ -27,9 +28,16 @@ const props = defineProps<{
     v-if="props.spec.type === 'default_icon'"
     :name="props.spec.id as SimpleIcons"
     :size="size"
+    :title="props.title"
   />
   <div v-else-if="props.spec.type === 'user_icon'">
-    <img :src="props.spec.path" :width="iconSize" :height="iconSize" />
+    <img
+      :src="props.spec.path"
+      :width="iconSize"
+      :height="iconSize"
+      :title="props.title"
+      :alt="props.title"
+    />
   </div>
   <div v-else>{{ untranslated('ERROR') }}</div>
 </template>

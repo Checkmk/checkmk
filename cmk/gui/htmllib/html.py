@@ -1329,7 +1329,7 @@ class HTMLGenerator(HTMLWriter):
         return HTMLGenerator.render_vue_component(
             component_name="cmk-dynamic-icon",
             data=asdict_strip_none(
-                DynamicIconAppProps(spec=resolve_icon_name(icon, theme), size=size)
+                DynamicIconAppProps(spec=resolve_icon_name(icon, theme), size=size, title=title)
             ),
             class_=css_classes,
             id_=id_,

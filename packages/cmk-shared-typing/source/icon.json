@@ -18,6 +18,9 @@
         "spec": {
           "$ref": "#/$defs/dynamic_icon"
         },
+        "title": {
+          "type": "string"
+        },
         "size": {
           "$ref": "#/$defs/icon_sizes"
         }

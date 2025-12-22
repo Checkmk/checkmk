@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
-from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import DictionaryEntry, TextInput
 
 
 class StaticTextDashletConfig(DashletConfig):
@@ -37,27 +34,3 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
     @classmethod
     def initial_size(cls) -> DashletSize:
         return (30, 18)
-
-    @classmethod
-    def vs_parameters(cls) -> list[DictionaryEntry]:
-        return [
-            (
-                "text",
-                TextInput(
-                    title=_("Text"),
-                    size=50,
-                    help=_(
-                        "You can enter a text here that will be displayed in the element when "
-                        "viewing the dashboard. It is also possible to insert a limited set of HTML "
-                        "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
-                    ),
-                ),
-            ),
-        ]
-
-    def show(self, config: Config) -> None:
-        html.open_div(class_="nodata")
-        html.open_div(class_="msg")
-        html.write_text_permissive(self._dashlet_spec.get("text", ""))
-        html.close_div()
-        html.close_div()

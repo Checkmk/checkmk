@@ -20,7 +20,6 @@ from cmk.utils import paths
 def test_registered_pages() -> None:
     expected_pages = [
         "add_bookmark",
-        "ajax_figure_dashlet_data",
         "ajax_bi_rule_preview",
         "ajax_bi_aggregation_preview",
         "ajax_cascading_render_painer_parameters",
@@ -158,7 +157,6 @@ def test_registered_pages() -> None:
         "ajax_graph",
         "ajax_graph_hover",
         "ajax_render_graph_content",
-        "ajax_initial_dashboard_filters",
         "ajax_initial_view_filters",
         "ajax_initial_topology_filters",
         "ajax_graph_images",

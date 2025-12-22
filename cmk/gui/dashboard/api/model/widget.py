@@ -9,8 +9,7 @@ from typing import Annotated, assert_never, Literal, override, Self
 from annotated_types import Ge
 from pydantic_core import ErrorDetails
 
-from cmk.ccc.user import UserId
-from cmk.gui.dashboard import DashboardConfig, dashlet_registry, GROW, MAX
+from cmk.gui.dashboard import dashlet_registry, GROW, MAX
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletPosition, DashletSize
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
@@ -287,46 +286,5 @@ def determine_widget_filter_used_infos(
     widget_config: DashletConfig,
 ) -> list[AnnotatedInfoName]:
     dashlet_type = dashlet_registry[widget_config["type"]]
-    if "context" not in widget_config:
-        # setting a dummy context, since the widget might access it
-        widget_config = {**widget_config, "context": {}}
-    # pretty sure the only thing used here is the (empty) dashboard context...
-    dummy_dashboard = default_dashboard(widget_config)
-    dashlet = dashlet_type(
-        str(dummy_dashboard["title"]),
-        dummy_dashboard["owner"],
-        dummy_dashboard,
-        0,
-        widget_config,
-    )
+    dashlet = dashlet_type(widget_config)
     return list(dashlet.infos())
-
-
-def default_dashboard(widget_config: DashletConfig) -> DashboardConfig:
-    if "context" not in widget_config:
-        # setting a dummy context, since the widget might access it
-        widget_config = {**widget_config, "context": {}}
-    return DashboardConfig(
-        owner=UserId.builtin(),
-        name="dummy-dashboard",
-        context={},
-        single_infos=[],
-        add_context_to_title=False,
-        title="Dummy Dashboard",
-        description="",
-        topic="",
-        sort_index=0,
-        is_show_more=False,
-        icon=None,
-        hidden=False,
-        hidebutton=False,
-        public=False,
-        packaged=False,
-        link_from={},
-        main_menu_search_terms=[],
-        mtime=0,
-        dashlets=[widget_config],
-        show_title=True,
-        mandatory_context_filters=[],
-        embedded_views={},
-    )

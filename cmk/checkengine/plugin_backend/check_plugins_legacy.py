@@ -12,20 +12,16 @@
 
 import copy
 import functools
-import itertools
-from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
-from contextlib import suppress
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 
+from cmk.agent_based.legacy.conversion import convert_legacy_results
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.plugins import CheckPlugin, LegacyPluginLocation
 
-from .check_plugins import (
-    create_check_plugin,
-)
+from .check_plugins import create_check_plugin
 
 
 def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Callable:
@@ -131,105 +127,6 @@ def _create_check_function(
         yield from convert_legacy_results(subresults)
 
     return check_result_generator
-
-
-def convert_legacy_results(
-    subresults: Sequence[tuple[int, str, list] | Result | Metric | IgnoreResults],
-) -> CheckResult:
-    for idx, subresult in enumerate(subresults):
-        if isinstance(subresult, Result | Metric | IgnoreResults):
-            yield subresult
-            continue
-
-        if "\n" in subresult[1]:
-            yield from _create_new_results_with_details(subresults[idx:])
-            break
-
-        yield from _create_new_result(*subresult)
-
-
-def _create_new_results_with_details(
-    results: Sequence,
-) -> CheckResult:
-    state_sorted = defaultdict(list)
-    for result in results:
-        if isinstance(result, Result | Metric):
-            yield result
-            continue
-        state = State(result[0])
-        state_sorted[state].append(result)
-
-    for idx, (state, subresults) in enumerate(state_sorted.items()):
-        metrics = []
-        details = []
-        first_detail = subresults[0][1] if subresults else ""
-        for result in subresults:
-            if len(result) > 2:
-                metrics.extend(list(result[2]))
-            details.extend([el for el in result[1].split("\n") if el])
-
-        if len(details) == 0:
-            continue
-
-        # we might have an actual summary to use
-        if idx == 0 and (s := first_detail.split("\n", 1)[0]):
-            summary = s
-        else:
-            summary = (
-                f"{len(details)} additional detail{'' if len(details) == 1 else 's'} available"
-            )
-
-        yield Result(
-            state=state,
-            summary=summary,
-            details="\n".join(d.lstrip() for d in details),
-        )
-        yield from _create_new_metric(metrics)
-
-
-def _get_float(raw_value: Any) -> float | None:
-    """Try to convert to float
-
-    >>> _get_float("12.3s")
-    12.3
-
-    """
-    with suppress(TypeError, ValueError):
-        return float(raw_value)
-
-    if not isinstance(raw_value, str):
-        return None
-    # try to cut off units:
-    for i in range(len(raw_value) - 1, 0, -1):
-        with suppress(TypeError, ValueError):
-            return float(raw_value[:i])
-
-    return None
-
-
-def _create_new_result(
-    legacy_state: int,
-    legacy_text: str,
-    legacy_metrics: tuple | list = (),
-) -> CheckResult:
-    if legacy_state or legacy_text:  # skip "Null"-Result
-        yield Result(state=State(legacy_state), summary=legacy_text.strip())
-    yield from _create_new_metric(legacy_metrics)
-
-
-def _create_new_metric(legacy_metrics: tuple | list = ()) -> Generator[Metric]:
-    for metric in legacy_metrics:
-        if len(metric) < 2:
-            continue
-        name = str(metric[0])
-        value = _get_float(metric[1])
-        if value is None:  # skip bogus metrics
-            continue
-        # fill up with None:
-        warn, crit, min_, max_ = (
-            _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4))
-        )
-        yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
 
 
 def _create_signature_check_function(

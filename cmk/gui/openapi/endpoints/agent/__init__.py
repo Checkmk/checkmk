@@ -2,17 +2,6 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Agents
-
-An agent is a small program that is installed on a host in order for Checkmk to be able to query
-data from the host.
-
-An introduction to agents can be found in the
-[Checkmk guide](https://docs.checkmk.com/latest/en/wato_monitoringagents.html).
-
-You can find more about the Agent Bakery and automatic agent updates in
-[Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
-"""
 
 from collections.abc import Mapping
 from typing import Any
@@ -21,6 +10,7 @@ from cmk import fields
 from cmk.gui.http import ContentDispositionType, Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.shared_endpoint_families.agent import AGENTS_FAMILY
 from cmk.gui.utils import agent
 
 OS_TYPES_AVAILABLE_IN_RAW = ["linux_rpm", "linux_deb", "windows_msi"]
@@ -44,6 +34,7 @@ OS_TYPE_RAW = {
     method="get",
     content_type="application/octet-stream",
     query_params=[OS_TYPE_RAW],
+    family_name=AGENTS_FAMILY.name,
 )
 def download_agent(params: Mapping[str, Any]) -> Response:
     """Download agents shipped with Checkmk"""

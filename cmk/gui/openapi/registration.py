@@ -46,6 +46,7 @@ from .api_endpoints.sidebar_element import registration as sidebar_element
 from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
+from .shared_endpoint_families.agent import AGENTS_FAMILY
 from .shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 
 
@@ -62,6 +63,7 @@ def register(
     endpoint_family_registry.register(
         HOST_CONFIG_FAMILY, ignore_duplicates=ignore_duplicate_endpoints
     )
+    endpoint_family_registry.register(AGENTS_FAMILY, ignore_duplicates=ignore_duplicate_endpoints)
 
     acknowledgement.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     activate_changes.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)

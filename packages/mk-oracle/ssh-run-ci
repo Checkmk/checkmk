@@ -57,10 +57,10 @@ esac
 }
 
 git_path="${REMOTE_HOME}/${REMOTE_USER}/git"
-# TODO: Separate branch checkouts via branch name
-# CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
-# checkmk_path="${git_path}/checkmk_ci_checkout_$(make -C ${CHECKOUT_ROOT} print-BRANCH_VERSION)"
-checkmk_path="${git_path}/checkmk_ci_checkout"
+
+# shellcheck disable=SC2154 # ${checkout_dir} is set via groovy
+checkmk_path="${git_path}/checkmk_ci_checkout_$(make --no-print-directory -C "${checkout_dir}" print-BRANCH_VERSION)"
+
 ssh -o "UserKnownHostsFile=${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@${REMOTE_HOST}" mkdir -p "${checkmk_path}"
 
 # shellcheck disable=SC2154 # ${checkout_dir} is set via groovy

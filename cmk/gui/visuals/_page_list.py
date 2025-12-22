@@ -90,24 +90,14 @@ def page_list(
     topic_entries = []
 
     if what == "dashboards":
-        topic_entries.extend(
-            [
-                PageMenuEntry(
-                    title=_("Add dashboard"),
-                    icon_name=StaticIcon(IconNames.new),
-                    item=make_simple_link("dashboard.py?mode=create"),
-                    is_shortcut=True,
-                    is_suggested=True,
-                ),
-                # TODO: should later be removed
-                PageMenuEntry(
-                    title=_("Add %s (deprecated)") % visual_type.title,
-                    icon_name=StaticIcon(IconNames.new),
-                    item=make_simple_link("create_%s.py" % what_s),
-                    is_shortcut=False,
-                    is_suggested=False,
-                ),
-            ]
+        topic_entries.append(
+            PageMenuEntry(
+                title=_("Add dashboard"),
+                icon_name=StaticIcon(IconNames.new),
+                item=make_simple_link("dashboard.py?mode=create"),
+                is_shortcut=True,
+                is_suggested=True,
+            )
         )
     else:
         topic_entries.append(

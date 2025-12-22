@@ -14,7 +14,6 @@ from ipaddress import (
 
 from cmk.agent_based.v2 import (
     all_of,
-    any_of,
     exists,
     HostLabel,
     HostLabelGenerator,
@@ -24,7 +23,6 @@ from cmk.agent_based.v2 import (
     OIDEnd,
     SNMPSection,
     SNMPTree,
-    startswith,
     StringByteTable,
     TableRow,
 )
@@ -262,18 +260,8 @@ snmp_section_ip_address = SNMPSection(
         ),
     ],
     detect=all_of(
-        any_of(
-            startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.9."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12740."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2356."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.30065."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4329."),
-        ),
         exists(".1.3.6.1.2.1.4.20.1.1.*"),
+        exists(".1.3.6.1.2.1.4.34.1.3.*"),
     ),
 )
 

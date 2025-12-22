@@ -33,8 +33,8 @@ const step1Note = _t(
 )
 const downloadUrl =
   `${window.location.href.substring(0, window.location.href.indexOf('/check_mk/') + 9)}` +
-  '/api/1.0/domain-types/agent/actions/download_by_host/' +
-  'invoke?folder_name=%2Fpreconfigured_agent%2F&os_type=[OS_TYPE]&agent_type=generic'
+  '/api/internal/domain-types/agent/actions/download_by_host_via_token/' +
+  'invoke?folder=%2Fpreconfigured_agent%2F&os_type=[OS_TYPE]&agent_type=generic'
 
 export const tabs: FirstHostTabs[] = [
   {
@@ -51,7 +51,7 @@ export const tabs: FirstHostTabs[] = [
           '(\n' +
           'curl -o check-mk-agent.deb \\\n' +
           '--header "Accept: application/octet-stream" \\\n' +
-          '--header "Authorization: Bearer agent_download [AGENT_DOWNLOAD_SECRET]" \\\n' +
+          '--header "Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]" \\\n' +
           `"${downloadUrl.replace('[OS_TYPE]', 'linux_deb')}"\n` +
           ');'
       },
@@ -80,7 +80,7 @@ export const tabs: FirstHostTabs[] = [
           '(\n' +
           'curl -o check-mk-agent.rpm \\\n' +
           '--header "Accept: application/octet-stream" \\\n' +
-          '--header "Authorization: Bearer agent_download [AGENT_DOWNLOAD_SECRET]" \\\n' +
+          '--header "Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]" \\\n' +
           `"${downloadUrl.replace('[OS_TYPE]', 'linux_rpm')}"\n` +
           ');'
       },
@@ -109,7 +109,7 @@ export const tabs: FirstHostTabs[] = [
           '-Method "GET" `\n' +
           '-Headers @{\n' +
           ' "Accept" = "application/octet-stream";\n' +
-          ' "Authorization" = "Bearer agent_download [AGENT_DOWNLOAD_SECRET]"\n' +
+          ' "Authorization" = "CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]" \n' +
           '}'
       },
       {

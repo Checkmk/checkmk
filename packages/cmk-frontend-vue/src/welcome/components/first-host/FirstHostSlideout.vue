@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef'
@@ -23,8 +23,9 @@ import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import GenerateToken from '@/mode-host/agent-connection-test/components/GenerateToken.vue'
+
 import { finalStepText, tabs } from './FirstHostSlideoutContent'
-import { CseOnboardingApiClient } from './onboarding-api-client'
 
 const { _t } = usei18n()
 
@@ -35,8 +36,7 @@ const openedTab = usePersistentRef<string | number>(
   (v) => v as string | number
 )
 const currentStep = ref<number>(1)
-const onboardingApiClient = new CseOnboardingApiClient('api/v1/')
-const agentSecret = ref<string | null>(null)
+const ott = ref<string | null | Error>(null)
 
 function onClose() {
   slideInOpen.value = false
@@ -46,16 +46,6 @@ function onClose() {
 function goToHostOverview() {
   window.location.href = 'wato.py?mode=folder'
 }
-
-onMounted(async () => {
-  try {
-    if (!agentSecret.value) {
-      agentSecret.value = (await onboardingApiClient.getAgentSecret()).secret
-    }
-  } catch (e) {
-    console.error('Failed to fetch agent download information', e)
-  }
-})
 </script>
 
 <template>
@@ -98,23 +88,26 @@ onMounted(async () => {
                 <CmkParagraph>
                   {{ step.description_top }}
                 </CmkParagraph>
-                <CmkCode
-                  :code_txt="
-                    step.code.replace(
-                      '[AGENT_DOWNLOAD_SECRET]',
-                      agentSecret || '<agent-download-secret>'
-                    )
-                  "
-                  class="welcome-first-host-slideout__code"
+                <GenerateToken
+                  v-if="currentStep === 1"
+                  v-model="ott"
+                  token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
+                  :description="_t('This requires the generation of a download token.')"
+                  :token-generation-body="{
+                    expires_at: null
+                  }"
                 />
-                <CmkParagraph v-if="step.description_bottom">
-                  {{ step.description_bottom }}
-                </CmkParagraph>
-                <CmkSpace></CmkSpace>
+                <template v-if="typeof ott === 'string'">
+                  <CmkCode
+                    :code_txt="step.code.replace('[AGENT_DOWNLOAD_OTT]', ott)"
+                    class="welcome-first-host-slideout__code"
+                  />
+                  <CmkSpace></CmkSpace>
+                </template>
               </template>
 
               <template #actions>
-                <CmkWizardButton type="next" />
+                <CmkWizardButton type="next" :disabled="ott === null" />
                 <CmkWizardButton v-if="step.stepNumber > 1" type="previous" />
               </template>
             </CmkWizardStep>

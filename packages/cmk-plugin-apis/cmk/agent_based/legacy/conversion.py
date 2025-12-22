@@ -12,10 +12,30 @@
 
 import itertools
 from collections import defaultdict
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from contextlib import suppress
 
+from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, State
+
+
+def check_levels_legacy_compatible(
+    value: int | float,
+    dsname: None | str,
+    params: None | tuple | dict,
+    human_readable_func: Callable | None = None,
+    infoname: str | None = None,
+    boundaries: tuple[float | None, float | None] | None = None,
+) -> CheckResult:
+    """A wrapper around the legacy check_levels to convert to v2 results
+
+    This allows to create a v2 compatible result while maintaining the old check_levels API.
+    The sole purpose of this function is to decouple the migration of the check plug-ins
+    from the migration of the rulesets.
+    """
+    yield from convert_legacy_results(
+        (check_levels(value, dsname, params, human_readable_func, infoname, boundaries),)
+    )
 
 
 def convert_legacy_results(

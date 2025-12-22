@@ -170,6 +170,67 @@ String hashFiles(files) {
     }).join("-");
 }
 
+Map capture_folder_state(download_dest) {
+    // Capture all folders in download_dest with their sizes
+    // Note: .cache/bazel is excluded as it's managed by MOUNT_SHARED_REPOSITORY_CACHE
+    def folder_state = [:];
+    try {
+        def output = sh(script: """
+            cd ${download_dest}
+            find . -maxdepth 1 -type d ! -name '.' -exec du -sb --exclude='.cache/bazel' {} \\; | sort
+        """, returnStdout: true).trim();
+
+        if (output) {
+            output.split('\n').each { line ->
+                def parts = line.split('\t');
+                if (parts.size() == 2) {
+                    def size = parts[0];
+                    def folder = parts[1];
+                    folder_state[folder] = size;
+                }
+            }
+        }
+    } catch (Exception exc) {
+        println("hot cache: Warning - could not capture folder state: ${exc}");
+    }
+    return folder_state;
+}
+
+void verify_folder_integrity(Map before_state, String download_dest) {
+    def after_state = capture_folder_state(download_dest);
+
+    // Check for new folders
+    def new_folders = after_state.keySet() - before_state.keySet();
+    if (new_folders.size() > 0) {
+        println("hot cache: WARNING - New folders detected in ${download_dest}: ${new_folders.join(', ')}");
+    }
+
+    // Check for size changes in existing folders
+    def size_changes = [];
+    before_state.each { folder, size ->
+        if (after_state.containsKey(folder) && after_state[folder] != size) {
+            def before_mb = (size as Long) / (1024 * 1024);
+            def after_mb = (after_state[folder] as Long) / (1024 * 1024);
+            def before_mb_rounded = String.format("%.2f", before_mb);
+            def after_mb_rounded = String.format("%.2f", after_mb);
+            size_changes.add("${folder}: ${before_mb_rounded} MB -> ${after_mb_rounded} MB");
+        }
+    }
+
+    if (size_changes.size() > 0) {
+        println("hot cache: WARNING - Folder size changes detected:");
+        size_changes.each { change ->
+            println("  - ${change}");
+        }
+    }
+
+    // Check for removed folders
+    def removed_folders = before_state.keySet() - after_state.keySet();
+    if (removed_folders.size() > 0) {
+        println("hot cache: WARNING - Folders removed from ${download_dest}: ${removed_folders.join(', ')}");
+    }
+}
+
 void withHotCache(Map args, Closure body) {
     body.resolveStrategy = Closure.OWNER_FIRST;
     body.delegate = [:];
@@ -197,9 +258,13 @@ void withHotCache(Map args, Closure body) {
         download_dest: args.download_dest,
     ]);
 
+    def folder_state_after_extraction = capture_folder_state(args.download_dest);
+
     try {
         body();
     } finally {
+        verify_folder_integrity(folder_state_after_extraction, args.download_dest);
+
         if (upload_new_bazel_folder_artifact) {
             println("hot cache: Creating ${args.download_dest}/${file_pattern}");
 

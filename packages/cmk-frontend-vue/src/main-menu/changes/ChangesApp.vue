@@ -335,9 +335,11 @@ onMounted(async () => {
         "
         type="success"
         :title="
-          _t('Successfully activated %{numberOfChangesLastActivation} changes', {
-            numberOfChangesLastActivation
-          })
+          numberOfChangesLastActivation === 1
+            ? _t('Successfully activated 1 change')
+            : _t('Successfully activated %{numberOfChangesLastActivation} changes', {
+                numberOfChangesLastActivation
+              })
         "
         :info="_t('Everything is up to date')"
         class="cmk-div-activation-result-container"

@@ -20,7 +20,7 @@ from .dashlets import (
     StaticTextDashletConfig,
     StatsDashletConfig,
 )
-from .figure_dashlet import ABCFigureDashlet, FigureDashletPage
+from .figure_dashlet import ABCFigureDashlet
 from .registry import dashlet_registry, DashletRegistry
 
 __all__ = [
@@ -39,6 +39,5 @@ __all__ = [
     "DashletConfig",
     "StatsDashletConfig",
     "copy_view_into_dashlet",
-    "FigureDashletPage",
     "ABCFigureDashlet",
 ]

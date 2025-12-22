@@ -17,7 +17,7 @@ from ._find_group_usage import find_usages_of_contact_group_in_dashboards
 from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
 from .community_dashboards import register_builtin_dashboards
-from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
+from .dashlet import DashletRegistry, register_dashlets
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
@@ -47,7 +47,6 @@ def register(
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
-    page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage()))
     page_registry.register(PageEndpoint(FigureWidgetPage.ident(), FigureWidgetPage()))
     page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage()))
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))

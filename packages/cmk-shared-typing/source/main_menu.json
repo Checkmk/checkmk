@@ -21,28 +21,42 @@
     "nav_items": {
       "type": "array",
       "items": {
-        "type": "object",
-        "$ref": "#/$defs/nav_item"
+        "anyOf": [{ "$ref": "#/$defs/nav_item" }, { "$ref": "#/$defs/nav_link_item" }]
       }
     },
-    "nav_item": {
+    "nav_base_item": {
       "type": "object",
       "properties": {
         "id": { "$ref": "#/$defs/nav_item_id_enum" },
         "title": { "type": "string" },
+        "sort": { "type": "number" },
+        "shortcut": { "$ref": "#/$defs/nav_item_shortcut" }
+      },
+      "required": ["id", "title", "sort", "shortcut_hint"]
+    },
+    "nav_item": {
+      "allOf": [{ "$ref": "#/$defs/nav_base_item" }],
+      "type": "object",
+      "properties": {
         "topics": {
           "type": "array",
           "items": { "$ref": "#/$defs/nav_item_topic" }
         },
-        "sort": { "type": "number" },
         "set_focus_on_element_by_id": { "type": "string" },
         "vue_app": { "$ref": "#/$defs/nav_item_vue_app" },
         "header": { "$ref": "#/$defs/nav_item_header" },
-        "shortcut": { "$ref": "#/$defs/nav_item_shortcut" },
         "show_more": { "$ref": "#/$defs/nav_item_show_more" },
         "popup_small": { "type": "boolean" }
+      }
+    },
+    "nav_link_item": {
+      "allOf": [{ "$ref": "#/$defs/nav_base_item" }],
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "target": { "type": "string" }
       },
-      "required": ["id", "title", "sort", "shortcut_hint"]
+      "required": ["url"]
     },
     "nav_item_topic": {
       "type": "object",

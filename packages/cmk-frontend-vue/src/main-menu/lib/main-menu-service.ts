@@ -11,7 +11,8 @@ import type {
   NavItemShortcut,
   NavItemTopic,
   NavItemTopicEntry,
-  NavItems
+  NavItems,
+  NavLinkItem
 } from 'cmk-shared-typing/typescript/main_menu'
 import { type Ref, ref } from 'vue'
 
@@ -219,7 +220,7 @@ export class MainMenuService extends ServiceBase {
     }
   }
 
-  protected getItemById(id: NavItemIdEnum): NavItem {
+  protected getItemById(id: NavItemIdEnum): NavItem | NavLinkItem {
     const item = [...this.mainItems, ...this.userItems].find((item) => item.id === id)
 
     if (!item) {
@@ -233,8 +234,8 @@ export class MainMenuService extends ServiceBase {
     for (const item of this.mainItems.concat(this.userItems)) {
       this.itemBadge[item.id] = ref<MenuItemBadge | null>(null)
 
-      if (item.show_more) {
-        this.showMoreActive[item.id] = ref<boolean>(item.show_more.active)
+      if ('show_more' in item && item.show_more) {
+        this.showMoreActive[item.id] = ref<boolean>(item.show_more.active || false)
       }
 
       if (item.shortcut) {

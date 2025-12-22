@@ -38,9 +38,6 @@ function convertCamelToKebabCase(str) {
 }
 
 function shortPrefix(str, longName, shortName) {
-  if (longName === 'dashboard-wip') {
-    longName = 'dashboard'
-  }
   if (str.startsWith(longName)) {
     return str.replace(new RegExp(`^${longName}`), shortName)
   }
@@ -54,7 +51,7 @@ const patternMap = {
   demo: 'demo/',
   '': 'src/assets/',
   cmk: 'src/components/',
-  db: 'src/dashboard-wip/',
+  db: 'src/dashboard/',
   qs: 'src/quick-setup/',
   gd: 'src/graph-designer/',
   mm: 'src/main-menu/',

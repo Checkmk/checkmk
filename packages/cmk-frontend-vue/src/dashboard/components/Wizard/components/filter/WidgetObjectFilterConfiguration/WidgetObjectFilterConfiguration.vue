@@ -1,0 +1,142 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
+import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
+import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
+import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
+import type { ContextFilters } from '@/dashboard/types/filter.ts'
+import type { ObjectType } from '@/dashboard/types/shared.ts'
+
+import ObjectTypeFilterConfiguration from '../ObjectTypeFilterConfiguration/ObjectTypeFilterConfiguration.vue'
+import type { FilterEmits } from '../types.ts'
+import type { FilterConfigState } from '../utils.ts'
+import { getStrings } from '../utils.ts'
+import DisplayContextFilters from './DisplayContextFilters.vue'
+
+const { _t } = usei18n()
+
+interface Props {
+  objectType: ObjectType
+  objectSelectionMode: ElementSelection
+  objectConfiguredFilters: FilterConfigState
+  contextFilters: ContextFilters
+  showContextFiltersSection?: boolean
+  inFocus: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  showContextFiltersSection: true
+})
+
+const { filterName } = getStrings(props.objectType)
+
+const filterDefinitions = useFilterDefinitions()
+const toggleContextFiltersSection = ref(false)
+
+const emit = defineEmits<FilterEmits>()
+
+const relevantContextFilters = computed<ContextFilters>(() => {
+  if (props.objectSelectionMode === ElementSelection.SPECIFIC) {
+    const singleTargetFilter = props.contextFilters[props.objectType as keyof ContextFilters]
+
+    if (singleTargetFilter) {
+      return {
+        [props.objectType as keyof ContextFilters]: singleTargetFilter
+      } as ContextFilters
+    }
+    return {}
+  }
+
+  const objectSpecificContext: ContextFilters = {}
+
+  for (const [key, value] of Object.entries(props.contextFilters) as [
+    keyof ContextFilters,
+    ContextFilters[keyof ContextFilters]
+  ][]) {
+    const def = filterDefinitions[key as unknown as string]
+    if (def === undefined) {
+      throw new Error(`No filter definition found for filter ${String(key)}`)
+    }
+
+    if (def.extensions.info === props.objectType) {
+      objectSpecificContext[key] = value
+    }
+  }
+
+  return objectSpecificContext
+})
+
+const displayLabels = computed(() => {
+  if (props.objectSelectionMode === ElementSelection.SPECIFIC) {
+    return {
+      contextFilterTitle: _t('Applied %{n} filter', {
+        n: filterName
+      }),
+      contextFilterTooltip: _t(
+        'Relevant %{n} targeted filter set on dashboard level via dashboard or runtime filters.',
+        {
+          n: props.objectType
+        }
+      ),
+      emptyContextTitle: _t('No %{n} filter applied', {
+        n: filterName
+      })
+    }
+  }
+  return {
+    contextFilterTitle: _t('Applied %{n} filters', { n: props.objectType }),
+    contextFilterTooltip: _t(
+      'Relevant %{n} filters set on dashboard level via dashboard or runtime filters.',
+      { n: props.objectType }
+    ),
+    emptyContextTitle: _t('No %{n} filters applied', { n: props.objectType })
+  }
+})
+</script>
+
+<template>
+  <div v-if="showContextFiltersSection" class="db-widget-object-filter-configuration__group">
+    <CollapsibleTitle
+      :title="displayLabels.contextFilterTitle"
+      :help_text="displayLabels.contextFilterTooltip"
+      :open="toggleContextFiltersSection"
+      @toggle-open="toggleContextFiltersSection = !toggleContextFiltersSection"
+    />
+    <CollapsibleContent :open="toggleContextFiltersSection">
+      <!-- object-configured-filters is not being recognized as a props -->
+      <!-- @vue-ignore -->
+      <DisplayContextFilters
+        :object-configured-filters="objectConfiguredFilters"
+        :context-filters="relevantContextFilters"
+        :empty-filters-title="displayLabels.emptyContextTitle"
+      />
+    </CollapsibleContent>
+  </div>
+  <ObjectTypeFilterConfiguration
+    :object-type="objectType"
+    :object-selection-mode="objectSelectionMode"
+    :object-configured-filters="objectConfiguredFilters"
+    :in-focus="inFocus"
+    :filter-labels="{
+      title: _t('Widget filters'),
+      tooltip: _t('Widget configured filters override dashboard and runtime filters')
+    }"
+    @set-focus="emit('set-focus', $event)"
+    @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+    @remove-filter="(filterId) => emit('remove-filter', filterId)"
+  />
+</template>
+
+<style scoped>
+.db-widget-object-filter-configuration__group {
+  padding-bottom: var(--dimension-4);
+}
+</style>

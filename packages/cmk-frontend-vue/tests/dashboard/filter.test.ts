@@ -5,7 +5,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { useFilters } from '@/dashboard-wip/components/filter/composables/useFilters.ts'
+import { useFilters } from '@/dashboard/components/filter/composables/useFilters.ts'
 
 describe('useFilters Composable', () => {
   let filters: ReturnType<typeof useFilters>

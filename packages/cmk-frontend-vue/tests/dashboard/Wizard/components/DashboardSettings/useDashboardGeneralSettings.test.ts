@@ -5,10 +5,10 @@
  */
 import { describe, expect, it, vi } from 'vitest'
 
-import { useDashboardGeneralSettings } from '@/dashboard-wip/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings.ts'
-import type { DashboardGeneralSettings } from '@/dashboard-wip/types/dashboard'
+import { useDashboardGeneralSettings } from '@/dashboard/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings.ts'
+import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
 
-vi.mock('@/dashboard-wip/components/Wizard/components/DashboardSettings/utils', () => ({
+vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/utils', () => ({
   isValidSnakeCase: (str: string) => /^[a-z][a-z0-9_]*$/.test(str),
   isIdInUse: async (id: string) => id === 'existing_dashboard'
 }))

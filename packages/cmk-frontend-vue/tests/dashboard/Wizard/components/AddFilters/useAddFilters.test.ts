@@ -5,7 +5,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { useAddFilter } from '@/dashboard-wip/components/Wizard/components/AddFilters/composables/useAddFilters.ts'
+import { useAddFilter } from '@/dashboard/components/Wizard/components/AddFilters/composables/useAddFilters.ts'
 
 describe('useAddFilter Composable', () => {
   let filterModal: ReturnType<typeof useAddFilter>

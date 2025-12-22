@@ -5,8 +5,8 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import type { DashboardKey } from '@/dashboard-wip/types/dashboard'
-import { urlHandler } from '@/dashboard-wip/utils'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
+import { urlHandler } from '@/dashboard/utils'
 
 describe('urlHandler', () => {
   let parentWindow: Window

@@ -128,22 +128,28 @@ def _create_check_function(
 
         subresults = _normalize_check_function_return_value(sig_function(**kwargs))
 
-        for idx, subresult in enumerate(subresults):
-            if isinstance(subresult, Result | Metric | IgnoreResults):
-                yield subresult
-                continue
-
-            if "\n" in subresult[1]:
-                yield from _create_new_results_with_details(subresults[idx:])
-                break
-
-            yield from _create_new_result(*subresult)
+        yield from convert_legacy_results(subresults)
 
     return check_result_generator
 
 
+def convert_legacy_results(
+    subresults: Sequence[tuple[int, str, list] | Result | Metric | IgnoreResults],
+) -> CheckResult:
+    for idx, subresult in enumerate(subresults):
+        if isinstance(subresult, Result | Metric | IgnoreResults):
+            yield subresult
+            continue
+
+        if "\n" in subresult[1]:
+            yield from _create_new_results_with_details(subresults[idx:])
+            break
+
+        yield from _create_new_result(*subresult)
+
+
 def _create_new_results_with_details(
-    results: list,
+    results: Sequence,
 ) -> CheckResult:
     state_sorted = defaultdict(list)
     for result in results:

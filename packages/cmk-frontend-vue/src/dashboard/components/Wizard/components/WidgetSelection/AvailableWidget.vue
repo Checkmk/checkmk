@@ -28,7 +28,7 @@ defineProps<AvailableWidgetProps>()
       class="db-available-widget__item-label"
       :class="disabled ? 'db-available-widget__item-label-disabled' : ''"
     >
-      <CmkLabel>{{ label }}</CmkLabel>
+      <CmkLabel cursor="pointer">{{ label }}</CmkLabel>
     </div>
   </div>
 </template>
@@ -51,11 +51,6 @@ defineProps<AvailableWidgetProps>()
 
   &:hover {
     background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
-  }
-
-  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-  :deep(label) {
-    cursor: pointer;
   }
 }
 

@@ -22,10 +22,15 @@ const labelVariants = cva('', {
       default: '',
       title: 'cmk-label--title',
       subtitle: 'cmk-label--subtitle'
+    },
+    cursor: {
+      default: '',
+      pointer: 'cmk-label--cursor-pointer'
     }
   },
   defaultVariants: {
-    variant: 'default'
+    variant: 'default',
+    cursor: 'default'
   }
 })
 type LabelVariants = VariantProps<typeof labelVariants>
@@ -35,13 +40,14 @@ export interface LabelProps {
   variant?: LabelVariants['variant']
   dots?: boolean | undefined
   help?: TranslatedString | undefined
+  cursor?: LabelVariants['cursor']
 }
 
 const props = defineProps<LabelProps>()
 const attrs = useAttrs()
 
 const delegatedProps = computed(() => {
-  const { variant: _1, help: _2, ...delegated } = attrs
+  const { variant: _1, help: _2, cursor: _3, ...delegated } = attrs
 
   if (props.for) {
     delegated.for = props.for
@@ -54,7 +60,7 @@ const delegatedProps = computed(() => {
 <template>
   <div class="cmk-label__container">
     <span class="cmk-label__content">
-      <Label v-bind="delegatedProps" :class="labelVariants({ variant })"><slot /></Label
+      <Label v-bind="delegatedProps" :class="labelVariants({ variant, cursor })"><slot /></Label
       ><span v-if="help" class="cmk-label--nowrap">&nbsp;<CmkHelpText :help="help" /></span>
     </span>
     <div v-if="dots" class="cmk-label--dots" />
@@ -84,6 +90,10 @@ label {
   &.cmk-label--subtitle {
     font-size: var(--font-size-normal);
     margin-bottom: var(--spacing);
+  }
+
+  &.cmk-label--cursor-pointer {
+    cursor: pointer;
   }
 }
 

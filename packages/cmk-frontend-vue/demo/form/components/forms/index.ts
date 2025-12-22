@@ -6,11 +6,13 @@
 import { Page } from '@demo/_demo/page'
 import type { Folder } from '@demo/_demo/page'
 
+import DemoFormBinaryConditions from './DemoFormBinaryConditions.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
 import DemoFormCatalog from './DemoFormCatalog.vue'
 import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
 import DemoFormCommentTextArea from './DemoFormCommentTextArea.vue'
+import DemoFormConditionChoices from './DemoFormConditionChoices.vue'
 import DemoFormDataSize from './DemoFormDataSize.vue'
 import DemoFormDatePicker from './DemoFormDatePicker.vue'
 import DemoFormDictionary from './DemoFormDictionary.vue'
@@ -36,12 +38,14 @@ import DemoFormTimeSpecific from './DemoFormTimeSpecific.vue'
 import DemoFormTuple from './DemoFormTuple.vue'
 
 export const pages: Array<Folder | Page> = [
+  new Page('FormBinaryConditions', () => DemoFormBinaryConditions),
   new Page('FormSingleChoiceEditable', DemoFormSingleChoiceEditable),
   new Page('FormCascadingSingleChoice', DemoFormCascadingSingleChoice),
   new Page('FormList', DemoFormList),
   new Page('FormMetric', DemoFormMetric),
-  new Page('FormBoleanChoice', DemoFormBooleanChoice),
+  new Page('FormBooleanChoice', DemoFormBooleanChoice),
   new Page('FormOptionalChoice', DemoFormOptionalChoice),
+  new Page('FormConditionChoices', () => DemoFormConditionChoices),
   new Page('FormDictionary', DemoFormDictionary),
   new Page('FormCheckboxListChoice', DemoFormCheckboxListChoice),
   new Page('FormSingleChoice', DemoFormSingleChoice),

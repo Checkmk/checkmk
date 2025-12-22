@@ -58,7 +58,7 @@ const modifierClass = computed(() => {
       <CmkIcon :name="icon" size="xxlarge" :colored="!disabled" :class="modifierClass" />
     </div>
     <div class="db-selectable-widget__item-label">
-      <CmkLabel :class="modifierClass">{{ label }}</CmkLabel>
+      <CmkLabel cursor="pointer" :class="modifierClass">{{ label }}</CmkLabel>
     </div>
   </div>
 </template>
@@ -80,9 +80,7 @@ const modifierClass = computed(() => {
   overflow-wrap: break-word;
 }
 
-.db-selectable-widget__item-available,
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.db-selectable-widget__item-available:deep(label) {
+.db-selectable-widget__item-available {
   cursor: pointer;
 }
 

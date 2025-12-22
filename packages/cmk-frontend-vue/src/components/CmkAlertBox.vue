@@ -118,23 +118,23 @@ const alertIconColor = computed(() => {
 
 .cmk-alert-box--error {
   color: var(--font-color);
-  background: color-mix(in srgb, var(--color-dark-red-50) 10%, transparent);
+  background: color-mix(in srgb, var(--color-dark-red-50) 50%, transparent);
 }
 
 .cmk-alert-box--warning {
   color: var(--font-color);
-  background-color: color-mix(in srgb, var(--color-yellow-50) 10%, transparent);
+  background-color: color-mix(in srgb, var(--color-yellow-50) 25%, transparent);
 }
 
 .cmk-alert-box--success {
   color: var(--font-color);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 10%, transparent);
+  background: color-mix(in srgb, var(--color-corporate-green-50) 25%, transparent);
 }
 
 .cmk-alert-box--info,
 .cmk-alert-box--loading {
   color: var(--font-color);
-  background-color: color-mix(in srgb, var(--color-dark-blue-50) 10%, transparent);
+  background-color: color-mix(in srgb, var(--color-dark-blue-50) 25%, transparent);
 }
 
 .cmk-alert-box--small {

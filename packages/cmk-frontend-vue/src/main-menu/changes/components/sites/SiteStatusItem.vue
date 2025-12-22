@@ -164,7 +164,7 @@ const emit = defineEmits<{
 }
 
 .cmk-div-site-activate-warning {
-  background: rgb(255 202 40 / 15%); /* TODO: add var */
+  background-color: color-mix(in srgb, var(--color-yellow-50) 25%, transparent);
 }
 
 .cmk-div-site-activate-warning,

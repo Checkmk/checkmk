@@ -425,8 +425,10 @@ def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
                 "_login": "Login",
             },
         )
+
+        # Check if the cmk-two-factor-authentication vue app has been initialized in mode "totp_credentials"
         assert "cmk-two-factor-authentication" in response.text
-        assert "'totp_credentials': true" in response.text
+        assert "&quot;totp_credentials&quot;: true" in response.text
 
         response = session.get(
             f"/{site.id}/check_mk/api/1.0/version",

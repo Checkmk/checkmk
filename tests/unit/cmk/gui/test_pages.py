@@ -157,7 +157,6 @@ def test_registered_pages() -> None:
         "ajax_graph",
         "ajax_graph_hover",
         "ajax_render_graph_content",
-        "ajax_initial_dashboard_filters",
         "ajax_initial_view_filters",
         "ajax_initial_topology_filters",
         "ajax_graph_images",

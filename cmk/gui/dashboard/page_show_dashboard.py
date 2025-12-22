@@ -12,7 +12,6 @@
 of the dashboard to render is given in the HTML variable 'name'.
 """
 
-from collections.abc import Iterable
 from dataclasses import asdict
 from typing import Literal
 
@@ -24,16 +23,13 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import VisualContext, VisualTypeName
+from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
-from cmk.gui.visuals.info import visual_info_registry
 from cmk.utils import paths
 
-from ._network_topology import get_topology_context_and_filters
 from .breadcrumb import dashboard_breadcrumb, EvaluatedBreadcrumbItem
 from .metadata import DashboardMetadataObject
 from .page_edit_dashboards import PAGE_EDIT_DASHBOARDS_LINK
@@ -41,9 +37,8 @@ from .store import (
     get_permitted_dashboards,
     load_dashboard,
 )
-from .type_defs import DashboardConfig
 
-__all__ = ["page_dashboard_app", "AjaxInitialDashboardFilters"]
+__all__ = ["page_dashboard_app"]
 
 
 def page_dashboard_app(ctx: PageContext) -> None:
@@ -160,44 +155,3 @@ def _get_default_dashboard_name() -> str:
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         return "main"  # problems = main in community edition
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
-
-
-def _get_mandatory_filters(
-    board: DashboardConfig, unconfigured_single_infos: set[str]
-) -> Iterable[str]:
-    # Get required single info keys (the ones that are not set by the config)
-    for info_key in unconfigured_single_infos:
-        for info, _unused in visual_info_registry[info_key]().single_spec:
-            yield info
-
-    # Get required context filters set in the dashboard config
-    yield from board["mandatory_context_filters"]
-
-
-def _minimal_context(
-    mandatory_filters: Iterable[str], known_context: VisualContext
-) -> VisualContext:
-    filter_context: VisualContext = {name: {} for name in mandatory_filters}
-    return visuals.get_merged_context(filter_context, known_context)
-
-
-class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
-    def get_context(self, page_name: str) -> VisualContext:
-        return self._get_context(page_name)
-
-    def _get_context(self, page_name: str) -> VisualContext:
-        dashboard_name = page_name
-        board = load_dashboard(
-            get_permitted_dashboards(),
-            dashboard_name,
-        )
-
-        # For the topology dashboard filters are retrieved from a corresponding view context.
-        # This should not be needed here. Can't we load the context from the board as we usually do?
-        if page_name == "topology":
-            _context, show_filters = get_topology_context_and_filters()
-            return {
-                f.ident: board["context"].get(f.ident, {}) for f in show_filters if f.available()
-            }
-
-        return _minimal_context(_get_mandatory_filters(board, set()), board["context"])

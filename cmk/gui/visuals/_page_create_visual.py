@@ -51,8 +51,8 @@ def page_create_visual(
     html.open_p()
     html.write_text_permissive(
         _(
-            "Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. "
-            "For example, the <i>services</i> datasource can be used to simply create a list "
+            "Depending on the chosen data source, a %s can list <i>multiple</i> or <i>single</i> objects. "
+            "For example, the <i>services</i> data source can be used to simply create a list "
             "of <i>multiple</i> services, a list of <i>multiple</i> services of a <i>single</i> host or even "
             "a list of services with the same name on <i>multiple</i> hosts. When you just want to "
             "create a list of objects, simply continue with the default choice (no restrictions). "

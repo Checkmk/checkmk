@@ -82,6 +82,6 @@ rulespec_registry.register(
         item_spec=_item_spec_mssql_jobs,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_jobs,
-        title=lambda: _("MSSQL Jobs"),
+        title=lambda: _("MSSQL jobs"),
     )
 )

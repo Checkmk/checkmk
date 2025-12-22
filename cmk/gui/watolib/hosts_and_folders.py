@@ -2377,7 +2377,7 @@ class Folder(FolderProtocol):
         if subfolder.path() == target_folder.path():
             raise MKUserError(
                 None,
-                _("Cannot move folder: A folder can not be moved into itself."),
+                _("Cannot move folder: A folder cannot be moved into itself."),
             )
 
         if self.path() == target_folder.path():
@@ -2389,7 +2389,7 @@ class Folder(FolderProtocol):
         if subfolder in parent_folder_chain(target_folder):
             raise MKUserError(
                 None,
-                _("Cannot move folder: A folder can not be moved to a folder within itself."),
+                _("Cannot move folder: A folder cannot be moved into a folder within itself."),
             )
 
         original_alias_path = subfolder.alias_path()
@@ -2653,7 +2653,7 @@ class Folder(FolderProtocol):
         if not allow_locked_deletion and (
             hosts := self._get_hosts_locked_by_quick_setup(host_names)
         ):
-            errors.extend(_("%s is locked by quick setup.") % host_name for host_name in hosts)
+            errors.extend(_("%s is locked by Quick Setup.") % host_name for host_name in hosts)
 
         # 2. check if hosts have parents
         if hosts_with_children := self._get_parents_of_hosts(self.tree, host_names):
@@ -2868,8 +2868,7 @@ class Folder(FolderProtocol):
         if self._locked_hosts is True:
             lock_messages.append(
                 _(
-                    "Host attributes are locked "
-                    "(You cannot create, edit or delete hosts in this folder)"
+                    "Host attributes are locked (you cannot create, edit or delete hosts in this folder)"
                 )
             )
         elif isinstance(self._locked_hosts, str) and self._locked_hosts:
@@ -2878,7 +2877,7 @@ class Folder(FolderProtocol):
         # Locked folder attributes
         if self._locked is True:
             lock_messages.append(
-                _("Folder attributes are locked (You cannot edit the attributes of this folder)")
+                _("Folder attributes are locked (you cannot edit the attributes of this folder)")
             )
         elif isinstance(self._locked, str) and self._locked:
             lock_messages.append(self._locked)
@@ -2886,7 +2885,7 @@ class Folder(FolderProtocol):
         # Also subfolders are locked
         if self._locked_subfolders:
             lock_messages.append(
-                _("Subfolders are locked (You cannot create or remove folders in this folder)")
+                _("Subfolders are locked (you cannot create or remove folders in this folder)")
             )
         elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:
             lock_messages.append(self._locked_subfolders)

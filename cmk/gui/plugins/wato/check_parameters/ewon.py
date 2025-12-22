@@ -25,9 +25,7 @@ def _valuespec_ewon_discovery_rules():
                     "device",
                     DropdownChoice(
                         help=_(
-                            "The ewon vpn routers can rely data from a secondary device via snmp. "
-                            "It doesn't however allow discovery of the device type relayed this way. "
-                            "To allow interpretation of the data you need to pick the device manually."
+                            "The eWon VPN routers can rely on data from a secondary device via SNMP. It doesn't however allow discovery of the device type relayed this way. To allow interpretation of the data you need to pick the device manually."
                         ),
                         label=_("Select device type"),
                         choices=[
@@ -68,8 +66,7 @@ def _parameter_valuespec_ewon():
     return Dictionary(
         title=_("Device Type"),
         help=_(
-            "The eWON router can act as a proxy to metrics from a secondary non-snmp device."
-            "Here you can make settings to the monitoring of the proxied device."
+            "The eWON router can act as a proxy to metrics from a secondary non-SNMP device. Here you can make settings to the monitoring of the proxied device."
         ),
         elements=[
             (

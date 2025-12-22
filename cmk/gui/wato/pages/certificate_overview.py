@@ -58,8 +58,8 @@ class CertificateView:
     def get_fields(self) -> dict[str, str | HTML]:
         """Get title and value of fields."""
         return {
-            _("Common Name (Subject)"): self.subject.common_name or _("None"),
-            _("Common Name (Issuer)"): self.issuer.common_name or _("None"),
+            _("Common name (subject)"): self.subject.common_name or _("None"),
+            _("Common name (issuer)"): self.issuer.common_name or _("None"),
             _("Creation date"): self.creation.isoformat(),
             _("Expiration date"): self.expiration.isoformat(),
             _("Fingerprint"): HTMLWriter.render_span(self.fingerprint[:17], title=self.fingerprint),

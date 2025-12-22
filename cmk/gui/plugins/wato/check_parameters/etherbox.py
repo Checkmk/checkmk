@@ -57,7 +57,7 @@ def _vs_smoke() -> Dictionary:
                         (
                             "levels",
                             _("Configure levels on smoke"),
-                            SimpleLevels(title=_("Smoke Levels")),
+                            SimpleLevels(title=_("Smoke levels")),
                         ),
                     ],
                     sorted=False,

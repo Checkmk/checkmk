@@ -16,8 +16,8 @@ from cmk.gui.valuespec import Checkbox, Dictionary, TextInput
 
 def _item_spec_lnx_quota():
     return TextInput(
-        title=_("filesystem"),
-        help=_("Name of filesystem with quotas enabled"),
+        title=_("file system"),
+        help=_("Name of file system with quotas enabled"),
     )
 
 

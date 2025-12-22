@@ -34,7 +34,7 @@ def _parameter_valuespec_vm_counter() -> Migrate[dict[str, Any]]:
                     "levels",
                     Levels(
                         help=_(
-                            "This ruleset applies to several similar checks measing various kernel "
+                            "This rule set applies to several similar checks measuring various kernel "
                             "events like context switches, process creations and major page faults. "
                             "Please create separate rules for each type of kernel counter you "
                             "want to set levels for."

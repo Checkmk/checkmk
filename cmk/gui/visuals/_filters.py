@@ -1729,7 +1729,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         if not unique_sites_from_services.issuperset(connected_sites):
             doc_ref = html.resolve_help_text_macros(
                 _(
-                    "Please refer to the [dashboards#host_problems|Checkmk user guide] for more details."
+                    "Please refer to the [dashboards#host_problems|Checkmk User Guide] for more details."
                 )
             )
             if len(connected_sites) == 1:

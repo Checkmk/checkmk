@@ -423,7 +423,7 @@ def ajax_inv_render_tree(ctx: PageContext) -> None:
                 MKUserError(
                     "load_inventory_delta_tree",
                     _(
-                        "Cannot load HW/SW Inventory history of %s. Please remove the corrupted files %s."
+                        "Cannot load HW/SW inventory history of %s. Please remove the corrupted files %s."
                     )
                     % (host_name, ", ".join(corrupted_history_files)),
                 )
@@ -443,7 +443,7 @@ def ajax_inv_render_tree(ctx: PageContext) -> None:
                 MKUserError(
                     "load_inventory_tree",
                     _(
-                        "Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or status data tree files."
+                        "Cannot load HW/SW inventory of %s. Please remove the corrupted inventory or status data tree files."
                     )
                     % host_name,
                 )

@@ -65,6 +65,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("SNAT Consumption")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_snat_usage,
-        title=lambda: _("SNAT Usage (Deprecated)"),
+        title=lambda: _("SNAT usage (deprecated)"),
     )
 )

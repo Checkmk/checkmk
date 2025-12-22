@@ -58,7 +58,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hp_hh3c_ext_states",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Port"), help=_("The Port Description")),
+        item_spec=lambda: TextInput(title=_("Port"), help=_("The port description")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hp_hh3c_ext_states,
         title=lambda: _("HP Switch module state"),

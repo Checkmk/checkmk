@@ -30,15 +30,15 @@ def _parameter_valuespec_netscaler_vserver():
             (
                 "cluster_status",
                 DropdownChoice(
-                    title=_("Cluster behaviour"),
+                    title=_("Cluster behavior"),
                     help=_(
-                        "Here you can choose the cluster behaviour. The best state "
-                        "of all nodes is the default. This means, if  you have at "
-                        "least one node in status UP the check returns OK. Health levels "
+                        "Here, you can choose the cluster behavior. The best state "
+                        "of all nodes is the default. This means that if you have at "
+                        "least one node in status UP, the check returns OK. Health levels "
                         "should be the same on each node. If you choose worst, the check "
                         "will return CRIT if at least one node is in a state other than OK. "
-                        "Health levels should be the same on each node, so only the first "
-                        "node the health-levels are checked."
+                        "Health levels should be the same on each node, so only for the first "
+                        "node the health levels have to be checked."
                     ),
                     choices=[
                         ("best", _("best state")),

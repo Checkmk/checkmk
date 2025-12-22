@@ -51,7 +51,7 @@ ConfigVariableSiteTraceSend = ConfigVariable(
             # ("central_site", _("Send traces to the central sites Jaeger instance")),
             (
                 "other_collector",
-                _("Send traces to another OpenTelemetry collector"),
+                _("Send traces to another OpenTelemetry Collector"),
                 Dictionary(
                     elements=[
                         (

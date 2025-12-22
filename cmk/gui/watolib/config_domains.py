@@ -174,7 +174,7 @@ class ConfigDomainGUI(ABCConfigDomain):
                 "",
                 _(
                     "'git' command was not found on this system, but it is required for versioning the configuration. "
-                    "Please either install 'git' or disable git configuration tracking in setup."
+                    "Please either install 'git' or disable git configuration tracking in Setup."
                 ),
             )
 

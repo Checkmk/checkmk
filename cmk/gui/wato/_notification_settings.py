@@ -113,9 +113,9 @@ ConfigVariableNotificationBulkInterval = ConfigVariable(
     valuespec=lambda context: Age(
         title=_("Interval for checking for ripe bulk notifications"),
         help=_(
-            "If you are using rule based notifications with and <i>Bulk Notifications</i> "
-            "then Checkmk will check for ripe notification bulks to be sent out "
-            "at latest every this interval."
+            "If you are using rule based notifications with <i>Bulk notifications</i>, "
+            "then Checkmk will check for ripe bulk notifications to be sent "
+            "at this interval at the latest."
         ),
         minvalue=1,
     ),

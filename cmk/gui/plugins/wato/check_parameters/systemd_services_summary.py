@@ -48,7 +48,7 @@ def _parameter_valuespec_systemd_units_summary() -> Migrate:
                         label="Failed units that are disabled will be considered critical",
                         title=_("Treat failed units that are disabled as critical"),
                         help=_(
-                            "Failed service that are disabled are also considered for the status of the service. "
+                            "A failed service that is disabled is also considered for the status of the service. "
                             "Activating this option will cause the service to be CRIT if a failed service is disabled."
                         ),
                     ),
@@ -143,7 +143,7 @@ def _parameter_valuespec_systemd_units_summary() -> Migrate:
                 ),
             ],
             help=_(
-                "This ruleset only applies to the summary Systemd service and not the individual one."
+                "This rule set only applies to the summary systemd service and not the individual one."
             ),
         ),
         migrate=_migrate,

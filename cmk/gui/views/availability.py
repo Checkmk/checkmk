@@ -1117,9 +1117,7 @@ def show_annotations(
             elif annotation.get("downtime") is False:
                 html.static_icon(
                     StaticIcon(IconNames.nodowntime),
-                    title=_(
-                        "This period has been reclassified as a not being a scheduled downtime"
-                    ),
+                    title=_("This period has been reclassified as not being a scheduled downtime"),
                 )
             recl_host_state = annotation.get("host_state")
             if recl_host_state is not None:

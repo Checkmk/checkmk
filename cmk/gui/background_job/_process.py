@@ -200,7 +200,7 @@ def _execute_function(
     except Exception as e:
         crash = create_gui_crash_report()
         logger.exception("Exception in background function (Crash ID: %s)", crash.ident_to_text())
-        job_interface.send_exception(_("Exception (Crash ID: %s): %s") % (crash.ident_to_text(), e))
+        job_interface.send_exception(_("Exception (crash ID: %s): %s") % (crash.ident_to_text(), e))
 
 
 def _open_progress_update(work_dir: Path) -> IO[str]:

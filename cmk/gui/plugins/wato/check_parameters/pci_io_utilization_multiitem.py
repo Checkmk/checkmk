@@ -44,6 +44,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Component"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_pci_io_utilization_multiitem,
-        title=lambda: _("Device Component PCI IO Utilization"),
+        title=lambda: _("Device component PCI IO utilization"),
     )
 )

@@ -576,7 +576,7 @@ class PageBackup:
                 data={
                     "title": _("Backup in progress. Refresh to see the final status."),
                     "message": _(
-                        "You can leave this page. This backup continues in the background"
+                        "You can leave this page. This backup continues in the background."
                     ),
                     "buttons": [
                         {
@@ -717,7 +717,7 @@ class PageBackup:
 
                     assert state.bytes_per_second is not None
                     html.write_text_permissive(
-                        _(" (Duration: %s,%s IO: %s/s)")
+                        _(" (duration: %s, %s IO: %s/s)")
                         % (
                             render.timespan(duration),
                             size_txt,
@@ -1122,7 +1122,7 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
                 html.write_text_permissive(", Finished at %s" % render.date_and_time(state.started))
                 duration = state.finished - state.started
 
-            html.write_text_permissive(_(" (Duration: %s)") % render.timespan(duration))
+            html.write_text_permissive(_(" (duration: %s)") % render.timespan(duration))
         html.close_td()
         html.close_tr()
 
@@ -1721,8 +1721,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
     if targets_are_cma:
         html.p(
             _(
-                "These backup targets can not be edited here. You need to "
-                "open the device backup management."
+                "These backup targets cannot be edited here. You need to open the device backup management."
             )
         )
 
@@ -1832,7 +1831,7 @@ class PageBackupTargets:
         if jobs := [job for job in backup_config.jobs.values() if job.target_ident() == target_id]:
             raise MKUserError(
                 "target",
-                _("You can not delete this target because it is used by these backup jobs: %s")
+                _("You cannot delete this target because it is used by these backup jobs: %s")
                 % ", ".join(job.title for job in jobs),
             )
 
@@ -2036,11 +2035,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
 
     def _delete_confirm_msg(self) -> str:
         return _(
-            "<b>Beware:</b> Deleting this key "
-            "means that you will not be able to encrypt or sign backups with the key. "
-            "Already created backups which have been encrypted, can not be decrypted "
-            "without access to this key. So please be sure that you either have a "
-            "backup or don't need this key anymore."
+            "<b>Beware:</b> Deleting this key means that you will not be able to encrypt or sign backups with the key. Already created backups which have been encrypted, cannot be decrypted without access to this key. So please be sure that you either have a backup or don't need this key anymore."
         )
 
     def _delete_confirm_title(self, nr: int) -> str:

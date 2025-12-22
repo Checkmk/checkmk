@@ -22,7 +22,7 @@ def _parameter_valuespec_docsis_cm_status():
                 ListChoice(
                     title=_("Modem States that lead to a critical state"),
                     help=_(
-                        "If one of the selected states occurs the check will repsond with a critical state "
+                        "If one of the selected states occurs, the check will respond with a critical state. "
                     ),
                     choices=[
                         (1, "other"),

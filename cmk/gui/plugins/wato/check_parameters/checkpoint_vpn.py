@@ -80,7 +80,7 @@ rulespec_registry.register(
         check_group_name="checkpoint_packets",
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=_parameter_valuespec_checkpoint_packets,
-        title=lambda: _("Check Point Firewall Packet Rates"),
+        title=lambda: _("Check Point firewall packet rates"),
     )
 )
 
@@ -143,6 +143,6 @@ rulespec_registry.register(
             allow_empty=True,
         ),
         parameter_valuespec=_parameter_valuespec_checkpoint_tunnels,
-        title=lambda: _("Check Point Tunnel Status"),
+        title=lambda: _("Check Point tunnel status"),
     )
 )

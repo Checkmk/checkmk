@@ -45,7 +45,7 @@ def _parameter_valuespec_snapvault():
                             ),
                         ],
                     ),
-                    title=_("Policy specific levels (Clustermode only)"),
+                    title=_("Policy specific levels (cluster mode only)"),
                     help=_(
                         "Here you can specify levels for different policies which overrule the levels "
                         "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."

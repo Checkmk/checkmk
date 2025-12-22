@@ -49,7 +49,7 @@ class ManPage:
         return cls(
             name=name,
             path=path,
-            title=_("%s: Cannot parse man page: %s") % (name, msg),
+            title=_("%s: Cannot parse manual page: %s") % (name, msg),
             agents=[],
             catalog=["generic"],
             license="unknown",
@@ -361,7 +361,7 @@ def get_title_from_man_page(path: Path) -> str:
         for line in fp:
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip()
-    raise MKGeneralException(_("Invalid man page: Failed to get the title"))
+    raise MKGeneralException(_("Invalid manual page: Failed to get the title"))
 
 
 def load_man_page_catalog(

@@ -47,6 +47,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_vm_snapshots,
-        title=lambda: _("Virtual Machine Snapshots"),
+        title=lambda: _("Virtual machine snapshots"),
     )
 )

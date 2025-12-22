@@ -41,7 +41,7 @@ class UserProfileReplicate(Page):
             raise MKAuthException(_("You are not allowed to edit your user profile."))
 
         if not ctx.config.wato_enabled:
-            raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
+            raise MKAuthException(_("User profiles cannot be edited (Setup is disabled)."))
 
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), title)

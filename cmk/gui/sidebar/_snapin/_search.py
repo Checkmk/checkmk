@@ -52,7 +52,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Quicksearch")
+        return _("Quick search")
 
     @classmethod
     def description(cls) -> str:

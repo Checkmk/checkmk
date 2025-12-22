@@ -42,7 +42,7 @@ def _parameter_valuespec_ucs_bladecenter_faultinst():
             (
                 "warning",
                 DropdownChoice(
-                    title=_("'Warning' state"),
+                    title=_("'WARNING' state"),
                     choices=status_choices,
                     default_value=1,
                 ),

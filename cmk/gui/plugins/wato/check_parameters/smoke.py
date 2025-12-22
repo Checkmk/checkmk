@@ -36,6 +36,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=lambda: TextInput(title=_("Sensor ID"), help=_("The identifier of the sensor.")),
         parameter_valuespec=_parameter_valuespec_smoke,
-        title=lambda: _("Smoke Detection"),
+        title=lambda: _("Smoke detection"),
     )
 )

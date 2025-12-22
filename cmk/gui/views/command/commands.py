@@ -662,14 +662,14 @@ def command_fake_check_result_render(what: str) -> None:
 
     html.open_tr()
     html.open_td()
-    html.write_text_permissive(_("Performance data") + " &nbsp; ")
+    html.write_text_permissive(_("Metrics") + " &nbsp; ")
     html.close_td()
     html.open_td()
     html.text_input(
         "_fake_perfdata",
         "",
         size=60,
-        placeholder=_("Enter performance data to show in notifications etc. ..."),
+        placeholder=_("Enter metrics to show in notifications etc. ..."),
     )
     html.close_td()
     html.close_tr()
@@ -997,7 +997,7 @@ def command_acknowledge_render(what: str) -> None:
     if is_community_edition:
         render_community_upgrade_button()
     html.help(
-        _("Note: Expiration of acknowledgements only works when using the Checkmk Micro Core.")
+        _("Note: Expiration of acknowledgments only works when using the Checkmk Micro Core.")
     )
     html.close_div()
 

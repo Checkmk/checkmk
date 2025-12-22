@@ -45,6 +45,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Component"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_overall_utilization_multiitem,
-        title=lambda: _("Device Component Overall Utilization"),
+        title=lambda: _("Device component overall utilization"),
     )
 )

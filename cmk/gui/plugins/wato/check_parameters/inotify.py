@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, ListOf, TextInput
 
 def _item_spec_inotify():
     return TextInput(
-        title=_("The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"),
+        title=_("The file system path, prefixed with <i>File </i> or <i>Folder </i>"),
     )
 
 

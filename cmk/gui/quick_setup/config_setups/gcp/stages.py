@@ -85,7 +85,7 @@ def configure_authentication() -> QuickSetupStage:
                     ),
                     Text(
                         text=_(
-                            "Create a new key in json format for the service account and download the created file."
+                            "Create a new key in JSON format for the service account and download the created file."
                         )
                     ),
                     Text(
@@ -95,7 +95,7 @@ def configure_authentication() -> QuickSetupStage:
                     ),
                     Text(
                         text=_(
-                            "Return to Checkmk, define a unique configuration name, and use the Project ID as well as the raw output of the JSON file for the key below."
+                            "Return to Checkmk, define a unique configuration name, and use the project ID as well as the raw output of the JSON file for the key below."
                         )
                     ),
                 ],

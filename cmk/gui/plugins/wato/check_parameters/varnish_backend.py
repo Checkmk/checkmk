@@ -57,6 +57,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_varnish_backend,
-        title=lambda: _("Varnish Backend"),
+        title=lambda: _("Varnish back-end"),
     )
 )

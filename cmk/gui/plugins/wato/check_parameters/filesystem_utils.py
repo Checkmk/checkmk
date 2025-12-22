@@ -271,8 +271,8 @@ def _filesystem_inodes_elements() -> list[DictionaryEntry]:
             Alternative(
                 title=_("Levels for Inodes"),
                 help=_(
-                    "The number of remaining inodes on the filesystem. "
-                    "Please note that this setting has no effect on some filesystem checks."
+                    "The number of remaining inodes on the file system. "
+                    "Please note that this setting has no effect on some file system checks."
                 ),
                 elements=[
                     Tuple(
@@ -334,7 +334,7 @@ def _filesystem_magic_elements() -> list[DictionaryEntry]:
         (
             "magic",
             Float(
-                title=_("Magic factor (automatic level adaptation for large filesystems)"),
+                title=_("Magic factor (automatic level adaptation for large file systems)"),
                 default_value=0.8,
                 minvalue=0.1,
                 maxvalue=1.0,
@@ -354,8 +354,8 @@ def _filesystem_magic_elements() -> list[DictionaryEntry]:
             Tuple(
                 title=_("Minimum levels if using magic factor"),
                 help=_(
-                    "The filesystem levels will never fall below these values, when using "
-                    "the magic factor and the filesystem is very small."
+                    "The file system levels will never fall below these values, when you use "
+                    "the magic factor and the file system is very small."
                 ),
                 elements=[
                     Percentage(
@@ -383,7 +383,7 @@ def size_trend_elements() -> list[DictionaryEntry]:
         (
             "trend_range",
             Integer(
-                title=_("Time Range for trend computation"),
+                title=_("Time range for trend computation"),
                 default_value=24,
                 minvalue=1,
                 unit=_("hours"),
@@ -478,8 +478,8 @@ def size_trend_elements() -> list[DictionaryEntry]:
         (
             "trend_perfdata",
             Checkbox(
-                title=_("Trend performance data"),
-                label=_("Enable generation of performance data from trends"),
+                title=_("Trend metrics"),
+                label=_("Enable generation of metrics from trends"),
             ),
         ),
     ]

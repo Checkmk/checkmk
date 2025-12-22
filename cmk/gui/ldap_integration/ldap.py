@@ -363,7 +363,7 @@ class LDAPConnectionValuespec(Dictionary):
                                     "like timeouts or some other network related problems, the connect mechanism "
                                     "will try to use this server instead of the server configured above. If you "
                                     "use persistent connections (default), the connection is being used until the "
-                                    "LDAP is not reachable or the local webserver is restarted."
+                                    "LDAP is not reachable or the local web server is restarted."
                                 ),
                                 allow_empty=False,
                             ),
@@ -490,7 +490,7 @@ class LDAPConnectionValuespec(Dictionary):
                     title=_("User-ID attribute"),
                     help=_(
                         "The attribute used to identify the individual users. It must have "
-                        "unique values to make an user identifyable by the value of this "
+                        "unique values to make a user identifiable by the value of this "
                         "attribute."
                     ),
                     default_value=lambda: ldap_attr_of_connection(self._connection, "user_id"),
@@ -968,13 +968,13 @@ class ModeEditLDAPConnection(WatoMode):
             (_("Count Users"), self._test_user_count),
             (_("Group Base-DN"), self._test_group_base_dn),
             (_("Count Groups"), self._test_group_count),
-            (_("Sync-Plug-in: Roles"), self._test_groups_to_roles),
+            (_("Sync-plug-in: Roles"), self._test_groups_to_roles),
         ]
 
     def _test_connect(self, connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
         conn, msg = connection.connect_server(address)
         if conn:
-            return (True, _("Connection established. The connection settings seem to be ok."))
+            return (True, _("Connection established. The connection settings seem to be OK."))
         return (False, msg)
 
     def _test_user_base_dn(

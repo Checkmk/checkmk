@@ -545,7 +545,7 @@ def _render_custom_action_icon(
         action_url = row[what + "_action_url_expanded"]
         pnpgraph_present = row[what + "_pnpgraph_present"]
         if action_url and not ("/pnp4nagios/" in action_url and pnpgraph_present >= 0):
-            return StaticIcon(IconNames.action), _("Custom Action"), action_url
+            return StaticIcon(IconNames.action), _("Custom action"), action_url
     return None
 
 

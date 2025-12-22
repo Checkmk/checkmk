@@ -65,7 +65,7 @@ rulespec_registry.register(
         item_spec=_item_spec_sap_hana_backup,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sap_hana_backup,
-        title=lambda: _("SAP HANA Backup"),
+        title=lambda: _("SAP HANA backup"),
     )
 )
 

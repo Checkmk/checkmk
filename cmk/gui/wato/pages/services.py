@@ -844,7 +844,7 @@ class DiscoveryPageRenderer:
             # Output per data source
             html.open_div(class_="message_container")
             if overall_state == 0:
-                html.h2(_("All datasources are OK"))
+                html.h2(_("All data sources are OK"))
             else:
                 num_problem_states: int = len([s for s in states if s != 0])
                 html.h2(
@@ -1026,13 +1026,13 @@ class DiscoveryPageRenderer:
                     messages.append(
                         _(
                             "%d service(s) moved to vanished services table. "
-                            "Monitoring is enabled, but service is unknown."
+                            "Monitoring is enabled, but service is in status UNKNOWN."
                         )
                         % num
                         if use_plural
                         else _(
                             "Service moved to vanished services table. "
-                            "Monitoring is enabled, but service is unknown."
+                            "Monitoring is enabled, but service is in status UNKNOWN."
                         )
                     )
                 case DiscoveryState.IGNORED:
@@ -2007,7 +2007,7 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Active checks"),
                 help_text=_(
-                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk SNMP engine but actively "
                     "call classical check plug-ins. They have been added by a rule in the section "
                     "<i>Active checks</i> or implicitly by Checkmk."
                 ),
@@ -2026,7 +2026,7 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Custom checks - defined via rule"),
                 help_text=_(
-                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk SNMP engine but actively "
                     "call a classical check plug-in that you have installed yourself."
                 ),
             ),
@@ -2073,7 +2073,7 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Disabled active checks"),
                 help_text=_(
-                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk SNMP engine but actively "
                     "call classical check plug-ins. They have been added by a rule in the section "
                     "<i>Active checks</i> or implicitly by Checkmk. "
                     "These services have been disabled by creating a rule in the rule set "
@@ -2085,7 +2085,7 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Disabled custom checks - defined via rule"),
                 help_text=_(
-                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk SNMP engine but actively "
                     "call a classical check plug-in that you have installed yourself. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
@@ -2283,7 +2283,7 @@ def _extend_display_dropdown(menu: PageMenu, host: Host, options: DiscoveryOptio
 
 
 def _extend_help_dropdown(menu: PageMenu) -> None:
-    menu.add_doc_reference(_("Beginner's guide: Configuring services"), DocReference.INTRO_SERVICES)
+    menu.add_doc_reference(_("Beginner's Guide: Configuring services"), DocReference.INTRO_SERVICES)
     menu.add_doc_reference(_("Understanding and configuring services"), DocReference.WATO_SERVICES)
 
 

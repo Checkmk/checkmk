@@ -80,7 +80,7 @@ class DataSourceBIAggregations(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("BI Aggregations")
+        return _("BI aggregations")
 
     @property
     def table(self) -> RowTable:
@@ -1051,7 +1051,7 @@ def render_tree_json(
         if is_leaf:
             service = tree[2].get("service")
             if not service:
-                title = _("Host status")
+                title = _("Host state")
             else:
                 title = service
         else:

@@ -58,15 +58,15 @@ _RULE_PACKS: Sequence[ec.ECRulePack] = [
             _RULE_PACKS,
             [
                 (
-                    "Event console rule: test2",
+                    "Event Console rule: test2",
                     "wato.py?edit=0&folder=&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
                 (
-                    "Event console rule: test1",
+                    "Event Console rule: test1",
                     "wato.py?edit=2&folder=&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
                 (
-                    "Event console rule: test",
+                    "Event Console rule: test",
                     "wato.py?edit=3&folder=&mode=mkeventd_edit_rule&rule_pack=default",
                 ),
             ],

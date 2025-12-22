@@ -786,7 +786,7 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                     "case it can be safely removed. Alternatively, it might belong "
                     "to a temporarily disabled extension package, so you may want "
                     "to retain it for now. You can use the <a "
-                    'href="wato.py?mode=unknown_rulesets">unknown rulesets</a> '
+                    'href="wato.py?mode=unknown_rulesets">unknown rule sets</a> '
                     "page in case you want to remove the rule.</p><p>Affected "
                     'sites: site_id</p><p>Details:</p><table class="data '
                     'table"><tr class="even0"><td>A text</td><td class="state '

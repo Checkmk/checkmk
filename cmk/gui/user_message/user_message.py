@@ -177,7 +177,7 @@ def show_user_messages() -> None:
 
         html.open_div(class_="details")
         html.write_text(
-            _("Sent on: %s, Expires on: %s")
+            _("Sent on: %s, expires on: %s")
             % (
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"])),
                 (

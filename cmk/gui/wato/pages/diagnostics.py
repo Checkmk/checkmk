@@ -118,7 +118,7 @@ _FILE_MAPS = [
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
     " passwords. These files are marked with 'H'."
-    " Other files may include IP addresses, host names, user names,"
+    " Other files may include IP addresses, host names, usernames,"
     " mail addresses or phone numbers and are marked with 'M'."
 )
 
@@ -421,9 +421,9 @@ class ModeDiagnostics(WatoMode):
                     totext="",
                     title=_("OMD Config"),
                     help=_(
-                        "Apache mode and TCP address and port, Core, "
+                        "Apache mode and TCP address and port, core, "
                         "Liveproxy daemon and Livestatus TCP mode, "
-                        "event daemon config, graphical user interface (GUI) authorisation, "
+                        "event daemon config, graphical user interface (GUI) authorization, "
                         "NSCA mode, TMP file system mode"
                     ),
                 ),
@@ -451,8 +451,8 @@ class ModeDiagnostics(WatoMode):
                     title=_("Crash Reports"),
                     help=_(
                         "The latest crash reports"
-                        "<br>Note: Some crash reports may contain sensitive data like"
-                        "host names or user names."
+                        "<br>Note: Some crash reports may contain sensitive data like "
+                        "host names or usernames."
                     ),
                 ),
             ),
@@ -485,7 +485,7 @@ class ModeDiagnostics(WatoMode):
                     FixedValue(
                         value=True,
                         totext="",
-                        title=_("Performance Graphs of Checkmk Server"),
+                        title=_("Time series graphs of Checkmk server"),
                         help=_(
                             "CPU load and utilization, number of threads, Kernel performance, "
                             "OMD, file system, Apache status, TCP connections of the time ranges "
@@ -502,7 +502,7 @@ class ModeDiagnostics(WatoMode):
             (
                 OPT_COMP_GLOBAL_SETTINGS,
                 Dictionary(
-                    title=_("Global Settings"),
+                    title=_("Global settings"),
                     help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s")
                     % _CHECKMK_FILES_NOTE,
                     elements=self._get_component_specific_checkmk_files_elements(

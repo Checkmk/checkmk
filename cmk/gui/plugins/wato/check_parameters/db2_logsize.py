@@ -32,6 +32,6 @@ rulespec_registry.register(
         item_spec=_item_spec_db2_logsize,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db2_logsize,
-        title=lambda: _("DB2 logfile usage"),
+        title=lambda: _("DB2 log file usage"),
     )
 )

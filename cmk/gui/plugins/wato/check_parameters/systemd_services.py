@@ -72,7 +72,7 @@ def _valuespec_discovery_systemd_units_services_rules() -> Dictionary:
             "Configure the discovery of single systemd services. To be discovered, a service "
             "must match at least one description condition, one name condition and one state "
             "condition, if configured. To simply discover all systemd services, do not "
-            "configure any restrictions. Note that independently of this ruleset, some systemd "
+            "configure any restrictions. Note that independently of this rule set, some systemd "
             "service units which are used by the Checkmk agent ('check-mk-agent@...') will "
             "never be discovered because they appear and disappear frequently."
         ),
@@ -162,10 +162,10 @@ def _valuespec_discovery_systemd_units_base(elements: list[tuple[str, ValueSpec]
         elements=elements,
         help=_(
             "Configure the discovery of single systemd units (sockets or services)."
-            " To be discovered, a unit must match at least one condition each:"
-            " One description condition, one name condition and one state condition, if configured."
+            " To be discovered, a unit must match at least one condition each: "
+            "one description condition, one name condition and one state condition, if configured."
             " To discover all units, do not configure any restrictions."
-            " Independently of this ruleset, some systemd units created by the Checkmk agent"
+            " Independently of this rule set, some systemd units created by the Checkmk agent"
             " ('check-mk-agent@...') will never be discovered."
             " They appear and disappear frequently."
         ),

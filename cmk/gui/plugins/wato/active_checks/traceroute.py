@@ -65,7 +65,7 @@ def _valuespec_active_checks_traceroute() -> Dictionary:
                 DropdownChoice(
                     title=_("Method of probing"),
                     choices=[
-                        (None, _("UDP (default behaviour of traceroute)")),
+                        (None, _("UDP (default behavior of traceroute)")),
                         ("icmp", _("ICMP Echo Request")),
                         ("tcp", _("TCP SYN")),
                     ],

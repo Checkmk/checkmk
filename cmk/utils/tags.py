@@ -732,12 +732,12 @@ class BuiltinTagConfig(TagConfig):
                     },
                     {
                         "id": TagID("snmp-v2"),
-                        "title": _("SNMP v2 or v3"),
+                        "title": _("SNMPv2 or v3"),
                         "aux_tags": [TagID("snmp")],
                     },
                     {
                         "id": TagID("snmp-v1"),
-                        "title": _("SNMP v1"),
+                        "title": _("SNMPv1"),
                         "aux_tags": [TagID("snmp")],
                     },
                 ],
@@ -794,12 +794,12 @@ class BuiltinTagConfig(TagConfig):
             {
                 "id": TagID("tcp"),
                 "topic": _("Monitoring agents"),
-                "title": _("Monitor via Checkmk Agent or special agent"),
+                "title": _("Monitor via Checkmk agent or special agent"),
             },
             {
                 "id": TagID("checkmk-agent"),
                 "topic": _("Monitoring agents"),
-                "title": _("Monitor via Checkmk Agent"),
+                "title": _("Monitor via Checkmk agent"),
             },
             {
                 "id": TagID("ping"),

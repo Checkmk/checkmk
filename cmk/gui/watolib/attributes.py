@@ -148,7 +148,7 @@ def _snmp_no_credentials_element() -> ValueSpec:
 
 def _snmpv1_v2_credentials_element() -> ValueSpec:
     return Password(
-        title=_("SNMP community (SNMP Versions 1 and 2c)"),
+        title=_("SNMP community (SNMP versions 1 and 2c)"),
         allow_empty=False,
     )
 

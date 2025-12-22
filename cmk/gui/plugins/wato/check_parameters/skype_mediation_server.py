@@ -38,7 +38,7 @@ def _parameter_valuespec_skype_mediation_server():
             (
                 "failed_calls_because_of_proxy",
                 Dictionary(
-                    title=_("Failed calls caused by unexpected interaction from proxy"),
+                    title=_("Failed calls caused by unexpected interaction of the proxy"),
                     elements=[
                         (
                             "upper",
@@ -74,7 +74,7 @@ def _parameter_valuespec_skype_mediation_server():
             (
                 "media_connectivity_failure",
                 Dictionary(
-                    title=_("Media Connectivity Check Failure"),
+                    title=_("Media connectivity check failure"),
                     elements=[
                         (
                             "upper",

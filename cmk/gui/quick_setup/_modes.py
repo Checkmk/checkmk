@@ -119,7 +119,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
 
         quick_setup = quick_setup_registry.get(self._name)
         if quick_setup is None:
-            raise MKUserError(None, _("No Configuration Quick setup for %s available") % self._name)
+            raise MKUserError(None, _("No configuration Quick Setup for %s available") % self._name)
         self._quick_setup_id = quick_setup.id
 
     @staticmethod
@@ -291,7 +291,7 @@ class ModeEditConfigurationBundles(WatoMode):
         )
         add_change(
             action_name="delete-quick-setup",
-            text=_("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
+            text=_("Deleted Quick Setup {bundle_id}").format(bundle_id=bundle_id),
             user_id=user.id,
             prevent_discard_changes=prevent_discard_changes,
             use_git=use_git,
@@ -747,14 +747,14 @@ class ModeConfigurationBundle(WatoMode):
             html.br()
             html.write_text_permissive(
                 _(
-                    "This can happen if the configuration bundle was deleted and some underlying "
-                    "objects were not properly cleaned up. By pressing the button 'Clean Up' you "
+                    "This can happen if the configuration bundle has been deleted and some underlying "
+                    "objects have not been properly cleaned up. By pressing the button 'Clean up' you "
                     "can remove all objects that reference the non-existing configuration."
                 )
             )
             html.br()
             with html.form_context("edit_bundle", method="POST"):
-                html.button("_clean_up", _("Clean Up"), "")
+                html.button("_clean_up", _("Cleanup"), "")
                 html.hidden_fields(add_action_vars=True)
 
             html.close_div()

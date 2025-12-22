@@ -146,6 +146,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_tablespaces,
-        title=lambda: _("MSSQL Size of Tablespace"),
+        title=lambda: _("MSSQL size of tablespace"),
     )
 )

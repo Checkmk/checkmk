@@ -539,7 +539,7 @@ class ModeBIPacks(ABCBIMode):
                             title=_("Of aggregations"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("BI Aggregations"),
+                                    title=_("BI aggregations"),
                                     icon_name=StaticIcon(IconNames.rulesets),
                                     item=make_simple_link(
                                         makeuri_contextless(
@@ -1959,7 +1959,7 @@ class BIModeEditAggregation(ABCBIMode):
                         title=_("Freeze aggregations"),
                         label=_("New aggregations are frozen"),
                         help=_(
-                            "The structure of frozen aggregations are saved initially and does not change afterwards, unless triggered by the user. "
+                            "The structure of frozen aggregations is saved initially and does not change afterwards, unless triggered by the user. "
                             "An icon indicates whether the aggregate is frozen. This icon can also be used to update the frozen structure of the aggregates."
                         ),
                     ),
@@ -1985,13 +1985,12 @@ class BIModeEditAggregation(ABCBIMode):
                         title=_("Aggregation of downtimes"),
                         label=_("Escalate downtimes based on aggregated WARN state"),
                         help=_(
-                            "When computing the state 'in scheduled downtime' for an aggregate "
-                            "first all leaf nodes that are within downtime are assumed CRIT and all others "
-                            "OK. Then each aggregated node is assumed to be in downtime if the state "
+                            "When computing the state 'in scheduled downtime' for an aggregate, "
+                            "at first, all leaf nodes that are within downtime are assumed CRIT and all others "
+                            "OK. Then, each aggregated node is assumed to be in downtime if the state "
                             "is CRIT under this assumption. You can change this to WARN. The influence of "
                             "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
-                            "and want the downtime information also escalated in case such a node would go into "
-                            "WARN state."
+                            "and want the downtime information also escalated in case such a node would go into WARN state."
                         ),
                     ),
                 ),

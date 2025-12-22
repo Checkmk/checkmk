@@ -32,9 +32,9 @@ def _parameter_valuespec_oracle_dataguard_stats():
                 (
                     "active_dataguard_option",
                     MonitoringState(
-                        title=_("State in case of Active Data-Guard Option is active: "),
+                        title=_("State in case of Active Data Guard option is active: "),
                         help=_(
-                            "The Active Data-Guard Option needs an addional license from Oracle."
+                            "The Active Data Guard option needs an additional license from Oracle."
                         ),
                         default_value=1,
                     ),
@@ -42,7 +42,7 @@ def _parameter_valuespec_oracle_dataguard_stats():
                 (
                     "primary_broker_state",
                     Checkbox(
-                        title=_("Check State of Broker on Primary: "),
+                        title=_("Check state of broker on primary: "),
                         default_value=False,
                         help=_(
                             "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "

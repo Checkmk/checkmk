@@ -224,7 +224,7 @@ def _backup_revoked_macro() -> str:
 
 class SecurityNotificationEvent(Enum):
     password_change = (
-        _("Your Checkmk Password has been changed"),
+        _("Your Checkmk password has been changed"),
         partial(_password_change_macro),
     )
     webauthn_added = (
@@ -244,7 +244,7 @@ class SecurityNotificationEvent(Enum):
         partial(_totp_removed_macro),
     )
     backup_used = (
-        _("Login performed with backup code - Checkmk Security Notice"),
+        _("Login performed with backup code - Checkmk security notice"),
         partial(_backup_used_macro),
     )
     backup_reset = (
@@ -263,16 +263,16 @@ def user_friendly_gui_message(event: SecurityNotificationEvent) -> str:
     )
     match event:
         case SecurityNotificationEvent.password_change:
-            message = _("Your Checkmk Password has been changed.")
+            message = _("Your Checkmk password has been changed.")
         case SecurityNotificationEvent.webauthn_added:
-            message = _("A Two-factor security token has been added to your Checkmk account.")
+            message = _("A two-factor security token has been added to your Checkmk account.")
         case SecurityNotificationEvent.webauthn_removed:
-            message = _("A Two-factor security token has been removed from your Checkmk account.")
+            message = _("A two-factor security token has been removed from your Checkmk account.")
         case SecurityNotificationEvent.totp_added:
-            message = _("A Two-factor Authenticator app has been added to your Checkmk account.")
+            message = _("A two-factor authenticator app has been added to your Checkmk account.")
         case SecurityNotificationEvent.totp_removed:
             message = _(
-                "A Two-factor Authenticator app has been removed from your Checkmk account."
+                "A two-factor authenticator app has been removed from your Checkmk account."
             )
         case SecurityNotificationEvent.backup_used:
             message = _("Your account has been accessed using a backup code.")
@@ -312,7 +312,7 @@ def _send_mail(email_address: str, event: SecurityNotificationEvent, event_time:
     e_time = event_time.strftime("%Y-%m-%d %H:%M:%S")
     mail = multipart_mail(
         target=email_address,
-        subject=event.value[0] + _(" - Checkmk Security Notice"),
+        subject=event.value[0] + _(" - Checkmk security notice"),
         from_address=default_from_address(),
         reply_to="",
         content_txt=template_txt.render(

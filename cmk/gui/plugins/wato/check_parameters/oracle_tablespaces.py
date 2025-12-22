@@ -32,7 +32,7 @@ def _parameter_valuespec_oracle_tablespaces():
         help=_(
             "A tablespace is a container for segments (tables, indexes, etc). A "
             "database consists of one or more tablespaces, each made up of one or "
-            "more data files. Tables and indexes are created within a particular "
+            "more datafiles. Tables and indexes are created within a particular "
             "tablespace. "
             "This rule allows you to define checks on the size of tablespaces."
         ),
@@ -89,7 +89,7 @@ def _parameter_valuespec_oracle_tablespaces():
                 DropdownChoice(
                     title=_("Monitor temporary tablespace"),
                     choices=[
-                        (False, _("Ignore temporary tablespaces (Default)")),
+                        (False, _("Ignore temporary tablespaces (default)")),
                         (True, _("Apply rule to temporary tablespaces")),
                     ],
                 ),
@@ -99,7 +99,7 @@ def _parameter_valuespec_oracle_tablespaces():
                 DropdownChoice(
                     title=_("Monitor undo tablespace"),
                     choices=[
-                        (False, _("Ignore undo tablespaces (Default)")),
+                        (False, _("Ignore undo tablespaces (default)")),
                         (True, _("Apply rule to undo tablespaces")),
                     ],
                     help=_(

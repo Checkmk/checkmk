@@ -36,7 +36,7 @@ def _valuespec_custom_checks() -> MigrateNotUpdated:
                             "and does not collide with other services."
                         ),
                         allow_empty=False,
-                        default_value=_("Customcheck"),
+                        default_value=_("Custom check"),
                     ),
                 ),
                 (
@@ -50,8 +50,8 @@ def _valuespec_custom_checks() -> MigrateNotUpdated:
                         help=_(
                             "If you want, you can specify a name that will be used "
                             "in the <tt>define command</tt> section for these checks. This "
-                            "allows you to a assign a custom PNP template for the performance "
-                            "data of the checks. If you omit this, then <tt>check-mk-custom</tt> "
+                            "allows you to assign a custom PNP template for the metrics "
+                            "of the checks. If you omit this, then <tt>check-mk-custom</tt> "
                             "will be used."
                         ),
                         size=32,
@@ -67,7 +67,7 @@ def _valuespec_custom_checks() -> MigrateNotUpdated:
                             "when the check results are not arriving in time. Staleness will still grey out the "
                             "test after the corresponding interval. If you don't want that, you might want to adjust "
                             "the staleness interval as well. The staleness interval is calculated from the normal "
-                            "check interval multiplied by the staleness value in the <tt>Global Settings</tt>. "
+                            "check interval multiplied by the staleness value in the <tt>Global settings</tt>. "
                             "The normal check interval can be configured in a separate rule for your check."
                         ),
                         optional_keys=False,

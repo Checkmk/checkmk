@@ -78,11 +78,11 @@ def prepare_aws() -> QuickSetupStage:
                             "your AWS account."
                         ),
                     ),
-                    Text(text=_("Note down the generated Access key ID and Secret access key.")),
+                    Text(text=_("Note down the generated access key ID and secret access key.")),
                     Text(
                         text=_(
                             "Return to Checkmk, define a unique configuration name, and use the "
-                            "Access key ID and Secret access key below."
+                            "access key ID and secret access key below."
                         )
                     ),
                 ],
@@ -125,7 +125,7 @@ def prepare_aws() -> QuickSetupStage:
                         parameter_form=quick_setup_aws_form_spec(),
                         custom_collect_params=_collect_params_for_connection_test,
                         error_message=_(
-                            "Could not access your AWS account. Please check your Access and Secret key and try again."
+                            "Could not access your AWS account. Please check your access and secret key and try again."
                         ),
                     ),
                 ],
@@ -297,7 +297,7 @@ def recap_found_services(
 def review_and_run_preview_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Review and test configuration"),
-        sub_title=_("Test the AWS connection based on your configuration settings"),
+        sub_title=_("Test the AWS connection based on your configuration settings."),
         configure_components=[],
         actions=[
             QuickSetupBackgroundStageAction(

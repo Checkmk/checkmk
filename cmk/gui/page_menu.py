@@ -492,7 +492,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                 title=_("Articles in the User Guide"),
                 entries=[
                     PageMenuEntry(
-                        title=_("The official Checkmk user guide"),
+                        title=_("The official Checkmk User Guide"),
                         icon_name=DynamicIconName("manual"),
                         item=make_external_link(doc_reference_url()),
                     ),

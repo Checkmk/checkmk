@@ -26,7 +26,7 @@ def _parameter_valuespec_bluecat_command_server():
                         (
                             "warning",
                             ListChoice(
-                                title=_("States treated as warning"),
+                                title=_("States treated as WARNING"),
                                 choices=bluecat_operstates,
                                 default_value=[2, 3, 4],
                             ),

@@ -33,7 +33,7 @@ def _parameter_valuespec_fcp():
                 OptionalDropdownChoice(
                     title=_("Operating speed"),
                     help=_(
-                        "If you use this parameter then the check goes warning if the "
+                        "If you use this parameter then the check goes WARNING if the "
                         "interface is not operating at the expected speed (e.g. it "
                         "is working with 8Gbit/s instead of 16Gbit/s)."
                     ),

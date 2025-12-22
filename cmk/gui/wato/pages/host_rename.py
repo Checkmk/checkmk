@@ -261,7 +261,7 @@ class ModeBulkRenameHost(WatoMode):
             warning += self._format_renamings_warning(
                 _(
                     "You cannot do this renaming since the following hosts are locked by "
-                    "quick setup:"
+                    "Quick Setup:"
                 ),
                 locked_by_quick_setup,
             )
@@ -735,8 +735,8 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "pnpspool": _("Spool files of PNP4Nagios"),
         "history": _("Monitoring history entries (events and availability)"),
         "retention": _("The current monitoring state (including acknowledgments and downtimes)"),
-        "inv": _("HW/SW Inventory"),
-        "invarch": _("HW/SW Inventory history"),
+        "inv": _("HW/SW inventory"),
+        "invarch": _("HW/SW inventory history"),
         "uuid_link": _("UUID links for TLS-encrypting agent communication"),
     }
 
@@ -748,9 +748,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         if what.startswith("dnsfail-"):
             text = (
                 _(
-                    "<b>WARNING: </b> the IP address lookup of <b>%s</b> has failed. The core has been "
-                    "started by using the address <tt>0.0.0.0</tt> for the while. "
-                    "Please update your DNS or configure an IP address for the affected host."
+                    "<b>Warning: </b> the IP address lookup of <b>%s</b> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. Please update your DNS or configure an IP address for the affected host."
                 )
                 % what.split("-", 1)[1]
             )

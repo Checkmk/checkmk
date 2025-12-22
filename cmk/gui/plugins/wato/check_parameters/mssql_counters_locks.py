@@ -100,6 +100,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_counters_locks,
-        title=lambda: _("MSSQL Locks"),
+        title=lambda: _("MSSQL locks"),
     )
 )

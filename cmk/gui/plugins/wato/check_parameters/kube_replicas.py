@@ -18,7 +18,7 @@ from cmk.gui.valuespec import Dictionary
 def _parameter_valuespec():
     return Dictionary(
         help=_(
-            "This ruleset is relevant for Kubernetes replicas. You can set "
+            "This rule set is relevant for Kubernetes replicas. You can set "
             "a maximum allowed duration during which replicas may be in a not "
             "ready, not available or not up-to-date state. For DaemonSets, you may "
             "additionally specify the duration for which there may be a "

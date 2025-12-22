@@ -55,10 +55,10 @@ class TemperatureUnitUserAttribute(UserAttribute):
             title=_("Temperature unit"),
             orientation="horizontal",
             help=_(
-                "Set the temperature unit used for graphs and perfometers. The default unit can be "
+                "Set the temperature unit used for graphs and Perf-O-Meters. The default unit can be "
                 "configured <a href='%s'>here</a>. Note that this setting does not affect the "
                 "temperature unit used in service outputs, which can however be configured in "
-                "<a href='%s'>this ruleset</a>."
+                "<a href='%s'>this rule set</a>."
             )
             % (
                 makeuri_contextless(
@@ -110,7 +110,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
             help=_(
                 "When this option is checked, the status GUI will only "
                 "display hosts and services that the user is a contact for - "
-                "even they have the permission for seeing all objects."
+                "even if they have the permission for seeing all objects."
             ),
         )
 

@@ -573,7 +573,7 @@ class IndexSearcher:
             _("Enforced services"),
             _("Global settings"),
             _("Miscellaneous"),
-            _("Deprecated rulesets"),
+            _("Deprecated rule sets"),
             # _("Maintenance"),
         )
 
@@ -680,7 +680,7 @@ def _process_update_requests_background(
         except RedisConnectionError as e:
             # This can happen when Redis or the whole site is stopped while the background job is
             # running. Report an error in the background job result but don't create a crash report.
-            job_interface.send_exception(_("An connection error occurred: %s") % e)
+            job_interface.send_exception(_("A connection error occurred: %s") % e)
 
 
 def _process_update_requests(

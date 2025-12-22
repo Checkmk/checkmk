@@ -31,9 +31,9 @@ def _parameter_valuespec_memory():
                 Alternative(
                     title=_("Levels for Cisco CPU memory"),
                     help=_(
-                        "The performance graph will always display the occupied memory. "
+                        "The time series graph will always display the occupied memory. "
                         "This is independent of the actual check levels which can be set "
-                        "for both free and occupied memory levels."
+                        "for both, free and occupied memory levels."
                     ),
                     default_value=(150.0, 200.0),
                     match=match_dual_level_type,

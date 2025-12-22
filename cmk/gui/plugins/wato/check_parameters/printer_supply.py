@@ -90,7 +90,7 @@ def _parameter_valuespec_printer_supply() -> Migrate:
                     "some_remaining_space",
                     MonitoringState(
                         title=_(
-                            "State for receptacles if the exact amount of remaining space is unkown"
+                            "State for receptacles if the exact amount of remaining space is unknown"
                         ),
                         help=_(
                             "Some printers do not report a precise percentage but "

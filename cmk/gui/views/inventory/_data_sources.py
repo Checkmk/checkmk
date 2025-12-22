@@ -130,7 +130,7 @@ class RowTableInventory(ABCRowTable):
                 MKUserError(
                     "load_inventory_tree",
                     _(
-                        "Cannot load HW/SW Inventory tree of host %s."
+                        "Cannot load HW/SW inventory tree of host %s."
                         " Please remove the corrupted file."
                     )
                     % host_name,
@@ -162,7 +162,7 @@ class RowTableInventoryHistory(ABCRowTable):
                 MKUserError(
                     "load_inventory_delta_tree",
                     _(
-                        "Cannot load HW/SW Inventory history entries %s. Please remove the corrupted files."
+                        "Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
                     )
                     % ", ".join(sorted(corrupted_history_files)),
                 )
@@ -184,7 +184,7 @@ class DataSourceInventoryHistory(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("HW/SW Inventory history")
+        return _("HW/SW inventory history")
 
     @property
     def table(self) -> RowTable:

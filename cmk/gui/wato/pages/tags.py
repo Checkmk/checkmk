@@ -353,9 +353,9 @@ class ModeTags(ABCTagMode):
         html.show_warning(
             _(
                 "You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
-                "In current Checkmk versions these are <i>built-in</i> tag groups which "
-                "can not be customized anymore. Your customized tag group will work for "
-                "the moment, but needs to be migrated until 1.7. With 1.7 it won't work "
+                "In current Checkmk versions, these are <i>built-in</i> tag groups which "
+                "cannot be customized anymore. Your customized tag group will work for "
+                "the moment, but needs to be migrated until the release of 1.7. With 1.7 it won't work "
                 "anymore."
             )
             % ", ".join(customized)
@@ -495,7 +495,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
                 title=id_title,
                 size=60,
                 allow_empty=False,
-                help=_("This ID is used as it's unique identifier. It cannot be changed later."),
+                help=_("This ID is used as its unique identifier. It cannot be changed later."),
             )
         else:
             vs_id = FixedValue(

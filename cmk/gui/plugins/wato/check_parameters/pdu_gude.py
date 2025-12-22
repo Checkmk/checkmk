@@ -76,7 +76,7 @@ rulespec_registry.register(
         check_group_name="pdu_gude",
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=lambda: TextInput(
-            title=_("Phase Number"), help=_("The Number of the power Phase.")
+            title=_("Phase Number"), help=_("The number of the power phase.")
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_pdu_gude,

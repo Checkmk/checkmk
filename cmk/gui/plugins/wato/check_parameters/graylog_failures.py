@@ -30,8 +30,8 @@ def _parameter_valuespec_graylog_failures() -> Dictionary:
                 Tuple(
                     title=_("Index failure in the defined time range upper levels"),
                     help=_(
-                        "Here you can set levels on failures in the time range "
-                        "specified in the datasource (default: 30m)."
+                        "Here, you can set levels on failures in the time range "
+                        "specified in the data source (default: 30 min)."
                     ),
                     elements=[
                         Integer(title=_("Warning at")),

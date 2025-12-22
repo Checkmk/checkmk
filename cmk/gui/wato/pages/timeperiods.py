@@ -279,7 +279,7 @@ class ModeTimeperiods(WatoMode):
             self._timeperiods = load_timeperiods()
 
         except watolib.timeperiods.TimePeriodBuiltInError:
-            raise MKUserError("_delete", _("Built-in time periods can not be modified"))
+            raise MKUserError("_delete", _("Built-in time periods cannot be modified"))
 
         except watolib.timeperiods.TimePeriodInUseError as exception:
             message = "<b>{}</b><br>{}:<ul>".format(
@@ -436,7 +436,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 "on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import "
                 "is normally used to import events as exceptions. Time ranges and "
                 "recurring events are supported, however, currently the total number of "
-                "75 exceptions can not be exceeded."
+                "75 exceptions cannot be exceeded."
             )
         )
 
@@ -539,7 +539,7 @@ class ModeEditTimeperiod(WatoMode):
                 self._timeperiod = {"alias": ""}
         else:
             if is_builtin_timeperiod(self._name):
-                raise MKUserError("edit", _("Built-in time periods can not be modified"))
+                raise MKUserError("edit", _("Built-in time periods cannot be modified"))
             self._timeperiod = self._get_timeperiod(self._name)
 
     def _get_timeperiod(self, name: TimeperiodName) -> TimeperiodSpec:
@@ -621,7 +621,7 @@ class ModeEditTimeperiod(WatoMode):
         return CascadingDropdown(
             title=_("Active time range"),
             help=_(
-                "For each weekday you can setup no, one or several "
+                "For each weekday you can set up no, one or several "
                 "time ranges in the format <tt>23:39</tt>, in which the time period "
                 "should be active."
             ),

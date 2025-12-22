@@ -106,7 +106,7 @@ def _expected_rulespec_group_choices() -> list[tuple[str, str]]:
         ),
         ("datasource_programs", "Other integrations"),
         ("eventconsole", "Event Console rules"),
-        ("inventory", "HW/SW Inventory"),
+        ("inventory", "HW/SW inventory"),
         ("host_monconf", "Host monitoring rules"),
         ("host_monconf/host_checks", "&nbsp;&nbsp;\u2319 Host checks"),
         ("host_monconf/host_notifications", "&nbsp;&nbsp;\u2319 Notifications"),
@@ -426,7 +426,7 @@ def test_match_item_generator_rules() -> None:
         ),
         MatchItem(
             title="Deprecated: Title",
-            topic="Deprecated rulesets",
+            topic="Deprecated rule sets",
             url="wato.py?mode=edit_ruleset&varname=some_deprecated_host_rulespec",
             match_texts=["deprecated: title", "some_deprecated_host_rulespec"],
         ),

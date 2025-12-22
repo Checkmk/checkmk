@@ -66,6 +66,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Instance identifier")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_instance_blocked_sessions,
-        title=lambda: _("MSSQL Blocked Sessions"),
+        title=lambda: _("MSSQL blocked sessions"),
     )
 )

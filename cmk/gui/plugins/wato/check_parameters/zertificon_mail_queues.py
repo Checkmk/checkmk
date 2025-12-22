@@ -55,6 +55,6 @@ rulespec_registry.register(
         check_group_name="zertificon_mail_queues",
         group=RulespecGroupEnforcedServicesApplications,
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Zertificon Mail Queues"),
+        title=lambda: _("Zertificon mail queues"),
     )
 )

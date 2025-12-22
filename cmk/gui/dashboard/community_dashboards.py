@@ -82,7 +82,7 @@ ProblemsDashboard = DashboardConfig(
             EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
-                    "title": _("Host Problems (unhandled)"),
+                    "title": _("Host problems (unhandled)"),
                     "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
                     "position": (-1, 1),
                     "size": (GROW, 18),
@@ -273,7 +273,7 @@ SimpleProblemsDashboard = DashboardConfig(
             EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
-                    "title": _("Host Problems (unhandled)"),
+                    "title": _("Host problems (unhandled)"),
                     "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
                     "show_title": True,
                     "position": (1, 1),

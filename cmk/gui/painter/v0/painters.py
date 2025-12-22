@@ -347,7 +347,7 @@ class PainterOptionTimestampFormat(PainterOption):
     @property
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
-            title=_("Time stamp format"),
+            title=_("Timestamp format"),
             default_value=self.config.default_ts_format,
             encode_value=False,
             choices=[
@@ -355,7 +355,7 @@ class PainterOptionTimestampFormat(PainterOption):
                 ("abs", _("Absolute")),
                 ("rel", _("Relative")),
                 ("both", _("Both")),
-                ("epoch", _("Unix Timestamp (Epoch)")),
+                ("epoch", _("Unix timestamp (epoch)")),
             ],
         )
 
@@ -604,7 +604,7 @@ class PainterSvcPluginOutput(Painter):
         return _("Summary")
 
     def list_title(self, cell: Cell) -> str:
-        return _("Summary (Previously named: Status details or plug-in output)")
+        return _("Summary (previously named: Status details or plug-in output)")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -636,7 +636,7 @@ class PainterSvcLongPluginOutput(Painter):
         return _("Details")
 
     def list_title(self, cell: Cell) -> str:
-        return _("Details (Previously named: long output)")
+        return _("Details (previously named: long output)")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -651,8 +651,8 @@ class PainterSvcLongPluginOutput(Painter):
                     Integer(
                         title=_("Maximum number of characters to show"),
                         help=_(
-                            "Truncate content at this amount of characters."
-                            "A zero value mean not to truncate"
+                            "Truncate content at this amount of characters. "
+                            "A zero value means not to truncate."
                         ),
                         default_value=0,
                         minvalue=0,
@@ -713,10 +713,10 @@ class PainterSvcPerfData(Painter):
         return "svc_perf_data"
 
     def title(self, cell: Cell) -> str:
-        return _("Service performance data (source code)")
+        return _("Service metrics (source code)")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Perfdata")
+        return _("Metrics")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -762,7 +762,7 @@ class PainterSvcMetrics(Painter):
         )
 
         if row["service_perf_data"] and not translated_metrics:
-            return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
+            return "", _("Failed to parse metrics string: %s") % row["service_perf_data"]
 
         with output_funnel.plugged():
             self._show_metrics_table(
@@ -833,7 +833,7 @@ class PainterSvcPerfVal(Painter):
         return "svc_perf_val%02d" % self._num
 
     def title(self, cell: Cell) -> str:
-        return _("Service performance data - value number %2d") % self._num
+        return _("Service metrics - value number %2d") % self._num
 
     def short_title(self, cell: Cell) -> str:
         return _("Val. %d") % self._num
@@ -932,7 +932,7 @@ class PainterSvcNotesURL(Painter):
         return "svc_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes (URL) for Services")
+        return _("Notes (URL) for services")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
@@ -2083,7 +2083,7 @@ class PainterHostPluginOutput(Painter):
         return _("Summary")
 
     def list_title(self, cell: Cell) -> str:
-        return _("Summary (Previously named: Status details or plug-in output)")
+        return _("Summary (previously named: Status details or plug-in output)")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -2107,10 +2107,10 @@ class PainterHostPerfData(Painter):
         return "host_perf_data"
 
     def title(self, cell: Cell) -> str:
-        return _("Host performance data")
+        return _("Host metrics")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Performance data")
+        return _("Metrics")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -2164,7 +2164,7 @@ class PainterHostNotesURL(Painter):
         return "host_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes (URL) for Hosts")
+        return _("Notes (URL) for hosts")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
@@ -2745,7 +2745,7 @@ class PainterHostAddress(Painter):
         return "host_address"
 
     def title(self, cell: Cell) -> str:
-        return _("Host address (Primary)")
+        return _("Host address (primary)")
 
     def short_title(self, cell: Cell) -> str:
         return _("IP address")
@@ -2866,7 +2866,7 @@ class PainterHostAddressFamily(Painter):
         return "host_address_family"
 
     def title(self, cell: Cell) -> str:
-        return _("Host address family (Primary)")
+        return _("Host address family (primary)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Address family")
@@ -3483,11 +3483,11 @@ def _paint_discovery_output(
                 + HTML.with_escaping(_("Disabled (configured away by admin)")),
                 "vanished": html.render_icon_button(
                     discovery_url,
-                    _("Vanished (checked, but no longer exist)"),
+                    _("Vanished (checked, but no longer exists)"),
                     StaticIcon(IconNames.services),
                     theme=theme,
                 )
-                + HTML.with_escaping(_("Vanished (checked, but no longer exist)")),
+                + HTML.with_escaping(_("Vanished (checked, but no longer exists)")),
                 "unmonitored": html.render_icon_button(
                     discovery_url,
                     _("Available (missing)"),
@@ -4236,7 +4236,7 @@ class PainterCommentEntryType(Painter):
             help_txt = _("Flapping")
         elif t == 4:
             icon = StaticIcon(IconNames.ack)
-            help_txt = _("Acknowledgement")
+            help_txt = _("Acknowledgment")
         else:
             return "", ""
         code: str | HTML = html.render_static_icon(icon, title=help_txt)
@@ -4544,8 +4544,8 @@ class PainterLogDetailsHistory(Painter):
                     Integer(
                         title=_("Maximum number of characters to show"),
                         help=_(
-                            "Truncate content at this amount of characters."
-                            "A zero value mean not to truncate"
+                            "Truncate content at this amount of characters. "
+                            "A zero value means not to truncate."
                         ),
                         default_value=0,
                         minvalue=0,
@@ -4601,7 +4601,7 @@ class PainterLogDetailsHistory(Painter):
                 ],
             )
             content = (
-                _("HTML output can not be rendered because of truncated data. ")
+                _("HTML output cannot be rendered because of truncated data. ")
                 + setting_link_tag
                 + html.render_b("WARN", class_="stmark state1")
                 + html.render_br()
@@ -4938,7 +4938,7 @@ class PainterLogIcon(Painter):
                 title = _("Acknowledged")
             else:
                 img = StaticIcon(IconNames.alert_ackstop)
-                title = _("Stopped acknowledgement")
+                title = _("Stopped acknowledgment")
 
         if img:
             return "icon", html.render_static_icon(img, title=title)
@@ -5676,7 +5676,7 @@ class PainterHostKubernetesCluster(_PainterHostKubernetes):
     _constraints = ["cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes Cluster")
+        return _("Kubernetes cluster")
 
     def short_title(self, cell: Cell) -> str:
         return _("Cluster")
@@ -5731,7 +5731,7 @@ class PainterHostKubernetesNode(_PainterHostKubernetes):
     _constraints = ["node", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes Node")
+        return _("Kubernetes node")
 
     def short_title(self, cell: Cell) -> str:
         return _("Node")

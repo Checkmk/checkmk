@@ -67,7 +67,7 @@ class KeypairStore:
             if stored_key.fingerprint(HashAlgorithm.MD5) == this_digest:
                 raise MKUserError(
                     None,
-                    _("The key / certificate already exists (Key: %d, Description: %s)")
+                    _("The key / certificate already exists (key: %d, description: %s)")
                     % (key_id, stored_key.alias),
                 )
 

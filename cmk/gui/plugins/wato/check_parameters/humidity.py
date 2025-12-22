@@ -23,7 +23,7 @@ def _item_spec_humidity():
 
 def _parameter_valuespec_humidity() -> Dictionary:
     return Dictionary(
-        help=_("This Ruleset sets the threshold limits for humidity sensors"),
+        help=_("This rule set sets the threshold limits for humidity sensors"),
         elements=[
             (
                 "levels",

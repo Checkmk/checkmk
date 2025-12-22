@@ -70,6 +70,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_stats,
-        title=lambda: _("MSSQL Statistics"),
+        title=lambda: _("MSSQL statistics"),
     )
 )

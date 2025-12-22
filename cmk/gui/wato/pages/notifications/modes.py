@@ -614,7 +614,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
     def _vs_notification_bulkby(self) -> ListChoice:
         return ListChoice(
-            title=_("Create separate notification bulks based on"),
+            title=_("Create separate bulk notifications based on"),
             choices=[
                 ("folder", _("Folder")),
                 ("host", _("Host")),
@@ -654,7 +654,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         if rule.get("contact_all"):
             infos.append(_("all users"))
         if rule.get("contact_all_with_email"):
-            infos.append(_("all users with and email address"))
+            infos.append(_("all users with an email address"))
         if rule.get("contact_users"):
             contact_users_list = rule["contact_users"]
             info = HTML.with_escaping(_("users: "))
@@ -1094,7 +1094,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Recipient"), contact.replace(",", ", "))
                 table.cell(_("Method"), self._vs_notification_scripts().value_to_html(plugin))
                 table.cell(_("Parameters"), ", ".join(list(parameters)))
-                table.cell(_("Bulking"))
+                table.cell(_("Building bulks"))
                 if bulk:
                     html.write_text_permissive(_("Time horizon") + ": ")
                     if is_always_bulk(bulk):
@@ -1390,9 +1390,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 entries=[
                     PageMenuEntry(
                         title=(
-                            _("Hide notification bulks")
+                            _("Hide bulk notifications")
                             if self._show_bulks
-                            else _("Show notification bulks")
+                            else _("Show bulk notifications")
                         ),
                         icon_name=StaticIcon(
                             IconNames.toggle_on if self._show_bulks else IconNames.toggle_off
@@ -1450,7 +1450,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
             if not self._render_bulks(only_ripe=False, debug=debug):
-                html.show_message(_("Currently there are no unsent notification bulks pending."))
+                html.show_message(_("Currently there are no unsent bulk notifications pending."))
         else:
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True, debug=debug)
@@ -2065,7 +2065,7 @@ class ModeTestNotifications(ModeNotifications):
         self._ensure_correct_default_test_options()
 
         with html.form_context("test_notifications", method="POST"):
-            html.help(_("Test a self defined notification against your ruleset."))
+            html.help(_("Test a self-defined notification against your rule set."))
             self._vs_test_on_options()
             self._vs_general_test_options().render_input_as_form(
                 "general_opts",
@@ -2526,7 +2526,7 @@ def _validate_general_opts(general_test_options: GeneralTestOptions, varprefix: 
     if not general_test_options["on_hostname_hint"]:
         raise MKUserError(
             f"{varprefix}_p_on_hostname_hint",
-            _("Please provide a hostname to test with."),
+            _("Please provide a host name to test with."),
         )
 
     if (
@@ -3022,11 +3022,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 "count",
                 Integer(
                     title=_("Maximum bulk size"),
-                    label=_("Bulk up to"),
+                    label=_("Build bulks up to"),
                     unit=_("Notifications"),
                     help=_(
-                        "At most that many notifications are kept back for bulking. A value of "
-                        "1 essentially turns off notification bulking."
+                        "At most that many notifications are kept back to build bulks. A value of 1 essentially turns off the bulk notification."
                     ),
                     default_value=1000,
                     minvalue=1,
@@ -3042,16 +3041,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     valuespec=ID(),
                     orientation="horizontal",
                     title=_(
-                        "Create separate notification bulks for different values of the following custom macros"
+                        "Create separate bulk notifications for different values of the following custom macros."
                     ),
                     help=_(
-                        "If you enter the names of host/service-custom macros here "
-                        "then for each different combination of values of those "
-                        "macros a separate bulk will be created. Service macros "
-                        "match first, if no service macro is found, the host macros "
-                        "are searched. This can be used in combination with the grouping by folder, host etc. "
-                        "Omit any leading underscore. <b>Note</b>: If you are using "
-                        "Nagios as a core you need to make sure that the values of the required macros are "
+                        "If you enter the names of host/service-custom macros here then for each different combination of values of those macros a separate bulk will be created. Service macros match first, if no service macro is found, the host macros are searched. This can be used in combination with the grouping by folder, host etc. Omit any leading underscore. <b>Note</b>: If you are using Nagios as a core you need to make sure that the values of the required macros are "
                         "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
                         "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
                         "<tt>NOTIFY_SERVICE_FOO</tt>."
@@ -3083,8 +3076,8 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     "interval",
                     Age(
                         title=_("Time horizon"),
-                        label=_("Bulk up to"),
-                        help=_("Notifications are kept back for bulking at most for this time."),
+                        label=_("Build bulks up to"),
+                        help=_("Notifications are kept back to build bulks at most for this time."),
                         default_value=60,
                     ),
                 ),
@@ -3103,10 +3096,9 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             (
                 "bulk_outside",
                 Dictionary(
-                    title=_("Also bulk outside of time period"),
+                    title=_("Build bulks also outside of time period"),
                     help=_(
-                        "By enabling this option notifications will be bulked "
-                        "outside of the defined time period as well."
+                        "By enabling this option notifications will be bundled outside of the defined time period as well."
                     ),
                     elements=make_interval_entry() + bulk_options,
                     columns=1,
@@ -3174,7 +3166,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "notify_plugin",
                     CascadingDropdown(
-                        title=_("Notification Method"),
+                        title=_("Notification method"),
                         choices=self._notification_script_choices_with_parameters,
                         default_value=("mail", {}),
                     ),
@@ -3188,7 +3180,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                             choices=[
                                 (
                                     "always",
-                                    _("Always bulk"),
+                                    _("Always build bulks"),
                                     Dictionary(
                                         help=_(
                                             "Enabling the bulk notifications will collect several subsequent notifications "
@@ -3203,7 +3195,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                                 ),
                                 (
                                     "timeperiod",
-                                    _("Bulk during time period"),
+                                    _("Build bulks during time period"),
                                     Dictionary(
                                         help=_(
                                             "By enabling this option notifications will be bulked only if the "
@@ -3313,14 +3305,14 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 if not info["bulk"]:
                     raise MKUserError(
                         varprefix + "_p_notify_plugin",
-                        _("The notification script %s does not allow bulking.") % info["title"],
+                        _("The notification script %s does not allow building bulks.")
+                        % info["title"],
                     )
             else:
                 raise MKUserError(
                     varprefix + "_p_notify_plugin",
                     _(
-                        "Legacy ASCII emails do not support bulking. You can either disable notification "
-                        "bulking or choose another notification plug-in which allows bulking."
+                        "Legacy ASCII emails do not support building bulks. You can either disable bulk notifications or choose another notification plug-in which allows building bulks."
                     ),
                 )
 
@@ -3636,7 +3628,7 @@ class ModeNotificationParametersOverview(WatoMode):
                             title=_("Add"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Define parameters for HTML mail"),
+                                    title=_("Define parameters for HTML email"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(

@@ -467,7 +467,7 @@ SorterSvcPerfVal01 = Sorter(
 
 SorterSvcPerfVal02 = Sorter(
     ident="svc_perf_val02",
-    title=_("Service performance data - value number 02"),
+    title=_("Service metrics - value number 02"),
     columns=["service_perf_data"],
     sort_function=partial(_sort_service_perf_val, num=2),
 )
@@ -525,7 +525,7 @@ SorterSvcPerfVal09 = Sorter(
 
 SorterSvcPerfVal10 = Sorter(
     ident="svc_perf_val10",
-    title=_("Service performance data - value number 10"),
+    title=_("Service metrics - value number 10"),
     columns=["service_perf_data"],
     sort_function=partial(_sort_service_perf_val, num=10),
 )

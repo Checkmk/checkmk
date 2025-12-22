@@ -70,7 +70,7 @@ def _parameter_valuespec_skype_conferencing():
             (
                 "allocation_latency",
                 Dictionary(
-                    title=_("Conference Allocation Latency"),
+                    title=_("Conference allocation latency"),
                     elements=[
                         (
                             "upper",

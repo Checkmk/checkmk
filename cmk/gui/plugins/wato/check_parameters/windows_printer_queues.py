@@ -22,7 +22,7 @@ def _parameter_valuespec_windows_printer_queues() -> Dictionary:
                     title=_("Levels for the number of print jobs"),
                     help=_(
                         "This rule is applied to the number of print jobs "
-                        "currently waiting in windows printer queue."
+                        "currently waiting in Windows printer queue."
                     ),
                     elements=[
                         Integer(title=_("Warning at"), unit=_("jobs"), default_value=40),
@@ -54,7 +54,7 @@ def _parameter_valuespec_windows_printer_queues() -> Dictionary:
             (
                 "warn_states",
                 ListChoice(
-                    title=_("States who should lead to warning"),
+                    title=_("States who should lead to WARNING"),
                     choices=[
                         (0, "Unkown"),
                         (1, "Other"),

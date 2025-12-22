@@ -23,7 +23,7 @@ def _parameter_valuespec_mail_queue_length() -> Dictionary:
                 Tuple(
                     title=_("Mails in failed mail queue"),
                     help=_(
-                        "This rule is applied to the number of E-Mails currently "
+                        "This rule is applied to the number of emails currently "
                         "in the failed mail queue"
                     ),
                     elements=[

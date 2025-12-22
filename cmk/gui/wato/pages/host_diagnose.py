@@ -453,8 +453,8 @@ class ModeDiagHost(WatoMode):
                             [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
                         ),
                         help=_(
-                            "After a request is sent to the remote SNMP agent we will wait up to this "
-                            "number of seconds until assuming the answer get lost and retrying."
+                            "After a request is sent to the remote SNMP agent, the service will wait up to "
+                            "the provided timeout limit before assuming that the answer got lost and retrying."
                         ),
                         default_value=snmp_timeout if snmp_timeout is not None else 1,
                         minvalue=1,

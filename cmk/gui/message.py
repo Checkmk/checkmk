@@ -221,8 +221,8 @@ def acknowledge_gui_message(msg_id: str | None) -> None:
 def _messaging_methods() -> dict[MessageMethod, dict[str, Any]]:
     return {
         "gui_popup": {
-            "title": _("Show popup message"),
-            "confirmation_title": _("as a popup message"),
+            "title": _("Show pop-up message"),
+            "confirmation_title": _("as a pop-up message"),
             "handler": _message_gui,
         },
         "gui_hint": {

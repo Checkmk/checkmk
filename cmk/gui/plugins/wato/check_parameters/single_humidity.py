@@ -29,7 +29,7 @@ def _migrate_quadruple(
 def _parameter_valuespec_single_humidity():
     return Migrate(
         valuespec=Dictionary(
-            help=_("This ruleset sets the threshold limits for humidity sensors"),
+            help=_("This rule set sets the threshold limits for humidity sensors"),
             elements=[
                 (
                     "levels_lower",

@@ -27,7 +27,7 @@ def _parameter_valuespec_ups_capacity():
                         Integer(
                             title=_("Warning at"),
                             help=_(
-                                "The battery capacity in percent at and below which a warning state is triggered"
+                                "The battery capacity in percent at and below which a WARNING state is triggered"
                             ),
                             unit="%",
                             default_value=95,
@@ -51,7 +51,7 @@ def _parameter_valuespec_ups_capacity():
                         Integer(
                             title=_("Warning at"),
                             help=_(
-                                "Time left on Battery at and below which a warning state is triggered"
+                                "Time left on battery at or below which a WARNING state is triggered"
                             ),
                             unit=_("min"),
                             default_value=0,
@@ -59,7 +59,7 @@ def _parameter_valuespec_ups_capacity():
                         Integer(
                             title=_("Critical at"),
                             help=_(
-                                "Time Left on Battery at and below which a critical state is triggered"
+                                "Time left on battery at or below which a critical state is triggered"
                             ),
                             unit=_("min"),
                             default_value=0,

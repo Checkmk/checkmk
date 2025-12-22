@@ -25,7 +25,7 @@ def _parameter_valuespec_fs_mount_options() -> Migrate:
                         help=_(
                             "Specify all expected mount options here. If the list of "
                             "actually found options differs from this list, the check will go "
-                            "warning or critical. Just the option <tt>commit</tt> is being "
+                            "WARNING or CRITICAL. Just the option <tt>commit</tt> is being "
                             "ignored since it is modified by the power saving algorithms."
                         ),
                         valuespec=TextInput(),
@@ -44,6 +44,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         item_spec=lambda: TextInput(title=_("Mount point"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_fs_mount_options,
-        title=lambda: _("Filesystem mount options (Linux/UNIX)"),
+        title=lambda: _("File system mount options (Linux/Unix)"),
     )
 )

@@ -267,7 +267,7 @@ class ModeObjectParameters(WatoMode):
         checkgroup = serviceinfo["checkgroup"]
 
         if (checktype := serviceinfo["checktype"]) in NOTDISPLAYABLE:
-            reason = _("Check parameters for check type '%s' can not be displayed") % checktype
+            reason = _("Check parameters for check type '%s' cannot be displayed") % checktype
         else:
             reason = _("This check is not configurable via Setup")
 
@@ -452,7 +452,7 @@ class ModeObjectParameters(WatoMode):
         url = folder_preserving_link(
             [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
         )
-        forms.section(HTMLWriter.render_a(_("Command Line"), href=url))
+        forms.section(HTMLWriter.render_a(_("Command line"), href=url))
         url = folder_preserving_link(
             [
                 ("mode", "edit_rule"),

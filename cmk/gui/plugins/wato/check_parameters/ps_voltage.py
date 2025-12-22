@@ -52,6 +52,6 @@ rulespec_registry.register(
         check_group_name="ps_voltage",
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_ps_voltage,
-        title=lambda: _("Output Voltage of Power Supplies"),
+        title=lambda: _("Output voltage of power supplies"),
     )
 )

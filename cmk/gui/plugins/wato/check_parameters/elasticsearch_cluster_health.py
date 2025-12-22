@@ -69,7 +69,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_elasticsearch_cluster_health,
-        title=lambda: _("Elasticsearch Cluster Health"),
+        title=lambda: _("Elasticsearch cluster health"),
     )
 )
 

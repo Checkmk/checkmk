@@ -38,6 +38,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Job name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_veeam_backup,
-        title=lambda: _("Veeam: Time since last Backup"),
+        title=lambda: _("Veeam: Time since last backup"),
     )
 )

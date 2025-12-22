@@ -27,8 +27,8 @@ def _parameter_valuespec_netapp_volumes():
             (
                 "perfdata",
                 ListChoice(
-                    title=_("Performance data for protocols"),
-                    help=_("Specify for which protocol performance data should get recorded."),
+                    title=_("Metrics for protocols"),
+                    help=_("Specify for which protocol metrics should get recorded."),
                     choices=[
                         ("", _("Summarized data of all protocols")),
                         ("nfs", _("NFS")),

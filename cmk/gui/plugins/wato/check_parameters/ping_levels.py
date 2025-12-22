@@ -17,11 +17,11 @@ from cmk.gui.valuespec import Dictionary
 
 def _valuespec_ping_levels():
     return Dictionary(
-        title=_("PING and host check parameters"),
+        title=_("Ping and host check parameters"),
         help=_(
             "This rule sets the parameters for the host checks (via <tt>check_icmp</tt>) "
-            "and also for PING checks on ping-only-hosts. For the host checks only the "
-            "critical state is relevant, the warning levels are ignored."
+            "and also for ping checks on ping-only-hosts. For the host checks only the "
+            "CRITICAL state is relevant, the WARNING levels are ignored."
         ),
         elements=check_icmp_params(),
     )

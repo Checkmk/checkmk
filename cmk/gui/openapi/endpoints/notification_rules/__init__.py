@@ -136,7 +136,7 @@ def post_rule(params: Mapping[str, Any]) -> Response:
     except BulkNotAllowedException as exc:
         raise ProblemException(
             status=400,
-            title=_("Bulking not allowed"),
+            title=_("Building bulks is not allowed"),
             detail=str(exc),
         )
 
@@ -180,7 +180,7 @@ def put_rule(params: Mapping[str, Any]) -> Response:
             except BulkNotAllowedException as exc:
                 raise ProblemException(
                     status=400,
-                    title=_("Bulking not allowed"),
+                    title=_("Building bulks is not allowed"),
                     detail=str(exc),
                 )
 

@@ -33,7 +33,7 @@ def user_profile_async_replication_dialog(sites: Sequence[SiteId], back_url: str
             "In order to activate your changes available on all remote sites, your user profile needs "
             "to be replicated to the remote sites. This is done on this page now. Each site "
             "is being represented by a single image which is first shown gray and then fills "
-            "to green during synchronisation."
+            "to green during synchronization."
         )
     )
 

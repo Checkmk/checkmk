@@ -229,8 +229,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "livestatus_usage",
                 Tuple(
-                    title=_("Levels livestatus usage"),
-                    help=_("Set levels for the Checkmk livestatus usage"),
+                    title=_("Levels Livestatus usage"),
+                    help=_("Set levels for the Checkmk Livestatus usage"),
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
@@ -246,8 +246,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "livestatus_overflows_rate",
                 Tuple(
-                    title=_("Levels livestatus overflows"),
-                    help=_("Set levels for the Checkmk livestatus overflows"),
+                    title=_("Levels Livestatus overflows"),
+                    help=_("Set levels for the Checkmk Livestatus overflows"),
                     elements=[
                         Float(
                             title=_("Warning at or above"),
@@ -300,7 +300,7 @@ def _parameter_valuespec_livestatus_status():
                 "carbon_overflows_rate",
                 Tuple(
                     title=_("Carbon overflows rate"),
-                    help=_("Rate of performance data loss for carbon"),
+                    help=_("Rate of metrics loss for Carbon"),
                     elements=[
                         Float(
                             title=_("Warning at or above"),
@@ -338,7 +338,7 @@ def _parameter_valuespec_livestatus_status():
                 "influxdb_overflows_rate",
                 Tuple(
                     title=_("InfluxDB overflows rate"),
-                    help=_("Rate of performance data loss for InfluxDB"),
+                    help=_("Rate of metrics loss for InfluxDB"),
                     elements=[
                         Float(
                             title=_("Warning at or above"),
@@ -376,7 +376,7 @@ def _parameter_valuespec_livestatus_status():
                 "rrdcached_overflows_rate",
                 Tuple(
                     title=_("RRD overflows rate"),
-                    help=_("Rate of performance data loss for RRD"),
+                    help=_("Rate of metrics loss for RRD"),
                     elements=[
                         Float(
                             title=_("Warning at or above"),

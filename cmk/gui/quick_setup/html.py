@@ -19,7 +19,7 @@ def _quick_setup_link(ident: GlobalIdent) -> str:
 def quick_setup_render_link(ident: GlobalIdent) -> HTML:
     """Returns HTML for a link to the quick setup. This assumes the `ident` is for a quick setup."""
     return html.render_a(
-        _("[%s] - Quick setup") % ident["instance_id"],
+        _("[%s] - Quick Setup") % ident["instance_id"],
         _quick_setup_link(ident),
         class_=["config-bundle-link"],
     )
@@ -40,7 +40,7 @@ def quick_setup_locked_warning(ident: GlobalIdent, type_name: str) -> None:
     html.div(
         html.render_div(
             html.render_h2(
-                _("Part of Quick setup: %s") % ident["instance_id"],
+                _("Part of Quick Setup: %s") % ident["instance_id"],
                 class_=["heading"],
             )
             + html.render_div(
@@ -74,12 +74,11 @@ def quick_setup_duplication_warning(ident: GlobalIdent, type_name: str) -> None:
             + html.render_div(
                 html.render_div(
                     _(
-                        "You are duplicating a %s that has been created by the Quick setup and "
-                        "associated with the source"
+                        "You are duplicating a %s that has been created by the Quick Setup and associated with the source"
                     )
                     % type_name
                     + html.render_a(
-                        _("[%s] - Quick setup") % ident["instance_id"],
+                        _("[%s] - Quick Setup") % ident["instance_id"],
                         _quick_setup_link(ident),
                         class_=["config-bundle-link"],
                         style="margin-left: 2px;",
@@ -88,8 +87,7 @@ def quick_setup_duplication_warning(ident: GlobalIdent, type_name: str) -> None:
                     style="display: flex; align-items: center;",
                 )
                 + _(
-                    "However, the duplicated %s will no longer be associated with the Quick setup "
-                    "and this source."
+                    "However, the duplicated %s will no longer be associated with the Quick setup and this source."
                 )
                 % type_name
             ),

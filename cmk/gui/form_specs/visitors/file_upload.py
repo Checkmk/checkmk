@@ -143,7 +143,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
 
         if value.get("file_name") is None:
             return InvalidValue(
-                reason=_("Invalid data. Missing filename"), fallback_value=FileUploadModel()
+                reason=_("Invalid data. Missing file name"), fallback_value=FileUploadModel()
             )
 
         # Existing file, all data is already in value

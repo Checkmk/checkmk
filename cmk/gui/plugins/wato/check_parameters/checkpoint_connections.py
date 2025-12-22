@@ -49,6 +49,6 @@ rulespec_registry.register(
         check_group_name="checkpoint_connections",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_checkpoint_connections,
-        title=lambda: _("Check Point Firewall Connections"),
+        title=lambda: _("Check Point firewall connections"),
     )
 )

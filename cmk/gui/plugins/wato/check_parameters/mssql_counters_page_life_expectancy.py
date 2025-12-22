@@ -22,7 +22,7 @@ def _parameter_valuespec_mssql_counters_ple():
             (
                 "mssql_min_page_life_expectancy",
                 Tuple(
-                    title=_("Minimum Page Life Expectancy"),
+                    title=_("Minimum page life expectancy"),
                     elements=[
                         Age(title=_("Warning below")),
                         Age(title=_("Critical below")),
@@ -40,6 +40,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_counters_ple,
-        title=lambda: _("MSSQL Page Life Expectancy"),
+        title=lambda: _("MSSQL page life expectancy"),
     )
 )

@@ -489,7 +489,7 @@ def _web_log_level_elements() -> list[tuple[str, DropdownChoice]]:
                     _("Agent registration"),
                     _(
                         "Log the agent registration process of incoming requests"
-                        " by the Checkmk agent controller registration command."
+                        " by the Checkmk Agent Controller registration command."
                     ),
                 ),
                 (
@@ -538,7 +538,7 @@ ConfigVariableDebug = ConfigVariable(
         title=_("Debug mode"),
         label=_("enable debug mode"),
         help=_(
-            "When Multisite is running in debug mode, internal Python error messages "
+            "When the graphical user interface (GUI) is running in debug mode, internal Python error messages "
             "are being displayed and various debug information in other places is "
             "also available."
         ),
@@ -550,12 +550,12 @@ def _valuespec_profile(context: GlobalSettingsContext) -> DropdownChoice:
     return DropdownChoice(
         title=_("Profile requests"),
         help=_(
-            "It is possible to profile the rendering process of Multisite pages. This "
+            "It is possible to profile the rendering process of graphical user interface (GUI) pages. This "
             "Is done using the Python module cProfile. When profiling is performed "
             "three files are created in <tt>%s</tt>: <tt>multisite.profile</tt>, "
             "<tt>multisite.cachegrind</tt> and <tt>multisite.py</tt>. By executing the latter "
             "file you can get runtime statistics about the last processed page. When "
-            "enabled by request the profiling mode is enabled by providing the HTTP "
+            "enabled, by request the profiling mode is enabled by providing the HTTP "
             "variable <tt>_profile</tt> in the query parameters."
         )
         % context.site_neutral_var_dir,
@@ -627,9 +627,9 @@ ConfigVariableEnableSounds = ConfigVariable(
         title=_("Sounds in views"),
         label=_("Sounds"),
         help=_(
-            "If sounds are enabled then the user will be alarmed by problems shown "
-            "in a Multisite status view if that view has been configured for sounds. "
-            "From the views shipped in with Multisite all problem views have sounds "
+            "If sounds are enabled, then the user will be alarmed by problems shown "
+            "in a graphical user interface (GUI) status view if that view has been configured for sounds. "
+            "From the views shipped with the GUI all problem views have sounds "
             "enabled."
         ),
     ),
@@ -892,7 +892,7 @@ ConfigVariableEscapePluginOutput = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="escape_plugin_output",
     valuespec=lambda context: Checkbox(
-        title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
+        title=_("Escape HTML in service output (dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
@@ -1087,7 +1087,7 @@ ConfigVariableSidebarNotifyInterval = ConfigVariable(
             unit="sec",
             display_format="%.1f",
         ),
-        title=_("Interval of sidebar popup notification updates"),
+        title=_("Interval of sidebar pop-up notification updates"),
         help=_(
             "The sidebar can be configured to regularly check for pending popup notifications. "
             "This is disabled by default."
@@ -1811,10 +1811,10 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
                 Checkbox(
                     title=_("Use system wide CAs"),
                     help=_(
-                        "All supported linux distributions provide a mechanism of managing "
-                        "trusted CAs. Depending on your linux distributions the paths where "
+                        "All supported Linux distributions provide a mechanism of managing "
+                        "trusted CAs. Depending on your Linux distributions the paths where "
                         "these CAs are stored and the commands to manage the CAs differ. "
-                        "Please check out the documentation of your linux distribution "
+                        "Please check out the documentation of your Linux distribution "
                         "in case you want to customize trusted CAs system wide. You can "
                         "choose here to trust the system wide CAs here. Checkmk will search "
                         "these directories for system wide CAs: %s"
@@ -2037,7 +2037,7 @@ ConfigVariableWATOHideHosttags = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_hosttags",
     valuespec=lambda context: Checkbox(
-        title=_("Hide hosttags in Setup folder view"),
+        title=_("Hide host tags in Setup folder view"),
         label=_("hide hosttags"),
         help=_("When enabled, hosttags are no longer shown within the Setup folder view"),
     ),
@@ -2525,7 +2525,7 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
         ),
         choices=[
             ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
-            ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
+            ("barracuda_mailqueues", _("Barracuda: Mail queue")),
             ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
             ("casa_cpu_temp", _("Casa module: CPU temperature")),
             ("cisco_mem", _("Cisco memory usage (%s)") % "cisco_mem"),
@@ -2602,8 +2602,8 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
             ),
             ("juniper_trpz_mem", _("Juniper memory usage (%s)") % "juniper_trpz_mem"),
             ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
-            ("logwatch", _("Check logfiles for relevant new messages")),
-            ("logwatch_groups", _("Check logfile groups")),
+            ("logwatch", _("Check log files for relevant new messages")),
+            ("logwatch_groups", _("Check log file groups")),
             ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
             ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
             ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
@@ -2758,10 +2758,10 @@ ConfigVariableCheckMKPerfdataWithTimes = ConfigVariable(
     primary_domain=ConfigDomainCore,
     ident="check_mk_perfdata_with_times",
     valuespec=lambda context: Checkbox(
-        title=_("Checkmk with times performance data"),
+        title=_("Checkmk with times metrics"),
         label=_("Return process times within performance data"),
         help=_(
-            "Enabling this option results in additional performance data "
+            "Enabling this option results in additional metrics "
             "for the Checkmk output, giving information regarding the process times. "
             "It provides the following fields: user_time, system_time, children_user_time "
             "and children_system_time"
@@ -2814,13 +2814,7 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
                 (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
             ],
             help=_(
-                "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
-                "snmpwalk to gather SNMP information. For each request a new command line "
-                "program is being executed. It is now possible to use the Inline SNMP implementation "
-                "which calls the respective libraries directly via its python bindings. This "
-                "should increase the performance of SNMP checks in a significant way. Both "
-                "SNMP modes are features which improve the performance for large installations and are "
-                "only available via our subscription."
+                "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information. For each request a new command line program is being executed. It is now possible to use the inline SNMP implementation which calls the respective libraries directly via its Python bindings. This should increase the performance of SNMP checks in a significant way. Both SNMP modes are features which improve the performance for large installations and are only available via our subscription."
             ),
         ),
         to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
@@ -3752,7 +3746,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
 
 def _help_only_hosts() -> str:
     return _(
-        "By adding rules to this ruleset you can define a subset of your hosts "
+        "By adding rules to this rule set, you can define a subset of your hosts "
         "to be actually monitored. As long as the rule set is empty "
         "all configured hosts will be monitored. As soon as you add at least one "
         "rule, only hosts with a matching rule will be monitored."

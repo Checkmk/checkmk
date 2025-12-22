@@ -204,7 +204,7 @@ ConfigVariableSiteLivestatusTCP = ConfigVariable(
         ),
         title=_("Access to Livestatus via TCP"),
         help=_(
-            "Check_MK Livestatus usually listens only on a local UNIX socket - "
+            "Check_MK Livestatus usually listens only on a local Unix socket - "
             "for reasons of performance and security. This option is used "
             "to make it reachable via TCP on a port configurable with LIVESTATUS_TCP_PORT."
         ),
@@ -257,9 +257,9 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
         help=_(
             "You can configure your monitoring site to free disk space based on the ages "
             "of files or free space of the volume the site is placed on.<br>"
-            "The monitoring site is executing the program <tt>diskspace</tt> 5 past "
-            "every full hour as cron job. Details about the execution are logged to the file "
-            "<tt>var/log/diskspace.log</tt>. You can always execut this program manually "
+            "The monitoring site is executing the program <tt>diskspace</tt> 5 minutes past "
+            "every full hour as a cronjob. Details about the execution are logged to the file "
+            "<tt>var/log/diskspace.log</tt>. You can always execute this program manually "
             "(add the <tt>-v</tt> option to see details about the actions taken)."
         ),
         elements=[
@@ -271,15 +271,15 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
                     title=_("Delete files older than"),
                     help=_(
                         "The historic events (state changes, downtimes etc.) of your hosts and services "
-                        "is stored in the monitoring "
+                        "are stored in the monitoring "
                         "history as plain text log files. One history log file contains the monitoring "
                         "history of a given time period of all hosts and services. The files which are "
                         "older than the configured time will be removed on the next execution of the "
                         "disk space cleanup.<br>"
                         "The historic metrics are stored in files for each host and service "
-                        "individually. When a host or service is removed from the monitoring, it's "
+                        "individually. When a host or service has been removed from the monitoring, its "
                         "metric files remain untouched on your disk until the files last update "
-                        "(modification time) is longer ago than the configure age."
+                        "(modification time) is longer ago than the configured age."
                     ),
                 ),
             ),
@@ -288,7 +288,7 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
                 Tuple(
                     elements=[
                         Filesize(
-                            title=_("Cleanup when disk space is below"),
+                            title=_("Clean up when disk space is below"),
                             minvalue=1,  # min 1 byte
                             default_value=0,
                         ),
@@ -314,7 +314,7 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
             (
                 "cleanup_abandoned_host_files",
                 Age(
-                    title=_("Cleanup abandoned host files older than"),
+                    title=_("Clean up abandoned host files older than"),
                     minvalue=3600,  # 1 hour
                     default_value=2592000,  # 1 month
                     help=_(

@@ -61,7 +61,7 @@ rulespec_registry.register(
         check_group_name="keepalived",
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextInput(
-            title=_("VRRP Instance"),
+            title=_("VRRP instance"),
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_keepalived,

@@ -415,7 +415,7 @@ class ModeEditSite(WatoMode):
             raise MKUserError(
                 varprefix,
                 _(
-                    "You can not connect remote sites named <tt>[central_site]_bi</tt>. You will "
+                    "You cannot connect remote sites named <tt>[central_site]_bi</tt>. You will "
                     "have to rename your remote site to be able to connect it with this site."
                 ),
             )
@@ -469,9 +469,9 @@ class ModeEditSite(WatoMode):
                         "The URL prefix will be prepended to links of add-ons like NagVis "
                         "when a link to such applications points to a host or "
                         "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
-                        "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
+                        "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you need a mod_proxy "
                         "configuration in your local system Apache that proxies such URLs to the according remote site. "
-                        "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
+                        "Please refer to the <a target=_blank href='%s'>User Guide</a> for details. "
                         "The prefix should end with a slash. Omit the <tt>/nagvis/</tt> from the prefix."
                     )
                     % proxy_docu_url,
@@ -587,11 +587,11 @@ class ModeEditSite(WatoMode):
                 "user_login",
                 Checkbox(
                     title=_("Direct login to web GUI allowed"),
-                    label=_("Users are allowed to directly login into the web GUI of this site"),
+                    label=_("Users are allowed to directly log in into the web GUI of this site"),
                     help=_(
-                        "When enabled, this site is marked for synchronisation every time a web GUI "
-                        "related option is changed and users are allowed to login "
-                        "to the web GUI of this site."
+                        "When enabled, this site is marked for synchronization every time a web GUI "
+                        "related option is changed and users are allowed to log in "
+                        "to the web GUI of this site. "
                         "The access to the Rest API is unaffected by this option though."
                     ),
                 ),
@@ -724,7 +724,7 @@ class ModeEditBrokerConnection(WatoMode):
         if self._site_mgmt.broker_connection_id_exists(connection_id):
             raise MKUserError(
                 None,
-                _("Connection id %s already exists.") % connection_id,
+                _("Connection ID %s already exists.") % connection_id,
             )
 
     def action(self, config: Config) -> ActionResult:
@@ -978,7 +978,7 @@ class ModeDistributedMonitoring(WatoMode):
         # Prevent deletion of the local site. This does not make sense, even on
         # standalone sites or distributed remote sites.
         if delete_id == omd_site():
-            raise MKUserError(None, _("You can not delete the connection to the local site."))
+            raise MKUserError(None, _("You cannot delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
         folder_site_stats = FolderSiteStats.build(folder_tree().root_folder())
@@ -1209,8 +1209,8 @@ class ModeDistributedMonitoring(WatoMode):
             "sites",
             _("Connections"),
             empty_text=_(
-                "You have not configured any local or remotes sites. Multisite will "
-                "implicitly add the data of the local monitoring site. If you add remotes "
+                "You have not configured any local or remote sites. The graphical user interface (GUI) will "
+                "implicitly add the data of the local monitoring site. If you add remote "
                 "sites, please do not forget to add your local monitoring site also, if "
                 "you want to display its data."
             ),
@@ -1546,7 +1546,9 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         remote_omd_status: OMDStatus,
     ) -> tuple[StaticIcon, str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
-            return StaticIcon(IconNames.cross), _("Offline: No valid multisite URL configured")
+            return StaticIcon(IconNames.cross), _(
+                "Offline: No valid URL for graphical user interface (GUI) configured"
+            )
 
         if remote_omd_status["rabbitmq"] == 5:
             return StaticIcon(IconNames.disabled), _("Disabled")
@@ -1559,7 +1561,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
-            return StaticIcon(IconNames.alert), _("Unkown error: %s") % (e,)
+            return StaticIcon(IconNames.alert), _("Unknown error: %s") % (e,)
 
         match connection_status:
             case ConnectionOK():
@@ -1739,8 +1741,8 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             if not has_distributed_setup_remote_sites(self._configured_sites):
                 html.show_error(
                     _(
-                        "You can not configure site specific global settings "
-                        "in non distributed setups."
+                        "You cannot configure site specific global settings "
+                        "in non-distributed setups."
                     )
                 )
                 return
@@ -1998,7 +2000,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         if cert.verify_result.is_valid:
             return _("Yes")
 
-        return _("No (Error: %s, Code: %d, Depth: %d)") % (
+        return _("No (error: %s, code: %d, depth: %d)") % (
             cert.verify_result.error_message,
             cert.verify_result.error_number,
             cert.verify_result.error_depth,

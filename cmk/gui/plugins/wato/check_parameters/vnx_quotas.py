@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Dictionary, ListOf, TextInput, Tuple
 
 def _valuespec_discovery_rules_vnx_quotas():
     return Dictionary(
-        title=_("VNX quotas and filesystems discovery"),
+        title=_("VNX quotas and file systems discovery"),
         elements=[
             (
                 "dms_names",
@@ -47,10 +47,7 @@ def _valuespec_discovery_rules_vnx_quotas():
                     ),
                     title=_("Map mount point names"),
                     help=_(
-                        "Here you are able to substitute the filesystem name. Either you "
-                        "determine an exact name and the related subsitution or you "
-                        "enter a regex beginning with '~'. The regexes must include "
-                        "groups marked by '(...)' which will be substituted."
+                        "Here, you are able to substitute the file system name. Either you determine an exact name and the related substitution or you enter a regex beginning with '~'. The regexes must include groups marked by '(...)' which will be substituted."
                     ),
                 ),
             ),

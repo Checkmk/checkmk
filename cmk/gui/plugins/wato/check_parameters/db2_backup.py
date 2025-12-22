@@ -46,6 +46,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec_db2_backup,
         parameter_valuespec=_parameter_valuespec_db2_backup,
-        title=lambda: _("DB2 Time since last database Backup"),
+        title=lambda: _("DB2 time since last database backup"),
     )
 )

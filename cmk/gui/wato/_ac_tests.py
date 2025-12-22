@@ -174,7 +174,7 @@ class ACTestLiveproxyd(ACTest):
         return ACTestCategories.performance
 
     def title(self) -> str:
-        return _("Use Livestatus Proxy Daemon")
+        return _("Use Livestatus proxy daemon")
 
     def help(self) -> str:
         return _(
@@ -197,7 +197,7 @@ class ACTestLiveproxyd(ACTest):
         if _site_is_using_livestatus_proxy(site_id):
             return ACSingleResult(
                 state=ACResultState.OK,
-                text=_("Site is using the Livestatus Proxy Daemon"),
+                text=_("Site is using the Livestatus proxy daemon"),
                 site_id=site_id,
             )
 
@@ -205,15 +205,15 @@ class ACTestLiveproxyd(ACTest):
             return ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "The Livestatus Proxy is not only good for remote sites, "
-                    "enable it for your central site"
+                    "The Livestatus proxy is not only good for remote sites, "
+                    "enable it for your central site."
                 ),
                 site_id=site_id,
             )
 
         return ACSingleResult(
             state=ACResultState.WARN,
-            text=_("Use the Livestatus Proxy Daemon for your site"),
+            text=_("Use the Livestatus proxy daemon for your site"),
             site_id=site_id,
         )
 
@@ -268,7 +268,7 @@ class ACTestLivestatusUsage(ACTest):
 
         yield ACSingleResult(
             state=state,
-            text=_("The current livestatus usage is %.2f%%") % usage_perc,
+            text=_("The current Livestatus usage is %.2f%%") % usage_perc,
             site_id=site_id,
         )
         yield ACSingleResult(
@@ -291,7 +291,7 @@ class ACTestTmpfs(ACTest):
         return ACTestCategories.performance
 
     def title(self) -> str:
-        return _("Temporary filesystem mounted")
+        return _("Temporary file system mounted")
 
     def help(self) -> str:
         return _(
@@ -309,15 +309,14 @@ class ACTestTmpfs(ACTest):
         if self._tmpfs_mounted(site_id):
             yield ACSingleResult(
                 state=ACResultState.OK,
-                text=_("The temporary filesystem is mounted"),
+                text=_("The temporary file system is mounted"),
                 site_id=site_id,
             )
         else:
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "The temporary filesystem is not mounted. Your installation "
-                    "may work with degraded performance."
+                    "The temporary file system is not mounted. Your installation may work with degraded performance."
                 ),
                 site_id=site_id,
             )
@@ -1093,8 +1092,8 @@ class ACTestSizeOfExtensions(ACTest):
     def help(self) -> str:
         return _(
             "<p>In distributed setups it is possible to synchronize the "
-            "extensions (MKPs and files in <tt>~/local/</tt>) to the slave sites. "
-            "These files are synchronized on every replication with a slave site and "
+            "extensions (MKPs and files in <tt>~/local/</tt>) to the remote sites. "
+            "These files are synchronized on every replication with a remote site and "
             "can possibly slow down the synchronization in case the files are large. "
             "You could either disable the MKP sync or check whether or not you need "
             "all the extensions.</p>"
@@ -1170,14 +1169,11 @@ class ACTestESXDatasources(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("The Checkmk agent is queried via the ESX datasource program")
+        return _("The Checkmk agent is queried via the ESX data source program")
 
     def help(self) -> str:
         return _(
-            "The Checkmk agent is queried via the datasource program for ESX systems. "
-            "This is option will be deleted in a future release. Please configure the "
-            "host to contact the Checkmk agent and the configured datasource programs "
-            "instead."
+            "The Checkmk agent is queried via the data source program for ESX systems. This option will be deleted in a future release. Please configure the host to contact the Checkmk agent and the configured data source programs instead."
         )
 
     def _get_rules(self) -> list[tuple[Folder, int, Rule]]:
@@ -1717,18 +1713,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
 
     def help(self) -> str:
         return _(
-            "This check returns CRIT if the parameter <b>State in case of restricted address mismatch</b> "
-            "in the ruleset <b>Checkmk Agent installation auditing</b> is configured and differs from "
-            "states <b>WARN</b> (default) or <b>CRIT</b>. "
-            "With the above setting you can overwrite the default service state. This will help "
-            "you to reduce above warnings during the update process of your Checkmk sites "
-            "and agents. "
-            "We recommend to set this option only for the affected hosts as long as you "
-            "monitor agents older than Checkmk 2.0. After updating them, you should change "
-            "this setting back to it's original value. "
-            "Background: With IP access lists you can control which servers are allowed to talk "
-            "to these agents. Thus it's a security issue and should not be disabled or set to "
-            "<b>OK</b> permanently."
+            "This check returns CRIT if the parameter <b>State in case of restricted address mismatch</b> in the rule set <b>Checkmk agent installation auditing</b> is configured and differs from states <b>WARN</b> (default) or <b>CRIT</b>. With the above setting you can overwrite the default service state. This will help you to reduce above warnings during the update process of your Checkmk sites and agents. We recommend to set this option only for the affected hosts as long as you monitor agents older than Checkmk 2.0. After updating them, you should change this setting back to its original value. Background: With IP access lists you can control which servers are allowed to talk to these agents. Thus it's a security issue and should not be disabled or set to <b>OK</b> permanently."
         )
 
     def is_relevant(self) -> bool:

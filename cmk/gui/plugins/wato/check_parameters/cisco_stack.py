@@ -56,7 +56,7 @@ def _parameter_valuespec_cisco_stack() -> Dictionary:
                 MonitoringState(
                     title="newMasterInit",
                     default_value=0,
-                    help=_("Waiting for new master initialization"),
+                    help=_("Waiting for new central site initialization"),
                 ),
             ),
             (

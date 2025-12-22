@@ -246,7 +246,7 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
                 CheckPluginSelection(
                     title=_("Match check types"),
                     help_=_(
-                        "Only apply the rule if the notification originates from certain types of check plug-ins. "
+                        "Only apply the rule, if the notification originates from certain types of check plug-ins. "
                         "Note: Host notifications never match this rule, if this option is being used."
                     ),
                 ),

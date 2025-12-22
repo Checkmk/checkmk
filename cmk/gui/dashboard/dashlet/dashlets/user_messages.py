@@ -44,7 +44,7 @@ class MessageUsersDashlet(Dashlet[MessageUsersDashletConfig]):
             "user_messages",
             sortable=False,
             searchable=False,
-            empty_text=_("Currently you have no recieved messages"),
+            empty_text=_("Currently you have no received messages"),
         ) as table:
             for entry in sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True):
                 if "dashlet" not in entry["methods"]:

@@ -413,7 +413,7 @@ class ModeEditRole(WatoMode):
             _(
                 "If this setting is changed from disabled to enabled, all users with this role will be required to use a two-factor authentication "
                 "and will be logged out of any current sessions if they have not enabled two-factor. "
-                "'Enforce two-factor authentication' in global settings will override this setting."
+                "'Enforce two-factor authentication' in the global settings will override this setting."
             )
         )
         html.checkbox(

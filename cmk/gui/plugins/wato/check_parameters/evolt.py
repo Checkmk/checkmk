@@ -52,6 +52,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=_item_spec_evolt,
         parameter_valuespec=_parameter_valuespec_evolt,
-        title=lambda: _("Voltage levels (UPS / PDU / Other Devices)"),
+        title=lambda: _("Voltage levels (UPS / PDU / other devices)"),
     )
 )

@@ -49,7 +49,7 @@ def _migrate(x: tuple[int, int] | tuple[str, tuple[int, int]]) -> tuple[str, tup
 
 def _parameter_valuespec_jvm_tp() -> Dictionary:
     return Dictionary(
-        help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
+        help=_("This rule set also covers Tomcat, Jolokia and JMX. "),
         elements=[
             (
                 "currentThreadCount",

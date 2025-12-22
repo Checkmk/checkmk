@@ -34,7 +34,7 @@ def _valuespec_active_checks_icmp() -> ValueSpec:
         (
             "description",
             TextInput(
-                title=_("Service description"),
+                title=_("Service name"),
                 allow_empty=False,
                 default_value="PING",
             ),
@@ -105,13 +105,9 @@ def _valuespec_active_checks_icmp() -> ValueSpec:
         ),
     ]
     return Dictionary(
-        title=_("Check hosts with PING (ICMP Echo Request)"),
+        title=_("Check hosts with ping (ICMP echo request)"),
         help=_(
-            "This ruleset allows you to configure explicit PING monitoring of hosts. "
-            "Usually a PING is being used as a host check, so this is not necessary. "
-            "There are some situations, however, where this can be useful. One of them "
-            "is when using the Checkmk Micro Core with SMART Ping and you want to "
-            "track performance data of the PING to some hosts, nevertheless."
+            "This rule set allows you to configure explicit ping monitoring of hosts. Usually a ping is being used as a host check, so this is not necessary. There are some situations, however, where this can be useful. One of them is when using the Checkmk Micro Core with Smart Ping and you want to track metrics of the ping to some hosts, nevertheless."
         ),
         elements=elements + check_icmp_params(),
     )

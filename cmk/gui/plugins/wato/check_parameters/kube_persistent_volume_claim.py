@@ -44,9 +44,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="kube_pvc",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Persistent Volume Claim name")),
+        item_spec=lambda: TextInput(title=_("Persistent volume claim name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_persistent_volume_claims,
-        title=lambda: _("Persistent Volume Claims"),
+        title=lambda: _("Persistent volume claims"),
     )
 )

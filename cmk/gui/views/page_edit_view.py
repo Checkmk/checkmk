@@ -117,7 +117,7 @@ def view_editor_options():
 
 def view_editor_general_properties(ds_name: str) -> Dictionary:
     return Dictionary(
-        title=_("View Properties"),
+        title=_("View properties"),
         render="form",
         optional_keys=False,
         elements=[
@@ -125,9 +125,9 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
                 "datasource",
                 FixedValue(
                     value=ds_name,
-                    title=_("Datasource"),
+                    title=_("Data source"),
                     totext=data_source_registry[ds_name]().title,
-                    help=_("The datasource of a view cannot be changed."),
+                    help=_("The data source of a view cannot be changed."),
                 ),
             ),
             (
@@ -828,9 +828,9 @@ def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> 
     # TODO: This and the modification of the view_spec should not be here. Find a better place
     ds_name: str = view_spec.get("datasource", request.get_ascii_input_mandatory("datasource", ""))
     if not ds_name:
-        raise MKInternalError(_("No datasource defined."))
+        raise MKInternalError(_("No data source defined."))
     if ds_name not in data_source_registry:
-        raise MKInternalError(_("The given datasource is not supported."))
+        raise MKInternalError(_("The given data source is not supported."))
 
     value["datasource"] = ds_name
 

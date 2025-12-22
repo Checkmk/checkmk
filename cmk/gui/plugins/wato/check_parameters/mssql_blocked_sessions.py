@@ -473,6 +473,6 @@ rulespec_registry.register(
         is_deprecated=True,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_blocked_sessions,
-        title=lambda: _("MSSQL Blocked Sessions"),
+        title=lambda: _("MSSQL blocked sessions"),
     )
 )

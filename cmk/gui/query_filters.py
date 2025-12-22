@@ -265,7 +265,7 @@ def time_filter_options() -> SitesOptions:
     choices += [
         ("abs", _("Date (YYYY-MM-DD)")),
         ("ts", _("Timestamp (YYYY-MM-DD HH:mm:ss)")),
-        ("unix", _("UNIX timestamp")),
+        ("unix", _("Unix timestamp")),
     ]
     return choices
 

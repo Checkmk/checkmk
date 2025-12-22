@@ -184,7 +184,7 @@ def crash_dump_message(crash: GUICrashReport, show_crash_link: bool) -> str:
     if not show_crash_link:
         message += (
             _(
-                "An internal error occurred while processing your request (Crash ID: %s). "
+                "An internal error occurred while processing your request (crash ID: %s). "
                 "You can report this issue to your Checkmk administrator. "
                 "Detailed information can be found on the crash report page "
                 "or in <tt>var/log/web.log</tt>."

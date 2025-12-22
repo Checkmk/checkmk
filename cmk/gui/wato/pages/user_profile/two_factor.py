@@ -902,15 +902,15 @@ class RegisterTotpSecret(Page):
             )
             html.close_div()
 
-            forms.header("2. %s" % _("Enter authentication code"), foldable=False, css="wide")
+            forms.header("2. %s" % _("Enter one-time password (OTP)"), foldable=False, css="wide")
             forms.section(legend=False)
             html.span(
                 _(
                     "Open the two-factor authenticator app on your device and enter the shown "
-                    "authentication code below."
+                    "one-time password (OTP) below."
                 )
             )
-            forms.section(_("Authentication code (OTP / TOTP)"), is_required=True)
+            forms.section(_("One-time password (OTP / TOTP)"), is_required=True)
             TextInput().render_input("auth_code", "")
 
             forms.header("3. %s" % _("Enter alias (optional)"), foldable=False, css="wide")

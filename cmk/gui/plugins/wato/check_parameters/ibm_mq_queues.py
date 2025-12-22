@@ -95,7 +95,7 @@ def _parameter_valuespec_ibm_mq_queues():
                 "lputage",
                 Tuple(
                     help=_(
-                        "The age, in seconds, when the last message was put to the queue. "
+                        "The age, in seconds, when the last message was put to the queue."
                         " Calculated by subtracting LPUTDATE/LPUTTIME from current timestamp."
                     ),
                     title=_("Last put age"),

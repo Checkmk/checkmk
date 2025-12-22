@@ -381,7 +381,7 @@ class ModeBulkImport(WatoMode):
         return cmk.utils.paths.tmp_dir / "host-import"
 
     def title(self) -> str:
-        return _("Bulk host import")
+        return _("Bulk import of hosts")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.has_var("file_id"):
@@ -630,7 +630,7 @@ class ModeBulkImport(WatoMode):
             html.p(
                 _(
                     "Using this page you can import several hosts at once into the chosen folder. You can "
-                    "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
+                    "choose a CSV file from your workstation to be uploaded, paste a CSV file's content "
                     "into the text area or simply enter a list of host names (one per line) to the text area."
                 )
             )

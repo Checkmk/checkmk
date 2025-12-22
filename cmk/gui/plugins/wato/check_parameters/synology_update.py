@@ -36,7 +36,7 @@ def _parameter_valuespec_synology_update():
             (
                 "warn_states",
                 ListChoice(
-                    title=_("States which result in Warning"),
+                    title=_("States which result in WARNING"),
                     choices=synology_update_states,
                     default_value=[5],
                 ),

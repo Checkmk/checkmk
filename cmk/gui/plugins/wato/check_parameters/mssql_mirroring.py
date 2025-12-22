@@ -69,6 +69,6 @@ rulespec_registry.register(
         item_spec=_item_spec_mssql_mirroring,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_mirroring,
-        title=lambda: _("MSSQL Mirroring State"),
+        title=lambda: _("MSSQL mirroring state"),
     )
 )

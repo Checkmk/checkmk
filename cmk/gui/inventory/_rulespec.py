@@ -51,7 +51,7 @@ class RulespecGroupInventory(RulespecGroup):
 
     @property
     def title(self) -> str:
-        return _("HW/SW Inventory")
+        return _("HW/SW inventory")
 
     @property
     def help(self) -> str:
@@ -60,7 +60,7 @@ class RulespecGroupInventory(RulespecGroup):
 
 def _valuespec_active_checks_cmk_inv() -> Dictionary:
     return Dictionary(
-        title=_("Do HW/SW Inventory"),
+        title=_("Do HW/SW inventory"),
         help=_(
             "All hosts configured via this rule set will do a hardware and "
             "software inventory. For each configured host a new active check "
@@ -267,7 +267,7 @@ def _valuespec_inv_parameters_lnx_sysctl() -> Dictionary:
             "This rule allows for defining regex-patterns for in- and excluding kernel "
             "configuration parameters in the inventory. By default, no parameters are included. "
             "Note that some kernel configuration parameters change frequently. Inventorizing "
-            "one of these parameters will lead to frequent changes in the HW/SW Inventory, "
+            "one of these parameters will lead to frequent changes in the HW/SW inventory, "
             "which can quickly fill up the temporary file system."
         ),
         elements=[
@@ -343,7 +343,7 @@ def _valuespec_inv_retention_intervals() -> ValueSpec:
             ],
             optional_keys=["attributes", "columns"],
         ),
-        title=_("Retention intervals for HW/SW Inventory entities"),
+        title=_("Retention intervals for HW/SW inventory entities"),
         help=vs_inventory_path_or_keys_help()
         + _(
             "<br>With these intervals specific single values or table columns can be kept"

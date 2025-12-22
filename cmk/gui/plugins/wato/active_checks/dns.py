@@ -72,7 +72,7 @@ def _valuespec_active_checks_dns():
                 "server. This check uses <tt>check_dns</tt> from the standard "
                 "Nagios plug-ins. Note, that check_dns will always be executed in "
                 "the monitoring site. By default, the configured host(s) that "
-                "this rule applies to is used as DNS server. This behaviour can "
+                "this rule applies to is used as DNS server. This behavior can "
                 "be configured by using the option <tt>DNS Server</tt>. "
             ),
             elements=[

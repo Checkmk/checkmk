@@ -92,6 +92,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Instance name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sym_brightmail_queues,
-        title=lambda: _("Symantec Brightmail Queues"),
+        title=lambda: _("Symantec Brightmail queues"),
     )
 )

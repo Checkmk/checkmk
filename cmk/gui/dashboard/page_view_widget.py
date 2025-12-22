@@ -658,7 +658,7 @@ class ViewWidgetEditPage(Page):
     def _get_datasource_from_request(request: Request) -> str:
         datasource = request.get_ascii_input_mandatory("datasource")
         if datasource not in data_source_registry:
-            raise MKUserError("datasource", _("The datasource '%s' does not exist.") % datasource)
+            raise MKUserError("datasource", _("The data source '%s' does not exist.") % datasource)
 
         return datasource
 

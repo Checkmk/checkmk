@@ -37,7 +37,7 @@ def test_is_ntop_available() -> None:
             {"is_activated": False},
             "",
             False,
-            "ntopng integration is not activated under global settings.",
+            "ntopng integration is not activated in the global settings.",
         ),
         (
             {"is_activated": True, "use_custom_attribute_as_ntop_username": False},

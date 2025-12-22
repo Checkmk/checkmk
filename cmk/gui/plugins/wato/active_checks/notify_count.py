@@ -31,7 +31,7 @@ def _valuespec_active_checks_notify_count():
                 (
                     "description",
                     TextInput(
-                        title=_("Service description"),
+                        title=_("Service name"),
                         help=_("The name that will be used in the service name"),
                         allow_empty=False,
                     ),
@@ -49,7 +49,7 @@ def _valuespec_active_checks_notify_count():
                 (
                     "num_per_contact",
                     Tuple(
-                        title=_("Thresholds for Notifications per Contact"),
+                        title=_("Thresholds for notifications per contact"),
                         elements=[
                             Integer(title=_("Warning if above"), default_value=20),
                             Integer(title=_("Critical if above"), default_value=50),

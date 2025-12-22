@@ -59,6 +59,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Service names"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_plesk_backups,
-        title=lambda: _("Plesk Backups"),
+        title=lambda: _("Plesk backups"),
     )
 )

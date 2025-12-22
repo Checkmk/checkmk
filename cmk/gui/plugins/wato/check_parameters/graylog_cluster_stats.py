@@ -387,7 +387,7 @@ def _parameter_valuespec_graylog_cluster_stats_mongodb():
             (
                 "file_size_upper",
                 Tuple(
-                    title=_("Upper levels for data file size"),
+                    title=_("Upper levels for datafile size"),
                     elements=[
                         Filesize(title=_("Warning at")),
                         Filesize(title=_("Critical at")),

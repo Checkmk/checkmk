@@ -287,7 +287,7 @@ class ABCGlobalSettingsMode(WatoMode):
                     value_title: str | None = _("This option has been modified.")
                 elif varname in self._global_settings:
                     modified_cls = ["modified globally"]
-                    value_title = _("This option has been modified in global settings.")
+                    value_title = _("This option has been modified in the global settings.")
                 else:
                     modified_cls = []
                     value_title = None

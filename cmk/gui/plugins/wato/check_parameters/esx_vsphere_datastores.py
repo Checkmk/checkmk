@@ -17,7 +17,7 @@ from cmk.gui.valuespec import Percentage, TextInput, Tuple
 
 def _item_spec_esx_vsphere_datastores():
     return TextInput(
-        title=_("Datastore name"), help=_("The name of the datastore"), allow_empty=False
+        title=_("Data store name"), help=_("The name of the data store"), allow_empty=False
     )
 
 
@@ -60,6 +60,6 @@ rulespec_registry.register(
         item_spec=_item_spec_esx_vsphere_datastores,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_vsphere_datastores,
-        title=lambda: _("ESX Datastores (used space and growth)"),
+        title=lambda: _("ESX data stores (used space and growth)"),
     )
 )

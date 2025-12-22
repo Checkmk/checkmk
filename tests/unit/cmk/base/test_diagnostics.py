@@ -179,9 +179,9 @@ def test_diagnostics_element_perfdata() -> None:
         core_performance_settings=lambda x: {},
     )
     assert diagnostics_element.ident == "perfdata"
-    assert diagnostics_element.title == "Performance data"
+    assert diagnostics_element.title == "Metrics"
     assert diagnostics_element.description == (
-        "Performance data related to sizing, e.g. number of helpers, hosts, services"
+        "Metrics related to sizing, e.g. number of helpers, hosts, services"
     )
 
 
@@ -189,7 +189,7 @@ def test_diagnostics_element_hw_info() -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
     assert diagnostics_element.ident == "hwinfo"
     assert diagnostics_element.title == "HW Information"
-    assert diagnostics_element.description == ("Hardware information of the Checkmk Server")
+    assert diagnostics_element.description == ("Hardware information of the Checkmk server")
 
 
 def test_diagnostics_element_hw_info_content(
@@ -236,7 +236,7 @@ def test_diagnostics_element_vendor_info() -> None:
     diagnostics_element = diagnostics.VendorDiagnosticsElement()
     assert diagnostics_element.ident == "vendorinfo"
     assert diagnostics_element.title == "Vendor Information"
-    assert diagnostics_element.description == ("HW Vendor information of the Checkmk Server")
+    assert diagnostics_element.description == ("HW vendor information of the Checkmk server")
 
 
 def test_diagnostics_element_vendor_info_content(
@@ -363,7 +363,7 @@ def test_diagnostics_element_dpkg():
     assert diagnostics_element.ident == "dpkg_packages"
     assert diagnostics_element.title == "Dpkg packages information"
     assert diagnostics_element.description == (
-        "Output of `dpkg -l`. See the corresponding commandline help for more details."
+        "Output of `dpkg -l`. See the corresponding command line help for more details."
     )
 
 
@@ -430,7 +430,7 @@ def test_diagnostics_element_rpm():
     assert diagnostics_element.ident == "rpm_packages"
     assert diagnostics_element.title == "Rpm packages information"
     assert diagnostics_element.description == (
-        "Output of `rpm -qa`. See the corresponding commandline help for more details."
+        "Output of `rpm -qa`. See the corresponding command line help for more details."
     )
 
 
@@ -472,10 +472,10 @@ def test_diagnostics_element_omd_config() -> None:
     assert diagnostics_element.ident == "omd_config"
     assert diagnostics_element.title == "OMD Config"
     assert diagnostics_element.description == (
-        "Apache mode and TCP address and port, Core, "
-        "Liveproxy daemon and livestatus TCP mode, "
-        "Event daemon config, Multiste authorisation, "
-        "NSCA mode, TMP filesystem mode"
+        "Apache mode and TCP address and port, core, "
+        "Liveproxy daemon and Livestatus TCP mode, "
+        "event daemon config, graphical user interface (GUI) authorization, "
+        "NSCA mode, TMP file system mode"
     )
 
 
@@ -802,10 +802,10 @@ def test_diagnostics_element_checkmk_files_content(
 def test_diagnostics_element_performance_graphs() -> None:
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
     assert diagnostics_element.ident == "performance_graphs"
-    assert diagnostics_element.title == "Performance Graphs of Checkmk Server"
+    assert diagnostics_element.title == "Time series graphs of Checkmk server"
     assert diagnostics_element.description == (
-        "CPU load and utilization, Number of threads, Kernel Performance, "
-        "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
+        "CPU load and utilization, number of threads, Kernel performance, "
+        "OMD, file system, Apache status, TCP connections of the time ranges "
         "25 hours and 35 days"
     )
 
@@ -934,7 +934,7 @@ def test_diagnostics_element_se_linux():
     assert diagnostics_element.ident == "selinux"
     assert diagnostics_element.title == "SELinux information"
     assert diagnostics_element.description == (
-        "Output of `sestatus`. See the corresponding commandline help for more details."
+        "Output of `sestatus`. See the corresponding command line help for more details."
     )
 
 
@@ -972,9 +972,9 @@ def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
 def test_diagnostics_element_cma():
     diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
     assert diagnostics_element.ident == "appliance"
-    assert diagnostics_element.title == "Checkmk Appliance information"
+    assert diagnostics_element.title == "Checkmk appliance information"
     assert diagnostics_element.description == (
-        "Information about the Appliance hardware and firmware version."
+        "Information about the appliance hardware and firmware version."
     )
 
 

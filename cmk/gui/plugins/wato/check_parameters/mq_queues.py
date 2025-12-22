@@ -84,6 +84,6 @@ rulespec_registry.register(
         item_spec=_item_spec_mq_queues,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mq_queues,
-        title=lambda: _("Apache ActiveMQ Queue lengths"),
+        title=lambda: _("Apache ActiveMQ queue lengths"),
     )
 )

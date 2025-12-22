@@ -20,8 +20,10 @@ from cmk.gui.valuespec import DropdownChoice
 def DatasourceSelection() -> DropdownChoice[str]:
     """Create datasource selection valuespec, also for other modules"""
     return DropdownChoice[str](
-        title=_("Datasource"),
-        help=_("The datasources define which type of objects should be displayed with this view."),
+        title=_("Data source"),
+        help=_(
+            "The data sources define which types of objects should be displayed with this view."
+        ),
         choices=data_source_registry.data_source_choices(),
         default_value="services",
     )
@@ -71,7 +73,7 @@ def show_create_view_dialog(next_url: str | None = None) -> None:
     with html.form_context("create_view"):
         html.hidden_field("mode", "create")
 
-        forms.header(_("Select datasource"))
+        forms.header(_("Select data source"))
         forms.section(vs_ds.title())
         vs_ds.render_input("ds", ds)
         html.help(vs_ds.help())

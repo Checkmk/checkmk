@@ -69,6 +69,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database identifier"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_databases,
-        title=lambda: _("MSSQL Databases properties"),
+        title=lambda: _("MSSQL databases properties"),
     )
 )

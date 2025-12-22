@@ -1868,7 +1868,7 @@ def _compute_topology_result(
     headline = _("Topology for ") + ", ".join(layer.name() for layer in active_layers.values())
 
     if len(merged_results) > topology_configuration.filter.max_nodes:
-        headline += _(" (Data incomplete, maximum number of nodes reached)")
+        headline += _(" (data incomplete, maximum number of nodes reached)")
 
     topology_center, assigned_node_ids = compute_node_config(
         merged_results,

@@ -72,7 +72,7 @@ class ModeBulkEdit(WatoMode):
 
     @override
     def title(self) -> str:
-        return _("Bulk edit hosts")
+        return _("Bulk edit of hosts")
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -136,8 +136,8 @@ class ModeBulkEdit(WatoMode):
                 )
                 % len(hosts),
                 _(
-                    "If a selection is set to <i>This value differs between the selected hosts.</i> "
-                    "then currenty not all selected hosts share the same setting for this attribute. "
+                    "If a selection is set to <i>, this value differs between the selected hosts.</i> "
+                    "Then, currently not all selected hosts share the same setting for this attribute. "
                     "If you keep that selection, all hosts will keep their individual settings."
                 ),
                 _(

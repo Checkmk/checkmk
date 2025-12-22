@@ -257,8 +257,8 @@ def _paint_time_graph_cmk(
 
     if not available_metrics and perf_data and require_historic_metrics:
         return "", _(
-            "No historic metrics recorded but performance data is available. "
-            "Maybe performance data processing is disabled."
+            "No historic metrics recorded but metrics are available. "
+            "Maybe metrics processing is disabled."
         )
 
     return "", render_graphs_from_specification_html(
@@ -391,7 +391,7 @@ class PainterHostGraphs(Painter):
         return "host_graphs"
 
     def title(self, cell: Cell) -> str:
-        return _("Host Graphs with Time Range Previews")
+        return _("Host graphs with time range previews")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

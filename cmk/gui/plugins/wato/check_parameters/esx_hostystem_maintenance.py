@@ -38,6 +38,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_hostystem_maintenance,
-        title=lambda: _("ESX Host System Maintenance Mode"),
+        title=lambda: _("ESX host system maintenance mode"),
     )
 )

@@ -2271,7 +2271,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             ),
             "inventory": PagetypeTopicConfig(
                 name="inventory",
-                title=_("HW/SW Inventory"),
+                title=_("HW/SW inventory"),
                 icon_name=DynamicIconName("topic_inventory"),
                 public=True,
                 sort_index=90,
@@ -2297,7 +2297,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             ),
             "synthetic_monitoring": PagetypeTopicConfig(
                 name="synthetic_monitoring",
-                title=_("Synthetic Monitoring"),
+                title=_("Synthetic monitoring"),
                 icon_name=DynamicIconName("synthetic_monitoring_topic"),
                 public=True,
                 sort_index=105,

@@ -47,7 +47,7 @@ def _parameter_valuespec_oracle_jobs() -> Migrate:
         Dictionary(
             help=_(
                 "A scheduler job is an object in an Oracle database which could be "
-                "compared to a cron job on unix."
+                "compared to a cronjob on Unix."
             ),
             elements=[
                 ("run_duration", run_duration),

@@ -68,7 +68,7 @@ class View:
                 raise MKUserError(
                     None,
                     _(
-                        "The Event Console view '%s' can not be rendered. The Event Console is possibly "
+                        "The Event Console view '%s' cannot be rendered. The Event Console might be "
                         "disabled."
                     )
                     % self.name,
@@ -76,8 +76,8 @@ class View:
             raise MKUserError(
                 None,
                 _(
-                    "The view '%s' using the datasource '%s' can not be rendered "
-                    "because the datasource does not exist."
+                    "The view '%s' using the data source '%s' can not be rendered "
+                    "because the data source does not exist."
                 )
                 % (self.name, self.datasource),
             )
@@ -225,7 +225,7 @@ class View:
         raise MKUserError(
             None,
             _(
-                "The view '%s' using the layout '%s' can not be rendered "
+                "The view '%s' using the layout '%s' cannot be rendered "
                 "because the layout does not exist."
             )
             % (self.name, self.spec.get("layout")),

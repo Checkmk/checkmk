@@ -36,6 +36,6 @@ rulespec_registry.register(
             title=_("Sensor Name"), help=_("The power supply sensor name as shown in the service")
         ),
         parameter_valuespec=_parameter_valuespec_power_presence,
-        title=lambda: _("Power Presence Sensors"),
+        title=lambda: _("Power presence sensors"),
     )
 )

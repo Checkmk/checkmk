@@ -196,7 +196,7 @@ class SiteManagement:
             choices=[
                 (
                     "plain_text",
-                    _("Plain text (Unencrypted)"),
+                    _("Plain text (unencrypted)"),
                     FixedValue(value={}, totext=_("Use plain text, unencrypted transport")),
                 ),
                 (

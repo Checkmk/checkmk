@@ -119,7 +119,7 @@ def configure_authentication() -> QuickSetupStage:
                     Text(text=_("Create a client secret for the app and note it down.")),
                     Text(
                         text=_(
-                            "Return to Checkmk, define a unique configuration name, and use the Subscription ID, Tenant ID, Client ID, and the Client secret below. Please note that the Subscription ID is not needed if only monitoring resources through the Graph API."
+                            "Return to Checkmk, define a unique configuration name, and use the subscription ID, tenant ID, client ID, and the client secret below. Please note that the subscription ID is not needed if you intend to only monitor resources through the Graph API."
                         )
                     ),
                 ],
@@ -349,7 +349,7 @@ def azure_collect_params(
 
 
 quick_setup_azure = QuickSetup(
-    title=_("Microsoft Azure (Deprecated)"),
+    title=_("Microsoft Azure (deprecated)"),
     id=QuickSetupId(RuleGroup.SpecialAgents("azure")),
     stages=[
         configure_authentication,

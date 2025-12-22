@@ -1505,7 +1505,7 @@ class Rule:
         except Exception as e:
             logger.exception("error searching ruleset %s", self.ruleset.title())
             html.show_warning(
-                _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s")
+                _("Failed to search rule of rule set '%s' in folder '%s' (%r): %s")
                 % (self.ruleset.title(), self.folder.title(), self.to_config(), e)
             )
 
@@ -1897,7 +1897,7 @@ def find_timeperiod_usage_in_host_and_service_rules(time_period_name: str) -> li
             if rule.value == time_period_name:
                 used_in.append(
                     (
-                        "{}: {}".format(_("Ruleset"), ruleset.title()),
+                        "{}: {}".format(_("Rule set"), ruleset.title()),
                         folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]),
                     )
                 )

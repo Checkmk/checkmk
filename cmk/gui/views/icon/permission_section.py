@@ -8,6 +8,6 @@ from cmk.gui.permissions import PermissionSection
 
 PERMISSION_SECTION_ICONS_AND_ACTIONS = PermissionSection(
     name="icons_and_actions",
-    title=_("Icons and Actions"),
+    title=_("Icons and actions"),
     do_sort=True,
 )

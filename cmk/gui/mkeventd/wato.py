@@ -861,8 +861,8 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                             ),
                             choices=[
                                 ("interval", _("Interval")),
-                                ("tokenbucket", _("Token Bucket")),
-                                ("dynabucket", _("Dynamic Token Bucket")),
+                                ("tokenbucket", _("Token bucket")),
+                                ("dynabucket", _("Dynamic token bucket")),
                             ],
                             default_value="interval",
                         ),
@@ -1306,10 +1306,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                     "Negate match: Execute this rule if the upper conditions are <b>not</b> fulfilled."
                 ),
                 help=_(
-                    "By activating this checkbox the complete combined rule conditions will be inverted. That "
-                    "means that this rule with be executed, if at least on of the conditions does <b>not</b> match. "
-                    "This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. "
-                    "Please note: When an inverted rule matches there can never be match groups."
+                    "By activating this checkbox the complete combined rule conditions will be inverted. That means that this rule will be executed, if at least one of the conditions does <b>not</b> match. This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. Please note: When an inverted rule matches there can never be match groups."
                 ),
             ),
         ),
@@ -1346,9 +1343,9 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                     "etc matching group."
                 )
                 + _(
-                    "The placeholder <tt>\\0</tt> will be replaced by the original text of this field "
+                    "The placeholder <tt>\0</tt> will be replaced by the original text of this field "
                     "to match. Note that as an alternative, you may also use the rule "
-                    "Host name translation for Incoming Messages in the Global Settings "
+                    "<tt>Host name translation</tt> for incoming messages in the global settings "
                     "of the EC to accomplish your task."
                 )
                 + _(
@@ -1976,7 +1973,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             )
             html.show_warning(
                 _(
-                    "WARNING: This Event Console is currently running as a remote replication"
+                    "Warning: This Event Console is currently running as a remote replication"
                     ". The rules edited here will not be used. Instead a copy of the rules of the "
                     "central site are being used in the case of a takeover. The same holds for the event "
                     "actions in the global settings."
@@ -1984,8 +1981,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 + html.render_br()
                 + html.render_br()
                 + _(
-                    "If you want you can copy the ruleset of "
-                    "the central site into your local configuration: "
+                    "If you want, you can copy the rule set of the central site into your local configuration: "
                 )
                 + html.render_icon_button(
                     copy_url, _("Copy rules from central site"), StaticIcon(IconNames.clone)
@@ -2598,7 +2594,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 if rule.get("drop"):
                     table.cell(_("State"), css=["state statep nowrap"])
                     if rule["drop"] == "skip_pack":
-                        html.write_text_permissive(_("SKIP PACK"))
+                        html.write_text_permissive(_("Skip pack"))
                     else:
                         html.write_text_permissive(_("DROP"))
                 else:
@@ -3119,10 +3115,9 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
 
-        warning = _("The Event Console Daemon is currently not running. ")
+        warning = _("The Event Console daemon is currently not running. ")
         warning += _(
-            "Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
-            "before starting this site."
+            "Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> before starting this site."
         )
 
         if not daemon_running():
@@ -3137,7 +3132,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         repl_mode = status["status_replication_slavemode"]
         html.h3(_("Current status of local Event Console"))
         html.open_ul()
-        html.li(_("Event Daemon is running."))
+        html.li(_("Event daemon is running."))
         html.open_li()
         html.write_text_permissive("%s: " % _("Current replication mode"))
         html.open_b()
@@ -3145,7 +3140,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             {
                 "sync": _("synchronize"),
                 "takeover": _("Takeover!"),
-            }.get(repl_mode, _("master / standalone"))
+            }.get(repl_mode, _("central / standalone"))
         )
         html.close_b()
         html.close_li()
@@ -4017,15 +4012,13 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
                 (
                     "master",
                     Tuple(
-                        title=_("Master Event Console"),
+                        title=_("Central Event Console"),
                         help=_(
-                            "Specify the host name or IP address of the master Event Console that "
-                            "you want to replicate from. The port number must be the same as set "
-                            "in the master in <i>Access to event status via TCP</i>."
+                            "Specify the host name or IP address of the central Event Console that you want to replicate from. The port number must be the same as set in the central site in <i>Access to event status via TCP</i>."
                         ),
                         elements=[
                             TextInput(
-                                title=_("Host name/IP address of Master Event Console:"),
+                                title=_("Host name/IP address of central Event Console:"),
                                 allow_empty=False,
                             ),
                             Integer(
@@ -4052,7 +4045,7 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
                     "connect_timeout",
                     Integer(
                         title=_("Connect timeout"),
-                        help=_("TCP connect timeout for connecting to the master"),
+                        help=_("TCP connect timeout for connecting to the central site"),
                         label=_("Try bringing up TCP connection for"),
                         unit=_("sec"),
                         minvalue=1,
@@ -4064,11 +4057,9 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
                     Integer(
                         title=_("Automatic takeover"),
                         help=_(
-                            "If you enable this option then the remote site will automatically "
-                            "takeover and enable event processing if the central site is for "
-                            "the configured number of seconds unreachable."
+                            "If you enable this option, the remote site will automatically take over and enable event processing if the central site is unreachable for the configured number of seconds."
                         ),
-                        label=_("Takeover after a master downtime of"),
+                        label=_("Takeover after a central site downtime of"),
                         unit=_("sec"),
                         minvalue=1,
                         default_value=30,
@@ -4079,10 +4070,7 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
                     Integer(
                         title=_("Automatic fallback"),
                         help=_(
-                            "If you enable this option then the slave will automatically "
-                            "fallback from takeover mode to slavemode if the master is "
-                            "reachable again within the selected number of seconds since "
-                            "the previous unreachability (not since the takeover)"
+                            "If you enable this option, the remote site will automatically fallback from takeover mode to remote mode if the central site is reachable again within the selected number of seconds since the previous unreachability (not since the takeover)"
                         ),
                         label=_("Fallback if central comes back within"),
                         unit=_("sec"),
@@ -4118,7 +4106,7 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
                 ),
             ],
         ),
-        title=_("Enable replication from a master"),
+        title=_("Enable replication from a central"),
     ),
 )
 
@@ -4129,8 +4117,7 @@ ConfigVariableEventConsoleRetentionInterval = ConfigVariable(
     valuespec=lambda context: Age(
         title=_("State retention interval"),
         help=_(
-            "In this interval the event daemon will save its state "
-            "to disk, so that you won't lose your current event "
+            "In this interval the event daemon will save its state to disk, so that you won't lose your current event "
             "state in case of a crash."
         ),
     ),
@@ -4202,13 +4189,9 @@ ConfigVariableEventConsoleLogMessages = ConfigVariable(
     ident="log_messages",
     valuespec=lambda context: Checkbox(
         title=_("Syslog-like message logging"),
-        label=_("Log all messages into syslog-like logfiles"),
+        label=_("Log all messages into Syslog-like log files"),
         help=_(
-            "When this option is enabled, then <b>every</b> incoming message is being "
-            "logged into the directory <tt>messages</tt> in the Event Consoles state "
-            "directory. The logfile rotation is analog to that of the history logfiles. "
-            "Please note that if you have lots of incoming messages then these "
-            "files can get very large."
+            "When this option is enabled, then <b>every</b> incoming message is being logged into the directory <tt>messages</tt> in the Event Consoles state directory. The logfile rotation is analog to that of the history logfiles. Please note that if you have lots of incoming messages then these files can get very large."
         ),
     ),
 )
@@ -4515,7 +4498,7 @@ ConfigVariableEventConsoleHistoryRotation = ConfigVariable(
     primary_domain=ConfigDomainEventConsole,
     ident="history_rotation",
     valuespec=lambda context: DropdownChoice(
-        title=_("Event history logfile rotation"),
+        title=_("Event history log file rotation"),
         help=_("Specify at which time period a new file for the event history will be created."),
         choices=[("daily", _("daily")), ("weekly", _("weekly"))],
     ),
@@ -4527,7 +4510,7 @@ ConfigVariableEventConsoleHistoryLifetime = ConfigVariable(
     ident="history_lifetime",
     valuespec=lambda context: Integer(
         title=_("Event history lifetime"),
-        help=_("After this number of days old logfile of event history will be deleted."),
+        help=_("After this number of days old log files of the event history will be deleted."),
         unit=_("days"),
         minvalue=1,
     ),
@@ -4634,13 +4617,7 @@ ConfigVariableEventConsoleSNMPCredentials = ConfigVariable(
                         ),
                         title=_("Engine IDs (only needed for SNMPv3)"),
                         help=_(
-                            "Each SNMPv3 device has it's own engine ID. This is normally "
-                            "automatically generated, but can also be configured manually "
-                            "for some devices. As the engine ID is used for the encryption "
-                            "of SNMPv3 traps sent by the devices, Checkmk needs to know "
-                            "the engine ID to be able to decrypt the SNMP traps.<br>"
-                            "The engine IDs have to be configured as hex strings like "
-                            "<tt>8000000001020304</tt>."
+                            "Each SNMPv3 device has its own engine ID. This is normally automatically generated, but can also be configured manually for some devices. As the engine ID is used for the encryption of SNMPv3 traps sent by the devices, Checkmk needs to know the engine ID to be able to decrypt the SNMP traps.<br>The engine IDs have to be configured as hex strings like <tt>8000000001020304</tt>."
                         ),
                         allow_empty=False,
                     ),
@@ -5086,7 +5063,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                             ),
                         ),
                         TextInput(
-                            title=_("Access via UNIX socket"),
+                            title=_("Access via Unix socket"),
                             allow_empty=False,
                             size=64,
                         ),

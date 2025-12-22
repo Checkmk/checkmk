@@ -62,7 +62,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
         ),
         MainMenuItem(
             name="beginners_guide",
-            title=_("Beginner's guide"),
+            title=_("Beginner's Guide"),
             url=doc_reference_url(DocReference.INTRO_SETUP),
             target="_blank",
             sort_index=20,
@@ -70,7 +70,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
         ),
         MainMenuItem(
             name="user_manual",
-            title=_("User manual"),
+            title=_("User Guide"),
             url=doc_reference_url(),
             target="_blank",
             sort_index=30,
@@ -216,7 +216,7 @@ def _help_menu_topics(
             ),
             MainMenuTopic(
                 name="ideas_portal",
-                title=_("Ideas Portal"),
+                title=_("Ideas portal"),
                 icon=StaticIcon(IconNames.lightbulb),
                 entries=[
                     MainMenuItem(

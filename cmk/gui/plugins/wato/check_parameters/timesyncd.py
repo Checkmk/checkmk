@@ -27,7 +27,7 @@ def _parameter_valuespec_timesyncd_time():
                             title=_("Warning at"),
                             unit=_("ms"),
                             default_value=200,
-                            help=_("The offset in s at which a warning state is triggered."),
+                            help=_("The offset in s at which a WARNING state is triggered."),
                         ),
                         Float(
                             title=_("Critical at"),
@@ -59,7 +59,7 @@ def _parameter_valuespec_timesyncd_time():
             (
                 "last_synchronized",
                 Tuple(
-                    title=_("Allowed duration since last synchronisation"),
+                    title=_("Allowed duration since last synchronization"),
                     elements=[
                         Age(
                             title=_("Warning at"),
@@ -102,6 +102,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_timesyncd_time,
-        title=lambda: _("Systemd Timesyncd time synchronisation"),
+        title=lambda: _("Systemd timesyncd time synchronization"),
     )
 )

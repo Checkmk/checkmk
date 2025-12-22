@@ -1416,10 +1416,10 @@ class ModeEditUser(WatoMode):
                     )
                 else:
                     html.write_text_permissive(
-                        _("Not permitted to change the password. Change can not be enforced.")
+                        _("Not permitted to change the password. Change cannot be enforced.")
                     )
             else:
-                html.i(_("The password can not be changed (It is locked by the user connector)."))
+                html.i(_("The password cannot be changed (it is locked by the user connector)."))
                 html.hidden_field("_password", "")
                 html.hidden_field("_password2", "")
 
@@ -1461,7 +1461,7 @@ class ModeEditUser(WatoMode):
             )
             html.help(
                 _(
-                    "In order to reuse that secret for other rules, e.g. <i>Bi Aggregations</i>, <i>Dynamic host configuration</i>"
+                    "In order to reuse that secret for other rules, e.g. <i>Bi aggregations</i>, <i>Dynamic host configuration</i>"
                 )
             )
             html.close_div()

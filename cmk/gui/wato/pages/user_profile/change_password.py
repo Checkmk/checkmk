@@ -212,7 +212,7 @@ class UserChangePasswordPage(Page):
         if "password" in locked_attributes:
             raise MKUserError(
                 self._current_pw_field(),
-                _("You can not change your password, because it is managed by another system."),
+                _("You cannot change your password, because it is managed by another system."),
             )
 
         with html.form_context("profile", method="POST"):

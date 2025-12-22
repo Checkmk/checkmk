@@ -42,7 +42,7 @@ def test_local_connection_mocked(
             "1.2.6",
             ACSingleResult(
                 state=ACResultState.CRIT,
-                text="Entity uses an API (API) which was removed in Checkmk 1.2.5 (File: /path/to/file).",
+                text="Entity uses an API (API) which was removed in Checkmk 1.2.5 (file: /path/to/file).",
                 site_id=SiteId("site_id"),
                 path=Path("/path/to/file"),
             ),
@@ -52,7 +52,7 @@ def test_local_connection_mocked(
             "1.2.5",
             ACSingleResult(
                 state=ACResultState.CRIT,
-                text="Entity uses an API (API) which was marked as deprecated in Checkmk 1.2.3 and is removed in Checkmk 1.2.5 (File: /path/to/file).",
+                text="Entity uses an API (API) which was marked as deprecated in Checkmk 1.2.3 and is removed in Checkmk 1.2.5 (file: /path/to/file).",
                 site_id=SiteId("site_id"),
                 path=Path("/path/to/file"),
             ),
@@ -62,7 +62,7 @@ def test_local_connection_mocked(
             "1.2.4",
             ACSingleResult(
                 state=ACResultState.WARN,
-                text="Entity uses an API (API) which was marked as deprecated in Checkmk 1.2.3 and will be removed in Checkmk 1.2.5 (File: /path/to/file).",
+                text="Entity uses an API (API) which was marked as deprecated in Checkmk 1.2.3 and will be removed in Checkmk 1.2.5 (file: /path/to/file).",
                 site_id=SiteId("site_id"),
                 path=Path("/path/to/file"),
             ),
@@ -72,7 +72,7 @@ def test_local_connection_mocked(
             "1.2.3",
             ACSingleResult(
                 state=ACResultState.WARN,
-                text="Entity uses an API (API) which is marked as deprecated in Checkmk 1.2.3 and will be removed in Checkmk 1.2.5 (File: /path/to/file).",
+                text="Entity uses an API (API) which is marked as deprecated in Checkmk 1.2.3 and will be removed in Checkmk 1.2.5 (file: /path/to/file).",
                 site_id=SiteId("site_id"),
                 path=Path("/path/to/file"),
             ),

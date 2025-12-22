@@ -21,14 +21,14 @@ def _parameter_valuespec():
             (
                 "pending",
                 age_levels_dropdown(
-                    _("Time until alert, if latest CronJob job is in pending state")
+                    _("Time until alert, if latest cronjob job is in pending state")
                 ),
             ),
             (
                 "running",
                 age_levels_dropdown(
                     _(
-                        "Time until alert, if the latest CronJob job has been running for "
+                        "Time until alert, if the latest cronjob job has been running for "
                         "longer than set time"
                     )
                 ),
@@ -44,6 +44,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Kubernetes CronJob status"),
+        title=lambda: _("Kubernetes cronjob status"),
     )
 )

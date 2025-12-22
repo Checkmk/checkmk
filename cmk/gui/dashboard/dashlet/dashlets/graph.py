@@ -380,11 +380,11 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
 
     @classmethod
     def title(cls):
-        return _("Performance graph")
+        return _("Time series graph")
 
     @classmethod
     def description(cls):
-        return _("Displays a performance graph of a host or service.")
+        return _("Displays a time series graph of a host or service.")
 
     @classmethod
     def sort_index(cls) -> int:

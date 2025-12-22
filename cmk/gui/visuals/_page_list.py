@@ -313,7 +313,7 @@ def page_list(
 
                 # Owner
                 if owner == UserId.builtin():
-                    ownertxt = "<i>" + _("builtin") + "</i>"
+                    ownertxt = "<i>" + _("built-in") + "</i>"
                 else:
                     ownertxt = owner
                 table.cell(_("Owner"), ownertxt)

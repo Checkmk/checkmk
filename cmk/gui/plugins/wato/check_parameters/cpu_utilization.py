@@ -62,7 +62,7 @@ def cpu_util_elements() -> list[tuple[str, ValueSpec]]:
                     "With this configuration, Checkmk will alert if a single core is "
                     "exceeding a utilization threshold over an extended period of time. "
                     "This is currently only supported on Linux and Windows agents "
-                    "as well as devices monitored through the host-resource mib"
+                    "as well as devices monitored through the host-resource MIB."
                 ),
             ),
         ),
@@ -173,9 +173,9 @@ def cpu_util_elements() -> list[tuple[str, ValueSpec]]:
                     "This adds another graph to the performance CPU utilization "
                     "details page, showing utilization of individual cores. "
                     "Please note that this graph may be impractical on "
-                    "device with very many cores. "
+                    "devices with very many cores. "
                     "This is currently only supported on Linux and Windows agents "
-                    "as well as devices monitored through the host-resource mib"
+                    "as well as devices monitored through the host-resource MIB."
                 ),
                 choices=[
                     (True, _("Enable")),
@@ -192,7 +192,7 @@ def _cpu_util_unix_elements() -> list[tuple[str, ValueSpec]]:
         (
             "iowait",
             Tuple(
-                title=_("Levels on IO wait (UNIX only)"),
+                title=_("Levels on IO wait (Unix only)"),
                 elements=[
                     Percentage(title=_("Warning at a disk wait of"), default_value=5.0),
                     Percentage(title=_("Critical at a disk wait of"), default_value=10.0),
@@ -208,7 +208,7 @@ def _cpu_util_unix_elements() -> list[tuple[str, ValueSpec]]:
         (
             "steal",
             Tuple(
-                title=_("Levels on steal CPU utilization (UNIX only)"),
+                title=_("Levels on steal CPU utilization (Unix only)"),
                 elements=[
                     Percentage(title=_("Warning at a steal time of"), default_value=30.0),
                     Percentage(title=_("Critical at a steal time of"), default_value=50.0),
@@ -223,8 +223,8 @@ def _cpu_util_common_elements() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule configures levels for the CPU utilization (not load) for "
-            "Linux/UNIX and Windows, as well as devices "
-            "implementing the Host Resources MIB. The utilization "
+            "Linux/Unix and Windows, as well as devices "
+            "implementing the host resources MIB. The utilization "
             "percentage is computed with respect to the total number of CPUs. "
             "Note that not all parameters you can configure here are applicable "
             "to all checks."
@@ -322,9 +322,9 @@ def _parameter_valuespec_cpu_utilization_simple() -> Dictionary:
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cpu_utilization_with_item",
-        item_spec=lambda: TextInput(title=_("CPU Utilization")),
+        item_spec=lambda: TextInput(title=_("CPU utilization")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_cpu_utilization_simple,
-        title=lambda: _("CPU Utilization"),
+        title=lambda: _("CPU utilization"),
     )
 )

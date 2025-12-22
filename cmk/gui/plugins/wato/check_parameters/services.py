@@ -34,7 +34,7 @@ def _valuespec_inventory_services_rules():
             (
                 "services",
                 ListOfStrings(
-                    title=_("Services (Regular Expressions)"),
+                    title=_("Services (regular expressions)"),
                     size=49,
                     help=_(
                         "Regular expressions matching the beginning of the internal name "
@@ -73,8 +73,8 @@ def _valuespec_inventory_services_rules():
             ),
         ],
         help=_(
-            "This rule can be used to configure the discovery of the windows services check. "
-            "You can configure specific windows services to be monitored by the windows check by "
+            "This rule can be used to configure the inventory of the Windows services check. "
+            "You can configure specific Windows services to be monitored by the Windows check by "
             "selecting them by name, current state during the inventory, or start mode."
         ),
     )
@@ -98,7 +98,7 @@ def _item_spec_services():
             "the service names with underscores. If you are unsure about the "
             "correct spelling of the name, then please look at the output of "
             "the agent (cmk -d HOSTNAME). The service names are in the first "
-            "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
+            "column of the section 'services'. Please "
             "do not mix up the service name with the display name of the service. "
             "The latter one is just being displayed as a further information."
         ),

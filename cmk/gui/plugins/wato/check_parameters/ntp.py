@@ -63,7 +63,7 @@ def _ntp_params():
                 title=_("Warning at"),
                 unit=_("ms"),
                 default_value=200.0,
-                help=_("The offset in ms at which a warning state is triggered."),
+                help=_("The offset in ms at which a WARNING state is triggered."),
             ),
             Float(
                 title=_("Critical at"),
@@ -134,6 +134,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ntp_time,
-        title=lambda: _("State of NTP time synchronisation"),
+        title=lambda: _("State of NTP time synchronization"),
     )
 )

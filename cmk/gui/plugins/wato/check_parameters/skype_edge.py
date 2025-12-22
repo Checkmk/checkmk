@@ -17,7 +17,7 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 def _item_spec_skype_edge():
     return TextInput(
         title=_("Interface"),
-        help=_("The name of the interface (Public/Private IPv4/IPv6 Network Interface)"),
+        help=_("The name of the interface (public/private IPv4/IPv6 network interface)"),
     )
 
 
@@ -53,7 +53,7 @@ def _parameter_valuespec_skype_edge():
             (
                 "allocate_requests_exceeding",
                 Dictionary(
-                    title=_("Allocate Requests Exceeding Port Limit"),
+                    title=_("Allocate requests exceeding port limit"),
                     elements=[
                         (
                             "upper",

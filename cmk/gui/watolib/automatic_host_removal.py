@@ -114,7 +114,7 @@ def execute_host_removal_job(config: Config) -> None:
     except RedisConnectionError as e:
         # This can happen when Redis or the whole site is stopped while the background job is
         # running. Report an error in the background job result but don't create a crash report.
-        _LOGGER.warning(_("An connection error occurred: %s") % e)
+        _LOGGER.warning(_("A connection error occurred: %s") % e)
 
 
 def _init_logging() -> None:

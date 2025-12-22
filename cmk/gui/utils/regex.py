@@ -35,5 +35,5 @@ def validate_regex(value: str, varname: str | None) -> None:
 
     if re.search(lookahead_pattern, value):
         raise MKUserError(
-            varname, _("Your search statement is not valid. You can not use a lookahead here.")
+            varname, _("Your search statement is not valid. You cannot use a look-ahead here.")
         )

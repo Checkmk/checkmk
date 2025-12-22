@@ -20,7 +20,7 @@ def _parameter_valuespec():
             (
                 "machine_metrics",
                 MonitoringState(
-                    title=_("Monitoring state if the Cluster Collector reports no Machine Metrics"),
+                    title=_("Monitoring state if the cluster collector reports no machine metrics"),
                     default_value=2,
                 ),
             ),
@@ -35,6 +35,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Kubernetes Collector Info"),
+        title=lambda: _("Kubernetes Collector info"),
     )
 )

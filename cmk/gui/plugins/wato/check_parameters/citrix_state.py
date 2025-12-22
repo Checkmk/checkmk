@@ -23,7 +23,7 @@ def _parameter_valuespec_citrix_state() -> Dictionary:
                         ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
                         ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
                         ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
-                        ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
+                        ("AgentError", MonitoringState(title=_("Agent error"), default_value=2)),
                     ],
                     optional_keys=False,
                 ),
@@ -31,11 +31,11 @@ def _parameter_valuespec_citrix_state() -> Dictionary:
             (
                 "vmtoolsstate",
                 Dictionary(
-                    title=_("Interpretation of VM Tools States"),
+                    title=_("Interpretation of VM tools states"),
                     elements=[
                         ("NotPresent", MonitoringState(title=_("Not Present"), default_value=2)),
                         ("Unknown", MonitoringState(title=_("Unknown"), default_value=3)),
-                        ("NotStarted", MonitoringState(title=_("Not Started"), default_value=1)),
+                        ("NotStarted", MonitoringState(title=_("Not started"), default_value=1)),
                         ("Running", MonitoringState(title=_("Running"), default_value=0)),
                     ],
                     optional_keys=False,

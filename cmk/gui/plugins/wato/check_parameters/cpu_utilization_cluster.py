@@ -48,7 +48,7 @@ rulespec_registry.register(
         check_group_name="cpu_utilization_cluster",
         group=RulespecGroupEnforcedServicesNetworking,
         parameter_valuespec=_parameter_valuespec_cpu_utilization_cluster,
-        title=lambda: _("CPU Utilization of Clusters"),
+        title=lambda: _("CPU utilization of clusters"),
         is_deprecated=True,
     )
 )

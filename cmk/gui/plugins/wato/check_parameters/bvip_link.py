@@ -38,7 +38,7 @@ def _parameter_valuespec_bvip_link() -> Dictionary:
             (
                 "warn_states",
                 ListChoice(
-                    title=_("States which result in Warning"),
+                    title=_("States which result in WARNING"),
                     choices=bvip_link_states,
                     default_value=[7],
                 ),

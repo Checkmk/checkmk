@@ -25,14 +25,14 @@ def _item_spec_mtr():
 def _parameter_valuespec_mtr() -> Dictionary:
     return Dictionary(
         help=_(
-            "This ruleset can be used to change MTR's (Matt's traceroute) warning and crit levels for packet loss, average "
-            "roundtrip and standard deviation."
+            "This rule set can be used to change MTR's (Matt's traceroute) WARNING and CRIT levels for packet loss, average "
+            "round trip and standard deviation."
         ),
         elements=[
             (
                 "rta",
                 Tuple(
-                    title=_("Average roundtrip time in ms"),
+                    title=_("Average round trip time in ms"),
                     elements=[
                         Integer(title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0),
                         Integer(
@@ -40,7 +40,7 @@ def _parameter_valuespec_mtr() -> Dictionary:
                         ),
                     ],
                     help=_(
-                        "The maximum average roundtrip time in ms before this service goes into warning/critical. "
+                        "The maximum average round trip time in ms before this service goes into WARNING/CRITICAL. "
                         "This alarm only applies to the target host, not the hops in between."
                     ),
                 ),
@@ -48,7 +48,7 @@ def _parameter_valuespec_mtr() -> Dictionary:
             (
                 "rtstddev",
                 Tuple(
-                    title=_("Standard deviation of roundtrip times in ms"),
+                    title=_("Standard deviation of round trip times in ms"),
                     elements=[
                         Integer(title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0),
                         Integer(
@@ -56,8 +56,8 @@ def _parameter_valuespec_mtr() -> Dictionary:
                         ),
                     ],
                     help=_(
-                        "The maximum standard deviation on the roundtrip time in ms before this service goes into "
-                        "warning/critical. This alarm only applies to the target host, not the hops in between."
+                        "The maximum standard deviation on the round trip time in ms before this service goes into "
+                        "WARNING/CRITICAL. This alarm only applies to the target host, not the hops in between."
                     ),
                 ),
             ),
@@ -71,7 +71,7 @@ def _parameter_valuespec_mtr() -> Dictionary:
                     ],
                     help=_(
                         "The maximum allowed percentage of packet loss to the destination before this service "
-                        "goes into warning/critical."
+                        "goes into WARNING/CRITICAL."
                     ),
                 ),
             ),

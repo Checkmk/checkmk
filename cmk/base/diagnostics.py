@@ -378,13 +378,13 @@ class DiagnosticsDump:
                 _DiagnosticsElementWrapper(
                     _DiagnosticsElement(
                         ident="checkmk_overview.json",
-                        title=_("Checkmk Overview of Checkmk Server"),
+                        title=_("Checkmk overview of Checkmk server"),
                         description=_(
-                            "Checkmk Agent, Number, version and edition of sites, cluster host; "
+                            "Checkmk agent, number, version and edition of sites, cluster host; "
                             "number of hosts, services, CMK Helper, Live Helper, "
                             "Helper usage; state of daemons: Apache, Core, Crontab, "
                             "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-                            "(Agent plug-in mk_inventory needs to be installed)"
+                            "(agent plug-in mk_inventory needs to be installed)"
                         ),
                         content=content,
                         exception=exception_for_later,
@@ -693,7 +693,7 @@ class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     @override
     @property
     def description(self) -> str:
-        return _("Output of `dpkg -l`. See the corresponding commandline help for more details.")
+        return _("Output of `dpkg -l`. See the corresponding command line help for more details.")
 
     def _collect_infos(self) -> DiagnosticsElementCSVResult:
         if not (dpkg_binary := shutil.which("dpkg")):
@@ -719,7 +719,7 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     @override
     @property
     def description(self) -> str:
-        return _("Output of `rpm -qa`. See the corresponding commandline help for more details.")
+        return _("Output of `rpm -qa`. See the corresponding command line help for more details.")
 
     def _collect_infos(self) -> DiagnosticsElementCSVResult:
         if not (rpm_binary := shutil.which("rpm")):
@@ -797,12 +797,12 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def title(self) -> str:
-        return _("Performance data")
+        return _("Metrics")
 
     @override
     @property
     def description(self) -> str:
-        return _("Performance data related to sizing, e.g. number of helpers, hosts, services")
+        return _("Metrics related to sizing, e.g. number of helpers, hosts, services")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the runtime performance data from livestatus
@@ -921,7 +921,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def description(self) -> str:
-        return _("Hardware information of the Checkmk Server")
+        return _("Hardware information of the Checkmk server")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         return collect_infos_hw(Path("/proc"))
@@ -965,7 +965,7 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def description(self) -> str:
-        return _("HW Vendor information of the Checkmk Server")
+        return _("HW vendor information of the Checkmk server")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         return collect_infos_vendor(Path("/sys/class/dmi/id"))
@@ -1032,7 +1032,7 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _(
             "Output of `mkp find --all --json`. "
-            "See the corresponding commandline help for more details."
+            "See the corresponding command line help for more details."
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
@@ -1061,7 +1061,7 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _(
             "Output of `mkp show-all --json`. "
-            "See the corresponding commandline help for more details."
+            "See the corresponding command line help for more details."
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
@@ -1087,7 +1087,7 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "Output of `mkp list --json`. See the corresponding commandline help for more details."
+            "Output of `mkp list --json`. See the corresponding command line help for more details."
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
@@ -1112,7 +1112,7 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def description(self) -> str:
-        return _("Output of `sestatus`. See the corresponding commandline help for more details.")
+        return _("Output of `sestatus`. See the corresponding command line help for more details.")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         if not (selinux_binary := shutil.which("sestatus")):
@@ -1145,12 +1145,12 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def title(self) -> str:
-        return _("Checkmk Appliance information")
+        return _("Checkmk appliance information")
 
     @override
     @property
     def description(self) -> str:
-        return _("Information about the Appliance hardware and firmware version.")
+        return _("Information about the appliance hardware and firmware version.")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         cma_infos: dict[str, str | dict[str, str]] = {}
@@ -1179,10 +1179,7 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "Apache mode and TCP address and port, Core, "
-            "Liveproxy daemon and livestatus TCP mode, "
-            "Event daemon config, Multiste authorisation, "
-            "NSCA mode, TMP filesystem mode"
+            "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus TCP mode, event daemon config, graphical user interface (GUI) authorization, NSCA mode, TMP file system mode"
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
@@ -1413,15 +1410,13 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     @override
     @property
     def title(self) -> str:
-        return _("Performance Graphs of Checkmk Server")
+        return _("Time series graphs of Checkmk server")
 
     @override
     @property
     def description(self) -> str:
         return _(
-            "CPU load and utilization, Number of threads, Kernel Performance, "
-            "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
-            "25 hours and 35 days"
+            "CPU load and utilization, number of threads, Kernel performance, OMD, file system, Apache status, TCP connections of the time ranges 25 hours and 35 days"
         )
 
     @override
@@ -1487,7 +1482,7 @@ class BIDataDiagnosticsElement(ABCDiagnosticsElement):
     def description(self) -> str:
         return _(
             "Cached data from Business Intelligence. "
-            "contains states, downtimes, acknowledgements and service periods "
+            "Contains states, downtimes, acknowledgements and service periods "
             "for all hosts/services included in a BI aggregation."
         )
 

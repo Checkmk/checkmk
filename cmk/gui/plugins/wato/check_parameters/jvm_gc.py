@@ -23,7 +23,7 @@ def _item_spec_jvm_gc() -> TextInput:
 
 def _parameter_valuespec_jvm_gc() -> Dictionary:
     return Dictionary(
-        help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
+        help=_("This rule set also covers Tomcat, Jolokia and JMX. "),
         elements=[
             (
                 "collection_time",

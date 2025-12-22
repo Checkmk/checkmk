@@ -28,7 +28,7 @@ class SidebarSnapinEventConsole(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Event console performance")
+        return _("Event Console performance")
 
     @classmethod
     def description(cls) -> str:

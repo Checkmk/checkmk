@@ -17,13 +17,13 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, Tuple
 def _item_spec_domino_mailqueues():
     return DropdownChoice(
         choices=[
-            ("lnDeadMail", _("Mails in Dead Queue")),
-            ("lnWaitingMail", _("Mails in Waiting Queue")),
-            ("lnMailHold", _("Mails in Hold Queue")),
-            ("lnMailTotalPending", _("Total Pending Mails")),
-            ("InMailWaitingforDNS", _("Mails Waiting for DNS Queue")),
+            ("lnDeadMail", _("Mails in dead queue")),
+            ("lnWaitingMail", _("Mails in waiting queue")),
+            ("lnMailHold", _("Mails in hold queue")),
+            ("lnMailTotalPending", _("Total pending mails")),
+            ("InMailWaitingforDNS", _("Mails waiting for DNS queue")),
         ],
-        title=_("Domino Mail Queue Names"),
+        title=_("Domino mail queue names"),
     )
 
 
@@ -33,7 +33,7 @@ def _parameter_valuespec_domino_mailqueues():
             (
                 "queue_length",
                 Tuple(
-                    title=_("Number of Mails in Queue"),
+                    title=_("Number of mails in queue"),
                     elements=[
                         Integer(title=_("warning at"), default_value=300),
                         Integer(title=_("critical at"), default_value=350),
@@ -52,6 +52,6 @@ rulespec_registry.register(
         item_spec=_item_spec_domino_mailqueues,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_domino_mailqueues,
-        title=lambda: _("Lotus Domino Mail Queues"),
+        title=lambda: _("Lotus Domino mail queues"),
     )
 )

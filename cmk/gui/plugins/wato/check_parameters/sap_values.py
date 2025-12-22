@@ -35,7 +35,7 @@ def _valuespec_sap_value_groups():
                                     orientation="vertical",
                                     elements=[
                                         RegExp(
-                                            title=_("Include Pattern"),
+                                            title=_("Include pattern"),
                                             mode=RegExp.prefix,
                                         ),
                                         RegExp(

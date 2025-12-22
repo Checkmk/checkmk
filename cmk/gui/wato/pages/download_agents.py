@@ -45,7 +45,7 @@ class ABCModeDownloadAgents(WatoMode):
         "/plugins": _("Plug-ins"),
         "/cfg_examples": _("Example Configurations"),
         "/cfg_examples/systemd": _("Example configuration for systemd"),
-        "/windows": _("Windows Agent"),
+        "/windows": _("Windows agent"),
         "/windows/plugins": _("Plug-ins"),
         "/windows/mrpe": _("Scripts to integrate Nagios plugis"),
         "/windows/cfg_examples": _("Example Configurations"),
@@ -123,7 +123,7 @@ class ABCModeDownloadAgents(WatoMode):
         html.open_div(class_="rulesets")
 
         if packed := self._packed_agents():
-            self._download_table(_("Packaged Agents"), packed)
+            self._download_table(_("Packaged agents"), packed)
 
         for title, file_paths in sorted(
             entry for base_dir in self._walk_base_dirs() for entry in self._walk_dir(base_dir)

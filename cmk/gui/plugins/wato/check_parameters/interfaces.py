@@ -65,7 +65,7 @@ def _vs_item_appearance(title, help_txt):
         default_value="index",
         help=help_txt
         + _(
-            "<br> <br>  "
+            "<br><br>"
             "<b>Important note</b>: When changing this option, the services "
             "need to be removed and rediscovered to apply the changes. "
             "Otherwise there is a risk of mismatch between the discovered "
@@ -129,7 +129,7 @@ def _vs_single_discovery():
                             _vs_item_appearance(
                                 _("Appearance of network interface"),
                                 _(
-                                    "This option makes checkmk use either the interface description, "
+                                    "This option makes Checkmk use either the interface description, "
                                     "alias or port number as item."
                                 ),
                             ),
@@ -222,7 +222,7 @@ def _vs_grouping():
                                                 _("Appearance of group members in service output"),
                                                 _(
                                                     "When listing the group members in the output of the service "
-                                                    "monitoring the group, this option makes checkmk use either "
+                                                    "monitoring the group, this option makes Checkmk use either "
                                                     "the interface description, alias or port number."
                                                 ),
                                             ),
@@ -298,7 +298,7 @@ def _vs_matching_conditions():
         title=_("Conditions for this rule to apply"),
         help=_(
             "Here, you can define conditions for applying this rule. These conditions are evaluated "
-            "on a per-interface basis. When discovering an interface, checkmk will first find all "
+            "on a per-interface basis. When discovering an interface, Checkmk will first find all "
             "rules whose conditions match this interface. Then, these rules are merged together, "
             "whereby rules from subfolders overwrite rules from the main directory. Within a "
             "directory, the order of the rules matters, i.e., rules further below in the list are "
@@ -806,10 +806,10 @@ def _parameter_valuespec_if() -> Dictionary:
                 _vs_alternative_levels(
                     title=_("Levels for error rates"),
                     help=_(
-                        "These levels make the check go warning or critical whenever the "
+                        "These levels change the status of a check to WARNING or CRITICAL whenever the "
                         "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
                         "the given bounds. The percentual error rate is computed by "
-                        "the formula <b>(errors / (unicast + non-unicast + errors))*100</b> "
+                        "the formula <b>(errors / (unicast + non-unicast + errors))*100</b>. "
                     ),
                     percent_levels=PERC_ERROR_LEVELS,
                     percent_detail=_(" (in relation to all packets (successful + error))"),
@@ -821,7 +821,7 @@ def _parameter_valuespec_if() -> Dictionary:
                 OptionalDropdownChoice(
                     title=_("Operating speed"),
                     help=_(
-                        "If you use this parameter then the check goes warning if the "
+                        "If you use this parameter then the check goes WARNING if the "
                         "interface is not operating at the expected speed (e.g. it "
                         "is working with 100Mbit/s instead of 1Gbit/s.<b>Note:</b> "
                         "some interfaces do not provide speed information. In such cases "

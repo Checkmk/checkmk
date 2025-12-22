@@ -94,7 +94,7 @@ def _item_spec_http_lb() -> ValueSpec:
 
 def _vs_gcs_http_lb_requests() -> ValueSpec:
     return Dictionary(
-        title=_("Parameters for the  requests"),
+        title=_("Parameters for the requests"),
         elements=[("requests", Levels(title=_("Parameters for the requests"), unit="1/second"))],
     )
 

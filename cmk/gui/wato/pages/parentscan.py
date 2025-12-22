@@ -244,11 +244,11 @@ class ModeParentScan(WatoMode):
             _(
                 "The parent scan will try to detect the last gateway "
                 "on layer 3 (IP) before a host. This will be done by "
-                "calling <tt>traceroute</tt>. If a gateway is found by "
-                "that way and its IP address belongs to one of your "
-                "monitored hosts, that host will be used as the hosts "
-                "parent. If no such host exists, an artifical ping-only "
-                "gateway host will be created if you have not disabled "
+                "calling <tt>traceroute</tt>. If a gateway is found this "
+                "way and its IP address belongs to one of your "
+                "monitored hosts, that host will be used as the host's "
+                "parent. If no such host exists, an artificial ping-only "
+                "gateway host will be created, if you have not disabled "
                 "this feature."
             )
         )
@@ -327,13 +327,10 @@ class ModeParentScan(WatoMode):
 
         html.open_tr()
         html.open_td()
-        html.write_text_permissive(_("Number of PING probes") + ":")
+        html.write_text_permissive(_("Number of ping probes") + ":")
         html.help(
             _(
-                "After a gateway has been found, Checkmk checks if it is reachable "
-                "via PING. If not, it is skipped and the next gateway nearer to the "
-                "monitoring core is being tried. You can disable this check by setting "
-                "the number of PING probes to 0."
+                "After a gateway has been found, Checkmk checks if it is reachable via ping. If not, it is skipped and the next gateway nearer to the monitoring core is being tried. You can disable this check by setting the number of ping probes to 0."
             )
         )
         html.close_td()

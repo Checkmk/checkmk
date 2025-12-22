@@ -715,8 +715,8 @@ class BinaryHostRulespec(HostRulespec):
     def _binary_host_valuespec(self) -> ValueSpec:
         return DropdownChoice(
             choices=[
-                (True, _("Positive match (Add matching hosts to the set)")),
-                (False, _("Negative match (Exclude matching hosts from the set)")),
+                (True, _("Positive match (add matching hosts to the set)")),
+                (False, _("Negative match (exclude matching hosts from the set)")),
             ],
             default_value=True,
         )
@@ -776,8 +776,8 @@ class BinaryServiceRulespec(ServiceRulespec):
     def _binary_service_valuespec(self) -> ValueSpec:
         return DropdownChoice(
             choices=[
-                (True, _("Positive match (Add matching services to the set)")),
-                (False, _("Negative match (Exclude matching services from the set)")),
+                (True, _("Positive match (add matching services to the set)")),
+                (False, _("Negative match (exclude matching services from the set)")),
             ],
             default_value=True,
         )
@@ -1361,7 +1361,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             self._get_timeperiod_valuespec().render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
-                _("Disable timespecific parameters"),
+                _("Disable time specific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
         else:
@@ -1369,7 +1369,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             self._enclosed_valuespec.render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
-                _("Enable timespecific parameters"),
+                _("Enable time specific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
 

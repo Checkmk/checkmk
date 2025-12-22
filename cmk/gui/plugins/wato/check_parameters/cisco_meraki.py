@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 def _parameter_valuespec_cisco_meraki_org_licenses_overview():
     return Dictionary(
-        title=_("Cisco Meraki Organisation Licenses Overview"),
+        title=_("Cisco Meraki organization licenses overview"),
         optional_keys=True,
         elements=[
             (
@@ -35,12 +35,12 @@ def _parameter_valuespec_cisco_meraki_org_licenses_overview():
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
-        title=lambda: _("Cisco Meraki Organisation Licenses Overview"),
+        title=lambda: _("Cisco Meraki organization licenses overview"),
         check_group_name="cisco_meraki_org_licenses_overview",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_cisco_meraki_org_licenses_overview,
         item_spec=lambda: TextInput(
-            title=_("The organisation ID"),
+            title=_("The organization ID"),
         ),
         match_type="dict",
     )

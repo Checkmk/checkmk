@@ -45,6 +45,6 @@ rulespec_registry.register(
         item_spec=_item_spec_power_multiitem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_power_multiitem,
-        title=lambda: _("Device Component Power Consumption"),
+        title=lambda: _("Device component power consumption"),
     )
 )

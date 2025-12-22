@@ -340,7 +340,7 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
                     " You can use the %s page in case you want to remove the rule."
                 )
                 % HTMLWriter.render_a(
-                    _("unknown rulesets"),
+                    _("unknown rule sets"),
                     href=makeuri_contextless(
                         request,
                         [("mode", "unknown_rulesets")],

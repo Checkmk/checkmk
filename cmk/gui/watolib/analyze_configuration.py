@@ -480,7 +480,7 @@ def compute_deprecation_result(
         return ACSingleResult(
             state=ACResultState.CRIT,
             text=(
-                _("%s uses an API (%s) which was removed in Checkmk %s (File: %s).")
+                _("%s uses an API (%s) which was removed in Checkmk %s (file: %s).")
                 % (title_entity, title_api, removed_version, rel_path)
             ),
             site_id=site_id,
@@ -493,7 +493,7 @@ def compute_deprecation_result(
             text=(
                 _(
                     "%s uses an API (%s) which was marked as deprecated in"
-                    " Checkmk %s and is removed in Checkmk %s (File: %s)."
+                    " Checkmk %s and is removed in Checkmk %s (file: %s)."
                 )
                 % (title_entity, title_api, deprecated_version, removed_version, rel_path)
             ),
@@ -507,7 +507,7 @@ def compute_deprecation_result(
             text=(
                 _(
                     "%s uses an API (%s) which was marked as deprecated in"
-                    " Checkmk %s and will be removed in Checkmk %s (File: %s)."
+                    " Checkmk %s and will be removed in Checkmk %s (file: %s)."
                 )
                 % (title_entity, title_api, deprecated_version, removed_version, rel_path)
             ),
@@ -521,7 +521,7 @@ def compute_deprecation_result(
             text=(
                 _(
                     "%s uses an API (%s) which is marked as deprecated in"
-                    " Checkmk %s and will be removed in Checkmk %s (File: %s)."
+                    " Checkmk %s and will be removed in Checkmk %s (file: %s)."
                 )
                 % (title_entity, title_api, deprecated_version, removed_version, rel_path)
             ),

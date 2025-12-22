@@ -312,7 +312,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
     @classmethod
     @override
     def gui_title(cls) -> str:
-        return _("Run Quick Setup Stage Action")
+        return _("Run Quick Setup stage action")
 
     @classmethod
     def create_job_id(
@@ -438,7 +438,7 @@ def start_quick_setup_stage_job(
             ),
         ),
         InitialStatusArgs(
-            title=_("Running Quick setup %s stage %s action %s")
+            title=_("Running Quick Setup %s stage %s action %s")
             % (quick_setup_id, stage_index, action_id),
             user=str(user.id) if user.id else None,
         ),

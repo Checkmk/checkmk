@@ -36,9 +36,9 @@ def _valuespec_inventory_multipath_rules() -> Dictionary:
                     title=_("Use the multipath alias as service name, if one is set"),
                     label=_("use alias"),
                     help=_(
-                        "If a multipath device has an alias then you can use it for specifying "
+                        "If a multipath device has an alias, then you can use it for specifying "
                         "the device instead of the UUID. The alias will then be part of the service "
-                        "description. The UUID will be displayed in the plug-in output."
+                        "name. The UUID will be displayed in the plug-in output."
                     ),
                 ),
             ),

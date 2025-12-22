@@ -16,7 +16,7 @@ def _parameter_valuespec_oracle_sql() -> Dictionary:
     return Dictionary(
         elements=[
             ("instance_error_state", MonitoringState(title=_("Instance error state"))),
-            ("perfdata_error_state", MonitoringState(title=_("Perfdata error state"))),
+            ("perfdata_error_state", MonitoringState(title=_("Metrics error state"))),
         ],
     )
 
@@ -27,6 +27,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextInput(title=_("Custom SQL")),
         parameter_valuespec=_parameter_valuespec_oracle_sql,
-        title=lambda: _("Oracle Custom SQLs"),
+        title=lambda: _("Oracle custom SQLs"),
     )
 )

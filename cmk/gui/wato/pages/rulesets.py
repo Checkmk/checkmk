@@ -1195,7 +1195,7 @@ class ModeEditRuleset(WatoMode):
         action = request.get_ascii_input_mandatory("_action")
         if action == "delete":
             if is_locked_by_quick_setup(rule.locked_by):
-                raise MKUserError(None, _("Cannot delete rules that are managed by quick setup."))
+                raise MKUserError(None, _("Cannot delete rules that are managed by Quick Setup."))
             ruleset.delete_rule(rule, create_change=True, use_git=config.wato_use_git)
         elif action == "move_to":
             target_idx = request.get_integer_input_mandatory("_index")
@@ -1205,7 +1205,7 @@ class ModeEditRuleset(WatoMode):
                 flash(
                     _(
                         "This rule cannot be moved above rules that "
-                        "are defined as part of a quick setup."
+                        "are defined as part of Quick Setup."
                     ),
                     msg_type="warning",
                 )
@@ -1416,13 +1416,13 @@ class ModeEditRuleset(WatoMode):
         if is_locked_by_quick_setup(rule.locked_by):
             html.icon_button(
                 url="",
-                title=_("Rule cannot be moved, because it is managed by quick setup"),
+                title=_("Rule cannot be moved, because it is managed by Quick Setup"),
                 icon=StaticIcon(IconNames.drag),
                 class_=["disabled"],
             )
             html.icon_button(
                 url="",
-                title=_("Rule can only be deleted via quick setup"),
+                title=_("Rule can only be deleted via Quick Setup"),
                 icon=StaticIcon(IconNames.delete),
                 class_=["disabled"],
             )
@@ -1744,7 +1744,7 @@ class ModeRuleSearchForm(WatoMode):
     def title(self) -> str:
         if self.search_options:
             return _("Refine search")
-        return _("Search rulesets and rules")
+        return _("Search rule sets and rules")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
@@ -1795,7 +1795,7 @@ class ModeRuleSearchForm(WatoMode):
 
     def _valuespec(self, tree: FolderTree) -> Dictionary:
         return Dictionary(
-            title=_("Search rulesets"),
+            title=_("Search rule sets"),
             headers=[
                 (
                     _("Fulltext search"),
@@ -1804,7 +1804,7 @@ class ModeRuleSearchForm(WatoMode):
                     ],
                 ),
                 (
-                    _("Rulesets"),
+                    _("Rule sets"),
                     [
                         "ruleset_group",
                         "ruleset_name",
@@ -1874,8 +1874,8 @@ class ModeRuleSearchForm(WatoMode):
                     DropdownChoice(
                         title=_("Deprecated"),
                         choices=[
-                            (True, _("Search for deprecated rulesets")),
-                            (False, _("Search for not deprecated rulesets")),
+                            (True, _("Search for deprecated rule sets")),
+                            (False, _("Search for non-deprecated rule sets")),
                         ],
                     ),
                 ),
@@ -1884,8 +1884,8 @@ class ModeRuleSearchForm(WatoMode):
                     DropdownChoice(
                         title=_("Used"),
                         choices=[
-                            (True, _("Search for rulesets that have rules configured")),
-                            (False, _("Search for rulesets that don't have rules configured")),
+                            (True, _("Search for rule sets that have rules configured")),
+                            (False, _("Search for rule sets that don't have rules configured")),
                         ],
                     ),
                 ),
@@ -2082,7 +2082,7 @@ class ABCEditRuleMode(WatoMode):
             LockedConditions(
                 instance_id=self._rule.locked_by["instance_id"],
                 render_link=quick_setup_render_link(self._rule.locked_by),
-                message=_("Cannot change rule conditions for rules managed by Quick setup."),
+                message=_("Cannot change rule conditions for rules managed by Quick Setup."),
             )
             if is_locked_by_quick_setup(self._rule.locked_by)
             else None
@@ -2157,7 +2157,7 @@ class ABCEditRuleMode(WatoMode):
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
         if not may_edit_ruleset(self._name):
-            raise MKAuthException(_("You are not permitted to access this ruleset."))
+            raise MKAuthException(_("You are not permitted to access this rule set."))
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -2874,11 +2874,7 @@ class VSExplicitConditions(Transform):
         itemtype = self._rulespec.item_type
         if itemtype == "service":
             return _(
-                "Specify a list of service patterns this rule shall apply to. "
-                "The patterns must match the <b>beginning</b> of the service "
-                "in question. Adding a <tt>$</tt> to the end forces an excact "
-                "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
-                "match an arbitrary text."
+                "Specify a list of service patterns this rule shall apply to. The patterns must match the <b>beginning</b> of the service in question. Adding a <tt>$</tt> to the end forces an exact match. Patterns use <b>regular expressions</b>. A <tt>.*</tt> will match an arbitrary text."
             )
 
         if itemtype == "item":
@@ -3412,11 +3408,7 @@ class ModeExportRule(ABCEditRuleMode):
         with html.form_context("rule_representation", only_close=True):
             html.p(
                 _(
-                    "To set the value of a rule using the REST API, you need to set the "
-                    "<tt>value_raw</tt> field. The value of this fields is individual for each rule set. "
-                    "To help you understand what kind of data structure you need to provide, this rule "
-                    "export mechanism is showing you the value you need to set for a given rule. The "
-                    "value needs to be a string representation of a compatible Python data structure."
+                    "To set the value of a rule using the REST API, you need to set the <tt>value_raw</tt> field. The value of this field is individual for each rule set. To help you understand what kind of data structure you need to provide, this rule export mechanism is showing you the value you need to set for a given rule. The value needs to be a string representation of a compatible Python data structure."
                 )
             )
             html.p(_("You can copy and use the data structure below in your REST API requests."))
@@ -3478,14 +3470,14 @@ def _get_rule_render_mode() -> RenderMode:
 class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield MatchItem(
-            title=_("Unknown rulesets"),
+            title=_("Unknown rule sets"),
             topic=_("Setup"),
             url=makeuri_contextless(
                 request,
                 [("mode", "unknown_rulesets")],
                 filename="wato.py",
             ),
-            match_texts=[_("Unknown rulesets")],
+            match_texts=[_("Unknown rule sets")],
         )
 
     @staticmethod
@@ -3512,14 +3504,14 @@ class ModeUnknownRulesets(WatoMode):
         return ModeRulesetGroup
 
     def title(self) -> str:
-        return _("Unknown rulesets")
+        return _("Unknown rule sets")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="rulesets",
-                    title=_("Rulesets"),
+                    title=_("Rule sets"),
                     topics=[
                         PageMenuTopic(
                             title=_("On selected rules"),
@@ -3531,7 +3523,7 @@ class ModeUnknownRulesets(WatoMode):
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_delete_selected_unknown_rulesets",
                                         button_name="_bulk_delete_selected_unknown_rulesets",
-                                        title=_("Delete selected rulesets"),
+                                        title=_("Delete selected rule sets"),
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -3620,7 +3612,7 @@ class ModeUnknownRulesets(WatoMode):
                     ]
                 ),
                 title=_("Delete unknown rule"),
-                message=_("#%s of unknown ruleset %r") % (rule_nr, unknown_ruleset_name),
+                message=_("#%s of unknown rule set %r") % (rule_nr, unknown_ruleset_name),
             ),
             _("Delete"),
             StaticIcon(IconNames.delete),
@@ -3674,7 +3666,7 @@ class ModeUnknownRulesets(WatoMode):
                     ]
                 ),
                 title=_("Delete unknown rule"),
-                message=_("#%s of unknown ruleset %r") % (rule_nr, unknown_ruleset_name),
+                message=_("#%s of unknown rule set %r") % (rule_nr, unknown_ruleset_name),
             ),
             _("Delete"),
             StaticIcon(IconNames.delete),
@@ -3708,7 +3700,7 @@ class ModeUnknownRulesets(WatoMode):
             ) as table:
                 for unknown_check_parameter_ruleset in unknown_check_parameter_rulesets:
                     table.groupheader(
-                        _("Unknown ruleset: %s") % unknown_check_parameter_ruleset.name
+                        _("Unknown rule set: %s") % unknown_check_parameter_ruleset.name
                     )
                     for rules in unknown_check_parameter_ruleset.rules.values():
                         for rule_nr, rule in enumerate(rules):
@@ -3716,7 +3708,7 @@ class ModeUnknownRulesets(WatoMode):
                                 table, unknown_check_parameter_ruleset.name, rule_nr, rule
                             )
                 for unknown_ruleset_name, rulespecs in unknown_rulesets.items():
-                    table.groupheader(_("Unknown ruleset: %s") % unknown_ruleset_name)
+                    table.groupheader(_("Unknown rule set: %s") % unknown_ruleset_name)
                     for rule_nr, (folder_path, rulespec) in enumerate(rulespecs):
                         self._show_row_unknown_rulespec(
                             table, unknown_ruleset_name, rule_nr, folder_path, rulespec
@@ -3726,7 +3718,7 @@ class ModeUnknownRulesets(WatoMode):
         self, rulesets: AllRulesets, ruleset: Ruleset, rule: Rule, *, use_git: bool
     ) -> None:
         if is_locked_by_quick_setup(rule.locked_by):
-            raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
+            raise MKUserError(None, _("Cannot delete rules that are managed by Quick Setup."))
         ruleset.delete_rule(rule, create_change=True, use_git=use_git)
 
     def _bulk_delete_selected_rules(

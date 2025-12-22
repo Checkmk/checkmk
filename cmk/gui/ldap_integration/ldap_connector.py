@@ -333,7 +333,7 @@ def _create_checkmk_user_for_this_ldap_connection(
     if new_user_id in existing_users:
         raise MKUserError(
             None,
-            _("The user id '%s' already exists") % new_user_id,
+            _("The user ID '%s' already exists") % new_user_id,
         )
     new_user_spec = new_user_template(ldap_connector_id, default_user_profile)
     _set_customer_for_user(user=new_user_spec, customer_id=ldap_connector_customer_id)
@@ -1078,8 +1078,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             if active_config.debug:
                 raise MKLDAPException(
                     _(
-                        "Unable to successfully perform the LDAP search "
-                        "(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s"
+                        "Unable to successfully perform the LDAP search (base: %s, scope: %s, filter: %s, columns: %s): %s"
                     )
                     % (
                         escaping.escape_attribute(base),
@@ -2402,9 +2401,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
             ident="auth_expire",
             title=_("Authentication Expiration"),
             help_text=_(
-                "This plug-in fetches all information which are needed to check whether or "
-                "not an already authenticated user should be deauthenticated, e.g. because "
-                "the password has changed in LDAP or the account has been locked."
+                "This plug-in fetches all information which is needed to check whether or not an already authenticated user should be de-authenticated, e.g. because the password has changed in LDAP or the account has been locked."
             ),
         )
 

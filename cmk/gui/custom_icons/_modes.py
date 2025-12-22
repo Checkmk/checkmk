@@ -138,7 +138,7 @@ class ModeIcons(WatoMode):
             html.hidden_fields()
 
         icons = sorted(self._load_custom_icons().items())
-        with table_element("icons", _("Custom Icons")) as table:
+        with table_element("icons", _("Custom icons")) as table:
             for nr, (icon_name, category_name) in enumerate(icons):
                 table.row()
 

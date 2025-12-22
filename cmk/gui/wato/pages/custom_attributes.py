@@ -322,7 +322,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
     @property
     def _macro_help(self) -> str:
         return _(
-            "The attribute can be added to the contact definiton in order to use it for notifications."
+            "The attribute can be added to the contact definition in order to use it for notifications."
         )
 
     @property

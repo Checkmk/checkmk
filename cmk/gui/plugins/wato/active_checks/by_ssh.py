@@ -53,7 +53,7 @@ def _valuespec_active_checks_by_ssh():
                                     (
                                         "description",
                                         TextInput(
-                                            title=_("Service description"),
+                                            title=_("Service name"),
                                             help=_(
                                                 "Must be unique for every host. Defaults to command that is executed."
                                             ),
@@ -67,8 +67,7 @@ def _valuespec_active_checks_by_ssh():
                                             default_value="$HOSTADDRESS$",
                                             allow_empty=False,
                                             help=_(
-                                                "You can specify a host name or IP address different from IP address "
-                                                "of the host as configured in your host properties."
+                                                "You can specify a host name or IP address different from the IP address of the host as configured in your host properties."
                                             ),
                                         ),
                                     ),
@@ -108,7 +107,7 @@ def _valuespec_active_checks_by_ssh():
                                         "logname",
                                         TextInput(
                                             title=_("Username"),
-                                            help=_("SSH user name on remote host"),
+                                            help=_("SSH username on remote host"),
                                             size=30,
                                         ),
                                     ),
@@ -128,9 +127,7 @@ def _valuespec_active_checks_by_ssh():
                                                 "Enable automatic host key acceptance (OpenSSH version >= 7.6)"
                                             ),
                                             help=_(
-                                                "This will automatically accept hitherto-unseen keys"
-                                                "but will refuse connections for changed or invalid hostkeys. "
-                                                "This option only works with OpenSSH version >= 7.6."
+                                                "This will automatically accept hitherto-unseen keys, but will refuse connections for changed or invalid host keys. This option only works with OpenSSH version >= 7.6."
                                             ),
                                             totext=_(
                                                 "Automatically stores the host key with no manual input requirement"

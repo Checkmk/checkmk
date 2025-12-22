@@ -273,15 +273,15 @@ class ModeFolder(WatoMode):
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         menu.add_doc_reference(title=_("Host administration"), doc_ref=DocReference.WATO_HOSTS)
         menu.add_doc_reference(
-            title=_("Beginner's guide: Host folder structures"),
+            title=_("Beginner's Guide: Host folder structures"),
             doc_ref=DocReference.INTRO_FOLDERS,
         )
         menu.add_doc_reference(
-            title=_("Beginner's guide: Creating folders"),
+            title=_("Beginner's Guide: Creating folders"),
             doc_ref=DocReference.INTRO_CREATING_FOLDERS,
         )
         menu.add_doc_reference(
-            title=_("Beginner's guide: Adding the first hosts"),
+            title=_("Beginner's Guide: Adding the first hosts"),
             doc_ref=DocReference.INTRO_LINUX,
         )
 
@@ -622,7 +622,7 @@ class ModeFolder(WatoMode):
 
         if request.var("_delete_folder"):
             if isinstance(self._folder, SearchFolder):
-                raise MKUserError(None, _("This action can not be performed on search results"))
+                raise MKUserError(None, _("This action cannot be performed on search results"))
             if transactions.check_transaction():
                 self._folder.delete_subfolder(
                     request.get_ascii_input_mandatory("_delete_folder"), use_git=config.wato_use_git
@@ -631,7 +631,7 @@ class ModeFolder(WatoMode):
 
         if request.has_var("_move_folder_to"):
             if isinstance(self._folder, SearchFolder):
-                raise MKUserError(None, _("This action can not be performed on search results"))
+                raise MKUserError(None, _("This action cannot be performed on search results"))
             if transactions.check_transaction():
                 var_ident = mandatory_parameter("_ident", request.var("_ident"))
                 tree = folder_tree()
@@ -651,7 +651,7 @@ class ModeFolder(WatoMode):
 
         if request.has_var("_remove_tls_registration_from_folder"):
             if isinstance(self._folder, SearchFolder):
-                raise MKUserError(None, _("This action can not be performed on search results"))
+                raise MKUserError(None, _("This action cannot be performed on search results"))
             remove_tls_registration(
                 [
                     (make_automation_config(config.sites[site_id]), hosts)
@@ -751,7 +751,7 @@ class ModeFolder(WatoMode):
 
         if request.var("_remove_tls_registration_from_selection"):
             if isinstance(self._folder, SearchFolder):
-                raise MKUserError(None, _("This action can not be performed on search results"))
+                raise MKUserError(None, _("This action cannot be performed on search results"))
             remove_tls_registration(
                 [
                     (make_automation_config(config.sites[site_id]), hosts)

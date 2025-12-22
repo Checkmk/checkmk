@@ -51,7 +51,7 @@ def _parameter_valuespec_vpn_tunnel():
             (
                 "state",
                 MonitoringState(
-                    title=_("Default state to report when tunnel can not be found anymore"),
+                    title=_("Default state to report when tunnel cannot be found anymore"),
                     help=_(
                         "Default state if a tunnel, which is not listed above in this rule, "
                         "can no longer be found."

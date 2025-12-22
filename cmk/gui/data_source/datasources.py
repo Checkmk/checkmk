@@ -373,7 +373,7 @@ class LogDataSource(DataSourceLivestatus):
 class DataSourceLog(LogDataSource):
     @property
     def title(self) -> str:
-        return _("The Logfile")
+        return _("The log file")
 
 
 class DataSourceLogHostAndServiceEvents(LogDataSource):

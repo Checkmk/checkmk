@@ -33,10 +33,10 @@ def _parameter_valuespec_network_fs():
             (
                 "has_perfdata",
                 DropdownChoice(
-                    title=_("Performance data settings"),
+                    title=_("Metrics settings"),
                     choices=[
-                        (True, _("Enable performance data")),
-                        (False, _("Disable performance data")),
+                        (True, _("Enable metrics")),
+                        (False, _("Disable metrics")),
                     ],
                     default_value=False,
                 ),
@@ -52,6 +52,6 @@ rulespec_registry.register(
         item_spec=_item_spec_network_fs,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_network_fs,
-        title=lambda: _("Network filesystem - overall status and usage (e.g. NFS)"),
+        title=lambda: _("Network file system - overall status and usage (e.g. NFS)"),
     )
 )

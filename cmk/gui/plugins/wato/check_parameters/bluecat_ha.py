@@ -36,7 +36,7 @@ def _parameter_valuespec_bluecat_ha():
                         (
                             "warning",
                             ListChoice(
-                                title=_("States treated as warning"),
+                                title=_("States treated as WARNING"),
                                 choices=bluecat_ha_operstates,
                                 default_value=[5, 6, 7],
                             ),

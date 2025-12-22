@@ -253,7 +253,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         for nr, cluster_node in enumerate(cluster_nodes):
             if cluster_node == self._host.name():
-                raise MKUserError("nodes_%d" % nr, _("The cluster can not be a node of it's own"))
+                raise MKUserError("nodes_%d" % nr, _("The cluster cannot be a node of itself"))
 
             if not Host.host_exists(cluster_node):
                 raise MKUserError(
@@ -274,7 +274,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             ):
                 raise MKUserError(
                     "nodes_%d" % nr,
-                    _("Cluster and nodes must have the same datasource. ")
+                    _("Cluster and nodes must have the same data source. ")
                     + self._format_datasource_differences(cluster_node, datasource_differences),
                 )
 
@@ -349,7 +349,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         locked_hosts = folder_from_request(request.var("folder"), host_name).locked_hosts()
         if locked_hosts:
             if locked_hosts is True:
-                lock_message = _("Host attributes locked (You cannot edit this host)")
+                lock_message = _("Host attributes locked (you cannot edit this host)")
             elif isinstance(locked_hosts, str):
                 lock_message = locked_hosts
         if lock_message:

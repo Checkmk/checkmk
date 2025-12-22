@@ -338,7 +338,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
     @classmethod
     @override
     def gui_title(cls) -> str:
-        return _("Run Quick Setup Action")
+        return _("Run Quick Setup action")
 
     def __init__(
         self,
@@ -387,7 +387,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
     def _run_quick_setup_stage(
         self, job_interface: BackgroundProcessInterface, *, use_git: bool, pprint_value: bool
     ) -> None:
-        job_interface.send_progress_update(_("Starting Quick setup action..."))
+        job_interface.send_progress_update(_("Starting Quick Setup action..."))
 
         register_config_setups(quick_setup_registry)
         quick_setup = quick_setup_registry[self._quick_setup_id]
@@ -442,7 +442,7 @@ def start_quick_setup_job(
             ),
         ),
         InitialStatusArgs(
-            title=_("Running Quick setup %s action %s") % (quick_setup.id, action_id),
+            title=_("Running Quick Setup %s action %s") % (quick_setup.id, action_id),
             user=str(user.id) if user.id else None,
         ),
     )

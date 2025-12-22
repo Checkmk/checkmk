@@ -919,7 +919,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
 
     @override
     def get_match_topic(self) -> str:
-        return _("Service description")
+        return _("Service name")
 
     @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
@@ -1157,7 +1157,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
     @override
     def get_match_topic(self) -> str:
-        return _("Hosttag")
+        return _("Host tag")
 
     @override
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:

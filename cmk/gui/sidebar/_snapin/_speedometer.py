@@ -102,7 +102,7 @@ class Speedometer(SidebarSnapin):
             program_start = 0
             percentage = 0
             last_perc = 0.0
-            title = _("No performance data: %s") % e
+            title = _("No metrics: %s") % e
 
         response.set_data(
             json.dumps(

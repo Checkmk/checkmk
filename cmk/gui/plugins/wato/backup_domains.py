@@ -12,7 +12,7 @@ backup_domains.update(
         "check_mk": {
             "group": _("Configuration"),
             "title": _(
-                "Hosts, Services, Groups, Time Periods, Business Intelligence and Monitoring Configuration"
+                "Hosts, services, groups, time periods, Business Intelligence and monitoring configuration"
             ),
             "prefix": cmk.utils.paths.default_config_dir,
             "paths": [
@@ -45,7 +45,7 @@ backup_domains.update(
         },
         "mkeventstatus": {
             "group": _("Configuration"),
-            "title": _("Event Console Configuration"),
+            "title": _("Event Console configuration"),
             "prefix": cmk.utils.paths.omd_root,
             "paths": [
                 ("dir", "etc/check_mk/mkeventd.d"),

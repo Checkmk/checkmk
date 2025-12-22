@@ -528,7 +528,7 @@ class ModeCheckManPage(WatoMode):
         try:
             man_page_path = man_page_paths[self._check_plugin_name]
         except KeyError:
-            raise MKUserError(None, _("There is no manpage for this check."))
+            raise MKUserError(None, _("There is no manual page for this check."))
 
         self._manpage = man_pages.parse_man_page(self._check_plugin_name, man_page_path)
         self._check_default_parameters: object = None
@@ -554,7 +554,7 @@ class ModeCheckManPage(WatoMode):
         else:
             raise MKUserError(
                 None,
-                _("Could not detect type of manpage: %s. Maybe the check is missing ")
+                _("Could not detect type of manual page: %s. Maybe the check is missing ")
                 % self._check_plugin_name,
             )
 
@@ -635,7 +635,7 @@ class ModeCheckManPage(WatoMode):
 
             if self._manpage.cluster:
                 html.open_tr()
-                html.th(_("Cluster behaviour"))
+                html.th(_("Cluster behavior"))
                 html.td(self._manpage_text(self._manpage.cluster))
                 html.close_tr()
 

@@ -37,7 +37,7 @@ def _parameter_valuespec_mbg_lantime_state():
             (
                 "offset",
                 Tuple(
-                    title=_("Warning levels for Time Offset"),
+                    title=_("Warning levels for time offset"),
                     elements=[
                         Integer(
                             title=_("Warning at"),

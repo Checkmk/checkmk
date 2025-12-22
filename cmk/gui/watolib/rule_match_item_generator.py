@@ -28,7 +28,7 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
 
     def _topic(self, rulespec: Rulespec) -> str:
         if rulespec.is_deprecated:
-            return _("Deprecated rulesets")
+            return _("Deprecated rule sets")
         return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:

@@ -49,7 +49,7 @@ def _render_inventory_icon(
         assert v is not None
         return (
             StaticIcon(IconNames.inventory),
-            _("Show HW/SW Inventory tree"),
+            _("Show HW/SW inventory tree"),
             v,
         )
     return None
@@ -102,7 +102,7 @@ def _render_inventory_history_icon(
         assert v is not None
         return (
             StaticIcon(IconNames.inventory),
-            _("Show HW/SW Inventory history"),
+            _("Show HW/SW inventory history"),
             v,
         )
     return None

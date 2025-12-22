@@ -27,7 +27,7 @@ def _parameter_valuespec_sshd_config() -> Migrate:
                         title=_("Permit root login"),
                         choices=[
                             ("yes", _("yes")),
-                            ("key-based", _("without-password/prohibit-password (Key based)")),
+                            ("key-based", _("without-password/prohibit-password (key based)")),
                             ("forced-commands-only", _("forced-commands-only")),
                             ("no", _("no")),
                         ],

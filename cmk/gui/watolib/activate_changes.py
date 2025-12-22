@@ -1967,9 +1967,9 @@ class ActivateChangesManager:
                 raise MKUserError(
                     None,
                     _(
-                        "There are some changes made by your colleagues that you can not "
+                        "There are some changes made by your colleagues that you cannot "
                         "activate because you are not permitted to. You can only activate "
-                        "the changes on the sites that are not affected by these changes. "
+                        "your changes on the sites that are not affected by these changes. "
                         "<br>"
                         "If you need to activate your changes on all sites, please contact "
                         "a permitted user to do it for you."
@@ -2750,7 +2750,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
 
     @classmethod
     def gui_title(cls) -> str:
-        return _("Activate Changes Scheduler")
+        return _("Activate changes scheduler")
 
     def __init__(self, activation_id: str) -> None:
         super().__init__(f"{self.job_prefix}-{activation_id}")
@@ -2771,7 +2771,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             UserPermissions.from_serialized_config(user_permission_config, permission_registry)
         ):
             job_interface.send_progress_update(
-                _("Activate Changes Scheduler started"), with_timestamp=True
+                _("Activate changes scheduler started"), with_timestamp=True
             )
 
             job_interface.send_progress_update(

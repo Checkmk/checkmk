@@ -198,7 +198,7 @@ def show_host_log_list(
     debug: bool,
 ) -> None:
     """Shows all problematic logfiles of a host"""
-    title = _("Logfiles of host %s") % host_name
+    title = _("Log files of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title, user_permissions)
     make_header(
         html, title, breadcrumb, _host_log_list_page_menu(request, breadcrumb, site, host_name)
@@ -311,7 +311,7 @@ def list_logs(
                 state_name = form_level(state)
 
                 table.cell(_("Level"), state_name, css=["state%d" % state])
-                table.cell(_("Logfile"), logfile_link)
+                table.cell(_("Log file"), logfile_link)
                 table.cell(_("Last Entry"), form_datetime(last_log["datetime"]))
                 table.cell(_("Entries"), len(log_chunks), css=["number"])
 
@@ -319,7 +319,7 @@ def list_logs(
                 if debug:
                     raise
                 table.cell(_("Level"), "")
-                table.cell(_("Logfile"), logfile_link)
+                table.cell(_("Log file"), logfile_link)
                 table.cell(_("Last Entry"), "")
                 table.cell(_("Entries"), _("Corrupted"))
 
@@ -335,7 +335,7 @@ def show_file(
 ) -> None:
     int_filename = form_file_to_int(file_name)
 
-    title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
+    title = _("Log files of host %s: %s") % (host_name, int_filename)
     breadcrumb = _show_file_breadcrumb(request, host_name, title, user_permissions)
     make_header(
         html,
@@ -359,17 +359,17 @@ def show_file(
     except Exception as e:
         if debug:
             raise
-        html.show_error(_("Unable to show logfile: <b>%s</b>") % e)
+        html.show_error(_("Unable to show log file: <b>%s</b>") % e)
         html.footer()
         return
 
     if log_chunks is None:
-        html.show_error(_("The logfile does not exist on site."))
+        html.show_error(_("The log file does not exist on site."))
         html.footer()
         return
 
     if log_chunks == []:
-        html.show_message(_("This logfile contains no unacknowledged messages."))
+        html.show_message(_("This log file contains no unacknowledged messages."))
         html.footer()
         return
 
@@ -632,10 +632,10 @@ def do_log_ack(
 
 def _get_ack_msg(host_name: HostName | None, file_name: str | None) -> str:
     if not host_name and not file_name:  # all logs on all hosts
-        return _("all logfiles on all hosts")
+        return _("all log files on all hosts")
 
     if host_name and not file_name:  # all logs on one host
-        return _("all logfiles of host %s") % host_name
+        return _("all log files of host %s") % host_name
 
     if host_name and file_name:  # one log on one host
         return _("the log file %s on host %s") % (file_name, host_name)

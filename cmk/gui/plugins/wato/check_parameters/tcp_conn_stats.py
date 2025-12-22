@@ -60,8 +60,8 @@ def _parameter_valuespec_tcp_conn_stats():
                 Tuple(
                     title=_("LAST_ACK"),
                     help=_(
-                        "our socket is closed; remote endpoint has also shut down; "
-                        " we are waiting for a final acknowledgement"
+                        "our socket is closed; remote endpoint has also shut down;"
+                        " we are waiting for a final acknowledgment"
                     ),
                     elements=[
                         Integer(title=_("Warning at"), label=_("connections")),

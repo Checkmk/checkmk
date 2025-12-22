@@ -32,7 +32,7 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "Add OpenTelemetry collector: Prometheus scraping (experimental)"
+        self.page_title = "Add OpenTelemetry Collector: Prometheus scraping (experimental)"
         super().__init__(page, navigate_to_page)
 
     @override

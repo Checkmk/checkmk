@@ -57,6 +57,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_mailq,
-        title=lambda: _("Fireeye Mail Queues"),
+        title=lambda: _("Fireeye mail queues"),
     )
 )

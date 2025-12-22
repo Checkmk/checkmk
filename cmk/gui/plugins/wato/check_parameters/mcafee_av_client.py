@@ -35,6 +35,6 @@ rulespec_registry.register(
         check_group_name="mcafee_av_client",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_mcafee_av_client,
-        title=lambda: _("McAfee Anti-Virus Time Settings"),
+        title=lambda: _("McAfee Anti-Virus time settings"),
     )
 )

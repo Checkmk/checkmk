@@ -72,7 +72,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
             raise MKUserError(
                 None,
                 _(
-                    "The audit log can not be shown because of "
+                    "The audit log cannot be shown because of "
                     "a syntax error in %s.<br><br>Please review and fix the file "
                     "content or remove the file before you visit this page "
                     "again.<br><br>The problematic entry is:<br>%s"

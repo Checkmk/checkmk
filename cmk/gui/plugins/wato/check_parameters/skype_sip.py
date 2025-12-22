@@ -190,7 +190,7 @@ def _parameter_valuespec_skype_sip():
             (
                 "timedout_incoming_messages",
                 Dictionary(
-                    title=_("Incoming Messages Timed out"),
+                    title=_("Incoming messages timed out"),
                     elements=[
                         (
                             "upper",
@@ -248,7 +248,7 @@ def _parameter_valuespec_skype_sip():
             (
                 "outgoing_queue_delay",
                 Dictionary(
-                    title=_("Average Outgoing Queue Delay"),
+                    title=_("Average outgoing queue delay"),
                     elements=[
                         (
                             "upper",

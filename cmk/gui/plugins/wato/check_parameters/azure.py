@@ -39,7 +39,7 @@ def _parameter_valuespec_azure_agent_info():
                     title=_("Resource pinning: Ensure monitored resources are unchanged"),
                     help=_(
                         "If this option is selected, the resources being monitored are stored during"
-                        " discovery. The service will go to a warning state, if they change."
+                        " discovery. The service will go to a WARNING state, if they change."
                     ),
                     choices=[
                         (True, _("Warn if resources appear or vanish")),
@@ -95,7 +95,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_agent_info,
-        title=lambda: _("Azure Agent Info (deprecated)"),
+        title=lambda: _("Azure agent info (deprecated)"),
     )
 )
 
@@ -106,7 +106,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_agent_info,
-        title=lambda: _("Azure Agent Info"),
+        title=lambda: _("Azure agent info"),
     )
 )
 
@@ -208,7 +208,7 @@ def _parameter_valuespec_azure_storageaccounts():
                 "server_latency_levels",
                 Tuple(
                     title=_("Levels on server latency in seconds"),
-                    help=_("Average latency used by Azure Storage to process a successful request"),
+                    help=_("Average latency used by Azure storage to process a successful request"),
                     elements=[
                         Float(title=_("Warning at"), unit="s"),
                         Float(title=_("Critical at"), unit="s"),
@@ -259,7 +259,7 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_storageaccounts,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_storageaccounts,
-        title=lambda: _("Azure Storage"),
+        title=lambda: _("Azure storage"),
         is_deprecated=True,
     )
 )
@@ -321,7 +321,7 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_databases,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_databases,
-        title=lambda: _("Azure Databases"),
+        title=lambda: _("Azure databases"),
         is_deprecated=True,
     )
 )
@@ -502,7 +502,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
-        title=lambda: _("Azure virtual machines summary  (deprecated)"),
+        title=lambda: _("Azure virtual machines summary (deprecated)"),
     )
 )
 
@@ -628,7 +628,7 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_virtualnetworkgateways,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
-        title=lambda: _("Azure VNet Gateway  (deprecated)"),
+        title=lambda: _("Azure VNet gateway (deprecated)"),
     )
 )
 
@@ -639,7 +639,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
-        title=lambda: _("Azure VNet Gateway"),
+        title=lambda: _("Azure VNet gateway"),
     )
 )
 
@@ -676,7 +676,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Service Type")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_usagedetails,
-        title=lambda: _("Azure Usage Details (Costs) (deprecated)"),
+        title=lambda: _("Azure usage details (costs) (deprecated)"),
     )
 )
 
@@ -704,17 +704,17 @@ def _parameter_valuespec_storage():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="azure_db_storage",
-        item_spec=lambda: TextInput(title=_("Azure DB Storage")),
+        item_spec=lambda: TextInput(title=_("Azure DB storage")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_storage,
-        title=lambda: _("Azure DB Storage (deprecated)"),
+        title=lambda: _("Azure DB storage (deprecated)"),
     )
 )
 
 
 def _parameter_valuespec_qps():
     return Dictionary(
-        title=_("Levels qps"),
+        title=_("Levels QPS"),
         elements=[
             (
                 "levels",
@@ -727,10 +727,10 @@ def _parameter_valuespec_qps():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="azure_traffic_manager_qps",
-        item_spec=lambda: TextInput(title=_("Qps")),
+        item_spec=lambda: TextInput(title=_("QPS")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_qps,
-        title=lambda: _("Azure Traffic Manager Qps (deprecated)"),
+        title=lambda: _("Azure Traffic Manager QPS (deprecated)"),
     )
 )
 
@@ -760,7 +760,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Probe State")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_probe_state,
-        title=lambda: _("Azure Traffic Manager Probe State (deprecated)"),
+        title=lambda: _("Azure Traffic Manager probe state (deprecated)"),
     )
 )
 
@@ -787,7 +787,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Load Balancer Health")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_health,
-        title=lambda: _("Azure Load Balancer Health (deprecated)"),
+        title=lambda: _("Azure Load Balancer health (deprecated)"),
     )
 )
 
@@ -809,7 +809,7 @@ rulespec_registry.register(
         check_group_name="azure_vm_burst_cpu_credits",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
-        title=lambda: _("Azure VM Burst CPU Credits (deprecated)"),
+        title=lambda: _("Azure VM burst CPU credits (deprecated)"),
     )
 )
 
@@ -819,7 +819,7 @@ rulespec_registry.register(
         check_group_name="azure_v2_vm_burst_cpu_credits",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
-        title=lambda: _("Azure VM Burst CPU Credits"),
+        title=lambda: _("Azure VM burst CPU credits"),
     )
 )
 

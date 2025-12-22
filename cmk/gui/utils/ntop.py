@@ -107,7 +107,7 @@ def get_ntop_misconfiguration_reason() -> str:
         return _("ntopng integration is only available in CEE")
     ntop = get_ntop_connection()
     if not ntop or not ntop["is_activated"]:
-        return _("ntopng integration is not activated under global settings.")
+        return _("ntopng integration is not activated in the global settings.")
     custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
     if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):
         return _(

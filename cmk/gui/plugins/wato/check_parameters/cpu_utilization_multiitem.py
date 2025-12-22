@@ -55,6 +55,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Module name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("CPU utilization of Devices with Modules"),
+        title=lambda: _("CPU utilization of devices with modules"),
     )
 )

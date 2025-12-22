@@ -25,4 +25,4 @@ def verify_requirements(
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
     if not wato_enabled:
-        raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
+        raise MKAuthException(_("User profiles cannot be edited (Setup is disabled)."))

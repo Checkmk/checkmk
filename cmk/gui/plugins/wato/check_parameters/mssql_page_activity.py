@@ -60,6 +60,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_page_activity,
-        title=lambda: _("MSSQL Page Activity"),
+        title=lambda: _("MSSQL page activity"),
     )
 )

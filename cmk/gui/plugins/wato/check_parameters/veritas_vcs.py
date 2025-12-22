@@ -43,7 +43,7 @@ def _parameter_valuespec_veritas_vcs():
             (
                 "map_frozen",
                 Dictionary(
-                    title=_("Map Attribute 'Frozen'"),
+                    title=_("Map attribute 'Frozen'"),
                     elements=[
                         (
                             "tfrozen",

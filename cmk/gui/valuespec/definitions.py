@@ -1291,7 +1291,7 @@ class RegExp(TextInput):
             help_text.append(_("The match is case insensitive."))
 
         help_text.append(
-            _("Read more about [regexes|regular expression matching in Checkmk] in our user guide.")
+            _("Read more about [regexes|regular expression matching in Checkmk] in our User Guide.")
         )
 
         return " ".join("%s" % h for h in help_text)
@@ -4125,7 +4125,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def validate_datatype(self, value: ListChoiceModel, varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
-                varprefix, _("The datatype must be list, but is %s") % type_name(value)
+                varprefix, _("The data type must be list, but is %s") % type_name(value)
             )
 
     def _validate_value(self, value: ListChoiceModel, varprefix: str) -> None:
@@ -4941,7 +4941,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         if not isinstance(value, tuple):
             raise MKUserError(
                 varprefix,
-                _("The datatype must be tuple, but ist %s") % type_name(value),
+                _("The data type must be tuple, but is %s") % type_name(value),
             )
 
         if len(value) != 2:
@@ -5052,7 +5052,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         if not isinstance(value, tuple):
             raise MKUserError(
                 varprefix,
-                _("The datatype must be tuple, but ist %s") % type_name(value),
+                _("The data type must be tuple, but is %s") % type_name(value),
             )
 
         if len(value) != 2:
@@ -5981,7 +5981,7 @@ class Tuple(ValueSpec[TT]):
         if not isinstance(value, tuple):
             raise MKUserError(
                 varprefix,
-                _("The datatype must be a tuple, but is %s") % type_name(value),
+                _("The data type must be a tuple, but is %s") % type_name(value),
             )
         if len(value) != len(self._elements):
             raise MKUserError(
@@ -6537,7 +6537,7 @@ class ElementSelection(ValueSpec[None | str]):
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
-                _("The datatype must be str (string), but is %s") % type_name(value),
+                _("The data type must be str (string), but is %s") % type_name(value),
             )
 
 
@@ -6553,7 +6553,7 @@ class AutoTimestamp(FixedValue[float]):
 
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if not isinstance(value, int | float):
-            raise MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
+            raise MKUserError(varprefix, _("Invalid data type of timestamp: must be int or float."))
 
 
 class Foldable(ValueSpec[T]):
@@ -6917,7 +6917,7 @@ class Password(TextInput):
         self.password_meter = password_meter
         if self._is_stored_plain:
             plain_help = _(
-                "The password entered here is stored in clear text within "
+                "The password entered here is stored in cleartext within "
                 "the monitoring site. This is necessary because the "
                 "monitoring process must have access to the unencrypted "
                 "password in order to provide it for authentication with "
@@ -6978,9 +6978,7 @@ class Password(TextInput):
         if self._is_stored_plain:
             html.span(
                 _(
-                    "<br>Please note that Checkmk needs this password in clear"
-                    "<br>text during normal operation and thus stores it unencrypted"
-                    "<br>on the Checkmk server."
+                    "<br>Please note that Checkmk needs this password in cleartext<br> during normal operation and thus stores it unencrypted<br>on the Checkmk server."
                 )
             )
 
@@ -8401,7 +8399,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
             on_change=on_change,
             orientation=orientation,
             title=(
-                _("Certificate Chain (Root / Intermediate Certificate)") if title is None else title
+                _("Certificate chain (root / intermediate certificate)") if title is None else title
             ),
             help=help,
             default_value=default_value,
@@ -8440,7 +8438,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
             cert_info["fingerprint"][:41], title=cert_info["fingerprint"]
         )
         show_info["validity"] = HTML.without_escaping(
-            _("Not Before: %s - Not After: %s")
+            _("Not before: %s - Not after: %s")
             % (
                 cert_info["creation"],
                 cert_info["expiration"],
@@ -8709,7 +8707,7 @@ class RuleComment(TextAreaUnicode):
         html.nbsp()
         html.icon_button(
             None,
-            title=_("Prefix the comment with the current date and your user name."),
+            title=_("Prefix the comment with the current date and your username."),
             icon=StaticIcon(IconNames.insertdate),
             onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" % date_and_user,
         )
@@ -8722,7 +8720,7 @@ def DocumentationURL() -> TextInput:
             return
         raise MKUserError(
             varprefix,
-            _("Not a valid URL (Only http and https URLs are allowed)."),
+            _("Not a valid URL (only HTTP and HTTPS URLs are allowed)."),
         )
 
     return TextInput(
@@ -8730,10 +8728,7 @@ def DocumentationURL() -> TextInput:
         autocomplete="one-time-code",
         help=HTML.without_escaping(
             _(
-                "In this field you can add a URL linking to a page with related, "
-                "useful information. You can use:<br>"
-                "<ul>"
-                "<li>an absolute URL starting with the protocol (<tt>http(s)://</tt>)</li>"
+                "In this field you can add a URL linking to a page with related, useful information. You can use:<br><ul><li>an absolute URL starting with the protocol (<tt>http(s)://</tt>)</li>"
                 "<li>or a relative URL either starting with a slash (<tt>/something</tt> "
                 "will be resolved to <tt>https://mycheckmkserver/something</tt>) or without "
                 "a slash (<tt>somethingelse</tt> will be resolved to "

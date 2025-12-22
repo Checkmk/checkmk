@@ -22,7 +22,7 @@ def _parameter_valuespec_mssql_file_sizes():
             (
                 "data_files",
                 Tuple(
-                    title=_("Total data file size: Absolute upper levels"),
+                    title=_("Total datafile size: Absolute upper levels"),
                     elements=[
                         Filesize(title=_("Warning at")),
                         Filesize(title=_("Critical at")),
@@ -69,6 +69,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_file_sizes,
-        title=lambda: _("MSSQL Log and Data File Sizes"),
+        title=lambda: _("MSSQL log and datafile sizes"),
     )
 )

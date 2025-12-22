@@ -56,7 +56,7 @@ def _render_aggregations_icon(
         url = makeuri_contextless(request, urivars, filename="view.py")
         return (
             StaticIcon(IconNames.aggr),
-            _("BI Aggregations containing this %s")
+            _("BI aggregations containing this %s")
             % (what == "host" and _("Host") or _("Service")),
             url,
         )

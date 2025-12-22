@@ -47,7 +47,7 @@ def _parameter_valuespec_temperature() -> Dictionary:
                     title=_("Display values in (see also help text)"),
                     help=_(
                         "This setting affects service summaries and details only, which are user-"
-                        "independent. Changing the temperature unit for graphs and perfometers is "
+                        "independent. Changing the temperature unit for graphs and Perf-O-Meters is "
                         "possible via the user profile."
                     ),
                     choices=[

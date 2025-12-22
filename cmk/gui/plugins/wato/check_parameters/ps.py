@@ -101,8 +101,8 @@ def process_level_elements():
                 title=_("Levels for process count"),
                 help=_(
                     "Please note that if you specify and also if you modify levels "
-                    "here, the change is activated only during an inventory."
-                    "Saving this rule is not enough. This is due to the nature of"
+                    "here, the change is activated only during an inventory. "
+                    "Saving this rule is not enough. This is due to the nature of "
                     "inventory rules."
                 ),
                 elements=[
@@ -324,7 +324,7 @@ def process_level_elements():
         (
             "handle_count",
             Tuple(
-                title=_("Handle Count (Windows only)"),
+                title=_("Handle count (Windows only)"),
                 help=_(
                     "The number of object handles in the processes object table. This includes "
                     "open handles to threads, files and other resources like registry keys."
@@ -374,7 +374,9 @@ def process_level_elements():
             Checkbox(
                 title="Include usernames in service details",
                 label="Acquire and show usernames",
-                help=_("If enabled, the service details will contain username of a process owner."),
+                help=_(
+                    "If enabled, the service details will contain the username of a process owner."
+                ),
                 default_value=True,
             ),
         ),
@@ -518,7 +520,7 @@ def user_match_options(extra_elements=None):
                     mode=RegExp.prefix,
                 ),
                 title=_("Regular expression matching username"),
-                help=_("This regex must match the <i>beginning</i> of the complete username"),
+                help=_("This regex must match the <i>beginning</i> of the full user name"),
                 to_valuespec=lambda x: x[1:],  # remove ~
                 from_valuespec=lambda x: "~" + x,  # prefix ~
             ),
@@ -671,13 +673,13 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
     return Dictionary(
         title=_("Process discovery"),
         help=_(
-            "This ruleset defines criteria for automatically creating checks for running "
+            "This rule set defines criteria for automatically creating checks for running "
             "processes based upon what is running when the service discovery is "
             "done. These services will be created with default parameters. They will get "
             "critical when no process is running and OK otherwise. You can parameterize "
-            "the check with the ruleset <i>State and count of processes</i>."
+            "the check with the rule set <i>State and count of processes</i>."
             "Care should be taken when removing vanished services, for example via "
-            "<i>Bulk Discovery</i>. When a process vanishes, so does the corresponding "
+            "<i>Bulk discovery</i>. When a process vanishes, so does the corresponding "
             "service. So despite that the service is critical, it can be removed by discovery, "
             "effectively turning off monitoring."
         ),
@@ -690,7 +692,7 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                     [
                         FixedValue(
                             value=False,
-                            title=_("Grab user from found processess"),
+                            title=_("Grab user from found processes"),
                             totext="",
                             help=_(
                                 'Specifying "grab user" makes the created check expect the process to '
@@ -865,9 +867,9 @@ def hr_process_match_elements():
                 title=_("Process status matching"),
                 choices=[
                     ("running", _("Running")),
-                    ("runnable", _("Runnable (Waiting for resource)")),
-                    ("not_runnable", _("Not runnable (Loaded but waiting for event)")),
-                    ("invalid", _("Invalid (Not loaded)")),
+                    ("runnable", _("Runnable (waiting for resource)")),
+                    ("not_runnable", _("Not runnable (loaded, but waiting for event)")),
+                    ("invalid", _("Invalid (not loaded)")),
                 ],
             ),
         ),
@@ -882,8 +884,8 @@ def hr_process_parameter_elements():
                 title=_("Levels for process count"),
                 help=_(
                     "Please note that if you specify and also if you modify levels "
-                    "here, the change is activated only during an inventory."
-                    "Saving this rule is not enough. This is due to the nature of"
+                    "here, the change is activated only during an inventory. "
+                    "Saving this rule is not enough. This is due to the nature of "
                     "inventory rules."
                 ),
                 elements=[
@@ -919,9 +921,9 @@ def hr_process_parameter_elements():
                         DropdownChoice(
                             choices=[
                                 ("running", _("Running")),
-                                ("runnable", _("Runnable (Waiting for resource)")),
-                                ("not_runnable", _("Not runnable (Loaded but waiting for event)")),
-                                ("invalid", _("Invalid (Not loaded)")),
+                                ("runnable", _("Runnable (waiting for resource)")),
+                                ("not_runnable", _("Not runnable (loaded, but waiting for event)")),
+                                ("invalid", _("Invalid (not loaded)")),
                             ]
                         ),
                         MonitoringState(),
@@ -937,8 +939,8 @@ def _valuespec_discovery_hr_processes_rules():
     return Dictionary(
         title=_("Process discovery (only SNMP)"),
         help=_(
-            "This ruleset defines criteria for automatically creating checks for running "
-            "SNMP processes based upon the HOST Resource MIB and what is running when the "
+            "This rule set defines criteria for automatically creating checks for running "
+            "SNMP processes based upon the host resource MIB and what is running when the "
             "service discovery is done. You can either specify the textual description "
             "or the path of process within the matching criteria."
         ),
@@ -982,7 +984,7 @@ rulespec_registry.register(
 def _parameter_valuespec_hr_ps():
     return Dictionary(
         help=_(
-            "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."
+            "This rule set defines criteria for SNMP processes based upon the host resources MIB."
         ),
         elements=hr_process_parameter_elements(),
         ignored_keys=["match_name_or_path", "match_status", "match_groups"],

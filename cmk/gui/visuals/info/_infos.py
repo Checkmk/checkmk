@@ -114,7 +114,7 @@ class VisualInfoService(VisualInfo):
                 "service",
                 MonitoredServiceDescription(
                     # TODO: replace MonitoredServiceDescription with AjaxDropdownChoice
-                    title=_("Service description"),
+                    title=_("Service name"),
                     autocompleter=ContextAutocompleterConfig(
                         ident=MonitoredServiceDescription.ident,
                         strict=True,
@@ -361,7 +361,7 @@ class VisualInfoBIAggregation(VisualInfo):
 
     @property
     def title_plural(self) -> str:
-        return _("BI Aggregations")
+        return _("BI aggregations")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -442,11 +442,11 @@ class VisualInfoEvent(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Event Console Event")
+        return _("Event Console event")
 
     @property
     def title_plural(self) -> str:
-        return _("Event Console Events")
+        return _("Event Console events")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -470,11 +470,11 @@ class VisualInfoEventHistory(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Historic Event Console Event")
+        return _("Historic Event Console event")
 
     @property
     def title_plural(self) -> str:
-        return _("Historic Event Console Events")
+        return _("Historic Event Console events")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -535,11 +535,11 @@ class VisualInfoKubernetesCluser(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Kubernetes Cluster")
+        return _("Kubernetes cluster")
 
     @property
     def title_plural(self) -> str:
-        return _("Kubernetes Clusters")
+        return _("Kubernetes clusters")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -577,11 +577,11 @@ class VisualInfoKubernetesDaemonset(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Kubernetes Daemonset")
+        return _("Kubernetes DaemonSet")
 
     @property
     def title_plural(self) -> str:
-        return _("Kubernetes Daemonsets")
+        return _("Kubernetes DaemonSets")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -619,11 +619,11 @@ class VisualInfoKubernetesStatefulset(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Kubernetes Statefulset")
+        return _("Kubernetes StatefulSet")
 
     @property
     def title_plural(self) -> str:
-        return _("Kubernetes Statefulsets")
+        return _("Kubernetes StatefulSets")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:

@@ -199,6 +199,6 @@ rulespec_registry.register(
             ),
             options=["usage", "request", "request_lower", "limit"],
         ),
-        title=lambda: _("Kubernetes resource quota cpu utilization"),
+        title=lambda: _("Kubernetes resource quota CPU utilization"),
     )
 )

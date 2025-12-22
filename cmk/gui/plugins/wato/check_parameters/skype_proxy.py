@@ -16,8 +16,8 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 def _item_spec_skype_proxy():
     return TextInput(
-        title=_("Name of the Proxy"),
-        help=_("The name of the Data Proxy"),
+        title=_("Name of the proxy"),
+        help=_("The name of the data proxy"),
         allow_empty=False,
     )
 
@@ -29,7 +29,7 @@ def _parameter_valuespec_skype_proxy():
             (
                 "throttled_connections",
                 Dictionary(
-                    title=_("Throttled Server Connections"),
+                    title=_("Throttled server connections"),
                     elements=[
                         (
                             "upper",
@@ -56,6 +56,6 @@ rulespec_registry.register(
         item_spec=_item_spec_skype_proxy,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_skype_proxy,
-        title=lambda: _("Skype for Business Data Proxy"),
+        title=lambda: _("Skype for Business data proxy"),
     )
 )

@@ -17,8 +17,8 @@ rulespec_registry.register(
         group=RulespecGroupEnforcedServicesStorage,
         parameter_valuespec=lambda: Dictionary(
             elements=(),
-            title=_("This plug-in has no paramaters"),
-            empty_text=_("This plug-in has no paramaters"),
+            title=_("This plug-in has no parameters."),
+            empty_text=_("This plug-in has no parameters."),
         ),
         title=lambda: _("ZFS storage pool status"),
     )

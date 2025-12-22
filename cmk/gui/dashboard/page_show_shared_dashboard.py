@@ -115,7 +115,7 @@ def page_dashboard_token_invalid(title: str) -> Response:
         html.h1(_("Dashboard not available"))
         html.open_div()
         html.p(_("This shared link is not valid."))
-        html.p(_("The access token is invalid or revoked or expired."))
+        html.p(_("The access token is invalid, revoked or expired."))
         html.close_div()
         html.close_div()  # message_text_container
 

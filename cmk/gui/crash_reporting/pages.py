@@ -559,7 +559,7 @@ class ReportRendererSection(ABCReportRenderer):
 
         _crash_row(_("Section Name"), details["section_name"], odd=True)
         _crash_row(
-            _("Inline-SNMP"),
+            _("Inline SNMP"),
             format_bool(details.get("inline_snmp")),
             odd=False,
             pre=True,
@@ -595,7 +595,7 @@ class ReportRendererCheck(ABCReportRenderer):
             filename="view.py",
         )
         yield PageMenuEntry(
-            title=_("Host status"),
+            title=_("Host state"),
             icon_name=StaticIcon(IconNames.status),
             item=make_simple_link(host_url),
         )
@@ -614,7 +614,7 @@ class ReportRendererCheck(ABCReportRenderer):
             filename="view.py",
         )
         yield PageMenuEntry(
-            title=_("Service status"),
+            title=_("Service state"),
             icon_name=StaticIcon(IconNames.status),
             item=make_simple_link(service_url),
         )
@@ -646,7 +646,7 @@ class ReportRendererCheck(ABCReportRenderer):
             pre=True,
         )
         _crash_row(
-            _("Inline-SNMP"),
+            _("Inline SNMP"),
             format_bool(details.get("inline_snmp")),
             odd=True,
             pre=True,
@@ -679,7 +679,7 @@ class ReportRendererGUI(ABCReportRenderer):
         html.open_table(class_="data")
 
         _crash_row(_("Page"), details["page"], odd=False, legend=True)
-        _crash_row(_("Request Method"), details.get("request_method", _("Unknown")))
+        _crash_row(_("Request method"), details.get("request_method", _("Unknown")))
         html.open_tr(class_="data even0")
         html.td(_("HTTP Parameters"), class_="left")
         html.open_td()
@@ -688,7 +688,7 @@ class ReportRendererGUI(ABCReportRenderer):
         html.close_tr()
         _crash_row(_("Referer"), details.get("referer", _("Unknown")))
         _crash_row(_("Username"), details["username"], odd=False)
-        _crash_row(_("User Agent"), details["user_agent"])
+        _crash_row(_("User agent"), details["user_agent"])
         _crash_row(_("Mobile GUI"), details["is_mobile"], odd=False)
         _crash_row(_("SSL"), details["is_ssl_request"])
         _crash_row(_("Language"), details["language"], odd=False)

@@ -21,7 +21,7 @@ from cmk.gui.valuespec import Checkbox, Dictionary
 
 def _valuespec_mssql_transactionlogs_discovery():
     return Dictionary(
-        title=_("MSSQL datafile and transactionlog discovery"),
+        title=_("MSSQL datafile and transaction log discovery"),
         elements=[
             (
                 "summarize_datafiles",
@@ -77,6 +77,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_database_file,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_transactionlogs,
-        title=lambda: _("MSSQL Transactionlog Sizes"),
+        title=lambda: _("MSSQL transaction log sizes"),
     )
 )

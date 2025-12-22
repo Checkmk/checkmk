@@ -1734,8 +1734,11 @@ def test_bulking_400(
     resp.assert_status_code(400)
 
     plugin_name = config["notification_method"]["notify_plugin"]["plugin_params"]["plugin_name"]
-    assert resp.json["title"] == "Bulking not allowed"
-    assert resp.json["detail"] == "The notification script %s does not allow bulking." % plugin_name
+    assert resp.json["title"] == "Building bulks is not allowed"
+    assert (
+        resp.json["detail"]
+        == "The notification script %s does not allow building bulks." % plugin_name
+    )
 
 
 def test_create_notification_with_invalid_custom_plugin(

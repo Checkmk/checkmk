@@ -39,8 +39,8 @@ def _validate_discovery_filesystem_params(value, varprefix):
         raise MKUserError(
             varprefix,
             _(
-                "You cannot use mountpoint as item and grouping based on"
-                " volume name and mountpoint."
+                "You cannot use mount point as item and grouping based on"
+                " volume name and mount point."
             ),
         )
 
@@ -51,23 +51,23 @@ def _validate_discovery_filesystem_params(value, varprefix):
         raise MKUserError(
             varprefix,
             _(
-                "You cannot mix volume name and UUID in 'Mountpoint for block devices',"
-                " 'Item appearance' or 'Grouping'"
+                "You cannot mix volume name and UUID in 'Mount point for block devices',"
+                " 'Item appearance' or 'Grouping'."
             ),
         )
 
 
 def _valuespec_inventory_df_rules() -> Dictionary:
     return Dictionary(
-        title=_("Filesystem discovery"),
+        title=_("File system discovery"),
         elements=[
             (
                 "mountpoint_for_block_devices",
                 DropdownChoice(
-                    title=_("Mountpoint for block devices (brtfs)"),
+                    title=_("Mount point for block devices (brtfs)"),
                     choices=[
-                        ("volume_name_as_mountpoint", _("Use volume name as mountpoint")),
-                        ("uuid_as_mountpoint", _("Use UUID as mountpoint")),
+                        ("volume_name_as_mountpoint", _("Use volume name as mount point")),
+                        ("uuid_as_mountpoint", _("Use UUID as mount point")),
                     ],
                     default_value="volume_name_as_mountpoint",
                 ),
@@ -77,9 +77,9 @@ def _valuespec_inventory_df_rules() -> Dictionary:
                 DropdownChoice(
                     title=_("Item appearance"),
                     choices=[
-                        ("mountpoint", _("Use mountpoint")),
-                        ("volume_name_and_mountpoint", _("Use volume name and mountpoint")),
-                        ("uuid_and_mountpoint", _("Use UUID and mountpoint")),
+                        ("mountpoint", _("Use mount point")),
+                        ("volume_name_and_mountpoint", _("Use volume name and mount point")),
+                        ("uuid_and_mountpoint", _("Use UUID and mount point")),
                     ],
                     default_value="mountpoint",
                 ),
@@ -89,13 +89,12 @@ def _valuespec_inventory_df_rules() -> Dictionary:
                 DropdownChoice(
                     title=_("Grouping applies to"),
                     choices=[
-                        ("mountpoint", _("mountpoint only")),
-                        ("volume_name_and_mountpoint", _("volume name and mountpoint")),
-                        ("uuid_and_mountpoint", _("UUID and mountpoint")),
+                        ("mountpoint", _("mount point only")),
+                        ("volume_name_and_mountpoint", _("volume name and mount point")),
+                        ("uuid_and_mountpoint", _("UUID and mount point")),
                     ],
                     help=_(
-                        "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a>"
-                        " feature processes this filesystem."
+                        "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</a> feature processes this file system."
                     ),
                     default_value="mountpoint",
                 ),
@@ -103,7 +102,7 @@ def _valuespec_inventory_df_rules() -> Dictionary:
             (
                 "ignore_fs_types",
                 ListChoice(
-                    title=_("Filesystem types to ignore"),
+                    title=_("File system types to ignore"),
                     choices=[
                         ("tmpfs", "tmpfs"),
                         ("nfs", "nfs"),
@@ -118,10 +117,9 @@ def _valuespec_inventory_df_rules() -> Dictionary:
                 "never_ignore_mountpoints",
                 ListOf(
                     valuespec=TextOrRegExp(),
-                    title=_("Mountpoints to never ignore"),
+                    title=_("Mount points never to be ignored"),
                     help=_(
-                        "Regardless of filesystem type, these mountpoints will always be discovered."
-                        "Regular expressions are supported."
+                        "Regardless of file system type, these mount points will always be discovered. Regular expressions are supported."
                     ),
                 ),
             ),
@@ -145,7 +143,7 @@ FILESYSTEM_GROUPS_WRAPPER_KEY = "groups"
 
 def _valuespec_filesystem_groups() -> Dictionary:
     return Dictionary(
-        title=_("Filesystem grouping patterns"),
+        title=_("File system grouping patterns"),
         optional_keys=False,
         elements=[_list_of_filesystem_groups_specs_elements()],
     )
@@ -172,14 +170,14 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                         help=_(
                             "You can specify one or several globbing patterns containing "
                             "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "
-                            "<tt>/spool/tmpspace*</tt>. The filesystems matching the "
+                            "<tt>/spool/tmpspace*</tt>. The file systems matching the "
                             "patterns will be grouped together and monitored as one big "
-                            "filesystem in a single service. Note that specifically for "
+                            "file system in a single service. Note that specifically for "
                             "the check <tt>df</tt>, the pattern matches either the mount "
                             "point or the combination of volume and mount point, "
                             "depending on the configuration in "
                             "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
-                            "Filesystem discovery</a>."
+                            "File system discovery</a>."
                         ),
                     ),
                 ),
@@ -206,7 +204,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
             ],
         ),
         add_label=_("Add group"),
-        title=_("Filesystem grouping patterns"),
+        title=_("File system grouping patterns"),
         help=_(
             "By default, the file system checks (<tt>df</tt>, <tt>hr_fs</tt> and others) will "
             "create a single service for each file system. By defining grouping patterns, you "
@@ -233,8 +231,7 @@ def _item_spec_filesystem():
     return TextInput(
         title=_("Mount point"),
         help=_(
-            "For Linux/UNIX systems, specify the mount point, for Windows systems "
-            "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"
+            "For Linux/Unix systems, specify the mount point, for Windows systems the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"
         ),
         allow_empty=False,
     )
@@ -247,7 +244,7 @@ rulespec_registry.register(
         item_spec=_item_spec_filesystem,
         match_type="dict",
         parameter_valuespec=vs_filesystem,
-        title=lambda: _("Filesystems (used space and growth)"),
+        title=lambda: _("File systems (used space and growth)"),
     )
 )
 

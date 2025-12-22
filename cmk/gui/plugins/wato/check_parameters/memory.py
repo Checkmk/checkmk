@@ -132,7 +132,7 @@ rulespec_registry.register(
         check_group_name="memory",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_memory,
-        title=lambda: _("Main memory usage (UNIX / Other Devices)"),
+        title=lambda: _("Main memory usage (Unix / other devices)"),
     )
 )
 
@@ -152,10 +152,10 @@ def _parameter_valuespec_memory_utilization():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="memory_utilization",
-        item_spec=lambda: TextInput(title=_("Memory Utilization")),
+        item_spec=lambda: TextInput(title=_("Memory utilization")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_memory_utilization,
-        title=lambda: _("Memory Utilization"),
+        title=lambda: _("Memory utilization"),
     )
 )
 

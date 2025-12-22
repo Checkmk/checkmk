@@ -220,7 +220,7 @@ class AvailabilityColumns:
             ("flapping", "flapping", _("Flapping"), None),
             ("in_downtime", "downtime", _("Downtime"), _("The host was in a scheduled downtime")),
             ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
-            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
+            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of service period")),
             (
                 "unmonitored",
                 "unmonitored",
@@ -244,7 +244,7 @@ class AvailabilityColumns:
                 _("The host or service was in a scheduled downtime"),
             ),
             ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
-            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
+            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of service period")),
             (
                 "unmonitored",
                 "unmonitored",
@@ -475,10 +475,10 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             "single",
             True,
             DropdownChoice(
-                title=_("Format time stamps as"),
+                title=_("Format timestamps as"),
                 choices=[
                     ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS")),
-                    ("epoch", _("Unix Timestamp (Epoch)")),
+                    ("epoch", _("Unix timestamp (epoch)")),
                 ],
                 default_value="yyyy-mm-dd hh:mm:ss",
             ),
@@ -589,7 +589,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "double",
             True,
             Dictionary(
-                title=_("Service status grouping"),
+                title=_("Service state grouping"),
                 columns=2,
                 elements=[
                     (
@@ -673,7 +673,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "single",
             True,
             Dictionary(
-                title=_("Host status grouping"),
+                title=_("Host state grouping"),
                 columns=2,
                 elements=[
                     (

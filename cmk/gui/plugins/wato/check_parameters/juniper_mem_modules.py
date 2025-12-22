@@ -17,7 +17,7 @@ from cmk.gui.valuespec import Dictionary, Migrate, Percentage, TextInput
 
 def _item_spec_juniper_mem_modules():
     return TextInput(
-        title=_("Module Name"),
+        title=_("Module name"),
         help=_("The identificator of the module."),
     )
 

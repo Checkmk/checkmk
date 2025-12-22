@@ -39,7 +39,7 @@ def _parameter_valuespec_mysql_db_size() -> Migrate:
                     SimpleLevels(
                         Filesize,
                         help=_(
-                            "The service will trigger a warning or critical state if the size of the "
+                            "The service will trigger a WARNING or CRITICAL state if the size of the "
                             "database exceeds these levels."
                         ),
                         title=_("Impose limits on the size of the database"),

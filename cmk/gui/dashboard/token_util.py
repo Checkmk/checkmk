@@ -49,7 +49,7 @@ class InvalidWidgetError(MKException):
 
     @override
     def __str__(self) -> str:
-        return _("The given widget id does not match any of this dashboard's widgets.")
+        return _("The given widget ID does not match any of this dashboard's widgets.")
 
 
 class InvalidDashboardTokenReference(MKException):

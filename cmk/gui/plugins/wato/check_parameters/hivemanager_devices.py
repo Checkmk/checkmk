@@ -55,7 +55,7 @@ def _parameter_valuespec_hivemanager_devices():
             (
                 "warn_states",
                 ListChoice(
-                    title=_("States treated as warning"),
+                    title=_("States treated as WARNING"),
                     choices=hivemanger_states,
                     default_value=["Maybe", "Major", "Minor"],
                 ),

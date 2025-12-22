@@ -26,7 +26,7 @@ class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
 
     @classmethod
     def title(cls) -> str:
-        return _("Failed Notifications")
+        return _("Failed notifications")
 
     @classmethod
     def description(cls) -> str:

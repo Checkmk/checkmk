@@ -32,7 +32,7 @@ def _parameter_valuespec_mysql_connections() -> Dictionary:
                         "Compares the maximum number of connections that have been "
                         "in use simultaneously since the server started with the maximum simultaneous "
                         "connections allowed by the configuration of the server. This threshold "
-                        "raises warning/critical states if the percentage is equal to "
+                        "raises WARNING/CRITICAL states if the percentage is equal to "
                         "or above the configured levels."
                     ),
                     elements=[
@@ -48,7 +48,7 @@ def _parameter_valuespec_mysql_connections() -> Dictionary:
                     help=_(
                         "Compares the number of currently open connections to the server "
                         "with the maximum simultaneous connections allowed by the configuration "
-                        "of the server. This threshold raises warning/critical states if the "
+                        "of the server. This threshold raises WARNING/CRITICAL states if the "
                         "percentage is equal to or above the configured levels."
                     ),
                     elements=[

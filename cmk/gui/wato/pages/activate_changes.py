@@ -595,7 +595,7 @@ class ModeActivateChanges(WatoMode):
         message = html.render_div(
             (
                 html.render_div(
-                    _("Activate the changes by clicking the Activate on selected sites button.")
+                    _('Activate the changes by clicking the "Activate on selected sites" button.')
                 )
                 + html.render_div(_("This action will affect all pending changes you have made."))
             ),
@@ -664,20 +664,13 @@ class ModeActivateChanges(WatoMode):
                 if user.may("wato.activateforeign"):
                     html.show_warning(
                         _(
-                            "There are some changes made by your colleagues that you will "
-                            "activate if you proceed. You need to enable the checkbox above "
-                            "to confirm the activation of these changes."
+                            "There are some changes made by your colleagues that you will activate if you proceed. You need to enable the checkbox above to confirm the activation of these changes."
                         )
                     )
                 else:
                     html.show_warning(
                         _(
-                            "There are some changes made by your colleagues that you can not "
-                            "activate because you are not permitted to. You can only activate "
-                            "the changes on the sites that are not affected by these changes. "
-                            "<br>"
-                            "If you need to activate your changes on all sites, please contact "
-                            "a permitted user to do it for you."
+                            "There are some changes made by your colleagues that you cannot activate because you are not permitted to. You can only activate your changes on the sites that are not affected by these changes. <br>If you need to activate your changes on all sites, please contact a permitted user to do it for you."
                         )
                     )
 

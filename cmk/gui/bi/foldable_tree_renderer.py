@@ -192,7 +192,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
                 html.b(HTML.without_escaping("&diams;"), class_="bullet")
 
             if not service:
-                html.a(_("Host&nbsp;status"), href=host_url)
+                html.a(_("Host state"), href=host_url)
             else:
                 html.a(service.replace(" ", "&nbsp;"), href=service_url)
 

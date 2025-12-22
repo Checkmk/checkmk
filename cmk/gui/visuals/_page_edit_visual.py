@@ -635,11 +635,11 @@ def _vs_general(
                     title=_("Icon"),
                     help=_(
                         "This selection is only relevant if under 'User' "
-                        "-> 'Edit Profile' -> 'Mega menue icons' you have selected "
-                        "the options 'Per Entry'. If this is the case, you "
-                        "select here the icon that will be placed next to your "
-                        "Dashboard’s name in the Monitoring menu. You can only "
-                        "select one icon (the colored icon) or one icon that is "
+                        "-> 'Edit profile' -> 'Mega menu icons' you have selected "
+                        "the options 'Per entry'. If this is the case, you "
+                        "select the icon here that will be placed next to your "
+                        "dashboard’s name in the monitoring menu. You can "
+                        "select an icon only (the colored icon) or an icon that is "
                         "complemented with an additional symbol."
                     ),
                 ),

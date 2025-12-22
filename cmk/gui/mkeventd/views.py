@@ -1163,7 +1163,7 @@ class PainterHistoryTime(Painter):
         return "history_time"
 
     def title(self, cell: Cell) -> str:
-        return _("Time of entry in logfile")
+        return _("Time of entry in log file")
 
     def short_title(self, cell: Cell) -> str:
         return _("Time")

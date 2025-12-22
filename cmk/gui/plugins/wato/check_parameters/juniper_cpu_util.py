@@ -39,6 +39,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_juniper_cpu_util,
-        title=lambda: _("Juniper Processor Utilization of Operating CPU"),
+        title=lambda: _("Juniper processor utilization of operating CPU"),
     )
 )

@@ -62,7 +62,7 @@ class MainMenuData: ...
 @dataclass
 class MainMenuVueApp:
     name: str
-    data: Callable[[Request], MainMenuData]
+    data: Callable[[Request], MainMenuData] | MainMenuData
 
 
 class MainMenu(NamedTuple):

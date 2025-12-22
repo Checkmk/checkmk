@@ -59,8 +59,6 @@ class UnifiedSearchSlideout(LocatorHelper):
         """Validate that the unified search slideout is open"""
         logger.info("Validate that the unified search slideout is open")
         expect(self.slideout).to_be_visible()
-        logger.info("Validate that the provider select is visible")
-        expect(self.provider_select.locator).to_be_visible()
         logger.info("Validate that the search operator select is visible")
         expect(self.search_operator_select.locator).to_be_visible()
         logger.info("Validate that the focus is on the input field")

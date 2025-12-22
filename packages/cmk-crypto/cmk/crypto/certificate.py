@@ -365,6 +365,15 @@ class Certificate:
             critical=False,
         )
 
+        # RFC 5280 4.2.1.1.  Authority Key Identifier
+        #     this extension MUST appear in all conforming CA certificates
+        #     ...
+        #     this extension SHOULD be included in all certificates
+        builder = builder.add_extension(
+            x509.AuthorityKeyIdentifier.from_issuer_public_key(issuer_signing_key.public_key.key),
+            critical=False,
+        )
+
         # RFC 5280 4.2.1.9.  Key Usage
         #
         # Note that some combinations of usage bits may have security implications. See
@@ -515,6 +524,13 @@ class Certificate:
             pass
 
         return True
+
+    def has_authority_key_identifier(self) -> bool:
+        try:
+            self._cert.extensions.get_extension_for_class(x509.AuthorityKeyIdentifier)
+            return True
+        except x509.ExtensionNotFound:
+            return False
 
     def _is_self_signed(self) -> bool:
         """Is the issuer the same as the subject?"""

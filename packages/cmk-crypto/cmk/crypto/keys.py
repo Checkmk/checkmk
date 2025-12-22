@@ -207,6 +207,10 @@ class PublicKey:
     def __init__(self, key: PublicKeyType) -> None:
         self._key = key
 
+    @property
+    def key(self) -> PublicKeyType:
+        return self._key
+
     @classmethod
     def load_pem(cls, pem_data: PublicKeyPEM) -> PublicKey:
         key = serialization.load_pem_public_key(pem_data.bytes)

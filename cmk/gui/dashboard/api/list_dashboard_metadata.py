@@ -32,7 +32,7 @@ def list_dashboard_metadata_v1(api_context: ApiContext) -> DashboardMetadataColl
     """List permitted dashboard metadata."""
     dashboards = []
     user_permissions = api_context.config.user_permissions()
-    for owner, owner_dashboards in get_permitted_dashboards_by_owners().items():
+    for _owner, owner_dashboards in get_permitted_dashboards_by_owners().items():
         for dashboard_id, dashboard in owner_dashboards.items():
             dashboard_model = DashboardMetadataModel(
                 id=dashboard_id,

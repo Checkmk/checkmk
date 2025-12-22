@@ -915,6 +915,7 @@ fn test_system_parameter() {
 }
 
 #[test]
+#[ignore = "CMK-28692 test hangs with 'has been running for over 60 seconds'"]
 fn test_table_spaces() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -962,6 +963,7 @@ fn test_table_spaces() {
 }
 
 #[test]
+#[ignore = "CMK-28692 test hangs with 'has been running for over 60 seconds'"]
 fn test_table_spaces_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {

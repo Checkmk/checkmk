@@ -215,20 +215,6 @@ class Dashlet(abc.ABC, Generic[T]):
             return set()
         return visuals.get_missing_single_infos(self.single_infos(), self.context)
 
-    def size(self) -> DashletSize:
-        if self.is_resizable():
-            try:
-                return self._dashlet_spec["size"]
-            except KeyError:
-                return self.initial_size()
-        return self.initial_size()
-
-    def position(self) -> DashletPosition:
-        try:
-            return self._dashlet_spec["position"]
-        except KeyError:
-            return self.initial_position()
-
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:
         yield from []

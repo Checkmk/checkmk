@@ -273,63 +273,6 @@ def test_show_background(dummy_config: DummyDashletConfig) -> None:
     assert dashlet.show_background() is False
 
 
-def test_size(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.size() == DummyDashlet.initial_size()
-
-    dummy_config["size"] = (22, 33)
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.size() == (22, 33)
-
-    class NotResizable(DummyDashlet):
-        @classmethod
-        def is_resizable(cls) -> bool:
-            return False
-
-    dummy_config["size"] = (22, 33)
-    dashlet = NotResizable(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.size() == NotResizable.initial_size()
-
-
-def test_position(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.position() == DummyDashlet.initial_position()
-
-    dummy_config["position"] = (4, 4)
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.position() == (4, 4)
-
-
 @pytest.mark.usefixtures("reset_dashlet_registry")
 def test_dashlet_context_inheritance() -> None:
     test_dashboard = TEST_DASHBOARD.copy()

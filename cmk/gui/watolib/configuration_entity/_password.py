@@ -100,7 +100,6 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                     "password": TopicElement(
                         parameter_form=SimplePassword(
                             title=Title("Password"),
-                            custom_validate=[not_empty()],
                         ),
                         required=True,
                     ),
@@ -147,7 +146,7 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                     name=name,
                                     title=Title(title),  # astrein: disable=localization-checker
                                 )
-                                for name, title in sorted_contact_group_choices(only_own=True)
+                                for name, title in sorted_contact_group_choices(only_own=False)
                             ],
                         ),
                         required=True,

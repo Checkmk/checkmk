@@ -17,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class AddRuleFilesystems(CmkPage):
-    """Represent the 'Add rule: Filesystems (used space and growth)' page.
+    """Represent the 'Add rule: File systems (used space and growth)' page.
 
-    To navigate: `Setup > Services > Service monitoring rules > Filesystems (used space and growth)
-    > Add rule: Filesystems (used space and growth)`.
+    To navigate: `Setup > Services > Service monitoring rules > File systems (used space and growth)
+    > Add rule: File systems (used space and growth)`.
     """
 
-    rule_name = "Filesystems (used space and growth)"
+    rule_name = "File systems (used space and growth)"
     section_name = "Service monitoring rules"
     url_specific = "%3Afilesystem"
     url_pattern = "varname=checkgroup_parameters%s&mode=new_rule"

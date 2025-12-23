@@ -187,7 +187,7 @@ def test_filesystem_email_notifications(
         if service_search_page is not None:
             filesystems_rules_page = Ruleset(
                 service_search_page.page,
-                "Filesystems (used space and growth)",
+                "File systems (used space and growth)",
                 "Service monitoring rules",
             )
             logger.info("Delete the filesystems rule")

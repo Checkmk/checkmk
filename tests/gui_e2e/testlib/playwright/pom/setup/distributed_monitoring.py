@@ -26,7 +26,7 @@ class EncryptionType(DropdownOptions):
     """Encryption type DropdownOptions the site connection."""
 
     TLS = "Encrypt data using TLS"
-    NONE = "Plain text (Unencrypted)"
+    NONE = "Plain text (unencrypted)"
 
 
 class ReplicationType(DropdownOptions):

@@ -27,7 +27,7 @@ class HelpMenuButton:
             id="beginners_guide",
         ),
         pytest.param(
-            HelpMenuButton("help_user_manual", "docs.checkmk.com"),
+            HelpMenuButton("help_user_guide", "docs.checkmk.com"),
             id="user_manual",
         ),
         pytest.param(

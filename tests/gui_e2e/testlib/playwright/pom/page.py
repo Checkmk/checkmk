@@ -341,8 +341,8 @@ class MainMenu(LocatorHelper):
         return self.help_menu("Beginner's guide")
 
     @property
-    def help_user_manual(self) -> Locator:  #
-        return self.help_menu("User manual")
+    def help_user_guide(self) -> Locator:
+        return self.help_menu("User Guide")
 
     @property
     def help_video_tutorials(self) -> Locator:

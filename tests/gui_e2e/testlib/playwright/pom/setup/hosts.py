@@ -409,7 +409,7 @@ class ImportHostsViaCSVFilePreview(CmkPage):
     (which is the first step of the process).
     """
 
-    page_title = "Bulk host import"
+    page_title = "Bulk import of hosts"
 
     @override
     def navigate(self) -> None:
@@ -479,7 +479,7 @@ class ImportHostsViaCSVFilePreview(CmkPage):
 class ImportHostsViaCSVFileUpload(CmkPage):
     """Represents page `setup -> Hosts -> Hosts dropdown -> Import hosts via CSV file`."""
 
-    page_title = "Bulk host import"
+    page_title = "Bulk import of hosts"
 
     textarea_name = "Content of CSV File"
 

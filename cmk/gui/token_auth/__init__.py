@@ -13,6 +13,7 @@ from cmk.gui.token_auth._registry import (
     TokenAuthenticatedPageRegistry,
 )
 from cmk.gui.token_auth._store import (
+    AgentDownloadToken,
     AgentRegistrationToken,
     AuthToken,
     DashboardToken,
@@ -27,6 +28,7 @@ __all__ = [
     "AuthToken",
     "DashboardToken",
     "AgentRegistrationToken",
+    "AgentDownloadToken",
     "MKTokenExpiredOrRevokedException",
     "TokenAuthenticatedEndpoint",
     "TokenAuthenticatedPage",

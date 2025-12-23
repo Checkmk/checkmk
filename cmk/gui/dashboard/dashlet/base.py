@@ -193,18 +193,6 @@ class Dashlet(abc.ABC, Generic[T]):
     def _dashlet_context_vars(self) -> HTTPVariables:
         return visuals.context_to_uri_vars(self.context)
 
-    def unconfigured_single_infos(self) -> set[str]:
-        """Returns infos that are not set by the dashlet config"""
-        if not self.has_context():
-            return set()
-        return visuals.get_missing_single_infos(self.single_infos(), self._dashlet_spec["context"])
-
-    def missing_single_infos(self) -> set[str]:
-        """Returns infos that are neither configured nor available through HTTP variables"""
-        if not self.has_context():
-            return set()
-        return visuals.get_missing_single_infos(self.single_infos(), self.context)
-
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:
         yield from []

@@ -24,6 +24,7 @@ from cmk.ccc import store
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import Edition
 from cmk.utils import paths
+from cmk.utils.licensing.active_metric_series_retriever_registry import get_num_active_metric_series
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
@@ -153,6 +154,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         - with the check_command: robotmk_pattern_based_kpi or robotmk_marker_based_kpi
         - that are not shadow services
         - with the "cmk/licensing:excluded" label
+    num_active_metric_series: coming from metric backend
 
     Shadow objects: 0: active, 1: passive, 2: shadow
     """
@@ -169,6 +171,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
     services_counter = _get_services_counter()
     cloud_counter = _get_cloud_counter()
     synthetic_monitoring_counter = _get_synthetic_monitoring_counter()
+    num_active_metric_series = get_num_active_metric_series() or 0
 
     general_infos = cmk_version.get_general_version_infos(omd_root)
     extensions = _load_extensions()
@@ -192,6 +195,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         num_synthetic_tests_excluded=synthetic_monitoring_counter.num_excluded,
         num_synthetic_kpis=synthetic_monitoring_counter.num_kpis,
         num_synthetic_kpis_excluded=synthetic_monitoring_counter.num_kpis_excluded,
+        num_active_metric_series=num_active_metric_series,
         sample_time=sample_time,
         timezone=now.tz,
         extension_ntop=extensions.ntop,

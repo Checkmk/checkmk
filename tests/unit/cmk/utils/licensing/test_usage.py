@@ -68,6 +68,7 @@ def test_try_update_license_usage() -> None:
             num_synthetic_tests_excluded=2,
             num_synthetic_kpis=3,
             num_synthetic_kpis_excluded=4,
+            num_active_metric_series=52,
             extension_ntop=True,
         ),
     )
@@ -160,6 +161,7 @@ def test_try_update_license_usage_next_run_ts_not_reached() -> None:
             num_synthetic_tests_excluded=2,
             num_synthetic_kpis=3,
             num_synthetic_kpis_excluded=4,
+            num_active_metric_series=52,
             extension_ntop=True,
         ),
     )
@@ -235,7 +237,8 @@ def test_serialize_license_usage_report() -> None:
         b"[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D6CG:46DQi c[ Q?F>0D6"
         b"CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q?F>"
         b"0DJ?E96E:40E6DEDQi _[ Q?F>0DJ?E96E:40E6DED06I4=F565Qi _[ Q?F>0DJ?E96E:40<A:D"
-        b"Qi _[ Q?F>0DJ?E96E:40<A:D06I4=F565Qi _[ Q6IE6?D:@?0?E@AQi ECF6N.N"
+        b"Qi _[ Q?F>0DJ?E96E:40<A:D06I4=F565Qi _[ Q?F>024E:G60>6EC:40D6C:6DQi _[ Q6IE6"
+        b"?D:@?0?E@AQi ECF6N.N"
     )
 
 
@@ -292,6 +295,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=False,
                     ),
                 ]
@@ -342,6 +346,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=False,
                     ),
                 ]
@@ -395,6 +400,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -448,6 +454,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -501,6 +508,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -555,6 +563,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -610,6 +619,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -667,6 +677,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -724,6 +735,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=0,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -783,6 +795,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=2,
                         num_synthetic_kpis=0,
                         num_synthetic_kpis_excluded=0,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -844,6 +857,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=2,
                         num_synthetic_kpis=3,
                         num_synthetic_kpis_excluded=4,
+                        num_active_metric_series=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -878,6 +892,7 @@ def test_serialize_license_usage_report() -> None:
                         "num_synthetic_tests_excluded": 2,
                         "num_synthetic_kpis": 3,
                         "num_synthetic_kpis_excluded": 4,
+                        "num_active_metric_series": 52,
                         "extension_ntop": True,
                     },
                 ],
@@ -905,6 +920,7 @@ def test_serialize_license_usage_report() -> None:
                         num_synthetic_tests_excluded=2,
                         num_synthetic_kpis=3,
                         num_synthetic_kpis_excluded=4,
+                        num_active_metric_series=52,
                         extension_ntop=True,
                     ),
                 ]
@@ -943,6 +959,7 @@ def test_license_usage_report(
         assert sample.num_synthetic_tests_excluded == expected_sample.num_synthetic_tests_excluded
         assert sample.num_synthetic_kpis == expected_sample.num_synthetic_kpis
         assert sample.num_synthetic_kpis_excluded == expected_sample.num_synthetic_kpis_excluded
+        assert sample.num_active_metric_series == expected_sample.num_active_metric_series
         assert sample.extension_ntop == expected_sample.extension_ntop
 
 
@@ -1008,6 +1025,7 @@ def test_history_add_sample() -> None:
                 num_synthetic_tests_excluded=2,
                 num_synthetic_kpis=3,
                 num_synthetic_kpis_excluded=4,
+                num_active_metric_series=52,
                 extension_ntop=False,
             ),
         )
@@ -1033,6 +1051,7 @@ def test_history_add_sample() -> None:
         num_synthetic_tests_excluded=2,
         num_synthetic_kpis=3,
         num_synthetic_kpis_excluded=4,
+        num_active_metric_series=52,
         extension_ntop=False,
     )
 
@@ -1084,6 +1103,7 @@ def test_history_try_add_sample_from_same_day() -> None:
         num_synthetic_tests_excluded=2,
         num_synthetic_kpis=3,
         num_synthetic_kpis_excluded=4,
+        num_active_metric_series=52,
         extension_ntop=False,
     )
     history = LocalLicenseUsageHistory([first_sample])
@@ -1109,6 +1129,7 @@ def test_history_try_add_sample_from_same_day() -> None:
             num_synthetic_tests_excluded=6,
             num_synthetic_kpis=7,
             num_synthetic_kpis_excluded=8,
+            num_active_metric_series=53,
             extension_ntop=True,
         )
     )

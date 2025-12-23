@@ -11,8 +11,7 @@ from typing import Generic, Literal, TypeVar
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import default_authorized_builtin_role_ids
-from cmk.gui.type_defs import HTTPVariables, RoleName, SingleInfos, VisualContext
+from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.utils.macros import replace_macros_in_str
@@ -90,10 +89,6 @@ class Dashlet(abc.ABC, Generic[T]):
     def initial_position(cls) -> DashletPosition:
         """The initial position of dashlets when being added to the dashboard"""
         return (1, 1)
-
-    @classmethod
-    def allowed_roles(cls) -> list[RoleName]:
-        return default_authorized_builtin_role_ids
 
     def __init__(
         self,

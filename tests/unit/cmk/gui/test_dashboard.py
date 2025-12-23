@@ -16,7 +16,6 @@ import pytest
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
-from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.type_defs import DynamicIconName
@@ -171,7 +170,6 @@ def test_dashlet_type_defaults() -> None:
     assert Dashlet.is_resizable() is True
     assert Dashlet.initial_size() == Dashlet.minimum_size
     assert Dashlet.initial_position() == (1, 1)
-    assert Dashlet.allowed_roles() == default_authorized_builtin_role_ids
 
 
 def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:

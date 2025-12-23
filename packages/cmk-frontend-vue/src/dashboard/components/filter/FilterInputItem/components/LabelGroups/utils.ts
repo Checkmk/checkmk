@@ -12,7 +12,7 @@ import type { LabelGroupItem, QueryItem } from './types.ts'
  * @returns Dictionary of query parameters
  *
  * Notes: the structure is still quite different from the original filter structure and may require further adjustments.
- * The essential is covered here and the other filler elements can be handled at the top to accomodate for the
+ * The essential is covered here and the other filler elements can be handled at the top to accommodate for the
  * valuespec @magic
  */
 export function convertToFilterStructure(

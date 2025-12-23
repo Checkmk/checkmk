@@ -28,12 +28,11 @@ export interface KeyShortcutHandler extends KeyShortcutEnsured {
   callback: KeyShortcutHandlerCallback
 }
 
-export interface KeyStates {
-  [key: string]: boolean
-}
+const MODIFIER_KEYS = ['Control', 'Shift', 'Alt']
+const N_KEYS_REMEMBERED = 10
 
 export class KeyShortcutService {
-  private keyStates: KeyStates = {}
+  private keySequence: string[] = []
   private handlers: KeyShortcutHandler[] = []
 
   constructor(
@@ -41,7 +40,6 @@ export class KeyShortcutService {
     private propagateTo: HTMLCollectionOf<HTMLIFrameElement> | null = null
   ) {
     this.window.addEventListener('keydown', this.handleKeyDown.bind(this))
-    this.window.addEventListener('keyup', this.handleKeyUp.bind(this))
   }
 
   public on(shortcut: KeyShortcut, callback: KeyShortcutHandlerCallback): void {
@@ -90,27 +88,27 @@ export class KeyShortcutService {
     }
   }
 
-  private setKeyState(key: string, pressed: boolean): void {
-    this.keyStates[key.toLowerCase()] = pressed
+  private recordKeyPress(key: string): void {
+    const newSize = this.keySequence.push(key)
+    if (newSize > N_KEYS_REMEMBERED) {
+      this.keySequence.shift()
+    }
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    this.setKeyState(e.key, true)
+    if (MODIFIER_KEYS.includes(e.key)) {
+      return
+    }
+    this.recordKeyPress(e.key.toLowerCase())
     this.callHandlers(e)
   }
 
-  private handleKeyUp(e: KeyboardEvent): void {
-    this.setKeyState(e.key, false)
-  }
-
-  private shortcutKeysPressed(keys: string[]): boolean {
-    for (const key of keys) {
-      if (!this.keyStates[key.toLowerCase()]) {
-        return false
-      }
+  private sequenceMatches(keys: string[]): boolean {
+    const startIndex = this.keySequence.length - keys.length
+    if (startIndex < 0) {
+      return false
     }
-
-    return true
+    return keys.every((key, index) => key === this.keySequence[startIndex + index])
   }
 
   private callHandlers(e: KeyboardEvent): void {
@@ -119,7 +117,7 @@ export class KeyShortcutService {
         e.ctrlKey === handler.ctrl &&
         e.shiftKey === handler.shift &&
         e.altKey === handler.alt &&
-        this.shortcutKeysPressed(handler.key)
+        this.sequenceMatches(handler.key)
       ) {
         if (handler.preventDefault) {
           e.preventDefault()

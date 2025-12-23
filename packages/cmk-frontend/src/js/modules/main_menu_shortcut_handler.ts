@@ -23,6 +23,16 @@ export function handle_main_menu(id: string): void {
   menu_item.getElementsByTagName('a')[0].click()
 }
 
+function rnbw(): void {
+  if (document.getElementById('rnbw-cursor')) {
+    return
+  }
+  const rnbw = document.createElement('cmk-rnbw')
+  rnbw.setAttribute('id', 'rnbw-cursor')
+  rnbw.setAttribute('data', '{}')
+  document.body.appendChild(rnbw)
+}
+
 export function register_shortcuts(keyShortcuts: KeyShortcutService): void {
   keyShortcuts.on(
     {
@@ -63,5 +73,23 @@ export function register_shortcuts(keyShortcuts: KeyShortcutService): void {
     () => {
       handle_main_menu('search')
     }
+  )
+
+  keyShortcuts.on(
+    {
+      key: [
+        'arrowup',
+        'arrowup',
+        'arrowdown',
+        'arrowdown',
+        'arrowleft',
+        'arrowright',
+        'arrowleft',
+        'arrowright',
+        'b',
+        'a'
+      ]
+    },
+    rnbw
   )
 }

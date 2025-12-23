@@ -15,6 +15,7 @@ import NotificationParametersOverviewApp from '@/notification/NotificationParame
 import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
 import DynamicIconApp from './components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
 import IconApp from './components/CmkIcon/IconApp.vue'
+import RnbwApp from './components/graphics/RnbwApp.vue'
 import Dashboard from './dashboard/DashboardApp.vue'
 import SharedDashboard from './dashboard/DashboardSharedApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
@@ -53,6 +54,7 @@ defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
+defineCmkComponent('cmk-rnbw', RnbwApp, { pure: true })
 defineCmkComponent('cmk-main-menu', MainMenuApp)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)
 defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fullPage: true } })

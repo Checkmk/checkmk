@@ -941,6 +941,8 @@ def test_license_usage_report(
         assert sample.num_services_excluded == expected_sample.num_services_excluded
         assert sample.num_synthetic_tests == expected_sample.num_synthetic_tests
         assert sample.num_synthetic_tests_excluded == expected_sample.num_synthetic_tests_excluded
+        assert sample.num_synthetic_kpis == expected_sample.num_synthetic_kpis
+        assert sample.num_synthetic_kpis_excluded == expected_sample.num_synthetic_kpis_excluded
         assert sample.extension_ntop == expected_sample.extension_ntop
 
 

@@ -161,6 +161,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         requirement("requests"),
+        requirement("urllib3"),
         requirement("vcrpy"),
     ],
 )

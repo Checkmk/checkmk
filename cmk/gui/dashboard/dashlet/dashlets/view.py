@@ -245,11 +245,5 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
     def default_display_title(self) -> str:
         return visuals.visual_title("view", self._get_view_spec(), self.context)
 
-    def title_url(self) -> str:
-        view_name = self._dashlet_spec["name"]
-        request_vars: HTTPVariables = [("view_name", view_name)]
-        request_vars += self._dashlet_context_vars()
-        return makeuri_contextless(request, request_vars, filename="view.py")
-
     def infos(self) -> SingleInfos:
         return self._get_infos_from_view_spec(self._get_view_spec())

@@ -186,27 +186,6 @@ def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
     assert dashlet.dashboard_name == "main"
 
 
-def test_dashlet_title(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.display_title() == "DUMMy"
-
-    dummy_config["title"] = "abc"
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.display_title() == "abc"
-
-
 def test_show_title(dummy_config: DummyDashletConfig) -> None:
     dashlet = DummyDashlet(
         dashboard_name="main",
@@ -226,27 +205,6 @@ def test_show_title(dummy_config: DummyDashletConfig) -> None:
         dashlet=dummy_config,
     )
     assert dashlet.show_title() is False
-
-
-def test_title_url(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.title_url() is None
-
-    dummy_config["title_url"] = "index.py?bla=blub"
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.title_url() == "index.py?bla=blub"
 
 
 def test_show_background(dummy_config: DummyDashletConfig) -> None:

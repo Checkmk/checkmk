@@ -12,9 +12,6 @@ from typing import Generic, Literal, TypeVar
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
-from cmk.gui.utils.html import HTML
-from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
-from cmk.utils.macros import replace_macros_in_str
 
 from ..title_macros import macro_mapping_from_context
 from ..type_defs import (
@@ -144,12 +141,6 @@ class Dashlet(abc.ABC, Generic[T]):
     def default_display_title(self) -> str:
         return self.title()
 
-    def display_title(self) -> str:
-        try:
-            return self._dashlet_spec["title"]
-        except KeyError:
-            return self.default_display_title()
-
     def _get_macro_mapping(self, title: str) -> Mapping[str, str]:
         return macro_mapping_from_context(
             self.context if self.has_context() else {},
@@ -158,31 +149,11 @@ class Dashlet(abc.ABC, Generic[T]):
             self.default_display_title(),
         )
 
-    def render_title_html(self) -> HTML:
-        title = self.display_title()
-        return text_with_links_to_user_translated_html(
-            [
-                (
-                    replace_macros_in_str(
-                        title,
-                        self._get_macro_mapping(title),
-                    ),
-                    self.title_url(),
-                ),
-            ],
-        )
-
     def show_title(self) -> bool | Literal["transparent"]:
         try:
             return self._dashlet_spec["show_title"]
         except KeyError:
             return True
-
-    def title_url(self) -> str | None:
-        try:
-            return self._dashlet_spec["title_url"]
-        except KeyError:
-            return None
 
     def show_background(self) -> bool:
         try:

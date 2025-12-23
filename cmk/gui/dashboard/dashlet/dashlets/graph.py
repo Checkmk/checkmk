@@ -229,7 +229,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         macro_mapping = macro_mapping_from_context(
             self.context if self.has_context() else {},
             self.single_infos(),
-            self.display_title(),
+            title,
             self.default_display_title(),
             **self._get_additional_macros(),
         )

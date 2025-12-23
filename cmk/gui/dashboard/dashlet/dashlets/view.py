@@ -159,29 +159,6 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
     def description(cls) -> str:
         return _("Copies a view to a dashboard element")
 
-    @classmethod
-    def default_settings(cls) -> ViewDashletConfig:
-        return ViewDashletConfig(
-            {
-                "type": cls.type_name(),
-                "datasource": request.get_str_input_mandatory("datasource"),
-                "group_painters": [],
-                "layout": "table",
-                "painters": [],
-                "sorters": [],
-                "title": "",
-                "browser_reload": 0,
-                "column_headers": "off",
-                "mustsearch": False,
-                "name": "",
-                "num_columns": 3,
-                "play_sounds": False,
-                "sort_index": 99,
-                "add_context_to_title": True,
-                "is_show_more": False,
-            }
-        )
-
     def infos(self) -> SingleInfos:
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.

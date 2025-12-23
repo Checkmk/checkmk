@@ -100,14 +100,6 @@ class Dashlet(abc.ABC, Generic[T]):
     def allowed_roles(cls) -> list[RoleName]:
         return default_authorized_builtin_role_ids
 
-    @classmethod
-    def default_settings(cls) -> T | None:
-        """Overwrite specific default settings for dashlets by returning a dict
-            return { key: default_value, ... }
-        e.g. to have a dashlet default to not showing its title
-            return { "show_title": False }
-        """
-
     def __init__(
         self,
         dashboard_name: DashboardName,

@@ -6,8 +6,8 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Generic, Literal, TypeVar
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Generic, Literal, TypeVar
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
@@ -15,7 +15,6 @@ from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.type_defs import HTTPVariables, RoleName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
-from cmk.gui.valuespec import DictionaryEntry, ValueSpec, ValueSpecValidateFunc
 from cmk.utils.macros import replace_macros_in_str
 
 from ..title_macros import macro_mapping_from_context
@@ -96,29 +95,6 @@ class Dashlet(abc.ABC, Generic[T]):
     def initial_position(cls) -> DashletPosition:
         """The initial position of dashlets when being added to the dashboard"""
         return (1, 1)
-
-    @classmethod
-    def vs_parameters(
-        cls,
-    ) -> (
-        None
-        | list[DictionaryEntry]
-        | ValueSpec
-        | tuple[Callable[[T], None], Callable[[DashletId, T, T], T]]
-    ):
-        """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
-        # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)
-        return None
-
-    @classmethod
-    def opt_parameters(cls) -> bool | list[str]:
-        """List of optional parameters in case vs_parameters() returns a list"""
-        return False
-
-    @classmethod
-    def validate_parameters_func(cls) -> ValueSpecValidateFunc[Any] | None:
-        """Optional validation function in case vs_parameters() returns a list"""
-        return None
 
     @classmethod
     def allowed_roles(cls) -> list[RoleName]:

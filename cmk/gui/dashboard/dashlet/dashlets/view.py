@@ -6,7 +6,6 @@
 # mypy: disable-error-code="possibly-undefined"
 
 import copy
-from collections.abc import Callable
 from typing import cast, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -15,7 +14,6 @@ from cmk.gui import visuals
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import (
     ABCViewDashletConfig,
-    DashletId,
     DashletSize,
     EmbeddedViewDashletConfig,
     LinkedViewDashletConfig,
@@ -32,10 +30,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
-from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
-from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view_config
 from cmk.gui.views.store import get_all_views, get_permitted_views
-from cmk.gui.views.view_choices import view_choices
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
@@ -165,33 +160,6 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         return _("Copies a view to a dashboard element")
 
     @classmethod
-    def vs_parameters(
-        cls,
-    ) -> tuple[
-        Callable[[ViewDashletConfig], None],
-        Callable[[DashletId, ViewDashletConfig, ViewDashletConfig], ViewDashletConfig],
-    ]:
-        def _render_input(dashlet: ViewDashletConfig) -> None:
-            render_view_config(view_spec_from_view_dashlet(dashlet))
-
-        def _handle_input(
-            ident: DashletId, old_dashlet: ViewDashletConfig, dashlet: ViewDashletConfig
-        ) -> ViewDashletConfig:
-            dashlet["name"] = "dashlet_%d" % ident
-            dashlet.setdefault("title", _("View"))
-
-            # The view dashlet editor does not provide a configuration for the general visual
-            # settings as defined in visuals._vs_general. They have no effect on the dashlets, but
-            # let's apply them here for consistency.
-            dashlet.setdefault("sort_index", 99)
-            dashlet.setdefault("add_context_to_title", True)
-            dashlet.setdefault("is_show_more", False)
-
-            return create_view_from_valuespec(old_dashlet, dashlet)
-
-        return _render_input, _handle_input
-
-    @classmethod
     def default_settings(cls) -> ViewDashletConfig:
         return ViewDashletConfig(
             {
@@ -284,26 +252,6 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
     @classmethod
     def description(cls) -> str:
         return _("Displays the content of a view")
-
-    @classmethod
-    def vs_parameters(cls) -> list[DictionaryEntry]:
-        return [
-            (
-                "name",
-                DropdownChoice(
-                    title=_("View name"),
-                    help=_(
-                        "Choose the view you would like to show. Please note that, depending on the, "
-                        "logged in user viewing this dashboard, the view being displayed may "
-                        "differ. For example when another user has created a view with the same name. "
-                        "In case a user is not permitted to see a view, an error message will be "
-                        "displayed."
-                    ),
-                    choices=view_choices,
-                    sorted=True,
-                ),
-            ),
-        ]
 
     def _get_view_spec(self) -> ViewSpec:
         view_name = self._dashlet_spec["name"]

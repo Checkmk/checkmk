@@ -46,7 +46,6 @@ from cmk.gui.graphing import (
     RegisteredMetric,
     TemplateGraphSpecification,
     translated_metrics_from_row,
-    vs_graph_render_options,
 )
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -62,12 +61,7 @@ from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
-    Dictionary,
-    DictionaryElements,
-    DictionaryEntry,
     DropdownChoiceWithHostAndServiceHints,
-    Timerange,
-    ValueSpec,
 )
 from cmk.gui.visuals import (
     get_only_sites_from_context,
@@ -158,44 +152,6 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
 
     def infos(self) -> SingleInfos:
         return ["host", "service"]
-
-    @classmethod
-    def vs_parameters(cls) -> ValueSpec:
-        return Dictionary(
-            title=_("Properties"),
-            render="form",
-            optional_keys=[],
-            elements=cls._parameter_elements,
-        )
-
-    @classmethod
-    def _parameter_elements(cls) -> DictionaryElements:
-        yield cls._vs_timerange()
-        yield cls._vs_graph_render_options()
-
-    @staticmethod
-    def _vs_timerange() -> DictionaryEntry:
-        return (
-            "timerange",
-            Timerange(
-                title=_("Time range"),
-                default_value="25h",
-            ),
-        )
-
-    @staticmethod
-    def _vs_graph_render_options() -> DictionaryEntry:
-        return (
-            "graph_render_options",
-            vs_graph_render_options(
-                default_values=default_dashlet_graph_render_options(),
-                exclude=[
-                    "show_time_range_previews",
-                    "title_format",
-                    "show_title",
-                ],
-            ),
-        )
 
     @staticmethod
     def _resolve_site(host: str) -> None:
@@ -351,14 +307,6 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
             graph_id=raw_source,
             destination=GraphDestinations.dashlet,
         )
-
-    @classmethod
-    def _parameter_elements(cls) -> DictionaryElements:
-        yield (
-            "source",
-            AvailableGraphs(),
-        )
-        yield from super()._parameter_elements()
 
     def _get_additional_macros(self) -> Mapping[str, str]:
         if self._graph_specification is None:

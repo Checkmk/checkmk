@@ -18,8 +18,6 @@ from cmk.gui.pages import Page, PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.valuespec.definitions import DictionaryEntry
 
 from ._snapin import all_snapins, SidebarSnapin
 
@@ -50,31 +48,6 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
     @classmethod
     def initial_size(cls) -> DashletSize:
         return (28, 20)
-
-    @classmethod
-    def vs_parameters(cls) -> list[DictionaryEntry]:
-        return [
-            (
-                "snapin",
-                DropdownChoice(
-                    title=_("Sidebar element"),
-                    help=_("Choose the sidebar element you would like to show."),
-                    choices=cls._snapin_choices,
-                ),
-            ),
-        ]
-
-    @classmethod
-    def _snapin_choices(cls) -> list[tuple[str, str]]:
-        return sorted(
-            [
-                (k, v.title())
-                for k, v in all_snapins(
-                    UserPermissions.from_config(active_config, permission_registry)
-                ).items()
-            ],
-            key=lambda x: x[1],
-        )
 
     def default_display_title(self) -> str:
         return all_snapins(

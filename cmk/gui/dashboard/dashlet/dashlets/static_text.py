@@ -6,7 +6,6 @@
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import DictionaryEntry, TextInput
 
 
 class StaticTextDashletConfig(DashletConfig):
@@ -35,20 +34,3 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
     @classmethod
     def initial_size(cls) -> DashletSize:
         return (30, 18)
-
-    @classmethod
-    def vs_parameters(cls) -> list[DictionaryEntry]:
-        return [
-            (
-                "text",
-                TextInput(
-                    title=_("Text"),
-                    size=50,
-                    help=_(
-                        "You can enter a text here that will be displayed in the element when "
-                        "viewing the dashboard. It is also possible to insert a limited set of HTML "
-                        "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
-                    ),
-                ),
-            ),
-        ]

@@ -6,7 +6,6 @@
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import DictionaryEntry, TextInput
 
 
 class URLDashletConfig(DashletConfig):
@@ -35,7 +34,3 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
     @classmethod
     def initial_size(cls) -> DashletSize:
         return (30, 10)
-
-    @classmethod
-    def vs_parameters(cls) -> list[DictionaryEntry]:
-        return [("url", TextInput(title=_("URL"), size=50, allow_empty=False))]

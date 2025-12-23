@@ -172,9 +172,6 @@ def test_dashlet_type_defaults() -> None:
     assert Dashlet.is_iframe_dashlet() is False
     assert Dashlet.initial_size() == Dashlet.minimum_size
     assert Dashlet.initial_position() == (1, 1)
-    assert Dashlet.vs_parameters() is None
-    assert Dashlet.opt_parameters() is False
-    assert Dashlet.validate_parameters_func() is None
     assert Dashlet.allowed_roles() == default_authorized_builtin_role_ids
 
 

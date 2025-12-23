@@ -10,9 +10,7 @@ import abc
 
 from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.figures import FigureResponseData
-from cmk.gui.i18n import _
 from cmk.gui.type_defs import SingleInfos
-from cmk.gui.valuespec import Dictionary, DictionaryElements, MigrateNotUpdated
 
 from .base import Dashlet, T
 
@@ -52,34 +50,6 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
     def instance_name(self) -> str:
         # Note: This introduces the restriction one graph type per dashlet
         return f"{self.type_name()}_{self._dashlet_id}"
-
-    @classmethod
-    def vs_parameters(cls) -> MigrateNotUpdated:
-        return MigrateNotUpdated(
-            valuespec=Dictionary(
-                title=_("Properties"),
-                render="form",
-                optional_keys=cls._vs_optional_keys(),
-                elements=cls._vs_elements(),
-            ),
-            migrate=cls._migrate_vs,
-        )
-
-    @staticmethod
-    def _vs_optional_keys() -> bool | list[str]:
-        return False
-
-    @staticmethod
-    def _migrate_vs(valuespec_result):
-        if "svc_status_display" in valuespec_result:
-            # now as code is shared between host and service (svc) dashlet,
-            # the `svc_` prefix is removed.
-            valuespec_result["status_display"] = valuespec_result.pop("svc_status_display")
-        return valuespec_result
-
-    @staticmethod
-    def _vs_elements() -> DictionaryElements:
-        return []
 
     @abc.abstractmethod
     def generate_response_data(self) -> FigureResponseData: ...

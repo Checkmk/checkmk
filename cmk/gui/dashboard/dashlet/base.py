@@ -82,11 +82,6 @@ class Dashlet(abc.ABC, Generic[T]):
         return True
 
     @classmethod
-    def is_iframe_dashlet(cls) -> bool:
-        """Whether or not the dashlet is rendered in an iframe"""
-        return False
-
-    @classmethod
     def initial_size(cls) -> DashletSize:
         """The initial size of dashlets when being added to the dashboard"""
         return cls.minimum_size
@@ -222,15 +217,3 @@ class Dashlet(abc.ABC, Generic[T]):
 
 class IFrameDashlet(Dashlet[T], abc.ABC):
     """Base class for all dashlet using an iframe"""
-
-    @classmethod
-    def is_iframe_dashlet(cls) -> bool:
-        """Whether or not the dashlet is rendered in an iframe"""
-        return True
-
-    def reload_on_resize(self) -> bool:
-        """Whether or not the page should be reloaded when the dashlet is resized"""
-        try:
-            return self._dashlet_spec["reload_on_resize"]
-        except KeyError:
-            return False

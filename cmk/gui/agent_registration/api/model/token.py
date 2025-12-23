@@ -50,22 +50,6 @@ class AgentRegistrationTokenMetadata:
 
 
 @api_model
-class AgentRegistrationTokenModel(AgentRegistrationTokenMetadata):
-    token_id: str = api_field(description="The unique identifier of the agent registration token.")
-
-    @classmethod
-    def from_internal(cls, token: AuthToken) -> Self:
-        base = AgentRegistrationTokenMetadata.from_internal(token)
-        return cls(
-            token_id=token.token_id,
-            comment=base.comment,
-            host_name=base.host_name,
-            issued_at=base.issued_at,
-            expires_at=base.expires_at,
-        )
-
-
-@api_model
 class AgentRegistrationTokenObjectModel(DomainObjectModel):
     domainType: Literal["agent_registration_token"] = api_field(
         description="The domain type of the object."

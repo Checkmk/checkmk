@@ -95,6 +95,7 @@ def create_apache_hook(
     except FileNotFoundError:
         pass
 
+    apache_config.parent.mkdir(parents=True, exist_ok=True)
     with open(apache_config, "w") as f:
         f.write(
             f"""{apache_hook_header(version)}

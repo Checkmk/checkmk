@@ -12,15 +12,13 @@ from collections.abc import Iterator
 from typing import Literal
 
 import pytest
-from pytest import MonkeyPatch
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
-from cmk.gui.config import Config, default_authorized_builtin_role_ids
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
 from cmk.gui.dashboard.dashlet.base import Dashlet
-from cmk.gui.htmllib.html import html
 from cmk.gui.type_defs import DynamicIconName
 from cmk.utils import paths
 from tests.testlib.unit.utils import reset_registries
@@ -45,9 +43,6 @@ class DummyDashlet(Dashlet[DummyDashletConfig]):
     @classmethod
     def sort_index(cls) -> int:
         return 123
-
-    def show(self, config: Config) -> None:
-        html.write_text_permissive("dummy")
 
 
 @pytest.fixture(name="reset_dashlet_registry")
@@ -169,39 +164,6 @@ TEST_DASHBOARD = DashboardConfig(
 )
 
 
-@pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-@pytest.mark.usefixtures("mock_livestatus")
-@pytest.mark.usefixtures("request_context")
-@pytest.mark.usefixtures("reset_dashlet_registry")
-def test_dashlet_refresh_intervals(
-    type_name: str,
-    expected_refresh_interval: Literal[False] | int,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    dashlet_type = dashlet_registry[type_name]
-    assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
-
-    dashlet_spec: DashletConfig = {
-        "type": type_name,
-    }
-    if dashlet_type.has_context():
-        dashlet_spec["context"] = {}
-    if type_name in ["pnpgraph", "custom_graph"]:
-        monkeypatch.setattr(dashlet_type, "graph_specification", lambda s, c: None)
-
-    monkeypatch.setattr(Dashlet, "_get_context", lambda s: {})
-
-    dashlet = dashlet_type(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD.copy(),
-        dashlet_id=1,
-        dashlet=dashlet_spec,
-    )
-
-    assert dashlet.refresh_interval() == expected_refresh_interval
-
-
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_type_defaults() -> None:
     assert not Dashlet.single_infos()
@@ -210,15 +172,10 @@ def test_dashlet_type_defaults() -> None:
     assert Dashlet.is_iframe_dashlet() is False
     assert Dashlet.initial_size() == Dashlet.minimum_size
     assert Dashlet.initial_position() == (1, 1)
-    assert Dashlet.initial_refresh_interval() is False
     assert Dashlet.vs_parameters() is None
     assert Dashlet.opt_parameters() is False
     assert Dashlet.validate_parameters_func() is None
-    assert Dashlet.styles() is None
-    assert Dashlet.script() is None
     assert Dashlet.allowed_roles() == default_authorized_builtin_role_ids
-
-    assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"
 
 
 def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
@@ -319,28 +276,6 @@ def test_show_background(dummy_config: DummyDashletConfig) -> None:
     assert dashlet.show_background() is False
 
 
-def test_on_resize(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.on_resize() is None
-
-
-def test_on_refresh(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.on_refresh() is None
-
-
 def test_size(dummy_config: DummyDashletConfig) -> None:
     dashlet = DummyDashlet(
         dashboard_name="main",
@@ -396,17 +331,6 @@ def test_position(dummy_config: DummyDashletConfig) -> None:
         dashlet=dummy_config,
     )
     assert dashlet.position() == (4, 4)
-
-
-def test_refresh_interval(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.refresh_interval() == DummyDashlet.initial_refresh_interval()
 
 
 @pytest.mark.usefixtures("reset_dashlet_registry")

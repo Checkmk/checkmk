@@ -3,15 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui import notifications
-from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
-from cmk.gui.dashboard.type_defs import DashletConfig, DashletRefreshInterval
-from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.urls import makeuri_contextless
 
 
 class FailedNotificationsDashletConfig(DashletConfig): ...
@@ -37,58 +31,5 @@ class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
         return 0
 
     @classmethod
-    def initial_refresh_interval(cls) -> DashletRefreshInterval:
-        return 60
-
-    @classmethod
     def is_selectable(cls) -> bool:
         return False
-
-    @classmethod
-    def styles(cls) -> str:
-        return """
-.has_failed_notifications {
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    font-weight: bold;
-    font-size: 14pt;
-
-    text-align: center;
-    background-color: #ff5500;
-}
-.failed_notifications_inner {
-    display:inline-block;
-    margin: auto;
-    position: absolute;
-    top:0; bottom:0; left:0; right:0;
-    height:32px;
-}"""
-
-    def show(self, config: Config) -> None:
-        failed_notifications = notifications.number_of_failed_notifications(
-            after=notifications.acknowledged_time()
-        )
-        if not failed_notifications:
-            return
-
-        html.open_div(class_="has_failed_notifications")
-        html.open_div(class_="failed_notifications_inner")
-
-        confirm_url = makeuri_contextless(request, [], filename="clear_failed_notifications.py")
-        html.icon_button(
-            confirm_url,
-            _("Clear failed notifications"),
-            StaticIcon(IconNames.closetimewarp),
-            target="main",
-        )
-
-        view_url = makeuri_contextless(
-            request,
-            [("view_name", "failed_notifications")],
-            filename="view.py",
-        )
-        html.a(_("%d failed notifications") % failed_notifications, href=view_url)
-
-        html.close_div()
-        html.close_div()

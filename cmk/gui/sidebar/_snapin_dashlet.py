@@ -9,7 +9,7 @@ from typing import override
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import DashletConfig, IFrameDashlet
-from cmk.gui.dashboard.type_defs import DashletRefreshInterval, DashletSize
+from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -52,10 +52,6 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         return (28, 20)
 
     @classmethod
-    def initial_refresh_interval(cls) -> DashletRefreshInterval:
-        return 30
-
-    @classmethod
     def vs_parameters(cls) -> list[DictionaryEntry]:
         return [
             (
@@ -84,36 +80,6 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         return all_snapins(
             UserPermissions.from_config(active_config, permission_registry),
         )[self._dashlet_spec["snapin"]].title()
-
-    def update(self, config: Config, user_permissions: UserPermissions) -> None:
-        dashlet = self._dashlet_spec
-        snapin = all_snapins(user_permissions).get(self._dashlet_spec["snapin"])
-        if not snapin:
-            raise MKUserError(None, _("The configured element does not exist."))
-        snapin_instance = snapin()
-        snapin_name = dashlet["snapin"]
-
-        html.browser_reload = self.refresh_interval()
-        html.html_head(_("Sidebar element"))
-        html.open_body(class_="side", data_theme=theme.get())
-        html.open_div(id_="check_mk_sidebar")
-        html.open_div(id_="side_content")
-        show_more = user.get_show_more_setting(f"sidebar_snapin_{snapin_name}")
-        html.open_div(
-            id_=f"snapin_container_{snapin_name}",
-            class_=["snapin", ("more" if show_more else "less")],
-        )
-        html.open_div(id_="snapin_%s" % dashlet["snapin"], class_="content")
-        styles = snapin_instance.styles()
-        if styles:
-            html.style(styles)
-        snapin_instance.show(config)
-        html.close_div()
-        html.close_div()
-        html.close_div()
-        html.close_div()
-        html.javascript('cmk.utils.add_simplebar_scrollbar("check_mk_sidebar");')
-        html.body_end()
 
 
 class SnapinWidgetIFramePage(Page):

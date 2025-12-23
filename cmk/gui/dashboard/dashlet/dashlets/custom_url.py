@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
 from cmk.gui.i18n import _
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import DictionaryEntry, TextInput
 
 
@@ -41,10 +39,3 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
     @classmethod
     def vs_parameters(cls) -> list[DictionaryEntry]:
         return [("url", TextInput(title=_("URL"), size=50, allow_empty=False))]
-
-    def update(self, config: Config, user_permissions: UserPermissions) -> None:
-        pass  # Not called at all. This dashlet always opens configured pages (see below)
-
-    def _get_iframe_url(self) -> str:
-        # override so we don't add context vars
-        return self._dashlet_spec["url"]

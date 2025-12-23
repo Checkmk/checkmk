@@ -10,7 +10,6 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-import json
 from collections.abc import Iterable, Mapping
 from typing import Any, Generic, Literal, TypeVar
 
@@ -40,8 +39,6 @@ from cmk.gui.graphing import (
     get_template_graph_specification,
     GraphDestinations,
     GraphPluginChoice,
-    GraphRenderConfig,
-    GraphRenderOptions,
     graphs_from_api,
     GraphSpecification,
     metrics_from_api,
@@ -51,11 +48,9 @@ from cmk.gui.graphing import (
     translated_metrics_from_row,
     vs_graph_render_options,
 )
-from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     Choices,
     GraphRenderOptionsVS,
@@ -158,10 +153,6 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         return (60, 21)
 
     @classmethod
-    def initial_refresh_interval(cls) -> int:
-        return 60
-
-    @classmethod
     def has_context(cls) -> bool:
         return True
 
@@ -214,44 +205,6 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
                 return sites.live().query_value(query)
             except livestatus.MKLivestatusNotFoundError:
                 raise MKUserError("host", _("The host could not be found on any active site."))
-
-    @classmethod
-    def script(cls) -> str:
-        return """
-var dashlet_offsets = {};
-function dashboard_render_graph(nr, graph_specification, graph_render_config, timerange)
-{
-    // Get the target size for the graph from the inner dashlet container
-    var inner = document.getElementById('dashlet_inner_' + nr);
-    var c_w = inner.clientWidth;
-    var c_h = inner.clientHeight;
-
-    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_specification))
-                  + "&config=" + encodeURIComponent(JSON.stringify(graph_render_config))
-                  + "&timerange=" + encodeURIComponent(JSON.stringify(timerange))
-                  + "&width=" + c_w
-                  + "&height=" + c_h
-                  + "&id=" + nr;
-
-    cmk.ajax.call_ajax("graph_dashlet.py", {
-        post_data        : post_data,
-        method           : "POST",
-        response_handler : handle_dashboard_render_graph_response,
-        handler_data     : nr,
-    });
-}
-
-function handle_dashboard_render_graph_response(handler_data, response_body)
-{
-    var nr = handler_data;
-    var container = document.getElementById('dashlet_graph_' + nr);
-    if (container) {
-        container.innerHTML = response_body;
-        cmk.utils.execute_javascript_by_object(container);
-    }
-}
-
-"""
 
     @abc.abstractmethod
     def graph_specification(self, context: VisualContext) -> TGraphSpec: ...
@@ -315,39 +268,6 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 
     def default_display_title(self) -> str:
         return self._graph_title if self._graph_title is not None else self.title()
-
-    def on_resize(self) -> str:
-        return self._reload_js()
-
-    def on_refresh(self) -> str:
-        return self._reload_js()
-
-    def _reload_js(self) -> str:
-        if self._graph_specification is None or self._graph_title is None:
-            return ""
-
-        return "dashboard_render_graph(%d, %s, %s, %s)" % (
-            self._dashlet_id,
-            self._graph_specification.model_dump_json(),
-            GraphRenderConfig.from_user_context_and_options(
-                user,
-                theme.get(),
-                GraphRenderOptions.from_graph_render_options_vs(
-                    default_dashlet_graph_render_options()
-                    # Something is wrong with the typing here. self._dashlet_spec is a subclass of
-                    # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be
-                    # a dict ...
-                    | self._dashlet_spec.get("graph_render_options", {})  # type: ignore[operator]
-                ),
-            ).model_dump_json(),
-            json.dumps(self._dashlet_spec["timerange"]),
-        )
-
-    def show(self, config: Config) -> None:
-        if self._init_exception:
-            raise self._init_exception
-
-        html.div("", id_="dashlet_graph_%d" % self._dashlet_id)
 
     def _get_macro_mapping(self, title: str) -> Mapping[str, str]:
         macro_mapping = macro_mapping_from_context(

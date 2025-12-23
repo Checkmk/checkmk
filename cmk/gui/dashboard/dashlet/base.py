@@ -6,21 +6,15 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-import json
-import urllib.parse
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Generic, Literal, TypeVar
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import Config, default_authorized_builtin_role_ids
-from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.type_defs import HTTPVariables, RoleName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DictionaryEntry, ValueSpec, ValueSpecValidateFunc
 from cmk.utils.macros import replace_macros_in_str
 
@@ -31,8 +25,6 @@ from ..type_defs import (
     DashletConfig,
     DashletId,
     DashletPosition,
-    DashletRefreshAction,
-    DashletRefreshInterval,
     DashletSize,
 )
 
@@ -106,10 +98,6 @@ class Dashlet(abc.ABC, Generic[T]):
         return (1, 1)
 
     @classmethod
-    def initial_refresh_interval(cls) -> DashletRefreshInterval:
-        return False
-
-    @classmethod
     def vs_parameters(
         cls,
     ) -> (
@@ -133,27 +121,8 @@ class Dashlet(abc.ABC, Generic[T]):
         return None
 
     @classmethod
-    def styles(cls) -> str | None:
-        """Optional registration of snapin type specific stylesheets"""
-        return None
-
-    @classmethod
-    def script(cls) -> str | None:
-        """Optional registration of snapin type specific javascript"""
-        return None
-
-    @classmethod
     def allowed_roles(cls) -> list[RoleName]:
         return default_authorized_builtin_role_ids
-
-    @classmethod
-    def add_url(cls) -> str:
-        """The URL to open for adding a new dashlet of this type to a dashboard"""
-        return makeuri(
-            request,
-            [("type", cls.type_name()), ("back", makeuri(request, [("edit", "1")]))],
-            filename="edit_dashlet.py",
-        )
 
     @classmethod
     def default_settings(cls) -> T | None:
@@ -263,44 +232,6 @@ class Dashlet(abc.ABC, Generic[T]):
         except KeyError:
             return True
 
-    def on_resize(self) -> str | None:
-        """Returns either Javascript code to execute when a resize event occurs or None"""
-        return None
-
-    def on_refresh(self) -> str | None:
-        """Returns either Javascript code to execute when a the dashlet should be refreshed or None"""
-        return None
-
-    def update(self, config: Config, user_permissions: UserPermissions) -> None:
-        """Called by the ajax call to update dashlet contents
-
-        This is normally equivalent to the .show() method. Differs only for
-        iframe and single metric dashlets.
-        """
-        self.show(config)
-
-    @abc.abstractmethod
-    def show(self, config: Config) -> None:
-        """Produces the HTML code of the dashlet content."""
-        raise NotImplementedError()
-
-    def _add_context_vars_to_url(self, url: str) -> str:
-        """Adds missing context variables to the given URL"""
-        if not self.has_context():
-            return url
-
-        context_vars = {k: str(v) for k, v in self._dashlet_context_vars() if v is not None}  #
-
-        # This is a long distance hack to be able to rebuild the variables on the dashlet _get_context
-        # using the visuals.VisualFilterListWithAddPopup.from_html_vars, which
-        # requires this flag.
-        parts = urllib.parse.urlparse(url)
-        url_vars = dict(urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
-        url_vars.update(context_vars)
-
-        new_qs = urllib.parse.urlencode(url_vars)
-        return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
-
     def _dashlet_context_vars(self) -> HTTPVariables:
         return visuals.context_to_uri_vars(self.context)
 
@@ -330,39 +261,6 @@ class Dashlet(abc.ABC, Generic[T]):
         except KeyError:
             return self.initial_position()
 
-    def refresh_interval(self) -> DashletRefreshInterval:
-        return self.initial_refresh_interval()
-
-    def get_refresh_action(self, *, debug: bool) -> DashletRefreshAction:
-        if not self.refresh_interval():
-            return None
-
-        url = self._get_refresh_url()
-        try:
-            if on_refresh := self.on_refresh():
-                return f"(function() {{{on_refresh}}})"
-            return f'"{self._add_context_vars_to_url(url)}"'  # url to dashboard_dashlet.py
-        except Exception:
-            # Ignore the exceptions in non debug mode, assuming the exception also occurs
-            # while dashlet rendering, which is then shown in the dashlet itselfs.
-            if debug:
-                raise
-
-        return None
-
-    def _get_refresh_url(self) -> str:
-        """Returns the URL to be used for loading the dashlet contents"""
-        return makeuri_contextless(
-            request,
-            [
-                ("name", self._dashboard_name),
-                ("owner", self._dashboard_owner),
-                ("id", self._dashlet_id),
-                ("mtime", self._dashboard["mtime"]),
-            ],
-            filename="dashboard_dashlet.py",
-        )
-
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:
         yield from []
@@ -376,45 +274,9 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
         """Whether or not the dashlet is rendered in an iframe"""
         return True
 
-    def show(self, config: Config) -> None:
-        self._show_initial_iframe_container()
-
     def reload_on_resize(self) -> bool:
         """Whether or not the page should be reloaded when the dashlet is resized"""
         try:
             return self._dashlet_spec["reload_on_resize"]
         except KeyError:
             return False
-
-    def _show_initial_iframe_container(self) -> None:
-        iframe_url = self._get_iframe_url()
-        if not iframe_url:
-            return
-
-        # Fix of iPad >:-P
-        html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
-        html.iframe(
-            "",
-            src="about:blank" if self.reload_on_resize() else iframe_url,
-            id_="dashlet_iframe_%d" % self._dashlet_id,
-            allowTransparency="true",
-            frameborder="0",
-            width="100%",
-            height="100%",
-        )
-        html.close_div()
-
-        if self.reload_on_resize():
-            html.javascript(
-                f"cmk.dashboard.set_reload_on_resize({json.dumps(self._dashlet_id)}, {json.dumps(iframe_url)});"
-            )
-
-    def _get_iframe_url(self) -> str | None:
-        if not self.is_iframe_dashlet():
-            return None
-
-        return self._add_context_vars_to_url(self._get_refresh_url())
-
-    @abc.abstractmethod
-    def update(self, config: Config, user_permissions: UserPermissions) -> None:
-        raise NotImplementedError()

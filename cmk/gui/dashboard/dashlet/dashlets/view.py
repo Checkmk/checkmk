@@ -12,7 +12,6 @@ from typing import cast, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import (
     ABCViewDashletConfig,
@@ -23,29 +22,20 @@ from cmk.gui.dashboard.type_defs import (
     ViewDashletConfig,
 )
 from cmk.gui.data_source import data_source_registry
-from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
-from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     HTTPVariables,
     SingleInfos,
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
-from cmk.gui.view import View
-from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view_config
-from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.views.view_choices import view_choices
-from cmk.gui.visuals import get_only_sites_from_context
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
@@ -138,89 +128,6 @@ class ABCViewDashlet(IFrameDashlet[VT]):
     def has_context(cls) -> bool:
         return True
 
-    def _show_view_as_dashlet(
-        self,
-        view_spec: ViewSpec | ViewDashletConfig,
-        user_permissions: UserPermissions,
-        *,
-        soft_query_limit: int,
-        hard_query_limit: int,
-        debug: bool,
-    ) -> None:
-        html.add_body_css_class("view")
-        html.open_div(id_="dashlet_content_wrapper")
-
-        is_reload = request.has_var("_reload")
-
-        view_display_options = "SIXLW"
-        if not is_reload:
-            view_display_options += "HR"
-
-        request.set_var("display_options", view_display_options)
-        request.set_var("_display_options", view_display_options)
-        html.add_body_css_class("dashlet")
-
-        # Need to be loaded before processing the painter_options below.
-        # TODO: Make this dependency explicit
-        display_options.load_from_html(request, html)
-
-        painter_options = PainterOptions.get_instance()
-        painter_options.load(self._dashlet_spec["name"])
-
-        # Here the linked view default context has the highest priority
-        # linkedview default>dashlet>url active filter> dashboard. However views
-        # have the "show_filters" default to prefill the filtermenu with empty
-        # valued filters(UX). Those need to be cleared out. Otherwise those
-        # empty filters are the highest priority filters and the user can never
-        # filter the view.
-        view_context = {
-            filtername: filtervalues
-            for filtername, filtervalues in view_spec["context"].items()
-            if {
-                var: value
-                for var, value in filtervalues.items()
-                # These are the filters request variables. Keep set values
-                # For the TriStateFilters unset == ignore == "-1"
-                # all other cases unset is an empty string
-                if (var.startswith("is_") and value != "-1")  # TriState filters except ignore
-                or (not var.startswith("is_") and value)  # Rest of filters with some value
-            }
-        }
-        # context of dashlet has to be merged after view context, otherwise the
-        # context of the view is always used
-        context = visuals.get_merged_context(view_context, self.context)
-
-        # We are only interested in the ViewSpec specific attributes here. Once we have the full
-        # picture (dashlets typed (already done) and reports typed), we can better decide how to do
-        # it
-        view = View(
-            self._dashlet_spec["name"],
-            view_spec,  # type: ignore[arg-type]
-            context,
-            user_permissions,
-        )
-        view.row_limit = get_limit(
-            request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
-            soft_query_limit=soft_query_limit,
-            may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
-            hard_query_limit=hard_query_limit,
-            may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
-        )
-        view.only_sites = get_only_sites_from_context(context)
-        view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
-
-        process_view(
-            GUIViewRenderer(
-                view,
-                show_buttons=False,
-                page_menu_dropdowns_callback=lambda x, y, z: None,
-            ),
-            user_permissions,
-            debug=debug,
-        )
-
-        html.close_div()
-
     def _get_infos_from_view_spec(self, view_spec: ViewSpec | ViewDashletConfig) -> SingleInfos:
         ds_name = view_spec["datasource"]
         return data_source_registry[ds_name]().infos
@@ -240,9 +147,6 @@ class EmbeddedViewDashlet(ABCViewDashlet[EmbeddedViewDashletConfig]):
     @classmethod
     def description(cls) -> str:
         return _("Copies a view to a dashboard element")
-
-    def update(self, config: Config, user_permissions: UserPermissions) -> None:
-        raise NotImplementedError()
 
 
 class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
@@ -288,13 +192,6 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         return _render_input, _handle_input
 
     @classmethod
-    def add_url(cls) -> str:
-        return "create_view_dashlet.py?name={}&mode=create&back={}".format(
-            urlencode(request.var("name")),
-            urlencode(makeuri(request, [("edit", "1")])),
-        )
-
-    @classmethod
     def default_settings(cls) -> ViewDashletConfig:
         return ViewDashletConfig(
             {
@@ -316,16 +213,6 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
                 "is_show_more": False,
             }
         )
-
-    def update(self, config: Config, user_permissions: UserPermissions) -> None:
-        self._show_view_as_dashlet(
-            self._dashlet_spec,
-            user_permissions,
-            soft_query_limit=config.soft_query_limit,
-            hard_query_limit=config.hard_query_limit,
-            debug=config.debug,
-        )
-        html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self) -> SingleInfos:
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
@@ -418,13 +305,6 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
             ),
         ]
 
-    @classmethod
-    def add_url(cls) -> str:
-        return "create_link_view_dashlet.py?name={}&mode=create&back={}".format(
-            urlencode(request.var("name")),
-            urlencode(makeuri(request, [("edit", "1")])),
-        )
-
     def _get_view_spec(self) -> ViewSpec:
         view_name = self._dashlet_spec["name"]
         view_spec = get_permitted_views().get(view_name)
@@ -445,16 +325,6 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         request_vars: HTTPVariables = [("view_name", view_name)]
         request_vars += self._dashlet_context_vars()
         return makeuri_contextless(request, request_vars, filename="view.py")
-
-    def update(self, config: Config, user_permissions: UserPermissions) -> None:
-        self._show_view_as_dashlet(
-            self._get_view_spec(),
-            user_permissions,
-            soft_query_limit=config.soft_query_limit,
-            hard_query_limit=config.hard_query_limit,
-            debug=config.debug,
-        )
-        html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self) -> SingleInfos:
         return self._get_infos_from_view_spec(self._get_view_spec())

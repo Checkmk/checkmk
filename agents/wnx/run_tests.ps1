@@ -435,7 +435,7 @@ try {
     Invoke-PluginsUnitTests
     Invoke-RegressionTest
     Invoke-IntegrationTest
-    Write-Host "PUYTHON TESTING IS DISABLED" -foreground Red
+    Write-Host "PYTHON TESTING IS DISABLED" -foreground Red
     try {
         Set-Location $repo_root
         # Invoke-Exe -run $testPlugins -name "plugins" -exe "py"  "-3" "-m" "pytest" "$cur_dir\tests\ap\test_mk_logwatch_win.py"

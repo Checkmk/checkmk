@@ -212,6 +212,65 @@ test('dropdown resets label if option is reset', async () => {
   await screen.findByText('Select an option')
 })
 
+test('dropdown handles race condition when resetting value', async () => {
+  let resolveQuery: ((value: Response) => void) | null = null
+
+  const response = new Response([
+    {
+      name: 'value1',
+      title: 'Value 1 Title'
+    }
+  ])
+
+  const querySuggestions = vi.fn((_) => {
+    return new Promise((resolve) => {
+      resolveQuery = resolve
+    })
+  })
+
+  render(
+    defineComponent({
+      components: { CmkDropdown },
+      setup() {
+        const selectedOption = ref<string | null>(null)
+        return { selectedOption, querySuggestions }
+      },
+      template: `
+      <CmkDropdown
+        v-model:selected-option="selectedOption"
+        :options="{ type: 'callback-filtered', querySuggestions }"
+        input-hint="Select an option"
+        label="some aria label"
+      />
+      <button @click="selectedOption = 'value1'">Set Value</button>
+      <button @click="selectedOption = null">Reset Value</button>
+    `
+    })
+  )
+
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+
+  // 1. Set value to 'value1'. This triggers querySuggestions which waits to be resolved.
+  await fireEvent.click(screen.getByText('Set Value'))
+  // 2. Reset value to null. This updates button label to input hint immediately.
+  await fireEvent.click(screen.getByText('Reset Value'))
+
+  // Verify it is currently showing the hint (because null update was fast/sync)
+  await screen.findByText('Select an option')
+
+  // 3. Resolve the query for 'value1'.
+  await waitFor(() => {
+    expect(resolveQuery).not.toBeNull()
+    resolveQuery!(response)
+  })
+
+  // Wait a bit to ensure any pending promises resolve
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  // 4. Verify it still shows the hint, NOT the resolved title for 'value1'.
+  expect(dropdown).toHaveTextContent('Select an option')
+})
+
 test('dropdown hides after clicking already selected option', async () => {
   render(CmkDropdown, {
     props: {

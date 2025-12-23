@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 import useClickOutside from '@/lib/useClickOutside'
+import { immediateWatch } from '@/lib/watch'
 
 import CmkSuggestions, {
   ErrorResponse,
@@ -55,15 +56,16 @@ const vClickOutside = useClickOutside()
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const buttonLabel = ref<string>(inputHint)
 
-watch(selectedOption, (newValue) => {
-  if (newValue === null) {
-    buttonLabel.value = inputHint
+immediateWatch(
+  () => selectedOption.value,
+  async (newValue) => {
+    const label = await getButtonLabel(options, newValue)
+    // Only update if the selected option hasn't changed again while awaiting
+    if (newValue === selectedOption.value) {
+      buttonLabel.value = label
+    }
   }
-})
-
-onMounted(async () => {
-  buttonLabel.value = await getButtonLabel(options, selectedOption.value)
-})
+)
 
 /**
  * This function might have a performance impact as it might trigger a callback to fetch

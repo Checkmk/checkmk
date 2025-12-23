@@ -17,7 +17,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type { AgentSlideOutTabs } from '../../lib/type_def'
-import GenerateRegistrationToken from '../GenerateRegistrationToken.vue'
+import GenerateToken from '../GenerateToken.vue'
 
 const { _t } = usei18n()
 
@@ -69,12 +69,16 @@ function reset() {
             </CmkParagraph>
           </div>
 
-          <GenerateRegistrationToken
+          <GenerateToken
             v-model="ott"
+            token-generation-endpoint-uri="domain-types/agent_registration_token/collections/all"
+            :token-generation-body="{
+              host: hostName,
+              comment: 'Agent registration token for agent slideout',
+              expires_at: null
+            }"
             :description="_t('This requires the generation of a registration token.')"
-            :host-name="hostName"
-            generate-comment="Agent registration token for agent slideout."
-          ></GenerateRegistrationToken>
+          />
           <template v-if="ott !== null">
             <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
             <CmkCode :code_txt="regAgentCmd" class="code" />

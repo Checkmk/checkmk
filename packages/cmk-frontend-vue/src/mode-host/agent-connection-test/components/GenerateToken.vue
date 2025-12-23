@@ -15,11 +15,6 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-export interface IAgentTokenGenerationRequest {
-  comment: string
-  expires_at: string | null
-}
-
 export interface IAgentTokenGenerationResponse {
   id: string
   title: string
@@ -29,9 +24,8 @@ export interface IAgentTokenGenerationResponse {
 const { _t } = usei18n()
 const props = defineProps<{
   description?: TranslatedString | undefined
-  generateComment: string
-  hostName: string
-  expiresAt?: string | null | undefined
+  tokenGenerationEndpointUri: string
+  tokenGenerationBody: unknown
 }>()
 
 const ott = defineModel<string | null | Error>({ required: true })
@@ -44,11 +38,10 @@ async function generateOTT() {
   ottGenerating.value = true
 
   try {
-    const res = (await api.post('domain-types/agent_registration_token/collections/all', {
-      comment: props.generateComment,
-      host: props.hostName,
-      expires_at: props.expiresAt || null
-    } as IAgentTokenGenerationRequest)) as IAgentTokenGenerationResponse
+    const res = (await api.post(
+      props.tokenGenerationEndpointUri,
+      props.tokenGenerationBody
+    )) as IAgentTokenGenerationResponse
 
     ott.value = res.id
   } catch (e) {
@@ -67,30 +60,28 @@ async function generateOTT() {
     <CmkButton
       v-if="!ottGenerating"
       variant="secondary"
-      class="mh-generate-registration-token__button"
+      class="mh-generate-token__button"
       @click="generateOTT"
     >
-      <CmkIcon name="signature-key" class="mh-generate-registration-token__icon" />
-      {{ _t('Generate registration token') }}
+      <CmkIcon name="signature-key" class="mh-generate-token__icon" />
+      {{ _t('Generate token') }}
     </CmkButton>
 
-    <CmkAlertBox v-else variant="loading">{{ _t('Generating registration token') }}</CmkAlertBox>
+    <CmkAlertBox v-else variant="loading">{{ _t('Generating token') }}</CmkAlertBox>
   </template>
   <template v-else>
     <CmkAlertBox v-if="ottError" variant="error">{{
-      _t(`Error on generating registration token: ${ottError.message}`)
+      _t(`Error on generating token: ${ottError.message}`)
     }}</CmkAlertBox>
-    <CmkAlertBox v-else variant="success">{{
-      _t('Successfully generated registration token')
-    }}</CmkAlertBox>
+    <CmkAlertBox v-else variant="success">{{ _t('Successfully generated token') }}</CmkAlertBox>
   </template>
 </template>
 
 <style scoped>
-.mh-generate-registration-token__button {
+.mh-generate-token__button {
   margin: var(--dimension-4) 0 var(--dimension-6);
 
-  .mh-generate-registration-token__icon {
+  .mh-generate-token__icon {
     margin-right: var(--dimension-4);
   }
 }

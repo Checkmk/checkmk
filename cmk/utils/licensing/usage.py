@@ -145,6 +145,14 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         - with the check_command: robotmk_test
         - that are not shadow services
         - with the "cmk/licensing:excluded" label
+    num_synthetic_kpis Services
+        - with the check_command: robotmk_pattern_based_kpi or robotmk_marker_based_kpi
+        - that are not shadow services
+        - without the "cmk/licensing:excluded" label
+    num_synthetic_kpis_excluded: Services
+        - with the check_command: robotmk_pattern_based_kpi or robotmk_marker_based_kpi
+        - that are not shadow services
+        - with the "cmk/licensing:excluded" label
 
     Shadow objects: 0: active, 1: passive, 2: shadow
     """

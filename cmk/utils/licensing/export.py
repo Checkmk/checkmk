@@ -144,6 +144,7 @@ class RawLicenseUsageSample(TypedDict):
     num_synthetic_tests_excluded: int
     num_synthetic_kpis: int
     num_synthetic_kpis_excluded: int
+    num_active_metric_series: int
     extension_ntop: bool
 
 
@@ -169,6 +170,7 @@ class LicenseUsageSample:
     num_synthetic_tests_excluded: int
     num_synthetic_kpis: int
     num_synthetic_kpis_excluded: int
+    num_active_metric_series: int
     extension_ntop: bool
 
     def for_report(self) -> RawLicenseUsageSample:
@@ -193,6 +195,7 @@ class LicenseUsageSample:
             num_synthetic_tests_excluded=self.num_synthetic_tests_excluded,
             num_synthetic_kpis=self.num_synthetic_kpis,
             num_synthetic_kpis_excluded=self.num_synthetic_kpis_excluded,
+            num_active_metric_series=self.num_active_metric_series,
             extension_ntop=self.extension_ntop,
         )
 
@@ -329,6 +332,7 @@ def _parse_sample_v1_1(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_synthetic_tests_excluded=0,
         num_synthetic_kpis=0,
         num_synthetic_kpis_excluded=0,
+        num_active_metric_series=0,
         extension_ntop=_parse_extensions(raw).ntop,
     )
 
@@ -361,6 +365,7 @@ def _parse_sample_v2_0(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_synthetic_tests_excluded=0,
         num_synthetic_kpis=0,
         num_synthetic_kpis_excluded=0,
+        num_active_metric_series=0,
         extension_ntop=_parse_extensions(raw).ntop,
     )
 
@@ -407,6 +412,7 @@ class ParserV1_0(Parser):
             num_synthetic_tests_excluded=0,
             num_synthetic_kpis=0,
             num_synthetic_kpis_excluded=0,
+            num_active_metric_series=0,
             extension_ntop=_parse_extensions(raw).ntop,
         )
 
@@ -473,6 +479,7 @@ class ParserV1_4(Parser):
             num_synthetic_tests_excluded=0,
             num_synthetic_kpis=0,
             num_synthetic_kpis_excluded=0,
+            num_active_metric_series=0,
             extension_ntop=_parse_extensions(raw).ntop,
         )
 
@@ -511,6 +518,7 @@ class ParserV1_5(Parser):
             num_synthetic_tests_excluded=0,
             num_synthetic_kpis=0,
             num_synthetic_kpis_excluded=0,
+            num_active_metric_series=0,
             extension_ntop=_parse_extensions(raw).ntop,
         )
 
@@ -570,17 +578,18 @@ class ParserV3_0(Parser):
             num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
             num_synthetic_kpis=0,
             num_synthetic_kpis_excluded=0,
+            num_active_metric_series=0,
             extension_ntop=extensions.ntop,
         )
 
 
 def _parse_sample_v3_1(instance_id: UUID | None, site_hash: str, raw: object) -> LicenseUsageSample:
     if not isinstance(raw, dict):
-        raise TypeError("Parse sample 3.1/3.2: Wrong sample type: %r" % type(raw))
+        raise TypeError("Parse sample 3.1: Wrong sample type: %r" % type(raw))
     if not (raw_instance_id := raw.get("instance_id")):
-        raise ValueError("Parse sample 3.1/3.2: No such instance ID")
+        raise ValueError("Parse sample 3.1: No such instance ID")
     if not (site_hash := raw.get("site_hash", site_hash)):
-        raise ValueError("Parse sample 3.1/3.2: No such site hash")
+        raise ValueError("Parse sample 3.1: No such site hash")
     extensions = _parse_extensions(raw)
     return LicenseUsageSample(
         instance_id=UUID(raw_instance_id),
@@ -603,6 +612,43 @@ def _parse_sample_v3_1(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
         num_synthetic_kpis=raw["num_synthetic_kpis"],
         num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
+        num_active_metric_series=0,
+        extension_ntop=extensions.ntop,
+    )
+
+
+def _parse_sample_v3_2(instance_id: UUID | None, site_hash: str, raw: object) -> LicenseUsageSample:
+    if not isinstance(raw, dict):
+        raise TypeError("Parse sample 3.2: Wrong sample type: %r" % type(raw))
+    if not (raw_instance_id := raw.get("instance_id")):
+        raise ValueError("Parse sample 3.2: No such instance ID")
+    if not (site_hash := raw.get("site_hash", site_hash)):
+        raise ValueError("Parse sample 3.2: No such site hash")
+    extensions = _parse_extensions(raw)
+    return LicenseUsageSample(
+        instance_id=UUID(raw_instance_id),
+        site_hash=site_hash,
+        version=raw["version"],
+        edition=raw["edition"],
+        platform=_parse_platform(raw["platform"]),
+        is_cma=raw["is_cma"],
+        sample_time=raw["sample_time"],
+        timezone=raw["timezone"],
+        num_hosts=raw["num_hosts"],
+        num_hosts_cloud=raw["num_hosts_cloud"],
+        num_hosts_shadow=raw["num_hosts_shadow"],
+        num_hosts_excluded=raw["num_hosts_excluded"],
+        num_services=raw["num_services"],
+        num_services_cloud=raw["num_services_cloud"],
+        num_services_shadow=raw["num_services_shadow"],
+        num_services_excluded=raw["num_services_excluded"],
+        num_synthetic_tests=raw["num_synthetic_tests"],
+        num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
+        num_synthetic_kpis=raw["num_synthetic_kpis"],
+        num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
+        num_active_metric_series=raw.get(
+            "num_active_metric_series", 0
+        ),  # remove the default during SAASDEV-6265
         extension_ntop=extensions.ntop,
     )
 
@@ -624,7 +670,7 @@ class ParserV3_2(Parser):
     def parse_sample(
         self, instance_id: UUID | None, site_hash: str, raw: object
     ) -> LicenseUsageSample:
-        return _parse_sample_v3_1(instance_id, site_hash, raw)
+        return _parse_sample_v3_2(instance_id, site_hash, raw)
 
 
 def parse_protocol_version(

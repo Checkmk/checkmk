@@ -115,6 +115,16 @@ _PERMISSIONS_VIEW_WIDGET = permissions.Optional(
         ]
     )
 )
+
+# if a dashboard contains graphs, these might come up (even for reads)
+_PERMISSIONS_GRAPH_WIDGET = permissions.Optional(
+    permissions.AllPerm(
+        [
+            permissions.Perm("general.edit_custom_graph"),  # yes, even for reads
+        ]
+    )
+)
+
 PERMISSIONS_DASHBOARD = permissions.AllPerm(
     [
         permissions.Perm("general.edit_dashboards"),  # always required, even for reads
@@ -126,8 +136,9 @@ PERMISSIONS_DASHBOARD = permissions.AllPerm(
         _PERMISSIONS_PAGE_TOPICS,
         # every dashboard has its own permissions, all of which might be checked (and are optional)
         permissions.PrefixPerm("dashboard"),
-        # dashboards which contain view widgets need extra permissions to view/modify them
+        # dashboards which contain certain widgets need extra permissions to view/modify them
         _PERMISSIONS_VIEW_WIDGET,
+        _PERMISSIONS_GRAPH_WIDGET,
         # somewhere these are also checked
         _PERMISSIONS_MISC,
     ]

@@ -93652,6 +93652,13 @@ msgstr "flexible"
 msgid "folder"
 msgstr "carpeta"
 
+#, fuzzy
+msgid "folder has to be omitted for agent_type=host_name."
+msgstr "La carpeta no está permitida para ningún grupo de contactos."
+
+msgid "folder has to be omitted for agent_type=vanilla."
+msgstr ""
+
 msgid "for"
 msgstr "para"
 
@@ -93779,6 +93786,15 @@ msgstr "Nombre del Vhost"
 
 msgid "host tags"
 msgstr "etiquetas de host"
+
+msgid "host_name can not be empty for agent_type=host_name."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=generic."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=vanilla."
+msgstr ""
 
 msgid "hosts"
 msgstr "Hosts"
@@ -97245,18 +97261,18 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Generate registration token"
-msgstr "Usuario de registro del agente"
+msgid "Generate token"
+msgstr "Generar"
 
 #, fuzzy
-msgid "Generating registration token"
-msgstr "Usuario de registro del agente"
+msgid "Generating token"
+msgstr "Opciones generales"
 
-msgid "Error on generating registration token: ${ottError.message}"
+msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
-msgid "Successfully generated registration token"
+msgid "Successfully generated token"
 msgstr "Se ha cambiado la contraseña con éxito."
 
 msgid ""
@@ -97817,6 +97833,10 @@ msgstr "Trabajos en grupo de"
 msgid "Add your first host"
 msgstr "Añadir regla para el host actual"
 
+#, fuzzy
+msgid "This requires the generation of a download token."
+msgstr "Este permiso permite el registro de cualquier host existente."
+
 msgid "View your newly added host"
 msgstr ""
 
@@ -98175,6 +98195,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Generate registration token"
+#~ msgstr "Usuario de registro del agente"
+
+#, fuzzy
+#~ msgid "Generating registration token"
+#~ msgstr "Usuario de registro del agente"
 
 #~ msgid "'Warning' state"
 #~ msgstr "estado 'Advertencia'"

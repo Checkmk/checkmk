@@ -92287,6 +92287,13 @@ msgstr "flessibile"
 msgid "folder"
 msgstr "cartella"
 
+#, fuzzy
+msgid "folder has to be omitted for agent_type=host_name."
+msgstr "La cartella non è ammessa per nessun gruppo di contatti."
+
+msgid "folder has to be omitted for agent_type=vanilla."
+msgstr ""
+
 msgid "for"
 msgstr "per"
 
@@ -92413,6 +92420,15 @@ msgstr "Nome del vhost"
 
 msgid "host tags"
 msgstr "tag dell'host"
+
+msgid "host_name can not be empty for agent_type=host_name."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=generic."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=vanilla."
+msgstr ""
 
 msgid "hosts"
 msgstr "ospita"
@@ -95839,18 +95855,18 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Generate registration token"
-msgstr "Utente di registrazione dell'agente"
+msgid "Generate token"
+msgstr "Generare la chiave"
 
 #, fuzzy
-msgid "Generating registration token"
-msgstr "Utente di registrazione dell'agente"
+msgid "Generating token"
+msgstr "Opzioni generali"
 
-msgid "Error on generating registration token: ${ottError.message}"
+msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
-msgid "Successfully generated registration token"
+msgid "Successfully generated token"
 msgstr "Copiato con successo negli appunti."
 
 msgid ""
@@ -96410,6 +96426,11 @@ msgstr "Gruppo Werks di"
 msgid "Add your first host"
 msgstr "Aggiungi regola per l'host corrente"
 
+#, fuzzy
+msgid "This requires the generation of a download token."
+msgstr ""
+"Questa autorizzazione consente la registrazione di qualsiasi host esistente."
+
 msgid "View your newly added host"
 msgstr ""
 
@@ -96767,6 +96788,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Generate registration token"
+#~ msgstr "Utente di registrazione dell'agente"
+
+#, fuzzy
+#~ msgid "Generating registration token"
+#~ msgstr "Utente di registrazione dell'agente"
 
 #, python-format
 #~ msgid "%s can only be deleted via quick setup"

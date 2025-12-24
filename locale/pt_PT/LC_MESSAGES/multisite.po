@@ -92829,6 +92829,13 @@ msgstr "flexível"
 msgid "folder"
 msgstr "pasta"
 
+#, fuzzy
+msgid "folder has to be omitted for agent_type=host_name."
+msgstr "A pasta não é permitida para nenhum grupo de contato."
+
+msgid "folder has to be omitted for agent_type=vanilla."
+msgstr ""
+
 msgid "for"
 msgstr "para"
 
@@ -92955,6 +92962,15 @@ msgstr "Nome do fantasma"
 
 msgid "host tags"
 msgstr "etiquetas de host"
+
+msgid "host_name can not be empty for agent_type=host_name."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=generic."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=vanilla."
+msgstr ""
 
 msgid "hosts"
 msgstr "hospedeiros"
@@ -96397,18 +96413,18 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Generate registration token"
-msgstr "Utilizador de registo de agente"
+msgid "Generate token"
+msgstr "Gerar"
 
 #, fuzzy
-msgid "Generating registration token"
-msgstr "Utilizador de registo de agente"
+msgid "Generating token"
+msgstr "Opções Gerais"
 
-msgid "Error on generating registration token: ${ottError.message}"
+msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
-msgid "Successfully generated registration token"
+msgid "Successfully generated token"
 msgstr "Mudança de senha com sucesso."
 
 msgid ""
@@ -96968,6 +96984,10 @@ msgstr "Grupo Werks por"
 msgid "Add your first host"
 msgstr "Adicionar regra para o anfitrião actual"
 
+#, fuzzy
+msgid "This requires the generation of a download token."
+msgstr "Esta permissão permite o registo de qualquer anfitrião existente."
+
 msgid "View your newly added host"
 msgstr ""
 
@@ -97327,6 +97347,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Generate registration token"
+#~ msgstr "Utilizador de registo de agente"
+
+#, fuzzy
+#~ msgid "Generating registration token"
+#~ msgstr "Utilizador de registo de agente"
 
 #~ msgid "'Warning' state"
 #~ msgstr "Estado de \"Advertência"

@@ -89645,6 +89645,13 @@ msgstr "flexibel"
 msgid "folder"
 msgstr "Ordner"
 
+#, fuzzy
+msgid "folder has to be omitted for agent_type=host_name."
+msgstr "Keine Kontaktgruppe hat auf diesem Ordner eine Berechtigung."
+
+msgid "folder has to be omitted for agent_type=vanilla."
+msgstr ""
+
 msgid "for"
 msgstr "für"
 
@@ -89768,6 +89775,16 @@ msgstr "Host-Namen"
 
 msgid "host tags"
 msgstr "Host-Merkmale"
+
+#, fuzzy
+msgid "host_name can not be empty for agent_type=host_name."
+msgstr "Der Ausgangszustand kann nicht gleich dem Zielzustand sein."
+
+msgid "host_name has to be omitted for agent_type=generic."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=vanilla."
+msgstr ""
 
 msgid "hosts"
 msgstr "Hosts"
@@ -92959,18 +92976,18 @@ msgstr ""
 "die CPU-Auslastung ist."
 
 #, fuzzy
-msgid "Generate registration token"
-msgstr "Benutzer der Agentenregistrierung"
+msgid "Generate token"
+msgstr "Erstelle Schlüssel"
 
 #, fuzzy
-msgid "Generating registration token"
-msgstr "Benutzer der Agentenregistrierung"
+msgid "Generating token"
+msgstr "Generation 1"
 
-msgid "Error on generating registration token: ${ottError.message}"
+msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
-msgid "Successfully generated registration token"
+msgid "Successfully generated token"
 msgstr "Erfolgreich mit Agent verbunden."
 
 msgid ""
@@ -93496,6 +93513,10 @@ msgstr "Werks gruppieren nach"
 msgid "Add your first host"
 msgstr "Fügen Sie Ihren ersten Host hinzu"
 
+#, fuzzy
+msgid "This requires the generation of a download token."
+msgstr "Diese Berechtigung erlaubt die Registrierung jedes bestehenden Hosts."
+
 msgid "View your newly added host"
 msgstr "Sehen Sie sich Ihren neu hinzugefügten Host an"
 
@@ -93892,6 +93913,14 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#, fuzzy
+#~ msgid "Generate registration token"
+#~ msgstr "Benutzer der Agentenregistrierung"
+
+#, fuzzy
+#~ msgid "Generating registration token"
+#~ msgstr "Benutzer der Agentenregistrierung"
 
 #, python-format
 #~ msgid "%s can only be deleted via quick setup"
@@ -96980,9 +97009,6 @@ msgstr ""
 
 #~ msgid "Physical disks"
 #~ msgstr "Physikalische Platten"
-
-#~ msgid "Source state can not be equal to target state."
-#~ msgstr "Der Ausgangszustand kann nicht gleich dem Zielzustand sein."
 
 #~ msgid "Export this connection for API"
 #~ msgstr "Diese Verbindung für API exportieren"

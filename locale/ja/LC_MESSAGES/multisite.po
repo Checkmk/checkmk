@@ -87431,6 +87431,13 @@ msgstr "フレキシブル"
 msgid "folder"
 msgstr "フォルダ"
 
+#, fuzzy
+msgid "folder has to be omitted for agent_type=host_name."
+msgstr "このフォルダは、どの連絡先グループにも許可されていません。"
+
+msgid "folder has to be omitted for agent_type=vanilla."
+msgstr ""
+
 msgid "for"
 msgstr "ために"
 
@@ -87553,6 +87560,15 @@ msgstr "ホスト名"
 
 msgid "host tags"
 msgstr "ホストタグ"
+
+msgid "host_name can not be empty for agent_type=host_name."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=generic."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=vanilla."
+msgstr ""
 
 msgid "hosts"
 msgstr "ホスト"
@@ -90904,18 +90920,18 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Generate registration token"
-msgstr "エージェント登録ユーザー"
+msgid "Generate token"
+msgstr "キーを生成する"
 
 #, fuzzy
-msgid "Generating registration token"
-msgstr "エージェント登録ユーザー"
+msgid "Generating token"
+msgstr "一般的なオプション"
 
-msgid "Error on generating registration token: ${ottError.message}"
+msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
-msgid "Successfully generated registration token"
+msgid "Successfully generated token"
 msgstr "クリップボードへのコピーに成功しました。"
 
 msgid ""
@@ -91465,6 +91481,10 @@ msgstr "によるグループワーク"
 msgid "Add your first host"
 msgstr "現ホストに対するルールを追加"
 
+#, fuzzy
+msgid "This requires the generation of a download token."
+msgstr "この権限は、任意の既存ホストの登録を許可する。"
+
 msgid "View your newly added host"
 msgstr ""
 
@@ -91817,6 +91837,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Generate registration token"
+#~ msgstr "エージェント登録ユーザー"
+
+#, fuzzy
+#~ msgid "Generating registration token"
+#~ msgstr "エージェント登録ユーザー"
 
 #, python-format
 #~ msgid "%s can only be deleted via quick setup"

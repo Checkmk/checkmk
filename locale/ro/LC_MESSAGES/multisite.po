@@ -93195,6 +93195,13 @@ msgstr "flexibil"
 msgid "folder"
 msgstr "dosar"
 
+#, fuzzy
+msgid "folder has to be omitted for agent_type=host_name."
+msgstr "Dosarul nu este permis pentru niciun grup de contacte."
+
+msgid "folder has to be omitted for agent_type=vanilla."
+msgstr ""
+
 msgid "for"
 msgstr "pentru"
 
@@ -93323,6 +93330,15 @@ msgstr "Nume Vhost"
 
 msgid "host tags"
 msgstr "Etichete gazdă"
+
+msgid "host_name can not be empty for agent_type=host_name."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=generic."
+msgstr ""
+
+msgid "host_name has to be omitted for agent_type=vanilla."
+msgstr ""
 
 msgid "hosts"
 msgstr "gazde"
@@ -96790,18 +96806,18 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Generate registration token"
-msgstr "Utilizator de înregistrare agent"
+msgid "Generate token"
+msgstr "Generarea cheii"
 
 #, fuzzy
-msgid "Generating registration token"
-msgstr "Utilizator de înregistrare agent"
+msgid "Generating token"
+msgstr "Opțiuni generale"
 
-msgid "Error on generating registration token: ${ottError.message}"
+msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
-msgid "Successfully generated registration token"
+msgid "Successfully generated token"
 msgstr "Copiat cu succes în clipboard."
 
 msgid ""
@@ -97370,6 +97386,10 @@ msgstr "Lucrări în grup de"
 msgid "Add your first host"
 msgstr "Adăugați o regulă pentru gazda curentă"
 
+#, fuzzy
+msgid "This requires the generation of a download token."
+msgstr "Această permisiune permite înregistrarea oricărei gazde existente."
+
 msgid "View your newly added host"
 msgstr ""
 
@@ -97730,6 +97750,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Generate registration token"
+#~ msgstr "Utilizator de înregistrare agent"
+
+#, fuzzy
+#~ msgid "Generating registration token"
+#~ msgstr "Utilizator de înregistrare agent"
 
 #~ msgid "'Warning' state"
 #~ msgstr "Starea \"Avertizare"

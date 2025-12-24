@@ -84,6 +84,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
     :id="`db-relative-grid-frame-${contentProps.widget_id}`"
     class="db-relative-grid-frame db-widget-theme"
     :style="{ ...containerStyle }"
+    :aria-label="_t('Widget')"
   >
     <MissingRuntimeFiltersMsg>
       <div :style="{ position: 'relative', height: '100%', width: '100%', zIndex: zIndex }">
@@ -161,18 +162,21 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
                 class="db-centered-edit-controls-button control-button-color"
                 name="widget-delete"
                 size="xlarge"
+                :aria-label="_t('Delete widget')"
                 @click="emit('click:delete')"
               />
               <CmkIconButton
                 class="db-centered-edit-controls-button control-button-color"
                 name="widget-clone"
                 size="xlarge"
+                :aria-label="_t('Clone widget')"
                 @click="emit('click:clone')"
               />
               <CmkIconButton
                 class="db-centered-edit-controls-button control-button-color"
                 name="widget-edit"
                 size="xlarge"
+                :aria-label="_t('Edit widget')"
                 @click="emit('click:edit')"
               />
             </div>

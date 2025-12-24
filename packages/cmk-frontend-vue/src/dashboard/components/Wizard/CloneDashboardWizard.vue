@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import CmkIcon from '@/components/CmkIcon'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
@@ -23,6 +25,8 @@ interface CreateDashboardWizardProps {
   referenceDashboardType: DashboardOwnerType
   availableLayouts: DashboardLayout[]
 }
+
+const { _t } = usei18n()
 
 const props = defineProps<CreateDashboardWizardProps>()
 
@@ -52,7 +56,7 @@ const cancel = () => {
 </script>
 
 <template>
-  <CmkSlideIn :open="open">
+  <CmkSlideIn :open="open" :aria-label="_t('Clone dashboard')">
     <Suspense>
       <CloneDashboardWizard
         :reference-dashboard-id="activeDashboardId"

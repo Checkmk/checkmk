@@ -55,5 +55,6 @@ const metricNameAutocompleter = computed(() => {
     :autocompleter="metricNameAutocompleter"
     :size="0"
     :placeholder="_t('Select service metric')"
+    :label="_t('Select service metric')"
   />
 </template>

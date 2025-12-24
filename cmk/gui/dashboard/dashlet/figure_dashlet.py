@@ -9,7 +9,6 @@
 import abc
 
 from cmk.gui.dashboard.type_defs import DashletSize
-from cmk.gui.figures import FigureResponseData
 from cmk.gui.type_defs import SingleInfos
 
 from .base import Dashlet, T
@@ -45,11 +44,3 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
     @classmethod
     def has_context(cls) -> bool:
         return True
-
-    @property
-    def instance_name(self) -> str:
-        # Note: This introduces the restriction one graph type per dashlet
-        return f"{self.type_name()}_{self._dashlet_id}"
-
-    @abc.abstractmethod
-    def generate_response_data(self) -> FigureResponseData: ...

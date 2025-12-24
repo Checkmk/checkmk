@@ -196,11 +196,6 @@ class StatsDashletConfig(DashletConfig): ...
 
 
 class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    def generate_response_data(self) -> FigureResponseData:
-        return HostStatsDashletDataGenerator.generate_response_data(
-            self.dashlet_spec, self.context, self.infos()
-        )
-
     @classmethod
     def type_name(cls) -> str:
         return "hoststats"
@@ -230,11 +225,6 @@ class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
 
 
 class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    def generate_response_data(self) -> FigureResponseData:
-        return ServiceStatsDashletDataGenerator.generate_response_data(
-            self.dashlet_spec, self.context, self.infos()
-        )
-
     @classmethod
     def type_name(cls) -> str:
         return "servicestats"
@@ -261,11 +251,6 @@ class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
 
 
 class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    def generate_response_data(self) -> FigureResponseData:
-        return EventStatsDashletDataGenerator.generate_response_data(
-            self.dashlet_spec, self.context, self.infos()
-        )
-
     @classmethod
     def type_name(cls) -> str:
         return "eventstats"

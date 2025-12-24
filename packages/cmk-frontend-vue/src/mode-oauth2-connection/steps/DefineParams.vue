@@ -27,7 +27,7 @@ const { _t } = usei18n()
 const props = defineProps<
   CmkWizardStepProps & {
     urls: Oauth2Urls
-    form_spec: {
+    formSpec: {
       id: string
       spec: FormSpec
       validation?: ValidationMessages
@@ -37,7 +37,7 @@ const props = defineProps<
 >()
 
 const dataRef = defineModel<OAuth2FormData>({ required: true })
-const validationRef = ref<ValidationMessages>(props.form_spec.validation ?? [])
+const validationRef = ref<ValidationMessages>(props.formSpec.validation ?? [])
 
 async function validate(): Promise<boolean> {
   let valid = true
@@ -102,7 +102,7 @@ async function validate(): Promise<boolean> {
       <CmkHeading type="h2"> {{ _t('Define OAuth2 parameter') }}</CmkHeading>
     </template>
     <template #content>
-      <FormEdit v-model:data="dataRef" :backend-validation="validationRef" :spec="form_spec.spec" />
+      <FormEdit v-model:data="dataRef" :backend-validation="validationRef" :spec="formSpec.spec" />
       <CmkParagraph>
         {{
           _t(

@@ -10,7 +10,7 @@ import { computed } from 'vue'
 
 import { type ValidationMessages } from '@/form/private/validation'
 
-import ModeCreateOAuth2ConnectionApp from '@/mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
+import CreateOAuth2Connection from '@/mode-oauth2-connection/CreateOAuth2Connection.vue'
 import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
 
 const props = defineProps<{
@@ -39,9 +39,9 @@ const modeCreateOAuth2ConnectionFormSpec = computed(() => {
 </script>
 
 <template>
-  <ModeCreateOAuth2ConnectionApp
+  <CreateOAuth2Connection
     :config="spec.config"
-    :form_spec="modeCreateOAuth2ConnectionFormSpec"
-    :authority_mapping="authorityMapping"
+    :form-spec="modeCreateOAuth2ConnectionFormSpec"
+    :authority-mapping="authorityMapping"
   />
 </template>

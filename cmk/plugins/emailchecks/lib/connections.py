@@ -848,7 +848,7 @@ def _make_connection(config: TRXConfig, timeout: int) -> POP3 | IMAP | EWS | Gra
                 return GraphApi(
                     authority_urls=get_graph_authority_urls(config.authority),
                     auth=config.auth,
-                    storage_id=config.auth.initial_access_token.split(":")[0],
+                    storage_id=config.auth.storage_id,
                 )
 
             case "SMTP":

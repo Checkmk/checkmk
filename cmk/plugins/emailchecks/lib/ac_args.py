@@ -27,6 +27,7 @@ class OAuth2:
 
 @dataclass(kw_only=True)
 class OAuth2WithTokens(OAuth2):
+    storage_id: str
     initial_access_token: str
     initial_refresh_token: str
 
@@ -178,6 +179,11 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         metavar="INITIAL_REFRESH_TOKEN_ID",
         help="Password store reference for initial refresh token for GraphApi authentication",
     )
+    parser.add_argument(
+        f"--{scope}-storage-id",
+        required=False,
+        help="Storage ID used for storing access to the GraphAPI. Only required of not using referenced tokens.",
+    )
 
 
 def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
@@ -191,6 +197,7 @@ def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
             "initial_access_token_reference": str() | None as initial_access_token_reference,
             "initial_refresh_token": str() | None as initial_refresh_token,
             "initial_refresh_token_reference": str() | None as initial_refresh_token_reference,
+            "storage_id": str() | None as storage_id,
         }:
             return OAuth2WithTokens(
                 client_id=client_id,
@@ -202,6 +209,7 @@ def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
                 initial_refresh_token=_parse_secret(
                     initial_refresh_token, initial_refresh_token_reference
                 ),
+                storage_id=_build_storage_id(storage_id, initial_access_token_reference),
             )
         case {
             "client_id": str(client_id),
@@ -236,6 +244,14 @@ def _parse_secret(secret: str | None, reference: str | None) -> str:
     if reference is None:
         raise ValueError("Either secret or secret reference must be set")
     return dereference_secret(reference).reveal()
+
+
+def _build_storage_id(storage_id: str | None, secret_reference: str | None) -> str:
+    if storage_id:
+        return f"emailchecks-{storage_id}"
+    if secret_reference:
+        return f"emailchecks-{secret_reference.split(':')[0].split('_')[0]}"
+    raise ValueError("Either storage_id or secret_reference must be set")
 
 
 def _parse_port(raw: Mapping[str, object]) -> int:

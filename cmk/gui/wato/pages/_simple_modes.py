@@ -544,13 +544,13 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                 (
                     "disabled",
                     Checkbox(
-                        title=_("Activation"),
+                        title=_("Configuration Activation"),
                         help=_(
                             "Selecting this option will disable the %s, but "
                             "it will remain in the configuration."
                         )
                         % self._mode_type.name_singular(),
-                        label=_("do not activate this %s") % self._mode_type.name_singular(),
+                        label=_("Do not apply this configuration"),
                     ),
                 ),
             ]
@@ -668,7 +668,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                         "it will remain in the configuration."
                     )
                     % self._mode_type.name_singular(),
-                    label=Label("do not activate this %s") % self._mode_type.name_singular(),
+                    label=Label("Do not apply this configuration"),
                 ),
             )
 

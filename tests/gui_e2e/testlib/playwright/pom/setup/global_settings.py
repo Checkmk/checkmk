@@ -25,13 +25,14 @@ class GlobalSettings(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to 'Global settings' page")
-        _url_pattern = quote_plus("wato.py?mode=globalvars")
         self.main_menu.setup_menu(self.page_title).click()
-        self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
+        self.validate_page()
 
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Global settings' page")
+        _url_pattern = quote_plus("wato.py?mode=globalvars")
+        self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
         self.main_area.check_page_title(self.page_title)
 
     @override
@@ -48,6 +49,7 @@ class GlobalSettings(CmkPage):
     def search_settings(self, search_text: str) -> None:
         """Search for a setting using the searchbar."""
         logger.info("Search for setting: %s", search_text)
+        self._searchbar.wait_for(state="visible")
         self._searchbar.fill(search_text)
         self.main_area.locator().get_by_role(role="button", name="Submit").click()
 

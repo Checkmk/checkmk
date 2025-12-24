@@ -526,13 +526,13 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 (
                     "disabled",
                     Checkbox(
-                        title=_("Activation"),
+                        title=_("Configuration activation"),
                         help=_(
                             "Selecting this option will disable the %s, but "
                             "it will remain in the configuration."
                         )
                         % self._mode_type.name_singular(),
-                        label=_("do not activate this %s") % self._mode_type.name_singular(),
+                        label=_("Do not apply this configuration"),
                     ),
                 ),
             ]
@@ -644,13 +644,13 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         if self._mode_type.can_be_disabled():
             elements["disabled"] = form_specs.DictElement(
                 parameter_form=form_specs.BooleanChoice(
-                    title=Title("Activation"),
+                    title=Title("Configuration activation"),
                     help_text=Help(
                         "Selecting this option will disable the %s, but "
                         "it will remain in the configuration."
                     )
                     % self._mode_type.name_singular(),
-                    label=Label("do not activate this %s") % self._mode_type.name_singular(),
+                    label=Label("Do not apply this configuration"),
                 ),
             )
 

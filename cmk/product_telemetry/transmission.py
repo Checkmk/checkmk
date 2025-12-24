@@ -27,7 +27,7 @@ def transmit_telemetry_data(
     if not _is_telemetry_transmission_enabled():
         logger.info(
             "Data transmission is disabled, "
-            "see CMK_TELEMETRY_TRANSMISSION_ENABLE environment variable"
+            "see CMK_TELEMETRY_TRANSMISSION_ENABLED environment variable"
         )
         return
 
@@ -56,7 +56,7 @@ def transmit_telemetry_data(
 
 
 def _is_telemetry_transmission_enabled() -> bool:
-    return _strtobool(os.environ.get("CMK_TELEMETRY_TRANSMISSION_ENABLE", "True"))
+    return _strtobool(os.environ.get("CMK_TELEMETRY_TRANSMISSION_ENABLED", "True"))
 
 
 def _strtobool(value: str) -> bool:

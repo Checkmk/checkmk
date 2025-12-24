@@ -132,7 +132,7 @@ def test_transmission_feature_flag(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     mocked_telemetry_dir.mkdir(parents=True, exist_ok=True)
     (mocked_telemetry_dir / "telemetry_1.json").write_text("{}")
 
-    monkeypatch.setenv("CMK_TELEMETRY_TRANSMISSION_ENABLE", "FALSE")
+    monkeypatch.setenv("CMK_TELEMETRY_TRANSMISSION_ENABLED", "FALSE")
 
     with patch("requests.post") as mock_post:
         transmit_telemetry_data(tmp_path, logger=mock.Mock())

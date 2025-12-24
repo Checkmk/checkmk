@@ -40,7 +40,7 @@ class AgentReceiverClient:
         self._client_ip_override: tuple[str, int] | None = None
 
     @contextmanager
-    def with_client_ip(self, client_ip: str = "127.0.0.1", client_port: int = 0) -> Iterator[None]:
+    def with_client_ip(self, client_ip: str, client_port: int = 0) -> Iterator[None]:
         """Context manager to temporarily set the client IP for requests.
 
         This is useful for testing endpoints that have IP-based access control,
@@ -132,8 +132,14 @@ class AgentReceiverClient:
             },
         )
 
-    def activate_config(self) -> httpx.Response:
-        return self.client.post(f"/{self.site_name}/relays/activate-config")
+    def activate_config(self, site_cn: str = SITE_CN) -> httpx.Response:
+        headers = {
+            INJECTED_UUID_HEADER: site_cn,
+        }
+        return self.client.post(
+            f"/{self.site_name}/relays/activate-config",
+            headers=headers,
+        )
 
     def forward_monitoring_data(
         self, *, relay_id: str, monitoring_data: MonitoringData

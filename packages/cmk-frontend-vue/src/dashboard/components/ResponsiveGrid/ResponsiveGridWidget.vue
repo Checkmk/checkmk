@@ -4,11 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import DashboardContent from '@/dashboard/components/DashboardContent/DashboardContent.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import MissingRuntimeFiltersMsg from '@/dashboard/components/DashboardFilterSettings/runtime-filter/MissingRuntimeFiltersMsg.vue'
+
+const { _t } = usei18n()
 
 interface Props {
   spec: ContentProps
@@ -28,6 +32,7 @@ defineEmits<{
     :id="`widget-${spec.widget_id}`"
     class="db-responsive-grid-widget__frame"
     :class="{ 'db-responsive-grid-widget__frame--edit': isEditing }"
+    :aria-label="_t('Widget')"
   >
     <div v-if="isEditing" class="db-responsive-grid-widget__edit-controls">
       <div class="db-responsive-grid-widget__edit-controls-buttons">

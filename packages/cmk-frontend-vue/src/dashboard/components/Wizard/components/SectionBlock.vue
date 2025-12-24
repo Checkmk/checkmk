@@ -18,13 +18,15 @@ defineProps<SectionBlockProps>()
 </script>
 
 <template>
-  <CmkHeading type="h3">
-    {{ title }}
-  </CmkHeading>
+  <div role="region" :aria-label="title">
+    <CmkHeading type="h3">
+      {{ title }}
+    </CmkHeading>
 
-  <ContentSpacer :dimension="5" />
+    <ContentSpacer :dimension="5" />
 
-  <slot />
+    <slot />
 
-  <ContentSpacer :dimension="8" />
+    <ContentSpacer :dimension="8" />
+  </div>
 </template>

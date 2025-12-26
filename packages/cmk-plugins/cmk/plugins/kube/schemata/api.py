@@ -649,7 +649,7 @@ class StatefulSetRollingUpdate(BaseModel):
 
     type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate")
     partition: int
-    max_unavailable: str | None = Field(None)
+    max_unavailable: str | int | None = Field(None)
 
 
 class Recreate(BaseModel):

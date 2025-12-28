@@ -489,7 +489,6 @@ LEGACY_CHECKS = [
     "packeteer_fan_status",
     "packeteer_ps_status",
     "palo_alto_sessions",
-    "pandacom_psu",
     "pandacom_sys_temp",
     "pandacom_temp",
     "papouch_th2e_sensors",

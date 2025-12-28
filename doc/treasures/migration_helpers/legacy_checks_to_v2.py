@@ -25,7 +25,13 @@ import libcst as cst
 _ADDED_IMPORTS = (
     "from collections.abc import Iterable, Mapping",
     "from typing import Any",
-    "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!",
+    (
+        "from cmk.agent_based.legacy.conversion import (\n"
+        "    # TODO: replace this by 'from cmk.agent_based.v2 import check_levels'.\n"
+        "    # This might require you to migrate the corresponding ruleset.\n"
+        "    check_levels_legacy_compatible as check_levels,\n"
+        ")"
+    ),
     (
         "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
         " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin"
@@ -79,6 +85,8 @@ def _make_state(value: cst.BaseExpression) -> cst.BaseExpression:
                 return cst.parse_expression("State.CRIT")
             case "3":
                 return cst.parse_expression("State.UNKNOWN")
+            case _:
+                return value
     return value
 
 

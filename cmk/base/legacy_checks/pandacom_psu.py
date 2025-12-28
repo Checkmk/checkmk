@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # .1.3.6.1.4.1.3652.3.2.1.1.0 M9-2 --> SPEEDCARRIER-MIB::nmCarrierName.0
 # .1.3.6.1.4.1.3652.3.2.1.2.0 4 --> SPEEDCARRIER-MIB::nmCarrierType.0
 # .1.3.6.1.4.1.3652.3.2.1.3.0 3 --> SPEEDCARRIER-MIB::nmPSU1Status.0
@@ -19,14 +17,26 @@
 # .1.3.6.1.4.1.3652.3.2.1.12.0 0 --> SPEEDCARRIER-MIB::nmPSU3Status.0
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.pandacom.lib import DETECT_PANDACOM
 
-check_info = {}
+Section = Mapping[str, Mapping[str, Any]]
 
 
-def parse_pandacom_psu(string_table):
+def parse_pandacom_psu(string_table: StringTable) -> Section | None:
     map_psu_type = {
         "0": "type not configured",
         "1": "230 V AC 75 W",
@@ -51,11 +61,11 @@ def parse_pandacom_psu(string_table):
         "65033": "230 V AC 1200W 1 UH",
     }
     map_psu_state = {
-        "0": (3, "not installed"),
-        "1": (2, "fail"),
-        "2": (1, "temperature warning"),
-        "3": (0, "pass"),
-        "255": (3, "not available"),
+        "0": (State.UNKNOWN, "not installed"),
+        "1": (State.CRIT, "fail"),
+        "2": (State.WARN, "temperature warning"),
+        "3": (State.OK, "pass"),
+        "255": (State.UNKNOWN, "not available"),
     }
 
     if not string_table:
@@ -76,18 +86,21 @@ def parse_pandacom_psu(string_table):
     return parsed
 
 
-def inventory_pandacom_psu(parsed):
-    return [(psu_nr, None) for psu_nr in parsed]
+def inventory_pandacom_psu(section: Section) -> DiscoveryResult:
+    for psu_nr in section:
+        yield Service(item=psu_nr)
 
 
-def check_pandacom_psu(item, _no_params, parsed):
-    if item in parsed:
-        state, state_readable = parsed[item]["state"]
-        return state, "[{}] Operational status: {}".format(parsed[item]["type"], state_readable)
-    return None
+def check_pandacom_psu(item: str, section: Section) -> CheckResult:
+    if item in section:
+        state, state_readable = section[item]["state"]
+        yield Result(
+            state=state,
+            summary=f"[{section[item]['type']}] Operational status: {state_readable}",
+        )
 
 
-check_info["pandacom_psu"] = LegacyCheckDefinition(
+snmp_section_pandacom_psu = SimpleSNMPSection(
     name="pandacom_psu",
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(
@@ -95,6 +108,11 @@ check_info["pandacom_psu"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     parse_function=parse_pandacom_psu,
+)
+
+
+check_plugin_pandacom_psu = CheckPlugin(
+    name="pandacom_psu",
     service_name="Power Supply %s",
     discovery_function=inventory_pandacom_psu,
     check_function=check_pandacom_psu,

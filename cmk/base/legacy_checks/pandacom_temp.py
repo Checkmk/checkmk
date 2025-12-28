@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 from cmk.plugins.pandacom.lib import DETECT_PANDACOM
-
-check_info = {}
 
 PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS = {"levels": (35.0, 40.0)}
 
@@ -19,25 +24,27 @@ def parse_pandacom_temp(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def inventory_pandacom_module_temp(info):
-    return [(line[0], {}) for line in info]
+def inventory_pandacom_module_temp(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=line[0])
 
 
-def check_pandacom_module_temp(item, params, info):
-    for slot, temp_str, warn_str, crit_str in info:
+def check_pandacom_module_temp(
+    item: str, params: TempParamType, section: StringTable
+) -> CheckResult:
+    for slot, temp_str, warn_str, crit_str in section:
         if slot == item:
-            return check_temperature(
-                int(temp_str),
-                params,
-                "pandacom_%s" % item,
-                dev_levels=(int(warn_str), int(crit_str)),
+            yield from check_temperature(
+                reading=float(temp_str),
+                params=params,
+                value_store=get_value_store(),
+                unique_name=f"pandacom_{item}",
+                dev_levels=(float(warn_str), float(crit_str)),
             )
-    return None
 
 
-check_info["pandacom_10gm_temp"] = LegacyCheckDefinition(
+snmp_section_pandacom_10gm_temp = SimpleSNMPSection(
     name="pandacom_10gm_temp",
-    parse_function=parse_pandacom_temp,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.3.4",
@@ -51,17 +58,20 @@ check_info["pandacom_10gm_temp"] = LegacyCheckDefinition(
         # .1.3.6.1.4.1.3652.3.3.4.2.1.14.5 60 --> SPEED-DUALLINE-10G::speedDualline10GMTempAlarmLevel.5
         oids=["1.1.2", "1.1.7", "2.1.13", "2.1.14"],
     ),
+    parse_function=parse_pandacom_temp,
+)
+
+
+check_plugin_pandacom_10gm_temp = CheckPlugin(
+    name="pandacom_10gm_temp",
     service_name="Temperature 10GM Module %s",
     discovery_function=inventory_pandacom_module_temp,
     check_function=check_pandacom_module_temp,
     check_ruleset_name="temperature",
     check_default_parameters=PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,
 )
-
-
-check_info["pandacom_fc_temp"] = LegacyCheckDefinition(
+snmp_section_pandacom_fc_temp = SimpleSNMPSection(
     name="pandacom_fc_temp",
-    parse_function=parse_pandacom_temp,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.3.3",
@@ -75,6 +85,12 @@ check_info["pandacom_fc_temp"] = LegacyCheckDefinition(
         # .1.3.6.1.4.1.3652.3.3.3.2.1.14.3 60 --> SPEED-DUALLINE-FC::speedDuallineFCMTempAlarmLevel.3
         oids=["1.1.2", "1.1.7", "2.1.13", "2.1.14"],
     ),
+    parse_function=parse_pandacom_temp,
+)
+
+
+check_plugin_pandacom_fc_temp = CheckPlugin(
+    name="pandacom_fc_temp",
     service_name="Temperature FC Module %s",
     discovery_function=inventory_pandacom_module_temp,
     check_function=check_pandacom_module_temp,

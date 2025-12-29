@@ -42,6 +42,9 @@ _NOT_YET_MOVED_PLUGINS = (
     # This way we can separate migration and moving.
     # For example:
     # "cmk.base.legacy_checks.esx_vsphere_datastores",
+    "cmk.base.legacy_checks.3ware_disks",
+    "cmk.base.legacy_checks.3ware_units",
+    "cmk.base.legacy_checks.3ware_info",
 )
 
 

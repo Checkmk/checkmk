@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 
 threware_disks = importlib.import_module("cmk.base.legacy_checks.3ware_disks")
 check_3ware_disks = threware_disks.check_3ware_disks
@@ -28,20 +28,18 @@ discover_3ware_disks = threware_disks.inventory_3ware_disks
                 ["p2", "SMART_FAILURE", "u0", "465.76", "GB", "SATA", "2", "-", "ST3500320SV"],
                 ["p3", "FOOBAR", "u0", "465.76", "GB", "SATA", "3", "-", "ST3500418AS"],
             ],
-            [("p0", {}), ("p1", {}), ("p2", {}), ("p3", {})],
+            ["p0", "p1", "p2", "p3"],
         ),
     ],
 )
-def test_discover_3ware_disks(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
+def test_discover_3ware_disks(info: StringTable, expected_discoveries: Sequence[str]) -> None:
     """Test discovery function for 3ware_disks check."""
-    result = list(discover_3ware_disks(info))
+    result = [service.item for service in discover_3ware_disks(info)]
     assert sorted(result) == sorted(expected_discoveries)
 
 
 @pytest.mark.parametrize(
-    "item, params, info, expected_results",
+    "item, params, info, expected_state, expected_summary",
     [
         (
             "p0",
@@ -52,10 +50,8 @@ def test_discover_3ware_disks(
                 ["p2", "SMART_FAILURE", "u0", "465.76", "GB", "SATA", "2", "-", "ST3500320SV"],
                 ["p3", "FOOBAR", "u0", "465.76", "GB", "SATA", "3", "-", "ST3500418AS"],
             ],
-            [
-                0,
-                "disk status is OK (unit: u0, size: 465.76,GB, type: SATA, model: ST3500418AS)",
-            ],
+            State.OK,
+            "disk status is OK (unit: u0, size: 465.76,GB, type: SATA, model: ST3500418AS)",
         ),
         (
             "p1",
@@ -66,10 +62,8 @@ def test_discover_3ware_disks(
                 ["p2", "SMART_FAILURE", "u0", "465.76", "GB", "SATA", "2", "-", "ST3500320SV"],
                 ["p3", "FOOBAR", "u0", "465.76", "GB", "SATA", "3", "-", "ST3500418AS"],
             ],
-            [
-                0,
-                "disk status is VERIFYING (unit: u0, size: 465.76,GB, type: SATA, model: ST3500418AS)",
-            ],
+            State.OK,
+            "disk status is VERIFYING (unit: u0, size: 465.76,GB, type: SATA, model: ST3500418AS)",
         ),
         (
             "p2",
@@ -80,10 +74,8 @@ def test_discover_3ware_disks(
                 ["p2", "SMART_FAILURE", "u0", "465.76", "GB", "SATA", "2", "-", "ST3500320SV"],
                 ["p3", "FOOBAR", "u0", "465.76", "GB", "SATA", "3", "-", "ST3500418AS"],
             ],
-            [
-                1,
-                "disk status is SMART_FAILURE (unit: u0, size: 465.76,GB, type: SATA, model: ST3500320SV)",
-            ],
+            State.WARN,
+            "disk status is SMART_FAILURE (unit: u0, size: 465.76,GB, type: SATA, model: ST3500320SV)",
         ),
         (
             "p3",
@@ -94,16 +86,21 @@ def test_discover_3ware_disks(
                 ["p2", "SMART_FAILURE", "u0", "465.76", "GB", "SATA", "2", "-", "ST3500320SV"],
                 ["p3", "FOOBAR", "u0", "465.76", "GB", "SATA", "3", "-", "ST3500418AS"],
             ],
-            [
-                2,
-                "disk status is FOOBAR (unit: u0, size: 465.76,GB, type: SATA, model: ST3500418AS)",
-            ],
+            State.CRIT,
+            "disk status is FOOBAR (unit: u0, size: 465.76,GB, type: SATA, model: ST3500418AS)",
         ),
     ],
 )
 def test_check_3ware_disks(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, Any],
+    info: StringTable,
+    expected_state: State,
+    expected_summary: str,
 ) -> None:
     """Test check function for 3ware_disks check."""
-    result = list(check_3ware_disks(item, params, info))
-    assert result == expected_results
+    results = list(check_3ware_disks(item, params, info))
+    assert len(results) == 1
+    assert isinstance(results[0], Result)
+    assert results[0].state == expected_state
+    assert results[0].summary == expected_summary

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Possible output:
 # # tw_cli show
 #
@@ -25,36 +23,44 @@
 # This version of the check currently only handles output of the first type
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-
-def inventory_3ware_info(info):
-    inventory = []
-    for line in info:
+def inventory_3ware_info(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if len(line) == 8:
-            controller = line[0]
-            inventory.append((controller, None))
-    return inventory
+            yield Service(item=line[0])
 
 
-def check_3ware_info(item, _no_params, info):
+def check_3ware_info(item: str, section: StringTable) -> CheckResult:
     infotext = ""
-    for line in info:
-        line = " ".join(line[1:])
-        infotext = infotext + line + ";"
-    return (0, infotext)
+    for line in section:
+        line_text = " ".join(line[1:])
+        infotext = infotext + line_text + ";"
+    yield Result(state=State.OK, summary=infotext)
 
 
 def parse_3ware_info(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["3ware_info"] = LegacyCheckDefinition(
+agent_section_3ware_info = AgentSection(
     name="3ware_info",
     parse_function=parse_3ware_info,
+)
+
+
+check_plugin_3ware_info = CheckPlugin(
+    name="3ware_info",
     service_name="RAID 3ware controller %s",
     discovery_function=inventory_3ware_info,
     check_function=check_3ware_info,

@@ -21,14 +21,16 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
 
 
 @dataclass(frozen=True)
@@ -61,34 +63,40 @@ def parse_3ware_units(string_table: StringTable) -> Section:
     }
 
 
-def discover_3ware_units(section: Section) -> LegacyDiscoveryResult:
-    yield from ((name, {}) for name in section)
+def discover_3ware_units(section: Section) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section)
 
 
-def check_3ware_units(item: str, _no_params: object, section: Section) -> LegacyCheckResult:
+def check_3ware_units(item: str, params: object, section: Section) -> CheckResult:
     if (unit := section.get(item)) is None:
         return
 
     match unit.status:
         case "OK" | "VERIFYING":
-            state = 0
+            state = State.OK
         case "INITIALIZING" | "VERIFY-PAUSED" | "REBUILDING":
-            state = 1
+            state = State.WARN
         case _:
-            state = 2
+            state = State.CRIT
 
-    yield state, unit.status
-    yield 0, f"Type: {unit.type}"
-    yield 0, f"Size: {unit.size}GB"
+    yield Result(state=state, summary=unit.status)
+    yield Result(state=State.OK, summary=f"Type: {unit.type}")
+    yield Result(state=State.OK, summary=f"Size: {unit.size}GB")
     if unit.complete != "-":
-        yield 0, f"Complete: {unit.complete}%"
+        yield Result(state=State.OK, summary=f"Complete: {unit.complete}%")
 
 
-check_info["3ware_units"] = LegacyCheckDefinition(
+agent_section_3ware_units = AgentSection(
     name="3ware_units",
     parse_function=parse_3ware_units,
+)
+
+
+check_plugin_3ware_units = CheckPlugin(
+    name="3ware_units",
     service_name="RAID 3ware unit %s",
     discovery_function=discover_3ware_units,
     check_function=check_3ware_units,
+    check_default_parameters={},
     check_ruleset_name="raid",
 )

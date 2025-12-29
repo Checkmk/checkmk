@@ -40,7 +40,7 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.passwords import remove_password
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -64,6 +64,13 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeOAuth2Connections)
 
 
+def uuid4_validator(error_msg: Message | None = None) -> validators.MatchRegex:
+    return validators.MatchRegex(
+        regex="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+        error_msg=error_msg,
+    )
+
+
 def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
     return TwoColumnDictionary(
         title=Title("Define OAuth parameters"),
@@ -75,6 +82,11 @@ def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     title=Title("OAuth2 connection ID"),
                     help_text=Help("A unique identifier for this OAuth2 connection."),
                     prefill=DefaultValue(ident or str(uuid.uuid4())),
+                    custom_validate=[
+                        uuid4_validator(
+                            error_msg=Message("OAuth2 connection ID must be a valid UUID.")
+                        ),
+                    ],
                 ),
             ),
             "title": DictElement(
@@ -82,7 +94,11 @@ def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 parameter_form=String(
                     title=Title("Title"),
                     help_text=Help("A descriptive name for this OAuth2 connection."),
-                    custom_validate=[validators.LengthInRange(min_value=1)],
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=Message("Title is required")
+                        ),
+                    ],
                 ),
             ),
             "authority": DictElement(
@@ -108,7 +124,12 @@ def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 parameter_form=String(
                     title=Title("Tenant ID"),
                     help_text=Help("The Tenant ID of your Azure AD instance."),
-                    custom_validate=[validators.LengthInRange(min_value=1)],
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=Message("Tenant ID is required")
+                        ),
+                        uuid4_validator(error_msg=Message("Tenant ID must be a valid UUID.")),
+                    ],
                 ),
             ),
             "client_id": DictElement(
@@ -118,7 +139,12 @@ def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     help_text=Help(
                         "The Client ID (Application ID) of your registered application."
                     ),
-                    custom_validate=[validators.LengthInRange(min_value=1)],
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=Message("Client ID is required")
+                        ),
+                        uuid4_validator(error_msg=Message("Tenant ID must be a valid UUID.")),
+                    ],
                 ),
             ),
             "client_secret": DictElement(
@@ -126,6 +152,11 @@ def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 parameter_form=Password(
                     title=Title("Client secret"),
                     help_text=Help("The Client secret of your registered application."),
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=Message("Client secret is required")
+                        ),
+                    ],
                 ),
             ),
             "access_token": DictElement(

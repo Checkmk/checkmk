@@ -6,62 +6,78 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.apc.lib_ats import DETECT
 
-check_info = {}
+
+def inventory_apc_inrow_airflow(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def inventory_apc_inrow_airflow(info):
-    if info:
-        yield None, {}
-
-
-def check_apc_inrow_airflow(_no_item, params, info):
+def check_apc_inrow_airflow(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     # The MIB states that this value is given in hundredths of liters per second.
     # However, it appears that the device actually returns l/s, as the oom should
     # be closer to 1000 l/s. (cf. https://www.apc.com/salestools/DRON-AAAR53/DRON-AAAR53_R1_EN.pdf)
     try:
-        flow = float(info[0][0])
+        flow = float(section[0][0])
     except Exception:
-        return None
+        return
 
-    state = 0
+    state = State.OK
     message = ""
 
-    warn, crit = params["level_low"]
-    if flow < crit:
-        state = 2
+    warn_low, crit_low = params["level_low"]
+    if flow < crit_low:
+        state = State.CRIT
         message = "too low"
-    elif flow < warn:
-        state = 1
+    elif flow < warn_low:
+        state = State.WARN
         message = "too low"
 
-    warn, crit = params["level_high"]
-    if flow >= crit:
-        state = 2
+    warn_high, crit_high = params["level_high"]
+    if flow >= crit_high:
+        state = State.CRIT
         message = "too high"
-    elif flow >= warn:
-        state = 1
+    elif flow >= warn_high:
+        state = State.WARN
         message = "too high"
 
-    perf = [("airflow", flow, warn, crit)]
-    return state, f"Current: {flow:.0f} l/s {message}", perf
+    yield Result(state=state, summary=f"Current: {flow:.0f} l/s {message}")
+    yield Metric("airflow", flow, levels=(warn_high, crit_high))
 
 
 def parse_apc_inrow_airflow(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
+snmp_section_apc_inrow_airflow = SimpleSNMPSection(
     name="apc_inrow_airflow",
-    parse_function=parse_apc_inrow_airflow,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["5"],
     ),
+    parse_function=parse_apc_inrow_airflow,
+)
+
+
+check_plugin_apc_inrow_airflow = CheckPlugin(
+    name="apc_inrow_airflow",
     service_name="Airflow",
     discovery_function=inventory_apc_inrow_airflow,
     check_function=check_apc_inrow_airflow,

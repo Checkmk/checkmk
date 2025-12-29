@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from starlette.status import HTTP_403_FORBIDDEN
 
 from cmk.agent_receiver.lib.certs import get_local_site_cn
+from cmk.agent_receiver.lib.log import logger
 
 
 def validate_site_cn_authorization(client_cn: str) -> None:
@@ -26,6 +27,9 @@ def validate_site_cn_authorization(client_cn: str) -> None:
     """
     local_site_cn = get_local_site_cn()
     if client_cn != local_site_cn:
+        logger.warning(
+            f"Site CN authorization failed: Client CN '{client_cn}' does not match local site CN '{local_site_cn}'"
+        )
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail=f"Client certificate CN ({client_cn}) does not match local site CN ({local_site_cn})",

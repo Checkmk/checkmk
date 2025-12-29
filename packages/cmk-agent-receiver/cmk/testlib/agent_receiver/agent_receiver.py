@@ -132,8 +132,14 @@ class AgentReceiverClient:
             },
         )
 
-    def activate_config(self) -> httpx.Response:
-        return self.client.post(f"/{self.site_name}/relays/activate-config")
+    def activate_config(self, site_cn: str = SITE_CN) -> httpx.Response:
+        headers = {
+            INJECTED_UUID_HEADER: site_cn,
+        }
+        return self.client.post(
+            f"/{self.site_name}/relays/activate-config",
+            headers=headers,
+        )
 
     def forward_monitoring_data(
         self, *, relay_id: str, monitoring_data: MonitoringData

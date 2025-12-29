@@ -17,10 +17,14 @@ filegroup(
         "mk-job.aix",
         "mk-job.solaris",
         "waitmax",
-    ] + glob([
-        "check-mk-agent-*.noarch.rpm",
-        "check-mk-agent_*_all.deb",
-    ]),
+    ] + glob(
+        [
+            "check-mk-agent-*.noarch.rpm",
+            "check-mk-agent_*_all.deb",
+        ],
+        # Files created elsewhere
+        allow_empty = True,
+    ),
     visibility = ["//omd:__subpackages__"],
 )
 

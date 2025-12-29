@@ -1,5 +1,18 @@
+diff --git a/MODULE.bazel b/MODULE.bazel
+index e597912..4f973cc 100644
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -22,7 +22,7 @@ bazel_dep(name = "aspect_rules_js", version = "1.40.0")
+ bazel_dep(name = "aspect_tools_telemetry", version = "0.2.8")
+ bazel_dep(name = "bazel_features", version = "1.0.0")
+ bazel_dep(name = "bazel_lib", version = "3.0.0")
+-bazel_dep(name = "bazel_skylib", version = "1.4.2")
++bazel_dep(name = "bazel_skylib", version = "1.8.1")
+ bazel_dep(name = "jq.bzl", version = "0.4.0")
+ bazel_dep(name = "platforms", version = "0.0.7")
+ bazel_dep(name = "rules_multirun", version = "0.9.0")
 diff --git a/lint/clang_tidy.bzl b/lint/clang_tidy.bzl
-index 202cd6f..2d8269a 100644
+index d2c4403..8e531ba 100644
 --- a/lint/clang_tidy.bzl
 +++ b/lint/clang_tidy.bzl
 @@ -37,6 +37,7 @@ clang_tidy = lint_clang_tidy_aspect(
@@ -10,7 +23,7 @@ index 202cd6f..2d8269a 100644
  load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
  load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
  load("//lint/private:lint_aspect.bzl", "LintOptionsInfo", "OPTIONAL_SARIF_PARSER_TOOLCHAIN", "OUTFILE_FORMAT", "noop_lint_action", "output_files", "parse_to_sarif_action", "patch_and_output_files")
-@@ -50,6 +51,8 @@ def _gather_inputs(ctx, compilation_context, srcs):
+@@ -51,6 +52,8 @@ def _gather_inputs(ctx, compilation_context, srcs):
      inputs = srcs + ctx.files._configs
      if (any(ctx.files._global_config)):
          inputs.append(ctx.files._global_config[0])
@@ -19,16 +32,7 @@ index 202cd6f..2d8269a 100644
      return depset(inputs, transitive = [compilation_context.headers])
  
  def _toolchain_env(ctx, user_flags, action_name = ACTION_NAMES.cpp_compile):
-@@ -259,9 +262,23 @@ def _get_args(ctx, compilation_context, srcs):
-     args.extend([src.path for src in srcs])
-     return args
- 
-+def _quote_arg(arg):
-+    # Do not lose quotation marks when passing args to bash
-+    if '\"' in arg and not arg.startswith("'") and not arg.endswith("'"):
-+        return "'%s'" % arg
-+    return arg
-+
+@@ -263,6 +266,14 @@ def _get_args(ctx, compilation_context, srcs):
  def _get_compiler_args(ctx, compilation_context, srcs):
      # add args specified by the toolchain, on the command line and rule copts
      args = []
@@ -40,19 +44,10 @@ index 202cd6f..2d8269a 100644
 +        for dir in gcc_install_dir:
 +            args.append("--gcc-install-dir=" + dir.path)
 +
-     rule_flags = ctx.rule.attr.copts if hasattr(ctx.rule.attr, "copts") else []
+     rule_flags = list(getattr(ctx.rule.attr, "copts", [])) + list(getattr(ctx.rule.attr, "cxxopts", []))
      sources_are_cxx = _is_cxx(srcs[0])
      if (sources_are_cxx):
-@@ -347,7 +364,7 @@ def clang_tidy_fix(ctx, compilation_context, executable, srcs, patch, stdout, ex
-     """
-     patch_cfg = ctx.actions.declare_file("_{}.patch_cfg".format(ctx.label.name))
-     clang_tidy_args = _get_args(ctx, compilation_context, srcs)
--    compiler_args = _get_compiler_args(ctx, compilation_context, srcs)
-+    compiler_args = [_quote_arg(arg) for arg in _get_compiler_args(ctx, compilation_context, srcs)]
- 
-     ctx.actions.write(
-         output = patch_cfg,
-@@ -409,7 +426,16 @@ def _clang_tidy_aspect_impl(target, ctx):
+@@ -397,7 +408,16 @@ def _clang_tidy_aspect_impl(target, ctx):
      parse_to_sarif_action(ctx, _MNEMONIC, raw_machine_report, outputs.machine.out)
      return [info]
  
@@ -70,7 +65,7 @@ index 202cd6f..2d8269a 100644
      """A factory function to create a linter aspect.
  
      Args:
-@@ -427,6 +453,9 @@ def lint_clang_tidy_aspect(binary, configs = [], global_config = [], header_filt
+@@ -415,6 +435,9 @@ def lint_clang_tidy_aspect(binary, configs = [], global_config = [], header_filt
              files which may be used for formatting fixes.
          global_config: label of a single global .clang-tidy file to pass to clang-tidy on the command line. This
              will cause clang-tidy to ignore any other config files in the source directories.
@@ -80,7 +75,7 @@ index 202cd6f..2d8269a 100644
          header_filter: optional, set to a posix regex to supply to clang-tidy with the -header-filter option
          lint_target_headers: optional, set to True to pass a pattern that includes all headers with the target's
              directory prefix. This crude control may include headers from the linted target in the results. If
-@@ -455,6 +484,13 @@ def lint_clang_tidy_aspect(binary, configs = [], global_config = [], header_filt
+@@ -443,6 +466,13 @@ def lint_clang_tidy_aspect(binary, configs = [], global_config = [], header_filt
                  default = global_config,
                  allow_files = True,
              ),

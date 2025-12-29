@@ -159,6 +159,7 @@ run_lint() {
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --diff \
         --quiet \
+        --fixes=false \
         :all
     # The following targets will be part of `bazel lint`
     # after CMK-26334 and CMK-25906.

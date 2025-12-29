@@ -146,6 +146,11 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     sidebar_title = "Metrics & graphs"
 
     @property
+    def _service_selection_region(self) -> Locator:
+        """Locator property of 'Service selection' region."""
+        return self.locator().get_by_role("region", name="Service selection")
+
+    @property
     def _metric_selection_region(self) -> Locator:
         """Locator property of 'Host selection' region."""
         return self.locator().get_by_role("region", name="Metric selection")
@@ -156,14 +161,14 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         return self.locator().get_by_role("region", name="Available visualization type")
 
     @property
-    def _service_metric_combobox(self) -> Locator:
-        """Locator property of combobox to select the service metric of the widget."""
-        return self._metric_selection_region.get_by_role("combobox", name="Select service metric")
-
-    @property
     def _combobox_text_input(self) -> Locator:
         """Locator property of the text input to search a value in a combobox."""
         return self.locator().get_by_role("listbox").get_by_role("textbox")
+
+    @property
+    def service_metric_combobox(self) -> Locator:
+        """Locator property of combobox to select the service metric of the widget."""
+        return self._metric_selection_region.get_by_role("combobox", name="Select service metric")
 
     @property
     def next_step_visualization_button(self) -> Locator:
@@ -174,6 +179,28 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     def add_and_place_widget_button(self) -> Locator:
         """Locator property of 'Add & place widget' button."""
         return self.locator().get_by_role("button", name="Add & place widget")
+
+    def get_service_filter_container(self, filter_name: str) -> Locator:
+        """Get the locator of the containe of a filter from 'Service selection' region.
+
+        Args:
+            filter_name: the name of the filter of the container.
+
+        Returns:
+            The locator of the filter container.
+        """
+        return self._service_selection_region.locator("div.filter-container", has_text=filter_name)
+
+    def get_service_filter_combobox(self, filter_name: str) -> Locator:
+        """Get the locator of the combobox to set a service filter for the widget.
+
+        Args:
+            filter_name: the name of the filter that is set by the combobox.
+
+        Returns:
+            The locator of the combobox.
+        """
+        return self.get_service_filter_container(filter_name).get_by_role("combobox")
 
     def select_visualization_type(self, visualization_type: VisualizationType) -> None:
         """Select the type of visualization for the widget.
@@ -219,7 +246,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         """
         self.select_dropdown_option(
             "Service metric",
-            self._service_metric_combobox,
+            self.service_metric_combobox,
             metric_name,
             self._combobox_text_input if search else None,
         )

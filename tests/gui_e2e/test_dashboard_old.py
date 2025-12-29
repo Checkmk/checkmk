@@ -226,57 +226,6 @@ def test_host_dashboard(
             )
 
 
-@pytest.mark.parametrize(
-    "dashlet_title, expected_service_name, expected_metric",
-    [
-        pytest.param(
-            "Top 10: Memory utilization",
-            "Memory",
-            "RAM usage",
-            id="memory_utilization",
-        ),
-        pytest.param(
-            "Top 10: Disk utilization",
-            "Disk IO SUMMARY",
-            "Disk utilization",
-            id="disk_utilization",
-        ),
-    ],
-)
-def test_top_list_dashlets_settings(
-    dashlet_title: str,
-    expected_service_name: str,
-    expected_metric: str,
-    cloned_linux_hosts_dashboard: CustomDashboard,
-) -> None:
-    """Check settings of 'Top list' dashlets on 'Linux Hosts' dashboard page.
-
-    Check that 'Service (exact match)' and 'Metric' fields contain expected values
-    for some of the 'Top list' dashlets.
-
-    Steps:
-        1. Navigate to the 'Linux Hosts' dashboard page.
-        2. Clone the built-in dashboard.
-        3. Enter layout mode.
-        4. Open settings of the 'Top 10: Memory utilization' or 'Top 10: Disk utilization' dashlet.
-        5. Check that 'Service (exact match)' field contains expected service name.
-        6. Check that 'Metric' field contains expected metric name.
-    """
-    cloned_linux_hosts_dashboard.enter_layout_mode()
-    cloned_linux_hosts_dashboard.edit_dashlet_properties_button(dashlet_title).click()
-    edit_element_top_list_page = EditElementTopList(
-        cloned_linux_hosts_dashboard.page, navigate_to_page=False
-    )
-    expect(
-        edit_element_top_list_page.service_exact_match_search_field,
-        "Unexpected values in 'Service (exact match)' field",
-    ).to_contain_text(re.compile(f"{expected_service_name}$"))
-    expect(
-        edit_element_top_list_page.metric_search_field,
-        "Unexpected values in 'Metric' field",
-    ).to_contain_text(re.compile(f"{expected_metric}$"))
-
-
 def test_dashlet_filters(
     linux_hosts: list[str], cloned_linux_hosts_dashboard: CustomDashboard
 ) -> None:

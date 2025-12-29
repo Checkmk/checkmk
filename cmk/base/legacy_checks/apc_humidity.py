@@ -7,12 +7,20 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.plugins.apc.lib_ats import DETECT
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.apc.lib_ats import DETECT
+from cmk.plugins.lib.humidity import check_humidity
 
 
 def saveint(i: str) -> int:
@@ -28,16 +36,16 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_apc_humidity(info):
-    for line in info:
+def inventory_apc_humidity(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if int(line[1]) >= 0:
-            yield line[0], {}
+            yield Service(item=line[0])
 
 
-def check_apc_humidity(item, params, info):
-    for line in info:
+def check_apc_humidity(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    for line in section:
         if line[0] == item:
-            return check_humidity(saveint(line[1]), params)
+            yield from check_humidity(saveint(line[1]), params)
     return None
 
 
@@ -45,14 +53,19 @@ def parse_apc_humidity(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["apc_humidity"] = LegacyCheckDefinition(
+snmp_section_apc_humidity = SimpleSNMPSection(
     name="apc_humidity",
-    parse_function=parse_apc_humidity,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.4.2.3.1",
         oids=["3", "6"],
     ),
+    parse_function=parse_apc_humidity,
+)
+
+
+check_plugin_apc_humidity = CheckPlugin(
+    name="apc_humidity",
     service_name="Humidity %s",
     discovery_function=inventory_apc_humidity,
     check_function=check_apc_humidity,

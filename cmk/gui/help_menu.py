@@ -22,6 +22,7 @@ from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
+from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_message
 
@@ -52,14 +53,7 @@ def default_info_line() -> str:
 
 
 def default_learning_entries() -> MainMenuTopicEntries:
-    return [
-        MainMenuItem(
-            name="welcome_page",
-            title=_("Welcome page"),
-            url="welcome.py",
-            sort_index=10,
-            icon=StaticIcon(IconNames.learning_beginner),
-        ),
+    entries: list[MainMenuItem] = [
         MainMenuItem(
             name="beginners_guide",
             title=_("Beginner's Guide"),
@@ -101,6 +95,18 @@ def default_learning_entries() -> MainMenuTopicEntries:
             icon=StaticIcon(IconNames.sparkle),
         ),
     ]
+    if all(user.may(perm) for perm in WELCOME_PERMISSIONS):
+        return [
+            *entries,
+            MainMenuItem(
+                name="welcome_page",
+                title=_("Welcome page"),
+                url="welcome.py",
+                sort_index=10,
+                icon=StaticIcon(IconNames.learning_beginner),
+            ),
+        ]
+    return [*entries]
 
 
 def default_developer_entries() -> MainMenuTopicEntries:

@@ -17,6 +17,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
+from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
 from cmk.utils.urls import is_allowed_url
 
@@ -65,27 +66,6 @@ def make_url_or_callback_from_registry(identifier: str, permitted: bool = True) 
     )
 
 
-WELCOME_PAGE_PERMISSIONS = {
-    "wato.use",
-    "wato.hosts",
-    "wato.edit",
-    "wato.manage_hosts",
-    "wato.service_discovery_to_undecided",
-    "wato.service_discovery_to_monitored",
-    "wato.service_discovery_to_ignored",
-    "wato.service_discovery_to_removed",
-    "wato.download_agents",
-    "wato.activate",
-    "wato.timeperiods",
-    "wato.groups",
-    "wato.notifications",
-    "general.force_dashboards",
-    "general.edit_dashboards",
-    "general.see_user_dashboards",
-    "general.see_packaged_dashboards",
-}
-
-
 def _ajax_mark_step_as_complete(ctx: PageContext) -> None:
     # Handle step completion if completed-step parameter is provided
     if completed_step_name := request.get_ascii_input("_completed_step"):
@@ -109,7 +89,7 @@ def _welcome_page(ctx: PageContext) -> None:
         show_top_heading=False,
         enable_main_page_scrollbar=False,
     )
-    if not all(user.may(perm) for perm in WELCOME_PAGE_PERMISSIONS):
+    if not all(user.may(perm) for perm in WELCOME_PERMISSIONS):
         set_user_attribute("start_url", None)
         default_start_url = user.start_url or ctx.config.start_url
         if not is_allowed_url(default_start_url):

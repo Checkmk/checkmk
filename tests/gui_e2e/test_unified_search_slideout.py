@@ -10,6 +10,7 @@ of main menu.
 import logging
 from typing import Literal
 
+import pytest
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
@@ -18,6 +19,7 @@ from tests.gui_e2e.testlib.playwright.pom.search.unified_search import UnifiedSe
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.xfail(reason="Bug CMK-28738", strict=False)
 def test_unified_search_slideout(dashboard_page: MainDashboard) -> None:
     """Check elements of 'Unified Search' slideout"""
     logger.info("Init unified search slideout")

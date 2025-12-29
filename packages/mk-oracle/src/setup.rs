@@ -18,7 +18,7 @@ use crate::args::Args;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
 use crate::platform::get_local_instances;
-use crate::types::{SectionFilter, UseHostClient};
+use crate::types::{EnvVarName, SectionFilter, UseHostClient};
 use crate::version::VERSION;
 use crate::{constants, setup};
 use anyhow::Result;
@@ -396,9 +396,13 @@ pub fn detect_runtime(use_host_client: &UseHostClient, env_var: Option<String>) 
 }
 
 #[cfg(windows)]
-const DEFAULT_ENV_VAR: &str = "PATH";
+const _DEFAULT_ENV_VAR: &str = "PATH";
 #[cfg(unix)]
-const DEFAULT_ENV_VAR: &str = "LD_LIBRARY_PATH";
+const _DEFAULT_ENV_VAR: &str = "LD_LIBRARY_PATH";
+
+static DEFAULT_ENV_VAR: LazyLock<EnvVarName> =
+    LazyLock::new(|| EnvVarName::from(_DEFAULT_ENV_VAR.to_string()));
+
 #[cfg(windows)]
 const ENV_VAR_SEP: &str = ";";
 #[cfg(unix)]
@@ -409,12 +413,14 @@ const ENV_VAR_SEP: &str = ":";
 pub fn add_runtime_path_to_env(
     config: &OracleConfig,
     mk_lib_dir: Option<String>,
-    mut_env: Option<String>,
+    mut_env: Option<EnvVarName>,
 ) -> Option<PathBuf> {
     log::info!("Runtime to be added");
-    let mutable_var = mut_env.unwrap_or(DEFAULT_ENV_VAR.to_string());
-    let mutable_var_content = std::env::var(&mutable_var).ok().unwrap_or_default();
-    log::info!("Current {mutable_var}={mutable_var_content}");
+    let mutable_var_name = mut_env.unwrap_or(DEFAULT_ENV_VAR.clone());
+    let mutable_var_content = std::env::var(mutable_var_name.to_str())
+        .ok()
+        .unwrap_or_default();
+    log::info!("Current {mutable_var_name}={mutable_var_content}");
     let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
     log::info!("Use host client {:?}", use_host_client);
     let runtime = detect_runtime(&use_host_client, mk_lib_dir)?.into_os_string();
@@ -423,7 +429,7 @@ pub fn add_runtime_path_to_env(
     additional_path.push(ENV_VAR_SEP);
     additional_path.push(&mutable_var_content);
     unsafe {
-        std::env::set_var(&mutable_var, additional_path);
+        std::env::set_var(mutable_var_name.to_str(), additional_path);
     }
     Some(PathBuf::from(mutable_var_content))
 }

@@ -33,7 +33,7 @@ use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
 use mk_oracle::platform::registry::get_instances;
 use mk_oracle::setup::{create_plugin, detect_host_runtime, detect_runtime, Env};
-use mk_oracle::types::SqlQuery;
+use mk_oracle::types::{EnvVarName, SqlQuery};
 
 use mk_oracle::types::{
     Credentials, InstanceName, InstanceNumVersion, InstanceVersion, ServiceName, Tenant,
@@ -1484,15 +1484,15 @@ fn test_add_runtime_to_path() {
     fn exec_add_runtime_to_path(
         cfg: &OracleConfig,
         mk_lib: &str,
-        mut_env_var: &str,
+        mut_env_var: &EnvVarName,
     ) -> Option<std::path::PathBuf> {
         unsafe {
-            std::env::set_var(mut_env_var, "xxx");
+            std::env::set_var(mut_env_var.to_str(), "xxx");
         }
-        add_runtime_path_to_env(cfg, Some(mk_lib.to_owned()), Some(mut_env_var.to_owned()))
+        add_runtime_path_to_env(cfg, Some(mk_lib.to_owned()), Some(mut_env_var.clone()))
     }
     let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
-    let mut_env_var = "SOME_PATH_TEST_VAR_XXX".to_string();
+    let mut_env_var = EnvVarName::from("SOME_PATH_TEST_VAR_XXX".to_string());
     let good_path = base_dir().join("runtimes");
     let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
         SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
@@ -1516,7 +1516,7 @@ fn test_add_runtime_to_path() {
         std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
     }
     exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
-    assert!(std::env::var(&mut_env_var)
+    assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(good_path_str.as_str()));
 
@@ -1527,14 +1527,16 @@ fn test_add_runtime_to_path() {
         std::env::remove_var(&mk_lib_dir_env_var);
     }
     assert!(exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_none());
-    assert!(std::env::var(&mut_env_var).unwrap().starts_with("xxx"));
+    assert!(std::env::var(mut_env_var.to_str())
+        .unwrap()
+        .starts_with("xxx"));
 
     // MK_LIBDIR is good_path
     unsafe {
         std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
     }
     exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
-    assert!(std::env::var(&mut_env_var)
+    assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(good_path_str.as_str()));
 
@@ -1548,7 +1550,9 @@ fn test_add_runtime_to_path() {
     let result = exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
     assert_eq!(result.is_some(), local_exists);
     assert_eq!(
-        std::env::var(&mut_env_var).unwrap().starts_with("xxx"),
+        std::env::var(mut_env_var.to_str())
+            .unwrap()
+            .starts_with("xxx"),
         !local_exists
     );
     unsafe {
@@ -1569,7 +1573,7 @@ fn test_add_runtime_to_path() {
     }
     // depends on local SQL endpoint, if exist -> found otherwise not
     exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
-    assert!(std::env::var(&mut_env_var)
+    assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(some_path.as_str()));
     unsafe {
@@ -1577,7 +1581,7 @@ fn test_add_runtime_to_path() {
     }
     exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
     // depends on local SQL endpoint, if exist -> found otherwise not
-    assert!(std::env::var(&mut_env_var)
+    assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(some_path.as_str()));
 }

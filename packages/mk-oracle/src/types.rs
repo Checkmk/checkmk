@@ -72,6 +72,15 @@ pub enum SectionAffinity {
     Asm,
 }
 
+#[derive(From, Debug, Display, Clone, Default, Into)]
+pub struct EnvVarName(String);
+
+impl EnvVarName {
+    pub fn to_str(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
 pub struct ServiceName(String);
 

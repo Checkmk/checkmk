@@ -36,9 +36,6 @@ help:
 rpm:
 	$(MAKE) -C omd rpm
 
-deb:
-	$(MAKE) -C omd deb
-
 cma:
 	$(MAKE) -C omd cma
 

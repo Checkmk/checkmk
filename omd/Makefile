@@ -91,49 +91,6 @@ rpm: install-clean omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
-debian/changelog:
-	sed -e 's/###DISTRO_CODE###/$(DISTRO_CODE)/g' \
-	    -e "s/###PKG_VERSION###/$(PKG_VERSION)/g" \
-	    -e "s/###NOW###/$(shell date -R)/g" \
-	    -e 's/###EDITION###/$(EDITION)/g' \
-	    debian/changelog.in > debian/changelog
-
-debian/control: debian/control.in
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
-	    -e "s/###PKG_VERSION###/$(PKG_VERSION)/g" \
-	    -e 's/###EDITION###/$(EDITION)/g' \
-	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/g' \
-	    -e '/Depends:/s/\> /, /g' \
-	    -e '/Depends:/s/@/ /g' \
-	   debian/control.in > debian/control
-
-# Called by our release system to build DEB packages
-#
-# Check out "man debuild" and "man dpkg-buildpackage" to get a description of
-# the build mechanism.
-# Please keep in mind that we are building for multiple Ubuntu/Debian version
-# and need to be compatible to all of the tool chains shipped with them.
-#
-# In case we want to have fast package creation without need to rebuild
-# everything, we'd have to
-# a) drop the "clean" argument for newer distros
-# b) remove the dh_prep from debian/rules
-deb: debian/changelog debian/control
-	debuild \
-	--preserve-envvar="NEXUS_*" \
-	--preserve-envvar="BAZEL_*" \
-	--preserve-envvar="MAKE" \
-	--preserve-envvar="CI" \
-	--prepend-path $$HOME/.cargo/bin \
-	--prepend-path=/usr/local/bin \
-	--prepend-path=`dirname $$(which python3)` \
-	--set-envvar EDITION=$(EDITION) \
-	--no-lintian \
-	-i\.git -I\.git \
-	-i.gitignore -I.gitignore \
-	-rfakeroot \
-	--no-sign -- clean build-arch binary-arch
-
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 

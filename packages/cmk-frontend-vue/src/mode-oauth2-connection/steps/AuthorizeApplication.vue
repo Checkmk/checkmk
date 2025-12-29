@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
 import { ref } from 'vue'
+import { inject } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -21,12 +22,11 @@ import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import { type OAuth2FormData, Oauth2ConnectionApi } from '../lib/service/oauth2-connection-api'
+import { type OAuth2FormData, type Oauth2ConnectionApi } from '../lib/service/oauth2-connection-api'
+import { submitKey } from '../lib/submitKey'
 import { waitForRedirect } from '../lib/waitForRedirect'
 
 const { _t } = usei18n()
-
-const api = new Oauth2ConnectionApi()
 
 const props = defineProps<
   CmkWizardStepProps & {
@@ -34,8 +34,11 @@ const props = defineProps<
     authorityMapping: Record<string, string>
     oAuth2Type: 'ms_graph_api'
     ident: string
+    api: Oauth2ConnectionApi
   }
 >()
+
+const submitted = inject(submitKey)
 
 const TIMEOUT = 5 * 60000
 
@@ -136,7 +139,7 @@ async function requestAccessToken(): Promise<boolean> {
   loadingTitle.value = _t('Requesting access token')
   try {
     if (props.oAuth2Type === 'ms_graph_api' && resultCode.value) {
-      const res = await api.requestAccessToken({
+      const res = await props.api.requestAccessToken({
         type: 'ms_graph_api',
         id: props.ident,
         redirect_uri: buildRedirectUri(),
@@ -165,12 +168,10 @@ function resetProcess() {
 }
 
 async function saveConnection() {
-  if (props.oAuth2Type === 'ms_graph_api') {
-    const res = await api.saveOAuth2Connection(dataRef.value)
-    if (res.type === 'success') {
-      window.location.href = props.urls.back
-    } else {
-      errorTitle.value = _t(`Failed to save OAuth2 connection`)
+  if (submitted !== undefined) {
+    const error = await submitted(props.oAuth2Type, dataRef.value)
+    if (error) {
+      errorTitle.value = error
     }
   }
 }
@@ -237,6 +238,7 @@ immediateWatch(
 
     <template #actions>
       <CmkWizardButton
+        v-if="submitted"
         type="finish"
         :override-label="_t('Save')"
         :disabled="!authSucceeded"

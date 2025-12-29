@@ -17,6 +17,7 @@ import type { ValidationMessages } from '@/form'
 
 import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
 
+import { type Oauth2ConnectionApi } from './lib/service/oauth2-connection-api'
 import AuthorizeApplication from './steps/AuthorizeApplication.vue'
 import DefineParams from './steps/DefineParams.vue'
 
@@ -29,6 +30,7 @@ const props = defineProps<{
     data: OAuth2FormData
   }
   authorityMapping: Record<string, string>
+  api: Oauth2ConnectionApi
 }>()
 
 const dataRef = ref()
@@ -62,6 +64,7 @@ const currentStep = ref<number>(1)
         :ident="formSpec.data.ident"
         :index="2"
         :is-completed="() => currentStep > 2"
+        :api="api"
       />
     </CmkWizard>
   </div>

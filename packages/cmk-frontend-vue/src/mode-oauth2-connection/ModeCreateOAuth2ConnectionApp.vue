@@ -7,13 +7,22 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Oauth2ConnectionConfig } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { provide } from 'vue'
+
+import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import type { ValidationMessages } from '@/form'
 
 import CreateOAuth2Connection from '@/mode-oauth2-connection/CreateOAuth2Connection.vue'
 import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
 
-defineProps<{
+import { Oauth2ConnectionApi } from './lib/service/oauth2-connection-api'
+import { submitKey } from './lib/submitKey'
+
+const { _t } = usei18n()
+
+const props = defineProps<{
   config: Oauth2ConnectionConfig
   form_spec: {
     id: string
@@ -23,6 +32,22 @@ defineProps<{
   }
   authority_mapping: Record<string, string>
 }>()
+
+const api = new Oauth2ConnectionApi()
+
+async function submit(oAuth2Type: string, data: OAuth2FormData): Promise<TranslatedString | null> {
+  if (oAuth2Type === 'ms_graph_api') {
+    const res = await api.saveOAuth2Connection(data)
+    if (res.type === 'success') {
+      window.location.href = props.config.urls.back
+      return null
+    }
+    return _t(`Failed to save OAuth2 connection`)
+  }
+  return _t(`Unknown OAuth2 type: ${oAuth2Type}`)
+}
+
+provide(submitKey, submit)
 </script>
 
 <template>
@@ -30,5 +55,7 @@ defineProps<{
     :config="config"
     :form-spec="form_spec"
     :authority-mapping="authority_mapping"
+    :api="api"
+    @submitted="submit"
   />
 </template>

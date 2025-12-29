@@ -9,7 +9,6 @@ LEGACY_CHECKS = [
     "alcatel_temp",
     "alcatel_timetra_cpu",
     "allnet_ip_sensoric",
-    "apc_humidity",
     "apc_inrow_airflow",
     "apc_inrow_temp",
     "apc_rackpdu_power",

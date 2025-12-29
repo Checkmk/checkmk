@@ -86,6 +86,10 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
             {"deployment": ("do_not_deploy", None), "cmk-match-type": "dict"},
             {"deployment": ("do_not_deploy", None), "cmk-match-type": "dict"},
         ),
+        (
+            {"cmk-match-type": "dict"},
+            {"cmk-match-type": "dict"},
+        ),
     ],
 )
 def test_migrate(value: object, expected: object) -> None:

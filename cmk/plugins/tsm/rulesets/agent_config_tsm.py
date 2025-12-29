@@ -57,6 +57,8 @@ def _migrate(value: object) -> Mapping[str, object]:
             return {"deployment": ("do_not_deploy", None)}
         case {"deployment": deployment} if isinstance(value, dict):
             return {**value, "deployment": _migrate_240_deployment(deployment)}
+        case dict():
+            return value
         case _:
             raise ValueError(value)
 

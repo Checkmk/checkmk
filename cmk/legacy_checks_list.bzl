@@ -8,7 +8,6 @@ LEGACY_CHECKS = [
     "alcatel_timetra_cpu",
     "allnet_ip_sensoric",
     "apc_rackpdu_power",
-    "apc_sts_inputs",
     "apc_symmetra_ext_temp",
     "apc_symmetra_input",
     "apc_symmetra_output",

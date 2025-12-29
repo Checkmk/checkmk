@@ -45,7 +45,6 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
-    FixedValue,
     Password,
     String,
     validators,
@@ -71,10 +70,11 @@ def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
         elements={
             "ident": DictElement(
                 required=True,
-                parameter_form=FixedValue(
+                render_only=True,
+                parameter_form=String(
                     title=Title("OAuth2 connection ID"),
                     help_text=Help("A unique identifier for this OAuth2 connection."),
-                    value=ident or str(uuid.uuid4()),
+                    prefill=DefaultValue(ident or str(uuid.uuid4())),
                 ),
             ),
             "title": DictElement(

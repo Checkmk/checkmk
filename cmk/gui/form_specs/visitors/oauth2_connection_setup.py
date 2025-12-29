@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from dataclasses import asdict
 from typing import override
 
@@ -10,7 +11,6 @@ from cmk.gui.form_specs import get_visitor
 from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.form_specs.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.visitors._type_defs import (
-    DefaultValue,
     IncomingData,
     InvalidValue,
 )
@@ -24,8 +24,8 @@ from cmk.gui.oauth2_connections.wato._modes import (
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.vue_formspec_components import Oauth2ConnectionConfig
 
-_ParsedValueModel = IncomingData
-_FallbackDataModel = IncomingData
+_ParsedValueModel = Mapping[str, IncomingData]
+_FallbackDataModel = _ParsedValueModel
 
 
 class OAuth2ConnectionSetupVisitor(
@@ -34,9 +34,17 @@ class OAuth2ConnectionSetupVisitor(
     @override
     def _parse_value(
         self, raw_value: IncomingData
-    ) -> IncomingData | InvalidValue[_FallbackDataModel]:
-        # Do not parse the value here, just pass it through to the inner form spec visitor
-        return raw_value
+    ) -> _ParsedValueModel | InvalidValue[_FallbackDataModel]:
+        return get_visitor(get_oauth_2_connection_form_spec(), self.visitor_options)._parse_value(
+            raw_value
+        )
+
+    @override
+    def _validate(
+        self, parsed_value: _ParsedValueModel
+    ) -> list[shared_type_defs.ValidationMessage]:
+        visitor = get_visitor(get_oauth_2_connection_form_spec(), self.visitor_options)
+        return visitor._validate(parsed_value)
 
     @override
     def _to_vue(
@@ -45,14 +53,13 @@ class OAuth2ConnectionSetupVisitor(
         if isinstance(parsed_value, InvalidValue):
             raise TypeError("Received unexpected InvalidValue: %r" % parsed_value)
         title, help_text = get_title_and_help(self.form_spec)
-        vue_form_spec, vue_value = get_visitor(
-            get_oauth_2_connection_form_spec(), self.visitor_options
-        ).to_vue(parsed_value)
+        visitor = get_visitor(get_oauth_2_connection_form_spec(), self.visitor_options)
+        vue_form_spec, vue_value = visitor._to_vue(parsed_value)
         return (
             shared_type_defs.Oauth2ConnectionSetup(
                 title=title,
                 help=help_text,
-                validators=build_vue_validators(self._validators()),
+                validators=build_vue_validators(visitor._validators()),
                 config=Oauth2ConnectionConfig(**asdict(get_oauth2_connection_config())),
                 form_spec=vue_form_spec,
                 authority_mapping=[
@@ -68,8 +75,7 @@ class OAuth2ConnectionSetupVisitor(
 
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
-        assert not isinstance(parsed_value, DefaultValue)
-        assert isinstance(parsed_value.value, dict)
-        return get_visitor(
-            get_oauth_2_connection_form_spec(parsed_value.value.get("ident")), self.visitor_options
-        ).to_disk(parsed_value)
+        ident = str(parsed_value["ident"]) if "ident" in parsed_value else None
+        return get_visitor(get_oauth_2_connection_form_spec(ident), self.visitor_options)._to_disk(
+            parsed_value
+        )

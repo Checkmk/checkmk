@@ -11,6 +11,7 @@ from playwright.sync_api import BrowserContext, expect, Page
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
+from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import GlobalSettings
 from tests.gui_e2e.testlib.playwright.pom.setup.session_management import (
     SessionManagementPage,
     TimeoutValues,
@@ -53,7 +54,9 @@ def test_session_expiry_warning_and_logout(
         session_page.set_advise_reauth_values(TimeoutValues(days=0, hours=0, minutes=1))
         session_page.set_idle_timeout_values(TimeoutValues(days=0, hours=0, minutes=3))
         session_page.save_options()
-        session_page.navigate()
+        session_page.navigate_from_global_settings(
+            GlobalSettings(session_page.page, navigate_to_page=False)
+        )
         assert session_page.get_max_duration_values() == TimeoutValues(days=0, hours=0, minutes=2)
         assert session_page.get_advise_reauth_values() == TimeoutValues(days=0, hours=0, minutes=1)
         assert session_page.get_idle_timeout_values() == TimeoutValues(days=0, hours=0, minutes=3)

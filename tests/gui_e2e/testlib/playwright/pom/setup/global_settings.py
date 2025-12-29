@@ -49,7 +49,6 @@ class GlobalSettings(CmkPage):
     def search_settings(self, search_text: str) -> None:
         """Search for a setting using the searchbar."""
         logger.info("Search for setting: %s", search_text)
-        self._searchbar.wait_for(state="visible")
         self._searchbar.fill(search_text)
         self.main_area.locator().get_by_role(role="button", name="Submit").click()
 

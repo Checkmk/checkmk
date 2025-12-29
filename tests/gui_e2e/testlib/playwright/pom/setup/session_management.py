@@ -31,6 +31,8 @@ class SessionManagementPage(CmkPage):
     Setup -> Global settings -> User management -> Session management.
     """
 
+    setting_name = "Session management"
+
     def __init__(self, page: Page) -> None:
         super().__init__(page)
         self._init_locators()
@@ -78,15 +80,8 @@ class SessionManagementPage(CmkPage):
     @override
     def navigate(self) -> None:
         """Navigate to the Session Management page."""
-        setting_name = "Session management"
-        logger.info("Navigate to '%s' setting page", setting_name)
-        settings_page = GlobalSettings(self.page)
-        settings_page.search_settings(setting_name)
-        settings_page.setting_link(setting_name).click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("varname=session_mgmt")), wait_until="load"
-        )
-        self.validate_page()
+        logger.info("Navigate to '%s' setting page", self.setting_name)
+        self.navigate_from_global_settings(GlobalSettings(self.page))
 
     @override
     def validate_page(self) -> None:
@@ -98,6 +93,14 @@ class SessionManagementPage(CmkPage):
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
+
+    def navigate_from_global_settings(self, global_settings: GlobalSettings) -> None:
+        global_settings.search_settings(self.setting_name)
+        global_settings.setting_link(self.setting_name).click()
+        self.page.wait_for_url(
+            url=re.compile(quote_plus("varname=session_mgmt")), wait_until="load"
+        )
+        self.validate_page()
 
     def get_max_duration_values(self) -> TimeoutValues:
         """Get all maximum session duration values.

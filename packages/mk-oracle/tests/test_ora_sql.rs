@@ -747,7 +747,6 @@ fn test_processes() {
 }
 
 #[test]
-#[ignore = "Unskip with CMK-28693"]
 fn test_recovery_status_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -777,7 +776,6 @@ fn test_recovery_status_last() {
 }
 
 #[test]
-#[ignore = "Unskip with CMK-28693"]
 fn test_recovery_status_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {

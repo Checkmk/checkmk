@@ -13,6 +13,7 @@ from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_info import (
     _check_proxmox_ve_vm_info_testable,
     Params,
+    parse_proxmox_ve_vm_info,
 )
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
 
@@ -34,6 +35,11 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
     uptime=12345,
     lock=LockState.BACKUP,
 )
+
+
+@pytest.mark.parametrize("info_section_model", [VM_DATA, VM_DATA_WITH_LOCK])
+def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMInfo) -> None:
+    assert parse_proxmox_ve_vm_info([[info_section_model.model_dump_json()]]) == info_section_model
 
 
 @pytest.mark.parametrize(

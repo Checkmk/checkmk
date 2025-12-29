@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 import time
 from collections.abc import MutableMapping
 from typing import Any, TypedDict
@@ -42,7 +41,7 @@ class GetLockDurationError(IgnoreResultsError):
 
 
 def parse_proxmox_ve_vm_info(string_table: StringTable) -> SectionVMInfo:
-    return SectionVMInfo.model_validate_json(json.loads(string_table[0][0]))
+    return SectionVMInfo.model_validate_json(string_table[0][0])
 
 
 def host_label_function(section: SectionVMInfo) -> HostLabelGenerator:

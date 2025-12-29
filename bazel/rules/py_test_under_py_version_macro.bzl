@@ -3,7 +3,6 @@ load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
 def _py_test_under_py_version_impl(name, visibility, deps, srcs, data, python_version):
     py_pytest_main(
         name = name + "__test__",
-        deps = deps,
         visibility = visibility,
     )
 

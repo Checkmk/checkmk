@@ -14,6 +14,7 @@ from tests.gui_e2e.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     BaseWidgetWizard,
     MetricsAndGraphsWidgetWizard,
     WidgetType,
+    WidgetWizardMode,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,11 @@ class CustomDashboard(BaseDashboard):
         return add_widget_sidebar.open_widget_wizard(widget_type)
 
     @property
+    def edit_widgets_button(self) -> Locator:
+        """Locator property for the 'Edit widgets' button"""
+        return self.main_area.locator().get_by_role("button", name="Edit widgets")
+
+    @property
     def add_widget_button(self) -> Locator:
         """Locator property for the 'Add widget' button"""
         return self.main_area.locator().get_by_role("button", name="Add widget")
@@ -80,3 +86,32 @@ class CustomDashboard(BaseDashboard):
     def save_button(self) -> Locator:
         """Locator property for the 'Save' button"""
         return self.main_area.locator().get_by_role("button", name="Save")
+
+    def enter_edit_widgets_mode(self) -> None:
+        """Activate the mode to edit widgets of the dashboard"""
+        self.edit_widgets_button.click()
+
+    @overload
+    def open_edit_widget_sidebar(
+        self, widget_type: Literal[WidgetType.METRICS_AND_GRAPHS], widget_title: str
+    ) -> MetricsAndGraphsWidgetWizard: ...
+
+    @overload
+    def open_edit_widget_sidebar(
+        self, widget_type: WidgetType, widget_title: str
+    ) -> BaseWidgetWizard: ...
+
+    def open_edit_widget_sidebar(
+        self, widget_type: WidgetType, widget_title: str
+    ) -> BaseWidgetWizard:
+        """Open the sidebar to edit a widget.
+
+        Args:
+            widget_type: the widget type for which the sidebar will be open.
+            widget_title: the title of the widget to open the edit sidebar.
+
+        Returns:
+            The `BaseWidgetWizard` object of the open sidebar.
+        """
+        self.edit_widget_properties_button(widget_title).click()
+        return widget_type.get_wizard(WidgetWizardMode.EDIT_WIDGET, self.page)

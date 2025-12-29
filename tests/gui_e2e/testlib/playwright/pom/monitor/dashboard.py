@@ -13,6 +13,9 @@ from playwright.sync_api import expect, Locator
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.pom.sidebar.create_dashboard_sidebar import (
+    CloneDashboardSidebar,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +89,21 @@ class BaseDashboard(CmkPage):
         """
         return self._menu_header.get_by_role("button", name=button_name)
 
+    def clone_dashboard(self, automatic_unique_id: bool = True) -> None:
+        """Clone a dashboard creating a customized copy"""
+        self.get_menu_button("Clone").click()
+        clone_dashboard_sidebar = CloneDashboardSidebar(self.page)
+
+        if automatic_unique_id:
+            clone_dashboard_sidebar.automatic_unique_id_checkbox.check()
+            clone_dashboard_sidebar.expect_auto_generated_unique_id_to_be_populated(
+                self.page_title.lower().replace(" ", "_")
+            )
+        else:
+            raise NotImplementedError("Custom unique id is not yet implemented")
+
+        clone_dashboard_sidebar.clone_button.click()
+
     def get_widget(self, widget_title: str) -> Locator:
         """Get the Locator of the widget with the given title.
 
@@ -145,6 +163,9 @@ class BaseDashboard(CmkPage):
         expect(
             self.get_widget(widget_title), f"Widget '{widget_title}' is not presented on the page"
         ).to_be_visible()
+
+    def edit_widget_properties_button(self, widget_title: str) -> Locator:
+        return self.get_widget(widget_title).get_by_role("button", name="Edit widget")
 
 
 class MainDashboard(BaseDashboard):

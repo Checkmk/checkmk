@@ -212,7 +212,6 @@ def test_create_rules(
             ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
 
 
-@pytest.mark.xfail(reason="CMK-28671; broken Werk#18887.", strict=True)
 @pytest.mark.parametrize(
     "created_host",
     [
@@ -283,7 +282,6 @@ def test_periodic_service_discovery_rule(
         ruleset_page.delete_button.click()
 
 
-@pytest.mark.xfail(reason="CMK-28671; broken Werk#18887.", strict=True)
 @pytest.mark.parametrize(
     "created_host",
     [

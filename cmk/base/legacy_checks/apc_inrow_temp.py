@@ -8,12 +8,20 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.plugins.apc.lib_ats import DETECT
+from collections.abc import Mapping
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.apc.lib_ats import DETECT
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.7.0 197 --> PowerNet-MIB::airIRRCUnitStatusRackInletTempMetric.0
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.9.0 202 --> PowerNet-MIB::airIRRCUnitStatusSupplyAirTempMetric.0
@@ -22,31 +30,37 @@ check_info = {}
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.26.0 154 --> PowerNet-MIB::airIRRCUnitStatusLeavingFluidTemperatureMetric.0
 
 
-def parse_apc_inrow_temp(string_table):
+def parse_apc_inrow_temp(string_table: StringTable) -> Mapping[str, float]:
     parsed = {}
     if string_table:
         for what, what_item in zip(
             string_table[0],
             ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"],
+            strict=False,
         ):
             if what not in ["", "-1"]:
-                parsed.setdefault(what_item, float(what) / 10)
+                parsed[what_item] = float(what) / 10
 
     return parsed
 
 
-def inventory_apc_inrow_temp(parsed):
-    for key in parsed:
-        yield key, {}
+def inventory_apc_inrow_temp(section: Mapping[str, float]) -> DiscoveryResult:
+    yield from (Service(item=key) for key in section)
 
 
-def check_apc_inrow_temp(item, params, parsed):
-    if item in parsed:
-        return check_temperature(parsed[item], params, "apc_inrow_temp_%s" % item)
-    return None
+def check_apc_inrow_temp(
+    item: str, params: TempParamType, section: Mapping[str, float]
+) -> CheckResult:
+    if (temperature := section.get(item)) is not None:
+        yield from check_temperature(
+            temperature,
+            params,
+            unique_name=f"apc_inrow_temp_{item}",
+            value_store=get_value_store(),
+        )
 
 
-check_info["apc_inrow_temp"] = LegacyCheckDefinition(
+snmp_section_apc_inrow_temp = SimpleSNMPSection(
     name="apc_inrow_temp",
     detect=DETECT,
     fetch=SNMPTree(
@@ -54,6 +68,11 @@ check_info["apc_inrow_temp"] = LegacyCheckDefinition(
         oids=["7", "9", "11", "24", "26"],
     ),
     parse_function=parse_apc_inrow_temp,
+)
+
+
+check_plugin_apc_inrow_temp = CheckPlugin(
+    name="apc_inrow_temp",
     service_name="Temperature %s",
     discovery_function=inventory_apc_inrow_temp,
     check_function=check_apc_inrow_temp,

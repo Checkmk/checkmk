@@ -3799,7 +3799,7 @@ def _check_sites_that_cannot_be_activated(
 def _check_sites_that_can_be_activated(
     site_configurations: SiteConfigurations,
     force_foreign_changes: bool,
-) -> tuple[ActivateChangesManager, list[SiteId]]:
+) -> tuple[ActivateChangesManager, SiteConfigurations]:
     """Run checks on the given site configurations These sites are either remote sites that
     are logged in or the local site and they will have an online status ."""
     sites_that_can_be_activated = SiteConfigurations(
@@ -3836,7 +3836,7 @@ def _check_sites_that_can_be_activated(
     if not manager.changes.dirty_sites(activation_sites(sites_that_can_be_activated)):
         raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
-    return manager, list(sites_that_can_be_activated)
+    return manager, sites_that_can_be_activated
 
 
 def activate_changes_start(
@@ -3887,16 +3887,16 @@ def activate_changes_start(
         }
     )
     _check_sites_that_cannot_be_activated(sites_to_activate)
-    manager, site_ids_that_can_be_activated = _check_sites_that_can_be_activated(
+    manager, sites_that_can_be_activated = _check_sites_that_can_be_activated(
         sites_to_activate, force_foreign_changes
     )
 
     manager.start(
-        sites=site_ids_that_can_be_activated,
+        sites=list(sites_that_can_be_activated),
         comment=comment,
         activate_foreign=force_foreign_changes,
         source=source,
-        all_site_configs=all_site_configs,
+        all_site_configs=sites_that_can_be_activated,
         user_permission_config=user_permission_config,
         max_snapshots=max_snapshots,
         use_git=use_git,

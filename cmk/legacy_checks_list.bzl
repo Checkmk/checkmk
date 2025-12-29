@@ -1,7 +1,4 @@
 LEGACY_CHECKS = [
-    "3ware_disks",
-    "3ware_info",
-    "3ware_units",
     "ad_replication",
     "adva_fsp_temp",
     "aironet_errors",

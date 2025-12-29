@@ -5,17 +5,18 @@
 
 # mypy: disable-error-code="misc"
 
-import importlib
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
-
-threware_disks = importlib.import_module("cmk.base.legacy_checks.3ware_disks")
-check_3ware_disks = threware_disks.check_3ware_disks
-discover_3ware_disks = threware_disks.inventory_3ware_disks
+from cmk.plugins.broadcom_storage.agent_based.lsi_3ware_disks import (
+    check_3ware_disks,
+)
+from cmk.plugins.broadcom_storage.agent_based.lsi_3ware_disks import (
+    inventory_3ware_disks as discover_3ware_disks,
+)
 
 
 @pytest.mark.parametrize(
@@ -32,9 +33,10 @@ discover_3ware_disks = threware_disks.inventory_3ware_disks
         ),
     ],
 )
-def test_discover_3ware_disks(info: StringTable, expected_discoveries: Sequence[str]) -> None:
+def test_discover_3ware_disks(info: StringTable, expected_discoveries: list[str]) -> None:
     """Test discovery function for 3ware_disks check."""
-    result = [service.item for service in discover_3ware_disks(info)]
+    services = list(discover_3ware_disks(info))
+    result = [service.item for service in services if service.item is not None]
     assert sorted(result) == sorted(expected_discoveries)
 
 

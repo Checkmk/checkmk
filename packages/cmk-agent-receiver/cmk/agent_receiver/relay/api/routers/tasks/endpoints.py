@@ -230,14 +230,7 @@ async def get_task_endpoint(
     return TaskResponseSerializer.serialize(task)
 
 
-@router.post(
-    "/activate-config",
-    status_code=fastapi.status.HTTP_200_OK,
-    dependencies=[
-        fastapi.Depends(validate_localhost_authorization),
-        fastapi.Depends(site_cn_authorization),
-    ],
-)
+@router.post("/activate-config", status_code=fastapi.status.HTTP_200_OK)
 async def create_relay_config_tasks(
     handler: Annotated[ActivateConfigHandler, fastapi.Depends(get_activate_config_handler)],
 ) -> tasks_protocol.TaskListResponse:

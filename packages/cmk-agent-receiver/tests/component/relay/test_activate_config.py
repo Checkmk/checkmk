@@ -56,8 +56,7 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     agent_receiver.set_serial(serial_folder.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -86,8 +85,7 @@ def test_activation_performed_twice_with_same_config(
     agent_receiver.set_serial(serial_folder.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -95,8 +93,7 @@ def test_activation_performed_twice_with_same_config(
     _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -125,8 +122,7 @@ def test_activation_performed_twice_with_new_config(
     agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -138,8 +134,7 @@ def test_activation_performed_twice_with_new_config(
     agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
@@ -170,8 +165,7 @@ def test_new_relays_when_activation_performed(
     agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -195,8 +189,7 @@ def test_new_relays_when_activation_performed(
     agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
@@ -227,8 +220,7 @@ def test_removed_relays_when_activation_performed(
     agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -242,8 +234,7 @@ def test_removed_relays_when_activation_performed(
     agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
@@ -273,8 +264,7 @@ def test_activation_with_no_relays(
     agent_receiver.set_serial(cf.serial)
 
     # Simulate user activation with no relays
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # No tasks should be created since there are no relays
@@ -302,8 +292,7 @@ def test_activation_with_mixed_relay_task_states(
     agent_receiver.set_serial(serial_folder.serial)
 
     # First activation - creates pending tasks for both relays
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Verify both relays have pending tasks
@@ -326,8 +315,7 @@ def test_activation_with_mixed_relay_task_states(
     assert tasks.tasks[0].status == TaskStatus.FINISHED
 
     # Second activation - should create new pending tasks ONLY for relay_id_a since its previous task is finished
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+    resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)

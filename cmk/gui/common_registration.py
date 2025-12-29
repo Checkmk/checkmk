@@ -163,11 +163,12 @@ def register(
     help_developer_entries: Callable[[], MainMenuTopicEntries],
     help_about_checkmk_entries: Callable[[], MainMenuTopicEntries],
     token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
+    builtin_pagetype_topic_registry: pagetypes.BuiltinPagetypeTopicRegistry,
     *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
     hooks.register_thread_cache_cleanup()
-    pagetypes.register(main_menu_registry)
+    pagetypes.register(main_menu_registry, builtin_pagetype_topic_registry)
     search_menu.register(main_menu_registry)
     help_menu.register(
         main_menu_registry,

@@ -26,6 +26,7 @@ from cmk.gui.http import Request
 from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.pagetypes import BuiltinPagetypeTopic, BuiltinPagetypeTopicRegistry
 from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry
 from cmk.gui.painter.v0.helpers import paint_nagiosflag
 from cmk.gui.painter.v0.painters import paint_custom_var
@@ -97,6 +98,7 @@ def register(
     command_registry: CommandRegistry,
     sorter_registry: SorterRegistry,
     permission_registry: PermissionRegistry,
+    builtin_pagetype_topic_registry: BuiltinPagetypeTopicRegistry,
 ) -> None:
     data_source_registry.register(DataSourceECEvents)
     data_source_registry.register(DataSourceECEventHistory)
@@ -190,6 +192,19 @@ def register(
     permission_registry.register(PermissionECCustomActions)
     permission_registry.register(PermissionECArchiveEvent)
     permission_registry.register(PermissionECArchiveEventsOfHost)
+
+    builtin_pagetype_topic_registry.register(_ec_pagetype_topic())
+
+
+def _ec_pagetype_topic() -> BuiltinPagetypeTopic:
+    return BuiltinPagetypeTopic(
+        name="events",
+        title=_l("Event Console"),
+        icon_name=DynamicIconName("topic_events"),
+        public=True,
+        sort_index=70,
+        owner=UserId.builtin(),
+    )
 
 
 #   .--Datasources---------------------------------------------------------.

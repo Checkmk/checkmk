@@ -7,6 +7,7 @@ from collections.abc import Callable
 
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.pagetypes import BuiltinPagetypeTopicRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.search import match_item_generator_registry
@@ -70,6 +71,7 @@ def register(
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
     endpoint_registry: EndpointRegistry,
     replication_path_registry: ReplicationPathRegistry,
+    builtin_pagetype_topic_registry: BuiltinPagetypeTopicRegistry,
     save_active_config: Callable[[], None],
     *,
     ignore_duplicate_endpoints: bool = False,
@@ -80,6 +82,7 @@ def register(
         command_registry,
         sorter_registry,
         permission_registry,
+        builtin_pagetype_topic_registry,
     )
     icon_registry.register(MkeventdIcon)
     wato.register(

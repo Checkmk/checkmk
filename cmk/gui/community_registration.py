@@ -42,6 +42,7 @@ from cmk.gui.openapi import (
 from cmk.gui.openapi.endpoints import autocomplete
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry, PageEndpoint
+from cmk.gui.pagetypes import builtin_pagetype_topic_registry
 from cmk.gui.painter.v0 import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
@@ -187,6 +188,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         default_developer_entries,
         default_about_checkmk_entries,
         token_authenticated_page_registry,
+        builtin_pagetype_topic_registry,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
 
@@ -307,6 +309,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         timeperiod_usage_finder_registry,
         endpoint_registry,
         replication_path_registry,
+        builtin_pagetype_topic_registry,
         save_active_config,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )

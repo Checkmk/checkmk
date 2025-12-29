@@ -26,7 +26,7 @@ from __future__ import annotations
 import abc
 import copy
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, replace
 from typing import Generic, Literal, override, Self, TypeVar
@@ -36,6 +36,7 @@ from pydantic import BaseModel as PydanticBaseModel
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui import sites, userdb
@@ -96,9 +97,9 @@ from cmk.gui.type_defs import (
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
@@ -197,7 +198,10 @@ class PagetypeTopicConfig(OverridableConfig):
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 
-def register(main_menu_registry_: MainMenuRegistry) -> None:
+def register(
+    main_menu_registry_: MainMenuRegistry,
+    builtin_pagetype_topic_registry_: BuiltinPagetypeTopicRegistry,
+) -> None:
     main_menu_registry_.register(
         MainMenu(
             name="customize",
@@ -209,6 +213,8 @@ def register(main_menu_registry_: MainMenuRegistry) -> None:
             search=UnifiedSearch("customize_search", "unified-search-input-customize"),
         )
     )
+    for pagetype_topic in _default_pagetype_topics():
+        builtin_pagetype_topic_registry_.register(pagetype_topic)
 
 
 #   .--Base----------------------------------------------------------------.
@@ -2083,6 +2089,136 @@ def page_menu_add_to_topics(
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(kw_only=True, frozen=True)
+class BuiltinPagetypeTopic:
+    name: str
+    title: LazyString
+    icon_name: DynamicIconName
+    public: bool
+    sort_index: int
+    owner: UserId
+    hide: Callable[[], bool] | None = None
+
+
+class BuiltinPagetypeTopicRegistry(Registry[BuiltinPagetypeTopic]):
+    def plugin_name(self, instance: BuiltinPagetypeTopic) -> str:
+        return instance.name
+
+
+builtin_pagetype_topic_registry = BuiltinPagetypeTopicRegistry()
+
+
+def _default_pagetype_topics() -> Sequence[BuiltinPagetypeTopic]:
+    return [
+        BuiltinPagetypeTopic(
+            name="overview",
+            title=_l("Overview"),
+            icon_name=DynamicIconName("topic_overview"),
+            public=True,
+            sort_index=20,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="monitoring",
+            title=_l("Monitoring"),
+            icon_name=DynamicIconName("topic_monitoring"),
+            public=True,
+            sort_index=30,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="problems",
+            title=_l("Problems"),
+            icon_name=DynamicIconName("topic_problems"),
+            public=True,
+            sort_index=40,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="history",
+            title=_l("History"),
+            icon_name=DynamicIconName("topic_history"),
+            public=True,
+            sort_index=50,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="analyze",
+            title=_l("System"),
+            icon_name=DynamicIconName("topic_checkmk"),
+            public=True,
+            sort_index=60,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="cloud",
+            title=_l("Cloud"),
+            icon_name=DynamicIconName("plugins_cloud"),
+            public=True,
+            sort_index=75,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="bi",
+            title=_l("Business Intelligence"),
+            icon_name=DynamicIconName("topic_bi"),
+            sort_index=80,
+            public=True,
+            hide=_no_bi_aggregate_active,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="applications",
+            title=_l("Applications"),
+            icon_name=DynamicIconName("topic_applications"),
+            public=True,
+            sort_index=85,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="inventory",
+            title=_l("HW/SW inventory"),
+            icon_name=DynamicIconName("topic_inventory"),
+            public=True,
+            sort_index=90,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="it_efficiency",
+            title=_l("IT infrastructure efficiency"),
+            icon_name=DynamicIconName("topic_analyze"),
+            public=True,
+            sort_index=100,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="synthetic_monitoring",
+            title=_l("Synthetic monitoring"),
+            icon_name=DynamicIconName("synthetic_monitoring_topic"),
+            public=True,
+            sort_index=105,
+            owner=UserId.builtin(),
+        ),
+        BuiltinPagetypeTopic(
+            name="my_workplace",
+            title=_l("Workplace"),
+            icon_name=DynamicIconName("topic_my_workplace"),
+            public=True,
+            sort_index=110,
+            owner=UserId.builtin(),
+        ),
+        # Only fallback for items without topic
+        BuiltinPagetypeTopic(
+            name="other",
+            title=_l("Other"),
+            icon_name=DynamicIconName("topic_other"),
+            public=True,
+            sort_index=115,
+            owner=UserId.builtin(),
+        ),
+    ]
+
+
 class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     @override
     @classmethod
@@ -2203,139 +2339,18 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     @override
     @classmethod
     def builtin_pages(cls) -> Mapping[str, PagetypeTopicConfig]:
-        topics: dict[str, PagetypeTopicConfig] = {
-            "overview": PagetypeTopicConfig(
-                name="overview",
-                title=_("Overview"),
-                icon_name=DynamicIconName("topic_overview"),
-                public=True,
-                sort_index=20,
-                owner=UserId.builtin(),
-            ),
-            "monitoring": PagetypeTopicConfig(
-                name="monitoring",
-                title=_("Monitoring"),
-                icon_name=DynamicIconName("topic_monitoring"),
-                public=True,
-                sort_index=30,
-                owner=UserId.builtin(),
-            ),
-            "problems": PagetypeTopicConfig(
-                name="problems",
-                title=_("Problems"),
-                icon_name=DynamicIconName("topic_problems"),
-                public=True,
-                sort_index=40,
-                owner=UserId.builtin(),
-            ),
-            "history": PagetypeTopicConfig(
-                name="history",
-                title=_("History"),
-                icon_name=DynamicIconName("topic_history"),
-                public=True,
-                sort_index=50,
-                owner=UserId.builtin(),
-            ),
-            "analyze": PagetypeTopicConfig(
-                name="analyze",
-                title=_("System"),
-                icon_name=DynamicIconName("topic_checkmk"),
-                public=True,
-                sort_index=60,
-                owner=UserId.builtin(),
-            ),
-            "cloud": PagetypeTopicConfig(
-                name="cloud",
-                title=_("Cloud"),
-                icon_name=DynamicIconName("plugins_cloud"),
-                public=True,
-                sort_index=75,
-                owner=UserId.builtin(),
-            ),
-            "bi": PagetypeTopicConfig(
-                name="bi",
-                title=_("Business Intelligence"),
-                icon_name=DynamicIconName("topic_bi"),
-                sort_index=80,
-                public=True,
-                hide=_no_bi_aggregate_active(),
-                owner=UserId.builtin(),
-            ),
-            "applications": PagetypeTopicConfig(
-                name="applications",
-                title=_("Applications"),
-                icon_name=DynamicIconName("topic_applications"),
-                public=True,
-                sort_index=85,
-                owner=UserId.builtin(),
-            ),
-            "inventory": PagetypeTopicConfig(
-                name="inventory",
-                title=_("HW/SW inventory"),
-                icon_name=DynamicIconName("topic_inventory"),
-                public=True,
-                sort_index=90,
-                owner=UserId.builtin(),
-            ),
-            "network_statistics": PagetypeTopicConfig(
-                name="network_statistics",
-                title=_("Network statistics"),
-                icon_name=DynamicIconName("topic_network"),
-                sort_index=95,
-                public=True,
-                hide=not is_ntop_configured(),
-                owner=UserId.builtin(),
-            ),
-            "it_efficiency": PagetypeTopicConfig(
-                name="it_efficiency",
-                title=_("IT infrastructure efficiency"),
-                icon_name=DynamicIconName("topic_analyze"),
-                description=_("Analyze the utilization of your IT infrastructure data center."),
-                public=True,
-                sort_index=100,
-                owner=UserId.builtin(),
-            ),
-            "synthetic_monitoring": PagetypeTopicConfig(
-                name="synthetic_monitoring",
-                title=_("Synthetic monitoring"),
-                icon_name=DynamicIconName("synthetic_monitoring_topic"),
-                public=True,
-                sort_index=105,
-                owner=UserId.builtin(),
-            ),
-            "my_workplace": PagetypeTopicConfig(
-                name="my_workplace",
-                title=_("Workplace"),
-                icon_name=DynamicIconName("topic_my_workplace"),
-                public=True,
-                sort_index=110,
-                owner=UserId.builtin(),
-            ),
-            # Only fallback for items without topic
-            "other": PagetypeTopicConfig(
-                name="other",
-                title=_("Other"),
-                icon_name=DynamicIconName("topic_other"),
-                public=True,
-                sort_index=115,
-                owner=UserId.builtin(),
-            ),
-        }
-        if edition(cmk.utils.paths.omd_root) is not Edition.CLOUD:  # disabled in CSE
-            topics.update(
-                {
-                    "events": PagetypeTopicConfig(
-                        name="events",
-                        title=_("Event Console"),
-                        icon_name=DynamicIconName("topic_events"),
-                        public=True,
-                        sort_index=70,
-                        owner=UserId.builtin(),
-                    )
-                }
+        return {
+            name: PagetypeTopicConfig(
+                name=topic_config.name,
+                title=str(topic_config.title),
+                owner=topic_config.owner,
+                public=topic_config.public,
+                icon_name=topic_config.icon_name,
+                sort_index=topic_config.sort_index,
+                hide=topic_config.hide() if topic_config.hide else False,
             )
-
-        return topics
+            for name, topic_config in builtin_pagetype_topic_registry.items()
+        }
 
     def max_entries(self) -> int:
         return self.config.max_entries

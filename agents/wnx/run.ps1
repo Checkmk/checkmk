@@ -15,10 +15,9 @@ if ((get-host).version.major -lt 7) {
 }
 
 $argAll = $false
-$argBuild = $false
+$argBuildOnly = $false
 $argClean = $false
 $argCtl = $false
-$argBuild = $false
 $argSign = $false
 $argMsi = $false
 $argOhm = $false
@@ -67,7 +66,7 @@ function Write-Help() {
     Write-Host "  --clean-artifacts       clean artifacts"
     Write-Host "  -C, --ctl               make controller"
     Write-Host "  -Q, --mk-sql            make mk-sql"
-    Write-Host "  -B, --build-only        do not test, just build"
+    Write-Host "  -B, --build             do not test, just build"
     Write-Host "  -W, --win-agent         make windows agent"
     Write-Host "  -M, --msi               make msi"
     Write-Host "  -O, --ohm               make ohm"
@@ -96,7 +95,7 @@ else {
             { $("-?", "-h", "--help") -contains "$_" } { Write-Help; return }
             { $("-A", "--all") -contains $_ } { $argAll = $true }
             { $("-C", "--controller") -contains $_ } { $argCtl = $true }
-            { $("-B", "--build") -contains $_ } { $argBuild = $true }
+            { $("-B", "--build") -contains $_ } { $argBuildOnly = $true }
             { $("-W", "--win-agent") -contains $_ } { $argWin = $true }
             { $("-M", "--msi") -contains $_ } { $argMsi = $true }
             { $("-O", "--ohm") -contains $_ } { $argOhm = $true }
@@ -123,7 +122,6 @@ if ($argAll) {
     $argMsi = $true
     $argWin = $true
 }
-
 
 # Example of setting environment variables (equivalent to SETLOCAL in batch)
 $env:LOGONSERVER = "YourLogonServerHere"
@@ -299,7 +297,7 @@ function Set-MSI-Version {
 }
 
 function Start-UnitTests {
-    if ($argBuild -or ($argWin -ne $true) ) {
+    if ($argBuildOnly -or ($argWin -ne $true) ) {
         Write-Host "Skipping unit testing..." -ForegroundColor Yellow
         return
     }
@@ -707,7 +705,7 @@ try {
 
     # BUILDING
     Build-Agent
-    if ($argBuild){
+    if ($argBuildOnly){
         $build_arg = "--build"
     }
     else
@@ -757,5 +755,3 @@ finally {
     Invoke-Detach $argAttached
 }
 exit $result
-
-

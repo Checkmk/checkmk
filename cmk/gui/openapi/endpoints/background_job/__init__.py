@@ -71,6 +71,8 @@ class FieldSiteId:
         [
             permissions.Perm("background_jobs.manage_jobs"),
             permissions.Optional(permissions.Perm("background_jobs.delete_jobs")),
+            permissions.Optional(permissions.Perm("background_jobs.stop_jobs")),
+            permissions.Optional(permissions.Perm("background_jobs.stop_foreign_jobs")),
         ]
     ),
     response_schema=BackgroundJobSnapshotObject,

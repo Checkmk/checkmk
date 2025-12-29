@@ -10,6 +10,7 @@ import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_compone
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import { immediateWatch } from '@/lib/watch'
 
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
@@ -38,6 +39,15 @@ const props = defineProps<
 
 const dataRef = defineModel<OAuth2FormData>({ required: true })
 const validationRef = ref<ValidationMessages>(props.formSpec.validation ?? [])
+
+immediateWatch(
+  () => props.formSpec.validation,
+  async (newValue: ValidationMessages | undefined) => {
+    if (newValue !== undefined) {
+      validationRef.value = newValue
+    }
+  }
+)
 
 async function validate(): Promise<boolean> {
   let valid = true

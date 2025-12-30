@@ -14,7 +14,7 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
-from cmk.gui.oauth2_connections.wato._modes import get_oauth_2_connection_form_spec
+from cmk.gui.oauth2_connections.wato._modes import get_oauth2_connection_form_spec
 from cmk.gui.oauth2_connections.watolib.store import extract_password_store_entry
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 
@@ -29,7 +29,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         result = ctx.request.get_json()
-        form_spec = get_oauth_2_connection_form_spec()
+        form_spec = get_oauth2_connection_form_spec()
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
         data = parse_and_validate_frontend_data(form_spec, RawFrontendData(value=result["data"]))
         assert isinstance(data, dict)

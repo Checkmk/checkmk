@@ -19,7 +19,7 @@ from cmk.gui.form_specs.visitors.validators import build_vue_validators
 from cmk.gui.oauth2_connections.wato._modes import (
     get_authority_mapping,
     get_oauth2_connection_config,
-    get_oauth_2_connection_form_spec,
+    get_oauth2_connection_form_spec,
 )
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.vue_formspec_components import Oauth2ConnectionConfig
@@ -35,7 +35,7 @@ class OAuth2ConnectionSetupVisitor(
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackDataModel]:
-        return get_visitor(get_oauth_2_connection_form_spec(), self.visitor_options)._parse_value(
+        return get_visitor(get_oauth2_connection_form_spec(), self.visitor_options)._parse_value(
             raw_value
         )
 
@@ -43,7 +43,7 @@ class OAuth2ConnectionSetupVisitor(
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
-        visitor = get_visitor(get_oauth_2_connection_form_spec(), self.visitor_options)
+        visitor = get_visitor(get_oauth2_connection_form_spec(), self.visitor_options)
         return visitor._validate(parsed_value)
 
     @override
@@ -53,7 +53,7 @@ class OAuth2ConnectionSetupVisitor(
         if isinstance(parsed_value, InvalidValue):
             raise TypeError("Received unexpected InvalidValue: %r" % parsed_value)
         title, help_text = get_title_and_help(self.form_spec)
-        visitor = get_visitor(get_oauth_2_connection_form_spec(), self.visitor_options)
+        visitor = get_visitor(get_oauth2_connection_form_spec(), self.visitor_options)
         vue_form_spec, vue_value = visitor._to_vue(parsed_value)
         return (
             shared_type_defs.Oauth2ConnectionSetup(
@@ -76,6 +76,6 @@ class OAuth2ConnectionSetupVisitor(
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         ident = str(parsed_value["ident"]) if "ident" in parsed_value else None
-        return get_visitor(get_oauth_2_connection_form_spec(ident), self.visitor_options)._to_disk(
+        return get_visitor(get_oauth2_connection_form_spec(ident), self.visitor_options)._to_disk(
             parsed_value
         )

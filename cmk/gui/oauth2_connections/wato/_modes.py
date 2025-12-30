@@ -71,7 +71,7 @@ def uuid4_validator(error_msg: Message | None = None) -> validators.MatchRegex:
     )
 
 
-def get_oauth_2_connection_form_spec(ident: str | None = None) -> Dictionary:
+def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
     return TwoColumnDictionary(
         title=Title("Define OAuth parameters"),
         elements={
@@ -332,7 +332,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                     "config": asdict(get_oauth2_connection_config()),
                     "form_spec": asdict(
                         serialize_data_for_frontend(
-                            form_spec=get_oauth_2_connection_form_spec(),
+                            form_spec=get_oauth2_connection_form_spec(),
                             value=RawDiskData(
                                 value={
                                     "title": self._entry["title"] + " (Clone)",
@@ -360,7 +360,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                     "config": asdict(get_oauth2_connection_config()),
                     "form_spec": asdict(
                         serialize_data_for_frontend(
-                            form_spec=get_oauth_2_connection_form_spec(),
+                            form_spec=get_oauth2_connection_form_spec(),
                             field_id=form_name,
                             do_validate=False,
                         )
@@ -376,7 +376,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                 "config": asdict(get_oauth2_connection_config()),
                 "form_spec": asdict(
                     serialize_data_for_frontend(
-                        form_spec=get_oauth_2_connection_form_spec(self._ident),
+                        form_spec=get_oauth2_connection_form_spec(self._ident),
                         value=RawDiskData(
                             value={
                                 "ident": self._ident,

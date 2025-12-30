@@ -3,58 +3,76 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree, StringTable
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
-check_info = {}
-
-# this is currently here only to prevent error messages when upgrading
+@dataclass(frozen=True)
+class Sensor:
+    temperature: float
+    threshold_low: float
+    threshold_high: float
 
 
-def inventory_adva_fsp_temp(info):
-    for line in info:
-        # Ignore unconnected sensors
-        if len(line) == 5 and line[0] != "" and line[4] != "" and int(line[0]) >= -2730:
-            yield line[4], {}
+type Section = Mapping[str, Sensor]
 
 
-def check_adva_fsp_temp(item, params, info):
-    for line in info:
-        if len(line) == 5 and line[4] == item:
-            temp, high, low, _descr = line[0:4]
-            temp = float(temp) / 10
-            high = float(high) / 10
-            low = float(low) / 10
-
-            if temp <= -2730:
-                return 3, "Invalid sensor data"
-
-            if low > -273:
-                return check_temperature(
-                    temp,
-                    params,
-                    "adva_fsp_temp_%s" % item,
-                    dev_levels=(high, high),
-                    dev_levels_lower=(low, low),
-                )
-
-            return check_temperature(
-                temp, params, "adva_fsp_temp_%s" % item, dev_levels=(high, high)
-            )
-    return None
+def _is_connected(raw_temp: str, description: str) -> bool:
+    return bool(description) and bool(raw_temp)
 
 
-def parse_adva_fsp_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_adva_fsp_temp(string_table: StringTable) -> Section:
+    return {
+        name: Sensor(
+            temperature=float(raw_temp) / 10,
+            threshold_high=float(raw_high) / 10,
+            threshold_low=float(raw_low) / 10,
+        )
+        for raw_temp, raw_high, raw_low, description, name in string_table
+        if _is_connected(raw_temp, description)
+    }
 
 
-check_info["adva_fsp_temp"] = LegacyCheckDefinition(
+def discover_adva_fsp_temp(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=name) for name, sensor in section.items() if sensor.temperature > -273.0
+    )
+
+
+def check_adva_fsp_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+
+    if sensor.temperature <= -273.0:
+        yield Result(state=State.UNKNOWN, summary="Invalid sensor data")
+
+    yield from check_temperature(
+        sensor.temperature,
+        params,
+        dev_levels=(sensor.threshold_high, sensor.threshold_high),
+        dev_levels_lower=(
+            (sensor.threshold_low, sensor.threshold_low) if sensor.threshold_low > -273 else None
+        ),
+    )
+
+
+snmp_section_adva_fsp_temp = SimpleSNMPSection(
     name="adva_fsp_temp",
-    parse_function=parse_adva_fsp_temp,
     detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2544",
@@ -66,8 +84,14 @@ check_info["adva_fsp_temp"] = LegacyCheckDefinition(
             "2.5.5.2.1.5",
         ],
     ),
+    parse_function=parse_adva_fsp_temp,
+)
+
+
+check_plugin_adva_fsp_temp = CheckPlugin(
+    name="adva_fsp_temp",
     service_name="Temperature %s",
-    discovery_function=inventory_adva_fsp_temp,
+    discovery_function=discover_adva_fsp_temp,
     check_function=check_adva_fsp_temp,
     check_ruleset_name="temperature",
     check_default_parameters={},

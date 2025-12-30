@@ -313,13 +313,22 @@ class EditNotificationRule(BaseNotificationPage):
     To navigate: `Setup > Notifications > Edit this notification rule`.
     """
 
-    def __init__(self, page: Page, rule_position: int = 0, navigate_to_page: bool = True) -> None:
+    def __init__(
+        self,
+        page: Page,
+        rule_position: int = 0,
+        navigate_to_page: bool = True,
+        navigate_to_notification_configuration: bool = True,
+    ) -> None:
         self.rule_position = rule_position
         self.page_title = f"Edit notification rule {rule_position}"
+        self._navigate_to_notification_configuration = navigate_to_notification_configuration
         super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:
-        notification_configuration_page = NotificationConfiguration(self.page)
+        notification_configuration_page = NotificationConfiguration(
+            self.page, navigate_to_page=self._navigate_to_notification_configuration
+        )
         # The scrollbar interrupts the interaction with rule edit button -> -> collapse overview
         notification_configuration_page.collapse_notification_overview(True)
         notification_configuration_page.notification_rule_edit_button(self.rule_position).click()

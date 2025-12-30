@@ -223,7 +223,9 @@ def test_email_notifications_host_filters(
     ).to_have_text(host_name)
 
     edit_notification_rule_page = EditNotificationRule(
-        notification_configuration_page.page, rule_position=0
+        notification_configuration_page.page,
+        rule_position=0,
+        navigate_to_notification_configuration=False,
     )
     edit_notification_rule_page.expand_host_filters()
     edit_notification_rule_page.hosts_dropdown_list().click()

@@ -1709,6 +1709,7 @@ jinja2==3.1.6 \
     #   meraki
     #   pysmi
     #   pytest-html
+    #   sarif-tools
     #   sphinx
     #   sphinx-autoapi
 jira==3.10.5 \
@@ -1737,6 +1738,11 @@ jsonpatch==1.33 \
     --hash=sha256:0ae28c0cd062bbd8b8ecc26d7d164fbbea9652a1a3693f3b956c1eae5145dade \
     --hash=sha256:9fcd4009c41e6d12348b4a0ff2563ba56a2923a7dfee731d004e212e1ee5030c
     # via redfish
+jsonpath-ng==1.7.0 \
+    --hash=sha256:898c93fc173f0c336784a3fa63d7434297544b7198124a68f9a3ef9597b0ae6e \
+    --hash=sha256:f3d7f9e848cba1b6da28c55b1c26ff915dc9e0b1ba7e752a53d6da8d5cbd00b6 \
+    --hash=sha256:f6f5f7fd4e5ff79c785f1573b394043b39849fb2bb47bcead935d12b00beab3c
+    # via sarif-tools
 jsonpath-rw==1.4.0 \
     --hash=sha256:05c471281c45ae113f6103d1268ec7a4831a2e96aa80de45edc89b11fac4fbec
     # via redfish
@@ -2307,6 +2313,7 @@ lxml==6.0.2 \
     #   -r cmk/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   exchangelib
+    #   python-docx
     #   svglib
 lz4==4.4.5 \
     --hash=sha256:0846e6e78f374156ccf21c631de80967e03cc3c01c373c665789dc0c5431e7fc \
@@ -2540,7 +2547,9 @@ matplotlib==3.10.8 \
     --hash=sha256:f97aeb209c3d2511443f8797e3e5a569aebb040d4f8bc79aa3ee78a8fb9e3dd8 \
     --hash=sha256:f9b587c9c7274c1613a30afabf65a272114cd6cdbe67b3406f818c79d7ab2e2a \
     --hash=sha256:fb061f596dad3a0f52b60dc6a5dec4a0c300dec41e058a7efe09256188d170b7
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r tests/dev-requirements.in
+    #   sarif-tools
 mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
@@ -3273,6 +3282,7 @@ ply==3.11 \
     --hash=sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3 \
     --hash=sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce
     # via
+    #   jsonpath-ng
     #   jsonpath-rw
     #   pysmi
     #   python-active-directory
@@ -4172,6 +4182,10 @@ python-dateutil==2.9.0.post0 \
     #   recurring-ical-events
     #   time-machine
     #   trickkiste
+python-docx==1.2.0 \
+    --hash=sha256:3fd478f3250fbbbfd3b94fe1e985955737c145627498896a8a6bf81f4baf66c7 \
+    --hash=sha256:7bc9d7b7d8a69c9c02ca09216118c86552704edc23bac179283f2e38f86220ce
+    # via sarif-tools
 python-jenkins==1.8.3 \
     --hash=sha256:2e1766b253e3b2f28f52abfd0de45ffeaa1191f98520cc8d74d2c317786e59d0 \
     --hash=sha256:8f4761c391ac11e8c1f23f771010920c10440497705ab7175d52358f5a12dc98
@@ -4300,6 +4314,7 @@ pyyaml==6.0.3 \
     #   kubernetes
     #   pre-commit
     #   responses
+    #   sarif-tools
     #   schemathesis
     #   sphinx-autoapi
     #   vcrpy
@@ -4739,6 +4754,10 @@ s3transfer==0.16.0 \
     --hash=sha256:18e25d66fed509e3868dc1572b3f427ff947dd2c56f844a5bf09481ad3f3b2fe \
     --hash=sha256:8e990f13268025792229cd52fa10cb7163744bf56e719e0b9cb925ab79abf920
     # via boto3
+sarif-tools==3.0.5 \
+    --hash=sha256:52d09c101121231fb3489ad8c7af56896b8a95415cef726a6db5e7d74c6834d2 \
+    --hash=sha256:682d22559095ca4a210a401e21f0585fdb8015e826c0d160ab3cbadee326952f
+    # via -r scripts/requirements.in
 schemathesis==3.39.16 \
     --hash=sha256:4db548ce016a13f18fe70fbc7a296058aef799e6b8e14220865157c0ca88850c \
     --hash=sha256:d903368786e745ad151924d4e2e883a8b158332e60af56cd623d88d08ad55076
@@ -5427,6 +5446,7 @@ typing-extensions==4.15.0 \
     #   pydantic
     #   pydantic-core
     #   pyee
+    #   python-docx
     #   reactivex
     #   typeguard
     #   types-lxml

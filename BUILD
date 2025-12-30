@@ -87,6 +87,7 @@ compile_requirements_in(
         "//tests:dev-requirements.in",
         "//packages:python_requirements",
         "//packages:dev_python_requirements",
+        "//scripts:requirements.in",
     ] + select({
         "@//:gpl+nonfree_repo": [
             "//non-free/packages:python_requirements",

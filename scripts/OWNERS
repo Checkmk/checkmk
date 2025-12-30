@@ -20,6 +20,8 @@ per-file run-mypy=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file run-mypy=set noparent
 per-file run-uvenv=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file run-uvenv=set noparent
+per-file sarif_preparse.py=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file sarif_preparse.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

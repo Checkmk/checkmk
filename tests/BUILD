@@ -8,7 +8,11 @@ exports_files(["dev-requirements.in"])
 py_library(
     name = "testlib",
     testonly = True,
-    srcs = ["__init__.py"] + glob(include = ["testlib/**"]),
+    srcs = ["__init__.py"] + glob(include = ["testlib/**/*.py"]),
+    data = glob(
+        include = ["testlib/**"],
+        exclude = ["testlib/**/*.py"],
+    ),
     imports = [".."],
     deps = [
         "//cmk:lib_cmk",
@@ -40,8 +44,12 @@ py_library(
     name = "testlib_system_level",
     testonly = True,
     srcs = ["__init__.py"] + glob(
-        include = ["testlib/**"],
+        include = ["testlib/**/*.py"],
         exclude = ["testlib/unit/**"],
+    ),
+    data = glob(
+        include = ["testlib/**"],
+        exclude = ["testlib/**/*.py"],
     ),
     imports = [".."],
     deps = [
@@ -61,9 +69,19 @@ py_library(
     name = "testlib_unit",
     testonly = True,
     srcs = ["__init__.py"] + glob(include = [
-        "testlib/unit/**",
-        "testlib/common/**",
+        "testlib/unit/**/*.py",
+        "testlib/common/**/*.py",
     ]),
+    data = glob(
+        include = [
+            "testlib/unit/**",
+            "testlib/common/**/*.py",
+        ],
+        exclude = [
+            "testlib/unit/**/*.py",
+            "testlib/common/**/*.py",
+        ],
+    ),
     imports = [".."],
     deps = [
         "//cmk:lib_cmk",

@@ -9,31 +9,26 @@ import fastapi
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_dependency
-from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
-    get_forward_monitoring_data_handler,
-    get_register_relay_handler,
-)
-from cmk.agent_receiver.relay.api.routers.relays.handlers import (
-    ForwardMonitoringDataHandler,
-    RegisterRelayHandler,
-)
+from cmk.agent_receiver.relay.api.routers.relays import dependencies, handlers
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     FailedToSendMonitoringDataError,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import Serial
+from cmk.relay_protocols import relays as relay_protocols
 from cmk.relay_protocols.monitoring_data import MonitoringData
-from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 
 router = fastapi.APIRouter()
 
 
 @router.post("/", status_code=fastapi.status.HTTP_200_OK)
 async def register_relay(
-    handler: Annotated[RegisterRelayHandler, fastapi.Depends(get_register_relay_handler)],
+    handler: Annotated[
+        handlers.RegisterRelayHandler, fastapi.Depends(dependencies.get_register_relay_handler)
+    ],
     authorization: Annotated[SecretStr, fastapi.Header()],
-    payload: RelayRegistrationRequest,
-) -> RelayRegistrationResponse:
+    payload: relay_protocols.RelayRegistrationRequest,
+) -> relay_protocols.RelayRegistrationResponse:
     """Register a new relay entity.
 
     This endpoint allows relay entities to register themselves with the Agent Receiver.
@@ -59,6 +54,27 @@ async def register_relay(
 
 
 @router.post(
+    "/{relay_id}/csr",
+    status_code=fastapi.status.HTTP_200_OK,
+    dependencies=[mtls_authorization_dependency("relay_id")],
+)
+async def refresh_cert(
+    handler: Annotated[
+        handlers.RefreshCertHandler, fastapi.Depends(dependencies.get_refresh_cert_handler)
+    ],
+    relay_id: str,
+    payload: relay_protocols.RelayRefreshCertRequest,
+) -> relay_protocols.RelayRefreshCertResponse:
+    try:
+        return handler.process(relay_id=relay_id, request=payload)
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
+        )
+
+
+@router.post(
     "/{relay_id}/monitoring",
     status_code=fastapi.status.HTTP_204_NO_CONTENT,
     dependencies=[mtls_authorization_dependency("relay_id")],
@@ -66,7 +82,8 @@ async def register_relay(
 async def forward_monitoring_data(
     monitoring_data: MonitoringData,
     handler: Annotated[
-        ForwardMonitoringDataHandler, fastapi.Depends(get_forward_monitoring_data_handler)
+        handlers.ForwardMonitoringDataHandler,
+        fastapi.Depends(dependencies.get_forward_monitoring_data_handler),
     ],
 ) -> fastapi.Response:
     """

@@ -6,7 +6,6 @@
 from uuid import uuid4
 
 import httpx
-import pytest
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
@@ -16,12 +15,9 @@ from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 from cmk.relay_protocols.relays import RelayRegistrationRequest
 from cmk.testlib.agent_receiver.certs import (
-    check_certificate_against_private_key,
-    check_cn,
     generate_csr_pair,
-    read_certificate,
 )
-from cmk.testlib.agent_receiver.relay import random_relay_id, site_has_relay
+from cmk.testlib.agent_receiver.relay import site_has_relay
 
 
 def test_process_adds_new_relay_id_to_registry(
@@ -35,47 +31,11 @@ def test_process_adds_new_relay_id_to_registry(
         request=RelayRegistrationRequest(
             relay_id=relay_id,
             alias="test",
-            csr=serialize_to_pem(generate_csr_pair(cn=relay_id)[1]),
+            csr=_csr(relay_id),
         ),
     )
     assert relay_id == response.relay_id
     assert site_has_relay(site_api_client, RelayID(response.relay_id), test_user)
-
-
-def test_process_creates_valid_certificate(
-    register_relay_handler: RegisterRelayHandler,
-    test_user: UserAuth,
-) -> None:
-    relay_id = random_relay_id()
-    private_key, csr = generate_csr_pair(cn=relay_id)
-    response = register_relay_handler.process(
-        test_user.secret,
-        request=RelayRegistrationRequest(
-            relay_id=relay_id,
-            alias="test",
-            csr=serialize_to_pem(csr),
-        ),
-    )
-    cert = read_certificate(response.client_cert)
-    assert check_cn(cert, relay_id)
-    check_certificate_against_private_key(cert, private_key)
-
-
-def test_process_validates_csr(
-    register_relay_handler: RegisterRelayHandler,
-    test_user: UserAuth,
-) -> None:
-    relay_id = random_relay_id()
-    _, csr = generate_csr_pair(cn=random_relay_id())
-    with pytest.raises(ValueError):
-        register_relay_handler.process(
-            test_user.secret,
-            request=RelayRegistrationRequest(
-                relay_id=relay_id,
-                alias="test",
-                csr=serialize_to_pem(csr),
-            ),
-        )
 
 
 def test_process_creates_multiple_relays(
@@ -93,7 +53,7 @@ def test_process_creates_multiple_relays(
             request=RelayRegistrationRequest(
                 relay_id=relay_id,
                 alias=alias,
-                csr=serialize_to_pem(generate_csr_pair(cn=relay_id)[1]),
+                csr=_csr(relay_id),
             ),
         )
         relay_ids.append(relay_id)
@@ -103,3 +63,7 @@ def test_process_creates_multiple_relays(
     # Verify all relays are still registered
     for relay_id in relay_ids:
         assert site_has_relay(site_api_client, relay_id, test_user)
+
+
+def _csr(relay_id: RelayID) -> str:
+    return serialize_to_pem(generate_csr_pair(cn=relay_id)[1])

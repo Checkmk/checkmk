@@ -57,3 +57,11 @@ class TooManyTasksError(HTTPException):
             status_code=HTTPStatus.FORBIDDEN,
             detail=f"The maximum number of tasks {max_number_of_tasks} has been reached",
         )
+
+
+class CertificateCNError(HTTPException):
+    def __init__(self, expected_cn: str, actual_cn: str):
+        super().__init__(
+            status_code=HTTPStatus.BAD_GATEWAY,
+            detail=f"Unexpected certificate CN value: expected '{expected_cn}', actual '{actual_cn}'",
+        )

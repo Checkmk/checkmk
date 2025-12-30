@@ -36,6 +36,7 @@ py_library(
         "cmk/agent_receiver/relay/api/routers/relays/dependencies.py",
         "cmk/agent_receiver/relay/api/routers/relays/endpoints.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/__init__.py",
+        "cmk/agent_receiver/relay/api/routers/relays/handlers/cert_retriever.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/forward_monitoring_data.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/register_relay.py",
         "cmk/agent_receiver/relay/api/routers/tasks/__init__.py",
@@ -139,6 +140,7 @@ py_test(
         requirement("requests"),
         requirement("starlette"),
         requirement("time-machine"),
+        requirement("python-dateutil"),
     ],
 )
 

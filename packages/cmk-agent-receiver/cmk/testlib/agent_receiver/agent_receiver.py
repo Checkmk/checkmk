@@ -96,6 +96,34 @@ class AgentReceiverClient:
             },
         )
 
+    def refresh_cert(self, relay_id: str) -> httpx.Response:
+        """Refresh the certificate for a relay.
+
+        This endpoint allows a relay to request a new certificate by submitting
+        a new Certificate Signing Request (CSR). The relay must be authenticated
+        via mTLS using its current certificate.
+
+        Args:
+            relay_id: The UUID of the relay requesting certificate refresh
+
+        Returns:
+            httpx.Response containing RelayRefreshCertResponse with:
+                - root_cert: The root CA certificate in PEM format
+                - client_cert: The newly signed client certificate in PEM format
+
+        Note:
+            - The relay must authenticate using mTLS with its existing certificate
+            - The CSR's Common Name must match the relay_id
+        """
+        csr_pair = generate_csr_pair(cn=relay_id)
+        return self.client.post(
+            f"/{self.site_name}/relays/{relay_id}/csr",
+            headers={INJECTED_UUID_HEADER: relay_id},
+            json={
+                "csr": serialize_to_pem(csr_pair[1]),
+            },
+        )
+
     def push_task(
         self, *, relay_id: str, spec: TaskCreateRequestSpec, site_cn: str = SITE_CN
     ) -> httpx.Response:

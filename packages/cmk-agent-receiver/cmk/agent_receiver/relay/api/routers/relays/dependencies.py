@@ -13,9 +13,14 @@ from cmk.agent_receiver.relay.api.dependencies.relays_repository import (
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     ForwardMonitoringDataHandler,
+    RefreshCertHandler,
     RegisterRelayHandler,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+
+
+def get_refresh_cert_handler() -> RefreshCertHandler:
+    return RefreshCertHandler()
 
 
 def get_register_relay_handler(

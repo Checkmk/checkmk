@@ -17,3 +17,12 @@ class RelayRegistrationResponse(BaseModel, frozen=True):
     relay_id: str
     root_cert: str
     client_cert: str
+
+
+class RelayRefreshCertRequest(BaseModel, frozen=True):
+    csr: Annotated[str, Field(min_length=1)]
+
+
+class RelayRefreshCertResponse(BaseModel, frozen=True):
+    root_cert: str
+    client_cert: str

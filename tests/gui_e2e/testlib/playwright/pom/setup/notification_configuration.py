@@ -87,6 +87,12 @@ class NotificationConfiguration(CmkPage):
             )
         return rule_row_locator
 
+    def is_the_current_page(self) -> bool:
+        return (
+            self.main_area.page_title_locator.is_visible()
+            and self.main_area.page_title_locator.text_content() == self.page_title
+        )
+
     def notification_rule_edit_button(self, rule_id: int | str) -> Locator:
         return self._notification_rule_row(rule_id).get_by_title("Edit this notification rule")
 

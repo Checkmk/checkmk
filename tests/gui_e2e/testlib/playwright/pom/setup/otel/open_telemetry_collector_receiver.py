@@ -16,19 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 class OpenTelemetryCollectorReceiver(CmkPage):
-    """Represent the page `Setup -> Hosts -> OpenTelemetry collector: Receiver (experimental)`"""
+    """Represent the page `Setup -> Hosts -> OpenTelemetry Collector: Receiver (experimental)`"""
 
     def __init__(
         self,
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "OpenTelemetry collector: Receiver (experimental)"
+        self.page_title = "OpenTelemetry Collector: Receiver (experimental)"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `OpenTelemetry collector: Receiver (experimental)` page."""
+        """Instructions to navigate to `OpenTelemetry Collector: Receiver (experimental)` page."""
         logger.info(f"Navigate to '{self.page_title}' page")
         self.main_menu.setup_menu(self.page_title).click()
         _url_pattern: str = quote_plus("wato.py?mode=otel_collectors_receivers")
@@ -49,7 +49,7 @@ class OpenTelemetryCollectorReceiver(CmkPage):
 
     @property
     def add_open_telemetry_collector_receiver_configuration_btn(self) -> Locator:
-        return self.main_area.get_suggestion("Add OpenTelemetry collector receiver configuration")
+        return self.main_area.get_suggestion("Add OpenTelemetry Collector receiver configuration")
 
     def collector_configuration_row(self, collector_id: str) -> Locator:
         return self.main_area.locator(f"tr:has(td:has-text('{collector_id}'))")

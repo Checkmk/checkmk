@@ -16,19 +16,21 @@ logger = logging.getLogger(__name__)
 
 
 class OpenTelemetryCollectorPrometheusScraping(CmkPage):
-    """Represent the page `Setup -> Hosts -> OpenTelemetry collector: Prometheus scraping (experimental)`"""
+    """Represent the page `Setup -> Hosts -> OpenTelemetry Collector:
+    Prometheus scraping (experimental)`"""
 
     def __init__(
         self,
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "OpenTelemetry collector: Prometheus scraping (experimental)"
+        self.page_title = "OpenTelemetry Collector: Prometheus scraping (experimental)"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `OpenTelemetry collector: Prometheus scraping (experimental)` page."""
+        """Instructions to navigate to
+        `OpenTelemetry Collector: Prometheus scraping (experimental)` page."""
         logger.info(f"Navigate to '{self.page_title}' page")
         self.main_menu.setup_menu(self.page_title).click()
         _url_pattern: str = quote_plus("wato.py?mode=otel_collectors_prom_scrapes")
@@ -50,7 +52,7 @@ class OpenTelemetryCollectorPrometheusScraping(CmkPage):
     @property
     def add_open_telemetry_collector_configuration_btn(self) -> Locator:
         return self.main_area.get_suggestion(
-            "Add OpenTelemetry collector prometheus scraping configuration"
+            "Add OpenTelemetry Collector Prometheus scraping configuration"
         )
 
     def collector_configuration_row(self, collector_id: str) -> Locator:

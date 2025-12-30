@@ -15,7 +15,7 @@ from typing import Any
 import time_machine
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.base.legacy_checks.ad_replication import (
+from cmk.plugins.windows.agent_based.ad_replication import (
     check_ad_replication,
     inventory_ad_replication,
     parse_ad_replication,

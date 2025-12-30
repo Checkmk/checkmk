@@ -51,9 +51,7 @@ class BaseNotificationPage(QuickSetupPage):
         return DropdownListNameToID()
 
     def _get_row(self, row_name: str) -> Locator:
-        return self.main_area.locator(
-            f'table[class*="form-dictionary"] >> tr:has(span:text-is("{row_name}"))'
-        )
+        return self.main_area.locator().get_by_role("group", name=row_name)
 
     # stage 1
     @property
@@ -62,11 +60,11 @@ class BaseNotificationPage(QuickSetupPage):
 
     @property
     def _host_events_rows(self) -> Locator:
-        return self._get_row("Host events").locator("table > tr")
+        return self._get_row("Host events").get_by_role("list").get_by_role("listitem")
 
     @property
     def _service_events_rows(self) -> Locator:
-        return self._get_row("Service events").locator("table > tr")
+        return self._get_row("Service events").get_by_role("list").get_by_role("listitem")
 
     @property
     def _add_service_event_button(self) -> Locator:
@@ -211,7 +209,7 @@ class BaseNotificationPage(QuickSetupPage):
 
     def delete_all_service_events(self) -> None:
         for _ in self._service_events_rows.all():
-            self._service_events_rows.nth(0).get_by_role("button").click()
+            self._service_events_rows.first.get_by_role("button", name="Remove element").click()
 
     # stage 6
     @property

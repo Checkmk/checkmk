@@ -89,6 +89,12 @@ class NotificationConfiguration(CmkPage):
             )
         return rule_row_locator
 
+    def is_the_current_page(self) -> bool:
+        return (
+            self.main_area.page_title_locator.is_visible()
+            and self.main_area.page_title_locator.text_content() == self.page_title
+        )
+
     def notification_rule_edit_button(self, rule_id: int | str) -> Locator:
         return self._notification_rule_row(rule_id).get_by_title("Edit this notification rule")
 
@@ -101,7 +107,7 @@ class NotificationConfiguration(CmkPage):
         return self._notification_rule_row(rule_id).get_by_title("Delete this notification rule")
 
     def notification_overview_container(self) -> Locator:
-        return self.main_area.locator("div[class='overview_container']")
+        return self.main_area.locator("div.notification-overview__container")
 
     def collapse_notification_overview(self, collapse: bool = True) -> None:
         container = self.notification_overview_container()
@@ -121,7 +127,7 @@ class NotificationConfiguration(CmkPage):
 
     def _get_notification_stat_count(self, title: str) -> Locator:
         return (
-            self.main_area.locator("div[class='section']")
+            self.main_area.locator("div.notification-stats__section")
             .filter(has=self.main_area.page.get_by_role("heading", name=title))
             .get_by_role("paragraph")
         )

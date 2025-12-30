@@ -166,6 +166,10 @@ class EmailManager:
                 dict_result[key.strip()] = value.strip()
         return dict_result
 
+    def clean_emails(self, email_subject: str | None = None) -> None:
+        while file_path := self.find_email_by_subject(email_subject):
+            file_path.unlink()
+
 
 def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[str, str]]:
     """Create a user for email notifications via API.

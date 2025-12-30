@@ -68,7 +68,6 @@ def _modify_notification_rule(test_site: Site, linux_hosts: list[str]) -> Iterat
         test_site.delete_file(notification_rule_backup_path)
 
 
-@pytest.mark.skip(reason="CMK-22883; Investigation ongoing ...")
 def test_filesystem_email_notifications(
     dashboard_page: MainDashboard,
     linux_hosts: list[str],
@@ -95,6 +94,7 @@ def test_filesystem_email_notifications(
 
     logger.info("Clone the existing default notification rule")
     notification_configuration_page = NotificationConfiguration(dashboard_page.page)
+    notification_configuration_page.collapse_notification_overview(False)
     total_sent = notification_configuration_page.get_total_sent_notifications_count()
     total_failures = notification_configuration_page.get_failed_notifications_count()
     logger.info("Current notification stats: sent=%s, failed=%s", total_sent, total_failures)
@@ -103,37 +103,41 @@ def test_filesystem_email_notifications(
     notification_configuration_page.notification_rule_copy_button(0).click()
     notification_configuration_page.clone_and_edit_button.click()
 
-    logger.info("Modify the cloned rule")
-    cloned_notification_rule_page = EditNotificationRule(
-        notification_configuration_page.page,
-        rule_position=1,
-        navigate_to_page=False,
-    )
-    cloned_notification_rule_page.modify_notification_rule(
-        username, f"{service_name}$", notification_description
-    )
-
-    logger.info("Disable the default notification rule")
-    default_notification_rule_page = EditNotificationRule(
-        notification_configuration_page.page, rule_position=0
-    )
-    default_notification_rule_page.check_disable_rule(True)
-    default_notification_rule_page.apply_and_create_another_rule_button.click()
-
-    logger.info(
-        "Add rule for filesystems to change status '%s' when used space is more then %s percent",
-        expected_event,
-        used_space,
-    )
-    add_rule_filesystem_page = AddRuleFilesystems(dashboard_page.page)
-    add_rule_filesystem_page.check_levels_for_user_free_space(True)
-    add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
-    add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
-    add_rule_filesystem_page.save_button.click()
-    add_rule_filesystem_page.activate_changes(test_site)
-
-    service_search_page = None
     try:
+        service_search_page = None
+
+        logger.info("Modify the cloned rule")
+        cloned_notification_rule_page = EditNotificationRule(
+            notification_configuration_page.page,
+            rule_position=1,
+            navigate_to_page=False,
+        )
+        cloned_notification_rule_page.modify_notification_rule(
+            username, f"{service_name}$", notification_description
+        )
+
+        logger.info("Disable the default notification rule")
+        default_notification_rule_page = EditNotificationRule(
+            notification_configuration_page.page, rule_position=0
+        )
+        default_notification_rule_page.check_disable_rule(True)
+        default_notification_rule_page.apply_and_create_another_rule_button.click()
+
+        logger.info(
+            (
+                "Add rule for filesystems to change status '%s'"
+                " when used space is more than %s percent"
+            ),
+            expected_event,
+            used_space,
+        )
+        add_rule_filesystem_page = AddRuleFilesystems(dashboard_page.page)
+        add_rule_filesystem_page.check_levels_for_user_free_space(True)
+        add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
+        add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
+        add_rule_filesystem_page.save_button.click()
+        add_rule_filesystem_page.activate_changes(test_site)
+
         checkmk_agent = "Check_MK"
         service_search_page = ServiceSearchPage(dashboard_page.page)
         logger.info("Reschedule the '%s' service to trigger the notification", checkmk_agent)
@@ -170,20 +174,6 @@ def test_filesystem_email_notifications(
         new_page.close()
 
     finally:
-        logger.info("Delete the created rule")
-        notification_configuration_page.navigate()
-        # The scrollbar interrupts the interaction with rule delete button -> collapse overview
-        notification_configuration_page.collapse_notification_overview(True)
-        # delete the cloned rule.
-        notification_configuration_page.delete_notification_rule(notification_description)
-
-        logger.info("Enable the default notification rule")
-        default_notification_rule_page = EditNotificationRule(
-            notification_configuration_page.page, rule_position=0
-        )
-        default_notification_rule_page.check_disable_rule(False)
-        default_notification_rule_page.apply_and_create_another_rule_button.click()
-
         if service_search_page is not None:
             filesystems_rules_page = Ruleset(
                 service_search_page.page,
@@ -194,6 +184,27 @@ def test_filesystem_email_notifications(
             filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
             filesystems_rules_page.activate_changes(test_site)
             test_site.schedule_check(host_name, checkmk_agent)
+
+        logger.info("Delete the created rule")
+
+        if not notification_configuration_page.is_the_current_page():
+            notification_configuration_page.navigate()
+
+        # The scrollbar interrupts the interaction with rule delete button -> collapse overview
+        notification_configuration_page.collapse_notification_overview(True)
+        # delete the cloned rule.
+        notification_configuration_page.delete_notification_rule(rule_id=1)
+
+        logger.info("Enable the default notification rule")
+        default_notification_rule_page = EditNotificationRule(
+            notification_configuration_page.page,
+            rule_position=0,
+            navigate_to_notification_configuration=False,
+        )
+        default_notification_rule_page.check_disable_rule(False)
+        default_notification_rule_page.apply_and_create_another_rule_button.click()
+
+        email_manager.clean_emails(expected_notification_subject)
 
 
 def test_email_notifications_host_filters(

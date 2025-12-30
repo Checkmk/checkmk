@@ -39,6 +39,7 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that user-triggered config activation creates a relay config task for each configured relay.
 
@@ -57,7 +58,7 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -69,6 +70,7 @@ def test_activation_performed_twice_with_same_config(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that performing config activation twice with the same configuration does not create duplicate tasks.
 
@@ -87,7 +89,7 @@ def test_activation_performed_twice_with_same_config(
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -96,7 +98,7 @@ def test_activation_performed_twice_with_same_config(
 
     # Simulate second user activation.
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -108,6 +110,7 @@ def test_activation_performed_twice_with_new_config(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that performing activation with a new configuration creates new config tasks with the updated serial.
 
@@ -126,7 +129,7 @@ def test_activation_performed_twice_with_new_config(
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -139,7 +142,7 @@ def test_activation_performed_twice_with_new_config(
 
     # Simulate second user activation.
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
@@ -152,6 +155,7 @@ def test_new_relays_when_activation_performed(
     site_client: httpx.Client,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that activation creates config tasks for newly added relays while maintaining tasks for existing relays.
 
@@ -171,7 +175,7 @@ def test_new_relays_when_activation_performed(
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -196,7 +200,7 @@ def test_new_relays_when_activation_performed(
 
     # Simulate second user activation.
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
@@ -210,6 +214,7 @@ def test_removed_relays_when_activation_performed(
     site_client: httpx.Client,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that activation correctly handles scenarios where relays have been removed from the configuration.
 
@@ -228,7 +233,7 @@ def test_removed_relays_when_activation_performed(
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
@@ -243,7 +248,7 @@ def test_removed_relays_when_activation_performed(
 
     # Simulate second user activation.
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
@@ -258,6 +263,7 @@ def test_activation_with_no_relays(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that config activation succeeds gracefully when no relays are configured.
 
@@ -274,7 +280,7 @@ def test_activation_with_no_relays(
 
     # Simulate user activation with no relays
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # No tasks should be created since there are no relays
@@ -285,6 +291,7 @@ def test_activation_with_mixed_relay_task_states(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that activation creates new pending tasks only for relays whose previous config tasks are finished, not for those with pending tasks.
 
@@ -303,7 +310,7 @@ def test_activation_with_mixed_relay_task_states(
 
     # First activation - creates pending tasks for both relays
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Verify both relays have pending tasks
@@ -327,7 +334,7 @@ def test_activation_with_mixed_relay_task_states(
 
     # Second activation - should create new pending tasks ONLY for relay_id_a since its previous task is finished
     with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config()
+        resp = agent_receiver.activate_config(site_cn=site_name)
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)

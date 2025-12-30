@@ -19,6 +19,7 @@ def test_cannot_push_more_pending_tasks_than_allowed(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that pushing more tasks than the maximum allowed is rejected with a FORBIDDEN status.
 
@@ -36,7 +37,7 @@ def test_cannot_push_more_pending_tasks_than_allowed(
 
     # add maximum number of tasks allowed
 
-    task_ids = add_tasks(task_count, agent_receiver, relay_id)
+    task_ids = add_tasks(task_count, agent_receiver, relay_id, site_name)
 
     # An additional task cannot be pushed
 
@@ -44,6 +45,7 @@ def test_cannot_push_more_pending_tasks_than_allowed(
         response = agent_receiver.push_task(
             relay_id=relay_id,
             spec=FetchAdHocTask(payload=".."),
+            site_cn=site_name,
         )
 
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text
@@ -61,6 +63,7 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that after marking a task as finished, new tasks can be pushed even when the limit was previously reached.
 
@@ -77,7 +80,7 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     agent_receiver.set_serial(cf.serial)
 
     # add maximum number of tasks allowed
-    task_id, *_ = add_tasks(task_count, agent_receiver, relay_id)
+    task_id, *_ = add_tasks(task_count, agent_receiver, relay_id, site_name)
 
     agent_receiver.update_task(
         relay_id=relay_id,
@@ -90,6 +93,7 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
         response = agent_receiver.push_task(
             relay_id=relay_id,
             spec=FetchAdHocTask(payload=".."),
+            site_cn=site_name,
         )
 
     assert response.status_code == HTTPStatus.OK, response.text
@@ -98,7 +102,9 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     assert len(current_tasks) == task_count + 1
 
 
-def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site: SiteMock) -> None:
+def test_each_relay_has_its_own_limit(
+    agent_receiver: AgentReceiverClient, site: SiteMock, site_name: str
+) -> None:
     """Verify that each relay has its own independent task limit and filling one relay does not affect others.
 
     Test steps:
@@ -113,7 +119,7 @@ def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site:
 
     # add maximum number of tasks allowed to relay A
 
-    _ = add_tasks(task_count, agent_receiver, relay_id_A)
+    _ = add_tasks(task_count, agent_receiver, relay_id_A, site_name)
 
     # we should still be able to add tasks to relay B
 
@@ -121,6 +127,7 @@ def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site:
         response = agent_receiver.push_task(
             relay_id=relay_id_B,
             spec=FetchAdHocTask(payload=".."),
+            site_cn=site_name,
         )
     assert response.status_code == HTTPStatus.OK, response.text
 

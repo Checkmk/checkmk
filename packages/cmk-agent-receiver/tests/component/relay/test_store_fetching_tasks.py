@@ -18,6 +18,7 @@ def test_store_fetching_task(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that a fetching task can be stored and later retrieved with the correct payload.
 
@@ -35,6 +36,7 @@ def test_store_fetching_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
         spec=FetchAdHocTask(payload="any payload"),
+        site_cn=site_name,
     )
 
     tasks_1 = get_relay_tasks(agent_receiver, relay_id)
@@ -47,6 +49,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that storing tasks for one relay does not affect the tasks of other relays.
 
@@ -66,6 +69,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
         spec=FetchAdHocTask(payload=".."),
+        site_cn=site_name,
     )
 
     tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
@@ -77,6 +81,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
         spec=FetchAdHocTask(payload=".."),
+        site_cn=site_name,
     )
 
     tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
@@ -90,6 +95,7 @@ def test_store_fetching_task_non_existent_relay(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that tasks can be stored for a relay even when the relay does not have a configured folder.
 
@@ -107,6 +113,7 @@ def test_store_fetching_task_non_existent_relay(
         response = agent_receiver.push_task(
             relay_id=relay_id,
             spec=FetchAdHocTask(payload=".."),
+            site_cn=site_name,
         )
 
     assert response.status_code == HTTPStatus.OK

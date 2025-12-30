@@ -17,7 +17,7 @@ from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.certs import set_up_ca_certs
+from cmk.testlib.agent_receiver.certs import generate_site_certificate, set_up_ca_certs
 from cmk.testlib.agent_receiver.container import Container, run_container
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Wiremock
@@ -56,6 +56,7 @@ def site_context(
     (site_context.omd_root / CONFIG_FILE).write_text(site_context.model_dump_json())
 
     set_up_ca_certs(config=site_context)
+    generate_site_certificate(config=site_context)
 
     # Create version symlink structure
     version_name = "some.detailed.version.ultimate"

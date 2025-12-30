@@ -3,12 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime, timedelta, UTC
+
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+)
 from cryptography.x509 import (
     Certificate,
+    CertificateBuilder,
     CertificateSigningRequest,
     CertificateSigningRequestBuilder,
     load_pem_x509_certificate,
@@ -18,9 +26,6 @@ from cryptography.x509 import (
 from cryptography.x509.oid import NameOID
 
 from cmk.agent_receiver.lib.config import Config
-
-# Common Name extracted from the CA_CERT below
-SITE_CN = "Site 'heute' local CA"
 
 CA_CERT = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
@@ -80,6 +85,49 @@ def set_up_ca_certs(config: Config) -> None:
     ):
         ca_path.parent.mkdir(parents=True, exist_ok=True)
         ca_path.write_bytes(CA_CERT)
+
+
+def generate_site_certificate(config: Config) -> None:
+    """Generate a site certificate with CN matching the site name.
+
+    Creates a certificate signed by the CA and writes both the private key
+    and certificate to the site certificate path.
+    """
+    # Load the CA to sign the site certificate
+    ca_cert = load_pem_x509_certificate(CA_CERT)
+
+    # Generate a private key and certificate for the site
+    site_private_key = generate_private_key(2048)
+
+    # Create site certificate signed by CA
+    now = datetime.now(UTC).replace(tzinfo=None)
+    site_cert = (
+        CertificateBuilder()
+        .subject_name(
+            Name(
+                [
+                    NameAttribute(NameOID.COMMON_NAME, config.site_name),
+                ]
+            )
+        )
+        .issuer_name(ca_cert.subject)
+        .public_key(site_private_key.public_key())
+        .serial_number(12345)
+        .not_valid_before(now)
+        .not_valid_after(now + timedelta(days=365))
+        .sign(site_private_key, SHA256())  # Self-signed for tests
+    )
+
+    # Write site certificate and private key
+    config.site_cert_path.parent.mkdir(parents=True, exist_ok=True)
+    site_cert_pem = site_cert.public_bytes(Encoding.PEM)
+    site_key_pem = site_private_key.private_bytes(
+        Encoding.PEM,
+        PrivateFormat.TraditionalOpenSSL,
+        NoEncryption(),
+    )
+    # Site cert file contains both key and cert
+    config.site_cert_path.write_bytes(site_key_pem + site_cert_pem)
 
 
 # Copied from test/testlib/certs.py to make cmk-agent-receiver/tests self contained

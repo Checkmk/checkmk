@@ -19,6 +19,7 @@ def test_task_expires_in_agent_receiver(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that tasks expire and are automatically removed after the configured TTL (time-to-live) period.
 
@@ -45,6 +46,7 @@ def test_task_expires_in_agent_receiver(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
         spec=FetchAdHocTask(payload=".."),
+        site_cn=site_name,
     )
 
     # Verify task is present initially
@@ -64,6 +66,7 @@ def test_task_expiration_resets_on_update(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that the task expiration timer is reset when a task is updated, extending its lifetime.
 
@@ -90,6 +93,7 @@ def test_task_expiration_resets_on_update(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
         spec=FetchAdHocTask(payload=".."),
+        site_cn=site_name,
     )
     task_id = task_response.task_id
 
@@ -126,6 +130,7 @@ def test_completed_tasks_expiration(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that tasks expire after their TTL regardless of whether they are pending, finished, or failed.
 
@@ -152,6 +157,7 @@ def test_completed_tasks_expiration(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
         spec=FetchAdHocTask(payload="test task A payload"),
+        site_cn=site_name,
     )
     task_a_id = task_a_response.task_id
 
@@ -159,6 +165,7 @@ def test_completed_tasks_expiration(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
         spec=FetchAdHocTask(payload="test task B payload"),
+        site_cn=site_name,
     )
     task_b_id = task_b_response.task_id
 

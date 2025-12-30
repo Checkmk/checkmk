@@ -18,7 +18,7 @@ from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
 
-from .certs import generate_csr_pair, SITE_CN
+from .certs import generate_csr_pair
 from .relay import random_relay_id
 from .site_mock import User
 
@@ -125,7 +125,7 @@ class AgentReceiverClient:
         )
 
     def push_task(
-        self, *, relay_id: str, spec: TaskCreateRequestSpec, site_cn: str = SITE_CN
+        self, *, relay_id: str, spec: TaskCreateRequestSpec, site_cn: str
     ) -> httpx.Response:
         headers = {
             INJECTED_UUID_HEADER: site_cn,
@@ -160,7 +160,7 @@ class AgentReceiverClient:
             },
         )
 
-    def activate_config(self, site_cn: str = SITE_CN) -> httpx.Response:
+    def activate_config(self, site_cn: str) -> httpx.Response:
         headers = {
             INJECTED_UUID_HEADER: site_cn,
         }

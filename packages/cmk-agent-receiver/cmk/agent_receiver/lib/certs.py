@@ -125,7 +125,7 @@ def relay_root_ca() -> tuple[Certificate, RSAPrivateKey]:
 def get_local_site_cn() -> str:
     """Extract the Common Name (CN) from the local site's certificate.
 
-    This function loads the site's root CA certificate and extracts its CN.
+    This function loads the site's certificate and extracts its CN.
     The result is cached for performance since the site certificate doesn't change
     during runtime.
 
@@ -135,10 +135,12 @@ def get_local_site_cn() -> str:
     Raises:
         ValueError: If the certificate doesn't contain a CN attribute.
     """
-    site_cert = site_root_certificate()
+    config = get_config()
+    site_cert = load_pem_x509_certificate(config.site_cert_path.read_bytes())
     cn_attributes = site_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
     if not cn_attributes:
         raise ValueError("Site certificate does not contain a Common Name (CN)")
+
     cn_value = cn_attributes[0].value
     assert isinstance(cn_value, str)
     return cn_value

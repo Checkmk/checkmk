@@ -41,6 +41,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that registering a new relay does not affect tasks belonging to other already registered relays.
 
@@ -60,6 +61,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
         agent_receiver=agent_receiver,
         relay_id=relay_1_id,
         spec=FetchAdHocTask(payload=".."),
+        site_cn=site_name,
     )
 
     register_relay(agent_receiver, "relay2", relay_2_id)

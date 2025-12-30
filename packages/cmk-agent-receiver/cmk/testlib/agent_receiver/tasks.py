@@ -14,14 +14,13 @@ from cmk.relay_protocols.tasks import (
 )
 
 from .agent_receiver import AgentReceiverClient
-from .certs import SITE_CN
 
 
 def push_task(
     agent_receiver: AgentReceiverClient,
     relay_id: str,
     spec: TaskCreateRequestSpec,
-    site_cn: str = SITE_CN,
+    site_cn: str,
 ) -> TaskCreateResponse:
     """Helper to push tasks for a relay from localhost (site operations).
 
@@ -46,12 +45,15 @@ def get_relay_tasks(
     return TaskListResponse.model_validate(response.json())
 
 
-def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskID]:
+def add_tasks(
+    count: int, agent_receiver: AgentReceiverClient, relay_id: str, site_cn: str
+) -> list[TaskID]:
     gen = (
         push_task(
             agent_receiver=agent_receiver,
             relay_id=relay_id,
             spec=FetchAdHocTask(payload=f"payload_{i}"),
+            site_cn=site_cn,
         )
         for i in range(count)
     )

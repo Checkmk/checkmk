@@ -235,6 +235,7 @@ async def get_task_endpoint(
     status_code=fastapi.status.HTTP_200_OK,
     dependencies=[
         fastapi.Depends(validate_localhost_authorization),
+        fastapi.Depends(site_cn_authorization),
     ],
 )
 async def create_relay_config_tasks(

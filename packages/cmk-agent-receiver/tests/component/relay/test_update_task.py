@@ -37,6 +37,7 @@ def test_updating_task_should_change_stored_task_object(
     result_type_output: ResultType,
     expected_status: TaskStatus,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that updating a task with a result modifies the stored task object and sets the correct task status based on the result type.
 
@@ -49,7 +50,7 @@ def test_updating_task_should_change_stored_task_object(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
-    task_ids = add_tasks(1, agent_receiver, relay_id)
+    task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
     task_id = task_ids[0]
 
     # do the update
@@ -89,6 +90,7 @@ def test_task_no_longer_pending(
     relay_id: str,
     result_type_input: str,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that once a task has been updated with a result, it no longer appears in the list of pending tasks.
 
@@ -101,7 +103,7 @@ def test_task_no_longer_pending(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
-    task_ids = add_tasks(3, agent_receiver, relay_id)
+    task_ids = add_tasks(3, agent_receiver, relay_id, site_name)
     task_id = task_ids[1]
 
     all_tasks = get_all_tasks(agent_receiver, relay_id)
@@ -128,6 +130,7 @@ def test_timestamps_are_handled(
     relay_id: str,
     result_type_input: str,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that updating a task modifies the update_timestamp but preserves the creation_timestamp.
 
@@ -140,7 +143,7 @@ def test_timestamps_are_handled(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
-    task_ids = add_tasks(1, agent_receiver, relay_id)
+    task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
     task_id = task_ids[0]
 
     all_tasks = get_all_tasks(agent_receiver, relay_id)
@@ -169,6 +172,7 @@ def test_the_other_tasks_are_not_changed(
     relay_id: str,
     result_type_input: str,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that updating one task does not modify any other tasks that belong to the same relay.
 
@@ -181,7 +185,7 @@ def test_the_other_tasks_are_not_changed(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
-    task_ids = add_tasks(3, agent_receiver, relay_id)
+    task_ids = add_tasks(3, agent_receiver, relay_id, site_name)
     task_id = task_ids[1]
 
     orig_tasks = get_all_tasks(agent_receiver, relay_id)

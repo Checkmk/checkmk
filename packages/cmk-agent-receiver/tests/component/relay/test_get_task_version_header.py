@@ -17,6 +17,7 @@ def test_get_task_returns_version_header(
     site: SiteMock,
     site_context: Config,
     agent_receiver: AgentReceiverClient,
+    site_name: str,
 ) -> None:
     """Verify that the get task endpoint includes the version header in the response.
 
@@ -31,7 +32,9 @@ def test_get_task_returns_version_header(
     _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
 
     # create a task
-    task_ids = add_tasks(count=1, agent_receiver=agent_receiver, relay_id=relay_id)
+    task_ids = add_tasks(
+        count=1, agent_receiver=agent_receiver, relay_id=relay_id, site_cn=site_name
+    )
     task_id = task_ids[0]
 
     # get the specific task

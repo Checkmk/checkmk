@@ -71,6 +71,10 @@ class Config(BaseModel):
         return self.omd_root / "etc/ssl/ca.pem"
 
     @property
+    def site_cert_path(self) -> Path:
+        return self.omd_root / "etc/ssl/sites" / f"{self.site_name}.pem"
+
+    @property
     def agent_ca_path(self) -> Path:
         return self.omd_root / "etc/ssl/agents/ca.pem"
 

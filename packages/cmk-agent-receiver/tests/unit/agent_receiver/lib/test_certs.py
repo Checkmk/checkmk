@@ -82,9 +82,10 @@ def test_get_local_site_cn_custom_certificate() -> None:
         .sign(private_key, SHA256())
     )
 
-    # Write the custom certificate to the site CA path
+    # Write the custom certificate to the site cert path
     config = get_config()
-    config.site_ca_path.write_text(serialize_to_pem(cert))
+    config.site_cert_path.parent.mkdir(parents=True, exist_ok=True)
+    config.site_cert_path.write_text(serialize_to_pem(cert))
 
     # Now get_local_site_cn should return our custom CN
     cn = get_local_site_cn()
@@ -123,9 +124,10 @@ def test_get_local_site_cn_missing_cn() -> None:
         .sign(private_key, SHA256())
     )
 
-    # Write the certificate without CN to the site CA path
+    # Write the certificate without CN to the site cert path
     config = get_config()
-    config.site_ca_path.write_text(serialize_to_pem(cert))
+    config.site_cert_path.parent.mkdir(parents=True, exist_ok=True)
+    config.site_cert_path.write_text(serialize_to_pem(cert))
 
     # get_local_site_cn should raise ValueError
     with pytest.raises(ValueError, match="Site certificate does not contain a Common Name"):

@@ -17,7 +17,7 @@ from starlette.routing import Mount
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import ControllerCertSettings
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.main import main_app
-from cmk.testlib.agent_receiver.certs import set_up_ca_certs
+from cmk.testlib.agent_receiver.certs import generate_site_certificate, set_up_ca_certs
 
 
 @pytest.fixture(autouse=True)
@@ -46,6 +46,7 @@ def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     config.r4r_dir.mkdir(parents=True)
     config.log_path.parent.mkdir(parents=True)
     set_up_ca_certs(config=config)
+    generate_site_certificate(config=config)
 
 
 @pytest.fixture(autouse=True)

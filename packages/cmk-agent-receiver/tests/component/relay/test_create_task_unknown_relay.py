@@ -17,6 +17,7 @@ def test_create_task_unknown_relay(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
+    site_name: str,
 ) -> None:
     """Verify that tasks can be created for unknown relay IDs as the site is responsible for handling such cases.
 
@@ -35,7 +36,7 @@ def test_create_task_unknown_relay(
 
     with agent_receiver.with_client_ip("127.0.0.1"):
         response = agent_receiver.push_task(
-            relay_id="bad_relay_id", spec=FetchAdHocTask(payload="..")
+            relay_id="bad_relay_id", spec=FetchAdHocTask(payload=".."), site_cn=site_name
         )
     assert response.status_code == HTTPStatus.OK
     assert response.json()["task_id"] is not None

@@ -11,6 +11,7 @@ from http import HTTPStatus
 import pytest
 
 from cmk.agent_receiver.lib.config import Config
+from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.certs import SITE_CN
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
@@ -25,14 +26,14 @@ from cmk.testlib.agent_receiver.site_mock import SiteMock
         ("Site 'other' local CA", "different site CA"),
     ],
 )
-def test_activate_config_with_various_invalid_cns(
+def test_create_task_with_various_invalid_cns(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
     invalid_cn: str,
     description: str,
 ) -> None:
-    """Verify activate-config rejects various invalid CN values.
+    """Verify create-task rejects various invalid CN values.
 
     Expected: 403 Forbidden for all invalid CN values
 
@@ -41,7 +42,7 @@ def test_activate_config_with_various_invalid_cns(
 
     Steps:
     1. Start AR with configured relays
-    2. Send activate-config from localhost with invalid CN
+    2. Send create-task from localhost with invalid CN
     3. Verify request is rejected with 403
     """
     # Setup: Create relays
@@ -51,9 +52,11 @@ def test_activate_config_with_various_invalid_cns(
     serial_folder = create_config_folder(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
-    # Test: Activate config with invalid CN
+    # Test: Create task with invalid CN
     with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.activate_config(site_cn=invalid_cn)
+        response = agent_receiver.push_task(
+            relay_id=relay_id, spec=FetchAdHocTask(payload=".."), site_cn=invalid_cn
+        )
 
     # Assert: Request is forbidden
     assert response.status_code == HTTPStatus.FORBIDDEN, (
@@ -64,21 +67,20 @@ def test_activate_config_with_various_invalid_cns(
     )
 
 
-def test_activate_config_with_valid_cn_and_localhost(
+def test_create_task_with_valid_cn_and_localhost(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
-    """Verify activate-config succeeds with correct CN and localhost.
+    """Verify create-task succeeds with correct CN and localhost.
 
-    Test scenario: AR-CT-AUTH-3.6 (Positive test case)
     Expected: 200 OK
 
     This verifies that valid requests (correct CN + localhost) are accepted.
 
     Steps:
     1. Start AR with configured relays
-    2. Send activate-config from localhost with correct site CN
+    2. Send create-task from localhost with correct site CN
     3. Verify request succeeds
     """
     # Setup: Create relays
@@ -89,20 +91,21 @@ def test_activate_config_with_valid_cn_and_localhost(
     serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(serial_folder.serial)
 
-    # Test: Activate config with correct CN from localhost
+    # Test: Create task with correct CN from localhost
     with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.activate_config(site_cn=SITE_CN)
-
+        response = agent_receiver.push_task(
+            relay_id=relay_id_a, spec=FetchAdHocTask(payload=".."), site_cn=SITE_CN
+        )
     # Assert: Request succeeds
     assert response.status_code == HTTPStatus.OK, response.text
 
 
-def test_activate_config_cn_check_without_localhost(
+def test_create_task_cn_check_without_localhost(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
-    """Verify activate-config requires localhost even with valid CN.
+    """Verify create-task requires localhost even with valid CN.
 
     Expected: 403 Forbidden (localhost check fails first)
 
@@ -121,9 +124,11 @@ def test_activate_config_cn_check_without_localhost(
     serial_folder = create_config_folder(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
-    # Test: Activate config with correct CN but from non-localhost
+    # Test: Create task with correct CN but from non-localhost
     with agent_receiver.with_client_ip("192.168.1.100"):
-        response = agent_receiver.activate_config(site_cn=SITE_CN)
+        response = agent_receiver.push_task(
+            relay_id=relay_id, spec=FetchAdHocTask(payload=".."), site_cn=SITE_CN
+        )
 
     # Assert: Request is forbidden (localhost check fails)
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text

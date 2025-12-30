@@ -64,6 +64,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOf,
     Migrate,
+    OptionalDropdownChoice,
     TextInput,
     TextOrRegExp,
     Transform,
@@ -145,6 +146,21 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
                     unit=_("seconds"),
                     minvalue=0,
                     help=_('Set to "0" to disable the automatic reload.'),
+                ),
+            ),
+            (
+                "row_limit",
+                OptionalDropdownChoice(
+                    title=_("Row limit"),
+                    choices=[
+                        (0, _("Use global hard/soft limit behavior")),
+                    ],
+                    explicit=Integer(
+                        default_value=10,
+                        minvalue=1,
+                        maxvalue=1000,
+                    ),
+                    otherlabel=_("Set custom row limit"),
                 ),
             ),
             (
@@ -864,7 +880,14 @@ def _transform_view_to_valuespec_value(view: ViewSpec) -> dict[str, Any]:
     value: dict[str, Any] = {**view}
     value["view"] = {}  # Several global variables are put into a sub-dict
     # Only copy our known keys. Reporting element, etc. might have their own keys as well
-    for key in ["datasource", "browser_reload", "layout", "num_columns", "column_headers"]:
+    for key in [
+        "datasource",
+        "browser_reload",
+        "layout",
+        "num_columns",
+        "column_headers",
+        "row_limit",
+    ]:
         if key in value:
             value["view"][key] = value[key]
 

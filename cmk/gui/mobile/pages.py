@@ -252,14 +252,15 @@ def _page_index(config: Config) -> None:
         id_="data",
     )
     items = []
-    row_limit = get_limit(
-        request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
-        soft_query_limit=config.soft_query_limit,
-        may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
-        hard_query_limit=config.hard_query_limit,
-        may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
-    )
     for view_name, view_spec in get_permitted_views().items():
+        row_limit = get_limit(
+            view_spec_row_limit=view_spec.get("row_limit", 0),
+            request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
+            soft_query_limit=config.soft_query_limit,
+            may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
+            hard_query_limit=config.hard_query_limit,
+            may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+        )
         if view_spec.get("mobile") and not view_spec.get("hidden"):
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
@@ -326,6 +327,7 @@ def _page_view(config: Config, *, debug: bool) -> None:
     user_permissions = UserPermissions.from_config(config, permission_registry)
     view = View(view_name, view_spec, context, user_permissions)
     view.row_limit = get_limit(
+        view_spec_row_limit=view_spec.get("row_limit", 0),
         request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
         soft_query_limit=config.soft_query_limit,
         may_ignore_soft_limit=user.may("general.ignore_soft_limit"),

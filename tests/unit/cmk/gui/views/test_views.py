@@ -434,26 +434,34 @@ def test_view_row_limit(view: View) -> None:
 
 
 @pytest.mark.parametrize(
-    "limit,ignore_soft_limit,ignore_hard_limit,result",
+    "spec_limit,limit,ignore_soft_limit,ignore_hard_limit,result",
     [
-        (None, False, False, 1000),
-        ("soft", False, False, 1000),
-        ("hard", False, False, 1000),
-        ("none", False, False, 1000),
-        ("soft", True, False, 1000),
-        ("hard", True, False, 5000),
+        (0, None, False, False, 1000),
+        (0, "soft", False, False, 1000),
+        (0, "hard", False, False, 1000),
+        (0, "none", False, False, 1000),
+        (0, "soft", True, False, 1000),
+        (0, "hard", True, False, 5000),
         # Strange. Shouldn't this stick to the hard limit?
-        ("none", True, False, 1000),
-        ("soft", True, True, 1000),
-        ("hard", True, True, 5000),
-        ("none", True, True, None),
+        (0, "none", True, False, 1000),
+        (0, "soft", True, True, 1000),
+        (0, "hard", True, True, 5000),
+        (0, "none", True, True, None),
+        (10, None, False, False, 10),
+        (10, "none", True, True, 10),
+        (10, "hard", True, False, 10),
     ],
 )
 def test_gui_view_row_limit(
-    limit: str, ignore_soft_limit: bool, ignore_hard_limit: bool, result: int | None
+    spec_limit: int,
+    limit: str,
+    ignore_soft_limit: bool,
+    ignore_hard_limit: bool,
+    result: int | None,
 ) -> None:
     assert (
         get_limit(
+            view_spec_row_limit=spec_limit,
             request_limit_mode=limit,
             soft_query_limit=1000,
             may_ignore_soft_limit=ignore_soft_limit,

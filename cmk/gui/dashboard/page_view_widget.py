@@ -366,6 +366,7 @@ class ViewWidgetIFramePage(Page):
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         row_limit = get_limit(
+            view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=parameters.limit,
             soft_query_limit=ctx.config.soft_query_limit,
             may_ignore_soft_limit=user.may("general.ignore_soft_limit"),

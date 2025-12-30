@@ -608,6 +608,7 @@ class ViewSpec(Visual):
     column_headers: Literal["off", "pergroup"]
     sorters: Sequence[SorterSpec]
     add_headers: NotRequired[str]
+    row_limit: NotRequired[int]  # Custom row limit for this view (overrides soft/hard limits)
     # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
     mobile: NotRequired[bool]

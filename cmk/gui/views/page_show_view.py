@@ -90,6 +90,7 @@ def page_show_view(
 
         view = View(view_name, view_spec, context, user_permissions)
         view.row_limit = get_limit(
+            view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
             soft_query_limit=ctx.config.soft_query_limit,
             may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
@@ -648,6 +649,7 @@ def get_want_checkboxes() -> bool:
 
 def get_limit(
     *,
+    view_spec_row_limit: int,
     request_limit_mode: str,
     soft_query_limit: int,
     may_ignore_soft_limit: bool,
@@ -655,6 +657,8 @@ def get_limit(
     may_ignore_hard_limit: bool,
 ) -> int | None:
     """How many data rows may the user query?"""
+    if view_spec_row_limit:
+        return view_spec_row_limit
     if request_limit_mode == "hard" and may_ignore_soft_limit:
         return hard_query_limit
     if request_limit_mode == "none" and may_ignore_hard_limit:

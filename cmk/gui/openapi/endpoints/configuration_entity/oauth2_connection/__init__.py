@@ -19,7 +19,9 @@ from cmk import fields
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
+    get_endpoint_decorator,
     list_endpoint_decorator,
+    serve_configuration_entity,
     serve_configuration_entity_list,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -51,5 +53,12 @@ def _list_oauth2_connections(params: Mapping[str, Any]) -> Response:
     return serve_configuration_entity_list(ConfigEntityType.oauth2_connection, params, user=user)
 
 
+@get_endpoint_decorator(ConfigEntityType.oauth2_connection)
+def _get_oauth2_connection(params: Mapping[str, Any]) -> Response:
+    """Get an OAuth2 connection"""
+    return serve_configuration_entity(ConfigEntityType.oauth2_connection, params, user)
+
+
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
     endpoint_registry.register(_list_oauth2_connections, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(_get_oauth2_connection, ignore_duplicates=ignore_duplicates)

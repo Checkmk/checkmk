@@ -65,9 +65,6 @@ export const configEntityAPI = {
     if (entityType === 'passwordstore_password') {
       throw new Error('Passwords are not supported in configEntityAPI.getData')
     }
-    if (entityType === 'oauth2_connection') {
-      throw new Error('OAuth2 connections are not supported in configEntityAPI.getData')
-    }
     const data = unwrap(
       await client.GET(`/objects/${entityType}/{entity_id}`, {
         params: { path: { entity_id: entityId } }

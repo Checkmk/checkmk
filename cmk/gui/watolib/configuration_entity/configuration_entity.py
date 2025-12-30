@@ -28,7 +28,9 @@ from cmk.gui.watolib.configuration_entity._folder import (
     save_folder_from_slidein_schema,
 )
 from cmk.gui.watolib.configuration_entity._oauth2_connections import (
+    get_oauth2_connection,
     save_oauth2_connection_and_passwords_from_slidein_schema,
+    update_oauth2_connection_and_passwords_from_slidein_schema,
 )
 from cmk.gui.watolib.configuration_entity._password import (
     get_password_slidein_schema,
@@ -131,6 +133,7 @@ def update_configuration_entity(
     user: LoggedInUser,
     object_id: EntityId,
     pprint_value: bool,
+    use_git: bool,
 ) -> ConfigurationEntityDescription:
     """Update a configuration entity.
 
@@ -160,8 +163,11 @@ def update_configuration_entity(
             )
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")
-            raise NotImplementedError(
-                "Editing oauth2 connections via config entity API is not supported."
+            ident, oauth2_connection = update_oauth2_connection_and_passwords_from_slidein_schema(
+                RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
+            )
+            return ConfigurationEntityDescription(
+                ident=EntityId(ident), description=oauth2_connection["title"]
             )
         case other:
             assert_never(other)
@@ -254,8 +260,9 @@ def get_configuration_entity(
             raise NotImplementedError("Editing rules via config entity API is not yet supported.")
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")
-            raise NotImplementedError(
-                "Editing oauth2 connections via config entity API is not yet supported."
+            oauth2_connection = get_oauth2_connection(entity_id)
+            return ConfigurationEntity(
+                description=oauth2_connection.description, data=oauth2_connection.data
             )
         case other:
             assert_never(other)

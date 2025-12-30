@@ -50,8 +50,7 @@ def recompose(
             help_text=form_spec.help_text,
             entity_type=ConfigEntityType.oauth2_connection,
             entity_type_specifier="all",
-            # TODO: add later should be quite straight forward
-            allow_editing_existing_elements=False,
+            allow_editing_existing_elements=True,
         ),
         from_disk=_oauth2_connection_disk_to_ui,
         to_disk=_oauth2_connection_ui_to_disk,

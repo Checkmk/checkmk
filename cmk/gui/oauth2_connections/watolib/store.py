@@ -166,7 +166,7 @@ def save_tokens_to_passwordstore(
         )
 
 
-def save_reference_to_config_file(
+def update_reference(
     *,
     ident: str,
     title: str,
@@ -186,15 +186,36 @@ def save_reference_to_config_file(
         tenant_id=tenant_id,
         authority=authority,
     )
-    if ident in load_oauth2_connections():
-        update_oauth2_connection(
-            ident=ident,
-            details=details,
-            user_id=user_id,
-            pprint_value=pprint_value,
-            use_git=use_git,
-        )
-        return ident, details
+    update_oauth2_connection(
+        ident=ident,
+        details=details,
+        user_id=user_id,
+        pprint_value=pprint_value,
+        use_git=use_git,
+    )
+    return ident, details
+
+
+def save_new_reference_to_config_file(
+    *,
+    ident: str,
+    title: str,
+    client_id: str,
+    tenant_id: str,
+    authority: str,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> tuple[str, OAuth2Connection]:
+    details = OAuth2Connection(
+        title=title,
+        access_token=("cmk_postprocessed", "stored_password", (f"{ident}_access_token", "")),
+        client_id=client_id,
+        client_secret=("cmk_postprocessed", "stored_password", (f"{ident}_client_secret", "")),
+        refresh_token=("cmk_postprocessed", "stored_password", (f"{ident}_refresh_token", "")),
+        tenant_id=tenant_id,
+        authority=authority,
+    )
     save_oauth2_connection(
         ident=ident,
         details=details,

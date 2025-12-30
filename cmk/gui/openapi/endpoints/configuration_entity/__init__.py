@@ -151,6 +151,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
             user=user,
             object_id=entity_id,
             pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
         )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)

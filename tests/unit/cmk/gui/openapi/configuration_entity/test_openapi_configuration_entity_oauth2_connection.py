@@ -106,16 +106,12 @@ def test_create_already_existing_oauth2_connection(
                 "authority": option_id("global"),
             },
         },
-        expect_ok=True,
+        expect_ok=False,
     )
 
-    # Currently, this is supported because the underlying save function overwrites existing entries
-    # and is therefore used for editing as well.
-    # If this behavior is fixed in the future, this test should expect an error response instead.
-
     # THEN
-    assert resp.status_code == 200, resp.json
-    assert resp.json["id"] == MY_OAUTH2_CONNECTION_UUID, resp.json
+    assert resp.status_code == 400, resp.json
+    assert "This ID is already in use." in resp.json["detail"], resp.json
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")

@@ -31,13 +31,16 @@ const props = defineProps<{
     data: OAuth2FormData
   }
   authority_mapping: Record<string, string>
+  new: boolean
 }>()
 
 const api = new Oauth2ConnectionApi()
 
 async function submit(oAuth2Type: string, data: OAuth2FormData): Promise<TranslatedString | null> {
   if (oAuth2Type === 'ms_graph_api') {
-    const res = await api.saveOAuth2Connection(data)
+    const res = props.new
+      ? await api.saveOAuth2Connection(data)
+      : await api.updateOAuth2Connection(data.ident, data)
     if (res.type === 'success') {
       window.location.href = props.config.urls.back
       return null

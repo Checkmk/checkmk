@@ -66,4 +66,16 @@ export class Oauth2ConnectionApi extends Api {
       requestObject as unknown as Payload
     )
   }
+
+  public async updateOAuth2Connection(
+    ident: string,
+    requestObject: OAuth2FormData
+  ): Promise<SetDataResult<EntityDescription>> {
+    return await configEntityAPI.updateEntity(
+      'oauth2_connection',
+      'all',
+      ident,
+      requestObject as unknown as Payload
+    )
+  }
 }

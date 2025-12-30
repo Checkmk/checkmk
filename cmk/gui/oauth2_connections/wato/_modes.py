@@ -329,6 +329,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
             html.vue_component(
                 "cmk-mode-create-oauth2-connection",
                 data={
+                    "new": True,
                     "config": asdict(get_oauth2_connection_config()),
                     "form_spec": asdict(
                         serialize_data_for_frontend(
@@ -357,6 +358,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
             html.vue_component(
                 "cmk-mode-create-oauth2-connection",
                 data={
+                    "new": True,
                     "config": asdict(get_oauth2_connection_config()),
                     "form_spec": asdict(
                         serialize_data_for_frontend(
@@ -373,6 +375,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
             data={
+                "new": False,
                 "config": asdict(get_oauth2_connection_config()),
                 "form_spec": asdict(
                     serialize_data_for_frontend(

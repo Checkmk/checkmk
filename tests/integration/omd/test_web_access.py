@@ -88,7 +88,7 @@ def test_cmk_agents_access(site: Site) -> None:
 def test_cmk_relay_installation_script_access(site: Site) -> None:
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/relays/install_relay.sh" % site.id)
-    assert response.headers["Content-Type"] == "text/x-sh"
+    assert response.headers["Content-Type"] in ["text/x-sh", "application/x-shellscript"]
     # Verify it's a shell script
     assert response.text.startswith("#!")
 

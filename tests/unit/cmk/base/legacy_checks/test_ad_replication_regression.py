@@ -14,6 +14,7 @@ from typing import Any
 
 import time_machine
 
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.base.legacy_checks.ad_replication import (
     check_ad_replication,
     inventory_ad_replication,
@@ -102,10 +103,10 @@ def test_ad_replication_discovery() -> None:
     result = list(inventory_ad_replication(section))
 
     assert result == [
-        ("HAM/SADS055", {}),
-        ("HAM/SADS008", {}),
-        ("HAM/SADS015", {}),
-        ("HAM/SADS003", {}),
+        Service(item="HAM/SADS055"),
+        Service(item="HAM/SADS008"),
+        Service(item="HAM/SADS015"),
+        Service(item="HAM/SADS003"),
     ]
 
 
@@ -116,7 +117,7 @@ def test_ad_replication_check_ok() -> None:
     params: dict[str, Any] = {"failure_levels": (15, 20)}
 
     result = list(check_ad_replication("HAM/SADS003", params, section))
-    assert result == [(0, "All replications are OK.")]
+    assert result == [Result(state=State.OK, summary="All replications are OK.")]
 
 
 @time_machine.travel("2015-07-12 00:00:00")
@@ -129,7 +130,9 @@ def test_ad_replication_check_warn() -> None:
 
     # Should match the expected output from the dataset
     assert len(result) == 2
-    assert result[0][0] == 1  # Warning state
-    assert "Replications with failures: 3, Total failures: 0" in result[0][1]
-    assert result[1][0] == 0  # OK state for detailed output
-    assert "reached  the threshold of maximum failures" in result[1][1]
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.WARN  # Warning state
+    assert "Replications with failures: 3, Total failures: 0" in result[0].summary
+    assert isinstance(result[1], Result)
+    assert result[1].state == State.OK  # OK state for detailed output
+    assert "reached  the threshold of maximum failures" in result[1].details

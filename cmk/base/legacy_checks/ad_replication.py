@@ -18,11 +18,20 @@
 
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def _get_relative_date_human_readable(timestamp: float) -> str:
@@ -53,9 +62,9 @@ def parse_ad_replication_info(info):
     return lines
 
 
-def inventory_ad_replication(info):
+def inventory_ad_replication(section: StringTable) -> DiscoveryResult:
     inv = []
-    for line in parse_ad_replication_info(info):
+    for line in parse_ad_replication_info(section):
         if len(line) == 11:
             source_site = line[4]
             source_dc = line[5]
@@ -67,10 +76,10 @@ def inventory_ad_replication(info):
         entry = f"{source_site}/{source_dc}"
         if line[0] == "showrepl_INFO" and entry not in inv:
             inv.append(entry)
-    yield from ((entry, {}) for entry in inv)
+    yield from (Service(item=entry) for entry in inv)
 
 
-def check_ad_replication(item, params, info):
+def check_ad_replication(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     status = 0
     long_output = []
     found_line = False
@@ -78,7 +87,7 @@ def check_ad_replication(item, params, info):
     count_failed_repl = 0
     max_failures_warn, max_failures_crit = params["failure_levels"]
 
-    for line in parse_ad_replication_info(info):
+    for line in parse_ad_replication_info(section):
         if len(line) == 11:
             (
                 line_type,
@@ -169,15 +178,17 @@ def check_ad_replication(item, params, info):
         return
 
     if status == 0:
-        yield 0, "All replications are OK."
+        yield Result(state=State.OK, summary="All replications are OK.")
         return
 
-    yield (
-        status,
-        (f"Replications with failures: {count_failed_repl}, Total failures: {count_failures}"),
+    yield Result(
+        state=State(status),
+        summary=(
+            f"Replications with failures: {count_failed_repl}, Total failures: {count_failures}"
+        ),
     )
     if long_output:
-        yield 0, "\n%s" % "\n".join(long_output)
+        yield Result(state=State.OK, notice="\n".join(long_output))
     return
 
 
@@ -185,9 +196,14 @@ def parse_ad_replication(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ad_replication"] = LegacyCheckDefinition(
+agent_section_ad_replication = AgentSection(
     name="ad_replication",
     parse_function=parse_ad_replication,
+)
+
+
+check_plugin_ad_replication = CheckPlugin(
+    name="ad_replication",
     service_name="AD Replication %s",
     discovery_function=inventory_ad_replication,
     check_function=check_ad_replication,

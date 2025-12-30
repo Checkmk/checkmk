@@ -1,5 +1,4 @@
 LEGACY_CHECKS = [
-    "adva_fsp_temp",
     "aironet_errors",
     "aix_hacmp_resources",
     "aix_paging",

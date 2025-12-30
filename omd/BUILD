@@ -293,9 +293,6 @@ pkg_files(
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
     ],
-    compressor = "@zstd//:zstd_cli",
-    compressor_args = "-19",
-    extension = "tar.zst",
     package_dir_file = ":omd_root_dir",
     tags = ["manual"],
     deps = [
@@ -374,6 +371,23 @@ pkg_files(
                "//conditions:default": [],
            }) +
            edition_deps[edition],
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
+[pkg_tar(
+    name = "deps_install_compressed_" + edition,
+    compressor = "@zstd//:zstd_cli",
+    compressor_args = "-19",
+    extension = "tar.zst",
+    tags = ["manual"],
+    deps = [
+        ":deps_install_" + edition,
+    ],
 ) for edition in [
     "community",
     "ultimate",
@@ -523,7 +537,7 @@ pkg_tar(
     name = "deb_" + edition,
     architecture = "amd64",
     config = "//omd/debian:config",
-    data = "deps_install_" + edition,
+    data = "deps_install_compressed_" + edition,
     depends_file = "//omd/distros:dependencies",
     description = "Checkmk - Best-in-class infrastructure & application monitoring",
     homepage = "https://checkmk.com",

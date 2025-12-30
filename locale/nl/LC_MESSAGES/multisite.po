@@ -14581,6 +14581,10 @@ msgstr "Klant ID"
 msgid "Client ID / Application ID"
 msgstr "Klant ID / Applicatie ID"
 
+#, fuzzy
+msgid "Client ID is required"
+msgstr "is vereist"
+
 msgid "Client Secret"
 msgstr "Geheim van de klant"
 
@@ -14617,6 +14621,10 @@ msgstr "Ontvangen aanvragen van cliënten"
 
 msgid "Client secret"
 msgstr "Geheim van de klant"
+
+#, fuzzy
+msgid "Client secret is required"
+msgstr "is vereist"
 
 msgid "ClientID"
 msgstr "ClientID"
@@ -49017,6 +49025,10 @@ msgid "OAuth2 connection ID"
 msgstr "Aansluiting toevoegen"
 
 #, fuzzy
+msgid "OAuth2 connection ID must be a valid UUID."
+msgstr "De waarde moet een string zijn"
+
+#, fuzzy
 msgid "OAuth2 connections"
 msgstr "Aansluiting toevoegen"
 
@@ -67997,6 +68009,14 @@ msgstr "TenantID"
 msgid "Tenant ID / Directory ID"
 msgstr "Huurder ID / Directory ID"
 
+#, fuzzy
+msgid "Tenant ID is required"
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "De waarde moet een string zijn"
+
 msgid "TenantID"
 msgstr "TenantID"
 
@@ -79362,6 +79382,10 @@ msgstr "Titel voor servicemeldingen"
 
 msgid "Title format"
 msgstr "Titel formaat"
+
+#, fuzzy
+msgid "Title is required"
+msgstr "is vereist"
 
 msgid "Title of Column. This field is mandatory."
 msgstr "Titel van de kolom. Dit veld is verplicht."
@@ -96225,6 +96249,10 @@ msgid ""
 "             Activate changes to apply them to live monitoring."
 msgstr ""
 
+#, fuzzy
+msgid "Successfully activated 1 change"
+msgstr "Wachtwoord succesvol gewijzigd."
+
 msgid "Successfully activated %{numberOfChangesLastActivation} changes"
 msgstr ""
 
@@ -96537,6 +96565,14 @@ msgid "Run this command to register the Checkmk agent controller."
 msgstr ""
 
 #, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "Aansluiting toevoegen"
+
+#, fuzzy
+msgid "Unknown OAuth2 type: ${oAuth2Type}"
+msgstr "Onbekend doeltype: %s. Beschikbare types: %s."
+
+#, fuzzy
 msgid "Application successfully authorized!"
 msgstr "Host succesvol aangemaakt"
 
@@ -96569,10 +96605,6 @@ msgid "Failed to request and save access token: ${e}"
 msgstr "Mislukte verzoeken om Adressbook bestanden"
 
 #, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "Aansluiting toevoegen"
-
-#, fuzzy
 msgid "Authorization was not completed. Please try again."
 msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 
@@ -96599,10 +96631,6 @@ msgstr "is vereist"
 #, fuzzy
 msgid "Tenant ID is required."
 msgstr "is vereist"
-
-#, fuzzy
-msgid "Tenant ID must be a valid UUID."
-msgstr "De waarde moet een string zijn"
 
 #, fuzzy
 msgid "Client ID is required."

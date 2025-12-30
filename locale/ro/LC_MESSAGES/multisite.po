@@ -14638,6 +14638,10 @@ msgstr "ID client"
 msgid "Client ID / Application ID"
 msgstr "ID client / ID aplicație"
 
+#, fuzzy
+msgid "Client ID is required"
+msgstr "este necesară"
+
 msgid "Client Secret"
 msgstr "Secretul clientului"
 
@@ -14674,6 +14678,10 @@ msgstr "Solicitări primite de la clienți"
 
 msgid "Client secret"
 msgstr "Secretul clientului"
+
+#, fuzzy
+msgid "Client secret is required"
+msgstr "este necesară"
 
 msgid "ClientID"
 msgstr "ClientID"
@@ -49139,6 +49147,10 @@ msgid "OAuth2 connection ID"
 msgstr "Adăugați o conexiune"
 
 #, fuzzy
+msgid "OAuth2 connection ID must be a valid UUID."
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy
 msgid "OAuth2 connections"
 msgstr "Adăugați o conexiune"
 
@@ -68227,6 +68239,14 @@ msgstr "TenantID"
 msgid "Tenant ID / Directory ID"
 msgstr "ID-ul chiriașului / ID-ul directorului"
 
+#, fuzzy
+msgid "Tenant ID is required"
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
 msgid "TenantID"
 msgstr "TenantID"
 
@@ -79691,6 +79711,10 @@ msgstr "Titlu pentru notificările de serviciu"
 
 msgid "Title format"
 msgstr "Formatul titlului"
+
+#, fuzzy
+msgid "Title is required"
+msgstr "este necesară"
 
 msgid "Title of Column. This field is mandatory."
 msgstr "Titlul rubricii. Acest câmp este obligatoriu."
@@ -96521,6 +96545,10 @@ msgid ""
 "             Activate changes to apply them to live monitoring."
 msgstr ""
 
+#, fuzzy
+msgid "Successfully activated 1 change"
+msgstr "Copiat cu succes în clipboard."
+
 msgid "Successfully activated %{numberOfChangesLastActivation} changes"
 msgstr ""
 
@@ -96833,6 +96861,14 @@ msgid "Run this command to register the Checkmk agent controller."
 msgstr ""
 
 #, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "Adăugați o conexiune"
+
+#, fuzzy
+msgid "Unknown OAuth2 type: ${oAuth2Type}"
+msgstr "Tip țintă necunoscut: %s. Tipuri disponibile: %s."
+
+#, fuzzy
 msgid "Application successfully authorized!"
 msgstr "Gazdă creată cu succes"
 
@@ -96865,10 +96901,6 @@ msgid "Failed to request and save access token: ${e}"
 msgstr "Solicitări eșuate la fișierele Adressbook"
 
 #, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "Adăugați o conexiune"
-
-#, fuzzy
 msgid "Authorization was not completed. Please try again."
 msgstr ""
 "Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
@@ -96897,10 +96929,6 @@ msgstr "este necesară"
 #, fuzzy
 msgid "Tenant ID is required."
 msgstr "este necesară"
-
-#, fuzzy
-msgid "Tenant ID must be a valid UUID."
-msgstr "Valoarea trebuie să fie un șir de caractere"
 
 #, fuzzy
 msgid "Client ID is required."

@@ -14599,6 +14599,10 @@ msgstr "Identificação do cliente"
 msgid "Client ID / Application ID"
 msgstr "ID do cliente / ID da aplicação"
 
+#, fuzzy
+msgid "Client ID is required"
+msgstr "é necessário"
+
 msgid "Client Secret"
 msgstr "Segredo do Cliente"
 
@@ -14635,6 +14639,10 @@ msgstr "Pedidos de clientes recebidos"
 
 msgid "Client secret"
 msgstr "Segredo do cliente"
+
+#, fuzzy
+msgid "Client secret is required"
+msgstr "é necessário"
 
 msgid "ClientID"
 msgstr "ID do cliente"
@@ -49003,6 +49011,10 @@ msgid "OAuth2 connection ID"
 msgstr "Adicionar conexão"
 
 #, fuzzy
+msgid "OAuth2 connection ID must be a valid UUID."
+msgstr "O valor deve ser uma cadeia de caracteres"
+
+#, fuzzy
 msgid "OAuth2 connections"
 msgstr "Adicionar conexão"
 
@@ -68008,6 +68020,14 @@ msgstr "ID do inquilino"
 msgid "Tenant ID / Directory ID"
 msgstr "Identificação do locatário / Identificação do directório"
 
+#, fuzzy
+msgid "Tenant ID is required"
+msgstr "é necessário"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "O valor deve ser uma cadeia de caracteres"
+
 msgid "TenantID"
 msgstr "ID do inquilino"
 
@@ -79315,6 +79335,10 @@ msgstr "Título para as notificações de serviço"
 
 msgid "Title format"
 msgstr "Formato do título"
+
+#, fuzzy
+msgid "Title is required"
+msgstr "é necessário"
 
 msgid "Title of Column. This field is mandatory."
 msgstr "Título da Coluna. Este campo é obrigatório."
@@ -96129,6 +96153,10 @@ msgid ""
 "             Activate changes to apply them to live monitoring."
 msgstr ""
 
+#, fuzzy
+msgid "Successfully activated 1 change"
+msgstr "Mudança de senha com sucesso."
+
 msgid "Successfully activated %{numberOfChangesLastActivation} changes"
 msgstr ""
 
@@ -96440,6 +96468,14 @@ msgid "Run this command to register the Checkmk agent controller."
 msgstr ""
 
 #, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "Adicionar conexão"
+
+#, fuzzy
+msgid "Unknown OAuth2 type: ${oAuth2Type}"
+msgstr "Tipo de alvo desconhecido: %s. Tipos disponíveis: %s."
+
+#, fuzzy
 msgid "Application successfully authorized!"
 msgstr "Anfitrião criado com sucesso"
 
@@ -96472,10 +96508,6 @@ msgid "Failed to request and save access token: ${e}"
 msgstr "Pedidos não atendidos nos arquivos do Adressbook"
 
 #, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "Adicionar conexão"
-
-#, fuzzy
 msgid "Authorization was not completed. Please try again."
 msgstr ""
 "Não encontrei filas correspondentes. Por favor, tente outro termo de busca."
@@ -96503,10 +96535,6 @@ msgstr "é necessário"
 #, fuzzy
 msgid "Tenant ID is required."
 msgstr "é necessário"
-
-#, fuzzy
-msgid "Tenant ID must be a valid UUID."
-msgstr "O valor deve ser uma cadeia de caracteres"
 
 #, fuzzy
 msgid "Client ID is required."

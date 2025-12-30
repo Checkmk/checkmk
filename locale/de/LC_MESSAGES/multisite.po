@@ -14099,6 +14099,10 @@ msgstr "Client-ID"
 msgid "Client ID / Application ID"
 msgstr "Client-ID / Anwendungs-ID"
 
+#, fuzzy
+msgid "Client ID is required"
+msgstr "Client-ID ist erforderlich."
+
 msgid "Client Secret"
 msgstr "Client-Geheimnis"
 
@@ -14132,6 +14136,10 @@ msgstr "Client-Anfrage empfangen"
 
 msgid "Client secret"
 msgstr "Client-Geheimnis"
+
+#, fuzzy
+msgid "Client secret is required"
+msgstr "Client-ID ist erforderlich."
 
 msgid "ClientID"
 msgstr "Client-ID"
@@ -47107,6 +47115,10 @@ msgstr "OAuth2-Verbindung"
 msgid "OAuth2 connection ID"
 msgstr "OAuth2-Verbindungs-ID"
 
+#, fuzzy
+msgid "OAuth2 connection ID must be a valid UUID."
+msgstr "Die Tenant-ID muss eine gültige UUID sein."
+
 msgid "OAuth2 connections"
 msgstr "OAuth2-Verbindungen"
 
@@ -65227,6 +65239,13 @@ msgstr "Tenant-ID"
 msgid "Tenant ID / Directory ID"
 msgstr "Tenant-ID / Verzeichnis-ID"
 
+#, fuzzy
+msgid "Tenant ID is required"
+msgstr "Tenant-ID ist erforderlich."
+
+msgid "Tenant ID must be a valid UUID."
+msgstr "Die Tenant-ID muss eine gültige UUID sein."
+
 msgid "TenantID"
 msgstr "TenantID"
 
@@ -76869,6 +76888,10 @@ msgstr "Titel für Service-Benachrichtigungen"
 
 msgid "Title format"
 msgstr "Titelformat"
+
+#, fuzzy
+msgid "Title is required"
+msgstr "Titel ist erforderlich."
 
 msgid "Title of Column. This field is mandatory."
 msgstr "Titel der Spalte. Dieses Feld ist obligatorisch."
@@ -92687,6 +92710,10 @@ msgstr ""
 "             Aktivieren Sie die Änderungen, um sie auf das Live-Monitoring "
 "anzuwenden."
 
+#, fuzzy
+msgid "Successfully activated 1 change"
+msgstr "Erfolgreich mit Agent verbunden."
+
 msgid "Successfully activated %{numberOfChangesLastActivation} changes"
 msgstr ""
 "%{numberOfChangesLastActivation} Änderungen wurden erfolgreich aktiviert"
@@ -93007,6 +93034,14 @@ msgid "Run this command to register the Checkmk agent controller."
 msgstr ""
 "Diesen Befehl ausführen, um den Checkmk Agent Controller zu registrieren."
 
+#, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "OAuth2-Verbindungen verwalten"
+
+#, fuzzy
+msgid "Unknown OAuth2 type: ${oAuth2Type}"
+msgstr "Unbekannter Objekttyp: %{objectType}"
+
 msgid "Application successfully authorized!"
 msgstr "Applikation wurde erfolgreich autorisiert!"
 
@@ -93031,10 +93066,6 @@ msgstr "${res.message}"
 msgid "Failed to request and save access token: ${e}"
 msgstr "Anfrage und Speicherung des Zugriffstokens sind fehlgeschlagen: ${e}"
 
-#, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "OAuth2-Verbindungen verwalten"
-
 msgid "Authorization was not completed. Please try again."
 msgstr ""
 "Autorisierung wurde nicht abgeschlossen. Bitte versuchen Sie es erneut."
@@ -93057,9 +93088,6 @@ msgstr "Titel ist erforderlich."
 
 msgid "Tenant ID is required."
 msgstr "Tenant-ID ist erforderlich."
-
-msgid "Tenant ID must be a valid UUID."
-msgstr "Die Tenant-ID muss eine gültige UUID sein."
 
 msgid "Client ID is required."
 msgstr "Client-ID ist erforderlich."

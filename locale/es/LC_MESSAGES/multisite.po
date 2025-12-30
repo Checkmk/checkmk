@@ -14687,6 +14687,10 @@ msgstr "Identificación del cliente"
 msgid "Client ID / Application ID"
 msgstr "ID de cliente / ID de aplicación"
 
+#, fuzzy
+msgid "Client ID is required"
+msgstr "es necesario"
+
 msgid "Client Secret"
 msgstr "Secreto de cliente"
 
@@ -14723,6 +14727,10 @@ msgstr "Solicitudes de clientes recibidas"
 
 msgid "Client secret"
 msgstr "Secreto de cliente"
+
+#, fuzzy
+msgid "Client secret is required"
+msgstr "es necesario"
 
 msgid "ClientID"
 msgstr "ClientID"
@@ -49398,6 +49406,10 @@ msgid "OAuth2 connection ID"
 msgstr "Añadir conexión"
 
 #, fuzzy
+msgid "OAuth2 connection ID must be a valid UUID."
+msgstr "El valor debe ser una cadena"
+
+#, fuzzy
 msgid "OAuth2 connections"
 msgstr "Añadir conexión"
 
@@ -68577,6 +68589,14 @@ msgstr "TenantID"
 msgid "Tenant ID / Directory ID"
 msgstr "ID de inquilino / ID de directorio"
 
+#, fuzzy
+msgid "Tenant ID is required"
+msgstr "es necesario"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "El valor debe ser una cadena"
+
 msgid "TenantID"
 msgstr "TenantID"
 
@@ -80014,6 +80034,10 @@ msgstr "Título para notificaciones de servicio"
 
 msgid "Title format"
 msgstr "Formato del título"
+
+#, fuzzy
+msgid "Title is required"
+msgstr "es necesario"
 
 msgid "Title of Column. This field is mandatory."
 msgstr "Título de la columna. Este campo es obligatorio."
@@ -96975,6 +96999,10 @@ msgid ""
 "             Activate changes to apply them to live monitoring."
 msgstr ""
 
+#, fuzzy
+msgid "Successfully activated 1 change"
+msgstr "Se ha cambiado la contraseña con éxito."
+
 msgid "Successfully activated %{numberOfChangesLastActivation} changes"
 msgstr ""
 
@@ -97288,6 +97316,14 @@ msgid "Run this command to register the Checkmk agent controller."
 msgstr ""
 
 #, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "Añadir conexión"
+
+#, fuzzy
+msgid "Unknown OAuth2 type: ${oAuth2Type}"
+msgstr "Tipo de objetivo desconocido: %s. Tipos disponibles: %s."
+
+#, fuzzy
 msgid "Application successfully authorized!"
 msgstr "Anfitrión creado con éxito"
 
@@ -97320,10 +97356,6 @@ msgid "Failed to request and save access token: ${e}"
 msgstr "Peticiones fallidas a los archivos de Adressbook"
 
 #, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "Añadir conexión"
-
-#, fuzzy
 msgid "Authorization was not completed. Please try again."
 msgstr ""
 "No se han encontrado filas coincidentes. Por favor, intente con otro término "
@@ -97352,10 +97384,6 @@ msgstr "es necesario"
 #, fuzzy
 msgid "Tenant ID is required."
 msgstr "es necesario"
-
-#, fuzzy
-msgid "Tenant ID must be a valid UUID."
-msgstr "El valor debe ser una cadena"
 
 #, fuzzy
 msgid "Client ID is required."

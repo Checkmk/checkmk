@@ -13791,6 +13791,10 @@ msgstr "クライアントID"
 msgid "Client ID / Application ID"
 msgstr "クライアントID /アプリケーションID"
 
+#, fuzzy
+msgid "Client ID is required"
+msgstr "ユニークIDですが必須。"
+
 msgid "Client Secret"
 msgstr "クライアントシークレット"
 
@@ -13824,6 +13828,10 @@ msgstr "受け取ったクライアント要求"
 
 msgid "Client secret"
 msgstr "Client secret"
+
+#, fuzzy
+msgid "Client secret is required"
+msgstr "ユニークIDですが必須。"
 
 msgid "ClientID"
 msgstr "クライアント ID"
@@ -46257,6 +46265,10 @@ msgid "OAuth2 connection ID"
 msgstr "接続を追加"
 
 #, fuzzy
+msgid "OAuth2 connection ID must be a valid UUID."
+msgstr "値は文字列であること"
+
+#, fuzzy
 msgid "OAuth2 connections"
 msgstr "接続を追加"
 
@@ -64072,6 +64084,14 @@ msgstr "テナントID"
 msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
 
+#, fuzzy
+msgid "Tenant ID is required"
+msgstr "ユニークIDですが必須。"
+
+#, fuzzy
+msgid "Tenant ID must be a valid UUID."
+msgstr "値は文字列であること"
+
 msgid "TenantID"
 msgstr "テナントID"
 
@@ -75035,6 +75055,10 @@ msgstr "サービス通知用のタイトル"
 
 msgid "Title format"
 msgstr "タイトル形式"
+
+#, fuzzy
+msgid "Title is required"
+msgstr "名前は必須です。"
 
 msgid "Title of Column. This field is mandatory."
 msgstr "列のタイトル。このフィールドは必須です。"
@@ -90642,6 +90666,10 @@ msgid ""
 "             Activate changes to apply them to live monitoring."
 msgstr ""
 
+#, fuzzy
+msgid "Successfully activated 1 change"
+msgstr "クリップボードへのコピーに成功しました。"
+
 msgid "Successfully activated %{numberOfChangesLastActivation} changes"
 msgstr ""
 
@@ -90947,6 +90975,14 @@ msgid "Run this command to register the Checkmk agent controller."
 msgstr ""
 
 #, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "接続を追加"
+
+#, fuzzy
+msgid "Unknown OAuth2 type: ${oAuth2Type}"
+msgstr "不明なオブジェクトタイプ： %{objectType}"
+
+#, fuzzy
 msgid "Application successfully authorized!"
 msgstr "通知ルールが正常に修正されました！"
 
@@ -90979,10 +91015,6 @@ msgid "Failed to request and save access token: ${e}"
 msgstr "Adressbookファイルへのリクエストの失敗"
 
 #, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "接続を追加"
-
-#, fuzzy
 msgid "Authorization was not completed. Please try again."
 msgstr "何か問題が発生しました: %s"
 
@@ -91009,10 +91041,6 @@ msgstr "名前は必須です。"
 #, fuzzy
 msgid "Tenant ID is required."
 msgstr "ユニークIDですが必須。"
-
-#, fuzzy
-msgid "Tenant ID must be a valid UUID."
-msgstr "値は文字列であること"
 
 #, fuzzy
 msgid "Client ID is required."

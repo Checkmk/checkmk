@@ -14,6 +14,7 @@ cc_binary(
     features = [
         "static_libstdcpp",
     ],
+    tags = ["no-lint"],
 )
 
 cc_binary(

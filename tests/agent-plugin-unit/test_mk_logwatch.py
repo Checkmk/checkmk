@@ -17,10 +17,9 @@ import re
 import sys
 from typing import Iterable, Mapping, Optional, Sequence, Tuple, Union
 
+import agents.plugins.mk_logwatch as lw
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-
-import agents.plugins.mk_logwatch as lw
 
 unicode = str
 

@@ -7,7 +7,6 @@
 
 
 import pytest
-
 from agents.plugins import mtr
 
 

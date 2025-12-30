@@ -15,7 +15,6 @@ from unittest.mock import Mock
 import pytest
 from _pytest.capture import CaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
-
 from agents.plugins import apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))

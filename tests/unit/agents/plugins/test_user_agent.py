@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-
 from agents.plugins import apache_status, mk_jolokia, nginx_status
+
 from cmk.ccc import version
 
 

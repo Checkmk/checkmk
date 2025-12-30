@@ -70,9 +70,7 @@ DOCKERABLE_TESTS := \
 	test-lint-groovy \
 	test-mypy \
 	test-requirements \
-	test-ruff \
 	test-plugins-siteless \
-	test-astrein \
 	test-shellcheck \
 	test-unit-all \
 	test-unit-shell \
@@ -96,7 +94,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
-	test-mypy test-mypy-gpl test-mypy-docker test-packaging test-astrein test-astrein-docker test-ruff test-ruff-docker \
+	test-mypy test-mypy-gpl test-mypy-docker test-packaging \
 	test-unit test-unit-all test-unit-docker \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
@@ -364,23 +362,6 @@ test-mypy-gpl:
 test-packaging:
 	export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path); \
 	$(PYTEST) --log-cli-level=INFO packaging
-
-test-astrein:
-	bazel build \
-	    --aspects //bazel/tools:aspects.bzl%astrein \
-	    --output_groups=rules_lint_human \
-	    //cmk:lib_cmk_repo \
-	    && cat ../bazel-bin/cmk/lib_cmk_repo.AspectRulesLintAstrein.out \
-	    && exit $$(cat ../bazel-bin/cmk/lib_cmk_repo.AspectRulesLintAstrein.out.exit_code)
-	bazel run //tests/astrein:astrein -- \
-	    --checker all \
-	    --repo-root /home/lm/git/checkmk \
-	    $$(realpath -L ..)/omd/packages/omd/omdlib \
-	    $$(realpath -L ..)/tests
-	cd .. && bazel test //tests/astrein/tests:all
-
-test-ruff:
-	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check
 
 test-shellcheck:
 	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))

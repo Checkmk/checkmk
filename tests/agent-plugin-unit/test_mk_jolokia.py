@@ -10,7 +10,6 @@
 from typing import Mapping
 
 import pytest
-
 from agents.plugins import mk_jolokia
 
 

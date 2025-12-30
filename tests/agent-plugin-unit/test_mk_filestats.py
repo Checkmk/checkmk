@@ -16,7 +16,6 @@ from collections import OrderedDict
 from typing import Mapping, Optional, Sequence, Tuple
 
 import pytest
-
 from agents.plugins import mk_filestats
 
 MYLAZYFILE = mk_filestats.FileStat.from_path(__file__, __file__)

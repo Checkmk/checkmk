@@ -173,7 +173,6 @@ def _handle_results(
             output_file.write_text(output)
         else:
             print(output)
-        return 1
 
     elif output_format == "gcc":
         output = "\n".join(error.format_gcc() for error in results.errors)

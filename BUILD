@@ -113,6 +113,7 @@ compile_requirements_in(
         "//:constraints.txt",
     ],
     requirements = [
+        "//scripts:requirements.in",
         "//cmk:requirements.in",
         "//tests:dev-requirements.in",
         "//packages:python_requirements",

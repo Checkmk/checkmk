@@ -12,6 +12,7 @@ import { ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkCode from '@/components/CmkCode.vue'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -22,6 +23,7 @@ import type { ValidationMessages } from '@/form'
 import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
 
 import FormEdit from '../../form/FormEdit.vue'
+import { buildRedirectUri } from './utils'
 
 const { _t } = usei18n()
 
@@ -112,6 +114,39 @@ async function validate(): Promise<boolean> {
       <CmkHeading type="h2"> {{ _t('Define OAuth2 parameter') }}</CmkHeading>
     </template>
     <template #content>
+      <ol>
+        <li>
+          {{ _t('Register an app in Microsoft Entra ID and note the Tenant ID and Client ID.') }}
+        </li>
+        <li>{{ _t('Create a client secret for the app and store the secret value securely.') }}</li>
+        <li>
+          {{
+            _t(
+              'Add the following delegated Microsoft Graph API permissions required and grant admin consent if required.'
+            )
+          }}
+          <ul>
+            <li>{{ 'Mail.Read' }}</li>
+            <li>{{ 'Mail.Send' }}</li>
+            <li>{{ 'offline_access' }}</li>
+          </ul>
+        </li>
+        <li>
+          {{
+            _t(
+              'Register the following redirect URI (Web platform, HTTPS) in the app’s Authentication settings.'
+            )
+          }}
+          <CmkCode :code_txt="buildRedirectUri(props.urls.redirect)" />
+        </li>
+        <li>
+          {{
+            _t(
+              'Complete OAuth2 authorization from Checkmk and verify that access and refresh tokens are stored successfully.'
+            )
+          }}
+        </li>
+      </ol>
       <FormEdit v-model:data="dataRef" :backend-validation="validationRef" :spec="formSpec.spec" />
       <CmkParagraph>
         {{

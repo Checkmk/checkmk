@@ -25,6 +25,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import { type OAuth2FormData, type Oauth2ConnectionApi } from '../lib/service/oauth2-connection-api'
 import { submitKey } from '../lib/submitKey'
 import { waitForRedirect } from '../lib/waitForRedirect'
+import { buildRedirectUri } from './utils'
 
 const { _t } = usei18n()
 
@@ -55,20 +56,6 @@ const countDownValue = ref<number>(TIMEOUT)
 const dataRef = defineModel<OAuth2FormData>({ required: true })
 const resultCode = ref<string | null>(null)
 
-function buildRedirectUri(): string {
-  const baseUri = (
-    location.origin +
-    location.pathname.replace('wato.py', '') +
-    props.urls.redirect
-  ).replace('index.py', 'wato.py')
-
-  const url = new URL(baseUri)
-  url.searchParams.delete('clone')
-  url.searchParams.delete('ident')
-  url.searchParams.delete('entity_type_specifier')
-  return url.toString()
-}
-
 async function authorize(): Promise<string | null> {
   return new Promise((resolve) => {
     const authorityKey = dataRef.value.authority as keyof typeof props.authorityMapping
@@ -83,7 +70,7 @@ async function authorize(): Promise<string | null> {
       )
 
       url.searchParams.append('client_id', dataRef.value.client_id as string)
-      url.searchParams.append('redirect_uri', buildRedirectUri())
+      url.searchParams.append('redirect_uri', buildRedirectUri(props.urls.redirect))
       url.searchParams.append('response_type', 'code')
       url.searchParams.append('response_mode', 'query')
       url.searchParams.append('scope', '.default')
@@ -143,7 +130,7 @@ async function requestAccessToken(): Promise<boolean> {
       const res = await props.api.requestAccessToken({
         type: 'ms_graph_api',
         id: props.ident,
-        redirect_uri: buildRedirectUri(),
+        redirect_uri: buildRedirectUri(props.urls.redirect),
         data: dataRef.value,
         code: resultCode.value
       })

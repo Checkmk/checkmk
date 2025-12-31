@@ -3,55 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
+from pytest import MonkeyPatch
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.base.legacy_checks import poseidon_temp
 
-import pytest
-
-from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.poseidon_temp import (
-    check_poseidon_temp,
-    discover_poseidon_temp,
-    parse_poseidon_temp,
-)
+STRING_TABLE = [["Bezeichnung Sensor 1", "1", "16.8 C"]]
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        ([["Bezeichnung Sensor 1", "1", "16.8 C"]], [("Bezeichnung Sensor 1", {})]),
-    ],
-)
-def test_discover_poseidon_temp(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
-    """Test discovery function for poseidon_temp check."""
-    parsed = parse_poseidon_temp(string_table)
-    result = list(discover_poseidon_temp(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+def _section() -> poseidon_temp.Section:
+    section = poseidon_temp.parse_poseidon_temp(STRING_TABLE)
+    assert section is not None
+    return section
 
 
-@pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
-    [
-        (
-            "Bezeichnung Sensor 1",
-            {},
-            [["Bezeichnung Sensor 1", "1", "16.8 C"]],
-            [
-                (0, "Sensor Bezeichnung Sensor 1, State normal"),
-                (0, "16.8 °C", [("temp", 16.8, None, None)]),
-            ],
+def test_discover_poseidon_temp() -> None:
+    assert list(poseidon_temp.discover_poseidon_temp(_section())) == [
+        Service(item="Bezeichnung Sensor 1")
+    ]
+
+
+def test_check_poseidon_temp(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(poseidon_temp, "get_value_store", dict)
+    assert list(poseidon_temp.check_poseidon_temp("Bezeichnung Sensor 1", {}, _section())) == [
+        Result(state=State.OK, summary="Sensor Bezeichnung Sensor 1, State normal"),
+        Metric("temp", 16.8),
+        Result(state=State.OK, summary="Temperature: 16.8 °C"),
+        Result(
+            state=State.OK,
+            notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
-    ],
-)
-def test_check_poseidon_temp(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
-) -> None:
-    """Test check function for poseidon_temp check."""
-    parsed = parse_poseidon_temp(string_table)
-    result = list(check_poseidon_temp(item, params, parsed))
-    assert result == expected_results
+    ]

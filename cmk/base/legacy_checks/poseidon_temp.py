@@ -6,14 +6,28 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, startswith
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
+Section = Mapping[str, Mapping[str, Any]]
 
 
-def parse_poseidon_temp(string_table):
+def parse_poseidon_temp(string_table: StringTable) -> Section | None:
     parsed = {}
     if not string_table:
         return None
@@ -26,8 +40,8 @@ def parse_poseidon_temp(string_table):
     return parsed
 
 
-def check_poseidon_temp(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_poseidon_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     sensor_states = {
         "0": "invalid",
@@ -36,24 +50,29 @@ def check_poseidon_temp(item, params, parsed):
         "3": "alarm",
     }
     sensor_state_value = data.get("status")
-    sensor_state_txt = sensor_states.get(sensor_state_value)
-    mk_status = 0
+    sensor_state_txt = sensor_states.get(sensor_state_value) if sensor_state_value else None
+    mk_status = State.OK
     if sensor_state_value != "1":
-        mk_status = 2
-    yield mk_status, f"Sensor {item}, State {sensor_state_txt}"
+        mk_status = State.CRIT
+    yield Result(state=mk_status, summary=f"Sensor {item}, State {sensor_state_txt}")
 
     temp = data.get("temp")
     if temp:
-        yield check_temperature(temp, params, "poseidon_temp_%s" % item.replace(" ", "_"))
+        yield from check_temperature(
+            temp,
+            params,
+            unique_name=f"poseidon_temp_{item.replace(' ', '_')}",
+            value_store=get_value_store(),
+        )
     else:
-        yield 3, "No data for Sensor %s found" % item
+        yield Result(state=State.UNKNOWN, summary=f"No data for Sensor {item} found")
 
 
-def discover_poseidon_temp(section):
-    yield from ((item, {}) for item in section)
+def discover_poseidon_temp(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["poseidon_temp"] = LegacyCheckDefinition(
+snmp_section_poseidon_temp = SimpleSNMPSection(
     name="poseidon_temp",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
     fetch=SNMPTree(
@@ -61,6 +80,11 @@ check_info["poseidon_temp"] = LegacyCheckDefinition(
         oids=["2", "4", "5"],
     ),
     parse_function=parse_poseidon_temp,
+)
+
+
+check_plugin_poseidon_temp = CheckPlugin(
+    name="poseidon_temp",
     service_name="Temperatur: %s",
     discovery_function=discover_poseidon_temp,
     check_function=check_poseidon_temp,

@@ -5345,6 +5345,7 @@ time-machine==2.19.0 \
     #   -c constraints.txt
     #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
     #   -r non-free/packages/cmk-otel-collector/dev-requirements.in
+    #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r packages/cmk-crypto/dev-requirements.in
     #   -r packages/cmk-ec/dev-requirements.in

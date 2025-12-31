@@ -54,11 +54,12 @@ def check_mail_loop_arguments(
     send_protocol, send_params = params.send
 
     args.append(f"--send-protocol={send_protocol}")
-    send_server = (
-        host_config.primary_ip_config.address
-        if send_params.server is None
-        else replace_macros(send_params.server, host_config.macros)
-    )
+
+    if send_params.server:
+        send_server = replace_macros(send_params.server, host_config.macros)
+    else:
+        send_server = host_config.primary_ip_config.address
+
     args.append(f"--send-server={send_server}")
 
     if (port := send_params.connection.port) is not None:

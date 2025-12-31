@@ -11,6 +11,8 @@ from pydantic import BaseModel
 from cmk.server_side_calls.internal import OAuth2Connection
 from cmk.server_side_calls.v1 import Secret
 
+DUMMY_GRAPH_API_SERVER = "graph.microsoft.com"
+
 
 class SMTPConnectionParameters(BaseModel):
     tls: bool = False
@@ -49,7 +51,7 @@ class CommonParameters(BaseModel):
 
 class GraphApiConnectionParameters(BaseModel):
     auth: OAuth2Connection
-    server: str | None = None
+    server: str = DUMMY_GRAPH_API_SERVER
     connection: CommonConnectionParameters = CommonConnectionParameters()
     email_address: str | None = None
 

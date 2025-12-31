@@ -16,11 +16,10 @@ def fetching_options_to_args(
     host_config: HostConfig,
 ) -> Sequence[str | Secret]:
     fetch_protocol, fetch_params = params
-    fetch_server = (
-        host_config.primary_ip_config.address
-        if fetch_params.server is None
-        else replace_macros(fetch_params.server, host_config.macros)
-    )
+    if fetch_params.server:
+        fetch_server = replace_macros(fetch_params.server, host_config.macros)
+    else:
+        fetch_server = host_config.primary_ip_config.address
 
     args: list[str | Secret] = [
         f"--fetch-protocol={fetch_protocol}",

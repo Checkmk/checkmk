@@ -77,6 +77,7 @@ py_library(
             "testlib/unit/**",
             "testlib/common/**/*.py",
         ],
+        allow_empty = True,
         exclude = [
             "testlib/unit/**/*.py",
             "testlib/common/**/*.py",

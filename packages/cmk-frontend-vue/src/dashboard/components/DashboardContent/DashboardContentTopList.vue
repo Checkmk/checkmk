@@ -133,7 +133,7 @@ const percentage = (metricValue: number) => {
                 {{ entry.host_name }}
               </a>
             </td>
-            <td>
+            <td v-if="content.columns.show_service_description === true">
               <a :href="serviceViewUrl(entry)">
                 {{ entry.service_description }}
               </a>

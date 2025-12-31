@@ -110,17 +110,17 @@ def check_mail_loop_arguments(
         case ("GRAPHAPI", GraphApiConnectionParameters() as graph_params):
             oauth2 = graph_params.auth
             args += [
-                "--fetch-initial-access-token-reference",
+                "--send-initial-access-token-reference",
                 oauth2.access_token,
-                "--fetch-initial-refresh-token-reference",
+                "--send-initial-refresh-token-reference",
                 oauth2.refresh_token,
-                "--fetch-authority",
+                "--send-authority",
                 oauth2.authority,
-                "--fetch-client-secret-reference",
+                "--send-client-secret-reference",
                 oauth2.client_secret,
-                "--fetch-client-id",
+                "--send-client-id",
                 oauth2.client_id,
-                "--fetch-tenant-id",
+                "--send-tenant-id",
                 oauth2.tenant_id,
             ]
         case (protocol, _):

@@ -74026,6 +74026,10 @@ msgstr "Deze ID kan niet worden gebruikt als aangepast attribuut"
 msgid "This ID is already being used by another connection."
 msgstr "Deze id wordt al door een andere verbinding gebruikt."
 
+#, fuzzy
+msgid "This ID is already in use."
+msgstr "Deze regel ID wordt al gebruikt."
+
 msgid "This ID is already in use. Please choose another one."
 msgstr "Deze ID is al in gebruik. Gelieve een andere te kiezen."
 

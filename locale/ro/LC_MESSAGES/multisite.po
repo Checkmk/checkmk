@@ -74289,6 +74289,10 @@ msgstr "Acest ID nu poate fi utilizat ca atribut personalizat"
 msgid "This ID is already being used by another connection."
 msgstr "Acest id este deja utilizat de o altă conexiune."
 
+#, fuzzy
+msgid "This ID is already in use."
+msgstr "Acest ID de regulă este deja utilizat."
+
 msgid "This ID is already in use. Please choose another one."
 msgstr "Acest ID este deja utilizat. Vă rugăm să alegeți altul."
 

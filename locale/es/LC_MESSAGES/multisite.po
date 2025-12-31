@@ -74627,6 +74627,10 @@ msgstr "Este ID no se puede utilizar como atributo personalizado"
 msgid "This ID is already being used by another connection."
 msgstr "Este identificador ya está siendo utilizado por otra conexión."
 
+#, fuzzy
+msgid "This ID is already in use."
+msgstr "Este ID de regla ya está utilizado."
+
 msgid "This ID is already in use. Please choose another one."
 msgstr "Este ID ya está en uso. Por favor, elija otro."
 

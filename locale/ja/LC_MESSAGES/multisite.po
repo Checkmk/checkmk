@@ -69927,6 +69927,10 @@ msgstr "このIDはカスタム属性として使用できません"
 msgid "This ID is already being used by another connection."
 msgstr "このIDはすでに他の接続で使用されています。"
 
+#, fuzzy
+msgid "This ID is already in use."
+msgstr "このルールIDはすでに使用されています。"
+
 msgid "This ID is already in use. Please choose another one."
 msgstr "このIDはすでに使用されています。別のものを選択してください。"
 

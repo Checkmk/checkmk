@@ -492,7 +492,6 @@ LEGACY_CHECKS = [
     "pfsense_status",
     "plesk_backups",
     "plesk_domains",
-    "poseidon_inputs",
     "postgres_bloat",
     "postgres_connections",
     "postgres_conn_time",

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.base.legacy_checks.poseidon_inputs import (
+from cmk.plugins.poseidon.agent_based.poseidon_inputs import (
     check_poseidon_inputs,
     discover_poseidon_inputs,
     parse_poseidon_inputs,

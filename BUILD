@@ -232,17 +232,29 @@ create_venv(
     }),
 )
 
+write_file(
+    name = "empty_proto",
+    out = "empty_proto.proto",
+    content = ['syntax = "proto2";'],
+)
+
 proto_library_as(
     name = "cycletime_proto",
     as_proto = "cmc_proto/cycletime.proto",
-    proto = "//non-free/packages/cmc-protocols/protocols:cmc_config/cycletime.proto",
+    proto = select({
+        "@//:gpl+nonfree_repo": "//non-free/packages/cmc-protocols/protocols:cmc_config/cycletime.proto",
+        "@//:gpl_repo": ":empty_proto",
+    }),
     visibility = ["//visibility:public"],
 )
 
 proto_library_as(
     name = "config_proto",
     as_proto = "cmc_proto/config.proto",
-    proto = "//non-free/packages/cmc-protocols/protocols:cmc_config/config.proto",
+    proto = select({
+        "@//:gpl+nonfree_repo": "//non-free/packages/cmc-protocols/protocols:cmc_config/config.proto",
+        "@//:gpl_repo": ":empty_proto",
+    }),
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",
@@ -254,7 +266,10 @@ proto_library_as(
 proto_library_as(
     name = "state_proto",
     as_proto = "cmc_proto/state.proto",
-    proto = "//non-free/packages/cmc-protocols/protocols:cmc_config/state.proto",
+    proto = select({
+        "@//:gpl+nonfree_repo": "//non-free/packages/cmc-protocols/protocols:cmc_config/state.proto",
+        "@//:gpl_repo": ":empty_proto",
+    }),
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",

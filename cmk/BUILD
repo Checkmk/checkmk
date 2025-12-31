@@ -295,7 +295,10 @@ py_library(
     srcs = srcs,
     imports = [".."],
     visibility = ["//tests:__subpackages__"],
-    deps = CMC_PROTO_DEPS + [
+    deps = select({
+        "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
+        "@//:gpl_repo": [],
+    }) + [
         "lib_cmk",
     ] + edition_python_deps[edition],
 ) for edition, srcs in [
@@ -347,7 +350,10 @@ py_wheel(
     # TODO(ml): cmk_version vs. PEP 440?
     version = "1+" + edition,
     visibility = ["//visibility:public"],
-    deps = CMC_PROTO_DEPS + [
+    deps = select({
+        "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
+        "@//:gpl_repo": [],
+    }) + [
         "lib_cmk",
         ":agents",
         ":checkman",

@@ -12,17 +12,29 @@ void main() {
             versioning.delete_non_cre_files();
         }
 
-        targets = cmd_output(
-            "grep target: .github/workflows/pr.yaml | cut -f2 -d':'"
-        ).split("\n").collect({ target -> target.trim()});
+        test_jenkins_helper.execute_test([
+            name: "test-format",
+            cmd: "EDITION=community bazel run //:format.check",
+            container_name: "ubuntu-2404-${safe_branch_name}-latest",
+        ]);
 
-        targets.each({ target ->
-            test_jenkins_helper.execute_test([
-                name: target,
-                cmd: "EDITION=community make -C tests ${target}",
-                container_name: "ubuntu-2404-${safe_branch_name}-latest",
-            ]);
-        })
+        test_jenkins_helper.execute_test([
+            name: "test-lint",
+            cmd: "EDITION=community bazel lint --fixes=false ...",
+            container_name: "ubuntu-2404-${safe_branch_name}-latest",
+        ]);
+
+        test_jenkins_helper.execute_test([
+            name: "test-bandit",
+            cmd: "EDITION=community make -C tests test-bandit",
+            container_name: "ubuntu-2404-${safe_branch_name}-latest",
+        ]);
+
+        test_jenkins_helper.execute_test([
+            name: "test-unit",
+            cmd: "EDITION=community make -C tests test-unit",
+            container_name: "ubuntu-2404-${safe_branch_name}-latest",
+        ]);
     }
 }
 

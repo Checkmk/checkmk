@@ -22,15 +22,6 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-24.04]
-                include:
-                    - name: Bandit tests
-                      target: test-bandit
-                    - name: Formatting
-                      target: test-format
-                    - name: Python unit tests
-                      target: test-unit
-                    - name: mypy tests
-                      target: test-mypy-gpl
         steps:
             - name: Remove unnecessary build tools
               run: |
@@ -97,8 +88,14 @@ jobs:
                   sudo apt-get update
                   sudo apt-get install ksh libpango1.0-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev libglib2.0-dev gettext "^g\+\+-14$"
                   make .venv
-            - name: Run ${{ matrix.name  }}
-              env:
-                  TEST_TARGETS: ${{ matrix.target }}
-              run: |
-                  make -C tests $TEST_TARGETS
+            # Keep next targets in sync with `test-github-actions.groovy`.
+            - name: Formatting
+              run: bazel run //:format.check
+            - name: Lint repo
+              run: bazel lint --fixes=false ...
+            - name: Check typing
+              run: make -C tests test-mypy-gpl
+            - name: Run Bandit
+              run: make -C tests test-bandit
+            - name: Run unit tests
+              run: make -C tests test-unit

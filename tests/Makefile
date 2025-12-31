@@ -157,6 +157,14 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$
 	    $$IMAGE_HASH \
 	    python$$PYTHON_VERSION -m pytest "/tests"
 
+.PHONY: test-ruff
+test-ruff:
+	@echo "This target is deprecated, use 'bazel lint [TARGET]' instead."
+
+.PHONY: test-astrein
+test-astrein:
+	@echo "This target is deprecated, use 'bazel lint [TARGET]' instead."
+
 test-semgrep:
 	$(SEMGREP) scan \
 	    $(SEMGREP_OUTPUT_ARGS) \

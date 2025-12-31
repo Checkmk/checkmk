@@ -27,8 +27,6 @@ jobs:
                       target: test-bandit
                     - name: Formatting
                       target: test-format
-                    - name: Ruff lint tests
-                      target: test-ruff
                     - name: Python unit tests
                       target: test-unit
                     - name: mypy tests

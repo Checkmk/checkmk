@@ -209,7 +209,6 @@ It is recommended to run all tests locally before submitting a PR.
 If you want to execute the full test suite, you can do this by executing these commands in the project base directory:
 
 ```console
-$ make -C tests test-ruff
 $ make -C tests test-bandit
 $ make -C tests test-unit
 $ make -C tests test-format

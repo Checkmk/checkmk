@@ -6,7 +6,7 @@
 from pytest import MonkeyPatch
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.base.legacy_checks import poseidon_temp
+from cmk.plugins.poseidon.agent_based import poseidon_temp
 
 STRING_TABLE = [["Bezeichnung Sensor 1", "1", "16.8 C"]]
 

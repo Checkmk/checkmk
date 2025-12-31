@@ -493,7 +493,6 @@ LEGACY_CHECKS = [
     "plesk_backups",
     "plesk_domains",
     "poseidon_inputs",
-    "poseidon_temp",
     "postgres_bloat",
     "postgres_connections",
     "postgres_conn_time",

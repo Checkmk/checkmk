@@ -45,6 +45,7 @@ const TIMEOUT = 5 * 60000
 const context = getWizardContext()
 
 const loading = ref(true)
+const saving = ref(false)
 const loadingTitle = ref(_t('Verifying the authorization...'))
 const errorTitle = ref(_t('Authorization failed.'))
 const authSucceeded = ref(false)
@@ -164,15 +165,18 @@ async function requestAccessToken(): Promise<boolean> {
 
 function resetProcess() {
   loading.value = false
+  saving.value = false
   countDownValue.value = TIMEOUT
 }
 
 async function saveConnection() {
   if (submitted !== undefined) {
+    saving.value = true
     const error = await submitted(props.oAuth2Type, dataRef.value)
     if (error) {
       errorTitle.value = error
     }
+    saving.value = false
   }
 }
 
@@ -234,6 +238,11 @@ immediateWatch(
       <CmkAlertBox v-else variant="error">
         {{ errorTitle }}
       </CmkAlertBox>
+
+      <span v-if="saving">
+        <CmkIcon name="load-graph" />
+        {{ _t('Saving OAuth2 connection') }}
+      </span>
     </template>
 
     <template #actions>

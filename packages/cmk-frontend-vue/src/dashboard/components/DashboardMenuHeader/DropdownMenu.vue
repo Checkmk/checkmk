@@ -35,6 +35,7 @@ interface DropdownMenuProps {
   icon?: SimpleIcons
   label: TranslatedString
   options: DropdownMenuOption[]
+  right?: boolean
 }
 
 const props = defineProps<DropdownMenuProps>()
@@ -45,7 +46,7 @@ const visibleOptions = computed(() => {
 </script>
 
 <template>
-  <ButtonDropdownMenu :label="label">
+  <ButtonDropdownMenu :label="label" :right="!!right">
     <template #button>
       <CmkIcon v-if="icon" :name="icon" size="large" />
       <span>{{ label }}</span>

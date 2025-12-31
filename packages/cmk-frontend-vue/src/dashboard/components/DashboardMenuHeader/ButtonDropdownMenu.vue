@@ -13,7 +13,7 @@ import ArrowDown from '@/components/graphics/ArrowDown.vue'
 
 import MenuButton from './MenuButton.vue'
 
-const { label } = defineProps<{ label: TranslatedString }>()
+const { label, right = false } = defineProps<{ label: TranslatedString; right?: boolean }>()
 
 const vClickOutside = useClickOutside()
 
@@ -64,7 +64,12 @@ defineExpose({
       />
     </MenuButton>
 
-    <div v-if="menuShown" ref="menuRef" class="db-button-dropdown-menu__container">
+    <div
+      v-if="menuShown"
+      ref="menuRef"
+      class="db-button-dropdown-menu__container"
+      :class="{ 'db-button-dropdown-menu__container--right': right }"
+    >
       <div class="db-button-dropdown-menu__content">
         <slot name="menu" :hide-menu="hideMenu" />
       </div>
@@ -102,6 +107,10 @@ defineExpose({
     min-width: 200px;
     margin-top: 1px;
     width: max-content;
+
+    &.db-button-dropdown-menu__container--right {
+      right: 0;
+    }
   }
 
   .db-button-dropdown-menu__content {

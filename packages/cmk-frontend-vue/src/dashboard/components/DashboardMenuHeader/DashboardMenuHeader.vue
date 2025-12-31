@@ -188,6 +188,7 @@ const pageNavigation = parsePageNavigation()
         <DropdownMenu
           icon="global-settings"
           :label="_t('Settings')"
+          :right="!(isBuiltInDashboard || canEditDashboard)"
           :options="[
             {
               label: _t('Dashboard settings'),

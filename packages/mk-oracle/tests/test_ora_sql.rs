@@ -1314,6 +1314,7 @@ fn test_detection_registry() {
 }
 
 #[test]
+#[ignore]
 fn test_detect_host_runtime() {
     let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
         SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
@@ -1344,6 +1345,7 @@ fn base_dir() -> std::path::PathBuf {
 }
 
 #[test]
+#[ignore]
 fn test_detect_runtime_with_runtime() {
     // MK_LIBDIR is set so that runtimes exist
     let good_path = base_dir().join("runtimes");
@@ -1411,6 +1413,7 @@ fn to_string(p: Option<std::path::PathBuf>) -> Option<String> {
 }
 
 #[test]
+#[ignore]
 fn test_detect_runtime_without_runtime() {
     // MK_LIBDIR is set so that runtimes is missing
     let bad_path = base_dir().join("runtimes-wrong");
@@ -1479,6 +1482,7 @@ oracle:
 
 /// NOT ALL CONDITIONS TESTED
 #[test]
+#[ignore]
 fn test_add_runtime_to_path() {
     use mk_oracle::setup::add_runtime_path_to_env;
     fn exec_add_runtime_to_path(

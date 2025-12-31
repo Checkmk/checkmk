@@ -23,7 +23,6 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard_old import (
 )
 from tests.gui_e2e.testlib.playwright.pom.monitor.edit_element_top_list import (
     AddElementTopList,
-    EditElementTopList,
 )
 from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard_old import (
     LinuxHostsDashboard,
@@ -224,72 +223,6 @@ def test_host_dashboard(
             assert int(hosts_dashboard_page.total_count(dashlet_title).inner_text()) > 0, (
                 f"Total count in dashlet '{dashlet_title}' is 0"
             )
-
-
-def test_dashlet_filters(
-    linux_hosts: list[str], cloned_linux_hosts_dashboard: CustomDashboard
-) -> None:
-    """Test that applying filters for 'Top 10: CPU utilization' dashlet works correctly.
-
-    Test that after applying 'Site', 'Host label' and both filters together in dashlet settings,
-    the dashlet table contains all expected hosts.
-
-    Steps:
-        1. Navigate to the 'Linux Hosts' dashboard page.
-        2. Clone the built-in dashboard.
-        3. Enter layout mode.
-        4. Apply 'Site' filter for 'Top 10: CPU utilization' dashlet.
-        5. Check that dashlet contains all expected hosts.
-        6. Apply 'label' filter for 'Top 10: CPU utilization'
-        7. Check that dashlet contains all expected hosts.
-        8. Delete 'Site' filter.
-        9. Check that dashlet contains all expected hosts.
-        10. Delete 'Label' filter.
-    """
-    hosts_count = len(linux_hosts)
-    dashlet_title = "Top 10: CPU utilization"
-
-    logger.info("Apply 'Site' filter for '%s' dashlet", dashlet_title)
-    cloned_linux_hosts_dashboard.enter_layout_mode()
-    cloned_linux_hosts_dashboard.edit_dashlet_properties_button(dashlet_title).click()
-    edit_element_top_list_page = EditElementTopList(
-        cloned_linux_hosts_dashboard.page, navigate_to_page=False
-    )
-    edit_element_top_list_page.add_host_filter_site("Local site gui_e2e_central")
-    edit_element_top_list_page.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
-
-    logger.info("Check that filtered '%s' dashlet contains all expected hosts", dashlet_title)
-    expect(cloned_linux_hosts_dashboard.dashlet_table_rows(dashlet_title)).to_have_count(
-        hosts_count
-    )
-
-    logger.info("Apply 'Label' filter")
-    cloned_linux_hosts_dashboard.edit_dashlet_properties_button(dashlet_title).click()
-    edit_element_top_list_page.add_host_filter_host_labels("cmk/os_family:linux")
-    edit_element_top_list_page.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
-
-    logger.info("Check that filtered '%s' dashlet contains all expected hosts", dashlet_title)
-    expect(cloned_linux_hosts_dashboard.dashlet_table_rows(dashlet_title)).to_have_count(
-        hosts_count
-    )
-
-    logger.info("Delete 'Site' filter")
-    cloned_linux_hosts_dashboard.edit_dashlet_properties_button(dashlet_title).click()
-    edit_element_top_list_page.remove_host_filter_button("Site").click()
-    edit_element_top_list_page.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
-
-    logger.info("Check that filtered '%s' dashlet contains all expected hosts", dashlet_title)
-    expect(cloned_linux_hosts_dashboard.dashlet_table_rows(dashlet_title)).to_have_count(
-        hosts_count
-    )
-
-    logger.info("Delete 'Label' filter")
-    cloned_linux_hosts_dashboard.edit_dashlet_properties_button(dashlet_title).click()
-    edit_element_top_list_page.remove_host_filter_button("Host labels").click()
-    edit_element_top_list_page.save_button.click()
 
 
 def test_add_top_list_dashlet(

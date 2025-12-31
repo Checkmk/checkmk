@@ -97,6 +97,10 @@ class ServiceMetricDropdownOptions(DropdownOptions):
     CPU_UTILIZATION = "CPU utilization"
 
 
+class SiteFilterDropdownOptions(DropdownOptions):
+    LOCAL_SITE_GUI_E2E_CENTRAL = "Local site gui_e2e_central"
+
+
 class VisualizationType(StrEnum):
     """Enumeration to define the type of visualization that a widget could have."""
 
@@ -146,6 +150,11 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     sidebar_title = "Metrics & graphs"
 
     @property
+    def _host_selection_region(self) -> Locator:
+        """Locator property of 'Host selection' region."""
+        return self.locator().get_by_role("region", name="Host selection")
+
+    @property
     def _service_selection_region(self) -> Locator:
         """Locator property of 'Service selection' region."""
         return self.locator().get_by_role("region", name="Service selection")
@@ -166,6 +175,11 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         return self.locator().get_by_role("listbox").get_by_role("textbox")
 
     @property
+    def _host_selection_add_filter_button(self) -> Locator:
+        """Locator property of the button to 'Add filter' to the 'Host selection' region."""
+        return self._host_selection_region.get_by_role("button", name="Add filter")
+
+    @property
     def service_metric_combobox(self) -> Locator:
         """Locator property of combobox to select the service metric of the widget."""
         return self._metric_selection_region.get_by_role("combobox", name="Select service metric")
@@ -179,6 +193,45 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     def add_and_place_widget_button(self) -> Locator:
         """Locator property of 'Add & place widget' button."""
         return self.locator().get_by_role("button", name="Add & place widget")
+
+    @property
+    def save_widget_button(self) -> Locator:
+        """Locator property of 'Save widget' button."""
+        return self.locator().get_by_role("button", name="Save widget")
+
+    def _get_filter_menu_item(self, item_name: str, exact: bool) -> Locator:
+        """Get an item from filter menu.
+
+        Args:
+            item_name: the name of the item to get.
+            exact: whether the name match has to be exact or not.
+
+        Returns:
+            The locator of the filter menu item.
+        """
+        return self.locator("div.filter-menu__entries").get_by_text(item_name, exact=exact)
+
+    def get_host_filter_container(self, filter_name: str) -> Locator:
+        """Get the locator of the container of a filter from 'Host selection' region.
+
+        Args:
+            filter_name: the name of the filter of the container.
+
+        Returns:
+            The locator of the filter container.
+        """
+        return self._host_selection_region.locator("div.filter-container", has_text=filter_name)
+
+    def get_host_filter_combobox(self, filter_name: str) -> Locator:
+        """Get the locator of the combobox to set a host filter for the widget.
+
+        Args:
+            filter_name: the name of the filter that is set by the combobox.
+
+        Returns:
+            The locator of the combobox.
+        """
+        return self.get_host_filter_container(filter_name).get_by_role("combobox")
 
     def get_service_filter_container(self, filter_name: str) -> Locator:
         """Get the locator of the containe of a filter from 'Service selection' region.
@@ -250,3 +303,23 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
             metric_name,
             self._combobox_text_input if search else None,
         )
+
+    def add_filter_to_host_selection(self, filter_name: str, exact: bool = True) -> None:
+        """Add filter to widget in host selection region.
+
+        Args:
+            filter_name: name of the filter to add.
+            exact: whether the name match has to be exact or not.
+        """
+        self._host_selection_add_filter_button.click()
+        self._get_filter_menu_item(filter_name, exact=exact).click()
+
+    def remove_filter_from_host_selection(self, filter_name: str) -> None:
+        """Remove filter from host selection region.
+
+        Args:
+            filter_name: name of the filter to remove.
+        """
+        self._host_selection_region.get_by_role(
+            "button", name=f"Remove {filter_name} filter"
+        ).click()

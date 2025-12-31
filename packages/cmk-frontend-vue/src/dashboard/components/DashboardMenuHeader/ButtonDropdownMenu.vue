@@ -54,15 +54,18 @@ defineExpose({
         if (menuShown) menuShown = false
       }
     "
-    class="cmk-dropdown-menu"
+    class="db-button-dropdown-menu"
   >
     <MenuButton :aria-label="label" :aria-expanded="menuShown" @click="showMenu">
       <slot name="button" />
-      <ArrowDown class="cmk-dropdown-menu--arrow" :class="{ rotated: menuShown }" />
+      <ArrowDown
+        class="db-button-dropdown-menu__arrow"
+        :class="{ 'db-button-dropdown-menu__arrow--rotated': menuShown }"
+      />
     </MenuButton>
 
-    <div v-if="menuShown" ref="menuRef" class="cmk-dropdown-menu--container">
-      <div class="cmk-dropdown-menu--content">
+    <div v-if="menuShown" ref="menuRef" class="db-button-dropdown-menu__container">
+      <div class="db-button-dropdown-menu__content">
         <slot name="menu" :hide-menu="hideMenu" />
       </div>
     </div>
@@ -70,28 +73,24 @@ defineExpose({
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-dropdown-menu {
+.db-button-dropdown-menu {
   display: inline-block;
   position: relative;
   white-space: nowrap;
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .cmk-dropdown-menu--arrow {
+  .db-button-dropdown-menu__arrow {
     width: 0.7em;
     height: 0.7em;
     color: #888;
     margin: 0;
     flex-shrink: 0;
 
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-    &.rotated {
+    &.db-button-dropdown-menu__arrow--rotated {
       transform: rotate(180deg);
     }
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .cmk-dropdown-menu--container {
+  .db-button-dropdown-menu__container {
     position: absolute;
     z-index: var(--z-index-dropdown-offset);
     color: var(--font-color);
@@ -105,8 +104,7 @@ defineExpose({
     width: max-content;
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .cmk-dropdown-menu--content {
+  .db-button-dropdown-menu__content {
     padding: 0;
     margin: 0;
   }

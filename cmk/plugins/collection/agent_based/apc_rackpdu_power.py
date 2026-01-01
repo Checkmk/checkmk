@@ -30,12 +30,21 @@
 #                           3/0     => parsed = device phase + 3 phases
 
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import NotRequired, TypedDict
 
 from cmk.agent_based.v2 import all_of, exists, SNMPSection, SNMPTree, startswith, StringTable
 
-StatusInfo = tuple[float, tuple[int, str]]
-Parsed = dict[str, dict[str, float | StatusInfo]]
+type StatusInfo = tuple[float, tuple[int, str]]
+
+
+class Power(TypedDict):
+    power: NotRequired[float]
+    current: NotRequired[StatusInfo]
+
+
+type Section = Mapping[str, Power]
+
 
 STATE_MAP = {
     "1": (0, "load normal"),
@@ -49,16 +58,16 @@ def get_status_info(amperage_str: str, device_state: str) -> StatusInfo:
     return float(amperage_str) / 10, STATE_MAP[device_state]
 
 
-def parse_apc_rackpdu_power(string_table: Sequence[StringTable]) -> Parsed | None:
+def parse_apc_rackpdu_power(string_table: Sequence[StringTable]) -> Section | None:
     if not any(string_table):
         return None
 
-    parsed: Parsed = {}
+    parsed = dict[str, Power]()
     device_info, n_phases, phase_bank_info = string_table
     pdu_ident_name, power_str = device_info[0]
     device_name = "Device %s" % pdu_ident_name
 
-    parsed.setdefault(device_name, {"power": float(power_str)})
+    parsed.setdefault(device_name, Power(power=float(power_str)))
 
     if n_phases[0][0] == "1":
         parsed[device_name]["current"] = get_status_info(*phase_bank_info[0][:2])
@@ -75,7 +84,7 @@ def parse_apc_rackpdu_power(string_table: Sequence[StringTable]) -> Parsed | Non
             continue
 
         parsed.setdefault(
-            f"{name_part} {num}", {"current": get_status_info(amperage_str, device_state)}
+            f"{name_part} {num}", Power(current=get_status_info(amperage_str, device_state))
         )
     return parsed
 

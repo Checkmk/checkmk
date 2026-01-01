@@ -91035,6 +91035,10 @@ msgid "OAuth2 connection parameters requested successfully!"
 msgstr "エージェント%sが成功しました"
 
 #, fuzzy
+msgid "Saving OAuth2 connection"
+msgstr "接続を追加"
+
+#, fuzzy
 msgid "Go back to restart authorization process"
 msgstr "認証リクエスト作成不可"
 
@@ -91057,6 +91061,29 @@ msgstr "値は文字列であること"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "デフォルトパラメータ"
+
+msgid ""
+"Register an app in Microsoft Entra ID and note the Tenant ID and Client ID."
+msgstr ""
+
+#, fuzzy
+msgid "Create a client secret for the app and store the secret value securely."
+msgstr "アプリのクライアントシークレットを作成し、それをメモする。"
+
+msgid ""
+"Add the following delegated Microsoft Graph API permissions required and "
+"grant admin consent if required."
+msgstr ""
+
+msgid ""
+"Register the following redirect URI (Web platform, HTTPS) in the app’s "
+"Authentication settings."
+msgstr ""
+
+msgid ""
+"Complete OAuth2 authorization from Checkmk and verify that access and "
+"refresh tokens are stored successfully."
+msgstr ""
 
 #, fuzzy
 msgid ""

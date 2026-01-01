@@ -97475,6 +97475,10 @@ msgid "OAuth2 connection parameters requested successfully!"
 msgstr "Agent %s réussi"
 
 #, fuzzy
+msgid "Saving OAuth2 connection"
+msgstr "Ajouter une connexion"
+
+#, fuzzy
 msgid "Go back to restart authorization process"
 msgstr "Impossible de créer une demande d'authentification"
 
@@ -97497,6 +97501,28 @@ msgstr "La valeur doit être une chaîne de caractères"
 #, fuzzy
 msgid "Define OAuth2 parameter"
 msgstr "Paramètres du modèle"
+
+msgid ""
+"Register an app in Microsoft Entra ID and note the Tenant ID and Client ID."
+msgstr ""
+
+msgid "Create a client secret for the app and store the secret value securely."
+msgstr ""
+
+msgid ""
+"Add the following delegated Microsoft Graph API permissions required and "
+"grant admin consent if required."
+msgstr ""
+
+msgid ""
+"Register the following redirect URI (Web platform, HTTPS) in the app’s "
+"Authentication settings."
+msgstr ""
+
+msgid ""
+"Complete OAuth2 authorization from Checkmk and verify that access and "
+"refresh tokens are stored successfully."
+msgstr ""
 
 msgid ""
 "A new tab will be opened. Please follow the instructions to authorize the "

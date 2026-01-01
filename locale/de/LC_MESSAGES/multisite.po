@@ -93084,6 +93084,10 @@ msgstr "Sekunden verbleibend"
 msgid "OAuth2 connection parameters requested successfully!"
 msgstr "OAuth2-Verbindung wurde erfolgreich erstellt!"
 
+#, fuzzy
+msgid "Saving OAuth2 connection"
+msgstr "OAuth2-Verbindungen verwalten"
+
 msgid "Go back to restart authorization process"
 msgstr "Zurückgehen, um Autorisierungsprozess erneut zu starten"
 
@@ -93101,6 +93105,29 @@ msgstr "Die Client-ID muss eine gültige UUID sein."
 
 msgid "Define OAuth2 parameter"
 msgstr "OAuth2-Parameter definieren"
+
+msgid ""
+"Register an app in Microsoft Entra ID and note the Tenant ID and Client ID."
+msgstr ""
+
+#, fuzzy
+msgid "Create a client secret for the app and store the secret value securely."
+msgstr "Erstellen Sie ein Client-Geheimnis für die App und notieren Sie es."
+
+msgid ""
+"Add the following delegated Microsoft Graph API permissions required and "
+"grant admin consent if required."
+msgstr ""
+
+msgid ""
+"Register the following redirect URI (Web platform, HTTPS) in the app’s "
+"Authentication settings."
+msgstr ""
+
+msgid ""
+"Complete OAuth2 authorization from Checkmk and verify that access and "
+"refresh tokens are stored successfully."
+msgstr ""
 
 msgid ""
 "A new tab will be opened. Please follow the instructions to authorize the "

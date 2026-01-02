@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from dataclasses import dataclass, field, InitVar
 
 from pydantic import GetCoreSchemaHandler
@@ -9,6 +10,7 @@ from pydantic_core import core_schema, CoreSchema
 
 from cmk.ccc.version import Edition, edition
 from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model.converter import CustomerConverter
 from cmk.utils import paths
 
 
@@ -22,6 +24,7 @@ class RestrictEditions:
     supported_editions: InitVar[set[Edition] | None] = None
     excluded_editions: InitVar[set[Edition] | None] = None
     editions: set[Edition] = field(init=False)
+    which_field: str = ""
 
     def __post_init__(
         self, supported_editions: set[Edition] | None, excluded_editions: set[Edition] | None
@@ -39,9 +42,9 @@ class RestrictEditions:
     def _validate_editions(self, value: object) -> object:
         if edition(paths.omd_root) in self.editions:
             if self.required_if_supported and isinstance(value, ApiOmitted):
-                raise ValueError("Field is required in this edition")
+                raise ValueError(f"The {self.which_field} field is required in this edition")
         elif not isinstance(value, ApiOmitted):
-            raise ValueError("Field is not supported by this edition")
+            raise ValueError(f"The {self.which_field} field is not supported by this edition")
 
         return value
 
@@ -51,3 +54,16 @@ class RestrictEditions:
         return core_schema.no_info_after_validator_function(
             self._validate_editions, handler(source_type)
         )
+
+
+def after_validator_for_customer_field(
+    customer: str | ApiOmitted,
+    required_if_supported: bool = False,
+) -> None:
+    RestrictEditions(
+        supported_editions={Edition.ULTIMATEMT},
+        required_if_supported=required_if_supported,
+        which_field="customer",
+    )._validate_editions(customer)
+    if not isinstance(customer, ApiOmitted):
+        CustomerConverter().should_exist(customer)

@@ -12,7 +12,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import PasswordConverter
-from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
+from cmk.gui.openapi.framework.model.restrict_editions import after_validator_for_customer_field
 from cmk.utils.password_store import Password
 
 
@@ -63,10 +63,7 @@ class CreatePassword:
         serialization_alias="shared",
         default_factory=ApiOmitted,
     )
-    customer: Annotated[
-        str | ApiOmitted,
-        RestrictEditions(supported_editions={Edition.ULTIMATEMT}, required_if_supported=True),
-    ] = api_field(
+    customer: str | ApiOmitted = api_field(
         example="provider",
         description=edition_field_description(
             "By specifying a customer, you configure on which sites the user object will be "
@@ -76,6 +73,14 @@ class CreatePassword:
         ),
         default_factory=ApiOmitted,
     )
+
+    @model_validator(mode="after")
+    def validate_customer(self) -> Self:
+        after_validator_for_customer_field(
+            customer=self.customer,
+            required_if_supported=True,
+        )
+        return self
 
     @model_validator(mode="after")
     def validate_mutually_exclusive_fields(self) -> Self:
@@ -148,19 +153,20 @@ class UpdatePassword:
         serialization_alias="shared",
         default_factory=ApiOmitted,
     )
-    customer: Annotated[
-        str | ApiOmitted,
-        RestrictEditions(supported_editions={Edition.ULTIMATEMT}, required_if_supported=True),
-    ] = api_field(
+    customer: str | ApiOmitted = api_field(
         example="provider",
         description=edition_field_description(
             "By specifying a customer, you configure on which sites the user object will be "
             "available. 'global' will make the object available on all sites.",
             supported_editions={Edition.ULTIMATEMT},
-            field_required=True,
         ),
         default_factory=ApiOmitted,
     )
+
+    @model_validator(mode="after")
+    def validate_customer(self) -> Self:
+        after_validator_for_customer_field(customer=self.customer)
+        return self
 
     @model_validator(mode="after")
     def validate_mutually_exclusive_fields(self) -> Self:

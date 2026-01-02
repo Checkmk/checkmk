@@ -25,7 +25,6 @@ $(DEPS_INSTALL_BAZEL):
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
 	    //omd:deps_install_$(EDITION)
 	$(MKDIR) $(DESTDIR)
-	bazel run @zstd//:zstd_cli -- -d -o `pwd`/deps_install_$(EDITION).tar $(BAZEL_BIN)/omd/deps_install_$(EDITION).tar
 	tar -C $(DESTDIR) -xf `pwd`/deps_install_$(EDITION).tar
 
 	mkdir -p $(BUILD_HELPER_DIR)/

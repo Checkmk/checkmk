@@ -127,7 +127,7 @@ PERL_MODULES_LIST_2 = {
     },
     "Sys-SigAction-0.21.tar.gz": {
         "sha256": "e144207a6fd261eb9f98554c76bea66d95870ee1f62d2d346a1ea95fdccf80db",
-        "url": "https://www.cpan.org/modules/by-module/Sys/Sys-SigAction-0.21.tar.gz",
+        "url": "https://cpan.metacpan.org/authors/id/L/LB/LBAXTER/Sys-SigAction-0.21.tar.gz",
     },
     "Term-ReadLine-Gnu-1.47.tar.gz": {
         "sha256": "3b07ac8a9b494c50aa87a40dccab3f879b92eb9527ac0f2ded5d4743d166b649",
@@ -319,7 +319,7 @@ PERL_MODULES_LIST_2 = {
     },
     "Params-Validate-1.18.tar.gz": {
         "sha256": "b25d2488d326f0cfa303cba7ed64fed9ec698b7bfc5d408f0b71058af39206c1",
-        "url": "https://cpan.metacpan.org/modules/by-module/Params/Params-Validate-1.18.tar.gz",
+        "url": "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Params-Validate-1.18.tar.gz",
     },
     "DateTime-Locale-0.45.tar.gz": {
         "sha256": "8aa1b8db0baccc26ed88f8976a228d2cdf4f6ed4e10fc88c1501ecd8f3ccaf9c",

@@ -621,3 +621,10 @@ def test_create_diagnostics_dump(execute: Execute) -> None:
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
     assert p.stdout.startswith("+ COLLECT DIAGNOSTICS INFORMATION")
+
+
+def test_update_dns_cache(execute: Execute) -> None:
+    p = execute(["cmk", "--update-dns-cache", "-vvv"])
+    for hostname in ["modes-test-host", "modes-test-host2", "modes-test-host3"]:
+        assert hostname in p.stdout
+    assert "lookup failed" not in p.stdout

@@ -593,8 +593,10 @@ def test_automation_update_dns_cache(site: Site) -> None:
 
     # use .internal. FQDN to avoid false positives in name resolution
     unknown_host = "update-dns-cache-host.internal."
+    static_ip_host = "host-with-static-ip.internal."
     try:
         site.openapi.hosts.create(hostname=unknown_host)
+        site.openapi.hosts.create(hostname=static_ip_host, attributes={"ipaddress": "127.0.0.1"})
         site.openapi.hosts.create(hostname="localhost")
 
         site.write_file(cache_path, "{('bla', 4): '127.0.0.1'}")
@@ -616,6 +618,7 @@ def test_automation_update_dns_cache(site: Site) -> None:
     finally:
         site.openapi.hosts.delete("localhost")
         site.openapi.hosts.delete(unknown_host)
+        site.openapi.hosts.delete(static_ip_host)
         site.openapi.changes.activate_and_wait_for_completion(timeout=120)
 
 

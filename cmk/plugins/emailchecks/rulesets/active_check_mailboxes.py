@@ -44,7 +44,7 @@ def _valuespec_active_checks_mailboxes() -> Dictionary:
             ),
             "fetch": DictElement(
                 required=True,
-                parameter_form=fetching({"IMAP", "EWS"}),
+                parameter_form=fetching({"IMAP", "EWS", "GRAPHAPI"}),
             ),
             "connect_timeout": DictElement(
                 parameter_form=timeout(),
@@ -105,7 +105,7 @@ def _valuespec_active_checks_mailboxes() -> Dictionary:
 
 
 rule_spec_check_mailboxes = ActiveCheck(
-    title=Title("Check IMAP/EWS Mailboxes"),
+    title=Title("Check IMAP/EWS/GraphApi Mailboxes"),
     topic=Topic.APPLICATIONS,
     name="mailboxes",
     parameter_form=_valuespec_active_checks_mailboxes,

@@ -99,3 +99,10 @@ bazel_env(
         "genhtml": "@lcov//:genhtml",
     },
 )
+
+py_binary(
+    name = "extract_os_packages",
+    srcs = ["extract_os_packages.py"],
+    main = "extract_os_packages.py",
+    visibility = ["//visibility:public"],
+)

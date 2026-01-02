@@ -1,4 +1,5 @@
-#TODO: Replace those *.mk files with bazel files and replace these genrules: CMK-24412
+load("//bazel/rules:write_os_dependencies.bzl", "write_os_dependencies")
+
 exports_files([
     "ALMALINUX_8.mk",
     "ALMALINUX_9.mk",
@@ -12,26 +13,28 @@ exports_files([
     "UBUNTU_24.04.mk",
 ])
 
-genrule(
+write_os_dependencies(
     name = "dependencies",
-    srcs = select(
+    src = select(
         {
-            "@cmk//distro:almalinux-8": ["ALMALINUX_8.mk"],
-            "@cmk//distro:almalinux-9": ["ALMALINUX_9.mk"],
-            "@cmk//distro:almalinux-10": ["ALMALINUX_10.mk"],
-            "@cmk//distro:debian-12": ["DEBIAN_12.mk"],
-            "@cmk//distro:debian-13": ["DEBIAN_13.mk"],
-            "@cmk//distro:sles-15sp5": ["SLES_15SP5.mk"],
-            "@cmk//distro:sles-15sp6": ["SLES_15SP6.mk"],
-            "@cmk//distro:sles-15sp7": ["SLES_15SP7.mk"],
-            "@cmk//distro:ubuntu-22.04": ["UBUNTU_22.04.mk"],
-            "@cmk//distro:ubuntu-24.04": ["UBUNTU_24.04.mk"],
+            "@cmk//distro:almalinux-8": "ALMALINUX_8.mk",
+            "@cmk//distro:almalinux-9": "ALMALINUX_9.mk",
+            "@cmk//distro:almalinux-10": "ALMALINUX_10.mk",
+            "@cmk//distro:debian-12": "DEBIAN_12.mk",
+            "@cmk//distro:debian-13": "DEBIAN_13.mk",
+            "@cmk//distro:sles-15sp5": "SLES_15SP5.mk",
+            "@cmk//distro:sles-15sp6": "SLES_15SP6.mk",
+            "@cmk//distro:sles-15sp7": "SLES_15SP7.mk",
+            "@cmk//distro:ubuntu-22.04": "UBUNTU_22.04.mk",
+            "@cmk//distro:ubuntu-24.04": "UBUNTU_24.04.mk",
         },
     ),
-    outs = ["dependencies.txt"],
-    cmd = """
-            grep -e "^OS_PACKAGES\\s\\++" $< | sed 's/^OS_PACKAGES\\s\\++=\\s\\([^[:space:]]*\\).*/\\1/' | tr '\n\r' ',' | sed 's/,$$//' > $@
-        """,
+    out_name = "dependencies.txt",
+    separator = select({
+        "@cmk//distro:almalinux": " ",
+        "@cmk//distro:sles": " ",
+        "//conditions:default": ",",
+    }),
     visibility = ["//omd:__pkg__"],
 )
 

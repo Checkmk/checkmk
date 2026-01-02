@@ -785,8 +785,8 @@ def mode_update_dns_cache() -> None:
             for hn in set(hosts_config.hosts).union(hosts_config.clusters)
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
-        configured_ipv6_addresses=config.ipaddresses,
-        configured_ipv4_addresses=config.ipv6addresses,
+        configured_ipv6_addresses=config.ipv6addresses,
+        configured_ipv4_addresses=config.ipaddresses,
         simulation_mode=config.simulation_mode,
         override_dns=HostAddress(config.fake_dns) if config.fake_dns is not None else None,
     )

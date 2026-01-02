@@ -451,7 +451,7 @@ http_archive(
     sha256 = "015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
     strip_prefix = "heirloom-mailx-12.5",
     urls = [
-        "https://ftp.nl.debian.org/debian-archive/debian/pool/main/h/heirloom-mailx/heirloom-mailx_12.5.orig.tar.gz",
+        "https://anduin.linuxfromscratch.org/BLFS/mailx/heirloom-mailx_12.5.orig.tar.gz",
         UPSTREAM_MIRROR_URL + "heirloom-mailx_12.5.orig.tar.gz",
     ],
 )

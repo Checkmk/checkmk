@@ -209,8 +209,8 @@ class RuleProperties:
     def from_api_request(cls, incoming: APIRuleProperties) -> RuleProperties:
         return cls(
             description=incoming["description"],
-            comment=incoming.get("comment"),
-            documentation_url=incoming.get("documentation_url"),
+            comment=incoming["comment"],
+            documentation_url=incoming["documentation_url"],
             do_not_apply_this_rule=CheckboxWithBoolValue.from_api_request(
                 incoming["do_not_apply_this_rule"]
             ),
@@ -221,14 +221,15 @@ class RuleProperties:
         )
 
     def api_response(self) -> APIRuleProperties:
-        return APIRuleProperties(
-            description=self.description,
-            comment="" if self.comment is None else self.comment,
-            documentation_url="" if self.documentation_url is None else self.documentation_url,
-            do_not_apply_this_rule=self.do_not_apply_this_rule.api_response(),
-            allow_users_to_deactivate=self.allow_users_to_deactivate.api_response(),
-            user_id=self.user_id,
-        )
+        r: APIRuleProperties = {
+            "description": self.description,
+            "comment": "" if self.comment is None else self.comment,
+            "documentation_url": "" if self.documentation_url is None else self.documentation_url,
+            "do_not_apply_this_rule": self.do_not_apply_this_rule.api_response(),
+            "allow_users_to_deactivate": self.allow_users_to_deactivate.api_response(),
+            "user_id": self.user_id,
+        }
+        return r
 
     def to_mk_file_format(self) -> dict[str, Any]:
         r: dict[str, Any] = {"description": self.description}

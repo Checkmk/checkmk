@@ -69,7 +69,7 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         f"--{scope}-server",
         required=True,
         metavar="ADDRESS",
-        help=f"Host address of the {'/'.join(protocols)} server hosting your mailbox",
+        help=f"Host address of the {'/'.join(protocols)} server hosting your mailbox. Can be any dummy IP for GRAPHAPI.",
     )
     parser.add_argument(
         f"--{scope}-email-address",
@@ -81,20 +81,20 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         f"--{scope}-username",
         required=False,
         metavar="USER",
-        help=f"Username to use for {'/'.join(protocols)}",
+        help=f"Username to use for {'/'.join(protocols - {'GRAPHAPI'})}",
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         f"--{scope}-password",
         required=False,
         metavar="PASSWORD",
-        help=f"Password to use for {'/'.join(protocols)}",
+        help=f"Password to use for {'/'.join(protocols - {'GRAPHAPI'})}",
     )
     group.add_argument(
         f"--{scope}-password-reference",
         required=False,
         metavar="PASSWORD-ID",
-        help=f"Password store reference of password to use for {'/'.join(protocols)}",
+        help=f"Password store reference of password to use for {'/'.join(protocols - {'GRAPHAPI'})}",
     )
     parser.add_argument(
         f"--{scope}-client-id",
@@ -132,7 +132,7 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         f"--{scope}-port",
         type=int,
         metavar="PORT",
-        help=f"{'/'.join(protocols)} port (defaults to 110/995 (TLS) for POP3, to 143/993 (TLS) for "
+        help=f"{'/'.join(protocols - {'GRAPHAPI'})} port (defaults to 110/995 (TLS) for POP3, to 143/993 (TLS) for "
         "IMAP and to 80/443 (TLS) for EWS)",
     )
     parser.add_argument(

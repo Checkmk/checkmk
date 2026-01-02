@@ -166,7 +166,7 @@ def page_list(
             continue
 
         html.h3(title1, class_="table")
-        with table_element(css="data", limit=None) as table:
+        with table_element(css="data", limit=False) as table:
             for owner, visual_name, visual in visual_group:
                 table.row(css=["data"])
 

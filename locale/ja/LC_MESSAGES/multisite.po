@@ -12361,7 +12361,8 @@ msgid ""
 msgstr ""
 "チェック HTTP:SSL/TLS接続にHTTPの代わりにHTTPSを使用する（非推奨/効果なし）"
 
-msgid "Check IMAP/EWS Mailboxes"
+#, fuzzy
+msgid "Check IMAP/EWS/GraphApi Mailboxes"
 msgstr "IMAP/EWSメールボックスを確認する"
 
 msgid "Check LDAP service access"

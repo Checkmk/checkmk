@@ -13081,7 +13081,8 @@ msgid ""
 msgstr ""
 "Controleer HTTP: Gebruik HTTPS in plaats van HTTP voor SSL/TLS-verbindingen"
 
-msgid "Check IMAP/EWS Mailboxes"
+#, fuzzy
+msgid "Check IMAP/EWS/GraphApi Mailboxes"
 msgstr "IMAP/EWS Mailboxen controleren"
 
 msgid "Check LDAP service access"

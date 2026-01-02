@@ -13051,7 +13051,8 @@ msgid ""
 "ineffective)"
 msgstr "Controlla HTTP: usa HTTPS invece di HTTP per le connessioni SSL/TLS"
 
-msgid "Check IMAP/EWS Mailboxes"
+#, fuzzy
+msgid "Check IMAP/EWS/GraphApi Mailboxes"
 msgstr "Controllare le caselle di posta IMAP/EWS"
 
 msgid "Check LDAP service access"

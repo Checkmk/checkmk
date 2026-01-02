@@ -13140,7 +13140,8 @@ msgid ""
 msgstr ""
 "Verificați HTTP: Utilizați HTTPS în loc de HTTP pentru conexiunile SSL/TLS"
 
-msgid "Check IMAP/EWS Mailboxes"
+#, fuzzy
+msgid "Check IMAP/EWS/GraphApi Mailboxes"
 msgstr "Verificarea cutiilor poștale IMAP/EWS"
 
 msgid "Check LDAP service access"

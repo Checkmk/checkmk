@@ -7,7 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator, Iterator
-from typing import Any, get_args, Literal
+from typing import Any, cast, get_args, Literal
 
 import pytest
 
@@ -17,6 +17,29 @@ from cmk.gui.openapi.api_endpoints.site_management.models.config_example import 
 )
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
+)
+from cmk.gui.openapi.endpoints.notification_rules.request_schemas import (
+    AsciiMailPluginCreate,
+    CiscoWebexPluginCreate,
+    HTMLMailPluginCreate,
+    IlertPluginCreate,
+    JiraPluginCreate,
+    MkEventDPluginCreate,
+    MSTeamsPluginCreate,
+    OpsGeniePluginCreate,
+    PagerDutyPluginCreate,
+    PluginWithParams,
+    PushOverPluginCreate,
+    RuleNotification,
+    RuleNotificationMethod,
+    RuleProperties,
+    ServiceNowPluginCreate,
+    Signl4PluginCreate,
+    SlackPluginCreate,
+    SMSAPIPluginCreate,
+    SMSPluginBase,
+    SpectrumPluginBase,
+    VictoropsPluginCreate,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
     AckStateAPI,
@@ -2234,4 +2257,139 @@ def test_explicit_email_addresses_allowed_in_non_cloud_editions(
             "state"
         ]
         == "enabled"
+    )
+
+
+@pytest.mark.parametrize(
+    "plugin",
+    [
+        HTMLMailPluginCreate().load({"plugin_name": "mail"}),
+        AsciiMailPluginCreate().load({"plugin_name": "asciimail"}),
+        CiscoWebexPluginCreate().load(
+            {
+                "plugin_name": "cisco_webex",
+                "webhook_url": {"option": "explicit", "url": "http://abc.com"},
+            }
+        ),
+        IlertPluginCreate().load(
+            {
+                "plugin_name": "ilert",
+                "api_key": {"option": "explicit", "key": "abcde"},
+                "notification_priority": "HIGH",
+                "custom_summary_for_host_alerts": "$NOTIFICATIONTYPE$ Host Alert: $HOSTNAME$ is $HOSTSTATE$ - $HOSTOUTPUT$",
+                "custom_summary_for_service_alerts": "$NOTIFICATIONTYPE$ Service Alert: $HOSTALIAS$/$SERVICEDESC$ is $SERVICESTATE$ - $SERVICEOUTPUT$",
+            }
+        ),
+        JiraPluginCreate().load(
+            {
+                "plugin_name": "jira_issues",
+                "jira_url": "https://test_jira_url.com/here",
+                "auth": {
+                    "option": "explicit_password",
+                    "username": "user_username",
+                    "password": "user_password",
+                },
+                "host_custom_id": "3456",
+                "service_custom_id": "",
+                "monitoring_url": "http://test_monitoring_url.com/here",
+            },
+        ),
+        MkEventDPluginCreate().load({"plugin_name": "mkeventd"}),
+        MSTeamsPluginCreate().load(
+            {
+                "plugin_name": "msteams",
+                "webhook_url": {"option": "explicit", "url": "http://abc.com"},
+            },
+        ),
+        OpsGeniePluginCreate().load(
+            {
+                "plugin_name": "opsgenie_issues",
+                "api_key": {"option": "explicit", "key": "abcde"},
+            },
+        ),
+        PagerDutyPluginCreate().load(
+            {
+                "plugin_name": "pagerduty",
+                "integration_key": {"option": "explicit", "key": "abcde"},
+            },
+        ),
+        PushOverPluginCreate().load(
+            {
+                "plugin_name": "pushover",
+                "api_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+                "user_group_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+            }
+        ),
+        ServiceNowPluginCreate().load(
+            {
+                "plugin_name": "servicenow",
+                "servicenow_url": "https://service_now_url_test",
+                "auth": {
+                    "option": "explicit_password",
+                    "username": "user_username",
+                    "password": "user_password",
+                },
+            }
+        ),
+        Signl4PluginCreate().load(
+            {
+                "plugin_name": "signl4",
+                "team_secret": {
+                    "option": "explicit",
+                    "secret": "explicit_team_secret",
+                },
+            },
+        ),
+        SlackPluginCreate().load(
+            {
+                "plugin_name": "slack",
+                "webhook_url": {"option": "explicit", "url": "http://abc.com"},
+            },
+        ),
+        SMSAPIPluginCreate().load(
+            {
+                "plugin_name": "sms_api",
+                "modem_url": "https://teltonika.com",
+                "username": "test_username",
+                "user_password": {
+                    "option": "explicit",
+                    "password": "test_password",
+                },
+            },
+        ),
+        SMSPluginBase().load({"plugin_name": "sms"}),
+        SpectrumPluginBase().load(
+            {
+                "plugin_name": "spectrum",
+                "destination_ip": "127.0.0.1",
+                "snmp_community": "abcde",
+            },
+        ),
+        VictoropsPluginCreate().load(
+            {
+                "plugin_name": "victorops",
+                "splunk_on_call_rest_endpoint": {
+                    "option": "explicit",
+                    "url": "https://alert.victorops.com/integrations/splunk_on_call_endpoint",
+                },
+            },
+        ),
+    ],
+)
+def test_defaults_are_loaded(plugin: dict[str, Any], clients: ClientRegistry) -> None:
+    """Test minimal notification rule creation."""
+    clients.RuleNotification.create(
+        rule_config=cast(
+            APINotificationRule,
+            RuleNotification().load(
+                {
+                    "rule_properties": RuleProperties().load(
+                        {"description": "Test rule with defaults"}
+                    ),
+                    "notification_method": RuleNotificationMethod().load(
+                        {"notify_plugin": PluginWithParams().load({"plugin_params": plugin})}
+                    ),
+                }
+            ),
+        )
     )

@@ -8,9 +8,12 @@ exports_files(["dev-requirements.in"])
 py_library(
     name = "testlib",
     testonly = True,
-    srcs = ["__init__.py"] + glob(include = ["testlib/**/*.py"]),
+    srcs = ["__init__.py"] + glob(
+        include = ["testlib/**/*.py"],
+    ),
     data = glob(
         include = ["testlib/**"],
+        allow_empty = True,
         exclude = ["testlib/**/*.py"],
     ),
     imports = [".."],
@@ -49,6 +52,7 @@ py_library(
     ),
     data = glob(
         include = ["testlib/**"],
+        allow_empty = True,
         exclude = ["testlib/**/*.py"],
     ),
     imports = [".."],
@@ -68,14 +72,16 @@ py_library(
 py_library(
     name = "testlib_unit",
     testonly = True,
-    srcs = ["__init__.py"] + glob(include = [
-        "testlib/unit/**/*.py",
-        "testlib/common/**/*.py",
-    ]),
+    srcs = ["__init__.py"] + glob(
+        include = [
+            "testlib/unit/**/*.py",
+            "testlib/common/**/*.py",
+        ],
+    ),
     data = glob(
         include = [
             "testlib/unit/**",
-            "testlib/common/**/*.py",
+            "testlib/common/**",
         ],
         allow_empty = True,
         exclude = [

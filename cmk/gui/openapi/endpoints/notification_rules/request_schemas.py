@@ -17,7 +17,6 @@ from cmk.utils import paths
 from cmk.utils.notify_types import (
     CaseStateStr,
     EmailBodyElementsType,
-    get_builtin_plugin_names,
     GroupbyType,
     IlertPriorityType,
     IncidentStateStr,
@@ -325,149 +324,161 @@ CHECKMK_URL_PREFIX_OPTION = fields.String(
 
 class HostOrServiceEventTypeCommon(BaseSchema):
     start_or_end_of_flapping_state = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     start_or_end_of_scheduled_downtime = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     acknowledgement_of_problem = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     alert_handler_execution_successful = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     alert_handler_execution_failed = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
 
 
 class HostEventType(HostOrServiceEventTypeCommon):
     up_down = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     up_unreachable = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     down_up = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     down_unreachable = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     unreachable_down = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     unreachable_up = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     any_up = fields.Boolean(
-        required=True,
+        load_default=True,
         example=False,
     )
     any_down = fields.Boolean(
-        required=True,
+        load_default=True,
         example=True,
     )
     any_unreachable = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
 
 
 class ServiceEventType(HostOrServiceEventTypeCommon):
     ok_warn = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     ok_ok = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     ok_crit = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     ok_unknown = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     warn_ok = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     warn_crit = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     warn_unknown = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
     crit_ok = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     crit_warn = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     crit_unknown = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     unknown_ok = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     unknown_warn = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     unknown_crit = fields.Boolean(
-        required=True,
+        load_default=False,
         example=True,
     )
     any_ok = fields.Boolean(
-        required=True,
+        load_default=True,
         example=False,
     )
     any_warn = fields.Boolean(
-        required=True,
+        load_default=True,
         example=False,
     )
     any_crit = fields.Boolean(
-        required=True,
+        load_default=True,
         example=True,
     )
     any_unknown = fields.Boolean(
-        required=True,
+        load_default=False,
         example=False,
     )
 
 
-class CheckboxHostEventType(Checkbox):
+class CheckboxHostEventType(BaseSchema):
+    state = fields.String(
+        enum=["enabled", "disabled"],
+        load_default="enabled",
+        description="To enable or disable this field",
+        example="enabled",
+    )
     value = fields.Nested(
         HostEventType,
-        required=True,
+        load_default=lambda: HostEventType().load({}),
         description="Select the host event types and transitions this rule should handle. Note: If you activate this option and do not also specify service event types then this rule will never hold for service notifications! Note: You can only match on event types created by the core.",
     )
 
 
-class CheckboxServiceEventType(Checkbox):
+class CheckboxServiceEventType(BaseSchema):
+    state = fields.String(
+        enum=["enabled", "disabled"],
+        load_default="enabled",
+        description="To enable or disable this field",
+        example="enabled",
+    )
     value = fields.Nested(
         ServiceEventType,
-        required=True,
+        load_default=lambda: ServiceEventType().load({}),
         description="Select the service event types and transitions this rule should handle. Note: If you activate this option and do not also specify host event types then this rule will never hold for host notifications! Note: You can only match on event types created by the core",
     )
 
@@ -823,15 +834,6 @@ class CheckboxEventConsoleAlerts(Checkbox):
 # Plugins -----------------------------------------------------------
 
 
-class PluginName(BaseSchema):
-    plugin_name = fields.String(
-        enum=get_builtin_plugin_names(),
-        required=True,
-        description="The plug-in name.",
-        example="mail",
-    )
-
-
 class EmailAndDisplayName(BaseSchema):
     address = fields.String(
         required=False,
@@ -919,30 +921,20 @@ class SortOrderOneOfSchema(CheckboxOneOfSchema):
     }
 
 
-class MailBaseCreate(PluginName):
-    from_details = fields.Nested(
-        FromDetailsOneOfSchema,
-        required=True,
-    )
-    reply_to = fields.Nested(
-        ReplyToOneOfSchema,
-        required=True,
-    )
+class MailBaseCreate(BaseSchema):
+    from_details = fields.Nested(FromDetailsOneOfSchema, load_default=lambda: {"state": "disabled"})
+    reply_to = fields.Nested(ReplyToOneOfSchema, load_default=lambda: {"state": "disabled"})
     subject_for_host_notifications = fields.Nested(
-        SubjectHostOneOfSchema,
-        required=True,
+        SubjectHostOneOfSchema, load_default=lambda: {"state": "disabled"}
     )
     subject_for_service_notifications = fields.Nested(
-        SubjectServiceOneOfSchema,
-        required=True,
+        SubjectServiceOneOfSchema, load_default=lambda: {"state": "disabled"}
     )
     send_separate_notification_to_every_recipient = fields.Nested(
-        Checkbox,
-        required=True,
+        Checkbox, load_default=lambda: {"state": "disabled"}
     )
     sort_order_for_bulk_notifications = fields.Nested(
-        SortOrderOneOfSchema,
-        required=True,
+        SortOrderOneOfSchema, load_default=lambda: {"state": "disabled"}
     )
 
 
@@ -950,17 +942,20 @@ class MailBaseCreate(PluginName):
 
 
 class AsciiMailPluginCreate(MailBaseCreate):
-    body_head_for_both_host_and_service_notifications = fields.Nested(
-        StrValueOneOfSchema,
+    plugin_name = fields.Constant(
+        "asciimail",
         required=True,
+        description="The ASCII Mail plug-in.",
+        example="asciimail",
+    )
+    body_head_for_both_host_and_service_notifications = fields.Nested(
+        StrValueOneOfSchema, load_default=lambda: {"state": "disabled"}
     )
     body_tail_for_host_notifications = fields.Nested(
-        StrValueOneOfSchema,
-        required=True,
+        StrValueOneOfSchema, load_default=lambda: {"state": "disabled"}
     )
     body_tail_for_service_notifications = fields.Nested(
-        StrValueOneOfSchema,
-        required=True,
+        StrValueOneOfSchema, load_default=lambda: {"state": "disabled"}
     )
 
 
@@ -1134,38 +1129,43 @@ class UrlPrefixOneOfSchema(CheckboxOneOfSchema):
 
 
 URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE = fields.Nested(
-    UrlPrefixOneOfSchema,
-    required=True,
+    UrlPrefixOneOfSchema, load_default=lambda: {"state": "disabled"}
 )
 
 
 class HTMLMailPluginCreate(MailBaseCreate):
+    plugin_name = fields.Constant(
+        "mail",
+        required=True,
+        description="The HTML mail plug-in.",
+        example="mail",
+    )
     info_to_be_displayed_in_the_email_body = fields.Nested(
         EmailInfoOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     insert_html_section_between_body_and_table = fields.Nested(
         InsertHtmlOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
 
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
 
     display_graphs_among_each_other = fields.Nested(
         Checkbox,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     enable_sync_smtp = fields.Nested(
         EnableSyncOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     graphs_per_notification = fields.Nested(
         GraphsPerNotificationOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     bulk_notifications_with_graphs = fields.Nested(
         BulkNotificationsOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
 
 
@@ -1173,7 +1173,7 @@ class HTMLMailPluginCreate(MailBaseCreate):
 
 DISABLE_SSL_CERT_VERIFICATION = fields.Nested(
     Checkbox,
-    required=True,
+    load_default=lambda: {"state": "disabled"},
     description="Ignore unverified HTTPS request warnings. Use with caution.",
 )
 
@@ -1219,12 +1219,18 @@ class HttpProxyOneOfSchema(CheckboxOneOfSchema):
 
 HTTP_PROXY_CREATE = fields.Nested(
     HttpProxyOneOfSchema,
-    required=True,
+    load_default=lambda: {"state": "disabled"},
     description="Use the proxy settings from the environment variables. The variables NO_PROXY, HTTP_PROXY and HTTPS_PROXY are taken into account during execution.",
 )
 
 
-class CiscoWebexPluginCreate(PluginName):
+class CiscoWebexPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "cisco_webex_teams",
+        required=True,
+        description="The Cisco plug-in.",
+        example="cisco_webex_teams",
+    )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     webhook_url = fields.Nested(CiscoUrlOrStoreSelector)
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
@@ -1264,14 +1270,20 @@ class IPAddressOneOfSchema(CheckboxOneOfSchema):
     }
 
 
-class MkEventDPluginCreate(PluginName):
+class MkEventDPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "mkeventd",
+        required=True,
+        description="The MkEventd plug-in.",
+        example="mkeventd",
+    )
     syslog_facility_to_use = fields.Nested(
         SysLogFacilityOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     ip_address_of_remote_event_console = fields.Nested(
         IPAddressOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
 
 
@@ -1296,7 +1308,13 @@ class IlertKeyOrStoreSelector(OptionOneOfSchema):
     }
 
 
-class IlertPluginCreate(PluginName):
+class IlertPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "ilert",
+        required=True,
+        description="The Ilert plug-in.",
+        example="ilert",
+    )
     notification_priority = fields.String(
         enum=list(get_args(IlertPriorityType)),
         required=True,
@@ -1369,7 +1387,13 @@ class AuthSelector(OptionOneOfSchema):
     }
 
 
-class JiraPluginCreate(PluginName):
+class JiraPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "jira_issues",
+        required=True,
+        description="The Jira plug-in.",
+        example="jira_issues",
+    )
     jira_url = fields.String(
         required=False,
         example="http://jira_url_example.com",
@@ -1382,12 +1406,12 @@ class JiraPluginCreate(PluginName):
         description="The authentication credentials for the Jira connection",
     )
     project_id = fields.String(
-        required=True,
+        load_default="",
         example="",
         description="The numerical Jira project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
     )
     issue_type_id = fields.String(
-        required=True,
+        load_default="",
         example="",
         description="The numerical Jira issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
     )
@@ -1408,27 +1432,27 @@ class JiraPluginCreate(PluginName):
     )
     site_custom_id = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="The numerical ID of the Jira custom field for sites. Please use this option if you have multiple sites in a distributed setup which send their notifications to the same Jira instance",
     )
     priority_id = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="The numerical Jira priority ID. If not set, it will be retrieved from a custom user attribute named jirapriority. If that is not set, the standard priority will be used",
     )
     host_summary = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Here you are allowed to use all macros that are defined in the notification context",
     )
     service_summary = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Here you are allowed to use all macros that are defined in the notification context",
     )
     label = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Here you can set a custom label for new issues. If not set, 'monitoring' will be used",
     )
     graphs_per_notification = fields.Nested(
@@ -1438,12 +1462,12 @@ class JiraPluginCreate(PluginName):
     )
     resolution_id = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="The numerical Jira resolution transition ID. 11 - 'To Do', 21 - 'In Progress', 31 - 'Done'",
     )
     optional_timeout = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Here you can configure timeout settings.",
     )
 
@@ -1507,80 +1531,86 @@ class ListOfExtraPropertiesOneOfSchema(CheckboxOneOfSchema):
     }
 
 
-class OpsGeniePluginCreate(PluginName):
+class OpsGeniePluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "opsgenie_issues",
+        required=True,
+        description="The OpsGenie plug-in.",
+        example="opsgenie_issues",
+    )
     api_key = fields.Nested(
         OpsGenisStoreOrExplicitKeySelector,
         required=True,
     )
     domain = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="If you have an european account, please set the domain of your opsgenie. Specify an absolute URL like https://api.eu.opsgenie.com",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     http_proxy = HTTP_PROXY_CREATE
     owner = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Sets the user of the alert. Display name of the request owner",
     )
     source = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Source field of the alert. Default value is IP address of the incoming request",
     )
     priority = fields.Nested(
         OpsGeniePriorityOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     note_while_creating = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Additional note that will be added while creating the alert",
     )
     note_while_closing = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Additional note that will be added while closing the alert",
     )
     desc_for_host_alerts = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Description field of host alert that is generally used to provide a detailed information about the alert",
     )
     desc_for_service_alerts = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Description field of service alert that is generally used to provide a detailed information about the alert",
     )
     message_for_host_alerts = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="",
     )
     message_for_service_alerts = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="",
     )
     responsible_teams = fields.Nested(
         ListOfStrOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Team names which will be responsible for the alert. If the API Key belongs to a team integration, this field will be overwritten with the owner team. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input fields",
     )
     actions = fields.Nested(
         ListOfStrOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Custom actions that will be available for the alert. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input fields",
     )
     tags = fields.Nested(
         ListOfStrOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Tags of the alert. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input fields",
     )
     entity = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Is used to specify which domain the alert is related to",
     )
     extra_properties = fields.Nested(
@@ -1611,7 +1641,13 @@ class PagerDutyStoreOrIntegrationKeySelector(OptionOneOfSchema):
     }
 
 
-class PagerDutyPluginCreate(PluginName):
+class PagerDutyPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "pagerduty",
+        required=True,
+        description="The PagerDuty plug-in.",
+        example="pagerduty",
+    )
     integration_key = fields.Nested(
         PagerDutyStoreOrIntegrationKeySelector,
         required=True,
@@ -1705,7 +1741,13 @@ class SoundsOneOfSchema(CheckboxOneOfSchema):
     }
 
 
-class PushOverPluginCreate(PluginName):
+class PushOverPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "pushover",
+        required=True,
+        description="The Pushover plug-in.",
+        example="pushover",
+    )
     api_key = fields.String(
         required=True,
         example="azGDORePK8gMaC0QOYAMyEEuzJnyUi",
@@ -1721,11 +1763,11 @@ class PushOverPluginCreate(PluginName):
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     priority = fields.Nested(
         PushOverOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     sound = fields.Nested(
         SoundsOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     http_proxy = HTTP_PROXY_CREATE
 
@@ -1750,15 +1792,19 @@ class SiteIDPrefixOneOfSchema(CheckboxOneOfSchema):
 class IncidentAndCaseParams(BaseSchema):
     host_description = fields.Nested(
         StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     service_description = fields.Nested(
         StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     host_short_description = fields.Nested(
         StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     service_short_description = fields.Nested(
         StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
 
 
@@ -1801,8 +1847,14 @@ class StateRecoveryOneOfSchema(CheckboxOneOfSchema):
 
 
 class CaseParams(IncidentAndCaseParams):
-    priority = fields.Nested(PriorityOneOfSchema)
-    state_recovery = fields.Nested(StateRecoveryOneOfSchema)
+    priority = fields.Nested(
+        PriorityOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+    )
+    state_recovery = fields.Nested(
+        StateRecoveryOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+    )
 
 
 class ManagementTypeIncedentStates(BaseSchema):
@@ -1853,24 +1905,29 @@ class TypeUrgencyOneOfSchema(CheckboxOneOfSchema):
 
 class IncidentParams(IncidentAndCaseParams):
     caller = fields.String(
-        required=True,
+        load_default="",
         example="Alice",
         description="Caller is the user on behalf of whom the incident is being reported within ServiceNow.",
     )
     urgency = fields.Nested(
         TypeUrgencyOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     impact = fields.Nested(
         StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     state_acknowledgement = fields.Nested(
         TypeStateOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     state_downtime = fields.Nested(
         TypeStateOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     state_recovery = fields.Nested(
         TypeStateOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
 
 
@@ -1897,7 +1954,13 @@ class MgmntTypeSelector(OptionOneOfSchema):
     }
 
 
-class ServiceNowPluginCreate(PluginName):
+class ServiceNowPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "servicenow",
+        required=True,
+        description="The ServiceNow plug-in.",
+        example="servicenow",
+    )
     servicenow_url = fields.String(
         required=True,
         example="https://myservicenow.com",
@@ -1911,14 +1974,15 @@ class ServiceNowPluginCreate(PluginName):
     http_proxy = HTTP_PROXY_CREATE
     use_site_id_prefix = fields.Nested(
         SiteIDPrefixOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     optional_timeout = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     management_type = fields.Nested(
         MgmntTypeSelector,
+        load_default=lambda: {"option": "incident", "params": IncidentParams().load({})},
     )
 
 
@@ -1943,7 +2007,13 @@ class SignL4ExplicitOrStoreSelector(OptionOneOfSchema):
     }
 
 
-class Signl4PluginCreate(PluginName):
+class Signl4PluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "signl4",
+        required=True,
+        description="The Signl4 plug-in.",
+        example="signl4",
+    )
     team_secret = fields.Nested(SignL4ExplicitOrStoreSelector, required=True)
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
@@ -1989,7 +2059,13 @@ class SlackStoreOrExplicitURLSelector(OptionOneOfSchema):
     }
 
 
-class SlackPluginCreate(PluginName):
+class SlackPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "slack",
+        required=True,
+        description="The Slack plug-in.",
+        example="slack",
+    )
     webhook_url = fields.Nested(SlackStoreOrExplicitURLSelector, required=True)
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
@@ -2017,10 +2093,16 @@ class SMSAPIPasswordSelector(OptionOneOfSchema):
     }
 
 
-class SMSAPIPluginCreate(PluginName):
+class SMSAPIPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "sms_api",
+        required=True,
+        description="The SMS API plug-in.",
+        example="sms_api",
+    )
     modem_type = fields.String(
         enum=["trb140"],
-        required=True,
+        load_default="trb140",
         example="trb140",
         description="Choose what modem is used. Currently supported is only Teltonika-TRB140.",
     )
@@ -2036,7 +2118,7 @@ class SMSAPIPluginCreate(PluginName):
         description="Configure the user name here",
     )
     timeout = fields.String(
-        required=True,
+        load_default="10",
         example="10",
         description="Here you can configure timeout settings",
     )
@@ -2050,10 +2132,16 @@ class SMSAPIPluginCreate(PluginName):
 # SMS ---------------------------------------------------------------
 
 
-class SMSPluginBase(PluginName):
+class SMSPluginBase(BaseSchema):
+    plugin_name = fields.Constant(
+        "sms",
+        required=True,
+        description="The SMS plug-in.",
+        example="sms",
+    )
     params = fields.List(
         fields.String,
-        required=True,
+        load_default=[],
         uniqueItems=True,
         description="The given parameters are available in scripts as NOTIFY_PARAMETER_1, NOTIFY_PARAMETER_2, etc. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input fields.",
         example=["NOTIFY_PARAMETER_1", "NOTIFY_PARAMETER_1"],
@@ -2063,7 +2151,13 @@ class SMSPluginBase(PluginName):
 # Spectrum ----------------------------------------------------------
 
 
-class SpectrumPluginBase(PluginName):
+class SpectrumPluginBase(BaseSchema):
+    plugin_name = fields.Constant(
+        "spectrum",
+        required=True,
+        description="The Spectrum plug-in.",
+        example="spectrum",
+    )
     destination_ip = IPField(
         ip_type_allowed="ipv4",
         required=True,
@@ -2075,7 +2169,7 @@ class SpectrumPluginBase(PluginName):
         description="SNMP community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
     )
     base_oid = fields.String(
-        required=True,
+        load_default="1.3.6.1.4.1.1234",
         example="1.3.6.1.4.1.1234",
         description="The base OID for the trap content",
     )
@@ -2099,7 +2193,13 @@ class SplunkRESTEndpointSelector(OptionOneOfSchema):
     }
 
 
-class VictoropsPluginCreate(PluginName):
+class VictoropsPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "victorops",
+        required=True,
+        description="The Victorops plug-in.",
+        example="victorops",
+    )
     splunk_on_call_rest_endpoint = fields.Nested(SplunkRESTEndpointSelector, required=True)
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
@@ -2128,40 +2228,46 @@ class MSTeamsUrlOrStoreSelector(OptionOneOfSchema):
     }
 
 
-class MSTeamsPluginCreate(PluginName):
+class MSTeamsPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "msteams",
+        required=True,
+        description="The MicrosoftTeams plug-in.",
+        example="msteams",
+    )
     affected_host_groups = fields.Nested(
         Checkbox,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Enable/disable if we show affected host groups in the created message",
     )
     host_details = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Enable/disable the details for host notifications",
     )
     service_details = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Enable/disable the details for service notifications",
     )
     host_summary = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Enable/disable the summary for host notifications",
     )
     service_summary = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Enable/disable the summary for service notifications",
     )
     host_title = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Enable/disable the title for host notifications",
     )
     service_title = fields.Nested(
         StrValueOneOfSchema,
-        required=True,
+        load_default=lambda: {"state": "disabled"},
         description="Enable/disable the title for service notifications",
     )
     http_proxy = HTTP_PROXY_CREATE
@@ -2221,7 +2327,7 @@ class PluginWithoutParams(BaseSchema):
 class PluginWithParams(BaseSchema):
     option = fields.Constant(
         PluginOptions.WITH_PARAMS.value,
-        required=True,
+        load_default=PluginOptions.WITH_PARAMS.value,
         description="Create notifications with parameters",
         example=PluginOptions.WITH_PARAMS.value,
     )
@@ -2507,24 +2613,22 @@ class RuleProperties(BaseSchema):
     comment = fields.String(
         description="An optional comment that may be used to explain the purpose of this object.",
         example="An example comment",
-        required=True,
     )
     documentation_url = fields.String(
         description="An optional URL pointing to documentation or any other page. This will be displayed as an icon and open a new page when clicked.",
         example="http://link/to/documentation",
-        required=True,
     )
     do_not_apply_this_rule = fields.Nested(
         Checkbox,
         description="Disabled rules are kept in the configuration but are not applied.",
         example={"state": "enabled"},
-        required=True,
+        load_default=lambda: {"state": "disabled"},
     )
     allow_users_to_deactivate = fields.Nested(
         Checkbox,
         description="If you set this option then users are allowed to deactivate notifications that are created by this rule.",
         example={"state": "enabled"},
-        required=True,
+        load_default=lambda: {"state": "enabled"},
     )
 
 
@@ -2541,21 +2645,45 @@ class RuleNotificationMethod(BaseSchema):
         PluginOptionsSelector,
         required=True,
     )
-    notification_bulking = fields.Nested(NotificationBulk)
+    notification_bulking = fields.Nested(
+        NotificationBulk,
+        load_default=lambda: {"state": "disabled"},
+    )
 
 
 class ContactSelection(BaseSchema):
-    all_contacts_of_the_notified_object = fields.Nested(Checkbox, required=True)
-    all_users = fields.Nested(Checkbox, required=True)
-    all_users_with_an_email_address = fields.Nested(Checkbox, required=True)
-    the_following_users = fields.Nested(TheFollowingUsers, required=True)
-    members_of_contact_groups = fields.Nested(ListOfContactGroupsCheckbox, required=True)
+    all_contacts_of_the_notified_object = fields.Nested(
+        Checkbox,
+        load_default=lambda: {"state": "enabled"},
+    )
+    all_users = fields.Nested(
+        Checkbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    all_users_with_an_email_address = fields.Nested(
+        Checkbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    the_following_users = fields.Nested(
+        TheFollowingUsers,
+        load_default=lambda: {"state": "disabled"},
+    )
+    members_of_contact_groups = fields.Nested(
+        ListOfContactGroupsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
     explicit_email_addresses = fields.Nested(
         ExplicitEmailAddressesCheckbox,
-        required=False,  # Required in non-CSE editions. See pre_load/post_load.
+        description="Send notifications to the following explicit email addresses (non-CSE editions only).",
     )
-    restrict_by_contact_groups = fields.Nested(ListOfContactGroupsCheckbox, required=True)
-    restrict_by_custom_macros = fields.Nested(CustomMacrosCheckbox, required=True)
+    restrict_by_contact_groups = fields.Nested(
+        ListOfContactGroupsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    restrict_by_custom_macros = fields.Nested(
+        CustomMacrosCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
 
     @pre_load
     def _require_explicit_email_addresses_when_allowed(
@@ -2563,9 +2691,7 @@ class ContactSelection(BaseSchema):
     ) -> dict[str, Any]:
         if version.edition(paths.omd_root) != version.Edition.CSE:
             if "explicit_email_addresses" not in data:
-                raise ValidationError(
-                    {"explicit_email_addresses": ["Missing data for required field."]}
-                )
+                data["explicit_email_addresses"] = {"state": "disabled"}
         return data
 
     @post_load
@@ -2586,35 +2712,106 @@ class ContactSelection(BaseSchema):
 
 
 class RuleConditions(BaseSchema):
-    match_sites = fields.Nested(MatchSitesCheckbox, required=True)
-    match_folder = fields.Nested(MatchFolderCheckbox, required=True)
-    match_host_tags = fields.Nested(MatchHostTagsCheckbox, required=True)
-    match_host_labels = fields.Nested(MatchLabelsCheckbox, required=True)
-    match_host_groups = fields.Nested(MatchHostGroupsCheckbox, required=True)
-    match_hosts = fields.Nested(MatchHostsCheckbox, required=True)
-    match_exclude_hosts = fields.Nested(MatchHostsCheckbox, required=True)
-    match_service_labels = fields.Nested(MatchLabelsCheckbox, required=True)
-    match_service_groups = fields.Nested(MatchServiceGroupsCheckbox, required=True)
-    match_exclude_service_groups = fields.Nested(MatchServiceGroupsCheckbox, required=True)
-    match_service_groups_regex = fields.Nested(MatchServiceGroupRegexCheckbox, required=True)
+    match_sites = fields.Nested(
+        MatchSitesCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_folder = fields.Nested(
+        MatchFolderCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_host_tags = fields.Nested(
+        MatchHostTagsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_host_labels = fields.Nested(
+        MatchLabelsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_host_groups = fields.Nested(
+        MatchHostGroupsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_hosts = fields.Nested(
+        MatchHostsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_exclude_hosts = fields.Nested(
+        MatchHostsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_service_labels = fields.Nested(
+        MatchLabelsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_service_groups = fields.Nested(
+        MatchServiceGroupsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_exclude_service_groups = fields.Nested(
+        MatchServiceGroupsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_service_groups_regex = fields.Nested(
+        MatchServiceGroupRegexCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
     match_exclude_service_groups_regex = fields.Nested(
-        MatchServiceGroupRegexCheckbox, required=True
+        MatchServiceGroupRegexCheckbox,
+        load_default=lambda: {"state": "disabled"},
     )
-    match_services = fields.Nested(MatchServicesCheckbox, required=True)
-    match_exclude_services = fields.Nested(MatchServicesCheckbox, required=True)
-    match_check_types = fields.Nested(MatchCheckTypesCheckbox, required=True)
-    match_plugin_output = fields.Nested(StringCheckbox, required=True)
-    match_contact_groups = fields.Nested(MatchContactGroupsCheckbox, required=True)
-    match_service_levels = fields.Nested(MatchServiceLevelsCheckbox, required=True)
-    match_only_during_time_period = fields.Nested(MatchTimePeriodCheckbox, required=True)
-    match_host_event_type = fields.Nested(MatchHostEventTypeCheckbox, required=True)
-    match_service_event_type = fields.Nested(MatchServiceEventTypeCheckbox, required=True)
-    restrict_to_notification_numbers = fields.Nested(RestrictNotificationNumCheckbox, required=True)
+    match_services = fields.Nested(
+        MatchServicesCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_exclude_services = fields.Nested(
+        MatchServicesCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_check_types = fields.Nested(
+        MatchCheckTypesCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_plugin_output = fields.Nested(
+        StringCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_contact_groups = fields.Nested(
+        MatchContactGroupsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_service_levels = fields.Nested(
+        MatchServiceLevelsCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_only_during_time_period = fields.Nested(
+        MatchTimePeriodCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    match_host_event_type = fields.Nested(
+        MatchHostEventTypeCheckbox,
+        load_default=lambda: CheckboxHostEventType().load({}),
+    )
+    match_service_event_type = fields.Nested(
+        MatchServiceEventTypeCheckbox,
+        load_default=lambda: CheckboxServiceEventType().load({}),
+    )
+    restrict_to_notification_numbers = fields.Nested(
+        RestrictNotificationNumCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
     throttle_periodic_notifications = fields.Nested(
-        ThorttlePeriodicNotificationsCheckbox, required=True
+        ThorttlePeriodicNotificationsCheckbox,
+        load_default=lambda: {"state": "disabled"},
     )
-    match_notification_comment = fields.Nested(StringCheckbox, required=True)
-    event_console_alerts = fields.Nested(EventConsoleAlertCheckbox, required=True)
+    match_notification_comment = fields.Nested(
+        StringCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
+    event_console_alerts = fields.Nested(
+        EventConsoleAlertCheckbox,
+        load_default=lambda: {"state": "disabled"},
+    )
 
 
 class RuleNotification(BaseSchema):
@@ -2628,11 +2825,11 @@ class RuleNotification(BaseSchema):
     )
     contact_selection = fields.Nested(
         ContactSelection,
-        required=True,
+        load_default=lambda: ContactSelection().load({}),
     )
     conditions = fields.Nested(
         RuleConditions,
-        required=True,
+        load_default=lambda: RuleConditions().load({}),
     )
 
 

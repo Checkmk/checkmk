@@ -119,11 +119,11 @@ class HTMLGenerator(HTMLWriter):
 
     def set_focus(self, varname: str) -> None:
         self.final_javascript(
-            f"cmk.utils.set_focus_by_name({json.dumps(self.form_name)}, {json.dumps(varname)})"
+            f"cmk.utils.set_focus_by_name({json.dumps(self.form_name)}, {json.dumps(varname)});"
         )
 
     def set_focus_by_id(self, dom_id: str) -> None:
-        self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
+        self.final_javascript("cmk.utils.set_focus_by_id(%s);" % (json.dumps(dom_id)))
 
     def immediate_browser_redirect(self, secs: float, url: str) -> None:
         self.javascript(f"cmk.utils.set_reload({secs}, '{url}');")
@@ -133,7 +133,7 @@ class HTMLGenerator(HTMLWriter):
 
     def reload_whole_page(self, url: str | None = None) -> None:
         if not self.request.has_var("_ajaxid"):
-            return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
+            return self.final_javascript("cmk.utils.reload_whole_page(%s);" % json.dumps(url))
         return None
 
     def show_localization_hint(self) -> None:

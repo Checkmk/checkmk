@@ -759,7 +759,7 @@ class HTMLWriter:
         css_classes = [] if enable_scrollbar else ["vue-scrolling"]
         self.open_div(id_=content_id, class_=css_classes or None)
         if enable_scrollbar:
-            self.final_javascript("cmk.utils.content_scrollbar(%s)" % json.dumps(content_id))
+            self.final_javascript("cmk.utils.content_scrollbar(%s);" % json.dumps(content_id))
 
     def end_page_content(self) -> None:
         self.close_div()

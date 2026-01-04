@@ -366,7 +366,7 @@ def JsonCachedData(
     cutoff_condition: Callable[[str, Any], bool],
 ) -> Generator[Callable[[str, Any], Any], None, None]:
     """Store JSON-serializable data on filesystem and provide it if available"""
-    cache = json.loads(storage.read(key=storage_key, default="{}"))
+    cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
     LOG.debug("Cache: loaded %d elements", len(cache))
 
     dirty = False

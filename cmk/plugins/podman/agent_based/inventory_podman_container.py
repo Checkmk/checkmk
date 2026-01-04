@@ -17,7 +17,9 @@ def inventory_podman_container(
         inventory_attributes={
             "hostname": section.config.hostname,
             "pod": section.pod,
-            "labels": ",".join(f"{k}={v}" for k, v in section.config.labels.items()),
+            "labels": ",".join(f"{k}={v}" for k, v in section.config.labels.items())
+            if section.config.labels
+            else "",
         },
     )
 

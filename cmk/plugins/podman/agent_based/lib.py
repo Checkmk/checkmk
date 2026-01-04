@@ -55,7 +55,7 @@ class SectionPodmanContainerConfig(BaseModel, frozen=True):
         description="Action to take when the health check fails.",
     )
     hostname: str = Field(alias="Hostname")
-    labels: Mapping[str, str] = Field(alias="Labels")
+    labels: Mapping[str, str] | None = Field(default=None, alias="Labels")
     user: str = Field(alias="User")
 
 

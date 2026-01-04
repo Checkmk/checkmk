@@ -469,7 +469,7 @@ def JsonCachedData(
 ) -> Generator[Callable[[str, Any], Any]]:
     """Store JSON-serializable data on filesystem and provide it if available"""
 
-    cache = json.loads(storage.read(key=storage_key, default="{}"))
+    cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
     LOGGER.debug("Cache: loaded %d elements", len(cache))
 
     dirty = False

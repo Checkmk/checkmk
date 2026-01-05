@@ -7,7 +7,7 @@ def xmlsec_workspace():
     http_archive(
         name = "xmlsec1",
         urls = [
-            "https://github.com/lsh123/xmlsec/releases/download/xmlsec_" + version_str.replace(".", "_") + "/" + filename,
+            "https://github.com/lsh123/xmlsec/releases/download/" + version_str + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = "d0180916ae71be28415a6fa919a0684433ec9ec3ba1cc0866910b02e5e13f5bd",

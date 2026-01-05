@@ -1864,7 +1864,7 @@ ConfigVariableProductTelemetry = ConfigVariable(
     ident="product_telemetry",
     hint=lambda: HTML.without_escaping(
         _(
-            "Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download your data by %s."
+            "Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> on the command line as site user, or download your data by %s."
         )
         % HTMLWriter.render_a(
             content=_("clicking here"),

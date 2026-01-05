@@ -11,6 +11,8 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type {
   FilterSettingsEmits,
@@ -208,9 +210,9 @@ const serviceMandatoryFilters = computed(() => {
       </div>
       <div class="filter-configuration__definition-container">
         <div class="filter-configuration__header">
-          <div class="filter-configuration__window-title">
+          <CmkHeading type="h1">
             {{ isConfigurationWindowOpen ? _t('Filter configuration') : _t('Runtime filters') }}
-          </div>
+          </CmkHeading>
           <button
             class="filter-configuration__close-button"
             type="button"
@@ -223,12 +225,12 @@ const serviceMandatoryFilters = computed(() => {
 
         <div v-if="!isConfigurationWindowOpen">
           <div class="runtime-filter-info">
-            <div class="filter-configuration__title">
+            <CmkHeading type="h3">
               {{ _t('Runtime filters are required to load data.') }}
-            </div>
-            <div class="filter-configuration__subtitle">
+            </CmkHeading>
+            <CmkParagraph>
               {{ _t('Values are temporary and can be overridden by widget filters.') }}
-            </div>
+            </CmkParagraph>
           </div>
 
           <RuntimeFilterConfiguration
@@ -271,77 +273,69 @@ const serviceMandatoryFilters = computed(() => {
             </template>
             <template #tab-contents>
               <CmkTabContent id="dashboard-filter">
-                <div>
-                  <div class="filter-configuration__info-header">
-                    <div class="filter-configuration__title">
-                      {{ _t('Set filters for all widgets.') }}
-                    </div>
-                    <div class="filter-configuration__subtitle">
-                      {{ _t('Values can be overridden by runtime or widget filters.') }}
-                    </div>
-                  </div>
-                  <hr class="cmk-hr" />
+                <CmkHeading type="h3">
+                  {{ _t('Set filters for all widgets.') }}
+                </CmkHeading>
+                <CmkParagraph>
+                  {{ _t('Values can be overridden by runtime or widget filters.') }}
+                </CmkParagraph>
+                <hr class="cmk-hr" />
 
-                  <FilterCollection
-                    :title="_t('Host filters')"
-                    :filters="hostDashboardFilters"
-                    :get-filter-values="dashboardFilters.getFilterValues"
-                    additional-item-label="Select from list"
-                  >
-                    <template #default="{ filterId, configuredFilterValues }">
-                      <FilterCollectionInputItem
-                        :filter-id="filterId"
-                        :configured-filter-values="configuredFilterValues"
-                        :filter-definitions="filterDefinitions"
-                        @update-filter-values="dashboardFilters.updateFilterValues"
-                        @remove-filter="dashboardFilters.removeFilter"
-                      />
-                    </template>
-                  </FilterCollection>
-                  <FilterCollection
-                    :title="_t('Service filters')"
-                    :filters="serviceDashboardFilters"
-                    :get-filter-values="dashboardFilters.getFilterValues"
-                    additional-item-label="Select from list"
-                  >
-                    <template #default="{ filterId, configuredFilterValues }">
-                      <FilterCollectionInputItem
-                        :filter-id="filterId"
-                        :configured-filter-values="configuredFilterValues"
-                        :filter-definitions="filterDefinitions"
-                        @update-filter-values="dashboardFilters.updateFilterValues"
-                        @remove-filter="dashboardFilters.removeFilter"
-                      />
-                    </template>
-                  </FilterCollection>
-                </div>
+                <FilterCollection
+                  :title="_t('Host filters')"
+                  :filters="hostDashboardFilters"
+                  :get-filter-values="dashboardFilters.getFilterValues"
+                  additional-item-label="Select from list"
+                >
+                  <template #default="{ filterId, configuredFilterValues }">
+                    <FilterCollectionInputItem
+                      :filter-id="filterId"
+                      :configured-filter-values="configuredFilterValues"
+                      :filter-definitions="filterDefinitions"
+                      @update-filter-values="dashboardFilters.updateFilterValues"
+                      @remove-filter="dashboardFilters.removeFilter"
+                    />
+                  </template>
+                </FilterCollection>
+                <FilterCollection
+                  :title="_t('Service filters')"
+                  :filters="serviceDashboardFilters"
+                  :get-filter-values="dashboardFilters.getFilterValues"
+                  additional-item-label="Select from list"
+                >
+                  <template #default="{ filterId, configuredFilterValues }">
+                    <FilterCollectionInputItem
+                      :filter-id="filterId"
+                      :configured-filter-values="configuredFilterValues"
+                      :filter-definitions="filterDefinitions"
+                      @update-filter-values="dashboardFilters.updateFilterValues"
+                      @remove-filter="dashboardFilters.removeFilter"
+                    />
+                  </template>
+                </FilterCollection>
               </CmkTabContent>
 
               <CmkTabContent id="required-filter">
-                <div class="required-filters-content">
-                  <div class="filter-configuration__info-header">
-                    <div class="filter-configuration__title">
-                      {{ _t('Set required filters for viewers to enter on load.') }}
-                    </div>
-                    <div class="filter-configuration__subtitle">
-                      {{ _t('Values are temporary and can be overridden by widget filters.') }}
-                    </div>
-                  </div>
-                  <hr class="cmk-hr" />
+                <CmkHeading type="h3">
+                  {{ _t('Set required filters for viewers to enter on load.') }}
+                </CmkHeading>
+                <CmkParagraph>
+                  {{ _t('Values are temporary and can be overridden by widget filters.') }}
+                </CmkParagraph>
+                <hr class="cmk-hr" />
 
-                  <FilterSelectionCollection
-                    :title="_t('Host filters')"
-                    :filters="hostMandatoryFilters"
-                    :filter-definitions="filterDefinitions"
-                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
-                  />
-                  <FilterSelectionCollection
-                    :title="_t('Service filters')"
-                    :filters="serviceMandatoryFilters"
-                    :filter-definitions="filterDefinitions"
-                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
-                  />
-                </div>
+                <FilterSelectionCollection
+                  :title="_t('Host filters')"
+                  :filters="hostMandatoryFilters"
+                  :filter-definitions="filterDefinitions"
+                  @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                />
+                <FilterSelectionCollection
+                  :title="_t('Service filters')"
+                  :filters="serviceMandatoryFilters"
+                  :filter-definitions="filterDefinitions"
+                  @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                />
               </CmkTabContent>
             </template>
           </CmkTabs>
@@ -448,42 +442,10 @@ const serviceMandatoryFilters = computed(() => {
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__info-header {
-  margin-top: var(--dimension-4);
-  margin-bottom: var(--dimension-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-hr {
   border: none;
   border-top: 1px solid var(--ux-theme-5);
   margin: var(--dimension-5) 0;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.required-filters-content {
-  margin-top: var(--dimension-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__window-title {
-  font-size: var(--dimension-6);
-  color: var(--font-color);
-  font-weight: var(--font-weight-bold);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__title {
-  font-size: 14px;
-  color: var(--font-color);
-  font-weight: var(--font-weight-bold);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__subtitle {
-  font-size: var(--dimension-5);
-  color: var(--font-color);
-  margin-top: var(--dimension-1);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

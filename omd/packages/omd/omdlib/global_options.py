@@ -24,7 +24,9 @@ def parse_global_opts(main_args: list[str]) -> tuple[GlobalOptions, list[str]]:
         for flag in flags:
             match flag:
                 case "V" | "version":
-                    version, main_args = _opt_arg(main_args, flag)
+                    if len(main_args) < 1:
+                        sys.exit(f"Option {flag} needs an argument.")
+                    version = main_args.pop(0)
                 case "f" | "force":
                     force = True
                 case "v" | "verbose":
@@ -34,9 +36,3 @@ def parse_global_opts(main_args: list[str]) -> tuple[GlobalOptions, list[str]]:
                         f"Invalid global option {token}.\nCall omd help for available options."
                     )
     return GlobalOptions(version=version, verbose=verbose, force=force), main_args
-
-
-def _opt_arg(main_args: list[str], opt: str) -> tuple[str, list[str]]:
-    if len(main_args) < 1:
-        sys.exit("Option %s needs an argument." % opt)
-    return main_args[0], main_args[1:]

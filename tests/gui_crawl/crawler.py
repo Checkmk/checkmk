@@ -444,7 +444,7 @@ class Crawler:
             .split(";", 1)[0]
             .strip()
         )
-        if content_type.startswith("text/html"):
+        if content_type == "text/html" or content_type.startswith("image/"):
             try:
                 page_content = await self.get_page_content(browser_context, url)
                 await self.validate(url, page_content.content, page_content.logs)

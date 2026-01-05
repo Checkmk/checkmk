@@ -250,11 +250,15 @@ const serviceMandatoryFilters = computed(() => {
         </div>
 
         <div v-else class="configuration-subwindow">
-          <div class="configuration-subwindow__actions">
+          <div class="db-filter-settings__configuration-subwindow-actions">
             <CmkButton variant="primary" @click="handleSaveConfiguration">
               {{ _t('Save') }}
             </CmkButton>
-            <CmkButton variant="secondary" class="cancel-button" @click="handleCancelConfiguration">
+            <CmkButton
+              variant="optional"
+              class="db-filter-settings__cancel-button"
+              @click="handleCancelConfiguration"
+            >
               <CmkIcon name="cancel" size="xsmall" />
               {{ _t('Cancel') }}
             </CmkButton>
@@ -279,7 +283,7 @@ const serviceMandatoryFilters = computed(() => {
                 <CmkParagraph>
                   {{ _t('Values can be overridden by runtime or widget filters.') }}
                 </CmkParagraph>
-                <hr class="cmk-hr" />
+                <hr class="db-filter-settings__hr" />
 
                 <FilterCollection
                   :title="_t('Host filters')"
@@ -322,7 +326,7 @@ const serviceMandatoryFilters = computed(() => {
                 <CmkParagraph>
                   {{ _t('Values are temporary and can be overridden by widget filters.') }}
                 </CmkParagraph>
-                <hr class="cmk-hr" />
+                <hr class="db-filter-settings__hr" />
 
                 <FilterSelectionCollection
                   :title="_t('Host filters')"
@@ -433,25 +437,22 @@ const serviceMandatoryFilters = computed(() => {
   margin-bottom: var(--dimension-5);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.configuration-subwindow__actions {
+.db-filter-settings__configuration-subwindow-actions {
   display: flex;
   align-items: center;
-  margin-bottom: var(--dimension-5);
+  margin: var(--dimension-8) 0;
   gap: var(--dimension-4);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-hr {
-  border: none;
-  border-top: 1px solid var(--ux-theme-5);
-  margin: var(--dimension-5) 0;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cancel-button {
+.db-filter-settings__cancel-button {
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
+}
+
+.db-filter-settings__hr {
+  width: 100%;
+  border: none;
+  border-bottom: var(--dimension-1) solid var(--ux-theme-5);
 }
 </style>

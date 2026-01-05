@@ -121,11 +121,11 @@ watch(
         <CmkButton variant="primary" @click="applyRuntimeFilters">
           {{ _t('Apply') }}
         </CmkButton>
-        <CmkButton variant="secondary" @click="resetRuntimeFilters">
+        <CmkButton variant="optional" @click="resetRuntimeFilters">
           {{ _t('Reset to pre-selected filters') }}
         </CmkButton>
       </div>
-      <CmkButton v-if="canEdit" variant="secondary" @click="openConfiguration">
+      <CmkButton v-if="canEdit" variant="optional" @click="openConfiguration">
         {{ _t('Edit filter configuration') }}
       </CmkButton>
     </div>

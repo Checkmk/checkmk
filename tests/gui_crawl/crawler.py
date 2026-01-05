@@ -445,7 +445,12 @@ class Crawler:
         if content_type == "text/html" or content_type.startswith("image/"):
             try:
                 page_content = await self.get_page_content(browser_context, url)
-                await self.validate(url, page_content.content, page_content.logs)
+                if page_content.status_code == 404:
+                    self.handle_error(
+                        url, error_type="NotFound", message=f"{content_type} resource not found"
+                    )
+                else:
+                    await self.validate(url, page_content.content, page_content.logs)
             except playwright.async_api.Error as e:
                 self.handle_error(url, "BrowserError", repr(e))
         elif content_type in self._ignored_content_types:

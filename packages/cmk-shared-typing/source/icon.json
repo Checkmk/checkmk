@@ -492,6 +492,7 @@
         "pnp",
         "predefined-conditions",
         "prediction",
+        "prometheus",
         "problem",
         "qs-aws",
         "qs-azure",

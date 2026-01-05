@@ -455,6 +455,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'predefined-conditions': 'icon_predefined_conditions.svg',
   prediction: 'icon_prediction.png',
   problem: 'icon_problem.svg',
+  prometheus: 'icon_prometheus.svg',
   'qs-aws': 'icon_qs_aws.svg',
   'qs-azure': 'icon_qs_azure.svg',
   'qs-gcp': 'icon_qs_gcp.svg',

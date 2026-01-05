@@ -21,42 +21,37 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <div class="dashboard-filter__collection">
-    <div class="dashboard-filter__collection-title">
-      <CmkLabel variant="title">{{ title }}</CmkLabel>
-    </div>
-    <div v-for="(filterId, index) in filters" :key="index" class="filter-item__container">
+  <div class="db-filter-collection__container">
+    <CmkLabel variant="title">{{ title }}</CmkLabel>
+    <div
+      v-for="(filterId, index) in filters"
+      :key="index"
+      class="db-filter-collection__item-container"
+    >
       <slot
         :filter-id="filterId"
         :configured-filter-values="getFilterValues(filterId)"
         :index="index"
       />
     </div>
-    <div v-if="additionalItemLabel" class="dashboard-filter__item-placeholder">
+    <div v-if="additionalItemLabel" class="db-filter-collection__item-placeholder">
       {{ additionalItemLabel }}
     </div>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__collection {
-  margin-top: var(--dimension-7);
+.db-filter-collection__container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__collection-title {
-  margin-bottom: var(--dimension-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-item__container {
+.db-filter-collection__item-container {
   background-color: var(--ux-theme-3);
-  margin-bottom: var(--dimension-4);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__item-placeholder {
+.db-filter-collection__item-placeholder {
   padding: var(--dimension-5) var(--dimension-7);
   border: 1px dashed var(--ux-theme-7);
   color: var(--color-white-70);

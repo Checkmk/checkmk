@@ -277,46 +277,50 @@ const serviceMandatoryFilters = computed(() => {
             </template>
             <template #tab-contents>
               <CmkTabContent id="dashboard-filter">
-                <CmkHeading type="h3">
-                  {{ _t('Set filters for all widgets.') }}
-                </CmkHeading>
-                <CmkParagraph>
-                  {{ _t('Values can be overridden by runtime or widget filters.') }}
-                </CmkParagraph>
-                <hr class="db-filter-settings__hr" />
+                <div class="db-filter-settings__filter-container">
+                  <div>
+                    <CmkHeading type="h3">
+                      {{ _t('Set filters for all widgets.') }}
+                    </CmkHeading>
+                    <CmkParagraph>
+                      {{ _t('Values can be overridden by runtime or widget filters.') }}
+                    </CmkParagraph>
+                  </div>
+                  <hr class="db-filter-settings__hr" />
 
-                <FilterCollection
-                  :title="_t('Host filters')"
-                  :filters="hostDashboardFilters"
-                  :get-filter-values="dashboardFilters.getFilterValues"
-                  additional-item-label="Select from list"
-                >
-                  <template #default="{ filterId, configuredFilterValues }">
-                    <FilterCollectionInputItem
-                      :filter-id="filterId"
-                      :configured-filter-values="configuredFilterValues"
-                      :filter-definitions="filterDefinitions"
-                      @update-filter-values="dashboardFilters.updateFilterValues"
-                      @remove-filter="dashboardFilters.removeFilter"
-                    />
-                  </template>
-                </FilterCollection>
-                <FilterCollection
-                  :title="_t('Service filters')"
-                  :filters="serviceDashboardFilters"
-                  :get-filter-values="dashboardFilters.getFilterValues"
-                  additional-item-label="Select from list"
-                >
-                  <template #default="{ filterId, configuredFilterValues }">
-                    <FilterCollectionInputItem
-                      :filter-id="filterId"
-                      :configured-filter-values="configuredFilterValues"
-                      :filter-definitions="filterDefinitions"
-                      @update-filter-values="dashboardFilters.updateFilterValues"
-                      @remove-filter="dashboardFilters.removeFilter"
-                    />
-                  </template>
-                </FilterCollection>
+                  <FilterCollection
+                    :title="_t('Host filters')"
+                    :filters="hostDashboardFilters"
+                    :get-filter-values="dashboardFilters.getFilterValues"
+                    additional-item-label="Select from list"
+                  >
+                    <template #default="{ filterId, configuredFilterValues }">
+                      <FilterCollectionInputItem
+                        :filter-id="filterId"
+                        :configured-filter-values="configuredFilterValues"
+                        :filter-definitions="filterDefinitions"
+                        @update-filter-values="dashboardFilters.updateFilterValues"
+                        @remove-filter="dashboardFilters.removeFilter"
+                      />
+                    </template>
+                  </FilterCollection>
+                  <FilterCollection
+                    :title="_t('Service filters')"
+                    :filters="serviceDashboardFilters"
+                    :get-filter-values="dashboardFilters.getFilterValues"
+                    additional-item-label="Select from list"
+                  >
+                    <template #default="{ filterId, configuredFilterValues }">
+                      <FilterCollectionInputItem
+                        :filter-id="filterId"
+                        :configured-filter-values="configuredFilterValues"
+                        :filter-definitions="filterDefinitions"
+                        @update-filter-values="dashboardFilters.updateFilterValues"
+                        @remove-filter="dashboardFilters.removeFilter"
+                      />
+                    </template>
+                  </FilterCollection>
+                </div>
               </CmkTabContent>
 
               <CmkTabContent id="required-filter">

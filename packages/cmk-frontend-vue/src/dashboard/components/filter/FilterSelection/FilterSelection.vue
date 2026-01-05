@@ -279,7 +279,7 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <div class="filter-menu__controls-row">
+            <div v-if="Object.keys(collapsibleStates).length > 0" class="filter-menu__controls-row">
               <div class="filter-menu__expand-controls">
                 <button
                   v-if="!groupStates.allExpanded"

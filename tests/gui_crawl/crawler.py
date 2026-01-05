@@ -211,12 +211,12 @@ class Crawler:
             try:
                 browser_context = await self.setup_checkmk_context(browser)
                 storage_state = await browser_context.storage_state()
-                # makes sure authentication cookies is also available in the "requests" session.
-                for cookie_dict in storage_state["cookies"]:
-                    self.requests_session.cookies.set(
-                        name=cookie_dict["name"],
-                        value=cookie_dict["value"],
-                    )
+                # makes sure authentication cookies are also available in the "requests" session.
+                for cookie_dict in storage_state.get("cookies", []):
+                    cookie_name = cookie_dict.get("name")
+                    cookie_value = cookie_dict.get("value")
+                    if cookie_name and cookie_value:
+                        self.requests_session.cookies.set(name=cookie_name, value=cookie_value)
                 for url in urls:
                     logger.debug("Checking URL %s", url.url)
                     num_done += await self.visit_url(browser_context, url)

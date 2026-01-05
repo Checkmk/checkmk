@@ -434,7 +434,7 @@ class Crawler:
         if ignore_reason := next(
             (reason for reason, urls in self._ignored_urls.items() if relative_url in urls), None
         ):
-            self.handle_skipped_reference(url, reason="ignored url", message=ignore_reason)
+            self.handle_skipped_reference(url, reason="IgnoredUrl", message=ignore_reason)
             return self.handle_page_done(url, duration=time.time() - start)
         content_type = (
             self.requests_session.head(url.url)
@@ -454,7 +454,7 @@ class Crawler:
             except playwright.async_api.Error as e:
                 self.handle_error(url, "BrowserError", repr(e))
         elif content_type in self._ignored_content_types:
-            self.handle_skipped_reference(url, reason="content-type", message=content_type)
+            self.handle_skipped_reference(url, reason="IgnoredContentType", message=content_type)
         else:
             self.handle_error(url, error_type="UnknownContentType", message=content_type)
 
@@ -556,9 +556,7 @@ class Crawler:
             try:
                 self.verify_is_valid_url(url.url)
             except InvalidUrl as invalid_url:
-                self.handle_skipped_reference(
-                    url, reason="invalid-url", message=invalid_url.message
-                )
+                self.handle_skipped_reference(url, reason="InvalidUrl", message=invalid_url.message)
             else:
                 self.handle_new_reference(url, referer_url=referer_url)
 

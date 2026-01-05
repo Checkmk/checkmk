@@ -49,11 +49,11 @@ const tabs: AgentSlideOutTabs[] = [
     id: 'windows',
     title: _t('Windows'),
     installMsg: _t(
-      'Run this command on your Windows host to download and install the Checkmk agent.'
+      'Run this command on your Windows host to download and install the Checkmk agent. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”)'
     ),
     installCmd: props.agentInstallCmds.windows,
     registrationMsg: _t(
-      'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller.'
+      'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”).'
     ),
     registrationCmd: props.agentRegistrationCmds.windows.replace('[HOSTNAME]', props.hostName)
   },

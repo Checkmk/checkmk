@@ -148,7 +148,7 @@ const toggleExpansion = () => {
 .code_wrapper {
   display: flex;
   align-items: flex-start;
-  margin-bottom: var(--spacing);
+  margin: var(--spacing) 0 var(--spacing) 0;
   gap: var(--dimension-4);
   max-width: 100%;
 

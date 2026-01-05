@@ -36,7 +36,7 @@ def build_agent_install_cmds(
     )
 
 
-WINDOWS_AGENT_REGISTRATION_CMD = """C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe register ^
+WINDOWS_AGENT_REGISTRATION_CMD = """\"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe\" register ^
     --hostname [HOSTNAME] ^
     --server {ip_address} ^
     --site {site} ^

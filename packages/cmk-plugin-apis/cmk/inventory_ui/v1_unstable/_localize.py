@@ -101,9 +101,9 @@ class _Localizable:
         return self.__class__(other, _modifier=(_Operation.MOD, (self,)))
 
 
-class Title(_Localizable):  # pylint: disable=too-few-public-methods
+class Title(_Localizable):
     pass
 
 
-class Label(_Localizable):  # pylint: disable=too-few-public-methods
+class Label(_Localizable):
     pass

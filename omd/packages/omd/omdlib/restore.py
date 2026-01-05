@@ -107,7 +107,7 @@ def _restore_working_dir(site_home: Path) -> Path:
 
 
 def _clickhouse_dir(site_home: Path) -> Path:
-    return site_home / "var" / "lib" / "clickhouse-server"
+    return site_home / "var" / "clickhouse-server"
 
 
 def _clear_site_home(site_home: Path) -> None:

@@ -45,7 +45,7 @@ TABLE_2 = [
 13208	/omd/sites/local/var/check_mk/inventory_archive/
 666	/omd/sites/local/var/check_mk/crashes/
 1099	/omd/sites/local/var/check_mk/otel_collector/
-49475	/omd/sites/local/var/lib/clickhouse-server/
+49475	/omd/sites/local/var/clickhouse-server/
 """.split("\n")
 ]
 

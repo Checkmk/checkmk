@@ -141,15 +141,8 @@ _CLICKHOUSE_EXAMPLE_DIR = Directory(
     directories=frozenset(
         {
             Directory(
-                name="lib",
-                directories=frozenset(
-                    {
-                        Directory(
-                            name="clickhouse-server",
-                            files=frozenset({File("data", content=b"abc")}),
-                        )
-                    }
-                ),
+                name="clickhouse-server",
+                files=frozenset({File("data", content=b"abc")}),
             ),
         }
     ),

@@ -558,11 +558,11 @@ class Crawler:
 
     def verify_is_valid_url(self, url: str) -> None:
         parsed = urlsplit(url)
-        if parsed.scheme != "http":
-            raise InvalidUrl(url, f"invalid scheme: {parsed.scheme}")
+        if parsed.scheme == "javascript":
+            raise InvalidUrl(url, "javascript URL")
 
         # skip external urls
-        if url.startswith("http://") and not url.startswith(self.site.internal_url):
+        if url.startswith("http") and not url.startswith(self.site.url_prefix):
             raise InvalidUrl(url, "external url")
         # skip non check_mk urls
         if (

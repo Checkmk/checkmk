@@ -662,7 +662,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         if self._mode_type.can_be_disabled():
             elements["disabled"] = form_specs.DictElement(
                 parameter_form=form_specs.BooleanChoice(
-                    title=Title("Activation"),
+                    title=Title("Configuration Activation"),
                     help_text=Help(
                         "Selecting this option will disable the %s, but "
                         "it will remain in the configuration."

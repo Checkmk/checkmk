@@ -86,7 +86,7 @@ SEC_TITLE_WIRELESS_DEVICE_STATUS = 'Wireless devices SSIDs status (Device)'
 SEC_TITLE_ORG_SWITCH_PORTS_STATUSES = 'Switch port status (Organization/Early Access)'
 
 
-class DuplicateInList:  # pylint: disable=too-few-public-methods
+class DuplicateInList:
     """ Custom validator that ensures the validated list has no duplicate entries. """
 
     def __init__(

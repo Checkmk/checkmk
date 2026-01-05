@@ -305,7 +305,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <CmkScrollContainer type="outer">
+          <CmkScrollContainer type="outer" class="db-filter-selection__scroll-container">
             <div class="filter-menu__entries">
               <template
                 v-for="entry in processedCategory.entries"
@@ -380,6 +380,12 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.db-filter-selection__scroll-container {
+  border-image: linear-gradient(to right, var(--color-digital-green-0), var(--color-mid-grey-60)) 1;
+  border-width: 0 0 1px;
+  border-style: solid;
+}
+
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .specify-filter__external-container {
   display: flex;

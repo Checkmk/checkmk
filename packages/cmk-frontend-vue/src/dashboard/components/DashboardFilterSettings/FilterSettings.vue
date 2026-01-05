@@ -223,8 +223,8 @@ const serviceMandatoryFilters = computed(() => {
           </button>
         </div>
 
-        <div v-if="!isConfigurationWindowOpen">
-          <div class="runtime-filter-info">
+        <div v-if="!isConfigurationWindowOpen" class="db-filter-settings__filter-container">
+          <div>
             <CmkHeading type="h3">
               {{ _t('Runtime filters are required to load data.') }}
             </CmkHeading>
@@ -432,9 +432,10 @@ const serviceMandatoryFilters = computed(() => {
   justify-content: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.runtime-filter-info {
-  margin-bottom: var(--dimension-5);
+.db-filter-settings__filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-8);
 }
 
 .db-filter-settings__configuration-subwindow-actions {

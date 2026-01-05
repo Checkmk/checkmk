@@ -115,104 +115,94 @@ watch(
 </script>
 
 <template>
-  <div>
-    <div class="filter-configuration__apply">
-      <div class="filter-configuration__apply-actions">
-        <CmkButton variant="primary" @click="applyRuntimeFilters">
-          {{ _t('Apply') }}
-        </CmkButton>
-        <CmkButton variant="optional" @click="resetRuntimeFilters">
-          {{ _t('Reset to pre-selected filters') }}
-        </CmkButton>
-      </div>
-      <CmkButton v-if="canEdit" variant="optional" @click="openConfiguration">
-        {{ _t('Edit filter configuration') }}
+  <div class="db-runtime-filter-configuration__actions">
+    <div class="db-runtime-filter-configuration__actions-left">
+      <CmkButton variant="primary" @click="applyRuntimeFilters">
+        {{ _t('Apply') }}
+      </CmkButton>
+      <CmkButton variant="optional" @click="resetRuntimeFilters">
+        {{ _t('Reset to pre-selected filters') }}
       </CmkButton>
     </div>
-    <div class="filter-configuration__mode-toggle">
-      <CmkCheckbox v-model="overrideMode" :label="_t('Override dashboard filters')" />
-    </div>
-    <div v-if="showAppliedConfirmation">
-      <CmkAlertBox variant="success">
-        <CmkLabel>
-          {{ _t('Success! Your runtime filters have been applied') }}
-        </CmkLabel>
-      </CmkAlertBox>
-    </div>
-
-    <RuntimeFilterCollection
-      object-type="host"
-      :filters="hostRuntimeFilters"
-      :get-filter-values="runtimeFilters.getFilterValues"
-      additional-item-label="Select from list"
-      :dashboard-filters="hostDashboardFilters"
-      :dashboard-configured-filters="dashboardFilters"
-      :force-override="overrideMode"
-    >
-      <template #default="{ filterId, configuredFilterValues }">
-        <FilterCollectionInputItem
-          :filter-id="filterId"
-          :configured-filter-values="
-            configuredFilterValues !== null
-              ? configuredFilterValues
-              : dashboardFilters[filterId] || null
-          "
-          :filter-definitions="filterDefinitions"
-          :allow-remove="!mandatoryFilters.has(filterId)"
-          :show-required-label="mandatoryFilters.has(filterId)"
-          :label="mandatoryFilters.has(filterId) ? _t('pre-selected') : undefined"
-          @update-filter-values="handleUpdateFilterValues"
-          @remove-filter="handleRemoveFilter"
-        />
-      </template>
-    </RuntimeFilterCollection>
-
-    <RuntimeFilterCollection
-      object-type="service"
-      :filters="serviceRuntimeFilters"
-      :get-filter-values="runtimeFilters.getFilterValues"
-      additional-item-label="Select from list"
-      :dashboard-filters="serviceDashboardFilters"
-      :dashboard-configured-filters="dashboardFilters"
-      :force-override="overrideMode"
-    >
-      <template #default="{ filterId, configuredFilterValues }">
-        <FilterCollectionInputItem
-          :filter-id="filterId"
-          :configured-filter-values="
-            configuredFilterValues !== null
-              ? configuredFilterValues
-              : dashboardFilters[filterId] || null
-          "
-          :filter-definitions="filterDefinitions"
-          :allow-remove="!mandatoryFilters.has(filterId)"
-          :show-required-label="mandatoryFilters.has(filterId)"
-          :label="mandatoryFilters.has(filterId) ? _t('Pre-selected') : undefined"
-          @update-filter-values="handleUpdateFilterValues"
-          @remove-filter="handleRemoveFilter"
-        />
-      </template>
-    </RuntimeFilterCollection>
+    <CmkButton v-if="canEdit" variant="optional" @click="openConfiguration">
+      {{ _t('Edit filter configuration') }}
+    </CmkButton>
   </div>
+
+  <CmkCheckbox v-model="overrideMode" :label="_t('Override dashboard filters')" />
+
+  <div v-if="showAppliedConfirmation">
+    <CmkAlertBox variant="success">
+      <CmkLabel>
+        {{ _t('Success! Your runtime filters have been applied') }}
+      </CmkLabel>
+    </CmkAlertBox>
+  </div>
+
+  <RuntimeFilterCollection
+    object-type="host"
+    :filters="hostRuntimeFilters"
+    :get-filter-values="runtimeFilters.getFilterValues"
+    additional-item-label="Select from list"
+    :dashboard-filters="hostDashboardFilters"
+    :dashboard-configured-filters="dashboardFilters"
+    :force-override="overrideMode"
+  >
+    <template #default="{ filterId, configuredFilterValues }">
+      <FilterCollectionInputItem
+        :filter-id="filterId"
+        :configured-filter-values="
+          configuredFilterValues !== null
+            ? configuredFilterValues
+            : dashboardFilters[filterId] || null
+        "
+        :filter-definitions="filterDefinitions"
+        :allow-remove="!mandatoryFilters.has(filterId)"
+        :show-required-label="mandatoryFilters.has(filterId)"
+        :label="mandatoryFilters.has(filterId) ? _t('pre-selected') : undefined"
+        @update-filter-values="handleUpdateFilterValues"
+        @remove-filter="handleRemoveFilter"
+      />
+    </template>
+  </RuntimeFilterCollection>
+
+  <RuntimeFilterCollection
+    object-type="service"
+    :filters="serviceRuntimeFilters"
+    :get-filter-values="runtimeFilters.getFilterValues"
+    additional-item-label="Select from list"
+    :dashboard-filters="serviceDashboardFilters"
+    :dashboard-configured-filters="dashboardFilters"
+    :force-override="overrideMode"
+  >
+    <template #default="{ filterId, configuredFilterValues }">
+      <FilterCollectionInputItem
+        :filter-id="filterId"
+        :configured-filter-values="
+          configuredFilterValues !== null
+            ? configuredFilterValues
+            : dashboardFilters[filterId] || null
+        "
+        :filter-definitions="filterDefinitions"
+        :allow-remove="!mandatoryFilters.has(filterId)"
+        :show-required-label="mandatoryFilters.has(filterId)"
+        :label="mandatoryFilters.has(filterId) ? _t('Pre-selected') : undefined"
+        @update-filter-values="handleUpdateFilterValues"
+        @remove-filter="handleRemoveFilter"
+      />
+    </template>
+  </RuntimeFilterCollection>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__apply {
+.db-runtime-filter-configuration__actions {
   display: flex;
   align-items: center;
-  margin-bottom: var(--dimension-5);
   justify-content: space-between;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__apply-actions {
+.db-runtime-filter-configuration__actions-left {
   display: flex;
   gap: var(--dimension-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__mode-toggle {
-  margin-bottom: var(--dimension-5);
 }
 </style>

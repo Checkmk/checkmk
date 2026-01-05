@@ -2,9 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# mypy: disable-error-code="type-arg"
-
 import asyncio
 import io
 import json
@@ -246,7 +243,7 @@ class Crawler:
                 #       b. for all URLs in the batches (tasks are run concurrently):
                 #           visit each URL -> visit_url -> ... -> handle_new_reference
                 #           handle_new_reference adds new URL(s) found in the page to the queue
-                tasks: set = set()
+                tasks: set[asyncio.Task[int]] = set()
                 async with asyncio.TaskGroup() as task_group:
                     # run multiple batches of URLs concurrently (up to max_tasks),
                     # the task_group both ensures

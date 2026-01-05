@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import asyncio
 import io
@@ -22,7 +20,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from types import TracebackType
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api
@@ -530,17 +528,20 @@ class Crawler:
     def check_links(self, url: Url, soup: BeautifulSoup) -> None:
         self.check_referenced(url, soup, "a", "href")
 
-    def check_referenced(self, referer_url: Url, soup: BeautifulSoup, tag: str, attr: str) -> None:
-        # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
-        elements = soup.find_all(tag)
+    def check_referenced(
+        self,
+        referer_url: Url,
+        soup: BeautifulSoup,
+        tag_name: Literal["frame", "iframe", "img", "a"],
+        attr_name: Literal["src", "href"],
+    ) -> None:
+        elements = soup.find_all(tag_name)
         for element in elements:
-            orig_url = element.get(attr)
-            if orig_url is None:
+            if not (orig_url := str(element.get(attr_name, ""))):
                 continue  # Skip elements that don't have the attribute in question
-            normalized_orig_url = self.normalize_url(orig_url)  # type: ignore[arg-type]
-            if normalized_orig_url is None:
+            if not (normalized_orig_url := self.normalize_url(orig_url)):
                 continue
-            url = Url(normalized_orig_url, orig_url=orig_url, referer_url=referer_url.url)  # type: ignore[arg-type]
+            url = Url(normalized_orig_url, orig_url=orig_url, referer_url=referer_url.url)
             try:
                 self.verify_is_valid_url(url.url)
             except InvalidUrl as invalid_url:

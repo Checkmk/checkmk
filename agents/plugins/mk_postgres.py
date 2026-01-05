@@ -33,6 +33,9 @@ PGVERSION="14"
 # PGHOST="hostname.my.domain"
 # or (for access through socket):
 # PGHOST="/tmp"
+# optional:
+# PGLIBS= name of a directory where needed libraries will be found
+# example: PGLIBS=/my/postgres/lib
 ----------------------------------------------------------
 
 Inside of the environment file, only `PGPORT` is mandatory.
@@ -172,6 +175,7 @@ class PostgresBase:
         self.pg_user = instance["pg_user"]
         self.pg_port = instance["pg_port"]
         self.pg_host = instance["pg_host"]
+        self.pg_libs = instance["pg_libs"]
         self.pg_database = instance["pg_database"]
         self.pg_passfile = instance.get("pg_passfile", "")
         self.pg_version = instance.get("pg_version")
@@ -789,12 +793,16 @@ class PostgresLinux(PostgresBase):
         self, sql_file_path, extra_args="", field_sep=";", quiet=True, rows_only=True
     ):
         # type: (str, str, str, bool, bool) -> str
+        ld_prefix = ""
+        if self.pg_libs:
+            ld_prefix = f"LD_LIBRARY_PATH={self.pg_libs} "
+
         base_cmd_list = [
             "su",
             "-",
             self.db_user,
             "-c",
-            r"""PGPASSFILE=%s %s -X %s -A0 -F'%s' -f %s""",
+            r"""%sPGPASSFILE=%s %s -X %s -A0 -F'%s' -f %s""",
         ]
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
@@ -808,6 +816,7 @@ class PostgresLinux(PostgresBase):
             extra_args += " -t"
 
         base_cmd_list[-1] = base_cmd_list[-1] % (
+            ld_prefix,
             self.pg_passfile,
             self.psql_binary_path,
             extra_args,
@@ -1214,11 +1223,12 @@ def open_env_file(file_to_open):
 
 
 def parse_env_file(env_file):
-    # type: (str) -> tuple[str, str, str | None, str]
+    # type: (str) -> tuple[str, str, str | None, str, str]
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
     pg_version = None
     pg_host = ""
+    pg_libs = ""
 
     for line in open_env_file(env_file):
         line = line.strip()
@@ -1232,10 +1242,12 @@ def parse_env_file(env_file):
             pg_version = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
         elif "PGHOST=" in line:
             pg_host = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+        elif "PGLIBS=" in line:
+            pg_libs = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
 
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
-    return pg_database, pg_port, pg_version, pg_host
+    return pg_database, pg_port, pg_version, pg_host, pg_libs
 
 
 def _parse_INSTANCE_value(value, config_separator):
@@ -1272,7 +1284,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
             env_file, pg_user, pg_passfile, instance_name = _parse_INSTANCE_value(
                 value, config_separator
             )
-            pg_database, pg_port, pg_version, pg_host = parse_env_file(env_file)
+            pg_database, pg_port, pg_version, pg_host, pg_libs = parse_env_file(env_file)
             instances.append(
                 {
                     "name": instance_name.strip(),
@@ -1281,6 +1293,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
                     "pg_database": pg_database,
                     "pg_port": pg_port,
                     "pg_host": pg_host,
+                    "pg_libs": pg_libs,
                     "pg_version": pg_version,
                 }
             )

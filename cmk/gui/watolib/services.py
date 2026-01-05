@@ -12,7 +12,14 @@ import hashlib
 import json
 import sys
 import time
-from collections.abc import Callable, Container, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Container,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from contextlib import contextmanager
 from pathlib import Path
 from typing import assert_never, Final, Literal, NamedTuple
@@ -271,6 +278,16 @@ class Discovery:
         self._selected_services = selected_services
         self.user_need_permission: Final = user_need_permission
 
+    def _get_selected_descriptions(
+        self, discovery_result: DiscoveryResult, hostname: HostName
+    ) -> Iterator[str]:
+        for nodename, check_table in self._get_effective_check_tables(
+            discovery_result, hostname
+        ).items():
+            for entry in check_table:
+                if (entry.check_plugin_name, entry.item) in self._selected_services:
+                    yield entry.description
+
     def do_discovery(self, discovery_result: DiscoveryResult, target_host_name: HostName) -> None:
         if (
             transition := self.compute_discovery_transition(discovery_result, target_host_name)
@@ -303,6 +320,7 @@ class Discovery:
         remove_disabled_rule: set[str] = set()
         add_disabled_rule: set[str] = set()
         saved_services: set[str] = set()
+        selected_services: set[str] = set()
         apply_changes: bool = False
 
         for autochecks_host_name, check_table in self._get_effective_check_tables(
@@ -310,6 +328,9 @@ class Discovery:
         ).items():
             unchanged_services: MutableMapping[ServiceName, AutocheckEntry] = {}
             changed_services: MutableMapping[ServiceName, AutocheckEntry] = {}
+            selected_services |= set(
+                self._get_selected_descriptions(discovery_result, autochecks_host_name)
+            )
             for entry in check_table:
                 key = ServiceName(entry.description)
                 table_target = self._get_table_target(entry)
@@ -357,7 +378,12 @@ class Discovery:
                 remove_disabled_rule or add_disabled_rule
             ),  # Watch out! Can't be derived form the next two!
             remove_disabled_rule=remove_disabled_rule,
-            add_disabled_rule=add_disabled_rule - remove_disabled_rule - saved_services,
+            # Caveats for duplicate service descriptions:
+            # 1. If a plugin is disabled, we don't want to create "disabled services" rules for its services.
+            # 2. If a user wants to disable a service, the "disabled services" rule must be created.
+            add_disabled_rule=(
+                add_disabled_rule - remove_disabled_rule - (saved_services - selected_services)
+            ),
             old_autochecks=SetAutochecksInput(
                 target_host_name, unchanged_target_services, unchanged_nodes_services
             ),

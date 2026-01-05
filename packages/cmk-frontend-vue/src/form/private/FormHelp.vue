@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIcon from '@/components/CmkIcon'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 defineProps<{
   help: string
@@ -17,7 +18,11 @@ defineProps<{
     <div class="form-help__info-icon">
       <CmkIcon name="info" size="small" />
     </div>
-    <div class="form-help__help-text"><CmkHtml :html="help" /></div>
+    <CmkScrollContainer :max-height="'160px'">
+      <div class="form-help__help-text">
+        <CmkHtml :html="help" />
+      </div>
+    </CmkScrollContainer>
   </div>
 </template>
 
@@ -35,6 +40,8 @@ defineProps<{
   padding: 10px;
   background-color: var(--inline-help-text-bg);
   border-radius: 0 4px 4px 0;
+  text-align: left;
+  white-space: normal;
 }
 
 div.form-help__container {

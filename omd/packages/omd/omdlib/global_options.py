@@ -15,34 +15,24 @@ class GlobalOptions:
 
 
 def parse_global_opts(main_args: list[str]) -> tuple[GlobalOptions, list[str]]:
-    global_opts = GlobalOptions()
+    version: str | None = None
+    verbose = False
+    force = False
     while len(main_args) >= 1 and main_args[0].startswith("-"):
-        opt = main_args[0]
-        main_args = main_args[1:]
-        if opt.startswith("--"):
-            global_opts, main_args = _handle_global_option(global_opts, main_args, opt[2:], opt)
-        else:
-            for c in opt[1:]:
-                global_opts, main_args = _handle_global_option(global_opts, main_args, c, opt)
-    return global_opts, main_args
-
-
-def _handle_global_option(
-    global_opts: GlobalOptions, main_args: list[str], opt: str, orig: str
-) -> tuple[GlobalOptions, list[str]]:
-    version = global_opts.version
-    verbose = global_opts.verbose
-    force = global_opts.force
-
-    if opt in ["V", "version"]:
-        version, main_args = _opt_arg(main_args, opt)
-    elif opt in ["f", "force"]:
-        force = True
-    elif opt in ["v", "verbose"]:
-        verbose = True
-    else:
-        sys.exit("Invalid global option %s.\nCall omd help for available options." % orig)
-
+        token = main_args.pop(0)
+        flags = [token[2:]] if token.startswith("--") else list(token[1:])
+        for flag in flags:
+            match flag:
+                case "V" | "version":
+                    version, main_args = _opt_arg(main_args, flag)
+                case "f" | "force":
+                    force = True
+                case "v" | "verbose":
+                    verbose = True
+                case _:
+                    sys.exit(
+                        f"Invalid global option {token}.\nCall omd help for available options."
+                    )
     return GlobalOptions(version=version, verbose=verbose, force=force), main_args
 
 

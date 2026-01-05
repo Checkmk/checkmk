@@ -6,7 +6,7 @@
 set -e
 
 JOBS=6
-readonly ALL_LINTERS=mypy,ruff,semgrep
+readonly ALL_LINTERS=mypy,ruff
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -37,7 +37,6 @@ parse_options() {
     RUN_CHECK_FORMAT=no
     RUN_MYPY=no
     RUN_RUFF=no
-    RUN_SEMGREP=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
@@ -86,7 +85,6 @@ parse_options() {
                 RUN_CHECK_FORMAT=yes
                 RUN_MYPY=yes
                 RUN_RUFF=yes
-                RUN_SEMGREP=yes
                 shift
                 ;;
             '-f' | '--format')
@@ -114,7 +112,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS RUN_COMPONENT_TESTS RUN_TESTLIB_TESTS
+    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_FORMAT RUN_DOCUMENTATION JOBS RUN_COMPONENT_TESTS RUN_TESTLIB_TESTS
 }
 
 setup_venv() {
@@ -151,22 +149,6 @@ run_ruff() {
     bazel lint --aspect:interactive=false --quiet --diff --fixes=false :all
 }
 
-run_semgrep() {
-    # semgrep requires a dedicated venv at the moment. We would rather have semgrep as regular dev
-    # dependency, which would make the run-semgrep wrapper obsolete. See also:
-    #   https://review.lan.tribe29.com/c/check_mk/+/92077
-    #   https://github.com/semgrep/semgrep/issues/10408
-    SEMGREP_DIR="$(bazel info workspace)/tests/semgrep"
-    "${SEMGREP_DIR}"/run-semgrep scan \
-        --config "${SEMGREP_DIR}/rules" \
-        --error \
-        --quiet \
-        --oss-only \
-        --use-git-ignore \
-        --disable-version-check \
-        cmk tests
-}
-
 run_format() {
     bazel run //:format "$PWD"
 }
@@ -186,7 +168,6 @@ main() {
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_MYPY} = yes && run_mypy
     test ${RUN_RUFF} = yes && run_ruff
-    test ${RUN_SEMGREP} = yes && run_semgrep
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     test ${RUN_FORMAT} = yes && run_format
     true

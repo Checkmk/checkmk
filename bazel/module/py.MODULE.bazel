@@ -37,7 +37,14 @@ pip.parse(
         "@//:requirements.txt": "linux_*",
     },
 )
-use_repo(pip, "cmk_requirements")
+pip.parse(
+    hub_name = "tools_requirements",
+    python_version = "3.13",
+    requirements_by_platform = {
+        "//bazel/tools:requirements.txt": "linux_*",
+    },
+)
+use_repo(pip, "cmk_requirements", "tools_requirements")
 
 types = use_extension("@rules_mypy//mypy:types.bzl", "types")
 types.requirements(

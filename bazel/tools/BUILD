@@ -8,6 +8,15 @@ load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("@rules_uv//uv:pip.bzl", "pip_compile")
+load("@tools_requirements//:requirements.bzl", tooling_pip = "requirement")
+
+pip_compile(
+    name = "requirements",
+    requirements_in = "requirements.in",
+    requirements_txt = "requirements.txt",
+    tags = ["manual"],
+)
 
 npm_link_all_packages(name = "node_modules")
 
@@ -42,6 +51,12 @@ mypy_cli(
 py_console_script_binary(
     name = "bandit",
     pkg = requirement("bandit"),
+)
+
+py_console_script_binary(
+    name = "semgrep",
+    pkg = tooling_pip("semgrep"),
+    script = "pysemgrep",
 )
 
 # Custom mypy wrapper that filters problematic MYPYPATH entries
@@ -102,6 +117,7 @@ bazel_env(
         "bandit": ":bandit",
         "osslsigncode": "@osslsigncode",
         "pnpm": "@pnpm",
+        "semgrep": ":semgrep",
         "uv": "@multitool//tools/uv",
         "genhtml": "@lcov//:genhtml",
     },

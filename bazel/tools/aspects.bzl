@@ -1,6 +1,7 @@
 load("@aspect_rules_lint//lint:bandit.bzl", "lint_bandit_aspect")
 load("@aspect_rules_lint//lint:clang_tidy.bzl", "lint_clang_tidy_aspect")
 load("@aspect_rules_lint//lint:ruff.bzl", "lint_ruff_aspect")
+load("@aspect_rules_lint//lint:semgrep.bzl", "lint_semgrep_aspect")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@cmk_types//:types.bzl", "types")
 load("@rules_mypy//mypy:mypy.bzl", "mypy")
@@ -40,6 +41,13 @@ bandit = lint_bandit_aspect(
 ruff = lint_ruff_aspect(
     binary = Label("@multitool_hub//tools/ruff"),
     configs = [Label("@//:pyproject.toml")],
+)
+
+semgrep = lint_semgrep_aspect(
+    binary = Label(":semgrep"),
+    config = [Label("//.semgrep:semgrep_rules")],
+    extra_options = ["--oss-only", "--disable-version-check"],
+    rule_kinds = ["py_binary", "py_library", "py_test"],
 )
 
 clang_tidy = lint_clang_tidy_aspect(

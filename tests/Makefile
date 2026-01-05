@@ -11,7 +11,6 @@ PYTEST := $(UVENV) pytest $(PYTEST_ARGS)
 CYCLES := $(UVENV) py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
-SEMGREP := $(realpath semgrep)/run-semgrep
 SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
 SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt --
 TAPLO := bazel run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
@@ -99,7 +98,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
 	test-unit-neb test-unit-core \
-	test-semgrep test-semgrep-docker
+	test-semgrep
 
 clean:
 	$(RM) -r .mypy_cache
@@ -160,16 +159,7 @@ test-astrein:
 	@echo "This target is deprecated, use 'bazel lint [TARGET]' instead."
 
 test-semgrep:
-	$(SEMGREP) scan \
-	    $(SEMGREP_OUTPUT_ARGS) \
-	    --config "$(realpath semgrep)/rules" \
-	    --quiet \
-	    --oss-only \
-	    --use-git-ignore \
-	    --exclude=$(realpath ..)/packages \
-	    --disable-version-check \
-	    --error \
-	    $(realpath ..)
+	@echo "This target is deprecated, use 'bazel lint [TARGET]' instead."
 
 test-bandit:
 	@echo "This target is deprecated, use 'bazel lint [TARGET]' instead."

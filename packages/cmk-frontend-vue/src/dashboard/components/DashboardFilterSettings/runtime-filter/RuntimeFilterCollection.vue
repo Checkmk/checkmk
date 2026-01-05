@@ -8,7 +8,8 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkLabel from '@/components/CmkLabel.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
@@ -62,49 +63,59 @@ const countDashboardFilters = computed(() => {
 </script>
 
 <template>
-  <div class="dashboard-filter__collection">
-    <div class="dashboard-filter__collection-title">
-      <CmkLabel variant="title">{{ displayLabels.title }}</CmkLabel>
+  <div>
+    <CmkHeading type="h3">
+      {{ displayLabels.title }}
+    </CmkHeading>
+
+    <div class="db-runtime-filter-collection__filter-container">
+      <CollapsibleTitle
+        :title="displayLabels.contextFilterTitle"
+        :open="isAppliedOpen"
+        @toggle-open="isAppliedOpen = !isAppliedOpen"
+      />
+      <CollapsibleContent :open="isAppliedOpen">
+        <div class="db-runtime-filter-collection__items">
+          <template v-if="countDashboardFilters > 0">
+            <div v-for="filterId in dashboardFilters" :key="filterId" class="filter-item__wrapper">
+              <FilterItem
+                :origin="FilterOrigin.DASHBOARD"
+                :filter-id="filterId"
+                :configured-values="dashboardConfiguredFilters[filterId]!"
+                :overridden="isOverridden(filterId)"
+              />
+            </div>
+          </template>
+          <CmkParagraph v-else class="db-runtime-filter-collection__empty-message">
+            {{ displayLabels.emptyContextTitle }}
+          </CmkParagraph>
+        </div>
+      </CollapsibleContent>
     </div>
 
-    <CollapsibleTitle
-      :title="displayLabels.contextFilterTitle"
-      :open="isAppliedOpen"
-      @toggle-open="isAppliedOpen = !isAppliedOpen"
-    />
-    <CollapsibleContent :open="isAppliedOpen">
-      <div v-if="countDashboardFilters > 0" class="filter-list">
-        <div v-for="filterId in dashboardFilters" :key="filterId" class="filter-item__wrapper">
-          <FilterItem
-            :origin="FilterOrigin.DASHBOARD"
-            :filter-id="filterId"
-            :configured-values="dashboardConfiguredFilters[filterId]!"
-            :overridden="isOverridden(filterId)"
-          />
-        </div>
-      </div>
-      <div v-else class="dashboard-filter__empty-message">
-        {{ displayLabels.emptyContextTitle }}
-      </div>
-    </CollapsibleContent>
-
-    <div class="dashboard-filter__runtime-filters">
+    <div class="db-runtime-filter-collection__filter-container">
       <CollapsibleTitle
         :title="_t('Runtime filters')"
         :open="isOpen"
         @toggle-open="isOpen = !isOpen"
       />
       <CollapsibleContent :open="isOpen">
-        <div v-for="(filterId, index) in filters" :key="index" class="filter-item__container">
-          <slot
-            :filter-id="filterId"
-            :configured-filter-values="getFilterValues(filterId)"
-            :index="index"
-          />
-        </div>
-        <div v-if="additionalItemLabel" class="dashboard-filter__item-placeholder">
-          <div class="db-runtime-filter-collection__item-placeholder-inner">
-            {{ additionalItemLabel }}
+        <div class="db-runtime-filter-collection__items">
+          <div
+            v-for="(filterId, index) in filters"
+            :key="index"
+            class="db-runtime-filter-collection__item-container"
+          >
+            <slot
+              :filter-id="filterId"
+              :configured-filter-values="getFilterValues(filterId)"
+              :index="index"
+            />
+          </div>
+          <div v-if="additionalItemLabel" class="db-runtime-filter-collection__item-placeholder">
+            <div class="db-runtime-filter-collection__item-placeholder-inner">
+              {{ additionalItemLabel }}
+            </div>
           </div>
         </div>
       </CollapsibleContent>
@@ -113,36 +124,23 @@ const countDashboardFilters = computed(() => {
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__collection {
-  margin-top: var(--dimension-7);
+.db-runtime-filter-collection__filter-container {
+  margin-top: var(--dimension-5);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__collection-title {
-  margin-bottom: var(--dimension-4);
+.db-runtime-filter-collection__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__applied-filters {
-  margin-bottom: var(--dimension-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-item__container {
+.db-runtime-filter-collection__item-container {
   background-color: var(--ux-theme-3);
-  margin-bottom: var(--dimension-4);
   border: 1px solid var(--ux-theme-8);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-item__wrapper {
-  margin-bottom: var(--dimension-2);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__item-placeholder {
-  padding: var(--dimension-5) var(--dimension-7);
+.db-runtime-filter-collection__item-placeholder {
+  padding: var(--dimension-7);
   border: 1px solid var(--ux-theme-8);
   color: var(--color-white-50);
 }
@@ -153,9 +151,7 @@ const countDashboardFilters = computed(() => {
   padding: var(--dimension-3);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-filter__empty-message {
-  padding: var(--dimension-5);
-  color: var(--color-white-50);
+.db-runtime-filter-collection__empty-message {
+  color: var(--menu-entry-disabled);
 }
 </style>

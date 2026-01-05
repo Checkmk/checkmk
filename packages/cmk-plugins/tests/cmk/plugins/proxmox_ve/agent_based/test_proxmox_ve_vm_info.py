@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
+import json
 from collections.abc import MutableMapping
 from zoneinfo import ZoneInfo
 
@@ -39,7 +40,10 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
 
 @pytest.mark.parametrize("info_section_model", [VM_DATA, VM_DATA_WITH_LOCK])
 def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMInfo) -> None:
-    assert parse_proxmox_ve_vm_info([[info_section_model.model_dump_json()]]) == info_section_model
+    assert (
+        parse_proxmox_ve_vm_info([[json.dumps(info_section_model.model_dump_json())]])
+        == info_section_model
+    )
 
 
 @pytest.mark.parametrize(

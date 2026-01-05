@@ -277,7 +277,7 @@ const serviceMandatoryFilters = computed(() => {
                       {{ _t('Set filters for all widgets.') }}
                     </div>
                     <div class="filter-configuration__subtitle">
-                      {{ _t('Values can be overriden by runtime or widget filters.') }}
+                      {{ _t('Values can be overridden by runtime or widget filters.') }}
                     </div>
                   </div>
                   <hr class="cmk-hr" />
@@ -324,7 +324,7 @@ const serviceMandatoryFilters = computed(() => {
                       {{ _t('Set required filters for viewers to enter on load.') }}
                     </div>
                     <div class="filter-configuration__subtitle">
-                      {{ _t('Values are temporary and can be overriden by widget filters.') }}
+                      {{ _t('Values are temporary and can be overridden by widget filters.') }}
                     </div>
                   </div>
                   <hr class="cmk-hr" />

@@ -325,6 +325,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
 
     @override
     def page(self, config: Config, form_name: str = "edit") -> None:
+        html.enable_help_toggle()
         if self._clone:
             html.vue_component(
                 "cmk-mode-create-oauth2-connection",

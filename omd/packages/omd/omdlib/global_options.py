@@ -39,6 +39,4 @@ def parse_global_opts(main_args: list[str]) -> tuple[GlobalOptions, list[str]]:
 def _opt_arg(main_args: list[str], opt: str) -> tuple[str, list[str]]:
     if len(main_args) < 1:
         sys.exit("Option %s needs an argument." % opt)
-    arg = main_args[0]
-    main_args = main_args[1:]
-    return arg, main_args
+    return main_args[0], main_args[1:]

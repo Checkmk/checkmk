@@ -94,7 +94,7 @@ def _dumps_up_to_date(dumps_dir: Path, min_version: CMKVersion) -> None:
             )
 
 
-def inject_dumps(site: Site, dumps_dir: Path) -> None:
+def inject_dumps(site: Site, dumps_dir: Path) -> str:
     _dumps_up_to_date(dumps_dir, get_min_version())
 
     # create dump folder in the test site
@@ -120,5 +120,6 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
 
     ruleset_name = "datasource_programs"
     logger.info('Creating rule "%s"...', ruleset_name)
-    site.openapi.rules.create(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
+    rule_id = site.openapi.rules.create(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
     logger.info('Rule "%s" created!', ruleset_name)
+    return rule_id

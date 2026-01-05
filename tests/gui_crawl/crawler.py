@@ -42,6 +42,7 @@ RelativeUrl = str
 class PageContent(NamedTuple):
     content: str
     logs: Iterable[str]
+    status_code: int
 
 
 class Progress:
@@ -474,8 +475,12 @@ class Crawler:
         page.on("pageerror", handle_page_error)
         page.on("console", handle_console_messages)
         try:
-            await page.goto(url.url)
-            return PageContent(content=await page.content(), logs=logs)
+            response = await page.goto(url.url)
+            return PageContent(
+                content=await page.content(),
+                logs=logs,
+                status_code=response.status if response else 0,
+            )
         finally:
             await page.close()
 

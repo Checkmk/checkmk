@@ -16,9 +16,9 @@ common: &common
 # ubuntu-22.04 is used as internal base image
 daily_reduced: &daily_reduced
     - "almalinux-10"
+    - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
-    - "debian-12"
     - "sles-15sp6"
     - "sles-15sp7"
 

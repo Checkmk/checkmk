@@ -11,6 +11,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 import type { Filters } from '../composables/useFilters.ts'
 import type { FilterType } from '../types.ts'
@@ -304,78 +305,72 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="filter-menu__scrollable-content">
-            <div>
-              <div class="filter-menu__entries">
-                <template
-                  v-for="entry in processedCategory.entries"
-                  :key="`${processedCategory.name}-${entry.type === 'group' ? entry.name : entry.id}`"
+          <CmkScrollContainer type="outer">
+            <div class="filter-menu__entries">
+              <template
+                v-for="entry in processedCategory.entries"
+                :key="`${processedCategory.name}-${entry.type === 'group' ? entry.name : entry.id}`"
+              >
+                <div
+                  v-if="entry.type === 'filter'"
+                  class="filter-menu__filter-item"
+                  @click="filters.toggleFilter(entry.id)"
                 >
-                  <div
-                    v-if="entry.type === 'filter'"
-                    class="filter-menu__filter-item"
-                    @click="filters.toggleFilter(entry.id)"
-                  >
+                  <span
+                    class="filter-menu__filter-checkmark"
+                    :class="{
+                      'filter-menu__filter-checkmark--active': filters.isFilterActive(entry.id)
+                    }"
+                  ></span>
+                  <div class="filter-menu__filter-title">
+                    <CmkLabel>{{ entry.title }}</CmkLabel>
+                  </div>
+                </div>
+
+                <div v-else-if="entry.type === 'group'" class="filter-menu__group">
+                  <div class="filter-menu__group-header">
                     <span
                       class="filter-menu__filter-checkmark"
                       :class="{
-                        'filter-menu__filter-checkmark--active': filters.isFilterActive(entry.id)
+                        'filter-menu__filter-checkmark--active': isGroupActive(entry)
                       }"
                     ></span>
-                    <div class="filter-menu__filter-title">
-                      <CmkLabel>{{ entry.title }}</CmkLabel>
-                    </div>
-                  </div>
-
-                  <div v-else-if="entry.type === 'group'" class="filter-menu__group">
-                    <div class="filter-menu__group-header">
-                      <span
-                        class="filter-menu__filter-checkmark"
-                        :class="{
-                          'filter-menu__filter-checkmark--active': isGroupActive(entry)
-                        }"
-                      ></span>
-                      <CmkCollapsibleTitle
-                        :title="untranslated(getGroupTitle(entry))"
-                        :side-title="untranslated(getGroupSideTitle(entry))"
-                        :open="
-                          collapsibleStates[`${processedCategory.name}-${entry.name}`] ?? false
-                        "
-                        @toggle-open="toggleCollapsible(entry.name)"
-                      />
-                    </div>
-                    <CmkCollapsible
+                    <CmkCollapsibleTitle
+                      :title="untranslated(getGroupTitle(entry))"
+                      :side-title="untranslated(getGroupSideTitle(entry))"
                       :open="collapsibleStates[`${processedCategory.name}-${entry.name}`] ?? false"
-                    >
-                      <div class="filter-menu__group-content">
-                        <div
-                          v-for="filterItem in entry.entries"
-                          :key="filterItem.id"
-                          class="filter-menu__filter-item filter-menu__filter-item--grouped"
+                      @toggle-open="toggleCollapsible(entry.name)"
+                    />
+                  </div>
+                  <CmkCollapsible
+                    :open="collapsibleStates[`${processedCategory.name}-${entry.name}`] ?? false"
+                  >
+                    <div class="filter-menu__group-content">
+                      <div
+                        v-for="filterItem in entry.entries"
+                        :key="filterItem.id"
+                        class="filter-menu__filter-item filter-menu__filter-item--grouped"
+                        :class="{
+                          'filter-menu__filter-item--active': filters.isFilterActive(filterItem.id)
+                        }"
+                        @click="filters.toggleFilter(filterItem.id)"
+                      >
+                        <span
+                          class="filter-menu__filter-checkmark"
                           :class="{
-                            'filter-menu__filter-item--active': filters.isFilterActive(
+                            'filter-menu__filter-checkmark--active': filters.isFilterActive(
                               filterItem.id
                             )
                           }"
-                          @click="filters.toggleFilter(filterItem.id)"
-                        >
-                          <span
-                            class="filter-menu__filter-checkmark"
-                            :class="{
-                              'filter-menu__filter-checkmark--active': filters.isFilterActive(
-                                filterItem.id
-                              )
-                            }"
-                          ></span>
-                          <span class="filter-menu__filter-title">{{ filterItem.title }}</span>
-                        </div>
+                        ></span>
+                        <span class="filter-menu__filter-title">{{ filterItem.title }}</span>
                       </div>
-                    </CmkCollapsible>
-                  </div>
-                </template>
-              </div>
+                    </div>
+                  </CmkCollapsible>
+                </div>
+              </template>
             </div>
-          </div>
+          </CmkScrollContainer>
         </div>
 
         <div v-else class="filter-menu__empty">{{ _t('No filter category available') }}</div>
@@ -438,13 +433,6 @@ onUnmounted(() => {
   margin-bottom: var(--dimension-4);
   border-bottom: 1px solid transparent;
   background-color: var(--slide-in-left-part);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu__scrollable-content {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: visible;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

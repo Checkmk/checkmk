@@ -830,6 +830,191 @@ def test_perform_discovery_single_update__ignore(
     assert add_disabled_rule == {"MSSQL S2DT Instance"}
 
 
+@pytest.mark.usefixtures("inline_background_jobs")
+class TestPerformDiscoverySingleUpdate:
+    check_table = [
+        CheckPreviewEntry(
+            check_source="unchanged",
+            check_plugin_name="some_plugin",
+            ruleset_name="some_rule",
+            discovery_ruleset_name=None,
+            item="A",
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters={},
+            description="Description A",
+            state=1,
+            output="Lorem ipsum",
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[],
+        ),
+        CheckPreviewEntry(
+            check_source="ignored",
+            check_plugin_name="other_plugin",
+            ruleset_name="some_rule",
+            discovery_ruleset_name=None,
+            item="B",
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters={},
+            description="Description B",
+            state=1,
+            output="Lorem ipsum",
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[],
+        ),
+        CheckPreviewEntry(
+            check_source="unchanged",
+            check_plugin_name="some_plugin",
+            ruleset_name="some_rule",
+            discovery_ruleset_name=None,
+            item="B",
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters={},
+            description="Description B",
+            state=1,
+            output="Lorem ipsum",
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[],
+        ),
+    ]
+
+    def _perform_discovery(
+        self,
+        mocker: MockerFixture,
+        sample_host_name: HostName,
+        sample_host: Host,
+        selected_serives: tuple[tuple[str, str | None]],
+        update_source: str,
+        update_target: str,
+    ) -> tuple[DiscoveryResult, set[str], set[str]]:
+        mock_save_function = mocker.patch(
+            "cmk.gui.watolib.services.Discovery._save_host_service_enable_disable_rules",
+            return_value=None,
+        )
+        mocker.patch(
+            "cmk.gui.watolib.services.local_discovery_preview",
+            return_value=ServiceDiscoveryPreviewResult(
+                output="",
+                check_table=self.check_table,
+                nodes_check_table={},
+                host_labels={
+                    "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                    "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+                },
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
+                source_results={"agent": (0, "Success")},
+                labels_by_host={},
+                config_warnings=[],
+            ),
+        )
+        result = perform_service_discovery(
+            action=DiscoveryAction.SINGLE_UPDATE,
+            discovery_result=DiscoveryResult(
+                job_status={
+                    "state": "finished",
+                    "started": 1764593093.764405,
+                    "pid": 604583,
+                    "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+                    "is_active": False,
+                    "duration": 0.36932802200317383,
+                    "title": "Refresh",
+                    "stoppable": True,
+                    "deletable": True,
+                    "user": "cmkadmin",
+                    "estimated_duration": 0.0,
+                    "ppid": 604485,
+                    "logfile_path": "~/var/log/web.log",
+                    "acknowledged_by": None,
+                    "lock_wato": False,
+                    "host_name": sample_host_name,
+                },
+                check_table_created=1764596025,
+                check_table=self.check_table,
+                nodes_check_table={},
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
+                labels_by_host={sample_host_name: []},
+                sources={
+                    "agent": (0, "[agent] Success"),
+                    "piggyback": (0, "[piggyback] Success (but no data found for this host)"),
+                },
+                config_warnings=[],
+            ),
+            selected_services=selected_serives,
+            update_source=update_source,
+            update_target=update_target,
+            host=sample_host,
+            raise_errors=True,
+            automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+            pprint_value=False,
+            debug=False,
+            use_git=False,
+        )
+
+        mock_save_function.assert_called_once()
+        remove_disabled_rule, add_disabled_rule, *_ = mock_save_function.call_args_list[0][0]
+        return result, remove_disabled_rule, add_disabled_rule
+
+    def test_dupes_are_not_disabled_automatically(
+        self,
+        mocker: MockerFixture,
+        sample_host_name: HostName,
+        sample_host: Host,
+        mock_set_autochecks: MagicMock,
+    ) -> None:
+        """
+        Ensure that no disabled rule gets created when there are duplicate services and one is
+        discovery as disabled, e.g. because the check is disabled.
+        """
+        _, remove_disabled_rule, add_disabled_rule = self._perform_discovery(
+            mocker=mocker,
+            sample_host_name=sample_host_name,
+            sample_host=sample_host,
+            selected_serives=(("some_plugin", "A"),),
+            update_source="unchanged",
+            update_target="ignored",
+        )
+
+        assert len(remove_disabled_rule) == 0
+        assert add_disabled_rule == {"Description A"}
+
+    def test_dupes_are_disabled_manually(
+        self,
+        mocker: MockerFixture,
+        sample_host_name: HostName,
+        sample_host: Host,
+        mock_set_autochecks: MagicMock,
+    ) -> None:
+        """
+        Ensure that the disabled rule gets created, when a user explicitly wants to disable the
+        service.
+        """
+        _, remove_disabled_rule, add_disabled_rule = self._perform_discovery(
+            mocker=mocker,
+            sample_host_name=sample_host_name,
+            sample_host=sample_host,
+            selected_serives=(("some_plugin", "B"),),
+            update_source="unchanged",
+            update_target="ignored",
+        )
+
+        assert len(remove_disabled_rule) == 0
+        assert add_disabled_rule == {"Description B"}
+
+
 def test_perform_discovery_action_update_services(
     mocker: MockerFixture,
     sample_host_name: HostName,

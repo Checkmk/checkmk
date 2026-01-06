@@ -7222,6 +7222,15 @@ msgstr "Apache ActiveMQ lunghezze di coda"
 msgid "Apache ActiveMQ queues"
 msgstr "Code Apache ActiveMQ"
 
+#, fuzzy
+msgid "Apache Config"
+msgstr "Messa a punto del processo Apache"
+
+msgid ""
+"Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
+"and $OMD_ROOT/etc/apache"
+msgstr ""
+
 msgid "Apache Server"
 msgstr "Server Apache"
 
@@ -15405,6 +15414,10 @@ msgstr "Dump di configurazione e di stato del CMC"
 msgid "Configuration"
 msgstr "Configurazione"
 
+#, fuzzy
+msgid "Configuration Activation"
+msgstr "Connessione di configurazione"
+
 msgid "Configuration Error"
 msgstr "Errore di configurazione"
 
@@ -15450,6 +15463,10 @@ msgstr "File di configurazione ('*.mk' o '*.conf') da etc/check_mk.%s"
 #, python-format
 msgid "Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s"
 msgstr "File di configurazione ('*.mk' o '*.conf') da etc/checkmk: %s"
+
+#, fuzzy, python-format
+msgid "Configuration files from %s"
+msgstr "File di configurazione"
 
 #, fuzzy
 msgid "Configuration name"
@@ -22074,6 +22091,10 @@ msgid "Do not add text"
 msgstr "Non imbottire"
 
 #, fuzzy
+msgid "Do not apply this configuration"
+msgstr "Cancellare questa connessione"
+
+#, fuzzy
 msgid "Do not apply this rule"
 msgstr "non applicare questa regola"
 
@@ -27117,6 +27138,10 @@ msgstr "File"
 msgid "Files are unpackaged and remain in your system."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Files in %s"
+msgstr "Nome del file: %s"
+
 #, fuzzy
 msgid "Filestore"
 msgstr "Ripristinare"
@@ -28505,6 +28530,9 @@ msgstr "Utilizzo della CPU"
 msgid "GPU utilization"
 msgstr "Utilizzo della CPU"
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "GUI design"
 msgstr "Progettazione GUI"
 
@@ -29443,6 +29471,9 @@ msgstr "Bilanciatori di carico"
 #, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, e-mail, ..."
+
+msgid "HTTP-based receiver"
+msgstr ""
 
 #, fuzzy
 msgid "HTTP: Active Requests"
@@ -42826,11 +42857,12 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "Quantità massima di punti di accesso non operativi"
 
+#, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
-"This option is used to calculate memory limit from the total available "
-"memory. For instance setting of 75% with the total memory of 1GiB will "
-"result in the limit of 750 MiB."
+"This option is used to calculate the hard memory limit from the total "
+"available memory. For instance, setting the limit to 75% on a machine with "
+"1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
 
 msgid "Maximum bulk size"
@@ -42945,6 +42977,23 @@ msgstr "Età massima del tronco"
 
 msgid "Maximum long output size"
 msgstr "Dimensione massima dell'uscita lunga"
+
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value from the total available memory. For instance, setting "
+"the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
+"memory available will result in a 600 MiB hard limit and a 350 MiB soft "
+"limit (the spike limit being equal to 250MiB)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value. The soft limit value will be equal to (limit - spike "
+"limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
 
 msgid "Maximum messages per save interval"
 msgstr "Messaggi massimi per intervallo di salvataggio"
@@ -43119,20 +43168,6 @@ msgstr "Dimensione massima di tutti i file nello spazio di backup"
 #, fuzzy
 msgid "Maximum speed"
 msgstr "Velocità massima"
-
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than limit. This option is used to calculate spike limit from "
-"the total available memory. For instance setting of 25% with the total "
-"memory of 1GiB will result in the spike limit of 250MiB."
-msgstr ""
-
-#, python-format
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than the limit. The soft limit value will be equal to (limit - "
-"spike limit). The recommended value for spike limit is about 20% limit."
-msgstr ""
 
 msgid "Maximum spool duration"
 msgstr "Durata massima della bobina"
@@ -43770,6 +43805,14 @@ msgstr "Metriche di servizio"
 #, fuzzy
 msgid "Metrics path"
 msgstr "Metriche"
+
+#, fuzzy
+msgid "Metrics path must be a string."
+msgstr "Il valore deve essere una stringa"
+
+#, fuzzy
+msgid "Metrics path must start with a '/'."
+msgstr "Il login non è consentito su questo sito."
 
 #, fuzzy
 msgid "Metrics related to sizing, e.g. number of helpers, hosts, services"
@@ -49235,6 +49278,10 @@ msgstr "Le condizioni della regola non corrispondono."
 msgid "One heartbeat every"
 msgstr "Un battito di cuore ogni"
 
+msgid ""
+"One host is created for each unique value of this resource attribute key."
+msgstr ""
+
 msgid "One hour"
 msgstr "Un'ora"
 
@@ -49690,6 +49737,10 @@ msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
+msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+msgid "OpenTelemetry Collector (Experimental)"
 msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
@@ -54510,8 +54561,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download "
-"your data by %s."
+"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> on the command "
+"line as site user, or download your data by %s."
 msgstr ""
 
 msgid "Preview this report"
@@ -57852,7 +57903,7 @@ msgid "Resource attribute filters"
 msgstr "Azzeramento degli attributi"
 
 #, fuzzy
-msgid "Resource attribute for hostname computation"
+msgid "Resource attribute for hostname lookup"
 msgstr "Calcolo del nome host"
 
 #, fuzzy
@@ -68189,7 +68240,9 @@ msgid ""
 "for standard operations."
 msgstr ""
 
-msgid "The HTTP resource path on which to fetch metrics from targets."
+msgid ""
+"The HTTP resource path on which to fetch metrics from targets. Must start "
+"with a '/'."
 msgstr ""
 
 #, fuzzy, python-format
@@ -79187,6 +79240,26 @@ msgstr "Top"
 msgid "Top (highest) N"
 msgstr ""
 
+#, fuzzy
+msgid "Top 10: CPU utilization"
+msgstr "Utilizzo della CPU di Sophos"
+
+#, fuzzy
+msgid "Top 10: CPU utilization (Windows)"
+msgstr "Utilizzo della CPU"
+
+#, fuzzy
+msgid "Top 10: Disk utilization"
+msgstr "Sophos Utilizzo del disco"
+
+#, fuzzy
+msgid "Top 10: Input bandwidth"
+msgstr "Larghezza di banda in ingresso"
+
+#, fuzzy
+msgid "Top 10: Output bandwidth"
+msgstr "Larghezza di banda in uscita"
+
 msgid "Top Talkers"
 msgstr "Top Talkers"
 
@@ -84526,6 +84599,13 @@ msgstr "Utilizzare l'unità di temperatura predefinita"
 
 msgid "Use the default theme"
 msgstr "Utilizzare il tema predefinito"
+
+#, fuzzy
+msgid ""
+"Use the filters to select the metrics the configuration will be applied to."
+msgstr ""
+"Le regole disabilitate vengono mantenute nella configurazione ma non vengono "
+"applicate."
 
 msgid "Use the following ID"
 msgstr "Usa il seguente ID"
@@ -92122,10 +92202,6 @@ msgstr "scoperta saltata: host non monitorato"
 msgid "discovery successful"
 msgstr "scoperta riuscita"
 
-#, python-format
-msgid "do not activate this %s"
-msgstr "non attivare questo %s"
-
 msgid "do not apply this rule"
 msgstr "non applicare questa regola"
 
@@ -95830,12 +95906,14 @@ msgstr "Contatta anche l'agente Checkmk"
 
 msgid ""
 "Run this command on your Windows host to download and install the Checkmk "
-"agent."
+"agent. Please make sure to run this command with sufficient permissions "
+"(e.g. “Run as Administrator”)"
 msgstr ""
 
 msgid ""
 "After you have downloaded the agent, run this command on your Windows host "
-"to register the Checkmk agent controller."
+"to register the Checkmk agent controller. Please make sure to run this "
+"command with sufficient permissions (e.g. “Run as Administrator”)."
 msgstr ""
 
 msgid ""
@@ -96848,6 +96926,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "do not activate this %s"
+#~ msgstr "non attivare questo %s"
+
 #, fuzzy
 #~ msgid "Generate registration token"
 #~ msgstr "Utente di registrazione dell'agente"
@@ -97388,10 +97470,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add OpenTelemetry collector configuration"
 #~ msgstr "Aggiungere una nuova configurazione utente"
-
-#, fuzzy
-#~ msgid "OpenTelemetry collector (experimental)"
-#~ msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 #~ msgid "OpenTelemetry collector configurations"

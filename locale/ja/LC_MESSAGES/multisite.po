@@ -6821,6 +6821,15 @@ msgstr "Apache ActiveMQ Queueの長さ"
 msgid "Apache ActiveMQ queues"
 msgstr "Apache ActiveMQキュー"
 
+#, fuzzy
+msgid "Apache Config"
+msgstr "Apacheプロセスのチューニング"
+
+msgid ""
+"Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
+"and $OMD_ROOT/etc/apache"
+msgstr ""
+
 msgid "Apache Server"
 msgstr "Apacheサーバー"
 
@@ -14638,6 +14647,10 @@ msgstr "CMCのコンフィグとステートダンプ"
 msgid "Configuration"
 msgstr "コンフィギュレーション"
 
+#, fuzzy
+msgid "Configuration Activation"
+msgstr "設定接続"
+
 msgid "Configuration Error"
 msgstr "構成エラー"
 
@@ -14681,6 +14694,10 @@ msgstr "etc/check_mk.%sからの設定ファイル( '* .mk'または '* .conf')"
 #, python-format
 msgid "Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s"
 msgstr "構成ファイル ('*.mk' or '*.conf') from etc/checkmk: %s"
+
+#, fuzzy, python-format
+msgid "Configuration files from %s"
+msgstr "設定ファイル"
 
 msgid "Configuration name"
 msgstr "コンフィギュレーション名"
@@ -21008,6 +21025,10 @@ msgid "Do not add text"
 msgstr "テキストを追加しない"
 
 #, fuzzy
+msgid "Do not apply this configuration"
+msgstr "この接続を削除します"
+
+#, fuzzy
 msgid "Do not apply this rule"
 msgstr "このルールを適用しないでください"
 
@@ -25835,6 +25856,10 @@ msgstr "ファイル"
 msgid "Files are unpackaged and remain in your system."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Files in %s"
+msgstr "ファイル名: %s"
+
 msgid "Filestore"
 msgstr "ファイルストア"
 
@@ -27167,6 +27192,9 @@ msgstr "GPU 使用率"
 msgid "GPU utilization"
 msgstr "GPU使用率"
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "GUI design"
 msgstr "GUIデザイン"
 
@@ -28076,6 +28104,9 @@ msgstr "HTTP(S)ロードバランサー"
 
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Eメール, ..."
+
+msgid "HTTP-based receiver"
+msgstr ""
 
 msgid "HTTP: Active Requests"
 msgstr "HTTP: アクティブリクエスト"
@@ -40680,11 +40711,12 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "動作していないアクセスポイントの最大数"
 
+#, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
-"This option is used to calculate memory limit from the total available "
-"memory. For instance setting of 75% with the total memory of 1GiB will "
-"result in the limit of 750 MiB."
+"This option is used to calculate the hard memory limit from the total "
+"available memory. For instance, setting the limit to 75% on a machine with "
+"1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
 
 msgid "Maximum bulk size"
@@ -40791,6 +40823,23 @@ msgstr "最大ログ経過時間"
 
 msgid "Maximum long output size"
 msgstr "最長出力サイズ"
+
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value from the total available memory. For instance, setting "
+"the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
+"memory available will result in a 600 MiB hard limit and a 350 MiB soft "
+"limit (the spike limit being equal to 250MiB)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value. The soft limit value will be equal to (limit - spike "
+"limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
 
 msgid "Maximum messages per save interval"
 msgstr "保存間隔あたりの最大メッセージ数"
@@ -40961,20 +41010,6 @@ msgstr "バックアップスペース上のすべてのファイルの最大サ
 
 msgid "Maximum speed"
 msgstr "最大速度"
-
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than limit. This option is used to calculate spike limit from "
-"the total available memory. For instance setting of 25% with the total "
-"memory of 1GiB will result in the spike limit of 250MiB."
-msgstr ""
-
-#, python-format
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than the limit. The soft limit value will be equal to (limit - "
-"spike limit). The recommended value for spike limit is about 20% limit."
-msgstr ""
 
 msgid "Maximum spool duration"
 msgstr "最大スプール持続時間"
@@ -41583,6 +41618,14 @@ msgstr "サービス指標"
 
 msgid "Metrics path"
 msgstr "メトリクスパス"
+
+#, fuzzy
+msgid "Metrics path must be a string."
+msgstr "値は文字列であること"
+
+#, fuzzy
+msgid "Metrics path must start with a '/'."
+msgstr "パスが'/'で始まることはできません"
 
 #, fuzzy
 msgid "Metrics related to sizing, e.g. number of helpers, hosts, services"
@@ -46752,6 +46795,10 @@ msgstr "1つの条件が一致する必要があります（攻撃的）"
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
 
+msgid ""
+"One host is created for each unique value of this resource attribute key."
+msgstr ""
+
 msgid "One hour"
 msgstr "一時間"
 
@@ -47203,6 +47250,10 @@ msgstr "OpenTelemetry（実験的）"
 
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry Collector (Experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
 
 #, fuzzy
 msgid "OpenTelemetry Collector Prometheus scraping configurations"
@@ -51583,8 +51634,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download "
-"your data by %s."
+"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> on the command "
+"line as site user, or download your data by %s."
 msgstr ""
 
 msgid "Preview this report"
@@ -54778,7 +54829,7 @@ msgid "Resource attribute filters"
 msgstr "属性をリセット"
 
 #, fuzzy
-msgid "Resource attribute for hostname computation"
+msgid "Resource attribute for hostname lookup"
 msgstr "カスタムホスト名算出"
 
 #, fuzzy
@@ -64650,7 +64701,10 @@ msgid ""
 "for standard operations."
 msgstr ""
 
-msgid "The HTTP resource path on which to fetch metrics from targets."
+#, fuzzy
+msgid ""
+"The HTTP resource path on which to fetch metrics from targets. Must start "
+"with a '/'."
 msgstr "ターゲットからメトリクスを取得するためのHTTPリソースパス。"
 
 #, python-format
@@ -75344,6 +75398,26 @@ msgstr "トップ"
 msgid "Top (highest) N"
 msgstr "トップ（最高位） N"
 
+#, fuzzy
+msgid "Top 10: CPU utilization"
+msgstr "ソフォスのCPU使用率"
+
+#, fuzzy
+msgid "Top 10: CPU utilization (Windows)"
+msgstr "CPU使用率(Windows)"
+
+#, fuzzy
+msgid "Top 10: Disk utilization"
+msgstr "ソフォスのディスク使用率"
+
+#, fuzzy
+msgid "Top 10: Input bandwidth"
+msgstr "入力帯域幅"
+
+#, fuzzy
+msgid "Top 10: Output bandwidth"
+msgstr "出力帯域幅"
+
 msgid "Top Talkers"
 msgstr "トップトーカー"
 
@@ -80100,6 +80174,11 @@ msgstr "デフォルトの温度単位を使用する"
 
 msgid "Use the default theme"
 msgstr "デフォルトのテーマを使用する"
+
+#, fuzzy
+msgid ""
+"Use the filters to select the metrics the configuration will be applied to."
+msgstr "無効化されたルールは構成に保持されますが、適用されません。"
 
 msgid "Use the following ID"
 msgstr "次のIDを使用してください"
@@ -87273,10 +87352,6 @@ msgstr "検出がスキップされました:ホストが監視されていま�
 msgid "discovery successful"
 msgstr "発見に成功"
 
-#, python-format
-msgid "do not activate this %s"
-msgstr "この%sをアクティブにしないでください"
-
 msgid "do not apply this rule"
 msgstr "このルールを適用しないでください"
 
@@ -90895,12 +90970,14 @@ msgstr "Checkmkエージェントにも連絡してください"
 
 msgid ""
 "Run this command on your Windows host to download and install the Checkmk "
-"agent."
+"agent. Please make sure to run this command with sufficient permissions "
+"(e.g. “Run as Administrator”)"
 msgstr ""
 
 msgid ""
 "After you have downloaded the agent, run this command on your Windows host "
-"to register the Checkmk agent controller."
+"to register the Checkmk agent controller. Please make sure to run this "
+"command with sufficient permissions (e.g. “Run as Administrator”)."
 msgstr ""
 
 msgid ""
@@ -91898,6 +91975,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, python-format
+#~ msgid "do not activate this %s"
+#~ msgstr "この%sをアクティブにしないでください"
+
 #, fuzzy
 #~ msgid "Generate registration token"
 #~ msgstr "エージェント登録ユーザー"
@@ -92422,9 +92503,6 @@ msgstr ""
 
 #~ msgid "Add OpenTelemetry collector configuration"
 #~ msgstr "OpenTelemetryコレクターの設定を追加する"
-
-#~ msgid "OpenTelemetry collector (experimental)"
-#~ msgstr "OpenTelemetryコレクター（実験的）"
 
 #~ msgid "OpenTelemetry collector configurations"
 #~ msgstr "Open Telemetryコレクターの構成"

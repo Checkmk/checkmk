@@ -7074,6 +7074,15 @@ msgstr "Apache ActiveMQ Länge der Warteschlangen"
 msgid "Apache ActiveMQ queues"
 msgstr "Apache ActiveMQ Warteschlangen"
 
+#, fuzzy
+msgid "Apache Config"
+msgstr "Apache-Prozessoptimierung"
+
+msgid ""
+"Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
+"and $OMD_ROOT/etc/apache"
+msgstr ""
+
 msgid "Apache Server"
 msgstr "Apache-Server"
 
@@ -14951,6 +14960,10 @@ msgstr "Auszug der Konfiguration und des Zustands vom CMC"
 msgid "Configuration"
 msgstr "Einstellungen"
 
+#, fuzzy
+msgid "Configuration Activation"
+msgstr "Konfigurationsverbindung"
+
 msgid "Configuration Error"
 msgstr "Konfigurationsfehler"
 
@@ -14994,6 +15007,10 @@ msgstr "Konfigurationsdateien ('*.mk' oder '*.conf') aus etc/check_mk.%s"
 #, python-format
 msgid "Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s"
 msgstr "Konfigurationsdateien ('*.mk' oder '*.conf') aus etc/checkmk: %s"
+
+#, fuzzy, python-format
+msgid "Configuration files from %s"
+msgstr "Konfigurationsdateien"
 
 msgid "Configuration name"
 msgstr "Konfigurationsname"
@@ -21406,6 +21423,10 @@ msgstr "Keine Spalten-Header hinzufügen"
 msgid "Do not add text"
 msgstr "Keinen Text hinzufügen"
 
+#, fuzzy
+msgid "Do not apply this configuration"
+msgstr "Diese Konfiguration löschen"
+
 msgid "Do not apply this rule"
 msgstr "Diese Regel nicht anwenden"
 
@@ -26314,6 +26335,10 @@ msgstr "Dateien"
 msgid "Files are unpackaged and remain in your system."
 msgstr "Dateien sind unpaketiert und verbleiben in Ihrem System."
 
+#, fuzzy, python-format
+msgid "Files in %s"
+msgstr "Dateiname: %s"
+
 msgid "Filestore"
 msgstr "Dateienspeicher"
 
@@ -27671,6 +27696,9 @@ msgstr "GPU-Auslastung"
 msgid "GPU utilization"
 msgstr "GPU-Auslastung"
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "GUI design"
 msgstr "GUI-Design"
 
@@ -28587,6 +28615,9 @@ msgstr "HTTP(S) Loadbalancer"
 
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, E-Mail, ..."
+
+msgid "HTTP-based receiver"
+msgstr ""
 
 msgid "HTTP: Active Requests"
 msgstr "HTTP: aktive Anfragen"
@@ -41477,11 +41508,12 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "Maximale Anzahl von nicht-operativen Zugriffspunkten"
 
+#, fuzzy, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
-"This option is used to calculate memory limit from the total available "
-"memory. For instance setting of 75% with the total memory of 1GiB will "
-"result in the limit of 750 MiB."
+"This option is used to calculate the hard memory limit from the total "
+"available memory. For instance, setting the limit to 75% on a machine with "
+"1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
 "Maximale Gesamtmenge an Speicher, die vom Prozess-Heap zugewiesen werden "
 "soll. Diese Option wird verwendet, um die Speichergrenze aus dem insgesamt "
@@ -41589,6 +41621,34 @@ msgstr "Maximales Logalter"
 
 msgid "Maximum long output size"
 msgstr "Maximale Größe der langen Ausgabe"
+
+#, fuzzy
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value from the total available memory. For instance, setting "
+"the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
+"memory available will result in a 600 MiB hard limit and a 350 MiB soft "
+"limit (the spike limit being equal to 250MiB)"
+msgstr ""
+"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
+"erwartet wird. Der Wert muss unter dem Limit liegen. Diese Option wird "
+"verwendet, um den Spitzenwertgrenzwert aus dem insgesamt verfügbaren "
+"Speicher zu berechnen. Bei einer Einstellung von 25 % bei einem "
+"Gesamtspeicher von 1 GiB ergibt sich beispielsweise ein Spitzenwertgrenzwert "
+"von 250 MiB."
+
+#, fuzzy, python-format
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value. The soft limit value will be equal to (limit - spike "
+"limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
+"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
+"erwartet wird. Der Wert muss unter dem Limit liegen. Der Soft-Grenzwert "
+"entspricht (Grenzwert – Spitzenwertgrenze). Der empfohlene Wert für die "
+"Spitzenwertgrenze liegt bei etwa 20 % des Grenzwerts."
 
 msgid "Maximum messages per save interval"
 msgstr "Maximale Meldungen pro Speicher-Intervall"
@@ -41757,30 +41817,6 @@ msgstr "Maximale Größe aller Dateien am Sicherungsspeicherplatz"
 
 msgid "Maximum speed"
 msgstr "Maximale Geschwindigkeit"
-
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than limit. This option is used to calculate spike limit from "
-"the total available memory. For instance setting of 25% with the total "
-"memory of 1GiB will result in the spike limit of 250MiB."
-msgstr ""
-"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
-"erwartet wird. Der Wert muss unter dem Limit liegen. Diese Option wird "
-"verwendet, um den Spitzenwertgrenzwert aus dem insgesamt verfügbaren "
-"Speicher zu berechnen. Bei einer Einstellung von 25 % bei einem "
-"Gesamtspeicher von 1 GiB ergibt sich beispielsweise ein Spitzenwertgrenzwert "
-"von 250 MiB."
-
-#, fuzzy, python-format
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than the limit. The soft limit value will be equal to (limit - "
-"spike limit). The recommended value for spike limit is about 20% limit."
-msgstr ""
-"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
-"erwartet wird. Der Wert muss unter dem Limit liegen. Der Soft-Grenzwert "
-"entspricht (Grenzwert – Spitzenwertgrenze). Der empfohlene Wert für die "
-"Spitzenwertgrenze liegt bei etwa 20 % des Grenzwerts."
 
 msgid "Maximum spool duration"
 msgstr "Maximale Dauer der Zwischenspeicherung"
@@ -42391,6 +42427,14 @@ msgstr "Metriken der Services"
 
 msgid "Metrics path"
 msgstr "Pfad der Metriken"
+
+#, fuzzy
+msgid "Metrics path must be a string."
+msgstr "Wert muss ein String sein"
+
+#, fuzzy
+msgid "Metrics path must start with a '/'."
+msgstr "Der Pfad darf nicht mit '/' beginnen"
 
 #, fuzzy
 msgid "Metrics related to sizing, e.g. number of helpers, hosts, services"
@@ -47608,6 +47652,10 @@ msgstr "Eine Bedingung muss zutreffen (offensiv)"
 msgid "One heartbeat every"
 msgstr "Ein Lebenszeichen alle"
 
+msgid ""
+"One host is created for each unique value of this resource attribute key."
+msgstr ""
+
 msgid "One hour"
 msgstr "Eine Stunde"
 
@@ -48075,6 +48123,10 @@ msgstr "OpenTelemetry"
 
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
+
+#, fuzzy
+msgid "OpenTelemetry Collector (Experimental)"
+msgstr "OpenTelemetry Collector (experimentell)"
 
 #, fuzzy
 msgid "OpenTelemetry Collector Prometheus scraping configurations"
@@ -52549,8 +52601,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> or download "
-"your data by %s."
+"Preview telemetry data: Run <tt>cmk-telemetry --dry-run</tt> on the command "
+"line as site user, or download your data by %s."
 msgstr ""
 
 msgid "Preview this report"
@@ -55717,7 +55769,8 @@ msgstr "Ressourcenname"
 msgid "Resource attribute filters"
 msgstr "Ressource-Attribute"
 
-msgid "Resource attribute for hostname computation"
+#, fuzzy
+msgid "Resource attribute for hostname lookup"
 msgstr "Ressource-Attribut für die Erstellung von Host-Namen"
 
 msgid "Resource attributes"
@@ -65844,7 +65897,10 @@ msgstr ""
 "Der HTTP-Port kann für den Zugriff auf die ClickHouse WEb-UI genutzt werden. "
 "Für Standard-Operationen wird er nicht benötigt."
 
-msgid "The HTTP resource path on which to fetch metrics from targets."
+#, fuzzy
+msgid ""
+"The HTTP resource path on which to fetch metrics from targets. Must start "
+"with a '/'."
 msgstr ""
 "Der Pfad zur HTTP-Ressource, über den Metriken von Zielen abgerufen werden."
 
@@ -77195,6 +77251,26 @@ msgstr "Oben"
 msgid "Top (highest) N"
 msgstr "Top (höchste) N"
 
+#, fuzzy
+msgid "Top 10: CPU utilization"
+msgstr "CPU-Auslastung von Sophos"
+
+#, fuzzy
+msgid "Top 10: CPU utilization (Windows)"
+msgstr "CPU-Auslastung (Windows)"
+
+#, fuzzy
+msgid "Top 10: Disk utilization"
+msgstr "Festplattenauslastung von Sophos"
+
+#, fuzzy
+msgid "Top 10: Input bandwidth"
+msgstr "Input-Bandbreite"
+
+#, fuzzy
+msgid "Top 10: Output bandwidth"
+msgstr "Output-Bandbreite"
+
 msgid "Top Talkers"
 msgstr "Top Talkers"
 
@@ -81990,6 +82066,13 @@ msgstr "Standard-Temperatureinheit verwenden"
 
 msgid "Use the default theme"
 msgstr "Standard Aussehen benutzen"
+
+#, fuzzy
+msgid ""
+"Use the filters to select the metrics the configuration will be applied to."
+msgstr ""
+"Deaktivierte Regeln bleiben in der Konfiguration, werden aber nicht "
+"verwendet."
 
 msgid "Use the following ID"
 msgstr "Die folgende ID verwenden"
@@ -89486,10 +89569,6 @@ msgstr "Erkennung übersprungen: Host nicht überwacht"
 msgid "discovery successful"
 msgstr "Erkennung erfolgreich"
 
-#, python-format
-msgid "do not activate this %s"
-msgstr "diese %s nicht aktivieren"
-
 msgid "do not apply this rule"
 msgstr "wende diese Regel nicht an"
 
@@ -92921,16 +93000,20 @@ msgstr ""
 msgid "Install the legacy Checkmk agent"
 msgstr "Den Legacy Checkmk-Agent installieren"
 
+#, fuzzy
 msgid ""
 "Run this command on your Windows host to download and install the Checkmk "
-"agent."
+"agent. Please make sure to run this command with sufficient permissions "
+"(e.g. “Run as Administrator”)"
 msgstr ""
 "Diesen Befehl auf Ihrem Windows-Host ausführen, um den Checkmk-Agent "
 "herunterzuladen und zu installieren."
 
+#, fuzzy
 msgid ""
 "After you have downloaded the agent, run this command on your Windows host "
-"to register the Checkmk agent controller."
+"to register the Checkmk agent controller. Please make sure to run this "
+"command with sufficient permissions (e.g. “Run as Administrator”)."
 msgstr ""
 "Nachdem Sie den Agenten heruntergeladen haben, führen Sie diesen Befehl auf "
 "Ihrem Windows-Host aus, um den Checkmk Agent Controller zu registrieren."
@@ -93974,6 +94057,10 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#, python-format
+#~ msgid "do not activate this %s"
+#~ msgstr "diese %s nicht aktivieren"
+
 #, fuzzy
 #~ msgid "Generate registration token"
 #~ msgstr "Benutzer der Agentenregistrierung"
@@ -94539,9 +94626,6 @@ msgstr ""
 
 #~ msgid "Add OpenTelemetry collector configuration"
 #~ msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
-
-#~ msgid "OpenTelemetry collector (experimental)"
-#~ msgstr "OpenTelemetry Collector (experimentell)"
 
 #~ msgid "OpenTelemetry collector configurations"
 #~ msgstr "Konfigurationen des OpenTelemetry Collectors"

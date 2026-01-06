@@ -28,6 +28,7 @@ import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkLoading from './DemoCmkLoading.vue'
+import DemoCmkPerfometer from './DemoCmkPerfometer.vue'
 import DemoCmkPopupDialog from './DemoCmkPopupDialog.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 import DemoCmkScrollContainer from './DemoCmkScrollContainer.vue'
@@ -69,6 +70,7 @@ export const pages = [
   new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
   new Page('CmkLinkCard', DemoCmkLinkCard),
   new Page('CmkList', DemoCmkList),
+  new Page('CmkPerfometer', DemoCmkPerfometer),
   new Page('CmkPopupDialog', DemoCmkPopupDialog),
   new Page('CmkProgressbar', DemoCmkProgressbar),
   new Page('CmkSkeleton', DemoCmkSkeleton),

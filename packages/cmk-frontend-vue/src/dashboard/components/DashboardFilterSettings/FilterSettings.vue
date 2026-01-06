@@ -190,188 +190,178 @@ const serviceMandatoryFilters = computed(() => {
 </script>
 
 <template>
-  <div class="filter-configuration__external-container">
-    <div class="filter-configuration__main-container">
-      <div class="filter-configuration__selection-container">
-        <div class="filter-selections__wrapper">
-          <FilterSelection
-            :category-filter="filterCategories.get('host')!"
-            :category-definition="CATEGORY_DEFINITIONS.host!"
-            :filters="targetFilters"
-            class="filter-selection__item"
-          />
-          <FilterSelection
-            :category-filter="filterCategories.get('service')!"
-            :category-definition="CATEGORY_DEFINITIONS.service!"
-            :filters="targetFilters"
-            class="filter-selection__item"
-          />
-        </div>
+  <div class="db-filter-settings__main-container">
+    <div class="filter-configuration__selection-container">
+      <div class="filter-selections__wrapper">
+        <FilterSelection
+          :category-filter="filterCategories.get('host')!"
+          :category-definition="CATEGORY_DEFINITIONS.host!"
+          :filters="targetFilters"
+          class="filter-selection__item"
+        />
+        <FilterSelection
+          :category-filter="filterCategories.get('service')!"
+          :category-definition="CATEGORY_DEFINITIONS.service!"
+          :filters="targetFilters"
+          class="filter-selection__item"
+        />
       </div>
-      <div class="db-filter-settings__definition-container">
-        <div class="db-filter-settings__header">
-          <CmkHeading type="h1">
-            {{ isConfigurationWindowOpen ? _t('Filter configuration') : _t('Runtime filters') }}
+    </div>
+    <div class="db-filter-settings__definition-container">
+      <div class="db-filter-settings__header">
+        <CmkHeading type="h1">
+          {{ isConfigurationWindowOpen ? _t('Filter configuration') : _t('Runtime filters') }}
+        </CmkHeading>
+        <button
+          class="db-filter-settings__close-button"
+          type="button"
+          :aria-label="_t('Close filter configuration')"
+          @click="closeWindow"
+        >
+          <CmkIcon :aria-label="_t('Clear search')" name="close" size="xxsmall" />
+        </button>
+      </div>
+
+      <div v-if="!isConfigurationWindowOpen" class="db-filter-settings__filter-container">
+        <div>
+          <CmkHeading type="h3">
+            {{ _t('Runtime filters are required to load data.') }}
           </CmkHeading>
-          <button
-            class="db-filter-settings__close-button"
-            type="button"
-            :aria-label="_t('Close filter configuration')"
-            @click="closeWindow"
+          <CmkParagraph>
+            {{ _t('Values are temporary and can be overridden by widget filters.') }}
+          </CmkParagraph>
+        </div>
+
+        <RuntimeFilterConfiguration
+          :filter-definitions="filterDefinitions"
+          :runtime-filters="runtimeFilters"
+          :dashboard-filters="dashboardFilters.getFilters()"
+          :host-dashboard-filters="hostDashboardFilters"
+          :service-dashboard-filters="serviceDashboardFilters"
+          :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
+          :runtime-filters-mode="runtimeFiltersMode"
+          :can-edit="canEdit"
+          @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
+          @apply-runtime-filters="applyRuntimeFilters"
+          @open-configuration="openConfigurationWindow"
+          @reset-runtime-filters="handleResetRuntimeFilters"
+        />
+      </div>
+
+      <div v-else>
+        <div class="db-filter-settings__configuration-subwindow-actions">
+          <CmkButton variant="primary" @click="handleSaveConfiguration">
+            {{ _t('Save') }}
+          </CmkButton>
+          <CmkButton
+            variant="optional"
+            class="db-filter-settings__cancel-button"
+            @click="handleCancelConfiguration"
           >
-            <CmkIcon :aria-label="_t('Clear search')" name="close" size="xxsmall" />
-          </button>
+            <CmkIcon name="cancel" size="xsmall" />
+            {{ _t('Cancel') }}
+          </CmkButton>
         </div>
 
-        <div v-if="!isConfigurationWindowOpen" class="db-filter-settings__filter-container">
-          <div>
-            <CmkHeading type="h3">
-              {{ _t('Runtime filters are required to load data.') }}
-            </CmkHeading>
-            <CmkParagraph>
-              {{ _t('Values are temporary and can be overridden by widget filters.') }}
-            </CmkParagraph>
-          </div>
-
-          <RuntimeFilterConfiguration
-            :filter-definitions="filterDefinitions"
-            :runtime-filters="runtimeFilters"
-            :dashboard-filters="dashboardFilters.getFilters()"
-            :host-dashboard-filters="hostDashboardFilters"
-            :service-dashboard-filters="serviceDashboardFilters"
-            :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
-            :runtime-filters-mode="runtimeFiltersMode"
-            :can-edit="canEdit"
-            @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
-            @apply-runtime-filters="applyRuntimeFilters"
-            @open-configuration="openConfigurationWindow"
-            @reset-runtime-filters="handleResetRuntimeFilters"
-          />
-        </div>
-
-        <div v-else>
-          <div class="db-filter-settings__configuration-subwindow-actions">
-            <CmkButton variant="primary" @click="handleSaveConfiguration">
-              {{ _t('Save') }}
-            </CmkButton>
-            <CmkButton
-              variant="optional"
-              class="db-filter-settings__cancel-button"
-              @click="handleCancelConfiguration"
+        <CmkTabs v-model="configurationTab">
+          <template #tabs>
+            <CmkTab
+              v-for="tab in configurationTabs"
+              :id="tab.id"
+              :key="tab.id"
+              class="cmk-demo-tabs"
             >
-              <CmkIcon name="cancel" size="xsmall" />
-              {{ _t('Cancel') }}
-            </CmkButton>
-          </div>
-
-          <CmkTabs v-model="configurationTab">
-            <template #tabs>
-              <CmkTab
-                v-for="tab in configurationTabs"
-                :id="tab.id"
-                :key="tab.id"
-                class="cmk-demo-tabs"
-              >
-                {{ tab.title }}
-              </CmkTab>
-            </template>
-            <template #tab-contents>
-              <CmkTabContent id="dashboard-filter">
-                <div class="db-filter-settings__filter-container">
-                  <div>
-                    <CmkHeading type="h3">
-                      {{ _t('Set filters for all widgets.') }}
-                    </CmkHeading>
-                    <CmkParagraph>
-                      {{ _t('Values can be overridden by runtime or widget filters.') }}
-                    </CmkParagraph>
-                  </div>
-                  <hr class="db-filter-settings__hr" />
-
-                  <FilterCollection
-                    :title="_t('Host filters')"
-                    :filters="hostDashboardFilters"
-                    :get-filter-values="dashboardFilters.getFilterValues"
-                    additional-item-label="Select from list"
-                  >
-                    <template #default="{ filterId, configuredFilterValues }">
-                      <FilterCollectionInputItem
-                        :filter-id="filterId"
-                        :configured-filter-values="configuredFilterValues"
-                        :filter-definitions="filterDefinitions"
-                        @update-filter-values="dashboardFilters.updateFilterValues"
-                        @remove-filter="dashboardFilters.removeFilter"
-                      />
-                    </template>
-                  </FilterCollection>
-                  <FilterCollection
-                    :title="_t('Service filters')"
-                    :filters="serviceDashboardFilters"
-                    :get-filter-values="dashboardFilters.getFilterValues"
-                    additional-item-label="Select from list"
-                  >
-                    <template #default="{ filterId, configuredFilterValues }">
-                      <FilterCollectionInputItem
-                        :filter-id="filterId"
-                        :configured-filter-values="configuredFilterValues"
-                        :filter-definitions="filterDefinitions"
-                        @update-filter-values="dashboardFilters.updateFilterValues"
-                        @remove-filter="dashboardFilters.removeFilter"
-                      />
-                    </template>
-                  </FilterCollection>
+              {{ tab.title }}
+            </CmkTab>
+          </template>
+          <template #tab-contents>
+            <CmkTabContent id="dashboard-filter">
+              <div class="db-filter-settings__filter-container">
+                <div>
+                  <CmkHeading type="h3">
+                    {{ _t('Set filters for all widgets.') }}
+                  </CmkHeading>
+                  <CmkParagraph>
+                    {{ _t('Values can be overridden by runtime or widget filters.') }}
+                  </CmkParagraph>
                 </div>
-              </CmkTabContent>
+                <hr class="db-filter-settings__hr" />
 
-              <CmkTabContent id="required-filter">
-                <div class="db-filter-settings__filter-container">
-                  <div>
-                    <CmkHeading type="h3">
-                      {{ _t('Set required filters for viewers to enter on load.') }}
-                    </CmkHeading>
-                    <CmkParagraph>
-                      {{ _t('Values are temporary and can be overridden by widget filters.') }}
-                    </CmkParagraph>
-                  </div>
-                  <hr class="db-filter-settings__hr" />
+                <FilterCollection
+                  :title="_t('Host filters')"
+                  :filters="hostDashboardFilters"
+                  :get-filter-values="dashboardFilters.getFilterValues"
+                  additional-item-label="Select from list"
+                >
+                  <template #default="{ filterId, configuredFilterValues }">
+                    <FilterCollectionInputItem
+                      :filter-id="filterId"
+                      :configured-filter-values="configuredFilterValues"
+                      :filter-definitions="filterDefinitions"
+                      @update-filter-values="dashboardFilters.updateFilterValues"
+                      @remove-filter="dashboardFilters.removeFilter"
+                    />
+                  </template>
+                </FilterCollection>
+                <FilterCollection
+                  :title="_t('Service filters')"
+                  :filters="serviceDashboardFilters"
+                  :get-filter-values="dashboardFilters.getFilterValues"
+                  additional-item-label="Select from list"
+                >
+                  <template #default="{ filterId, configuredFilterValues }">
+                    <FilterCollectionInputItem
+                      :filter-id="filterId"
+                      :configured-filter-values="configuredFilterValues"
+                      :filter-definitions="filterDefinitions"
+                      @update-filter-values="dashboardFilters.updateFilterValues"
+                      @remove-filter="dashboardFilters.removeFilter"
+                    />
+                  </template>
+                </FilterCollection>
+              </div>
+            </CmkTabContent>
 
-                  <FilterSelectionCollection
-                    :title="_t('Host filters')"
-                    :filters="hostMandatoryFilters"
-                    :filter-definitions="filterDefinitions"
-                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
-                  />
-                  <FilterSelectionCollection
-                    :title="_t('Service filters')"
-                    :filters="serviceMandatoryFilters"
-                    :filter-definitions="filterDefinitions"
-                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
-                  />
+            <CmkTabContent id="required-filter">
+              <div class="db-filter-settings__filter-container">
+                <div>
+                  <CmkHeading type="h3">
+                    {{ _t('Set required filters for viewers to enter on load.') }}
+                  </CmkHeading>
+                  <CmkParagraph>
+                    {{ _t('Values are temporary and can be overridden by widget filters.') }}
+                  </CmkParagraph>
                 </div>
-              </CmkTabContent>
-            </template>
-          </CmkTabs>
-        </div>
+                <hr class="db-filter-settings__hr" />
+
+                <FilterSelectionCollection
+                  :title="_t('Host filters')"
+                  :filters="hostMandatoryFilters"
+                  :filter-definitions="filterDefinitions"
+                  @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                />
+                <FilterSelectionCollection
+                  :title="_t('Service filters')"
+                  :filters="serviceMandatoryFilters"
+                  :filter-definitions="filterDefinitions"
+                  @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                />
+              </div>
+            </CmkTabContent>
+          </template>
+        </CmkTabs>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__external-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__main-container {
+.db-filter-settings__main-container {
   background-color: var(--ux-theme-2);
   display: flex;
   width: 100%;
   flex: 1;
-  height: 100%;
+  height: 100vh;
   column-gap: 10px;
 }
 

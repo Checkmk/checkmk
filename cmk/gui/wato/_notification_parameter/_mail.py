@@ -189,6 +189,14 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                         title=Title("Acknowledgement comment"),
                     ),
                     MultipleChoiceElement(
+                        name="notification_author",
+                        title=Title("Notification author"),
+                    ),
+                    MultipleChoiceElement(
+                        name="notification_comment",
+                        title=Title("Notification comment"),
+                    ),
+                    MultipleChoiceElement(
                         name="perfdata",
                         title=Title("Metrics"),
                     ),

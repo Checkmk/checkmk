@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
-    """Represent the page `Add OpenTelemetry collector: Prometheus scraping (experimental)`"""
+    """Represent the page `Add Prometheus scraping (Experimental)`"""
 
     incorrect_form_error_message = "Cannot save the form because it contains errors."
     one_collector_per_site_error_detail = (
@@ -32,12 +32,12 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "Add OpenTelemetry Collector: Prometheus scraping (experimental)"
+        self.page_title = "Add Prometheus scraping (Experimental)"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `Add OpenTelemetry collector: Prometheus scraping (experimental)` page."""
+        """Instructions to navigate to `Add Prometheus scraping (Experimental)` page."""
         otel_collector_prom_scrape_page = OpenTelemetryCollectorPrometheusScraping(self.page)
         otel_collector_prom_scrape_page.add_open_telemetry_collector_configuration_btn.click()
         _url_pattern: str = quote_plus("mode=edit_otel_collectors_prom_scrape")

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class AddOpenTelemetryCollectorReceiver(CmkPage):
-    """Represent the page `Add OpenTelemetry Collector: Receiver (experimental)`"""
+    """Represent the page `Add OpenTelemetry Collector (Experimental)`"""
 
     incorrect_form_error_message = "Cannot save the form because it contains errors."
     one_collector_per_site_error_detail = (
@@ -33,13 +33,13 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "Add OpenTelemetry Collector: Receiver (experimental)"
+        self.page_title = "Add OpenTelemetry Collector (Experimental)"
         super().__init__(page, navigate_to_page)
         self.new_password_slide_in = NewPasswordSlideIn(self.page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `Add OpenTelemetry collector: Receiver (experimental)` page."""
+        """Instructions to navigate to `Add OpenTelemetry Collector (Experimental)` page."""
         otel_collector_receiver_page = OpenTelemetryCollectorReceiver(self.page)
         otel_collector_receiver_page.add_open_telemetry_collector_receiver_configuration_btn.click()
         _url_pattern: str = quote_plus("mode=edit_otel_collectors_receiver")
@@ -201,13 +201,13 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         self.site_restriction_checkbox(site_id).check()
         if grpc_receiver_properties:
             self._fill_collector_receiver_properties(
-                "Receiver protocol GRPC",
+                "GRPC-based receiver",
                 grpc_receiver_properties,
                 grpc_password_data,
             )
         if http_receiver_properties:
             self._fill_collector_receiver_properties(
-                "Receiver protocol HTTP",
+                "HTTP-based receiver",
                 http_receiver_properties,
                 http_password_data,
             )

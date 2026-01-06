@@ -47,7 +47,7 @@ def _parameter_valuespec_proxmox_ve_vm_info():
                             TimeMagnitude.MINUTE,
                         ]
                     ),
-                    prefill_fixed_levels=DefaultValue(value=(15 * 60, 30 * 60)),
+                    prefill_fixed_levels=DefaultValue(value=(15 * 60.0, 30 * 60.0)),
                 ),
             ),
         },

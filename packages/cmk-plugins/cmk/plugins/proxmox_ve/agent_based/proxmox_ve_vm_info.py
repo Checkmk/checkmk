@@ -181,6 +181,6 @@ check_plugin_proxmox_ve_vm_info = CheckPlugin(
     check_ruleset_name="proxmox_ve_vm_info",
     check_default_parameters={
         "required_vm_status": "",
-        "lock_duration": ("fixed", (15 * 60, 30 * 60)),
+        "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0)),
     },
 )

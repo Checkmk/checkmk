@@ -68,7 +68,7 @@ def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMIn
         (
             {
                 "required_vm_status": "",
-                "lock_duration": ("fixed", (15 * 60, 30 * 60)),
+                "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0)),
             },
             VM_DATA,
             {},
@@ -85,7 +85,7 @@ def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMIn
         (
             {
                 "required_vm_status": None,
-                "lock_duration": ("fixed", (15 * 60, 30 * 60)),
+                "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0)),
             },
             VM_DATA_WITH_LOCK,
             {
@@ -111,7 +111,7 @@ def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMIn
         (
             {
                 "required_vm_status": None,
-                "lock_duration": ("fixed", (15 * 60, 30 * 60)),
+                "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0)),
             },
             VM_DATA_WITH_LOCK,
             {
@@ -133,7 +133,7 @@ def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMIn
         (
             {
                 "required_vm_status": "idle",
-                "lock_duration": ("fixed", (15 * 60, 30 * 60)),
+                "lock_duration": ("fixed", (15 * 60.0, 30 * 60.0)),
             },
             VM_DATA,
             {},

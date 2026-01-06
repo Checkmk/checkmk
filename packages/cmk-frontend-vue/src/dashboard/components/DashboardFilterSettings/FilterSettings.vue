@@ -208,13 +208,13 @@ const serviceMandatoryFilters = computed(() => {
           />
         </div>
       </div>
-      <div class="filter-configuration__definition-container">
-        <div class="filter-configuration__header">
+      <div class="db-filter-settings__definition-container">
+        <div class="db-filter-settings__header">
           <CmkHeading type="h1">
             {{ isConfigurationWindowOpen ? _t('Filter configuration') : _t('Runtime filters') }}
           </CmkHeading>
           <button
-            class="filter-configuration__close-button"
+            class="db-filter-settings__close-button"
             type="button"
             :aria-label="_t('Close filter configuration')"
             @click="closeWindow"
@@ -249,7 +249,7 @@ const serviceMandatoryFilters = computed(() => {
           />
         </div>
 
-        <div v-else class="configuration-subwindow">
+        <div v-else>
           <div class="db-filter-settings__configuration-subwindow-actions">
             <CmkButton variant="primary" @click="handleSaveConfiguration">
               {{ _t('Save') }}
@@ -397,18 +397,7 @@ const serviceMandatoryFilters = computed(() => {
   min-height: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-selection__disabled-overlay {
-  position: absolute;
-  inset: 0;
-  background-color: var(--color-conference-grey-60);
-  z-index: 10;
-  pointer-events: auto;
-  cursor: not-allowed;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__definition-container {
+.db-filter-settings__definition-container {
   background-color: var(--ux-theme-1);
   flex: 2;
   width: 100%;
@@ -417,16 +406,14 @@ const serviceMandatoryFilters = computed(() => {
   overflow-y: auto;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__header {
-  margin-bottom: var(--dimension-5);
+.db-filter-settings__header {
+  margin-bottom: var(--dimension-8);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__close-button {
+.db-filter-settings__close-button {
   background: none;
   border: none;
   color: var(--font-color);

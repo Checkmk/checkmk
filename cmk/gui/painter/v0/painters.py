@@ -928,7 +928,7 @@ class PainterSvcNotesURL(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["service_notes_url"]
+        return ["host_address", "service_notes_url"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         raw_url = row.get("service_notes_url")
@@ -2164,7 +2164,7 @@ class PainterHostNotesURL(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["host_notes_url"]
+        return ["host_address", "host_notes_url"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         raw_url = row.get("host_notes_url")

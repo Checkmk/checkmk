@@ -17,6 +17,7 @@
 import dataclasses
 import json
 import pprint
+import socket
 import traceback
 from collections import Counter
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
@@ -28,7 +29,7 @@ from pydantic import BaseModel, Field
 import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import get_omd_config, omd_site, SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, omd_version, Version
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.background_job import JobStatusStates
@@ -783,9 +784,8 @@ class DiscoveryPageRenderer:
             return output_funnel.drain()
 
     def _render_agent_download_tooltip(self, output: str) -> None:
-        omd_config = get_omd_config(omd_root)
         site = omd_site()
-        ip_address = omd_config["CONFIG_APACHE_TCP_ADDR"]
+        fqdn = socket.getfqdn()
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         html.vue_component(
             component_name="cmk-agent-download",
@@ -800,14 +800,14 @@ class DiscoveryPageRenderer:
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].install_cmds(
-                                    site, ip_address, version
+                                    site, fqdn, version
                                 )
                             )
                         ),
                         agent_registration_cmds=AgentRegistrationCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].registration_cmds(
-                                    site, ip_address
+                                    site, fqdn
                                 )
                             )
                         ),

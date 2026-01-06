@@ -11,6 +11,7 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
+import socket
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import Final, Literal, overload, override
@@ -23,7 +24,7 @@ import cmk.utils.tags
 from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInput
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import get_omd_config, omd_site, SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import omd_version
 from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
@@ -359,9 +360,8 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         host_name_attribute_key: Final[str] = "host"
         form_name: Final[str] = "edit_host"
-        omd_config = get_omd_config(omd_root)
         site = omd_site()
-        ip_address = omd_config["CONFIG_APACHE_TCP_ADDR"]
+        fqdn = socket.getfqdn()
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         html.vue_component(
             component_name="cmk-mode-host",
@@ -416,14 +416,14 @@ class ABCHostMode(WatoMode, abc.ABC):
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].install_cmds(
-                                    site, ip_address, version
+                                    site, fqdn, version
                                 )
                             )
                         ),
                         agent_registration_cmds=AgentRegistrationCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].registration_cmds(
-                                    site, ip_address
+                                    site, fqdn
                                 )
                             )
                         ),

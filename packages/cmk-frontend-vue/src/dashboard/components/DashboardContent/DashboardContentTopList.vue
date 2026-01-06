@@ -11,6 +11,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkPerfometer from '@/components/CmkPerfometer.vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import type {
@@ -27,13 +28,10 @@ import type { ContentProps } from './types.ts'
 const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()
 const cmkToken = useInjectCmkToken()
-const isLoading = ref(false)
 const data = ref<ComputedTopList | undefined>(undefined)
 const fetchingErrorMessage = ref<string | null>(null)
 
 const fetchData = async () => {
-  isLoading.value = true
-
   if (cmkToken === undefined) {
     const response = await dashboardAPI.computeTopListData(
       props.content,
@@ -48,12 +46,10 @@ const fetchData = async () => {
       }).toString()
       data.value = await cmkAjax(`compute_top_list_data_token_auth.py?${httpVarsString}`, {})
     } catch (error) {
-      isLoading.value = false
       console.error('Error initializing top list content:', error)
       fetchingErrorMessage.value = (error as Error).message
     }
   }
-  isLoading.value = false
 }
 
 onBeforeMount(() => {
@@ -107,10 +103,12 @@ const checkCommandViewUrl = (error: TopListError) => {
   return `view.py?${urlParams}`
 }
 
-const percentage = (metricValue: number) => {
-  const { min_value: minValue, max_value: maxValue } = data.value!.value_range
-  return Math.round((100 * (metricValue - minValue)) / (maxValue - minValue))
-}
+const valueRange: Ref<[number, number] | undefined> = computed(() => {
+  if (data.value) {
+    return [data.value.value_range.min_value, data.value.value_range.max_value]
+  }
+  return undefined
+})
 </script>
 
 <template>
@@ -118,7 +116,7 @@ const percentage = (metricValue: number) => {
     <div v-if="fetchingErrorMessage" class="db-content-ntop__error error">
       {{ fetchingErrorMessage }}
     </div>
-    <div v-else-if="isLoading" class="db-content-top-list__loading">
+    <div v-else-if="data === undefined" class="db-content-top-list__loading">
       {{ _t('Loading Top list content') }}...
     </div>
     <div v-else>
@@ -142,18 +140,12 @@ const percentage = (metricValue: number) => {
               {{ entry.metric.formatted }}
             </td>
             <td v-else class="db-content-top-list__perfometer">
-              <div>
-                <div
-                  class="db-content-top-list__perfometer-bar"
-                  :style="{
-                    width: `${percentage(entry.metric.value)}%`,
-                    'background-color': entry.metric.color
-                  }"
-                />
-                <div class="db-content-top-list__perfometer-value">
-                  {{ entry.metric.formatted }}
-                </div>
-              </div>
+              <CmkPerfometer
+                :value="entry.metric.value"
+                :value-range="valueRange!"
+                :formatted="entry.metric.formatted"
+                :color="entry.metric.color"
+              />
             </td>
           </tr>
         </tbody>

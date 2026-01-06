@@ -133,7 +133,7 @@ function callPingHostOnElement(
   if (!elementName) {
     return
   }
-  if (!element.value) {
+  if (!element.value || element.value.trim() === '') {
     delete statusElements.value[elementName]
     return
   }

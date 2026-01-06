@@ -191,21 +191,19 @@ const serviceMandatoryFilters = computed(() => {
 
 <template>
   <div class="db-filter-settings__main-container">
-    <div class="filter-configuration__selection-container">
-      <div class="filter-selections__wrapper">
-        <FilterSelection
-          :category-filter="filterCategories.get('host')!"
-          :category-definition="CATEGORY_DEFINITIONS.host!"
-          :filters="targetFilters"
-          class="filter-selection__item"
-        />
-        <FilterSelection
-          :category-filter="filterCategories.get('service')!"
-          :category-definition="CATEGORY_DEFINITIONS.service!"
-          :filters="targetFilters"
-          class="filter-selection__item"
-        />
-      </div>
+    <div class="db-filter-settings__selection-container">
+      <FilterSelection
+        :category-filter="filterCategories.get('host')!"
+        :category-definition="CATEGORY_DEFINITIONS.host!"
+        :filters="targetFilters"
+        class="db-filter-settings__selection-item"
+      />
+      <FilterSelection
+        :category-filter="filterCategories.get('service')!"
+        :category-definition="CATEGORY_DEFINITIONS.service!"
+        :filters="targetFilters"
+        class="db-filter-settings__selection-item"
+      />
     </div>
     <div class="db-filter-settings__definition-container">
       <div class="db-filter-settings__header">
@@ -365,24 +363,17 @@ const serviceMandatoryFilters = computed(() => {
   column-gap: 10px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-configuration__selection-container {
-  flex: 1.3;
+.db-filter-settings__selection-container {
+  position: relative;
   height: 100%;
+  flex: 1.3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
   background-color: var(--slide-in-left-part);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-selections__wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  gap: var(--dimension-4);
-  position: relative;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-selection__item {
+.db-filter-settings__selection-item {
   flex: 1;
   min-height: 0;
 }

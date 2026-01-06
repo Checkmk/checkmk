@@ -30,7 +30,7 @@ def main() {
     def edition = JOB_BASE_NAME.split("-")[-1];
     def edition_base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
 
-    def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily";
+    def use_case = LocalDate.now().getDayOfWeek().toString() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily";
     def safe_branch_name = versioning.safe_branch_name();
 
     /// NOTE: this way ALL parameter are being passed through..

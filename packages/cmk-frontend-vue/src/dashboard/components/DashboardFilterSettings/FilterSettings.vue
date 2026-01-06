@@ -324,26 +324,30 @@ const serviceMandatoryFilters = computed(() => {
               </CmkTabContent>
 
               <CmkTabContent id="required-filter">
-                <CmkHeading type="h3">
-                  {{ _t('Set required filters for viewers to enter on load.') }}
-                </CmkHeading>
-                <CmkParagraph>
-                  {{ _t('Values are temporary and can be overridden by widget filters.') }}
-                </CmkParagraph>
-                <hr class="db-filter-settings__hr" />
+                <div class="db-filter-settings__filter-container">
+                  <div>
+                    <CmkHeading type="h3">
+                      {{ _t('Set required filters for viewers to enter on load.') }}
+                    </CmkHeading>
+                    <CmkParagraph>
+                      {{ _t('Values are temporary and can be overridden by widget filters.') }}
+                    </CmkParagraph>
+                  </div>
+                  <hr class="db-filter-settings__hr" />
 
-                <FilterSelectionCollection
-                  :title="_t('Host filters')"
-                  :filters="hostMandatoryFilters"
-                  :filter-definitions="filterDefinitions"
-                  @remove-filter="mandatoryRuntimeFilters.removeFilter"
-                />
-                <FilterSelectionCollection
-                  :title="_t('Service filters')"
-                  :filters="serviceMandatoryFilters"
-                  :filter-definitions="filterDefinitions"
-                  @remove-filter="mandatoryRuntimeFilters.removeFilter"
-                />
+                  <FilterSelectionCollection
+                    :title="_t('Host filters')"
+                    :filters="hostMandatoryFilters"
+                    :filter-definitions="filterDefinitions"
+                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                  />
+                  <FilterSelectionCollection
+                    :title="_t('Service filters')"
+                    :filters="serviceMandatoryFilters"
+                    :filter-definitions="filterDefinitions"
+                    @remove-filter="mandatoryRuntimeFilters.removeFilter"
+                  />
+                </div>
               </CmkTabContent>
             </template>
           </CmkTabs>

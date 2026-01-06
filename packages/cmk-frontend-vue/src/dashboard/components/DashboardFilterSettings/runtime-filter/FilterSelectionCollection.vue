@@ -26,16 +26,18 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="quick-filter__collection">
-    <div class="quick-filter__collection-title">
-      <CmkLabel variant="title">{{ title }}</CmkLabel>
-    </div>
-    <div v-for="(filterId, index) in filters" :key="index" class="quick-filter__item">
-      <span class="quick-filter__item-title">
+  <div class="db-filter-selection-collection__container">
+    <CmkLabel variant="title">{{ title }}</CmkLabel>
+    <div
+      v-for="(filterId, index) in filters"
+      :key="index"
+      class="db-filter-selection-collection__item"
+    >
+      <span class="db-filter-selection-collection__item-title">
         {{ props.filterDefinitions[filterId]!.title }}
       </span>
       <button
-        class="quick-filter__remove-button"
+        class="db-filter-selection-collection__item-remove-button"
         type="button"
         :aria-label="`Remove ${props.filterDefinitions[filterId]!.title} filter`"
         @click="() => emit('remove-filter', filterId)"
@@ -43,40 +45,32 @@ const emit = defineEmits<{
         <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
       </button>
     </div>
-    <div class="quick-filter__item-placeholder">
+    <div class="db-filter-selection-collection__item-placeholder">
       {{ _t('Select from list') }}
     </div>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.quick-filter__collection {
-  margin-top: var(--dimension-7);
+.db-filter-selection-collection__container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.quick-filter__collection-title {
-  margin-bottom: var(--dimension-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.quick-filter__item {
+.db-filter-selection-collection__item {
   background-color: var(--ux-theme-3);
   padding: var(--dimension-5) var(--dimension-7);
-  margin-bottom: var(--dimension-4);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.quick-filter__item-title {
+.db-filter-selection-collection__item-title {
   flex: 1;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.quick-filter__remove-button {
+.db-filter-selection-collection__item-remove-button {
   background: none;
   border: none;
   color: var(--color-white-70);
@@ -91,8 +85,7 @@ const emit = defineEmits<{
   height: 24px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.quick-filter__item-placeholder {
+.db-filter-selection-collection__item-placeholder {
   padding: var(--dimension-5) var(--dimension-7);
   border: 1px dashed var(--ux-theme-7);
   color: var(--color-white-70);

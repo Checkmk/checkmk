@@ -56,17 +56,9 @@
                             {{ additional_tr(data, "Acknowledgment comment", "HOSTACKCOMMENT") }}
                         {% endif %}
                     {% elif element == "notification_author" %}
-                        {% if service_notification %}
-                            {{ additional_tr(data, "Notification author", "SERVICEACKAUTHOR") }}
-                        {% else %}
-                            {{ additional_tr(data, "Notification author", "HOSTACKAUTHOR") }}
-                        {% endif %}
+                        {{ additional_tr(data, "Notification author", "NOTIFICATIONAUTHOR") }}
                     {% elif element == "notification_comment" %}
-                        {% if service_notification %}
-                            {{ additional_tr(data, "Notification comment", "SERVICEACKCOMMENT") }}
-                        {% else %}
-                            {{ additional_tr(data, "Notification comment", "HOSTACKCOMMENT") }}
-                        {% endif %}
+                        {{ additional_tr(data, "Notification comment", "NOTIFICATIONCOMMENT") }}
                     {% elif element == "omdsite" %}
                         {{ additional_tr(data, "Site", "OMD_SITE") }}
                     {% elif element == "reltime" %}

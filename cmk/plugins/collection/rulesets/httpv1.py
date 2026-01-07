@@ -642,6 +642,7 @@ def _parameter_form_active_checks_http() -> Dictionary:
 rule_spec_http = ActiveCheck(
     name="http",
     topic=Topic.NETWORKING,
-    title=Title("Check HTTP service (deprecated)"),
+    title=Title("Check HTTP service"),
     parameter_form=_parameter_form_active_checks_http,
+    is_deprecated=True,
 )

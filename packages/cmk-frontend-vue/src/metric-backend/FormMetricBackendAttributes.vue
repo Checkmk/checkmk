@@ -27,8 +27,14 @@ const props = withDefaults(
     metricName?: string | null
     disableValuesOnEmptyKey?: boolean
     strict?: boolean
+    staticResourceAttributeKeys?: string[] | null
   }>(),
-  { metricName: null, disableValuesOnEmptyKey: false, strict: false }
+  {
+    metricName: null,
+    disableValuesOnEmptyKey: false,
+    strict: false,
+    staticResourceAttributeKeys: null
+  }
 )
 
 const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
@@ -94,6 +100,7 @@ export interface AutoCompleteContext {
   resource_attributes?: GraphLineQueryAttributes
   scope_attributes?: GraphLineQueryAttributes
   data_point_attributes?: GraphLineQueryAttributes
+  static_resource_attribute_keys?: string[]
 }
 
 enum AttributeType {
@@ -212,6 +219,9 @@ function getAutoCompleterContext(
   }
   if (key !== '' && key !== null) {
     context.attribute_key = key
+  }
+  if (props.staticResourceAttributeKeys !== null) {
+    context.static_resource_attribute_keys = props.staticResourceAttributeKeys
   }
   return context
 }

@@ -50183,6 +50183,10 @@ msgid "OpenTelemetry (experimental)"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
 msgid "OpenTelemetry Collector (Experimental)"
 msgstr "Configurația stilului selectat"
 
@@ -55374,7 +55378,11 @@ msgid "Prometheus custom services"
 msgstr "Servicii personalizate Prometheus"
 
 #, fuzzy
-msgid "Prometheus scrape configurations"
+msgid "Prometheus scraping"
+msgstr "Alertmanager"
+
+#, fuzzy
+msgid "Prometheus scraping (Experimental)"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -60271,6 +60279,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Scor"
+
+#, fuzzy
+msgid "Scrape configurations"
+msgstr "Activați configurația"
 
 #, fuzzy
 msgid "Scrape interval"
@@ -72512,12 +72524,6 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "Un titlu descriptiv despre această acțiune."
-
-#, python-format
-msgid ""
-"The relay '%s' is still assigned to one or more hosts. To delete it, first "
-"remove the relay from all associated hosts it is monitoring."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "The relay with ID '%s' does not exist."
@@ -95158,13 +95164,10 @@ msgid "Set filters for all widgets."
 msgstr "Setați valorile implicite pentru toate secțiunile"
 
 #, fuzzy
-msgid "Values can be overriden by runtime or widget filters."
+msgid "Values can be overridden by runtime or widget filters."
 msgstr "Nu puteți suprascrie grupul de etichete încorporat \"%s\"."
 
 msgid "Set required filters for viewers to enter on load."
-msgstr ""
-
-msgid "Values are temporary and can be overriden by widget filters."
 msgstr ""
 
 #, fuzzy
@@ -97887,6 +97890,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Prometheus scrape configurations"
+#~ msgstr "Configurația stilului selectat"
+
 #, python-format
 #~ msgid "do not activate this %s"
 #~ msgstr "nu activați acest %s"
@@ -98703,10 +98710,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Open telemetry hosts creation options"
 #~ msgstr "Opțiuni de creare Piggyback"
-
-#, fuzzy
-#~ msgid "Opentelemetry collector data"
-#~ msgstr "Configurația stilului selectat"
 
 #, fuzzy
 #~ msgid "Please specify at least one \"Open telemetry hosts creation option\""

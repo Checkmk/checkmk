@@ -48125,6 +48125,10 @@ msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
 
 #, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Daten des OpenTelemetry Collectors"
+
+#, fuzzy
 msgid "OpenTelemetry Collector (Experimental)"
 msgstr "OpenTelemetry Collector (experimentell)"
 
@@ -52935,8 +52939,13 @@ msgstr "Benutzerdefinierter Prometheus-Service"
 msgid "Prometheus custom services"
 msgstr "Benutzerdefinierte Prometheus-Services"
 
-msgid "Prometheus scrape configurations"
-msgstr "Prometheus scrape Konfiguration"
+#, fuzzy
+msgid "Prometheus scraping"
+msgstr "Prometheus Alertmanager"
+
+#, fuzzy
+msgid "Prometheus scraping (Experimental)"
+msgstr "OpenTelemetry Collector: Prometheus-Scraping (experimentell)"
 
 msgid "Prometheus targets"
 msgstr "Prometheus Ziele"
@@ -57561,6 +57570,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Punktzahl"
+
+#, fuzzy
+msgid "Scrape configurations"
+msgstr "Aktiviere Konfiguration"
 
 msgid "Scrape interval"
 msgstr "Scrape-Intervall"
@@ -69675,15 +69688,6 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "Ein beschreibender Titel für diese OAuth2-Verbindung."
-
-#, python-format
-msgid ""
-"The relay '%s' is still assigned to one or more hosts. To delete it, first "
-"remove the relay from all associated hosts it is monitoring."
-msgstr ""
-"Das Relais '%s' ist noch einem oder mehreren Hosts zugewiesen. Um es zu "
-"löschen, entfernen Sie zunächst das Relais von allen zugehörigen Hosts, die "
-"es überwacht."
 
 #, python-format
 msgid "The relay with ID '%s' does not exist."
@@ -91547,7 +91551,8 @@ msgstr ""
 msgid "Set filters for all widgets."
 msgstr "Filter für alle Widgets festlegen."
 
-msgid "Values can be overriden by runtime or widget filters."
+#, fuzzy
+msgid "Values can be overridden by runtime or widget filters."
 msgstr ""
 "Die Werte können durch Laufzeit- oder Widget-Filter überschrieben werden."
 
@@ -91555,10 +91560,6 @@ msgid "Set required filters for viewers to enter on load."
 msgstr ""
 "Legen Sie die erforderlichen Filter fest, welche die Betrachter beim Laden "
 "eingeben müssen."
-
-msgid "Values are temporary and can be overriden by widget filters."
-msgstr ""
-"Werte sind temporär und können durch Widget-Filter überschrieben werden."
 
 msgid "Select from list"
 msgstr "Aus der Liste auswählen"
@@ -94057,6 +94058,22 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Prometheus scrape configurations"
+#~ msgstr "Prometheus scrape Konfiguration"
+
+#, python-format
+#~ msgid ""
+#~ "The relay '%s' is still assigned to one or more hosts. To delete it, "
+#~ "first remove the relay from all associated hosts it is monitoring."
+#~ msgstr ""
+#~ "Das Relais '%s' ist noch einem oder mehreren Hosts zugewiesen. Um es zu "
+#~ "löschen, entfernen Sie zunächst das Relais von allen zugehörigen Hosts, "
+#~ "die es überwacht."
+
+#~ msgid "Values are temporary and can be overriden by widget filters."
+#~ msgstr ""
+#~ "Werte sind temporär und können durch Widget-Filter überschrieben werden."
+
 #, python-format
 #~ msgid "do not activate this %s"
 #~ msgstr "diese %s nicht aktivieren"
@@ -94913,9 +94930,6 @@ msgstr ""
 
 #~ msgid "Open telemetry hosts creation options"
 #~ msgstr "Optionen für die Erstellung von OpenTelemetry-Hosts"
-
-#~ msgid "Opentelemetry collector data"
-#~ msgstr "Daten des OpenTelemetry Collectors"
 
 #~ msgid "Please specify at least one \"Open telemetry hosts creation option\""
 #~ msgstr ""

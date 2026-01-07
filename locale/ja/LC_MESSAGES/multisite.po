@@ -47252,6 +47252,10 @@ msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry（実験的）"
 
 #, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Opentelemetry コレクターデータ"
+
+#, fuzzy
 msgid "OpenTelemetry Collector (Experimental)"
 msgstr "OpenTelemetryコレクター（実験的）"
 
@@ -51968,8 +51972,13 @@ msgstr "プロメテウスカスタムサービス"
 msgid "Prometheus custom services"
 msgstr "プロメテウスカスタムサービス"
 
-msgid "Prometheus scrape configurations"
-msgstr "Prometheus スクレイプ構成"
+#, fuzzy
+msgid "Prometheus scraping"
+msgstr "Prometheus アラートマネージャ"
+
+#, fuzzy
+msgid "Prometheus scraping (Experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "Prometheus targets"
 msgstr "Prometheus ターゲット"
@@ -56611,6 +56620,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "スコア"
+
+#, fuzzy
+msgid "Scrape configurations"
+msgstr "構成を有効化する"
 
 msgid "Scrape interval"
 msgstr "スクレイピング間隔"
@@ -68201,12 +68214,6 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "このアクションの説明的なタイトル。"
-
-#, python-format
-msgid ""
-"The relay '%s' is still assigned to one or more hosts. To delete it, first "
-"remove the relay from all associated hosts it is monitoring."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "The relay with ID '%s' does not exist."
@@ -89323,13 +89330,10 @@ msgid "Set filters for all widgets."
 msgstr "すべてのセクションにデフォルト値を設定する"
 
 #, fuzzy
-msgid "Values can be overriden by runtime or widget filters."
+msgid "Values can be overridden by runtime or widget filters."
 msgstr "クイックフィルターを追加することでこれらを上書きできます"
 
 msgid "Set required filters for viewers to enter on load."
-msgstr ""
-
-msgid "Values are temporary and can be overriden by widget filters."
 msgstr ""
 
 #, fuzzy
@@ -91975,6 +91979,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Prometheus scrape configurations"
+#~ msgstr "Prometheus スクレイプ構成"
+
 #, python-format
 #~ msgid "do not activate this %s"
 #~ msgstr "この%sをアクティブにしないでください"
@@ -92777,9 +92784,6 @@ msgstr ""
 
 #~ msgid "Open telemetry hosts creation options"
 #~ msgstr "Open telemetryホスト作成オプション"
-
-#~ msgid "Opentelemetry collector data"
-#~ msgstr "Opentelemetry コレクターデータ"
 
 #~ msgid "Please specify at least one \"Open telemetry hosts creation option\""
 #~ msgstr "\"Open telemetry ホストの作成オプション\"を1つ以上指定してください"

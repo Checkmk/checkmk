@@ -50029,6 +50029,10 @@ msgid "OpenTelemetry (experimental)"
 msgstr "Adicionar configuração do estado"
 
 #, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
 msgid "OpenTelemetry Collector (Experimental)"
 msgstr "Adicionar configuração do estado"
 
@@ -55223,7 +55227,11 @@ msgid "Prometheus custom services"
 msgstr "Serviços personalizados Prometheus"
 
 #, fuzzy
-msgid "Prometheus scrape configurations"
+msgid "Prometheus scraping"
+msgstr "Gestor de alertas"
+
+#, fuzzy
+msgid "Prometheus scraping (Experimental)"
 msgstr "Adicionar configuração do estado"
 
 #, fuzzy
@@ -60138,6 +60146,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Pontuação"
+
+#, fuzzy
+msgid "Scrape configurations"
+msgstr "Ativar a configuração"
 
 #, fuzzy
 msgid "Scrape interval"
@@ -72241,12 +72253,6 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "Um título descritivo desta acção."
-
-#, python-format
-msgid ""
-"The relay '%s' is still assigned to one or more hosts. To delete it, first "
-"remove the relay from all associated hosts it is monitoring."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "The relay with ID '%s' does not exist."
@@ -94776,13 +94782,10 @@ msgid "Set filters for all widgets."
 msgstr "Definir valores padrão para todas as seções"
 
 #, fuzzy
-msgid "Values can be overriden by runtime or widget filters."
+msgid "Values can be overridden by runtime or widget filters."
 msgstr "Não é possível substituir o grupo de etiquetas incorporado \"%s\"."
 
 msgid "Set required filters for viewers to enter on load."
-msgstr ""
-
-msgid "Values are temporary and can be overriden by widget filters."
 msgstr ""
 
 #, fuzzy
@@ -97485,6 +97488,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Prometheus scrape configurations"
+#~ msgstr "Adicionar configuração do estado"
+
 #, python-format
 #~ msgid "do not activate this %s"
 #~ msgstr "não active esta %s"
@@ -98301,10 +98308,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Open telemetry hosts creation options"
 #~ msgstr "Opções de criação de porquinhos"
-
-#, fuzzy
-#~ msgid "Opentelemetry collector data"
-#~ msgstr "Adicionar configuração do estado"
 
 #, fuzzy
 #~ msgid "Please specify at least one \"Open telemetry hosts creation option\""

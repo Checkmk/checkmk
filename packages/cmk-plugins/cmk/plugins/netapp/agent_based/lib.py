@@ -303,6 +303,7 @@ def merge_if_sections(
     interfaces_section: SectionSingleInstance,
     if_mac_list: MutableMapping[str, MACList],
     virtual_interfaces: Sequence[str],
+    timestamp: float,
 ) -> IfSection:
     nics = []
     extra_info: dict[str, NICExtraInfo] = {}
@@ -379,6 +380,7 @@ def merge_if_sections(
                     out_mcast=interfaces.saveint(values.get("send_mcasts", 0)),
                     out_err=interfaces.saveint(values.get("send_errors", 0)),
                 ),
+                timestamp,
             )
         )
         if "home-port" in values:

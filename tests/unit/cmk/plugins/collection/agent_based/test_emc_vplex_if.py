@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.agent_based.emc_vplex_if import parse_emc_vplex_if
+from cmk.plugins.collection.agent_based.emc_vplex_if import parse_emc_vplex_if_pure
 from cmk.plugins.lib import interfaces
 
 
-def test_parse_emc_vplex_if() -> None:
-    assert parse_emc_vplex_if(
+def test_parse_emc_vplex_if_pure() -> None:
+    assert parse_emc_vplex_if_pure(
         [
             [["director-1-1-A", "128.221.252.35"], ["director-1-1-B", "128.221.252.36"]],
             [
@@ -19,7 +19,8 @@ def test_parse_emc_vplex_if() -> None:
                 ["A1-FC00", "186252890510666", "187929275117112", "128.221.252.35.1"],
                 ["B1-FC00", "245631087709370", "155375928891392", "128.221.252.36.1"],
             ],
-        ]
+        ],
+        1.0,
     ) == [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -40,6 +41,7 @@ def test_parse_emc_vplex_if() -> None:
                 in_octets=159850409786880,
                 out_octets=118814791148032,
             ),
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -60,6 +62,7 @@ def test_parse_emc_vplex_if() -> None:
                 in_octets=325205070345216,
                 out_octets=198559903067648,
             ),
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -80,6 +83,7 @@ def test_parse_emc_vplex_if() -> None:
                 in_octets=186252890510666,
                 out_octets=187929275117112,
             ),
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -100,5 +104,6 @@ def test_parse_emc_vplex_if() -> None:
                 in_octets=245631087709370,
                 out_octets=155375928891392,
             ),
+            timestamp=1.0,
         ),
     ]

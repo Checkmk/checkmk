@@ -8,7 +8,7 @@
 
 import pytest
 
-from cmk.plugins.collection.agent_based.aix_if import parse_aix_if
+from cmk.plugins.collection.agent_based.aix_if import parse_aix_if_pure
 from cmk.plugins.lib.interfaces import Attributes, Counters, InterfaceWithCounters, Section
 
 STRING_TABLE = [
@@ -25,6 +25,7 @@ STRING_TABLE = [
     ["Simplex", "64BitSupport", "ChecksumOffload"],
     ["LargeSend", "DataRateSet", "ETHERCHANNEL"],
 ]
+TIMESTAMP = 123.0
 
 EXPECTED_SECTION = [
     InterfaceWithCounters(
@@ -60,6 +61,7 @@ EXPECTED_SECTION = [
             out_disc=None,
             out_err=None,
         ),
+        timestamp=TIMESTAMP,
     )
 ]
 
@@ -120,11 +122,12 @@ EXPECTED_SECTION = [
                         out_disc=None,
                         out_err=None,
                     ),
+                    timestamp=TIMESTAMP,
                 )
             ],
             id="new aix_if section with down interfaces: en4 is down",
         ),
     ],
 )
-def test_parse_aix_if(string_table: list[list[str]], section: Section) -> None:
-    assert parse_aix_if(string_table) == section
+def test_parse_aix_if_pure(string_table: list[list[str]], section: Section) -> None:
+    assert parse_aix_if_pure(string_table, timestamp=TIMESTAMP) == section

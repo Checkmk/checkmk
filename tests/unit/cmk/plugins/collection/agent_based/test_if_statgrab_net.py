@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.if_statgrab_net import parse_statgrab_net
+from cmk.plugins.collection.agent_based.if_statgrab_net import parse_statgrab_net_pure
 from cmk.plugins.lib import interfaces
 
 _SECTION = [
@@ -32,6 +32,7 @@ _SECTION = [
             out_disc=0,
             out_err=0,
         ),
+        timestamp=0.0,
     ),
     interfaces.InterfaceWithCounters(
         interfaces.Attributes(
@@ -57,6 +58,7 @@ _SECTION = [
             out_disc=0,
             out_err=0,
         ),
+        timestamp=0.0,
     ),
     interfaces.InterfaceWithCounters(
         interfaces.Attributes(
@@ -83,13 +85,14 @@ _SECTION = [
             out_disc=0,
             out_err=0,
         ),
+        timestamp=0.0,
     ),
 ]
 
 
-def test_parse_statgrab_net() -> None:
+def test_parse_statgrab_net_pure() -> None:
     assert (
-        parse_statgrab_net(
+        parse_statgrab_net_pure(
             [
                 ["lo0.duplex", "unknown"],
                 ["lo0.interface_name", "lo0"],
@@ -143,7 +146,8 @@ def test_parse_statgrab_net() -> None:
                 ["vnet0.systime", "1413287036"],
                 ["vnet0.tx", "19679032546569"],
                 ["vnet0.up", "true"],
-            ]
+            ],
+            0.0,
         )
         == _SECTION
     )

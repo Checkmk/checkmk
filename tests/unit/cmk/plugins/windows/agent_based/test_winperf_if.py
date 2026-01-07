@@ -16,9 +16,9 @@ from cmk.plugins.windows.agent_based.winperf_if import (
     _merge_sections,
     AdditionalIfData,
     inventory_winperf_if,
-    parse_winperf_if,
     parse_winperf_if_dhcp,
     parse_winperf_if_get_netadapter,
+    parse_winperf_if_pure,
     parse_winperf_if_teaming,
     parse_winperf_if_win32_networkadapter,
     SectionCounters,
@@ -893,6 +893,7 @@ def _entry(
     num: int,
     name: Names,
     speed: int,
+    timestamp: float,
     mode: Mode = Mode.UP,
     *,
     alias: str | None = None,
@@ -901,6 +902,7 @@ def _entry(
     return interfaces.InterfaceWithCounters(
         _if_attributes(num, name, speed, mode=mode, alias=alias, phys_address=phys_address),
         _counters.get(name, null_counters),
+        timestamp,
     )
 
 
@@ -923,7 +925,6 @@ def _flatten(data: Sequence[_Block]) -> _Block:
                 ]
             ),
             SectionCounters(
-                timestamp=1630928323.48,
                 interfaces={
                     str(Names.INTEL_PRO): interfaces.InterfaceWithCounters(
                         _if_attributes(
@@ -934,6 +935,7 @@ def _flatten(data: Sequence[_Block]) -> _Block:
                             phys_address="\x01\x02\x03\x04\x05\x06",
                         ),
                         _counters[Names.INTEL_PRO],
+                        timestamp=1630928323.48,
                     ),
                 },
                 found_windows_if=False,
@@ -943,11 +945,11 @@ def _flatten(data: Sequence[_Block]) -> _Block:
         )
     ],
 )
-def test_parse_winperf_if_ex(
+def test_parse_winperf_if_pure_ex(
     string_table: StringTable,
     section: SectionCounters,
 ) -> None:
-    assert parse_winperf_if(string_table) == section
+    assert parse_winperf_if_pure(string_table, 123.0) == section
 
 
 @pytest.mark.parametrize(
@@ -956,9 +958,8 @@ def test_parse_winperf_if_ex(
         pytest.param(
             VALID_ONE_IF_INPUT,
             SectionCounters(
-                timestamp=1630928323.48,
                 interfaces={
-                    str(name): _entry(i + 1, name, speed)
+                    str(name): _entry(i + 1, name, speed, 1630928323.48)
                     for i, (name, speed) in enumerate([(Names.INTEL_PRO, 1000000000)])
                 },
                 found_windows_if=False,
@@ -969,9 +970,8 @@ def test_parse_winperf_if_ex(
         pytest.param(
             _flatten([VALID_ONE_IF_INPUT, DHCP_STRANGE_INPUT, [["2002", "1", "text"]]]),
             SectionCounters(
-                timestamp=1630928323.48,
                 interfaces={
-                    str(name): _entry(i + 1, name, speed)
+                    str(name): _entry(i + 1, name, speed, 1630928323.48)
                     for i, (name, speed) in enumerate([(Names.INTEL_PRO, 1000000000)])
                 },
                 found_windows_if=False,
@@ -982,9 +982,8 @@ def test_parse_winperf_if_ex(
         pytest.param(
             MULTIPLY_INTERFACES_INPUT,
             SectionCounters(
-                timestamp=1425370325.75,
                 interfaces={
-                    str(name): _entry(i + 1, name, speed)
+                    str(name): _entry(i + 1, name, speed, 1425370325.75)
                     for i, (name, speed) in enumerate(
                         [
                             (Names.QLOGIC_2, 10000000000),
@@ -1013,9 +1012,8 @@ def test_parse_winperf_if_ex(
                 ]
             ),
             SectionCounters(
-                timestamp=1498114570.1,
                 interfaces={
-                    str(name): _entry(i + 1, name, speed)
+                    str(name): _entry(i + 1, name, speed, 1498114570.1)
                     for i, (name, speed) in enumerate(
                         [
                             (Names.INTEL_NDC, 1000000000),
@@ -1040,11 +1038,11 @@ def test_parse_winperf_if_ex(
         ),
     ],
 )
-def test_parse_winperf_if(
+def test_parse_winperf_if_pure(
     string_table: StringTable,
     section: SectionCounters,
 ) -> None:
-    assert parse_winperf_if(string_table) == section
+    assert parse_winperf_if_pure(string_table, 0.0) == section
 
 
 @pytest.mark.parametrize(
@@ -1336,32 +1334,33 @@ def test_parse_winperf_if_dhcp() -> None:
     "interfaces_in, section_teaming, section_extended, interfaces_out",
     [
         pytest.param(
-            {Names.INTEL_PRO: _entry(1, Names.INTEL_PRO, 1000000000)},
+            {Names.INTEL_PRO: _entry(1, Names.INTEL_PRO, 1000000000, 0.0)},
             None,
             None,
-            [_entry(1, Names.INTEL_PRO, 1000000000)],
+            [_entry(1, Names.INTEL_PRO, 1000000000, 0.0)],
             id="agent data only",
         ),
         pytest.param(
             {
-                Names.QLOGIC_2: _entry(1, Names.QLOGIC_2, 10000000000),
-                Names.QLOGIC: _entry(2, Names.QLOGIC, 10000000000),
-                Names.INTEL_I350: _entry(3, Names.INTEL_I350, 0),
-                Names.INTEL_I350_2: _entry(4, Names.INTEL_I350_2, 0),
-                Names.INTEL_I350_3: _entry(5, Names.INTEL_I350_3, 0),
-                Names.INTEL_I350_4: _entry(6, Names.INTEL_I350_4, 0),
-                Names.IBM_USB_2: _entry(7, Names.IBM_USB_2, 9728000),
-                Names.ISATAP_24: _entry(8, Names.ISATAP_24, 100000),
-                Names.ISATAP_2E: _entry(9, Names.ISATAP_2E, 100000),
+                Names.QLOGIC_2: _entry(1, Names.QLOGIC_2, 10000000000, 1.0),
+                Names.QLOGIC: _entry(2, Names.QLOGIC, 10000000000, 1.0),
+                Names.INTEL_I350: _entry(3, Names.INTEL_I350, 0, 1.0),
+                Names.INTEL_I350_2: _entry(4, Names.INTEL_I350_2, 0, 1.0),
+                Names.INTEL_I350_3: _entry(5, Names.INTEL_I350_3, 0, 1.0),
+                Names.INTEL_I350_4: _entry(6, Names.INTEL_I350_4, 0, 1.0),
+                Names.IBM_USB_2: _entry(7, Names.IBM_USB_2, 9728000, 1.0),
+                Names.ISATAP_24: _entry(8, Names.ISATAP_24, 100000, 1.0),
+                Names.ISATAP_2E: _entry(9, Names.ISATAP_2E, 100000, 1.0),
             },
             None,
             EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1,
             [
-                _entry(1, Names.QLOGIC_2, 10000000000),
+                _entry(1, Names.QLOGIC_2, 10000000000, 1.0),
                 _entry(
                     2,
                     Names.QLOGIC,
                     10000000000,
+                    1.0,
                     Mode.UP,
                     alias="Ethernet 2",
                     phys_address="8LxÌ×Q",
@@ -1370,6 +1369,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     3,
                     Names.INTEL_I350,
                     0,
+                    1.0,
                     Mode.DISCONN,
                     alias="Ethernet 3",
                     phys_address="Ã\x08\x87.\x16\x89",
@@ -1378,6 +1378,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     4,
                     Names.INTEL_I350_2,
                     0,
+                    1.0,
                     Mode.DISCONN,
                     alias="Ethernet 4",
                     phys_address="\x94O\x82 \x86P",
@@ -1386,6 +1387,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     5,
                     Names.INTEL_I350_3,
                     0,
+                    1.0,
                     Mode.DISCONN,
                     alias="Ethernet 5",
                     phys_address="q\rÙjPª",
@@ -1394,6 +1396,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     6,
                     Names.INTEL_I350_4,
                     0,
+                    1.0,
                     Mode.DISCONN,
                     alias="Ethernet 6",
                     phys_address="Äp\x14_ÒÀ",
@@ -1402,29 +1405,40 @@ def test_parse_winperf_if_dhcp() -> None:
                     7,
                     Names.IBM_USB_2,
                     9728000,
+                    1.0,
                     Mode.UP,
                     alias="Local Area Connection 2",
                     phys_address="cü´\x9a®c",
                 ),
-                _entry(8, Names.ISATAP_24, 100000),
-                _entry(9, Names.ISATAP_2E, 100000),
+                _entry(
+                    8,
+                    Names.ISATAP_24,
+                    100000,
+                    1.0,
+                ),
+                _entry(
+                    9,
+                    Names.ISATAP_2E,
+                    100000,
+                    1.0,
+                ),
             ],
             id="with additional data",
         ),
         pytest.param(
             {
-                Names.INTEL_NDC: _entry(1, Names.INTEL_NDC, 1000000000),
-                Names.INTEL_X520: _entry(2, Names.INTEL_X520, 10000000000),
-                Names.INTEL_X520_2: _entry(3, Names.INTEL_X520_2, 10000000000),
-                Names.INTEL_NDC_2: _entry(4, Names.INTEL_NDC_2, 0),
-                Names.INTEL_NDC_3: _entry(5, Names.INTEL_NDC_3, 0),
-                Names.INTEL_NDC_4: _entry(6, Names.INTEL_NDC_4, 0),
-                Names.INTEL_X520_3: _entry(7, Names.INTEL_X520_3, 10000000000),
-                Names.INTEL_X520_4: _entry(8, Names.INTEL_X520_4, 10000000000),
-                Names.ISA: _entry(9, Names.ISA, 100000),
-                Names.ISATAP_A0: _entry(10, Names.ISATAP_A0, 100000),
-                Names.ISATAP_09: _entry(11, Names.ISATAP_09, 100000),
-                Names.ISATAP_BF: _entry(12, Names.ISATAP_BF, 100000),
+                Names.INTEL_NDC: _entry(1, Names.INTEL_NDC, 1000000000, 2.0),
+                Names.INTEL_X520: _entry(2, Names.INTEL_X520, 10000000000, 2.0),
+                Names.INTEL_X520_2: _entry(3, Names.INTEL_X520_2, 10000000000, 2.0),
+                Names.INTEL_NDC_2: _entry(4, Names.INTEL_NDC_2, 0, 2.0),
+                Names.INTEL_NDC_3: _entry(5, Names.INTEL_NDC_3, 0, 2.0),
+                Names.INTEL_NDC_4: _entry(6, Names.INTEL_NDC_4, 0, 2.0),
+                Names.INTEL_X520_3: _entry(7, Names.INTEL_X520_3, 10000000000, 2.0),
+                Names.INTEL_X520_4: _entry(8, Names.INTEL_X520_4, 10000000000, 2.0),
+                Names.ISA: _entry(9, Names.ISA, 100000, 2.0),
+                Names.ISATAP_A0: _entry(10, Names.ISATAP_A0, 100000, 2.0),
+                Names.ISATAP_09: _entry(11, Names.ISATAP_09, 100000, 2.0),
+                Names.ISATAP_BF: _entry(12, Names.ISATAP_BF, 100000, 2.0),
             },
             {
                 "{07F1904B-3242-4CFE-8D5C-15C174CD3CD5}": TeamingData(
@@ -1450,6 +1464,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     1,
                     Names.INTEL_NDC,
                     1000000000,
+                    2.0,
                     Mode.UP,
                     alias="NIC1",
                     phys_address="MMíM\r\x1d",
@@ -1471,6 +1486,7 @@ def test_parse_winperf_if_dhcp() -> None:
                         admin_status=None,
                     ),
                     _counters[Names.INTEL_X520],
+                    timestamp=2.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -1489,11 +1505,13 @@ def test_parse_winperf_if_dhcp() -> None:
                         admin_status=None,
                     ),
                     _counters[Names.INTEL_X520_2],
+                    timestamp=2.0,
                 ),
                 _entry(
                     4,
                     Names.INTEL_NDC_2,
                     0,
+                    2.0,
                     mode=Mode.DISCONN,
                     alias="NIC2",
                     phys_address="\x82\x84±O\x1d¨",
@@ -1502,6 +1520,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     5,
                     Names.INTEL_NDC_3,
                     0,
+                    2.0,
                     mode=Mode.DISCONN,
                     alias="NIC3",
                     phys_address="Ðþ\x91¬0)",
@@ -1510,6 +1529,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     6,
                     Names.INTEL_NDC_4,
                     0,
+                    2.0,
                     mode=Mode.DISCONN,
                     alias="NIC4",
                     phys_address="\x89Ír\n\x8fX",
@@ -1531,6 +1551,7 @@ def test_parse_winperf_if_dhcp() -> None:
                         admin_status=None,
                     ),
                     _counters[Names.INTEL_X520_3],
+                    timestamp=2.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -1549,11 +1570,12 @@ def test_parse_winperf_if_dhcp() -> None:
                         admin_status=None,
                     ),
                     _counters[Names.INTEL_X520_4],
+                    timestamp=2.0,
                 ),
-                _entry(9, Names.ISA, 100000),
-                _entry(10, Names.ISATAP_A0, 100000),
-                _entry(11, Names.ISATAP_09, 100000),
-                _entry(12, Names.ISATAP_BF, 100000),
+                _entry(9, Names.ISA, 100000, 2.0),
+                _entry(10, Names.ISATAP_A0, 100000, 2.0),
+                _entry(11, Names.ISATAP_09, 100000, 2.0),
+                _entry(12, Names.ISATAP_BF, 100000, 2.0),
             ],
             id="with additional data",
         ),
@@ -1636,13 +1658,13 @@ def test_inventory_winperf_if() -> None:
     assert list(
         inventory_winperf_if(
             SectionCounters(
-                timestamp=1425370325.75,
                 interfaces={
-                    Names.QLOGIC_2: _entry(1, Names.QLOGIC_2, 10000000000),
+                    Names.QLOGIC_2: _entry(1, Names.QLOGIC_2, 10000000000, 1425370325.75),
                     Names.QLOGIC: _entry(
                         2,
                         Names.QLOGIC,
                         10000000000,
+                        1425370325.75,
                         Mode.UP,
                         alias="Ethernet 2",
                         phys_address="QC2I7y",
@@ -1651,6 +1673,7 @@ def test_inventory_winperf_if() -> None:
                         3,
                         Names.INTEL_I350,
                         0,
+                        1425370325.75,
                         Mode.DISCONN,
                         alias="Ethernet 3",
                         phys_address="42oV#!",
@@ -1659,6 +1682,7 @@ def test_inventory_winperf_if() -> None:
                         4,
                         Names.INTEL_I350_2,
                         0,
+                        1425370325.75,
                         Mode.DISCONN,
                         alias="Ethernet 4",
                         phys_address="@cZ7ff",
@@ -1667,11 +1691,17 @@ def test_inventory_winperf_if() -> None:
                         7,
                         Names.IBM_USB_2,
                         9728000,
+                        1425370325.75,
                         Mode.UP,
                         alias="Local Area Connection 2",
                         phys_address="gJ7F^9",
                     ),
-                    Names.ISATAP_24: _entry(8, Names.ISATAP_24, 100000),
+                    Names.ISATAP_24: _entry(
+                        8,
+                        Names.ISATAP_24,
+                        100000,
+                        1425370325.75,
+                    ),
                 },
                 found_windows_if=False,
                 found_mk_dhcp_enabled=False,

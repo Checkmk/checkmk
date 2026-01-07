@@ -55,7 +55,8 @@ def test_generic_parse_if64() -> None:
                 "",
                 [220, 166, 50, 183, 252, 79],
             ],
-        ]
+        ],
+        0.0,
     ) == [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -84,6 +85,7 @@ def test_generic_parse_if64() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=0.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -111,5 +113,6 @@ def test_generic_parse_if64() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=0.0,
         ),
     ]

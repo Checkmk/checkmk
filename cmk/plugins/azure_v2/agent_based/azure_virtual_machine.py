@@ -353,8 +353,8 @@ def check_azure_vm_network_io(
             ),
             rates=interfaces.Rates(in_octets=in_octets, out_octets=out_octets),
             get_rate_errors=[],
+            timestamp=time.time(),
         ),
-        timestamp=time.time(),
         value_store=get_value_store(),
         params=params,
     )

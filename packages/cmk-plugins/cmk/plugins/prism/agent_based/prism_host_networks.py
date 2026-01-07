@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import json
+import time
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
@@ -49,8 +49,9 @@ class InterfaceElement(NamedTuple):
     data: RawData
 
 
-def parse_prism_host_networks(
+def parse_prism_host_networks_pure(
     string_table: StringTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithRates]:
     try:
         data = pydantic.TypeAdapter(list[RawData]).validate_json(string_table[0][0])
@@ -99,9 +100,16 @@ def parse_prism_host_networks(
                 out_err=raw_data.stats.out_err / 30,
             ),
             get_rate_errors=[],
+            timestamp=timestamp,
         )
         for index, (name, raw_data) in enumerate(sorted(generator()))
     ]
+
+
+def parse_prism_host_networks(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithRates]:
+    return parse_prism_host_networks_pure(string_table, time.time())
 
 
 agent_section_prism_host_networks = AgentSection(

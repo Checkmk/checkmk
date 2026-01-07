@@ -35,17 +35,19 @@ def parse_if64adm(string_table: StringTable) -> If64AdmSection:
     }
 
 
-@dataclasses.dataclass(frozen=True)
-class If64WithUptime:
-    uptime: uptime.Section | None
-    interfaces: interfaces.Section[interfaces.InterfaceWithCounters]
-
-
-def parse_if64_with_uptime(string_table: Sequence[StringByteTable]) -> If64WithUptime:
+def parse_if64_with_uptime(
+    string_table: Sequence[StringByteTable],
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     raw_uptime, raw_if64 = string_table
-    return If64WithUptime(
-        uptime=uptime.parse_snmp_uptime([[str(w) for w in l] for l in raw_uptime]),
-        interfaces=if64.parse_if64(raw_if64),
+    parsed_uptime = uptime.parse_snmp_uptime([[str(w) for w in l] for l in raw_uptime])
+    timestamp = (
+        parsed_uptime.uptime_sec
+        if parsed_uptime and parsed_uptime.uptime_sec is not None
+        else time.time()
+    )
+    return if64.parse_if64(
+        raw_if64,
+        timestamp,
     )
 
 
@@ -94,23 +96,17 @@ def _add_admin_status_to_ifaces(
             iface.attributes.admin_status = admin_status
 
 
-def _uptime_or_server_time(now: float, section_uptime: uptime.Section | None) -> float:
-    if section_uptime is None:
-        return now
-    return section_uptime.uptime_sec or now
-
-
 def discover_if64(
     params: Sequence[Mapping[str, Any]],
-    section_if64: If64WithUptime | None,
+    section_if64: interfaces.Section[interfaces.InterfaceWithCounters] | None,
     section_if64adm: If64AdmSection | None,
 ) -> DiscoveryResult:
     if section_if64 is None:
         return
-    _add_admin_status_to_ifaces(section_if64.interfaces, section_if64adm)
+    _add_admin_status_to_ifaces(section_if64, section_if64adm)
     yield from interfaces.discover_interfaces(
         params,
-        section_if64.interfaces,
+        section_if64,
     )
 
 
@@ -136,20 +132,19 @@ def _check_timestamp(timestamp: float, value_store: MutableMapping[str, Any]) ->
 def check_if64(
     item: str,
     params: Mapping[str, Any],
-    section_if64: If64WithUptime | None,
+    section_if64: interfaces.Section[interfaces.InterfaceWithCounters] | None,
     section_if64adm: If64AdmSection | None,
 ) -> CheckResult:
     if section_if64 is None:
         return
-    _add_admin_status_to_ifaces(section_if64.interfaces, section_if64adm)
-    timestamp = _uptime_or_server_time(time.time(), section_if64.uptime)
+    _add_admin_status_to_ifaces(section_if64, section_if64adm)
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
-        section_if64.interfaces,
-        timestamps=[timestamp] * len(section_if64.interfaces),
+        section_if64,
     )
-    yield from _check_timestamp(timestamp, get_value_store())
+    if section_if64:
+        yield from _check_timestamp(section_if64[0].timestamp, get_value_store())
 
 
 def _check_timestamps(
@@ -190,25 +185,20 @@ def _check_timestamps(
 def cluster_check_if64(
     item: str,
     params: Mapping[str, Any],
-    section_if64: Mapping[str, If64WithUptime | None],
+    section_if64: Mapping[str, interfaces.Section[interfaces.InterfaceWithCounters] | None],
     section_if64adm: Mapping[str, If64AdmSection | None],
 ) -> CheckResult:
     sections_w_admin_status: dict[str, interfaces.Section[interfaces.InterfaceWithCounters]] = {}
     for node_name, node_section_if64 in section_if64.items():
         if node_section_if64 is not None:
-            _add_admin_status_to_ifaces(node_section_if64.interfaces, section_if64adm[node_name])
-            sections_w_admin_status[node_name] = node_section_if64.interfaces
+            _add_admin_status_to_ifaces(node_section_if64, section_if64adm[node_name])
+            sections_w_admin_status[node_name] = node_section_if64
 
     ifaces = []
-    timestamp_per_iface = []
     node_to_timestamp = {}
-    now = time.time()
     for node, node_ifaces in sections_w_admin_status.items():
-        timestamp = _uptime_or_server_time(
-            now,
-            None if (s := section_if64[node]) is None else s.uptime,
-        )
-        node_to_timestamp[node] = timestamp
+        if node_ifaces:
+            node_to_timestamp[node] = node_ifaces[0].timestamp
         for iface in node_ifaces or ():
             ifaces.append(
                 dataclasses.replace(
@@ -219,12 +209,10 @@ def cluster_check_if64(
                     ),
                 )
             )
-            timestamp_per_iface.append(timestamp)
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
         ifaces,
-        timestamps=timestamp_per_iface,
     )
     yield from _check_timestamps(node_to_timestamp, get_value_store())
 

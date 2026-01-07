@@ -16,7 +16,7 @@ from cmk.plugins.lib import interfaces
 from cmk.plugins.prism.agent_based.prism_host_networks import (
     _check_prism_host_network,
     discovery_prism_host_networks,
-    parse_prism_host_networks,
+    parse_prism_host_networks_pure,
 )
 
 RAW = [
@@ -63,7 +63,7 @@ RAW = [
 
 @pytest.fixture(name="section", scope="module")
 def fixture_section() -> interfaces.Section[interfaces.InterfaceWithRates]:
-    return parse_prism_host_networks([[json.dumps(RAW)]])
+    return parse_prism_host_networks_pure([[json.dumps(RAW)]], 123.0)
 
 
 @pytest.mark.parametrize(

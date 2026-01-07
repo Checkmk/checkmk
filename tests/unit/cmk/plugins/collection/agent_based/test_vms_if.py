@@ -4,17 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.vms_if import parse_vms_if
+from cmk.plugins.collection.agent_based.vms_if import parse_vms_if_pure
 from cmk.plugins.lib import interfaces
 
 
-def test_parse_vms_if() -> None:
-    assert parse_vms_if(
+def test_parse_vms_if_pure() -> None:
+    assert parse_vms_if_pure(
         [
             ["SE0", "0", "6680", "0", "0", "0", "0", "0", "3649", "0", "0", "0", "0"],
             ["WE0", "-357453266", "0", "1246887166", "0", "0"],
             ["WE4", "6061662", "0", "4858067", "0", "0"],
-        ]
+        ],
+        5.0,
     ) == [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -40,6 +41,7 @@ def test_parse_vms_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=5.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -58,6 +60,7 @@ def test_parse_vms_if() -> None:
                 in_bcast=0,
                 in_disc=0,
             ),
+            timestamp=5.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -76,5 +79,6 @@ def test_parse_vms_if() -> None:
                 in_bcast=0,
                 in_disc=0,
             ),
+            timestamp=5.0,
         ),
     ]

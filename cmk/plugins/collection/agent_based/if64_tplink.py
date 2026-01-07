@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 
 from cmk.agent_based.v2 import (
     all_of,
@@ -15,8 +16,9 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import if64, interfaces
 
 
-def parse_if64_tplink(
+def parse_if64_tplink_pure(
     string_table: StringByteTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     preprocessed_lines = []
     for line in string_table:
@@ -26,7 +28,13 @@ def parse_if64_tplink(
         line[3] = if64.fix_if_64_highspeed(str(line[3]))
         # cut away the last column with the optional ifAlias info
         preprocessed_lines.append(line[:20])
-    return if64.generic_parse_if64(preprocessed_lines)
+    return if64.generic_parse_if64(preprocessed_lines, timestamp)
+
+
+def parse_if64_tplink(
+    string_table: StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_if64_tplink_pure(string_table, time.time())
 
 
 snmp_section_if64_tplink = SimpleSNMPSection(

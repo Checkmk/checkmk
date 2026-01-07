@@ -11,6 +11,7 @@
 # Wrong naming oper_status has no "media disconnect" status
 # Bad typing dict[str,tuple[str,str]]  - is not typing at all
 
+import time
 from collections.abc import Callable, Collection, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict
 from functools import partial
@@ -63,7 +64,6 @@ def _line_to_mapping(
 
 
 class SectionCounters(NamedTuple):
-    timestamp: float | None
     interfaces: Mapping[str, interfaces.InterfaceWithCounters]
     found_windows_if: bool
     found_mk_dhcp_enabled: bool
@@ -123,6 +123,7 @@ def _get_mac(agent_section: Mapping[str, Line], idx: int) -> str:
 def _parse_counters(
     raw_nic_names: Sequence[str],
     agent_section: Mapping[str, Line],
+    timestamp: float,
 ) -> Mapping[str, interfaces.InterfaceWithCounters]:
     def get_int_value(pos: int, row: str) -> int:
         return int(agent_section[row][pos])
@@ -158,6 +159,7 @@ def _parse_counters(
                     out_disc=counter("30"),
                     out_err=counter("32"),
                 ),
+                timestamp,
             ),
         )
     return ifaces
@@ -211,7 +213,7 @@ def _is_first_line(line: Sequence[str]) -> bool:
     return "." in line[0]
 
 
-def parse_winperf_if(string_table: StringTable) -> SectionCounters:
+def parse_winperf_if_pure(string_table: StringTable, fallback_timestamp: float) -> SectionCounters:
     # There used to be only a single winperf_if-section which contained both the native agent data
     # and plug-in data which is now located in the sections winperf_if_... For compatibily reasons,
     # we still handle this case by filtering out the plug-in data and advising the user to update
@@ -236,14 +238,20 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
             agent_section.setdefault(line[0], line[1:])
 
     return SectionCounters(
-        timestamp=agent_timestamp,
         interfaces=_parse_counters(
             raw_nic_names,
             agent_section,
+            fallback_timestamp if agent_timestamp is None else agent_timestamp,
         ),
         found_windows_if=found_windows_if,
         found_mk_dhcp_enabled=found_mk_dhcp_enabled,
     )
+
+
+def parse_winperf_if(
+    string_table: StringTable,
+) -> SectionCounters:
+    return parse_winperf_if_pure(string_table, time.time())
 
 
 agent_section_winperf_if = AgentSection(
@@ -524,6 +532,7 @@ def _merge_sections(
                     },
                 ),
                 counters=interface.counters,
+                timestamp=interface.timestamp,
             )
             if (add_if_data := additional_data.get(name))
             else interface
@@ -587,17 +596,11 @@ def _check_winperf_if(
         section_winperf_if_teaming,
         section_winperf_if_extended,
     )
-    timestamps = (
-        [section_winperf_if.timestamp] * len(ifaces)
-        if section_winperf_if.timestamp is not None
-        else None
-    )
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
         ifaces,
         group_name="Teaming",
-        timestamps=timestamps,
         value_store=value_store,
     )
     if section_winperf_if_dhcp and (

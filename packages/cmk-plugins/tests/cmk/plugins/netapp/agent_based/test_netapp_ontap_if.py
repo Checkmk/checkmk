@@ -398,7 +398,7 @@ class TestMergeIfCountersSections:
         self,
     ) -> None:
         (interfaces_data, _) = _merge_if_counters_sections(
-            self.interfaces_section, self.ports_section, self.counters_section
+            self.interfaces_section, self.ports_section, self.counters_section, 0.0
         )
 
         assert interfaces_data[0].attributes == interfaces.Attributes(
@@ -454,7 +454,7 @@ class TestMergeIfCountersSections:
         self,
     ) -> None:
         (interfaces_data, _) = _merge_if_counters_sections(
-            self.interfaces_section, self.ports_section, self.counters_section
+            self.interfaces_section, self.ports_section, self.counters_section, 0.0
         )
 
         assert interfaces_data[0].counters == interfaces.Counters(
@@ -510,7 +510,7 @@ class TestMergeIfCountersSections:
         self,
     ) -> None:
         (_, extra_data) = _merge_if_counters_sections(
-            self.interfaces_section, self.ports_section, self.counters_section
+            self.interfaces_section, self.ports_section, self.counters_section, 0.0
         )
 
         assert len(extra_data) == 3
@@ -535,7 +535,7 @@ class TestMergeIfCountersSections:
         self,
     ) -> None:
         (interfaces_data, _) = _merge_if_counters_sections(
-            self.interfaces_section, self.ports_section, None
+            self.interfaces_section, self.ports_section, None, 0.0
         )
 
         # Should still work, but with no counter data

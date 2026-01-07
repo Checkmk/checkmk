@@ -1060,7 +1060,7 @@ def _parameter_form_spec_aws_elb_backend_connection_errors() -> Dictionary:
 
 rule_spec_aws_elb_backend_connection_errors = CheckParameters(
     name="aws_elb_backend_connection_errors",
-    title=Title("AWS/ELB back-end connection errors"),
+    title=Title("AWS/ELB backend connection errors"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_backend_connection_errors,
     condition=HostCondition(),

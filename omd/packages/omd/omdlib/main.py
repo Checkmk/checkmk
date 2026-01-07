@@ -2590,6 +2590,7 @@ def main_umount(
     options: CommandOptions,
 ) -> None:
     only_version = options.get("version")
+    kill = "kill" in options
 
     # if no site is selected, all sites are affected
     exit_status = 0
@@ -2603,7 +2604,12 @@ def main_umount(
                 continue
 
             # Skip the site even when it is partly running
-            if not site.is_stopped(global_opts.verbose):
+            if (
+                subprocess.run(
+                    ["omd", "status", site.name], capture_output=True, check=False
+                ).returncode
+                != 1
+            ):
                 sys.stderr.write(
                     "Cannot unmount tmpfs of site '%s' while it is running.\n" % site.name
                 )
@@ -2612,9 +2618,11 @@ def main_umount(
             sys.stdout.write(f"{tty.bold}Unmounting tmpfs of site {site.name}{tty.normal}...")
             sys.stdout.flush()
 
-            if not show_success(
-                unmount_tmpfs(site.name, site_home, site.tmp_dir, False, kill="kill" in options)
-            ):
+            args = ["--kill", site.name] if kill else [site.name]
+            returncode = subprocess.run(
+                ["omd", "umount"] + args, capture_output=True, check=False
+            ).returncode
+            if not show_success(returncode):
                 exit_status = 1
     else:
         # Skip the site even when it is partly running

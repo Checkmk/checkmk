@@ -56,9 +56,9 @@ const runtimeFiltersMode = ref<RuntimeFilterMode>(props.configuredRuntimeFilters
 const dashboardFilters = useFilters(props.configuredDashboardFilters)
 
 const appliedRuntimeFilterIds = Object.keys(props.appliedRuntimeFilters || {})
-const mandatorySet = new Set(props.configuredMandatoryRuntimeFilters)
+const mandatorySet = computed(() => new Set(props.configuredMandatoryRuntimeFilters))
 const nonMandatoryApplied = appliedRuntimeFilterIds.filter(
-  (filterId) => !mandatorySet.has(filterId)
+  (filterId) => !mandatorySet.value.has(filterId)
 )
 const mergedRuntimeFilterIds = [...props.configuredMandatoryRuntimeFilters, ...nonMandatoryApplied]
 
@@ -67,6 +67,9 @@ const initialRuntimeFilters = ref<ConfiguredFilters>(
   JSON.parse(JSON.stringify(runtimeFilters.getFilters()))
 )
 const mandatoryRuntimeFilters = useFilters(undefined, props.configuredMandatoryRuntimeFilters)
+
+// Unfortunate addition as the requirements changed which forces us to completely remount during filter reset
+const resetCounter = ref(0)
 
 // Track whether the configuration sub-window is open
 const isConfigurationWindowOpen = ref(props.startingWindow === 'filter-configuration')
@@ -112,10 +115,13 @@ const handleUpdateRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
 const handleResetRuntimeFilters = () => {
   const activeFilters = [...runtimeFilters.getSelectedFilters()]
   activeFilters.forEach((filterId) => {
-    if (!mandatorySet.has(filterId)) {
+    if (!mandatorySet.value.has(filterId)) {
       runtimeFilters.removeFilter(filterId)
+    } else {
+      runtimeFilters.clearFilter(filterId)
     }
   })
+  resetCounter.value++
 }
 
 const handleSaveConfiguration = () => {
@@ -239,6 +245,7 @@ const serviceMandatoryFilters = computed(() => {
           :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
           :runtime-filters-mode="runtimeFiltersMode"
           :can-edit="canEdit"
+          :reset-key="resetCounter"
           @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
           @apply-runtime-filters="applyRuntimeFilters"
           @open-configuration="openConfigurationWindow"

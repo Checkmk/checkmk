@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -14,11 +14,15 @@ import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpace
 import SingleInfosSpecifier from '@/dashboard/components/Wizard/wizards/view/stage1/components/SingleInfosSpecifier.vue'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types.ts'
 import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
-import { useDataSourcesCollection } from '@/dashboard/composables/api/useDataSourcesCollection.ts'
 import { useInjectViews } from '@/dashboard/composables/useProvideViews'
+import type { DataSourceModel } from '@/dashboard/types/api'
 import { RestrictedToSingle } from '@/dashboard/types/shared.ts'
 
 const { _t } = usei18n()
+
+const props = defineProps<{
+  datasourcesById: Record<string, DataSourceModel>
+}>()
 
 const emit = defineEmits<{
   (e: 'overwrite-filters', filters: ConfiguredFilters): void
@@ -32,36 +36,30 @@ const restrictedToSingleInfos = defineModel<string[]>('restrictedToSingleInfos',
 const singleInfosMode = ref<RestrictedToSingle>(RestrictedToSingle.NO)
 
 const byViewId = useInjectViews()
-const { byId: byDatasourceId, ensureLoaded: ensureDataSourcesLoaded } = useDataSourcesCollection()
-
-onMounted(async () => {
-  await ensureDataSourcesLoaded()
-})
 
 watch(
   () => referencedView.value,
-  async (id, _prev, onCleanup) => {
-    let cancelled = false
-    onCleanup(() => {
-      cancelled = true
-    })
-
+  (id) => {
     if (!id) {
       contextInfos.value = []
       emit('overwrite-filters', {})
       return
     }
 
-    // Make sure data sources are loaded when referencedView is already set (for edit)
-    await ensureDataSourcesLoaded()
-    if (cancelled) {
-      return
+    const view = byViewId.value[id]
+    // Use prop for synchronous access to avoid timing issues
+    const datasource = props.datasourcesById[view!.extensions!.data_source]
+
+    const newInfos = datasource!.extensions.infos
+    // Equality check to prevent unnecessary resets
+    const currentInfos = contextInfos.value
+    const hasChanged =
+      newInfos.length !== currentInfos.length || newInfos.some((v, i) => v !== currentInfos[i])
+
+    if (hasChanged) {
+      contextInfos.value = newInfos
     }
 
-    const view = byViewId.value[id]
-    const datasource = byDatasourceId.value[view!.extensions!.data_source]
-
-    contextInfos.value = datasource!.extensions.infos
     const restrictedToSingle = view!.extensions?.restricted_to_single ?? []
 
     if (restrictedToSingle.length === 1 && restrictedToSingle[0] === 'host') {
@@ -76,7 +74,6 @@ watch(
   },
   { immediate: true }
 )
-// TODO: read-only mode for SelectorSingleInfos is required (require to make DualList component read only)
 </script>
 
 <template>

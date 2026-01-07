@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -13,31 +13,37 @@ import CmkIndent from '@/components/CmkIndent.vue'
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import SingleInfosSpecifier from '@/dashboard/components/Wizard/wizards/view/stage1/components/SingleInfosSpecifier.vue'
 import SelectorDatasource from '@/dashboard/components/selectors/SelectorDatasource.vue'
-import { useDataSourcesCollection } from '@/dashboard/composables/api/useDataSourcesCollection.ts'
+import type { DataSourceModel } from '@/dashboard/types/api'
 import { RestrictedToSingle } from '@/dashboard/types/shared.ts'
 
 const { _t } = usei18n()
+
+const props = defineProps<{
+  datasourcesById: Record<string, DataSourceModel>
+}>()
 
 const selectedDatasource = defineModel<string | null>('selectedDatasource', { default: null })
 const contextInfos = defineModel<string[]>('contextInfos', { default: [] })
 const restrictedToSingleInfos = defineModel<string[]>('restrictedToSingleInfos', { default: [] })
 const singleInfosMode = ref<RestrictedToSingle>(RestrictedToSingle.NO)
 
-const { byId: byDatasourceId, ensureLoaded: ensureDataSourcesLoaded } = useDataSourcesCollection()
-
-onMounted(async () => {
-  await ensureDataSourcesLoaded()
-})
-
 watch(
   () => selectedDatasource.value,
   (id) => {
-    if (!id) {
-      contextInfos.value = []
-      return
+    let newInfos: string[] = []
+    if (id) {
+      const datasource = props.datasourcesById[id]
+      newInfos = datasource?.extensions?.infos ?? []
     }
-    const datasource = byDatasourceId.value[id]
-    contextInfos.value = datasource?.extensions?.infos ?? []
+
+    // Only update if the content has changed to prevent resetting active filters in StageContents
+    const currentInfos = contextInfos.value
+    const hasChanged =
+      newInfos.length !== currentInfos.length || newInfos.some((v, i) => v !== currentInfos[i])
+
+    if (hasChanged) {
+      contextInfos.value = newInfos
+    }
   },
   { immediate: true }
 )

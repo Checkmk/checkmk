@@ -305,7 +305,12 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <CmkScrollContainer type="outer" class="db-filter-selection__scroll-container">
+          <CmkScrollContainer
+            :max-height="`calc(100% - 130px)`"
+            :height="`calc(100% - 130px)`"
+            type="outer"
+            class="db-filter-selection__scroll-container"
+          >
             <div class="filter-menu__entries">
               <template
                 v-for="entry in processedCategory.entries"

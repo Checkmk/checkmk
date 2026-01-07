@@ -84,18 +84,17 @@ const displayVisualizationSettings = ref<boolean>(true)
   <ActionBar align-items="left">
     <ActionButton
       :label="_t('Previous step')"
-      :icon="{ name: 'back', side: 'left' }"
+      :icon="{ name: 'continue', side: 'left', rotate: 180 }"
       :action="() => $emit('goPrev')"
       variant="secondary"
     />
     <ActionButton
       :label="!!isEditMode ? _t('Save widget') : _t('Add & place widget')"
       :action="saveWidget"
-      variant="secondary"
+      variant="primary"
     />
   </ActionBar>
-
-  <ContentSpacer />
+  <ContentSpacer :dimension="11" />
 
   <DashboardPreviewContent v-bind="widgetContentProps" />
 

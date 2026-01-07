@@ -20,7 +20,8 @@
  * TODO: Get rid of important styles throughout this style sheet
  */
 
-.stale .state {
+.stale .state,
+.state.stale {
   text-shadow: none !important;
   background-image: none !important;
   filter: saturate(50%) brightness(105%);

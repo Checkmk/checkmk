@@ -157,9 +157,9 @@ annotated-types==0.7.0 \
     # via
     #   -r requirements_all.txt
     #   pydantic
-anyio==4.12.0 \
-    --hash=sha256:73c693b567b0c55130c104d0b43a9baf3aa6a31fc6110116509f27bf75e21ec0 \
-    --hash=sha256:dad2376a628f98eeca4881fc56cd06affd18f659b17a747d3ff0307ced94b1bb
+anyio==4.12.1 \
+    --hash=sha256:41cfcc3a4c85d3f05c932da7c26d0201ac36f72abd4435ba90d0464a3ffed703 \
+    --hash=sha256:d405828884fc140aa80a3c667b8beed277f1dfedec42ba031bd6ac3db606ab6c
     # via
     #   -r requirements_all.txt
     #   httpx
@@ -2760,9 +2760,9 @@ pathable==0.4.4 \
     # via
     #   -r requirements_all.txt
     #   jsonschema-path
-pathspec==1.0.0 \
-    --hash=sha256:1373719036e64a2b9de3b8ddd9e30afb082a915619f07265ed76d9ae507800ae \
-    --hash=sha256:9ada63a23541746b0cf7d5672a39ea77eac31dd23a80470be90df83537512131
+pathspec==1.0.1 \
+    --hash=sha256:8870061f22c58e6d83463cfce9a7dd6eca0512c772c1001fb09ac64091816721 \
+    --hash=sha256:e2769b508d0dd47b09af6ee2c75b2744a2cb1f474ae4b1494fd6a1b7a841613c
     # via black
 pbr==7.0.3 \
     --hash=sha256:b46004ec30a5324672683ec848aed9e8fc500b0d261d40a3229c2d2bbfcedc29 \

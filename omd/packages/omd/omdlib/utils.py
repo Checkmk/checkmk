@@ -68,7 +68,7 @@ def get_site_distributed_setup() -> SiteDistributedSetup:
 def chown_tree(directory: str, user: str) -> None:
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
-    os.chown(directory, uid, gid)
+    os.lchown(directory, uid, gid)
     for dirpath, dirnames, filenames in os.walk(directory):
         for entry in dirnames + filenames:
             os.lchown(dirpath + "/" + entry, uid, gid)

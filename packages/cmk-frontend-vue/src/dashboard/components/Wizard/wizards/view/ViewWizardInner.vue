@@ -44,7 +44,7 @@ import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 import Stage3 from './stage3/StageContents.vue'
 import type { CopyExistingViewSelection, NewViewSelection, ViewSelection } from './types'
-import { DataConfigurationMode } from './types'
+import { DataConfigurationMode, ViewSelectionMode } from './types'
 
 const { _t } = usei18n()
 
@@ -91,6 +91,7 @@ const contextInfos = ref<string[]>([])
 const restrictedToSingleInfos = ref<string[]>(getDefaultRestrictedToSingle())
 const originalViewName = ref<string | null>(null)
 const referencedViewName = ref<string | null>(getDefaultReferencedViewName())
+const modeSelection = ref<ViewSelectionMode>(ViewSelectionMode.NEW)
 
 watchEffect(() => {
   if (props.editWidgetSpec) {
@@ -346,7 +347,7 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
       />
     </WizardStepsContainer>
 
-    <WizardStageContainer>
+    <WizardStageContainer :overflow-hidden="wizardHandler.stage.value === 1">
       <CloseButton @close="() => emit('goBack')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"
@@ -355,13 +356,14 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
         v-model:restricted-to-single-infos="restrictedToSingleInfos"
         v-model:original-view-name="originalViewName"
         v-model:referenced-view-name="referencedViewName"
+        v-model:mode-selection="modeSelection"
         :widget-configured-filters="widgetFilterManager.getConfiguredFilters()"
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :context-filters="contextFilters"
         :current-filter-selection-menu-focus="currentFilterSelectionFocus"
         :is-edit-mode="!!editWidgetSpec"
         :content="stage1Content"
-        :datasources-by-id="datasourcesById"
+        :datasources-by-id="props.datasourcesById"
         @go-next="stage1GoNext"
         @set-focus="widgetFilterManager.openSelectionMenu"
         @update-filter-values="

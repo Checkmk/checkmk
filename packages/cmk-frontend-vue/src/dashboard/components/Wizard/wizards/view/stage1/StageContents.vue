@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
@@ -67,6 +67,9 @@ const contextInfos = defineModel<string[]>('contextInfos', { default: [] })
 const restrictedToSingleInfos = defineModel<string[]>('restrictedToSingleInfos', { default: [] })
 const originalViewName = defineModel<string | null>('originalViewName', { default: null })
 const referencedViewName = defineModel<string | null>('referencedViewName', { default: null })
+const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
+  default: ViewSelectionMode.NEW
+})
 
 function goToNextStage() {
   if (props.isEditMode) {
@@ -102,10 +105,6 @@ function goToNextStage() {
   }
   emit('goNext', viewSelection)
 }
-
-const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
-  default: ViewSelectionMode.NEW
-})
 
 watch(contextInfos, () => {
   emit('reset-all-filters')
@@ -190,12 +189,14 @@ const sortedContextInfos = computed(() => {
             v-model:selected-datasource="selectedDatasource"
             v-model:context-infos="contextInfos"
             v-model:restricted-to-single-infos="restrictedToSingleInfos"
+            :datasources-by-id="datasourcesById"
           />
         </div>
         <div v-else-if="modeSelection === ViewSelectionMode.COPY">
           <ReferenceView
             v-model:referenced-view="originalViewName"
             v-model:context-infos="contextInfos"
+            :datasources-by-id="datasourcesById"
             @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
           />
         </div>
@@ -203,6 +204,7 @@ const sortedContextInfos = computed(() => {
           <ReferenceView
             v-model:referenced-view="referencedViewName"
             v-model:context-infos="contextInfos"
+            :datasources-by-id="datasourcesById"
             @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
           />
         </div>
@@ -216,28 +218,32 @@ const sortedContextInfos = computed(() => {
       />
       <ContentSpacer />
       <div v-for="objectType in sortedContextInfos" :key="objectType">
-        <h2>
-          {{
-            getVisual(objectType)?.title || _t('Unknown object type: %{objectType}', { objectType })
-          }}
-        </h2>
-        <WidgetObjectFilterConfiguration
-          :object-type="objectType"
-          :object-selection-mode="
-            restrictedToSingleInfos.includes(objectType)
-              ? ElementSelection.SPECIFIC
-              : ElementSelection.MULTIPLE
+        <SectionBlock
+          :title="
+            untranslated(
+              getVisual(objectType)?.title ||
+                _t('Unknown object type: %{objectType}', { objectType })
+            )
           "
-          :object-configured-filters="configuredFiltersByObjectType[objectType]!"
-          :in-focus="currentFilterSelectionMenuFocus === objectType"
-          :context-filters="contextFilters"
-          :show-context-filters-section="objectType in ['host', 'service']"
-          @set-focus="emit('set-focus', $event)"
-          @update-filter-values="
-            (filterId, values) => emit('update-filter-values', filterId, values)
-          "
-          @remove-filter="(filterId) => emit('remove-filter', filterId)"
-        />
+        >
+          <WidgetObjectFilterConfiguration
+            :object-type="objectType"
+            :object-selection-mode="
+              restrictedToSingleInfos.includes(objectType)
+                ? ElementSelection.SPECIFIC
+                : ElementSelection.MULTIPLE
+            "
+            :object-configured-filters="configuredFiltersByObjectType[objectType]!"
+            :in-focus="currentFilterSelectionMenuFocus === objectType"
+            :context-filters="contextFilters"
+            :show-context-filters-section="objectType in ['host', 'service']"
+            @set-focus="emit('set-focus', $event)"
+            @update-filter-values="
+              (filterId, values) => emit('update-filter-values', filterId, values)
+            "
+            @remove-filter="(filterId) => emit('remove-filter', filterId)"
+          />
+        </SectionBlock>
         <ContentSpacer :height="10" />
       </div>
     </SectionBlock>

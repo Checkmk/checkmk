@@ -156,7 +156,7 @@ onUnmounted(() => {
   <ActionBar align-items="left">
     <ActionButton
       :label="_t('Previous step')"
-      :icon="{ name: 'back', side: 'left' }"
+      :icon="{ name: 'continue', side: 'left', rotate: 180 }"
       :action="() => $emit('goPrev')"
       variant="secondary"
     />
@@ -169,7 +169,7 @@ onUnmounted(() => {
     />
   </ActionBar>
 
-  <ContentSpacer />
+  <ContentSpacer :dimension="11" />
 
   <CmkAlertBox v-if="configurationError" variant="error">
     {{ configurationError }}
@@ -180,10 +180,10 @@ onUnmounted(() => {
 <style scoped>
 .db-stage-contents__view-editor {
   border: none;
-  width: 750px;
+  width: 100%;
 
-  /* should be more than 91px = height of heading + action bar + spacers
+  /* should be more than 95px = height of heading + action bar + spacers
    we're adding a bit more because otherwise a simple scroll bar might pop up */
-  height: calc(100% - 95px);
+  height: calc(100% - 100px);
 }
 </style>

@@ -44,12 +44,8 @@ IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 
 def requirements_files() -> dict[str, list[Path]]:
-    dev_req_files_list = (
-        [
-            repo_path() / "cmk/dev-requirements.in",
-        ]
-        + list((repo_path() / "packages").glob("*/dev-requirements.in"))
-        + list((repo_path() / "non-free" / "packages").glob("*/dev-requirements.in"))
+    dev_req_files_list = list((repo_path() / "packages").glob("*/dev-requirements.in")) + list(
+        (repo_path() / "non-free" / "packages").glob("*/dev-requirements.in")
     )
 
     runtime_req_files_list = (
@@ -130,6 +126,7 @@ def loaded_requirements():
     return load_requirements("all")
 
 
+@pytest.mark.skip("requirements are pinned with `constraints.txt`, now")
 @pytest.mark.skipif(
     branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) == "master",
     reason="pinning is only enforced in release branches",

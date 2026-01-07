@@ -18,7 +18,7 @@ BRANCH_VERSION     := 2.5.0
 # this is evaluated by "buildscripts/scripts/utils/versioning.groovy" and does
 # fallback to "master" instead of the branch version value above
 # set this to any value after creating a new (beta) branch
-BRANCH_NAME_IS_BRANCH_VERSION :=
+BRANCH_NAME_IS_BRANCH_VERSION := yes
 
 SHELL              := /bin/bash
 CLANG_VERSION      := 19

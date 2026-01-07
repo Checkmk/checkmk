@@ -21,7 +21,7 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 UVENV=$REPO_PATH/scripts/run-uvenv
 
 if [ "$1" == "diff" ]; then
-    HEAD=origin/master..HEAD
+    HEAD=origin/2.5.0..HEAD
 else
     HEAD=HEAD
 fi

@@ -179,7 +179,7 @@ function Build-Agent {
     $env:make_exe = $make_exe.trim()
     $env:wnx_version = Get-Version
     Write-Host "Used version: $env:wnx_version"
-    Write-Host make is $env:make_exe 
+    Write-Host make is $env:make_exe
     & $env:make_exe install_extlibs
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to install extlibs, error code is $LASTEXITCODE" -ErrorAction Stop
@@ -372,12 +372,12 @@ function Invoke-Attach($usbip, $addr, $port) {
         throw "Attach to the signing key is not possible. Signing can't be done"
     }
     Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
-    Start-Sleep -Seconds 5 
+    Start-Sleep -Seconds 5
     Test-SigningQuickly
     return
 }
 
-function Test-Administrator {  
+function Test-Administrator {
     [OutputType([bool])]
     param()
     process {
@@ -395,7 +395,7 @@ function Invoke-TestSigning($usbip) {
     if (-not(Test-Path -Path $usbip -PathType Leaf)) {
         $argSign = $False
         Write-Host "$usbip doesn't exist" -ForegroundColor Red
-        throw 
+        throw
     }
 
     if (-not (Test-Administrator)) {
@@ -409,7 +409,7 @@ function Invoke-TestSigning($usbip) {
     if ($LastExitCode -eq 3) {
         $argSign = $False
         Write-Host "No chance"
-        throw 
+        throw
     }
     Write-Host "try to detach"
 

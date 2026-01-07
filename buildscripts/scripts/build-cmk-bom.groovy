@@ -78,8 +78,8 @@ void main() {
                     python3 -m dependencyscanner \
                         --stage prod \
                         --outfile '${bom_path}' \
-                        --research_file researched_master.yml \
-                        --license_cache license_cache_master.json \
+                        --research_file researched_2.5.0.yml \
+                        --license_cache license_cache_2.5.0.json \
                         --version '${cmk_version}' \
                         --type jsscanner --type bazel_files --type cargo --type omd --type package-lock \
                         --type pnpm-lock --type cmk_runtime_lock --type cmk_module_bazel --type go\

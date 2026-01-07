@@ -35,7 +35,7 @@ $packDoc = $false
 
 # repo/branch specific short path
 # TODO(sk): move it to CI upon confirmation that screen works as intended
-$shortenPath = "workdir\workspace\checkmk\master"
+$shortenPath = "workdir\workspace\checkmk\2.5.0"
 $shortenLink = "ym"
 
 if ("$env:arg_var_value" -ne "") {
@@ -93,9 +93,9 @@ else {
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
             }
-            "--shorten" { 
-                $shortenLink = $args[++$i] 
-                $shortenPath = $args[++$i] 
+            "--shorten" {
+                $shortenLink = $args[++$i]
+                $shortenPath = $args[++$i]
             }
         }
     }
@@ -151,7 +151,7 @@ function Invoke-Cargo($cmd) {
     }
 }
 
-function Test-Administrator {  
+function Test-Administrator {
     [OutputType([bool])]
     param()
     process {

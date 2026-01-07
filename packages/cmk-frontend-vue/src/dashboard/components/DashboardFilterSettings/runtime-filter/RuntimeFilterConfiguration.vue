@@ -34,6 +34,7 @@ const props = defineProps<{
   mandatoryFilters: Set<string>
   runtimeFiltersMode: RuntimeFilterMode
   canEdit: boolean
+  resetKey: number
 }>()
 
 const emit = defineEmits<{
@@ -150,6 +151,7 @@ watch(
   >
     <template #default="{ filterId, configuredFilterValues }">
       <FilterCollectionInputItem
+        :key="`${filterId}-${props.resetKey}`"
         :filter-id="filterId"
         :configured-filter-values="
           configuredFilterValues !== null
@@ -177,6 +179,7 @@ watch(
   >
     <template #default="{ filterId, configuredFilterValues }">
       <FilterCollectionInputItem
+        :key="`${filterId}-${props.resetKey}`"
         :filter-id="filterId"
         :configured-filter-values="
           configuredFilterValues !== null

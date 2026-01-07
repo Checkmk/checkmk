@@ -1,35 +1,15 @@
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
-    name = "framework",
-    srcs = ["framework.py"],
-)
-
-py_library(
-    name = "sarif",
-    srcs = ["sarif.py"],
-    deps = [":framework"],
-)
-
-py_library(
-    name = "module_layers_config",
-    srcs = ["config/module_layers_config.py"],
-)
-
-py_library(
-    name = "checker_localization",
-    srcs = ["checker_localization.py"],
-    visibility = ["//tests/astrein:__subpackages__"],
-    deps = [":framework"],
-)
-
-py_library(
-    name = "checker_module_layers",
-    srcs = ["checker_module_layers.py"],
-    visibility = ["//tests/astrein:__subpackages__"],
-    deps = [
-        ":framework",
-        ":module_layers_config",
+    name = "library",
+    srcs = [
+        "checker_localization.py",
+        "checker_module_layers.py",
+        "cli.py",
+        "config/module_layers_config.py",
+        "framework.py",
+        "sarif.py",
     ],
 )
 
@@ -39,10 +19,24 @@ py_binary(
     main = "cli.py",
     visibility = ["//visibility:public"],
     deps = [
-        ":checker_localization",
-        ":checker_module_layers",
-        ":framework",
-        ":module_layers_config",
-        ":sarif",
+        ":library",
+    ],
+)
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "test",
+    srcs = ["__test__"] + glob(["tests/test_*.py"]),
+    main = "__test__.py",
+    deps = [
+        ":__test__",
+        ":library",
+        requirement("pytest"),
     ],
 )

@@ -174,6 +174,11 @@ def _handle_results(
         else:
             print(output)
 
+        if results.errors:
+            if output_file is not None:  # Do not mess with sarif output
+                print(summary)
+            return 1
+
     elif output_format == "gcc":
         output = "\n".join(error.format_gcc() for error in results.errors)
 
@@ -182,12 +187,12 @@ def _handle_results(
             output_file.write_text(output + summary)
         else:
             print(output)
+
+        if results.errors:
+            print(summary)
+            return 1
     else:
         print(f"Error: Unknown output format: {output_format}", file=sys.stderr)
-        return 1
-
-    if results.errors:
-        print(summary)
         return 1
 
     return 0

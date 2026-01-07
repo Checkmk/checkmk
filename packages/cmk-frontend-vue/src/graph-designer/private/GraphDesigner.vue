@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import {
   type GraphLine,
+  type Query as GraphLineQuery,
   type GraphLineQueryAttributes,
   type GraphLines,
   type GraphOptions,
@@ -35,6 +36,7 @@ import {
   type Payload,
   configEntityAPI
 } from '@/form/private/forms/FormSingleChoiceEditable/configuration_entity'
+import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendCustomQuery, {
   type Query
@@ -423,7 +425,11 @@ function isOperation(graphLine: GraphLine) {
 }
 
 async function addQuery() {
-  if (dataQuery.value.metricName !== '' && dataQuery.value.metricName !== null) {
+  if (
+    dataQuery.value.metricName !== '' &&
+    dataQuery.value.metricName !== null &&
+    validateFormMetricBackendCustomQuery(dataQuery.value).length === 0
+  ) {
     graphLines.value.push({
       id: nextIndex(),
       type: 'query',
@@ -856,9 +862,56 @@ function slideInSubmitted(event: { ident: string; description: string }) {
   closeSlideIn()
 }
 
+function validateFormMetricBackendCustomQuery(
+  query?: Query,
+  graphLineQuery?: GraphLineQuery
+): ValidationMessages {
+  const validationMessages: ValidationMessages = []
+  const metricName = query?.metricName ?? graphLineQuery?.metric_name
+  const aggregationLookback = query?.aggregationLookback ?? graphLineQuery?.aggregation_lookback
+  const aggregationHistogramPercentile =
+    query?.aggregationHistogramPercentile ?? graphLineQuery?.aggregation_histogram_percentile
+  if (metricName !== undefined && (metricName === null || metricName.trim() === '')) {
+    validationMessages.push({
+      message: 'Metric name cannot be empty',
+      location: ['metric_name'],
+      replacement_value: { metric_name: metricName }
+    })
+  }
+  if (aggregationLookback !== undefined && aggregationLookback < 1) {
+    validationMessages.push({
+      message: 'Aggregation lookback must be at least 1 second',
+      location: ['aggregation_lookback'],
+      replacement_value: { aggregation_lookback: aggregationLookback }
+    })
+  }
+  if (
+    aggregationHistogramPercentile !== undefined &&
+    (aggregationHistogramPercentile > 100 || aggregationHistogramPercentile < 0)
+  ) {
+    validationMessages.push({
+      message: 'Aggregation histogram percentile must be between 0 and 100.',
+      location: ['aggregation_histogram_percentile'],
+      replacement_value: { aggregation_histogram_percentile: aggregationHistogramPercentile }
+    })
+  }
+  return validationMessages
+}
+
 // Form
 
-window.addEventListener('submit', () => {
+window.addEventListener('submit', (event) => {
+  if (
+    graphLines.value.some((graphLine: GraphLine) => {
+      if (graphLine.type === 'query') {
+        return validateFormMetricBackendCustomQuery(undefined, graphLine).length > 0
+      }
+      return false
+    })
+  ) {
+    event.preventDefault()
+    return
+  }
   handlePreventLeaving(false)
 })
 
@@ -936,7 +989,11 @@ const graphDesignerContentAsJson = computed(() => {
             @click="deleteGraphLine(graphLine)"
           />
           <img
-            v-if="props.create_services_available && graphLine.type === 'query'"
+            v-if="
+              props.create_services_available &&
+              graphLine.type === 'query' &&
+              validateFormMetricBackendCustomQuery(undefined, graphLine).length === 0
+            "
             :title="_t('Add rule: Metric backend (Custom query)')"
             src="themes/facelift/images/icon_move.png"
             class="icon iconbutton"
@@ -972,6 +1029,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:data-point-attributes="graphLine.data_point_attributes"
               v-model:aggregation-lookback="graphLine.aggregation_lookback"
               v-model:aggregation-histogram-percentile="graphLine.aggregation_histogram_percentile"
+              :backend-validation="validateFormMetricBackendCustomQuery(undefined, graphLine)"
               @update:metric-name="updateGraphLineAutoTitle(graphLine)"
             />
           </div>
@@ -1073,6 +1131,7 @@ const graphDesignerContentAsJson = computed(() => {
           v-model:data-point-attributes="dataQuery.dataPointAttributes"
           v-model:aggregation-lookback="dataQuery.aggregationLookback"
           v-model:aggregation-histogram-percentile="dataQuery.aggregationHistogramPercentile"
+          :backend-validation="validateFormMetricBackendCustomQuery(dataQuery)"
         />
         <CmkButton @click="addQuery">
           {{ _t('Add') }}

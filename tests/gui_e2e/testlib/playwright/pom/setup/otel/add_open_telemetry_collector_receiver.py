@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class AddOpenTelemetryCollectorReceiver(CmkPage):
-    """Represent the page `Add OpenTelemetry collector: Receiver (experimental)`"""
+    """Represent the page `Add OpenTelemetry Collector (Experimental)`"""
 
     incorrect_form_error_message = "Cannot save the form because it contains errors."
     one_collector_per_site_error_detail = (
@@ -32,13 +32,13 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "Add OpenTelemetry collector: Receiver (experimental)"
+        self.page_title = "Add OpenTelemetry Collector (Experimental)"
         super().__init__(page, navigate_to_page)
         self.new_password_slide_in = NewPasswordSlideIn(self.page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `Add OpenTelemetry collector: Receiver (experimental)` page."""
+        """Instructions to navigate to `Add OpenTelemetry Collector (Experimental)` page."""
         otel_collector_receiver_page = OpenTelemetryCollectorReceiver(self.page)
         otel_collector_receiver_page.add_open_telemetry_collector_receiver_configuration_btn.click()
         _url_pattern: str = quote_plus("mode=edit_otel_collectors_receiver")
@@ -50,7 +50,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         logger.info(f"Validate that current page is '{self.page_title}' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.unique_id_textfield).to_be_visible()
-        expect(self.receiver_protocol_endpoint_checkbox("Receiver protocol GRPC")).to_be_visible()
+        expect(self.receiver_protocol_endpoint_checkbox("GRPC-based receiver")).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -135,8 +135,8 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     def literal_string_textfield(self, receiver_type: str) -> Locator:
         return (
             self._receiver(receiver_type)
-            .get_by_text("Host name computationThe host")
-            .locator("input[type='text']")
+            .locator("div.form-dictionary__group_elem:has-text('Host name lookup')")
+            .locator("input[type='text'][size='20']")
         )
 
     def create_password_button(self, receiver_type: str) -> Locator:
@@ -180,6 +180,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     ) -> None:
         """Fill in receiver properties form and create new passwords if needed."""
         new_passwords_created = False
+
         self.receiver_protocol_endpoint_checkbox(receiver_type).check()
         if properties["endpoint"]["encryption"]:
             self.encrypt_communication_with_tls_checkbox(receiver_type).check()
@@ -219,6 +220,8 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
                     self.dropdown_option(receiver_type, host_name_field["value"]).click()
                 elif host_name_field["type"] == "free":
                     self.dropdown_option(receiver_type, "Literal string").click()
+                    logger.info(f"Fill in literal string for host name field: {host_name_field}")
+                    logger.info(f"localtor: {self.literal_string_textfield(receiver_type)}")
                     self.fill_last_locator(
                         self.literal_string_textfield(receiver_type), host_name_field["value"]
                     )
@@ -243,13 +246,13 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         self.site_restriction_checkbox(site_id).check()
         if grpc_receiver_properties:
             self._fill_collector_receiver_properties(
-                "Receiver protocol GRPC",
+                "GRPC-based receiver",
                 grpc_receiver_properties,
                 grpc_password_data,
             )
         if http_receiver_properties:
             self._fill_collector_receiver_properties(
-                "Receiver protocol HTTP",
+                "HTTP-based receiver",
                 http_receiver_properties,
                 http_password_data,
             )

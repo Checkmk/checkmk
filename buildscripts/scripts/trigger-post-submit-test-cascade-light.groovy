@@ -17,14 +17,14 @@ void main() {
         "test-format",
         "test-github-actions",
         "test-groovy-lint",
+        "test-python3-astrein",
         "test-python3-bandit",
         "test-python3-code-quality",
-        "test-python3-astrein",
         "test-python3-ruff",
         "test-python3-typing",
         "test-python3-unit-all",
-        "test-shellcheck_agents",
         "test-shell-unit",
+        "test-shellcheck_agents",
     ];
 
     print(

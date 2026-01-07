@@ -481,7 +481,6 @@ def _patch_template_file(  # pylint: disable=too-many-branches
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
     content = Path(src).read_bytes()
-    content = Path(src).read_bytes()
     filename = Path(f"{dst}.skel.{new_site.name}")
     filename.write_bytes(replace_tags(content, new_replacements))
     try_chown(str(filename), new_site.name)

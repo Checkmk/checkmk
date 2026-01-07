@@ -7,7 +7,7 @@
 
 import abc
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Generic, Literal, TypeVar
+from typing import Generic, TypeVar
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
@@ -148,12 +148,6 @@ class Dashlet(abc.ABC, Generic[T]):
             title,
             self.default_display_title(),
         )
-
-    def show_title(self) -> bool | Literal["transparent"]:
-        try:
-            return self._dashlet_spec["show_title"]
-        except KeyError:
-            return True
 
     def show_background(self) -> bool:
         try:

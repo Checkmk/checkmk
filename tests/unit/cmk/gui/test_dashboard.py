@@ -186,27 +186,6 @@ def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
     assert dashlet.dashboard_name == "main"
 
 
-def test_show_title(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.show_title() is True
-
-    dummy_config["show_title"] = False
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.show_title() is False
-
-
 def test_show_background(dummy_config: DummyDashletConfig) -> None:
     dashlet = DummyDashlet(
         dashboard_name="main",

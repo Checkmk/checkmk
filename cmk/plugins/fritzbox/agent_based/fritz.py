@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -48,7 +49,10 @@ _LINK_STATUS_MAP = {
 }
 
 
-def _section_to_interface(section: Section) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+def _section_to_interface(
+    section: Section,
+    timestamp: float,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if not _WAN_IF_KEYS & set(section):
         return []
     return [
@@ -74,6 +78,7 @@ def _section_to_interface(section: Section) -> interfaces.Section[interfaces.Int
                     section.get("NewX_AVM_DE_TotalBytesSent64", section.get("NewTotalBytesSent", 0))
                 ),
             ),
+            timestamp,
         )
     ]
 
@@ -84,7 +89,7 @@ def discover_fritz_wan_if(
 ) -> DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
-        _section_to_interface(section),
+        _section_to_interface(section, time.time()),
     )
 
 
@@ -113,7 +118,7 @@ def check_fritz_wan_if(
             },
             "unit": "bit",
         },
-        _section_to_interface(section),
+        _section_to_interface(section, time.time()),
     )
 
 

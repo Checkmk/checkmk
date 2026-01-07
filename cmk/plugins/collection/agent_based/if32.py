@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 
 from cmk.agent_based.v2 import exists, OIDBytes, SimpleSNMPSection, SNMPTree, StringByteTable
 from cmk.plugins.lib import interfaces
 
 
-def parse_if(
+def parse_if_pure(
     string_table: StringByteTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
@@ -37,10 +39,17 @@ def parse_if(
                 out_disc=interfaces.saveint(line[13]),
                 out_err=interfaces.saveint(line[14]),
             ),
+            timestamp,
         )
         for line in string_table
         if interfaces.saveint(line[0]) > 0
     ]
+
+
+def parse_if(
+    string_table: StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_if_pure(string_table, time.time())
 
 
 snmp_section_if = SimpleSNMPSection(

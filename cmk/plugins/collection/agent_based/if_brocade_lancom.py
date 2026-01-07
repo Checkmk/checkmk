@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+import time
+from collections.abc import Collection, Mapping, Sequence
 
 from cmk.agent_based.v2 import (
     all_of,
@@ -111,23 +112,11 @@ def _augment_name(
 
 def parse_if_brocade_lancom(
     if_table: StringByteTable,
+    timestamp: float,
     name_map: Mapping[str, str],
     port_map: Mapping[str, str],
-    ignore_descriptions: Iterable[str],
+    ignore_descriptions: Collection[str],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
-    """
-    >>> for result in parse_if_brocade_lancom([
-    ...       ['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    ...        '10', '11', '12', '13', 'eth0', [0, 12, 206, 149, 55, 128], 'Local0'],
-    ...       ['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    ...        '10', '11', '12', '13', 'eth1', [0, 12, 206, 149, 55, 128], 'Logical Network'],
-    ...     ],
-    ...     {'eth0': 'LAN'},
-    ...     {},
-    ...     {'Local'}):
-    ...   print(result.attributes.descr, result.attributes.alias, result.attributes.speed)
-    eth0 Logical LAN eth1 30000000
-    """
     return if64.generic_parse_if64(
         [
             _augment_name(line, description, name_map)
@@ -135,6 +124,7 @@ def parse_if_brocade_lancom(
             if isinstance(description, str)
             if not any(description.startswith(d) for d in ignore_descriptions)
         ],
+        timestamp,
         port_map,
     )
 
@@ -144,23 +134,32 @@ def parse_if_brocade(
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return parse_if_brocade_lancom(
         if_table=string_table,
+        timestamp=time.time(),
         name_map={},
         port_map={},
         ignore_descriptions={"Point-2-Point"},
     )
 
 
-def parse_if_lancom(
+def parse_if_lancom_pure(
     string_table: Sequence[StringByteTable],
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if_table, ssid_table, port_mapping = string_table
 
     return parse_if_brocade_lancom(
         if_table,
+        timestamp=timestamp,
         name_map={str(ssid_line[0]): str(ssid_line[1]) for ssid_line in ssid_table},
         port_map=_map_ports(port_mapping),
         ignore_descriptions={"P2P", "Point-2-Point"},
     )
+
+
+def parse_if_lancom(
+    string_table: Sequence[StringByteTable],
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_if_lancom_pure(string_table, timestamp=time.time())
 
 
 snmp_section_if_brocade = SimpleSNMPSection(

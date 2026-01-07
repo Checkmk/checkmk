@@ -317,6 +317,7 @@ def _port_mapping(name: str, port_map: Mapping[str, str]) -> str | None:
 
 def generic_parse_if64(
     string_table: StringByteTable,
+    timestamp: float,
     port_map: Mapping[str, str] | None = None,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
@@ -347,6 +348,7 @@ def generic_parse_if64(
                 out_disc=interfaces.saveint(line[15]),
                 out_err=interfaces.saveint(line[16]),
             ),
+            timestamp=timestamp,
         )
         for line in string_table
     ]
@@ -354,6 +356,7 @@ def generic_parse_if64(
 
 def parse_if64(
     string_table: StringByteTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     preprocessed_lines: StringByteTable = []
     for line in string_table:
@@ -374,7 +377,7 @@ def parse_if64(
             # remove ifHighSpeed
             preprocessed_lines.append(line[:20] if len(line) == 21 else line[:20] + line[21:])
 
-    return generic_parse_if64(preprocessed_lines)
+    return generic_parse_if64(preprocessed_lines, timestamp)
 
 
 def generic_check_if64(

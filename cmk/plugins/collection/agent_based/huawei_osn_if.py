@@ -24,6 +24,7 @@ Section = Mapping[str, interfaces.InterfaceWithCounters]
 
 
 def parse_huawei_osn_if(string_table: Sequence[StringTable]) -> Section:
+    timestamp = time.time()
     return {
         name: interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -45,6 +46,7 @@ def parse_huawei_osn_if(string_table: Sequence[StringTable]) -> Section:
                 out_bcast=interfaces.saveint(line[6]),
                 out_err=interfaces.saveint(line[10]),
             ),
+            timestamp,
         )
         for line in string_table[0]
         for name in [line[0]]
@@ -94,7 +96,6 @@ def check_huawei_osn_if(
         params,
         interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             interface,
-            timestamp=time.time(),
             value_store=get_value_store(),
             params=params,
         ),

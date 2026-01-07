@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.if64_tplink import parse_if64_tplink
+from cmk.plugins.collection.agent_based.if64_tplink import parse_if64_tplink_pure
 from cmk.plugins.lib import interfaces
 
 
-def test_parse_if64_tplink() -> None:
-    assert parse_if64_tplink(
+def test_parse_if64_tplink_pure() -> None:
+    assert parse_if64_tplink_pure(
         [
             [
                 "1",
@@ -57,7 +57,8 @@ def test_parse_if64_tplink() -> None:
                 [172, 132, 198, 175, 52, 255],
                 "ifAlias",
             ],
-        ]
+        ],
+        67.0,
     ) == [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -89,6 +90,7 @@ def test_parse_if64_tplink() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=67.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -120,5 +122,6 @@ def test_parse_if64_tplink() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=67.0,
         ),
     ]

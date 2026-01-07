@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping, Sequence
 from enum import Enum
 
@@ -106,7 +107,7 @@ def _parse_interface_types(raw_type: str, interface_name: str) -> InterfaceType:
     return InterfaceType.NOT_LOOPBACK
 
 
-def _create_interface(raw_stats: Mapping[str, str]) -> InterfaceWithCounters:
+def _create_interface(raw_stats: Mapping[str, str], timestamp: float) -> InterfaceWithCounters:
     multicast = float(raw_stats["multicast"])
     name = raw_stats["name"]
     return InterfaceWithCounters(
@@ -131,11 +132,16 @@ def _create_interface(raw_stats: Mapping[str, str]) -> InterfaceWithCounters:
             out_disc=float(raw_stats["tx_dropped"]),
             out_err=float(raw_stats["tx_errors"]),
         ),
+        timestamp=timestamp,
     )
 
 
+def parse_lnx_container_host_if_pure(string_table: StringTable, timestamp: float) -> Section:
+    return [_create_interface(_parse_raw_stats(i), timestamp) for i in string_table], {}
+
+
 def parse_lnx_container_host_if(string_table: StringTable) -> Section:
-    return [_create_interface(_parse_raw_stats(i)) for i in string_table], {}
+    return parse_lnx_container_host_if_pure(string_table, time.time())
 
 
 agent_section_lnx_container_host_if = AgentSection(

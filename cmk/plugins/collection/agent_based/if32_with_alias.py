@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import time
+
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -19,6 +22,7 @@ from cmk.plugins.lib import interfaces
 def parse_if(
     string_table: StringByteTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    timestamp = time.time()
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -45,6 +49,7 @@ def parse_if(
                 out_disc=interfaces.saveint(line[13]),
                 out_err=interfaces.saveint(line[14]),
             ),
+            timestamp,
         )
         for line in string_table
         if interfaces.saveint(line[0]) > 0

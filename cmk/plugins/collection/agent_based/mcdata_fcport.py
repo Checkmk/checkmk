@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Iterable, Sequence
 
 from cmk.agent_based.v2 import (
@@ -30,7 +31,10 @@ def _bin_to_64(bin_: str | Sequence[int]) -> int:
     return sum(b * 265**i for i, b in enumerate(bin_[::-1]))
 
 
-def _line_to_interface(line: Iterable[str | Sequence[int]]) -> interfaces.InterfaceWithCounters:
+def _line_to_interface(
+    line: Iterable[str | Sequence[int]],
+    timestamp: float,
+) -> interfaces.InterfaceWithCounters:
     index, opStatus, speed, txWords64, rxWords64, txFrames64, rxFrames64, c3Discards64, crcs = line
     index = "%02d" % int(str(index))
     return interfaces.InterfaceWithCounters(
@@ -50,13 +54,21 @@ def _line_to_interface(line: Iterable[str | Sequence[int]]) -> interfaces.Interf
             out_ucast=_bin_to_64(txFrames64),
             out_disc=_bin_to_64(c3Discards64),
         ),
+        timestamp,
     )
+
+
+def parse_mcdata_fcport_pure(
+    string_table: StringByteTable,
+    timestamp: float,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return [_line_to_interface(line, timestamp) for line in string_table]
 
 
 def parse_mcdata_fcport(
     string_table: StringByteTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
-    return [_line_to_interface(line) for line in string_table]
+    return parse_mcdata_fcport_pure(string_table, time.time())
 
 
 snmp_section_mcdata_fcport = SimpleSNMPSection(

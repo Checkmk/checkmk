@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import CheckPlugin, RuleSetType, SNMPSection, SNMPTree, StringTable
@@ -13,6 +14,7 @@ from cmk.plugins.lib import if64, interfaces
 def parse_hitachi_hnas_fc_if(
     string_table: Sequence[StringTable],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    timestamp = time.time()
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -29,6 +31,7 @@ def parse_hitachi_hnas_fc_if(
                 in_err=sum(map(int, line[6:13])),
                 out_octets=interfaces.saveint(line[5]),
             ),
+            timestamp=timestamp,
         )
         for line in string_table[0]
     ]

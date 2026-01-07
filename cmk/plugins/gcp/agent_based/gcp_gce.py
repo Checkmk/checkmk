@@ -133,8 +133,8 @@ def check_network(
                 out_octets=metrics["out"],
             ),
             get_rate_errors=[],
+            timestamp=time.time(),
         ),
-        timestamp=time.time(),
         value_store=get_value_store(),
         params=params,
     )

@@ -5,6 +5,8 @@
 
 # mypy: disable-error-code="possibly-undefined"
 
+import time
+
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces
 
@@ -22,6 +24,7 @@ def _consume_down_interfaces(string_table: StringTable) -> tuple[list[str], int]
 
 def _parse_aix_common(
     string_table: StringTable,
+    timestamp: float,
 ) -> tuple[dict[str, interfaces.InterfaceWithCounters], dict[str, list[str]]]:
     ifaces = {}
     flags = {}
@@ -38,6 +41,7 @@ def _parse_aix_common(
                     type="24" if nic.startswith("lo") else "6",
                 ),
                 interfaces.Counters(),
+                timestamp=timestamp,
             )
         elif line[0] == "Bytes:" and line[2] == "Bytes:":
             iface.counters.out_octets = interfaces.saveint(line[1])
@@ -71,9 +75,10 @@ def _parse_aix_common(
 
 def _parse_aix_if_ifconfig_augmented(
     string_table: StringTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     interfaces_in_down_state, idx = _consume_down_interfaces(string_table)
-    ifaces, flags = _parse_aix_common(string_table[idx:])
+    ifaces, flags = _parse_aix_common(string_table[idx:], timestamp)
     for nic, iface in ifaces.items():
         iface.attributes.oper_status = "2" if nic in interfaces_in_down_state else "1"
         iface.attributes.finalize()
@@ -82,8 +87,9 @@ def _parse_aix_if_ifconfig_augmented(
 
 def _parse_aix_if_entstat_only(
     string_table: StringTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
-    ifaces, flags = _parse_aix_common(string_table)
+    ifaces, flags = _parse_aix_common(string_table, timestamp)
 
     for nic, iface in ifaces.items():
         iface_flags = flags.get(nic, [])
@@ -101,12 +107,21 @@ def _parse_aix_if_entstat_only(
     return list(ifaces.values())
 
 
+def parse_aix_if_pure(
+    string_table: StringTable,
+    timestamp: float,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return (
+        _parse_aix_if_ifconfig_augmented(string_table, timestamp)
+        if string_table[0][0] == "[interfaces_in_down_state]"
+        else _parse_aix_if_entstat_only(string_table, timestamp)
+    )
+
+
 def parse_aix_if(
     string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
-    if string_table[0][0] == "[interfaces_in_down_state]":
-        return _parse_aix_if_ifconfig_augmented(string_table)
-    return _parse_aix_if_entstat_only(string_table)
+    return parse_aix_if_pure(string_table, time.time())
 
 
 agent_section_aix_if = AgentSection(

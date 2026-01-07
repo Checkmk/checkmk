@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field, replace
 from ipaddress import AddressValueError, ip_interface, NetmaskValueError
@@ -212,7 +213,7 @@ def _get_physical_address(address: str) -> str:
     return ""
 
 
-def parse_lnx_if(string_table: StringTable) -> Section:
+def parse_lnx_if_pure(string_table: StringTable, timestamp: float) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     if_table = []
@@ -249,10 +250,15 @@ def parse_lnx_if(string_table: StringTable) -> Section:
                     out_disc=ethtool_interface.counters[11],
                     out_err=ethtool_interface.counters[10],
                 ),
+                timestamp,
             )
         )
 
     return if_table, ip_stats
+
+
+def parse_lnx_if(string_table: StringTable) -> Section:
+    return parse_lnx_if_pure(string_table, time.time())
 
 
 def host_label_lnx_ip_address(section: Section) -> HostLabelGenerator:

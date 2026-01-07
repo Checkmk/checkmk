@@ -151,7 +151,7 @@ const pageNavigation = parsePageNavigation()
     <div class="actions-section">
       <template v-if="!isEditMode">
         <SharingStatus
-          v-if="!isBuiltInDashboard"
+          v-if="canEditDashboard && !isBuiltInDashboard"
           :enabled="!!publicToken"
           :shared-until="publicToken?.expires_at ? new Date(publicToken?.expires_at) : null"
           @open-sharing-settings="emit('open-share-workflow')"

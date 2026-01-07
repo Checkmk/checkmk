@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class AddOpenTelemetryCollectorReceiver(CmkPage):
-    """Represent the page `Add OpenTelemetry Collector (Experimental)`"""
+    """Represent the page `Add OpenTelemetry Collector: Receiver (experimental)`"""
 
     incorrect_form_error_message = "Cannot save the form because it contains errors."
     one_collector_per_site_error_detail = (
@@ -39,7 +39,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `Add OpenTelemetry Collector (Experimental)` page."""
+        """Instructions to navigate to `Add OpenTelemetry collector: Receiver (experimental)` page."""
         otel_collector_receiver_page = OpenTelemetryCollectorReceiver(self.page)
         otel_collector_receiver_page.add_open_telemetry_collector_receiver_configuration_btn.click()
         _url_pattern: str = quote_plus("mode=edit_otel_collectors_receiver")
@@ -51,7 +51,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         logger.info(f"Validate that current page is '{self.page_title}' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.unique_id_textfield).to_be_visible()
-        expect(self.receiver_protocol_endpoint_checkbox("Receiver protocol GRPC")).to_be_visible()
+        expect(self.receiver_protocol_endpoint_checkbox("GRPC-based receiver")).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:

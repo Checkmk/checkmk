@@ -9,6 +9,11 @@ The metric backend, concretely ClickHouse, is a third-party component.
 Its purpose is to store and retrieve time series data (metrics).
 The goal is to offer application monitoring with Checkmk.
 
+Note that ClickHouse is not intended to be a general-purpose database for Checkmk.
+At the moment, its purpose is solely the support of application monitoring, specifically time series data.
+Other signals such as logs or traces will be added in the future.
+Hence, only components related to application monitoring should access ClickHouse.
+
 At the moment, we support the ingestion of OpenTelemetry (OTel) metrics via the `ClickHouse exporter <https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/clickhouseexporter>`_ of the OTel collector.
 Once ingested, there are two main channels for monitoring:
 
@@ -22,6 +27,8 @@ The metric backend works the other way round: We create services based on data s
 Also, the metric backend offers a much richer feature set, both in terms of storage and querying capabilities.
 One promiment example are attributes that uniquely identify a concrete time series.
 Finally, the data we store in the metric backend currently has a time-to-live of 14 days, compared to years for RRDs.
+In the future, we might move the data currently stored in the RRDs to the metric backend as well.
+However, this requires further evaluation and there are no concrete plans yet.
 
 Architecture
 ============

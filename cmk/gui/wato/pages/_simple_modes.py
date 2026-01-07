@@ -544,7 +544,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                 (
                     "disabled",
                     Checkbox(
-                        title=_("Configuration Activation"),
+                        title=_("Configuration activation"),
                         help=_(
                             "Selecting this option will disable the %s, but "
                             "it will remain in the configuration."
@@ -662,7 +662,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         if self._mode_type.can_be_disabled():
             elements["disabled"] = form_specs.DictElement(
                 parameter_form=form_specs.BooleanChoice(
-                    title=Title("Configuration Activation"),
+                    title=Title("Configuration activation"),
                     help_text=Help(
                         "Selecting this option will disable the %s, but "
                         "it will remain in the configuration."

@@ -144,7 +144,6 @@ void main() {
                         case "Agent Plugin Unit Tests":     // docker in docker
                         case "Package cmk-agent-receiver":  // Tries to start docker containers
                         case "Package cmk-relay-engine":    // Tries to start docker containers
-                        case "Package cmk-ccc":             // Seems to require non-root permissions, see CMK-24586
                         case "Package cmc":                 // Requires the C++ toolchain in /opt, clang tooling, and IWYU
                         case "Package neb":                 // Requires the C++ toolchain in /opt, clang tooling, and IWYU
                         case "Package livestatus":          // Requires the C++ toolchain in /opt, clang tooling, and IWYU

@@ -8,13 +8,18 @@ void execute_test(Map config = [:]) {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
 
+    // The branch-specific part must not contain dots (e.g. 2.5.0),
+    // because this results in an invalid branch name.
+    // The pod templates uses - instead.
+    def container_safe_branch_name = safe_branch_name.replace(".", "-")
+
     // update the default map content with the user provided config content
     // new key/value of provided map is automatically added to the defaultDict
     def defaultDict = [
         name: "",
         cmd: "",
         output_file: "",
-        container_name: "minimal-ubuntu-checkmk-${safe_branch_name}",
+        container_name: "minimal-ubuntu-checkmk-${container_safe_branch_name}",
     ] << config;
 
     stage("Run ${defaultDict.name}") {

@@ -149,12 +149,6 @@ class Dashlet(abc.ABC, Generic[T]):
             self.default_display_title(),
         )
 
-    def show_background(self) -> bool:
-        try:
-            return self._dashlet_spec["background"]
-        except KeyError:
-            return True
-
     def _dashlet_context_vars(self) -> HTTPVariables:
         return visuals.context_to_uri_vars(self.context)
 

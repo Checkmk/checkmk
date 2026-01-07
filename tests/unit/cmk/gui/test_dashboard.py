@@ -186,27 +186,6 @@ def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
     assert dashlet.dashboard_name == "main"
 
 
-def test_show_background(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.show_background() is True
-
-    dummy_config["background"] = False
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
-    assert dashlet.show_background() is False
-
-
 @pytest.mark.usefixtures("reset_dashlet_registry")
 def test_dashlet_context_inheritance() -> None:
     test_dashboard = TEST_DASHBOARD.copy()

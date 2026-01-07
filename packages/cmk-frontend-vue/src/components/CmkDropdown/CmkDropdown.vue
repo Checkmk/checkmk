@@ -144,7 +144,6 @@ function hideSuggestions(): void {
 
 function handleUpdate(selected: Suggestion | null): void {
   selectedOption.value = selected?.name || null
-  buttonLabel.value = selected?.title || inputHint
   hideSuggestions()
 }
 

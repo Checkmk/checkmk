@@ -26,6 +26,7 @@ const data = defineModel<DcdMetricBackendFilter>('data', { required: true })
     v-model:data-point-attributes="data.data_point_attributes"
     :strict="false"
     :disable-values-on-empty-key="true"
+    :static-resource-attribute-keys="['service.name']"
   />
 </template>
 

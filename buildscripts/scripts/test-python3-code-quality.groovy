@@ -7,6 +7,11 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
 
+    // The branch-specific part must not contain dots (e.g. 2.5.0),
+    // because this results in an invalid branch name.
+    // The pod templates uses - instead.
+    def container_safe_branch_name = safe_branch_name.replace(".", "-")
+
     stage('Fetch tags') {
         dir("${checkout_dir}") {
             withCredentials([
@@ -20,7 +25,7 @@ void main() {
                     // however the werk tests heavily rely on them, so fetch them here
                     // this requires a lot of CPU power
                     // thereby switch to the larger container with more resources granted
-                    container("minimal-ubuntu-checkmk-${safe_branch_name}") {
+                    container("minimal-ubuntu-checkmk-${container_safe_branch_name}") {
                         sh("git fetch origin 'refs/tags/*:refs/tags/*'");
                     }
                 }

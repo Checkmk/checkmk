@@ -157,8 +157,13 @@ inside_container = { Map arg1=[:], Closure arg2 ->
         def tmp_given_image = args.image ?: "";
         println("Given image: ${tmp_given_image}");
         if (tmp_given_image == "") {
+            // The branch-specific part must not contain dots (e.g. 2.5.0),
+            // because this results in an invalid branch name.
+            // The pod templates uses - instead.
+            def container_safe_branch_name = safe_branch_name.replace(".", "-")
+
             // "ubuntu-2404-master-latest" is part of "klausi-package-builder-base" pod template
-            tmp_given_image = "ubuntu-2404-${safe_branch_name}-latest";
+            tmp_given_image = "ubuntu-2404-${container_safe_branch_name}-latest";
         // tmp_given_image = docker_reference_image();
         } else {
             // docker.image() object is given
@@ -210,8 +215,13 @@ inside_container_minimal = { Map arg1=[:], Closure arg2 ->
         def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
         def safe_branch_name = versioning.safe_branch_name();
 
-        container("minimal-alpine-python-checkmk-${safe_branch_name}") {
-            println("'inside_container_minimal' is using k8s container 'minimal-alpine-python-checkmk-${safe_branch_name}'");
+        // The branch-specific suffix must not contain dots (e.g. 2.5.0),
+        // because this results in an invalid branch name.
+        // The pod templates uses - instead.
+        def container_name_suffix = safe_branch_name.replace(".", "-")
+
+        container("minimal-alpine-python-checkmk-${container_name_suffix}") {
+            println("'inside_container_minimal' is using k8s container 'minimal-alpine-python-checkmk-${container_name_suffix}'");
             body();
         }
     }

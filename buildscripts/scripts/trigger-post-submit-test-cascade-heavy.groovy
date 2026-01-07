@@ -26,7 +26,6 @@ void main() {
         "test-integration-single-f12less-ultimatemt",
         "test-plugins",
         "test-plugins-piggyback",
-        "test-plugins-siteless",
         "test-update-single-f12less",
         "test-update-single-f12less-pro-community",
         "test-update-single-f12less-pro-ultimate",

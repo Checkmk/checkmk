@@ -112,6 +112,10 @@ def test_load_data_from_file_locking(tmp_path: Path) -> None:
     assert store.have_lock(locked_file) is True
 
 
+@pytest.mark.xfail(
+    reason="This test fails when executed as root user, as it is done currently in K8s CV pods. "
+    "As soon as we change this to unprivileged user, this test should work again."
+)
 def test_load_data_from_not_permitted_file(tmp_path: Path) -> None:
     # Note: The code is actually a lot more expressive in debug mode.
     cmk.ccc.debug.disable()

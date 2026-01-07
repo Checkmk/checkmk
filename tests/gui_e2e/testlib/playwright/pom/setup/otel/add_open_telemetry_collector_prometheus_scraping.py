@@ -37,7 +37,7 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `Add Prometheus scraping (Experimental)` page."""
+        """Instructions to navigate to `Add OpenTelemetry collector: Prometheus scraping (experimental)` page."""
         otel_collector_prom_scrape_page = OpenTelemetryCollectorPrometheusScraping(self.page)
         otel_collector_prom_scrape_page.add_open_telemetry_collector_configuration_btn.click()
         _url_pattern: str = quote_plus("mode=edit_otel_collectors_prom_scrape")

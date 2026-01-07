@@ -13,6 +13,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import NamedTuple
 
+from cmk.gui import main_modules as _  # noqa: F401
 from cmk.gui.config import active_config
 from cmk.gui.utils import gen_id
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE

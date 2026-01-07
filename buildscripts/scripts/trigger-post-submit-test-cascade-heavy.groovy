@@ -19,7 +19,6 @@ void main() {
         "test-gui-e2e-f12less-cloud",
         "test-gui-e2e-f12less-pro",
         "test-gui-e2e-f12less-ultimate",
-        "test-integration-agent-plugin",
         "test-integration-single-f12less",
         "test-integration-single-f12less-community",
         "test-integration-single-f12less-redfish",

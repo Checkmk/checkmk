@@ -67,7 +67,7 @@ def commit_id(directory: str) -> str:
 
 def cmk_branch(directory: str) -> str:
     return min(
-        ("master", "2.4.0", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.6.0", "1.5.0"),
+        ("master", "2.5.0", "2.4.0", "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.6.0", "1.5.0"),
         key=lambda b: int(
             cmd_result(f" git rev-list --max-count=1000 --count HEAD...origin/{b}", cwd=directory)[
                 0

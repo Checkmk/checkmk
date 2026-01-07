@@ -29,7 +29,7 @@ import requests
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
-__version__ = "2.5.0b1"
+__version__ = "2.6.0b1"
 
 AGENT = "mobileiron"
 

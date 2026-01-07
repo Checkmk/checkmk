@@ -24,7 +24,7 @@ sys.path.append(str(cmk.utils.paths.local_agents_dir / "plugins"))
 sys.path.append(str(cmk.utils.paths.agents_dir / "plugins"))
 import mk_jolokia
 
-__version__ = "2.5.0b1"
+__version__ = "2.6.0b1"
 
 USER_AGENT = "checkmk-special-jolokia-" + __version__
 

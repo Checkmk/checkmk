@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.5.0b1"
+$CMK_VERSION = "2.6.0b1"
 
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and

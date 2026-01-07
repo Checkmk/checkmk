@@ -371,7 +371,7 @@ section_cpu() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.5.0b1"
+    echo "Version: 2.6.0b1"
     echo "AgentOS: openwrt"
     echo "Hostname: $(cat /proc/sys/kernel/hostname)"
 

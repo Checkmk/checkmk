@@ -3,4 +3,4 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 // This file is ignored by bazel where the version is set with a build flag.
-pub const VERSION: &str = "2.5.0b1";
+pub const VERSION: &str = "2.6.0b1";

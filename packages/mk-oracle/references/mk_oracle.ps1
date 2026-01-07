@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.5.0b1"
+$CMK_VERSION = "2.6.0b1"
 # Copyright (C) 2025 Checkmk GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,7 +79,7 @@ $DEBUG = 0
 
 # Entries which assumed as safe during testing security permission check
 # ----------------------------------------------------------------------
-# Add to the list of entries which 
+# Add to the list of entries which
 # 1. May have write access to Oracle binaries
 # 2. Are not Administrators
 # Typical example: 'DOMAIN\DbInstaller' or 'MYPC\SpecialUser'

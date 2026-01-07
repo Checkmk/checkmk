@@ -9,6 +9,6 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.5.0b1"
+CMK_VERSION="2.6.0b1"
 
 "${MK_LIBDIR}/plugins/packages/mk-oracle/mk-oracle" -c "${MK_CONFDIR}/oracle.yml" --filter async

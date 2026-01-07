@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-__version__ = "2.5.0b1"
+__version__ = "2.6.0b1"
 
 # Monitors FTP backup spaces of plesk domains.
 # Data format

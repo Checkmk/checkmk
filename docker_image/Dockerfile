@@ -71,7 +71,7 @@ RUN set -e \
     && rm needed-packages
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.5.0b1"
+ARG CMK_VERSION="2.6.0b1"
 ARG CMK_EDITION
 # Distro codename is used to find the corresponding .deb package
 ARG DISTRO_CODENAME="jammy"

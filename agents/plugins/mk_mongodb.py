@@ -27,7 +27,7 @@ version of pymongo (at least 2.8).
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-__version__ = "2.5.0b1"
+__version__ = "2.6.0b1"
 
 import argparse
 import configparser

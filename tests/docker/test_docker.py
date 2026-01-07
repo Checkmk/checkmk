@@ -336,7 +336,7 @@ def test_update(client: docker.DockerClient) -> None:
     min_version = get_min_version()
     base_package = (
         CMKPackageInfoOld(min_version, CMKEditionOld(CMKEditionOld.CRE))
-        if min_version < CMKVersion("2.5.0")
+        if min_version < CMKVersion("2.6.0")
         else CMKPackageInfo(min_version, CMKEdition(CMKEdition.COMMUNITY))
     )
     update_package = CMKPackageInfo(version_from_env(), edition_from_env())

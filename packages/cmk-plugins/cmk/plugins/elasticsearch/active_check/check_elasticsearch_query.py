@@ -22,7 +22,7 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # TODO: use these:
-__version__ = "2.5.0b1"
+__version__ = "2.6.0b1"
 
 USER_AGENT = f"checkmk-active-elasticsearch-query-{__version__}"
 

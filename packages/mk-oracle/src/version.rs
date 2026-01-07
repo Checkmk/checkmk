@@ -15,4 +15,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // This file is ignored by bazel where the version is set with a build flag.
-pub const VERSION: &str = "2.5.0b1";
+pub const VERSION: &str = "2.6.0b1";

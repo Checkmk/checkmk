@@ -70,9 +70,9 @@ setversion:
 	# version natively.
 	sed -i \
 	-e 's/$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"\r/' \
-	-e 's/^set CMK_VERSION=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' \
+	-e 's/^set CMK_VERSION ?=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' \
 	-e 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' \
-	windows/plugins/* \
+	$(shell find $(REPO_PATH)/windows/plugins -type f) \
 	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) ; \
 	sed -i \
 	-e 's/^CMK_VERSION=".*/CMK_VERSION="$(NEW_VERSION)"/' \

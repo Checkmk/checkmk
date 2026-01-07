@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-__version__ = "2.5.0b1"
+__version__ = "2.6.0b1"
 
 # This plugin was sponsored by BenV. Thanks!
 # https://notes.benv.junerules.com/mtr/

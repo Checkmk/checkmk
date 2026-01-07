@@ -16,7 +16,7 @@ from typing import NoReturn
 from livestatus import SingleSiteConnection
 
 # This will be substituted at 'make dist' time.
-__version__ = "2.5.0b1"
+__version__ = "2.6.0b1"
 
 
 @dataclass(slots=True)

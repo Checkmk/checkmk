@@ -6,13 +6,13 @@
 
 REPO_PATH          := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
-VERSION            := 2.5.0b1
+VERSION            := 2.6.0b1
 
 # Currently only used for the OMD package build cache. We did not want to use
 # the branch name, because we want to re-use a single cache also for derived sandbox
 # branches (1.7.0i1 -> 1.7.0).
 # This needs to be changed in the master branch every time a stable branch is forked.
-BRANCH_VERSION     := 2.5.0
+BRANCH_VERSION     := 2.6.0
 
 # return nothing if the branch name, e.g. "master" is not the version e.g. 2.4.0
 # this is evaluated by "buildscripts/scripts/utils/versioning.groovy" and does

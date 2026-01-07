@@ -124,8 +124,8 @@ def check_aws_rds_network_io(
                     out_octets=metrics["NetworkTransmitThroughput"],
                 ),
                 get_rate_errors=[],
+                timestamp=time.time(),
             ),
-            timestamp=time.time(),
             value_store=get_value_store(),
             params=params,
         )

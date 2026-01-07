@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
+import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any
 
@@ -93,6 +93,7 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
     section_netapp_ontap_if: InterfacesSection,
     section_netapp_ontap_ports: PortsSection,
     section_netapp_ontap_if_counters: InterfacesCountersSection | None,
+    timestamp: float,
 ) -> IfSection:
     """
     Failover policy docs:
@@ -175,7 +176,7 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
             case _:
                 ...
 
-    return merge_if_sections(interfaces_data_section, if_mac_list, virtual_interfaces)
+    return merge_if_sections(interfaces_data_section, if_mac_list, virtual_interfaces, timestamp)
 
 
 def discover_netapp_ontap_if(
@@ -191,6 +192,7 @@ def discover_netapp_ontap_if(
         section_netapp_ontap_if,
         section_netapp_ontap_ports,
         section_netapp_ontap_if_counters,
+        time.time(),
     )
 
     yield from interfaces.discover_interfaces(
@@ -213,6 +215,7 @@ def check_netapp_ontap_if(
         section_netapp_ontap_if,
         section_netapp_ontap_ports,
         section_netapp_ontap_if_counters,
+        time.time(),
     )
 
     yield from check_netapp_interfaces(

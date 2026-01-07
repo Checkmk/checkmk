@@ -31,6 +31,7 @@ def test_add_admin_status_to_ifaces() -> None:
                 type="6",
             ),
             interfaces.Counters(),
+            123.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -40,6 +41,7 @@ def test_add_admin_status_to_ifaces() -> None:
                 type="6",
             ),
             interfaces.Counters(),
+            123.0,
         ),
     ]
     if64._add_admin_status_to_ifaces(ifaces, {"1": "1"})

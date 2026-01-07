@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+import time
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces
 
-Section = Sequence[interfaces.InterfaceWithCounters]
 
-
-def parse_statgrab_net(string_table: StringTable) -> Section:
+def parse_statgrab_net_pure(
+    string_table: StringTable,
+    timestamp: float,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     nics: dict[str, dict[str, str]] = {}
     for nic_varname, value in string_table:
         nic_id, varname = nic_varname.split(".")
@@ -36,9 +37,16 @@ def parse_statgrab_net(string_table: StringTable) -> Section:
                 out_disc=interfaces.saveint(nic.get("collisions", 0)),
                 out_err=interfaces.saveint(nic.get("oerrors", 0)),
             ),
+            timestamp,
         )
         for nr, (nic_id, nic) in enumerate(nics.items())
     ]
+
+
+def parse_statgrab_net(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_statgrab_net_pure(string_table, timestamp=time.time())
 
 
 agent_section_statgrab_net = AgentSection(

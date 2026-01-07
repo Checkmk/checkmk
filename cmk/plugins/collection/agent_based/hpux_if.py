@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 
 from cmk.agent_based.v2 import AgentSection, CheckPlugin, RuleSetType, StringTable
 from cmk.plugins.lib import if64, interfaces
@@ -26,6 +27,7 @@ _HPUX_FIELDS_TO_IF_FIELDS = {
 def parse_hpux_if(
     string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    timestamp = time.time()
     nics = []
     for line in string_table:
         if "***" in line:
@@ -37,6 +39,7 @@ def parse_hpux_if(
                     type="6",
                 ),
                 interfaces.Counters(),
+                timestamp=timestamp,
             )
             nics.append(iface)
             continue

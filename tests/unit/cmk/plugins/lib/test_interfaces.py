@@ -17,6 +17,7 @@ CheckResults = Sequence[Result | Metric | IgnoreResults]
 
 def _create_interfaces_with_counters(
     bandwidth_change: int,
+    timestamp: float = 0.0,
     **attr_kwargs: Any,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     ifaces = [
@@ -36,6 +37,7 @@ def _create_interfaces_with_counters(
                 out_octets=266045395,
                 out_ucast=97385,
             ),
+            timestamp,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -48,6 +50,7 @@ def _create_interfaces_with_counters(
                 phys_address="\x02B\x9d\xa42/",
             ),
             interfaces.Counters(),
+            timestamp,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -60,6 +63,7 @@ def _create_interfaces_with_counters(
                 phys_address="\xe4\xb9z6\x93\xad",
             ),
             interfaces.Counters(),
+            timestamp,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -72,6 +76,7 @@ def _create_interfaces_with_counters(
                 phys_address="\xe4\xb9z\xb9\x9f\x99",
             ),
             interfaces.Counters(),
+            timestamp,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -88,6 +93,7 @@ def _create_interfaces_with_counters(
                 out_octets=20171,
                 out_ucast=113,
             ),
+            timestamp,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -114,6 +120,7 @@ def _create_interfaces_with_counters(
                 out_err=0,
                 out_disc=0,
             ),
+            timestamp,
         ),
     ]
     for iface in ifaces:
@@ -133,20 +140,18 @@ def _create_interfaces_with_rates(
     _init = [
         interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             iface,
-            timestamp=0,
             value_store=value_store,
             params=params or {},
         )
-        for iface in _create_interfaces_with_counters(0, **attr_kwargs)
+        for iface in _create_interfaces_with_counters(0, 0.0, **attr_kwargs)
     ]
     return [
         interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             iface,
-            timestamp=timedelta,
             value_store=value_store,
             params=params or {},
         )
-        for iface in _create_interfaces_with_counters(bandwidth_change, **attr_kwargs)
+        for iface in _create_interfaces_with_counters(bandwidth_change, timedelta, **attr_kwargs)
     ]
 
 
@@ -1703,17 +1708,15 @@ def test_check_multiple_interfaces(
             item,
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
-    ifaces = _create_interfaces_with_counters(4000000)
+    ifaces = _create_interfaces_with_counters(4000000, 5.0)
     assert (
         list(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
                 ifaces,
-                timestamps=[5] * len(ifaces),
             )
         )
         == result
@@ -1735,17 +1738,15 @@ def test_check_multiple_interfaces_duplicate_descr(
             item,
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
-    ifaces = _create_interfaces_with_counters(4000000, descr=description)
+    ifaces = _create_interfaces_with_counters(4000000, 5.0, descr=description)
     assert (
         list(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
                 ifaces,
-                timestamps=[5] * len(ifaces),
             )
         )
         == result
@@ -1768,16 +1769,14 @@ def test_check_multiple_interfaces_duplicate_alias(
             item,
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
-    ifaces = _create_interfaces_with_counters(4000000, alias=alias)
+    ifaces = _create_interfaces_with_counters(4000000, 5.0, alias=alias)
     assert list(
         interfaces.check_multiple_interfaces(
             item,
             params,
             ifaces,
-            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(
@@ -1816,16 +1815,14 @@ def test_check_multiple_interfaces_group_simple() -> None:
             "group",
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
-    ifaces = _create_interfaces_with_counters(4000000)
+    ifaces = _create_interfaces_with_counters(4000000, 5.0)
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
             ifaces,
-            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -1871,16 +1868,14 @@ def test_check_multiple_interfaces_group_exclude() -> None:
             "group",
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
-    ifaces = _create_interfaces_with_counters(4000000)
+    ifaces = _create_interfaces_with_counters(4000000, 5.0)
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
             ifaces,
-            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -1926,16 +1921,12 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     ifaces = _create_interfaces_with_counters(0)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
-    list(
-        interfaces.check_multiple_interfaces("group", params, ifaces, timestamps=[0] * len(ifaces))
-    )
+    list(interfaces.check_multiple_interfaces("group", params, ifaces))
 
-    ifaces = _create_interfaces_with_counters(4000000)
+    ifaces = _create_interfaces_with_counters(4000000, 5.0)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
-    assert list(
-        interfaces.check_multiple_interfaces("group", params, ifaces, timestamps=[5] * len(ifaces))
-    ) == [
+    assert list(interfaces.check_multiple_interfaces("group", params, ifaces)) == [
         Result(state=State.OK, summary="Interface group"),
         Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
         Result(state=State.OK, summary="Members: [4 (down), 6 (up)]"),
@@ -1992,16 +1983,14 @@ def test_check_multiple_interfaces_w_node(
             item,
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
-    ifaces = _create_interfaces_with_counters(4000000, node=node_name)
+    ifaces = _create_interfaces_with_counters(4000000, 5.0, node=node_name)
     assert list(
         interfaces.check_multiple_interfaces(
             item,
             params,
             ifaces,
-            timestamps=[5] * len(ifaces),
         )
     ) == _add_node_name_to_results(result, node_name)
 
@@ -2024,19 +2013,17 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
             item,
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
     ifaces = [
-        *_create_interfaces_with_counters(4000000, node=node_name_1),
-        *_create_interfaces_with_counters(4000000, node=node_name_2),
+        *_create_interfaces_with_counters(4000000, 5.0, node=node_name_1),
+        *_create_interfaces_with_counters(4000000, 5.0, node=node_name_2),
     ]
     assert list(
         interfaces.check_multiple_interfaces(
             item,
             params,
             ifaces,
-            timestamps=[5] * len(ifaces),
         )
     ) == _add_node_name_to_results(result, node_name_1)
 
@@ -2080,7 +2067,6 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
             "group",
             params,
             ifaces,
-            timestamps=[0] * len(ifaces),
         )
     )
     ifaces = [
@@ -2088,6 +2074,7 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
         for idx, node_name in enumerate(node_names)
         for interface in _create_interfaces_with_counters(
             4000000,
+            5.0,
             admin_status=str(idx + 1),
             node=node_name,
         )
@@ -2097,7 +2084,6 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
             "group",
             params,
             ifaces,
-            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -2188,6 +2174,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                             oper_status="1",
                         ),
                         interfaces.Counters(),
+                        timestamp=0.0,
                     ),
                 ],
             },
@@ -2224,6 +2211,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2233,6 +2221,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2256,6 +2245,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2265,6 +2255,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2288,6 +2279,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2297,6 +2289,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2321,6 +2314,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2331,6 +2325,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2341,6 +2336,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node2",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2373,6 +2369,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2383,6 +2380,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2393,6 +2391,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node2",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2425,6 +2424,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2435,6 +2435,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2445,6 +2446,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
                         node="node2",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2496,6 +2498,7 @@ def test_matching_interfaces_for_item(
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2505,6 +2508,7 @@ def test_matching_interfaces_for_item(
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2529,6 +2533,7 @@ def test_matching_interfaces_for_item(
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2538,6 +2543,7 @@ def test_matching_interfaces_for_item(
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2562,6 +2568,7 @@ def test_matching_interfaces_for_item(
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2571,6 +2578,7 @@ def test_matching_interfaces_for_item(
                         type="10",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2596,6 +2604,7 @@ def test_matching_interfaces_for_item(
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2606,6 +2615,7 @@ def test_matching_interfaces_for_item(
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2616,6 +2626,7 @@ def test_matching_interfaces_for_item(
                         node="node2",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2649,6 +2660,7 @@ def test_matching_interfaces_for_item(
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2659,6 +2671,7 @@ def test_matching_interfaces_for_item(
                         node="node1",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -2669,6 +2682,7 @@ def test_matching_interfaces_for_item(
                         node="node2",
                     ),
                     interfaces.Counters(),
+                    timestamp=0.0,
                 ),
             ],
             [
@@ -2715,21 +2729,24 @@ def test_non_unicast_packets_handling() -> None:
             in_nucast=0,
             out_nucast=0,
         ),
+        timestamp=0.0,
     )
     value_store: dict[str, object] = {}
 
     # first call: value store initalization
     interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
         iface_with_counters,
-        timestamp=0,
         value_store=value_store,
         params={},
     )
     # second call: rate computation
     iface_with_rates_and_averages = (
         interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
-            iface_with_counters,
-            timestamp=1,
+            interfaces.InterfaceWithCounters(
+                iface_with_counters.attributes,
+                iface_with_counters.counters,
+                timestamp=1.0,
+            ),
             value_store=value_store,
             params={},
         )

@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.ucs_bladecenter_if import parse_ucs_bladecenter_if
+from cmk.plugins.collection.agent_based.ucs_bladecenter_if import parse_ucs_bladecenter_if_pure
 from cmk.plugins.lib import interfaces
 
 
-def test_parse_ucs_bladecenter_if() -> None:
-    assert parse_ucs_bladecenter_if(
+def test_parse_ucs_bladecenter_if_pure() -> None:
+    assert parse_ucs_bladecenter_if_pure(
         [
             [
                 "fcStats",
@@ -67,7 +67,8 @@ def test_parse_ucs_bladecenter_if() -> None:
                 "SwitchId B",
                 "SlotId 1",
             ],
-        ]
+        ],
+        1.0,
     ) == [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -89,6 +90,7 @@ def test_parse_ucs_bladecenter_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -110,5 +112,6 @@ def test_parse_ucs_bladecenter_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=1.0,
         ),
     ]

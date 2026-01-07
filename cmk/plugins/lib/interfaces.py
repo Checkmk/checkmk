@@ -6,7 +6,6 @@
 import enum
 import itertools
 import re
-import time
 from collections import defaultdict
 from collections.abc import (
     Callable,
@@ -205,6 +204,7 @@ class Counters:
 class InterfaceWithCounters:
     attributes: Attributes
     counters: Counters
+    timestamp: float
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -230,22 +230,22 @@ class InterfaceWithRates:
     attributes: Attributes
     rates: Rates
     get_rate_errors: Sequence[tuple[str, GetRateError]]
+    timestamp: float
 
     @classmethod
     def from_interface_with_counters(
         cls,
         iface_counters: InterfaceWithCounters,
         *,
-        timestamp: float,
         value_store: MutableMapping[str, object],
     ) -> "InterfaceWithRates":
         return cls(
             iface_counters.attributes,
             *cls._compute_rates(
                 iface_counters,
-                timestamp=timestamp,
                 value_store=value_store,
             ),
+            timestamp=iface_counters.timestamp,
         )
 
     @classmethod
@@ -253,91 +253,90 @@ class InterfaceWithRates:
         cls,
         iface_counters: InterfaceWithCounters,
         *,
-        timestamp: float,
         value_store: MutableMapping[str, object],
     ) -> tuple[Rates, Sequence[tuple[str, GetRateError]]]:
         rate_errors = {}
         in_octets, rate_errors["in_octets"] = cls._compute_rate(
             counter=iface_counters.counters.in_octets,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"in_octets.{iface_counters.attributes.id_for_value_store}",
         )
         in_ucast, rate_errors["in_ucast"] = cls._compute_rate(
             counter=iface_counters.counters.in_ucast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"in_ucast.{iface_counters.attributes.id_for_value_store}",
         )
         in_mcast, rate_errors["in_mcast"] = cls._compute_rate(
             counter=iface_counters.counters.in_mcast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"in_mcast.{iface_counters.attributes.id_for_value_store}",
         )
         in_bcast, rate_errors["in_bcast"] = cls._compute_rate(
             counter=iface_counters.counters.in_bcast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"in_bcast.{iface_counters.attributes.id_for_value_store}",
         )
         in_nucast, rate_errors["in_nucast"] = cls._compute_rate(
             counter=iface_counters.counters.in_nucast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"in_nucast.{iface_counters.attributes.id_for_value_store}",
         )
         in_disc, rate_errors["in_disc"] = cls._compute_rate(
             counter=iface_counters.counters.in_disc,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"in_disc.{iface_counters.attributes.id_for_value_store}",
         )
         in_err, rate_errors["in_err"] = cls._compute_rate(
             counter=iface_counters.counters.in_err,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"in_err.{iface_counters.attributes.id_for_value_store}",
         )
         out_octets, rate_errors["out_octets"] = cls._compute_rate(
             counter=iface_counters.counters.out_octets,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"out_octets.{iface_counters.attributes.id_for_value_store}",
         )
         out_ucast, rate_errors["out_ucast"] = cls._compute_rate(
             counter=iface_counters.counters.out_ucast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"out_ucast.{iface_counters.attributes.id_for_value_store}",
         )
         out_mcast, rate_errors["out_mcast"] = cls._compute_rate(
             counter=iface_counters.counters.out_mcast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"out_mcast.{iface_counters.attributes.id_for_value_store}",
         )
         out_bcast, rate_errors["out_bcast"] = cls._compute_rate(
             counter=iface_counters.counters.out_bcast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"out_bcast.{iface_counters.attributes.id_for_value_store}",
         )
         out_nucast, rate_errors["out_nucast"] = cls._compute_rate(
             counter=iface_counters.counters.out_nucast,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"out_nucast.{iface_counters.attributes.id_for_value_store}",
         )
         out_disc, rate_errors["out_disc"] = cls._compute_rate(
             counter=iface_counters.counters.out_disc,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"out_disc.{iface_counters.attributes.id_for_value_store}",
         )
         out_err, rate_errors["out_err"] = cls._compute_rate(
             counter=iface_counters.counters.out_err,
-            timestamp=timestamp,
+            timestamp=iface_counters.timestamp,
             value_store=value_store,
             value_store_key=f"out_err.{iface_counters.attributes.id_for_value_store}",
         )
@@ -468,7 +467,6 @@ class InterfaceWithRatesAndAverages:
         cls,
         iface: InterfaceWithCounters | InterfaceWithRates,
         *,
-        timestamp: float,
         value_store: MutableMapping[str, object],
         params: Mapping[str, Any],
     ) -> "InterfaceWithRatesAndAverages":
@@ -477,7 +475,6 @@ class InterfaceWithRatesAndAverages:
             if isinstance(iface, InterfaceWithRates)
             else InterfaceWithRates.from_interface_with_counters(
                 iface,
-                timestamp=timestamp,
                 value_store=value_store,
             )
         )
@@ -487,7 +484,7 @@ class InterfaceWithRatesAndAverages:
                 _AveragingParams(
                     value_store=value_store,
                     value_store_key=f"in_octets.{iface_rates.attributes.id_for_value_store}.average",
-                    timestamp=timestamp,
+                    timestamp=iface_rates.timestamp,
                     backlog_minutes=backlog_minutes_in_octets,
                 )
                 if (backlog_minutes_in_octets := params.get("average")) is not None
@@ -500,7 +497,7 @@ class InterfaceWithRatesAndAverages:
                 _AveragingParams(
                     value_store=value_store,
                     value_store_key=f"out_octets.{iface_rates.attributes.id_for_value_store}.average",
-                    timestamp=timestamp,
+                    timestamp=iface_rates.timestamp,
                     backlog_minutes=backlog_minutes_out_octets,
                 )
                 if (backlog_minutes_out_octets := params.get("average")) is not None
@@ -521,7 +518,7 @@ class InterfaceWithRatesAndAverages:
                 _AveragingParams(
                     value_store=value_store,
                     value_store_key=f"in_mcast.{iface_rates.attributes.id_for_value_store}.average",
-                    timestamp=timestamp,
+                    timestamp=iface_rates.timestamp,
                     backlog_minutes=average_backlog_in_mcast,
                 )
                 if (average_backlog_in_mcast := params.get("average_bm")) is not None
@@ -534,7 +531,7 @@ class InterfaceWithRatesAndAverages:
                 _AveragingParams(
                     value_store=value_store,
                     value_store_key=f"out_mcast.{iface_rates.attributes.id_for_value_store}.average",
-                    timestamp=timestamp,
+                    timestamp=iface_rates.timestamp,
                     backlog_minutes=average_backlog_out_mcast,
                 )
                 if (average_backlog_out_mcast := params.get("average_bm")) is not None
@@ -547,7 +544,7 @@ class InterfaceWithRatesAndAverages:
                 _AveragingParams(
                     value_store=value_store,
                     value_store_key=f"in_bcast.{iface_rates.attributes.id_for_value_store}.average",
-                    timestamp=timestamp,
+                    timestamp=iface_rates.timestamp,
                     backlog_minutes=average_backlog_in_bcast,
                 )
                 if (average_backlog_in_bcast := params.get("average_bm")) is not None
@@ -560,7 +557,7 @@ class InterfaceWithRatesAndAverages:
                 _AveragingParams(
                     value_store=value_store,
                     value_store_key=f"out_bcast.{iface_rates.attributes.id_for_value_store}.average",
-                    timestamp=timestamp,
+                    timestamp=iface_rates.timestamp,
                     backlog_minutes=average_backlog_out_bcast,
                 )
                 if (average_backlog_out_bcast := params.get("average_bm")) is not None
@@ -1297,7 +1294,6 @@ def _check_ungrouped_ifs(
     item: str,
     params: Mapping[str, Any],
     section: Section[TInterfaceType],
-    timestamps: Sequence[float],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     """
@@ -1312,16 +1308,13 @@ def _check_ungrouped_ifs(
     item_appearance = (
         _to_item_appearance(params["item_appearance"]) if "item_appearance" in params else None
     )
-    for timestamp, interface in zip(
-        timestamps, matching_interfaces_for_item(item, section, item_appearance)
-    ):
+    for interface in matching_interfaces_for_item(item, section, item_appearance):
         last_results = list(
             check_single_interface(
                 item,
                 params,
                 InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
                     interface,
-                    timestamp=timestamp,
                     value_store=value_store,
                     params=params,
                 ),
@@ -1480,7 +1473,6 @@ def _check_grouped_ifs(
     params: Mapping[str, Any],
     section: Section[TInterfaceType],
     group_name: str,
-    timestamps: Sequence[float],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     """
@@ -1490,11 +1482,10 @@ def _check_grouped_ifs(
     matching_interfaces = [
         InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             iface,
-            timestamp=timestamp,
             value_store=value_store,
             params=params,
         )
-        for timestamp, iface in zip(timestamps, section)
+        for iface in section
         if _check_group_matching_conditions(
             iface.attributes,
             item,
@@ -1532,14 +1523,8 @@ def check_multiple_interfaces(
     section: Section[TInterfaceType],
     *,
     group_name: str = "Interface group",
-    timestamps: Sequence[float] | None = None,
     value_store: MutableMapping[str, Any] | None = None,
 ) -> CheckResult:
-    if timestamps is not None:
-        timestamps_f = timestamps
-    else:
-        now = time.time()
-        timestamps_f = [now] * len(section)
     if value_store is None:
         value_store = get_value_store()
 
@@ -1549,7 +1534,6 @@ def check_multiple_interfaces(
             params,
             section,
             group_name,
-            timestamps_f,
             value_store,
         )
     else:
@@ -1557,7 +1541,6 @@ def check_multiple_interfaces(
             item,
             params,
             section,
-            timestamps_f,
             value_store,
         )
 

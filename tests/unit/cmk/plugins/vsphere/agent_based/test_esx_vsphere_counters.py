@@ -237,7 +237,8 @@ def test_convert_esx_counters_if() -> None:
                     "vmnic5": [(["991", "603"], "kiloBytesPerSecond")],
                 },
             }
-        )
+        ),
+        1.0,
     ) == [
         interfaces.InterfaceWithRates(
             interfaces.Attributes(
@@ -269,6 +270,7 @@ def test_convert_esx_counters_if() -> None:
                 out_err=0,
             ),
             get_rate_errors=[],
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithRates(
             interfaces.Attributes(
@@ -300,6 +302,7 @@ def test_convert_esx_counters_if() -> None:
                 out_err=0,
             ),
             get_rate_errors=[],
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithRates(
             interfaces.Attributes(
@@ -331,6 +334,7 @@ def test_convert_esx_counters_if() -> None:
                 out_err=0,
             ),
             get_rate_errors=[],
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithRates(
             interfaces.Attributes(
@@ -362,6 +366,7 @@ def test_convert_esx_counters_if() -> None:
                 out_err=0,
             ),
             get_rate_errors=[],
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithRates(
             interfaces.Attributes(
@@ -393,6 +398,7 @@ def test_convert_esx_counters_if() -> None:
                 out_err=0,
             ),
             get_rate_errors=[],
+            timestamp=1.0,
         ),
         interfaces.InterfaceWithRates(
             interfaces.Attributes(
@@ -424,6 +430,7 @@ def test_convert_esx_counters_if() -> None:
                 out_err=0,
             ),
             get_rate_errors=[],
+            timestamp=1.0,
         ),
     ]
 

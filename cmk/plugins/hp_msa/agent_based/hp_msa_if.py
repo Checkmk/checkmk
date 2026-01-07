@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces
 
@@ -108,6 +110,7 @@ from .lib import parse_hp_msa
 def parse_hp_msa_if(
     string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    timestamp = time.time()
     parsed = []
     for idx, (_key, values) in enumerate(sorted(parse_hp_msa(string_table).items())):
         try:
@@ -135,6 +138,7 @@ def parse_hp_msa_if(
                     in_octets=int(values["data-read-numeric"]),
                     out_octets=int(values["data-written-numeric"]),
                 ),
+                timestamp,
             )
         )
 

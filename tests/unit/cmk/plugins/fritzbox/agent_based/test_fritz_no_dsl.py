@@ -39,5 +39,5 @@ _STRING_TABLE = [
 
 
 def test_new_physical_link_status_respected() -> None:
-    interfaces = fritz._section_to_interface(fritz.parse_fritz(_STRING_TABLE))
+    interfaces = fritz._section_to_interface(fritz.parse_fritz(_STRING_TABLE), 0.0)
     assert interfaces[0].attributes.oper_status == "1"

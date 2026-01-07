@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.mcdata_fcport import parse_mcdata_fcport
+from cmk.plugins.collection.agent_based.mcdata_fcport import parse_mcdata_fcport_pure
 from cmk.plugins.lib import interfaces
 
 
-def test_parse_mcdata_fcport() -> None:
-    assert parse_mcdata_fcport(
+def test_parse_mcdata_fcport_pure() -> None:
+    assert parse_mcdata_fcport_pure(
         [
             [
                 "1",
@@ -45,6 +45,7 @@ def test_parse_mcdata_fcport() -> None:
                 "0",
             ],
         ],
+        987.0,
     ) == [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -64,6 +65,7 @@ def test_parse_mcdata_fcport() -> None:
                 out_ucast=0,
                 out_disc=0,
             ),
+            timestamp=987.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -83,6 +85,7 @@ def test_parse_mcdata_fcport() -> None:
                 out_ucast=3700628163,
                 out_disc=0,
             ),
+            timestamp=987.0,
         ),
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -102,5 +105,6 @@ def test_parse_mcdata_fcport() -> None:
                 out_ucast=492267494,
                 out_disc=0,
             ),
+            timestamp=987.0,
         ),
     ]

@@ -9,7 +9,7 @@ import pytest
 from cmk.agent_based.v2 import Result
 from cmk.plugins.collection.agent_based.lnx_if import check_lnx_if, discover_lnx_if
 from cmk.plugins.collection.agent_based.section_lnx_container_host_if import (
-    parse_lnx_container_host_if,
+    parse_lnx_container_host_if_pure,
 )
 from cmk.plugins.lib.interfaces import (
     Attributes,
@@ -71,11 +71,12 @@ INTERFACE = InterfaceWithCounters(
         out_disc=0.0,
         out_err=0.0,
     ),
+    timestamp=111.0,
 )
 
 
-def test_parse_lnx_container_host_if() -> None:
-    assert parse_lnx_container_host_if(STRING_TABLE) == ([INTERFACE], {})
+def test_parse_lnx_container_host_if_pure() -> None:
+    assert parse_lnx_container_host_if_pure(STRING_TABLE, INTERFACE.timestamp) == ([INTERFACE], {})
 
 
 def test_discover_lnx_if_default_discovery() -> None:

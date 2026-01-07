@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces, ucs_bladecenter
@@ -121,8 +122,9 @@ _UCS_FIELDS_TO_IF_FIELDS = {
 }
 
 
-def parse_ucs_bladecenter_if(
+def parse_ucs_bladecenter_if_pure(
     string_table: StringTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     data = ucs_bladecenter.generic_parse(string_table)
     converted = []
@@ -201,6 +203,7 @@ def parse_ucs_bladecenter_if(
                         for iface_field, ctr_keys in _UCS_FIELDS_TO_IF_FIELDS[what].items()
                     },
                 ),
+                timestamp,
             )
 
             converted.append(iface)
@@ -296,6 +299,12 @@ def _parse_icnt_interfaces(data):
         [("etherRxStats", 9), ("etherTxStats", 9), ("etherErrStats", 10)],
         icnt_interfaces,
     )
+
+
+def parse_ucs_bladecenter_if(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_ucs_bladecenter_if_pure(string_table, time.time())
 
 
 agent_section_ucs_bladecenter_if = AgentSection(

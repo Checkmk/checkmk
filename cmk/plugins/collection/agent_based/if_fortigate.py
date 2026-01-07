@@ -3,9 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 
+from cmk.agent_based.v1.type_defs import StringByteTable
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, startswith
-from cmk.plugins.lib import if64
+from cmk.plugins.lib import if64, interfaces
+
+
+def parse_if_fortigate(
+    string_table: StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return if64.parse_if64(string_table, time.time())
+
 
 # Use ifName under the guise of ifAlias in order to make technical interface names available.
 # ifAlias or ifDescr may only contain user defined names. DO NOT roll back to ifAlias again
@@ -14,7 +23,7 @@ END_OIDS = if64.END_OIDS[:18] + ["31.1.1.1.1"] + if64.END_OIDS[19:] + ["2.2.1.7"
 
 snmp_section_if_fortigate = SimpleSNMPSection(
     name="if_fortigate",
-    parse_function=if64.parse_if64,
+    parse_function=parse_if_fortigate,
     parsed_section_name="interfaces",
     fetch=SNMPTree(
         base=if64.BASE_OID,

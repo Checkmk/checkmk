@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.if32 import parse_if
+from cmk.plugins.collection.agent_based.if32 import parse_if_pure
 from cmk.plugins.lib import interfaces
 
 
-def test_parse_if() -> None:
-    assert parse_if(
+def test_parse_if_pure() -> None:
+    assert parse_if_pure(
         [
             [
                 "1",
@@ -30,7 +30,8 @@ def test_parse_if() -> None:
                 "0",
                 [0, 38, 241, 198, 3, 255],
             ]
-        ]
+        ],
+        23750.0,
     ) == [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -62,5 +63,6 @@ def test_parse_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            timestamp=23750.0,
         )
     ]

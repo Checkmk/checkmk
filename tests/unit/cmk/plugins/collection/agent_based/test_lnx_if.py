@@ -14,7 +14,7 @@ from cmk.plugins.lib import bonding, interfaces
 
 
 @pytest.mark.parametrize(
-    "string_table, result",
+    "string_table, timestamp, result",
     [
         (
             [
@@ -40,6 +40,7 @@ from cmk.plugins.lib import bonding, interfaces
                 ["[end_iplink]"],
                 ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
+            8.0,
             [
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -66,6 +67,7 @@ from cmk.plugins.lib import bonding, interfaces
                         out_disc=0,
                         out_err=0,
                     ),
+                    timestamp=8.0,
                 ),
             ],
         ),
@@ -93,6 +95,7 @@ from cmk.plugins.lib import bonding, interfaces
                 ["[end_iplink]"],
                 ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
+            120485.0,
             [
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -119,6 +122,7 @@ from cmk.plugins.lib import bonding, interfaces
                         out_disc=0,
                         out_err=0,
                     ),
+                    timestamp=120485.0,
                 )
             ],
         ),
@@ -146,6 +150,7 @@ from cmk.plugins.lib import bonding, interfaces
                 ["[end_iplink]"],
                 ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
+            888.0,
             [
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -172,6 +177,7 @@ from cmk.plugins.lib import bonding, interfaces
                         out_disc=0,
                         out_err=0,
                     ),
+                    timestamp=888.0,
                 ),
             ],
         ),
@@ -192,6 +198,7 @@ from cmk.plugins.lib import bonding, interfaces
                 ["Speed", " 25000Mb/s"],
                 ["Address", " f4", "03", "43", "dc", "9e", "f0"],
             ],
+            0.0,
             [
                 interfaces.InterfaceWithCounters(
                     attributes=interfaces.Attributes(
@@ -224,6 +231,7 @@ from cmk.plugins.lib import bonding, interfaces
                         out_disc=0,
                         out_err=0,
                     ),
+                    timestamp=0.0,
                 ),
                 interfaces.InterfaceWithCounters(
                     attributes=interfaces.Attributes(
@@ -256,16 +264,24 @@ from cmk.plugins.lib import bonding, interfaces
                         out_disc=0,
                         out_err=0,
                     ),
+                    timestamp=0.0,
                 ),
             ],
         ),
     ],
 )
-def test_parse_lnx_if(
+def test_parse_lnx_if_pure(
     string_table: StringTable,
+    timestamp: float,
     result: interfaces.Section[interfaces.InterfaceWithCounters],
 ) -> None:
-    assert lnx_if.parse_lnx_if(string_table)[0] == result
+    assert (
+        lnx_if.parse_lnx_if_pure(
+            string_table,
+            timestamp,
+        )[0]
+        == result
+    )
 
 
 INTERFACE = interfaces.InterfaceWithCounters(
@@ -292,6 +308,7 @@ INTERFACE = interfaces.InterfaceWithCounters(
         0,
         0,
     ),
+    timestamp=0.0,
 )
 
 PARAMS = {
@@ -302,41 +319,50 @@ PARAMS = {
 }
 
 
+def _increment_timestamp_of_interface(
+    interface: interfaces.InterfaceWithCounters,
+    increment: float,
+) -> interfaces.InterfaceWithCounters:
+    return interfaces.InterfaceWithCounters(
+        interface.attributes,
+        interface.counters,
+        interface.timestamp + increment,
+    )
+
+
 @pytest.mark.usefixtures("initialised_item_state")
-def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
-    section_if = [INTERFACE]
-    section: lnx_if.Section = (section_if, {})
-    monkeypatch.setattr("time.time", lambda: 0)
+def test_check_lnx_if() -> None:
     list(
         lnx_if.check_lnx_if(
             INTERFACE.attributes.index,
             PARAMS,
-            section,
+            ([INTERFACE], {}),
             None,
         )
     )
-    monkeypatch.setattr("time.time", lambda: 1)
     result_lnx_if = list(
         lnx_if.check_lnx_if(
             INTERFACE.attributes.index,
             PARAMS,
-            section,
+            (
+                [_increment_timestamp_of_interface(INTERFACE, 1)],
+                {},
+            ),
             None,
         )
     )
-    monkeypatch.setattr("time.time", lambda: 2)
     result_interfaces = list(
         interfaces.check_multiple_interfaces(
             INTERFACE.attributes.index,
             PARAMS,
-            section_if,
+            [_increment_timestamp_of_interface(INTERFACE, 2)],
         )
     )
     assert result_lnx_if == result_interfaces
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cluster_check_lnx_if() -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):
@@ -345,7 +371,6 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
         ifaces_node = [iface] * (i + 1)
         section[iface.attributes.node] = ifaces_node, {}
         ifaces += ifaces_node
-    monkeypatch.setattr("time.time", lambda: 0)
     list(
         lnx_if.cluster_check_lnx_if(
             INTERFACE.attributes.index,
@@ -354,21 +379,22 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
         )
     )
-    monkeypatch.setattr("time.time", lambda: 1)
     result_lnx_if = list(
         lnx_if.cluster_check_lnx_if(
             INTERFACE.attributes.index,
             PARAMS,
-            section,
+            {
+                node: ([_increment_timestamp_of_interface(iface, 1) for iface in ifaces_node], {})
+                for node, (ifaces_node, _inv_data) in section.items()
+            },
             {},
         )
     )
-    monkeypatch.setattr("time.time", lambda: 2)
     result_interfaces = list(
         interfaces.check_multiple_interfaces(
             INTERFACE.attributes.index,
             PARAMS,
-            ifaces,
+            [_increment_timestamp_of_interface(iface, 2) for iface in ifaces],
         )
     )
     assert result_lnx_if == result_interfaces

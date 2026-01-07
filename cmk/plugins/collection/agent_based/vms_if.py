@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces
@@ -31,8 +32,9 @@ _VMS_IF_COUNTERS_ORDER = [
 ]
 
 
-def parse_vms_if(
+def parse_vms_if_pure(
     string_table: StringTable,
+    timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
@@ -50,9 +52,16 @@ def parse_vms_if(
                     for counter, str_val in zip(_VMS_IF_COUNTERS_ORDER, line[1:])
                 },
             ),
+            timestamp,
         )
         for idx, line in enumerate(string_table)
     ]
+
+
+def parse_vms_if(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_vms_if_pure(string_table, time.time())
 
 
 agent_section_vms_if = AgentSection(

@@ -165,7 +165,7 @@ def test_merge_if_counters_sections() -> None:
     }
 
     result = _merge_if_counters_sections(
-        interfaces_section, ports_section, interfaces_counters_section
+        interfaces_section, ports_section, interfaces_counters_section, 3.0
     )
 
     assert result[0][0].attributes.oper_status_name == "up"
@@ -178,6 +178,8 @@ def test_merge_if_counters_sections() -> None:
 
     assert result[0][1].counters.in_octets == 200
     assert result[0][1].counters.in_ucast == 200
+
+    assert result[0][0].timestamp == result[0][1].timestamp == 3.0
 
     assert result[1]["interface1"]["is_home"] is True
     assert result[1]["interface1"]["home_port"] == "port1"

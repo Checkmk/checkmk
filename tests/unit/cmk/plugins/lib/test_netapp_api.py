@@ -359,6 +359,7 @@ INTERFACE = interfaces.InterfaceWithCounters(
         out_mcast=0,
         out_err=1000,
     ),
+    timestamp=0.0,
 )
 
 

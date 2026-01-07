@@ -131,7 +131,10 @@ _CTR_TO_IF_FIELDS = {
 }
 
 
-def convert_esx_counters_if(section: Section) -> interfaces.Section[interfaces.InterfaceWithRates]:
+def convert_esx_counters_if(
+    section: Section,
+    timestamp: float,
+) -> interfaces.Section[interfaces.InterfaceWithRates]:
     rates: dict[str, dict[str, int]] = {}
     mac_addresses: dict[str, str] = {}
 
@@ -190,6 +193,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section[interfaces.I
                 },
             ),
             get_rate_errors=[],
+            timestamp=timestamp,
         )
         for index, (name, iface_rates) in enumerate(sorted(rates.items()))
         if name  # Skip summary entry without interface name
@@ -202,7 +206,7 @@ def discover_esx_vsphere_counters_if(
 ) -> DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
-        convert_esx_counters_if(section),
+        convert_esx_counters_if(section, time.time()),
     )
 
 
@@ -216,7 +220,7 @@ def check_esx_vsphere_counters_if(
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
-        convert_esx_counters_if(section),
+        convert_esx_counters_if(section, time.time()),
     )
 
 

@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Mapping
 
 import pytest
 
 from cmk.agent_based.v1.type_defs import StringByteTable
 from cmk.plugins.collection.agent_based.if_brocade_lancom import (
     parse_if_brocade_lancom,
-    parse_if_lancom,
+    parse_if_lancom_pure,
 )
 
 
@@ -77,14 +77,14 @@ def test_parse_if_brocade_lancom(
     if_table: StringByteTable,
     name_map: Mapping[str, str],
     port_map: Mapping[str, str],
-    ignore: Iterable[str],
+    ignore: Collection[str],
     expected_results: object,
 ) -> None:
     results = tuple(
         (r.index, r.descr, r.alias, r.type, r.speed)
         for r in (
             iface.attributes
-            for iface in parse_if_brocade_lancom(if_table, name_map, port_map, ignore)
+            for iface in parse_if_brocade_lancom(if_table, 0.0, name_map, port_map, ignore)
         )
     )
     assert results == expected_results
@@ -616,10 +616,12 @@ def test_parse_if_brocade_lancom(
         ),
     ],
 )
-def test_parse_if_lancom(string_table: list[StringByteTable], expected_results: object) -> None:
+def test_parse_if_lancom_pure(
+    string_table: list[StringByteTable], expected_results: object
+) -> None:
     results = tuple(
         (r.index, r.descr, r.extra_info, r.type, r.speed)
-        for r in (iface.attributes for iface in parse_if_lancom(string_table))
+        for r in (iface.attributes for iface in parse_if_lancom_pure(string_table, 0.0))
     )
     assert results == expected_results
 

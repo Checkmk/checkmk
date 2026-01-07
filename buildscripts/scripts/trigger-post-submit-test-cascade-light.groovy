@@ -17,6 +17,7 @@ void main() {
         "test-format",
         "test-github-actions",
         "test-groovy-lint",
+        "test-integration-agent-plugin",
         "test-plugins-siteless",
         "test-python3-astrein",
         "test-python3-bandit",

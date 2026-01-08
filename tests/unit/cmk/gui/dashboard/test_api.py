@@ -223,6 +223,41 @@ def test_delete_dashboard(clients: ClientRegistry) -> None:
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
 
 
+def test_compute_widget_titles(clients: ClientRegistry) -> None:
+    resp = clients.DashboardClient.compute_widget_titles(
+        {
+            "widget-1": {
+                "general_settings": {
+                    "title": {"text": "Widget 1", "render_mode": "with_background"},
+                    "render_background": True,
+                },
+                "content": {
+                    "type": "static_text",
+                    "text": "This is a static text widget",
+                },
+                "filters": {},
+            },
+            "widget-2": {
+                "general_settings": {
+                    "title": {"text": "$DEFAULT_TITLE$: custom", "render_mode": "with_background"},
+                    "render_background": True,
+                },
+                "content": {
+                    "type": "performance_graph",
+                    "timerange": {"type": "predefined", "value": "last_25_hours"},
+                    "graph_render_options": {},
+                    "source": "active_sessions",
+                },
+                "filters": {},
+            },
+        }
+    )
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    titles = resp.json["extensions"]["titles"]
+    assert titles["widget-1"] == "Widget 1", "Expected title for widget-1 to be 'Widget 1'"
+    assert titles["widget-2"] == "Time series graph: custom"
+
+
 class TestDashboardMetadata:
     def test_list_dashboard_metadata(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.list_dashboard_metadata()
@@ -579,6 +614,29 @@ class TestInventoryContent:
         )
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
         assert resp.json["value"]["filter_context"]["uses_infos"] == ["host"]
+
+    def test_compute_widget_titles(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.compute_widget_titles(
+            {
+                "id": {
+                    "general_settings": {
+                        "title": {
+                            "text": "$DEFAULT_TITLE$: custom",
+                            "render_mode": "with_background",
+                        },
+                        "render_background": True,
+                    },
+                    "content": {
+                        "type": "inventory",
+                        "path": "hardware.cpu.cores",
+                    },
+                    "filters": {},
+                },
+            }
+        )
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        titles = resp.json["extensions"]["titles"]
+        assert titles["id"] == "Processor ➤ #Cores: custom"
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")

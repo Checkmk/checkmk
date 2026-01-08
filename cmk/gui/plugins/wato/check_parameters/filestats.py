@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -109,7 +108,7 @@ file_size_age_elements: list[tuple[str, ValueSpec]] = [
 ]
 
 
-def _item_spec_filestats():
+def _item_spec_filestats() -> TextInput:
     return TextInput(
         title=_("File Group Name"),
         help=_(
@@ -120,7 +119,7 @@ def _item_spec_filestats():
     )
 
 
-def _parameter_valuespec_filestats():
+def _parameter_valuespec_filestats() -> Dictionary:
     return Dictionary(
         elements=file_size_age_elements
         + [

@@ -284,7 +284,7 @@ class MKDockerClient(docker.DockerClient):
         elif config["container_id"] == "long":
             self.all_containers = {c.attrs["Id"]: c for c in all_containers}
         elif config["container_id"] == "combined":
-            nodename = os.uname()[0]
+            nodename = os.uname()[1]
             self.all_containers = {
                 f"{nodename}_{c.attrs['Name'].lstrip('/')}": c for c in all_containers
             }

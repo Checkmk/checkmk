@@ -42,7 +42,11 @@ const componentId = useId()
       </div>
       <div class="form-single-choice__input-column">
         <FormValidation :validation="validation"></FormValidation>
+        <div v-if="props.spec.elements.length === 0">
+          {{ untranslated(props.spec.no_elements_text || '') }}
+        </div>
         <CmkDropdown
+          v-else
           v-model:selected-option="value"
           :options="{
             type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
@@ -51,11 +55,7 @@ const componentId = useId()
               title: untranslated(element.title)
             }))
           }"
-          :input-hint="
-            props.spec.elements.length === 0
-              ? untranslated(props.spec.no_elements_text || '')
-              : untranslated(props.spec.input_hint || '')
-          "
+          :input-hint="untranslated(props.spec.input_hint || '')"
           :disabled="spec.frozen"
           :component-id="componentId"
           :no-results-hint="untranslated(props.spec.no_elements_text || '')"
@@ -67,7 +67,6 @@ const componentId = useId()
     </div>
   </div>
 </template>
-
 <style scoped>
 .form-single-choice__layout {
   display: flex;

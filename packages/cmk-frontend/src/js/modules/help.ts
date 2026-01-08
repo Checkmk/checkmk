@@ -27,7 +27,6 @@ export function toggle() {
   } else {
     switch_help(true)
   }
-  toggle_help_page_menu_icon()
 }
 
 function switch_help(how: boolean) {
@@ -35,11 +34,17 @@ function switch_help(how: boolean) {
   else remove_class(document.body, SHOW_HELP_CLASS)
 
   call_ajax('ajax_switch_help.py?enabled=' + (how ? 'yes' : ''))
+  toggle_help_page_menu_icon()
 }
 
 function toggle_help_page_menu_icon() {
-  const icon = document.getElementById('menu_entry_inline_help')!.getElementsByTagName('img')[0]
-  icon.src = icon.src.includes('toggle_on')
-    ? icon.src.replace('toggle_on', 'toggle_off')
-    : icon.src.replace('toggle_off', 'toggle_on')
+  const iconElement = document.querySelector('#menu_entry_inline_help cmk-dynamic-icon')
+  if (!iconElement) return
+
+  const dataAttr = iconElement.getAttribute('data') || ''
+  const newData = is_help_active()
+    ? dataAttr.replace('"toggle-off"', '"toggle-on"')
+    : dataAttr.replace('"toggle-on"', '"toggle-off"')
+
+  iconElement.setAttribute('data', newData)
 }

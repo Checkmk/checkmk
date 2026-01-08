@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _item_spec_skype_proxy():
+def _item_spec_skype_proxy() -> TextInput:
     return TextInput(
         title=_("Name of the proxy"),
         help=_("The name of the data proxy"),
@@ -22,7 +20,7 @@ def _item_spec_skype_proxy():
     )
 
 
-def _parameter_valuespec_skype_proxy():
+def _parameter_valuespec_skype_proxy() -> Dictionary:
     return Dictionary(
         help=_("Warn/Crit levels for various Skype for Business (formerly known as Lync) metrics"),
         elements=[

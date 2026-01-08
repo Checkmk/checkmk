@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
+from collections.abc import Callable
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,7 +17,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Filesize, TextInput, Tuple
 
 
-def _tuple(title):
+def _tuple(title: str) -> Tuple:
     return Tuple(
         title=title,
         elements=[
@@ -29,8 +31,8 @@ def _tuple(title):
     )
 
 
-def _valuespec_couchbase_size(title):
-    def _get_spec():
+def _valuespec_couchbase_size(title: str) -> Callable[[], Dictionary]:
+    def _get_spec() -> Dictionary:
         return Dictionary(
             title=title,
             elements=[

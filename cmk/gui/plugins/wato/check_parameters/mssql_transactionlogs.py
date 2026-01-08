@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
@@ -19,7 +18,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Checkbox, Dictionary
 
 
-def _valuespec_mssql_transactionlogs_discovery():
+def _valuespec_mssql_transactionlogs_discovery() -> Dictionary:
     return Dictionary(
         title=_("MSSQL datafile and transaction log discovery"),
         elements=[
@@ -51,7 +50,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_mssql_transactionlogs():
+def _parameter_valuespec_mssql_transactionlogs() -> Dictionary:
     return Dictionary(
         title=_("File size levels"),
         help=_(

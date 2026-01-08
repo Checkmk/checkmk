@@ -28,7 +28,6 @@ interface Props {
   docsButtonTitle: TranslatedString
   closeButtonTitle: TranslatedString
   agentSlideout: AgentSlideout
-  allAgentsUrl: string
   isNotRegistered: boolean
 }
 
@@ -90,7 +89,7 @@ const tooltipOpen = ref(true)
     @close="slideInOpen = false"
   >
     <AgentSlideOutContent
-      :all-agents-url="allAgentsUrl"
+      :all-agents-url="agentSlideout.all_agents_url"
       :host-name="agentSlideout.host_name"
       :agent-install-cmds="agentSlideout.agent_install_cmds"
       :agent-registration-cmds="agentSlideout.agent_registration_cmds"

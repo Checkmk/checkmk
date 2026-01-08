@@ -11,7 +11,6 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-import socket
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import Final, Literal, overload, override
@@ -361,7 +360,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         host_name_attribute_key: Final[str] = "host"
         form_name: Final[str] = "edit_host"
         site = omd_site()
-        fqdn = socket.getfqdn()
+        server = request.host
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         html.vue_component(
             component_name="cmk-mode-host",
@@ -416,14 +415,14 @@ class ABCHostMode(WatoMode, abc.ABC):
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].install_cmds(
-                                    site, fqdn, version
+                                    site, server, version
                                 )
                             )
                         ),
                         agent_registration_cmds=AgentRegistrationCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].registration_cmds(
-                                    site, fqdn
+                                    site, server
                                 )
                             )
                         ),

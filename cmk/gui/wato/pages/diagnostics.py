@@ -117,7 +117,7 @@ _FILE_MAPS = [
 ]
 
 _CHECKMK_FILES_NOTE = _(
-    "<br>Note: Some files may contain highly sensitive data like"
+    "<br><b>Note</b>: Some files may contain highly sensitive data like"
     " passwords. These files are marked with 'H'."
     " Other files may include IP addresses, host names, usernames,"
     " mail addresses or phone numbers and are marked with 'M'."
@@ -296,8 +296,23 @@ class ModeDiagnostics(WatoMode):
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
-            help="File Descriptions:<br>%s"
-            % "<br>".join([f" - {f}: {d}" for (f, d) in get_checkmk_file_description()]),
+            help=_(
+                "Files collected by the Support Diagnostics tool are automatically categorized to"
+                " help you identify sensitive data. We recommend reviewing all files prior to"
+                " sharing, particularly those in the Unclassified category.<ul>"
+                "<li>H (High): Critical security data (e.g., passwords, API keys, secrets).</li>"
+                "<li>M (Medium): PII and infrastructure details (e.g., IP addresses, hostnames,"
+                " usernames, emails).</li>"
+                "<li>L (Low): Operational data; no sensitive information is expected.</li>"
+                "<li>U (Unclassified): Files from custom components. These might be 3rd-party"
+                " extensions or modifications made by you.</li></ul>"
+                "<b>Note</b>: These Classifications may differ from your organization's specific"
+                " data security classifications.<br><br>"
+                "The following files are created by built-in components:<ul><li>%s</li></ul>"
+            )
+            % "</li><li>".join(
+                [f"{s} {f}: {d}" for (r_s, f, d, s) in get_checkmk_file_description()]
+            ),
             elements=[
                 (
                     "site",
@@ -424,7 +439,8 @@ class ModeDiagnostics(WatoMode):
                     title=_("Apache Config"),
                     help=_(
                         "Apache Configuration files in /etc/apache2 or /etc/httpd, "
-                        "/opt/omd/apache and $OMD_ROOT/etc/apache"
+                        "/opt/omd/apache and $OMD_ROOT/etc/apache.<br>"
+                        "<b>Note</b>: This might include information with medium sensitivity (M)."
                     ),
                 ),
             ),
@@ -438,7 +454,7 @@ class ModeDiagnostics(WatoMode):
                         "Apache mode and TCP address and port, core, "
                         "Liveproxy daemon and Livestatus TCP mode, "
                         "event daemon config, graphical user interface (GUI) authorization, "
-                        "NSCA mode, TMP file system mode"
+                        "NSCA mode, TMP file system mode. "
                     ),
                 ),
             ),
@@ -464,8 +480,8 @@ class ModeDiagnostics(WatoMode):
                     totext="",
                     title=_("Crash Reports"),
                     help=_(
-                        "The latest crash reports"
-                        "<br>Note: Some crash reports may contain sensitive data like "
+                        "The latest crash reports<br>"
+                        "<b>Note</b>: Some crash reports may contain sensitive data like "
                         "host names or usernames."
                     ),
                 ),
@@ -650,13 +666,21 @@ class ModeDiagnostics(WatoMode):
                 _("Configuration files"),
                 self._checkmk_files_map[FILE_MAP_CONFIG["file_type"]],
             ),
-            ("core_files", _("Core files"), self._checkmk_files_map[FILE_MAP_CORE["file_type"]]),
+            (
+                "core_files",
+                _("Core files"),
+                self._checkmk_files_map[FILE_MAP_CORE["file_type"]],
+            ),
             (
                 "licensing_files",
                 _("Licensing files"),
                 self._checkmk_files_map[FILE_MAP_LICENSING["file_type"]],
             ),
-            ("log_files", _("Log files"), self._checkmk_files_map[FILE_MAP_LOG["file_type"]]),
+            (
+                "log_files",
+                _("Log files"),
+                self._checkmk_files_map[FILE_MAP_LOG["file_type"]],
+            ),
         ]:
             element_id, element_title, files_map = filetype
             for cs_element in self._get_cs_elements_for(
@@ -674,25 +698,33 @@ class ModeDiagnostics(WatoMode):
         title: str,
         checkmk_files: list[tuple[str, CheckmkFileInfo]],
     ) -> ValueSpec:
-        high_sensitive_files = []
-        sensitive_files = []
-        insensitive_files = []
-        for rel_filepath, file_info in checkmk_files:
-            if file_info.sensitivity == CheckmkFileSensitivity.high_sensitive:
-                high_sensitive_files.append((rel_filepath, file_info))
-            elif file_info.sensitivity == CheckmkFileSensitivity.sensitive:
-                sensitive_files.append((rel_filepath, file_info))
-            else:
-                insensitive_files.append((rel_filepath, file_info))
+        sorted_checkmk_files = sorted(checkmk_files, key=lambda t: t[0])
+        high_sensitive_files = [
+            f
+            for f in sorted_checkmk_files
+            if f[1].sensitivity == CheckmkFileSensitivity.high_sensitive
+        ]
 
-        sorted_files = sorted(
-            high_sensitive_files + sensitive_files + insensitive_files,
-            key=lambda t: t[0],
+        sensitive_files = [
+            f for f in sorted_checkmk_files if f[1].sensitivity == CheckmkFileSensitivity.sensitive
+        ]
+
+        insensitive_files = [
+            f
+            for f in sorted_checkmk_files
+            if f[1].sensitivity == CheckmkFileSensitivity.insensitive
+        ]
+
+        uncategorized_files = [
+            f for f in sorted_checkmk_files if f[1].sensitivity == CheckmkFileSensitivity.unknown
+        ]
+
+        # File lists are sorted by filename and grouped by sensitivity
+        sorted_files = (
+            high_sensitive_files + sensitive_files + insensitive_files + uncategorized_files
         )
-        sorted_non_high_sensitive_files = sorted(
-            sensitive_files + insensitive_files, key=lambda t: t[0]
-        )
-        sorted_insensitive_files = sorted(insensitive_files, key=lambda t: t[0])
+        sorted_non_high_sensitive_files = sensitive_files + insensitive_files
+        sorted_insensitive_files = insensitive_files
 
         return CascadingDropdown(
             title=title,
@@ -700,7 +732,7 @@ class ModeDiagnostics(WatoMode):
             choices=[
                 (
                     "all",
-                    _("Pack all files: High, Medium, Low sensitivity"),
+                    _("Pack all files: High, Medium, Low, Unclassified sensitivity"),
                     FixedValue(
                         value=[f for f, fi in sorted_files],
                         totext=self._list_of_files_to_text(sorted_files),

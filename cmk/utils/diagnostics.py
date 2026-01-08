@@ -10,7 +10,7 @@
 import os
 import re
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from enum import auto, Enum
+from enum import auto, Enum, IntEnum
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypedDict
 
@@ -370,10 +370,10 @@ class CheckmkFileEncryption(Enum):
     rot47 = auto()
 
 
-class CheckmkFileSensitivity(Enum):
-    insensitive = auto()
-    sensitive = auto()
+class CheckmkFileSensitivity(IntEnum):
     high_sensitive = auto()
+    sensitive = auto()
+    insensitive = auto()
     unknown = auto()
 
 
@@ -395,18 +395,20 @@ def _get_sensitivity_suffix(sensitivity: CheckmkFileSensitivity) -> str:
             return "(H)"
         case CheckmkFileSensitivity.sensitive:
             return "(M)"
-        case _:  # insensitive
+        case CheckmkFileSensitivity.insensitive:
             return "(L)"
+        case _:
+            return "(U)"
 
 
-def get_checkmk_file_description(
-    rel_filepath: str | None = None,
-) -> Sequence[tuple[str, str]]:
+def get_checkmk_file_description() -> Sequence[tuple[CheckmkFileSensitivity, str, str, str]]:
     cmk_file_info = {**CheckmkFileInfoByNameMap, **CheckmkFileInfoByRelFilePathMap}
-    if rel_filepath is not None:
-        return [(rel_filepath, cmk_file_info[rel_filepath].description)]
-
-    return [(f, d.description) for f, d in cmk_file_info.items()]
+    return sorted(
+        [
+            (d.sensitivity, f, d.description, _get_sensitivity_suffix(d.sensitivity))
+            for f, d in cmk_file_info.items()
+        ]
+    )
 
 
 def get_checkmk_file_info(rel_filepath: str, component: str | None = None) -> CheckmkFileInfo:
@@ -433,17 +435,17 @@ def get_checkmk_file_info(rel_filepath: str, component: str | None = None) -> Ch
     # update.log.2.gz -> update.log
     rel_filepath = re.sub(r"\.[0-9]+(\.gz)?", "", rel_filepath)
 
-    file_info_by_name = CheckmkFileInfoByNameMap.get(Path(rel_filepath).name)
-    if file_info_by_name is not None and (
-        component is None or component in file_info_by_name.components
-    ):
-        return file_info_by_name
-
     file_info_by_rel_filepath = CheckmkFileInfoByRelFilePathMap.get(rel_filepath)
     if file_info_by_rel_filepath is not None and (
         component is None or component in file_info_by_rel_filepath.components
     ):
         return file_info_by_rel_filepath
+
+    file_info_by_name = CheckmkFileInfoByNameMap.get(Path(rel_filepath).name)
+    if file_info_by_name is not None and (
+        component is None or component in file_info_by_name.components
+    ):
+        return file_info_by_name
 
     return CheckmkFileInfo(
         components=[],
@@ -458,20 +460,12 @@ def get_checkmk_file_info(rel_filepath: str, component: str | None = None) -> Ch
 # - log file entries are relative to "var/log".
 CheckmkFileInfoByNameMap: dict[str, CheckmkFileInfo] = {
     # config files
-    "sites.mk": CheckmkFileInfo(
-        components=[
-            OPT_COMP_GLOBAL_SETTINGS,
-        ],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        encryption=CheckmkFileEncryption.none,
-        description="Configuration for the distributed monitoring.",
-    ),
     "global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_GLOBAL_SETTINGS,
         ],
         sensitivity=CheckmkFileSensitivity.sensitive,
-        description="",
+        description="Global settings for a particular component.",
         encryption=CheckmkFileEncryption.none,
     ),
     "hosts.mk": CheckmkFileInfo(
@@ -491,6 +485,20 @@ CheckmkFileInfoByNameMap: dict[str, CheckmkFileInfo] = {
         sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains all rules assigned to a particular folder.",
         encryption=CheckmkFileEncryption.none,
+    ),
+    "sites.mk": CheckmkFileInfo(
+        components=[
+            OPT_COMP_GLOBAL_SETTINGS,
+        ],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        encryption=CheckmkFileEncryption.none,
+        description="Configuration for the distributed monitoring.",
+    ),
+    "sitespecific.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        encryption=CheckmkFileEncryption.none,
+        description="Sitespecific global settings for a particular component.",
     ),
     "tags.mk": CheckmkFileInfo(
         components=[
@@ -514,12 +522,54 @@ CheckmkFileInfoByNameMap: dict[str, CheckmkFileInfo] = {
 
 CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     # config files
+    "apache.conf": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Basic Apache configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "backup.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Backup configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "backup_keys.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Backup encryption keys.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "conf.d/distributed_wato.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Contains the information about if the site is a remotesite.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "conf.d/microcore.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Basic Microcore configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "conf.d/mkeventd.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Basic Eventconsole configuration for the core.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "conf.d/pnp4nagios.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Basic PNP4Nagios configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "conf.d/wato/alert_handlers.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity.high_sensitive,
-        description="Alert handler configuration",
+        description="Alert handler configuration.",
         encryption=CheckmkFileEncryption.none,
     ),
     "conf.d/wato/contacts.mk": CheckmkFileInfo(
@@ -546,12 +596,32 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains the contact groups.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "conf.d/wato/influxdb_connections.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains the InfluxDB configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "conf.d/wato/notifications.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains the notification rules.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "conf.d/wato/notification_parameter.mk": CheckmkFileInfo(
+        components=[
+            OPT_COMP_NOTIFICATIONS,
+        ],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains the configuration rules of the notification methods.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "dcd.d/wato/distributed.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Contains the information if DCD is used on this site.",
         encryption=CheckmkFileEncryption.none,
     ),
     "licensing.d/notification_settings.mk": CheckmkFileInfo(
@@ -562,12 +632,30 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains set of users to be notified on licensing situations.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "liveproxyd.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Basic Liveproxy configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "main.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity.insensitive,
         description="The main config file, which is used if you don't use the Setup features of the GUI.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "mkeventd.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Basic Eventconsole configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "mkeventd.d/wato/global.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains the configuration of the Event Console.",
         encryption=CheckmkFileEncryption.none,
     ),
     "mknotifyd.d/wato/global.mk": CheckmkFileInfo(
@@ -578,12 +666,48 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains the notification spooler's global settings.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "multisite.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Basic UI configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "multisite.d/licensing_settings.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_LICENSING,
         ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains licensing related settings for mode of connection, e.g. online verification, credentials, etc.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "multisite.d/liveproxyd.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Liveproxy configuration for the UI",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "multisite.d/mkeventd.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Eventconsole configuration for the UI",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "multisite.d/sites.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Distributed monitoring configuration.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "multisite.d/wato/agent_registration.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains the Agent registration rules.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "multisite.d/wato/agent_signature_keys.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains the Bakery's Agent signature keys.",
         encryption=CheckmkFileEncryption.none,
     ),
     "multisite.d/wato/bi_config.bi": CheckmkFileInfo(
@@ -594,11 +718,17 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains the Business Intelligence rules and aggregations.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "multisite.d/wato/customers.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains the customers definition in an MSP environment.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "multisite.d/wato/global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains GUI related global settings.",
         encryption=CheckmkFileEncryption.none,
     ),
@@ -608,6 +738,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         ],
         sensitivity=CheckmkFileSensitivity.insensitive,
         description="Contains GUI related contact group properties.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "multisite.d/wato/sites.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains the configuration of the distributed monitoring.",
         encryption=CheckmkFileEncryption.none,
     ),
     "multisite.d/wato/users.mk": CheckmkFileInfo(
@@ -625,11 +761,27 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         encryption=CheckmkFileEncryption.none,
     ),
     # Core files
+    "core/cmcdump": CheckmkFileInfo(
+        components=[
+            OPT_COMP_CMC,
+        ],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains the current status of the core in the cmcdump format.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "core/cmcdump--config": CheckmkFileInfo(
+        components=[
+            OPT_COMP_CMC,
+        ],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains the current configuration of the core in the cmcdump format.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "core/config.pb": CheckmkFileInfo(
         components=[
             OPT_COMP_CMC,
         ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains the current configuration of the core in the protobuff format.",
         encryption=CheckmkFileEncryption.none,
     ),
@@ -637,7 +789,7 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         components=[
             OPT_COMP_CMC,
         ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains the current status of the core.",
         encryption=CheckmkFileEncryption.none,
     ),
@@ -646,7 +798,7 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
             OPT_COMP_CMC,
             OPT_COMP_LICENSING,
         ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains the current status of the core in the protobuff format.",
         encryption=CheckmkFileEncryption.none,
     ),
@@ -723,7 +875,91 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains the licensed state for CMC/NEB.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "otel_collector.d/otel_collector_prom_scrape.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Configuration of the Open Telemetry Prometheus scraper.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "otel_collector.d/otel_collector_receivers.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Configuration of the Open Telemetry receiver.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     # Log files
+    "agent-receiver/access.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The access log of the agent receiver.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "agent-receiver/agent-receiver.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The operational log of the agent receiver.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "agent-receiver/error.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The error log of the agent receiver.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "agent-registration.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The log for the TLS registration of the agents.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "alerts.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Log file with all events relevant to the alert handler (logged by the alert helper).",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "apache/access_log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains all requests that are sent to the site's apache server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "apache/error_log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="this log file contains all errors that occur when requests are sent to the site's apache server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "apache/stats": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="this log file contains current access statistics about the site's apache server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "automatic-host-removal.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains events from the Automatic host removal feature.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "automation-helper/access.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains all requests that are sent to the automation helper server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "automation-helper/automation-helper.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains all activity inside the automation helper application.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "automation-helper/error.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains all errors that occur when requests are sent to the automation helper server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "cmc.log": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
@@ -733,13 +969,30 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="In this file messages from starting and stopping the CMC can be found, as well as general warnings and error messages related to the core and the check helpers.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "web.log": CheckmkFileInfo(
+    "dcd.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The log file for the Dynamic Configuration Daemon (DCD).",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "diskspace.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="The log file of the automatic disk space cleanup.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "jaeger.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The log file of the tracing component jaeger.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "licensing.log": CheckmkFileInfo(
         components=[
-            OPT_COMP_NOTIFICATIONS,
             OPT_COMP_LICENSING,
         ],
         sensitivity=CheckmkFileSensitivity.sensitive,
-        description="The log file of the checkmk weg gui. Here you can find all kind of automations call, ldap sync and some failing GUI extensions.",
+        description="Logs everything related to the licensing.",
         encryption=CheckmkFileEncryption.none,
     ),
     "liveproxyd.log": CheckmkFileInfo(
@@ -766,6 +1019,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="The notification spooler’s log file.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "mkeventd.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The event console log file. This will show you the processing of the incoming messages, matching of the rule packs and the processing of the matched mibs.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "mknotifyd.state": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
@@ -782,42 +1041,10 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="The notification module’s log file. This will show you the rule based processing of the notifications.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "apache/access_log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.high_sensitive,
-        description="This log file contains all requests that are sent to the site's apache server.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "apache/error_log": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="this log file contains all errors that occur when requests are sent to the site's apache server.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "dcd.log": CheckmkFileInfo(
+    "otel-collector.log": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
-        description="The log file for the Dynamic Configuration Daemon (DCD).",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "alerts.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="Log file with all events relevant to the alert handler (logged by the alert helper).",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "diskspace.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.insensitive,
-        description="The log file of the automatic disk space cleanup.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "mkeventd.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="The event console log file. This will show you the processing of the incoming messages, matching of the rule packs and the processing of the matched mibs.",
+        description="The log file of the Open Telemetry daemon.",
         encryption=CheckmkFileEncryption.none,
     ),
     "rrdcached.log": CheckmkFileInfo(
@@ -832,60 +1059,61 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="The log file of the redis-server of the Checkmk site.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "agent-receiver/access.log": CheckmkFileInfo(
+    "security.log": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
-        description="",
+        description="All modules forward security relevant events to this log file.",
         encryption=CheckmkFileEncryption.none,
     ),
-    "agent-receiver/agent-receiver.log": CheckmkFileInfo(
+    "stunnel-server.log": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
-        description="",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "agent-receiver/error.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "agent-registration.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "licensing.log": CheckmkFileInfo(
-        components=[
-            OPT_COMP_LICENSING,
-        ],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "automation-helper/access.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="This log file contains all requests that are sent to the automation helper server.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "automation-helper/automation-helper.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="This log file contains all activity inside the automation helper application.",
-        encryption=CheckmkFileEncryption.none,
-    ),
-    "automation-helper/error.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity.sensitive,
-        description="This log file contains all errors that occur when requests are sent to the automation helper server.",
+        description="Log file of the stunnel, which handles encrypted communication between sites.",
         encryption=CheckmkFileEncryption.none,
     ),
     "telemetry.log": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
         description="This log files contains all activity and errors of the product telemetry module.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "ui-job-scheduler/access.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains all requests that are sent to the ui-job-scheduler server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "ui-job-scheduler/ui-job-scheduler.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains all activity inside the ui-job-scheduler application.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "ui-job-scheduler/error.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains all errors that occur when requests are sent to the ui-job-scheduler server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "update.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Contains the output of the omd update calls.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "web.log": CheckmkFileInfo(
+        components=[
+            OPT_COMP_NOTIFICATIONS,
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The log file of the checkmk weg gui. Here you can find all kind of automations call, ldap sync and some failing GUI extensions.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "xinetd.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The log of the Internet superserver xinetd which handles connections to the livestatus port.",
         encryption=CheckmkFileEncryption.none,
     ),
 }

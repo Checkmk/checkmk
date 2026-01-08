@@ -124,11 +124,6 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
   align-items: flex-end;
 }
 
-.form-tuple.form-tuple--vertical .form-tuple__item {
-  display: flex;
-  margin-bottom: var(--spacing-half);
-}
-
 .form-tuple__horizontal-help .form-tuple__label {
   flex-shrink: 0;
   align-content: end;
@@ -170,10 +165,10 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
 /* Vertical layout */
 .form-tuple.form-tuple--vertical {
   flex-direction: column;
-}
 
-.form-tuple.form-tuple--vertical .form-tuple__item:last-child {
-  margin-bottom: 0;
+  .form-tuple__item:not(:last-child) {
+    margin-bottom: var(--spacing-half);
+  }
 }
 
 .form-tuple.form-tuple--vertical .form-tuple__label {

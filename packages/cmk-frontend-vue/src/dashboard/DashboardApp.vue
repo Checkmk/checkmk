@@ -214,9 +214,15 @@ function addWidget(
     )
   } else if (activeDashboard.content.layout.type === 'relative_grid') {
     const widgetConstants = dashboardsManager.constants.value!.widgets[content.type]!
+    // Add a static vertical offset to reduce the chance of placing the new widget in a way where it covers existing
+    // widgets
+    const yOffset = Object.keys(dashboardWidgets.widgetCores.value).length > 0 ? 5 : 0
     layout = {
       type: 'relative_grid',
-      position: widgetConstants.layout.relative.initial_position,
+      position: {
+        x: widgetConstants.layout.relative.initial_position.x,
+        y: widgetConstants.layout.relative.initial_position.y + yOffset
+      },
       size: widgetConstants.layout.relative.initial_size
     }
   } else {

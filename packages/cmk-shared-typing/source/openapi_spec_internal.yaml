@@ -66339,10 +66339,15 @@ components:
           description: Active filters in the format filter_id -> (variable -> value)
           title: Filters
           type: object
+        is_mobile:
+          description: Whether the view option "mobile" is set or not.
+          title: Is Mobile
+          type: boolean
       required:
       - data_source
       - restricted_to_single
       - filters
+      - is_mobile
       title: ViewExtensions
       type: object
     ViewModel:

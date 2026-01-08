@@ -43,7 +43,6 @@ type PingHostResponse = PingHostResponseError | PingHostResponseSuccess
 
 enum PingCmd {
   Ping = 'ping',
-  Ping4 = 'ping4',
   Ping6 = 'ping6'
 }
 
@@ -110,7 +109,7 @@ onMounted(() => {
       statusElements.value = {}
       return
     }
-    callPingHostOnElement(props.ipv4InputElement, PingCmd.Ping4, true)
+    callPingHostOnElement(props.ipv4InputElement, PingCmd.Ping, true)
   })
   props.ipv6InputElement.addEventListener('input', () => {
     if (!showPingHost.value) {

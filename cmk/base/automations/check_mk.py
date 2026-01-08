@@ -3070,8 +3070,9 @@ def automation_ping_host(
 
 
 def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]:
+    ping_command = ["ping", "-6"] if base_cmd.value == PingHostCmd.PING6 else ["ping", "-4"]
     completed_process = subprocess.run(
-        [base_cmd.value, "-A", "-i", "0.2", "-c", "2", "-W", "5", ip_or_dns_name],
+        [*ping_command, "-A", "-i", "0.2", "-c", "2", "-W", "5", ip_or_dns_name],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding="utf-8",

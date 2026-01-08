@@ -244,7 +244,20 @@ def _anonymize_host_attributes(
                         anon_attributes[f"tag_{anon_interface.get_tag_group(tag_key)}"] = (
                             anon_interface.get_tag_value(attr_value)
                         )
-
+                case "locked_attributes":
+                    # only built-in attributes can be locked
+                    anon_attributes["locked_attributes"] = attr_value.copy()
+                case "locked_by":
+                    site_id, program_id, program_instance_id = attr_value
+                    anon_instance_id = anon_interface.get_generic_mapping(
+                        program_instance_id,
+                        "program_instance_id",
+                    )
+                    anon_attributes["locked_by"] = [
+                        anon_interface.get_site(site_id),
+                        program_id,
+                        anon_instance_id,
+                    ]
                 case _:
                     # custom host attributes
                     anon_attributes[anon_interface.get_custom_host_attr_name(attr_name)] = (

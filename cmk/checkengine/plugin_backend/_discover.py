@@ -42,6 +42,14 @@ _NOT_YET_MOVED_PLUGINS = (
     # This way we can separate migration and moving.
     # For example:
     # "cmk.base.legacy_checks.esx_vsphere_datastores",
+    "cmk.base.legacy_checks.stormshield_cluster",
+    "cmk.base.legacy_checks.stormshield_cpu_temp",
+    "cmk.base.legacy_checks.stormshield_disk",
+    "cmk.base.legacy_checks.stormshield_info",
+    "cmk.base.legacy_checks.stormshield_packets",
+    "cmk.base.legacy_checks.stormshield_policy",
+    "cmk.base.legacy_checks.stormshield_route",
+    "cmk.base.legacy_checks.stormshield_updates",
 )
 
 

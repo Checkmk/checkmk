@@ -6,53 +6,65 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
 
-check_info = {}
-
 STATE_MAP = {
-    "Not Available": 1,
-    "Broken": 2,
-    "Uptodate": 0,
-    "Disabled": 1,
-    "Never started": 0,
-    "Running": 0,
-    "Failed": 2,
+    "Not Available": State.WARN,
+    "Broken": State.CRIT,
+    "Uptodate": State.OK,
+    "Disabled": State.WARN,
+    "Never started": State.OK,
+    "Running": State.OK,
+    "Failed": State.CRIT,
 }
 
 
-def inventory_stormshield_updates(info):
-    for subsystem, state, lastrun in info:
+def inventory_stormshield_updates(section: StringTable) -> DiscoveryResult:
+    for subsystem, state, lastrun in section:
         if state == "Failed" and lastrun == "":
             pass
         elif state not in ["Not Available", "Never started"]:
-            yield subsystem, {}
+            yield Service(item=subsystem)
 
 
-def check_stormshield_updates(item, _no_params, info):
-    for subsystem, state, lastrun in info:
+def check_stormshield_updates(item: str, section: StringTable) -> CheckResult:
+    for subsystem, state, lastrun in section:
         if item == subsystem:
             if lastrun == "":
                 lastrun = "Never"
             infotext = f"Subsystem {subsystem} is {state}, last update: {lastrun}"
-            monitoringstate = STATE_MAP.get(state, 3)
-            yield monitoringstate, infotext
+            monitoringstate = STATE_MAP.get(state, State.CRIT)
+            yield Result(state=monitoringstate, summary=infotext)
 
 
 def parse_stormshield_updates(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["stormshield_updates"] = LegacyCheckDefinition(
+snmp_section_stormshield_updates = SimpleSNMPSection(
     name="stormshield_updates",
-    parse_function=parse_stormshield_updates,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.9.1.1",
         oids=["2", "3", "4"],
     ),
+    parse_function=parse_stormshield_updates,
+)
+
+
+check_plugin_stormshield_updates = CheckPlugin(
+    name="stormshield_updates",
     service_name="Autoupdate %s",
     discovery_function=inventory_stormshield_updates,
     check_function=check_stormshield_updates,

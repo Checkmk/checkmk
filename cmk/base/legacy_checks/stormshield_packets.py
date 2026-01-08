@@ -7,61 +7,121 @@
 
 
 import time
+from collections.abc import Sequence
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
-
-check_info = {}
 
 # Unfortunalty we can not use the normal interface names here, because
 # the interface IDs from the enterprise MIBs and RFC are not the same.
 # We decided using the interface description for inventory (best practise)
 
 
-def inventory_stormshield_packets(info):
-    for descrip, _name, iftype, _pktaccepted, _pktblocked, _pkticmp, _tcp, _udp in info:
-        if iftype.lower() in ["ethernet", "ipsec"]:
-            yield descrip, {}
+class SectionItem(TypedDict):
+    description: str
+    name: str
+    iftype: str
+    pktaccepted: int
+    pktblocked: int
+    pkticmp: int
+    tcp: int
+    udp: int
 
 
-def check_stormshield_packets(item, _no_params, info):
-    for descrip, name, _iftype, pktaccepted, pktblocked, pkticmp, tcp, udp in info:
-        if item == descrip:
+Section = Sequence[SectionItem]
+
+
+def discover_stormshield_packets(section: Section) -> DiscoveryResult:
+    for section_item in section:
+        if section_item["iftype"].lower() in ["ethernet", "ipsec"]:
+            yield Service(item=section_item["description"])
+
+
+def check_stormshield_packets(item: str, section: Section) -> CheckResult:
+    for section_item in section:
+        if item == section_item["description"]:
             now = time.time()
             rate_pktaccepted = get_rate(
-                get_value_store(), "acc_%s" % item, now, int(pktaccepted), raise_overflow=True
+                get_value_store(),
+                "acc_%s" % item,
+                now,
+                int(section_item["pktaccepted"]),
+                raise_overflow=True,
             )
             rate_pktblocked = get_rate(
-                get_value_store(), "block_%s" % item, now, int(pktblocked), raise_overflow=True
+                get_value_store(),
+                "block_%s" % item,
+                now,
+                int(section_item["pktblocked"]),
+                raise_overflow=True,
             )
             rate_pkticmp = get_rate(
-                get_value_store(), "icmp_%s" % item, now, int(pkticmp), raise_overflow=True
+                get_value_store(),
+                "icmp_%s" % item,
+                now,
+                int(section_item["pkticmp"]),
+                raise_overflow=True,
             )
-            infotext = f"[{name}], tcp: {tcp}, udp: {udp}"
+            infotext = (
+                f"[{section_item['name']}], tcp: {section_item['tcp']}, udp: {section_item['udp']}"
+            )
+            yield Result(state=State.OK, summary=infotext)
+
             perfdata = [
-                ("tcp_active_sessions", tcp),
-                ("udp_active_sessions", udp),
+                ("tcp_active_sessions", section_item["tcp"]),
+                ("udp_active_sessions", section_item["udp"]),
                 ("packages_accepted", rate_pktaccepted),
                 ("packages_blocked", rate_pktblocked),
                 ("packages_icmp_total", rate_pkticmp),
             ]
-            yield 0, infotext, perfdata
+            for p in perfdata:
+                yield Metric(name=p[0], value=float(str(p[1])))
 
 
-def parse_stormshield_packets(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_stormshield_packets(string_table: StringTable) -> Section:
+    return list(
+        SectionItem(
+            description=descrip,
+            name=_name,
+            iftype=iftype,
+            pktaccepted=int(_pktaccepted),
+            pktblocked=int(_pktblocked),
+            pkticmp=int(_pkticmp),
+            tcp=int(_tcp),
+            udp=int(_udp),
+        )
+        for descrip, _name, iftype, _pktaccepted, _pktblocked, _pkticmp, _tcp, _udp in string_table
+    )
 
 
-check_info["stormshield_packets"] = LegacyCheckDefinition(
+snmp_section_stormshield_packets = SimpleSNMPSection(
     name="stormshield_packets",
-    parse_function=parse_stormshield_packets,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.4.1.1",
         oids=["2", "3", "6", "11", "12", "16", "23", "24"],
     ),
+    parse_function=parse_stormshield_packets,
+)
+
+
+check_plugin_stormshield_packets = CheckPlugin(
+    name="stormshield_packets",
     service_name="Packet Stats %s",
-    discovery_function=inventory_stormshield_packets,
+    discovery_function=discover_stormshield_packets,
     check_function=check_stormshield_packets,
 )

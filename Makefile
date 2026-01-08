@@ -28,13 +28,8 @@ CI ?= false
 help:
 	@echo "setup                          --> Prepare system for development and building"
 	@echo "make dist                      --> Create source tgz for later building of rpm/deb and livestatus tgz"
-	@echo "make rpm                       --> Create rpm package"
-	@echo "make deb                       --> Create deb package"
 	@echo "make cma                       --> Create cma package"
 	@echo "make version                   --> Switch to new version"
-
-rpm:
-	$(MAKE) -C omd rpm
 
 cma:
 	$(MAKE) -C omd cma

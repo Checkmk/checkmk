@@ -13,8 +13,6 @@ DESTDIR ?= $(BUILD_BASE_DIR)/dest
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 INSTALL := $(BUILD_HELPER_DIR)/install
-RPM_TOPDIR := $(BUILD_BASE_DIR)/rpm/topdir
-RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
 # $(SKEL) used in `omd/packages/appliance/appliance.make`.
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
@@ -23,9 +21,9 @@ ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 BOM := bill-of-materials.json
 
-.PHONY: install cma rpm deb clean install-clean venv
+.PHONY: install cma clean install-clean venv
 
-# Called while building the .rpm/.deb packages
+# Called while building the cma / dist packages
 install: $(INSTALL_GLOBAL) $(DEPS_INSTALL_BAZEL)
 
 # Called by our release system to build appliance packages
@@ -60,36 +58,6 @@ $(INSTALL_LOG_TARGETS): %-log: %
 
 $(INSTALL): $(PRE_INSTALL) $(INSTALL_LOG_TARGETS)
 	$(TOUCH) $@
-
-omd.spec: omd.spec.in
-	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
-	    -e 's/%{version}/$(OMD_VERSION)/g' \
-	    -e "s/%{pkg_version}/$(PKG_VERSION)/g" \
-	    -e 's/%{edition}/$(EDITION)/g' \
-	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
-	    -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
-	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
-	    -e 's#@APACHE_NAME@#$(APACHE_INIT_NAME)#g' \
-	    omd.spec.in > omd.spec
-	if [ "$(EDITION)" =  "community" ]; then \
-	    sed -i '/icmpsender/d;/icmpreceiver/d' omd.spec ; \
-	fi
-
-# Called by our release system to build RPM packages
-# To make incremental builds possible, e.g. for testing, remove the install-clean target
-rpm: install-clean omd.spec
-	$(MKDIR) $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
-	# share,lib,bin because the link has a invalid target until the site is created
-	# NO_BRP_CHECK_RPATH ignores errors with the compiled python2.7 binary which
-	# has a rpath hard coded to the OMD shipped libpython2.7.
-	NO_BRP_CHECK_RPATH="yes" \
-	NO_BRP_STALE_LINK_ERROR="yes" \
-	REPO_PATH=$(REPO_PATH) \
-	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
-	     --buildroot=$(RPM_BUILDROOT) omd.spec
-	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)
-	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)

@@ -10,7 +10,7 @@ from __future__ import annotations
 import ast
 import re
 
-from tests.astrein.framework import ASTVisitorChecker
+from astrein.framework import ASTVisitorChecker
 
 # Inlined from cmk.utils.escaping to avoid external dependencies
 _ALLOWED_TAGS = r"h1|h2|b|tt|i|u|hr|br(?: /)?|nobr(?: /)?|pre|sup|p|li|ul|ol"

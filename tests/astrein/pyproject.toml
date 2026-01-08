@@ -1,0 +1,14 @@
+[project]
+name = "astrein"
+version = "1.0.0"
+dependencies = []
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+astrein = "astrein.cli:main"
+
+[tool.setuptools]
+packages = ["astrein"]

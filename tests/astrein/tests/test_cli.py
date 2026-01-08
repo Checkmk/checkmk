@@ -8,10 +8,9 @@ import json
 from pathlib import Path
 
 import pytest
-
-from tests.astrein.checker_localization import LocalizationChecker
-from tests.astrein.checker_module_layers import ModuleLayersChecker
-from tests.astrein.cli import (
+from astrein.checker_localization import LocalizationChecker
+from astrein.checker_module_layers import ModuleLayersChecker
+from astrein.cli import (
     _checkers,
     _collect_files,
     _handle_results,
@@ -19,7 +18,7 @@ from tests.astrein.cli import (
     _select_checkers,
     CheckerResults,
 )
-from tests.astrein.framework import ASTVisitorChecker, CheckerError
+from astrein.framework import ASTVisitorChecker, CheckerError
 
 
 def test_checkers_returns_expected_checkers() -> None:

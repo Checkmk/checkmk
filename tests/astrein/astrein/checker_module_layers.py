@@ -10,7 +10,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from tests.astrein.config.module_layers_config import (
+from astrein.framework import ASTVisitorChecker
+from astrein.module_layers_config import (
     _EXPLICIT_FILE_TO_COMPONENT,
     _EXPLICIT_FILE_TO_DEPENDENCIES,
     Component,
@@ -19,7 +20,6 @@ from tests.astrein.config.module_layers_config import (
     ModuleName,
     ModulePath,
 )
-from tests.astrein.framework import ASTVisitorChecker
 
 
 class ModuleLayersChecker(ASTVisitorChecker):

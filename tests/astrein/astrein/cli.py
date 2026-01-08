@@ -14,10 +14,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from tests.astrein.checker_localization import LocalizationChecker
-from tests.astrein.checker_module_layers import ModuleLayersChecker
-from tests.astrein.framework import ASTVisitorChecker, CheckerError, run_checkers
-from tests.astrein.sarif import format_sarif
+from astrein.checker_localization import LocalizationChecker
+from astrein.checker_module_layers import ModuleLayersChecker
+from astrein.framework import ASTVisitorChecker, CheckerError, run_checkers
+from astrein.sarif import format_sarif
 
 
 def main() -> int:

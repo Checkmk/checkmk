@@ -20,6 +20,8 @@ def _check_path(filename: str) -> None:
     allowed_path = (Path.home() / "tmp" / "debug").resolve()
     if not p.is_relative_to(allowed_path):
         raise ValueError(f"Traces can only be stored in {allowed_path}")
+    if not (p_dir := p.parent).is_dir():
+        raise NotADirectoryError(f"Directory {p_dir} does not exist")
 
 
 def vcrtrace(
@@ -40,6 +42,7 @@ def vcrtrace(
     all requests the program sends and their corresponding answers will be recorded in said file.
     If the file already exists, no requests are sent to the server, but the responses will be
     replayed from the tracefile.
+    TRACEFILE must be a file path within the directory `~/tmp/debug`; `~/tmp/debug` must exist.
 
     The destination attribute will be set to `True` if the option was specified, the
     provided default otherwise.

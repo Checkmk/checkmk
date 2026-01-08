@@ -3627,6 +3627,17 @@ class DashboardClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def compute_widget_titles(self, widgets: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/compute-widget-titles/invoke",
+            body={
+                "widgets": widgets,
+            },
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def compute_top_list(
         self, top_list_config: dict[str, Any], context: VisualContext, _ok: bool = True
     ) -> Response:

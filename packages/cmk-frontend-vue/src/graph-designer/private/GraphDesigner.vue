@@ -832,7 +832,7 @@ const slideInAPI = {
           aggregation_histogram_percentile: graphLineQuery.value.aggregation_histogram_percentile
         }
         values.value = {
-          value: { metric_backend_custom_query: queryAttributes }
+          value: { metric_backend_custom_query: [queryAttributes] }
         }
       }
       return values

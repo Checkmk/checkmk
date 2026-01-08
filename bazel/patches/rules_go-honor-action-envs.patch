@@ -1,15 +1,14 @@
 diff --git a/go/private/context.bzl b/go/private/context.bzl
-index 5c29bc00..ee71c728 100644
+index 5c29bc00..c56225d0 100644
 --- a/go/private/context.bzl
 +++ b/go/private/context.bzl
-@@ -924,6 +924,11 @@ def cgo_context_data_impl(ctx):
+@@ -924,6 +924,10 @@ def cgo_context_data_impl(ctx):
              paths.append("/usr/bin")
      env["PATH"] = ctx.configuration.host_path_separator.join(paths)
 
-+    # HACK: rules_go does not honor our cache separation regarding distros/branches. so we manually inject the action_envs
-+    for action_env in ("DISTRO", "BRANCH_VERSION"):
-+        if action_env in ctx.configuration.default_shell_env:
-+            env[action_env] = ctx.configuration.default_shell_env[action_env]
++    # HACK: rules_go does not honor our cache separation regarding distros. so we manually inject it
++    if "DISTRO" in ctx.configuration.default_shell_env:
++        env["DISTRO"] = ctx.configuration.default_shell_env["DISTRO"]
 +
      return CgoContextInfo(
          cc_toolchain_files = cc_toolchain.all_files,

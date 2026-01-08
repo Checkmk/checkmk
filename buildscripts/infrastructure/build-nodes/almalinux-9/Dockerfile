@@ -226,13 +226,11 @@ COPY ci.bazelrc /etc/
 RUN <<EOF cat >> /etc/ci.bazelrc
 common:ci --@cmk//distro="almalinux-9"
 common:ci --action_env=DISTRO=${DISTRO}
-common:ci --action_env=BRANCH_VERSION=${BRANCH_VERSION}
 # We encountered false cache hits with remote caching due to environment variables
 # not being propagated to external dependeny builds
 # In that case "--host_action_env=..." (in addition to "--action_env") might help
 # Currently we don't use any external dependencies though.
 common:ci --host_action_env=DISTRO=${DISTRO}
-common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
 EOF
 
 ARG VERS_TAG

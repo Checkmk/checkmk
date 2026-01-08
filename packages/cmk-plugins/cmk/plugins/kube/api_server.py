@@ -305,14 +305,20 @@ def version_from_json(
     try:
         version_json = json.loads(raw_version)
     except Exception as e:
+        LOGGER.error("Failed to parse /version endpoint response as JSON: %s", raw_version)
         raise UnsupportedEndpointData(
             "Unknown endpoint information at endpoint /version, HTTP(S) response was "
-            f"'{raw_version}'."
+            f"'{raw_version.replace('\n', '')}'."
         ) from e
     if "gitVersion" not in version_json:
+        LOGGER.error(
+            "Data from endpoint /version did not have mandatory field 'gitVersion', HTTP(S) "
+            "response was: %s",
+            raw_version,
+        )
         raise UnsupportedEndpointData(
             "Data from endpoint /version did not have mandatory field 'gitVersion', HTTP(S) "
-            f"response was '{raw_version}'."
+            f"response was '{raw_version.replace('\n', '')}'."
         )
 
     return decompose_git_version(version_json["gitVersion"])

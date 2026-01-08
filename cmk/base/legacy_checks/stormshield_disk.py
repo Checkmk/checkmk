@@ -6,59 +6,97 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from collections.abc import Sequence
+from typing import TypedDict
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
 
-check_info = {}
+
+class DiskInfo(TypedDict):
+    clusterindex: str
+    index: str
+    name: str
+    selftest: str
+    israid: str
+    raidstatus: str
+    position: str
 
 
-def parse_stormshield_disk(string_table):
+Section = Sequence[DiskInfo]
+
+
+def parse_stormshield_disk(string_table: Sequence[StringTable]) -> Section:
     standalone, cluster = string_table
+
     parsed = []
+
     if not cluster and not standalone:
         return []
+
     if cluster != []:
         for item in cluster:
-            new_info = []
             index = item[0].split(".")[0]
-            new_info.append(index)
-            new_info.extend(item[1:])
-            parsed.append(new_info)
+            parsed.append(
+                DiskInfo(
+                    clusterindex=index,
+                    index=item[1],
+                    name=item[2],
+                    selftest=item[3],
+                    israid=item[4],
+                    raidstatus=item[5],
+                    position=item[6],
+                )
+            )
         return parsed
 
-    new_info = []
-    new_info.append("0")
-    new_info.extend(standalone[0])
-    parsed.append(new_info)
+    parsed.append(
+        DiskInfo(
+            clusterindex="0",
+            index=standalone[0][0],
+            name=standalone[0][1],
+            selftest=standalone[0][2],
+            israid=standalone[0][3],
+            raidstatus=standalone[0][4],
+            position=standalone[0][5],
+        )
+    )
     return parsed
 
 
-def inventory_stormshield_disk(parsed):
-    for disk in parsed:
-        clusterindex = disk[0]
-        yield clusterindex, {}
+def discover_stormshield_disk(section: Section) -> DiscoveryResult:
+    for disk in section:
+        yield Service(item=disk["clusterindex"])
 
 
-def check_stormshield_disk(item, params, parsed):
-    for disk in parsed:
-        clusterindex, index, name, selftest, israid, raidstatus, position = disk
-        if item == clusterindex:
-            infotext = (
-                f"Device Index {index}, Selftest: {selftest}, Device Mount Point Name: {name}"
-            )
-            if selftest != "PASSED":
-                status = 1
+def check_stormshield_disk(item: str, section: Section) -> CheckResult:
+    for disk in section:
+        if item == disk["clusterindex"]:
+            infotext = f"Device Index {disk['index']}, Selftest: {disk['selftest']}, Device Mount Point Name: {disk['name']}"
+            if disk["selftest"] != "PASSED":
+                status = State.WARN
             else:
-                status = 0
-            if israid != "0":
+                status = State.OK
+            if disk["israid"] != "0":
                 infotext = (
-                    infotext + f", Raid active, Raid Status {raidstatus}, Disk Position {position}"
+                    infotext
+                    + f", Raid active, Raid Status {disk['raidstatus']}, Disk Position {disk['position']}"
                 )
-            yield status, infotext
+            yield Result(state=status, summary=infotext)
 
 
-check_info["stormshield_disk"] = LegacyCheckDefinition(
+snmp_section_stormshield_disk = SNMPSection(
     name="stormshield_disk",
     detect=DETECT_STORMSHIELD,
     fetch=[
@@ -72,7 +110,12 @@ check_info["stormshield_disk"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_stormshield_disk,
+)
+
+
+check_plugin_stormshield_disk = CheckPlugin(
+    name="stormshield_disk",
     service_name="Disk %s",
-    discovery_function=inventory_stormshield_disk,
+    discovery_function=discover_stormshield_disk,
     check_function=check_stormshield_disk,
 )

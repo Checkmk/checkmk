@@ -6,22 +6,29 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
 
-check_info = {}
+
+def discover_stormshield_info(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def inventory_stormshield_info(info):
-    yield "Stormshield Info", None
-
-
-def check_stormshield_info(item, params, info):
-    for model, version, serial, sysname, syslanguage in info:
-        yield (
-            0,
-            f"Model: {model}, Version: {version}, Serial: {serial}, SysName: {sysname}, \
+def check_stormshield_info(section: StringTable) -> CheckResult:
+    for model, version, serial, sysname, syslanguage in section:
+        yield Result(
+            state=State.OK,
+            summary=f"Model: {model}, Version: {version}, Serial: {serial}, SysName: {sysname}, \
             SysLanguage: {syslanguage}",
         )
 
@@ -30,15 +37,20 @@ def parse_stormshield_info(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-check_info["stormshield_info"] = LegacyCheckDefinition(
+snmp_section_stormshield_info = SimpleSNMPSection(
     name="stormshield_info",
-    parse_function=parse_stormshield_info,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.0",
         oids=["1", "2", "3", "4", "5"],
     ),
-    service_name="%s",
-    discovery_function=inventory_stormshield_info,
+    parse_function=parse_stormshield_info,
+)
+
+
+check_plugin_stormshield_info = CheckPlugin(
+    name="stormshield_info",
+    service_name="Stormshield Info",
+    discovery_function=discover_stormshield_info,
     check_function=check_stormshield_info,
 )

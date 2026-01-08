@@ -56,8 +56,8 @@ def parse_hp_msa_system(string_table: StringTable) -> Mapping[str, Mapping[str, 
         if line[2] == "system-name":
             system_name = " ".join(line[3:])
             parsed[system_name] = {"item_type": line[0]}
-        elif line[2] == "health":
-            parsed[system_name]["health"] = " ".join(line[3:])
+        elif line[2] == "health-numeric":
+            parsed[system_name]["health-numeric"] = line[3]
         elif line[2] == "health-reason":
             parsed[system_name]["health-reason"] = " ".join(line[3:])
 

@@ -19,21 +19,40 @@ def _mocked_home(tmp_path: Path) -> Iterator[Path]:
         yield tmp_path
 
 
-def test_check_path_relative(mocked_home: Path) -> None:
+def test_check_path_relative_ok(mocked_home: Path) -> None:
+    (mocked_home / "tmp/debug").mkdir(parents=True, exist_ok=True)
     with chdir(mocked_home):
-        with pytest.raises(ValueError):
-            _check_path("foo")
         _check_path("tmp/debug/foo")
 
-    some_dir = mocked_home / "foobar"
-    some_dir.mkdir()
-    with chdir(some_dir):
-        with pytest.raises(ValueError):
-            _check_path("tmp/debug/foo")
-        _check_path("../tmp/debug/foo")
+
+def test_check_path_relative_missing(mocked_home: Path) -> None:
+    with chdir(mocked_home), pytest.raises(NotADirectoryError):
+        _check_path("tmp/debug/foo")
 
 
-def test_check_path_absolute(mocked_home: Path) -> None:
-    with pytest.raises(ValueError):
-        _check_path(str(mocked_home / "foo"))
-    _check_path(str(mocked_home / "tmp" / "debug" / "foo"))
+def test_check_path_relative_too_far_down(mocked_home: Path) -> None:
+    (mocked_home / "tmp/debug").mkdir(parents=True, exist_ok=True)
+    with chdir(mocked_home / "tmp"), pytest.raises(ValueError):
+        _check_path("tmp/debug/foo")
+
+
+def test_check_path_relative_too_far_up(mocked_home: Path) -> None:
+    (mocked_home / "tmp/debug").mkdir(parents=True, exist_ok=True)
+    with chdir(mocked_home / ".."), pytest.raises(ValueError):
+        _check_path("tmp/debug/foo")
+
+
+def test_check_path_absolute_ok(mocked_home: Path) -> None:
+    (mocked_home / "tmp/debug").mkdir(parents=True, exist_ok=True)
+    _check_path(str(mocked_home / "tmp/debug/foo"))
+
+
+def test_check_path_absolute_missing(mocked_home: Path) -> None:
+    with pytest.raises(NotADirectoryError):
+        _check_path(str(mocked_home / "tmp/debug/foo"))
+
+
+def test_check_path_absolute_invalid(mocked_home: Path) -> None:
+    (mocked_home / "tmp/debug").mkdir(parents=True, exist_ok=True)
+    with chdir(mocked_home / "tmp"), pytest.raises(ValueError):
+        _check_path(str(mocked_home / "tmp/degug/foo"))

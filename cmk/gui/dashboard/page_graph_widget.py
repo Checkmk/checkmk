@@ -8,7 +8,6 @@
 from typing import cast, override
 
 import cmk.gui.pages
-from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.gui.dashboard.api import (
     get_validated_internal_graph_request,
@@ -23,7 +22,6 @@ from cmk.gui.dashboard.token_util import (
     impersonate_dashboard_token_issuer,
     InvalidWidgetError,
 )
-from cmk.gui.dashboard.type_defs import DashboardConfig
 from cmk.gui.graphing import (
     get_temperature_unit,
     GraphRenderConfig,
@@ -38,6 +36,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils import paths
 
@@ -48,43 +47,14 @@ def render_graph_widget_content(
     ctx: PageContext,
     dashlet_config: GraphDashletConfig,
     widget_id: str,
+    base_context: VisualContext | None = None,
 ) -> None:
     dashlet_type = cast(type[ABCGraphDashlet], dashlet_registry[dashlet_config["type"]])
 
-    # create a dummy dashboard, so that we can create the dashlet instance
-    dashboard = DashboardConfig(
-        owner=UserId.builtin(),
-        name="dummy-dashboard",
-        context={},
-        single_infos=[],
-        add_context_to_title=False,
-        title="Dummy Dashboard",
-        description="",
-        topic="",
-        sort_index=0,
-        is_show_more=False,
-        icon=None,
-        hidden=False,
-        hidebutton=False,
-        public=False,
-        packaged=False,
-        link_from={},
-        main_menu_search_terms=[],
-        mtime=0,
-        dashlets=[dashlet_config],
-        show_title=True,
-        mandatory_context_filters=[],
-        embedded_views={},
-    )
+    graph_dashlet = dashlet_type(dashlet_config, base_context)
 
-    graph_dashlet = dashlet_type(
-        dashboard["name"], dashboard["owner"], dashboard, 0, dashlet_config
-    )
-
-    # TODO: try to build the type-specific (dashlet_config["type"]) graph_spec without the need to
-    #       create dashboard and dashlet instances here. find a way to do so more directly with
-    #       the given http request variables
-    graph_spec = graph_dashlet.graph_specification(dashlet_config["context"])
+    # graph_dashlet.context is the combined context
+    graph_spec = graph_dashlet.graph_specification(graph_dashlet.context)
 
     html.write_html(
         host_service_graph_dashlet_cmk(
@@ -125,6 +95,8 @@ class GraphWidgetPage(cmk.gui.pages.Page):
                 }
             )
 
+            # we expect the frontend to send us the combined context already,
+            # so we don't need to the dashboard
             render_graph_widget_content(ctx, dashlet_config, request_data.widget_id)
         except Exception as e:
             html.write_html(html.render_message(str(e)))
@@ -155,7 +127,14 @@ class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
 
             try:
                 # this also requires the impersonation context
-                render_graph_widget_content(ctx, cast(GraphDashletConfig, widget_config), widget_id)
+                render_graph_widget_content(
+                    ctx,
+                    cast(GraphDashletConfig, widget_config),
+                    widget_id,
+                    # for the token case, we need the dashboard context as well, since the frontend
+                    # won't combine them for us
+                    base_context=dashboard.get("context"),
+                )
             except KeyError:
                 # likely an edition downgrade where the graph type is not available anymore
                 raise InvalidWidgetError(disable_token=True) from None

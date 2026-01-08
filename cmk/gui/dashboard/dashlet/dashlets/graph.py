@@ -18,16 +18,12 @@ import livestatus
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.title_macros import macro_mapping_from_context
 from cmk.gui.dashboard.type_defs import (
     ABCGraphDashletConfig,
-    DashboardConfig,
-    DashboardName,
-    DashletId,
     DashletSize,
 )
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
@@ -167,19 +163,10 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
 
     def __init__(
         self,
-        dashboard_name: DashboardName,
-        dashboard_owner: UserId,
-        dashboard: DashboardConfig,
-        dashlet_id: DashletId,
         dashlet: T,
+        base_context: VisualContext | None = None,
     ) -> None:
-        super().__init__(
-            dashboard_name=dashboard_name,
-            dashboard_owner=dashboard_owner,
-            dashboard=dashboard,
-            dashlet_id=dashlet_id,
-            dashlet=dashlet,
-        )
+        super().__init__(dashlet=dashlet, base_context=base_context)
 
         # New graphs which have been added via "add to visual" option don't have a timerange
         # configured. So we assume the default timerange here by default.

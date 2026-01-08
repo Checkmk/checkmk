@@ -9,16 +9,12 @@ import abc
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Generic, TypeVar
 
-from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 
 from ..title_macros import macro_mapping_from_context
 from ..type_defs import (
-    DashboardConfig,
-    DashboardName,
     DashletConfig,
-    DashletId,
     DashletPosition,
     DashletSize,
 )
@@ -89,31 +85,24 @@ class Dashlet(abc.ABC, Generic[T]):
 
     def __init__(
         self,
-        dashboard_name: DashboardName,
-        dashboard_owner: UserId,
-        dashboard: DashboardConfig,
-        dashlet_id: DashletId,
         dashlet: T,
+        base_context: VisualContext | None = None,
     ) -> None:
         super().__init__()
-        self._dashboard_name = dashboard_name
-        self._dashboard_owner = dashboard_owner
-        self._dashboard = dashboard
-        self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
-        self._context: VisualContext | None = self._get_context()
+        self._context: VisualContext | None = self._get_context(base_context)
 
     def infos(self) -> SingleInfos:
         """Return a list of the supported infos (for the visual context) of this dashlet"""
         return []
 
-    def _get_context(self) -> VisualContext | None:
+    def _get_context(self, base_context: VisualContext | None) -> VisualContext | None:
         if not self.has_context():
             return None
 
         return visuals.get_merged_context(
-            self._dashboard["context"],
-            self._dashlet_spec["context"],
+            base_context or {},
+            self._dashlet_spec["context"] if "context" in self._dashlet_spec else {},
         )
 
     @property
@@ -123,20 +112,8 @@ class Dashlet(abc.ABC, Generic[T]):
         return self._context
 
     @property
-    def dashlet_id(self) -> DashletId:
-        return self._dashlet_id
-
-    @property
     def dashlet_spec(self) -> T:
         return self._dashlet_spec
-
-    @property
-    def dashboard_name(self) -> str:
-        return self._dashboard_name
-
-    @property
-    def dashboard_owner(self) -> UserId:
-        return self._dashboard_owner
 
     def default_display_title(self) -> str:
         return self.title()

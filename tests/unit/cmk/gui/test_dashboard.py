@@ -15,10 +15,8 @@ import pytest
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.user import UserId
-from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
+from cmk.gui.dashboard import dashlet_registry, DashletConfig
 from cmk.gui.dashboard.dashlet.base import Dashlet
-from cmk.gui.type_defs import DynamicIconName
 from cmk.utils import paths
 from tests.testlib.unit.utils import reset_registries
 
@@ -135,34 +133,6 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
     return expected
 
 
-TEST_DASHBOARD = DashboardConfig(
-    {
-        "mandatory_context_filters": [],
-        "hidebutton": False,
-        "single_infos": [],
-        "context": {},
-        "mtime": 0,
-        "show_title": True,
-        "title": "Test",
-        "topic": "problems",
-        "sort_index": 5,
-        "icon": DynamicIconName("dashboard_problems"),
-        "description": "",
-        "dashlets": [],
-        "owner": UserId.builtin(),
-        "public": True,
-        "name": "problems",
-        "hidden": False,
-        "link_from": {},
-        "add_context_to_title": True,
-        "is_show_more": False,
-        "packaged": False,
-        "main_menu_search_terms": [],
-        "embedded_views": {},
-    }
-)
-
-
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_type_defaults() -> None:
     assert not Dashlet.single_infos()
@@ -173,29 +143,13 @@ def test_dashlet_type_defaults() -> None:
 
 
 def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard_owner=UserId.builtin(),
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=1,
-        dashlet=dummy_config,
-    )
+    dashlet = DummyDashlet(dashlet=dummy_config)
     assert not dashlet.infos()
-    assert dashlet.dashlet_id == 1
     assert dashlet.dashlet_spec == {"type": "dummy"}
-    assert dashlet.dashboard_name == "main"
 
 
 @pytest.mark.usefixtures("reset_dashlet_registry")
 def test_dashlet_context_inheritance() -> None:
-    test_dashboard = TEST_DASHBOARD.copy()
-    test_dashboard["context"] = {
-        "wato_folder": {"wato_folder": "/aaa/eee"},
-        "host": {"host": "bla", "neg_host": ""},
-    }
-
-    dashboard_spec = test_dashboard
-
     dashlet_spec = {
         "type": "hoststats",
         "context": {"wato_folder": {"wato_folder": ""}},
@@ -210,11 +164,11 @@ def test_dashlet_context_inheritance() -> None:
 
     HostStats = dashlet_registry["hoststats"]
     dashlet = HostStats(
-        dashboard_name="bla",
-        dashboard_owner=UserId.builtin(),
-        dashboard=dashboard_spec,
-        dashlet_id=1,
         dashlet=dashlet_spec,
+        base_context={
+            "wato_folder": {"wato_folder": "/aaa/eee"},
+            "host": {"host": "bla", "neg_host": ""},
+        },
     )
 
     assert dashlet.context == {

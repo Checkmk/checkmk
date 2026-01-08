@@ -67,6 +67,17 @@ const defaultEmpty8 = ref<string | null>(null)
     label="some label"
     required
   />
+  <h2>no elements</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty2"
+    :options="{
+      type: 'fixed',
+      suggestions: []
+    }"
+    input-hint="some input hint"
+    no-elements-text="no elements"
+    label="some label"
+  />
   <h2>two elements, empty selection</h2>
   <CmkDropdown
     v-model:selected-option="defaultEmpty2"

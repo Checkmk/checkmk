@@ -72,16 +72,22 @@ immediateWatch(
  * suggestions. It should only be called when necessary.
  */
 async function getButtonLabel(options: Suggestions, selected: string | null): Promise<string> {
-  if (selected === null) {
-    return inputHint
-  }
   let currentOptions: Suggestion[]
   switch (options.type) {
     case 'filtered':
-    case 'fixed':
+    case 'fixed': {
+      if (options.suggestions.length === 0) {
+        return noElementsText ?? inputHint
+      } else if (selected === null) {
+        return inputHint
+      }
       currentOptions = options.suggestions
       break
+    }
     case 'callback-filtered': {
+      if (selected === null) {
+        return inputHint
+      }
       const result = await options.querySuggestions(selected)
       if (result instanceof ErrorResponse) {
         throw new Error(`Error fetching suggestions: ${result.error}`)

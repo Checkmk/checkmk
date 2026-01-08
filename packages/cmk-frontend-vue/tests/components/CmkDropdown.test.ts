@@ -34,6 +34,23 @@ test('dropdown shows options', async () => {
   await screen.findByText('Option 1')
 })
 
+test('dropdown shows no elements text without elements', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'fixed',
+        suggestions: []
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      noElementsText: 'No options available',
+      label: 'some aria label'
+    }
+  })
+
+  await screen.findByText('No options available')
+})
+
 test('dropdown truncates center of very long label', async () => {
   render(CmkDropdown, {
     props: {

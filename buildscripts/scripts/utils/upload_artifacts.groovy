@@ -153,7 +153,9 @@ boolean download_hot_cache(Map args) {
 
 void upload_hot_cache(Map args) {
     def exclude_bazel = env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? "--exclude='.cache/bazel'" : "";
-    sh("""
+
+    try {
+        sh("""
         cd ${args.download_dest}
         if [ -d ".cache" ] || [ -d ".java-caller" ]; then
             [ -d ".cache" ] && du -sh .cache
@@ -162,14 +164,18 @@ void upload_hot_cache(Map args) {
         fi
     """);
 
-    if (!sh(script:"test -f ${args.download_dest}/${args.file_pattern}", returnStatus:true)) {
-        upload_via_rsync(
-            "${args.download_dest}",
-            "",
-            "${args.file_pattern}",
-            "${INTERNAL_DEPLOY_DEST}" + "caches",
-            INTERNAL_DEPLOY_PORT,
-        );
+        if (!sh(script:"test -f ${args.download_dest}/${args.file_pattern}", returnStatus:true)) {
+            upload_via_rsync(
+                "${args.download_dest}",
+                "",
+                "${args.file_pattern}",
+                "${INTERNAL_DEPLOY_DEST}" + "caches",
+                INTERNAL_DEPLOY_PORT,
+            );
+        }
+    }
+    catch (Exception exc) {
+        print("hot cache: uploading the cache failed, contact your local CI dealer and tell: ${exc}");
     }
 }
 

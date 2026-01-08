@@ -122,6 +122,7 @@ except ImportError:
             "or the pip package 'requests-unixsocket'.",
         )
     )
+    sys.exit(0)
 
 
 def write_piggyback_section(target_host: str, section: Union[JSONSection, Error]) -> None:

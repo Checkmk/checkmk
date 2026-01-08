@@ -6947,19 +6947,6 @@ msgid "An alias or description of this group."
 msgstr "Un alias o una descrizione di questo gruppo."
 
 #, fuzzy
-msgid "An attribute filter requires a key. Please choose one (e.g., host.name)"
-msgstr ""
-"Un filtro per gli host richiede un attributo chiave. Scegline quindi uno "
-"(Per esempio, \"host.name\")"
-
-#, fuzzy
-msgid ""
-"An attribute filter requires a value. Please choose one (e.g., example.com)"
-msgstr ""
-"Un filtro per gli host richiede un attributo valore. Scegline quindi uno "
-"(Per esempio, \"example.com\")"
-
-#, fuzzy
 msgid "An empty value is not allowed here"
 msgstr "Un valore vuoto non è permesso qui."
 
@@ -13590,7 +13577,9 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Uso dell'helper Checkmk"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgid ""
+"Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
+"here."
 msgstr ""
 
 #, fuzzy
@@ -18928,10 +18917,6 @@ msgstr "Disponibilità del percorso dati livelli inferiori"
 #, fuzzy
 msgid "Data point"
 msgstr "Dati inviati"
-
-#, fuzzy
-msgid "Data point attribute filters"
-msgstr "Attributi di inattività:"
 
 #, fuzzy
 msgid "Data point attributes"
@@ -57907,10 +57892,6 @@ msgid "Resource Name"
 msgstr "Nome della risorsa"
 
 #, fuzzy
-msgid "Resource attribute filters"
-msgstr "Azzeramento degli attributi"
-
-#, fuzzy
 msgid "Resource attribute for hostname lookup"
 msgstr "Calcolo del nome host"
 
@@ -59756,10 +59737,6 @@ msgid "Scope ID"
 msgstr "ID del nodo"
 
 #, fuzzy
-msgid "Scope attribute filters"
-msgstr "Attributo del ruolo"
-
-#, fuzzy
 msgid "Scope attributes"
 msgstr "Attributo del ruolo"
 
@@ -60289,7 +60266,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 
 msgid ""
@@ -89733,10 +89710,6 @@ msgstr ""
 "cluster:"
 
 #, fuzzy
-msgid "You can choose only one agent signature key."
-msgstr "Scarica la chiave della firma dell'agente"
-
-#, fuzzy
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP "
 "address or name configured in the field above."
@@ -90920,12 +90893,6 @@ msgstr ""
 #, fuzzy
 msgid "You have not configured any peer-to-peer connections."
 msgstr "Non hai ancora creato nessuna regola."
-
-#, fuzzy
-msgid "You have not created any agent signature keys yet. This is necessary."
-msgstr ""
-"Non è ancora stato creato alcun agente <a href='%s' target='_blank'>chiavi "
-"di firma</a>. È necessario."
 
 #, fuzzy
 msgid "You have not created any parameters for this notification method yet."
@@ -94176,6 +94143,14 @@ msgstr "Modo aperto"
 msgid "required"
 msgstr "Porta richiesta"
 
+#, fuzzy
+msgid "Milliseconds"
+msgstr "secondi"
+
+#, fuzzy
+msgid "The time span cannot be negative."
+msgstr "Chiave segreta"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -96930,6 +96905,44 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid ""
+#~ "An attribute filter requires a key. Please choose one (e.g., host.name)"
+#~ msgstr ""
+#~ "Un filtro per gli host richiede un attributo chiave. Scegline quindi uno "
+#~ "(Per esempio, \"host.name\")"
+
+#, fuzzy
+#~ msgid ""
+#~ "An attribute filter requires a value. Please choose one (e.g., "
+#~ "example.com)"
+#~ msgstr ""
+#~ "Un filtro per gli host richiede un attributo valore. Scegline quindi uno "
+#~ "(Per esempio, \"example.com\")"
+
+#, fuzzy
+#~ msgid "Data point attribute filters"
+#~ msgstr "Attributi di inattività:"
+
+#, fuzzy
+#~ msgid "Resource attribute filters"
+#~ msgstr "Azzeramento degli attributi"
+
+#, fuzzy
+#~ msgid "Scope attribute filters"
+#~ msgstr "Attributo del ruolo"
+
+#, fuzzy
+#~ msgid "You can choose only one agent signature key."
+#~ msgstr "Scarica la chiave della firma dell'agente"
+
+#, fuzzy
+#~ msgid ""
+#~ "You have not created any agent signature keys yet. This is necessary."
+#~ msgstr ""
+#~ "Non è ancora stato creato alcun agente <a href='%s' "
+#~ "target='_blank'>chiavi di firma</a>. È necessario."
+
+#, fuzzy
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Configurazione dello stile selezionato"
 
@@ -97768,10 +97781,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Questo connettore può essere utilizzato per creare automaticamente gli "
 #~ "host in base ai miei dati."
-
-#, fuzzy
-#~ msgid "This field can not be empty."
-#~ msgstr "Chiave segreta"
 
 #, fuzzy
 #~ msgid ""

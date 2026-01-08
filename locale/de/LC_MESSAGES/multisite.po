@@ -6802,19 +6802,6 @@ msgstr "Ein Alias oder eine Beschreibung der Zeitperiode"
 msgid "An alias or description of this group."
 msgstr "Ein Alias oder eine Beschreibung dieser Gruppe."
 
-#, fuzzy
-msgid "An attribute filter requires a key. Please choose one (e.g., host.name)"
-msgstr ""
-"Ein Host-Filter benötigt einen Attribut-Schlüssel. Bitte wählen Sie einen "
-"(z.B. host.name)"
-
-#, fuzzy
-msgid ""
-"An attribute filter requires a value. Please choose one (e.g., example.com)"
-msgstr ""
-"Ein Host-Filter benötigt einen Attribut-Wert. Bitte wählen Sie einen (z.B. "
-"example.com)"
-
 msgid "An empty value is not allowed here"
 msgstr "Ein leerer Wert ist hier nicht erlaubt"
 
@@ -13185,7 +13172,10 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Auslastung Checkmk-Helper"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+#, fuzzy
+msgid ""
+"Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
+"here."
 msgstr ""
 "Checkmk-Metriken werden aus OTel-Datenpunkten erstellt. Konfigurieren Sie "
 "diese hier."
@@ -18381,10 +18371,6 @@ msgstr "Untergrenzen für Datenpfadverfügbarkeit"
 
 msgid "Data point"
 msgstr "Datenpunkt"
-
-#, fuzzy
-msgid "Data point attribute filters"
-msgstr "Attribute des Datenpunkts"
 
 msgid "Data point attributes"
 msgstr "Attribute des Datenpunkts"
@@ -55775,10 +55761,6 @@ msgid "Resource Name"
 msgstr "Ressourcenname"
 
 #, fuzzy
-msgid "Resource attribute filters"
-msgstr "Ressource-Attribute"
-
-#, fuzzy
 msgid "Resource attribute for hostname lookup"
 msgstr "Ressource-Attribut für die Erstellung von Host-Namen"
 
@@ -57543,10 +57525,6 @@ msgstr "Umfang"
 msgid "Scope ID"
 msgstr "Umfang-ID"
 
-#, fuzzy
-msgid "Scope attribute filters"
-msgstr "Umfang-Attribute"
-
 msgid "Scope attributes"
 msgstr "Umfang-Attribute"
 
@@ -58053,6 +58031,7 @@ msgstr "Wählen Sie aus einer Liste von Metriken, die Checkmk bekannt sind"
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Service-Namen, die Checkmk bekannt sind"
 
+#, fuzzy
 msgid ""
 "Select how multiple data points from replicas of the same service should be "
 "aggregated. By default, the latest value independent of replica is taken. "
@@ -58060,7 +58039,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 "Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
 "aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig von "
@@ -87022,9 +87001,6 @@ msgstr ""
 "Sie können zwischen verschiedenen Aggregationsmodi für geclusterte Services "
 "wählen:"
 
-msgid "You can choose only one agent signature key."
-msgstr "Sie können nur einen Agenten-Signaturschlüssel auswählen."
-
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP "
 "address or name configured in the field above."
@@ -88246,11 +88222,6 @@ msgstr ""
 
 msgid "You have not configured any peer-to-peer connections."
 msgstr "Sie haben keine Peer-to-peer-Verbindungen erstellt."
-
-msgid "You have not created any agent signature keys yet. This is necessary."
-msgstr ""
-"Sie haben bislang keinen Agenten-Signaturschlüssel erstellt. Dies ist "
-"erforderlich."
 
 msgid "You have not created any parameters for this notification method yet."
 msgstr ""
@@ -91502,6 +91473,14 @@ msgstr "Geführt"
 msgid "required"
 msgstr "erforderlich"
 
+#, fuzzy
+msgid "Milliseconds"
+msgstr "Sekunden"
+
+#, fuzzy
+msgid "The time span cannot be negative."
+msgstr "Textfeld darf nicht leer sein"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -94058,6 +94037,42 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#, fuzzy
+#~ msgid ""
+#~ "An attribute filter requires a key. Please choose one (e.g., host.name)"
+#~ msgstr ""
+#~ "Ein Host-Filter benötigt einen Attribut-Schlüssel. Bitte wählen Sie einen "
+#~ "(z.B. host.name)"
+
+#, fuzzy
+#~ msgid ""
+#~ "An attribute filter requires a value. Please choose one (e.g., "
+#~ "example.com)"
+#~ msgstr ""
+#~ "Ein Host-Filter benötigt einen Attribut-Wert. Bitte wählen Sie einen "
+#~ "(z.B. example.com)"
+
+#, fuzzy
+#~ msgid "Data point attribute filters"
+#~ msgstr "Attribute des Datenpunkts"
+
+#, fuzzy
+#~ msgid "Resource attribute filters"
+#~ msgstr "Ressource-Attribute"
+
+#, fuzzy
+#~ msgid "Scope attribute filters"
+#~ msgstr "Umfang-Attribute"
+
+#~ msgid "You can choose only one agent signature key."
+#~ msgstr "Sie können nur einen Agenten-Signaturschlüssel auswählen."
+
+#~ msgid ""
+#~ "You have not created any agent signature keys yet. This is necessary."
+#~ msgstr ""
+#~ "Sie haben bislang keinen Agenten-Signaturschlüssel erstellt. Dies ist "
+#~ "erforderlich."
+
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus scrape Konfiguration"
 
@@ -95013,10 +95028,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Diese Verbindung kann genutzt werden, um automatisiert Hosts auf Basis "
 #~ "von Daten des OpenTelemetry Collectors zu erstellen."
-
-#, fuzzy
-#~ msgid "This field can not be empty."
-#~ msgstr "Textfeld darf nicht leer sein"
 
 #~ msgid ""
 #~ "Time range to continue to consider outdated open telemetry data as valid."

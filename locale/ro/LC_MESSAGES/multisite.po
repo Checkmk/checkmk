@@ -6938,13 +6938,6 @@ msgstr "Un pseudonim sau o descriere a perioadei de timp"
 msgid "An alias or description of this group."
 msgstr "Un pseudonim sau o descriere a acestui grup."
 
-msgid "An attribute filter requires a key. Please choose one (e.g., host.name)"
-msgstr ""
-
-msgid ""
-"An attribute filter requires a value. Please choose one (e.g., example.com)"
-msgstr ""
-
 #, fuzzy
 msgid "An empty value is not allowed here"
 msgstr "Aici nu este permisă o valoare goală."
@@ -13684,7 +13677,9 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgid ""
+"Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
+"here."
 msgstr ""
 
 #, fuzzy
@@ -19057,10 +19052,6 @@ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 #, fuzzy
 msgid "Data point"
 msgstr "Date trimise"
-
-#, fuzzy
-msgid "Data point attribute filters"
-msgstr "Atributele timpilor morți:"
 
 #, fuzzy
 msgid "Data point attributes"
@@ -58384,10 +58375,6 @@ msgid "Resource Name"
 msgstr "Numele resursei"
 
 #, fuzzy
-msgid "Resource attribute filters"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
 msgid "Resource attribute for hostname lookup"
 msgstr "Calcularea numelui de gazdă"
 
@@ -60250,10 +60237,6 @@ msgid "Scope ID"
 msgstr "ID-ul nodului"
 
 #, fuzzy
-msgid "Scope attribute filters"
-msgstr "Atributul rolului"
-
-#, fuzzy
 msgid "Scope attributes"
 msgstr "Atributul rolului"
 
@@ -60792,7 +60775,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 
 msgid ""
@@ -90611,10 +90594,6 @@ msgid "You can choose from different aggregation modes of clustered services:"
 msgstr "Puteți alege între diferite moduri de agregare a serviciilor grupate:"
 
 #, fuzzy
-msgid "You can choose only one agent signature key."
-msgstr "Descărcați cheia de semnătură a agentului"
-
-#, fuzzy
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP "
 "address or name configured in the field above."
@@ -91801,12 +91780,6 @@ msgstr ""
 #, fuzzy
 msgid "You have not configured any peer-to-peer connections."
 msgstr "Nu ați creat încă nicio regulă."
-
-#, fuzzy
-msgid "You have not created any agent signature keys yet. This is necessary."
-msgstr ""
-"Nu ați creat încă niciun agent <a href='%s' target='_blank'>signature keys</"
-"a>. Acest lucru este necesar."
 
 #, fuzzy
 msgid "You have not created any parameters for this notification method yet."
@@ -95115,6 +95088,14 @@ msgstr "Modul deschis"
 msgid "required"
 msgstr "Port necesar"
 
+#, fuzzy
+msgid "Milliseconds"
+msgstr "secunde"
+
+#, fuzzy
+msgid "The time span cannot be negative."
+msgstr "Cheia secretă"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -97891,6 +97872,29 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Data point attribute filters"
+#~ msgstr "Atributele timpilor morți:"
+
+#, fuzzy
+#~ msgid "Resource attribute filters"
+#~ msgstr "Resetarea atributelor"
+
+#, fuzzy
+#~ msgid "Scope attribute filters"
+#~ msgstr "Atributul rolului"
+
+#, fuzzy
+#~ msgid "You can choose only one agent signature key."
+#~ msgstr "Descărcați cheia de semnătură a agentului"
+
+#, fuzzy
+#~ msgid ""
+#~ "You have not created any agent signature keys yet. This is necessary."
+#~ msgstr ""
+#~ "Nu ați creat încă niciun agent <a href='%s' target='_blank'>signature "
+#~ "keys</a>. Acest lucru este necesar."
+
+#, fuzzy
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Configurația stilului selectat"
 
@@ -98738,10 +98742,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Acest conector poate fi utilizat pentru a crea automat gazde pe baza "
 #~ "datelor mele."
-
-#, fuzzy
-#~ msgid "This field can not be empty."
-#~ msgstr "Cheia secretă"
 
 #, fuzzy
 #~ msgid ""

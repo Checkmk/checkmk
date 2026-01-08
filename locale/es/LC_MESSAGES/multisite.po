@@ -6980,13 +6980,6 @@ msgstr "Un alias o descripción del periodo de tiempo"
 msgid "An alias or description of this group."
 msgstr "Un alias o descripción de este grupo."
 
-msgid "An attribute filter requires a key. Please choose one (e.g., host.name)"
-msgstr ""
-
-msgid ""
-"An attribute filter requires a value. Please choose one (e.g., example.com)"
-msgstr ""
-
 #, fuzzy
 msgid "An empty value is not allowed here"
 msgstr "Aquí no se permite un valor vacío."
@@ -13737,7 +13730,9 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Uso del ayudante Checkmk"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgid ""
+"Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
+"here."
 msgstr ""
 
 #, fuzzy
@@ -19141,10 +19136,6 @@ msgstr "Disponibilidad de la ruta de datos niveles inferiores"
 #, fuzzy
 msgid "Data point"
 msgstr "Datos enviados"
-
-#, fuzzy
-msgid "Data point attribute filters"
-msgstr "Atributos modificados"
 
 #, fuzzy
 msgid "Data point attributes"
@@ -58717,10 +58708,6 @@ msgid "Resource Name"
 msgstr "Nombre del recurso"
 
 #, fuzzy
-msgid "Resource attribute filters"
-msgstr "Atributo de función"
-
-#, fuzzy
 msgid "Resource attribute for hostname lookup"
 msgstr "Cálculo del nombre de host"
 
@@ -60600,10 +60587,6 @@ msgid "Scope ID"
 msgstr "ID de nodo"
 
 #, fuzzy
-msgid "Scope attribute filters"
-msgstr "Atributo de función"
-
-#, fuzzy
 msgid "Scope attributes"
 msgstr "Atributo de función"
 
@@ -61143,7 +61126,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 
 #, fuzzy
@@ -91055,10 +91038,6 @@ msgstr ""
 "Puede elegir entre diferentes modos de agregación de servicios agrupados:"
 
 #, fuzzy
-msgid "You can choose only one agent signature key."
-msgstr "Descargar la clave de firma del agente"
-
-#, fuzzy
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP "
 "address or name configured in the field above."
@@ -92252,12 +92231,6 @@ msgstr ""
 #, fuzzy
 msgid "You have not configured any peer-to-peer connections."
 msgstr "Todavía no has creado ninguna regla."
-
-#, fuzzy
-msgid "You have not created any agent signature keys yet. This is necessary."
-msgstr ""
-"Todavía no ha creado ninguna clave de firma de agente <a href='%s'></a>. "
-"Esto es necesario."
 
 #, fuzzy
 msgid "You have not created any parameters for this notification method yet."
@@ -95576,6 +95549,14 @@ msgstr "Modo abierto"
 msgid "required"
 msgstr "Puerto requerido"
 
+#, fuzzy
+msgid "Milliseconds"
+msgstr "segundos"
+
+#, fuzzy
+msgid "The time span cannot be negative."
+msgstr "Clave secreta"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -98337,6 +98318,29 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Data point attribute filters"
+#~ msgstr "Atributos modificados"
+
+#, fuzzy
+#~ msgid "Resource attribute filters"
+#~ msgstr "Atributo de función"
+
+#, fuzzy
+#~ msgid "Scope attribute filters"
+#~ msgstr "Atributo de función"
+
+#, fuzzy
+#~ msgid "You can choose only one agent signature key."
+#~ msgstr "Descargar la clave de firma del agente"
+
+#, fuzzy
+#~ msgid ""
+#~ "You have not created any agent signature keys yet. This is necessary."
+#~ msgstr ""
+#~ "Todavía no ha creado ninguna clave de firma de agente <a href='%s'></a>. "
+#~ "Esto es necesario."
+
+#, fuzzy
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Añadir configuración de estado"
 
@@ -99173,10 +99177,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Este conector puede utilizarse para crear automáticamente hosts basados "
 #~ "en mis datos."
-
-#, fuzzy
-#~ msgid "This field can not be empty."
-#~ msgstr "Clave secreta"
 
 #, fuzzy
 #~ msgid ""

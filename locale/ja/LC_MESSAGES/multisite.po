@@ -6568,13 +6568,6 @@ msgstr "期間のエイリアスまたは説明"
 msgid "An alias or description of this group."
 msgstr "このグループのエイリアスまたは説明。"
 
-msgid "An attribute filter requires a key. Please choose one (e.g., host.name)"
-msgstr ""
-
-msgid ""
-"An attribute filter requires a value. Please choose one (e.g., example.com)"
-msgstr ""
-
 msgid "An empty value is not allowed here"
 msgstr "ここでは空の値は許可されていません"
 
@@ -12887,7 +12880,10 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+#, fuzzy
+msgid ""
+"Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
+"here."
 msgstr ""
 "CheckmkメトリクスはOtel(Open Telemetry)データポイントから作成されます。ここで"
 "設定してください。"
@@ -18030,10 +18026,6 @@ msgstr "データパスの可用性下位レベル"
 #, fuzzy
 msgid "Data point"
 msgstr "送信データ"
-
-#, fuzzy
-msgid "Data point attribute filters"
-msgstr "ダウンタイム属性:"
 
 #, fuzzy
 msgid "Data point attributes"
@@ -54834,10 +54826,6 @@ msgid "Resource Name"
 msgstr "リソース名"
 
 #, fuzzy
-msgid "Resource attribute filters"
-msgstr "属性をリセット"
-
-#, fuzzy
 msgid "Resource attribute for hostname lookup"
 msgstr "カスタムホスト名算出"
 
@@ -56594,10 +56582,6 @@ msgid "Scope ID"
 msgstr "スコープ"
 
 #, fuzzy
-msgid "Scope attribute filters"
-msgstr "役割属性"
-
-#, fuzzy
 msgid "Scope attributes"
 msgstr "役割属性"
 
@@ -57098,6 +57082,7 @@ msgstr "Checkmkが把握しているメトリクスのリストから選択す�
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Checkmkで認識されているサービス名の一覧から選択してください"
 
+#, fuzzy
 msgid ""
 "Select how multiple data points from replicas of the same service should be "
 "aggregated. By default, the latest value independent of replica is taken. "
@@ -57105,7 +57090,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 "同じサービスのレプリカからの複数のデータポイントをどのように集計するかを選択"
 "します。デフォルトでは、レプリカに依存しない最新の値が使用されます。この設定"
@@ -84955,10 +84940,6 @@ msgstr ""
 msgid "You can choose from different aggregation modes of clustered services:"
 msgstr "クラスタ化されたサービスのアグリゲーションモードが選べます。"
 
-#, fuzzy
-msgid "You can choose only one agent signature key."
-msgstr "エージェントの署名キーをダウンロードする"
-
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP "
 "address or name configured in the field above."
@@ -86074,12 +86055,6 @@ msgstr ""
 
 msgid "You have not configured any peer-to-peer connections."
 msgstr "ピアツーピア接続を設定していません。"
-
-#, fuzzy
-msgid "You have not created any agent signature keys yet. This is necessary."
-msgstr ""
-"エージェントの<a href='%s' target='_blank'>署名キー</a>をまだ作成していませ"
-"ん。これは必須です。"
 
 msgid "You have not created any parameters for this notification method yet."
 msgstr "この通知方法に対して、まだパラメーターを作成していません。"
@@ -89281,6 +89256,14 @@ msgstr "ガイドモード"
 msgid "required"
 msgstr "必須"
 
+#, fuzzy
+msgid "Milliseconds"
+msgstr "秒"
+
+#, fuzzy
+msgid "The time span cannot be negative."
+msgstr "入力を空にすることはできません"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -91979,6 +91962,29 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Data point attribute filters"
+#~ msgstr "ダウンタイム属性:"
+
+#, fuzzy
+#~ msgid "Resource attribute filters"
+#~ msgstr "属性をリセット"
+
+#, fuzzy
+#~ msgid "Scope attribute filters"
+#~ msgstr "役割属性"
+
+#, fuzzy
+#~ msgid "You can choose only one agent signature key."
+#~ msgstr "エージェントの署名キーをダウンロードする"
+
+#, fuzzy
+#~ msgid ""
+#~ "You have not created any agent signature keys yet. This is necessary."
+#~ msgstr ""
+#~ "エージェントの<a href='%s' target='_blank'>署名キー</a>をまだ作成していま"
+#~ "せん。これは必須です。"
+
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus スクレイプ構成"
 
@@ -92862,10 +92868,6 @@ msgstr ""
 #~ msgstr ""
 #~ "このコネクターはOpentelemetry コレクターのデータに基づいてホストを自動作成"
 #~ "するために使用します。"
-
-#, fuzzy
-#~ msgid "This field can not be empty."
-#~ msgstr "入力を空にすることはできません"
 
 #~ msgid ""
 #~ "Time range to continue to consider outdated open telemetry data as valid."

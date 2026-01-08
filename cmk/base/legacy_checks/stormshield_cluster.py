@@ -7,7 +7,8 @@
 
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD_CLUSTER
 
 check_info = {}
 
@@ -58,13 +59,7 @@ def parse_stormshield_cluster(string_table: StringTable) -> StringTable | None:
 check_info["stormshield_cluster"] = LegacyCheckDefinition(
     name="stormshield_cluster",
     parse_function=parse_stormshield_cluster,
-    detect=all_of(
-        any_of(
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.8"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11256.2.0"),
-        ),
-        exists(".1.3.6.1.4.1.11256.1.11.*"),
-    ),
+    detect=DETECT_STORMSHIELD_CLUSTER,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11",
         oids=["1", "2", "3", "5", "6", "8"],

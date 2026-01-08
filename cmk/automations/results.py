@@ -770,7 +770,6 @@ result_type_registry.register(PingHostResult)
 class PingHostCmd(StrEnum):
     PING = "ping"
     PING6 = "ping6"
-    PING4 = "ping4"
 
 
 @dataclass

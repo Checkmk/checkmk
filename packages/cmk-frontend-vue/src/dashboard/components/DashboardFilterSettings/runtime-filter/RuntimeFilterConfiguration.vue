@@ -34,6 +34,7 @@ const props = defineProps<{
   mandatoryFilters: Set<string>
   runtimeFiltersMode: RuntimeFilterMode
   canEdit: boolean
+  isBuiltIn: boolean
   resetKey: number
 }>()
 
@@ -43,6 +44,16 @@ const emit = defineEmits<{
   'update:runtime-filters-mode': [mode: RuntimeFilterMode]
   'reset-runtime-filters': []
 }>()
+
+const editButtonTooltip = computed(() => {
+  if (props.isBuiltIn) {
+    return _t('Editing is disabled for built-in dashboards')
+  }
+  if (!props.canEdit) {
+    return _t('Edit access required')
+  }
+  return undefined
+})
 
 const showAppliedConfirmation = ref(false)
 const overrideMode = ref(props.runtimeFiltersMode === RuntimeFilterMode.OVERRIDE)
@@ -125,7 +136,12 @@ watch(
         {{ _t('Reset to pre-selected filters') }}
       </CmkButton>
     </div>
-    <CmkButton v-if="canEdit" variant="optional" @click="openConfiguration">
+    <CmkButton
+      :disabled="!canEdit || isBuiltIn"
+      variant="optional"
+      :title="editButtonTooltip"
+      @click="openConfiguration"
+    >
       {{ _t('Edit filter configuration') }}
     </CmkButton>
   </div>

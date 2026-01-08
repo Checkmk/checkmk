@@ -245,6 +245,7 @@ const serviceMandatoryFilters = computed(() => {
           :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
           :runtime-filters-mode="runtimeFiltersMode"
           :can-edit="canEdit"
+          :is-built-in="isBuiltIn"
           :reset-key="resetCounter"
           @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
           @apply-runtime-filters="applyRuntimeFilters"

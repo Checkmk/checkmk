@@ -113,18 +113,27 @@ def check_for_license_header_violation(rel_path, abs_path):
 
 
 def test_license_headers(python_files: Sequence[str]) -> None:
+    files_checked = []
+    files_ignored = []
+
     def generator():
         for path in python_files:
             abs_path = os.path.realpath(path)
             rel_path = os.path.relpath(abs_path, repo_path())
 
             if rel_path in ignored_files:
+                files_ignored.append(rel_path)
                 continue
 
+            files_checked.append(rel_path)
             yield from check_for_license_header_violation(rel_path, abs_path)
 
+    LOGGER.info("Scanning %d files", len(python_files))
     violations = sorted(list(generator()))
     violations_formatted = "\n".join(f"{ident}: {path}" for (ident, path) in violations)
+
+    LOGGER.info("ignored: %d", len(files_ignored))
+    LOGGER.info("checked: %d", len(files_checked))
 
     assert not violations, (
         f"The following license header violations were detected:\n{violations_formatted}"

@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-any-return"
 
 import logging
+import subprocess
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -27,9 +28,37 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 @pytest.fixture
 def python_files(request: pytest.FixtureRequest) -> Sequence[str]:
     logger.debug("Getting python files from request: %s", request)
-    if not (files := request.config.getoption("--python-files")):
+    test_all_files = request.config.getoption("--test-all-files")
+    python_files_option = request.config.getoption("--python-files")
+
+    if test_all_files and python_files_option:
+        raise ValueError(
+            "Cannot use both --test-all-files and --python-files options at the same time"
+        )
+
+    if test_all_files:
+        # Get all* Python files using the find-python-files script
+        # (find-python-files excludes some paths like packages)
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        script_path = repo_root / "scripts" / "find-python-files"
+
+        try:
+            result = subprocess.run(
+                [str(script_path)],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=str(repo_root),
+            )
+            files = result.stdout.strip().split("\n")
+            return [f for f in files if f]  # Filter out empty strings
+        except subprocess.CalledProcessError as e:
+            logger.error("Failed to run find-python-files script: %s", e)
+            pytest.skip("Could not retrieve Python files from find-python-files script")
+
+    if not python_files_option:
         pytest.skip()
-    return files
+    return python_files_option
 
 
 @pytest.fixture

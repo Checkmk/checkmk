@@ -132,6 +132,8 @@ function getElementBySelector<T>(selector: string): T {
       hostnameInputElement &&
       siteSelectElement &&
       ipv4InputElement &&
+      ipv4InputButtonElement &&
+      ipv6InputButtonElement &&
       ipv6InputElement &&
       ipAddressFamilySelectElement &&
       tagAgentInputSelectElement &&
@@ -144,7 +146,9 @@ function getElementBySelector<T>(selector: string): T {
     :tag-agent-default="tagAgentDefaultElement"
     :hostname-input-element="hostnameInputElement"
     :ipv4-input-element="ipv4InputElement"
+    :ipv4-input-button-element="ipv4InputButtonElement"
     :ipv6-input-element="ipv6InputElement"
+    :ipv6-input-button-element="ipv6InputButtonElement"
     :site-select-element="siteSelectElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"

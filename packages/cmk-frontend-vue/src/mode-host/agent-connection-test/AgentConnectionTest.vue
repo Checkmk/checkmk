@@ -34,7 +34,9 @@ interface Props {
   tagAgentDefault: HTMLDivElement
   hostnameInputElement: HTMLInputElement
   ipv4InputElement: HTMLInputElement
+  ipv4InputButtonElement: HTMLInputElement
   ipv6InputElement: HTMLInputElement
+  ipv6InputButtonElement: HTMLInputElement
   siteSelectElement: HTMLSelectElement
   ipAddressFamilySelectElement: HTMLSelectElement
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
@@ -69,6 +71,8 @@ function checkPushMode() {
 }
 
 const hostname = ref(props.hostnameInputElement.value || '')
+const ipV4Selected = ref(false)
+const ipV6Selected = ref(false)
 const ipV4 = ref(props.ipv4InputElement.value || '')
 const ipV6 = ref(props.ipv6InputElement.value || '')
 const targetElement = ref<HTMLElement>(
@@ -77,6 +81,9 @@ const targetElement = ref<HTMLElement>(
 const setupErrorActive = ref(props.setupError)
 
 onMounted(() => {
+  ipV4Selected.value = props.ipv4InputButtonElement.checked
+  ipV6Selected.value = props.ipv6InputButtonElement.checked
+
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
     void startAjax().then(() => {
       if (!props.setupError) {
@@ -88,6 +95,18 @@ onMounted(() => {
   props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
       case props.formElement:
+      case props.ipv4InputButtonElement: {
+        if (!ipV4Selected.value) {
+          ipV4.value = ''
+        }
+        break
+      }
+      case props.ipv6InputButtonElement: {
+        if (!ipV6Selected.value) {
+          ipV6.value = ''
+        }
+        break
+      }
       case props.changeTagAgent: {
         switchVisibility()
         checkPushMode()
@@ -112,9 +131,33 @@ onMounted(() => {
     })
   }
 
+  function watchCheckbox(
+    checkbox: HTMLInputElement,
+    checkboxRef: Ref<boolean>,
+    valueRef: Ref<string>,
+    inputElement: HTMLInputElement
+  ) {
+    checkbox.addEventListener('change', () => {
+      checkboxRef.value = checkbox.checked
+
+      if (checkbox.checked) {
+        valueRef.value = inputElement.value
+      }
+
+      isLoading.value = false
+      isSuccess.value = false
+      isError.value = false
+      if (props.setupError) {
+        setupErrorActive.value = false
+      }
+    })
+  }
+
   watchInput(props.hostnameInputElement, hostname)
   watchInput(props.ipv4InputElement, ipV4)
   watchInput(props.ipv6InputElement, ipV6)
+  watchCheckbox(props.ipv4InputButtonElement, ipV4Selected, ipV4, props.ipv4InputElement)
+  watchCheckbox(props.ipv6InputButtonElement, ipV6Selected, ipV6, props.ipv6InputElement)
 })
 
 const isLoading = ref(false)

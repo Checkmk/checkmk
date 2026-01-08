@@ -1,5 +1,5 @@
 {
-  "checksum": "f2f19b11762c44d65aef889d51eca48fffacf331813dee3aefcea8f02de03d60",
+  "checksum": "9ee69bc412cd20e81fd34674d55b2365dfebe1f39cad4b647229155d900a4fdc",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1730,7 +1730,7 @@
               "target": "scrypt"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -3888,7 +3888,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -4412,7 +4412,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -4505,7 +4505,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -4592,7 +4592,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -4691,7 +4691,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -5588,6 +5588,89 @@
         },
         "edition": "2021",
         "version": "0.1.3"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "io-uring 0.7.11": {
+      "name": "io-uring",
+      "version": "0.7.11",
+      "package_url": "https://github.com/tokio-rs/io-uring",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/io-uring/0.7.11/download",
+          "sha256": "fdd7bddefd0a8833b88a4b68f90dae22c7450d11b354198baee3874fd811b344"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "io_uring",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "io_uring",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "bitflags 2.8.0",
+              "target": "bitflags"
+            },
+            {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
+              "id": "io-uring 0.7.11",
+              "target": "build_script_build"
+            },
+            {
+              "id": "libc 0.2.169",
+              "target": "libc"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.7.11"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ]
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7995,7 +8078,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -8833,7 +8916,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "tokio 1.43.0",
+                "id": "tokio 1.46.1",
                 "target": "tokio"
               },
               {
@@ -12029,14 +12112,14 @@
       ],
       "license_file": "LICENSE-APACHE.md"
     },
-    "tokio 1.43.0": {
+    "tokio 1.46.1": {
       "name": "tokio",
-      "version": "1.43.0",
+      "version": "1.46.1",
       "package_url": "https://github.com/tokio-rs/tokio",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio/1.43.0/download",
-          "sha256": "3d61fa4ffa3de412bfea335c6ecff681de2b609ba3c77ef3e00e521813a9ed9e"
+          "url": "https://static.crates.io/crates/tokio/1.46.1/download",
+          "sha256": "0cc3a2344dafbe23a245241fe8b09735b521110d30fcefbbd5feb1797ca35d17"
         }
       },
       "targets": [
@@ -12100,6 +12183,16 @@
             }
           ],
           "selects": {
+            "cfg(all(tokio_uring, target_os = \"linux\"))": [
+              {
+                "id": "io-uring 0.7.11",
+                "target": "io_uring"
+              },
+              {
+                "id": "slab 0.4.9",
+                "target": "slab"
+              }
+            ],
             "cfg(tokio_taskdump)": [
               {
                 "id": "backtrace 0.3.74",
@@ -12118,7 +12211,7 @@
           ],
           "selects": {}
         },
-        "version": "1.43.0"
+        "version": "1.46.1"
       },
       "license": "MIT",
       "license_ids": [
@@ -12217,7 +12310,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             }
           ],
@@ -12275,7 +12368,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             }
           ],
@@ -12342,7 +12435,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             }
           ],
@@ -12413,7 +12506,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             }
           ],
@@ -12489,7 +12582,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.43.0",
+              "id": "tokio 1.46.1",
               "target": "tokio"
             },
             {
@@ -16058,6 +16151,7 @@
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(all(target_family = \"wasm\", target_os = \"unknown\"))": [],
+    "cfg(all(tokio_uring, target_os = \"linux\"))": [],
     "cfg(all(unix, not(target_os = \"macos\")))": [
       "x86_64-unknown-linux-gnu"
     ],
@@ -16121,7 +16215,7 @@
     "reqwest 0.12.12",
     "scrypt 0.11.0",
     "time 0.3.37",
-    "tokio 1.43.0",
+    "tokio 1.46.1",
     "tracing 0.1.41",
     "tracing-subscriber 0.3.20",
     "typed-builder 0.18.2",

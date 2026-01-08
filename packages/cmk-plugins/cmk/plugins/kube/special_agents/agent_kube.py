@@ -81,7 +81,11 @@ from cmk.plugins.kube.common import (
 )
 from cmk.plugins.kube.prometheus_api import ResponseSuccess
 from cmk.plugins.kube.schemata import api, section
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+
+__VERSION__ = "2.6.0b1"
+
+AGENT_NAME = "kube"
 
 TOKEN_OPTION = "token"
 
@@ -1204,13 +1208,18 @@ def _create_sections_based_on_machine_section(
     )
 
 
-def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
+def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> int:
     token = resolve_secret_option(arguments, TOKEN_OPTION)
     client_config = query.APISessionConfig.model_validate(arguments.__dict__)
 
-    api_data = _collect_api_data(
-        token, client_config, MonitoredObject.pvcs in arguments.monitored_objects
-    )
+    try:
+        api_data = _collect_api_data(
+            token, client_config, MonitoredObject.pvcs in arguments.monitored_objects
+        )
+    except () if arguments.debug else (Exception,) as e:
+        sys.stderr.write(f"{str(e).replace('\n', '')}\n")
+        return 1
+
     # Namespaces are handled independently from the cluster object in order to improve
     # testability. The long term goal is to remove all objects from the cluster object
     composed_entities = ComposedEntities.from_api_resources(
@@ -1252,7 +1261,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
 
     # Skip machine & container sections when cluster agent endpoint not configured
     if isinstance(usage_config, query.NoUsageConfig):
-        return
+        return 0
 
     pods_to_host = determine_pods_to_host(
         composed_entities=composed_entities,
@@ -1282,7 +1291,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
 
         if all(not isinstance(response[1], ResponseSuccess) for response in (cpu, memory)):
             LOGGER.debug("Prometheus queries failed. Skipping generation of 'machine_sections'")
-            return
+            return 0
 
         prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
         common.write_sections(
@@ -1293,7 +1302,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             machine_sections=prometheus_section.machine_sections(token, usage_config),
             piggyback_formatter=piggyback_formatter,
         )
-        return
+        return 0
 
     assert isinstance(usage_config, query.CollectorSessionConfig)
 
@@ -1304,7 +1313,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     metadata_or_err = _create_metadata_based_cluster_collector(arguments.debug, token, usage_config)
     if isinstance(metadata_or_err, CollectorHandlingException):
         write_cluster_collector_info_section(processing_log=metadata_or_err.to_section())
-        return
+        return 0
     cluster_collector_metadata, nodes_metadata = metadata_or_err
     write_cluster_collector_info_section(
         processing_log=section.CollectorHandlerLog(
@@ -1337,18 +1346,20 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     ).model_dump_json()
     sys.stdout.write("<<<kube_collector_processing_logs_v1:sep(0)>>>\n")
     sys.stdout.write(f"{section_content}\n")
+    return 0
 
 
 def _main_with_setup(
     arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings
-) -> None:
+) -> int:
     setup_logging(arguments.verbose)
     LOGGER.debug("parsed arguments: %s\n", arguments)
 
     with Profile(profile_file=arguments.profile) if arguments.profile else nullcontext():
-        _main(arguments, checkmk_host_settings)
+        return _main(arguments, checkmk_host_settings)
 
 
+@report_agent_crashes(AGENT_NAME, __VERSION__)
 def main(args: list[str] | None = None) -> int:
     if args is None:
         args = sys.argv[1:]
@@ -1359,14 +1370,7 @@ def main(args: list[str] | None = None) -> int:
         annotation_key_pattern=arguments.annotation_key_pattern,
     )
 
-    try:
-        _main_with_setup(arguments, checkmk_host_settings)
-    except Exception as e:
-        if arguments.debug:
-            raise
-        sys.stderr.write("%s" % e)
-        return 1
-    return 0
+    return _main_with_setup(arguments, checkmk_host_settings)
 
 
 if __name__ == "__main__":

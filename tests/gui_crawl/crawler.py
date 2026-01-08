@@ -176,7 +176,7 @@ class Crawler:
             "application/x-rpm",
             "application/x-tar",
             "application/x-tgz",
-            "application/x-yaml; charset=utf-8",
+            "application/x-yaml",
             "text/x-c++src",
             "text/x-chdr",
             "text/x-sh",

@@ -136,7 +136,10 @@ def test_diagnostics_serialize_wato_parameters_with_host(
         (
             {
                 "opt_info": {
-                    diagnostics.OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2", "a3", "a4", "a5"]),
+                    diagnostics.OPT_CHECKMK_CONFIG_FILES: (
+                        "_ty",
+                        ["a1", "a2", "a3", "a4", "a5"],
+                    ),
                 },
                 "comp_specific": {
                     diagnostics.OPT_COMP_NOTIFICATIONS: {
@@ -305,50 +308,66 @@ def test_diagnostics_get_checkmk_file_info_by_name(
 @pytest.mark.parametrize(
     "rel_filepath, sensitivity",
     [
-        ("apache.conf", diagnostics.CheckmkFileSensitivity.unknown),
-        ("apache.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("conf.d/microcore.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("conf.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("conf.d/pnp4nagios.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("apache.conf", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("apache.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("conf.d/microcore.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("conf.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("conf.d/pnp4nagios.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("conf.d/wato/.wato", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("conf.d/wato/alert_handlers.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        (
+            "conf.d/wato/alert_handlers.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
         ("conf.d/wato/contacts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
         ("conf.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("conf.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("conf.d/wato/hosts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
-        ("conf.d/wato/notifications.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        (
+            "conf.d/wato/notifications.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
         ("conf.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
         ("conf.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("dcd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("liveproxyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("dcd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("liveproxyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("main.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("mkeventd.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
-        ("mkeventd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("mkeventd.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        (
+            "mkeventd.d/wato/global.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
+        ("mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("mknotifyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("multisite.d/liveproxyd.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("multisite.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("multisite.d/sites.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("multisite.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("multisite.d/liveproxyd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("multisite.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("multisite.d/sites.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        (
+            "multisite.d/wato/global.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
         ("multisite.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("multisite.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("multisite.d/wato/users.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
-        ("multisite.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("rrdcached.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
-        ("alerts.log", diagnostics.CheckmkFileSensitivity.unknown),
-        ("apache/access_log", diagnostics.CheckmkFileSensitivity.unknown),
-        ("apache/error_log", diagnostics.CheckmkFileSensitivity.unknown),
-        ("apache/stats", diagnostics.CheckmkFileSensitivity.unknown),
+        (
+            "multisite.d/wato/users.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
+        ("multisite.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("rrdcached.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("alerts.log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("apache/access_log", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("apache/error_log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("apache/stats", diagnostics.CheckmkFileSensitivity.high_sensitive),
         ("cmc.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("dcd.log", diagnostics.CheckmkFileSensitivity.unknown),
-        ("diskspace.log", diagnostics.CheckmkFileSensitivity.unknown),
-        ("liveproxyd.log", diagnostics.CheckmkFileSensitivity.unknown),
-        ("liveproxyd.state", diagnostics.CheckmkFileSensitivity.unknown),
-        ("mkeventd.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("unknown.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("dcd.log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("diskspace.log", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("liveproxyd.log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("liveproxyd.state", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("mkeventd.log", diagnostics.CheckmkFileSensitivity.sensitive),
         ("mknotifyd.log", diagnostics.CheckmkFileSensitivity.sensitive),
         ("mknotifyd.state", diagnostics.CheckmkFileSensitivity.sensitive),
         ("notify.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("rrdcached.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("rrdcached.log", diagnostics.CheckmkFileSensitivity.sensitive),
         ("web.log", diagnostics.CheckmkFileSensitivity.sensitive),
     ],
 )
@@ -356,8 +375,5 @@ def test_diagnostics_file_info_of_comp_notifications(
     rel_filepath: str, sensitivity: diagnostics.CheckmkFileSensitivity
 ) -> None:
     assert (
-        diagnostics.get_checkmk_file_info(
-            rel_filepath, diagnostics.OPT_COMP_NOTIFICATIONS
-        ).sensitivity.value
-        == sensitivity.value
+        diagnostics.get_checkmk_file_info(rel_filepath, None).sensitivity.value == sensitivity.value
     )

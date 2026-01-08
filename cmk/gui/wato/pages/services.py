@@ -873,6 +873,12 @@ class DiscoveryPageRenderer:
                 outputMessagePartials = [
                     "No cached data available",
                     "This data source is not supported for relay hosts",
+                    # We have no information about the rule matching here
+                    # (Individual program call instead of agent access).
+                    # As we don't want to slow down all discoveries with
+                    # rulematching, use the ProgramFetcher output instead
+                    "Agent exited with code",
+                    "not found (exit code 127)",
                 ]
 
                 if (

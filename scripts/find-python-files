@@ -7,9 +7,10 @@
 
 usage() {
     cat >&2 <<-HERE
-usage: $(basename "${0}") [--filter]
+usage: $(basename "${0}") [--filter] [--with-packages]
 
    --filter:             read file candidates from lines of stdin (one file per line)
+   --with-packages:      include Python files from packages/ directory
 HERE
     exit 1
 }
@@ -22,6 +23,7 @@ get_candidates_from_stdin() {
 }
 
 get_candidates_from_filesystem() {
+    local with_packages="$1"
     cd "$(dirname "$(dirname "$(realpath "$0")")")" || exit $?
 
     SEARCH=
@@ -47,6 +49,10 @@ get_candidates_from_filesystem() {
     SEARCH+=" omd/packages/check_mk"
     SEARCH+=" scripts"
     SEARCH+=" tests"
+    # Include packages/ directory if --with-packages is given
+    if [ "$with_packages" = "true" ] && [ -d "packages" ]; then
+        SEARCH+=" packages"
+    fi
     # The submodule is not checked out in the CI, so it should also not be checked locally.
     # The content of that repo needs to be checked by it's own CI
     PRUNE+=" -path $(realpath tests/qa-test-data) -prune -o"
@@ -73,15 +79,23 @@ get_candidates_from_filesystem() {
 filter_for_python_files() {
     local repo_path
     repo_path="$(dirname "$(dirname "$(realpath "$0")")")"
+    local with_packages="$1"
     local tmpfile
     tmpfile=$(mktemp)
     trap 'rm -f "$tmpfile"' EXIT
 
     # use "-r" over "--no-run-if-empty" and "-0" over "--null" to work on alpine
-    # Exclude files below packages: The package specific jobs deal with them
+    # Exclude files below packages: The package specific jobs deal with them (unless --with-packages is given)
     # Don't look into .werks folder: werks may contain a python shebang for documentation and should not be linted of course
-    grep --null --null-data -v -e "^$repo_path/packages/" -e "$repo_path/.werks" |
-        sort --zero-terminated >"$tmpfile"
+    if [ "$with_packages" = "true" ]; then
+        # Only exclude .werks, include packages/
+        grep --null --null-data -v -e "$repo_path/.werks" |
+            sort --zero-terminated >"$tmpfile"
+    else
+        # Exclude both packages/ and .werks
+        grep --null --null-data -v -e "^$repo_path/packages/" -e "$repo_path/.werks" |
+            sort --zero-terminated >"$tmpfile"
+    fi
 
     # only output unique python files
     {
@@ -93,20 +107,32 @@ filter_for_python_files() {
 }
 
 main() {
-    if [ $# -eq 0 ]; then
-        get_candidates_from_filesystem | filter_for_python_files
-    elif [ $# -eq 1 ]; then
+    local with_packages="false"
+    local filter_mode="false"
+
+    # Parse arguments
+    while [ $# -gt 0 ]; do
         case $1 in
             --filter)
-                # in the filtering case, no match by grep is OK!
-                get_candidates_from_stdin | filter_for_python_files || true
+                filter_mode="true"
+                shift
+                ;;
+            --with-packages)
+                with_packages="true"
+                shift
                 ;;
             *)
                 usage
                 ;;
         esac
+    done
+
+    # Execute based on mode
+    if [ "$filter_mode" = "true" ]; then
+        # in the filtering case, no match by grep is OK!
+        get_candidates_from_stdin | filter_for_python_files "$with_packages" || true
     else
-        usage
+        get_candidates_from_filesystem "$with_packages" | filter_for_python_files "$with_packages"
     fi
 }
 

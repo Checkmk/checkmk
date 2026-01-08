@@ -44,7 +44,7 @@ def python_files(request: pytest.FixtureRequest) -> Sequence[str]:
 
         try:
             result = subprocess.run(
-                [str(script_path)],
+                [str(script_path), "--with-packages"],
                 capture_output=True,
                 text=True,
                 check=True,

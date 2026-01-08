@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.stormshield_services import (
+from cmk.plugins.stormshield.agent_based.stormshield_services import (
     check_stormshield_services,
     discover_stormshield_services,
     StormshieldService,

@@ -1,5 +1,5 @@
 {
-  "checksum": "4699f756ef85da1617c27a4a866ce30a37455a6858f42612b8c40fd25e4f21cd",
+  "checksum": "12b497035378219cbe533bc248ab432920c489f2a243cc09a6712d5023dbfe9b",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -5470,7 +5470,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -10162,7 +10162,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-targets 0.53.3",
+                "id": "windows-targets 0.48.5",
                 "target": "windows_targets"
               }
             ]
@@ -17696,7 +17696,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -19972,7 +19972,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -23408,7 +23408,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.48.0",
                 "target": "windows_sys"
               }
             ]

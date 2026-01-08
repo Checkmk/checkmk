@@ -32,12 +32,14 @@ def test_parameter_valuespec_returns_a_dictionary() -> None:
 
 def test_parameter_valuespec_has_help() -> None:
     parameters = kube_node_container_count._parameter_valuespec()
-    assert all(c in parameters.help() for c in SECTION_ELEMENTS)
+    help_text = parameters.help()
+    assert help_text is not None
+    assert all(c in help_text for c in SECTION_ELEMENTS)
 
 
 def test_parameter_valuespec_has_as_much_elements_as_section_elements() -> None:
     parameters = kube_node_container_count._parameter_valuespec()
-    assert len(parameters._elements()) == len(OPTIONS)
+    assert len(list(parameters._elements())) == len(OPTIONS)
 
 
 @pytest.mark.parametrize("section_element", OPTIONS)

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,13 +14,13 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
 
 
-def _item_spec_efreq():
+def _item_spec_efreq() -> TextInput:
     return TextInput(
         title=_("Phase"), help=_("The identifier of the phase the power is related to.")
     )
 
 
-def _parameter_valuespec_efreq():
+def _parameter_valuespec_efreq() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

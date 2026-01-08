@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.kube import wrap_with_no_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
@@ -13,10 +10,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Tuple
 
 
-def __levels_upper(title):
+def __levels_upper(title: str) -> CascadingDropdown:
     return wrap_with_no_levels_dropdown(
         title=title,
         value_spec=Tuple(
@@ -28,7 +25,7 @@ def __levels_upper(title):
     )
 
 
-def __levels_lower(title):
+def __levels_lower(title: str) -> CascadingDropdown:
     return wrap_with_no_levels_dropdown(
         title=title,
         value_spec=Tuple(
@@ -40,7 +37,7 @@ def __levels_lower(title):
     )
 
 
-def _parameter_valuespec():
+def _parameter_valuespec() -> Dictionary:
     return Dictionary(
         help=_(
             "Allows to define absolute levels for running, waiting, terminated and total containers."

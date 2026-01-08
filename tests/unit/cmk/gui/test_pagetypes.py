@@ -5,6 +5,7 @@
 
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.script_helpers import application_and_request_context
+from tests.testlib.common.repo import is_pro_repo
 
 
 def test_registered_pagetype_topics() -> None:
@@ -19,12 +20,14 @@ def test_registered_pagetype_topics() -> None:
         "it_efficiency",
         "monitoring",
         "my_workplace",
-        "network_statistics",
         "other",
         "overview",
         "problems",
         "synthetic_monitoring",
     ]
+
+    if is_pro_repo():
+        expected.append("network_statistics")
 
     with application_and_request_context():
         assert sorted(list(PagetypeTopics.builtin_pages().keys())) == sorted(expected)

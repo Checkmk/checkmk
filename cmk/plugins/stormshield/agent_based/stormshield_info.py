@@ -33,8 +33,8 @@ def check_stormshield_info(section: StringTable) -> CheckResult:
         )
 
 
-def parse_stormshield_info(string_table: StringTable) -> StringTable | None:
-    return string_table or None
+def parse_stormshield_info(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 snmp_section_stormshield_info = SimpleSNMPSection(

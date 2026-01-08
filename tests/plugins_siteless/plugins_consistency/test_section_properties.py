@@ -88,7 +88,6 @@ def test_detect_spec_dedup(
         ("safenet_hsm", "safenet_ntls"),
         ("sentry_pdu_outlets_v4", "sentry_pdu_v4"),
         ("sophos", "sophos_messages"),
-        ("stormshield_cluster", "stormshield_cluster_node"),
         ("teracom_tcw241_analog", "teracom_tcw241_digital"),
         ("zebra_model", "zebra_printer_status"),
         ("adva_fsp_current", "adva_fsp_if", "adva_fsp_temp"),

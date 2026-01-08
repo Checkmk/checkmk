@@ -16,6 +16,7 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.werks import Werks
 
 logger = logging.getLogger(__name__)
+pytestmark = pytest.mark.xfail(reason="No werks are available for 2.6.0, yet!", strict=True)
 
 
 @pytest.fixture(name="werks_page", scope="function")

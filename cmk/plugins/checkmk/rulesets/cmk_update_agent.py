@@ -445,7 +445,7 @@ def _valuespec_signature_keys() -> MultipleChoiceExtended:
             for key in sorted(active_config.agent_signature_keys.values(), key=lambda k: k.alias)
         ],
         custom_validate=(validators.LengthInRange(min_value=1),),
-        migrate=_migrate_certificates,
+        migrate=_migrate_signature_keys,
     )
 
 
@@ -495,7 +495,7 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
                 parameter_form=_valuespec_editions(),
             ),
             "signature_keys": DictElement(
-                required=True,
+                required=False,
                 parameter_form=_valuespec_signature_keys(),
             ),
         },

@@ -32,6 +32,7 @@ const emit = defineEmits<FilterSettingsEmits>()
   >
     <FilterSettings
       :can-edit="canEdit"
+      :is-built-in="isBuiltIn"
       :applied-runtime-filters="appliedRuntimeFilters"
       :configured-dashboard-filters="configuredDashboardFilters"
       :configured-mandatory-runtime-filters="configuredMandatoryRuntimeFilters"

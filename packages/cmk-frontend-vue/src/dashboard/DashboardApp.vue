@@ -504,6 +504,7 @@ function deepClone<T>(obj: T): T {
           dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
         "
         :can-edit="dashboardsManager.activeDashboard.value?.metadata.is_editable ?? false"
+        :is-built-in="dashboardsManager.activeDashboard.value?.metadata.is_built_in ?? false"
         :starting-window="dashboardFilterSettingsStartingWindow"
         @apply-runtime-filters="handleApplyRuntimeFilters"
         @save-filter-settings="handleSaveFilterSettings"

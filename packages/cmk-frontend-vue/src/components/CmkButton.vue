@@ -31,6 +31,7 @@ export type ButtonVariants = VariantProps<typeof buttonVariants>
 export interface ButtonProps {
   variant?: ButtonVariants['variant']
   disabled?: boolean | string | undefined
+  title?: string | undefined
 }
 </script>
 
@@ -60,6 +61,7 @@ defineEmits(['click'])
     class="cmk-button"
     :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
     :disabled="isDisabled"
+    :title="title || ''"
     @click.prevent="
       (e) => {
         $emit('click', e)

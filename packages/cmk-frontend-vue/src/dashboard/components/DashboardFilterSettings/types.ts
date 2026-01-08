@@ -12,6 +12,7 @@ export type FilterSettingsProps = {
   appliedRuntimeFilters: ConfiguredFilters
   configuredRuntimeFiltersMode: RuntimeFilterMode
   canEdit: boolean
+  isBuiltIn: boolean
   startingWindow: 'runtime-filters' | 'filter-configuration'
 }
 

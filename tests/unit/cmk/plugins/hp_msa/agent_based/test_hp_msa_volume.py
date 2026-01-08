@@ -55,14 +55,14 @@ def test_health_check_accepts_volume_name_and_durable_id_as_item() -> None:
         "VMFS_01": {
             "durable-id": "V3",
             "container-name": "A",
-            "health": "OK",
+            "health-numeric": "0",
             "item_type": "volumes",
             "raidtype": "RAID0",
         },
         "V4": {
             "durable-id": "V4",
             "container-name": "B",
-            "health": "OK",
+            "health-numeric": "0",
             "item_type": "volumes",
             "raidtype": "RAID0",
         },

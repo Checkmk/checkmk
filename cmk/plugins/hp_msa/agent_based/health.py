@@ -14,14 +14,11 @@ from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, St
 _HealthSection = Mapping[str, Mapping[str, str]]
 
 _STATE_MAP = {
-    "Up": (State.OK, "up"),
-    "OK": (State.OK, "OK"),
-    "Warning": (State.WARN, "warning"),
-    "Degraded": (State.WARN, "degraded"),
-    "Error": (State.CRIT, "error"),
-    "Not Present": (State.CRIT, "not present"),
-    "Fault": (State.CRIT, "fault"),
-    "Unknown": (State.UNKNOWN, "unknown"),
+    "0": (State.OK, "OK"),
+    "1": (State.WARN, "degraded/warning"),
+    "2": (State.CRIT, "fault/error"),
+    "3": (State.UNKNOWN, "unknown"),
+    "4": (State.CRIT, "not present"),
 }
 
 
@@ -33,7 +30,7 @@ def check_hp_msa_health(item: str, section: _HealthSection) -> CheckResult:
     if (data := section.get(item)) is None:
         return
 
-    health_state, health_state_readable = _STATE_MAP[data["health"]]
+    health_state, health_state_readable = _STATE_MAP[data["health-numeric"]]
     health_info = "Status: %s" % health_state_readable
     if health_state is not State.OK and data.get("health-reason", ""):
         health_info += " (%s)" % data["health-reason"]

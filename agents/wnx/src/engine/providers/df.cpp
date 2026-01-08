@@ -67,7 +67,14 @@ std::string ProduceFileSystemOutput(std::string_view volume_id) {
     if (volume_name.empty())
         volume_name = volume_id;
     else
-        rs::replace(volume_name, ' ', '_');
+        // Windows volume names may contain new lines, spaces or tabs replace
+        // them with underscores; SUP-26742
+        rs::replace_if(
+            volume_name,
+            [](char c) {
+                return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+            },
+            '_');
 
     return fmt::format("{}\t{}\t{}\t{}\t{}\t{}%\t{}\n",  //
                        volume_name,                      //

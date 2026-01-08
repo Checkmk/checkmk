@@ -69,9 +69,9 @@ def chown_tree(directory: str, user: str) -> None:
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
     os.lchown(directory, uid, gid)
-    for dirpath, dirnames, filenames in os.walk(directory):
+    for _, dirnames, filenames, dir_fd in os.fwalk(directory):
         for entry in dirnames + filenames:
-            os.lchown(dirpath + "/" + entry, uid, gid)
+            os.chown(entry, uid, gid, dir_fd=dir_fd, follow_symlinks=False)
 
 
 def create_skeleton_file(

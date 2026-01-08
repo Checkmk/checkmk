@@ -10,7 +10,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Generic, TypeVar
 
 from cmk.gui import visuals
+from cmk.gui.i18n import _u
 from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.utils.macros import replace_macros_in_str
 
 from ..title_macros import macro_mapping_from_context
 from ..type_defs import (
@@ -124,11 +126,27 @@ class Dashlet(abc.ABC, Generic[T]):
             self.single_infos(),
             title,
             self.default_display_title(),
+            **self._get_additional_macros(),
         )
 
+    def _get_additional_macros(self) -> Mapping[str, str]:
+        return {}
+
     @classmethod
-    def get_additional_title_macros(cls) -> Iterable[str]:
+    def get_additional_macro_names(cls) -> Iterable[str]:
         yield from []
+
+    def compute_title(self) -> str:
+        try:
+            raw_title = self._dashlet_spec["title"]
+        except KeyError:
+            raw_title = self.default_display_title()
+
+        untranslated_title = replace_macros_in_str(
+            raw_title,
+            self._get_macro_mapping(raw_title),
+        )
+        return _u(untranslated_title)
 
 
 class IFrameDashlet(Dashlet[T], abc.ABC):

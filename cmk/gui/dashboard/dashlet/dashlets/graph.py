@@ -21,7 +21,6 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
-from cmk.gui.dashboard.title_macros import macro_mapping_from_context
 from cmk.gui.dashboard.type_defs import (
     ABCGraphDashletConfig,
     DashletSize,
@@ -212,23 +211,6 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
     def default_display_title(self) -> str:
         return self._graph_title if self._graph_title is not None else self.title()
 
-    def _get_macro_mapping(self, title: str) -> Mapping[str, str]:
-        macro_mapping = macro_mapping_from_context(
-            self.context if self.has_context() else {},
-            self.single_infos(),
-            title,
-            self.default_display_title(),
-            **self._get_additional_macros(),
-        )
-        return macro_mapping
-
-    def _get_additional_macros(self) -> Mapping[str, str]:
-        return {}
-
-    @classmethod
-    def get_additional_title_macros(cls) -> Iterable[str]:
-        yield from []
-
 
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     source: str | int  # graph id or index (1-based) of the graph in the template
@@ -303,7 +285,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         return {"$SITE$": site} if site else {}
 
     @classmethod
-    def get_additional_title_macros(cls) -> Iterable[str]:
+    def get_additional_macro_names(cls) -> Iterable[str]:
         yield "$SITE$"
 
 

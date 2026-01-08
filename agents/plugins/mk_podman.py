@@ -11,7 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Literal, TypedDict, Union
 
-# mypy: disable-error-code="no-any-return"
+__version__ = "2.6.0b1"
 
 DEFAULT_CFG_PATH = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman_cfg.json"
 

@@ -10,7 +10,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Generic, TypeVar
 
 from cmk.gui import visuals
-from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
+from cmk.gui.type_defs import SingleInfos, VisualContext
 
 from ..title_macros import macro_mapping_from_context
 from ..type_defs import (
@@ -125,9 +125,6 @@ class Dashlet(abc.ABC, Generic[T]):
             title,
             self.default_display_title(),
         )
-
-    def _dashlet_context_vars(self) -> HTTPVariables:
-        return visuals.context_to_uri_vars(self.context)
 
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:

@@ -175,7 +175,3 @@ def test_dashlet_context_inheritance() -> None:
         "host": {"host": "bla", "neg_host": ""},
         "wato_folder": {"wato_folder": ""},
     }
-
-    assert sorted(dashlet._dashlet_context_vars()) == sorted(
-        [("host", "bla"), ("neg_host", ""), ("wato_folder", "")]
-    )

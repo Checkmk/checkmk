@@ -62,6 +62,11 @@ const validationByLocation = ref<ValidationByLocation>({
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages | undefined) => {
+    validationByLocation.value = {
+      [ValidationLocation.METRIC_NAME]: [],
+      [ValidationLocation.AGGREGATION_LOOKBACK]: [],
+      [ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE]: []
+    }
     if (newValidation && newValidation.length > 0) {
       newValidation.forEach((message) => {
         const location = message.location[0] as ValidationLocation

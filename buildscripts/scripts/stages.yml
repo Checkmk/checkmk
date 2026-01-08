@@ -336,7 +336,6 @@ STAGES:
               -//non-free/packages/cmc/... \
               -//non-free/packages/cmk-relay-engine/... \
               -//non-free/packages/cmk-update-agent/... \
-              -//non-free/packages/otel-collector/... \
               //tests/unit/...
           make_rc=$?
           set -e
@@ -718,7 +717,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_OTEL_FILES, CHANGED_GO_MOD
       DIR: "non-free/packages/otel-collector"
       # No entry point for linters
-      COMMAND: "./run --all &> ${RESULTS}/otel-collector.txt"
+      COMMAND: "./run --lint=mypy --check-format  &> ${RESULTS}/otel-collector.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No otel-collector files changed"
       RESULT_CHECK_FILE_PATTERN: "results/otel-collector.txt"

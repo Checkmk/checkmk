@@ -59,9 +59,10 @@ def active_secrets_path_site(config_path: Path | None = None) -> Path:
     """file where the passwords for use by the helpers are stored
 
     This is "frozen" in the state at config generation.
+    Watch out: The created files might be re-used with the next configuration version,
+    so replacing the reference to 'latest' by the actual versioned path is not currently possible.
     """
     if config_path is None:
-        # TODO: Make non-optional
         config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
     return config_path / "stored_passwords"
 
@@ -72,9 +73,10 @@ def active_secrets_path_relay(config_path: Path | None = None) -> Path:
     """file where the passwords for use by the relays helpers are stored
 
     This is "frozen" in the state at config generation.
+    Watch out: The created files might be re-used with the next configuration version,
+    so replacing the reference to 'latest' by the actual versioned path is not currently possible.
     """
     if config_path is None:
-        # TODO: Make non-optional
         config_path = VersionedConfigPath.make_latest_path(Path())
     return config_path / "secrets/active_secrets"
 

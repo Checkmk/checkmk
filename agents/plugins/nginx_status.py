@@ -20,6 +20,7 @@ USER_AGENT = "checkmk-agent-nginx_status-" + __version__
 # create an nginx_status.cfg file in MK_CONFDIR and populate the servers
 # list to prevent executing the detection mechanism.
 
+import ipaddress
 import os
 import re
 import sys
@@ -119,6 +120,21 @@ def try_detect_servers(ssl_ports):
     return results
 
 
+def _is_ip_v6_address(address: str) -> bool:
+    """Check if the given address is an IPv6 address."""
+    try:
+        return ipaddress.ip_address(address).version == 6
+    except ValueError:
+        return False
+
+
+def _make_url(proto: str, address: str, port: int, page: str) -> str:
+    """Construct a URL from its components, taking care of IPv6 addresses."""
+    if _is_ip_v6_address(address):
+        return "%s://[%s]:%s/%s" % (proto, address, port, page)
+    return "%s://%s:%s/%s" % (proto, address, port, page)
+
+
 def main():  # pylint: disable=too-many-branches
     config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
     config_file = config_dir + "/nginx_status.cfg"
@@ -154,7 +170,7 @@ def main():  # pylint: disable=too-many-branches
             if proto not in ["http", "https"]:
                 raise ValueError("Scheme '%s' is not allowed" % proto)
 
-            url = "%s://%s:%s/%s" % (proto, address, port, page)
+            url = _make_url(proto, address, port, page)
             # Try to fetch the status page for each server
             try:
                 request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
@@ -163,9 +179,8 @@ def main():  # pylint: disable=too-many-branches
                 if "SSL23_GET_SERVER_HELLO:unknown protocol" in str(e):
                     # HACK: workaround misconfigurations where port 443 is used for
                     # serving non ssl secured http
-                    url = "http://%s:%s/%s" % (address, port, page)
                     fd = urlopen(  # pylint: disable=consider-using-with
-                        url
+                        _make_url("http", address, port, page)
                     )  # nosec B310 # BNS:6b61d9
                 else:
                     raise

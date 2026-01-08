@@ -109,6 +109,12 @@ void upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
     }
 }
 
+void clean_caches() {
+    sh("""
+        rm -rf ~/.cache/ ~/.java-caller/
+    """);
+}
+
 boolean download_hot_cache(Map args) {
     try {
         // around 10/15sec to download 1.6GB (gzip)/ 2.0GB (lz4) from tstbuilds
@@ -136,6 +142,9 @@ boolean download_hot_cache(Map args) {
     }
     catch (Exception exc) {
         print("hot cache: Decompression failed, contact your local CI dealer and tell: ${exc}");
+        // Clean-up any partial extraction - this might otherwise result in broken cache archives
+        // See https://wiki.lan.checkmk.net/spaces/DEV/pages/181605060/2026-01-07+Corrupt+hot+cache+breaks+CV
+        clean_caches()
         return true;
     }
 
@@ -242,10 +251,7 @@ void withHotCache(Map args, Closure body) {
     }
 
     if (args.remove_existing_cache == null ? false : args.remove_existing_cache.asBoolean()) {
-        // remove may existing cache shipped with the container
-        sh("""
-            rm -rf ~/.cache/ ~/.java-caller/
-        """);
+        clean_caches()
     }
 
     // use a combination of "JOB_BASE_NAME" and "arg.name"
@@ -260,21 +266,19 @@ void withHotCache(Map args, Closure body) {
 
     def folder_state_after_extraction = capture_folder_state(args.download_dest);
 
-    try {
-        body();
-    } finally {
-        verify_folder_integrity(folder_state_after_extraction, args.download_dest);
+    body();
 
-        if (upload_new_bazel_folder_artifact) {
-            println("hot cache: Creating ${args.download_dest}/${file_pattern}");
+    verify_folder_integrity(folder_state_after_extraction, args.download_dest);
 
-            upload_hot_cache([
-                download_dest: args.download_dest,
-                file_pattern: "${file_pattern}",
-            ]);
-        } else {
-            println("hot cache: No need to re-upload an existing artifact");
-        }
+    if (upload_new_bazel_folder_artifact) {
+        println("hot cache: Creating ${args.download_dest}/${file_pattern}");
+
+        upload_hot_cache([
+            download_dest: args.download_dest,
+            file_pattern: "${file_pattern}",
+        ]);
+    } else {
+        println("hot cache: No need to re-upload an existing artifact");
     }
 
     return;

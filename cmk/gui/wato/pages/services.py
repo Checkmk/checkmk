@@ -17,7 +17,6 @@
 import dataclasses
 import json
 import pprint
-import socket
 import traceback
 from collections import Counter
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
@@ -785,7 +784,7 @@ class DiscoveryPageRenderer:
 
     def _render_agent_download_tooltip(self, output: str) -> None:
         site = omd_site()
-        fqdn = socket.getfqdn()
+        server = request.host
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         html.vue_component(
             component_name="cmk-agent-download",
@@ -800,14 +799,14 @@ class DiscoveryPageRenderer:
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].install_cmds(
-                                    site, fqdn, version
+                                    site, server, version
                                 )
                             )
                         ),
                         agent_registration_cmds=AgentRegistrationCmds(
                             **asdict(
                                 agent_commands_registry["agent_commands"].registration_cmds(
-                                    site, fqdn
+                                    site, server
                                 )
                             )
                         ),

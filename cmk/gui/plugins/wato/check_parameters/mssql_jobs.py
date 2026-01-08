@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -23,7 +22,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Migrate, TextInput
 
 
-def _item_spec_mssql_jobs():
+def _item_spec_mssql_jobs() -> TextInput:
     return TextInput(
         title=_("Job ID"),
         help=_(

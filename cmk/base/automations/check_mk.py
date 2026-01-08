@@ -3104,11 +3104,6 @@ def automation_diag_cmk_agent(
         return socket.AddressFamily.AF_INET
 
     if not ipaddress:
-        if family == "no-ip":
-            return DiagCmkAgentResult(
-                1,
-                "Host is configured as No-IP host: %s" % host_name,
-            )
         try:
             resolved_address = ip_lookup.cached_dns_lookup(
                 hostname=host_name,

@@ -10,14 +10,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import (
-    all_of,
-    any_of,
-    equals,
-    exists,
     SNMPTree,
-    startswith,
     StringTable,
 )
+from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD_CLUSTER
 
 sync_name_mapping = {
     "1": "Synced",
@@ -40,23 +36,23 @@ def inventory_stormshield_cluster(info):
 
 def check_stormshield_cluster(item, params, info):
     for number, not_replying, active, eth_links, faulty_links, sync in info:
-        not_replying = int(not_replying)
-        faulty_links = int(faulty_links)
+        _not_replying = int(not_replying)
+        _faulty_links = int(faulty_links)
 
         yield sync_status_mapping[sync], "Sync Status: %s" % sync_name_mapping[sync]
         yield 0, f"Member: {number}, Active: {active}, Links used: {eth_links}"
 
-        if not_replying > 0:
+        if _not_replying > 0:
             status = 2
         else:
             status = 0
-        yield status, "Not replying: %s" % not_replying
+        yield status, "Not replying: %s" % _not_replying
 
-        if faulty_links > 0:
+        if _faulty_links > 0:
             status = 2
         else:
             status = 0
-        yield status, "Faulty: %s" % faulty_links
+        yield status, "Faulty: %s" % _faulty_links
 
 
 def parse_stormshield_cluster(string_table: StringTable) -> StringTable | None:
@@ -65,13 +61,7 @@ def parse_stormshield_cluster(string_table: StringTable) -> StringTable | None:
 
 check_info["stormshield_cluster"] = LegacyCheckDefinition(
     parse_function=parse_stormshield_cluster,
-    detect=all_of(
-        any_of(
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.8"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11256.2.0"),
-        ),
-        exists(".1.3.6.1.4.1.11256.1.11.*"),
-    ),
+    detect=DETECT_STORMSHIELD_CLUSTER,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11",
         oids=["1", "2", "3", "5", "6", "8"],

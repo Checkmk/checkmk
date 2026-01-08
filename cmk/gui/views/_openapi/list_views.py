@@ -41,6 +41,7 @@ class ViewExtensions:
     filters: VisualContext = api_field(
         description="Active filters in the format filter_id -> (variable -> value)"
     )
+    is_mobile: bool = api_field(description='Whether the view option "mobile" is set or not.')
 
 
 @api_model
@@ -69,6 +70,7 @@ def list_views_v1() -> ViewCollectionModel:
                 data_source=view_spec["datasource"],
                 restricted_to_single=list(view_spec["single_infos"]),
                 filters=view_spec.get("context", dict()),
+                is_mobile=view_spec.get("mobile", False),
             ),
             links=[],
         )

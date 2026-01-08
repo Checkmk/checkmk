@@ -21,6 +21,8 @@ def view_choices(only_with_hidden: bool = False, allow_empty: bool = True) -> li
     return choices
 
 
+# Copied to packages/cmk-frontend-vue/src/dashboard/components/selectors/SelectorView.vue
+# needs to be updated together until views have been migrated to vue.js
 def format_view_title(name: str, view: ViewSpec) -> str:
     title_parts = []
 

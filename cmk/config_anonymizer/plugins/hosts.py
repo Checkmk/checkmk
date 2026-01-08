@@ -43,6 +43,7 @@ def _anonymize_attributes(anon_interface: AnonInterface, data: dict[str, Any]) -
         }
 
     if (snmp_community := data.get("explicit_snmp_communities")) is not None:
+        # TODO: masking only works on passwords, rest of credentials remain un-anonymized
         snmp_spec = SNMPCredentials()
         anon_data["explicit_snmp_communities"] = {
             anon_interface.get_host(host): snmp_spec.mask(value)
@@ -51,6 +52,7 @@ def _anonymize_attributes(anon_interface: AnonInterface, data: dict[str, Any]) -
 
     if (management_snmp_credentials := data.get("management_snmp_credentials")) is not None:
         snmp_spec = SNMPCredentials()
+        # TODO: masking only works on passwords, rest of credentials remain un-anonymized
         anon_data["management_snmp_credentials"] = {
             anon_interface.get_host(host): snmp_spec.mask(value)
             for host, value in management_snmp_credentials.items()
@@ -189,9 +191,11 @@ def _anonymize_host_attributes(
                 case "management_protocol":
                     anon_attributes["management_protocol"] = attr_value
                 case "management_snmp_community":
+                    # TODO: masking only works on passwords, rest of credentials remain un-anonymized
                     snmp_spec = SNMPCredentials()
                     anon_attributes["management_snmp_community"] = snmp_spec.mask(attr_value)
                 case "management_ipmi_credentials":
+                    # TODO: masking only works on passwords, rest of credentials remain un-anonymized
                     ipmi_spec_visitor = get_visitor(
                         create_ipmi_parameters(),
                         VisitorOptions(migrate_values=False, mask_values=True),

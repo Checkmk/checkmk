@@ -1880,10 +1880,9 @@ class RelayAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def get(self, relay_id: str, cert: str | tuple[str, str]) -> tuple[Relay, str]:
+    def get(self, relay_id: str) -> tuple[Relay, str]:
         response = self.session.get(
             url=self._object_url(relay_id),
-            cert=cert,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

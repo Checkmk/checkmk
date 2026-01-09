@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
+import { type AgentDownloadServerPerSite } from 'cmk-shared-typing/typescript/setup'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -15,6 +16,8 @@ const { _t } = usei18n()
 
 const props = defineProps<{
   output: string
+  site: string
+  server_per_site: Array<AgentDownloadServerPerSite>
   agent_slideout: AgentSlideout
 }>()
 
@@ -44,6 +47,7 @@ if (props.output.includes(noTlsSearchTerm)) {
 }
 
 const docsButtonTitle = _t('Read Checkmk user guide')
+const siteServer = props.server_per_site.find((item) => item.site_id === props.site)?.server ?? ''
 </script>
 
 <template>
@@ -56,5 +60,7 @@ const docsButtonTitle = _t('Read Checkmk user guide')
     :close-button-title="_t('Close & run service discovery')"
     :agent-slideout="agent_slideout"
     :is-not-registered="output.includes(notRegisteredSearchTerm)"
+    :site-id="site"
+    :site-server="siteServer"
   />
 </template>

@@ -33,43 +33,43 @@ def build_agent_install_cmds(
 
 
 WINDOWS_AGENT_REGISTRATION_CMD = """\"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe\" register ^
-    --hostname [HOSTNAME] ^
-    --server {server} ^
-    --site {site} ^
+    --hostname {{HOSTNAME}} ^
+    --server {{SERVER}} ^
+    --site {{SITE}} ^
     --user agent_registration"""
 
 LINUX_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
-    --hostname [HOSTNAME] \\
-    --server {server} \\
-    --site {site} \\
+    --hostname {{HOSTNAME}} \\
+    --server {{SERVER}} \\
+    --site {{SITE}} \\
     --user agent_registration"""
 
 AIX_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
-    --hostname [HOSTNAME] \\
-    --server {server} \\
-    --site {site} \\
+    --hostname {{HOSTNAME}} \\
+    --server {{SERVER}} \\
+    --site {{SITE}} \\
     --user agent_registration"""
 
 SOLARIS_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
-    --hostname [HOSTNAME] \\
-    --server {server} \\
-    --site {site} \\
+    --hostname {{HOSTNAME}} \\
+    --server {{SERVER}} \\
+    --site {{SITE}} \\
     --user agent_registration"""
 
 
-def build_agent_registration_cmds(site: SiteId, server: str) -> AgentRegistrationCmds:
+def build_agent_registration_cmds() -> AgentRegistrationCmds:
     return AgentRegistrationCmds(
-        windows=WINDOWS_AGENT_REGISTRATION_CMD.format(server=server, site=site),
-        linux=LINUX_REGISTRATION_CMD.format(server=server, site=site),
-        aix=AIX_REGISTRATION_CMD.format(server=server, site=site),
-        solaris=SOLARIS_REGISTRATION_CMD.format(server=server, site=site),
+        windows=WINDOWS_AGENT_REGISTRATION_CMD,
+        linux=LINUX_REGISTRATION_CMD,
+        aix=AIX_REGISTRATION_CMD,
+        solaris=SOLARIS_REGISTRATION_CMD,
     )
 
 
 @dataclass(kw_only=True)
 class AgentCommands:
     install_cmds: Callable[[SiteId, str, str], AgentInstallCmds]
-    registration_cmds: Callable[[SiteId, str], AgentRegistrationCmds]
+    registration_cmds: Callable[[], AgentRegistrationCmds]
     legacy_agent_url: Callable[[], str | None] = lambda: None
 
 

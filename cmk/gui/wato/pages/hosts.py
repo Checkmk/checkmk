@@ -14,7 +14,7 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import Final, Literal, overload, override
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 from livestatus import SiteConfigurations
 
@@ -99,6 +99,7 @@ from cmk.shared_typing.mode_host import (
     ModeHost,
     ModeHostAgentConnectionMode,
     ModeHostFormKeys,
+    ModeHostServerPerSite,
     ModeHostSite,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode
@@ -402,6 +403,16 @@ class ABCHostMode(WatoMode, abc.ABC):
                             config.sites
                         )
                     ],
+                    server_per_site=[
+                        ModeHostServerPerSite(
+                            site_id=site_id,
+                            server=server_name
+                            if config_key.get("multisiteurl")
+                            and (server_name := urlparse(config_key["multisiteurl"]).hostname)
+                            else request.host,
+                        )
+                        for site_id, config_key in config.sites.items()
+                    ],
                     agent_connection_modes=[
                         ModeHostAgentConnectionMode(
                             id_hash=DropdownChoice.option_id(mode.value),
@@ -420,11 +431,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                             )
                         ),
                         agent_registration_cmds=AgentRegistrationCmds(
-                            **asdict(
-                                agent_commands_registry["agent_commands"].registration_cmds(
-                                    site, server
-                                )
-                            )
+                            **asdict(agent_commands_registry["agent_commands"].registration_cmds())
                         ),
                         legacy_agent_url=agent_commands_registry[
                             "agent_commands"

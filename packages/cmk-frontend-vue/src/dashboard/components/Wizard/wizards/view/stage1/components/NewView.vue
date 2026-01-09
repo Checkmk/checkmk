@@ -52,9 +52,9 @@ watch(
 <template>
   <CmkIndent>
     <h2>{{ _t('Datasource') }}</h2>
-    <ContentSpacer :height="10" />
+    <ContentSpacer :dimension="5" />
     <SelectorDatasource v-model:selected-datasource="selectedDatasource" :read-only="false" />
-    <ContentSpacer />
+    <ContentSpacer :dimension="5" />
     <SingleInfosSpecifier
       v-model:context-infos="contextInfos"
       v-model:restricted-ids="restrictedToSingleInfos"

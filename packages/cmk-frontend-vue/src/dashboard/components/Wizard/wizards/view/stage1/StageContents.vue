@@ -244,7 +244,7 @@ const sortedContextInfos = computed(() => {
             @remove-filter="(filterId) => emit('remove-filter', filterId)"
           />
         </SectionBlock>
-        <ContentSpacer :height="10" />
+        <ContentSpacer :dimension="5" />
       </div>
     </SectionBlock>
   </div>

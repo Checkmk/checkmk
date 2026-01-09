@@ -15,7 +15,7 @@ import pytest
 from psutil import Process
 
 from tests.testlib.site import Site
-from tests.testlib.utils import run
+from tests.testlib.utils import run, wait_until
 from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
@@ -23,24 +23,31 @@ from cmk.utils.paths import mkbackup_lock_dir
 
 @contextmanager
 def simulate_backup_lock(site: Site) -> Iterator[None]:
+    lock_file = str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock")
     with site.execute(
         [
             "flock",
             "-o",
             "-x",
             "-n",
-            str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"),
+            lock_file,
             "sleep",
             "300",
         ]
     ) as p:
         try:
+
+            def _file_is_locked() -> bool:
+                return site.file_exists(lock_file)
+
+            wait_until(_file_is_locked, timeout=10)
             yield None
         finally:
             for c in Process(p.pid).children(recursive=True):
                 if c.name() == "sleep":
                     assert site.execute(["kill", str(c.pid)]).wait() == 0
             p.wait()
+            site.delete_file(lock_file)
 
 
 @pytest.fixture(name="cleanup_restore_lock")

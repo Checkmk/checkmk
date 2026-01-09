@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 import {
   type ModeHostAgentConnectionMode,
+  type ModeHostServerPerSite,
   type ModeHostSite
 } from 'cmk-shared-typing/typescript/mode_host'
 import type { Ref } from 'vue'
@@ -41,6 +42,7 @@ interface Props {
   ipAddressFamilySelectElement: HTMLSelectElement
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
   sites: Array<ModeHostSite>
+  serverPerSite: Array<ModeHostServerPerSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
   agentSlideout: AgentSlideout
   setupError: boolean
@@ -73,6 +75,13 @@ function checkPushMode() {
 const hostname = ref(props.hostnameInputElement.value || '')
 const ipV4Selected = ref(false)
 const ipV6Selected = ref(false)
+const selectedSiteIdHash = ref(props.siteSelectElement.value)
+const siteId = ref(
+  props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+)
+const siteServer = ref(
+  props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
+)
 const ipV4 = ref(props.ipv4InputElement.value || '')
 const ipV6 = ref(props.ipv6InputElement.value || '')
 const targetElement = ref<HTMLElement>(
@@ -83,6 +92,10 @@ const setupErrorActive = ref(props.setupError)
 onMounted(() => {
   ipV4Selected.value = props.ipv4InputButtonElement.checked
   ipV6Selected.value = props.ipv6InputButtonElement.checked
+  selectedSiteIdHash.value = props.siteSelectElement.value
+  siteId.value =
+    props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+  siteServer.value = props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
 
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
     void startAjax().then(() => {
@@ -102,7 +115,14 @@ onMounted(() => {
         targetElement.value = props.changeTagAgent.checked
           ? (props.tagAgent.parentNode as HTMLElement)
           : props.tagAgentDefault
-        console.log(targetElement.value)
+        break
+      }
+      case props.siteSelectElement: {
+        selectedSiteIdHash.value = props.siteSelectElement.value
+        siteId.value =
+          props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+        siteServer.value =
+          props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
         break
       }
       case props.ipv4InputButtonElement: {
@@ -213,14 +233,14 @@ type AjaxOptions = {
 async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
   try {
     const siteIdHash = props.siteSelectElement.value
-    const siteId = props.sites.find((site) => site.id_hash === siteIdHash)?.site_id ?? ''
+    const siteIdent = props.sites.find((site) => site.id_hash === siteIdHash)?.site_id ?? ''
     const postDataRaw = new URLSearchParams({
       host_name: hostname.value ?? '',
       ipaddress: ipV4.value ?? ipV6.value ?? '',
       address_family: props.ipAddressFamilySelectElement.value ?? 'ip-v4-only',
       agent_port: '6556',
       timeout: '5',
-      site_id: siteId
+      site_id: siteIdent
     })
 
     const postData = postDataRaw.toString()
@@ -409,6 +429,8 @@ function onClose() {
       <AgentSlideOutContent
         :all-agents-url="agentSlideout.all_agents_url"
         :host-name="hostname"
+        :site-id="siteId"
+        :site-server="siteServer"
         :agent-install-cmds="agentSlideout.agent_install_cmds"
         :agent-registration-cmds="agentSlideout.agent_registration_cmds"
         :legacy-agent-url="agentSlideout.legacy_agent_url"

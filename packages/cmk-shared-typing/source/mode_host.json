@@ -10,6 +10,12 @@
         "$ref": "#/$defs/mode_host_site"
       }
     },
+    "server_per_site": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mode_host_server_per_site"
+      }
+    },
     "agent_connection_modes": {
       "type": "array",
       "items": {
@@ -20,7 +26,14 @@
     "host_name": { "type": "string" },
     "agent_slideout": { "$ref": "agent_slideout.json" }
   },
-  "required": ["form_keys", "sites", "i18n_ping_host", "agent_slideout", "host_name"],
+  "required": [
+    "form_keys",
+    "sites",
+    "server_per_site",
+    "i18n_ping_host",
+    "agent_slideout",
+    "host_name"
+  ],
   "$defs": {
     "i18n_ping_host": {
       "type": "object",
@@ -73,6 +86,14 @@
         "site_id": { "type": "string" }
       },
       "required": ["id_hash", "site_id"]
+    },
+    "mode_host_server_per_site": {
+      "type": "object",
+      "properties": {
+        "site_id": { "type": "string" },
+        "server": { "type": "string" }
+      },
+      "required": ["site_id", "server"]
     },
     "mode_host_agent_connection_mode": {
       "type": "object",

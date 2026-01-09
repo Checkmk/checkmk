@@ -22,6 +22,7 @@ from collections import Counter
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict
 from typing import Any, Literal, NamedTuple, override
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field
 
@@ -107,6 +108,7 @@ from cmk.gui.watolib.services import (
 from cmk.gui.watolib.utils import mk_repr
 from cmk.shared_typing.setup import (
     AgentDownload,
+    AgentDownloadServerPerSite,
     AgentInstallCmds,
     AgentRegistrationCmds,
     AgentSlideout,
@@ -791,6 +793,17 @@ class DiscoveryPageRenderer:
             data=asdict(
                 AgentDownload(
                     output=output,
+                    site=self._host.site_id(),
+                    server_per_site=[
+                        AgentDownloadServerPerSite(
+                            site_id=site_id,
+                            server=server_name
+                            if config_key.get("multisiteurl")
+                            and (server_name := urlparse(config_key["multisiteurl"]).hostname)
+                            else request.host,
+                        )
+                        for site_id, config_key in active_config.sites.items()
+                    ],
                     agent_slideout=AgentSlideout(
                         all_agents_url=folder_preserving_link(
                             [("mode", "agent_of_host"), ("host", self._host.name())]
@@ -804,11 +817,7 @@ class DiscoveryPageRenderer:
                             )
                         ),
                         agent_registration_cmds=AgentRegistrationCmds(
-                            **asdict(
-                                agent_commands_registry["agent_commands"].registration_cmds(
-                                    site, server
-                                )
-                            )
+                            **asdict(agent_commands_registry["agent_commands"].registration_cmds())
                         ),
                         legacy_agent_url=agent_commands_registry[
                             "agent_commands"

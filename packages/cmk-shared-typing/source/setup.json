@@ -8,14 +8,30 @@
       "$ref": "#/$defs/agent_download"
     }
   },
+  "required": ["agent_download"],
   "$defs": {
+    "agent_download_server_per_site": {
+      "type": "object",
+      "properties": {
+        "site_id": { "type": "string" },
+        "server": { "type": "string" }
+      },
+      "required": ["site_id", "server"]
+    },
     "agent_download": {
       "type": "object",
       "properties": {
         "output": { "type": "string" },
+        "site": { "type": "string" },
+        "server_per_site": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/agent_download_server_per_site"
+          }
+        },
         "agent_slideout": { "$ref": "agent_slideout.json" }
       },
-      "required": ["agent_slideout"]
+      "required": ["site", "server_per_site", "agent_slideout"]
     }
   }
 }

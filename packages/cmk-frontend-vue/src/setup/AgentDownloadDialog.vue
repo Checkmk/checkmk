@@ -29,6 +29,8 @@ interface Props {
   closeButtonTitle: TranslatedString
   agentSlideout: AgentSlideout
   isNotRegistered: boolean
+  siteId: string
+  siteServer: string
 }
 
 defineProps<Props>()
@@ -91,6 +93,8 @@ const tooltipOpen = ref(true)
     <AgentSlideOutContent
       :all-agents-url="agentSlideout.all_agents_url"
       :host-name="agentSlideout.host_name"
+      :site-id="siteId"
+      :site-server="siteServer"
       :agent-install-cmds="agentSlideout.agent_install_cmds"
       :agent-registration-cmds="agentSlideout.agent_registration_cmds"
       :legacy-agent-url="agentSlideout.legacy_agent_url"

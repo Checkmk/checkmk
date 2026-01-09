@@ -10,6 +10,7 @@ import {
   type I18NPingHost,
   type ModeHostAgentConnectionMode,
   type ModeHostFormKeys,
+  type ModeHostServerPerSite,
   type ModeHostSite
 } from 'cmk-shared-typing/typescript/mode_host'
 import { type Ref, onMounted, ref } from 'vue'
@@ -21,6 +22,7 @@ const props = defineProps<{
   i18n_ping_host: I18NPingHost
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
+  server_per_site: Array<ModeHostServerPerSite>
   agent_connection_modes: Array<ModeHostAgentConnectionMode>
   agent_slideout: AgentSlideout
   host_name: string
@@ -153,6 +155,7 @@ function getElementBySelector<T>(selector: string): T {
     :ip-address-family-select-element="ipAddressFamilySelectElement"
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
     :sites="sites"
+    :server-per-site="server_per_site"
     :agent-connection-modes="agent_connection_modes"
     :agent-slideout="agent_slideout"
     :setup-error="setupError"

@@ -20,6 +20,8 @@ const props = defineProps<{
   allAgentsUrl: string
   legacyAgentUrl: string | undefined
   hostName: string
+  siteId: string
+  siteServer: string
   agentInstallCmds: AgentInstallCmds
   agentRegistrationCmds: AgentRegistrationCmds
   closeButtonTitle: TranslatedString
@@ -44,6 +46,13 @@ const close = () => {
   emit('close')
 }
 
+function replaceMacros(cmd: string) {
+  return cmd
+    .replace(/{{HOSTNAME}}/g, props.hostName ?? '')
+    .replace(/{{SITE}}/g, props.siteId ?? '')
+    .replace(/{{SERVER}}/g, props.siteServer ?? '')
+}
+
 const tabs: AgentSlideOutTabs[] = [
   {
     id: 'windows',
@@ -55,7 +64,7 @@ const tabs: AgentSlideOutTabs[] = [
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”).'
     ),
-    registrationCmd: props.agentRegistrationCmds.windows.replace('[HOSTNAME]', props.hostName)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.windows)
   },
   {
     id: 'linux',
@@ -79,7 +88,7 @@ const tabs: AgentSlideOutTabs[] = [
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Linux host to register the Checkmk agent controller.'
     ),
-    registrationCmd: props.agentRegistrationCmds.linux.replace('[HOSTNAME]', props.hostName),
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.linux),
     toggleButtonOptions: toggleButtonOptions
   },
   {
@@ -100,7 +109,7 @@ const tabs: AgentSlideOutTabs[] = [
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Solaris host to install the Checkmk agent.'
     ),
-    registrationCmd: props.agentRegistrationCmds.solaris.replace('[HOSTNAME]', props.hostName)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.solaris)
   },
   {
     id: 'aix',
@@ -120,7 +129,7 @@ const tabs: AgentSlideOutTabs[] = [
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your AIX host to register the Checkmk agent controller.'
     ),
-    registrationCmd: props.agentRegistrationCmds.aix.replace('[HOSTNAME]', props.hostName)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.aix)
   }
 ]
 </script>

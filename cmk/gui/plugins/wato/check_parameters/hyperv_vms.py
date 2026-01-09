@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -51,7 +50,7 @@ VM_STATES_DEFVALS = [
 ]
 
 
-def _item_spec_hyperv_vms():
+def _item_spec_hyperv_vms() -> TextInput:
     return TextInput(
         title=_("Name of the VM"),
         help=_("Specify the name of the VM, for example z4065012."),

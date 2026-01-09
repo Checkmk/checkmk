@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -12,10 +11,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Integer, ListOf, Percentage, Tuple
+from cmk.gui.valuespec import Dictionary, DictionaryEntry, Integer, ListOf, Percentage, Tuple
 
 
-def _esx_host_memory_elements():
+def _esx_host_memory_elements() -> list[DictionaryEntry]:
     return [
         (
             "levels_upper",

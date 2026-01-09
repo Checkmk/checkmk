@@ -20,7 +20,7 @@ from cmk.gui.color import Color
 from cmk.gui.log import logger
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.gui.view_utils import get_perfometer_bg_color
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity
 from ._from_api import RegisteredMetric
@@ -777,14 +777,14 @@ def _get_renderer(
                 registered_metrics,
                 perfometer_plugin,
                 translated_metrics,
-                get_perfometer_bg_color(),
+                get_themed_perfometer_bg_color(),
             )
         case perfometers_api.Bidirectional():
             return MetricometerRendererBidirectional(
                 registered_metrics,
                 perfometer_plugin,
                 translated_metrics,
-                get_perfometer_bg_color(),
+                get_themed_perfometer_bg_color(),
             )
         case perfometers_api.Stacked():
             return MetricometerRendererStacked(

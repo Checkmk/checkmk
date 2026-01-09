@@ -426,8 +426,8 @@ def test_perfometer_renderer_stack(
             segments=segments,
         ),
         translated_metrics,
-        "transparent",
-    ).get_stack(TemperatureUnit.CELSIUS) == [list(value_projections) + [(11.73, "transparent")]]
+        "#bdbdbd",
+    ).get_stack(TemperatureUnit.CELSIUS) == [list(value_projections) + [(11.73, "#bdbdbd")]]
 
 
 def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
@@ -466,9 +466,9 @@ def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
                 color="#222222",
             ),
         },
-        "transparent",
+        "#bdbdbd",
     ).get_stack(TemperatureUnit.CELSIUS) == [
-        [(44.13, "#111111"), (44.13, "#222222"), (11.74, "transparent")]
+        [(44.13, "#111111"), (44.13, "#222222"), (11.74, "#bdbdbd")]
     ]
 
 
@@ -491,7 +491,7 @@ def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
                     color="#111111",
                 ),
             },
-            [[(100.0, "#111111"), (0.0, "transparent")]],
+            [[(100.0, "#111111"), (0.0, "#bdbdbd")]],
             "101",
             id="one-metric",
         ),
@@ -523,7 +523,7 @@ def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
                     color="#111111",
                 ),
             },
-            [[(98.02, "#111111"), (1.98, "#111111"), (0.0, "transparent")]],
+            [[(98.02, "#111111"), (1.98, "#111111"), (0.0, "#bdbdbd")]],
             "101",
             id="two-metrics",
         ),
@@ -556,7 +556,7 @@ def test_perfometer_renderer_exceeds_limit(
             segments=segments,
         ),
         translated_metrics,
-        "transparent",
+        "#bdbdbd",
     )
     assert metricometer.get_stack(TemperatureUnit.CELSIUS) == stack
     assert metricometer.get_label(TemperatureUnit.CELSIUS) == label
@@ -612,8 +612,8 @@ def test_metricometer_renderer_stacked(request_context: None, patch_theme: None)
         },
     )
     assert metricometer.get_stack(TemperatureUnit.CELSIUS) == [
-        [(59.5, "#111111"), (40.5, "transparent")],
-        [(17.0, "#111111"), (83.0, "transparent")],
+        [(59.5, "#111111"), (40.5, "#bdbdbd")],
+        [(17.0, "#111111"), (83.0, "#bdbdbd")],
     ]
     assert metricometer.get_label(TemperatureUnit.CELSIUS) == "7 / 2"
 

@@ -113,7 +113,7 @@ def _setup(
     logger.info("Setting up test-site ...")
     test_site = create_site(base_package)
     try:
-        inject_dumps(test_site, DUMPS_DIR)
+        inject_dumps(test_site, DUMPS_DIR, check_dumps_up_to_date=False)
         create_password(test_site)
         disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
         if not version_from_env().is_saas_edition():

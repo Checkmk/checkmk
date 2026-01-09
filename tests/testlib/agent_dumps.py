@@ -94,8 +94,9 @@ def _dumps_up_to_date(dumps_dir: Path, min_version: CMKVersion) -> None:
             )
 
 
-def inject_dumps(site: Site, dumps_dir: Path) -> str:
-    _dumps_up_to_date(dumps_dir, get_min_version())
+def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = True) -> str:
+    if check_dumps_up_to_date:
+        _dumps_up_to_date(dumps_dir, get_min_version())
 
     # create dump folder in the test site
     site_dumps_path = site.path("var/check_mk/dumps")

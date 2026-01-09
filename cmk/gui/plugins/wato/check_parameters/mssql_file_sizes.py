@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.mssql_utils import mssql_item_spec_instance_tablespace
@@ -15,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, Tuple
 
 
-def _parameter_valuespec_mssql_file_sizes():
+def _parameter_valuespec_mssql_file_sizes() -> Dictionary:
     return Dictionary(
         title=_("File size levels"),
         elements=[

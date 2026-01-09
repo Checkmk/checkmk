@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,7 +15,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer, Migrate
 
 
-def _parameter_valuespec_epower_single():
+def _parameter_valuespec_epower_single() -> Migrate[dict[str, Any]]:
     return Migrate(
         Dictionary(
             help=_("Levels for the electrical power consumption of a device "),

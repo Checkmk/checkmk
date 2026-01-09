@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from collections.abc import Mapping
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -27,7 +25,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _valuespec_inventory_services_rules():
+def _valuespec_inventory_services_rules() -> Dictionary:
     return Dictionary(
         title=_("Windows service discovery"),
         elements=[
@@ -90,7 +88,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_services():
+def _item_spec_services() -> TextInput:
     return TextInput(
         title=_("Name of the service"),
         help=_(
@@ -106,11 +104,13 @@ def _item_spec_services():
     )
 
 
-def _drop_icon_key(p: Mapping[str, object]) -> Mapping[str, object]:
+def _drop_icon_key(p: Any) -> dict[str, object]:
+    if not isinstance(p, dict):
+        raise ValueError
     return {k: v for k, v in p.items() if k != "icon"}
 
 
-def _parameter_valuespec_services():
+def _parameter_valuespec_services() -> Migrate[dict[str, object]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

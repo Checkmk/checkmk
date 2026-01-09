@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _item_spec_nginx_status():
+def _item_spec_nginx_status() -> TextInput:
     return TextInput(
         title=_("Nginx Server"),
         help=_("A string-combination of servername and port, e.g. 127.0.0.1:80."),
     )
 
 
-def _parameter_valuespec_nginx_status():
+def _parameter_valuespec_nginx_status() -> Dictionary:
     return Dictionary(
         elements=[
             (

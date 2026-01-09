@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     check_icmp_params,
@@ -15,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary
 
 
-def _valuespec_ping_levels():
+def _valuespec_ping_levels() -> Dictionary:
     return Dictionary(
         title=_("Ping and host check parameters"),
         help=_(

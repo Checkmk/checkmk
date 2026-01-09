@@ -143,6 +143,7 @@ common --incompatible_strict_action_env
 #       Also note that in some distro specific exceptions we force tools to be located in
 #       `/usr/bin` (by symlinking) when building the build images
 common --enable_platform_specific_config
+common --action_env=GOPROXY
 common:linux --action_env=PATH="/usr/bin:/bin"
 common:linux --host_action_env=PATH="/usr/bin:/bin"
 common:windows --action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Generator, Mapping, MutableMapping
+from contextlib import contextmanager
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
@@ -31,6 +32,14 @@ from cmk.plugins.aws.lib import (
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
+
+
+@contextmanager
+def _ignore_results_if_missing_data() -> Generator[None]:
+    try:
+        yield
+    except KeyError as exc:
+        raise IgnoreResultsError("Currently no data from AWS") from exc
 
 
 def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
@@ -109,7 +118,8 @@ def check_aws_rds_network_io(
     metrics = section.get(item)
     if metrics is None:
         return
-    try:
+
+    with _ignore_results_if_missing_data():
         interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             interfaces.InterfaceWithRates(
                 attributes=interfaces.Attributes(
@@ -129,8 +139,7 @@ def check_aws_rds_network_io(
             value_store=get_value_store(),
             params=params,
         )
-    except KeyError:
-        raise IgnoreResultsError("Currently no data from AWS")
+
     yield from interfaces.check_single_interface(item, params, interface)
 
 
@@ -232,12 +241,13 @@ def check_aws_rds(item: str, params: Mapping[str, Any], section: AWSSectionMetri
     if (metrics := section.get(item)) is None:
         return
 
-    yield from check_cpu_util(
-        util=metrics["CPUUtilization"],
-        params=params,
-        value_store=get_value_store(),
-        this_time=time.time(),
-    )
+    with _ignore_results_if_missing_data():
+        yield from check_cpu_util(
+            util=metrics["CPUUtilization"],
+            params=params,
+            value_store=get_value_store(),
+            this_time=time.time(),
+        )
 
 
 check_plugin_aws_rds = CheckPlugin(
@@ -271,7 +281,9 @@ def check_aws_rds_agent_jobs(item: str, section: AWSSectionMetrics) -> CheckResu
     if (metrics := section.get(item)) is None:
         return
 
-    failed_agent_jobs = metrics["FailedSQLServerAgentJobsCount"]
+    with _ignore_results_if_missing_data():
+        failed_agent_jobs = metrics["FailedSQLServerAgentJobsCount"]
+
     if failed_agent_jobs > 0:
         yield Result(
             state=State.WARN,
@@ -339,18 +351,22 @@ def check_aws_rds_cpu_credits(
     if (metrics := section.get(item)) is None:
         return
 
-    yield Result(state=State.OK, summary=f"CPU Credit Usage: {metrics['CPUCreditUsage']:.2f}")
+    with _ignore_results_if_missing_data():
+        cpu_credit_usage = metrics["CPUCreditUsage"]
+        cpu_credit_balance = metrics["CPUCreditBalance"]
+
+    yield Result(state=State.OK, summary=f"CPU Credit Usage: {cpu_credit_usage:.2f}")
 
     yield from check_levels_v1(
-        value=metrics["CPUCreditBalance"],
+        value=cpu_credit_balance,
         metric_name="aws_cpu_credit_balance",
         levels_lower=params.get("balance_levels_lower", (None, None)),
         label="CPU Credit Balance",
     )
 
-    if metrics.get("BurstBalance"):
+    if burst_balance := metrics.get("BurstBalance"):
         yield from check_levels_v1(
-            value=metrics["BurstBalance"],
+            value=burst_balance,
             metric_name="aws_burst_balance",
             levels_lower=params.get("burst_balance_levels_lower", (None, None)),
             render_func=render.percent,
@@ -394,7 +410,9 @@ def check_aws_rds_bin_log_usage(
     if (metrics := section.get(item)) is None:
         return
 
-    bin_log_usage = metrics["BinLogDiskUsage"]
+    with _ignore_results_if_missing_data():
+        bin_log_usage = metrics["BinLogDiskUsage"]
+
     yield Result(state=State.OK, summary=render.bytes(bin_log_usage))
 
     if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
@@ -452,7 +470,9 @@ def check_aws_rds_transaction_logs_usage(
     if (metrics := section.get(item)) is None:
         return
 
-    transaction_logs_space = metrics["TransactionLogsDiskUsage"]
+    with _ignore_results_if_missing_data():
+        transaction_logs_space = metrics["TransactionLogsDiskUsage"]
+
     yield Result(
         state=State.OK,
         summary=render.bytes(transaction_logs_space),
@@ -522,7 +542,9 @@ def check_aws_rds_replication_slot_usage(
     if (metrics := section.get(item)) is None:
         return
 
-    replication_slot_space = metrics["ReplicationSlotDiskUsage"]
+    with _ignore_results_if_missing_data():
+        replication_slot_space = metrics["ReplicationSlotDiskUsage"]
+
     yield Result(state=State.OK, summary=render.bytes(replication_slot_space))
 
     if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
@@ -574,12 +596,13 @@ def check_aws_rds_connections(
     if (metrics := section.get(item)) is None:
         return
 
-    yield from check_levels_v1(
-        value=metrics["DatabaseConnections"],
-        metric_name="aws_rds_connections",
-        levels_upper=params.get("levels"),
-        label="In use",
-    )
+    with _ignore_results_if_missing_data():
+        yield from check_levels_v1(
+            value=metrics["DatabaseConnections"],
+            metric_name="aws_rds_connections",
+            levels_upper=params.get("levels"),
+            label="In use",
+        )
 
 
 check_plugin_aws_rds_connections = CheckPlugin(
@@ -618,8 +641,11 @@ def check_aws_rds_replica_lag(
     if (metrics := section.get(item)) is None:
         return
 
+    with _ignore_results_if_missing_data():
+        replica_lag = metrics["ReplicaLag"]
+
     yield from check_levels_v1(
-        value=metrics["ReplicaLag"],
+        value=replica_lag,
         metric_name="aws_rds_replica_lag",
         levels_upper=params.get("lag_levels"),
         render_func=render.timespan,

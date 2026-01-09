@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 import cmk.plugins.aws.agent_based.aws_rds
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.aws.agent_based.aws_rds import (
     check_aws_rds,
     check_aws_rds_agent_jobs,
@@ -3268,7 +3268,7 @@ def test_check_aws_rds_agent_jobs_item_not_found() -> None:
 
 
 def test_check_aws_rds_agent_jobs_metric_not_found() -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_agent_jobs(
                 item="disk",
@@ -3342,7 +3342,7 @@ def test_check_aws_rds_cpu_credits_item_not_found() -> None:
 
 
 def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_cpu_credits(
                 item="disk",
@@ -3467,7 +3467,7 @@ def test_check_aws_rds_bin_log_usage_item_not_found() -> None:
 
 
 def test_check_aws_rds_bin_log_usage_metric_not_found() -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_bin_log_usage(
                 item="disk",
@@ -3591,7 +3591,7 @@ def test_check_aws_rds_transaction_logs_usage_item_not_found() -> None:
 
 
 def test_check_aws_rds_transaction_logs_usage_metric_not_found() -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_transaction_logs_usage(
                 item="disk",
@@ -3734,7 +3734,7 @@ def test_check_aws_rds_replication_slot_usage_item_not_found() -> None:
 
 
 def test_check_aws_rds_replication_slot_usage_metric_not_found() -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_replication_slot_usage(
                 item="disk",

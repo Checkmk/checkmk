@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,11 +12,11 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Alternative, Dictionary, Integer, Percentage, TextInput, Tuple
 
 
-def _item_spec_msoffice_licenses():
+def _item_spec_msoffice_licenses() -> TextInput:
     return TextInput(title=_("MS Office 365 license"))
 
 
-def _parameter_valuespec_msoffice_licenses():
+def _parameter_valuespec_msoffice_licenses() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -59,7 +57,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_msoffice_serviceplans():
+def _parameter_valuespec_msoffice_serviceplans() -> Dictionary:
     return Dictionary(
         elements=[
             (

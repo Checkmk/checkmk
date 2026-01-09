@@ -7,6 +7,7 @@ load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -36,6 +37,11 @@ mypy_cli(
         # for `plugins = ["pydantic.mypy"]`
         requirement("pydantic"),
     ],
+)
+
+py_console_script_binary(
+    name = "bandit",
+    pkg = requirement("bandit"),
 )
 
 # Custom mypy wrapper that filters problematic MYPYPATH entries
@@ -93,6 +99,7 @@ bazel_env(
     name = "bazel_env",
     toolchains = {},
     tools = {
+        "bandit": ":bandit",
         "osslsigncode": "@osslsigncode",
         "pnpm": "@pnpm",
         "uv": "@multitool//tools/uv",

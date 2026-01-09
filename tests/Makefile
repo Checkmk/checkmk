@@ -11,7 +11,6 @@ PYTEST := $(UVENV) pytest $(PYTEST_ARGS)
 CYCLES := $(UVENV) py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
-BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
 SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
 SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt --
@@ -84,8 +83,8 @@ DOCKERABLE_TESTS := \
 # agents/plugins/Makefile)
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 
-.PHONY: clean help prepare-playwright  bandit.ini \
-	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
+.PHONY: clean help prepare-playwright  \
+	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
 	test-integration-agent-plugin test-integration-agent-plugin-docker \
@@ -128,11 +127,6 @@ help:
 	@echo "test-unit-cmc                       - Run unit tests for cmc"
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-neb                       - Run unit tests for neb"
-bandit.ini:
-	( echo -n -e "[bandit]\ntargets: "; \
-	  $(FIND_PYTHON_FILES) | tr '\n' ',' | sed 's/,$$//'; \
-	  echo ) > bandit.ini
-	( echo exclude: /tests >> bandit.ini )
 
 $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	@if [ -z ${DOCKER_REGISTRY_NO_HTTPS} ]; then \
@@ -177,10 +171,8 @@ test-semgrep:
 	    --error \
 	    $(realpath ..)
 
-test-bandit: bandit.ini
-# Currently only care about high severity reported issues. Once this is reached,
-# go and enable the medium/low checks.
-	$(BANDIT) -c ../bandit.yaml -r -ll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
+test-bandit:
+	@echo "This target is deprecated, use 'bazel lint [TARGET]' instead."
 
 prepare-playwright:
 	$(UVENV) playwright install-deps "chromium";

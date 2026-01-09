@@ -1,6 +1,6 @@
 azure-mgmt-resource  # used by the release process to publish the azure image to the marketplace
 azure-mgmt-compute  # used by the release process to add a new image version
-bandit  # used by test/Makefile's test-bandit target
+bandit[toml,sarif]  # linter
 beautifulsoup4  # used by the GUI crawler and various tests
 boto3-stubs[logs]  # used for type checking, keep version in sync with boto3
 botocore-stubs  # used for type checking, keep version in sync with botocore

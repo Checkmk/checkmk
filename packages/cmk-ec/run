@@ -6,7 +6,7 @@
 set -e
 
 JOBS=6
-readonly ALL_LINTERS=mypy,ruff,bandit,semgrep
+readonly ALL_LINTERS=mypy,ruff,semgrep
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -33,7 +33,6 @@ parse_options() {
     RUN_CHECK_FORMAT=no
     RUN_MYPY=no
     RUN_RUFF=no
-    RUN_BANDIT=no
     RUN_SEMGREP=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
@@ -73,7 +72,6 @@ parse_options() {
                 RUN_CHECK_FORMAT=yes
                 RUN_MYPY=yes
                 RUN_RUFF=yes
-                RUN_BANDIT=yes
                 RUN_SEMGREP=yes
                 shift
                 ;;
@@ -102,7 +100,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 setup_venv() {
@@ -129,14 +127,6 @@ run_mypy() {
 
 run_ruff() {
     bazel lint --aspect:interactive=false --quiet --diff --fixes=false :all
-}
-
-run_bandit() {
-    setup_venv
-    # We would like to put everything into pyproject.toml, so running just "bandit" would do the
-    # right thing. But bandit is totally obscure & complicated regarding configuration, see several
-    # issues like https://github.com/PyCQA/bandit/issues/606.  :-/
-    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=medium cmk tests
 }
 
 run_semgrep() {
@@ -172,7 +162,6 @@ main() {
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_MYPY} = yes && run_mypy
     test ${RUN_RUFF} = yes && run_ruff
-    test ${RUN_BANDIT} = yes && run_bandit
     test ${RUN_SEMGREP} = yes && run_semgrep
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     test ${RUN_FORMAT} = yes && run_format

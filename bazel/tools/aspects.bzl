@@ -1,3 +1,4 @@
+load("@aspect_rules_lint//lint:bandit.bzl", "lint_bandit_aspect")
 load("@aspect_rules_lint//lint:clang_tidy.bzl", "lint_clang_tidy_aspect")
 load("@aspect_rules_lint//lint:ruff.bzl", "lint_ruff_aspect")
 load("@cmk_requirements//:requirements.bzl", "requirement")
@@ -28,6 +29,12 @@ mypy_aspect = mypy(
         requirement("marshmallow-oneofschema"): Label("@//tests/typeshed:marshmallow-oneofschema-stubs"),
         requirement("pyprof2calltree"): Label("@//tests/typeshed:pyprof2calltree-stubs"),
     },
+)
+
+bandit = lint_bandit_aspect(
+    binary = Label(":bandit"),
+    config = Label("//:pyproject.toml"),
+    args = ["--severity-level=medium"],
 )
 
 ruff = lint_ruff_aspect(

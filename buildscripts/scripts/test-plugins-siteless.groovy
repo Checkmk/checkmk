@@ -69,6 +69,12 @@ void main() {
             mount_credentials: true,
             privileged: true,
         ) {
+            stage("Set version") {
+                dir("${checkout_dir}") {
+                    versioning.set_version(cmk_version);
+                }
+            }
+
             try {
                 stage("Run `make ${make_target}`") {
                     dir("${checkout_dir}/tests") {

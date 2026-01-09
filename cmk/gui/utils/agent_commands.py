@@ -6,29 +6,26 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import SiteId
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.shared_typing.agent_slideout import AgentInstallCmds, AgentRegistrationCmds
 
-WINDOWS_AGENT_INSTALL_CMD = """curl.exe -fOG {server}/{site}/check_mk/agents/windows/check_mk_agent.msi && ^
+WINDOWS_AGENT_INSTALL_CMD = """curl.exe -fOG {{SERVER}}/{{SITE}}/check_mk/agents/windows/check_mk_agent.msi && ^
 msiexec /i check_mk_agent.msi"""
 
-LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -fOG {server}/{site}/check_mk/agents/check-mk-agent_{version}-1_all.deb && \\
+LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -fOG {{{{SERVER}}}}/{{{{SITE}}}}/check_mk/agents/check-mk-agent_{version}-1_all.deb && \\
 sudo dpkg -i check-mk-agent_{version}-1_all.deb"""
 
-LINUX_RPM_AGENT_INSTALL_CMD = """curl -fOG {server}/{site}/check_mk/agents/check-mk-agent_{version}-1_noarch.rpm && \\
+LINUX_RPM_AGENT_INSTALL_CMD = """curl -fOG {{{{SERVER}}}}/{{{{SITE}}}}/check_mk/agents/check-mk-agent_{version}-1_noarch.rpm && \\
 sudo rpm -Uvh check-mk-agent_{version}-1_noarch.rpm"""
 
 
 def build_agent_install_cmds(
-    site: SiteId,
-    server: str,
     version: str,
 ) -> AgentInstallCmds:
     return AgentInstallCmds(
-        windows=WINDOWS_AGENT_INSTALL_CMD.format(server=server, site=site),
-        linux_deb=LINUX_DEBIAN_AGENT_INSTALL_CMD.format(server=server, site=site, version=version),
-        linux_rpm=LINUX_RPM_AGENT_INSTALL_CMD.format(server=server, site=site, version=version),
+        windows=WINDOWS_AGENT_INSTALL_CMD,
+        linux_deb=LINUX_DEBIAN_AGENT_INSTALL_CMD.format(version=version),
+        linux_rpm=LINUX_RPM_AGENT_INSTALL_CMD.format(version=version),
     )
 
 
@@ -68,7 +65,7 @@ def build_agent_registration_cmds() -> AgentRegistrationCmds:
 
 @dataclass(kw_only=True)
 class AgentCommands:
-    install_cmds: Callable[[SiteId, str, str], AgentInstallCmds]
+    install_cmds: Callable[[str], AgentInstallCmds]
     registration_cmds: Callable[[], AgentRegistrationCmds]
     legacy_agent_url: Callable[[], str | None] = lambda: None
 

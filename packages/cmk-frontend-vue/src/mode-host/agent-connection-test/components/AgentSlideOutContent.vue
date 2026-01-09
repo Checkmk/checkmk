@@ -46,7 +46,10 @@ const close = () => {
   emit('close')
 }
 
-function replaceMacros(cmd: string) {
+function replaceMacros(cmd: string | undefined) {
+  if (!cmd) {
+    return ''
+  }
   return cmd
     .replace(/{{HOSTNAME}}/g, props.hostName ?? '')
     .replace(/{{SITE}}/g, props.siteId ?? '')
@@ -60,7 +63,7 @@ const tabs: AgentSlideOutTabs[] = [
     installMsg: _t(
       'Run this command on your Windows host to download and install the Checkmk agent. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”)'
     ),
-    installCmd: props.agentInstallCmds.windows,
+    installCmd: replaceMacros(props.agentInstallCmds.windows),
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”).'
     ),
@@ -72,9 +75,9 @@ const tabs: AgentSlideOutTabs[] = [
     installMsg: _t(
       'Run this command on your Linux host to download and install the Checkmk agent.'
     ),
-    installDebCmd: props.agentInstallCmds.linux_deb,
-    installRpmCmd: props.agentInstallCmds.linux_rpm,
-    installTgzCmd: props.agentInstallCmds.linux_tgz,
+    installDebCmd: replaceMacros(props.agentInstallCmds.linux_deb),
+    installRpmCmd: replaceMacros(props.agentInstallCmds.linux_rpm),
+    installTgzCmd: replaceMacros(props.agentInstallCmds.linux_tgz),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,
@@ -95,7 +98,7 @@ const tabs: AgentSlideOutTabs[] = [
     id: 'solaris',
     title: _t('Solaris'),
     installMsg: _t('Run this command on your Solaris host to download the Checkmk agent.'),
-    installCmd: props.agentInstallCmds.solaris,
+    installCmd: replaceMacros(props.agentInstallCmds.solaris),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,
@@ -115,7 +118,7 @@ const tabs: AgentSlideOutTabs[] = [
     id: 'aix',
     title: _t('AIX'),
     installMsg: _t('Run this command on your AIX host to download and install the Checkmk agent.'),
-    installCmd: props.agentInstallCmds.aix,
+    installCmd: replaceMacros(props.agentInstallCmds.aix),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,

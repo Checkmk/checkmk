@@ -785,8 +785,6 @@ class DiscoveryPageRenderer:
             return output_funnel.drain()
 
     def _render_agent_download_tooltip(self, output: str) -> None:
-        site = omd_site()
-        server = request.host
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         html.vue_component(
             component_name="cmk-agent-download",
@@ -811,9 +809,7 @@ class DiscoveryPageRenderer:
                         host_name=self._host.name(),
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
-                                agent_commands_registry["agent_commands"].install_cmds(
-                                    site, server, version
-                                )
+                                agent_commands_registry["agent_commands"].install_cmds(version)
                             )
                         ),
                         agent_registration_cmds=AgentRegistrationCmds(

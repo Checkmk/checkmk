@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
-def _item_spec_clr_memory():
+def _item_spec_clr_memory() -> TextInput:
     return TextInput(
         title=_("Name of the Application"),
         help=_("The name of the DotNet (.Net) application or _Global_"),
@@ -22,7 +20,7 @@ def _item_spec_clr_memory():
     )
 
 
-def _parameter_valuespec_clr_memory():
+def _parameter_valuespec_clr_memory() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule allows to set the warn and crit levels of the memory "

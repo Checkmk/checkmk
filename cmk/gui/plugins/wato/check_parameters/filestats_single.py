@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Age, Dictionary, Filesize, TextInput, Tuple
 
 
-def _item_spec_filestats():
+def _item_spec_filestats() -> TextInput:
     return TextInput(
         title=_("File name"),
         help=_("This name corresponds to the single file name to be monitored."),
@@ -23,7 +21,7 @@ def _item_spec_filestats():
     )
 
 
-def _parameter_valuespec_filestats():
+def _parameter_valuespec_filestats() -> Dictionary:
     return Dictionary(
         elements=[
             (

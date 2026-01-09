@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,7 +15,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
-def _item_spec_jvm_threads():
+def _item_spec_jvm_threads() -> TextInput:
     return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
@@ -23,7 +23,7 @@ def _item_spec_jvm_threads():
     )
 
 
-def _parameter_valuespec_jvm_threads():
+def _parameter_valuespec_jvm_threads() -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             elements=[

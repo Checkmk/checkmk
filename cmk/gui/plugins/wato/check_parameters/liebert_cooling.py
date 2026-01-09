@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
-def _item_spec_cooling_cap():
+def _item_spec_cooling_cap() -> TextInput:
     return TextInput(
         title=_("Cooling device"),
         help=_("This name corresponds to the cooling device to be monitored."),
@@ -22,7 +20,7 @@ def _item_spec_cooling_cap():
     )
 
 
-def _parameter_valuespec_cooling_cap():
+def _parameter_valuespec_cooling_cap() -> Dictionary:
     return Dictionary(
         elements=[
             (

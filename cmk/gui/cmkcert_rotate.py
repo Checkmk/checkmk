@@ -109,13 +109,7 @@ def start_rotate_site_ca_certificate(
             "before initiating a new rotation."
         )
 
-    # TODO detect remote site
-    sys.stdout.write(
-        "cmk-cert: Rotating the Site CA certificate now. Note that, if you are "
-        "running this command from a remote site you have to add the new Site CA "
-        "certificate to the central site's global trust store manually.\n"
-        "Run this command with the --remote argument from the central site instead to avoid this.\n"
-    )
+    # TODO detect if this is a local rotation on a remote site and warn about it
 
     with _site_gui_context(site_id) as (site, config):
         current_settings = cmk.gui.watolib.global_settings.load_configuration_settings()
@@ -181,8 +175,8 @@ def start_rotate_site_ca_certificate(
         )
 
         sys.stdout.write(
-            "cmk-cert: Site CA certificate rotation successfully initialized, "
-            "please review the pending changes before finalizing the rotation.\n"
+            "cmk-cert: Site CA certificate rotation successfully initialized, please review and "
+            "activate the pending changes in WATO before finalizing the rotation.\n"
         )
 
 

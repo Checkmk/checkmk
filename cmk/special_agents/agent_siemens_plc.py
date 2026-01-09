@@ -5,13 +5,11 @@
 
 import argparse
 import logging
-import os
 import socket
 import sys
 from itertools import groupby
 
 import snap7
-from snap7.common import Snap7Library
 from snap7.exceptions import Snap7Exception
 from snap7.types import Areas
 
@@ -280,10 +278,6 @@ def main(sys_argv=None):
     args = parse_arguments(sys_argv or sys.argv[1:])
 
     socket.setdefaulttimeout(args.timeout)
-
-    # The dynamic library detection of Snap7Library using ctypes.util.find_library does not work for
-    # some reason. Load the library from our standard path.
-    Snap7Library(lib_location="%s/lib/libsnap7.so" % os.environ["OMD_ROOT"])
 
     client = snap7.client.Client()
 

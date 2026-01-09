@@ -49,10 +49,10 @@ const emit = defineEmits<{
 }>()
 
 const availableWidgets: WidgetItemList = [
-  { id: OtherWidgetType.USER_MESSAGES, label: _t('User messages'), icon: 'folder' },
-  { id: OtherWidgetType.SIDEBAR_WIDGET, label: _t('Sidebar widget'), icon: 'folder' },
-  { id: OtherWidgetType.EMBEDDED_URL, label: _t('Embed URL'), icon: 'folder' },
-  { id: OtherWidgetType.STATIC_TEXT, label: _t('Static text'), icon: 'folder' }
+  { id: OtherWidgetType.USER_MESSAGES, label: _t('User messages'), icon: 'notifications' },
+  { id: OtherWidgetType.SIDEBAR_WIDGET, label: _t('Sidebar widget'), icon: 'custom-snapin' },
+  { id: OtherWidgetType.EMBEDDED_URL, label: _t('Embed URL'), icon: 'snmpmib' },
+  { id: OtherWidgetType.STATIC_TEXT, label: _t('Static text'), icon: 'static-text' }
 ]
 const enabledWidgets = computed(() => {
   return availableWidgets.map((item) => item.id)

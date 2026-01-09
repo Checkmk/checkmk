@@ -8,8 +8,6 @@ import usei18n from '@/lib/i18n'
 
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
-import OtherWizard from '@/dashboard/components/Wizard/wizards/other/OtherWizard.vue'
-
 import type { DashboardConstants, DashboardFeatures, DashboardKey } from '../../types/dashboard.ts'
 import type { ContextFilters } from '../../types/filter.ts'
 import type {
@@ -24,6 +22,7 @@ import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
 import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
 import MetricsWizard from '../Wizard/wizards/metrics/MetricsWizard.vue'
+import OtherWizard from '../Wizard/wizards/other/OtherWizard.vue'
 import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewWizard.vue'
 import ViewWizardWrapper from '../Wizard/wizards/view/ViewWizardWrapper.vue'
 

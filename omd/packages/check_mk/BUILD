@@ -199,6 +199,7 @@ pkg_mkdirs(
         "skel/tmp/check_mk/piggyback_sources",
         "skel/tmp/check_mk/counters",
         "skel/tmp/check_mk/cache",
+        "skel/tmp/check_mk/debug",
     ],
 )
 

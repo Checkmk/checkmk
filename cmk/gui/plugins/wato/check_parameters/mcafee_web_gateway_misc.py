@@ -8,8 +8,6 @@ Where possibile the "McAfee" string has been removed in favor of more generic th
 The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
 """
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -21,7 +19,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer
 
 
-def _parameter_valuespec_mcafee_web_gateway_misc():
+def _parameter_valuespec_mcafee_web_gateway_misc() -> Dictionary:
     return Dictionary(
         elements=[
             (

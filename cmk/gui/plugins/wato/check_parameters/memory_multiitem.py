@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -22,7 +20,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _parameter_valuespec_memory_multiitem():
+def _parameter_valuespec_memory_multiitem() -> Dictionary:
     return Dictionary(
         help=_(
             "The memory levels for one specific module of this host. This is relevant for hosts that have "

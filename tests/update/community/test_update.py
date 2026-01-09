@@ -21,6 +21,7 @@ from tests.update.helpers import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="No base versions available. Restore once 2.5.0b1 is released. CMK-29033.")
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8", reason="Fails on almalinux-8 due to dependency issue."
 )

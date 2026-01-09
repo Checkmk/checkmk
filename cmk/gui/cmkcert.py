@@ -232,9 +232,10 @@ def main(args: Sequence[str]) -> int:
                 )
                 return -1
 
+            target_site = SiteId(parsed_args.remote_site or site_id)
             _run_rotate(
                 cmk.utils.paths.omd_root,
-                SiteId(site_id),
+                target_site,
                 parsed_args.target_certificate,
                 parsed_args.expiry,
                 parsed_args.finalize,

@@ -70,17 +70,20 @@ setversion:
 	# version natively.
 	sed -i \
 	-e 's/$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"\r/' \
-	-e 's/^set CMK_VERSION ?=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' \
+	-e 's/\$$CMK_VERSION = ".*/\$$CMK_VERSION = "$(NEW_VERSION)"\r/' \
+	-e 's/^set CMK_VERSION *=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' \
 	-e 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' \
-	$(shell find $(REPO_PATH)/windows/plugins -type f) \
-	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) ; \
+	-e 's/\(^[[:space:]]*\)Version: [0-9.a-z-]*/\1Version: $(NEW_VERSION)/' \
+	$(shell find $(REPO_PATH)/agents/windows/plugins -type f) \
+	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) ;
 	sed -i \
 	-e 's/^CMK_VERSION=".*/CMK_VERSION="$(NEW_VERSION)"/' \
 	-e 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' \
 	-e 's/^$$CMK_VERSION=".*/$$CMK_VERSION="$(NEW_VERSION)"/' \
 	-e 's/^$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"/' \
 	$(shell find plugins/ -maxdepth 1 -type f) \
-	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) ; \
+	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) \
+	$(shell find $(REPO_PATH)/packages/cmk-plugins/cmk/plugins -type f) ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' \
 	    check_mk_agent.aix \

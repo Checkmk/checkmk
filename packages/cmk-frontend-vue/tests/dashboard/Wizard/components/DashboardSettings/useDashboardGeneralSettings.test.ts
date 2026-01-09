@@ -9,7 +9,7 @@ import { useDashboardGeneralSettings } from '@/dashboard/components/Wizard/compo
 import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
 
 vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/utils', () => ({
-  isValidSnakeCase: (str: string) => /^[a-z][a-z0-9_]*$/.test(str),
+  isValidSnakeCase: (str: string) => /^[a-z][a-z0-9]*(_[a-z0-9]+)*_?$/.test(str),
   isIdInUse: async (id: string) => id === 'existing_dashboard'
 }))
 describe('useDashboardGeneralSettings Composable', () => {

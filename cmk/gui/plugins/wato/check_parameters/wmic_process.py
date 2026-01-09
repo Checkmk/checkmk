@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     ManualCheckParameterRulespec,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Integer, Percentage, TextInput, Tuple
 
 
-def _item_spec_wmic_process():
+def _item_spec_wmic_process() -> TextInput:
     return TextInput(
         title=_("Process name for usage in the Nagios service name"),
         allow_empty=False,
     )
 
 
-def _parameter_valuespec_wmic_process():
+def _parameter_valuespec_wmic_process() -> Tuple[tuple[str, int, int, int, int, float, float]]:
     return Tuple(
         elements=[
             TextInput(

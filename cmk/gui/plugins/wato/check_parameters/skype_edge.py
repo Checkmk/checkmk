@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _item_spec_skype_edge():
+def _item_spec_skype_edge() -> TextInput:
     return TextInput(
         title=_("Interface"),
         help=_("The name of the interface (public/private IPv4/IPv6 network interface)"),
     )
 
 
-def _parameter_valuespec_skype_edge():
+def _parameter_valuespec_skype_edge() -> Dictionary:
     return Dictionary(
         elements=[
             (

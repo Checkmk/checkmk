@@ -32,7 +32,11 @@ const componentId = useId()
     <FormLabel v-if="$props.spec.label" :for="componentId"
       >{{ spec.label }}<CmkSpace size="small"
     /></FormLabel>
+    <div v-if="props.spec.elements.length === 0">
+      {{ props.spec.no_elements_text || '' }}
+    </div>
     <CmkDropdown
+      v-else
       v-model:selected-option="value"
       :options="{
         type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',

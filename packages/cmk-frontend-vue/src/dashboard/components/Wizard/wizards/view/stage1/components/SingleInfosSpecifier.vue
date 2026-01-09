@@ -64,14 +64,14 @@ watch(
 <template>
   <div>
     <h2>{{ _t('Specific object type') }}</h2>
-    <ContentSpacer :height="10" />
+    <ContentSpacer :dimension="5" />
     <CmkDropdown
       v-model:selected-option="mode"
       :options="dropdownOptions"
       :disabled="props.readOnly"
       :label="_t('Select specific object type')"
     />
-    <ContentSpacer />
+    <ContentSpacer :dimension="5" />
     <SelectorSingleInfo
       v-if="mode === RestrictedToSingle.CUSTOM"
       v-model:selected-ids="restrictedIds"

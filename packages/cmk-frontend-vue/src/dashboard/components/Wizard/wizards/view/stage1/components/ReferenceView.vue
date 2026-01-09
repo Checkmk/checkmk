@@ -80,10 +80,10 @@ watch(
   <CmkIndent>
     <div>
       <h2>{{ _t('View name') }}</h2>
-      <ContentSpacer :height="10" />
+      <ContentSpacer :dimension="5" />
       <SelectorView v-model:selected-view="referencedView" :read-only="false" />
     </div>
-    <ContentSpacer :height="10" />
+    <ContentSpacer :dimension="5" />
     <div v-if="referencedView">
       <SingleInfosSpecifier
         v-model:context-infos="contextInfos"

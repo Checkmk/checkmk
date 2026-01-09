@@ -61,7 +61,7 @@ const singleInfosMode = computed<RestrictedToSingle>(() => {
         <div class="info-value-block">
           <span class="db-edit-mode-view-info__info-label">{{ _t('Linked to view') }}</span>
           <div class="db-edit-mode-view-info__info-value">{{ viewTitle }}</div>
-          <ContentSpacer :height="5" />
+          <ContentSpacer :dimension="5" />
           <SingleInfosSpecifier
             :context-infos="contextInfos"
             :restricted-ids="restrictedToSingleInfos"
@@ -76,7 +76,7 @@ const singleInfosMode = computed<RestrictedToSingle>(() => {
         <div class="info-value-block">
           <span class="db-edit-mode-view-info__info-label">{{ _t('Datasource') }}</span>
           <div class="db-edit-mode-view-info__info-value">{{ datasourceTitle }}</div>
-          <ContentSpacer :height="5" />
+          <ContentSpacer :dimension="5" />
           <SingleInfosSpecifier
             :context-infos="contextInfos"
             :restricted-ids="restrictedToSingleInfos"
@@ -102,6 +102,5 @@ const singleInfosMode = computed<RestrictedToSingle>(() => {
 
 .db-edit-mode-view-info__info-value {
   font-weight: var(--font-weight-bold);
-  margin-bottom: var(--dimension-4);
 }
 </style>

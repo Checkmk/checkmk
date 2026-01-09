@@ -768,9 +768,9 @@ gitpython==3.1.43 \
     # via
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-werks/requirements.txt
-google-api-core[grpc]==2.28.1 \
-    --hash=sha256:2b405df02d68e68ce0fbc138559e6036559e685159d148ae5861013dc201baf8 \
-    --hash=sha256:4021b0f8ceb77a6fb4de6fde4502cecab45062e66ff4f2895169e0b35bc9466c
+google-api-core[grpc]==2.29.0 \
+    --hash=sha256:84181be0f8e6b04006df75ddfe728f24489f0af57c96a529ff7cf45bc28797f7 \
+    --hash=sha256:d30bc60980daa36e314b5d5a3e5958b0200cb44ca8fa1be2b614e932b75a3ea9
     # via
     #   google-api-python-client
     #   google-cloud-access-context-manager

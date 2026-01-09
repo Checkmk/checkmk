@@ -1301,6 +1301,7 @@ class HTMLGenerator(HTMLWriter):
             component_name="cmk-static-icon",
             data=asdict_strip_none(StaticIconAppProps(icon=icon.icon, title=title, size=size)),
             class_=css_classes,
+            id_=id_,
         )
 
     def static_icon(

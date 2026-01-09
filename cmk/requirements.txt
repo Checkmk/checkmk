@@ -10,7 +10,7 @@ ply==3.11  # needed by pysmi, python-active-directory
 pysmi==1.6.2  # needed by pysnmp
 pysnmp==6.2.6  # needed by Event Console
 snmpsim==1.1.7  # needed by pysnmp integration tests
-urllib3==2.5.0 # needed by requests
+urllib3==2.6.3 # needed by requests
 pyopenssl==24.3.0
 pyghmi==1.5.60  # needed by base for IPMI
 requests==2.32.4

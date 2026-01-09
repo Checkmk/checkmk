@@ -3,33 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Mapping
+from typing import Any
 
-from collections.abc import Iterable
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.agent_based.legacy.conversion import (
+    # TODO: replace this by 'from cmk.agent_based.v2 import check_levels'.
+    # This might require you to migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.docker.lib import NodeInfoSection
 
-check_info = {}
 
-
-def discover_docker_node_info(section: NodeInfoSection) -> Iterable[tuple[None, dict]]:
+def discover_docker_node_info(section: NodeInfoSection) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_docker_node_info(_no_item, _no_params, parsed):
-    if "Name" in parsed:
-        yield 0, "Daemon running on host %s" % parsed["Name"]
-    for state, key in [(2, "Critical"), (3, "Unknown")]:
-        for msg in parsed.get(key, ()):
-            yield state, msg
+def check_docker_node_info(section: NodeInfoSection) -> CheckResult:
+    if "Name" in section:
+        yield Result(state=State.OK, summary=f"Daemon running on host {section['Name']}")
+    for state, key in [(State.CRIT, "Critical"), (State.UNKNOWN, "Unknown")]:
+        for msg in section.get(key, ()):
+            yield Result(state=state, summary=msg)
 
 
-check_info["docker_node_info"] = LegacyCheckDefinition(
+check_plugin_docker_node_info = CheckPlugin(
     name="docker_node_info",
     service_name="Docker node info",
     discovery_function=discover_docker_node_info,
@@ -37,8 +46,10 @@ check_info["docker_node_info"] = LegacyCheckDefinition(
 )
 
 
-def check_docker_node_containers(_no_item, params, parsed):
-    if list(parsed.keys()) == ["Unknown"]:
+def check_docker_node_containers(
+    params: Mapping[str, Any], section: NodeInfoSection
+) -> CheckResult:
+    if list(section.keys()) == ["Unknown"]:
         # The section error is reported by the "Docker node info" service
         raise IgnoreResultsError("Container statistics missing")
 
@@ -48,27 +59,30 @@ def check_docker_node_containers(_no_item, params, parsed):
         ("paused", "ContainersPaused", "paused_"),
         ("stopped", "ContainersStopped", "stopped_"),
     ):
-        count = parsed.get(key)
+        count = section.get(key)
         if count is None:
-            yield 3, "%s: count not present in agent output" % title.title()
+            yield Result(
+                state=State.UNKNOWN, summary=f"{title.title()}: count not present in agent output"
+            )
             continue
 
-        levels = params.get("%supper_levels" % levels_prefix, (None, None))
-        levels_lower = params.get("%slower_levels" % levels_prefix, (None, None))
-        yield check_levels(
+        levels = params.get(f"{levels_prefix}upper_levels", (None, None))
+        levels_lower = params.get(f"{levels_prefix}lower_levels", (None, None))
+        yield from check_levels(
             count,
             title,
             levels + levels_lower,
-            human_readable_func=lambda x: "%d" % x,
+            human_readable_func=lambda x: f"{x:d}",
             infoname=title.title(),
         )
 
 
-check_info["docker_node_info.containers"] = LegacyCheckDefinition(
+check_plugin_docker_node_info_containers = CheckPlugin(
     name="docker_node_info_containers",
     service_name="Docker containers",
     sections=["docker_node_info"],
     discovery_function=discover_docker_node_info,
     check_function=check_docker_node_containers,
     check_ruleset_name="docker_node_containers",
+    check_default_parameters={},
 )

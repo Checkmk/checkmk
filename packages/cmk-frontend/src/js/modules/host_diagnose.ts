@@ -10,6 +10,13 @@ export function getFirstElementByNameAsInput(name: string): HTMLInputElement {
   return document.getElementsByName(name)[0] as HTMLInputElement
 }
 
+function replaceIcon(img: HTMLImageElement, new_icon: string) {
+  const imgData = img.getAttribute('data')
+  if (imgData) {
+    img.setAttribute('data', imgData.replace(/(.*"icon": ").*(".*)/, `$1${new_icon}$2`))
+  }
+}
+
 export function start_test(ident: string, hostname: string, transid: string) {
   const log = document.getElementById(ident + '_log') as HTMLImageElement
   const img = document.getElementById(ident + '_img') as HTMLImageElement
@@ -84,7 +91,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
     '&snmp_retries=' +
     encodeURIComponent(getFirstElementByNameAsInput('vs_rules_p_snmp_retries').value)
 
-  img.src = img.src.replace(/(.*\/icon_).*(\.svg$)/i, '$1reload$2')
+  replaceIcon(img, 'reload')
   add_class(img, 'reloading')
 
   log.innerHTML = '...'
@@ -124,10 +131,10 @@ function handle_host_diag_result(data: { hostname: string; ident: string }, resp
     text = response.result.output
   }
 
-  img.src = img.src.replace(/(.*\/icon_).*(\.svg$)/i, '$1' + new_icon + '$2')
+  replaceIcon(img, new_icon)
   log.innerText = text
 
-  retry.src = retry.src.replace(/(.*\/icon_).*(\.svg$)/i, '$1reload$2')
+  replaceIcon(retry, 'reload')
   retry.style.display = 'inline'
   ;(retry.parentNode as HTMLAnchorElement).href =
     `javascript:cmk.host_diagnose.start_test(${data.ident}, ${data.hostname}, ${response.result.next_transid});`

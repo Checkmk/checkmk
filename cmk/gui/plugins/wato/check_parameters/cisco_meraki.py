@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
-def _parameter_valuespec_cisco_meraki_org_licenses_overview():
+def _parameter_valuespec_cisco_meraki_org_licenses_overview() -> Dictionary:
     return Dictionary(
         title=_("Cisco Meraki organization licenses overview"),
         optional_keys=True,

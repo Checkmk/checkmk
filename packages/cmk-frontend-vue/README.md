@@ -51,6 +51,15 @@ To watch file changes across the bazelized components, you need to use
 Checkmk should then automatically reload as soon as you change a file of the
 cmk-frontend-vue project.
 
+**Attention:** If you encounter severe performance problems (consecutive
+pages after first load taking >1s to render or outright crashing) or
+trouble with the hot reloading of files, please follow the steps in
+[Vite's troubleshooting
+page](https://vite.dev/guide/troubleshooting#requests-are-stalled-forever).
+The inotify & `DefaultLimitNOFILE=65536` settings have proven to be
+effective. Make sure to restart the machine as instructed. If problems
+persist, reach out to Team Bug.
+
 ## Demo App
 
 To try our reusable components outside a checkmk site, you can

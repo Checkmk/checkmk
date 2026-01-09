@@ -29,10 +29,6 @@ export default defineConfig(() => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/site-api/, '')
         }
-      },
-      watch: {
-        usePolling: true,
-        interval: 250
       }
     },
     resolve: {

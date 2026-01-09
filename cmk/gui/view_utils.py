@@ -19,6 +19,7 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, IconNames, Row, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
@@ -410,9 +411,12 @@ def _render_tag_group(
     return HTMLWriter.render_a(span, href=url)
 
 
-def get_perfometer_bg_color() -> Literal["transparent"]:
-    """Return the background color for perfometer rendering"""
-    return "transparent"
+def get_themed_perfometer_bg_color() -> str:
+    """Return the theme specific background color for perfometer rendering"""
+    if theme.get() == "modern-dark":
+        return "#bdbdbd"
+    # else (classic and modern theme)
+    return "#7E8A95"
 
 
 def render_community_upgrade_button() -> None:

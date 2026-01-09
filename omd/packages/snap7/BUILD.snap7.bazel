@@ -24,6 +24,11 @@ make(
     out_shared_libs = [
         "libsnap7.so",
     ],
+    # "-Wl,-soname" is not supported in linkopts, so we use patchelf in a postfix script instead.
+    # https://bazel.build/reference/be/c-cpp#cc_library.linkopts
+    postfix_script = """
+      patchelf --set-soname libsnap7.so "$$INSTALLDIR/libsnap7.so"
+    """,
     visibility = ["//visibility:public"],
 )
 

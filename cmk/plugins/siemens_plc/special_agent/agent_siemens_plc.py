@@ -12,13 +12,11 @@ Checkmk special agent for monitoring Siemens PLC devices.
 
 import argparse
 import logging
-import os
 import socket
 import sys
 from itertools import groupby
 
 import snap7
-from snap7.common import load_library
 from snap7.type import Areas
 
 # prevent snap7 logger to log errors directly to console
@@ -287,10 +285,6 @@ def main(sys_argv=None):
     args = parse_arguments(sys_argv or sys.argv[1:])
 
     socket.setdefaulttimeout(args.timeout)
-
-    # The dynamic library detection of snap7's load_library using ctypes.util.find_library does not
-    # work for some reason. Load the library from our standard path.
-    load_library(lib_location="%s/lib/libsnap7.so" % os.environ["OMD_ROOT"])
 
     client = snap7.client.Client()
 

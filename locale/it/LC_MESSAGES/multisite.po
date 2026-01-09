@@ -3110,7 +3110,7 @@ msgid "AWS/ELB Statistics"
 msgstr "Statistiche AWS/ELB"
 
 #, fuzzy
-msgid "AWS/ELB back-end connection errors"
+msgid "AWS/ELB backend connection errors"
 msgstr "Errori di connessione del backend AWS/ELB"
 
 msgid "AWS/ELBApplication Target Errors"
@@ -7122,9 +7122,6 @@ msgstr "Testate una notifica autodefinita rispetto al vostro set di regole."
 msgid "Analyze rule set with this notification"
 msgstr "Analizzare il set di regole con questa notifica"
 
-msgid "Analyze the utilization of your IT infrastructure data center."
-msgstr ""
-
 msgid "Analyze this line"
 msgstr "Analizzare questa linea"
 
@@ -8332,7 +8329,7 @@ msgstr ""
 "modifiche alla configurazione del servizio"
 
 #, fuzzy
-msgid "Automatically select best type of back-end"
+msgid "Automatically select best type of backend"
 msgstr "Elimina automaticamente gli host senza dati di piggyback"
 
 msgid "Automatically stores the host key with no manual input requirement"
@@ -41495,8 +41492,8 @@ msgid "MISSING '%s'"
 msgstr "MANCANTE '%s'"
 
 msgid ""
-"MK SQL plug-in may use different monitoring back-ends. In some cases you may "
-"want to use ODBC back-end: typical use cases are firewall problems, "
+"MK SQL plug-in may use different monitoring backends. In some cases you may "
+"want to use ODBC backend: typical use cases are firewall problems, "
 "misconfigured network and for testing purposes"
 msgstr ""
 
@@ -43700,7 +43697,7 @@ msgid "Metric History"
 msgstr "Storia metrica"
 
 #, fuzzy
-msgid "Metric back-end"
+msgid "Metric backend"
 msgstr "Istanze Oracle"
 
 #, fuzzy
@@ -44607,7 +44604,7 @@ msgid "Monitoring agents"
 msgstr "Agenti di monitoraggio"
 
 #, fuzzy
-msgid "Monitoring back-end"
+msgid "Monitoring backend"
 msgstr "Agente di monitoraggio"
 
 msgid "Monitoring core"
@@ -56750,6 +56747,15 @@ msgstr "Dimensione del registro del relè"
 msgid "Relay properties"
 msgstr "Proprietà della regola"
 
+#, fuzzy, python-format
+msgid ""
+"Relay with ID '%s' is still in use by %d %s.<br><br>You can use the <a "
+"href=\"%s\">host search</a> to get a list."
+msgstr ""
+"Non puoi cancellare questa connessione. Ha cartelle/ospiti assegnati ad "
+"essa. Puoi usare il <a href=\"%s\">cerca host</a> per ottenere una lista "
+"degli host."
+
 #, fuzzy
 msgid "Relays"
 msgstr "Ritardo:"
@@ -62135,6 +62141,11 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Imposta i livelli sul totale degli errori di funzionamento dall'ultimo "
 "azzeramento del contatore."
+
+msgid ""
+"Sets the maximum amount of memory the backend is allowed to use as a "
+"percentage of the system's total memory."
+msgstr ""
 
 msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
@@ -84174,7 +84185,7 @@ msgstr "Utilizzare LDAPS (SSL)"
 msgid "Use Livestatus proxy daemon"
 msgstr "Utilizzare il demone proxy Livestatus"
 
-msgid "Use ODBC back-end if the plug-in is deployed on Windows"
+msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
 
 msgid "Use Organisation-ID as host prefix"
@@ -86371,11 +86382,11 @@ msgid "Varnish Worker thread ratio"
 msgstr "Vernice Rapporto filo lavoratore"
 
 #, fuzzy
-msgid "Varnish back-end"
+msgid "Varnish backend"
 msgstr "Varnish Backend"
 
 #, fuzzy
-msgid "Varnish back-end success ratio"
+msgid "Varnish backend success ratio"
 msgstr "Rapporto di successo di Varnish Backend"
 
 #, fuzzy

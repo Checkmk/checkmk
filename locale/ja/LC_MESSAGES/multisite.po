@@ -2951,7 +2951,8 @@ msgstr "AWS/ELBの制限"
 msgid "AWS/ELB Statistics"
 msgstr "AWS/ELB 統計"
 
-msgid "AWS/ELB back-end connection errors"
+#, fuzzy
+msgid "AWS/ELB backend connection errors"
 msgstr "AWS/ELBバックエンド接続エラー"
 
 msgid "AWS/ELBApplication Target Errors"
@@ -6725,9 +6726,6 @@ msgstr "現在のルールセットで最近の通知を分析する"
 msgid "Analyze rule set with this notification"
 msgstr "この通知でルールセットを分析する"
 
-msgid "Analyze the utilization of your IT infrastructure data center."
-msgstr "ITインフラのデータセンターの利用状況を分析します。"
-
 msgid "Analyze this line"
 msgstr "この行を分析する"
 
@@ -7900,7 +7898,7 @@ msgid ""
 msgstr "サービス構成の変更後、サービス検出チェックを自動的にスケジュールします"
 
 #, fuzzy
-msgid "Automatically select best type of back-end"
+msgid "Automatically select best type of backend"
 msgstr "自動的に　最適なバックエンドのタイプを選択"
 
 msgid "Automatically stores the host key with no manual input requirement"
@@ -39393,8 +39391,8 @@ msgstr "%s' がありません"
 
 #, fuzzy
 msgid ""
-"MK SQL plug-in may use different monitoring back-ends. In some cases you may "
-"want to use ODBC back-end: typical use cases are firewall problems, "
+"MK SQL plug-in may use different monitoring backends. In some cases you may "
+"want to use ODBC backend: typical use cases are firewall problems, "
 "misconfigured network and for testing purposes"
 msgstr ""
 "MK SQL プラグインは、異なるモニタリング バックエンドを使用する場合がありま"
@@ -41524,7 +41522,7 @@ msgid "Metric History"
 msgstr "メトリック履歴"
 
 #, fuzzy
-msgid "Metric back-end"
+msgid "Metric backend"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
@@ -42401,7 +42399,7 @@ msgid "Monitoring agents"
 msgstr "監視エージェント"
 
 #, fuzzy
-msgid "Monitoring back-end"
+msgid "Monitoring backend"
 msgstr "バックエンドの監視"
 
 msgid "Monitoring core"
@@ -53727,6 +53725,14 @@ msgstr "中継用ログサイズ"
 msgid "Relay properties"
 msgstr "ルールのプロパティ"
 
+#, fuzzy, python-format
+msgid ""
+"Relay with ID '%s' is still in use by %d %s.<br><br>You can use the <a "
+"href=\"%s\">host search</a> to get a list."
+msgstr ""
+"この接続は削除できません。フォルダ/ホストが割り当てられています。<a "
+"href=\"%s\">ホスト検索</a>を使用して、ホストのリストを取得できます。"
+
 #, fuzzy
 msgid "Relays"
 msgstr "ディレイ:"
@@ -58881,6 +58887,11 @@ msgstr "最後のカウンタリセット以降の非クリティカルイベン
 
 msgid "Sets levels on total operation errors since last counter reset."
 msgstr "最後のカウンタリセット以降の合計動作エラーのレベルを設定します。"
+
+msgid ""
+"Sets the maximum amount of memory the backend is allowed to use as a "
+"percentage of the system's total memory."
+msgstr ""
 
 msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
@@ -79778,7 +79789,7 @@ msgid "Use Livestatus proxy daemon"
 msgstr "Livestatusプロキシデーモンを使用する"
 
 #, fuzzy
-msgid "Use ODBC back-end if the plug-in is deployed on Windows"
+msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
 "Windowsにプラグインをデプロイする場合、ODBCバックエンドを使用してください"
 
@@ -81747,11 +81758,11 @@ msgid "Varnish Worker thread ratio"
 msgstr "Varnishワーカースレッド比"
 
 #, fuzzy
-msgid "Varnish back-end"
+msgid "Varnish backend"
 msgstr "Varnishバックエンド"
 
 #, fuzzy
-msgid "Varnish back-end success ratio"
+msgid "Varnish backend success ratio"
 msgstr "Varnishバックエンドの成功率"
 
 #, fuzzy
@@ -91961,6 +91972,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Analyze the utilization of your IT infrastructure data center."
+#~ msgstr "ITインフラのデータセンターの利用状況を分析します。"
 
 #, fuzzy
 #~ msgid "Data point attribute filters"

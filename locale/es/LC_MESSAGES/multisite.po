@@ -3076,7 +3076,7 @@ msgid "AWS/ELB Statistics"
 msgstr "Estadísticas de AWS/ELB"
 
 #, fuzzy
-msgid "AWS/ELB back-end connection errors"
+msgid "AWS/ELB backend connection errors"
 msgstr "Errores de conexión del backend de AWS/ELB"
 
 msgid "AWS/ELBApplication Target Errors"
@@ -7158,10 +7158,6 @@ msgstr "Crear una copia de esta regla de notificación"
 msgid "Analyze rule set with this notification"
 msgstr "Analizar el conjunto de reglas con esta notificación"
 
-msgid "Analyze the utilization of your IT infrastructure data center."
-msgstr ""
-"Analice la utilización del centro de datos de su infraestructura informática."
-
 msgid "Analyze this line"
 msgstr "Analiza esta línea"
 
@@ -8400,7 +8396,7 @@ msgstr ""
 "después de los cambios de configuración del servicio"
 
 #, fuzzy
-msgid "Automatically select best type of back-end"
+msgid "Automatically select best type of backend"
 msgstr "Borrar automáticamente los hosts sin datos piggyback"
 
 msgid "Automatically stores the host key with no manual input requirement"
@@ -42043,8 +42039,8 @@ msgid "MISSING '%s'"
 msgstr "FALTA '%s'"
 
 msgid ""
-"MK SQL plug-in may use different monitoring back-ends. In some cases you may "
-"want to use ODBC back-end: typical use cases are firewall problems, "
+"MK SQL plug-in may use different monitoring backends. In some cases you may "
+"want to use ODBC backend: typical use cases are firewall problems, "
 "misconfigured network and for testing purposes"
 msgstr ""
 
@@ -44302,7 +44298,7 @@ msgid "Metric History"
 msgstr "Historia de la métrica"
 
 #, fuzzy
-msgid "Metric back-end"
+msgid "Metric backend"
 msgstr "Instancias de Oracle"
 
 #, fuzzy
@@ -45223,7 +45219,7 @@ msgid "Monitoring agents"
 msgstr "Agentes de control"
 
 #, fuzzy
-msgid "Monitoring back-end"
+msgid "Monitoring backend"
 msgstr "Agente de control"
 
 msgid "Monitoring core"
@@ -57545,6 +57541,15 @@ msgstr "Tamaño del registro de relés"
 msgid "Relay properties"
 msgstr "Propiedades de las reglas"
 
+#, fuzzy, python-format
+msgid ""
+"Relay with ID '%s' is still in use by %d %s.<br><br>You can use the <a "
+"href=\"%s\">host search</a> to get a list."
+msgstr ""
+"No puede eliminar esta conexión. Tiene carpetas/hosts asignados. Puedes "
+"utilizar la <a href=\"%s\">búsqueda de hosts</a> para obtener una lista de "
+"los mismos."
+
 #, fuzzy
 msgid "Relays"
 msgstr "Retraso:"
@@ -63038,6 +63043,11 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Establece los niveles del total de errores de operación desde el último "
 "reinicio del contador."
+
+msgid ""
+"Sets the maximum amount of memory the backend is allowed to use as a "
+"percentage of the system's total memory."
+msgstr ""
 
 msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
@@ -85436,7 +85446,7 @@ msgstr "Utilizar LDAPS (SSL)"
 msgid "Use Livestatus proxy daemon"
 msgstr "Utilizar el demonio proxy de Livestatus"
 
-msgid "Use ODBC back-end if the plug-in is deployed on Windows"
+msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
 
 msgid "Use Organisation-ID as host prefix"
@@ -87656,11 +87666,11 @@ msgid "Varnish Worker thread ratio"
 msgstr "Relación Varnish-hilo de trabajo"
 
 #, fuzzy
-msgid "Varnish back-end"
+msgid "Varnish backend"
 msgstr "Varnish Backend"
 
 #, fuzzy
-msgid "Varnish back-end success ratio"
+msgid "Varnish backend success ratio"
 msgstr "Ratio de éxito de Varnish Backend"
 
 #, fuzzy
@@ -98316,6 +98326,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Analyze the utilization of your IT infrastructure data center."
+#~ msgstr ""
+#~ "Analice la utilización del centro de datos de su infraestructura "
+#~ "informática."
 
 #, fuzzy
 #~ msgid "Data point attribute filters"

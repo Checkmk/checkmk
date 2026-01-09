@@ -3087,7 +3087,7 @@ msgid "AWS/ELB Statistics"
 msgstr "Statistici AWS/ELB"
 
 #, fuzzy
-msgid "AWS/ELB back-end connection errors"
+msgid "AWS/ELB backend connection errors"
 msgstr "Erori de conectare AWS/ELB Backend"
 
 msgid "AWS/ELBApplication Target Errors"
@@ -7116,10 +7116,6 @@ msgstr ""
 msgid "Analyze rule set with this notification"
 msgstr "Analizează setul de reguli cu această notificare"
 
-msgid "Analyze the utilization of your IT infrastructure data center."
-msgstr ""
-"Analizați utilizarea centrului de date al infrastructurii dumneavoastră IT."
-
 msgid "Analyze this line"
 msgstr "Analizați această linie"
 
@@ -8337,7 +8333,7 @@ msgstr ""
 "modificarea configurației serviciilor"
 
 #, fuzzy
-msgid "Automatically select best type of back-end"
+msgid "Automatically select best type of backend"
 msgstr "Ștergeți automat gazdele fără date piggyback"
 
 msgid "Automatically stores the host key with no manual input requirement"
@@ -41855,8 +41851,8 @@ msgid "MISSING '%s'"
 msgstr "MISSING '%s'"
 
 msgid ""
-"MK SQL plug-in may use different monitoring back-ends. In some cases you may "
-"want to use ODBC back-end: typical use cases are firewall problems, "
+"MK SQL plug-in may use different monitoring backends. In some cases you may "
+"want to use ODBC backend: typical use cases are firewall problems, "
 "misconfigured network and for testing purposes"
 msgstr ""
 
@@ -44082,7 +44078,7 @@ msgid "Metric History"
 msgstr "Istoria metrică"
 
 #, fuzzy
-msgid "Metric back-end"
+msgid "Metric backend"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
@@ -44996,7 +44992,7 @@ msgid "Monitoring agents"
 msgstr "Agenții de monitorizare"
 
 #, fuzzy
-msgid "Monitoring back-end"
+msgid "Monitoring backend"
 msgstr "Agent de monitorizare"
 
 msgid "Monitoring core"
@@ -57241,6 +57237,15 @@ msgstr "Dimensiunea jurnalului de releu"
 msgid "Relay properties"
 msgstr "Proprietăți ale regulilor"
 
+#, fuzzy, python-format
+msgid ""
+"Relay with ID '%s' is still in use by %d %s.<br><br>You can use the <a "
+"href=\"%s\">host search</a> to get a list."
+msgstr ""
+"Nu puteți șterge această conexiune. Aceasta are dosare/hosturi alocate. "
+"Puteți utiliza <a href=\"%s\">căutare gazdă</a> pentru a obține o listă cu "
+"gazdele."
+
 #, fuzzy
 msgid "Relays"
 msgstr "Întârziere:"
@@ -62713,6 +62718,11 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Stabilește nivelurile privind totalul erorilor de funcționare de la ultima "
 "resetare a contorului."
+
+msgid ""
+"Sets the maximum amount of memory the backend is allowed to use as a "
+"percentage of the system's total memory."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -85007,7 +85017,7 @@ msgstr "Utilizați LDAPS (SSL)"
 msgid "Use Livestatus proxy daemon"
 msgstr "Utilizați Livestatus Proxy Daemon"
 
-msgid "Use ODBC back-end if the plug-in is deployed on Windows"
+msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
 
 msgid "Use Organisation-ID as host prefix"
@@ -87223,11 +87233,11 @@ msgid "Varnish Worker thread ratio"
 msgstr "Vernisaj Lucrător raport de fir de lucrător"
 
 #, fuzzy
-msgid "Varnish back-end"
+msgid "Varnish backend"
 msgstr "Varnish Backend"
 
 #, fuzzy
-msgid "Varnish back-end success ratio"
+msgid "Varnish backend success ratio"
 msgstr "Rata de succes a backend-ului Varnish"
 
 #, fuzzy
@@ -97870,6 +97880,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Analyze the utilization of your IT infrastructure data center."
+#~ msgstr ""
+#~ "Analizați utilizarea centrului de date al infrastructurii dumneavoastră "
+#~ "IT."
 
 #, fuzzy
 #~ msgid "Data point attribute filters"

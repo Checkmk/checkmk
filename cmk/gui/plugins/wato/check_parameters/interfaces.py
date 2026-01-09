@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
+from typing import Any
 
 from cmk.gui import ifaceoper
 from cmk.gui.exceptions import MKUserError
@@ -54,7 +54,7 @@ def _transform_discards(v: tuple[float, float] | Mapping[str, object]) -> Mappin
     return {"both": ("abs", (int(warn), int(crit)))}
 
 
-def _vs_item_appearance(title, help_txt):
+def _vs_item_appearance(title: str, help_txt: str) -> DropdownChoice[str]:
     return DropdownChoice(
         title=title,
         choices=[
@@ -74,7 +74,7 @@ def _vs_item_appearance(title, help_txt):
     )
 
 
-def _vs_labels_conditions():
+def _vs_labels_conditions() -> ListOf[dict[str, Any]]:
     return ListOf(
         title=_("Generate service labels for discovered matching interfaces"),
         help=_(
@@ -115,7 +115,7 @@ def _vs_labels_conditions():
     )
 
 
-def _vs_single_discovery():
+def _vs_single_discovery() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Configure discovery of single interfaces"),
         choices=[
@@ -180,7 +180,7 @@ def _vs_single_discovery():
     )
 
 
-def _vs_grouping():
+def _vs_grouping() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Configure grouping of interfaces"),
         help=_(
@@ -256,7 +256,7 @@ def _vs_grouping():
     )
 
 
-def _vs_regex_matching(match_obj):
+def _vs_regex_matching(match_obj: str) -> ListOfStrings:
     return ListOfStrings(
         title=_("Match interface %s (regex)") % match_obj,
         help=_(
@@ -272,7 +272,7 @@ def _vs_regex_matching(match_obj):
     )
 
 
-def _note_for_admin_state_options():
+def _note_for_admin_state_options() -> str:
     return _(
         # xgettext: no-python-format
         "Note: The admin state is in general only available for the 64-bit SNMP interface check. "
@@ -285,7 +285,7 @@ def _note_for_admin_state_options():
     )
 
 
-def _admin_states():
+def _admin_states() -> dict[str | int, str]:
     return {
         1: _("up"),
         2: _("down"),
@@ -293,7 +293,7 @@ def _admin_states():
     }
 
 
-def _vs_matching_conditions():
+def _vs_matching_conditions() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Conditions for this rule to apply"),
         help=_(
@@ -394,7 +394,7 @@ def _vs_matching_conditions():
     )
 
 
-def _validate_valuespec_inventory_if_rules(value, varprefix):
+def _validate_valuespec_inventory_if_rules(value: Mapping[str, object], varprefix: str) -> None:
     if "grouping" not in value and "discovery_single" not in value:
         raise MKUserError(
             varprefix,
@@ -561,7 +561,7 @@ rulespec_registry.register(
 )
 
 
-def _help_if_disable_if64_hosts():
+def _help_if_disable_if64_hosts() -> str:
     return _(
         "A couple of switches with broken firmware report that they support 64 bit "
         "counters but do not output any actual data in those counters. Listing those "
@@ -625,7 +625,7 @@ def _vs_packet_levels(
     )
 
 
-def _item_spec_if():
+def _item_spec_if() -> TextInput:
     return TextInput(title=_("Port"), allow_empty=False)
 
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.cpu_utilization import cpu_util_elements
@@ -16,7 +15,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary
 
 
-def _parameter_valuespec_prism_host_cpu():
+def _parameter_valuespec_prism_host_cpu() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule configures levels for the CPU utilization (not load) for "

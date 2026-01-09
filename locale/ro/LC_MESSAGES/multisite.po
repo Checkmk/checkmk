@@ -14413,6 +14413,10 @@ msgid "Configuration Error"
 msgstr "Eroare de configurare"
 
 #, fuzzy
+msgid "Configuration activation"
+msgstr "Conexiune de configurare"
+
+#, fuzzy
 msgid "Configuration bundle ID"
 msgstr "Fișiere de configurare"
 
@@ -20709,6 +20713,10 @@ msgstr "Nu adăugați anteturi de coloană"
 msgid "Do not add text"
 msgstr "Nu tamponați"
 
+#, fuzzy
+msgid "Do not apply this configuration"
+msgstr "Ștergeți această conexiune"
+
 msgid "Do not ask for a comment"
 msgstr "Nu cereți un comentariu"
 
@@ -26908,6 +26916,9 @@ msgstr "Resurse IG"
 msgid "GPU utilization"
 msgstr "Utilizare GPU"
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "GUI"
 msgstr "GUI"
 
@@ -27842,6 +27853,9 @@ msgstr "Solicitări GCP/HTTP(S) load balancer"
 #, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, e-mail, ..."
+
+msgid "HTTP-based receiver"
+msgstr ""
 
 #, fuzzy
 msgid "HTTP: Active Requests"
@@ -30715,6 +30729,10 @@ msgstr "Conflict de nume de gazdă"
 #, fuzzy, python-format
 msgid "Host name contains illegal characters: %s"
 msgstr "Numele gazdei conține caractere ilegale: %s."
+
+#, fuzzy
+msgid "Host name lookup"
+msgstr "Numele gazdei"
 
 #, fuzzy
 msgid "Host name matching"
@@ -40759,11 +40777,12 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "Numărul maxim de puncte de acces nefuncționale"
 
+#, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
-"This option is used to calculate memory limit from the total available "
-"memory. For instance setting of 75% with the total memory of 1GiB will "
-"result in the limit of 750 MiB."
+"This option is used to calculate the hard memory limit from the total "
+"available memory. For instance, setting the limit to 75% on a machine with "
+"1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
 
 msgid "Maximum bulk size"
@@ -40862,6 +40881,23 @@ msgstr "Vârsta maximă a buștenilor"
 
 msgid "Maximum long output size"
 msgstr "Dimensiunea maximă de ieșire lungă"
+
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value from the total available memory. For instance, setting "
+"the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
+"memory available will result in a 600 MiB hard limit and a 350 MiB soft "
+"limit (the spike limit being equal to 250MiB)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value. The soft limit value will be equal to (limit - spike "
+"limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
 
 msgid "Maximum messages per save interval"
 msgstr "Numărul maxim de mesaje pe interval de salvare"
@@ -41019,20 +41055,6 @@ msgstr "Dimensiunea maximă a tuturor fișierelor din spațiul de backup"
 #, fuzzy
 msgid "Maximum speed"
 msgstr "Viteza Maxima"
-
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than limit. This option is used to calculate spike limit from "
-"the total available memory. For instance setting of 25% with the total "
-"memory of 1GiB will result in the spike limit of 250MiB."
-msgstr ""
-
-#, python-format
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than the limit. The soft limit value will be equal to (limit - "
-"spike limit). The recommended value for spike limit is about 20% limit."
-msgstr ""
 
 msgid "Maximum spool duration"
 msgstr "Durata maximă a bobinei"
@@ -41604,6 +41626,14 @@ msgstr "Măsurători de serviciu"
 #, fuzzy
 msgid "Metrics path"
 msgstr "Metrici"
+
+#, fuzzy
+msgid "Metrics path must be a string."
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy
+msgid "Metrics path must start with a '/'."
+msgstr "Autentificarea nu este permisă pe acest site."
 
 msgid "Metrics system"
 msgstr "Sistem de măsurare"
@@ -46962,7 +46992,15 @@ msgid "OpenTelemetry (experimental)"
 msgstr ""
 
 #, fuzzy
-msgid "OpenTelemetry Collector Memory Limit"
+msgid "OpenTelemetry Collector (Experimental)"
+msgstr "Intervalul de colectare a datelor"
+
+#, fuzzy
+msgid "OpenTelemetry Collector (experimental)"
+msgstr "Intervalul de colectare a datelor"
+
+#, fuzzy
+msgid "OpenTelemetry Collector memory limit"
 msgstr "Configurația Consola de evenimente"
 
 #, fuzzy
@@ -52049,8 +52087,12 @@ msgid "Prometheus custom services"
 msgstr "Servicii personalizate Prometheus"
 
 #, fuzzy
-msgid "Prometheus scrape configurations"
-msgstr "Configurația stilului selectat"
+msgid "Prometheus scraping (Experimental)"
+msgstr "Intervalul de colectare a datelor"
+
+#, fuzzy
+msgid "Prometheus scraping (experimental)"
+msgstr "Intervalul de colectare a datelor"
 
 #, fuzzy
 msgid "Prometheus targets"
@@ -53203,12 +53245,6 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "Mesaje primite"
-
-msgid "Receiver protocol GRPC"
-msgstr ""
-
-msgid "Receiver protocol HTTP"
-msgstr ""
 
 #, fuzzy
 msgid "Receiving traces is disabled"
@@ -56587,6 +56623,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Scor"
+
+#, fuzzy
+msgid "Scrape configurations"
+msgstr "Activați configurația"
 
 #, fuzzy
 msgid "Scrape interval"
@@ -64876,7 +64916,9 @@ msgid ""
 "your account credentials here!"
 msgstr ""
 
-msgid "The HTTP resource path on which to fetch metrics from targets."
+msgid ""
+"The HTTP resource path on which to fetch metrics from targets. Must start "
+"with a '/'."
 msgstr ""
 
 #, fuzzy, python-format
@@ -66833,6 +66875,28 @@ msgstr ""
 #, fuzzy
 msgid "The host name is missing."
 msgstr "Numele de gazdă lipsește."
+
+#, python-format
+msgid ""
+"The host name lookup computes the name of the host that should have the "
+"corresponding Checkmk services. The computation is done by the OpenTelemetry "
+"collector and the result is stored in the \"%s\" attribute. For every rule "
+"configured here, the provided fields are concatenated in the order they are "
+"listed. The first rule that results in a non-empty value is used. For "
+"example:\n"
+"<ol><li>A first rule consisting of one field \"Value of attribute: "
+"service.name\" will set \"%s\" to the value of that attribute, if it is "
+"present. This attribute will be set to the prometheus scrape jobs name, for "
+"example.</li><li>A second rule consisting of one field \"Value of attribute: "
+"container.name\" will set \"%s\" to the value of that attribute, if it is "
+"present and \"%s\" has not been set by the previous rule.</li><li>A third "
+"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
+"the attribute is present and \"%s\" has not been set by the previous rules.</"
+"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
+"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
+"</li></ol>"
+msgstr ""
 
 msgid "The host name may not contain spaces."
 msgstr "Numele gazdei nu poate conține spații."
@@ -88220,10 +88284,6 @@ msgstr "descoperire sărită: gazdă necontrolată"
 msgid "discovery successful"
 msgstr "descoperire reușită"
 
-#, python-format
-msgid "do not activate this %s"
-msgstr "nu activați acest %s"
-
 msgid "do not apply this rule"
 msgstr "nu se aplică această regulă"
 
@@ -90012,6 +90072,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Prometheus scrape configurations"
+#~ msgstr "Configurația stilului selectat"
+
+#, python-format
+#~ msgid "do not activate this %s"
+#~ msgstr "nu activați acest %s"
 
 #, fuzzy
 #~ msgid "Return WARNING if found, OK if not"

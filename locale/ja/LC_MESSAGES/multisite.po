@@ -13548,6 +13548,10 @@ msgstr "コンフィギュレーション"
 msgid "Configuration Error"
 msgstr "構成エラー"
 
+#, fuzzy
+msgid "Configuration activation"
+msgstr "設定接続"
+
 msgid "Configuration bundle ID"
 msgstr "設定バンドルID"
 
@@ -19477,6 +19481,10 @@ msgstr "列ヘッダーを追加しないでください"
 msgid "Do not add text"
 msgstr "テキストを追加しない"
 
+#, fuzzy
+msgid "Do not apply this configuration"
+msgstr "この接続を削除します"
+
 msgid "Do not ask for a comment"
 msgstr "コメントを求めないでください"
 
@@ -25340,6 +25348,9 @@ msgstr "GIリソース"
 msgid "GPU utilization"
 msgstr "GPU使用率"
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "GUI"
 msgstr "GUI"
 
@@ -26238,6 +26249,9 @@ msgstr "HTTP(S)ロードバランサー"
 
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Eメール, ..."
+
+msgid "HTTP-based receiver"
+msgstr ""
 
 msgid "HTTP: Active Requests"
 msgstr "HTTP: アクティブリクエスト"
@@ -28740,6 +28754,10 @@ msgstr "ホスト名の競合"
 #, python-format
 msgid "Host name contains illegal characters: %s"
 msgstr "ホスト名に不正な文字が含まれています: %s"
+
+#, fuzzy
+msgid "Host name lookup"
+msgstr "ホスト名"
 
 msgid "Host name matching"
 msgstr "ホスト名の一致"
@@ -38253,11 +38271,12 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "動作していないアクセスポイントの最大数"
 
+#, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
-"This option is used to calculate memory limit from the total available "
-"memory. For instance setting of 75% with the total memory of 1GiB will "
-"result in the limit of 750 MiB."
+"This option is used to calculate the hard memory limit from the total "
+"available memory. For instance, setting the limit to 75% on a machine with "
+"1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
 
 msgid "Maximum bulk size"
@@ -38347,6 +38366,23 @@ msgstr "最大ログ経過時間"
 
 msgid "Maximum long output size"
 msgstr "最長出力サイズ"
+
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value from the total available memory. For instance, setting "
+"the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
+"memory available will result in a 600 MiB hard limit and a 350 MiB soft "
+"limit (the spike limit being equal to 250MiB)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum memory spike allowed between the measurements of memory usage. The "
+"value must be less than the limit. This option is used to calculate the "
+"maximum spike value. The soft limit value will be equal to (limit - spike "
+"limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
 
 msgid "Maximum messages per save interval"
 msgstr "保存間隔あたりの最大メッセージ数"
@@ -38499,20 +38535,6 @@ msgstr "バックアップスペース上のすべてのファイルの最大サ
 
 msgid "Maximum speed"
 msgstr "最大速度"
-
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than limit. This option is used to calculate spike limit from "
-"the total available memory. For instance setting of 25% with the total "
-"memory of 1GiB will result in the spike limit of 250MiB."
-msgstr ""
-
-#, python-format
-msgid ""
-"Maximum spike expected between the measurements of memory usage. The value "
-"must be less than the limit. The soft limit value will be equal to (limit - "
-"spike limit). The recommended value for spike limit is about 20% limit."
-msgstr ""
 
 msgid "Maximum spool duration"
 msgstr "最大スプール持続時間"
@@ -39054,6 +39076,14 @@ msgstr "サービス指標"
 
 msgid "Metrics path"
 msgstr "メトリクスパス"
+
+#, fuzzy
+msgid "Metrics path must be a string."
+msgstr "値は文字列であること"
+
+#, fuzzy
+msgid "Metrics path must start with a '/'."
+msgstr "パスが'/'で始まることはできません"
 
 msgid "Metrics system"
 msgstr "メトリックシステム"
@@ -44092,7 +44122,15 @@ msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry（実験的）"
 
 #, fuzzy
-msgid "OpenTelemetry Collector Memory Limit"
+msgid "OpenTelemetry Collector (Experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry Collector (experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry Collector memory limit"
 msgstr "Open Telemetryコレクターの設定"
 
 #, fuzzy
@@ -48704,8 +48742,13 @@ msgstr "プロメテウスカスタムサービス"
 msgid "Prometheus custom services"
 msgstr "プロメテウスカスタムサービス"
 
-msgid "Prometheus scrape configurations"
-msgstr "Prometheus スクレイプ構成"
+#, fuzzy
+msgid "Prometheus scraping (Experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
+
+#, fuzzy
+msgid "Prometheus scraping (experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "Prometheus targets"
 msgstr "Prometheus ターゲット"
@@ -49791,12 +49834,6 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "受信したメッセージ"
-
-msgid "Receiver protocol GRPC"
-msgstr "受信プロトコル GRPC"
-
-msgid "Receiver protocol HTTP"
-msgstr "受信プロトコル HTTP"
 
 msgid "Receiving traces is disabled"
 msgstr "トレース受信が無効になっています"
@@ -52992,6 +53029,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "スコア"
+
+#, fuzzy
+msgid "Scrape configurations"
+msgstr "構成を有効化する"
 
 msgid "Scrape interval"
 msgstr "スクレイピング間隔"
@@ -60748,7 +60789,10 @@ msgstr ""
 "たはREST APIから生成できます。注意：ここにはアカウントの認証情報を入力しない"
 "でください！"
 
-msgid "The HTTP resource path on which to fetch metrics from targets."
+#, fuzzy
+msgid ""
+"The HTTP resource path on which to fetch metrics from targets. Must start "
+"with a '/'."
 msgstr "ターゲットからメトリクスを取得するためのHTTPリソースパス。"
 
 #, python-format
@@ -62642,6 +62686,44 @@ msgstr ""
 
 msgid "The host name is missing."
 msgstr "ホスト名がありません。"
+
+#, fuzzy, python-format
+msgid ""
+"The host name lookup computes the name of the host that should have the "
+"corresponding Checkmk services. The computation is done by the OpenTelemetry "
+"collector and the result is stored in the \"%s\" attribute. For every rule "
+"configured here, the provided fields are concatenated in the order they are "
+"listed. The first rule that results in a non-empty value is used. For "
+"example:\n"
+"<ol><li>A first rule consisting of one field \"Value of attribute: "
+"service.name\" will set \"%s\" to the value of that attribute, if it is "
+"present. This attribute will be set to the prometheus scrape jobs name, for "
+"example.</li><li>A second rule consisting of one field \"Value of attribute: "
+"container.name\" will set \"%s\" to the value of that attribute, if it is "
+"present and \"%s\" has not been set by the previous rule.</li><li>A third "
+"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
+"the attribute is present and \"%s\" has not been set by the previous rules.</"
+"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
+"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
+"</li></ol>"
+msgstr ""
+"ホスト名の計算は、対応するCheckmkサービスを持つべきホストの名前を計算します。"
+"この計算はOpenTelemetryコレクタによって行われ、結果は \"%s\"属性に格納されま"
+"す。ここで設定された全てのルールについては、提供されたフィールドがリスト化さ"
+"れた順に連結されます。空ではない値になる最初のルールが使用されます。例え"
+"ば：\n"
+"<ol><li>最初のルールは1つのフィールド \"Value of attribute: service.name\" で"
+"構成され、その属性が存在する場合、その値を\"%s\"と設定します。この属性は、例"
+"えばprometheusのスクレイプジョブ名に設定されます。</li><li>2番目のルールは1つ"
+"のフィールド \"Value of attribute: container.name \"で構成され、その属性が存"
+"在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"をその属性の値に設"
+"定します。</li><li>3番目のルールは2つのフィールド \"Resource attribute "
+"value: custom_attr\"と \"Literal string: some_suffix\"から構成され、その属性"
+"が存在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"を "
+"\"VALUEsome_suffix \"に設定します。</li><li>最後のルールは1つのフィールド "
+"\"Literal string: fallback_host\" で構成され、まだ設定されていないすべての"
+"\"%s\"属性を \"fallback_host\"に設定します。</li></ol>"
 
 msgid "The host name may not contain spaces."
 msgstr "ホスト名にスペースを含めることはできません。"
@@ -82509,10 +82591,6 @@ msgstr "検出がスキップされました:ホストが監視されていま�
 msgid "discovery successful"
 msgstr "発見に成功"
 
-#, python-format
-msgid "do not activate this %s"
-msgstr "この%sをアクティブにしないでください"
-
 msgid "do not apply this rule"
 msgstr "このルールを適用しないでください"
 
@@ -84227,6 +84305,19 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Prometheus scrape configurations"
+#~ msgstr "Prometheus スクレイプ構成"
+
+#~ msgid "Receiver protocol GRPC"
+#~ msgstr "受信プロトコル GRPC"
+
+#~ msgid "Receiver protocol HTTP"
+#~ msgstr "受信プロトコル HTTP"
+
+#, python-format
+#~ msgid "do not activate this %s"
+#~ msgstr "この%sをアクティブにしないでください"
 
 #~ msgid "Return WARNING if found, OK if not"
 #~ msgstr "見つかった場合はWARNING を返し、見つからなかった場合はOKを返します"

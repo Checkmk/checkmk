@@ -790,7 +790,7 @@ class SuggestedEntryRenderer:
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         self._show_link(
             entry,
-            url=item.link.url,
+            url=item.link.url or "javascript:void(0)",
             onclick=item.link.onclick,
             target=item.link.target,
         )

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
@@ -16,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
-def _parameter_valuespec_persistent_volume_claims():
+def _parameter_valuespec_persistent_volume_claims() -> Dictionary:
     return Dictionary(
         elements=[
             (

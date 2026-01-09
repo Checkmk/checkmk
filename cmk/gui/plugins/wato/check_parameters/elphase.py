@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -12,10 +11,19 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Float, Integer, ListOf, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    DictionaryEntry,
+    Float,
+    Integer,
+    ListOf,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
-def _phase_elements():
+def _phase_elements() -> list[DictionaryEntry]:
     return [
         (
             "voltage",
@@ -92,11 +100,11 @@ def _phase_elements():
     ]
 
 
-def _item_spec_el_inphase():
+def _item_spec_el_inphase() -> TextInput:
     return TextInput(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
 
 
-def _parameter_valuespec_el_inphase():
+def _parameter_valuespec_el_inphase() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule allows you to specify levels for the voltage, current, power "
@@ -133,7 +141,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_ups_outphase():
+def _item_spec_ups_outphase() -> TextInput:
     return TextInput(
         title=_("Output Name"),
         help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"),

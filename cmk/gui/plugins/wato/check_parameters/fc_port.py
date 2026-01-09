@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Alternative, Dictionary, Float, Integer, Percentage, TextInput, Tuple
 
 
-def _item_spec_fc_port():
+def _item_spec_fc_port() -> TextInput:
     return TextInput(
         title=_("port name"),
         help=_("The name of the FC port"),
     )
 
 
-def _parameter_valuespec_fc_port():
+def _parameter_valuespec_fc_port() -> Dictionary:
     return Dictionary(
         elements=[
             (

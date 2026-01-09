@@ -65,6 +65,7 @@ _DEVICE_OIDS = (
     ".1.3.6.1.4.1.9.1.2669",  # cisco WLC C9800-80-K9
     ".1.3.6.1.4.1.9.1.2860",  # cisco WLC C9800
     ".1.3.6.1.4.1.9.1.2861",  # cisco WLC C9800-L-F-K9
+    ".1.3.6.1.4.1.9.1.3323",  # CW9800M
 )
 
 _DETECT_SPEC = any_of(*(equals(_OID_sysObjectID, device_id) for device_id in _DEVICE_OIDS))

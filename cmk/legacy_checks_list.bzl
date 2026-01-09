@@ -175,7 +175,6 @@ LEGACY_CHECKS = [
     "didactum_sensors_discrete",
     "didactum_sensors_outlet",
     "docker_node_disk_usage",
-    "docker_node_info",
     "docsis_channels_downstream",
     "docsis_channels_upstream",
     "docsis_cm_status",

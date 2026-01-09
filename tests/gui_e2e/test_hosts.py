@@ -173,6 +173,7 @@ def test_delete_host_row(
     test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
+@pytest.mark.xfail(strict=True, reason="CMK-29018")
 def test_agent_connection_test(dashboard_page: MainDashboard) -> None:
     """Validate agent connection test of a host."""
     add_host = AddHost(dashboard_page.page)

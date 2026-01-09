@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Filesize, Integer, Tuple
 
 
-def _item_spec_docker_node_disk_usage():
+def _item_spec_docker_node_disk_usage() -> DropdownChoice:
     return DropdownChoice(
         title=_("Type"),
         help=_("Either Containers, Images, Local Volumes or Build Cache"),
@@ -27,7 +27,7 @@ def _item_spec_docker_node_disk_usage():
     )
 
 
-def _parameter_valuespec_docker_node_disk_usage():
+def _parameter_valuespec_docker_node_disk_usage() -> Dictionary:
     return Dictionary(
         help=_(
             "Allows to define levels for the counts and size of Docker containers, images, local volumes, and the build cache."

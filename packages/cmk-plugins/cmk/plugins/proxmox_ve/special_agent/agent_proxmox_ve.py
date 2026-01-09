@@ -249,9 +249,10 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
             config_lock_data[str(vm["vmid"])] = {
                 "lock": vm["config"].get("lock"),
             }
-            node_storage[node["node"]] = find_storage_for_vmid(
-                all_vms, str(vm["vmid"]), vm["config"]
-            )
+
+            vm_storage = find_storage_for_vmid(all_vms, str(vm["vmid"]), vm["config"])
+            for storage_name, links in vm_storage.items():
+                node_storage.setdefault(node["node"], {}).setdefault(storage_name, []).extend(links)
 
     def date_to_utc(naive_string: str, tz: str) -> str:
         """

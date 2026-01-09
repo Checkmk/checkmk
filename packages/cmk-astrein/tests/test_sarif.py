@@ -6,8 +6,8 @@
 import json
 from pathlib import Path
 
-from astrein.framework import CheckerError
-from astrein.sarif import _get_rule_description, format_sarif
+from cmk.astrein.framework import CheckerError
+from cmk.astrein.sarif import _get_rule_description, format_sarif
 
 
 def _make_error(

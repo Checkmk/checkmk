@@ -1,5 +1,5 @@
 [project]
-name = "astrein"
+name = "cmk-astrein"
 version = "1.0.0"
 dependencies = []
 
@@ -8,7 +8,9 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-astrein = "astrein.cli:main"
+astrein = "cmk.astrein.cli:main"
 
 [tool.setuptools]
-packages = ["astrein"]
+packages = ["cmk"]
+
+[tool.bandit]

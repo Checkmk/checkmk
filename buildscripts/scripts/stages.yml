@@ -175,6 +175,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"
 
+    - NAME: CHANGED_CMK_ASTREIN_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-astrein/' || true"
+
     - NAME: CHANGED_CMK_CCC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-ccc/' || true"
 
@@ -608,6 +611,14 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
+
+    - NAME: "Package cmk-astrein"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_ASTREIN_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "packages/cmk-astrein"
+      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-astrein.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-astrein files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-astrein.txt"
 
     - NAME: "Package cmk-ccc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS

@@ -4,22 +4,28 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_library(
     name = "library",
     srcs = [
-        "astrein/__init__.py",
-        "astrein/checker_localization.py",
-        "astrein/checker_module_layers.py",
-        "astrein/cli.py",
-        "astrein/framework.py",
-        "astrein/module_layers_config.py",
-        "astrein/sarif.py",
+        "cmk/astrein/__init__.py",
+        "cmk/astrein/checker_localization.py",
+        "cmk/astrein/checker_module_layers.py",
+        "cmk/astrein/cli.py",
+        "cmk/astrein/framework.py",
+        "cmk/astrein/module_layers_config.py",
+        "cmk/astrein/sarif.py",
     ],
+    data = [":py_typed"],
     imports = ["."],
+)
+
+filegroup(
+    name = "py_typed",
+    srcs = ["cmk/astrein/py.typed"],
 )
 
 py_binary(
     name = "astrein_bin",
-    srcs = ["astrein/cli.py"],
+    srcs = ["cmk/astrein/cli.py"],
     imports = ["."],
-    main = "astrein/cli.py",
+    main = "cmk/astrein/cli.py",
     visibility = ["//visibility:public"],
     deps = [
         ":library",

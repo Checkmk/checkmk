@@ -43,5 +43,5 @@ clang_tidy = lint_clang_tidy_aspect(
 )
 
 astrein = lint_astrein_aspect(
-    binary = Label("//tests/astrein:astrein"),
+    binary = Label("//packages/cmk-astrein:astrein"),
 )

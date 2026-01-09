@@ -14,10 +14,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from astrein.checker_localization import LocalizationChecker
-from astrein.checker_module_layers import ModuleLayersChecker
-from astrein.framework import ASTVisitorChecker, CheckerError, run_checkers
-from astrein.sarif import format_sarif
+from cmk.astrein.checker_localization import LocalizationChecker
+from cmk.astrein.checker_module_layers import ModuleLayersChecker
+from cmk.astrein.framework import ASTVisitorChecker, CheckerError, run_checkers
+from cmk.astrein.sarif import format_sarif
 
 
 def main() -> int:
@@ -63,7 +63,7 @@ def main() -> int:
     try:
         files_to_check = _collect_files(args.paths, work_dir)
     except ValueError as e:
-        print(str(e), file=sys.stderr)
+        sys.stderr.write(f"{e}\n")
         return 1
 
     return _handle_results(
@@ -126,7 +126,7 @@ def _collect_files(paths: Sequence[Path], workspace_dir: Path) -> list[Path]:
             raise ValueError(f"Error: Not a file or directory: {path}")
 
     files_to_check = sorted(set(files_to_check))
-    print(f"Checking {len(files_to_check)} python files", file=sys.stderr)
+    sys.stderr.write(f"Checking {len(files_to_check)} python files\n")
 
     return files_to_check
 
@@ -172,11 +172,11 @@ def _handle_results(
             output_file.parent.mkdir(parents=True, exist_ok=True)
             output_file.write_text(output)
         else:
-            print(output)
+            sys.stdout.write(f"{output}\n")
 
         if results.errors:
             if output_file is not None:  # Do not mess with sarif output
-                print(summary)
+                sys.stdout.write(f"{summary}\n")
             return 1
 
     elif output_format == "gcc":
@@ -186,13 +186,13 @@ def _handle_results(
             output_file.parent.mkdir(parents=True, exist_ok=True)
             output_file.write_text(output + summary)
         else:
-            print(output)
+            sys.stdout.write(f"{output}\n")
 
         if results.errors:
-            print(summary)
+            sys.stdout.write(f"{summary}\n")
             return 1
     else:
-        print(f"Error: Unknown output format: {output_format}", file=sys.stderr)
+        sys.stderr.write(f"Error: Unknown output format: {output_format}\n")
         return 1
 
     return 0

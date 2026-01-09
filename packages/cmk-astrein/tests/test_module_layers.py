@@ -6,8 +6,8 @@
 import ast
 from pathlib import Path
 
-from astrein.checker_module_layers import ModuleLayersChecker
-from astrein.module_layers_config import (
+from cmk.astrein.checker_module_layers import ModuleLayersChecker
+from cmk.astrein.module_layers_config import (
     CLEAN_PLUGIN_FAMILIES,
     Component,
     COMPONENTS,

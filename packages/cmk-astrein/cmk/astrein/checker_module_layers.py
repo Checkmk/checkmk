@@ -10,8 +10,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from astrein.framework import ASTVisitorChecker
-from astrein.module_layers_config import (
+from cmk.astrein.framework import ASTVisitorChecker
+from cmk.astrein.module_layers_config import (
     _EXPLICIT_FILE_TO_COMPONENT,
     _EXPLICIT_FILE_TO_DEPENDENCIES,
     Component,

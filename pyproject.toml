@@ -112,7 +112,6 @@ explicit_package_bases = true
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-update-agent:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
-    $MYPY_CONFIG_FILE_DIR/tests/astrein:\
     $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
     """
 plugins = ["pydantic.mypy"]

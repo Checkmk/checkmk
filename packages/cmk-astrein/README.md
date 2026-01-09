@@ -16,16 +16,16 @@ Astrein enforces code quality rules through specialized checkers:
 
 ```bash
 # Check a single file
-bazel run //tests/astrein:astrein -- --checker localization cmk/gui/groups.py
+bazel run //packages/cmk-astrein:astrein -- --checker localization cmk/gui/groups.py
 
 # Check a directory recursively
-bazel run //tests/astrein:astrein -- --checker module-layers cmk/gui
+bazel run //packages/cmk-astrein:astrein -- --checker module-layers cmk/gui
 
 # Run all checkers
-bazel run //tests/astrein:astrein -- --checker all cmk
+bazel run //packages/cmk-astrein:astrein -- --checker all cmk
 
 # Specify repository root (required for module-layers)
-bazel run //tests/astrein:astrein -- --checker module-layers --repo-root . cmk/gui/main.py
+bazel run //packages/cmk-astrein:astrein -- --checker module-layers --repo-root . cmk/gui/main.py
 ```
 
 ### Bazel Integration

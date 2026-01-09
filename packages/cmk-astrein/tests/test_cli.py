@@ -8,9 +8,10 @@ import json
 from pathlib import Path
 
 import pytest
-from astrein.checker_localization import LocalizationChecker
-from astrein.checker_module_layers import ModuleLayersChecker
-from astrein.cli import (
+
+from cmk.astrein.checker_localization import LocalizationChecker
+from cmk.astrein.checker_module_layers import ModuleLayersChecker
+from cmk.astrein.cli import (
     _checkers,
     _collect_files,
     _handle_results,
@@ -18,7 +19,7 @@ from astrein.cli import (
     _select_checkers,
     CheckerResults,
 )
-from astrein.framework import ASTVisitorChecker, CheckerError
+from cmk.astrein.framework import ASTVisitorChecker, CheckerError
 
 
 def test_checkers_returns_expected_checkers() -> None:
@@ -210,7 +211,7 @@ def _make_checker(errors_by_file: dict[Path, list[CheckerError]]) -> type[ASTVis
         def checker_id(self) -> str:
             return "custom-checker"
 
-        def check(self, tree: ast.AST) -> list[CheckerError]:
+        def check(self, tree: ast.AST) -> list[CheckerError]:  # noqa: ARG002
             return errors_by_file.get(self.file_path, [])
 
     return CustomChecker

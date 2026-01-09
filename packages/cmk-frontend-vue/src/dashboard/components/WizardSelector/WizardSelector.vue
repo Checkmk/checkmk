@@ -76,7 +76,13 @@ const handleAddEditWidget = (
 <template>
   <div v-if="!selectedWizard"></div>
   <div v-else>
-    <CmkSlideIn :open="isOpen" :aria-label="_t('Add widget to dashboard')">
+    <CmkSlideIn
+      :open="isOpen"
+      :aria-label="
+        props.editWidgetId ? _t('Edit widget properties') : _t('Add widget to dashboard')
+      "
+      :size="selectedWizard === 'other' ? 'small' : 'medium'"
+    >
       <AlertsAndNotificationsWizard
         v-if="selectedWizard === 'alerts_notifications'"
         :dashboard-key="dashboardKey"
@@ -149,6 +155,7 @@ const handleAddEditWidget = (
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />
+
       <CustomGraphsWizard
         v-if="selectedWizard === 'custom_graphs'"
         :dashboard-key="dashboardKey"
@@ -158,6 +165,7 @@ const handleAddEditWidget = (
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />
+
       <OtherWizard
         v-if="selectedWizard === 'other'"
         :dashboard-key="dashboardKey"

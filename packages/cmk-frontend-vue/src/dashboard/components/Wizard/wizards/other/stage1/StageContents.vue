@@ -8,11 +8,11 @@ import { type ShallowRef, computed, ref, toValue, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-
 import ActionBar from '@/dashboard/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.vue'
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
+import SectionBlock from '@/dashboard/components/Wizard/components/SectionBlock.vue'
+import StepsHeader from '@/dashboard/components/Wizard/components/StepsHeader.vue'
 import SelectableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/SelectableWidgets.vue'
 import type { WidgetItemList } from '@/dashboard/components/Wizard/components/WidgetSelection/types'
 import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
@@ -23,7 +23,6 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 
-import SectionBlock from '../../../components/SectionBlock.vue'
 import { type GetValidWidgetProps, OtherWidgetType } from '../types'
 import EmbeddedURL from './EmbeddedURL/EmbeddedURL.vue'
 import SidebarWidget from './SidebarWidget/SidebarWidget.vue'
@@ -40,7 +39,7 @@ interface Stage1Props {
 
 const props = defineProps<Stage1Props>()
 const emit = defineEmits<{
-  goPrev: []
+  goBack: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -106,9 +105,11 @@ function gotoNextStage() {
 </script>
 
 <template>
-  <CmkHeading type="h1">
-    {{ _t('Add other element') }}
-  </CmkHeading>
+  <StepsHeader
+    :title="_t('Add other element')"
+    :subtitle="_t('Define widget')"
+    @back="() => emit('goBack')"
+  />
 
   <ContentSpacer />
 

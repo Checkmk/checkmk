@@ -5,6 +5,8 @@
  */
 import { onBeforeMount, ref, watch } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -19,6 +21,7 @@ import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext, dashboardAPI } from '@/dashboard/utils'
 
+const { _t } = usei18n()
 export interface UseUserMessages extends UseWidgetHandler, UseWidgetVisualizationOptions {}
 
 export function useUserMessages(
@@ -36,6 +39,10 @@ export function useUserMessages(
     validate,
     widgetGeneralSettings
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
+
+  if (!title.value) {
+    title.value = _t('User message')
+  }
 
   const content: UserMessagesContent = {
     type: 'user_messages'

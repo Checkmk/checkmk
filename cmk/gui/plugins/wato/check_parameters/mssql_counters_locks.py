@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.mssql_utils import mssql_item_spec_instance_tablespace
@@ -17,7 +16,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Checkbox, Dictionary, Float, Tuple
 
 
-def _valuespec_inventory_mssql_counters_rules():
+def _valuespec_inventory_mssql_counters_rules() -> Dictionary:
     return Dictionary(
         title=_("MSSQL counter discovery"),
         elements=[
@@ -37,7 +36,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_mssql_counters_locks():
+def _parameter_valuespec_mssql_counters_locks() -> Dictionary:
     return Dictionary(
         help=_("This check monitors locking related information of MSSQL tablespaces."),
         elements=[

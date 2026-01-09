@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 import enum
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -55,7 +54,7 @@ def _rename_keys(p: dict[str, object]) -> dict[str, object]:
     return {_KEY_MAP.get(k, k): v for k, v in p.items()}
 
 
-def _parameter_valuespec_rabbitmq_cluster_messages():
+def _parameter_valuespec_rabbitmq_cluster_messages() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

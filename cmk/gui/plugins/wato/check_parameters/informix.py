@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
 
 
-def _parameter_valuespec_informix_locks():
+def _parameter_valuespec_informix_locks() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -43,7 +42,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_informix_logusage():
+def _parameter_valuespec_informix_logusage() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -82,7 +81,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_informix_sessions():
+def _parameter_valuespec_informix_sessions() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -111,7 +110,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_informix_tabextents():
+def _parameter_valuespec_informix_tabextents() -> Dictionary:
     return Dictionary(
         elements=[
             (

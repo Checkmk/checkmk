@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, ListOf, Migrate, RegExp, TextInput, Tuple
 
 
-def _valuespec_sap_value_groups():
+def _valuespec_sap_value_groups() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             title=_("SAP R/3 grouped values discovery"),

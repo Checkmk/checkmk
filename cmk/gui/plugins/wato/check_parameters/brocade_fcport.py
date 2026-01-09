@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -58,7 +56,7 @@ _brocade_fcport_phy_choices = [
 ]
 
 
-def _valuespec_brocade_fcport_inventory():
+def _valuespec_brocade_fcport_inventory() -> Dictionary:
     return Dictionary(
         title=_("Brocade port discovery"),
         elements=[
@@ -148,14 +146,14 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_brocade_fcport():
+def _item_spec_brocade_fcport() -> TextInput:
     return TextInput(
         title=_("port name"),
         help=_("The name of the switch port"),
     )
 
 
-def _parameter_valuespec_brocade_fcport():
+def _parameter_valuespec_brocade_fcport() -> Dictionary:
     return Dictionary(
         elements=[
             (

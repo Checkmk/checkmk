@@ -137,5 +137,5 @@ function handle_host_diag_result(data: { hostname: string; ident: string }, resp
   replaceIcon(retry, 'reload')
   retry.style.display = 'inline'
   ;(retry.parentNode as HTMLAnchorElement).href =
-    `javascript:cmk.host_diagnose.start_test(${data.ident}, ${data.hostname}, ${response.result.next_transid});`
+    `javascript:cmk.host_diagnose.start_test("${data.ident}", "${data.hostname}", "${response.result.next_transid}");`
 }

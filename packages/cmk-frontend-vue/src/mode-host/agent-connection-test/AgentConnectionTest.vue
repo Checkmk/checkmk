@@ -95,6 +95,16 @@ onMounted(() => {
   props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
       case props.formElement:
+      case props.changeTagAgent: {
+        switchVisibility()
+        checkPushMode()
+
+        targetElement.value = props.changeTagAgent.checked
+          ? (props.tagAgent.parentNode as HTMLElement)
+          : props.tagAgentDefault
+        console.log(targetElement.value)
+        break
+      }
       case props.ipv4InputButtonElement: {
         if (!ipV4Selected.value) {
           ipV4.value = ''
@@ -105,15 +115,6 @@ onMounted(() => {
         if (!ipV6Selected.value) {
           ipV6.value = ''
         }
-        break
-      }
-      case props.changeTagAgent: {
-        switchVisibility()
-        checkPushMode()
-
-        targetElement.value = props.changeTagAgent.checked
-          ? (props.tagAgent.parentNode as HTMLElement)
-          : props.tagAgentDefault
         break
       }
     }

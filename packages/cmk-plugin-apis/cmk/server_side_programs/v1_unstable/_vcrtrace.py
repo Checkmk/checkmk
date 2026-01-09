@@ -12,12 +12,14 @@ import sys
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 
+_ALLOWDIR = "tmp/check_mk/debug"
+
 
 def _check_path(filename: str) -> None:
     """make sure we are only writing/reading traces from tmp/debug"""
 
     p = Path(filename).resolve()
-    allowed_path = (Path.home() / "tmp" / "debug").resolve()
+    allowed_path = (Path.home() / _ALLOWDIR).resolve()
     if not p.is_relative_to(allowed_path):
         raise ValueError(f"Traces can only be stored in {allowed_path}")
     if not (p_dir := p.parent).is_dir():
@@ -42,7 +44,8 @@ def vcrtrace(
     all requests the program sends and their corresponding answers will be recorded in said file.
     If the file already exists, no requests are sent to the server, but the responses will be
     replayed from the tracefile.
-    TRACEFILE must be a file path within the directory `~/tmp/debug`; `~/tmp/debug` must exist.
+    TRACEFILE must be a file path within the directory `~/tmp/check_mk/debug`.
+    Note that this feature is for debugging purposes only and might change in the future.
 
     The destination attribute will be set to `True` if the option was specified, the
     provided default otherwise.

@@ -194,5 +194,5 @@ function handle_host_diag_result(
     retry.src = retry.src.replace(/(.*\/icon_).*(\.svg$)/i, "$1reload$2");
     retry.style.display = "inline";
     (retry.parentNode as HTMLAnchorElement).href =
-        `javascript:cmk.host_diagnose.start_test(${data.ident}, ${data.hostname}, ${response.result.next_transid});`;
+        `javascript:cmk.host_diagnose.start_test("${data.ident}", "${data.hostname}", "${response.result.next_transid}");`;
 }

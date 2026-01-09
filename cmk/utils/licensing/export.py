@@ -757,7 +757,7 @@ class RawSubscriptionDetailsForAggregation(TypedDict):
 class SubscriptionDetailsForAggregation:
     start: int | None
     end: int | None
-    limit: Literal["unlimited"] | tuple[Literal["free"], Literal[3]] | int | None
+    limit: Literal["unlimited"] | tuple[Literal["free"], int] | int | None
 
     def __post_init__(self) -> None:
         if isinstance(self.limit, int) and self.limit <= 0:

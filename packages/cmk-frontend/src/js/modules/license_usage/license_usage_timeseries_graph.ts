@@ -430,7 +430,7 @@ function render_usage_graph(graph_config: GraphConfig, aggregation: RawMonthlySe
 
   const x_range = scaleTime().domain(x_domain).range([0, inner_width])
   const y_range = scaleLinear().domain([0, y_domain_max]).range([inner_height, 0])
-  const x_axis = axisBottom(x_range).ticks(10)
+  const x_axis = axisBottom(x_range).ticks(5)
   const y_axis_left = axisLeft(y_range).tickFormat(format('~s')).ticks(10)
 
   const line_daily_services = line<MonthlyServiceAverage>()
@@ -733,13 +733,55 @@ export function render_free_tests_usage_graph(
       width: Math.floor((0.9 * window.innerWidth) / num_graphs),
       graph_title: 'Synthetic Monitoring',
       subscription_sizing_title: 'Free tests',
-      subscription_sizing_line_class: 'line-free-tests',
-      subscription_sizing_legend_class: 'legend-free-tests',
+      subscription_sizing_line_class: 'line-free-limit',
+      subscription_sizing_legend_class: 'legend-free-limit',
       daily_title: 'Daily tests',
       monthly_averages_title: 'Monthly test averages',
       tooltip_title: 'Tests',
       first_above_limit_title: 'First monthly average usage above free limit'
     },
     tests_aggregation
+  )
+}
+
+export function render_metric_series_usage_graph(
+  num_graphs: number,
+  metric_series_aggregation: RawMonthlyServiceAggregation
+) {
+  render_usage_graph(
+    {
+      y_domain_max: 1000,
+      width: Math.floor((0.9 * window.innerWidth) / num_graphs),
+      graph_title: 'Telemetry',
+      subscription_sizing_title: 'Subscription sizing',
+      subscription_sizing_line_class: 'line-subscription-limit',
+      subscription_sizing_legend_class: 'legend-subscription-limit',
+      daily_title: 'Daily active metric series',
+      monthly_averages_title: 'Monthly active metric series averages',
+      tooltip_title: 'Active Metric Series',
+      first_above_limit_title: 'First monthly average usage above subscription limit'
+    },
+    metric_series_aggregation
+  )
+}
+
+export function render_free_metric_series_usage_graph(
+  num_graphs: number,
+  metric_series_aggregation: RawMonthlyServiceAggregation
+) {
+  render_usage_graph(
+    {
+      y_domain_max: 1000,
+      width: Math.floor((0.9 * window.innerWidth) / num_graphs),
+      graph_title: 'Telemetry',
+      subscription_sizing_title: 'Free metric series',
+      subscription_sizing_line_class: 'line-free-limit',
+      subscription_sizing_legend_class: 'legend-free-limit',
+      daily_title: 'Daily active metric series',
+      monthly_averages_title: 'Monthly active metric series averages',
+      tooltip_title: 'Active Metric Series',
+      first_above_limit_title: 'First monthly average usage above free limit'
+    },
+    metric_series_aggregation
   )
 }

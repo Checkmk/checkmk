@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
-def _item_spec_ibm_svc_mdisk():
+def _item_spec_ibm_svc_mdisk() -> TextInput:
     return TextInput(
         title=_("IBM SVC disk"),
         help=_("Name of the disk, e.g. mdisk0"),
     )
 
 
-def _parameter_valuespec_ibm_svc_mdisk():
+def _parameter_valuespec_ibm_svc_mdisk() -> Dictionary:
     return Dictionary(
         optional_keys=False,
         elements=[

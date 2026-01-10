@@ -7442,6 +7442,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "At least one custom query is required."
+msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
+
+#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
 
@@ -7855,9 +7859,6 @@ msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "変更を自動的にアクティブ化する"
-
-msgid "Automatically adjusted to available data"
-msgstr "利用可能なデータに自動的に調整"
 
 msgid "Automatically create monitoring agents"
 msgstr "監視エージェントを自動的に作成する"
@@ -9245,9 +9246,6 @@ msgstr "バックエンドポート"
 msgid "Backends"
 msgstr "バックエンド"
 
-msgid "Background in status color and label"
-msgstr "ステータスの色とラベルの背景"
-
 msgid "Background job acknowledged"
 msgstr "バックグラウンドジョブが承認されました"
 
@@ -9734,9 +9732,6 @@ msgstr "両方の条件が一致しなければならない（defensive）"
 
 msgid "Bottom"
 msgstr "ボトム"
-
-msgid "Bottom (lowest) N"
-msgstr "ボトム（最下位） N"
 
 msgid "Bottom level suite"
 msgstr "最下層スイート"
@@ -13375,22 +13370,8 @@ msgstr ""
 "リアルタイム・データとして送信するセクションを選択します。エージェントから"
 "Checkmkサーバーに送信されるパケットの種類と数を制御します。"
 
-msgid "Choose the sidebar element you would like to show."
-msgstr "表示したサイドバー要素を選択します。"
-
 msgid "Choose the type of action to perform"
 msgstr "実行するアクションのタイプを選択します"
-
-msgid ""
-"Choose the view you would like to show. Please note that, depending on the, "
-"logged in user viewing this dashboard, the view being displayed may differ. "
-"For example when another user has created a view with the same name. In case "
-"a user is not permitted to see a view, an error message will be displayed."
-msgstr ""
-"表示するビューを選択します。このダッシュボードを表示しているログインユーザー"
-"によっては、表示されるビューが異なる場合がありますのでご注意ください。たとえ"
-"ば、別のユーザーが同じ名前のビューを作成した場合です。ユーザーがビューを表示"
-"することを許可されていない場合、エラーメッセージが表示されます。"
 
 msgid ""
 "Choose this option if you need to have the provided document within a "
@@ -13712,9 +13693,6 @@ msgstr "クリーンアップストラテジー"
 
 msgid "Clear & Delete"
 msgstr "クリアと削除"
-
-msgid "Clear failed notifications"
-msgstr "失敗した通知をクリアする"
 
 msgid "Clear log"
 msgstr "ログをクリアする"
@@ -14191,23 +14169,11 @@ msgstr "カラーA4"
 msgid "Color gradient"
 msgstr "色のグラデーション"
 
-msgid "Color of the average"
-msgstr "平均の色"
-
-msgid "Color of the median"
-msgstr "中央値の色"
-
-msgid "Color of the scattered dots"
-msgstr "散らばった点の色"
-
 msgid "Color theme"
 msgstr "カラーテーマ"
 
 msgid "Coloring"
 msgstr "着色"
-
-msgid "Colorize"
-msgstr "色付け"
 
 msgid "Colorize background if host is down"
 msgstr "ホストがダウンしている場合、背景を色付けします"
@@ -14641,12 +14607,12 @@ msgstr "CMCのコンフィグとステートダンプ"
 msgid "Configuration"
 msgstr "コンフィギュレーション"
 
-#, fuzzy
-msgid "Configuration Activation"
-msgstr "設定接続"
-
 msgid "Configuration Error"
 msgstr "構成エラー"
+
+#, fuzzy
+msgid "Configuration activation"
+msgstr "設定接続"
 
 msgid "Configuration bundle ID"
 msgstr "設定バンドルID"
@@ -18029,9 +17995,6 @@ msgstr "送信データ"
 msgid "Data point attributes"
 msgstr "ダウンタイム属性:"
 
-msgid "Data range"
-msgstr "データ範囲"
-
 msgid "Data read"
 msgstr "読み取ったデータ"
 
@@ -20725,9 +20688,6 @@ msgstr ""
 msgid "Display average"
 msgstr "平均を表示"
 
-msgid "Display axis labels for the selected/automatic data range"
-msgstr "選択された/自動データ範囲の軸ラベルを表示する"
-
 msgid "Display dashboard title"
 msgstr "ダッシュボードのタイトルを表示する"
 
@@ -20774,9 +20734,6 @@ msgstr "すべてのデータファイルの要約のみを表示する"
 
 msgid "Display only a summary of all transactionlogs"
 msgstr "すべてのトランザクションログの要約のみを表示します"
-
-msgid "Display range: Minimum must be strictly less than maximum"
-msgstr "表示範囲:最小値は厳密に最大値より小さくする必要があります"
 
 msgid "Display sidecar details on"
 msgstr "サイドカーの詳細を表示する"
@@ -21454,10 +21411,6 @@ msgstr "要約行を表示しない"
 msgid "Do not show again"
 msgstr "二度は表示しない"
 
-#, fuzzy
-msgid "Do not show the service state"
-msgstr "サービスステータスを表示しない"
-
 msgid "Do not status data inventory"
 msgstr "データインベントリのステータスを設定しない"
 
@@ -21641,9 +21594,6 @@ msgstr "傷跡を送らない"
 msgid "Don't show"
 msgstr "表示しない"
 
-msgid "Don't show Summary"
-msgstr "要約を表示しない"
-
 msgid "Don't show and check"
 msgstr "表示して確認しないでください"
 
@@ -21652,9 +21602,6 @@ msgstr "グラフのタイトルを表示しない"
 
 msgid "Don't show home port info"
 msgstr "ホームポート情報を表示しない"
-
-msgid "Don't show information of limits"
-msgstr "制限の情報を表示しない"
 
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr "\"失敗したアクション\"が存在する場合は表示または警告しない(デフォルト)"
@@ -21913,14 +21860,6 @@ msgstr "ドロップされた作業要求"
 
 msgid "Dt."
 msgstr "Dt."
-
-msgid ""
-"Due to a limitation in how Checkmk handles metrics internally, the results "
-"contain conflicting metrics and this top list may be incorrect or incomplete."
-msgstr ""
-"Checkmkが内部的にメトリクスを処理する方法の制限により、結果には矛盾するメトリ"
-"クスが含まれており、このトップリストは不正確または不完全である可能性がありま"
-"す。"
 
 msgid ""
 "Due to security reasons the plug-in being executed as admin will check "
@@ -24726,9 +24665,6 @@ msgstr "有効期限が切れます"
 msgid "Expires %s"
 msgstr "有効期限が切れます"
 
-msgid "Expires on"
-msgstr "有効期限"
-
 #, fuzzy
 msgid "Explain with AI"
 msgstr "AIを続行しますか？"
@@ -26140,9 +26076,6 @@ msgstr "固定限界値"
 
 msgid "Fixed page elements"
 msgstr "固定ページエレメント"
-
-msgid "Fixed range"
-msgstr "固定範囲"
 
 msgid "Fixed rate"
 msgstr "固定レート"
@@ -30704,10 +30637,6 @@ msgstr "ホスト名またはアドレス"
 msgid "Host name or alias (regex)"
 msgstr "ホスト名またはエイリアス(正規表現)"
 
-#, fuzzy
-msgid "Host name resource attribute"
-msgstr "属性をリセット"
-
 msgid "Host name template"
 msgstr "ホスト名のテンプレート"
 
@@ -30767,10 +30696,6 @@ msgstr "ホスト通知が有効"
 
 msgid "Host or Disk"
 msgstr "ホストまたはディスク"
-
-#, python-format
-msgid "Host or service %ss"
-msgstr "ホストまたはサービス %ss"
 
 msgid ""
 "Host or service must be in the following service level to get notification"
@@ -31081,9 +31006,6 @@ msgstr "このフォルダ内のホスト"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Inline-SNMPを使用しないホスト"
-
-msgid "Hosts or sites, depending on context"
-msgstr "ホストかサイトか、文脈によって異なる"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "過去24時間に私たちに連絡したホスト"
@@ -31524,6 +31446,10 @@ msgstr "ホストのIPアドレス"
 
 msgid "IP address"
 msgstr "IPアドレス"
+
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "ホストアドレス(IPv4/IPv6)"
 
 msgid "IP address family"
 msgstr "IPアドレスファミリ"
@@ -36737,9 +36663,6 @@ msgstr "レーン"
 msgid "Language"
 msgstr "言語"
 
-msgid "Large"
-msgstr "大きい"
-
 msgid "Large pool size"
 msgstr "大きなプールサイズ"
 
@@ -37951,9 +37874,6 @@ msgstr "一括通知あたりのグラフ付きイベント数の上限(デフ�
 msgid "Limit number of processed search results"
 msgstr "処理される検索結果の数を制限する"
 
-msgid "Limit objects"
-msgstr "オブジェクトを制限する"
-
 msgid "Limit of meta data"
 msgstr "メタデータの制限"
 
@@ -37999,9 +37919,6 @@ msgstr "ビューテーブルの行数を制限する"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "表に表示される行数を制限する"
-
-msgid "Limit to"
-msgstr "制限は"
 
 msgid "Limit width"
 msgstr "幅を制限する"
@@ -40772,9 +40689,6 @@ msgstr "ゲートウェイまでの最大距離(TTL)"
 
 msgid "Maximum expected run time for heart beat packet"
 msgstr "ハートビートパケットの最大予想実行時間"
-
-msgid "Maximum hexagon size"
-msgstr "最大hexagonサイズ"
 
 #, python-format
 msgid "Maximum image size: %dx%dpx"
@@ -44288,9 +44202,6 @@ msgstr "検出されるホストがありません"
 msgid "No hosts/services found."
 msgstr "ホスト/サービスが見つかりません。"
 
-msgid "No influence on element display"
-msgstr "エレメントの表示に影響を与えません"
-
 msgid "No information available"
 msgstr "利用可能な情報はありません"
 
@@ -45858,9 +45769,6 @@ msgstr ""
 msgid "Number of nodes not in target state"
 msgstr "ターゲット状態にないノード数"
 
-msgid "Number of notifications as text"
-msgstr "テキストとしての通知の数"
-
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "通知の数が最大許容数を超えています"
 
@@ -47083,9 +46991,6 @@ msgid ""
 "Only services matching one of these patterns will be discovered. If no "
 "pattern is defined, all services are included."
 msgstr ""
-
-msgid "Only show current value"
-msgstr "現在の値のみを表示"
 
 msgid "Only show hosts and services the user is a contact for"
 msgstr "そのユーザーが連絡をとっているホストとサービスのみを表示"
@@ -52605,9 +52510,6 @@ msgstr ""
 "RRAエントリ番号 %d: ステップ数は前のエントリのステップ数よりも大きくする必要"
 "があります。"
 
-msgid "RRD consolidation"
-msgstr "RRDの統合"
-
 msgid "RRD data aggregated"
 msgstr "集計されたRRDデータ"
 
@@ -52778,14 +52680,8 @@ msgstr "パスワードをランダム化する"
 msgid "Range"
 msgstr "範囲"
 
-msgid "Range limits"
-msgstr "範囲制限"
-
 msgid "Range of values (min/max)"
 msgstr "値の範囲（最小／最大）"
-
-msgid "Ranking order"
-msgstr "順位"
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMXラック: 温度"
@@ -57312,13 +57208,6 @@ msgstr ""
 msgid "Select the parent folder"
 msgstr "親フォルダを選択"
 
-msgid ""
-"Select the range in between which the values are displayed. This only "
-"affects the dashlet if 'Show historic values' is selected"
-msgstr ""
-"値を表示する範囲を選択します。これは、「履歴値を表示する」が選択されている場"
-"合にのみダッシュレットに影響します"
-
 #, fuzzy
 msgid "Select the relay that should monitor this host."
 msgstr "このホストを監視するサイトを指定します。"
@@ -57432,19 +57321,8 @@ msgstr "オプション選択"
 msgid "Selected sections will not be executed by the agent."
 msgstr "選択したセクションはエージェントによって実行されません。"
 
-msgid "Selected state"
-msgstr "選択した状態"
-
 msgid "Selected style configuration"
 msgstr "選択されたスタイル構成"
-
-#, python-format
-msgid ""
-"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
-"large screens, e.g. on a wall monitor."
-msgstr ""
-"'%s'オプションの'Large'を選択すると、'%s'を壁面モニターなどの大きなスクリーン"
-"に表示するときに便利です。"
 
 #, python-format
 msgid ""
@@ -57629,9 +57507,6 @@ msgstr "センサー"
 
 msgid "Sent"
 msgstr "送信済み"
-
-msgid "Sent on"
-msgstr "送信日"
 
 #, fuzzy, python-format
 msgid "Sent on: %s, expires on: %s"
@@ -58769,13 +58644,6 @@ msgstr ""
 msgid "Set the organization of the InfluxDB server."
 msgstr "InfluxDBサーバーの組織を生成します。"
 
-msgid ""
-"Set the range in which data is displayed. Having selected a metric before "
-"auto selects the matching unit of the metric."
-msgstr ""
-"データを表示する範囲を設定します。メトリックを自動に選択する前に、メトリック"
-"位の一致単位を選択します。"
-
 #, fuzzy, python-format
 msgid ""
 "Set the temperature unit used for graphs and Perf-O-Meters. The default unit "
@@ -59140,18 +59008,6 @@ msgstr "\"失敗したアクション\" を表示し、存在する場合は警�
 msgid "Show %s"
 msgstr "%sを表示"
 
-#, python-format
-msgid "Show %ss for hosts"
-msgstr "ホストの %ss を表示"
-
-#, python-format
-msgid "Show %ss for hosts and services"
-msgstr "ホストとサービスの %ss を表示"
-
-#, python-format
-msgid "Show %ss for services"
-msgstr "サービスの%ssを表示"
-
 msgid "Show / hide notification context"
 msgstr "通知コンテキストの表示／非表示"
 
@@ -59171,12 +59027,6 @@ msgstr "マンページを表示"
 
 msgid "Show Setup icon"
 msgstr "セットアップアイコンの表示"
-
-msgid "Show a colored status label"
-msgstr "色付きのステータスラベルを表示する"
-
-msgid "Show a colored status label and color the metric background"
-msgstr "色付きのステータスラベルを表示し、メトリクスの背景を色付けする"
 
 msgid "Show a login message"
 msgstr "ログインメッセージを表示する"
@@ -59231,9 +59081,6 @@ msgstr "帯域幅"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr ""
-
-msgid "Show bar visualization"
-msgstr "バーの表示"
 
 #, fuzzy
 msgid "Show bulk notifications"
@@ -59315,15 +59162,8 @@ msgstr "重要度の設定を表示"
 msgid "Show hint in the 'User' menu"
 msgstr "ユーザー' メニューにヒントを表示する"
 
-msgid "Show historic values"
-msgstr "歴史的価値観を示す"
-
 msgid "Show host labels"
 msgstr "ホストラベルを表示"
-
-#, fuzzy
-msgid "Show host state"
-msgstr "ホストステータスを表示する"
 
 msgid "Show host tags"
 msgstr "ホストタグを表示"
@@ -59367,9 +59207,6 @@ msgstr "エンドユーザーへの通知のみを表示する"
 
 msgid "Show just preliminary notifications"
 msgstr "事前通知のみを表示する"
-
-msgid "Show label for"
-msgstr "のラベルを表示する"
 
 msgid "Show last log message"
 msgstr "最後のログメッセージを表示する"
@@ -59469,13 +59306,6 @@ msgstr "SLA期間ごとに個別の結果を表示する"
 msgid "Show service labels"
 msgstr "サービスラベルを表示"
 
-msgid "Show service name"
-msgstr "サービス名を表示"
-
-#, fuzzy
-msgid "Show service state"
-msgstr "サービスステータスを表示する"
-
 msgid "Show services"
 msgstr "サービスを表示"
 
@@ -59494,13 +59324,6 @@ msgstr "<tt>root</tt>ユーザー用に予約されているスペースを表�
 
 msgid "Show stale hosts and services"
 msgstr "古いホストとサービスを表示する"
-
-msgid "Show state of"
-msgstr "状態を表示"
-
-#, python-format
-msgid "Show summary for not %s states"
-msgstr "%s状態以外の概要の表示"
 
 msgid ""
 "Show the column for stale host and service checks in the tactical overview "
@@ -59537,9 +59360,6 @@ msgstr "グラフの縦軸を表示する"
 
 msgid "Show the header of the dashboard with the configured title."
 msgstr "設定されたタイトルでダッシュボードのヘッダーを表示します。"
-
-msgid "Show the limits of values displayed"
-msgstr "表示される値の制限を表示する"
 
 msgid "Show the list of hosts in this category"
 msgstr "このカテゴリのホストリストを表示する"
@@ -66208,9 +66028,6 @@ msgstr ""
 "す。ただし、この方法で中継されたデバイスタイプの検出は許可されません。データ"
 "の解釈を可能にするには、デバイスを手動で選択する必要があります。"
 
-msgid "The element does not exist."
-msgstr "エレメントが存在しません。"
-
 msgid ""
 "The email address is optional and is needed if the user is a monitoring "
 "contact and receives notifications via email."
@@ -68265,9 +68082,6 @@ msgstr "要求された接続は存在しません。"
 
 msgid "The requested dashboard does not exist."
 msgstr "要求されたダッシュボードは存在しません。"
-
-msgid "The requested element type does not exist."
-msgstr "要求されたエレメントタイプは存在しません。"
 
 msgid "The requested global setting does not exist."
 msgstr "要求されたグローバル設定は存在しません。"
@@ -70826,13 +70640,6 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "これはトップレベルのルールです。ルールツリーを表示する"
-
-msgid ""
-"This is caused by the service check commands with an example host and "
-"service in the following table."
-msgstr ""
-"これは、次の表にホストとサービスの例を示したようにサービスチェックコマンドに"
-"よって引き起こされます。"
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom agent "
@@ -74718,9 +74525,6 @@ msgstr "レポートコンテキストからの時間範囲"
 msgid "Time range synchronization"
 msgstr "時間範囲の同期"
 
-msgid "Time range to consider"
-msgstr "考慮すべき時間範囲"
-
 #, fuzzy
 msgid ""
 "Time range to continue to consider outdated OpenTelemetry data as valid."
@@ -75397,9 +75201,6 @@ msgstr "ヒント"
 
 msgid "Top"
 msgstr "トップ"
-
-msgid "Top (highest) N"
-msgstr "トップ（最高位） N"
 
 #, fuzzy
 msgid "Top 10: CPU utilization"
@@ -82003,9 +81804,6 @@ msgstr "失敗した通知を表示する"
 msgid "View layout"
 msgstr "レイアウトを表示"
 
-msgid "View name"
-msgstr "名前を表示"
-
 msgid "View permitted maps"
 msgstr "全ての許可地図を表示"
 
@@ -85126,15 +84924,6 @@ msgstr ""
 "プランをアップグレードすることで、サイトの容量を簡単に増やすことができます。"
 
 msgid ""
-"You can enter a text here that will be displayed in the element when viewing "
-"the dashboard. It is also possible to insert a limited set of HTML tags, "
-"some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
-msgstr ""
-"ダッシュボードを表示するときに要素に表示されるテキストをここに入力できます。"
-"HTMLタグの限定されたセットを挿入することも可能です。それらのいくつかは、h2、"
-"b、tt、i、br、pre、a、sup、p、li、ul、およびolです。"
-
-msgid ""
 "You can have these tags automatically added if certain primary tags are set."
 msgstr ""
 "特定のプライマリータグが設定されている場合、これらのタグが自動的に追加される"
@@ -85643,13 +85432,6 @@ msgstr ""
 "イコンの並べ替えインデックスは<tt>10</tt>で、グラフアイコンの並べ替えインデッ"
 "クスは<tt>20</tt>です。他のすべてのデフォルトアイコンには、<tt>30</tt>>のソー"
 "トインデックスが設定されています。"
-
-msgid ""
-"You can use these examples to identify hosts and services that must be "
-"filtered out in the top list configuration to resolve the problem."
-msgstr ""
-"これらの例を使用して、問題を解決するためにトップリスト構成でフィルタリングし"
-"なければならないホストとサービスを特定することができます。"
 
 msgid ""
 "You can use these options to tune the way packages are baked for your hosts "
@@ -86950,9 +86732,6 @@ msgstr "すべてのホストのすべてのログファイル"
 msgid "all special agents"
 msgstr "全ての特別なエージェント"
 
-msgid "all states"
-msgstr "すべての状態"
-
 msgid "all users"
 msgstr "全てのユーザー"
 
@@ -87431,9 +87210,6 @@ msgstr "有効"
 
 msgid "entries"
 msgstr "エントリ"
-
-msgid "entries (max. 50)"
-msgstr "エントリー数 (最大50)"
 
 msgid "entry number"
 msgstr "エントリナンバー"
@@ -88176,13 +87952,6 @@ msgstr "のどれも"
 
 msgid "normal connection"
 msgstr "通常の接続"
-
-#, python-format
-msgid "not %s states"
-msgstr "%s以外の状態"
-
-msgid "not OK states"
-msgstr "OK以外の状態"
 
 msgid "not available"
 msgstr "利用不可"
@@ -89289,6 +89058,12 @@ msgstr ""
 msgid "Loading Top list content"
 msgstr "ラベル付けオプション"
 
+msgid "Sent on"
+msgstr "送信日"
+
+msgid "Expires on"
+msgstr "有効期限"
+
 #, fuzzy
 msgid "Dashboard filter"
 msgstr "ダッシュボード要素"
@@ -89598,8 +89373,12 @@ msgid "Loading options…"
 msgstr "オプションの読み込み中…"
 
 #, fuzzy
-msgid "Loading views..."
-msgstr "読み込んでいます..."
+msgid "Error loading views: "
+msgstr "ビューの表示中にエラーが発生しました: %s"
+
+#, fuzzy
+msgid "Error loading data sources: "
+msgstr "データソースを読み込み中..."
 
 msgid "Select view"
 msgstr "ビューを選択"
@@ -89781,6 +89560,12 @@ msgstr ""
 #, fuzzy
 msgid "Choose how to display your data"
 msgstr "日付を表示しない"
+
+msgid "Automatically adjusted to available data"
+msgstr "利用可能なデータに自動的に調整"
+
+msgid "Fixed range"
+msgstr "固定範囲"
 
 #, fuzzy
 msgid "Add optional filters to refine this widget"
@@ -90371,6 +90156,12 @@ msgstr "%s以外の状態"
 msgid "Show summary for not UP states"
 msgstr "%s状態以外の概要の表示"
 
+msgid "Selected state"
+msgstr "選択した状態"
+
+msgid "Show state of"
+msgstr "状態を表示"
+
 #, fuzzy
 msgid "Host or sites, depending on context"
 msgstr "ホストかサイトか、文脈によって異なる"
@@ -90381,6 +90172,9 @@ msgstr "最大hexagonサイズ"
 
 msgid "Small"
 msgstr ""
+
+msgid "Large"
+msgstr "大きい"
 
 #, fuzzy
 msgid "Loading widget visualization settings..."
@@ -90439,6 +90233,15 @@ msgstr "オプション選択"
 msgid "Service graph"
 msgstr "サービスグラフ"
 
+msgid "Data range"
+msgstr "データ範囲"
+
+msgid "Only show current value"
+msgstr "現在の値のみを表示"
+
+msgid "Show historic values"
+msgstr "歴史的価値観を示す"
+
 #, fuzzy
 msgid "Fixed data range"
 msgstr "固定範囲"
@@ -90450,12 +90253,39 @@ msgstr "サービスステータス"
 msgid "Show colored status label"
 msgstr "色付きのステータスラベルを表示する"
 
+msgid "Show label for"
+msgstr "のラベルを表示する"
+
+msgid "all states"
+msgstr "すべての状態"
+
+msgid "not OK states"
+msgstr "OK以外の状態"
+
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "背景なしでタイトルを表示"
 
+msgid "Range limits"
+msgstr "範囲制限"
+
+msgid "Show the limits of values displayed"
+msgstr "表示される値の制限を表示する"
+
+msgid "Don't show information of limits"
+msgstr "制限の情報を表示しない"
+
 msgid "Show service status"
 msgstr "サービスステータスを表示する"
+
+msgid "Color of the scattered dots"
+msgstr "散らばった点の色"
+
+msgid "Color of the average"
+msgstr "平均の色"
+
+msgid "Color of the median"
+msgstr "中央値の色"
 
 #, fuzzy
 msgid "Additional scatterplot options"
@@ -90472,9 +90302,24 @@ msgstr "値は文字列であること"
 msgid "Rankin order"
 msgstr "順位"
 
+msgid "Top (highest) N"
+msgstr "トップ（最高位） N"
+
+msgid "Bottom (lowest) N"
+msgstr "ボトム（最下位） N"
+
+msgid "Limit to"
+msgstr "制限は"
+
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "エントリー数 (最大50)"
+
+msgid "Show service name"
+msgstr "サービス名を表示"
+
+msgid "Show bar visualization"
+msgstr "バーの表示"
 
 msgid "Enter URL to embed"
 msgstr ""
@@ -90519,6 +90364,9 @@ msgstr "表示するためのリンク"
 msgid "Datasource"
 msgstr "データソース"
 
+msgid "View name"
+msgstr "名前を表示"
+
 #, fuzzy
 msgid "Specific object type"
 msgstr "特定のオブジェクトタイプを選択します"
@@ -90558,6 +90406,10 @@ msgstr ""
 #, fuzzy
 msgid "Copy existing view: %{viewName}"
 msgstr "既存のビューをコピーする"
+
+#, fuzzy
+msgid "Edit widget properties"
+msgstr "プロパティを編集する"
 
 #, fuzzy
 msgid "Add widget to dashboard"
@@ -91972,6 +91824,178 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Background in status color and label"
+#~ msgstr "ステータスの色とラベルの背景"
+
+#~ msgid "Choose the sidebar element you would like to show."
+#~ msgstr "表示したサイドバー要素を選択します。"
+
+#~ msgid ""
+#~ "Choose the view you would like to show. Please note that, depending on "
+#~ "the, logged in user viewing this dashboard, the view being displayed may "
+#~ "differ. For example when another user has created a view with the same "
+#~ "name. In case a user is not permitted to see a view, an error message "
+#~ "will be displayed."
+#~ msgstr ""
+#~ "表示するビューを選択します。このダッシュボードを表示しているログインユー"
+#~ "ザーによっては、表示されるビューが異なる場合がありますのでご注意ください。"
+#~ "たとえば、別のユーザーが同じ名前のビューを作成した場合です。ユーザーが"
+#~ "ビューを表示することを許可されていない場合、エラーメッセージが表示されま"
+#~ "す。"
+
+#~ msgid "Clear failed notifications"
+#~ msgstr "失敗した通知をクリアする"
+
+#~ msgid "Colorize"
+#~ msgstr "色付け"
+
+#~ msgid "Display axis labels for the selected/automatic data range"
+#~ msgstr "選択された/自動データ範囲の軸ラベルを表示する"
+
+#~ msgid "Display range: Minimum must be strictly less than maximum"
+#~ msgstr "表示範囲:最小値は厳密に最大値より小さくする必要があります"
+
+#, fuzzy
+#~ msgid "Do not show the service state"
+#~ msgstr "サービスステータスを表示しない"
+
+#~ msgid "Don't show Summary"
+#~ msgstr "要約を表示しない"
+
+#~ msgid ""
+#~ "Due to a limitation in how Checkmk handles metrics internally, the "
+#~ "results contain conflicting metrics and this top list may be incorrect or "
+#~ "incomplete."
+#~ msgstr ""
+#~ "Checkmkが内部的にメトリクスを処理する方法の制限により、結果には矛盾するメ"
+#~ "トリクスが含まれており、このトップリストは不正確または不完全である可能性が"
+#~ "あります。"
+
+#, fuzzy
+#~ msgid "Host name resource attribute"
+#~ msgstr "属性をリセット"
+
+#, python-format
+#~ msgid "Host or service %ss"
+#~ msgstr "ホストまたはサービス %ss"
+
+#~ msgid "Hosts or sites, depending on context"
+#~ msgstr "ホストかサイトか、文脈によって異なる"
+
+#~ msgid "Limit objects"
+#~ msgstr "オブジェクトを制限する"
+
+#~ msgid "Maximum hexagon size"
+#~ msgstr "最大hexagonサイズ"
+
+#~ msgid "No influence on element display"
+#~ msgstr "エレメントの表示に影響を与えません"
+
+#~ msgid "Number of notifications as text"
+#~ msgstr "テキストとしての通知の数"
+
+#~ msgid "RRD consolidation"
+#~ msgstr "RRDの統合"
+
+#~ msgid "Ranking order"
+#~ msgstr "順位"
+
+#~ msgid ""
+#~ "Select the range in between which the values are displayed. This only "
+#~ "affects the dashlet if 'Show historic values' is selected"
+#~ msgstr ""
+#~ "値を表示する範囲を選択します。これは、「履歴値を表示する」が選択されている"
+#~ "場合にのみダッシュレットに影響します"
+
+#, python-format
+#~ msgid ""
+#~ "Selecting the '%s' option 'Large' can be useful when displaying the '%s' "
+#~ "on large screens, e.g. on a wall monitor."
+#~ msgstr ""
+#~ "'%s'オプションの'Large'を選択すると、'%s'を壁面モニターなどの大きなスク"
+#~ "リーンに表示するときに便利です。"
+
+#~ msgid ""
+#~ "Set the range in which data is displayed. Having selected a metric before "
+#~ "auto selects the matching unit of the metric."
+#~ msgstr ""
+#~ "データを表示する範囲を設定します。メトリックを自動に選択する前に、メトリッ"
+#~ "ク位の一致単位を選択します。"
+
+#, python-format
+#~ msgid "Show %ss for hosts"
+#~ msgstr "ホストの %ss を表示"
+
+#, python-format
+#~ msgid "Show %ss for hosts and services"
+#~ msgstr "ホストとサービスの %ss を表示"
+
+#, python-format
+#~ msgid "Show %ss for services"
+#~ msgstr "サービスの%ssを表示"
+
+#~ msgid "Show a colored status label"
+#~ msgstr "色付きのステータスラベルを表示する"
+
+#~ msgid "Show a colored status label and color the metric background"
+#~ msgstr "色付きのステータスラベルを表示し、メトリクスの背景を色付けする"
+
+#, fuzzy
+#~ msgid "Show host state"
+#~ msgstr "ホストステータスを表示する"
+
+#, fuzzy
+#~ msgid "Show service state"
+#~ msgstr "サービスステータスを表示する"
+
+#, python-format
+#~ msgid "Show summary for not %s states"
+#~ msgstr "%s状態以外の概要の表示"
+
+#~ msgid "The element does not exist."
+#~ msgstr "エレメントが存在しません。"
+
+#~ msgid "The requested element type does not exist."
+#~ msgstr "要求されたエレメントタイプは存在しません。"
+
+#~ msgid ""
+#~ "This is caused by the service check commands with an example host and "
+#~ "service in the following table."
+#~ msgstr ""
+#~ "これは、次の表にホストとサービスの例を示したようにサービスチェックコマンド"
+#~ "によって引き起こされます。"
+
+#~ msgid "Time range to consider"
+#~ msgstr "考慮すべき時間範囲"
+
+#~ msgid ""
+#~ "You can enter a text here that will be displayed in the element when "
+#~ "viewing the dashboard. It is also possible to insert a limited set of "
+#~ "HTML tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and "
+#~ "ol."
+#~ msgstr ""
+#~ "ダッシュボードを表示するときに要素に表示されるテキストをここに入力できま"
+#~ "す。HTMLタグの限定されたセットを挿入することも可能です。それらのいくつか"
+#~ "は、h2、b、tt、i、br、pre、a、sup、p、li、ul、およびolです。"
+
+#~ msgid ""
+#~ "You can use these examples to identify hosts and services that must be "
+#~ "filtered out in the top list configuration to resolve the problem."
+#~ msgstr ""
+#~ "これらの例を使用して、問題を解決するためにトップリスト構成でフィルタリング"
+#~ "しなければならないホストとサービスを特定することができます。"
+
+#~ msgid "entries (max. 50)"
+#~ msgstr "エントリー数 (最大50)"
+
+#, python-format
+#~ msgid "not %s states"
+#~ msgstr "%s以外の状態"
+
+#, fuzzy
+#~ msgid "Loading views..."
+#~ msgstr "読み込んでいます..."
 
 #~ msgid "Analyze the utilization of your IT infrastructure data center."
 #~ msgstr "ITインフラのデータセンターの利用状況を分析します。"

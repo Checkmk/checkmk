@@ -7698,6 +7698,10 @@ msgstr ""
 "Es muss mindestens eine Hyper-V Monitoring-Komponente ausgewählt werden. "
 "Bitte wählen Sie aus den verfügbaren Monitoring-Optionen aus."
 
+#, fuzzy
+msgid "At least one custom query is required."
+msgstr "Mindestens ein Ziel muss ausgewählt werden."
+
 msgid "At least one host event must be selected."
 msgstr "Mindestens ein Host-Ereignis muss ausgewählt werden."
 
@@ -8111,9 +8115,6 @@ msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "Änderungen automatisch aktivieren"
-
-msgid "Automatically adjusted to available data"
-msgstr "Automatisch auf verfügbare Daten angepasst"
 
 msgid "Automatically create monitoring agents"
 msgstr "Monitoring-Agenten automatisch erstellen"
@@ -9441,9 +9442,6 @@ msgstr "Backend-Port"
 msgid "Backends"
 msgstr "Backends"
 
-msgid "Background in status color and label"
-msgstr "Hintergrund in Statusfarbe und -label"
-
 msgid "Background job acknowledged"
 msgstr "Hintergrund-Prozess quittiert"
 
@@ -9929,9 +9927,6 @@ msgstr "Beide Bedingungen müssen zutreffen (defensiv)"
 
 msgid "Bottom"
 msgstr "Unten"
-
-msgid "Bottom (lowest) N"
-msgstr "Bottom (niedrigste) N"
 
 msgid "Bottom level suite"
 msgstr "Suite der untersten Ebene"
@@ -13667,24 +13662,8 @@ msgstr ""
 "Diese Auswahl steuert, welche und wie viele Pakete vom Agenten an den "
 "Checkmk-Server gesendet werden."
 
-msgid "Choose the sidebar element you would like to show."
-msgstr "Wählen Sie das Seitenleistenelement, das Sie anzeigen wollen."
-
 msgid "Choose the type of action to perform"
 msgstr "Wählen Sie den auszuführenden Aktionstyp"
-
-msgid ""
-"Choose the view you would like to show. Please note that, depending on the, "
-"logged in user viewing this dashboard, the view being displayed may differ. "
-"For example when another user has created a view with the same name. In case "
-"a user is not permitted to see a view, an error message will be displayed."
-msgstr ""
-"Wählen Sie die Ansicht, die Sie anzeigen möchten. Bitte beachten Sie, dass "
-"je nach dem angemeldeten Benutzer, der dieses Dashboard betrachtet, die "
-"angezeigte Ansicht unterschiedlich sein kann. Zum Beispiel, wenn ein anderer "
-"Benutzer eine Ansicht mit demselben Namen erstellt hat. Falls ein Benutzer "
-"nicht berechtigt ist, eine Ansicht zu sehen, wird eine Fehlermeldung "
-"angezeigt."
 
 msgid ""
 "Choose this option if you need to have the provided document within a "
@@ -14010,9 +13989,6 @@ msgstr "Bereinigungsstrategie"
 
 msgid "Clear & Delete"
 msgstr "Leeren & Löschen"
-
-msgid "Clear failed notifications"
-msgstr "Fehlgeschlagene Benachrichtigungen löschen"
 
 msgid "Clear log"
 msgstr "Log leeren"
@@ -14492,23 +14468,11 @@ msgstr "Farbe A4"
 msgid "Color gradient"
 msgstr "Farbverlauf"
 
-msgid "Color of the average"
-msgstr "Farbe für den Durchschnitt"
-
-msgid "Color of the median"
-msgstr "Farbe für den Median"
-
-msgid "Color of the scattered dots"
-msgstr "Farbe für die vereinzelten Punkte"
-
 msgid "Color theme"
 msgstr "Farbschema"
 
 msgid "Coloring"
 msgstr "Einfärbung"
-
-msgid "Colorize"
-msgstr "Färben"
 
 msgid "Colorize background if host is down"
 msgstr "Hintergrund einfärben, wenn der Host down ist"
@@ -14947,12 +14911,12 @@ msgstr "Auszug der Konfiguration und des Zustands vom CMC"
 msgid "Configuration"
 msgstr "Einstellungen"
 
-#, fuzzy
-msgid "Configuration Activation"
-msgstr "Konfigurationsverbindung"
-
 msgid "Configuration Error"
 msgstr "Konfigurationsfehler"
+
+#, fuzzy
+msgid "Configuration activation"
+msgstr "Konfigurationsverbindung"
 
 msgid "Configuration bundle ID"
 msgstr "Konfigurationsbündel-ID"
@@ -18372,9 +18336,6 @@ msgstr "Datenpunkt"
 msgid "Data point attributes"
 msgstr "Attribute des Datenpunkts"
 
-msgid "Data range"
-msgstr "Datenbereich"
-
 msgid "Data read"
 msgstr "Gelesene Daten"
 
@@ -21094,10 +21055,6 @@ msgstr ""
 msgid "Display average"
 msgstr "Durchschnitt anzeigen"
 
-msgid "Display axis labels for the selected/automatic data range"
-msgstr ""
-"Achsenbeschriftungen für den ausgewählten/automatischen Datenbereich anzeigen"
-
 msgid "Display dashboard title"
 msgstr "Dashboard-Titel anzeigen"
 
@@ -21144,10 +21101,6 @@ msgstr "Nur eine Zusammenfassung aller Datendateien anzeigen"
 
 msgid "Display only a summary of all transactionlogs"
 msgstr "Nur eine Zusammenfassung aller Transaktionslogs anzeigen"
-
-msgid "Display range: Minimum must be strictly less than maximum"
-msgstr ""
-"Anzeigebereich: Minimum muss grundsätzlich weniger sein als das Maximum"
 
 msgid "Display sidecar details on"
 msgstr "Zeige Sidecar Details auf"
@@ -21840,10 +21793,6 @@ msgstr "Keine Zusammenfassung anzeigen"
 msgid "Do not show again"
 msgstr "Nicht erneut anzeigen"
 
-#, fuzzy
-msgid "Do not show the service state"
-msgstr "Den Service-Status nicht anzeigen"
-
 msgid "Do not status data inventory"
 msgstr "Führe keine Statusdaten-Inventur durch"
 
@@ -22023,9 +21972,6 @@ msgstr "Keine Spuren senden"
 msgid "Don't show"
 msgstr "Nicht anzeigen"
 
-msgid "Don't show Summary"
-msgstr "Zusammenfassung nicht anzeigen"
-
 msgid "Don't show and check"
 msgstr "Nicht anzeigen und prüfen"
 
@@ -22034,9 +21980,6 @@ msgstr "Nicht den Graphtitel anzeigen"
 
 msgid "Don't show home port info"
 msgstr "Informationen zum Homeport nicht anzeigen"
-
-msgid "Don't show information of limits"
-msgstr "Informationen über Limits nicht anzeigen"
 
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr ""
@@ -22296,14 +22239,6 @@ msgstr "Ignorierte Arbeitsanfragen"
 
 msgid "Dt."
 msgstr "Dt."
-
-msgid ""
-"Due to a limitation in how Checkmk handles metrics internally, the results "
-"contain conflicting metrics and this top list may be incorrect or incomplete."
-msgstr ""
-"Aufgrund einer Einschränkung in der internen Handhabung von Metriken durch "
-"Checkmk enthalten die Ergebnisse widersprüchliche Metriken und diese "
-"Topliste kann falsch oder unvollständig sein."
 
 msgid ""
 "Due to security reasons the plug-in being executed as admin will check "
@@ -25183,9 +25118,6 @@ msgstr "Läuft ab"
 msgid "Expires %s"
 msgstr "Läuft ab %s"
 
-msgid "Expires on"
-msgstr "Läuft ab am"
-
 msgid "Explain with AI"
 msgstr "Mit KI erklären"
 
@@ -26605,9 +26537,6 @@ msgstr "Feste Limits"
 
 msgid "Fixed page elements"
 msgstr "Seitenelemente"
-
-msgid "Fixed range"
-msgstr "Fester Bereich"
 
 msgid "Fixed rate"
 msgstr "Feste Rate"
@@ -31262,9 +31191,6 @@ msgstr "Host-Name oder -Adresse"
 msgid "Host name or alias (regex)"
 msgstr "Host-Name oder Alias (regex)"
 
-msgid "Host name resource attribute"
-msgstr "Ressourcen-Attribut des Host-Namens"
-
 msgid "Host name template"
 msgstr "Vorlage für Host-Name"
 
@@ -31325,10 +31251,6 @@ msgstr "Host-Benachrichtigungen aktiviert"
 
 msgid "Host or Disk"
 msgstr "Host oder Platte"
-
-#, python-format
-msgid "Host or service %ss"
-msgstr "Host oder Service %ss"
 
 msgid ""
 "Host or service must be in the following service level to get notification"
@@ -31641,9 +31563,6 @@ msgstr "Hosts in diesem Ordner"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hosts, die kein Inline-SNMP verwenden"
-
-msgid "Hosts or sites, depending on context"
-msgstr "Hosts oder Instanzen, kontextabhängig"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Hosts, die uns innerhalb der letzten 24 Stunden kontaktiert haben"
@@ -32083,6 +32002,10 @@ msgstr "IP-Adresse der Hosts"
 
 msgid "IP address"
 msgstr "IP-Adresse"
+
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Host-Adressen (IPv4/IPv6)"
 
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
@@ -37486,9 +37409,6 @@ msgstr "Spuren"
 msgid "Language"
 msgstr "Sprache"
 
-msgid "Large"
-msgstr "Groß"
-
 msgid "Large pool size"
 msgstr "Umfangreiche Poolgröße"
 
@@ -38706,9 +38626,6 @@ msgstr ""
 msgid "Limit number of processed search results"
 msgstr "Anzahl der verarbeiteten Suchergebnisse begrenzen"
 
-msgid "Limit objects"
-msgstr "Objekte begrenzen"
-
 msgid "Limit of meta data"
 msgstr "Limitierung von Metadaten"
 
@@ -38759,9 +38676,6 @@ msgstr "Die Anzahl der Zeilen in Ansichten begrenzen"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitierung der maximalen Zahl von Zeilen in Tabellen"
-
-msgid "Limit to"
-msgstr "Begrenzen auf"
 
 msgid "Limit width"
 msgstr "Breite begrenzen"
@@ -41564,9 +41478,6 @@ msgstr "Maximale Entfernung (TTL) zum Gateway"
 
 msgid "Maximum expected run time for heart beat packet"
 msgstr "Maximale erwartete Laufzeit des Lebenszeichens"
-
-msgid "Maximum hexagon size"
-msgstr "Maximale Sechseckgröße"
 
 #, python-format
 msgid "Maximum image size: %dx%dpx"
@@ -45080,9 +44991,6 @@ msgstr "Keine Hosts zu erkennen"
 msgid "No hosts/services found."
 msgstr "Keine Hosts/Services gefunden."
 
-msgid "No influence on element display"
-msgstr "Kein Einfluss auf Anzeige des Elements"
-
 msgid "No information available"
 msgstr "Keine Informationen vorhanden"
 
@@ -46704,9 +46612,6 @@ msgstr ""
 msgid "Number of nodes not in target state"
 msgstr "Anzahl der Knoten, die sich nicht im Zielzustand befinden"
 
-msgid "Number of notifications as text"
-msgstr "Anzahl der Benachrichtigungen als Text"
-
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "Anzahl von Benachrichtigungen übersteigt erlaubte Höchstzahl"
 
@@ -47942,9 +47847,6 @@ msgid ""
 msgstr ""
 "Es werden nur Services gefunden, die einem dieser Pattern entsprechen. Wenn "
 "kein Pattern definiert ist, werden alle Services eingeschlossen."
-
-msgid "Only show current value"
-msgstr "Nur aktuellen Wert anzeigen"
 
 msgid "Only show hosts and services the user is a contact for"
 msgstr "Nur Hosts/Services zeigen, für die Benutzer Kontakt ist"
@@ -53555,9 +53457,6 @@ msgstr ""
 "RRA-Eintrag nummer %d: Die Anzahl der Schritte muss größer sein, als die vom "
 "vorhergehenden Eintrag."
 
-msgid "RRD consolidation"
-msgstr "RRD-Konsolidierung"
-
 msgid "RRD data aggregated"
 msgstr "Aggregierte RRD Daten"
 
@@ -53731,14 +53630,8 @@ msgstr "Zufallsgesteuertes Passwort"
 msgid "Range"
 msgstr "Bereich"
 
-msgid "Range limits"
-msgstr "Bereichsgrenzen"
-
 msgid "Range of values (min/max)"
 msgstr "Bereich der Werte (min/max)"
-
-msgid "Ranking order"
-msgstr "Rangfolge"
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack: Temperatur"
@@ -58278,14 +58171,6 @@ msgstr ""
 msgid "Select the parent folder"
 msgstr "Übergeordneten Ordner auswählen"
 
-msgid ""
-"Select the range in between which the values are displayed. This only "
-"affects the dashlet if 'Show historic values' is selected"
-msgstr ""
-"Wählen Sie den Bereich der Werte aus, die angezeigt werden sollen. Wenn "
-"\"Historische Werte anzeigen\" ausgewählt ist, wirkt sich dies nur auf das "
-"Dashlet aus"
-
 #, fuzzy
 msgid "Select the relay that should monitor this host."
 msgstr "Bestimmen Sie die Instanz, die diesen Host überwachen soll."
@@ -58413,19 +58298,8 @@ msgstr "Ausgewählte Optionen"
 msgid "Selected sections will not be executed by the agent."
 msgstr "Ausgewählte Sektionen werden nicht vom Agenten ausgeführt."
 
-msgid "Selected state"
-msgstr "Ausgewählter Zustand"
-
 msgid "Selected style configuration"
 msgstr "Gewählte Stilkonfiguration"
-
-#, python-format
-msgid ""
-"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
-"large screens, e.g. on a wall monitor."
-msgstr ""
-"Die Auswahl der '%s'-Option 'Groß' kann nützlich sein, wenn die '%s' auf "
-"großen Bildschirmen angezeigt werden soll, z. B. auf einem Wandmonitor."
 
 #, python-format
 msgid ""
@@ -58615,9 +58489,6 @@ msgstr "Sensoren"
 
 msgid "Sent"
 msgstr "Gesendet"
-
-msgid "Sent on"
-msgstr "Gesendet am"
 
 #, fuzzy, python-format
 msgid "Sent on: %s, expires on: %s"
@@ -59783,14 +59654,6 @@ msgstr ""
 msgid "Set the organization of the InfluxDB server."
 msgstr "Legen Sie die Organisation des InfluxDB-Servers fest."
 
-msgid ""
-"Set the range in which data is displayed. Having selected a metric before "
-"auto selects the matching unit of the metric."
-msgstr ""
-"Legen Sie den Bereich fest, in dem die Daten angezeigt werden. Wenn eine "
-"Metrik ausgewählt wurde, wird die passende Einheit der Metrik automatisch "
-"ausgewählt."
-
 #, fuzzy, python-format
 msgid ""
 "Set the temperature unit used for graphs and Perf-O-Meters. The default unit "
@@ -60179,18 +60042,6 @@ msgstr "\"Failed Actions\" anzeigen und warnen falls welche vorhanden sind"
 msgid "Show %s"
 msgstr "%s anzeigen"
 
-#, python-format
-msgid "Show %ss for hosts"
-msgstr "Zeige %ss für Hosts"
-
-#, python-format
-msgid "Show %ss for hosts and services"
-msgstr "Zeige %ss der Hosts und Services"
-
-#, python-format
-msgid "Show %ss for services"
-msgstr "Zeige %ss für Services"
-
 msgid "Show / hide notification context"
 msgstr "Benachrichtigungskontext zeigen / verstecken"
 
@@ -60210,12 +60061,6 @@ msgstr "Zeige Manpage"
 
 msgid "Show Setup icon"
 msgstr "Setup-Symbol anzeigen"
-
-msgid "Show a colored status label"
-msgstr "Ein farbiges Status-Label anzeigen"
-
-msgid "Show a colored status label and color the metric background"
-msgstr "Farbiges Status-Label anzeigen und Hintergrund der Metrik einfärben"
 
 msgid "Show a login message"
 msgstr "Eine Login-Meldung anzeigen"
@@ -60268,9 +60113,6 @@ msgstr "Bandbreite anzeigen"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr "Bandbreite anzeigen (nur mit deaktiviertem Cache nutzen)"
-
-msgid "Show bar visualization"
-msgstr "Balkenansicht anzeigen"
 
 #, fuzzy
 msgid "Show bulk notifications"
@@ -60352,15 +60194,8 @@ msgstr "Schwerkraftkonfiguration anzeigen"
 msgid "Show hint in the 'User' menu"
 msgstr "Hinweis im Menü \"Benutzer\" anzeigen"
 
-msgid "Show historic values"
-msgstr "Historische Werte anzeigen"
-
 msgid "Show host labels"
 msgstr "Host-Labels anzeigen"
-
-#, fuzzy
-msgid "Show host state"
-msgstr "Host-Status anzeigen"
 
 msgid "Show host tags"
 msgstr "Host-Merkmale anzeigen"
@@ -60405,9 +60240,6 @@ msgstr "Nur End-Benutzer-Benachrichtigungen anzeigen"
 
 msgid "Show just preliminary notifications"
 msgstr "Nur vorläufige Benachrichtigungen anzeigen"
-
-msgid "Show label for"
-msgstr "Label anzeigen für"
 
 msgid "Show last log message"
 msgstr "Letzte Log-Meldung anzeigen"
@@ -60508,13 +60340,6 @@ msgstr "Zeige separates Ergebnis für jede SLA Periode"
 msgid "Show service labels"
 msgstr "Service-Labels anzeigen"
 
-msgid "Show service name"
-msgstr "Service-Name anzeigen"
-
-#, fuzzy
-msgid "Show service state"
-msgstr "Service-Status anzeigen"
-
 msgid "Show services"
 msgstr "Services anzeigen"
 
@@ -60533,13 +60358,6 @@ msgstr "Zeige reservierten Platz für <tt>root</tt>-User"
 
 msgid "Show stale hosts and services"
 msgstr "Alle veralteten Hosts und Services zeigen"
-
-msgid "Show state of"
-msgstr "Zeige Zustand von"
-
-#, python-format
-msgid "Show summary for not %s states"
-msgstr "Zusammenfassung für nicht %s Zustände anzeigen"
 
 msgid ""
 "Show the column for stale host and service checks in the tactical overview "
@@ -60577,9 +60395,6 @@ msgstr "Zeige die vertikale Achse"
 
 msgid "Show the header of the dashboard with the configured title."
 msgstr "Zeigt die Header des Dashboards mit dem konfigurierten Titel an."
-
-msgid "Show the limits of values displayed"
-msgstr "Zeige die Grenzen der angezeigten Werte"
 
 msgid "Show the list of hosts in this category"
 msgstr "Liste der Hosts in dieser Kategorie anzeigen"
@@ -67525,9 +67340,6 @@ msgstr ""
 "Gerätetyps. Für eine Interpretation der Daten müssen Sie das Gerät manuell "
 "auswählen."
 
-msgid "The element does not exist."
-msgstr "Das Element ist nicht vorhanden."
-
 msgid ""
 "The email address is optional and is needed if the user is a monitoring "
 "contact and receives notifications via email."
@@ -69736,9 +69548,6 @@ msgstr "Die angeforderte Verbindung existiert nicht."
 
 msgid "The requested dashboard does not exist."
 msgstr "Das angefragte Dashboard existiert nicht."
-
-msgid "The requested element type does not exist."
-msgstr "Der angeforderte Elementtyp existiert nicht."
 
 msgid "The requested global setting does not exist."
 msgstr "Die angeforderte globale Einstellung ist nicht vorhanden."
@@ -72451,13 +72260,6 @@ msgstr ""
 msgid "This is a top-level rule. Show rule tree"
 msgstr ""
 "Dies ist eine Regel, die an der Spitze des Baums steht. Anzeigen der Regel"
-
-msgid ""
-"This is caused by the service check commands with an example host and "
-"service in the following table."
-msgstr ""
-"Dies wird durch die Service-Check-Kommandos mit einem Beispiel-Host und "
-"-Service in der folgenden Tabelle verursacht."
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom agent "
@@ -76528,9 +76330,6 @@ msgstr "Zeitraum aus Berichtskontext"
 msgid "Time range synchronization"
 msgstr "Zeitraumsynchronisation"
 
-msgid "Time range to consider"
-msgstr "Zu berücksichtigender Zeitraum"
-
 msgid ""
 "Time range to continue to consider outdated OpenTelemetry data as valid."
 msgstr ""
@@ -77241,9 +77040,6 @@ msgstr "Tooltipp"
 
 msgid "Top"
 msgstr "Oben"
-
-msgid "Top (highest) N"
-msgstr "Top (höchste) N"
 
 #, fuzzy
 msgid "Top 10: CPU utilization"
@@ -83928,9 +83724,6 @@ msgstr "Fehlgeschlagene Benachrichtigungen ansehen"
 msgid "View layout"
 msgstr "Ansicht Layout"
 
-msgid "View name"
-msgstr "Name anzeigen"
-
 msgid "View permitted maps"
 msgstr "Erlaubte Karten anzeigen"
 
@@ -87202,16 +86995,6 @@ msgstr ""
 "Upgrade Ihres Plans durchführen."
 
 msgid ""
-"You can enter a text here that will be displayed in the element when viewing "
-"the dashboard. It is also possible to insert a limited set of HTML tags, "
-"some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
-msgstr ""
-"Sie können hier einen Text eingeben, der in dem Element angezeigt wird, wenn "
-"das Dashboard angezeigt wird. Es ist auch möglich, einen begrenzten Satz von "
-"HTML-Merkmalen einzufügen, einige davon sind: h2, b, tt, i, br, pre, a, sup, "
-"p, li, ul und ol."
-
-msgid ""
 "You can have these tags automatically added if certain primary tags are set."
 msgstr ""
 "Diese Merkmale können automatisch ergänzt werden, wenn bestimmte primäre "
@@ -87766,14 +87549,6 @@ msgstr ""
 "nach groß sortiert. Das Aktionmenü hat einen Sortierungsindex von <tt>10</"
 "tt>, das Graphensymbol einen Sortierungsindex von <tt>20</tt>. Alle anderen "
 "voreingestellten Icons haben einen Sortierungsindex von <tt>30</tt>."
-
-msgid ""
-"You can use these examples to identify hosts and services that must be "
-"filtered out in the top list configuration to resolve the problem."
-msgstr ""
-"Sie können diese Beispiele verwenden, um Hosts und Services zu "
-"identifizieren, die in der Konfiguration der Topliste herausgefiltert werden "
-"müssen, um das Problem zu lösen."
 
 msgid ""
 "You can use these options to tune the way packages are baked for your hosts "
@@ -89161,9 +88936,6 @@ msgstr "alle Log-Dateien auf allen Hosts"
 msgid "all special agents"
 msgstr "alle Spezialagenten"
 
-msgid "all states"
-msgstr "alle Zustände"
-
 msgid "all users"
 msgstr "Alle Benutzer"
 
@@ -89641,9 +89413,6 @@ msgstr "aktiviert"
 
 msgid "entries"
 msgstr "Einträge"
-
-msgid "entries (max. 50)"
-msgstr "Einträge (max. 50)"
 
 msgid "entry number"
 msgstr "Eintragsnummer"
@@ -90392,13 +90161,6 @@ msgstr "keines von"
 
 msgid "normal connection"
 msgstr "Normale Verbindung"
-
-#, python-format
-msgid "not %s states"
-msgstr "nicht %s Zustände"
-
-msgid "not OK states"
-msgstr "nicht OK-Zustände"
 
 msgid "not available"
 msgstr "nicht verfügbar"
@@ -91513,6 +91275,12 @@ msgstr ""
 msgid "Loading Top list content"
 msgstr "Lädt Inhalt der Topliste"
 
+msgid "Sent on"
+msgstr "Gesendet am"
+
+msgid "Expires on"
+msgstr "Läuft ab am"
+
 msgid "Dashboard filter"
 msgstr "Dashboard-Filter"
 
@@ -91776,8 +91544,13 @@ msgstr "Sichtbare Informationen"
 msgid "Loading options…"
 msgstr "Lädt Optionen…"
 
-msgid "Loading views..."
-msgstr "Ansichten werden geladen..."
+#, fuzzy
+msgid "Error loading views: "
+msgstr "Fehler in Ansicht: %s"
+
+#, fuzzy
+msgid "Error loading data sources: "
+msgstr "Datenquellen werden geladen..."
 
 msgid "Select view"
 msgstr "Ansicht auswählen"
@@ -91938,6 +91711,12 @@ msgstr ""
 
 msgid "Choose how to display your data"
 msgstr "Wählen Sie, wie Sie Ihre Daten anzeigen wollen"
+
+msgid "Automatically adjusted to available data"
+msgstr "Automatisch auf verfügbare Daten angepasst"
+
+msgid "Fixed range"
+msgstr "Fester Bereich"
 
 msgid "Add optional filters to refine this widget"
 msgstr "Zusätzliche Filter hinzufügen, um dieses Widget zu verfeinern"
@@ -92458,6 +92237,12 @@ msgstr "Nicht-UP-Zustände einfärben"
 msgid "Show summary for not UP states"
 msgstr "Zusammenfassung für Nicht-UP-Zustände anzeigen"
 
+msgid "Selected state"
+msgstr "Ausgewählter Zustand"
+
+msgid "Show state of"
+msgstr "Zeige Zustand von"
+
 msgid "Host or sites, depending on context"
 msgstr "Host oder Instanzen, kontextabhängig"
 
@@ -92466,6 +92251,9 @@ msgstr "Sechseckgröße"
 
 msgid "Small"
 msgstr "Klein"
+
+msgid "Large"
+msgstr "Groß"
 
 msgid "Loading widget visualization settings..."
 msgstr "Visualisierungseinstellungen für das Widget werden geladen..."
@@ -92514,6 +92302,15 @@ msgstr "Sie müssen eine Option auswählen"
 msgid "Service graph"
 msgstr "Service-Graph"
 
+msgid "Data range"
+msgstr "Datenbereich"
+
+msgid "Only show current value"
+msgstr "Nur aktuellen Wert anzeigen"
+
+msgid "Show historic values"
+msgstr "Historische Werte anzeigen"
+
 msgid "Fixed data range"
 msgstr "Fester Datenbereich"
 
@@ -92523,11 +92320,38 @@ msgstr "Service-Status"
 msgid "Show colored status label"
 msgstr "Farbiges Status-Label anzeigen"
 
+msgid "Show label for"
+msgstr "Label anzeigen für"
+
+msgid "all states"
+msgstr "alle Zustände"
+
+msgid "not OK states"
+msgstr "nicht OK-Zustände"
+
 msgid "Show colored metric background"
 msgstr "Farbigen Metrik-Hintergrund anzeigen"
 
+msgid "Range limits"
+msgstr "Bereichsgrenzen"
+
+msgid "Show the limits of values displayed"
+msgstr "Zeige die Grenzen der angezeigten Werte"
+
+msgid "Don't show information of limits"
+msgstr "Informationen über Limits nicht anzeigen"
+
 msgid "Show service status"
 msgstr "Service-Status anzeigen"
+
+msgid "Color of the scattered dots"
+msgstr "Farbe für die vereinzelten Punkte"
+
+msgid "Color of the average"
+msgstr "Farbe für den Durchschnitt"
+
+msgid "Color of the median"
+msgstr "Farbe für den Median"
 
 msgid "Additional scatterplot options"
 msgstr "Zusätzliche Optionen des Streudiagramms"
@@ -92541,8 +92365,23 @@ msgstr "Wert außerhalb des Bereichs"
 msgid "Rankin order"
 msgstr "Rangfolge"
 
+msgid "Top (highest) N"
+msgstr "Top (höchste) N"
+
+msgid "Bottom (lowest) N"
+msgstr "Bottom (niedrigste) N"
+
+msgid "Limit to"
+msgstr "Begrenzen auf"
+
 msgid "entries (max. %{max_entries})"
 msgstr "Einträge (max. %{max_entries})"
+
+msgid "Show service name"
+msgstr "Service-Name anzeigen"
+
+msgid "Show bar visualization"
+msgstr "Balkenansicht anzeigen"
 
 msgid "Enter URL to embed"
 msgstr "URL zum Einbetten eingeben"
@@ -92581,6 +92420,9 @@ msgstr "Link zur Ansicht"
 msgid "Datasource"
 msgstr "Datenquelle"
 
+msgid "View name"
+msgstr "Name anzeigen"
+
 msgid "Specific object type"
 msgstr "Spezifischer Objekttyp"
 
@@ -92613,6 +92455,10 @@ msgstr "Neue Ansicht basierend auf: %{datasource}"
 
 msgid "Copy existing view: %{viewName}"
 msgstr "Vorhandene Ansicht kopieren: %{viewName}"
+
+#, fuzzy
+msgid "Edit widget properties"
+msgstr "Eigenschaften bearbeiten"
 
 #, fuzzy
 msgid "Add widget to dashboard"
@@ -94047,6 +93893,184 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Background in status color and label"
+#~ msgstr "Hintergrund in Statusfarbe und -label"
+
+#~ msgid "Choose the sidebar element you would like to show."
+#~ msgstr "Wählen Sie das Seitenleistenelement, das Sie anzeigen wollen."
+
+#~ msgid ""
+#~ "Choose the view you would like to show. Please note that, depending on "
+#~ "the, logged in user viewing this dashboard, the view being displayed may "
+#~ "differ. For example when another user has created a view with the same "
+#~ "name. In case a user is not permitted to see a view, an error message "
+#~ "will be displayed."
+#~ msgstr ""
+#~ "Wählen Sie die Ansicht, die Sie anzeigen möchten. Bitte beachten Sie, "
+#~ "dass je nach dem angemeldeten Benutzer, der dieses Dashboard betrachtet, "
+#~ "die angezeigte Ansicht unterschiedlich sein kann. Zum Beispiel, wenn ein "
+#~ "anderer Benutzer eine Ansicht mit demselben Namen erstellt hat. Falls ein "
+#~ "Benutzer nicht berechtigt ist, eine Ansicht zu sehen, wird eine "
+#~ "Fehlermeldung angezeigt."
+
+#~ msgid "Clear failed notifications"
+#~ msgstr "Fehlgeschlagene Benachrichtigungen löschen"
+
+#~ msgid "Colorize"
+#~ msgstr "Färben"
+
+#~ msgid "Display axis labels for the selected/automatic data range"
+#~ msgstr ""
+#~ "Achsenbeschriftungen für den ausgewählten/automatischen Datenbereich "
+#~ "anzeigen"
+
+#~ msgid "Display range: Minimum must be strictly less than maximum"
+#~ msgstr ""
+#~ "Anzeigebereich: Minimum muss grundsätzlich weniger sein als das Maximum"
+
+#, fuzzy
+#~ msgid "Do not show the service state"
+#~ msgstr "Den Service-Status nicht anzeigen"
+
+#~ msgid "Don't show Summary"
+#~ msgstr "Zusammenfassung nicht anzeigen"
+
+#~ msgid ""
+#~ "Due to a limitation in how Checkmk handles metrics internally, the "
+#~ "results contain conflicting metrics and this top list may be incorrect or "
+#~ "incomplete."
+#~ msgstr ""
+#~ "Aufgrund einer Einschränkung in der internen Handhabung von Metriken "
+#~ "durch Checkmk enthalten die Ergebnisse widersprüchliche Metriken und "
+#~ "diese Topliste kann falsch oder unvollständig sein."
+
+#~ msgid "Host name resource attribute"
+#~ msgstr "Ressourcen-Attribut des Host-Namens"
+
+#, python-format
+#~ msgid "Host or service %ss"
+#~ msgstr "Host oder Service %ss"
+
+#~ msgid "Hosts or sites, depending on context"
+#~ msgstr "Hosts oder Instanzen, kontextabhängig"
+
+#~ msgid "Limit objects"
+#~ msgstr "Objekte begrenzen"
+
+#~ msgid "Maximum hexagon size"
+#~ msgstr "Maximale Sechseckgröße"
+
+#~ msgid "No influence on element display"
+#~ msgstr "Kein Einfluss auf Anzeige des Elements"
+
+#~ msgid "Number of notifications as text"
+#~ msgstr "Anzahl der Benachrichtigungen als Text"
+
+#~ msgid "RRD consolidation"
+#~ msgstr "RRD-Konsolidierung"
+
+#~ msgid "Ranking order"
+#~ msgstr "Rangfolge"
+
+#~ msgid ""
+#~ "Select the range in between which the values are displayed. This only "
+#~ "affects the dashlet if 'Show historic values' is selected"
+#~ msgstr ""
+#~ "Wählen Sie den Bereich der Werte aus, die angezeigt werden sollen. Wenn "
+#~ "\"Historische Werte anzeigen\" ausgewählt ist, wirkt sich dies nur auf "
+#~ "das Dashlet aus"
+
+#, python-format
+#~ msgid ""
+#~ "Selecting the '%s' option 'Large' can be useful when displaying the '%s' "
+#~ "on large screens, e.g. on a wall monitor."
+#~ msgstr ""
+#~ "Die Auswahl der '%s'-Option 'Groß' kann nützlich sein, wenn die '%s' auf "
+#~ "großen Bildschirmen angezeigt werden soll, z. B. auf einem Wandmonitor."
+
+#~ msgid ""
+#~ "Set the range in which data is displayed. Having selected a metric before "
+#~ "auto selects the matching unit of the metric."
+#~ msgstr ""
+#~ "Legen Sie den Bereich fest, in dem die Daten angezeigt werden. Wenn eine "
+#~ "Metrik ausgewählt wurde, wird die passende Einheit der Metrik automatisch "
+#~ "ausgewählt."
+
+#, python-format
+#~ msgid "Show %ss for hosts"
+#~ msgstr "Zeige %ss für Hosts"
+
+#, python-format
+#~ msgid "Show %ss for hosts and services"
+#~ msgstr "Zeige %ss der Hosts und Services"
+
+#, python-format
+#~ msgid "Show %ss for services"
+#~ msgstr "Zeige %ss für Services"
+
+#~ msgid "Show a colored status label"
+#~ msgstr "Ein farbiges Status-Label anzeigen"
+
+#~ msgid "Show a colored status label and color the metric background"
+#~ msgstr "Farbiges Status-Label anzeigen und Hintergrund der Metrik einfärben"
+
+#, fuzzy
+#~ msgid "Show host state"
+#~ msgstr "Host-Status anzeigen"
+
+#, fuzzy
+#~ msgid "Show service state"
+#~ msgstr "Service-Status anzeigen"
+
+#, python-format
+#~ msgid "Show summary for not %s states"
+#~ msgstr "Zusammenfassung für nicht %s Zustände anzeigen"
+
+#~ msgid "The element does not exist."
+#~ msgstr "Das Element ist nicht vorhanden."
+
+#~ msgid "The requested element type does not exist."
+#~ msgstr "Der angeforderte Elementtyp existiert nicht."
+
+#~ msgid ""
+#~ "This is caused by the service check commands with an example host and "
+#~ "service in the following table."
+#~ msgstr ""
+#~ "Dies wird durch die Service-Check-Kommandos mit einem Beispiel-Host und "
+#~ "-Service in der folgenden Tabelle verursacht."
+
+#~ msgid "Time range to consider"
+#~ msgstr "Zu berücksichtigender Zeitraum"
+
+#~ msgid ""
+#~ "You can enter a text here that will be displayed in the element when "
+#~ "viewing the dashboard. It is also possible to insert a limited set of "
+#~ "HTML tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and "
+#~ "ol."
+#~ msgstr ""
+#~ "Sie können hier einen Text eingeben, der in dem Element angezeigt wird, "
+#~ "wenn das Dashboard angezeigt wird. Es ist auch möglich, einen begrenzten "
+#~ "Satz von HTML-Merkmalen einzufügen, einige davon sind: h2, b, tt, i, br, "
+#~ "pre, a, sup, p, li, ul und ol."
+
+#~ msgid ""
+#~ "You can use these examples to identify hosts and services that must be "
+#~ "filtered out in the top list configuration to resolve the problem."
+#~ msgstr ""
+#~ "Sie können diese Beispiele verwenden, um Hosts und Services zu "
+#~ "identifizieren, die in der Konfiguration der Topliste herausgefiltert "
+#~ "werden müssen, um das Problem zu lösen."
+
+#~ msgid "entries (max. 50)"
+#~ msgstr "Einträge (max. 50)"
+
+#, python-format
+#~ msgid "not %s states"
+#~ msgstr "nicht %s Zustände"
+
+#~ msgid "Loading views..."
+#~ msgstr "Ansichten werden geladen..."
 
 #~ msgid "Analyze the utilization of your IT infrastructure data center."
 #~ msgstr ""

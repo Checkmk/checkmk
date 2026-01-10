@@ -7836,6 +7836,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "At least one custom query is required."
+msgstr "Staat wanneer bestand ontbreekt"
+
+#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Staat wanneer bestand ontbreekt"
 
@@ -8277,9 +8281,6 @@ msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "Automatisch wijzigingen activeren"
-
-msgid "Automatically adjusted to available data"
-msgstr "Automatisch aangepast aan beschikbare gegevens"
 
 msgid "Automatically create monitoring agents"
 msgstr "Automatisch aanmaken van bewakingsagenten"
@@ -9842,9 +9843,6 @@ msgstr "Achterpoort"
 msgid "Backends"
 msgstr "Backends"
 
-msgid "Background in status color and label"
-msgstr "Achtergrond in statuskleur en label"
-
 msgid "Background job acknowledged"
 msgstr "Achtergrond baan erkend"
 
@@ -10355,9 +10353,6 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "Bodem"
-
-msgid "Bottom (lowest) N"
-msgstr ""
 
 #, fuzzy
 msgid "Bottom level suite"
@@ -14165,23 +14160,8 @@ msgstr ""
 "keuzes bepalen welke en hoeveel pakketten zullen worden verzonden van de "
 "agent naar de Checkmk server."
 
-msgid "Choose the sidebar element you would like to show."
-msgstr "Kies het zijbalk element dat u wilt tonen."
-
 msgid "Choose the type of action to perform"
 msgstr "Kies het type uit te voeren actie"
-
-msgid ""
-"Choose the view you would like to show. Please note that, depending on the, "
-"logged in user viewing this dashboard, the view being displayed may differ. "
-"For example when another user has created a view with the same name. In case "
-"a user is not permitted to see a view, an error message will be displayed."
-msgstr ""
-"Kies de weergave die u wilt tonen. Merk op dat, afhankelijk van de ingelogde "
-"gebruiker die dit dashboard bekijkt, het uitzicht dat wordt getoond kan "
-"verschillen. Bijvoorbeeld als een andere gebruiker een weergave met dezelfde "
-"naam heeft gemaakt. In het geval dat een gebruiker een view niet mag zien, "
-"zal er een foutmelding verschijnen."
 
 msgid ""
 "Choose this option if you need to have the provided document within a "
@@ -14509,9 +14489,6 @@ msgstr "Berichten opruimen"
 
 msgid "Clear & Delete"
 msgstr "Wis & Wis"
-
-msgid "Clear failed notifications"
-msgstr "Verwijder mislukte meldingen"
 
 msgid "Clear log"
 msgstr "Logboek wissen"
@@ -14991,23 +14968,11 @@ msgstr "Kleur A4"
 msgid "Color gradient"
 msgstr "Kleurverloop"
 
-msgid "Color of the average"
-msgstr "Kleur van het gemiddelde"
-
-msgid "Color of the median"
-msgstr "Kleur van de mediaan"
-
-msgid "Color of the scattered dots"
-msgstr "Kleur van de verspreide stippen"
-
 msgid "Color theme"
 msgstr "Kleurenthema"
 
 msgid "Coloring"
 msgstr "Kleurplaten"
-
-msgid "Colorize"
-msgstr "Colorize"
 
 msgid "Colorize background if host is down"
 msgstr "Kleur achtergrond als host down is"
@@ -15459,12 +15424,12 @@ msgid "Configuration"
 msgstr "Configuratie"
 
 #, fuzzy
-msgid "Configuration Activation"
-msgstr "Configuratie aansluiting"
-
-#, fuzzy
 msgid "Configuration Error"
 msgstr "Configuratiefout"
+
+#, fuzzy
+msgid "Configuration activation"
+msgstr "Configuratie aansluiting"
 
 #, fuzzy
 msgid "Configuration bundle ID"
@@ -19008,9 +18973,6 @@ msgstr "Verzonden gegevens"
 msgid "Data point attributes"
 msgstr "Gewijzigde attributen"
 
-msgid "Data range"
-msgstr "Gegevensbereik"
-
 msgid "Data read"
 msgstr "Gelezen gegevens"
 
@@ -21870,9 +21832,6 @@ msgstr ""
 msgid "Display average"
 msgstr "Gemiddelde tonen"
 
-msgid "Display axis labels for the selected/automatic data range"
-msgstr "Toon aslabels voor het geselecteerde/automatische gegevensbereik"
-
 msgid "Display dashboard title"
 msgstr "Titel dashboard weergeven"
 
@@ -21920,9 +21879,6 @@ msgstr "Toon alleen een samenvatting van alle Datafiles"
 #, fuzzy
 msgid "Display only a summary of all transactionlogs"
 msgstr "Alleen een samenvatting van alle transactielogboeken weergeven"
-
-msgid "Display range: Minimum must be strictly less than maximum"
-msgstr "Weergavebereik: Minimum moet strikt kleiner zijn dan maximum"
 
 msgid "Display sidecar details on"
 msgstr "Geef de details van het zijspan weer op"
@@ -22691,10 +22647,6 @@ msgstr "Geen samenvattingsregel tonen"
 msgid "Do not show again"
 msgstr "Titel niet tonen"
 
-#, fuzzy
-msgid "Do not show the service state"
-msgstr "Laat de dienst status niet zien"
-
 msgid "Do not status data inventory"
 msgstr "Geen status gegevensinventaris"
 
@@ -22889,9 +22841,6 @@ msgstr "Toon geen koptekst"
 msgid "Don't show"
 msgstr "Niet laten zien Samenvatting"
 
-msgid "Don't show Summary"
-msgstr "Niet laten zien Samenvatting"
-
 msgid "Don't show and check"
 msgstr "Laat je niet zien en controleer"
 
@@ -22900,9 +22849,6 @@ msgstr "Toon de grafiektitel niet"
 
 msgid "Don't show home port info"
 msgstr "Toon geen thuishaven info"
-
-msgid "Don't show information of limits"
-msgstr "Toon geen informatie over limieten"
 
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr ""
@@ -23179,11 +23125,6 @@ msgstr "Verlaten werkaanvragen"
 
 msgid "Dt."
 msgstr "Dt."
-
-msgid ""
-"Due to a limitation in how Checkmk handles metrics internally, the results "
-"contain conflicting metrics and this top list may be incorrect or incomplete."
-msgstr ""
 
 msgid ""
 "Due to security reasons the plug-in being executed as admin will check "
@@ -26063,10 +26004,6 @@ msgid "Expires %s"
 msgstr "Verloopt op"
 
 #, fuzzy
-msgid "Expires on"
-msgstr "Verloopt op"
-
-#, fuzzy
 msgid "Explain with AI"
 msgstr "Zoek verder"
 
@@ -27558,9 +27495,6 @@ msgstr "Grenzen toevoegen"
 
 msgid "Fixed page elements"
 msgstr "Vaste pagina elementen"
-
-msgid "Fixed range"
-msgstr "Vast bereik"
 
 msgid "Fixed rate"
 msgstr "Vaste rente"
@@ -32588,10 +32522,6 @@ msgid "Host name or alias (regex)"
 msgstr "Hostnaam of alias"
 
 #, fuzzy
-msgid "Host name resource attribute"
-msgstr "Rolkenmerk"
-
-#, fuzzy
 msgid "Host name template"
 msgstr "Sjabloon hostnaam"
 
@@ -32659,10 +32589,6 @@ msgstr "Host meldingen ingeschakeld"
 
 msgid "Host or Disk"
 msgstr "Gastheer of Schijf"
-
-#, python-format
-msgid "Host or service %ss"
-msgstr "Host of dienst %ss"
 
 msgid ""
 "Host or service must be in the following service level to get notification"
@@ -32984,9 +32910,6 @@ msgstr "Hosts in deze map"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hosts die geen Inline-SNMP gebruiken"
-
-msgid "Hosts or sites, depending on context"
-msgstr ""
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Hosts die de laatste 24 uur contact met ons hebben opgenomen"
@@ -33452,6 +33375,10 @@ msgstr "IP-adres van gastheer"
 
 msgid "IP address"
 msgstr "IP-adres"
+
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Hostadressen (IPv4/IPv6)"
 
 msgid "IP address family"
 msgstr "IP-adresfamilie"
@@ -38939,10 +38866,6 @@ msgstr "Lanen"
 msgid "Language"
 msgstr "Taal"
 
-#, fuzzy
-msgid "Large"
-msgstr "Doel"
-
 msgid "Large pool size"
 msgstr "Groot zwembad"
 
@@ -40222,9 +40145,6 @@ msgstr "Grafieken per melding (standaard: 5)"
 msgid "Limit number of processed search results"
 msgstr "Beperk het aantal verwerkte zoekresultaten"
 
-msgid "Limit objects"
-msgstr "Objecten beperken"
-
 msgid "Limit of meta data"
 msgstr "Beperking van metagegevens"
 
@@ -40277,10 +40197,6 @@ msgstr "Het aantal rijen in View-tabellen beperken"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Het aantal rijen in tabellen beperken"
-
-#, fuzzy
-msgid "Limit to"
-msgstr "Limiet"
 
 msgid "Limit width"
 msgstr "Grensbreedte"
@@ -43168,10 +43084,6 @@ msgstr "Maximale afstand (TTL) tot gateway"
 
 msgid "Maximum expected run time for heart beat packet"
 msgstr "Maximaal verwachte looptijd voor hartslagpakket"
-
-#, fuzzy
-msgid "Maximum hexagon size"
-msgstr "Maximale grootte"
 
 #, python-format
 msgid "Maximum image size: %dx%dpx"
@@ -46904,9 +46816,6 @@ msgstr "Geen hosts ontdekt"
 msgid "No hosts/services found."
 msgstr "Geen hosts/services gevonden."
 
-msgid "No influence on element display"
-msgstr "Geen invloed op elementweergave"
-
 msgid "No information available"
 msgstr "Geen informatie beschikbaar"
 
@@ -48578,9 +48487,6 @@ msgstr ""
 msgid "Number of nodes not in target state"
 msgstr "Aantal knooppunten gereed"
 
-msgid "Number of notifications as text"
-msgstr "Aantal meldingen als tekst"
-
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "Aantal meldingen overschrijdt het maximaal toegestane aantal"
 
@@ -49871,9 +49777,6 @@ msgid ""
 "Only services matching one of these patterns will be discovered. If no "
 "pattern is defined, all services are included."
 msgstr ""
-
-msgid "Only show current value"
-msgstr "Toon alleen huidige waarde"
 
 msgid "Only show hosts and services the user is a contact for"
 msgstr "Toon alleen hosts en diensten waar de gebruiker een contact voor is"
@@ -55898,9 +55801,6 @@ msgstr ""
 "RRA item nummer %d: het aantal stappen moet groter zijn dan dat van het "
 "vorige item."
 
-msgid "RRD consolidation"
-msgstr "RRD-consolidatie"
-
 msgid "RRD data aggregated"
 msgstr "Samengevoegde RRD-gegevens"
 
@@ -56088,15 +55988,8 @@ msgstr "Willekeurig wachtwoord"
 msgid "Range"
 msgstr "bereik"
 
-msgid "Range limits"
-msgstr "Bereik grenzen"
-
 msgid "Range of values (min/max)"
 msgstr "Bereik van de waarden (min/max)"
-
-#, fuzzy
-msgid "Ranking order"
-msgstr "Waarschuwing indien meer dan"
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack: Temperatuur"
@@ -60835,13 +60728,6 @@ msgstr ""
 msgid "Select the parent folder"
 msgstr "(selecteer doel map)"
 
-msgid ""
-"Select the range in between which the values are displayed. This only "
-"affects the dashlet if 'Show historic values' is selected"
-msgstr ""
-"Selecteer het bereik waartussen de waarden worden weergegeven. Dit heeft "
-"alleen invloed op het streepje als 'Toon historische waarden' is geselecteerd"
-
 #, fuzzy
 msgid "Select the relay that should monitor this host."
 msgstr "Specificeer de site die deze host moet monitoren."
@@ -60957,18 +60843,9 @@ msgstr "Afgewezen verbindingen"
 msgid "Selected sections will not be executed by the agent."
 msgstr "Geselecteerde secties zullen niet worden uitgevoerd door de agent."
 
-msgid "Selected state"
-msgstr "Geselecteerde staat"
-
 #, fuzzy
 msgid "Selected style configuration"
 msgstr "Configuratie toestand toevoegen"
-
-#, python-format
-msgid ""
-"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
-"large screens, e.g. on a wall monitor."
-msgstr ""
 
 #, python-format
 msgid ""
@@ -61166,10 +61043,6 @@ msgid "Sensors"
 msgstr "Sensoren"
 
 msgid "Sent"
-msgstr "Verzonden"
-
-#, fuzzy
-msgid "Sent on"
 msgstr "Verzonden"
 
 #, fuzzy, python-format
@@ -62390,14 +62263,6 @@ msgstr ""
 msgid "Set the organization of the InfluxDB server."
 msgstr "Stel de organisatie van de InfluxDB server in."
 
-msgid ""
-"Set the range in which data is displayed. Having selected a metric before "
-"auto selects the matching unit of the metric."
-msgstr ""
-"Stel het bereik in waarin de gegevens worden weergegeven. Als een metriek "
-"eerder is geselecteerd, wordt automatisch de bijbehorende eenheid van de "
-"metriek geselecteerd."
-
 #, fuzzy, python-format
 msgid ""
 "Set the temperature unit used for graphs and Perf-O-Meters. The default unit "
@@ -62776,18 +62641,6 @@ msgstr "Toon \"Mislukte acties\" en waarschuw indien aanwezig"
 msgid "Show %s"
 msgstr "Toon %s"
 
-#, python-format
-msgid "Show %ss for hosts"
-msgstr "Toon %ss voor hosts"
-
-#, python-format
-msgid "Show %ss for hosts and services"
-msgstr "Toon %ss voor hosts en diensten"
-
-#, python-format
-msgid "Show %ss for services"
-msgstr "Toon %ss voor diensten"
-
 msgid "Show / hide notification context"
 msgstr "Toon / verberg melding context"
 
@@ -62807,12 +62660,6 @@ msgstr "Toon Manpage"
 
 msgid "Show Setup icon"
 msgstr "Toon Setup-pictogram"
-
-msgid "Show a colored status label"
-msgstr "Toon een gekleurd status label"
-
-msgid "Show a colored status label and color the metric background"
-msgstr "Toon een gekleurd status label en kleur de metrische achtergrond"
 
 msgid "Show a login message"
 msgstr "Een inlogbericht tonen"
@@ -62868,10 +62715,6 @@ msgstr "Bandbreedte"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr ""
-
-#, fuzzy
-msgid "Show bar visualization"
-msgstr "BI-visualisatie"
 
 #, fuzzy
 msgid "Show bulk notifications"
@@ -62957,16 +62800,9 @@ msgstr "Configuratie van de dienst"
 msgid "Show hint in the 'User' menu"
 msgstr "Toon hint in het \"Gebruiker\" menu"
 
-msgid "Show historic values"
-msgstr "Toon historische waarden"
-
 #, fuzzy
 msgid "Show host labels"
 msgstr "Toon in gastheertabellen"
-
-#, fuzzy
-msgid "Show host state"
-msgstr "Toon host status"
 
 #, fuzzy
 msgid "Show host tags"
@@ -63012,9 +62848,6 @@ msgstr "Toon alleen eindgebruiker-notificaties"
 
 msgid "Show just preliminary notifications"
 msgstr "Toon alleen voorlopige meldingen"
-
-msgid "Show label for"
-msgstr "Toon etiket voor"
 
 #, fuzzy
 msgid "Show last log message"
@@ -63121,14 +62954,6 @@ msgid "Show service labels"
 msgstr "Dienstetiketten"
 
 #, fuzzy
-msgid "Show service name"
-msgstr "De naam van de dienst"
-
-#, fuzzy
-msgid "Show service state"
-msgstr "Toon dienst status"
-
-#, fuzzy
 msgid "Show services"
 msgstr "Schaduwdiensten"
 
@@ -63147,14 +62972,6 @@ msgstr "Toon ruimte gereserveerd voor de <tt>root</tt> gebruiker"
 
 msgid "Show stale hosts and services"
 msgstr "Toon verouderde hosts en diensten"
-
-#, fuzzy
-msgid "Show state of"
-msgstr "Titel tonen"
-
-#, python-format
-msgid "Show summary for not %s states"
-msgstr "Toon samenvatting voor niet %s staten"
 
 #, fuzzy
 msgid ""
@@ -63193,9 +63010,6 @@ msgstr "Toon de grafiek verticale as"
 
 msgid "Show the header of the dashboard with the configured title."
 msgstr "Toon de koptekst van het dashboard met de geconfigureerde titel."
-
-msgid "Show the limits of values displayed"
-msgstr "Toon de grenzen van de weergegeven waarden"
 
 msgid "Show the list of hosts in this category"
 msgstr "Toon de lijst van hosts in deze categorie"
@@ -70206,9 +70020,6 @@ msgstr ""
 "manier wordt doorgegeven te ontdekken. Om interpretatie van de gegevens "
 "mogelijk te maken moet het apparaat handmatig worden gekozen."
 
-msgid "The element does not exist."
-msgstr "Het element bestaat niet."
-
 #, fuzzy
 msgid ""
 "The email address is optional and is needed if the user is a monitoring "
@@ -72328,9 +72139,6 @@ msgstr "De gevraagde verbinding bestaat niet."
 
 msgid "The requested dashboard does not exist."
 msgstr "Het gevraagde dashboard bestaat niet."
-
-msgid "The requested element type does not exist."
-msgstr "Het gevraagde elementtype bestaat niet."
 
 msgid "The requested global setting does not exist."
 msgstr "De gevraagde globale instelling bestaat niet."
@@ -74960,11 +74768,6 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Dit is een regel van het hoogste niveau. Toon regelstructuur"
-
-msgid ""
-"This is caused by the service check commands with an example host and "
-"service in the following table."
-msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom agent "
@@ -79016,9 +78819,6 @@ msgstr "Tijdsspanne van verslagcontext"
 msgid "Time range synchronization"
 msgstr "Timer synchronisatie"
 
-msgid "Time range to consider"
-msgstr "Te overwegen tijdspanne"
-
 #, fuzzy
 msgid ""
 "Time range to continue to consider outdated OpenTelemetry data as valid."
@@ -79713,9 +79513,6 @@ msgstr "Tooltip"
 
 msgid "Top"
 msgstr "Top"
-
-msgid "Top (highest) N"
-msgstr ""
 
 #, fuzzy
 msgid "Top 10: CPU utilization"
@@ -87216,9 +87013,6 @@ msgstr "Toon mislukte meldingen"
 msgid "View layout"
 msgstr "Bekijk lay-out"
 
-msgid "View name"
-msgstr "Naam bekijken"
-
 msgid "View permitted maps"
 msgstr "Bekijk toegestane kaarten"
 
@@ -90521,16 +90315,6 @@ msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
 
 msgid ""
-"You can enter a text here that will be displayed in the element when viewing "
-"the dashboard. It is also possible to insert a limited set of HTML tags, "
-"some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
-msgstr ""
-"U kunt hier een tekst invoeren die zal worden weergegeven in het element "
-"wanneer u het dashboard bekijkt. Het is ook mogelijk om een beperkte set "
-"HTML tags in te voegen, enkele daarvan zijn: h2, b, tt, i, br, pre, a, sup, "
-"p, li, ul en ol."
-
-msgid ""
 "You can have these tags automatically added if certain primary tags are set."
 msgstr ""
 "U kunt deze tags automatisch laten toevoegen als bepaalde primaire tags zijn "
@@ -91072,11 +90856,6 @@ msgstr ""
 "grotere getallen. Het actie menu icoon heeft een sorteerindex van <tt>10</"
 "tt>, het grafiek icoon een sorteerindex van <tt>20</tt>. Alle andere "
 "standaardiconen hebben een sorteerindex van <tt>30</tt> geconfigureerd."
-
-msgid ""
-"You can use these examples to identify hosts and services that must be "
-"filtered out in the top list configuration to resolve the problem."
-msgstr ""
 
 msgid ""
 "You can use these options to tune the way packages are baked for your hosts "
@@ -92407,9 +92186,6 @@ msgstr "alle logbestanden op alle hosts"
 msgid "all special agents"
 msgstr "alle speciale agenten"
 
-msgid "all states"
-msgstr "alle staten"
-
 msgid "all users"
 msgstr "alle gebruikers"
 
@@ -92911,9 +92687,6 @@ msgstr "inschakelen"
 
 msgid "entries"
 msgstr "inzendingen"
-
-msgid "entries (max. 50)"
-msgstr ""
 
 #, fuzzy
 msgid "entry number"
@@ -93679,13 +93452,6 @@ msgstr "geen van"
 
 msgid "normal connection"
 msgstr "normale verbinding"
-
-#, python-format
-msgid "not %s states"
-msgstr "niet %s staten"
-
-msgid "not OK states"
-msgstr "niet OK staten"
 
 msgid "not available"
 msgstr "niet beschikbaar"
@@ -94834,6 +94600,14 @@ msgid "Loading Top list content"
 msgstr "Etiketteringsopties"
 
 #, fuzzy
+msgid "Sent on"
+msgstr "Verzonden"
+
+#, fuzzy
+msgid "Expires on"
+msgstr "Verloopt op"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "Dashboard-element"
 
@@ -95152,8 +94926,12 @@ msgid "Loading options…"
 msgstr "Etiketteringsopties"
 
 #, fuzzy
-msgid "Loading views..."
-msgstr "Laden..."
+msgid "Error loading views: "
+msgstr "Fout bij het bekijken: %s"
+
+#, fuzzy
+msgid "Error loading data sources: "
+msgstr "%d vertalingen"
 
 msgid "Select view"
 msgstr "Weergave kiezen"
@@ -95339,6 +95117,12 @@ msgstr ""
 #, fuzzy
 msgid "Choose how to display your data"
 msgstr "Geef geen datum weer"
+
+msgid "Automatically adjusted to available data"
+msgstr "Automatisch aangepast aan beschikbare gegevens"
+
+msgid "Fixed range"
+msgstr "Vast bereik"
 
 #, fuzzy
 msgid "Add optional filters to refine this widget"
@@ -95936,6 +95720,13 @@ msgstr "niet %s staten"
 msgid "Show summary for not UP states"
 msgstr "Toon samenvatting voor niet %s staten"
 
+msgid "Selected state"
+msgstr "Geselecteerde staat"
+
+#, fuzzy
+msgid "Show state of"
+msgstr "Titel tonen"
+
 msgid "Host or sites, depending on context"
 msgstr ""
 
@@ -95945,6 +95736,10 @@ msgstr "Maximale grootte"
 
 msgid "Small"
 msgstr ""
+
+#, fuzzy
+msgid "Large"
+msgstr "Doel"
 
 #, fuzzy
 msgid "Loading widget visualization settings..."
@@ -96003,6 +95798,15 @@ msgstr "Afgewezen verbindingen"
 msgid "Service graph"
 msgstr "Dienstgrafieken"
 
+msgid "Data range"
+msgstr "Gegevensbereik"
+
+msgid "Only show current value"
+msgstr "Toon alleen huidige waarde"
+
+msgid "Show historic values"
+msgstr "Toon historische waarden"
+
 #, fuzzy
 msgid "Fixed data range"
 msgstr "Vast bereik"
@@ -96014,12 +95818,39 @@ msgstr "Dienstverleningsstatus"
 msgid "Show colored status label"
 msgstr "Toon een gekleurd status label"
 
+msgid "Show label for"
+msgstr "Toon etiket voor"
+
+msgid "all states"
+msgstr "alle staten"
+
+msgid "not OK states"
+msgstr "niet OK staten"
+
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Titel tonen zonder achtergrond"
 
+msgid "Range limits"
+msgstr "Bereik grenzen"
+
+msgid "Show the limits of values displayed"
+msgstr "Toon de grenzen van de weergegeven waarden"
+
+msgid "Don't show information of limits"
+msgstr "Toon geen informatie over limieten"
+
 msgid "Show service status"
 msgstr "Toon dienst status"
+
+msgid "Color of the scattered dots"
+msgstr "Kleur van de verspreide stippen"
+
+msgid "Color of the average"
+msgstr "Kleur van het gemiddelde"
+
+msgid "Color of the median"
+msgstr "Kleur van de mediaan"
 
 #, fuzzy
 msgid "Additional scatterplot options"
@@ -96036,8 +95867,26 @@ msgstr "De waarde moet een string zijn"
 msgid "Rankin order"
 msgstr "Waarschuwing indien meer dan"
 
+msgid "Top (highest) N"
+msgstr ""
+
+msgid "Bottom (lowest) N"
+msgstr ""
+
+#, fuzzy
+msgid "Limit to"
+msgstr "Limiet"
+
 msgid "entries (max. %{max_entries})"
 msgstr ""
+
+#, fuzzy
+msgid "Show service name"
+msgstr "De naam van de dienst"
+
+#, fuzzy
+msgid "Show bar visualization"
+msgstr "BI-visualisatie"
 
 msgid "Enter URL to embed"
 msgstr ""
@@ -96084,6 +95933,9 @@ msgstr "Link om te bekijken"
 msgid "Datasource"
 msgstr "Datasource"
 
+msgid "View name"
+msgstr "Naam bekijken"
+
 #, fuzzy
 msgid "Specific object type"
 msgstr "Selecteer specifiek objecttype"
@@ -96124,6 +95976,10 @@ msgstr ""
 #, fuzzy
 msgid "Copy existing view: %{viewName}"
 msgstr "Bestaand uitzicht kopiëren"
+
+#, fuzzy
+msgid "Edit widget properties"
+msgstr "Eigenschappen bewerken"
 
 #, fuzzy
 msgid "Add widget to dashboard"
@@ -97572,6 +97428,146 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Background in status color and label"
+#~ msgstr "Achtergrond in statuskleur en label"
+
+#~ msgid "Choose the sidebar element you would like to show."
+#~ msgstr "Kies het zijbalk element dat u wilt tonen."
+
+#~ msgid ""
+#~ "Choose the view you would like to show. Please note that, depending on "
+#~ "the, logged in user viewing this dashboard, the view being displayed may "
+#~ "differ. For example when another user has created a view with the same "
+#~ "name. In case a user is not permitted to see a view, an error message "
+#~ "will be displayed."
+#~ msgstr ""
+#~ "Kies de weergave die u wilt tonen. Merk op dat, afhankelijk van de "
+#~ "ingelogde gebruiker die dit dashboard bekijkt, het uitzicht dat wordt "
+#~ "getoond kan verschillen. Bijvoorbeeld als een andere gebruiker een "
+#~ "weergave met dezelfde naam heeft gemaakt. In het geval dat een gebruiker "
+#~ "een view niet mag zien, zal er een foutmelding verschijnen."
+
+#~ msgid "Clear failed notifications"
+#~ msgstr "Verwijder mislukte meldingen"
+
+#~ msgid "Colorize"
+#~ msgstr "Colorize"
+
+#~ msgid "Display axis labels for the selected/automatic data range"
+#~ msgstr "Toon aslabels voor het geselecteerde/automatische gegevensbereik"
+
+#~ msgid "Display range: Minimum must be strictly less than maximum"
+#~ msgstr "Weergavebereik: Minimum moet strikt kleiner zijn dan maximum"
+
+#, fuzzy
+#~ msgid "Do not show the service state"
+#~ msgstr "Laat de dienst status niet zien"
+
+#~ msgid "Don't show Summary"
+#~ msgstr "Niet laten zien Samenvatting"
+
+#, fuzzy
+#~ msgid "Host name resource attribute"
+#~ msgstr "Rolkenmerk"
+
+#, python-format
+#~ msgid "Host or service %ss"
+#~ msgstr "Host of dienst %ss"
+
+#~ msgid "Limit objects"
+#~ msgstr "Objecten beperken"
+
+#, fuzzy
+#~ msgid "Maximum hexagon size"
+#~ msgstr "Maximale grootte"
+
+#~ msgid "No influence on element display"
+#~ msgstr "Geen invloed op elementweergave"
+
+#~ msgid "Number of notifications as text"
+#~ msgstr "Aantal meldingen als tekst"
+
+#~ msgid "RRD consolidation"
+#~ msgstr "RRD-consolidatie"
+
+#, fuzzy
+#~ msgid "Ranking order"
+#~ msgstr "Waarschuwing indien meer dan"
+
+#~ msgid ""
+#~ "Select the range in between which the values are displayed. This only "
+#~ "affects the dashlet if 'Show historic values' is selected"
+#~ msgstr ""
+#~ "Selecteer het bereik waartussen de waarden worden weergegeven. Dit heeft "
+#~ "alleen invloed op het streepje als 'Toon historische waarden' is "
+#~ "geselecteerd"
+
+#~ msgid ""
+#~ "Set the range in which data is displayed. Having selected a metric before "
+#~ "auto selects the matching unit of the metric."
+#~ msgstr ""
+#~ "Stel het bereik in waarin de gegevens worden weergegeven. Als een metriek "
+#~ "eerder is geselecteerd, wordt automatisch de bijbehorende eenheid van de "
+#~ "metriek geselecteerd."
+
+#, python-format
+#~ msgid "Show %ss for hosts"
+#~ msgstr "Toon %ss voor hosts"
+
+#, python-format
+#~ msgid "Show %ss for hosts and services"
+#~ msgstr "Toon %ss voor hosts en diensten"
+
+#, python-format
+#~ msgid "Show %ss for services"
+#~ msgstr "Toon %ss voor diensten"
+
+#~ msgid "Show a colored status label"
+#~ msgstr "Toon een gekleurd status label"
+
+#~ msgid "Show a colored status label and color the metric background"
+#~ msgstr "Toon een gekleurd status label en kleur de metrische achtergrond"
+
+#, fuzzy
+#~ msgid "Show host state"
+#~ msgstr "Toon host status"
+
+#, fuzzy
+#~ msgid "Show service state"
+#~ msgstr "Toon dienst status"
+
+#, python-format
+#~ msgid "Show summary for not %s states"
+#~ msgstr "Toon samenvatting voor niet %s staten"
+
+#~ msgid "The element does not exist."
+#~ msgstr "Het element bestaat niet."
+
+#~ msgid "The requested element type does not exist."
+#~ msgstr "Het gevraagde elementtype bestaat niet."
+
+#~ msgid "Time range to consider"
+#~ msgstr "Te overwegen tijdspanne"
+
+#~ msgid ""
+#~ "You can enter a text here that will be displayed in the element when "
+#~ "viewing the dashboard. It is also possible to insert a limited set of "
+#~ "HTML tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and "
+#~ "ol."
+#~ msgstr ""
+#~ "U kunt hier een tekst invoeren die zal worden weergegeven in het element "
+#~ "wanneer u het dashboard bekijkt. Het is ook mogelijk om een beperkte set "
+#~ "HTML tags in te voegen, enkele daarvan zijn: h2, b, tt, i, br, pre, a, "
+#~ "sup, p, li, ul en ol."
+
+#, python-format
+#~ msgid "not %s states"
+#~ msgstr "niet %s staten"
+
+#, fuzzy
+#~ msgid "Loading views..."
+#~ msgstr "Laden..."
 
 #~ msgid "Analyze the utilization of your IT infrastructure data center."
 #~ msgstr "Analyseer het gebruik van het datacenter van uw IT-infrastructuur."

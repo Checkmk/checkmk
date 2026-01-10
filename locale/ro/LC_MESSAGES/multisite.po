@@ -7858,6 +7858,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "At least one custom query is required."
+msgstr "Starea când lipsește fișierul"
+
+#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Starea când lipsește fișierul"
 
@@ -8286,9 +8290,6 @@ msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "Activarea automată a modificărilor"
-
-msgid "Automatically adjusted to available data"
-msgstr "Se ajustează automat la datele disponibile"
 
 msgid "Automatically create monitoring agents"
 msgstr "Crearea automată a agenților de monitorizare"
@@ -9848,9 +9849,6 @@ msgstr "Port backend"
 msgid "Backends"
 msgstr "Backends"
 
-msgid "Background in status color and label"
-msgstr "Fundalul în culoarea de stare și eticheta"
-
 msgid "Background job acknowledged"
 msgstr "Recunoașterea muncii de fond"
 
@@ -10359,9 +10357,6 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "Partea de jos"
-
-msgid "Bottom (lowest) N"
-msgstr "Jos (cel mai jos) N"
 
 #, fuzzy
 msgid "Bottom level suite"
@@ -14216,24 +14211,8 @@ msgstr ""
 "alegeri controlează care și câte pachete vor fi trimise de la agent către "
 "serverul Checkmk."
 
-msgid "Choose the sidebar element you would like to show."
-msgstr "Alegeți elementul de bară laterală pe care doriți să îl afișați."
-
 msgid "Choose the type of action to perform"
 msgstr "Alegeți tipul de acțiune care trebuie efectuată"
-
-msgid ""
-"Choose the view you would like to show. Please note that, depending on the, "
-"logged in user viewing this dashboard, the view being displayed may differ. "
-"For example when another user has created a view with the same name. In case "
-"a user is not permitted to see a view, an error message will be displayed."
-msgstr ""
-"Alegeți vederea pe care doriți să o afișați. Vă rugăm să rețineți că, în "
-"funcție de utilizatorul conectat care vizualizează acest tablou de bord, "
-"vizualizarea afișată poate fi diferită. De exemplu, atunci când un alt "
-"utilizator a creat o vizualizare cu același nume. În cazul în care unui "
-"utilizator nu i se permite să vadă o vizualizare, se va afișa un mesaj de "
-"eroare."
 
 msgid ""
 "Choose this option if you need to have the provided document within a "
@@ -14560,9 +14539,6 @@ msgstr "Mesaje de curățare"
 
 msgid "Clear & Delete"
 msgstr "Ștergeți & Ștergeți"
-
-msgid "Clear failed notifications"
-msgstr "Ștergeți notificările eșuate"
 
 msgid "Clear log"
 msgstr "Ștergeți jurnalul"
@@ -15049,23 +15025,11 @@ msgstr "Culoare A4"
 msgid "Color gradient"
 msgstr "Gradient de culoare"
 
-msgid "Color of the average"
-msgstr "Culoarea mediei"
-
-msgid "Color of the median"
-msgstr "Culoarea mediană"
-
-msgid "Color of the scattered dots"
-msgstr "Culoarea punctelor împrăștiate"
-
 msgid "Color theme"
 msgstr "Tema de culoare"
 
 msgid "Coloring"
 msgstr "Colorare"
-
-msgid "Colorize"
-msgstr "Colorează"
 
 msgid "Colorize background if host is down"
 msgstr "Colorați fundalul dacă gazda este oprită"
@@ -15507,12 +15471,12 @@ msgstr "Dumps de configurare și de stare ale CMC"
 msgid "Configuration"
 msgstr "Configurație"
 
-#, fuzzy
-msgid "Configuration Activation"
-msgstr "Conexiune de configurare"
-
 msgid "Configuration Error"
 msgstr "Eroare de configurare"
+
+#, fuzzy
+msgid "Configuration activation"
+msgstr "Conexiune de configurare"
 
 #, fuzzy
 msgid "Configuration bundle ID"
@@ -19053,9 +19017,6 @@ msgstr "Date trimise"
 msgid "Data point attributes"
 msgstr "Atributele timpilor morți:"
 
-msgid "Data range"
-msgstr "Intervalul de date"
-
 msgid "Data read"
 msgstr "Date citite"
 
@@ -21924,9 +21885,6 @@ msgstr ""
 msgid "Display average"
 msgstr "Afișează media"
 
-msgid "Display axis labels for the selected/automatic data range"
-msgstr "Afișarea etichetelor axei pentru intervalul de date selectat/automat"
-
 msgid "Display dashboard title"
 msgstr "Afișați titlul tabloului de bord"
 
@@ -21975,10 +21933,6 @@ msgstr "Afișați doar un rezumat al tuturor fișierelor de date"
 #, fuzzy
 msgid "Display only a summary of all transactionlogs"
 msgstr "Afișați doar un rezumat al tuturor jurnalelor de tranzacții"
-
-msgid "Display range: Minimum must be strictly less than maximum"
-msgstr ""
-"Intervalul de afișare: Minimul trebuie să fie strict mai mic decât maximul"
 
 msgid "Display sidecar details on"
 msgstr "Afișarea detaliilor despre atașament pe"
@@ -22766,10 +22720,6 @@ msgstr "Nu afișați o linie de rezumat"
 msgid "Do not show again"
 msgstr "Nu afișați titlul"
 
-#, fuzzy
-msgid "Do not show the service state"
-msgstr "Nu afișați starea serviciului"
-
 msgid "Do not status data inventory"
 msgstr "Nu faceți inventarul datelor de stare"
 
@@ -22959,9 +22909,6 @@ msgstr "Don't arată nici un antet"
 msgid "Don't show"
 msgstr "Nu arăta"
 
-msgid "Don't show Summary"
-msgstr "Nu arăta Rezumat"
-
 msgid "Don't show and check"
 msgstr "Don't arată și verifică"
 
@@ -22970,9 +22917,6 @@ msgstr "Nu afișați titlul graficului"
 
 msgid "Don't show home port info"
 msgstr "Nu afișați informații despre portul de origine"
-
-msgid "Don't show information of limits"
-msgstr "Nu afișați informații privind limitele"
 
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr ""
@@ -23245,11 +23189,6 @@ msgstr "Cereri de lucru abandonate"
 
 msgid "Dt."
 msgstr "Dt."
-
-msgid ""
-"Due to a limitation in how Checkmk handles metrics internally, the results "
-"contain conflicting metrics and this top list may be incorrect or incomplete."
-msgstr ""
 
 msgid ""
 "Due to security reasons the plug-in being executed as admin will check "
@@ -26165,10 +26104,6 @@ msgid "Expires %s"
 msgstr "Expiră"
 
 #, fuzzy
-msgid "Expires on"
-msgstr "Expiră la"
-
-#, fuzzy
 msgid "Explain with AI"
 msgstr "Continuați creșterea aici"
 
@@ -27661,9 +27596,6 @@ msgstr "Limite fixe"
 
 msgid "Fixed page elements"
 msgstr "Elemente de pagină fixe"
-
-msgid "Fixed range"
-msgstr "Interval fix"
 
 msgid "Fixed rate"
 msgstr "Rata fixă"
@@ -32681,10 +32613,6 @@ msgid "Host name or alias (regex)"
 msgstr "Numele de gazdă sau alias (regex)"
 
 #, fuzzy
-msgid "Host name resource attribute"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
 msgid "Host name template"
 msgstr "Șablon de nume de gazdă"
 
@@ -32756,10 +32684,6 @@ msgstr "Notificări gazdă activate"
 
 msgid "Host or Disk"
 msgstr "Gazdă sau disc"
-
-#, python-format
-msgid "Host or service %ss"
-msgstr "Gazdă sau serviciu %ss"
 
 msgid ""
 "Host or service must be in the following service level to get notification"
@@ -33082,9 +33006,6 @@ msgstr "Gazdele din acest dosar"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Gazde care nu utilizează Inline-SNMP"
-
-msgid "Hosts or sites, depending on context"
-msgstr "Gazde sau site-uri, în funcție de context"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Gazdele care ne-au contactat în ultimele 24 de ore"
@@ -33547,6 +33468,10 @@ msgstr "Adresa IP a gazdei"
 
 msgid "IP address"
 msgstr "Adresa IP"
+
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Adrese gazdă (IPv4/IPv6)"
 
 msgid "IP address family"
 msgstr "Familia de adrese IP"
@@ -39085,10 +39010,6 @@ msgstr "Alei"
 msgid "Language"
 msgstr "Limba"
 
-#, fuzzy
-msgid "Large"
-msgstr "Țintă"
-
 msgid "Large pool size"
 msgstr "Dimensiune mare a piscinei"
 
@@ -40349,9 +40270,6 @@ msgstr "Grafice pe notificare (implicit: 5)"
 msgid "Limit number of processed search results"
 msgstr "Limitarea numărului de rezultate de căutare procesate"
 
-msgid "Limit objects"
-msgstr "Obiecte limită"
-
 msgid "Limit of meta data"
 msgstr "Limita de meta-date"
 
@@ -40402,9 +40320,6 @@ msgstr "Limitarea numărului de rânduri în tabelele Vizualizare"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitarea numărului de rânduri afișate în tabele"
-
-msgid "Limit to"
-msgstr "Limitați la"
 
 msgid "Limit width"
 msgstr "Lățimea limită"
@@ -43289,10 +43204,6 @@ msgstr "Distanta maxima pana la gateway (TTL)"
 msgid "Maximum expected run time for heart beat packet"
 msgstr ""
 "Timpul maxim de execuție preconizat pentru pachetul de bătăi ale inimii"
-
-#, fuzzy
-msgid "Maximum hexagon size"
-msgstr "Dimensiunea maximă"
 
 #, python-format
 msgid "Maximum image size: %dx%dpx"
@@ -47037,9 +46948,6 @@ msgstr "Nu există gazde care să fie descoperite"
 msgid "No hosts/services found."
 msgstr "Nu s-au găsit gazde/servicii."
 
-msgid "No influence on element display"
-msgstr "Nicio influență asupra afișării elementelor"
-
 msgid "No information available"
 msgstr "Nu există informații disponibile"
 
@@ -48716,9 +48624,6 @@ msgstr ""
 msgid "Number of nodes not in target state"
 msgstr "Numărul de noduri care nu se află în starea țintă"
 
-msgid "Number of notifications as text"
-msgstr "Numărul de notificări sub formă de text"
-
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "Numărul de notificări depășește numărul maxim permis"
 
@@ -50003,9 +49908,6 @@ msgid ""
 "Only services matching one of these patterns will be discovered. If no "
 "pattern is defined, all services are included."
 msgstr ""
-
-msgid "Only show current value"
-msgstr "Afișează doar valoarea curentă"
 
 msgid "Only show hosts and services the user is a contact for"
 msgstr ""
@@ -56038,9 +55940,6 @@ msgstr ""
 "Numărul de intrare în RRA %d: numărul de trepte trebuie să fie mai mare "
 "decât cel al intrării anterioare."
 
-msgid "RRD consolidation"
-msgstr "Consolidarea RRD"
-
 msgid "RRD data aggregated"
 msgstr "Date RRD agregate"
 
@@ -56227,14 +56126,8 @@ msgstr "Randomize parola"
 msgid "Range"
 msgstr "gama"
 
-msgid "Range limits"
-msgstr "Limitele gamei"
-
 msgid "Range of values (min/max)"
 msgstr "Intervalul de valori (min/max)"
-
-msgid "Ranking order"
-msgstr "Ordinea de clasament"
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack: Temperatura"
@@ -60997,13 +60890,6 @@ msgstr ""
 msgid "Select the parent folder"
 msgstr "(selectați folderul țintă)"
 
-msgid ""
-"Select the range in between which the values are displayed. This only "
-"affects the dashlet if 'Show historic values' is selected"
-msgstr ""
-"Selectați intervalul între care sunt afișate valorile. Acest lucru afectează "
-"dashlet-ul numai dacă 'Show historical values' este selectat"
-
 #, fuzzy
 msgid "Select the relay that should monitor this host."
 msgstr "Specificați site-ul care trebuie să monitorizeze această gazdă."
@@ -61119,17 +61005,8 @@ msgstr "Conexiuni respinse"
 msgid "Selected sections will not be executed by the agent."
 msgstr "Secțiunile selectate nu vor fi executate de către agent."
 
-msgid "Selected state"
-msgstr "Statul selectat"
-
 msgid "Selected style configuration"
 msgstr "Configurația stilului selectat"
-
-#, python-format
-msgid ""
-"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
-"large screens, e.g. on a wall monitor."
-msgstr ""
 
 #, python-format
 msgid ""
@@ -61330,10 +61207,6 @@ msgid "Sensors"
 msgstr "Senzori"
 
 msgid "Sent"
-msgstr "Trimis"
-
-#, fuzzy
-msgid "Sent on"
 msgstr "Trimis"
 
 #, fuzzy, python-format
@@ -62581,14 +62454,6 @@ msgstr ""
 msgid "Set the organization of the InfluxDB server."
 msgstr "Setați organizarea serverului InfluxDB."
 
-msgid ""
-"Set the range in which data is displayed. Having selected a metric before "
-"auto selects the matching unit of the metric."
-msgstr ""
-"Setați intervalul în care sunt afișate datele. După ce ați selectat o "
-"unitate de măsură înainte, se selectează automat unitatea de măsură "
-"corespunzătoare."
-
 #, fuzzy, python-format
 msgid ""
 "Set the temperature unit used for graphs and Perf-O-Meters. The default unit "
@@ -62985,18 +62850,6 @@ msgstr ""
 msgid "Show %s"
 msgstr "Arată %s"
 
-#, python-format
-msgid "Show %ss for hosts"
-msgstr "Afișează %ss pentru gazde"
-
-#, python-format
-msgid "Show %ss for hosts and services"
-msgstr "Afișați %ss pentru gazde și servicii"
-
-#, python-format
-msgid "Show %ss for services"
-msgstr "Afișați %ss pentru servicii"
-
 msgid "Show / hide notification context"
 msgstr "Afișați / ascundeți contextul de notificare"
 
@@ -63016,12 +62869,6 @@ msgstr "Arată pagina de manual"
 
 msgid "Show Setup icon"
 msgstr "Afișați pictograma de configurare"
-
-msgid "Show a colored status label"
-msgstr "Afișați o etichetă de stare colorată"
-
-msgid "Show a colored status label and color the metric background"
-msgstr "Afișează o etichetă de stare colorată și colorează fundalul metric."
 
 msgid "Show a login message"
 msgstr "Afișați un mesaj de autentificare"
@@ -63077,9 +62924,6 @@ msgstr "Lățime de bandă"
 
 msgid "Show bandwidth (use only with cache disabled)"
 msgstr ""
-
-msgid "Show bar visualization"
-msgstr "Afișați vizualizarea barei"
 
 #, fuzzy
 msgid "Show bulk notifications"
@@ -63164,16 +63008,9 @@ msgstr "Afișați configurația gravitațională"
 msgid "Show hint in the 'User' menu"
 msgstr "Afișați indicii în meniul 'Utilizator' meniu"
 
-msgid "Show historic values"
-msgstr "Afișați valorile istorice"
-
 #, fuzzy
 msgid "Show host labels"
 msgstr "Afișați în tabelele gazdă"
-
-#, fuzzy
-msgid "Show host state"
-msgstr "Afișați starea gazdei"
 
 #, fuzzy
 msgid "Show host tags"
@@ -63221,9 +63058,6 @@ msgstr "Afișați doar notificările utilizatorilor finali"
 
 msgid "Show just preliminary notifications"
 msgstr "Afișați doar notificările preliminare"
-
-msgid "Show label for"
-msgstr "Afișați eticheta pentru"
 
 msgid "Show last log message"
 msgstr "Afișează ultimul mesaj din jurnal"
@@ -63327,14 +63161,6 @@ msgstr "Afișați un rezultat separat pentru fiecare perioadă SLA"
 msgid "Show service labels"
 msgstr "Etichete de servicii"
 
-#, fuzzy
-msgid "Show service name"
-msgstr "Numele serviciului"
-
-#, fuzzy
-msgid "Show service state"
-msgstr "Afișați starea serviciului"
-
 msgid "Show services"
 msgstr "Arată serviciile"
 
@@ -63353,14 +63179,6 @@ msgstr "Afișează spațiul rezervat pentru utilizatorul <tt>root</tt>."
 
 msgid "Show stale hosts and services"
 msgstr "Afișați gazdele și serviciile expirate"
-
-#, fuzzy
-msgid "Show state of"
-msgstr "Arată starea de"
-
-#, python-format
-msgid "Show summary for not %s states"
-msgstr "Afișați rezumatul pentru statele care nu sunt %s"
 
 #, fuzzy
 msgid ""
@@ -63399,9 +63217,6 @@ msgstr "Afișați graficul pe axa verticală"
 
 msgid "Show the header of the dashboard with the configured title."
 msgstr "Afișează antetul tabloului de bord cu titlul configurat."
-
-msgid "Show the limits of values displayed"
-msgstr "Afișarea limitelor valorilor afișate"
 
 msgid "Show the list of hosts in this category"
 msgstr "Afișează lista de gazde din această categorie"
@@ -70432,9 +70247,6 @@ msgstr ""
 "retransmis în acest mod. Pentru a permite interpretarea datelor, trebuie să "
 "alegeți manual dispozitivul."
 
-msgid "The element does not exist."
-msgstr "Elementul nu există."
-
 #, fuzzy
 msgid ""
 "The email address is optional and is needed if the user is a monitoring "
@@ -72575,9 +72387,6 @@ msgstr "Conexiunea solicitată nu există."
 
 msgid "The requested dashboard does not exist."
 msgstr "Tabloul de bord solicitat nu există."
-
-msgid "The requested element type does not exist."
-msgstr "Tipul de element solicitat nu există."
 
 msgid "The requested global setting does not exist."
 msgstr "Setarea globală solicitată nu există."
@@ -75223,11 +75032,6 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Aceasta este o regulă de nivel superior. Afișați arborele de reguli"
-
-msgid ""
-"This is caused by the service check commands with an example host and "
-"service in the following table."
-msgstr ""
 
 msgid ""
 "This is identical to a normal agent deployment, but with a custom agent "
@@ -79339,9 +79143,6 @@ msgstr "Intervalul de timp de la contextul raportului"
 msgid "Time range synchronization"
 msgstr "Sincronizarea intervalului de timp"
 
-msgid "Time range to consider"
-msgstr "Intervalul de timp de luat în considerare"
-
 #, fuzzy
 msgid ""
 "Time range to continue to consider outdated OpenTelemetry data as valid."
@@ -80052,9 +79853,6 @@ msgstr "Tooltip"
 
 msgid "Top"
 msgstr "Top"
-
-msgid "Top (highest) N"
-msgstr "Top (cel mai înalt) N"
 
 #, fuzzy
 msgid "Top 10: CPU utilization"
@@ -87485,9 +87283,6 @@ msgstr "Afișați notificările eșuate"
 msgid "View layout"
 msgstr "Vizualizați aspectul"
 
-msgid "View name"
-msgstr "Vezi numele"
-
 msgid "View permitted maps"
 msgstr "Vizualizați hărțile permise"
 
@@ -90787,16 +90582,6 @@ msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
 
 msgid ""
-"You can enter a text here that will be displayed in the element when viewing "
-"the dashboard. It is also possible to insert a limited set of HTML tags, "
-"some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
-msgstr ""
-"Puteți introduce aici un text care va fi afișat în element atunci când "
-"vizualizați tabloul de bord. De asemenea, este posibil să introduceți un set "
-"limitat de etichete HTML, unele dintre acestea fiind: h2, b, tt, i, br, pre, "
-"a, sup, p, li, ul și ol."
-
-msgid ""
 "You can have these tags automatically added if certain primary tags are set."
 msgstr ""
 "Aceste etichete pot fi adăugate automat dacă sunt setate anumite etichete "
@@ -91335,11 +91120,6 @@ msgstr ""
 "<tt>10</tt>, iar pictograma graficului un indice de sortare de <tt>20</tt>. "
 "Toate celelalte pictograme implicite au configurat un indice de sortare de "
 "<tt>30</tt>."
-
-msgid ""
-"You can use these examples to identify hosts and services that must be "
-"filtered out in the top list configuration to resolve the problem."
-msgstr ""
 
 msgid ""
 "You can use these options to tune the way packages are baked for your hosts "
@@ -92691,9 +92471,6 @@ msgstr "toate fișierele jurnal de pe toate gazdele"
 msgid "all special agents"
 msgstr "toți agenții speciali"
 
-msgid "all states"
-msgstr "toate statele"
-
 msgid "all users"
 msgstr "toți utilizatorii"
 
@@ -93186,9 +92963,6 @@ msgstr "activat"
 
 msgid "entries"
 msgstr "intrări"
-
-msgid "entries (max. 50)"
-msgstr "intrări (max. 50)"
 
 #, fuzzy
 msgid "entry number"
@@ -93953,13 +93727,6 @@ msgstr "niciunul dintre"
 
 msgid "normal connection"
 msgstr "conexiune normală"
-
-#, python-format
-msgid "not %s states"
-msgstr "nu %s state"
-
-msgid "not OK states"
-msgstr "nu sunt OK stări"
 
 msgid "not available"
 msgstr "nu este disponibil"
@@ -95121,6 +94888,14 @@ msgid "Loading Top list content"
 msgstr "Opțiuni de etichetare"
 
 #, fuzzy
+msgid "Sent on"
+msgstr "Trimis"
+
+#, fuzzy
+msgid "Expires on"
+msgstr "Expiră la"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "Element de tablou de bord"
 
@@ -95439,8 +95214,12 @@ msgid "Loading options…"
 msgstr "Opțiuni de etichetare"
 
 #, fuzzy
-msgid "Loading views..."
-msgstr "Încărcare..."
+msgid "Error loading views: "
+msgstr "Eroare de afișare a vizualizării: %s."
+
+#, fuzzy
+msgid "Error loading data sources: "
+msgstr "%d traduceri"
 
 msgid "Select view"
 msgstr "Selectați vizualizarea"
@@ -95628,6 +95407,12 @@ msgstr ""
 #, fuzzy
 msgid "Choose how to display your data"
 msgstr "Nu afișați o dată"
+
+msgid "Automatically adjusted to available data"
+msgstr "Se ajustează automat la datele disponibile"
+
+msgid "Fixed range"
+msgstr "Interval fix"
 
 #, fuzzy
 msgid "Add optional filters to refine this widget"
@@ -96225,6 +96010,13 @@ msgstr "nu %s state"
 msgid "Show summary for not UP states"
 msgstr "Afișați rezumatul pentru statele care nu sunt %s"
 
+msgid "Selected state"
+msgstr "Statul selectat"
+
+#, fuzzy
+msgid "Show state of"
+msgstr "Arată starea de"
+
 #, fuzzy
 msgid "Host or sites, depending on context"
 msgstr "Gazde sau site-uri, în funcție de context"
@@ -96235,6 +96027,10 @@ msgstr "Dimensiunea maximă"
 
 msgid "Small"
 msgstr ""
+
+#, fuzzy
+msgid "Large"
+msgstr "Țintă"
 
 #, fuzzy
 msgid "Loading widget visualization settings..."
@@ -96296,6 +96092,15 @@ msgstr "Conexiuni respinse"
 msgid "Service graph"
 msgstr "Grafice de servicii"
 
+msgid "Data range"
+msgstr "Intervalul de date"
+
+msgid "Only show current value"
+msgstr "Afișează doar valoarea curentă"
+
+msgid "Show historic values"
+msgstr "Afișați valorile istorice"
+
 #, fuzzy
 msgid "Fixed data range"
 msgstr "Interval fix"
@@ -96307,12 +96112,39 @@ msgstr "Starea serviciului"
 msgid "Show colored status label"
 msgstr "Afișați o etichetă de stare colorată"
 
+msgid "Show label for"
+msgstr "Afișați eticheta pentru"
+
+msgid "all states"
+msgstr "toate statele"
+
+msgid "not OK states"
+msgstr "nu sunt OK stări"
+
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Afișați titlul fără fundal"
 
+msgid "Range limits"
+msgstr "Limitele gamei"
+
+msgid "Show the limits of values displayed"
+msgstr "Afișarea limitelor valorilor afișate"
+
+msgid "Don't show information of limits"
+msgstr "Nu afișați informații privind limitele"
+
 msgid "Show service status"
 msgstr "Afișați starea serviciului"
+
+msgid "Color of the scattered dots"
+msgstr "Culoarea punctelor împrăștiate"
+
+msgid "Color of the average"
+msgstr "Culoarea mediei"
+
+msgid "Color of the median"
+msgstr "Culoarea mediană"
 
 #, fuzzy
 msgid "Additional scatterplot options"
@@ -96329,9 +96161,25 @@ msgstr "Valoarea trebuie să fie un șir de caractere"
 msgid "Rankin order"
 msgstr "Ordinea de clasament"
 
+msgid "Top (highest) N"
+msgstr "Top (cel mai înalt) N"
+
+msgid "Bottom (lowest) N"
+msgstr "Jos (cel mai jos) N"
+
+msgid "Limit to"
+msgstr "Limitați la"
+
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "intrări (max. 50)"
+
+#, fuzzy
+msgid "Show service name"
+msgstr "Numele serviciului"
+
+msgid "Show bar visualization"
+msgstr "Afișați vizualizarea barei"
 
 msgid "Enter URL to embed"
 msgstr ""
@@ -96378,6 +96226,9 @@ msgstr "Legătură pentru a vizualiza"
 msgid "Datasource"
 msgstr "Sursă de date"
 
+msgid "View name"
+msgstr "Vezi numele"
+
 #, fuzzy
 msgid "Specific object type"
 msgstr "Selectați un anumit tip de obiect"
@@ -96418,6 +96269,10 @@ msgstr ""
 #, fuzzy
 msgid "Copy existing view: %{viewName}"
 msgstr "Copierea vizualizării existente"
+
+#, fuzzy
+msgid "Edit widget properties"
+msgstr "Editați proprietățile"
 
 #, fuzzy
 msgid "Add widget to dashboard"
@@ -97880,6 +97735,153 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Background in status color and label"
+#~ msgstr "Fundalul în culoarea de stare și eticheta"
+
+#~ msgid "Choose the sidebar element you would like to show."
+#~ msgstr "Alegeți elementul de bară laterală pe care doriți să îl afișați."
+
+#~ msgid ""
+#~ "Choose the view you would like to show. Please note that, depending on "
+#~ "the, logged in user viewing this dashboard, the view being displayed may "
+#~ "differ. For example when another user has created a view with the same "
+#~ "name. In case a user is not permitted to see a view, an error message "
+#~ "will be displayed."
+#~ msgstr ""
+#~ "Alegeți vederea pe care doriți să o afișați. Vă rugăm să rețineți că, în "
+#~ "funcție de utilizatorul conectat care vizualizează acest tablou de bord, "
+#~ "vizualizarea afișată poate fi diferită. De exemplu, atunci când un alt "
+#~ "utilizator a creat o vizualizare cu același nume. În cazul în care unui "
+#~ "utilizator nu i se permite să vadă o vizualizare, se va afișa un mesaj de "
+#~ "eroare."
+
+#~ msgid "Clear failed notifications"
+#~ msgstr "Ștergeți notificările eșuate"
+
+#~ msgid "Colorize"
+#~ msgstr "Colorează"
+
+#~ msgid "Display axis labels for the selected/automatic data range"
+#~ msgstr ""
+#~ "Afișarea etichetelor axei pentru intervalul de date selectat/automat"
+
+#~ msgid "Display range: Minimum must be strictly less than maximum"
+#~ msgstr ""
+#~ "Intervalul de afișare: Minimul trebuie să fie strict mai mic decât maximul"
+
+#, fuzzy
+#~ msgid "Do not show the service state"
+#~ msgstr "Nu afișați starea serviciului"
+
+#~ msgid "Don't show Summary"
+#~ msgstr "Nu arăta Rezumat"
+
+#, fuzzy
+#~ msgid "Host name resource attribute"
+#~ msgstr "Resetarea atributelor"
+
+#, python-format
+#~ msgid "Host or service %ss"
+#~ msgstr "Gazdă sau serviciu %ss"
+
+#~ msgid "Hosts or sites, depending on context"
+#~ msgstr "Gazde sau site-uri, în funcție de context"
+
+#~ msgid "Limit objects"
+#~ msgstr "Obiecte limită"
+
+#, fuzzy
+#~ msgid "Maximum hexagon size"
+#~ msgstr "Dimensiunea maximă"
+
+#~ msgid "No influence on element display"
+#~ msgstr "Nicio influență asupra afișării elementelor"
+
+#~ msgid "Number of notifications as text"
+#~ msgstr "Numărul de notificări sub formă de text"
+
+#~ msgid "RRD consolidation"
+#~ msgstr "Consolidarea RRD"
+
+#~ msgid "Ranking order"
+#~ msgstr "Ordinea de clasament"
+
+#~ msgid ""
+#~ "Select the range in between which the values are displayed. This only "
+#~ "affects the dashlet if 'Show historic values' is selected"
+#~ msgstr ""
+#~ "Selectați intervalul între care sunt afișate valorile. Acest lucru "
+#~ "afectează dashlet-ul numai dacă 'Show historical values' este selectat"
+
+#~ msgid ""
+#~ "Set the range in which data is displayed. Having selected a metric before "
+#~ "auto selects the matching unit of the metric."
+#~ msgstr ""
+#~ "Setați intervalul în care sunt afișate datele. După ce ați selectat o "
+#~ "unitate de măsură înainte, se selectează automat unitatea de măsură "
+#~ "corespunzătoare."
+
+#, python-format
+#~ msgid "Show %ss for hosts"
+#~ msgstr "Afișează %ss pentru gazde"
+
+#, python-format
+#~ msgid "Show %ss for hosts and services"
+#~ msgstr "Afișați %ss pentru gazde și servicii"
+
+#, python-format
+#~ msgid "Show %ss for services"
+#~ msgstr "Afișați %ss pentru servicii"
+
+#~ msgid "Show a colored status label"
+#~ msgstr "Afișați o etichetă de stare colorată"
+
+#~ msgid "Show a colored status label and color the metric background"
+#~ msgstr "Afișează o etichetă de stare colorată și colorează fundalul metric."
+
+#, fuzzy
+#~ msgid "Show host state"
+#~ msgstr "Afișați starea gazdei"
+
+#, fuzzy
+#~ msgid "Show service state"
+#~ msgstr "Afișați starea serviciului"
+
+#, python-format
+#~ msgid "Show summary for not %s states"
+#~ msgstr "Afișați rezumatul pentru statele care nu sunt %s"
+
+#~ msgid "The element does not exist."
+#~ msgstr "Elementul nu există."
+
+#~ msgid "The requested element type does not exist."
+#~ msgstr "Tipul de element solicitat nu există."
+
+#~ msgid "Time range to consider"
+#~ msgstr "Intervalul de timp de luat în considerare"
+
+#~ msgid ""
+#~ "You can enter a text here that will be displayed in the element when "
+#~ "viewing the dashboard. It is also possible to insert a limited set of "
+#~ "HTML tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and "
+#~ "ol."
+#~ msgstr ""
+#~ "Puteți introduce aici un text care va fi afișat în element atunci când "
+#~ "vizualizați tabloul de bord. De asemenea, este posibil să introduceți un "
+#~ "set limitat de etichete HTML, unele dintre acestea fiind: h2, b, tt, i, "
+#~ "br, pre, a, sup, p, li, ul și ol."
+
+#~ msgid "entries (max. 50)"
+#~ msgstr "intrări (max. 50)"
+
+#, python-format
+#~ msgid "not %s states"
+#~ msgstr "nu %s state"
+
+#, fuzzy
+#~ msgid "Loading views..."
+#~ msgstr "Încărcare..."
 
 #~ msgid "Analyze the utilization of your IT infrastructure data center."
 #~ msgstr ""

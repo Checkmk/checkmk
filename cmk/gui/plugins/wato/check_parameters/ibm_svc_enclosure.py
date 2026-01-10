@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput, Tuple
 
 
-def _item_spec_ibm_svc_enclosure():
+def _item_spec_ibm_svc_enclosure() -> TextInput:
     return TextInput(
         title=_("Name of enclosure"),
         help=_("Name of the enclosure, e.g. Enclosure 1"),
     )
 
 
-def _parameter_valuespec_ibm_svc_enclosure():
+def _parameter_valuespec_ibm_svc_enclosure() -> Dictionary:
     return Dictionary(
         elements=[
             (

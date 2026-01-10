@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -16,7 +14,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer, Percentage
 
 
-def _parameter_valuespec_byte_count():
+def _parameter_valuespec_byte_count() -> Dictionary:
     return Dictionary(
         title=_("Levels byte count"),
         elements=[
@@ -43,7 +41,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_snat_usage():
+def _parameter_valuespec_snat_usage() -> Dictionary:
     return Dictionary(
         title=_("Levels SNAT usage"),
         elements=[

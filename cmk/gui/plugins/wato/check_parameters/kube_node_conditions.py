@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -37,7 +37,7 @@ def __elements() -> Tuple:
     )
 
 
-def _parameter_valuespec():
+def _parameter_valuespec() -> Migrate[dict[str, Any]]:
     return Migrate(
         Dictionary(
             elements=[

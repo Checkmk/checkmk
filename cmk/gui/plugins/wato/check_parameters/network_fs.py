@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.utils import (
@@ -12,16 +10,16 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import DropdownChoice, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 
 
-def _item_spec_network_fs():
+def _item_spec_network_fs() -> TextInput:
     return TextInput(
         title=_("Name of the mount point"), help=_("For NFS enter the name of the mount point.")
     )
 
 
-def _parameter_valuespec_network_fs():
+def _parameter_valuespec_network_fs() -> Dictionary:
     return vs_filesystem(
         elements=[
             FilesystemElements.levels,

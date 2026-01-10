@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -24,7 +22,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _valuespec_discovery_win_dhcp_pools():
+def _valuespec_discovery_win_dhcp_pools() -> Dictionary:
     return Dictionary(
         title=_("Windows DHCP pool discovery"),
         elements=[
@@ -53,7 +51,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_win_dhcp_pools():
+def _item_spec_win_dhcp_pools() -> TextInput:
     return TextInput(
         title=_("Pool name"),
         allow_empty=False,

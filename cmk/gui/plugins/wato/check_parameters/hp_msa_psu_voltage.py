@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,11 +13,11 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
-def _item_spec_hp_msa_psu_voltage():
+def _item_spec_hp_msa_psu_voltage() -> TextInput:
     return TextInput(title=_("Power supply name"), help=_("The identifier of the power supply."))
 
 
-def _parameter_valuespec_hp_msa_psu_voltage():
+def _parameter_valuespec_hp_msa_psu_voltage() -> Dictionary:
     return Dictionary(
         help=_("Here you can configure the 3.3V and 12V voltage levels for each power supply."),
         elements=[

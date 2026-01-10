@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.db2_tablespaces import db_levels_common
@@ -16,7 +15,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringState, TextInput, Tuple
 
 
-def _item_spec_oracle_tablespaces():
+def _item_spec_oracle_tablespaces() -> TextInput:
     return TextInput(
         title=_("Explicit tablespaces"),
         help=_(
@@ -27,7 +26,7 @@ def _item_spec_oracle_tablespaces():
     )
 
 
-def _parameter_valuespec_oracle_tablespaces():
+def _parameter_valuespec_oracle_tablespaces() -> Dictionary:
     return Dictionary(
         help=_(
             "A tablespace is a container for segments (tables, indexes, etc). A "

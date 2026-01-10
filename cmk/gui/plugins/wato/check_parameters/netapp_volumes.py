@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.utils import (
@@ -12,10 +10,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import ListChoice, TextInput
+from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
 
 
-def _parameter_valuespec_netapp_volumes():
+def _parameter_valuespec_netapp_volumes() -> Dictionary:
     return vs_filesystem(
         elements=[
             FilesystemElements.levels,

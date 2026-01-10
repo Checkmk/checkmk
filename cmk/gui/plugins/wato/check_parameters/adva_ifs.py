@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Float
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_form_spec_adva_ifs():
+def _parameter_form_spec_adva_ifs() -> Dictionary:
     return Dictionary(
         elements={
             "limits_output_power": DictElement(

@@ -31838,6 +31838,10 @@ msgstr "Adresse IP de l'hôte"
 msgid "IP address"
 msgstr "Adresse IP"
 
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Adresses d'hôtes (IPv4/IPv6)"
+
 msgid "IP address family"
 msgstr "Famille d'adresses IP"
 

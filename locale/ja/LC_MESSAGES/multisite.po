@@ -29557,6 +29557,10 @@ msgstr "ホストのIPアドレス"
 msgid "IP address"
 msgstr "IPアドレス"
 
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "ホストアドレス(IPv4/IPv6)"
+
 msgid "IP address family"
 msgstr "IPアドレスファミリ"
 

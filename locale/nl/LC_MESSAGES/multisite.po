@@ -31560,6 +31560,10 @@ msgstr "IP-adres van gastheer"
 msgid "IP address"
 msgstr "IP-adres"
 
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Hostadressen (IPv4/IPv6)"
+
 msgid "IP address family"
 msgstr "IP-adresfamilie"
 

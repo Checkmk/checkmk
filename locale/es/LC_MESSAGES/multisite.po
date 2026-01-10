@@ -31789,6 +31789,10 @@ msgstr "Dirección IP del host"
 msgid "IP address"
 msgstr "Dirección IP"
 
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Direcciones de host (IPv4/IPv6)"
+
 msgid "IP address family"
 msgstr "Familia de direcciones IP"
 

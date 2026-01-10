@@ -31591,6 +31591,10 @@ msgstr "Adresa IP a gazdei"
 msgid "IP address"
 msgstr "Adresa IP"
 
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Adrese gazdă (IPv4/IPv6)"
+
 msgid "IP address family"
 msgstr "Familia de adrese IP"
 

@@ -30344,6 +30344,10 @@ msgstr "IP-Adresse der Hosts"
 msgid "IP address"
 msgstr "IP-Adresse"
 
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Host-Adressen (IPv4/IPv6)"
+
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
 

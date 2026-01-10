@@ -31354,6 +31354,10 @@ msgstr "Indirizzo IP dell'host"
 msgid "IP address"
 msgstr "Indirizzo IP"
 
+#, fuzzy
+msgid "IP address (IPv4 or IPv6)"
+msgstr "Indirizzi host (IPv4/IPv6)"
+
 msgid "IP address family"
 msgstr "Famiglia di indirizzi IP"
 

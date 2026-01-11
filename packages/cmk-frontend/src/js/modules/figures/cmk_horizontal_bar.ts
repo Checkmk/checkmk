@@ -4,9 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Dimension } from 'crossfilter2'
-import type { AxisDomain, ScaleLinear, Selection } from 'd3'
+import type { AxisDomain, BaseType, ScaleLinear, Selection } from 'd3'
 import { axisLeft, axisRight, axisTop, max, range, scaleLinear } from 'd3'
 
+import { FigureTooltip } from '@/modules/figures/cmk_figure_tooltip'
 import { FigureBase } from '@/modules/figures/cmk_figures'
 import { add_scheduler_debugging, getIn } from '@/modules/figures/cmk_figures_utils'
 import { Domain, FigureData, SingleMetricDataPlotDefinitions } from '@/modules/figures/figure_types'
@@ -31,6 +32,7 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
   _plot_definitions: SingleMetricDataPlotDefinitions[]
   bars!: Selection<SVGGElement, unknown, any, any>
   scale_x!: ScaleLinear<number, number, never>
+  tooltip_generator!: FigureTooltip
 
   override ident() {
     return 'horizontal_barplot'
@@ -52,6 +54,8 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
     // X axis
     this.scale_x = scaleLinear()
     this.plot.append('g').classed('x_axis', true).call(axisTop(this.scale_x))
+
+    this.tooltip_generator = new FigureTooltip(this._div_selection.append('div'))
   }
 
   getEmptyData() {
@@ -110,6 +114,8 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
 
     this.resize()
     this.render_title(data.title, data.title_url!)
+
+    this.tooltip_generator.update_sizes(this.figure_size, this.plot_size)
 
     this.render_axis()
     this._render_values()
@@ -175,13 +181,19 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
     }
 
     // Rectangles
-    const links = this.bars
+    const bar_groups = this.bars
       .selectAll<SVGGElement, BarplotData>('g')
       .data(this._data.data, (d) => d.ident)
       .join('g')
       .attr('transform', (_d, idx) => {
         return 'translate(0,' + ((element_height + 10) * idx + 10) + ')'
       })
+
+    bar_groups.each((d, idx, nodes) => {
+      this.tooltip_generator.add_support(nodes[idx])
+    })
+
+    const links = bar_groups
       .selectAll<HTMLAnchorElement, BarplotData>('a')
       .data(
         (d) => [d],

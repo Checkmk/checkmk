@@ -56,7 +56,10 @@ def compute_warn_crit_rules_from_translated_metric(
     translated_metric: TranslatedMetric,
 ) -> Sequence[HorizontalRule]:
     horizontal_rules = []
-    if (warn_value := translated_metric.scalar.get("warn")) is not None:
+    if (warn_value := translated_metric.scalar.get("warn")) is not None and warn_value not in (
+        float("inf"),
+        float("-inf"),
+    ):
         horizontal_rules.append(
             HorizontalRule(
                 value=warn_value,
@@ -65,7 +68,10 @@ def compute_warn_crit_rules_from_translated_metric(
                 title=_("Warning"),
             )
         )
-    if (crit_value := translated_metric.scalar.get("crit")) is not None:
+    if (crit_value := translated_metric.scalar.get("crit")) is not None and crit_value not in (
+        float("inf"),
+        float("-inf"),
+    ):
         horizontal_rules.append(
             HorizontalRule(
                 value=crit_value,

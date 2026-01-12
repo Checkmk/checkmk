@@ -44,13 +44,13 @@ class CmkPageUrl(Enum):
 
 
 class PerformanceTest:
-    def __init__(self, sites: list[Site], config: pytest.Config) -> None:
-        """Initialize the performance test with a list of sites.
-
-        If multiple sites are given, the first site will be the central site,
-        while the remaining sites will act as remote sites."""
+    def __init__(
+        self, central_site: Site, remote_sites: list[Site] | None, config: pytest.Config
+    ) -> None:
+        """Initialize the performance test with a central site and a list of remote sites."""
         super().__init__()
-        self._sites = sites
+        self.central_site = central_site
+        self.remote_sites = remote_sites or []
 
         self.rounds = val if isinstance((val := config.getoption("rounds")), int) else 4
         self.warmup_rounds = (
@@ -63,18 +63,8 @@ class PerformanceTest:
 
     @property
     def sites(self) -> list[Site]:
-        """Return the list of all sites used for the test."""
-        return self._sites
-
-    @property
-    def central_site(self) -> Site:
-        """Return the central site."""
-        return self._sites[0]
-
-    @property
-    def remote_sites(self) -> list[Site]:
-        """The list of all remote sites used for the test (if any)."""
-        return self._sites[1:]
+        """Return a list of all sites used for the test."""
+        return [self.central_site] + self.remote_sites
 
     @staticmethod
     def hostnames(hosts: list[dict[str, object]]) -> list[str]:
@@ -278,7 +268,7 @@ class PerformanceTest:
 @pytest.fixture(name="perftest", scope="session")
 def _perftest(single_site: Site, pytestconfig: pytest.Config) -> Iterator[PerformanceTest]:
     """Single-site performance test"""
-    yield PerformanceTest([single_site], config=pytestconfig)
+    yield PerformanceTest(single_site, remote_sites=None, config=pytestconfig)
 
 
 @pytest.fixture(name="perftest_dist", scope="session")
@@ -286,7 +276,9 @@ def _perftest_dist(
     central_site: Site, remote_site: Site, remote_site_2: Site, pytestconfig: pytest.Config
 ) -> Iterator[PerformanceTest]:
     """Distributed performance test with 2 remote sites"""
-    yield PerformanceTest([central_site, remote_site, remote_site_2], config=pytestconfig)
+    yield PerformanceTest(
+        central_site, remote_sites=[remote_site, remote_site_2], config=pytestconfig
+    )
 
 
 def test_performance_hosts(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from polyfactory.factories import DataclassFactory
 
 from cmk.gui.search.collapsing import get_collapser
@@ -96,7 +95,6 @@ def test_host_collapsing_disabled() -> None:
     assert counts == initial_counts
 
 
-@pytest.mark.xfail(reason="Setup item may be missing if user has no permissions.", strict=True)
 def test_host_collapsing_setup_item_missing() -> None:
     initial_results = [
         UnifiedSearchResultItemFactory.build(

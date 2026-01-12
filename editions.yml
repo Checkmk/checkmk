@@ -56,19 +56,19 @@ editions:
         daily_tests: *daily_reduced
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
-        weekly: *daily_reduced
+        weekly: [*common, "cma-3", "cma-4"]
         testbuild: []
     managed:
         release: [*common, "cma-3", "cma-4"]
         daily: *daily_reduced
         daily_tests: *daily_reduced
-        weekly: *daily_reduced
+        weekly: [*common, "cma-3", "cma-4"]
         testbuild: []
     raw:
         release: *common
         daily: *daily_reduced
         daily_tests: *daily_reduced
-        weekly: *daily_reduced
+        weekly: *common
         testbuild: []
 
 # TODO: Sync this with our omd/distros/*.mk files

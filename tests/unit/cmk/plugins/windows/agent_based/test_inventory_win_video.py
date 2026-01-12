@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.windows.agent_based.inventory_win_video import (
-    inventory_win_video,
+    inventorize_win_video,
     parse_win_video,
 )
 
@@ -94,10 +94,10 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_win_video(
+def test_inventorize_win_video(
     monkeypatch: pytest.MonkeyPatch,
     string_table: StringTable,
     expected_result: InventoryResult,
 ) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
-    assert list(inventory_win_video(parse_win_video(string_table))) == expected_result
+    assert list(inventorize_win_video(parse_win_video(string_table))) == expected_result

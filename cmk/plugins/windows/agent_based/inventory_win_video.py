@@ -80,7 +80,7 @@ agent_section_win_video = AgentSection(
 )
 
 
-def inventory_win_video(section: Section) -> InventoryResult:
+def inventorize_win_video(section: Section) -> InventoryResult:
     for video in section:
         if "name" in video:
             yield TableRow(
@@ -99,5 +99,5 @@ def inventory_win_video(section: Section) -> InventoryResult:
 
 inventory_plugin_win_video = InventoryPlugin(
     name="win_video",
-    inventory_function=inventory_win_video,
+    inventory_function=inventorize_win_video,
 )

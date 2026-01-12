@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Never
 
 import pytest
 
@@ -61,7 +61,8 @@ from cmk.base.legacy_checks.huawei_switch_mem import (
     ],
 )
 def test_discover_huawei_switch_mem(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: Sequence[StringTable],
+    expected_discoveries: Sequence[tuple[str, Mapping[str, Never]]],
 ) -> None:
     """Test discovery function for huawei_switch_mem check."""
     parsed = parse_huawei_switch_mem(string_table)
@@ -239,7 +240,10 @@ def test_discover_huawei_switch_mem(
     ],
 )
 def test_check_huawei_switch_mem(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    string_table: Sequence[StringTable],
+    expected_results: Sequence[tuple[int, str, Sequence[tuple[str, float, float, float]]]],
 ) -> None:
     """Test check function for huawei_switch_mem check."""
     parsed = parse_huawei_switch_mem(string_table)

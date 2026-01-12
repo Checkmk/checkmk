@@ -3,18 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Never
 
 import pytest
 
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.huawei_switch_fan import (
     check_huawei_switch_fan,
-    inventory_huawei_switch_fan,
+    discover_huawei_switch_fan,
     parse_huawei_switch_fan,
 )
 
@@ -29,11 +27,11 @@ from cmk.base.legacy_checks.huawei_switch_fan import (
     ],
 )
 def test_inventory_huawei_switch_fan(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Never]]]
 ) -> None:
     """Test discovery function for huawei_switch_fan check."""
     parsed = parse_huawei_switch_fan(string_table)
-    result = list(inventory_huawei_switch_fan(parsed))
+    result = list(discover_huawei_switch_fan(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 
@@ -55,7 +53,12 @@ def test_inventory_huawei_switch_fan(
     ],
 )
 def test_check_huawei_switch_fan(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    string_table: StringTable,
+    expected_results: Sequence[
+        tuple[int, str, Sequence[tuple[str, float, float | None, float | None]]]
+    ],
 ) -> None:
     """Test check function for huawei_switch_fan check."""
     parsed = parse_huawei_switch_fan(string_table)

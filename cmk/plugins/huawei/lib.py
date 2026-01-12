@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import NamedTuple
+from dataclasses import dataclass
 
 from cmk.agent_based.v2 import contains, StringTable
 
@@ -15,7 +15,8 @@ DETECT_HUAWEI_OSN = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.25.1")
 _HUAWEI_MPU_BOARD_NAME_START = "mpu board"
 
 
-class HuaweiPhysicalEntityValue(NamedTuple):
+@dataclass(frozen=True)
+class HuaweiPhysicalEntityValue:
     physical_index: str
     stack_member: int
     value: str | None
@@ -109,10 +110,10 @@ def parse_huawei_physical_entity_values(
     return huawei_item_dict_from_entities(entities_per_member, multiple_entities_per_member)
 
 
-def huawei_item_dict_from_entities(
-    entities_per_member: Mapping[int, Sequence[HuaweiPhysicalEntityValue]],
+def huawei_item_dict_from_entities[T](
+    entities_per_member: Mapping[int, Sequence[T]] | Mapping[str, Sequence[T]],
     multiple_entities_per_member: bool = True,
-) -> Mapping[str, HuaweiPhysicalEntityValue]:
+) -> Mapping[str, T]:
     """
     Converts a dictionary of the form:
     {

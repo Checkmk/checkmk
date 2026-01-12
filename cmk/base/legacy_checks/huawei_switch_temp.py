@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterable
+from collections.abc import Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.plugins.huawei.lib import (
@@ -19,17 +22,17 @@ from cmk.plugins.huawei.lib import (
 check_info = {}
 
 
-def parse_huawei_switch_temp(string_table: list[StringTable]) -> Section:
+def parse_huawei_switch_temp(string_table: Sequence[StringTable]) -> Section:
     return parse_huawei_physical_entity_values(string_table)
 
 
-def discover_huawei_switch_temp(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_huawei_switch_temp(section: Section) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 
 def check_huawei_switch_temp(
     item: str, params: TempParamType, section: Section
-) -> Iterable[tuple[int, str, list]]:
+) -> LegacyCheckResult:
     if (item_data := section.get(item)) is None or item_data.value is None:
         return
     try:

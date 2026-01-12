@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.huawei.lib import (
     DETECT_HUAWEI_SWITCH,
@@ -29,14 +33,18 @@ def parse_huawei_switch_psu(string_table: list[StringTable]) -> Section:
     return parse_huawei_physical_entity_values(string_table, "power card")
 
 
-def discover_huawei_switch_psu(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_huawei_switch_psu(section: Section) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 
 def check_huawei_switch_psu(
-    item: str, params: Mapping, section: Section
-) -> Iterable[tuple[int, str]]:
-    if (item_data := section.get(item)) is None or item_data.value is None:
+    item: str, params: Mapping[str, Any], section: Section
+) -> LegacyCheckResult:
+    if not (item_data := section.get(item)):
+        return
+
+    # TODO: this weird. Either we should not discover in this case, or let it crash during checking.
+    if item_data.value is None:
         return
 
     # Only 'enabled' is OK, everything else is considered CRIT

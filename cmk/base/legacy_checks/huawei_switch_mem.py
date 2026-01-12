@@ -3,22 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, render, SNMPTree
-from cmk.plugins.huawei.lib import DETECT_HUAWEI_SWITCH, parse_huawei_physical_entity_values
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import OIDEnd, render, SNMPTree, StringTable
+from cmk.plugins.huawei.lib import (
+    DETECT_HUAWEI_SWITCH,
+    parse_huawei_physical_entity_values,
+    Section,
+)
 
 check_info = {}
 
 
-def parse_huawei_switch_mem(string_table):
+def parse_huawei_switch_mem(string_table: Sequence[StringTable]) -> Section:
     return parse_huawei_physical_entity_values(string_table)
 
 
-def check_huawei_switch_mem(item, params, parsed):
+def check_huawei_switch_mem(
+    item: str, params: Mapping[str, tuple[float, float]], parsed: Section
+) -> LegacyCheckResult:
     if not (item_data := parsed.get(item)):
+        return
+
+    # TODO: this weird. Either we should not discover in this case, or let it crash during checking.
+    if item_data.value is None:
         return
     try:
         mem = float(item_data.value)
@@ -34,7 +49,7 @@ def check_huawei_switch_mem(item, params, parsed):
     )
 
 
-def discover_huawei_switch_mem(section):
+def discover_huawei_switch_mem(section: Section) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 

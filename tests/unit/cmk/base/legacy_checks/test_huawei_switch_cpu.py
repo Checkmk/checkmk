@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Never
 
 import pytest
 
@@ -61,7 +59,8 @@ from cmk.base.legacy_checks.huawei_switch_cpu import (
     ],
 )
 def test_discover_huawei_switch_cpu(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: Sequence[StringTable],
+    expected_discoveries: Sequence[tuple[str, Mapping[str, Never]]],
 ) -> None:
     """Test discovery function for huawei_switch_cpu check."""
     parsed = parse_huawei_switch_cpu(string_table)
@@ -239,7 +238,10 @@ def test_discover_huawei_switch_cpu(
     ],
 )
 def test_check_huawei_switch_cpu(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    string_table: Sequence[StringTable],
+    expected_results: Sequence[tuple[int, str, Sequence[tuple[str, float, float, float]]]],
 ) -> None:
     """Test check function for huawei_switch_cpu check."""
     parsed = parse_huawei_switch_cpu(string_table)

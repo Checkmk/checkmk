@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
-def _item_spec_openhardwaremonitor_smart():
+def _item_spec_openhardwaremonitor_smart() -> TextInput:
     return TextInput(
         title=_("Device Name"),
         help=_("Name of the hard disk as reported by OHM: hdd0, hdd1, ..."),
     )
 
 
-def _parameter_valuespec_openhardwaremonitor_smart():
+def _parameter_valuespec_openhardwaremonitor_smart() -> Dictionary:
     return Dictionary(
         elements=[
             (

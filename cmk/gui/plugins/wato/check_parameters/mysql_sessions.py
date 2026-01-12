@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _item_spec_mysql_sessions():
+def _item_spec_mysql_sessions() -> TextInput:
     return TextInput(
         title=_("Instance"),
         help=_("Only needed if you have multiple MySQL instances on one server"),
     )
 
 
-def _parameter_valuespec_mysql_sessions():
+def _parameter_valuespec_mysql_sessions() -> Dictionary:
     return Dictionary(
         help=_(
             "This check monitors the current number of active sessions to the MySQL "

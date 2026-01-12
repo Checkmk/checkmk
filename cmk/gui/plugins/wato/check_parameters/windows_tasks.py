@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -18,7 +16,7 @@ from cmk.gui.valuespec import Dictionary, FixedValue, ListOf, MonitoringState, T
 _STATE = {0: "OK", 1: "WARN", 2: "CRIT"}
 
 
-def _parameter_valuespec_windows_tasks():
+def _parameter_valuespec_windows_tasks() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -100,7 +98,7 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_windows_tasks_discovery():
+def _valuespec_windows_tasks_discovery() -> Dictionary:
     return Dictionary(
         title=_("Windows Tasks"),
         elements=[

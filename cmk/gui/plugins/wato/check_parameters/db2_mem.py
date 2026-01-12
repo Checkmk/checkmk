@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Dictionary, Migrate, Percentage, TextInput
 
 
 def _parameter_valuespec_db2_mem() -> Migrate[dict[str, Any]]:
-    return Migrate(
+    return Migrate[dict[str, Any]](
         valuespec=Dictionary(
             elements=[
                 (

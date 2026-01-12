@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,12 +14,12 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Age, Checkbox, Dictionary, Migrate, MonitoringState, TextInput, Tuple
 
 
-def _migrate(params: dict) -> dict:
+def _migrate(params: dict[str, Any]) -> dict[str, Any]:
     params.pop("mrp_option", None)
     return params
 
 
-def _parameter_valuespec_oracle_dataguard_stats():
+def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
     return Migrate(
         Dictionary(
             help=_(

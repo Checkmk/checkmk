@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _item_spec_ibm_svc_total_latency() -> DropdownChoice[str]:
-    return DropdownChoice(
+    return DropdownChoice[str](
         choices=[
             ("Drives", _("Total latency for all drives")),
             ("MDisks", _("Total latency for all MDisks")),

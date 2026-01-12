@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -12,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, Migrate, TextInput
+from cmk.gui.valuespec import Age, Dictionary, DictionaryModel, Migrate, TextInput
 
 
 def _item_spec_db2_backup() -> TextInput:
@@ -21,7 +20,7 @@ def _item_spec_db2_backup() -> TextInput:
     )
 
 
-def _parameter_valuespec_db2_backup() -> Migrate[dict[str, Any]]:
+def _parameter_valuespec_db2_backup() -> Migrate[DictionaryModel]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

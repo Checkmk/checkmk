@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -48,7 +48,7 @@ rulespec_registry.register(
 )
 
 
-def _ntp_params():
+def _ntp_params() -> Tuple:
     return Tuple(
         title=_("Thresholds for quality of time"),
         elements=[
@@ -84,7 +84,7 @@ def _parameter_valuespec_ntp_peer() -> Dictionary:
     )
 
 
-def _item_spec_ntp_peer():
+def _item_spec_ntp_peer() -> TextInput:
     return TextInput(title=_("Name of the peer"))
 
 

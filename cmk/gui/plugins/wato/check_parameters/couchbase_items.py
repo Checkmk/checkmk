@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Float, Integer, TextInput, Tuple
 
 
-def _int_tuple(title: str) -> Tuple:
+def _int_tuple(title: str) -> Tuple[tuple[int, int]]:
     return Tuple(
         title=title,
         elements=[
@@ -28,7 +26,7 @@ def _int_tuple(title: str) -> Tuple:
     )
 
 
-def _float_tuple(title: str) -> Tuple:
+def _float_tuple(title: str) -> Tuple[tuple[float, float]]:
     return Tuple(
         title=title,
         elements=[

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from typing import Literal
@@ -45,7 +43,7 @@ def _migrate_licenses(
     return {"levels": ("always_ok", False)}
 
 
-def _vs_license():
+def _vs_license() -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             elements=[
@@ -109,7 +107,7 @@ def _vs_license():
     )
 
 
-def _item_spec_citrix_licenses():
+def _item_spec_citrix_licenses() -> TextInput:
     return TextInput(
         title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
         allow_empty=False,
@@ -127,7 +125,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_esx_licenses():
+def _item_spec_esx_licenses() -> TextInput:
     return TextInput(
         title=_("Name of the license"),
         help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
@@ -146,7 +144,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_ibmsvc_licenses():
+def _item_spec_ibmsvc_licenses() -> TextInput:
     return TextInput(
         title=_("ID of the license, e.g. <tt>virtualization</tt>"),
         allow_empty=False,
@@ -164,7 +162,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_rds_licenses():
+def _item_spec_rds_licenses() -> TextInput:
     return TextInput(
         title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
         allow_empty=False,

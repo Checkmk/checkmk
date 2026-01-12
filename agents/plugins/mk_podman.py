@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, Union
 
 # mypy: disable-error-code="no-any-return"
 
@@ -25,10 +25,10 @@ class AutomaticSocketDetectionMethod(Enum):
 
 
 class PodmanConfig(TypedDict):
-    socket_detection: AutomaticSocketDetectionMethod | tuple[Literal["manual"], Sequence[str]]
+    socket_detection: Union[AutomaticSocketDetectionMethod, tuple[Literal["manual"], Sequence[str]]]
 
 
-def load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> PodmanConfig | None:
+def load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> Union[PodmanConfig, None]:
     if not cfg_file_path.is_file():
         return None
     try:
@@ -61,7 +61,7 @@ def find_user_sockets() -> Sequence[str]:
     ]
 
 
-def get_socket_paths(config: PodmanConfig | None) -> Sequence[str]:
+def get_socket_paths(config: Union[PodmanConfig, None]) -> Sequence[str]:
     if (
         config is None
         or (socket_detection := config["socket_detection"]) is AutomaticSocketDetectionMethod.AUTO
@@ -91,12 +91,12 @@ class Error:
     message: str
 
 
-def write_sections(sections: Sequence[JSONSection | Error]) -> None:
+def write_sections(sections: Sequence[Union[JSONSection, Error]]) -> None:
     for section in sections:
         write_section(section)
 
 
-def write_section(section: JSONSection | Error) -> None:
+def write_section(section: Union[JSONSection, Error]) -> None:
     if isinstance(section, JSONSection):
         write_serialized_section(section.name, section.content)
     elif isinstance(section, Error):
@@ -113,17 +113,18 @@ def write_serialized_section(name: str, json_content: str) -> None:
 
 try:
     import requests_unixsocket  # type: ignore[import-untyped]
-except ImportError as e:
+except ImportError:
     write_section(
         Error(
-            label="requests_unixsocket",
-            message=f"Failed to import requests_unixsocket: {e}. "
-            "Please install the requests-unixsocket package.",
+            label="Missing Python dependency: requests-unixsocket.",
+            message="Import error: No module named 'requests_unixsocket'. "
+            "Install the OS package (for example: python3-requests-unixsocket on RHEL/Rocky via EPEL) "
+            "or the pip package 'requests-unixsocket'.",
         )
     )
 
 
-def write_piggyback_section(target_host: str, section: JSONSection | Error) -> None:
+def write_piggyback_section(target_host: str, section: Union[JSONSection, Error]) -> None:
     sys.stdout.write(f"<<<<{target_host}>>>>\n")
     write_section(section)
     sys.stdout.write("<<<<>>>>\n")
@@ -138,7 +139,9 @@ def build_url_callable(socket_path: str, endpoint_uri: str) -> str:
     return f"http+unix://{socket_path.replace('/', '%2F')}{endpoint_uri}"
 
 
-def query_containers(session: requests_unixsocket.Session, socket_path: str) -> JSONSection | Error:
+def query_containers(
+    session: requests_unixsocket.Session, socket_path: str
+) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/containers/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
@@ -149,7 +152,9 @@ def query_containers(session: requests_unixsocket.Session, socket_path: str) -> 
     return JSONSection("containers", json.dumps(output))
 
 
-def query_disk_usage(session: requests_unixsocket.Session, socket_path: str) -> JSONSection | Error:
+def query_disk_usage(
+    session: requests_unixsocket.Session, socket_path: str
+) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/system/df"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
@@ -159,7 +164,9 @@ def query_disk_usage(session: requests_unixsocket.Session, socket_path: str) -> 
     return JSONSection("disk_usage", json.dumps(response.json()))
 
 
-def query_engine(session: requests_unixsocket.Session, socket_path: str) -> JSONSection | Error:
+def query_engine(
+    session: requests_unixsocket.Session, socket_path: str
+) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/info"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
@@ -169,7 +176,7 @@ def query_engine(session: requests_unixsocket.Session, socket_path: str) -> JSON
     return JSONSection("engine", json.dumps(response.json()))
 
 
-def query_pods(session: requests_unixsocket.Session, socket_path: str) -> JSONSection | Error:
+def query_pods(session: requests_unixsocket.Session, socket_path: str) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/pods/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint), params={"all": "true"})
@@ -183,12 +190,14 @@ def query_container_inspect(
     session: requests_unixsocket.Session,
     socket_path: str,
     container_id: str,
-) -> JSONSection | Error:
+) -> Union[JSONSection, Error]:
     endpoint = f"/v4.0.0/libpod/containers/{container_id}/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
         response.raise_for_status()
-        section: JSONSection | Error = JSONSection("container_inspect", json.dumps(response.json()))
+        section: Union[JSONSection, Error] = JSONSection(
+            "container_inspect", json.dumps(response.json())
+        )
     except Exception as e:
         section = Error(build_url_human_readable(socket_path, endpoint), str(e))
     return section
@@ -196,7 +205,7 @@ def query_container_inspect(
 
 def query_raw_stats(
     session: requests_unixsocket.Session, socket_path: str
-) -> Mapping[str, object] | Error:
+) -> Union[Mapping[str, object], Error]:
     endpoint = "/v4.0.0/libpod/containers/stats"
     try:
         response = session.get(

@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.apc.lib_ats import DETECT
 
 
-def inventory_apc_inrow_airflow(section: StringTable) -> DiscoveryResult:
+def discover_apc_inrow_airflow(section: StringTable) -> DiscoveryResult:
     if section:
         yield Service()
 
@@ -79,7 +79,7 @@ snmp_section_apc_inrow_airflow = SimpleSNMPSection(
 check_plugin_apc_inrow_airflow = CheckPlugin(
     name="apc_inrow_airflow",
     service_name="Airflow",
-    discovery_function=inventory_apc_inrow_airflow,
+    discovery_function=discover_apc_inrow_airflow,
     check_function=check_apc_inrow_airflow,
     check_ruleset_name="airflow",
     check_default_parameters={

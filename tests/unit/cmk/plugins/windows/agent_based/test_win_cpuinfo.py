@@ -44,8 +44,8 @@ def _get_section() -> wci._Section:
     )
 
 
-def test_inventory_win_cpuinfo(section: wci._Section) -> None:
-    assert list(wci.inventory_win_cpuinfo(section)) == [
+def test_inventorize_win_cpuinfo(section: wci._Section) -> None:
+    assert list(wci.inventorize_win_cpuinfo(section)) == [
         Attributes(
             path=["hardware", "cpu"],
             inventory_attributes={

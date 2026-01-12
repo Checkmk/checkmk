@@ -104,7 +104,7 @@ agent_section_win_cpuinfo = AgentSection(
 )
 
 
-def inventory_win_cpuinfo(section: _Section) -> InventoryResult:
+def inventorize_win_cpuinfo(section: _Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "cpu"],
         inventory_attributes={k: v for k, v in asdict(section).items() if v is not None},
@@ -113,5 +113,5 @@ def inventory_win_cpuinfo(section: _Section) -> InventoryResult:
 
 inventory_plugin_win_cpuinfo = InventoryPlugin(
     name="win_cpuinfo",
-    inventory_function=inventory_win_cpuinfo,
+    inventory_function=inventorize_win_cpuinfo,
 )

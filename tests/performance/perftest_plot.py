@@ -1908,7 +1908,7 @@ def parse_args() -> PerftestPlotArgs:
         "--branch-version",
         dest="branch_version",
         type=str,
-        default="2.5.0",
+        default="2.6.0",
         help="The default branch version for jobs (default: %(default)s).",
     )
     parser.add_argument(

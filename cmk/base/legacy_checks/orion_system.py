@@ -57,7 +57,7 @@ def parse_orion_system(string_table):
     for what, value, factor in [
         ("voltage", system_voltage, 0.01),
         ("current", load_current, 0.1),
-        ("power", system_power, 0.1),
+        ("power", system_power, 1),
     ]:
         if value != "2147483647":
             # From MIB: The max. value 2147483647 is used to indicate an invalid value."

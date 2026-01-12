@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.windows.agent_based.inventory_win_disks import (
-    inventory_win_disks,
+    inventorize_win_disks,
     parse_win_disks,
 )
 
@@ -169,5 +169,5 @@ from cmk.plugins.windows.agent_based.inventory_win_disks import (
         ),
     ],
 )
-def test_inventory_win_disks(string_table: StringTable, expected_result: InventoryResult) -> None:
-    assert list(inventory_win_disks(parse_win_disks(string_table))) == expected_result
+def test_inventorize_win_disks(string_table: StringTable, expected_result: InventoryResult) -> None:
+    assert list(inventorize_win_disks(parse_win_disks(string_table))) == expected_result

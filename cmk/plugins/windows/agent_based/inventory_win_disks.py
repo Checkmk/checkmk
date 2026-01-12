@@ -107,7 +107,7 @@ agent_section_win_disks = AgentSection(
 )
 
 
-def inventory_win_disks(section: Section) -> InventoryResult:
+def inventorize_win_disks(section: Section) -> InventoryResult:
     for disk in section:
         if "fsnode" in disk:
             yield TableRow(
@@ -131,5 +131,5 @@ def inventory_win_disks(section: Section) -> InventoryResult:
 
 inventory_plugin_win_disks = InventoryPlugin(
     name="win_disks",
-    inventory_function=inventory_win_disks,
+    inventory_function=inventorize_win_disks,
 )

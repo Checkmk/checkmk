@@ -27,13 +27,6 @@ export interface UseWidgetVisualizationOptions {
 export interface UseWidgetVisualizationProps extends UseWidgetVisualizationOptions {
   validate: () => boolean
   widgetGeneralSettings: Ref<WidgetGeneralSettings>
-
-  /**
-   * use widgetGeneralSettings ref instead
-   * @deprecated
-   * @returns TitleSpec
-   */
-  generateTitleSpec: () => TitleSpec
 }
 
 export const useWidgetVisualizationProps = (
@@ -89,11 +82,6 @@ export const useWidgetVisualizationProps = (
     return false
   }
 
-  //To be removed once all widgets use the new system
-  const generateTitleSpec = (): TitleSpec => {
-    return widgetGeneralSettings.value.title!
-  }
-
   return {
     title,
     showTitle,
@@ -105,8 +93,6 @@ export const useWidgetVisualizationProps = (
     titleUrlValidationErrors,
     validate,
 
-    widgetGeneralSettings,
-
-    generateTitleSpec
+    widgetGeneralSettings
   }
 }

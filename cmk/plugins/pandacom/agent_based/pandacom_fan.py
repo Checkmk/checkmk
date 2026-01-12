@@ -29,7 +29,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.pandacom.lib import DETECT_PANDACOM
 
 
-def inventory_pandacom_fan(section: StringTable) -> DiscoveryResult:
+def discover_pandacom_fan(section: StringTable) -> DiscoveryResult:
     for fan_nr, fan_state in section:
         if fan_state not in ["0", "5"]:
             yield Service(item=fan_nr)
@@ -70,6 +70,6 @@ snmp_section_pandacom_fan = SimpleSNMPSection(
 check_plugin_pandacom_fan = CheckPlugin(
     name="pandacom_fan",
     service_name="Fan %s",
-    discovery_function=inventory_pandacom_fan,
+    discovery_function=discover_pandacom_fan,
     check_function=check_pandacom_fan,
 )

@@ -89,7 +89,7 @@ agent_section_win_reg_uninstall = AgentSection(
 )
 
 
-def inventory_win_reg_uninstall(section: Section) -> InventoryResult:
+def inventorize_win_reg_uninstall(section: Section) -> InventoryResult:
     for package in section:
         yield TableRow(
             path=["software", "packages"],
@@ -112,5 +112,5 @@ def inventory_win_reg_uninstall(section: Section) -> InventoryResult:
 
 inventory_plugin_win_reg_uninstall = InventoryPlugin(
     name="win_reg_uninstall",
-    inventory_function=inventory_win_reg_uninstall,
+    inventory_function=inventorize_win_reg_uninstall,
 )

@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.windows.agent_based.inventory_win_reg_uninstall import (
-    inventory_win_reg_uninstall,
+    inventorize_win_reg_uninstall,
     parse_win_reg_uninstall,
 )
 
@@ -120,12 +120,13 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_win_reg_uninstall(
+def test_inventorize_win_reg_uninstall(
     monkeypatch: pytest.MonkeyPatch,
     string_table: StringTable,
     expected_result: InventoryResult,
 ) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert (
-        list(inventory_win_reg_uninstall(parse_win_reg_uninstall(string_table))) == expected_result
+        list(inventorize_win_reg_uninstall(parse_win_reg_uninstall(string_table)))
+        == expected_result
     )

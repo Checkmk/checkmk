@@ -6,8 +6,6 @@
 # mypy: disable-error-code="exhaustive-match"
 
 
-from collections.abc import Mapping
-
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -16,6 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
+    migrate_to_password,
     Password,
     String,
     TimeMagnitude,
@@ -41,16 +40,31 @@ def _migrate_240_deployment(value: object) -> object:
             raise ValueError(value)
 
 
-def _migrate(value: object) -> Mapping[str, object]:
+def _migrate_password(value: object) -> object:
+    match value:
+        case {
+            "auth": {"password": ("cmk_postprocesed", "explicit_password", password)} as auth
+        } if isinstance(value, dict):
+            return {
+                **value,
+                "auth": {**auth, "password": migrate_to_password(("password", password))},
+            }
+        case _:
+            return value
+
+
+def _migrate(value: object) -> dict[str, object]:
     if isinstance(value, dict) and "user" in value:
         iv = value.get("interval")
         return {
             "deployment": ("sync", None) if not iv else ("cached", float(iv - iv % 60.0)),
             "auth": {
                 "user": value["user"],
-                "password": ("cmk_postprocesed", "explicit_password", value["password"]),
+                "password": migrate_to_password(("password", value["password"])),
             },
         }
+
+    value = _migrate_password(value)
 
     match value:
         case None:

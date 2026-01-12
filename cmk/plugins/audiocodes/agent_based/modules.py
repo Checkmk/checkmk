@@ -249,7 +249,7 @@ snmp_section_audiocodes_modules = SNMPSection(
 )
 
 
-def inventory_audiocodes_modules(section: Section) -> InventoryResult:
+def inventorize_audiocodes_modules(section: Section) -> InventoryResult:
     for module in [*section.modules, *section.redundant_modules]:
         yield TableRow(
             path=["hardware", "components", "modules"],
@@ -266,5 +266,5 @@ def inventory_audiocodes_modules(section: Section) -> InventoryResult:
 
 inventory_plugin_audiocodes_modules = InventoryPlugin(
     name="audiocodes_modules",
-    inventory_function=inventory_audiocodes_modules,
+    inventory_function=inventorize_audiocodes_modules,
 )

@@ -43,7 +43,7 @@ from cmk.plugins.genua.lib import DETECT_GENUA
 # .1.3.6.1.4.1.3717.2.1.3.1.6.4 2
 
 
-def inventory_genua_vpn(section: StringTable) -> DiscoveryResult:
+def discover_genua_vpn(section: StringTable) -> DiscoveryResult:
     yield from [Service(item=line[0]) for line in section]
 
 
@@ -82,6 +82,6 @@ snmp_section_genua_vpn = SimpleSNMPSection(
 check_plugin_genua_vpn = CheckPlugin(
     name="genua_vpn",
     service_name="VPN %s",
-    discovery_function=inventory_genua_vpn,
+    discovery_function=discover_genua_vpn,
     check_function=check_genua_vpn,
 )

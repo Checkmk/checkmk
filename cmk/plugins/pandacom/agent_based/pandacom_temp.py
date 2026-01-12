@@ -24,7 +24,7 @@ def parse_pandacom_temp(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def inventory_pandacom_module_temp(section: StringTable) -> DiscoveryResult:
+def discover_pandacom_module_temp(section: StringTable) -> DiscoveryResult:
     for line in section:
         yield Service(item=line[0])
 
@@ -65,7 +65,7 @@ snmp_section_pandacom_10gm_temp = SimpleSNMPSection(
 check_plugin_pandacom_10gm_temp = CheckPlugin(
     name="pandacom_10gm_temp",
     service_name="Temperature 10GM Module %s",
-    discovery_function=inventory_pandacom_module_temp,
+    discovery_function=discover_pandacom_module_temp,
     check_function=check_pandacom_module_temp,
     check_ruleset_name="temperature",
     check_default_parameters=PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,
@@ -92,7 +92,7 @@ snmp_section_pandacom_fc_temp = SimpleSNMPSection(
 check_plugin_pandacom_fc_temp = CheckPlugin(
     name="pandacom_fc_temp",
     service_name="Temperature FC Module %s",
-    discovery_function=inventory_pandacom_module_temp,
+    discovery_function=discover_pandacom_module_temp,
     check_function=check_pandacom_module_temp,
     check_ruleset_name="temperature",
     check_default_parameters=PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,

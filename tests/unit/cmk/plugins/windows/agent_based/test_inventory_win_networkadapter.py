@@ -22,8 +22,8 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
     Adapter,
     host_label_win_ip_address,
+    inventorize_win_ip_address,
     inventorize_win_networkadapter,
-    inventory_win_ip_address,
     parse_win_networkadapter,
     Section,
 )
@@ -229,8 +229,8 @@ __adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
         ),
     ],
 )
-def test_inventory_win_ip_address(section: Section, expected_result: InventoryResult) -> None:
-    assert list(inventory_win_ip_address(section)) == expected_result
+def test_inventorize_win_ip_address(section: Section, expected_result: InventoryResult) -> None:
+    assert list(inventorize_win_ip_address(section)) == expected_result
 
 
 @pytest.mark.parametrize(

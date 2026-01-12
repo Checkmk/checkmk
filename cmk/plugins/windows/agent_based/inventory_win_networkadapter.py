@@ -225,9 +225,9 @@ def inventorize_win_networkadapter(section: Section) -> InventoryResult:
             )
 
 
-def inventory_win_ip_address(section: Section) -> InventoryResult:
+def inventorize_win_ip_address(section: Section) -> InventoryResult:
     """
-    >>> list(inventory_win_ip_address([{
+    >>> list(inventorize_win_ip_address([{
     ...    "type": "ETH 802.3",
     ...    "macaddress": " 3C:7C:3F:49:7C:22",
     ...    "name": "Adaptor",
@@ -277,5 +277,5 @@ inventory_plugin_win_networkadapter = InventoryPlugin(
 inventory_plugin_win_ip_address = InventoryPlugin(
     name="win_ip_address",
     sections=["win_networkadapter"],
-    inventory_function=inventory_win_ip_address,
+    inventory_function=inventorize_win_ip_address,
 )

@@ -84,7 +84,7 @@ editions:
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
-        weekly: *daily_reduced
+        weekly: *common
         testbuild: []
     saas:
         release: *daily_saas

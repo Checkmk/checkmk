@@ -1,0 +1,2 @@
+# Exclude symlinked agent files from formatting
+.claude/agents/*.agent.md rules-lint-ignored=true

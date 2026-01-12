@@ -8,6 +8,9 @@ trace_profile.json
 
 *.jsonl
 
+# Exclude symlinked agent files from formatting
+.claude/agents/*.agent.md
+
 # 3rd party
 third_party/
 

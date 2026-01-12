@@ -72,11 +72,11 @@ void TableStateHistory::addColumns(Table *table, const std::string &prefix,
         offsets, [](const row_type &row) { return row._host_down; }));
     table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "in_downtime", "Shows if the host or service is in downtime",
-        offsets, [](const row_type &row) { return row._in_downtime; }));
+        offsets, [](const row_type &row) { return row._downtime_depth > 0; }));
     table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "in_host_downtime",
         "Shows if the host of this service is in downtime", offsets,
-        [](const row_type &row) { return row._in_host_downtime; }));
+        [](const row_type &row) { return row._host_downtime_depth > 0; }));
     table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "is_flapping", "Shows if the host or service is flapping",
         offsets, [](const row_type &row) { return row._is_flapping; }));
@@ -550,7 +550,7 @@ void TableStateHistory::fill_new_state(HostServiceState *hss,
     if (!hss->_is_host) {
         auto my_host = state_info.find(hss->_host->handleForStateHistory());
         if (my_host != state_info.end()) {
-            hss->_in_host_downtime = my_host->second->_in_host_downtime;
+            hss->_host_downtime_depth = my_host->second->_host_downtime_depth;
             hss->_host_down = my_host->second->_host_down;
         }
     }
@@ -668,7 +668,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         // Set absent state
         hss._state = -1;
         hss._debug_info = "UNMONITORED";
-        hss._in_downtime = false;
+        hss._downtime_depth = 0;
         hss._in_notification_period = 0;
         hss._in_service_period = 0;
         hss._is_flapping = false;
@@ -738,15 +738,16 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             const bool downtime_active =
                 entry->state_type().starts_with("STARTED");
 
-            if (hss._in_host_downtime != downtime_active) {
+            // TODO(sp) We need to do the actual counting here!
+            if ((hss._host_downtime_depth > 0) != downtime_active) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);
                 }
                 hss._debug_info =
                     hss._is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
-                hss._in_host_downtime = downtime_active;
+                hss._host_downtime_depth = downtime_active ? 1 : 0;
                 if (hss._is_host) {
-                    hss._in_downtime = downtime_active;
+                    hss._downtime_depth = downtime_active ? 1 : 0;
                 }
             } else {
                 state_changed = ModificationStatus::unchanged;
@@ -756,12 +757,12 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         case LogEntryKind::service_downtime_alert: {
             const bool downtime_active =
                 entry->state_type().starts_with("STARTED");
-            if (hss._in_downtime != downtime_active) {
+            if ((hss._downtime_depth > 0) != downtime_active) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);
                 }
                 hss._debug_info = "DOWNTIME SERVICE";
-                hss._in_downtime = downtime_active;
+                hss._downtime_depth = downtime_active ? 1 : 0;
             }
             break;
         }

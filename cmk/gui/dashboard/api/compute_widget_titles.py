@@ -31,23 +31,23 @@ class ComputeWidgetTitleWidgetRequest(BaseWidgetRequest):
 
 
 @api_model
-class ComputedWidgetTitlesRequest:
+class ComputeWidgetTitlesRequest:
     widgets: dict[str, ComputeWidgetTitleWidgetRequest] = api_field(
         description="All widgets to compute titles for."
     )
 
 
 @api_model
-class ComputedWidgetTitlesExtensions:
+class ComputeWidgetTitlesExtensions:
     titles: dict[str, str] = api_field(description="Computed widget titles by widget ID.")
 
 
 @api_model
-class ComputedWidgetTitlesResponse(DomainObjectModel):
+class ComputeWidgetTitlesResponse(DomainObjectModel):
     domainType: Literal["dashboard-widget-titles"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object."
     )
-    extensions: ComputedWidgetTitlesExtensions = api_field(
+    extensions: ComputeWidgetTitlesExtensions = api_field(
         description="Extensions for the response."
     )
 
@@ -59,12 +59,12 @@ def _compute_title(widget_request: ComputeWidgetTitleWidgetRequest) -> str:
     return widget.compute_title()
 
 
-def compute_widget_titles_v1(body: ComputedWidgetTitlesRequest) -> ComputedWidgetTitlesResponse:
+def compute_widget_titles_v1(body: ComputeWidgetTitlesRequest) -> ComputeWidgetTitlesResponse:
     """Compute multiple widget titles."""
     user.need_permission("general.edit_dashboards")
-    return ComputedWidgetTitlesResponse(
+    return ComputeWidgetTitlesResponse(
         domainType="dashboard-widget-titles",
-        extensions=ComputedWidgetTitlesExtensions(
+        extensions=ComputeWidgetTitlesExtensions(
             titles={
                 widget_id: _compute_title(widget_request)
                 for widget_id, widget_request in body.widgets.items()

@@ -758,6 +758,10 @@ class LDAPEnableGroupsToRoles(ValueTypedDictSchema):
         required=False,
     )
 
+    @pre_load
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        return {k: v for k, v in data.items() if k in self.fields}
+
     @post_load(pass_original=True)
     def _validate_extra_attributes(
         self,

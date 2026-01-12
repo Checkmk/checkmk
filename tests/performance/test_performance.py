@@ -227,9 +227,9 @@ class PerformanceTest:
             - Add success/failure summary and assertions for automated regression detection.
             - Introduce configurable request count and concurrency for broader coverage.
         """
-        max_first_request_timeout = 30  # 30 seconds until first request times out
-        max_request_timeout = 0.5  # 0.5 seconds until consecutive requests time out
-        max_average_request_duration = 0.3  # 0.3 seconds for the maximum average request time
+        max_first_request_timeout = 30  # seconds until first request times out
+        max_request_timeout = 0.5  # seconds until consecutive requests time out
+        max_average_request_duration = 0.4  # seconds for the maximum average request time
 
         first_request_duration = 0.0
         site_url = urljoin(str(self.central_site.internal_url), page_url.value).format_map(

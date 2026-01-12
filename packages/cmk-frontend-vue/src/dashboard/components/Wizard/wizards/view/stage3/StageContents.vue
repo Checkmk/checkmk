@@ -48,11 +48,6 @@ const visualizationProps = defineModel<UseWidgetVisualizationProps>('visualizati
   required: true
 })
 
-const generalSettings = computed<WidgetGeneralSettings>(() => ({
-  title: visualizationProps.value.generateTitleSpec(),
-  render_background: toValue(visualizationProps.value.showWidgetBackground)
-}))
-
 const widgetContentProps = computed<ContentProps>(
   () =>
     ({
@@ -60,14 +55,14 @@ const widgetContentProps = computed<ContentProps>(
       content: props.content,
       effective_filter_context: props.effective_filter_context,
       dashboardKey: props.dashboardKey,
-      general_settings: generalSettings.value
+      general_settings: visualizationProps.value.widgetGeneralSettings.value
     }) as ContentProps
 )
 
 function saveWidget() {
   const isValid = visualizationProps.value.validate()
   if (isValid) {
-    emit('addWidget', toValue(generalSettings))
+    emit('addWidget', toValue(visualizationProps.value.widgetGeneralSettings))
   }
 }
 

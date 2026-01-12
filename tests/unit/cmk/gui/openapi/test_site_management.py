@@ -881,3 +881,49 @@ def test_remote_site_not_logged_in(clients: ClientRegistry) -> None:
 
 def test_main_site_no_logged_in(clients: ClientRegistry) -> None:
     assert "logged_in" not in clients.SiteManagement.get(site_id="NO_SITE").json["extensions"]
+
+
+@pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT,
+    reason="Customer field only available in Ultimate MT edition",
+)
+def test_customer_required(clients: ClientRegistry) -> None:
+    r: SiteConfig = {
+        "basic_settings": {
+            "site_id": "required_site_id",
+            "alias": "required_site_alias",
+        },
+        "status_connection": {
+            "connection": {
+                "socket_type": "unix",
+                "path": "/path/to/socket",
+            },
+            "connect_timeout": 5,
+            "proxy": {"use_livestatus_daemon": "direct"},
+            "status_host": {"status_host_set": "disabled"},
+        },
+        "configuration_connection": {
+            "enable_replication": True,
+            "url_of_remote_site": "http://localhost/heute_remote_site_id_1/check_mk/",
+            "disable_remote_configuration": True,
+            "ignore_tls_errors": False,
+            "direct_login_to_web_gui_allowed": True,
+            "user_sync": {"sync_with_ldap_connections": "all"},
+            "replicate_event_console": True,
+            "replicate_extensions": True,
+            "message_broker_port": 5672,
+            "is_trusted": False,
+        },
+    }
+
+    clients.SiteManagement.create(site_config=r, expect_ok=False).assert_status_code(400)
+    r["basic_settings"]["customer"] = "provider"
+    clients.SiteManagement.create(site_config=r)
+    clients.SiteManagement.update(site_id=r["basic_settings"]["site_id"], site_config=r)
+
+    del r["basic_settings"]["customer"]
+    clients.SiteManagement.update(
+        site_id=r["basic_settings"]["site_id"],
+        site_config=r,
+        expect_ok=False,
+    ).assert_status_code(400)

@@ -15,7 +15,7 @@ from cmk.plugins.windows.agent_based.winperf_if import (
     _check_dhcp,
     _merge_sections,
     AdditionalIfData,
-    inventory_winperf_if,
+    inventorize_winperf_if,
     parse_winperf_if_dhcp,
     parse_winperf_if_get_netadapter,
     parse_winperf_if_pure,
@@ -1654,9 +1654,9 @@ def test_check_dhcp(item: str, result: Result | None) -> None:
     )
 
 
-def test_inventory_winperf_if() -> None:
+def test_inventorize_winperf_if() -> None:
     assert list(
-        inventory_winperf_if(
+        inventorize_winperf_if(
             SectionCounters(
                 interfaces={
                     Names.QLOGIC_2: _entry(1, Names.QLOGIC_2, 10000000000, 1425370325.75),

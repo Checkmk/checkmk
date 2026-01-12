@@ -686,7 +686,7 @@ check_plugin_winperf_if = CheckPlugin(
 )
 
 
-def inventory_winperf_if(
+def inventorize_winperf_if(
     section_winperf_if: SectionCounters | None,
     section_winperf_if_teaming: SectionTeaming | None,
     section_winperf_if_extended: SectionExtended | None,
@@ -745,5 +745,5 @@ inventory_plugin_winperf_if = InventoryPlugin(
         "winperf_if_teaming",
         "winperf_if_extended",
     ],
-    inventory_function=inventory_winperf_if,
+    inventory_function=inventorize_winperf_if,
 )

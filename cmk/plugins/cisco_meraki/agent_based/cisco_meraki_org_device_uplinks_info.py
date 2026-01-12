@@ -28,7 +28,7 @@ class Public(BaseModel, frozen=True):
 class Address(BaseModel, frozen=True):
     address: str
     assignment_mode: str = Field(alias="assignmentMode")
-    gateway: str
+    gateway: str | None = None
     protocol: str
     public: Public
 
@@ -72,7 +72,7 @@ def inventory_device_uplinks(section: Section) -> InventoryResult:
                 },
                 inventory_columns={
                     "assignment_mode": address.assignment_mode,
-                    "gateway": address.gateway,
+                    **({"gateway": address.gateway} if address.gateway else {}),
                     "public_address": address.public.address,
                 },
             )

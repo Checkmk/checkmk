@@ -35,7 +35,7 @@ export interface EnumerateActionsResponse {
 
 export interface AiInferenceRequest extends AiBaseRequestResponse {
   action_type: AiServiceAction
-  data: unknown
+  context_data: unknown
   history?: unknown[] | undefined
 }
 
@@ -61,11 +61,15 @@ export interface AiInference extends AiBaseLlmResponse {
 }
 
 export class AiApiClient extends Api {
-  public constructor() {
+  public constructor(siteName: string) {
     // no leading slash to use the given base url and path https://hostname.tld/sitename/check_mk/
-    super('ai-service/v1/', [
+    super('ai-service/api/v1/', [
       ['Content-Type', 'application/json'],
-      ['Accept', 'application/json']
+      ['Accept', 'application/json'],
+      ['x-checkmk-site-name', siteName]
+      // Uncomment this line for local testing,
+      // in production the reverse proxy will set the correct host header:
+      //, ['x-forwarded-host', 'localhost:3000']
     ])
   }
 
@@ -75,18 +79,20 @@ export class AiApiClient extends Api {
 
   public async getUserActions(templateId: string): Promise<AiServiceAction[]> {
     return (
-      (await this.get(`enumerate-actions?template_id=${templateId}`)) as EnumerateActionsResponse
+      (await this.get(
+        `enumerate-action-types?template_id=${templateId}`
+      )) as EnumerateActionsResponse
     ).all_possible_action_types
   }
 
   public async inference(
     action: AiServiceAction,
-    data: unknown,
+    contextData: unknown,
     history?: unknown[]
   ): Promise<AiInference> {
     const options: AiInferenceRequest = {
       action_type: action,
-      data,
+      context_data: contextData,
       history
     }
 

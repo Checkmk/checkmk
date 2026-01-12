@@ -28,7 +28,8 @@ function explainThis() {
   aiTemplate.value = new AiTemplateService(
     props.template.id,
     props.user_id,
-    props.template.context_data
+    props.template.context_data,
+    props.site_name
   )
   conversationOpen.value = true
 }

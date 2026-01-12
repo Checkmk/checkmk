@@ -114,11 +114,12 @@ export class AiTemplateService extends ServiceBase {
   constructor(
     public templateId: string,
     public userId: string,
-    public context_data: ExplainThisIssueData
+    public context_data: ExplainThisIssueData,
+    siteName: string
   ) {
     super(templateId, new KeyShortcutService(window))
 
-    this.api = new AiApiClient()
+    this.api = new AiApiClient(siteName)
     this.config = {
       user_id: this.userId,
       context_data: this.context_data,

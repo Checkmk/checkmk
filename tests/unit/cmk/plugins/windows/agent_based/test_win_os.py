@@ -31,8 +31,8 @@ def _get_section() -> win_os.Section:
         )
 
 
-def test_inventory_win_os(section: win_os.Section) -> None:
-    assert list(win_os.inventory_win_os(section)) == [
+def test_inventorize_win_os(section: win_os.Section) -> None:
+    assert list(win_os.inventorize_win_os(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

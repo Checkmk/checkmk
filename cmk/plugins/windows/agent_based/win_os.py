@@ -55,7 +55,7 @@ agent_section_win_os = AgentSection(
 )
 
 
-def inventory_win_os(section: Section) -> InventoryResult:
+def inventorize_win_os(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
@@ -68,5 +68,5 @@ def inventory_win_os(section: Section) -> InventoryResult:
 
 inventory_plugin_win_os = InventoryPlugin(
     name="win_os",
-    inventory_function=inventory_win_os,
+    inventory_function=inventorize_win_os,
 )

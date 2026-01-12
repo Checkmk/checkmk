@@ -1258,27 +1258,6 @@ def host_service_graph_dashlet_cmk(
     height -= bounds.top + bounds.bottom
     width -= bounds.left + bounds.right
 
-    graph_render_config.size = (width, height)
-
-    time_range = (
-        json.loads(request.get_str_input_mandatory("timerange"))
-        if time_range is None
-        else time_range
-    )
-
-    end_time: float
-    start_time: float
-    # Age and Range like ["age", 300] and ['date', [1661896800, 1661896800]]
-    if isinstance(time_range, list):
-        # compute_range needs tuple for computation
-        timerange_tuple: TimerangeValue = (time_range[0], time_range[1])
-        start_time, end_time = Timerange.compute_range(timerange_tuple).range
-    # Age like 14400 and y1, d1,...
-    else:
-        start_time, end_time = Timerange.compute_range(time_range).range
-
-    graph_data_range = make_graph_data_range((start_time, end_time), graph_render_config.size[1])
-
     try:
         graph_recipes = graph_specification.recipes(
             registered_metrics,
@@ -1320,6 +1299,27 @@ def host_service_graph_dashlet_cmk(
             msg_or_exc=_("Failed to calculate a graph recipe."),
             debug=debug,
         )
+
+    graph_render_config.size = (width, height)
+
+    time_range = (
+        json.loads(request.get_str_input_mandatory("timerange"))
+        if time_range is None
+        else time_range
+    )
+
+    end_time: float
+    start_time: float
+    # Age and Range like ["age", 300] and ['date', [1661896800, 1661896800]]
+    if isinstance(time_range, list):
+        # compute_range needs tuple for computation
+        timerange_tuple: TimerangeValue = (time_range[0], time_range[1])
+        start_time, end_time = Timerange.compute_range(timerange_tuple).range
+    # Age like 14400 and y1, d1,...
+    else:
+        start_time, end_time = Timerange.compute_range(time_range).range
+
+    graph_data_range = make_graph_data_range((start_time, end_time), graph_render_config.size[1])
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.

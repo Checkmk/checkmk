@@ -44,7 +44,7 @@ def parse_apc_inrow_temp(string_table: StringTable) -> Mapping[str, float]:
     return parsed
 
 
-def inventory_apc_inrow_temp(section: Mapping[str, float]) -> DiscoveryResult:
+def discover_apc_inrow_temp(section: Mapping[str, float]) -> DiscoveryResult:
     yield from (Service(item=key) for key in section)
 
 
@@ -74,7 +74,7 @@ snmp_section_apc_inrow_temp = SimpleSNMPSection(
 check_plugin_apc_inrow_temp = CheckPlugin(
     name="apc_inrow_temp",
     service_name="Temperature %s",
-    discovery_function=inventory_apc_inrow_temp,
+    discovery_function=discover_apc_inrow_temp,
     check_function=check_apc_inrow_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},

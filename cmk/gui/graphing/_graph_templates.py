@@ -701,9 +701,7 @@ def _create_graph_recipe_from_template(
             graph_template.range,
             translated_metrics,
         ),
-        horizontal_rules=[
-            _evaluated_scalar_to_horizontal_rule(evaluated) for evaluated in graph_template.scalars
-        ],
+        horizontal_rules=_evaluated_scalars_to_horizontal_rules(graph_template.scalars),
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function,
         specification=specification,
@@ -717,6 +715,16 @@ def _evaluated_scalar_to_horizontal_rule(evaluated: Evaluated) -> HorizontalRule
         color=evaluated.color,
         title=evaluated.title,
     )
+
+
+def _evaluated_scalars_to_horizontal_rules(
+    scalars: Sequence[Evaluated],
+) -> Sequence[HorizontalRule]:
+    return [
+        _evaluated_scalar_to_horizontal_rule(evaluated)
+        for evaluated in scalars
+        if evaluated.value not in (float("inf"), float("-inf"))
+    ]
 
 
 def _evaluate_predictive_metrics(

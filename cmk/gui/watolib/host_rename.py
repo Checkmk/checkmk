@@ -39,7 +39,7 @@ from .changes import add_change
 from .check_mk_automations import rename_hosts
 from .hosts_and_folders import call_hook_hosts_changed, Folder, folder_tree, Host
 from .notifications import NotificationRuleConfigFile
-from .rulesets import FolderRulesets
+from .rulesets import FolderRulesets, Rule
 from .utils import rename_host_in_list
 
 
@@ -64,6 +64,20 @@ class RenameHostHookRegistry(Registry[RenameHostHook]):
 
 
 rename_host_hook_registry = RenameHostHookRegistry()
+
+
+@dataclass(frozen=True)
+class RenameHostInRuleValue:
+    ruleset_name: str
+    func: Callable[[HostName, HostName, Rule], bool]  # returns true on change
+
+
+class RenameHostInRuleValueRegistry(Registry[RenameHostInRuleValue]):
+    def plugin_name(self, instance: RenameHostInRuleValue) -> str:
+        return instance.ruleset_name
+
+
+rename_host_in_rule_value_registry = RenameHostInRuleValueRegistry()
 
 
 def perform_rename_hosts(
@@ -199,9 +213,17 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
 
         changed_folder_rulesets = []
         for varname, ruleset in rulesets.get_rulesets().items():
+            rename_host_in_rule_value_hook = rename_host_in_rule_value_registry.get(varname)
             for _rule_folder, _rulenr, rule in ruleset.get_rules():
                 orig_rule = rule.clone(preserve_id=True)
+                changed_rule = False
                 if rule.replace_explicit_host_condition(oldname, newname):
+                    changed_rule = True
+                if rename_host_in_rule_value_hook:
+                    if rename_host_in_rule_value_hook.func(oldname, newname, rule):
+                        changed_rule = True
+
+                if changed_rule:
                     changed_folder_rulesets.append(varname)
 
                     log_audit(

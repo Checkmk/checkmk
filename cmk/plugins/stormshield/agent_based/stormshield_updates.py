@@ -30,7 +30,7 @@ STATE_MAP = {
 }
 
 
-def inventory_stormshield_updates(section: StringTable) -> DiscoveryResult:
+def discover_stormshield_updates(section: StringTable) -> DiscoveryResult:
     for subsystem, state, lastrun in section:
         if state == "Failed" and lastrun == "":
             pass
@@ -66,6 +66,6 @@ snmp_section_stormshield_updates = SimpleSNMPSection(
 check_plugin_stormshield_updates = CheckPlugin(
     name="stormshield_updates",
     service_name="Autoupdate %s",
-    discovery_function=inventory_stormshield_updates,
+    discovery_function=discover_stormshield_updates,
     check_function=check_stormshield_updates,
 )

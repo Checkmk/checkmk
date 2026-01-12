@@ -58,8 +58,8 @@ class CDP(BaseModel, frozen=True):
 
 class LLDP(BaseModel, frozen=True):
     port_id: str = Field(alias="portId")
-    system_name: str = Field(alias="systemName")
 
+    system_name: str | None = Field(default=None, alias="systemName")
     system_capabilities: str | None = Field(default=None, alias="systemCapabilities")
     chassis_id: str | None = Field(default=None, alias="chassisId")
     management_address: str | None = Field(default=None, alias="managementAddress")

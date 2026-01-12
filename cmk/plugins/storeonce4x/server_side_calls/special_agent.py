@@ -23,8 +23,10 @@ def commands_function(
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = [
+        "--user",
         params.user,
-        params.password.unsafe(),
+        "--password",
+        params.password,
         host_config.name,
     ]
 

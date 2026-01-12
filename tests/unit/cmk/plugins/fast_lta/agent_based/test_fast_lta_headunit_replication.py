@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.fast_lta.agent_based.fast_lta_headunit import (
     check_fast_lta_headunit_replication,
-    inventory_fast_lta_headunit_replication,
+    discover_fast_lta_headunit_replication,
 )
 
 
@@ -28,7 +28,7 @@ def test_discovery_fast_lta_headunit_replication(
     info: Sequence[StringTable],
     expected: DiscoveryResult,
 ) -> None:
-    assert list(inventory_fast_lta_headunit_replication(info)) == expected
+    assert list(discover_fast_lta_headunit_replication(info)) == expected
 
 
 @pytest.mark.parametrize(

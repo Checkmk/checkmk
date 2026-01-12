@@ -119,7 +119,7 @@ check_plugin_fast_lta_headunit_status = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fast_lta_headunit_replication(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_fast_lta_headunit_replication(section: Sequence[StringTable]) -> DiscoveryResult:
     if section[0]:
         yield Service()
 
@@ -155,7 +155,7 @@ check_plugin_fast_lta_headunit_replication = CheckPlugin(
     name="fast_lta_headunit_replication",
     service_name="Fast LTA Replication",
     sections=["fast_lta_headunit"],
-    discovery_function=inventory_fast_lta_headunit_replication,
+    discovery_function=discover_fast_lta_headunit_replication,
     check_function=check_fast_lta_headunit_replication,
 )
 

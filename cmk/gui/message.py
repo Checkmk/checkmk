@@ -432,7 +432,9 @@ def _message_spec(users: Mapping[str, UserSpec]) -> Dictionary:
     )
 
 
-def _validate_msg(msg: Mapping[str, Any], all_user_ids: Iterable[UserId]) -> None:
+def _validate_msg(msg_with_topic: Mapping[str, Any], all_user_ids: Iterable[UserId]) -> None:
+    msg = msg_with_topic["topic0"]
+    assert isinstance(msg, dict)
     if not msg.get("methods"):
         raise ValidationError(FSMessage("Please select at least one messaging method."))
 

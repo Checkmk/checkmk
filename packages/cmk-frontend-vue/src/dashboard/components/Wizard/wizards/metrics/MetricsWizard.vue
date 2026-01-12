@@ -83,7 +83,6 @@ const { hostSelection, serviceSelection, metricSelection } = getDefaultsFromGrap
 const hostFilterType = ref<ElementSelection>(hostSelection)
 const serviceFilterType = ref<ElementSelection>(serviceSelection)
 const metricType = ref<MetricSelection>(metricSelection)
-const metricHandler = useMetric(null, null, getMetricFromWidget(props.editWidgetSpec))
 
 watch([hostFilterType, serviceFilterType], ([newHostFilterType, newServiceFilterType]) => {
   if (newHostFilterType === ElementSelection.MULTIPLE) {
@@ -94,18 +93,41 @@ watch([hostFilterType, serviceFilterType], ([newHostFilterType, newServiceFilter
   }
 })
 
+interface PreselectedSingleFilters {
+  host: string | null
+  service: string | null
+}
+
+const _getSelectedSingleFilters = (
+  configuredFilters: ConfiguredFilters
+): PreselectedSingleFilters => {
+  const host: string | null = configuredFilters?.host?.host ?? null
+  const service: string | null = configuredFilters?.service?.service ?? null
+
+  return { host, service }
+}
+
+const preselectedFilters = _getSelectedSingleFilters(
+  widgetFilterManager.filterHandler.configuredFilters
+)
+
+const metricHandler = useMetric(
+  preselectedFilters.host,
+  preselectedFilters.service,
+  getMetricFromWidget(props.editWidgetSpec)
+)
+
 watch(
   [widgetFilterManager.filterHandler.configuredFilters],
-  (newConfiguredFilters) => {
-    const host: string | null = newConfiguredFilters[0]?.host?.host ?? null
-    const svc: string | null = newConfiguredFilters[0]?.service?.service ?? null
+  ([newConfiguredFilters]) => {
+    const { host, service } = _getSelectedSingleFilters(newConfiguredFilters)
 
     if (host && hostFilterType.value === ElementSelection.SPECIFIC) {
       metricHandler.host.value = host
     }
 
-    if (svc && serviceFilterType.value === ElementSelection.SPECIFIC) {
-      metricHandler.service.value = svc
+    if (service && serviceFilterType.value === ElementSelection.SPECIFIC) {
+      metricHandler.service.value = service
     }
   },
   { deep: true }

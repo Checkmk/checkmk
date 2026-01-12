@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.windows.agent_based.inventory_win_wmi_software import (
-    inventory_win_wmi_software,
+    inventorize_win_wmi_software,
     parse_win_wmi_software,
 )
 
@@ -84,8 +84,10 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_win_wmi_software(
+def test_inventorize_win_wmi_software(
     monkeypatch: pytest.MonkeyPatch, string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
-    assert list(inventory_win_wmi_software(parse_win_wmi_software(string_table))) == expected_result
+    assert (
+        list(inventorize_win_wmi_software(parse_win_wmi_software(string_table))) == expected_result
+    )

@@ -48,7 +48,7 @@ const options = computed<Array<Suggestion>>(() =>
         view.extensions.is_mobile!
       )
     }))
-    .sort((a, b) => a.title.localeCompare(b.title))
+    .sort((a: Suggestion, b: Suggestion) => a.title.localeCompare(b.title))
 )
 
 // Copied from cmk/gui/views/view_choices.py

@@ -186,11 +186,10 @@ def _get_or_load_image(
             logger.info("  Is in sync with registry, using local image")
             return image
 
-        logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
-
+        logger.info("  Not in sync with registry (%s), trying to pull", registry_data.short_id)
     except docker.errors.ImageNotFound:
         logger.info(
-            "  Not available locally, try to pull (May take some time. Grab a coffee or two...)"
+            "  Not available locally, trying to pull (May take some time. Grab a coffee or two...)"
         )
 
     try:

@@ -61,6 +61,14 @@ catch {
 ## -- end of the code which may switch powershell --
 
 
+## Situation with powershell ascii and code page in Windows is not uniform
+## We do not send UTF8 BOM: we call [Text.UTF8Encoding]::UTF8 functionally the same as [Text.UTF8Encoding]::new($false)
+## See:
+## https://devblogs.microsoft.com/powershell/outputencoding-to-the-rescue/
+## https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-7.5
+## https://www.ibm.com/docs/en/noi/1.6.13?topic=chs-ssh-automation-action-output-powershell-shows-garbled-multi-byte-characters
+$OutputEncoding = [Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
+
 # Get Information from veeam backup and replication in cmk-friendly format
 # V0.9
 

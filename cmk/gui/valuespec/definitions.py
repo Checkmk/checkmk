@@ -6430,6 +6430,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
     def transform_value(self, value: DictionaryModel) -> DictionaryModel:
         if not isinstance(value, dict):
             raise TypeError(f"Dictionary.transform_value() got a non-dict: {value!r}")
+        value = self.migrate(value)
         return {
             **{
                 param: vs.transform_value(value[param])

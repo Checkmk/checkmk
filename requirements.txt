@@ -5468,10 +5468,6 @@ types-oauthlib==3.3.0.20250822 \
     --hash=sha256:2cd41587dd80c199e4230e3f086777e9ae525e89579c64afe5e0039ab09be9de \
     --hash=sha256:b7f4c9b9eed0e020f454e0af800b10e93dd2efd196da65744b76910cce7e70d6
     # via -r tests/dev-requirements.in
-types-paho-mqtt==1.6.0.20240321 \
-    --hash=sha256:694eec160340f2a2b151237dcc3f107a63e1c4e5b8f9fcda0ba392049af9cbec \
-    --hash=sha256:cd275c14f39363c2a0f8286ead9a46962e5421ebd477547b892ae016699f5a4a
-    # via -r tests/dev-requirements.in
 types-paramiko==4.0.0.20250822 \
     --hash=sha256:1b56b0cbd3eec3d2fd123c9eb2704e612b777e15a17705a804279ea6525e0c53 \
     --hash=sha256:55bdb14db75ca89039725ec64ae3fa26b8d57b6991cfb476212fa8f83a59753c

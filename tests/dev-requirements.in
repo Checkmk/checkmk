@@ -68,7 +68,6 @@ types-jsonschema  # used for type checking
 types-lxml  # used for type checking
 types-mypy-extensions  # used for type checking
 types-oauthlib  # used for type checking
-types-paho-mqtt  # used for type checking
 types-paramiko  # used for type checking
 types-protobuf  # used for type checking
 types-psutil  # used for type checking

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Annotated
+from typing import Annotated, Self
 
-from pydantic import AfterValidator
+from pydantic import model_validator
 
 from livestatus import SiteConfiguration
 
@@ -14,11 +14,10 @@ from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
-    CustomerConverter,
     SiteIdConverter,
     TypedPlainValidator,
 )
-from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
+from cmk.gui.openapi.framework.model.restrict_editions import after_validator_for_customer_field
 
 from .common import SiteConnectionBaseModel
 from .config_example import default_config_example
@@ -30,10 +29,7 @@ class BasicSettingsBaseModel:
         description="The alias of the site.",
         example="Site Alias",
     )
-    customer: Annotated[
-        Annotated[str, AfterValidator(CustomerConverter().should_exist)] | ApiOmitted,
-        RestrictEditions(supported_editions={Edition.ULTIMATEMT}, required_if_supported=True),
-    ] = api_field(
+    customer: str | ApiOmitted = api_field(
         example="provider",
         description=edition_field_description(
             "By specifying a customer, you configure on which sites the user object will be "
@@ -48,6 +44,14 @@ class BasicSettingsBaseModel:
         if isinstance(self.customer, str) and self.customer != "global":
             return self.customer
         return None
+
+    @model_validator(mode="after")
+    def validate_customer(self) -> Self:
+        after_validator_for_customer_field(
+            customer=self.customer,
+            required_if_supported=True,
+        )
+        return self
 
 
 @api_model

@@ -24,10 +24,12 @@ onMounted(async () => {
 })
 
 const options = computed<Array<Suggestion>>(() =>
-  (list.value ?? []).map((ds) => ({
-    name: ds.id!,
-    title: untranslated(ds.title!)
-  }))
+  (list.value ?? [])
+    .map((ds) => ({
+      name: ds.id!,
+      title: untranslated(ds.title!)
+    }))
+    .sort((a: Suggestion, b: Suggestion) => a.title.localeCompare(b.title))
 )
 </script>
 
@@ -44,7 +46,7 @@ const options = computed<Array<Suggestion>>(() =>
     <CmkDropdown
       v-if="!isLoading && !error"
       v-model:selected-option="selectedDatasource"
-      :options="{ type: 'fixed', suggestions: options }"
+      :options="{ type: 'filtered', suggestions: options }"
       :label="_t('Select datasource')"
       :input-hint="_t('Choose from available datasources')"
       :disabled="readOnly"

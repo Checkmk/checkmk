@@ -12,6 +12,8 @@
 # ENV_VAR_LIST and SEC_VAR_LIST shall not contain elements with "#", see test-gerrit.groovy
 #
 
+# yamllint disable rule:line-length
+
 VARIABLES:
     - NAME: PATCHSET_REVISION
       # Will be used if not provided by Jenkins
@@ -375,6 +377,7 @@ STAGES:
       JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_requirements/"
 
     - NAME: "Python only Py-Extensions"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
       DIR: "tests"
       ENV_VARS:
           PYTEST_ADDOPTS: "--color=no"
@@ -391,7 +394,7 @@ STAGES:
       JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_py_extensions/"
 
     - NAME: "Python File Content Test"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FILES_REL
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
       DIR: "tests"
       ENV_VARS:
           PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-file-content-junit.xml --color=no"

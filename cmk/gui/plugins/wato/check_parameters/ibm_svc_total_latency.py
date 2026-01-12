@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -15,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
-def _item_spec_ibm_svc_total_latency():
+def _item_spec_ibm_svc_total_latency() -> DropdownChoice[str]:
     return DropdownChoice(
         choices=[
             ("Drives", _("Total latency for all drives")),
@@ -27,7 +25,7 @@ def _item_spec_ibm_svc_total_latency():
     )
 
 
-def _parameter_valuespec_ibm_svc_total_latency():
+def _parameter_valuespec_ibm_svc_total_latency() -> Dictionary:
     return Dictionary(
         elements=[
             (

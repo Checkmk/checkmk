@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,14 +12,14 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, TextInput, Tuple
 
 
-def _item_spec_cisco_ip_sla():
+def _item_spec_cisco_ip_sla() -> TextInput:
     return TextInput(
         title=_("RTT row index of the service"),
         allow_empty=True,
     )
 
 
-def _parameter_valuespec_cisco_ip_sla():
+def _parameter_valuespec_cisco_ip_sla() -> Dictionary:
     return Dictionary(
         elements=[
             (

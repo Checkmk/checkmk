@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,14 +15,14 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Migrate, Percentage, TextInput
 
 
-def _item_spec_juniper_mem_modules():
+def _item_spec_juniper_mem_modules() -> TextInput:
     return TextInput(
         title=_("Module name"),
         help=_("The identificator of the module."),
     )
 
 
-def _parameter_valuespec_juniper_mem_modules():
+def _parameter_valuespec_juniper_mem_modules() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

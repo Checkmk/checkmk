@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -17,7 +16,7 @@ from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 
 
 # TODO: Why is this only a manual check rulespec?
-def _parameter_valuespec_cpu_utilization_cluster() -> ListOf[tuple[Any, ...]]:
+def _parameter_valuespec_cpu_utilization_cluster() -> ListOf[tuple[int, tuple[float, float]]]:
     return ListOf(
         valuespec=Tuple(
             elements=[

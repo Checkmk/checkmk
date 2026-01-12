@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -28,7 +28,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _vs_levels(help_txt):
+def _vs_levels(help_txt: str) -> Tuple:
     return Tuple(
         title=_("Levels on task count"),
         help=help_txt,
@@ -152,7 +152,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_domino_tasks():
+def _item_spec_domino_tasks() -> TextInput:
     return TextInput(
         title=_("Name of service"),
         help=_("This name will be used in the description of the service"),

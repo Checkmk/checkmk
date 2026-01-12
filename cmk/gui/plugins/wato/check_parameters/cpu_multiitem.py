@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
@@ -14,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
-def _valuespec_cpu_utilization_multiitem_discovery():
+def _valuespec_cpu_utilization_multiitem_discovery() -> Dictionary:
     return Dictionary(
         title=_("CPU multi item discovery"),
         help=_(

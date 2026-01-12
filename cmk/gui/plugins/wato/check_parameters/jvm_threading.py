@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -15,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, TextInput
 
 
-def _item_spec_jvm_threading():
+def _item_spec_jvm_threading() -> TextInput:
     return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
@@ -23,7 +21,7 @@ def _item_spec_jvm_threading():
     )
 
 
-def _parameter_valuespec_jvm_threading():
+def _parameter_valuespec_jvm_threading() -> Dictionary:
     return Dictionary(
         elements=[
             (

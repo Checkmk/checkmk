@@ -24,7 +24,7 @@ def test_parameter_valuespec_returns_a_dictionary() -> None:
 
 def test_parameter_valuespec_has_as_much_elements_as_section_elements() -> None:
     parameters = kube_pod_containers._parameter_valuespec()
-    assert len(parameters._elements()) == len(SECTION_ELEMENTS)
+    assert len(list(parameters._elements())) == len(SECTION_ELEMENTS)
 
 
 @pytest.mark.parametrize("section_element", SECTION_ELEMENTS)

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,13 +15,13 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Age, Dictionary, Migrate, TextInput
 
 
-def _item_spec_db2_backup():
+def _item_spec_db2_backup() -> TextInput:
     return TextInput(
         title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
     )
 
 
-def _parameter_valuespec_db2_backup():
+def _parameter_valuespec_db2_backup() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

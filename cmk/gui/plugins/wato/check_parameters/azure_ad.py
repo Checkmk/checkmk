@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 from cmk.gui.form_specs.generators.age import Age
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.rulesets.v1 import Title
@@ -15,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_form_spec_azure_ad():
+def _parameter_form_spec_azure_ad() -> Dictionary:
     return Dictionary(
         elements={
             "age": DictElement(

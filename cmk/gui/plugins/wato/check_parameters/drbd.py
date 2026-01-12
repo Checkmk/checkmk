@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -23,7 +21,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _parameter_valuespec_drbd():
+def _parameter_valuespec_drbd() -> Dictionary:
     return Dictionary(
         ignored_keys=[
             "roles_inventory",

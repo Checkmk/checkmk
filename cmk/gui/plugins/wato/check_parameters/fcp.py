@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.interface_utils import vs_interface_traffic
@@ -24,7 +23,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _parameter_valuespec_fcp():
+def _parameter_valuespec_fcp() -> Dictionary:
     return Dictionary(
         ignored_keys=["inv_speed", "inv_state"],
         elements=[

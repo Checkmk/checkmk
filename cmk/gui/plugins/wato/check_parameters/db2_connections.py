@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,13 +12,13 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _item_spec_db2_connections():
+def _item_spec_db2_connections() -> TextInput:
     return TextInput(
         title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
     )
 
 
-def _parameter_valuespec_db2_connections():
+def _parameter_valuespec_db2_connections() -> Dictionary:
     return Dictionary(
         help=_("This rule allows you to set limits for the maximum number of DB2 connections"),
         elements=[

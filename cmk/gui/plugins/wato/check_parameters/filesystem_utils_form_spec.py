@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
@@ -66,7 +65,7 @@ class FilesystemElements(Enum):
 # (4 alternatives)
 # In the dynamic case, the levels are stores in a list where the second element
 # represents the levels and the conditions above apply.
-def _match_dual_level_type(value):
+def _match_dual_level_type(value: Any) -> int:
     if isinstance(value, list):
         for entry in value:
             if entry[1][0] < 0 or entry[1][1] < 0:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
 from cmk.rulesets.v1 import Help, Label, Title
@@ -18,7 +17,7 @@ from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_apache_status():
+def _item_spec_apache_status() -> String:
     return String(
         title=Title("Apache Server"),
         help_text=Help("A string-combination of servername and port, e.g. 127.0.0.1:5000."),

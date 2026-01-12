@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -28,7 +28,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _validate_discovery_filesystem_params(value, varprefix):
+def _validate_discovery_filesystem_params(value: Any, varprefix: str) -> None:
     mountpoint_for_block_devices = value.get(
         "mountpoint_for_block_devices", "volume_name_as_mountpoint"
     )
@@ -227,7 +227,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_filesystem():
+def _item_spec_filesystem() -> TextInput:
     return TextInput(
         title=_("Mount point"),
         help=_(

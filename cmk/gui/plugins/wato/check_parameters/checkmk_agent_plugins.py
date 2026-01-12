@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -23,7 +21,7 @@ def _validate_version(value: str, varprefix: str) -> None:
         raise MKUserError(varprefix, _("Can't parse version %r") % value)
 
 
-def _parameter_valuespec_checkmk_agent_plugins():
+def _parameter_valuespec_checkmk_agent_plugins() -> Dictionary:
     return Dictionary(
         elements=[
             (

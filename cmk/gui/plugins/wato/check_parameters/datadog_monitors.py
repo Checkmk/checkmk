@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -71,7 +69,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_datadog_monitors():
+def _item_spec_datadog_monitors() -> TextInput:
     return TextInput(
         title=_("Datadog monitor"),
         help=_("The name of the Datadog monitor."),

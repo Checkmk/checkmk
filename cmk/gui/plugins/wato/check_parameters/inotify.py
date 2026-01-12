@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -14,13 +12,13 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, ListOf, TextInput, Tuple
 
 
-def _item_spec_inotify():
+def _item_spec_inotify() -> TextInput:
     return TextInput(
         title=_("The file system path, prefixed with <i>File </i> or <i>Folder </i>"),
     )
 
 
-def _parameter_valuespec_inotify():
+def _parameter_valuespec_inotify() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule allows you to set levels for specific Inotify changes. "

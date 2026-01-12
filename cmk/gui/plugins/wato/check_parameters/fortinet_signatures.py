@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -15,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, Tuple
 
 
-def _vs_fortinet_signatures(title):
+def _vs_fortinet_signatures(title: str) -> Alternative:
     return Alternative(
         title=title,
         elements=[
@@ -37,7 +34,7 @@ def _vs_fortinet_signatures(title):
     )
 
 
-def _parameter_valuespec_fortinet_signatures():
+def _parameter_valuespec_fortinet_signatures() -> Dictionary:
     return Dictionary(
         elements=[
             ("av_age", _vs_fortinet_signatures(_("Age of Anti-Virus signature"))),

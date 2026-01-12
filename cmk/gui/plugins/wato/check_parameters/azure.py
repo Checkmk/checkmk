@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from typing import Any
@@ -30,7 +29,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _parameter_valuespec_azure_agent_info():
+def _parameter_valuespec_azure_agent_info() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -111,11 +110,11 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_webserver():
+def _item_spec_webserver() -> TextInput:
     return TextInput(title=_("Name of the service"))
 
 
-def _parameter_valuespec_webserver():
+def _parameter_valuespec_webserver() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -164,14 +163,14 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_azure_storageaccounts():
+def _item_spec_azure_storageaccounts() -> TextInput:
     return TextInput(
         title=_("Storage account name"),
         help=_("Specify storage account names that the rule should apply to"),
     )
 
 
-def _parameter_valuespec_azure_storageaccounts():
+def _parameter_valuespec_azure_storageaccounts() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -265,14 +264,14 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_azure_databases():
+def _item_spec_azure_databases() -> TextInput:
     return TextInput(
         title=_("Database name"),
         help=_("Specify database names that the rule should apply to"),
     )
 
 
-def _parameter_valuespec_azure_databases():
+def _parameter_valuespec_azure_databases() -> Dictionary:
     return Dictionary(
         title=_("Set levels"),
         elements=[
@@ -327,7 +326,7 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_azure_vms():
+def _item_spec_azure_vms() -> TextInput:
     return TextInput(title=_("VM name"))
 
 
@@ -507,14 +506,14 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_azure_virtualnetworkgateways():
+def _item_spec_azure_virtualnetworkgateways() -> TextInput:
     return TextInput(
         title=_("Virtual network gateway name"),
         help=_("Specify virtual network gateway names that the rule should apply to"),
     )
 
 
-def _parameter_valuespec_azure_virtualnetworkgateways():
+def _parameter_valuespec_azure_virtualnetworkgateways() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -644,7 +643,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_azure_usagedetails():
+def _parameter_valuespec_azure_usagedetails() -> Dictionary:
     return Dictionary(
         help=_(
             "To obtain the data required for this check, please configure"
@@ -681,7 +680,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_storage():
+def _parameter_valuespec_storage() -> Dictionary:
     return Dictionary(
         title=_("Levels storage"),
         elements=[
@@ -712,7 +711,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_qps():
+def _parameter_valuespec_qps() -> Dictionary:
     return Dictionary(
         title=_("Levels QPS"),
         elements=[
@@ -735,7 +734,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_probe_state():
+def _parameter_valuespec_probe_state() -> Dictionary:
     return Dictionary(
         title=_("Custom probe state"),
         elements=[
@@ -765,7 +764,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_health():
+def _parameter_valuespec_health() -> Dictionary:
     return Dictionary(
         title=_("Levels health"),
         elements=[

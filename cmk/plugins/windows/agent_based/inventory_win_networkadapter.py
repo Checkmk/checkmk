@@ -203,7 +203,7 @@ agent_section_win_networkadapter = AgentSection(
 )
 
 
-def inventory_win_networkadapter(section: Section) -> InventoryResult:
+def inventorize_win_networkadapter(section: Section) -> InventoryResult:
     for adapter in sorted(section, key=lambda a: a.get("name", "")):
         if "name" in adapter:
             yield TableRow(
@@ -271,7 +271,7 @@ def inventory_win_ip_address(section: Section) -> InventoryResult:
 
 inventory_plugin_win_networkadapter = InventoryPlugin(
     name="win_networkadapter",
-    inventory_function=inventory_win_networkadapter,
+    inventory_function=inventorize_win_networkadapter,
 )
 
 inventory_plugin_win_ip_address = InventoryPlugin(

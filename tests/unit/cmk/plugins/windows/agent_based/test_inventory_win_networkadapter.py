@@ -22,8 +22,8 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
     Adapter,
     host_label_win_ip_address,
+    inventorize_win_networkadapter,
     inventory_win_ip_address,
-    inventory_win_networkadapter,
     parse_win_networkadapter,
     Section,
 )
@@ -95,11 +95,11 @@ from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
         ),
     ],
 )
-def test_inventory_win_networkadapter(
+def test_inventorize_win_networkadapter(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert (
-        list(inventory_win_networkadapter(parse_win_networkadapter(string_table)))
+        list(inventorize_win_networkadapter(parse_win_networkadapter(string_table)))
         == expected_result
     )
 

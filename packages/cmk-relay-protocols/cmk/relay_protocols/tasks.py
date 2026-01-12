@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from enum import StrEnum
 from typing import Literal
@@ -86,3 +87,9 @@ class TaskListResponse(BaseModel, frozen=True):
 class TaskUpdateRequest(BaseModel, frozen=True):
     result_type: ResultType
     result_payload: str
+
+
+class UpdateConfigResponse(BaseModel, frozen=True):
+    created: Sequence[str]
+    pending: Sequence[str]
+    failed: Mapping[str, str]

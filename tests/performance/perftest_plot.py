@@ -734,7 +734,9 @@ class PerftestPlotArgs(argparse.Namespace):
         update_db (bool): If True, update existing job data in the database.
         purge_db (bool): If True, delete existing job data from the database.
         baseline_offset (int): The offset for the baseline validation.
-        overshoot_tolerance (float): The tolerance level for the baseline validation.
+        cpu_tolerance (float): The tolerance level for the CPU baseline validation.
+        mem_tolerance (float): The tolerance level for the memory baseline validation.
+        runtime_tolerance (float): The tolerance level for the runtime baseline validation.
         log_level (str): Logging level of the application.
     """
 
@@ -766,7 +768,9 @@ class PerftestPlotArgs(argparse.Namespace):
     update_db: bool
     purge_db: bool
     baseline_offset: int
-    overshoot_tolerance: float
+    cpu_tolerance: float
+    mem_tolerance: float
+    runtime_tolerance: float
     log_level: str
 
 
@@ -1611,12 +1615,18 @@ class PerftestPlot:
                 A list of human-readable alert messages. The list is empty if all scenarios
                 are within tolerated performance bounds.
         """
-        overshoot_tolerance = self.args.overshoot_tolerance
+        cpu_tolerance = self.args.cpu_tolerance
+        mem_tolerance = self.args.mem_tolerance
+        runtime_tolerance = self.args.runtime_tolerance
 
         alerts = []
         for scenario_name in self.scenario_names:
             msg_prefix = f"Scenario {scenario_name}: "
-            msg_suffix = f"; tolerance: +{overshoot_tolerance}%)"
+            msg_suffix = (
+                f"; tolerance: +{cpu_tolerance}% CPU"
+                f", +{mem_tolerance}% memory"
+                f", +{runtime_tolerance}% time)"
+            )
             if scenario_name == "test_performance_piggyback":
                 # ignore dcd piggyback test for now
                 continue
@@ -1627,7 +1637,7 @@ class PerftestPlot:
                 alerts.append(f"{msg_prefix}Missing data! Test aborted or skipped?")
                 continue
             baseline = self._calculate_baseline(scenario_name)
-            if averages.avg_time > baseline.avg_time * (100 + overshoot_tolerance) / 100:
+            if averages.avg_time > baseline.avg_time * (100 + runtime_tolerance) / 100:
                 overshoot = round((averages.avg_time / baseline.avg_time) * 100 - 100, 2)
                 msg = (
                     f"Execution time baseline exceeded by {overshoot}% "
@@ -1636,7 +1646,7 @@ class PerftestPlot:
                 )
 
                 alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
-            if averages.avg_cpu > baseline.avg_cpu * (100 + overshoot_tolerance) / 100:
+            if averages.avg_cpu > baseline.avg_cpu * (100 + cpu_tolerance) / 100:
                 overshoot = round((averages.avg_cpu / baseline.avg_cpu) * 100 - 100, 2)
                 msg = (
                     f"CPU usage baseline exceeded by {overshoot}% "
@@ -1644,7 +1654,7 @@ class PerftestPlot:
                     f" actual: {round(averages.avg_cpu, 2)}%"
                 )
                 alerts.append(f"{msg_prefix}{msg} {msg_suffix}")
-            if averages.avg_mem > baseline.avg_mem * (100 + overshoot_tolerance) / 100:
+            if averages.avg_mem > baseline.avg_mem * (100 + mem_tolerance) / 100:
                 overshoot = round((averages.avg_mem / baseline.avg_mem) * 100 - 100, 2)
                 msg = (
                     f"Memory usage baseline exceeded by {overshoot}% "
@@ -1942,11 +1952,34 @@ def parse_args() -> PerftestPlotArgs:
         help="Specifies the number of days in the past to use for the baseline validation (default: %(default)s).",
     )
     parser.add_argument(
-        "--overshoot-tolerance",
-        dest="overshoot_tolerance",
+        "--cpu-tolerance",
+        dest="cpu_tolerance",
         type=float,
-        default=10,
-        help="Specifies the tolerance percentage to which the baseline may be exceeded (default: %(default)s).",
+        default=15.0,
+        help=(
+            "Specifies the tolerance percentage to which the CPU baseline may be exceeded"
+            " (default: %(default)s)."
+        ),
+    )
+    parser.add_argument(
+        "--mem-tolerance",
+        dest="mem_tolerance",
+        type=float,
+        default=10.0,
+        help=(
+            "Specifies the tolerance percentage to which the memory baseline may be exceeded"
+            "(default: %(default)s)."
+        ),
+    )
+    parser.add_argument(
+        "--runtime-tolerance",
+        dest="runtime_tolerance",
+        type=float,
+        default=10.0,
+        help=(
+            "Specifies the tolerance percentage to which the runtime baseline may be exceeded"
+            " (default: %(default)s)."
+        ),
     )
     parser.add_argument(
         "--log-level",

@@ -66,7 +66,7 @@ editions:
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
-        weekly: *daily_reduced
+        weekly: [*common, *cma_distros]
         testbuild: []
     managed:
         release: [*common, *cma_distros]
@@ -75,7 +75,7 @@ editions:
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
-        weekly: *daily_reduced
+        weekly: [*common, *cma_distros]
         testbuild: []
     raw:
         release: *common

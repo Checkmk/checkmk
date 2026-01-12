@@ -521,3 +521,43 @@ def test_start_url_values(clients: ClientRegistry) -> None:
         ]["value"]
         == "custom_url"
     )
+
+
+def test_create_with_custom_user_role(clients: ClientRegistry) -> None:
+    clients.UserRole.clone(body={"role_id": "admin"})
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_3"},
+            },
+            "sync_plugins": {
+                "groups_to_roles": {
+                    "state": "enabled",
+                    "admin": [
+                        {
+                            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                            "search_in": "this_connection",
+                        }
+                    ],
+                    "user": [
+                        {
+                            "group_dn": "CN=cmk_AD_users,ou=Gruppen,dc=corp,dc=de",
+                            "search_in": "this_connection",
+                        }
+                    ],
+                    "adminx": [
+                        {
+                            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                            "search_in": "this_connection",
+                        }
+                    ],
+                    "handle_nested": True,
+                },
+            },
+        }
+    )

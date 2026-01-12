@@ -267,7 +267,7 @@ _CONFIG_FIELDS = [
 _UNCONFIGURED_VALUE = "0.0.0.0"
 
 
-def inventory_fritz(section: Section) -> InventoryResult:
+def inventorize_fritz(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={"model": section.get("VersionDevice")},
@@ -295,5 +295,5 @@ def inventory_fritz(section: Section) -> InventoryResult:
 
 inventory_plugin_fritz = InventoryPlugin(
     name="fritz",
-    inventory_function=inventory_fritz,
+    inventory_function=inventorize_fritz,
 )

@@ -28,7 +28,7 @@ from cmk.plugins.fritzbox.agent_based.fritz import (
     discover_fritz_link,
     discover_fritz_uptime,
     discover_fritz_wan_if,
-    inventory_fritz,
+    inventorize_fritz,
     parse_fritz,
     Section,
 )
@@ -395,8 +395,8 @@ def test_check_fritz_link(
     assert list(check_fritz_link(section)) == expected_result
 
 
-def test_inventory_fritz() -> None:
-    assert list(inventory_fritz(_SECTION)) == [
+def test_inventorize_fritz() -> None:
+    assert list(inventorize_fritz(_SECTION)) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={"model": "AVM FRITZ!Box 7412 (UI)"},

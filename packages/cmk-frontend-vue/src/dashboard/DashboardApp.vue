@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onBeforeMount, provide, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeMount, provide, ref, watch } from 'vue'
 
 import { randomId } from '@/lib/randomId'
 
@@ -65,6 +65,7 @@ const openDashboardSettings = ref(props.mode === 'edit_settings')
 const openAddWidgetDialog = ref(false)
 const openDashboardCreationDialog = ref(props.mode === 'create')
 const openDashboardCloneDialog = ref(props.mode === 'clone')
+const isCloning = ref(false)
 const openDashboardShareDialog = ref(false)
 const openWizard = ref(false)
 const selectedWizard = ref('')
@@ -321,35 +322,41 @@ const cloneDashboard = async (
     throw new Error('No active dashboard to clone from')
   }
   openDashboardCloneDialog.value = false
-  let newOwner
-  if (layout === DashboardLayout.RELATIVE_GRID) {
-    const response = await dashboardAPI.cloneAsRelativeGridDashboard(
-      key.name,
-      key.owner,
-      dashboardId,
-      generalSettings
-    )
-    newOwner = response.extensions.owner
-  } else {
-    const response = await dashboardAPI.cloneAsResponsiveGridDashboard(
-      key.name,
-      key.owner,
-      dashboardId,
-      generalSettings
-    )
-    newOwner = response.extensions.owner
-  }
-  if (nextStep === 'setFilters') {
-    const newKey: DashboardKey = {
-      name: dashboardId,
-      owner: newOwner
+  isCloning.value = true
+  try {
+    let newOwner
+    if (layout === DashboardLayout.RELATIVE_GRID) {
+      const response = await dashboardAPI.cloneAsRelativeGridDashboard(
+        key.name,
+        key.owner,
+        dashboardId,
+        generalSettings
+      )
+      newOwner = response.extensions.owner
+    } else {
+      const response = await dashboardAPI.cloneAsResponsiveGridDashboard(
+        key.name,
+        key.owner,
+        dashboardId,
+        generalSettings
+      )
+      newOwner = response.extensions.owner
     }
-    await setAsActiveDashboard(newKey, layout)
-    openDashboardFilterSettings.value = true
-  } else if (nextStep === 'viewList') {
-    redirectToListDashboardsPage()
-  } else {
-    throw new Error(`Unknown next step: ${nextStep}`)
+    if (nextStep === 'setFilters') {
+      const newKey: DashboardKey = {
+        name: dashboardId,
+        owner: newOwner
+      }
+      await setAsActiveDashboard(newKey, layout)
+      await nextTick()
+      openDashboardFilterSettings.value = true
+    } else if (nextStep === 'viewList') {
+      redirectToListDashboardsPage()
+    } else {
+      throw new Error(`Unknown next step: ${nextStep}`)
+    }
+  } finally {
+    isCloning.value = false
   }
 }
 
@@ -551,7 +558,7 @@ function deepClone<T>(obj: T): T {
         :available-features="available_features"
       />
       <CmkIcon
-        v-if="!(openDashboardCreationDialog || openDashboardCloneDialog)"
+        v-if="isCloning || !(openDashboardCreationDialog || openDashboardCloneDialog)"
         name="load-graph"
         size="xxlarge"
       />

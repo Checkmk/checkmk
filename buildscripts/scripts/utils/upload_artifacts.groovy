@@ -147,14 +147,22 @@ void clean_caches() {
 
 boolean download_hot_cache(Map args) {
     try {
-        download_file(
-            base_url: "${INTERNAL_DEPLOY_URL}/caches",
-            download_dest: "${args.download_dest}",
-            file_name: "${args.file_pattern}",
-        );
+        if (args.remote_download) {
+            download_file(
+                base_url: "${INTERNAL_DEPLOY_URL}/caches",
+                download_dest: "${args.download_dest}",
+                file_name: "${args.file_pattern}",
+            );
+        } else {
+            sh("""
+                mkdir -p ${args.download_dest}
+                ls -lisa ${env.PERSISTENT_K8S_VOLUME_PATH}
+                cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern} ${args.download_dest}
+            """);
+        }
     }
     catch (Exception exc) {
-        print("hot cache: ran into exception while running download_version_dir() for ${args.file_pattern}: ${exc}");
+        print("hot cache: ran into exception while running download_hot_cache() for ${args.file_pattern}: ${exc}");
         return true;
     }
 
@@ -193,13 +201,22 @@ void upload_hot_cache(Map args) {
     """);
 
         if (!sh(script:"test -f ${args.download_dest}/${args.file_pattern}", returnStatus:true)) {
-            upload_via_rsync(
-                "${args.download_dest}",
-                "",
-                "${args.file_pattern}",
-                "${INTERNAL_DEPLOY_DEST}" + "caches",
-                INTERNAL_DEPLOY_PORT,
-            );
+            if (args.remote_upload) {
+                upload_via_rsync(
+                    "${args.download_dest}",
+                    "",
+                    "${args.file_pattern}",
+                    "${INTERNAL_DEPLOY_DEST}" + "caches",
+                    INTERNAL_DEPLOY_PORT,
+                );
+            } else {
+                sh("""
+                    if [ ! -s "${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}" ]; then
+                        cp ${args.download_dest}/${args.file_pattern} ${env.PERSISTENT_K8S_VOLUME_PATH}/
+                    fi
+                    ls -lisa ${env.PERSISTENT_K8S_VOLUME_PATH}
+                """);
+            }
         }
     }
     catch (Exception exc) {
@@ -296,6 +313,7 @@ void withHotCache(Map args, Closure body) {
     def upload_new_bazel_folder_artifact = download_hot_cache([
         file_pattern: "${file_pattern}",
         download_dest: args.download_dest,
+        remote_download: args.remote_download == null ? true : args.remote_download.asBoolean(),
     ]);
 
     def folder_state_after_extraction = capture_folder_state(args.download_dest);
@@ -308,8 +326,9 @@ void withHotCache(Map args, Closure body) {
         println("hot cache: Creating ${args.download_dest}/${file_pattern}");
 
         upload_hot_cache([
-            download_dest: args.download_dest,
             file_pattern: "${file_pattern}",
+            download_dest: args.download_dest,
+            remote_upload: args.remote_upload == null ? true : args.remote_upload.asBoolean(),
         ]);
     } else {
         println("hot cache: No need to re-upload an existing artifact");

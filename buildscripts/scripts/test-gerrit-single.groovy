@@ -207,6 +207,8 @@ void main() {
                             }
                             artifacts_helper.withHotCache([
                                 download_dest: "~",
+                                remote_download: (env.COMPRESSED_CACHE_FROM_REMOTE_DOWNLOAD == "1"),
+                                remote_upload: (env.COMPRESSED_CACHE_FROM_REMOTE_UPLOAD == "1"),
                                 remove_existing_cache: true,
                                 target_name: params.CIPARAM_NAME,
                                 cache_prefix: versioning.distro_code(),

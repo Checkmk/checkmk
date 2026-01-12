@@ -8,7 +8,6 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
@@ -17,11 +16,11 @@ import WidgetVisualization from '@/dashboard/components/Wizard/components/Widget
 import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
+import DataSettings from '@/dashboard/components/Wizard/wizards/other/stage1/DataSettings.vue'
 import type { GetValidWidgetProps } from '@/dashboard/components/Wizard/wizards/other/types'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 
-import DataSelectionContainer from '../DataSelectionContainer.vue'
 import { useEmbeddedURL } from './composables/useEmbeddedURL'
 
 const { _t } = usei18n()
@@ -45,13 +44,6 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
 <template>
   <div>
-    <DataSelectionContainer>
-      <CmkHeading type="h4">{{ _t('Enter URL to embed') }}</CmkHeading>
-      <CmkInput v-model="handler.url.value" type="text" field-size="LARGE" />
-    </DataSelectionContainer>
-
-    <ContentSpacer />
-
     <DashboardPreviewContent
       widget_id="embedded-url-preview"
       :dashboard-key="dashboardKey"
@@ -61,6 +53,10 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
     />
 
     <ContentSpacer />
+
+    <DataSettings :label="_t('Enter URL to embed')">
+      <CmkInput v-model="handler.url.value" type="text" field-size="LARGE" />
+    </DataSettings>
 
     <CollapsibleTitle
       :title="_t('Widget settings')"

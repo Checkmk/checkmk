@@ -49,6 +49,7 @@ defineEmits<{
           (content, generalSettings, filterContext) =>
             $emit('addWidget', content, generalSettings, filterContext)
         "
+        @go-back="$emit('goBack')"
       />
     </WizardStageContainer>
   </WizardContainer>

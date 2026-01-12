@@ -24,4 +24,8 @@ defineProps<ContentProps<StaticTextContent>>()
 .db-content-static-text__text {
   padding: var(--spacing);
 }
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.db-preview-content .db-content-static-text__text {
+  overflow: hidden;
+}
 </style>

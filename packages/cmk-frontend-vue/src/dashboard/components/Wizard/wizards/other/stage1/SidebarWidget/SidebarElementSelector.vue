@@ -10,7 +10,6 @@ import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import type { Suggestion } from '@/components/CmkSuggestions'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { SidebarElementEntry } from './composables/useSidebarElements'
 
@@ -43,10 +42,9 @@ const dropdownOptions = computed<Suggestion[]>(() =>
     {{ _t('Failed to load sidebar elements.') }}
   </div>
   <template v-else>
-    <CmkHeading type="h4">{{ _t('Select sidebar element') }}</CmkHeading>
     <CmkDropdown
       v-model:selected-option="selectedSidebarElement"
-      :options="{ type: 'fixed', suggestions: dropdownOptions }"
+      :options="{ type: 'filtered', suggestions: dropdownOptions }"
       :label="_t('Select option')"
       width="max"
     />

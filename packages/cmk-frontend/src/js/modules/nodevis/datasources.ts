@@ -89,7 +89,7 @@ export class AbstractDatasource extends Object {
   _data: any = null
   _new_data_subscribers: DatasourceCallback[] = []
   _fetch_url: string | null = null
-  _fetch_params: BodyInit | null = null
+  _fetch_params: string = ''
   _fetch_start = 0
   _waiting_for_hash: string | null = null
 
@@ -125,7 +125,7 @@ export class AbstractDatasource extends Object {
     this._enabled = false
   }
 
-  fetch(url: string, params: BodyInit | null = null): void {
+  fetch(url: string, params: string): void {
     this._fetch_start = Math.floor(new Date().getTime() / 1000)
     this._fetch_url = url
     this._fetch_params = params
@@ -137,7 +137,7 @@ export class AbstractDatasource extends Object {
     json(encodeURI(this._fetch_url), {
       credentials: 'include',
       method: 'POST',
-      body: this._fetch_params,
+      body: encodeURIComponent(this._fetch_params),
       headers: {
         'Content-type': 'application/x-www-form-urlencoded'
       }

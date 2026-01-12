@@ -169,7 +169,7 @@ export class MultiDataFetcher {
     json(encodeURI(post_url), {
       credentials: 'include',
       method: 'POST',
-      body: post_body,
+      body: encodeURIComponent(post_body),
       headers: {
         'Content-type': 'application/x-www-form-urlencoded'
       }

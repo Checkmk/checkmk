@@ -28,6 +28,18 @@ class _RawSwitchPortStatusFactory(TypedDictFactory[RawSwitchPortStatus]):
     __check_model__ = False
 
 
+@pytest.mark.xfail(reason="Only first port is being parsed at the moment.", strict=True)
+def test_parsing_multiple_switch_ports() -> None:
+    switch_port_status = [
+        _RawSwitchPortStatusFactory.build(),
+        _RawSwitchPortStatusFactory.build(),
+        _RawSwitchPortStatusFactory.build(),
+    ]
+    string_table = [[f"{json.dumps(switch_port_status)}"]]
+    section = parse_switch_ports_statuses(string_table)
+    assert len(section) == 3
+
+
 class TestDiscovery:
     @pytest.fixture
     def params(self) -> DiscoveryParams:

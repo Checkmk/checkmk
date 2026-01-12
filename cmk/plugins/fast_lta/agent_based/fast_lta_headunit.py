@@ -55,7 +55,7 @@ snmp_section_fast_lta_headunit = SNMPSection(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fast_lta_headunit_status(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_fast_lta_headunit_status(section: Sequence[StringTable]) -> DiscoveryResult:
     if section[0]:
         yield Service()
 
@@ -104,7 +104,7 @@ check_plugin_fast_lta_headunit_status = CheckPlugin(
     name="fast_lta_headunit_status",
     service_name="Fast LTA Headunit Status",
     sections=["fast_lta_headunit"],
-    discovery_function=inventory_fast_lta_headunit_status,
+    discovery_function=discover_fast_lta_headunit_status,
     check_function=check_fast_lta_headunit_status,
 )
 

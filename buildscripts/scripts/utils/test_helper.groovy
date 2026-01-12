@@ -38,6 +38,8 @@ void execute_test(Map config = [:]) {
                     println("'execute_test' is using k8s container '${defaultDict.container_name}'");
                     artifacts_helper.withHotCache([
                         download_dest: "~",
+                        remote_download: (env.COMPRESSED_CACHE_FROM_REMOTE_DOWNLOAD == "1"),
+                        remote_upload: (env.COMPRESSED_CACHE_FROM_REMOTE_UPLOAD == "1"),
                         remove_existing_cache: true,
                         target_name: defaultDict.name,
                         cache_prefix: versioning.distro_code(),

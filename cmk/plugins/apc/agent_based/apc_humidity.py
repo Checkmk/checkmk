@@ -36,7 +36,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_apc_humidity(section: StringTable) -> DiscoveryResult:
+def discover_apc_humidity(section: StringTable) -> DiscoveryResult:
     for line in section:
         if int(line[1]) >= 0:
             yield Service(item=line[0])
@@ -67,7 +67,7 @@ snmp_section_apc_humidity = SimpleSNMPSection(
 check_plugin_apc_humidity = CheckPlugin(
     name="apc_humidity",
     service_name="Humidity %s",
-    discovery_function=inventory_apc_humidity,
+    discovery_function=discover_apc_humidity,
     check_function=check_apc_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={

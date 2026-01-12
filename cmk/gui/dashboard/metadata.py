@@ -58,7 +58,7 @@ class DashboardMetadataObject:
         is_built_in = dashboard["owner"] == UserId.builtin()
         is_editable = not is_built_in and (
             (user.id == dashboard["owner"] and user.may("general.edit_dashboards"))
-            or user.may("dashboards.edit_foreign_dashboards")
+            or user.may("general.edit_foreign_dashboards")
         )
         return cls(
             name=dashboard["name"],

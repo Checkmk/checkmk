@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.enterasys.lib import DETECT_ENTERASYS
 
 
-def inventory_enterasys_fans(section: StringTable) -> DiscoveryResult:
+def discover_enterasys_fans(section: StringTable) -> DiscoveryResult:
     for num, state in section:
         if state != "2":
             yield Service(item=num)
@@ -64,6 +64,6 @@ snmp_section_enterasys_fans = SimpleSNMPSection(
 check_plugin_enterasys_fans = CheckPlugin(
     name="enterasys_fans",
     service_name="FAN %s",
-    discovery_function=inventory_enterasys_fans,
+    discovery_function=discover_enterasys_fans,
     check_function=check_enterasys_fans,
 )

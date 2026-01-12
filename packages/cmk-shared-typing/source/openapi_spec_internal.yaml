@@ -12192,7 +12192,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ComputedWidgetTitlesResponse'
+                $ref: '#/components/schemas/ComputeWidgetTitlesResponse'
           headers:
             Content-Type:
               description: A header specifying which type of content is in the request/response
@@ -12218,7 +12218,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ComputedWidgetTitlesRequest'
+              $ref: '#/components/schemas/ComputeWidgetTitlesRequest'
       x-codeSamples:
       - label: requests
         lang: python
@@ -45120,7 +45120,7 @@ components:
       - filters
       title: ComputeWidgetTitleWidgetRequest
       type: object
-    ComputedWidgetTitlesRequest:
+    ComputeWidgetTitlesRequest:
       additionalProperties: false
       properties:
         widgets:
@@ -45131,9 +45131,9 @@ components:
           type: object
       required:
       - widgets
-      title: ComputedWidgetTitlesRequest
+      title: ComputeWidgetTitlesRequest
       type: object
-    ComputedWidgetTitlesExtensions:
+    ComputeWidgetTitlesExtensions:
       properties:
         titles:
           additionalProperties:
@@ -45143,9 +45143,9 @@ components:
           type: object
       required:
       - titles
-      title: ComputedWidgetTitlesExtensions
+      title: ComputeWidgetTitlesExtensions
       type: object
-    ComputedWidgetTitlesResponse:
+    ComputeWidgetTitlesResponse:
       properties:
         links:
           description: List of links to other resources.
@@ -45177,13 +45177,13 @@ components:
           title: Title
           type: string
         extensions:
-          $ref: '#/components/schemas/ComputedWidgetTitlesExtensions'
+          $ref: '#/components/schemas/ComputeWidgetTitlesExtensions'
           description: Extensions for the response.
       required:
       - links
       - domainType
       - extensions
-      title: ComputedWidgetTitlesResponse
+      title: ComputeWidgetTitlesResponse
       type: object
     DashboardOwnerWithBuiltin:
       anyOf:
@@ -56827,8 +56827,6 @@ components:
           - disabled
           - enabled
           example: enabled
-      required:
-      - state
       additionalProperties: false
     RuleProperties:
       type: object
@@ -56910,8 +56908,6 @@ components:
             address is OMD_SITE@FQDN is used. If the environment variable OMD_SITE
             is not set it defaults to checkmk
           $ref: '#/components/schemas/EmailAndDisplayName'
-      required:
-      - state
       additionalProperties: false
     FromDetailsOneOf:
       type: object
@@ -56937,8 +56933,6 @@ components:
           description: The email address and visible name used in the Reply-To header
             of notifications messages
           $ref: '#/components/schemas/EmailAndDisplayName'
-      required:
-      - state
       additionalProperties: false
     ReplyToOneOf:
       type: object
@@ -56965,8 +56959,6 @@ components:
           description: Here you are allowed to use all macros that are defined in
             the notification context.
           example: 'Check_MK: $HOSTNAME$ - $EVENT_TXT$'
-      required:
-      - state
       additionalProperties: false
     SubjectHostOneOf:
       type: object
@@ -56993,8 +56985,6 @@ components:
           description: Here you are allowed to use all macros that are defined in
             the notification context.
           example: 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$'
-      required:
-      - state
       additionalProperties: false
     SubjectServiceOneOf:
       type: object
@@ -57026,7 +57016,6 @@ components:
           - oldest_first
           example: oldest_first
       required:
-      - state
       - value
       additionalProperties: false
     SortOrderOneOf:
@@ -57052,7 +57041,6 @@ components:
         value:
           type: string
       required:
-      - state
       - value
       additionalProperties: false
     StrValueOneOf:
@@ -57128,7 +57116,6 @@ components:
             - perfdata
             - reltime
       required:
-      - state
       - value
       additionalProperties: false
     EmailInfoOneOf:
@@ -57155,8 +57142,6 @@ components:
           type: string
           description: Insert HTML section between body and table
           example: <HTMLTAG>CONTENT</HTMLTAG>
-      required:
-      - state
       additionalProperties: false
     InsertHtmlOneOf:
       type: object
@@ -57231,8 +57216,6 @@ components:
             can directly visit the host or service in question in Check_MK. Specify
             an absolute URL including the .../check_mk/
           $ref: '#/components/schemas/ManualOrAutomaticSelector'
-      required:
-      - state
       additionalProperties: false
     UrlPrefixOneOf:
       type: object
@@ -57278,7 +57261,6 @@ components:
         value:
           $ref: '#/components/schemas/Authentication'
       required:
-      - state
       - value
       additionalProperties: false
     AuthOneOf:
@@ -57326,8 +57308,6 @@ components:
           example: enabled
         value:
           $ref: '#/components/schemas/EnableSynchronousDeliveryViaSMTP'
-      required:
-      - state
       additionalProperties: false
     EnableSyncOneOf:
       type: object
@@ -57355,7 +57335,6 @@ components:
             a notification
           example: 5
       required:
-      - state
       - value
       additionalProperties: false
     GraphsPerNotificationOneOf:
@@ -57388,7 +57367,6 @@ components:
             a timeout so that a failed notification is produced
           example: 5
       required:
-      - state
       - value
       additionalProperties: false
     BulkNotificationsOneOf:
@@ -57558,8 +57536,6 @@ components:
             a site-user in ~/etc/environment and that this might affect other notification
             methods which also use the requests module
           $ref: '#/components/schemas/HttpProxyOptions'
-      required:
-      - state
       additionalProperties: false
     HttpProxyOneOf:
       type: object
@@ -57634,8 +57610,6 @@ components:
           - user
           - uucp
           example: ''
-      required:
-      - state
       additionalProperties: false
     SysLogFacilityOneOf:
       type: object
@@ -57662,7 +57636,6 @@ components:
           description: A valid IP address
           example: 127.0.0.1
       required:
-      - state
       - value
       additionalProperties: false
     IPAddressOneOf:
@@ -58008,7 +57981,6 @@ components:
           - moderate
           example: moderate
       required:
-      - state
       - value
       additionalProperties: false
     OpsGeniePriorityOneOf:
@@ -58035,9 +58007,6 @@ components:
           type: array
           items:
             type: string
-      required:
-      - state
-      - value
       additionalProperties: false
     ListOfStrOneOf:
       type: object
@@ -58082,8 +58051,6 @@ components:
             - omd_site
             - perfdata
             - reltime
-      required:
-      - state
       additionalProperties: false
     ListOfExtraPropertiesOneOf:
       type: object
@@ -58318,7 +58285,6 @@ components:
           example: normal
           $ref: '#/components/schemas/PushOverPrioritySelector'
       required:
-      - state
       - value
       additionalProperties: false
     PushOverOneOf:
@@ -58372,7 +58338,6 @@ components:
           - vibrate
           example: none
       required:
-      - state
       - value
       additionalProperties: false
     SoundsOneOf:
@@ -58440,7 +58405,6 @@ components:
           - use_site_id
           example: use_site_id
       required:
-      - state
       - value
       additionalProperties: false
     SiteIDPrefixOneOf:
@@ -58471,7 +58435,6 @@ components:
           - low
           - moderate
       required:
-      - state
       - value
       additionalProperties: false
     PriorityOneOf:
@@ -58514,8 +58477,6 @@ components:
           example: enabled
         value:
           $ref: '#/components/schemas/ManagementTypeCaseStates'
-      required:
-      - state
       additionalProperties: false
     StateRecoveryOneOf:
       type: object
@@ -58574,7 +58535,6 @@ components:
           - low
           - medium
       required:
-      - state
       - value
       additionalProperties: false
     TypeUrgencyOneOf:
@@ -58633,8 +58593,6 @@ components:
           example: enabled
         value:
           $ref: '#/components/schemas/ManagementTypeIncedentStates'
-      required:
-      - state
       additionalProperties: false
     TypeStateOneOf:
       type: object
@@ -59321,8 +59279,6 @@ components:
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingAlways'
-      required:
-      - state
       additionalProperties: false
     TimePeriodOneOf:
       type: object
@@ -59419,8 +59375,6 @@ components:
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingWhenToBulkSelector'
-      required:
-      - state
       additionalProperties: false
     NotificationBulk:
       type: object
@@ -59473,7 +59427,6 @@ components:
             example: all
             pattern: ^[-a-z0-9A-Z_]*$
       required:
-      - state
       - value
       additionalProperties: false
     ListOfContactGroupsCheckbox:
@@ -59510,7 +59463,6 @@ components:
             type: string
             format: email
       required:
-      - state
       - value
       additionalProperties: false
     ExplicitEmailAddressesCheckbox:
@@ -59552,8 +59504,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CustomMacro'
-      required:
-      - state
       additionalProperties: false
     CustomMacrosCheckbox:
       type: object
@@ -59606,7 +59556,6 @@ components:
           items:
             type: string
       required:
-      - state
       - value
       additionalProperties: false
     MatchSitesCheckbox:
@@ -59641,7 +59590,6 @@ components:
             `~`.'
           pattern: ^(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-F]{32})$
       required:
-      - state
       - value
       additionalProperties: false
     MatchFolderCheckbox:
@@ -59793,7 +59741,6 @@ components:
           items:
             $ref: '#/components/schemas/TagTypeSelector'
       required:
-      - state
       - value
       additionalProperties: false
     MatchHostTagsCheckbox:
@@ -59835,7 +59782,6 @@ components:
           items:
             $ref: '#/components/schemas/CheckboxLabel'
       required:
-      - state
       - value
       additionalProperties: false
     MatchLabelsCheckbox:
@@ -59869,7 +59815,6 @@ components:
             type: string
             example: host_group_1
       required:
-      - state
       - value
       additionalProperties: false
     MatchHostGroupsCheckbox:
@@ -59904,7 +59849,6 @@ components:
             example: example.com
             pattern: ^[-0-9a-zA-Z_.]+\Z
       required:
-      - state
       - value
       additionalProperties: false
     MatchHostsCheckbox:
@@ -59933,7 +59877,6 @@ components:
             type: string
             example: service_group_1
       required:
-      - state
       - value
       additionalProperties: false
     MatchServiceGroupsCheckbox:
@@ -59992,7 +59935,6 @@ components:
             and the single parts are added into dedicated input field
           $ref: '#/components/schemas/ServiceGroupsRegex'
       required:
-      - state
       - value
       additionalProperties: false
     MatchServiceGroupRegexCheckbox:
@@ -60040,7 +59982,6 @@ components:
           items:
             type: string
       required:
-      - state
       - value
       additionalProperties: false
     MatchCheckTypesCheckbox:
@@ -60107,7 +60048,6 @@ components:
             notification
           $ref: '#/components/schemas/FromToServiceLevels'
       required:
-      - state
       - value
       additionalProperties: false
     MatchServiceLevelsCheckbox:
@@ -60136,7 +60076,6 @@ components:
             from the monitoring system is active
           example: 24X7
       required:
-      - state
       - value
       additionalProperties: false
     MatchTimePeriodCheckbox:
@@ -60390,7 +60329,6 @@ components:
         value:
           $ref: '#/components/schemas/FromToNotificationNumbers'
       required:
-      - state
       - value
       additionalProperties: false
     RestrictNotificationNumCheckbox:
@@ -60432,7 +60370,6 @@ components:
         value:
           $ref: '#/components/schemas/ThrottlePeriodicNotifications'
       required:
-      - state
       - value
       additionalProperties: false
     ThorttlePeriodicNotificationsCheckbox:
@@ -60463,7 +60400,6 @@ components:
           items:
             type: string
       required:
-      - state
       - value
       additionalProperties: false
     MatchRuleIdsOneOf:
@@ -60521,8 +60457,6 @@ components:
           example: enabled
         value:
           $ref: '#/components/schemas/SysLogToFromPriorities'
-      required:
-      - state
       additionalProperties: false
     MatchSysLogPriOneOf:
       type: object
@@ -60575,8 +60509,6 @@ components:
           - user
           - uucp
           example: kern
-      required:
-      - state
       additionalProperties: false
     MatchSysLogFacOneOf:
       type: object
@@ -60656,7 +60588,6 @@ components:
             you access to special event fields
           $ref: '#/components/schemas/MatchTypeSelector'
       required:
-      - state
       - value
       additionalProperties: false
     EventConsoleAlertCheckbox:
@@ -61372,8 +61303,7 @@ components:
         customer:
           description: '[Only in editions: Ultimate with multi-tenancy] By specifying
             a customer, you configure on which sites the user object will be available.
-            ''global'' will make the object available on all sites. This field is
-            required for the following editions: Ultimate with multi-tenancy.'
+            ''global'' will make the object available on all sites.'
           examples:
           - provider
           title: Customer

@@ -21,8 +21,8 @@ def _get_section() -> wcs._Section:
     )
 
 
-def test_inventory_win_computersystem(section: wcs._Section) -> None:
-    assert list(wcs.inventory_win_computersystem(section)) == [
+def test_inventorize_win_computersystem(section: wcs._Section) -> None:
+    assert list(wcs.inventorize_win_computersystem(section)) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={

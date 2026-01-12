@@ -37,7 +37,7 @@ agent_section_win_computersystem = AgentSection(
 )
 
 
-def inventory_win_computersystem(section: _Section) -> InventoryResult:
+def inventorize_win_computersystem(section: _Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes=asdict(section),
@@ -46,5 +46,5 @@ def inventory_win_computersystem(section: _Section) -> InventoryResult:
 
 inventory_plugin_win_computersystem = InventoryPlugin(
     name="win_computersystem",
-    inventory_function=inventory_win_computersystem,
+    inventory_function=inventorize_win_computersystem,
 )

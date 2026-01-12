@@ -26,11 +26,14 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 
 import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
+from paho.mqtt.properties import Properties
+from paho.mqtt.reasoncodes import ReasonCode
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
@@ -180,7 +183,11 @@ def receive_from_mqtt(args: argparse.Namespace) -> ReceivedData:
     received = ReceivedData()
 
     # Have a look at https://github.com/eclipse/paho.mqtt.python for an API description
-    mqttc = mqtt.Client(args.client_id, userdata=received)
+    mqttc = mqtt.Client(
+        callback_api_version=CallbackAPIVersion.VERSION2,
+        client_id=args.client_id,
+        userdata=received,
+    )
     mqttc.enable_logger(LOGGER)
 
     mqttc.on_message = on_message
@@ -223,10 +230,14 @@ def receive_from_mqtt(args: argparse.Namespace) -> ReceivedData:
 
 
 def on_connect(
-    mqttc: mqtt.Client, received: ReceivedData, flags: Mapping[str, int], rc: int
+    mqttc: mqtt.Client,
+    received: ReceivedData,
+    _flags: mqtt.ConnectFlags,
+    rc: ReasonCode,
+    _properties: Properties | None,
 ) -> None:
     if rc != 0:
-        raise RuntimeError(f"Failed to connect: {mqtt.error_string(rc)}")
+        raise RuntimeError(f"Failed to connect: {rc}")
     received.connected = True
     result, _mid = mqttc.subscribe("$SYS/#", qos=0)
     if result != mqtt.MQTT_ERR_SUCCESS:
@@ -234,12 +245,20 @@ def on_connect(
 
 
 def on_subscribe(
-    mqttc: mqtt.Client, received: ReceivedData, mid: int, granted_qos: Sequence[int]
+    _mqttc: mqtt.Client,
+    received: ReceivedData,
+    _mid: int,
+    _reason_codes: Sequence[ReasonCode],
+    _properties: Properties | None,
 ) -> None:
     received.subscribed_to_sys = True
 
 
-def on_message(mqttc: mqtt.Client, received: ReceivedData, msg: mqtt.MQTTMessage) -> None:
+def on_message(
+    _mqttc: mqtt.Client,
+    received: ReceivedData,
+    msg: mqtt.MQTTMessage,
+) -> None:
     # Once a topic was received at least once, we remove it from our "todo" list
     with suppress(KeyError):
         received.remaining_topics.remove(msg.topic)

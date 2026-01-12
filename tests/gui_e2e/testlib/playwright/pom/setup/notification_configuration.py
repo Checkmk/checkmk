@@ -37,6 +37,7 @@ class NotificationConfiguration(CmkPage):
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.add_notification_rule_button).to_be_visible()
+        expect(self._notification_overview_header).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -106,16 +107,19 @@ class NotificationConfiguration(CmkPage):
     def notification_rule_delete_button(self, rule_id: int | str) -> Locator:
         return self._notification_rule_row(rule_id).get_by_title("Delete this notification rule")
 
-    def notification_overview_container(self) -> Locator:
+    @property
+    def _notification_overview_header(self) -> Locator:
+        return self.main_area.locator().get_by_role("heading", name="Notification overview")
+
+    @property
+    def _notification_overview_container(self) -> Locator:
         return self.main_area.locator("div.notification-overview__container")
 
     def collapse_notification_overview(self, collapse: bool = True) -> None:
-        container = self.notification_overview_container()
+        container = self._notification_overview_container
         is_overview_visible = container.is_visible()
         if (collapse and is_overview_visible) or (not collapse and not is_overview_visible):
-            self.main_area.locator().get_by_role("heading", name="Notification overview").locator(
-                "button"
-            ).click()
+            self._notification_overview_header.locator("button").click()
             container.wait_for(state="hidden" if collapse else "visible")
         else:
             logger.info("Notification overview is already in the desired state")

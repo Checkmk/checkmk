@@ -10,7 +10,7 @@ import pytest
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.genua.agent_based.genua_carp import (
     check_genua_carp,
-    inventory_genua_carp,
+    discover_genua_carp,
     parse_genua_carp,
 )
 
@@ -24,13 +24,13 @@ from cmk.plugins.genua.agent_based.genua_carp import (
         ),
     ],
 )
-def test_inventory_genua_carp(
+def test_discover_genua_carp(
     string_table: Sequence[list[list[str]]],
     expected_discoveries: Sequence[Service],
 ) -> None:
     """Test discovery function for genua_carp check."""
     parsed = parse_genua_carp(string_table)
-    assert list(inventory_genua_carp(parsed)) == expected_discoveries
+    assert list(discover_genua_carp(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(

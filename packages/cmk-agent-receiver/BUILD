@@ -200,6 +200,7 @@ py_test(
         requirement("fastapi"),
         requirement("starlette"),
         requirement("httpx"),
+        requirement("python-dateutil"),
     ],
 )
 

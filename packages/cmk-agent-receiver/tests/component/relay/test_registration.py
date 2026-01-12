@@ -2,10 +2,14 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from datetime import datetime, timedelta, UTC
 from http import HTTPStatus
+
+from dateutil.relativedelta import relativedelta
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
+from cmk.testlib.agent_receiver import certs as certslib
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.relay import random_relay_id
@@ -70,3 +74,27 @@ def test_registering_a_relay_does_not_affect_other_relays(
 
     tasks_A = get_relay_tasks(agent_receiver, relay_1_id)
     assert len(tasks_A.tasks) == 1
+
+
+def test_certificate_validity_period(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    """Verify that the certificate returned by the registration endpoint has the desired
+    validity period.
+
+    Test steps:
+    1. Register a relay with the agent receiver
+    2. Check the validity of the returned certificate
+    """
+    relay_id = random_relay_id()
+    site.set_scenario([], [(relay_id, OP.ADD)])
+    resp = agent_receiver.register_relay(relay_id, "relay1")
+    assert resp.status_code == HTTPStatus.OK
+
+    # Verify that the certificate has correct validity period bounds.
+    now = datetime.now(tz=UTC)
+    cert = certslib.read_certificate(resp.json()["client_cert"])
+    assert cert.not_valid_before_utc <= now
+    assert cert.not_valid_before_utc >= now - timedelta(minutes=1)
+    assert cert.not_valid_after_utc <= now + relativedelta(months=3)

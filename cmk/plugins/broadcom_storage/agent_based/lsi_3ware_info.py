@@ -35,7 +35,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_3ware_info(section: StringTable) -> DiscoveryResult:
+def discover_3ware_info(section: StringTable) -> DiscoveryResult:
     for line in section:
         if len(line) == 8:
             yield Service(item=line[0])
@@ -62,6 +62,6 @@ agent_section_3ware_info = AgentSection(
 check_plugin_3ware_info = CheckPlugin(
     name="3ware_info",
     service_name="RAID 3ware controller %s",
-    discovery_function=inventory_3ware_info,
+    discovery_function=discover_3ware_info,
     check_function=check_3ware_info,
 )

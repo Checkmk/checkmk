@@ -42,7 +42,7 @@ from cmk.agent_based.v2 import (
 )
 
 
-def inventory_3ware_disks(section: StringTable) -> DiscoveryResult:
+def discover_3ware_disks(section: StringTable) -> DiscoveryResult:
     for line in section:
         if len(line) > 0 and line[1] != "NOT-PRESENT":
             yield Service(item=line[0])
@@ -88,7 +88,7 @@ agent_section_3ware_disks = AgentSection(
 check_plugin_3ware_disks = CheckPlugin(
     name="3ware_disks",
     service_name="RAID 3ware disk %s",
-    discovery_function=inventory_3ware_disks,
+    discovery_function=discover_3ware_disks,
     check_function=check_3ware_disks,
     check_default_parameters={},
     check_ruleset_name="raid_disk",

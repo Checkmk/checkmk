@@ -15,7 +15,7 @@ from cmk.plugins.broadcom_storage.agent_based.lsi_3ware_disks import (
     check_3ware_disks,
 )
 from cmk.plugins.broadcom_storage.agent_based.lsi_3ware_disks import (
-    inventory_3ware_disks as discover_3ware_disks,
+    discover_3ware_disks as discover_3ware_disks,
 )
 
 

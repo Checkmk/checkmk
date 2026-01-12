@@ -60,7 +60,7 @@ async def _build_config_for_relays() -> None:
     logger.info(
         "startup: created %d config task(s) for %d relay(s)",
         len(created),
-        len({t.id for t in created}),
+        len({t.relay_id for t in created}),
     )
 
 

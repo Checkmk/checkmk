@@ -5,6 +5,7 @@
 import dataclasses
 import io
 import tarfile
+from collections.abc import Iterable, Sequence
 from datetime import datetime, UTC
 from pathlib import Path
 
@@ -24,12 +25,33 @@ from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME
 
 
+@dataclasses.dataclass(frozen=True)
+class ConfigTaskCreationFailed:
+    relay_id: RelayID
+    exception: Exception
+
+
+@dataclasses.dataclass(frozen=True)
+class ConfigTaskAlreadyExists:
+    relay_id: RelayID
+
+
+@dataclasses.dataclass(frozen=True)
+class ConfigTaskCreated:
+    relay_id: RelayID
+
+
+type ConfigTaskCreationResult = (
+    ConfigTaskCreationFailed | ConfigTaskAlreadyExists | ConfigTaskCreated
+)
+
+
 @dataclasses.dataclass
 class ConfigTaskFactory:
     relays_repository: RelaysRepository
     tasks_repository: TasksRepository
 
-    def create_for_all_relays(self) -> list[RelayTask]:
+    def create_for_all_relays(self) -> Sequence[ConfigTaskCreationResult]:
         """
         Creates relay config tasks for all registered relays.
         The number of actually created task might be lower than the number of the relays,
@@ -38,23 +60,22 @@ class ConfigTaskFactory:
         relay_ids = self.relays_repository.get_all_relay_ids()
         return self._create(relay_ids)
 
-    def create_for_relay(self, relay_id: RelayID) -> RelayTask | None:
+    def create_for_relay(self, relay_id: RelayID) -> ConfigTaskCreationResult:
         """
         Creates a relay config task for the specified relay.
         If the relay has already a pending relay for the current serial value, the function
-        does nothing and returns None.
+        does nothing.
         If the relay does not have a configuration folder created yet, the function
-        does nothing and returns None.
+        does nothing.
         """
-        result = self._create([relay_id])
-        return None if not result else result[0]
+        return self._create([relay_id])[0]
 
-    def _create(self, relay_ids: list[RelayID]) -> list[RelayTask]:
+    def _create(self, relay_ids: Iterable[RelayID]) -> tuple[ConfigTaskCreationResult, ...]:
         now = datetime.now(UTC)
         serial = retrieve_config_serial()
         config = get_config()
 
-        tasks = (
+        return tuple(
             self._safe_single_task(
                 relay_id=rid,
                 serial=serial,
@@ -63,17 +84,17 @@ class ConfigTaskFactory:
             )
             for rid in relay_ids
         )
-        return [t for t in tasks if t is not None]
 
     def _safe_single_task(
         self, relay_id: RelayID, serial: Serial, helper_config_dir: Path, timestamp: datetime
-    ) -> RelayTask | None:
+    ) -> ConfigTaskCreationResult:
         with bound_contextvars(relay_id=relay_id, serial=serial):
             try:
                 # TODO This check should be performed in TasksRepository, when saving
                 if self._pending_configuration_task_exists(relay_id, serial):
-                    logger.info("Skipping config task creation, pending")
-                    return None  # Skip creating duplicate pending tasks
+                    # Skip creating duplicate pending tasks
+                    logger.info("Skipping config task creation for %s, pending", relay_id)
+                    return ConfigTaskAlreadyExists(relay_id)
                 parent = helper_config_dir / f"{serial}/relays/{relay_id}"
                 relay_config_spec = RelayConfigSpec(serial=serial, tar_data=create_tar(parent))
                 task = RelayTask(
@@ -81,10 +102,10 @@ class ConfigTaskFactory:
                 )
                 with bound_contextvars(task_id=task.id):
                     self.tasks_repository.store_task(relay_id, task)
-                    return task
+                    return ConfigTaskCreated(relay_id)
             except Exception as e:
                 logger.exception(e)
-                return None
+                return ConfigTaskCreationFailed(relay_id, e)
 
     def _pending_configuration_task_exists(
         self,

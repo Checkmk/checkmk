@@ -232,7 +232,6 @@ async def get_task_endpoint(
 
 @router.post(
     "/activate-config",
-    status_code=fastapi.status.HTTP_200_OK,
     dependencies=[
         fastapi.Depends(validate_localhost_authorization),
         fastapi.Depends(site_cn_authorization),
@@ -240,7 +239,8 @@ async def get_task_endpoint(
 )
 async def create_relay_config_tasks(
     handler: Annotated[ActivateConfigHandler, fastapi.Depends(get_activate_config_handler)],
-) -> tasks_protocol.TaskListResponse:
+    response: fastapi.Response,
+) -> tasks_protocol.UpdateConfigResponse:
     """
     Create a relay configuration task for every registered relay.
 
@@ -251,7 +251,15 @@ async def create_relay_config_tasks(
         payload: RelayConfigTask containing the configuration data template.
 
     Returns:
-        TaskListResponse containing the list of created tasks.
+        UpdateConfigResponse containing the lists of relays for which the config task creation
+        succeeded, is already pending or failed respectively.
     """
-    created_tasks = handler.process()
-    return TaskListResponseSerializer.serialize(created_tasks)
+    response_content = handler.process()
+
+    response.status_code = (
+        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR
+        if response_content.failed
+        else fastapi.status.HTTP_200_OK
+    )
+
+    return response_content

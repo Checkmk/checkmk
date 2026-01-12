@@ -6,7 +6,11 @@
 import datetime
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
+from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import (
+    ConfigTaskAlreadyExists,
+    ConfigTaskCreationFailed,
+    ConfigTaskFactory,
+)
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayConfigSpec,
     RelayTask,
@@ -80,7 +84,7 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
 
     # Create tasks for chosen relay: relay_id_2
-    created_task = config_task_factory.create_for_relay(relay_id_2)
+    _ = config_task_factory.create_for_relay(relay_id_2)
 
     # assert no tasks are created for the other relays
 
@@ -94,7 +98,6 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     assert len(tasks_for_relay_2) == 1
     assert isinstance(tasks_for_relay_2[0].spec, RelayConfigSpec)
     assert tasks_for_relay_2[0].spec.serial == cf.serial
-    assert created_task == tasks_for_relay_2[0]
 
     cf.assert_tar_content(relay_id_2, tasks_for_relay_2[0].spec.tar_data)
 
@@ -136,8 +139,8 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
     tasks_repository.store_task(relay_id_2, stored_task)
 
     # ...then we cannot create tasks for chosen relay: relay_id_2
-    created_task = config_task_factory.create_for_relay(relay_id_2)
-    assert created_task is None
+    creation_result = config_task_factory.create_for_relay(relay_id_2)
+    assert isinstance(creation_result, ConfigTaskAlreadyExists)
 
     # assert no tasks are created for the other relays
 
@@ -182,8 +185,8 @@ def test_create_task_for_single_chosen_relay_when_relay_folder_does_not_exist(
 
     # ...then we cannot create tasks for chosen relay: relay_id_2
 
-    created_task = config_task_factory.create_for_relay(relay_id_2)
-    assert created_task is None
+    creation_result = config_task_factory.create_for_relay(relay_id_2)
+    assert isinstance(creation_result, ConfigTaskCreationFailed)
 
     # assert no tasks are created for the other relays
 

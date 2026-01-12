@@ -67,7 +67,7 @@ agent_section_win_ip_r = AgentSection(
 )
 
 
-def inventory_win_ip_r(section: Section) -> InventoryResult:
+def inventorize_win_ip_r(section: Section) -> InventoryResult:
     for route in section:
         yield TableRow(
             path=["networking", "routes"],
@@ -85,5 +85,5 @@ def inventory_win_ip_r(section: Section) -> InventoryResult:
 
 inventory_plugin_win_ip_r = InventoryPlugin(
     name="win_ip_r",
-    inventory_function=inventory_win_ip_r,
+    inventory_function=inventorize_win_ip_r,
 )

@@ -7,7 +7,10 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.windows.agent_based.inventory_win_ip_r import inventory_win_ip_r, parse_win_ip_r
+from cmk.plugins.windows.agent_based.inventory_win_ip_r import (
+    inventorize_win_ip_r,
+    parse_win_ip_r,
+)
 
 
 @pytest.mark.parametrize(
@@ -435,5 +438,5 @@ from cmk.plugins.windows.agent_based.inventory_win_ip_r import inventory_win_ip_
         ),
     ],
 )
-def test_inventory_win_ip_r(string_table: StringTable, expected_result: InventoryResult) -> None:
-    assert list(inventory_win_ip_r(parse_win_ip_r(string_table))) == expected_result
+def test_inventorize_win_ip_r(string_table: StringTable, expected_result: InventoryResult) -> None:
+    assert list(inventorize_win_ip_r(parse_win_ip_r(string_table))) == expected_result

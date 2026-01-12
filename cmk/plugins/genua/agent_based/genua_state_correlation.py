@@ -36,7 +36,7 @@ from cmk.plugins.genua.lib import DETECT_GENUA
 # .1.3.6.1.4.1.3137.2.1.2.1.7.10 = INTEGER: 2
 
 
-def inventory_genua_state(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_genua_state(section: Sequence[StringTable]) -> DiscoveryResult:
     # remove empty elements due to two alternative enterprise ids in snmp_info
     section = [_f for _f in section if _f]
     if section and section[0]:
@@ -112,6 +112,6 @@ snmp_section_genua_state_correlation = SNMPSection(
 check_plugin_genua_state_correlation = CheckPlugin(
     name="genua_state_correlation",
     service_name="Carp Correlation",
-    discovery_function=inventory_genua_state,
+    discovery_function=discover_genua_state,
     check_function=check_genua_state,
 )

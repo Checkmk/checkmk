@@ -26,7 +26,7 @@ from cmk.plugins.lib.df import (
 )
 
 
-def inventory_emc_datadomain_fs(section: StringTable) -> DiscoveryResult:
+def discover_emc_datadomain_fs(section: StringTable) -> DiscoveryResult:
     for line in section:
         if line[1] not in EXCLUDED_MOUNTPOINTS:
             yield Service(item=line[1])
@@ -64,7 +64,7 @@ snmp_section_emc_datadomain_fs = SimpleSNMPSection(
 check_plugin_emc_datadomain_fs = CheckPlugin(
     name="emc_datadomain_fs",
     service_name="DD-Filesystem %s",
-    discovery_function=inventory_emc_datadomain_fs,
+    discovery_function=discover_emc_datadomain_fs,
     check_function=check_emc_datadomain_fs,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

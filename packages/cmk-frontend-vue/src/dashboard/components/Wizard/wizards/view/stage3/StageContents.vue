@@ -19,6 +19,7 @@ import WidgetVisualization from '@/dashboard/components/Wizard/components/Widget
 import type { UseWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
+import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   EffectiveWidgetFilterContext,
@@ -48,11 +49,22 @@ const visualizationProps = defineModel<UseWidgetVisualizationProps>('visualizati
   required: true
 })
 
+const effectiveTitle = usePreviewWidgetTitle(
+  computed(() => {
+    return {
+      generalSettings: visualizationProps.value.widgetGeneralSettings.value,
+      content: props.content,
+      effectiveFilters: props.effective_filter_context.filters
+    }
+  })
+)
+
 const widgetContentProps = computed<ContentProps>(
   () =>
     ({
       widget_id: props.widget_id,
       content: props.content,
+      effectiveTitle: effectiveTitle.value,
       effective_filter_context: props.effective_filter_context,
       dashboardKey: props.dashboardKey,
       general_settings: visualizationProps.value.widgetGeneralSettings.value

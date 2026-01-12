@@ -13,3 +13,6 @@ export type DataSourceModel = components['schemas']['DataSourceModel']
 
 export type ViewCollectionModel = components['schemas']['ViewCollectionModel']
 export type ViewModel = components['schemas']['ViewModel']
+
+export type ComputeWidgetTitlesRequest = components['schemas']['ComputeWidgetTitlesRequest']
+export type ComputeWidgetTitlesResponse = components['schemas']['ComputeWidgetTitlesResponse']

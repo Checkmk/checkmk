@@ -91,7 +91,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <DashboardContentContainer :general_settings="general_settings" content-overflow="hidden">
+  <DashboardContentContainer
+    :effective-title="effectiveTitle"
+    :general_settings="general_settings"
+    content-overflow="hidden"
+  >
     <div :id="`db-content-graph-${widget_id}`" ref="contentDiv" class="db-content-graph" />
   </DashboardContentContainer>
 </template>

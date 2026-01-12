@@ -9,12 +9,16 @@ import { computed } from 'vue'
 import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 interface DashboardContentContainerProps {
+  effectiveTitle: string | undefined
   general_settings: WidgetGeneralSettings
   contentOverflow?: string
 }
 
-const { general_settings: generalSettings, contentOverflow = 'auto' } =
-  defineProps<DashboardContentContainerProps>()
+const {
+  effectiveTitle,
+  general_settings: generalSettings,
+  contentOverflow = 'auto'
+} = defineProps<DashboardContentContainerProps>()
 
 const titleRenderClass = computed<string>(() => {
   if (generalSettings.title?.render_mode === 'with_background') {
@@ -27,15 +31,15 @@ const titleRenderClass = computed<string>(() => {
 <template>
   <div class="db-content-container">
     <div
-      v-if="generalSettings.title && generalSettings.title.render_mode !== 'hidden'"
+      v-if="effectiveTitle && generalSettings.title?.render_mode !== 'hidden'"
       class="db-content-container__title"
       :class="titleRenderClass"
       role="heading"
     >
-      <a v-if="generalSettings.title.url" :href="generalSettings.title.url">{{
-        generalSettings.title.text
+      <a v-if="generalSettings.title?.url" :href="generalSettings.title.url">{{
+        effectiveTitle
       }}</a>
-      <span v-else>{{ generalSettings.title.text }}</span>
+      <span v-else>{{ effectiveTitle }}</span>
     </div>
     <div
       class="db-content-container__content"

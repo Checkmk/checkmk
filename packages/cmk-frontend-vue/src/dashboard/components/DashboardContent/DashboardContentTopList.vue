@@ -114,7 +114,7 @@ const percentage = (metricValue: number) => {
 </script>
 
 <template>
-  <DashboardContentContainer :general_settings="general_settings">
+  <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
     <div v-if="fetchingErrorMessage" class="db-content-ntop__error error">
       {{ fetchingErrorMessage }}
     </div>

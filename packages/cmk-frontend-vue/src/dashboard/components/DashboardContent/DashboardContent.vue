@@ -68,6 +68,7 @@ function componentKey(content: WidgetContent): string {
     :widget_id="widget_id"
     :general_settings="general_settings"
     :content="content"
+    :effective-title="effectiveTitle"
     :effective_filter_context="effective_filter_context"
     :dashboard-key="dashboardKey"
   />

@@ -15,6 +15,7 @@ export interface ContentProps<T = WidgetContent> {
   widget_id: string
   general_settings: WidgetGeneralSettings
   content: T
+  effectiveTitle: string | undefined
   effective_filter_context: EffectiveWidgetFilterContext
   dashboardKey: DashboardKey
 }

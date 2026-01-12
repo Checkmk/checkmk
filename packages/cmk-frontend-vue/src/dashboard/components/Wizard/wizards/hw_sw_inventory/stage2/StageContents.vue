@@ -72,6 +72,7 @@ const inventoryHandler = await useInventory(
     :dashboard-key="dashboardKey"
     :general_settings="inventoryHandler.widgetProps.value.general_settings"
     :content="inventoryHandler.widgetProps.value.content"
+    :effective-title="inventoryHandler.widgetProps.value.effectiveTitle"
     :effective_filter_context="inventoryHandler.widgetProps.value.effective_filter_context"
   />
 

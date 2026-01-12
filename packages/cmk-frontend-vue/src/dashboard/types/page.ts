@@ -53,6 +53,7 @@ export interface SharedDashboardPageProperties {
     owner: string
     title: string
   }
+  widget_titles: { [widgetId: string]: string }
   dashboard_constants: DashboardConstants
   url_params: FilterHTTPVars
   token_value: string

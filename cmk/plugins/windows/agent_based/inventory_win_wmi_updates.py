@@ -82,7 +82,7 @@ agent_section_win_wmi_updates = AgentSection(
 )
 
 
-def inventory_win_wmi_updates(section: Section) -> InventoryResult:
+def inventorize_win_wmi_updates(section: Section) -> InventoryResult:
     for package in section:
         yield TableRow(
             path=["software", "packages"],
@@ -101,5 +101,5 @@ def inventory_win_wmi_updates(section: Section) -> InventoryResult:
 
 inventory_plugin_win_wmi_updates = InventoryPlugin(
     name="win_wmi_updates",
-    inventory_function=inventory_win_wmi_updates,
+    inventory_function=inventorize_win_wmi_updates,
 )

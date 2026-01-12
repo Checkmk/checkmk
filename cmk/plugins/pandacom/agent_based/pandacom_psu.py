@@ -86,7 +86,7 @@ def parse_pandacom_psu(string_table: StringTable) -> Section | None:
     return parsed
 
 
-def inventory_pandacom_psu(section: Section) -> DiscoveryResult:
+def discover_pandacom_psu(section: Section) -> DiscoveryResult:
     for psu_nr in section:
         yield Service(item=psu_nr)
 
@@ -114,6 +114,6 @@ snmp_section_pandacom_psu = SimpleSNMPSection(
 check_plugin_pandacom_psu = CheckPlugin(
     name="pandacom_psu",
     service_name="Power Supply %s",
-    discovery_function=inventory_pandacom_psu,
+    discovery_function=discover_pandacom_psu,
     check_function=check_pandacom_psu,
 )

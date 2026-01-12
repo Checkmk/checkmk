@@ -90,7 +90,7 @@ def parse_fortinet_controller_aps(
     return parsed
 
 
-def inventory_fortinet_controller_aps(
+def discover_fortinet_controller_aps(
     section: Mapping[str, Mapping[str, Any]],
 ) -> DiscoveryResult:
     for key, values in section.items():
@@ -160,7 +160,7 @@ snmp_section_fortinet_controller_aps = SNMPSection(
 check_plugin_fortinet_controller_aps = CheckPlugin(
     name="fortinet_controller_aps",
     service_name="AP %s",
-    discovery_function=inventory_fortinet_controller_aps,
+    discovery_function=discover_fortinet_controller_aps,
     check_function=check_fortinet_controller_aps,
     check_default_parameters={},
 )

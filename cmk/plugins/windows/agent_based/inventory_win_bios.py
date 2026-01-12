@@ -51,7 +51,7 @@ agent_section_win_bios = AgentSection(
 )
 
 
-def inventory_win_bios(section: Mapping[str, str | int]) -> InventoryResult:
+def inventorize_win_bios(section: Mapping[str, str | int]) -> InventoryResult:
     attr = {k: section[k] for k in ("date", "model", "vendor", "version") if k in section}
     with suppress(KeyError):
         attr["version"] = (
@@ -66,5 +66,5 @@ def inventory_win_bios(section: Mapping[str, str | int]) -> InventoryResult:
 
 inventory_plugin_win_bios = InventoryPlugin(
     name="win_bios",
-    inventory_function=inventory_win_bios,
+    inventory_function=inventorize_win_bios,
 )

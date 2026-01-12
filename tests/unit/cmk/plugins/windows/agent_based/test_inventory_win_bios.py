@@ -9,7 +9,10 @@ from typing import Final
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.windows.agent_based.inventory_win_bios import inventory_win_bios, parse_win_bios
+from cmk.plugins.windows.agent_based.inventory_win_bios import (
+    inventorize_win_bios,
+    parse_win_bios,
+)
 
 OUTPUT: Final = """Manufacturer       : innotek GmbH
 Name               : Default System BIOS
@@ -28,8 +31,8 @@ def _get_section() -> Mapping[str, str | int]:
     return parse_win_bios([line.split(":") for line in OUTPUT.split("\n")])
 
 
-def test_inventory_win_bios(section: Mapping[str, str | int]) -> None:
-    assert list(inventory_win_bios({**section, "date": 0})) == [  # aviod TZ issues in C
+def test_inventorize_win_bios(section: Mapping[str, str | int]) -> None:
+    assert list(inventorize_win_bios({**section, "date": 0})) == [  # aviod TZ issues in C
         Attributes(
             path=["software", "bios"],
             inventory_attributes={

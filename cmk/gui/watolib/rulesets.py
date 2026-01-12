@@ -34,7 +34,7 @@ from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.generators.config_host_name import create_config_host_name
 from cmk.gui.form_specs.unstable import (
@@ -1502,6 +1502,10 @@ class Rule:
                 value_text = repr(data)
             else:
                 value_text = str(value_model.value_to_html(self.value))
+        except MKAuthException as e:
+            html.show_error(
+                _("Failed to search rule of rule set '%s': %s") % (self.ruleset.title(), e)
+            )
         except Exception as e:
             logger.exception("error searching ruleset %s", self.ruleset.title())
             html.show_warning(

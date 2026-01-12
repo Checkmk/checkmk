@@ -27,8 +27,10 @@ HOST_CONFIG = HostConfig(
             },
             SpecialAgentCommand(
                 command_arguments=[
+                    "--user",
                     "username",
-                    Secret(23).unsafe(),
+                    "--password",
+                    Secret(23),
                     "hostname",
                 ]
             ),
@@ -42,8 +44,10 @@ HOST_CONFIG = HostConfig(
             },
             SpecialAgentCommand(
                 command_arguments=[
+                    "--user",
                     "username",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password",
+                    Secret(id=1, format="%s", pass_safely=True),
                     "hostname",
                 ]
             ),
@@ -69,8 +73,10 @@ def test_storeonce4x_argument_parsing_password(
             },
             SpecialAgentCommand(
                 command_arguments=[
+                    "--user",
                     "username",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password",
+                    Secret(id=1, format="%s", pass_safely=True),
                     "hostname",
                 ]
             ),
@@ -84,8 +90,10 @@ def test_storeonce4x_argument_parsing_password(
             },
             SpecialAgentCommand(
                 command_arguments=[
+                    "--user",
                     "username",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password",
+                    Secret(id=1, format="%s", pass_safely=True),
                     "hostname",
                     "--verify_ssl",
                 ]

@@ -14,6 +14,7 @@ from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal
 
 import cmk.utils.paths
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
@@ -94,7 +95,9 @@ from cmk.gui.watolib.config_variable_groups import (
 )
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.groups_io import load_contact_group_information
+from cmk.gui.watolib.host_rename import RenameHostInRuleValue, RenameHostInRuleValueRegistry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.rulesets import Rule
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupAgent,
     RulespecGroupAgentSNMP,
@@ -141,6 +144,7 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
+    rename_host_in_rule_value_registry: RenameHostInRuleValueRegistry,
 ) -> None:
     config_variable_registry.register(ConfigVariableUITheme)
     config_variable_registry.register(ConfigVariableDefaultLanguage)
@@ -314,6 +318,18 @@ def register(
     rulespec_registry.register(SnmpExcludeSections)
     rulespec_registry.register(Snmpv3Contexts)
     rulespec_registry.register(PiggybackedHostFiles)
+
+    rename_host_in_rule_value_registry.register(
+        RenameHostInRuleValue(
+            "clustered_services_configuration", _rename_host_in_clustered_services_configuration
+        )
+    )
+
+    rename_host_in_rule_value_registry.register(
+        RenameHostInRuleValue(
+            "clustered_services_mapping", _rename_host_in_clustered_services_mapping
+        )
+    )
 
 
 #   .--Global Settings-----------------------------------------------------.
@@ -4503,6 +4519,18 @@ ClusteredServicesConfiguration = ServiceRulespec(
 )
 
 
+def _rename_host_in_clustered_services_configuration(
+    old_name: HostName, new_name: HostName, rule: Rule
+) -> bool:
+    assert isinstance(rule.value, tuple)
+    settings_ref = rule.value[1]
+    if primary_node := settings_ref.get("primary_node"):
+        if primary_node == old_name:
+            settings_ref["primary_node"] = new_name
+            return True
+    return False
+
+
 def _valuespec_clustered_services_mapping() -> TextInput:
     return TextInput(
         title=_("Clustered services for overlapping clusters"),
@@ -4524,6 +4552,15 @@ ClusteredServicesMapping = ServiceRulespec(
     name="clustered_services_mapping",
     valuespec=_valuespec_clustered_services_mapping,
 )
+
+
+def _rename_host_in_clustered_services_mapping(
+    old_name: HostName, new_name: HostName, rule: Rule
+) -> bool:
+    if rule.value == old_name:
+        rule.value = new_name
+        return True
+    return False
 
 
 def _valuespec_service_label_rules() -> Labels:

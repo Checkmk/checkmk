@@ -29,6 +29,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_sync import ReplicationPathRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.host_rename import rename_host_in_rule_value_registry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -131,6 +132,7 @@ def register(
         config_variable_registry,
         config_variable_group_registry,
         contact_group_usage_finder_registry,
+        rename_host_in_rule_value_registry,
     )
     _ac_tests.register(ac_test_registry)
     _omd_configuration.register(

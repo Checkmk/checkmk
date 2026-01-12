@@ -34,7 +34,7 @@ export async function cmkAjax<OutputType>(url: string, body: object): Promise<Ou
     headers: {
       'Content-type': 'application/x-www-form-urlencoded'
     },
-    body: `request=${JSON.stringify(body)}`
+    body: `request=${encodeURIComponent(JSON.stringify(body))}`
   })
   await response.raiseForStatus()
   const ajaxResponse = (await response.json()) as MaybeApiError

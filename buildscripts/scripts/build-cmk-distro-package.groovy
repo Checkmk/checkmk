@@ -205,15 +205,20 @@ void main() {
                         if (edition == "community") {
                             license_flag = '--//:repo_license="gpl"'
                         }
-                        sh("""
-                            bazel build \
-                                --cmk_version=${cmk_version} \
-                                --cmk_edition=${edition} \
-                                ${license_flag} \
-                                --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                        //omd:${package_type}_${edition}
-                        """);
-                        sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
+                        if (package_type != "cma") {
+                            sh("""
+                                bazel build \
+                                    --cmk_version=${cmk_version} \
+                                    --cmk_edition=${edition} \
+                                    ${license_flag} \
+                                    --execution_log_json_file="${checkout_dir}/deps_install.json" \
+                            //omd:${package_type}_${edition}
+                            """);
+                            sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
+                        }
+                        else {
+                            sh("${omd_env_vars.join(' ')} make -C omd ${package_type}");
+                        }
                     }
                     package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
                     if (!package_type) {

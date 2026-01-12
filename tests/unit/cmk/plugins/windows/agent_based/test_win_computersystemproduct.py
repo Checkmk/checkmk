@@ -17,9 +17,9 @@ STRING_TABLE = [
 STRING_TABLE_EMPTY: list[list[str]] = []
 
 
-def test_inventory_win_computersystemproduct() -> None:
+def test_inventorize_win_computersystemproduct() -> None:
     assert list(
-        wcsp.inventory_win_computersystemproduct(
+        wcsp.inventorize_win_computersystemproduct(
             wcsp.parse_win_computersystemproduct(STRING_TABLE),
         )
     ) == [
@@ -32,9 +32,9 @@ def test_inventory_win_computersystemproduct() -> None:
     ]
 
 
-def test_inventory_win_computersystemproduct_empty() -> None:
+def test_inventorize_win_computersystemproduct_empty() -> None:
     assert not list(
-        wcsp.inventory_win_computersystemproduct(
+        wcsp.inventorize_win_computersystemproduct(
             wcsp.parse_win_computersystemproduct(STRING_TABLE_EMPTY),
         )
     )

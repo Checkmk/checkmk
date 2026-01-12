@@ -35,7 +35,7 @@ agent_section_win_computersystemproduct = AgentSection(
 )
 
 
-def inventory_win_computersystemproduct(section: _Section | None) -> InventoryResult:
+def inventorize_win_computersystemproduct(section: _Section | None) -> InventoryResult:
     if section is not None:
         yield Attributes(
             path=["hardware", "system"],
@@ -45,5 +45,5 @@ def inventory_win_computersystemproduct(section: _Section | None) -> InventoryRe
 
 inventory_plugin_win_computersystemproduct = InventoryPlugin(
     name="win_computersystemproduct",
-    inventory_function=inventory_win_computersystemproduct,
+    inventory_function=inventorize_win_computersystemproduct,
 )

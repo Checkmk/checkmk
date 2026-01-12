@@ -20,7 +20,11 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
             {"user": "user", "password": "pass", "interval": 300},
             {
                 "auth": {
-                    "password": ("cmk_postprocesed", "explicit_password", "pass"),
+                    "password": (
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        ("some_uuid", "pass"),
+                    ),
                     "user": "user",
                 },
                 "deployment": ("cached", 300.0),
@@ -30,7 +34,11 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
             {"user": "user", "password": "pass"},
             {
                 "auth": {
-                    "password": ("cmk_postprocesed", "explicit_password", "pass"),
+                    "password": (
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        ("some_uuid", "pass"),
+                    ),
                     "user": "user",
                 },
                 "deployment": ("sync", None),
@@ -51,7 +59,7 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
             },
             {
                 "auth": {
-                    "password": ("cmk_postprocesed", "explicit_password", "pass"),
+                    "password": ("cmk_postprocessed", "explicit_password", ("some_uuid", "pass")),
                     "user": "user",
                 },
                 "deployment": ("cached", 300.0),
@@ -67,7 +75,7 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
             },
             {
                 "auth": {
-                    "password": ("cmk_postprocesed", "explicit_password", "pass"),
+                    "password": ("cmk_postprocessed", "explicit_password", ("some_uuid", "pass")),
                     "user": "user",
                 },
                 "deployment": ("sync", None),
@@ -90,9 +98,61 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
             {"cmk-match-type": "dict"},
             {"cmk-match-type": "dict"},
         ),
+        (
+            {
+                "auth": {
+                    "user": "user",
+                    "password": ("cmk_postprocessed", "explicit_password", ("some_uuid", "abc")),
+                },
+                "cmk-match-type": "dict",
+            },
+            {
+                "auth": {
+                    "user": "user",
+                    "password": ("cmk_postprocessed", "explicit_password", ("some_uuid", "abc")),
+                },
+                "cmk-match-type": "dict",
+            },
+        ),
+        (
+            {
+                "auth": {
+                    "user": "user",
+                    "password": ("cmk_postprocessed", "stored_password", ("password_1", "")),
+                },
+                "cmk-match-type": "dict",
+            },
+            {
+                "auth": {
+                    "user": "user",
+                    "password": ("cmk_postprocessed", "stored_password", ("password_1", "")),
+                },
+                "cmk-match-type": "dict",
+            },
+        ),
     ],
 )
-def test_migrate(value: object, expected: object) -> None:
+def test_migrate(value: object, expected: dict[str, object]) -> None:
     migrated = _migrate(value)
-    assert migrated == expected
-    assert _migrate(migrated) == migrated
+    _assert_equal(migrated, expected)
+    migrated_again = _migrate(value)
+    _assert_equal(migrated, migrated_again)
+
+
+def _replace_uuid(auth: object) -> None:
+    if not isinstance(auth, dict):
+        return
+    match auth["password"]:
+        case ("cmk_postprocessed", "explicit_password", (_uuid, password)):
+            auth["password"] = ("cmk_postprocessed", "explicit_password", ("some_uuid", password))
+        case _:
+            pass
+
+
+def _assert_equal(left: dict[str, object], right: dict[str, object]) -> None:
+    assert left.get("deployment") == right.get("deployment")
+    auth_left = left.get("auth")
+    _replace_uuid(auth_left)
+    auth_right = right.get("auth")
+    _replace_uuid(auth_right)
+    assert auth_left == auth_right

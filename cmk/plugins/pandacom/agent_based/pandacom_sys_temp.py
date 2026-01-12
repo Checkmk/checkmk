@@ -21,7 +21,7 @@ def parse_pandacom_sys_temp(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def inventory_pandacom_sys_temp(section: StringTable) -> DiscoveryResult:
+def discover_pandacom_sys_temp(section: StringTable) -> DiscoveryResult:
     yield Service(item="System")
 
 
@@ -43,7 +43,7 @@ snmp_section_pandacom_sys_temp = SimpleSNMPSection(
 check_plugin_pandacom_sys_temp = CheckPlugin(
     name="pandacom_sys_temp",
     service_name="Temperature %s",
-    discovery_function=inventory_pandacom_sys_temp,
+    discovery_function=discover_pandacom_sys_temp,
     check_function=check_pandacom_sys_temp,
     check_ruleset_name="temperature",
     check_default_parameters=TempParamDict(levels=(35.0, 40.0)),

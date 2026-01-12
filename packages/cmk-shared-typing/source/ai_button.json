@@ -9,9 +9,10 @@
     },
     "teleport": { "type": "string" },
     "user_id": { "type": "string" },
-    "hide_button": { "type": "boolean" }
+    "hide_button": { "type": "boolean" },
+    "site_name": { "type": "string" }
   },
-  "required": ["button_text", "template", "user_id"],
+  "required": ["button_text", "template", "user_id", "site_name"],
   "$defs": {
     "ai_template": {
       "type": "object",
@@ -40,12 +41,12 @@
       "properties": {
         "host_name": { "type": "string" },
         "service_name": { "type": "string" },
-        "host_state": { "enum": ["Up", "Down", "Unreach"] },
+        "host_state": { "enum": ["Up", "Down", "Unreachable"] },
         "service_state": {
           "enum": ["Unknown", "Critical", "Warning", "OK"]
         }
       },
-      "required": ["host_name", "service_name", "service_state"]
+      "required": ["host_name", "host_state", "service_name", "service_state"]
     }
   }
 }

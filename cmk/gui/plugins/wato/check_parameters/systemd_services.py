@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Container
@@ -205,7 +204,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_systemd_services():
+def _parameter_valuespec_systemd_services() -> Dictionary:
     return Dictionary(
         elements=[
             (

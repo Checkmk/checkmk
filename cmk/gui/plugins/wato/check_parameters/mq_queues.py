@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-# mypy: disable-error-code="no-untyped-def"
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -15,7 +14,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer, TextInput
 
 
-def _item_spec_mq_queues():
+def _item_spec_mq_queues() -> TextInput:
     return TextInput(
         title=_("Queue Name"), help=_("The name of the queue like in the Apache queue manager")
     )
@@ -43,7 +42,7 @@ def _migrate_mq_queue_consumer_count_levels(
             return other
 
 
-def _parameter_valuespec_mq_queues():
+def _parameter_valuespec_mq_queues() -> Dictionary:
     return Dictionary(
         migrate=_migrate_mq_queue_consumer_count_levels,  # type: ignore[arg-type]
         elements=[

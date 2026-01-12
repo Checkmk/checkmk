@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from collections.abc import Mapping
 from typing import Any
 
 from cmk.gui.i18n import _
@@ -17,13 +14,15 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Filesize, Integer, Migrate, TextInput, Tuple
 
 
-def migrate_to_bytes(params: Mapping[str, Any]) -> Mapping[str, Any]:
+def migrate_to_bytes(params: object) -> dict[str, Any]:
     """
     >>> migrate_to_bytes({"read": (1.0, 3.0), "average": 3.0})
     {'read_bytes': (1048576, 3145728), 'average': 3.0}
     >>> migrate_to_bytes({"write_bytes": 1024})
     {'write_bytes': 1024}
     """
+    if not isinstance(params, dict):
+        raise ValueError
     old = {"read", "write"}
     scale = 1024**2  # yes, it said "MB" below, but MiB was used in the check.
     return {
@@ -34,14 +33,14 @@ def migrate_to_bytes(params: Mapping[str, Any]) -> Mapping[str, Any]:
     }
 
 
-def _item_spec_mysql_innodb_io():
+def _item_spec_mysql_innodb_io() -> TextInput:
     return TextInput(
         title=_("Instance"),
         help=_("Only needed if you have multiple MySQL instances on one server"),
     )
 
 
-def _parameter_valuespec_mysql_innodb_io():
+def _parameter_valuespec_mysql_innodb_io() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, TextInput
 
 
-def _item_spec_siemens_plc_flag():
+def _item_spec_siemens_plc_flag() -> TextInput:
     return TextInput(
         title=_("Device Name and Value Ident"),
         help=_(
@@ -26,7 +26,7 @@ def _item_spec_siemens_plc_flag():
     )
 
 
-def _parameter_valuespec_siemens_plc_flag():
+def _parameter_valuespec_siemens_plc_flag() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             elements=[

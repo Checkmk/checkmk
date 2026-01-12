@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.kube import wrap_with_no_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
@@ -15,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
-def _parameter_valuespec():
+def _parameter_valuespec() -> Dictionary:
     return Dictionary(
         help=_(
             "Here you can configure absolute levels for total "

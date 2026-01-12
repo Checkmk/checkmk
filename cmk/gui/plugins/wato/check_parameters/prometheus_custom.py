@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -15,7 +15,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Float, ListOf, TextInput, Tuple
 
 
-def _parameter_valuespec_prometheus_custom():
+def _parameter_valuespec_prometheus_custom() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -91,14 +91,14 @@ def _parameter_valuespec_prometheus_custom():
     )
 
 
-def _item_spec_custom_service():
+def _item_spec_custom_service() -> TextInput:
     return TextInput(
         title=_("Prometheus custom service"),
         help=_("Name of the custom service"),
     )
 
 
-def _verify_empty(value, varprefix):
+def _verify_empty(value: Mapping[str, object], varprefix: str) -> None:
     if not value:
         raise MKUserError(varprefix, _("Please specify at least one type of levels"))
 

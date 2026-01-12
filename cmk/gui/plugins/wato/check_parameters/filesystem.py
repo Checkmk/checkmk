@@ -28,7 +28,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _validate_discovery_filesystem_params(value: Any, varprefix: str) -> None:
+def _validate_discovery_filesystem_params(value: dict[str, Any], varprefix: str) -> None:
     mountpoint_for_block_devices = value.get(
         "mountpoint_for_block_devices", "volume_name_as_mountpoint"
     )

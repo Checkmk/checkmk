@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -26,7 +25,7 @@ def _migrate_quadruple(
     return {"levels_lower": (wl, cl), "levels": (wu, cu)}
 
 
-def _parameter_valuespec_single_humidity():
+def _parameter_valuespec_single_humidity() -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             help=_("This rule set sets the threshold limits for humidity sensors"),

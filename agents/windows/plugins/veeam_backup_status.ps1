@@ -17,6 +17,50 @@ $newsize.height = 300
 $newsize.width = 150
 $pswindow.buffersize = $newsize
 
+## -- start of the code which may switch powershell --
+## Code below may been tested separately
+if ($Debug) {
+    $DebugPreference='Continue'
+}
+
+$borderVersion = 13
+try {
+    # works only if process is running, normally it's ok
+    $veeamVersion = [int](Get-Process | Where {$_.Name -like "*Veeam.Backup.Service*"}).ProductVersion.Substring(0,2)
+}
+catch {
+    Write-Debug "Could not determine Veeam version, assuming v13"
+    $veeamVersion = $borderVersion
+}
+
+$isNewVeeam = $veeamVersion -ge $borderVersion
+$isNewPowershell = $PSVersionTable.PSVersion.Major -ge 7
+
+try {
+    if ($isNewVeeam -and -not( $isNewPowershell) ) {
+        Write-Debug "Switch Powershell 7(core)"
+        pwsh $PSCommandPath @PSBoundParameters
+        exit 0
+    }
+
+    if (-not ($isNewVeeam) -and $isNewPowershell) {
+        Write-Debug "Switch to Powershell 5"
+        powershell $PSCommandPath @PSBoundParameters
+        exit 0
+    }
+
+    Write-Debug "Staying in Powershell $($PSVersionTable.PSVersion.Major)"
+
+}
+catch {
+    if ($Debug) {
+        Write-Debug "Could not execute required PowerShell"
+    }
+    exit 1
+}
+## -- end of the code which may switch powershell --
+
+
 # Get Information from veeam backup and replication in cmk-friendly format
 # V0.9
 
@@ -66,10 +110,10 @@ try {
 
             $MyCdpJobsNextRun = $mycdpjobs.NextRun
             if ($MyCdpJobsNextRun -ne $null) {
-                $MyCdpJobsNextRun = get-date -date $MyCdpJobsNextRun -Uformat %s 
+                $MyCdpJobsNextRun = get-date -date $MyCdpJobsNextRun -Uformat %s
             }
             else {
-                $MyCdpJobsNextRun = "null" 
+                $MyCdpJobsNextRun = "null"
             }
 
             $MyCdpJobsPolicyState = $mycdpjobs.PolicyState
@@ -106,8 +150,8 @@ try {
         # because we are interested in the status of the original backup but
         # for replicas the overall job state is all we need.
         # Monitor also jobs with the EpAgentBackup job type.
-        if ($myJob.IsBackup -eq $false -And $myJob.JobType -ne "EpAgentBackup") { 
-            continue 
+        if ($myJob.IsBackup -eq $false -And $myJob.JobType -ne "EpAgentBackup") {
+            continue
         }
 
         # Each backup job has a number of tasks which were executed (VMs which were processed)

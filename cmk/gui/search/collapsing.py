@@ -48,7 +48,8 @@ def _collapse_items(
     collapsed_results: list[UnifiedSearchResultItem] = []
 
     for title, group in groupby(results, key=lambda item: item.title):
-        host_items = []
+        host_monitoring_items = []
+        host_setup_item = None
         other_items = []
 
         # WARN: this logic only works because of some assumptions we make about the ordering from
@@ -57,16 +58,18 @@ def _collapse_items(
         # functionality will no longer work.
         for item in group:
             match item.topic:
-                case "Hosts" | "Host name":
-                    host_items.append(item)
-                case "Hostalias" if host_items:
-                    host_items.append(item)
+                case "Hosts":
+                    host_setup_item = item
+                case "Host name":
+                    host_monitoring_items.append(item)
+                case "Hostalias" if host_monitoring_items:
+                    host_monitoring_items.append(item)
                 case _:
                     other_items.append(item)
 
-        if len(host_items) >= 2:
-            collapsed_results.append(_collapse_host_items(host_items))
-            counts.monitoring -= len(host_items) - 2
+        if len(host_monitoring_items) > 1 or (host_setup_item and host_monitoring_items):
+            collapsed_results.append(_collapse_host_items(host_monitoring_items, host_setup_item))
+            counts.monitoring -= len(host_monitoring_items) - 1
 
         if other_items:
             collapsed_results.extend(other_items)
@@ -77,11 +80,11 @@ def _collapse_items(
     return collapsed_results, counts
 
 
-def _collapse_host_items(host_items: list[UnifiedSearchResultItem]) -> UnifiedSearchResultItem:
-    setup_item, *monitoring_items = host_items
-
+def _collapse_host_items(
+    monitoring_items: list[UnifiedSearchResultItem], setup_item: UnifiedSearchResultItem | None
+) -> UnifiedSearchResultItem:
     return UnifiedSearchResultItem(
-        title=setup_item.title,
+        title=monitoring_items[0].title,
         target=monitoring_items[0].target,
         provider=ProviderName.monitoring,
         topic=_HOST_TOPIC_TITLE,
@@ -91,5 +94,7 @@ def _collapse_host_items(host_items: list[UnifiedSearchResultItem]) -> UnifiedSe
                 target=setup_item.target,
                 title=_EDIT_TITLE,
             )
-        ],
+        ]
+        if setup_item
+        else None,
     )

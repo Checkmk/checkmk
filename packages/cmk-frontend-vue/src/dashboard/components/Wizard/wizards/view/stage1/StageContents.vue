@@ -216,7 +216,7 @@ const sortedContextInfos = computed(() => {
         :restricted-to-single-infos="restrictedToSingleInfos"
         :datasources-by-id="datasourcesById"
       />
-      <ContentSpacer />
+      <ContentSpacer :dimension="8" />
       <div v-for="objectType in sortedContextInfos" :key="objectType">
         <SectionBlock
           :title="

@@ -91,8 +91,6 @@ pkg_mkdirs(
     dirs = [
         "skel/var/nagios/",
         "skel/var/nagios/archive/",
-        "skel/local/share/nagios/htdocs/theme/",
-        "skel/local/share/nagios/htdocs/",
         "skel/tmp/nagios/checkresults/",
         "skel/tmp/nagios/tmp/",
     ],

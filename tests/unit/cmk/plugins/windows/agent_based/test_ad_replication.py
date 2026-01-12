@@ -17,7 +17,7 @@ import time_machine
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.windows.agent_based.ad_replication import (
     check_ad_replication,
-    inventory_ad_replication,
+    discover_ad_replication,
     parse_ad_replication,
 )
 
@@ -100,7 +100,7 @@ test_info = [
 def test_ad_replication_discovery() -> None:
     """Test discovery function of ad_replication check."""
     section = parse_ad_replication(test_info)
-    result = list(inventory_ad_replication(section))
+    result = list(discover_ad_replication(section))
 
     assert result == [
         Service(item="HAM/SADS055"),

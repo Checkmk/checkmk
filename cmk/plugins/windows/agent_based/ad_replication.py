@@ -62,7 +62,7 @@ def parse_ad_replication_info(info):
     return lines
 
 
-def inventory_ad_replication(section: StringTable) -> DiscoveryResult:
+def discover_ad_replication(section: StringTable) -> DiscoveryResult:
     inv = []
     for line in parse_ad_replication_info(section):
         if len(line) == 11:
@@ -205,7 +205,7 @@ agent_section_ad_replication = AgentSection(
 check_plugin_ad_replication = CheckPlugin(
     name="ad_replication",
     service_name="AD Replication %s",
-    discovery_function=inventory_ad_replication,
+    discovery_function=discover_ad_replication,
     check_function=check_ad_replication,
     check_ruleset_name="ad_replication",
     check_default_parameters={

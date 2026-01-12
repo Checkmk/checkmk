@@ -14,7 +14,7 @@ case "$DISTRO" in
             sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg >/dev/null
         # Upstream repo resides at https://apt.releases.hashicorp.com
         # We use an internal mirror for speedup.
-        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.lan.checkmk.net/hashicorp/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+        # echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.lan.checkmk.net/hashicorp/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 
         apt-get update
         apt-get install -y packer

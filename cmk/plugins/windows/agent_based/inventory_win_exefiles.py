@@ -76,7 +76,7 @@ agent_section_win_exefiles = AgentSection(
 )
 
 
-def inventory_win_exefiles(section: Section) -> InventoryResult:
+def inventorize_win_exefiles(section: Section) -> InventoryResult:
     for package in section:
         yield TableRow(
             path=["software", "packages"],
@@ -98,5 +98,5 @@ def inventory_win_exefiles(section: Section) -> InventoryResult:
 
 inventory_plugin_win_exefiles = InventoryPlugin(
     name="win_exefiles",
-    inventory_function=inventory_win_exefiles,
+    inventory_function=inventorize_win_exefiles,
 )

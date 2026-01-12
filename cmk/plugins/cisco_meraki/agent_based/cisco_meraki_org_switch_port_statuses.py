@@ -150,8 +150,8 @@ def parse_switch_ports_statuses(string_table: StringTable) -> Section:
     # https://developer.cisco.com/meraki/api-v1/get-organization-switch-ports-statuses-by-switch/
     match string_table:
         case [[payload]] if payload:
-            switch_port_status = SwitchPortStatus.model_validate(json.loads(payload)[0])
-            return {switch_port_status.port_id: switch_port_status}
+            statuses = (SwitchPortStatus.model_validate(data) for data in json.loads(payload))
+            return {switch_port.port_id: switch_port for switch_port in statuses}
         case _:
             return {}
 

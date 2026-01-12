@@ -269,7 +269,7 @@ def test__perfometer_plugin_matches(
                 "name": TranslatedMetric(
                     originals=[Original("name", 1.0)],
                     value=10.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -293,7 +293,7 @@ def test__perfometer_plugin_matches(
                 "name": TranslatedMetric(
                     originals=[Original("name", 1.0)],
                     value=10.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -392,7 +392,7 @@ def test__perfometer_plugin_matches(
                 "name1": TranslatedMetric(
                     originals=[Original("name1", 1.0)],
                     value=10.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -404,7 +404,7 @@ def test__perfometer_plugin_matches(
                 "name2": TranslatedMetric(
                     originals=[Original("name2", 1.0)],
                     value=5.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -428,7 +428,7 @@ def test__perfometer_plugin_matches(
                 "name1": TranslatedMetric(
                     originals=[Original("name1", 1.0)],
                     value=10.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -440,7 +440,7 @@ def test__perfometer_plugin_matches(
                 "name2": TranslatedMetric(
                     originals=[Original("name2", 1.0)],
                     value=5.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -464,7 +464,7 @@ def test__perfometer_plugin_matches(
                 "name1": TranslatedMetric(
                     originals=[Original("name1", 1.0)],
                     value=10.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -476,7 +476,7 @@ def test__perfometer_plugin_matches(
                 "name2": TranslatedMetric(
                     originals=[Original("name2", 1.0)],
                     value=3.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -501,7 +501,7 @@ def test__perfometer_plugin_matches(
                 "name1": TranslatedMetric(
                     originals=[Original("name1", 1.0)],
                     value=10.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -513,7 +513,7 @@ def test__perfometer_plugin_matches(
                 "name2": TranslatedMetric(
                     originals=[Original("name2", 1.0)],
                     value=5.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=False,
                     title="Title 1",
                     unit_spec=ConvertibleUnitSpecification(

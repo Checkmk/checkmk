@@ -35,7 +35,7 @@ def test_get_first_matching_perfometer_testable_without_superseding() -> None:
                 "active_connections": TranslatedMetric(
                     originals=[Original("active_connections", 1.0)],
                     value=1.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Active connections",
                     unit_spec=ConvertibleUnitSpecification(
@@ -77,7 +77,7 @@ def test_get_first_matching_perfometer_testable_with_superseding() -> None:
                 "active_connections": TranslatedMetric(
                     originals=[Original("active_connections", 1.0)],
                     value=1.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Active connections",
                     unit_spec=ConvertibleUnitSpecification(
@@ -310,7 +310,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                 "metric-name": TranslatedMetric(
                     originals=[Original("metric-name", 1.0)],
                     value=2600.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -329,7 +329,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                 "metric-name1": TranslatedMetric(
                     originals=[Original("metric-name1", 1.0)],
                     value=2000.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -341,7 +341,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                 "metric-name2": TranslatedMetric(
                     originals=[Original("metric-name2", 1.0)],
                     value=600.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 2",
                     unit_spec=ConvertibleUnitSpecification(
@@ -360,7 +360,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                 "metric-name1": TranslatedMetric(
                     originals=[Original("metric-name1", 1.0)],
                     value=2000.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 1",
                     unit_spec=ConvertibleUnitSpecification(
@@ -372,7 +372,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                 "metric-name2": TranslatedMetric(
                     originals=[Original("metric-name2", 1.0)],
                     value=400.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 2",
                     unit_spec=ConvertibleUnitSpecification(
@@ -384,7 +384,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                 "metric-name3": TranslatedMetric(
                     originals=[Original("metric-name3", 1.0)],
                     value=200.0,
-                    scalar={},
+                    scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 3",
                     unit_spec=ConvertibleUnitSpecification(
@@ -444,7 +444,7 @@ def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
             "metric-name1": TranslatedMetric(
                 originals=[Original("metric-name1", 1.0)],
                 value=1300.0,
-                scalar={},
+                scalar=ScalarBounds(),
                 auto_graph=True,
                 title="Metric name 1",
                 unit_spec=ConvertibleUnitSpecification(
@@ -456,7 +456,7 @@ def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
             "metric-name2": TranslatedMetric(
                 originals=[Original("metric-name2", 1.0)],
                 value=1300.0,
-                scalar={},
+                scalar=ScalarBounds(),
                 auto_graph=True,
                 title="Metric name 2",
                 unit_spec=ConvertibleUnitSpecification(
@@ -588,7 +588,7 @@ def test_metricometer_renderer_stacked(request_context: None, patch_theme: None)
             "metric_1": TranslatedMetric(
                 originals=[Original("metric_1", 1.0)],
                 value=2.0,
-                scalar={},
+                scalar=ScalarBounds(),
                 auto_graph=True,
                 title="Metric 1",
                 unit_spec=ConvertibleUnitSpecification(
@@ -600,7 +600,7 @@ def test_metricometer_renderer_stacked(request_context: None, patch_theme: None)
             "metric_2": TranslatedMetric(
                 originals=[Original("metric_2", 1.0)],
                 value=7.0,
-                scalar={},
+                scalar=ScalarBounds(),
                 auto_graph=True,
                 title="Metric 2",
                 unit_spec=ConvertibleUnitSpecification(

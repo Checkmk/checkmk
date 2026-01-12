@@ -37,6 +37,8 @@ import type {
   WidgetContent
 } from '@/dashboard/types/widget.ts'
 
+import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
+
 const CONTENT_TYPE_HEADER = {
   params: {
     header: { 'Content-Type': 'application/json' }
@@ -239,6 +241,16 @@ export const dashboardAPI = {
       await client.POST('/domain-types/dashboard/actions/compute-widget-attributes/invoke', {
         ...CONTENT_TYPE_HEADER,
         body: { content: widgetContent }
+      })
+    )
+  },
+  computeWidgetTitles: async (
+    request: ComputeWidgetTitlesRequest
+  ): Promise<ComputeWidgetTitlesResponse> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-widget-titles/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        body: request
       })
     )
   },

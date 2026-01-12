@@ -11,6 +11,7 @@ import {
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { URLContent, UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard/utils'
@@ -48,12 +49,23 @@ export function useEmbeddedURL(
     }
   })
 
+  const effectiveTitle = usePreviewWidgetTitle(
+    computed(() => {
+      return {
+        generalSettings: widgetGeneralSettings.value,
+        content: content.value,
+        effectiveFilters: {}
+      }
+    })
+  )
+
   const widgetProps = ref<WidgetProps>(_buildWidgetProps())
 
   function _buildWidgetProps(): WidgetProps {
     return {
       general_settings: widgetGeneralSettings.value,
       content: content.value,
+      effectiveTitle: effectiveTitle.value,
       effective_filter_context: buildWidgetEffectiveFilterContext(
         content.value,
         {},

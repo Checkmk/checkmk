@@ -46,6 +46,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
       :dashboard-key="dashboardKey"
       :general_settings="handler.widgetProps.value.general_settings!"
       :content="handler.widgetProps.value.content!"
+      :effective-title="handler.widgetProps.value!.effectiveTitle"
       :effective_filter_context="handler.widgetProps.value.effective_filter_context!"
     />
 

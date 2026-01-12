@@ -26,8 +26,9 @@ from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.utils.roles import UserPermissions
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
+from .dashlet.registry import dashlet_registry
 from .token_util import DashboardTokenAuthenticatedPage, impersonate_dashboard_token_issuer
-from .type_defs import DashboardConfig
+from .type_defs import DashboardConfig, DashletConfig
 
 
 class SharedDashboardPage(DashboardTokenAuthenticatedPage):
@@ -55,6 +56,12 @@ class SharedDashboardPageComponents:
         html.vue_component("cmk-shared-dashboard", data=page_properties)
 
 
+def _compute_widget_title(widget_config: DashletConfig) -> str:
+    widget_type = dashlet_registry[widget_config["type"]]
+    widget = widget_type(widget_config)
+    return widget.compute_title()
+
+
 def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
@@ -68,6 +75,12 @@ def page_shared_dashboard(
         # so it needs the impersonation context
         internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
 
+        # NOTE: the widget IDs must match convert_internal_relative_dashboard_to_api_model_dict
+        widget_titles = {
+            f"{board['name']}-{idx}": _compute_widget_title(widget)
+            for idx, widget in enumerate(board["dashlets"])
+        }
+
     title = visuals.visual_title("dashboard", board, board["context"])
     dashboard_properties = {
         "spec": internal_spec,
@@ -78,6 +91,7 @@ def page_shared_dashboard(
 
     page_properties = {
         "dashboard": dashboard_properties,
+        "widget_titles": widget_titles,
         "dashboard_constants": DashboardConstants.dict_output(),
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
         "token_value": token_id,

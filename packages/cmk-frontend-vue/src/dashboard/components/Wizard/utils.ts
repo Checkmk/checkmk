@@ -41,6 +41,7 @@ export const generateWidgetProps = (
       render_background: false
     },
     content: widgetContent,
+    effectiveTitle: titleSpec?.text,
     effective_filter_context: generateEffectiveFilterContext(filters)
   }
 }

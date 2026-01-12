@@ -99,7 +99,7 @@ function formatTimestamp(timestamp: number): string {
 </script>
 
 <template>
-  <DashboardContentContainer :general_settings="general_settings">
+  <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
     <div>
       <table v-if="messages!.length" class="db-content-user-messages__table">
         <tbody>

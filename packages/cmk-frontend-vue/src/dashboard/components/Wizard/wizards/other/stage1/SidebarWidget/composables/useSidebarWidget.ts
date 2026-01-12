@@ -11,6 +11,7 @@ import {
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { SidebarElementContent, WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext, dashboardAPI } from '@/dashboard/utils'
@@ -89,12 +90,23 @@ export function useSidebarWidget(
     usesInfos.value = resp.value.filter_context.uses_infos
   })
 
+  const effectiveTitle = usePreviewWidgetTitle(
+    computed(() => {
+      return {
+        generalSettings: widgetGeneralSettings.value,
+        content: content.value,
+        effectiveFilters: {}
+      }
+    })
+  )
+
   const widgetProps = ref<WidgetProps>(_buildWidgetProps())
 
   function _buildWidgetProps(): WidgetProps {
     return {
       general_settings: widgetGeneralSettings.value,
       content: content.value,
+      effectiveTitle: effectiveTitle.value,
       effective_filter_context: buildWidgetEffectiveFilterContext(
         content.value,
         {},

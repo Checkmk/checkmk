@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { onBeforeMount, ref, watch } from 'vue'
+import { computed, onBeforeMount, ref, watch } from 'vue'
 
 import {
   type UseWidgetVisualizationOptions,
@@ -15,6 +15,7 @@ import type {
   WidgetProps
 } from '@/dashboard/components/Wizard/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext, dashboardAPI } from '@/dashboard/utils'
@@ -47,12 +48,23 @@ export function useUserMessages(
     usesInfos.value = resp.value.filter_context.uses_infos
   })
 
+  const effectiveTitle = usePreviewWidgetTitle(
+    computed(() => {
+      return {
+        generalSettings: widgetGeneralSettings.value,
+        content,
+        effectiveFilters: {}
+      }
+    })
+  )
+
   const widgetProps = ref<WidgetProps>(_buildWidgetProps())
 
   function _buildWidgetProps(): WidgetProps {
     return {
       general_settings: widgetGeneralSettings.value,
       content,
+      effectiveTitle: effectiveTitle.value,
       effective_filter_context: buildWidgetEffectiveFilterContext(
         content,
         {},

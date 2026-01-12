@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, toValue, watch } from 'vue'
+import { computed, ref, toValue } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -14,9 +14,10 @@ import WidgetVisualization from '@/dashboard/components/Wizard/components/Widget
 import { useWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization.ts'
 import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
-import type { EventStatsContent, WidgetProps } from '@/dashboard/components/Wizard/types'
+import type { EventStatsContent } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import { useDebounceFn } from '@/dashboard/composables/useDebounce.ts'
+import { useDebounceRef } from '@/dashboard/composables/useDebounce.ts'
+import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings, WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard/utils.ts'
@@ -43,7 +44,6 @@ const emit = defineEmits<{
 }>()
 
 const displayVisualizationSettings = ref<boolean>(true)
-const configuredWidgetProps = ref<WidgetProps>()
 const filterUsesInfos = ['host', 'event']
 
 const {
@@ -58,11 +58,23 @@ const {
   widgetGeneralSettings
 } = useWidgetVisualizationProps('', props.editWidgetSpec?.general_settings)
 
-const buildWidgetSpec = (): WidgetProps => {
-  const content: EventStatsContent = { type: 'event_stats' }
+const content: EventStatsContent = { type: 'event_stats' }
+const debouncedGeneralSettings = useDebounceRef(widgetGeneralSettings, 300)
+const effectiveTitle = usePreviewWidgetTitle(
+  computed(() => {
+    return {
+      generalSettings: widgetGeneralSettings.value,
+      content,
+      effectiveFilters: props.filters
+    }
+  })
+)
+
+const widgetProps = computed(() => {
   return {
-    general_settings: widgetGeneralSettings.value,
+    general_settings: debouncedGeneralSettings.value,
     content,
+    effectiveTitle: effectiveTitle.value,
     effective_filter_context: buildWidgetEffectiveFilterContext(
       content,
       props.filters,
@@ -70,21 +82,7 @@ const buildWidgetSpec = (): WidgetProps => {
       props.dashboardConstants
     )
   }
-}
-
-const _updateWidgetProps = () => {
-  configuredWidgetProps.value = buildWidgetSpec()
-}
-
-void _updateWidgetProps()
-
-watch(
-  [widgetGeneralSettings],
-  useDebounceFn(() => {
-    void _updateWidgetProps()
-  }, 300),
-  { deep: true }
-)
+})
 
 const gotoNextStage = () => {
   const isValid = validateTitle()
@@ -92,15 +90,8 @@ const gotoNextStage = () => {
     return
   }
 
-  emit(
-    'addWidget',
-    toValue(configuredWidgetProps.value!.content),
-    toValue(configuredWidgetProps.value!.general_settings),
-    filterUsesInfos
-  )
+  emit('addWidget', toValue(content), toValue(widgetGeneralSettings), filterUsesInfos)
 }
-
-const widgetProps = computed(() => configuredWidgetProps)
 </script>
 
 <template>
@@ -109,9 +100,10 @@ const widgetProps = computed(() => configuredWidgetProps)
   <DashboardPreviewContent
     widget_id="event-stats-preview"
     :dashboard-key="dashboardKey"
-    :general_settings="widgetProps.value!.general_settings!"
-    :content="widgetProps.value!.content!"
-    :effective_filter_context="widgetProps.value!.effective_filter_context!"
+    :general_settings="widgetProps.general_settings"
+    :content="widgetProps.content"
+    :effective-title="widgetProps.effectiveTitle"
+    :effective_filter_context="widgetProps.effective_filter_context"
   />
 
   <ContentSpacer />

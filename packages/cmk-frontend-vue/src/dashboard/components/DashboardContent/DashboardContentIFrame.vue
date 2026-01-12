@@ -13,7 +13,7 @@ defineProps<ContentProps<IFrameContent>>()
 </script>
 
 <template>
-  <DashboardContentContainer :general_settings="general_settings">
+  <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
     <div class="db-content-i-frame__div">
       <iframe class="db-content-i-frame__iframe" allowtransparency="true" :src="content.url" />
     </div>

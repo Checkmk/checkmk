@@ -44,6 +44,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
     :dashboard-key="dashboardKey"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
+    :effective-title="widgetProps.value!.effectiveTitle"
     :effective_filter_context="widgetProps.value!.effective_filter_context!"
   />
 

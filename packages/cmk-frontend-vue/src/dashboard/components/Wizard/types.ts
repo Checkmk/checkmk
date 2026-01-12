@@ -49,6 +49,7 @@ export interface UseWidgetHandler extends UseValidate {
 export interface WidgetProps {
   general_settings: WidgetGeneralSettings
   content: WidgetContentType
+  effectiveTitle: string | undefined
   effective_filter_context: EffectiveWidgetFilterContext
 }
 

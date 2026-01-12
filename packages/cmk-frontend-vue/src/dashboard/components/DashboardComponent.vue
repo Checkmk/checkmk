@@ -16,6 +16,7 @@ import RelativeGrid from '@/dashboard/components/RelativeGrid/RelativeGrid.vue'
 import ResponsiveGrid from '@/dashboard/components/ResponsiveGrid/ResponsiveGrid.vue'
 import type { DashboardFilters } from '@/dashboard/composables/useDashboardFilters'
 import type { DashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
+import type { WidgetTitles } from '@/dashboard/composables/useWidgetTitles'
 import type {
   ContentRelativeGrid,
   ContentResponsiveGrid,
@@ -30,6 +31,7 @@ interface DashboardProps {
   dashboardKey: DashboardKey
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
+  widgetTitles: WidgetTitles
   isEditing: boolean
 }
 
@@ -57,6 +59,7 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
       widget_id: widgetId,
       general_settings: widget.general_settings,
       content: widget.content,
+      effectiveTitle: props.widgetTitles[widgetId],
       effective_filter_context: {
         uses_infos: widget.filter_context.uses_infos,
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,

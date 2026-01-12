@@ -30,6 +30,7 @@ import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
+import { useComputeWidgetTitles } from '@/dashboard/composables/useWidgetTitles'
 import {
   type ContentResponsiveGrid,
   type DashboardGeneralSettings,
@@ -114,6 +115,11 @@ const dashboardFilters = useDashboardFilters(
 const dashboardWidgets = useDashboardWidgets(
   computed(() => dashboardsManager.activeDashboard.value?.model.content.widgets)
 )
+const widgetTitles = useComputeWidgetTitles(
+  dashboardFilters.baseFilters,
+  dashboardWidgets.widgetCores
+)
+
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {
   openDashboardFilterSettings.value = true
 })
@@ -544,6 +550,7 @@ function deepClone<T>(obj: T): T {
         :dashboard-key="dashboardsManager.activeDashboardKey.value!"
         :base-filters="dashboardFilters.baseFilters"
         :widget-cores="dashboardWidgets.widgetCores"
+        :widget-titles="widgetTitles"
         :constants="dashboardsManager.constants.value!"
         :is-editing="isDashboardEditingMode"
         @widget:edit="editWidget($event)"

@@ -13,7 +13,7 @@ defineProps<ContentProps<StaticTextContent>>()
 </script>
 
 <template>
-  <DashboardContentContainer :general_settings="general_settings">
+  <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
     <div class="db-content-static-text__text">
       {{ content.text }}
     </div>

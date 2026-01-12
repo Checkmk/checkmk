@@ -21,6 +21,7 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
@@ -117,14 +118,20 @@ export const useGauge = async (
 
   const _updateWidgetProps = async () => {
     const content = _generateContent()
+    const [effectiveTitle, effectiveFilterContext] = await Promise.all([
+      computePreviewWidgetTitle({
+        generalSettings: widgetGeneralSettings.value,
+        content,
+        effectiveFilters: filters
+      }),
+      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+    ])
+
     widgetProps.value = {
       general_settings: widgetGeneralSettings.value,
       content,
-      effective_filter_context: await determineWidgetEffectiveFilterContext(
-        content,
-        filters,
-        dashboardConstants
-      )
+      effectiveTitle,
+      effective_filter_context: effectiveFilterContext
     }
   }
 

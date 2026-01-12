@@ -63,7 +63,6 @@ from cmk.utils.notify_types import (
 class Checkbox(BaseSchema):
     state = fields.String(
         enum=["enabled", "disabled"],
-        required=True,
         description="To enable or disable this field",
         example="enabled",
     )
@@ -255,10 +254,7 @@ class CheckboxWithListOfEmailAddresses(Checkbox):
 
 
 class CheckboxWithListOfStr(Checkbox):
-    value = fields.List(
-        fields.String,
-        required=True,
-    )
+    value = fields.List(fields.String)
 
 
 class HttpProxy(BaseSchema):

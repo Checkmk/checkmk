@@ -9,12 +9,12 @@ from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.base.check_legacy_includes.huawei_switch import (
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
+from cmk.plugins.huawei.lib import (
+    DETECT_HUAWEI_SWITCH,
     parse_huawei_physical_entity_values,
     Section,
 )
-from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.plugins.huawei.lib import DETECT_HUAWEI_SWITCH
 
 check_info = {}
 

@@ -43,7 +43,7 @@ fsc_ipmi_mem_status_levels = [
 ]
 
 
-def inventory_fsc_ipmi_mem_status(section: StringTable) -> DiscoveryResult:
+def discover_fsc_ipmi_mem_status(section: StringTable) -> DiscoveryResult:
     # Skip all lines which have
     # a) An error (Begin with "E")
     # b) Don't have a status (line[2])
@@ -84,6 +84,6 @@ agent_section_fsc_ipmi_mem_status = AgentSection(
 check_plugin_fsc_ipmi_mem_status = CheckPlugin(
     name="fsc_ipmi_mem_status",
     service_name="IPMI Memory status %s",
-    discovery_function=inventory_fsc_ipmi_mem_status,
+    discovery_function=discover_fsc_ipmi_mem_status,
     check_function=check_fsc_ipmi_mem_status,
 )

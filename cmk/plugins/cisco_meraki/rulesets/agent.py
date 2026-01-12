@@ -318,6 +318,6 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
 rule_spec_cisco_meraki = SpecialAgent(
     name="cisco_meraki",
     title=Title("Cisco Meraki"),
-    topic=Topic.APPLICATIONS,
+    topic=Topic.NETWORKING,
     parameter_form=_form_special_agent_cisco_meraki,
 )

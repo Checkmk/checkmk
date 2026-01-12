@@ -62,6 +62,34 @@ void download_version_dir(DOWNLOAD_SOURCE,
 }
 /* groovylint-enable ParameterCount */
 
+void download_file(Map args) {
+    println("""
+        ||== download_file() ================================================================
+        || BASE_URL =        |${args.base_url}|
+        || DOWNLOAD_DEST =   |${args.download_dest}|
+        || FILE_NAME =       |${args.file_name}|
+        ||==========================================================================================
+        """.stripMargin());
+
+    withCredentials([
+        usernamePassword(
+            credentialsId: 'cmk-credentials',
+            usernameVariable: 'USER',
+            passwordVariable: 'PASSWORD')
+    ]) {
+        sh("""
+            mkdir -p ${args.download_dest}
+            curl \
+                --silent \
+                --show-error \
+                --fail \
+                --user "${USER}:${PASSWORD}" \
+                --output ${args.download_dest}/${args.file_name} \
+                ${args.base_url}/${args.file_name}
+        """);
+    }
+}
+
 /* groovylint-disable ParameterCount */
 void upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port, exclude_pattern="") {
     println("""
@@ -117,13 +145,10 @@ void clean_caches() {
 
 boolean download_hot_cache(Map args) {
     try {
-        // around 10/15sec to download 1.6GB (gzip)/ 2.0GB (lz4) from tstbuilds
-        download_version_dir(
-            "${INTERNAL_DEPLOY_DEST}" + "caches",
-            "${INTERNAL_DEPLOY_PORT}",
-            "",
-            "${args.download_dest}",
-            "${args.file_pattern}",
+        download_file(
+            base_url: "${INTERNAL_DEPLOY_URL}/caches",
+            download_dest: "${args.download_dest}",
+            file_name: "${args.file_pattern}",
         );
     }
     catch (Exception exc) {

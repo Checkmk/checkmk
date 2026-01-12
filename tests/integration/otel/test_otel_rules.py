@@ -12,6 +12,7 @@ import pytest
 
 from tests.testlib.agent_dumps import copy_dumps, create_agent_dump_rule
 from tests.testlib.common.repo import repo_path
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -210,11 +211,16 @@ def test_otel_service_monitoring_rules(
 
         logger.info("Checking that services are in the expected states")
         for metric_name, expected_state in expected_service_states.items():
-            service = services.get(f"OTel metric {metric_name}")
+            service_name = f"OTel metric {metric_name}"
+            service = services.get(service_name)
             assert service is not None, f"Service for metric '{metric_name}' not found"
-            assert service.state == expected_state, (
-                f"Service '{metric_name}' is not in expected state {expected_state}, "
-                f"but found {service.state}"
+            # To prevent flakes, reschedule the service if it's not in the expected state yet
+            wait_until(
+                lambda: otel_site.is_service_in_expected_state_after_rescheduling(
+                    host_name, service_name, expected_state
+                ),
+                timeout=30,
+                interval=5,
             )
 
     finally:

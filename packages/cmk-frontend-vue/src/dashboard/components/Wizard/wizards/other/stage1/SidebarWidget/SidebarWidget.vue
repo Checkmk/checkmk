@@ -14,11 +14,11 @@ import WidgetVisualization from '@/dashboard/components/Wizard/components/Widget
 import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
+import DataSettings from '@/dashboard/components/Wizard/wizards/other/stage1/DataSettings.vue'
 import type { GetValidWidgetProps } from '@/dashboard/components/Wizard/wizards/other/types'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 
-import DataSelectionContainer from '../DataSelectionContainer.vue'
 import SidebarElementSelector from './SidebarElementSelector.vue'
 import { useSidebarElements } from './composables/useSidebarElements'
 import { useSidebarWidget } from './composables/useSidebarWidget'
@@ -52,17 +52,6 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
 <template>
   <div>
-    <DataSelectionContainer>
-      <SidebarElementSelector
-        v-model:selected-sidebar-element="handler.sidebarElementName.value"
-        :elements="sidebarElements.elements.value"
-        :is-loading="sidebarElements.isLoading.value"
-        :has-error="sidebarElements.hasError.value"
-      />
-    </DataSelectionContainer>
-
-    <ContentSpacer />
-
     <DashboardPreviewContent
       widget_id="sidebar-element-preview"
       :dashboard-key="dashboardKey"
@@ -72,6 +61,15 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
     />
 
     <ContentSpacer />
+
+    <DataSettings :label="_t('Select sidebar element')">
+      <SidebarElementSelector
+        v-model:selected-sidebar-element="handler.sidebarElementName.value"
+        :elements="sidebarElements.elements.value"
+        :is-loading="sidebarElements.isLoading.value"
+        :has-error="sidebarElements.hasError.value"
+      />
+    </DataSettings>
 
     <CollapsibleTitle
       :title="_t('Widget settings')"

@@ -221,7 +221,7 @@ class LunModel(BaseModel):
         return (self.space_size - self.space_used) / MEGA
 
     def item_name(self) -> str:
-        return self.name.rsplit("/", 1)[-1]
+        return f"{self.svm_name}:{self.name}"
 
 
 class AggregateSpace(BaseModel):

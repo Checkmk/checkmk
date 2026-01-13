@@ -1531,6 +1531,7 @@ class PasswordsAPI(BaseAPI):
                 "password": password,
                 "owner": owner,
                 "shared": ["all"],
+                "customer": "global",
             },
         )
         if response.status_code != 200:

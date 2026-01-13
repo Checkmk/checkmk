@@ -19,7 +19,7 @@ from cmk.plugins.network.agent_based.cdp_cache import (
     CdpGlobal,
     CdpNeighbor,
     host_label_cdp_cache,
-    inventory_cdp_cache,
+    inventorize_cdp_cache,
     InventoryParams,
     parse_cdp_cache,
 )
@@ -277,8 +277,8 @@ CDP_NEIGHBOR_ATTRIBUTE = TableRow(
     ],
     ids=["no neighbors", "with neighbors"],
 )
-def test_inventory_cdp_cache(
+def test_inventorize_cdp_cache(
     section: Cdp, params: InventoryParams, expected: InventoryResult
 ) -> None:
-    parsed = list(inventory_cdp_cache(params=params, section=section))
+    parsed = list(inventorize_cdp_cache(params=params, section=section))
     assert parsed == expected

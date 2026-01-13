@@ -359,7 +359,7 @@ def host_label_cdp_cache(section: Cdp) -> HostLabelGenerator:
             yield HostLabel(name=f"cmk/cdp_neighbor/{neighbor_id}", value="yes")
 
 
-def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResult:
+def inventorize_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResult:
     """Generates inventory for CDP cache"""
     path = ["networking", "cdp_cache"]
 
@@ -476,7 +476,7 @@ snmp_section_inv_cdp_cache = SNMPSection(
 
 inventory_plugin_inv_cdp_cache = InventoryPlugin(
     name="inv_cdp_cache",
-    inventory_function=inventory_cdp_cache,
+    inventory_function=inventorize_cdp_cache,
     inventory_default_parameters=InventoryParams(),
     inventory_ruleset_name="inv_cdp_cache",
 )

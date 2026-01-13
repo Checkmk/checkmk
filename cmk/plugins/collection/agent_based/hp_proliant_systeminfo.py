@@ -33,7 +33,7 @@ snmp_section_hp_proliant_systeminfo = SimpleSNMPSection(
 )
 
 
-def inventory_hp_proliant_systeminfo(section: _Serial) -> InventoryResult:
+def inventorize_hp_proliant_systeminfo(section: _Serial) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -44,5 +44,5 @@ def inventory_hp_proliant_systeminfo(section: _Serial) -> InventoryResult:
 
 inventory_plugin_hp_proliant_systeminfo = InventoryPlugin(
     name="hp_proliant_systeminfo",
-    inventory_function=inventory_hp_proliant_systeminfo,
+    inventory_function=inventorize_hp_proliant_systeminfo,
 )

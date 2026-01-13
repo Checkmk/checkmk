@@ -17,8 +17,8 @@ def _get_section() -> hps._Serial:
     return section
 
 
-def test_inventory_hp_proliant_systeminfo(section: hps._Serial) -> None:
-    assert list(hps.inventory_hp_proliant_systeminfo(section)) == [
+def test_inventorize_hp_proliant_systeminfo(section: hps._Serial) -> None:
+    assert list(hps.inventorize_hp_proliant_systeminfo(section)) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={

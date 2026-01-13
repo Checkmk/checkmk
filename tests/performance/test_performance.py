@@ -45,20 +45,22 @@ class CmkPageUrl(Enum):
 
 class PerformanceTest:
     def __init__(
-        self, central_site: Site, remote_sites: list[Site] | None, config: pytest.Config
+        self, central_site: Site, remote_sites: list[Site] | None, pytestconfig: pytest.Config
     ) -> None:
         """Initialize the performance test with a central site and a list of remote sites."""
         super().__init__()
         self.central_site = central_site
         self.remote_sites = remote_sites or []
 
-        self.rounds = val if isinstance((val := config.getoption("rounds")), int) else 4
+        self.rounds = val if isinstance((val := pytestconfig.getoption("rounds")), int) else 4
         self.warmup_rounds = (
-            val if isinstance((val := config.getoption("warmup_rounds")), int) else 0
+            val if isinstance((val := pytestconfig.getoption("warmup_rounds")), int) else 0
         )
-        self.iterations = val if isinstance((val := config.getoption("iterations")), int) else 4
+        self.iterations = (
+            val if isinstance((val := pytestconfig.getoption("iterations")), int) else 4
+        )
         self.object_count = (
-            val if isinstance((val := config.getoption("object_count")), int) else 100
+            val if isinstance((val := pytestconfig.getoption("object_count")), int) else 100
         )
 
     @property
@@ -297,7 +299,7 @@ class PerformanceTest:
 @pytest.fixture(name="perftest", scope="session")
 def _perftest(single_site: Site, pytestconfig: pytest.Config) -> Iterator[PerformanceTest]:
     """Single-site performance test"""
-    yield PerformanceTest(single_site, remote_sites=None, config=pytestconfig)
+    yield PerformanceTest(single_site, remote_sites=None, pytestconfig=pytestconfig)
 
 
 @pytest.fixture(name="perftest_dist", scope="session")
@@ -306,7 +308,7 @@ def _perftest_dist(
 ) -> Iterator[PerformanceTest]:
     """Distributed performance test with 2 remote sites"""
     yield PerformanceTest(
-        central_site, remote_sites=[remote_site, remote_site_2], config=pytestconfig
+        central_site, remote_sites=[remote_site, remote_site_2], pytestconfig=pytestconfig
     )
 
 

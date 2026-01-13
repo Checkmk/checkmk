@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 import time_machine
 
 from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.plugins.collection.agent_based.inv_if import inventory_if, parse_inv_if, SectionInvIf
+from cmk.plugins.collection.agent_based.inv_if import inventorize_if, parse_inv_if, SectionInvIf
 from cmk.plugins.lib import uptime
 from cmk.plugins.lib.inventory_interfaces import Interface
 
@@ -759,10 +759,10 @@ def test_parse_inv_if() -> None:
     )
 
 
-def test_inventory_if() -> None:
+def test_inventorize_if() -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(1601310544, tz=ZoneInfo("UTC"))):
         assert sort_inventory_result(
-            inventory_if(
+            inventorize_if(
                 {},
                 SECTION_INV_IF,
                 uptime.Section(7612999, None),

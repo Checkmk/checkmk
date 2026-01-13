@@ -133,7 +133,7 @@ snmp_section_inv_if = SNMPSection(
 )
 
 
-def inventory_if(
+def inventorize_if(
     params: InventoryParams,
     section_inv_if: SectionInvIf | None,
     section_uptime: uptime.Section | None,
@@ -150,7 +150,7 @@ def inventory_if(
 
 inventory_plugin_inv_if = InventoryPlugin(
     name="inv_if",
-    inventory_function=inventory_if,
+    inventory_function=inventorize_if,
     inventory_default_parameters={},
     inventory_ruleset_name="inv_if",
     sections=["inv_if", "uptime"],

@@ -24,8 +24,8 @@ def _section() -> ibsi.Section:
     return section
 
 
-def test_inventory_infoblox_systeminfo() -> None:
-    assert list(ibsi.inventory_infoblox_systeminfo(_section())) == [
+def test_inventorize_infoblox_systeminfo() -> None:
+    assert list(ibsi.inventorize_infoblox_systeminfo(_section())) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={

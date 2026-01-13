@@ -45,11 +45,11 @@ snmp_section_infoblox_systeminfo = SimpleSNMPSection(
 )
 
 
-def inventory_infoblox_systeminfo(section: Section) -> InventoryResult:
+def inventorize_infoblox_systeminfo(section: Section) -> InventoryResult:
     yield Attributes(path=["hardware", "system"], inventory_attributes=asdict(section))
 
 
 inventory_plugin_infoblox_systeminfo = InventoryPlugin(
     name="infoblox_systeminfo",
-    inventory_function=inventory_infoblox_systeminfo,
+    inventory_function=inventorize_infoblox_systeminfo,
 )

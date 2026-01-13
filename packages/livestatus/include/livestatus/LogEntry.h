@@ -43,23 +43,23 @@ inline bool worse(HostState state1, HostState state2) {
 
 enum class LogEntryKind {
     none,
-    alert_host,
-    alert_service,
-    downtime_alert_host,
-    downtime_alert_service,
-    state_host,
-    state_host_initial,
-    state_service,
-    state_service_initial,
-    flapping_host,
-    flapping_service,
+    host_alert,
+    service_alert,
+    host_downtime_alert,
+    service_downtime_alert,
+    current_host_state,
+    initial_host_state,
+    current_service_state,
+    initial_service_state,
+    host_flapping_alert,
+    service_flapping_alert,
     timeperiod_transition,
     core_starting,
     core_stopping,
     log_version,
-    log_initial_states,
-    acknowledge_alert_host,
-    acknowledge_alert_service
+    logging_initial_states,
+    host_acknowledge_alert,
+    service_acknowledge_alert
 };
 
 enum class LogEntryParam {

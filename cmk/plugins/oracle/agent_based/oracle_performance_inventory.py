@@ -8,7 +8,7 @@ from cmk.agent_based.v2 import InventoryPlugin, InventoryResult, TableRow
 from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
 
 
-def inventory_oracle_performance(section: SectionPerformance) -> InventoryResult:
+def inventorize_oracle_performance(section: SectionPerformance) -> InventoryResult:
     for entry, entryinfo in section.items():
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]
@@ -75,5 +75,5 @@ def inventory_oracle_performance(section: SectionPerformance) -> InventoryResult
 
 inventory_plugin_oracle_performance = InventoryPlugin(
     name="oracle_performance",
-    inventory_function=inventory_oracle_performance,
+    inventory_function=inventorize_oracle_performance,
 )

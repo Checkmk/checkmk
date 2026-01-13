@@ -20,7 +20,9 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.oracle.agent_based import oracle_performance_check
 from cmk.plugins.oracle.agent_based import oracle_performance_check as opc
 from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
-from cmk.plugins.oracle.agent_based.oracle_performance_inventory import inventory_oracle_performance
+from cmk.plugins.oracle.agent_based.oracle_performance_inventory import (
+    inventorize_oracle_performance,
+)
 from cmk.plugins.oracle.agent_based.oracle_performance_section import parse_oracle_performance
 
 
@@ -217,11 +219,11 @@ def test_check_oracle_performance(
         ),
     ],
 )
-def test_inventory_oracle_performance(
+def test_inventorize_oracle_performance(
     string_table: StringTable, expected_result: InventoryResult, empty_value_store: None
 ) -> None:
     assert (
-        list(inventory_oracle_performance(parse_oracle_performance(string_table)))
+        list(inventorize_oracle_performance(parse_oracle_performance(string_table)))
         == expected_result
     )
 

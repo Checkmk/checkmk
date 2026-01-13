@@ -34,7 +34,7 @@ def parse_esx_vsphere_clusters(string_table: StringTable) -> Section:
     return section
 
 
-def inventory_esx_vsphere_clusters(section: Section) -> InventoryResult:
+def inventorize_esx_vsphere_clusters(section: Section) -> InventoryResult:
     for cluster_name, cluster_data in section.items():
         yield TableRow(
             path=["software", "applications", "vmwareesx"],
@@ -52,8 +52,8 @@ agent_section_esx_vsphere_clusters = AgentSection(
     parse_function=parse_esx_vsphere_clusters,
 )
 
-inventory_plugin_inventory_esx_vsphere_clusters = InventoryPlugin(
-    name="inventory_esx_vsphere_clusters",
+inventory_plugin_inventorize_esx_vsphere_clusters = InventoryPlugin(
+    name="inventorize_esx_vsphere_clusters",
     sections=["esx_vsphere_clusters"],
-    inventory_function=inventory_esx_vsphere_clusters,
+    inventory_function=inventorize_esx_vsphere_clusters,
 )

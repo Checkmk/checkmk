@@ -12,7 +12,7 @@ agent_section_citrix_controller = AgentSection(
 )
 
 
-def inventory_citrix_controller(section: Section) -> InventoryResult:
+def inventorize_citrix_controller(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "applications", "citrix", "controller"],
         inventory_attributes={
@@ -23,5 +23,5 @@ def inventory_citrix_controller(section: Section) -> InventoryResult:
 
 inventory_plugin_citrix_controller = InventoryPlugin(
     name="citrix_controller",
-    inventory_function=inventory_citrix_controller,
+    inventory_function=inventorize_citrix_controller,
 )

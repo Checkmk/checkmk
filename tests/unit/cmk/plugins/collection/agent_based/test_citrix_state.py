@@ -12,7 +12,9 @@ from cmk.plugins.collection.agent_based.citrix_state import (
     check_citrix_state_hosting_server,
     DEFAULT_PARAMS,
 )
-from cmk.plugins.collection.agent_based.inventory_citrix_state import inventory_citrix_state
+from cmk.plugins.collection.agent_based.inventory_citrix_state import (
+    inventorize_citrix_state,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -40,7 +42,7 @@ STRING_TABLE = [
 ]
 
 
-def test_inventory_citrix_state() -> None:
+def test_inventorize_citrix_state() -> None:
     section = parse_citrix_state(STRING_TABLE)
     expected = Attributes(
         path=["software", "applications", "citrix", "vm"],
@@ -51,7 +53,7 @@ def test_inventory_citrix_state() -> None:
         },
         status_attributes={},
     )
-    assert sort_inventory_result(inventory_citrix_state(section)) == [expected]
+    assert sort_inventory_result(inventorize_citrix_state(section)) == [expected]
 
 
 def test_check_citrix_state_controller() -> None:

@@ -13,7 +13,7 @@ agent_section_citrix_state = AgentSection(
 )
 
 
-def inventory_citrix_state(section: Section) -> InventoryResult:
+def inventorize_citrix_state(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "applications", "citrix", "vm"],
         inventory_attributes={
@@ -30,5 +30,5 @@ def inventory_citrix_state(section: Section) -> InventoryResult:
 
 inventory_plugin_citrix_state = InventoryPlugin(
     name="citrix_state",
-    inventory_function=inventory_citrix_state,
+    inventory_function=inventorize_citrix_state,
 )

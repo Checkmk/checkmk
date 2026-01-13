@@ -56,7 +56,7 @@ snmp_section_kyocera_printer = SimpleSNMPSection(
 )
 
 
-def inventory_kyocera_printer(section: KyoceraPrinter) -> InventoryResult:
+def inventorize_kyocera_printer(section: KyoceraPrinter) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -78,5 +78,5 @@ def inventory_kyocera_printer(section: KyoceraPrinter) -> InventoryResult:
 
 inventory_plugin_kyocera_printer = InventoryPlugin(
     name="kyocera_printer",
-    inventory_function=inventory_kyocera_printer,
+    inventory_function=inventorize_kyocera_printer,
 )

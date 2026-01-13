@@ -7,7 +7,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.inventory_kyocera_printer import (
-    inventory_kyocera_printer,
+    inventorize_kyocera_printer,
     KyoceraPrinter,
     parse_kyocera_printer,
 )
@@ -37,8 +37,8 @@ def _get_section() -> KyoceraPrinter:
     )
 
 
-def test_inventory_kyocera_printer(section: KyoceraPrinter) -> None:
-    assert list(inventory_kyocera_printer(section)) == [
+def test_inventorize_kyocera_printer(section: KyoceraPrinter) -> None:
+    assert list(inventorize_kyocera_printer(section)) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={

@@ -255,7 +255,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     )
     logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
     test_site = _get_site(base_version, interactive=not disable_interactive_mode)
-    inject_dumps(test_site, DUMPS_DIR)
+    inject_dumps(test_site, DUMPS_DIR, check_dumps_up_to_date=False)
     yield test_site, disable_interactive_mode
     logger.info("Removing test-site...")
     test_site.rm()

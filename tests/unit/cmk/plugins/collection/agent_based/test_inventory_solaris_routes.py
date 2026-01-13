@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_solaris_routes import (
-    inventory_solaris_routes,
+    inventorize_solaris_routes,
     parse_solaris_routes,
 )
 
@@ -109,9 +109,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_solaris_routes(
+def test_inventorize_solaris_routes(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_solaris_routes(parse_solaris_routes(string_table))
+        inventorize_solaris_routes(parse_solaris_routes(string_table))
     ) == sort_inventory_result(expected_result)

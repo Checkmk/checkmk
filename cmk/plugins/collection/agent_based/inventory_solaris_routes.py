@@ -37,7 +37,7 @@ agent_section_solaris_routes = AgentSection(
 )
 
 
-def inventory_solaris_routes(section: Section) -> InventoryResult:
+def inventorize_solaris_routes(section: Section) -> InventoryResult:
     for route in section:
         yield TableRow(
             path=["networking", "routes"],
@@ -54,5 +54,5 @@ def inventory_solaris_routes(section: Section) -> InventoryResult:
 
 inventory_plugin_solaris_routes = InventoryPlugin(
     name="solaris_routes",
-    inventory_function=inventory_solaris_routes,
+    inventory_function=inventorize_solaris_routes,
 )

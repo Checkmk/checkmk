@@ -32,7 +32,7 @@ def test_check_ok(section: fss.Section) -> None:
 
 
 def test_inventory(section: fss.Section) -> None:
-    assert list(fss.inventory_fireeye_sys_status(section)) == [
+    assert list(fss.inventorize_fireeye_sys_status(section)) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={

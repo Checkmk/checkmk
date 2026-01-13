@@ -68,7 +68,7 @@ check_plugin_fireeye_sys_status = CheckPlugin(
 )
 
 
-def inventory_fireeye_sys_status(section: Section) -> InventoryResult:
+def inventorize_fireeye_sys_status(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -80,5 +80,5 @@ def inventory_fireeye_sys_status(section: Section) -> InventoryResult:
 
 inventory_plugin_fireeye_sys_status = InventoryPlugin(
     name="fireeye_sys_status",
-    inventory_function=inventory_fireeye_sys_status,
+    inventory_function=inventorize_fireeye_sys_status,
 )

@@ -17,6 +17,12 @@ def main() {
     def all_editions = versioning.get_editions();
     def editions_to_test = all_editions;
 
+    // building enterprise only on working days. Using JJB would build the job twice at night
+    if (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) != 1) {
+        // build only "enterprise" edition on all days other than sunday
+        editions_to_test = ["enterprise"];
+    }
+
     def job_parameters = [
         CUSTOM_GIT_REF: effective_git_ref,
     ];

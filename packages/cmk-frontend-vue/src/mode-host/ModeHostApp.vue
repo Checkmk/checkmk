@@ -138,6 +138,7 @@ function getElementBySelector<T>(selector: string): T {
       ipv6InputButtonElement &&
       ipv6InputElement &&
       ipAddressFamilySelectElement &&
+      ipAddressFamilyInputElement &&
       tagAgentInputSelectElement &&
       tagAgentInputButtonElement &&
       tagAgentDefaultElement
@@ -153,6 +154,7 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-button-element="ipv6InputButtonElement"
     :site-select-element="siteSelectElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
+    :ip-address-family-input-element="ipAddressFamilyInputElement"
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
     :sites="sites"
     :server-per-site="server_per_site"

@@ -94,13 +94,13 @@ snmp_section_dell_hw_info = SimpleSNMPSection(
 )
 
 
-def inventory_dell_hw_info(section: Section) -> InventoryResult:
+def inventorize_dell_hw_info(section: Section) -> InventoryResult:
     yield from _inventory_testable(section, None)
 
 
 inventory_plugin_dell_hw_info = InventoryPlugin(
     name="dell_hw_info",
-    inventory_function=inventory_dell_hw_info,
+    inventory_function=inventorize_dell_hw_info,
 )
 
 

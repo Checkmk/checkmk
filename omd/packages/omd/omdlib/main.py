@@ -332,6 +332,9 @@ def walk_skel(
         "local/share/check_mk/agents/special",
         "local/share/check_mk/checkman",
         "local/share/check_mk/checks",
+        "local/share/nagios",
+        "local/share/nagios/htdocs",
+        "local/share/nagios/htdocs/theme",
     ]
 
     with contextlib.chdir(root):

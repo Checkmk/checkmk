@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: Send traces to this collector
-# Menu: Addons
+# Menu: Add-ons
 # Description:
 #  If sending traces is configured, they are sent to the address of the collector configured here.
 #  The most basic approach is to send traces to the site's local Jaeger instance, which needs to be

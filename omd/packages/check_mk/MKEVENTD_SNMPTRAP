@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: Enable Builtin SNMPTrap Server
-# Menu: Addons
+# Menu: Add-ons
 # Description:
 #  If this option is enabled then mkeventd starts a builtin snmptrap
 #  server that receives snmptrap messages via UDP port 162.

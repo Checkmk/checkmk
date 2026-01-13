@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: Enable Builtin Syslog Server (UDP)
-# Menu: Addons
+# Menu: Add-ons
 # Description:
 #  If this option is enabled then mkeventd starts a builtin syslog
 #  server that receives syslog messages via UDP port 514. Local messages

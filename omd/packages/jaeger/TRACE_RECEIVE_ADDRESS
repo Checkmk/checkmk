@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: IP address to listen for traces
-# Menu: Addons
+# Menu: Add-ons
 # Description:
 #  If receiving traces is configured, they are only received from the local host by default. In
 #  distributed setups it is useful to collect all traces in the central site. To do this, you can

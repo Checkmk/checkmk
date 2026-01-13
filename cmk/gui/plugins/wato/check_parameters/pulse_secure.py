@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,7 +14,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer, Percentage, Tuple
 
 
-def _parameter_valuespec_pulse_secure_users():
+def _parameter_valuespec_pulse_secure_users() -> Dictionary:
     return Dictionary(
         title=_("Number of signed-in web users"),
         elements=[
@@ -41,7 +40,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_pulse_secure_disk_util():
+def _parameter_valuespec_pulse_secure_disk_util() -> Dictionary:
     return Dictionary(
         title=_("Upper levels for disk utilization"),
         elements=[
@@ -69,7 +68,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_pulse_secure_mem_util():
+def _parameter_valuespec_pulse_secure_mem_util() -> Dictionary:
     return Dictionary(
         elements=[
             (

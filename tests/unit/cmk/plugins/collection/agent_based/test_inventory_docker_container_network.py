@@ -7,7 +7,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_docker_container_network import (
-    inventory_docker_container_network,
+    inventorize_docker_container_network,
     parse_docker_container_network,
 )
 from cmk.plugins.docker import lib as docker
@@ -76,7 +76,7 @@ EXPECTED_RESULT = [
 ]
 
 
-def test_inventory_docker_container_network_empty() -> None:
+def test_inventorize_docker_container_network_empty() -> None:
     with pytest.raises(docker.AgentOutputMalformatted) as e:
         parse_docker_container_network([])
         assert (
@@ -93,8 +93,8 @@ def test_inventory_docker_container_network_empty() -> None:
         # (AGENT_OUTPUT_MULTIPLE_NODES, []),
     ],
 )
-def test_inventory_docker_container_network(
+def test_inventorize_docker_container_network(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     section = parse_docker_container_network(string_table)
-    assert list(inventory_docker_container_network(section)) == expected_result
+    assert list(inventorize_docker_container_network(section)) == expected_result

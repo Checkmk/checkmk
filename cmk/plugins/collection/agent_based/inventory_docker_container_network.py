@@ -28,7 +28,7 @@ agent_section_docker_container_network = AgentSection(
 )
 
 
-def inventory_docker_container_network_networks(section: Section) -> InventoryResult:
+def inventorize_docker_container_network_networks(section: Section) -> InventoryResult:
     if isinstance(section, docker.MultipleNodesMarker):
         return
 
@@ -49,7 +49,7 @@ def inventory_docker_container_network_networks(section: Section) -> InventoryRe
         )
 
 
-def inventory_docker_container_network_ports(section: Section) -> InventoryResult:
+def inventorize_docker_container_network_ports(section: Section) -> InventoryResult:
     if isinstance(section, docker.MultipleNodesMarker):
         return
 
@@ -74,12 +74,12 @@ def inventory_docker_container_network_ports(section: Section) -> InventoryResul
         )
 
 
-def inventory_docker_container_network(section: Section) -> InventoryResult:
-    yield from inventory_docker_container_network_networks(section)
-    yield from inventory_docker_container_network_ports(section)
+def inventorize_docker_container_network(section: Section) -> InventoryResult:
+    yield from inventorize_docker_container_network_networks(section)
+    yield from inventorize_docker_container_network_ports(section)
 
 
 inventory_plugin_docker_container_network = InventoryPlugin(
     name="docker_container_network",
-    inventory_function=inventory_docker_container_network,
+    inventory_function=inventorize_docker_container_network,
 )

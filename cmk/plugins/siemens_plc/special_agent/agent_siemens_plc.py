@@ -288,6 +288,7 @@ def main(sys_argv=None):
 
     client = snap7.client.Client()
 
+    has_error = False
     for device in args.hostspec:
         hostname = device["host_name"]
 
@@ -295,6 +296,7 @@ def main(sys_argv=None):
             client.connect(device["host_address"], device["rack"], device["slot"], device["port"])
         except Exception as e:
             sys.stderr.write(_snap7error(hostname, "Error connecting to device", e) + "\n")
+            has_error = True
             continue
 
         try:
@@ -302,6 +304,7 @@ def main(sys_argv=None):
         except Exception as e:
             cpu_state = None
             sys.stderr.write(_snap7error(hostname, "Error reading device CPU state", e) + "\n")
+            has_error = True
 
         parsed_area_values = []
         for (area_name, db_number), iter_values in _group_device_values(device):
@@ -316,6 +319,7 @@ def main(sys_argv=None):
                 )
             except Exception as e:
                 sys.stderr.write(_snap7error(hostname, "Error reading data area", e) + "\n")
+                has_error = True
                 continue
 
             parsed_area_values.extend(_cast_values(values, start_address, area_value))
@@ -327,6 +331,9 @@ def main(sys_argv=None):
         sys.stdout.write("<<<siemens_plc>>>\n")
         for values in parsed_area_values:
             sys.stdout.write("{} {} {} {}\n".format(hostname, *values))
+
+    if has_error:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

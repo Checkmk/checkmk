@@ -924,9 +924,9 @@ httpcore==1.0.9 \
     --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55 \
     --hash=sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8
     # via httpx
-httplib2==0.31.0 \
-    --hash=sha256:ac7ab497c50975147d4f7b1ade44becc7df2f8954d42b38b3d69c515f531135c \
-    --hash=sha256:b9cd78abea9b4e43a7714c6e0f8b6b8561a6fc1e95d5dbd367f5bf0ef35f5d24
+httplib2==0.31.1 \
+    --hash=sha256:21591655ac54953624c6ab8d587c71675e379e31e2cfe3147c83c11e9ef41f92 \
+    --hash=sha256:d520d22fa7e50c746a7ed856bac298c4300105d01bc2d8c2580a9b57fb9ed617
     # via
     #   google-api-python-client
     #   google-auth-httplib2
@@ -1257,9 +1257,9 @@ markupsafe==3.0.3 \
     # via
     #   jinja2
     #   werkzeug
-marshmallow==3.26.1 \
-    --hash=sha256:3350409f20a70a7e4e11a27661187b77cdcaeb20abca41c1454fe33636bea09c \
-    --hash=sha256:e6d8affb6cb61d39d26402096dc0aee12d5a26d490a121f118d2e81dc0719dc6
+marshmallow==3.26.2 \
+    --hash=sha256:013fa8a3c4c276c24d26d84ce934dc964e2aa794345a0f8c7e5a7191482c8a73 \
+    --hash=sha256:bbe2adb5a03e6e3571b573f42527c6fe926e17467833660bebd11593ab8dfd57
     # via
     #   -r _requirements_runtime.txt
     #   apispec-oneofschema

@@ -1835,7 +1835,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "43ff8517fdd67d831c61b004b34893270fd30f9178b5e471ae269f5e27fb89ac",
+          "@@//requirements_all_lock.txt": "02e69a74b0f0d1342c3364473f6f23ce0252ec1c556c31bf91cf0e1903a54ab3",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -4052,7 +4052,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "httplib2==0.31.0     --hash=sha256:ac7ab497c50975147d4f7b1ade44becc7df2f8954d42b38b3d69c515f531135c     --hash=sha256:b9cd78abea9b4e43a7714c6e0f8b6b8561a6fc1e95d5dbd367f5bf0ef35f5d24"
+              "requirement": "httplib2==0.31.1     --hash=sha256:21591655ac54953624c6ab8d587c71675e379e31e2cfe3147c83c11e9ef41f92     --hash=sha256:d520d22fa7e50c746a7ed856bac298c4300105d01bc2d8c2580a9b57fb9ed617"
             }
           },
           "cmk_requirements_312_identify": {
@@ -5548,7 +5548,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "marshmallow==3.26.1     --hash=sha256:3350409f20a70a7e4e11a27661187b77cdcaeb20abca41c1454fe33636bea09c     --hash=sha256:e6d8affb6cb61d39d26402096dc0aee12d5a26d490a121f118d2e81dc0719dc6"
+              "requirement": "marshmallow==3.26.2     --hash=sha256:013fa8a3c4c276c24d26d84ce934dc964e2aa794345a0f8c7e5a7191482c8a73     --hash=sha256:bbe2adb5a03e6e3571b573f42527c6fe926e17467833660bebd11593ab8dfd57"
             }
           },
           "cmk_requirements_312_polyfactory": {

@@ -332,6 +332,7 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
     assert ":::6556" in checkmk.container.exec_run(["netstat", "-tln"])[-1].decode("utf-8")
 
 
+@pytest.mark.skip(reason="No base versions available. Restore once 2.5.0b1 is released. CMK-29033.")
 def test_update(client: docker.DockerClient) -> None:
     min_version = get_min_version()
     base_package = (

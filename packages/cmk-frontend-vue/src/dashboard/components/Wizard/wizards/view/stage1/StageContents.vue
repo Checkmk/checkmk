@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
@@ -71,40 +72,59 @@ const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
   default: ViewSelectionMode.NEW
 })
 
+const error = ref<string | null>(null)
+
 function goToNextStage() {
+  error.value = null
+
   if (props.isEditMode) {
     emit('goNext', { type: 'edit' } as unknown as ViewSelection)
     return
   }
 
   let viewSelection: ViewSelection
-  if (modeSelection.value === ViewSelectionMode.NEW) {
+  const mode = modeSelection.value
+
+  if (mode === ViewSelectionMode.NEW) {
+    if (!selectedDatasource.value) {
+      error.value = _t('You must select a data source.')
+      return
+    }
+
     viewSelection = {
       type: ViewSelectionMode.NEW,
       datasource: selectedDatasource.value,
       restrictedToSingle: restrictedToSingleInfos.value
     } as NewViewSelection
-  } else if (modeSelection.value === ViewSelectionMode.COPY) {
+  } else if (mode === ViewSelectionMode.COPY) {
     if (!originalViewName.value) {
-      throw new Error('No original view name selected')
+      error.value = _t('You must select a view.')
+      return
     }
+
     viewSelection = {
       type: ViewSelectionMode.COPY,
       viewName: originalViewName.value
     } as CopyExistingViewSelection
-  } else if (modeSelection.value === ViewSelectionMode.LINK) {
+  } else if (mode === ViewSelectionMode.LINK) {
     if (!referencedViewName.value) {
-      throw new Error('No referenced view name selected')
+      error.value = _t('You must select a view.')
+      return
     }
+
     viewSelection = {
       type: ViewSelectionMode.LINK,
       viewName: referencedViewName.value
     } as LinkExistingViewSelection
   } else {
-    throw new Error('Invalid mode selection')
+    throw new Error(`Unknown view selection mode: ${mode}`)
   }
   emit('goNext', viewSelection)
 }
+
+watch(modeSelection, () => {
+  error.value = null
+})
 
 watch(contextInfos, () => {
   emit('reset-all-filters')
@@ -184,6 +204,9 @@ const sortedContextInfos = computed(() => {
             }
           ]"
         />
+        <CmkAlertBox v-if="error" variant="error" class="mb-5">
+          {{ error }}
+        </CmkAlertBox>
         <div v-if="modeSelection === ViewSelectionMode.NEW">
           <NewView
             v-model:selected-datasource="selectedDatasource"

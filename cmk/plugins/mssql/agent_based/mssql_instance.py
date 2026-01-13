@@ -111,7 +111,7 @@ agent_section_mssql_instance = AgentSection(
 )
 
 
-def inventory_mssql_instance(section: Section) -> InventoryResult:
+def inventorize_mssql_instance(section: Section) -> InventoryResult:
     for instance_id, attrs in section.items():
         cluster_name = attrs.get("cluster_name")
         yield TableRow(
@@ -136,7 +136,7 @@ def _get_info(key: str, alt_key: str, attrs: Mapping[str, str]) -> str | None:
 
 inventory_plugin_mssql_instance = InventoryPlugin(
     name="mssql_instance",
-    inventory_function=inventory_mssql_instance,
+    inventory_function=inventorize_mssql_instance,
 )
 
 # <<<mssql_instance:sep(124)>>>

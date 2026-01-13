@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.mssql.agent_based.mssql_instance import (
     check_plugin_mssql_instance,
-    inventory_mssql_instance,
+    inventorize_mssql_instance,
     parse_mssql_instance,
 )
 
@@ -360,9 +360,9 @@ def test_check_mssql_instance(
         ),
     ],
 )
-def test_inventory_mssql_instance(
+def test_inventorize_mssql_instance(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_mssql_instance(parse_mssql_instance(string_table))
+        inventorize_mssql_instance(parse_mssql_instance(string_table))
     ) == sort_inventory_result(expected_result)

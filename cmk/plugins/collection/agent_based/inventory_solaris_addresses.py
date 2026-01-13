@@ -103,7 +103,7 @@ agent_section_solaris_addresses = AgentSection(
 )
 
 
-def inventory_solaris_addresses(section: Section) -> InventoryResult:
+def inventorize_solaris_addresses(section: Section) -> InventoryResult:
     interfaces, addresses = section
 
     for iface in interfaces:
@@ -138,5 +138,5 @@ def inventory_solaris_addresses(section: Section) -> InventoryResult:
 
 inventory_plugin_solaris_addresses = InventoryPlugin(
     name="solaris_addresses",
-    inventory_function=inventory_solaris_addresses,
+    inventory_function=inventorize_solaris_addresses,
 )

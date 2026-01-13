@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import hashlib
 import os
 import shutil
 import socket
@@ -14,7 +13,6 @@ import subprocess
 import sys
 from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.debug
@@ -36,6 +34,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
 from ._base_core import CoreAction, MonitoringCore
+from ._snapshot_local_dir import snapshot_local_dir
 
 tracer = trace.get_tracer()
 
@@ -332,7 +331,7 @@ def _create_active_config(
             {k: s.reveal() for k, s in passwords.items()},
             cmk.utils.password_store.active_secrets_path_site(config_creation_context.path_created),
         )
-        _snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
+        snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
 
     core.cleanup_old_configs(cmk.utils.paths.omd_root)
 
@@ -344,32 +343,6 @@ def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
             "This might lead to invalid/incomplete monitoring for these hosts."
             % ", ".join(duplicates)
         )
-
-
-def _snapshot_local_dir(local_root: Path, config_path: Path) -> None:
-    """Create a snapshot of the local directory into the new config path.
-
-    At the time of writing this is only written to be used by the relay, but it would
-    also be correct for the core(s) to use it.
-    """
-    target_path = config_path / "local"
-    hash_path = Path(f"{target_path}.hash")
-    try:
-        shutil.copytree(local_root, target_path, symlinks=True)
-        hash_value = _hash_local_dir(target_path)
-    except FileNotFoundError:
-        hash_value = ""
-    hash_path.write_text(hash_value)
-
-
-def _hash_local_dir(path: Path) -> str:
-    """create a hash of a directory tree based on file paths and contents"""
-    hasher = hashlib.blake2b()
-    for file_path in sorted(path.rglob("*")):
-        if file_path.is_file():
-            hasher.update(file_path.relative_to(path).as_posix().encode())
-            hasher.update(file_path.read_bytes())
-    return hasher.hexdigest()
 
 
 def _print(txt: str) -> None:

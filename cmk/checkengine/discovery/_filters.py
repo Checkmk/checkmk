@@ -8,7 +8,7 @@ from typing import Literal, NamedTuple
 
 from typing_extensions import TypedDict
 
-from cmk.utils.regex import regex
+from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.servicename import ServiceName
 
 from ._utils import DiscoveryVsSettings
@@ -185,16 +185,10 @@ def _get_service_filter_func(
         return _accept_all_services
 
     whitelist = (
-        regex("|".join(f"({p})" for p in service_whitelist))  #
-        if service_whitelist
-        else _MATCH_EVERYTHING
+        regex(combine_patterns(service_whitelist)) if service_whitelist else _MATCH_EVERYTHING
     )
 
-    blacklist = (
-        regex("|".join(f"({p})" for p in service_blacklist))  #
-        if service_blacklist
-        else _MATCH_NOTHING
-    )
+    blacklist = regex(combine_patterns(service_blacklist)) if service_blacklist else _MATCH_NOTHING
 
     def _filter_service_by_patterns(service_name: ServiceName) -> bool:
         return whitelist.match(service_name) is not None and blacklist.match(service_name) is None

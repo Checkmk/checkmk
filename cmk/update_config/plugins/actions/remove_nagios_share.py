@@ -5,6 +5,7 @@
 
 from contextlib import suppress
 from logging import Logger
+from pathlib import Path
 from typing import override
 
 from cmk.update_config.lib import ExpiryVersion
@@ -12,24 +13,28 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.paths import omd_root
 
 
+def remove_nagios_share(root: Path, logger: Logger) -> None:
+    for path in [
+        root / "local/share/nagios/htdocs/theme/images",
+        root / "local/share/nagios/htdocs/theme/stylesheets",
+    ]:
+        if path.is_symlink():
+            path.unlink()
+            logger.info(f"Removed symlink: {path}")
+    for path in [
+        root / "local/share/nagios/htdocs/theme",
+        root / "local/share/nagios/htdocs/",
+        root / "local/share/nagios/",
+    ]:
+        with suppress(OSError):
+            path.rmdir()
+            logger.info(f"Removed empty directory: {path}")
+
+
 class RemoveNagiosShare(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        for path in [
-            omd_root / "local/share/nagios/htdocs/theme/images",
-            omd_root / "local/share/nagios/htdocs/theme/stylesheets",
-        ]:
-            if path.is_symlink():
-                path.unlink()
-                logger.info(f"Removed symlink: {path}")
-        for path in [
-            omd_root / "local/share/nagios/htdocs/theme",
-            omd_root / "local/share/nagios/htdocs/",
-            omd_root / "local/share/nagios/",
-        ]:
-            with suppress(OSError):
-                path.rmdir()
-                logger.info(f"Removed empty directory: {path}")
+        remove_nagios_share(omd_root, logger)
 
 
 update_action_registry.register(

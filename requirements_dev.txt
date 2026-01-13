@@ -8,7 +8,7 @@ beautifulsoup4==4.12.3 # used by the GUI crawler and various tests
 boto3-stubs[logs]==1.35.80 # used for type checking, keep version in sync with boto3
 botocore-stubs==1.35.80 # used for type checking, keep version in sync with botocore
 bson==0.5.10 # used by test_mk_mongodb unit test
-checkmk-dev-tools~=1.2.1  # provides tooling for build artifacts
+checkmk-dev-tools~=2.0.1  # provides tooling for build artifacts
 # Locked to 0.26.1 since 0.26.3 handled const strings differently
 # which broke inheritance.
 datamodel-code-generator==0.26.1  # used for cmk-shared-typing generation

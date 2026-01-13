@@ -1,5 +1,5 @@
 sphinx
 sphinx-autodoc-typehints  # used for the plugin API documentation
 sphinx-rtd-theme~=2.0.0  # used for the plugin API documentation # TODO: Unpin this here and in ../Pipfile when "make -C ../doc/plugin-api html" works again without it.
-checkmk-dev-tools==1.2.1  # provides tooling for build artifacts
+checkmk-dev-tools==2.0.1  # provides tooling for build artifacts
 python-dateutil~=2.9.0  # most likely a bug in trickkiste: it's a transitive dependency which is not set

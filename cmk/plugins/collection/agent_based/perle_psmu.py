@@ -93,7 +93,7 @@ snmp_section_perle_psmu = SimpleSNMPSection(
 )
 
 
-def inventory_perle_psmu(section: Section) -> InventoryResult:
+def inventorize_perle_psmu(section: Section) -> InventoryResult:
     for psu_index, data in section.items():
         yield TableRow(
             path=["hardware", "components", "psus"],
@@ -111,5 +111,5 @@ def inventory_perle_psmu(section: Section) -> InventoryResult:
 
 inventory_plugin_perle_psmu = InventoryPlugin(
     name="perle_psmu",
-    inventory_function=inventory_perle_psmu,
+    inventory_function=inventorize_perle_psmu,
 )

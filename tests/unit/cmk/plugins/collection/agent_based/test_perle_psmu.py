@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.perle_psmu import inventory_perle_psmu, parse_perle_psmu
+from cmk.plugins.collection.agent_based.perle_psmu import inventorize_perle_psmu, parse_perle_psmu
 
 from .utils_inventory import sort_inventory_result
 
@@ -50,7 +50,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_perle_psmu(string_table: StringTable, expected_result: InventoryResult) -> None:
+def test_inventorize_perle_psmu(
+    string_table: StringTable, expected_result: InventoryResult
+) -> None:
     assert sort_inventory_result(
-        inventory_perle_psmu(parse_perle_psmu(string_table))
+        inventorize_perle_psmu(parse_perle_psmu(string_table))
     ) == sort_inventory_result(expected_result)

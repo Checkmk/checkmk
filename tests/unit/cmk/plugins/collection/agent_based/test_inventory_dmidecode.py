@@ -7,7 +7,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_dmidecode import (
-    inventory_dmidecode,
+    inventorize_dmidecode,
     parse_dmidecode,
 )
 
@@ -162,5 +162,5 @@ from cmk.plugins.collection.agent_based.inventory_dmidecode import (
         ),
     ],
 )
-def test_inventory_dmidecode(string_table: StringTable, expected_result: InventoryResult) -> None:
-    assert list(inventory_dmidecode(parse_dmidecode(string_table))) == expected_result
+def test_inventorize_dmidecode(string_table: StringTable, expected_result: InventoryResult) -> None:
+    assert list(inventorize_dmidecode(parse_dmidecode(string_table))) == expected_result

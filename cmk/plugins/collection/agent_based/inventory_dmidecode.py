@@ -409,7 +409,7 @@ agent_section_dmidecode = AgentSection(
 )
 
 
-def inventory_dmidecode(
+def inventorize_dmidecode(
     section: Sequence[
         BIOSInformation
         | SystemInformation
@@ -504,5 +504,5 @@ def inventory_dmidecode(
 
 inventory_plugin_dmidecode = InventoryPlugin(
     name="dmidecode",
-    inventory_function=inventory_dmidecode,
+    inventory_function=inventorize_dmidecode,
 )

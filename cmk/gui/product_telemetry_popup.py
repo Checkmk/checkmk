@@ -66,6 +66,7 @@ def render_product_telemetry_popup(
 
                     if time_difference >= THIRTY_DAYS_IN_SECONDS:
                         _show_product_telemetry_popup(request)
+                        set_user_product_telemetry_popup_cookie(request, response)
 
 
 def _show_product_telemetry_popup(request: Request) -> None:

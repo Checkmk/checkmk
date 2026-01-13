@@ -200,7 +200,7 @@ check_plugin_aruba_wlc_aps = CheckPlugin(
 )
 
 
-def inventory_aruba_wlc_aps(section: Section) -> InventoryResult:
+def inventorize_aruba_wlc_aps(section: Section) -> InventoryResult:
     for ap_name, ap_data in section.items():
         yield TableRow(
             path=["networking", "wlan", "controller", "accesspoints"],
@@ -217,5 +217,5 @@ def inventory_aruba_wlc_aps(section: Section) -> InventoryResult:
 
 inventory_plugin_aruba_wlc_aps = InventoryPlugin(
     name="aruba_wlc_aps",
-    inventory_function=inventory_aruba_wlc_aps,
+    inventory_function=inventorize_aruba_wlc_aps,
 )

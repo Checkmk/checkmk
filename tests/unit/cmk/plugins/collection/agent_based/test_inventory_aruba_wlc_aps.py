@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.aruba_wlc_aps import (
-    inventory_aruba_wlc_aps,
+    inventorize_aruba_wlc_aps,
     parse_aruba_wlc_aps,
 )
 
@@ -55,9 +55,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_aruba_wlc_aps(
+def test_inventorize_aruba_wlc_aps(
     raw_section: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))
+        inventorize_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))
     ) == sort_inventory_result(expected_result)

@@ -39,7 +39,7 @@ agent_section_oracle_systemparameter = AgentSection(
 )
 
 
-def inventory_oracle_systemparameter(section: Section) -> InventoryResult:
+def inventorize_oracle_systemparameter(section: Section) -> InventoryResult:
     for inst, data in section.items():
         for param in data:
             param_name = param["param_name"]
@@ -66,5 +66,5 @@ def inventory_oracle_systemparameter(section: Section) -> InventoryResult:
 
 inventory_plugin_oracle_systemparameter = InventoryPlugin(
     name="oracle_systemparameter",
-    inventory_function=inventory_oracle_systemparameter,
+    inventory_function=inventorize_oracle_systemparameter,
 )

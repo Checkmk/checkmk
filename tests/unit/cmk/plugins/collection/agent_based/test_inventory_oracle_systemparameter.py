@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_oracle_systemparameter import (
-    inventory_oracle_systemparameter,
+    inventorize_oracle_systemparameter,
     parse_oracle_systemparameter,
 )
 
@@ -82,9 +82,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_oracle_systemparameter(
+def test_inventorize_oracle_systemparameter(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_oracle_systemparameter(parse_oracle_systemparameter(string_table))
+        inventorize_oracle_systemparameter(parse_oracle_systemparameter(string_table))
     ) == sort_inventory_result(expected_result)

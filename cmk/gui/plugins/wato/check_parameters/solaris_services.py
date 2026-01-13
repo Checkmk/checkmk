@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -26,7 +25,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _valuespec_inventory_solaris_services_rules():
+def _valuespec_inventory_solaris_services_rules() -> Dictionary:
     return Dictionary(
         title=_("Solaris service discovery"),
         elements=[
@@ -81,7 +80,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_solaris_services():
+def _parameter_valuespec_solaris_services() -> Dictionary:
     return Dictionary(
         elements=[
             (

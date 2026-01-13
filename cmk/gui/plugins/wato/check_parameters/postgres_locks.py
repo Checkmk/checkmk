@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _parameter_valuespec_postgres_locks():
+def _parameter_valuespec_postgres_locks() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule allows you to configure the limits for the SharedAccess and Exclusive Locks "

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import pytest
 
 from cmk.gui.exceptions import MKUserError
@@ -16,7 +14,7 @@ from cmk.gui.plugins.wato.check_parameters.ps import (
 
 @pytest.mark.parametrize("pattern", ["(test)$", "foo\\b", "^bar", "\\bfoo\\b", "(a)\\b"])
 def test_validate_ps_allowed_regex(pattern: str) -> None:
-    assert forbid_re_delimiters_inside_groups(pattern, "") is None
+    forbid_re_delimiters_inside_groups(pattern, "")
 
 
 @pytest.mark.parametrize("pattern", ["(test$)", "(foo\\b)", "(^bar)", "(\\bfoo\\b)"])

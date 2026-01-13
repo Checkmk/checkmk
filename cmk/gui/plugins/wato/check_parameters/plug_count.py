@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -21,7 +21,7 @@ def _migrate_plug_count(params: tuple[int, int, int, int] | dict[str, object]) -
     return {"levels_lower": (wl, cl), "levels_upper": (wu, cu)}
 
 
-def _parameter_valuespec_plug_count():
+def _parameter_valuespec_plug_count() -> Migrate[dict[str, Any]]:
     return Migrate(
         valuespec=Dictionary(
             help=_("Levels for the number of active plugs in a device."),

@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import re
 from collections.abc import Mapping
+from typing import Literal
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -42,6 +41,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 
 # This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only
@@ -51,7 +51,7 @@ from cmk.gui.valuespec import (
 CPU_RESCALE_MAX_UNSPEC = "cpu_rescale_max_unspecified"
 
 
-def process_level_elements():
+def process_level_elements() -> list[tuple[str, ValueSpec]]:
     cpu_rescale_max_choices: DropdownChoices = [
         (
             True,
@@ -397,7 +397,7 @@ def process_level_elements():
     ]
 
 
-def forbid_re_delimiters_inside_groups(pattern, varprefix):
+def forbid_re_delimiters_inside_groups(pattern: str, varprefix: str) -> None:
     # Used as input validation in PS check wato config
     group_re = r"\(.*?\)"
     for match in re.findall(group_re, pattern):
@@ -415,7 +415,7 @@ def forbid_re_delimiters_inside_groups(pattern, varprefix):
                 )
 
 
-def match_alt(x):
+def match_alt(x: Literal[False] | None | str) -> int:
     if x is False:
         return 3
     if x is None or x == "":
@@ -425,7 +425,7 @@ def match_alt(x):
     return 0
 
 
-def validate_process_discovery_descr_option(description, varprefix):
+def validate_process_discovery_descr_option(description: str, varprefix: str) -> None:
     if "%s" in description and re.search(r"%(\d+)", description):
         raise MKUserError(
             varprefix,
@@ -435,7 +435,7 @@ def validate_process_discovery_descr_option(description, varprefix):
         )
 
 
-def process_discovery_descr_option():
+def process_discovery_descr_option() -> TextInput:
     return TextInput(
         title=_("Process name"),
         size=49,
@@ -462,7 +462,7 @@ def process_discovery_descr_option():
     )
 
 
-def process_match_options():
+def process_match_options() -> Alternative:
     return Alternative(
         title=_("Process Matching"),
         elements=[
@@ -504,7 +504,7 @@ def process_match_options():
     )
 
 
-def user_match_options(extra_elements=None):
+def user_match_options(extra_elements: list[ValueSpec] | None = None) -> Alternative:
     if extra_elements is None:
         extra_elements = []
 
@@ -529,8 +529,8 @@ def user_match_options(extra_elements=None):
                 totext="",
                 title=_("Match all users"),
             ),
-        ]
-        + extra_elements,
+            *extra_elements,
+        ],
         match=match_alt,
         help=_(
             "<p>The user specification is a user name (string). The "
@@ -545,7 +545,7 @@ def user_match_options(extra_elements=None):
     )
 
 
-def cgroup_match_options():
+def cgroup_match_options() -> Tuple[tuple[str, ValueSpec]]:
     return Tuple(
         title=_("Operating system control group information"),
         elements=[
@@ -591,7 +591,7 @@ def cgroup_match_options():
     )
 
 
-def _item_spec_ps():
+def _item_spec_ps() -> TextInput:
     return TextInput(
         title=_("Discovered process name"),
     )
@@ -630,7 +630,7 @@ rulespec_registry.register(
 
 
 # Rule for static process checks
-def _manual_item_spec_ps():
+def _manual_item_spec_ps() -> TextInput:
     return TextInput(
         title=_("Process name"),
         help=_("This name will be used in the description of the service"),
@@ -768,13 +768,13 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def match_hr_alternative(x):
+def match_hr_alternative(x: str) -> int:
     if x.startswith("~"):
         return 1
     return 0
 
 
-def hr_process_match_name_option():
+def hr_process_match_name_option() -> Alternative:
     return Alternative(
         title=_("Process name matching"),
         elements=[
@@ -811,7 +811,7 @@ def hr_process_match_name_option():
     )
 
 
-def hr_process_match_path_option():
+def hr_process_match_path_option() -> Alternative:
     return Alternative(
         title=_("Process path matching"),
         elements=[
@@ -848,7 +848,7 @@ def hr_process_match_path_option():
     )
 
 
-def hr_process_match_elements():
+def hr_process_match_elements() -> list[tuple[str, ValueSpec]]:
     return [
         (
             "match_name_or_path",
@@ -876,7 +876,7 @@ def hr_process_match_elements():
     ]
 
 
-def hr_process_parameter_elements():
+def hr_process_parameter_elements() -> list[tuple[str, ValueSpec]]:
     return [
         (
             "levels",
@@ -935,7 +935,7 @@ def hr_process_parameter_elements():
     ]
 
 
-def _valuespec_discovery_hr_processes_rules():
+def _valuespec_discovery_hr_processes_rules() -> Dictionary:
     return Dictionary(
         title=_("Process discovery (only SNMP)"),
         help=_(
@@ -981,7 +981,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_hr_ps():
+def _parameter_valuespec_hr_ps() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule set defines criteria for SNMP processes based upon the host resources MIB."
@@ -1004,7 +1004,7 @@ rulespec_registry.register(
 
 
 # Rule for static process checks
-def _manual_item_spec_hr_ps():
+def _manual_item_spec_hr_ps() -> TextInput:
     return TextInput(
         title=_("Process name"),
         help=_("This name will be used in the description of the service"),
@@ -1017,7 +1017,7 @@ def _manual_item_spec_hr_ps():
     )
 
 
-def _manual_parameter_valuespec_hr_ps():
+def _manual_parameter_valuespec_hr_ps() -> Dictionary:
     return Dictionary(
         elements=hr_process_match_elements() + hr_process_parameter_elements(),
         required_keys=["descr"],

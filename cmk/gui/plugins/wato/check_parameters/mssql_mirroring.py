@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -14,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
-def _item_spec_mssql_mirroring():
+def _item_spec_mssql_mirroring() -> TextInput:
     return TextInput(
         title=_("Database name"),
         help=_(
@@ -25,7 +24,7 @@ def _item_spec_mssql_mirroring():
     )
 
 
-def _parameter_valuespec_mssql_mirroring():
+def _parameter_valuespec_mssql_mirroring() -> Dictionary:
     return Dictionary(
         help=_(
             "Set the criticalities of the mirroring state of database instances that "

@@ -142,7 +142,10 @@ def test_inventorize_power_supplies() -> None:
     expected = [
         TableRow(
             path=["hardware", "components", "psus"],
-            key_columns={"serial": "QABC-1234-5678"},
+            key_columns={
+                "index": 1,
+                "serial": "QABC-1234-5678",
+            },
             inventory_columns={
                 "model": "PWR-MS320-1025WAC",
                 "location": "Slot 1",

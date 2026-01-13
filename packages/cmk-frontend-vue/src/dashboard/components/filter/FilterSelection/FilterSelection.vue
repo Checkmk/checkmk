@@ -12,6 +12,8 @@ import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible
 import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type { Filters } from '../composables/useFilters.ts'
 import type { FilterType } from '../types.ts'
@@ -210,9 +212,9 @@ onUnmounted(() => {
   <div class="db-filter-selection__main-container">
     <div v-if="processedCategory" class="filter-menu">
       <div class="filter-menu__sticky-header">
-        <h3 class="filter-menu__main-title">
+        <CmkHeading type="h2">
           {{ `${untranslated(processedCategory.title)} ${_t('filter')}` }}
-        </h3>
+        </CmkHeading>
 
         <div ref="searchDropdownRef" class="filter-menu__search-container">
           <input
@@ -374,7 +376,7 @@ onUnmounted(() => {
       </CmkScrollContainer>
     </div>
 
-    <div v-else class="filter-menu__empty">{{ _t('No filter category available') }}</div>
+    <CmkParagraph v-else>{{ _t('No filter category available') }}</CmkParagraph>
   </div>
 </template>
 
@@ -415,14 +417,6 @@ onUnmounted(() => {
   margin-bottom: var(--dimension-4);
   border-bottom: 1px solid transparent;
   background-color: var(--slide-in-left-part);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu__main-title {
-  margin: 0 0 var(--dimension-5) 0;
-  font-size: var(--font-size-xlarge);
-  font-weight: var(--font-weight-bold);
-  color: var(--font-color);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

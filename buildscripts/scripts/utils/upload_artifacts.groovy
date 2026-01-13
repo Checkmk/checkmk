@@ -177,15 +177,13 @@ boolean download_hot_cache(Map args) {
 }
 
 void upload_hot_cache(Map args) {
-    def exclude_bazel = env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? "--exclude='.cache/bazel'" : "";
-
     try {
         sh("""
         cd ${args.download_dest}
         if [ -d ".cache" ] || [ -d ".java-caller" ]; then
             [ -d ".cache" ] && du -sh .cache
             [ -d ".java-caller" ] && du -sh .java-caller
-            time tar -cf - ${exclude_bazel} .cache .java-caller 2>/dev/null | lz4 > ${args.file_pattern}
+            time tar -cf - .cache .java-caller 2>/dev/null | lz4 > ${args.file_pattern}
         fi
     """);
 
@@ -217,7 +215,7 @@ Map capture_folder_state(download_dest) {
     try {
         def output = sh(script: """
             cd ${download_dest}
-            find . -maxdepth 1 -type d ! -name '.' -exec du -sb --exclude='.cache/bazel' {} \\; | sort
+            find . -maxdepth 1 -type d ! -name '.' -exec du -sb {} \\; | sort
         """, returnStdout: true).trim();
 
         if (output) {

@@ -165,7 +165,7 @@ def test_check_wireless_ethernet_statuses_poe_standard(params: CheckParams) -> N
 
 
 def test_inventory_wireless_ethernet_statuses() -> None:
-    status = _RawWirelessEthernetStatusFactory.build()
+    status = _RawWirelessEthernetStatusFactory.build(ports=[{"name": "Port 1"}])
     string_table = [[f"[{json.dumps(status)}]"]]
     section = parse_wireless_ethernet_statuses(string_table)
 

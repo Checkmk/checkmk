@@ -131,7 +131,7 @@ class MerakiOrganisation:
                 devices_by_serial[serial] = Device(
                     organisation_id=self.id,
                     organisation_name=self.name,
-                    networkName=network["name"] if network else "",
+                    network_name=network["name"] if network else "",
                     **raw_device,
                 )
 

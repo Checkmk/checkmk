@@ -30,7 +30,7 @@ class DeviceInfo(BaseModel, frozen=True):
     description: str = Field(alias="name")
     mac_address: str = Field(alias="mac")
     network_id: str = Field(alias="networkId")
-    network_name: str = Field(alias="networkName")
+    network_name: str
     product: str = Field(default="", alias="productType")
 
 

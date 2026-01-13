@@ -55,7 +55,9 @@ test_main_successful_call_order() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>/dev/null
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>/dev/null
     )
     local exit_code=$?
     set -e
@@ -89,7 +91,7 @@ test_main_successful_call_order() {
         "podman volume create relay"
         "podman pull docker.io/checkmk/check-mk-relay:1.0.0"
         "podman tag docker.io/checkmk/check-mk-relay:1.0.0 localhost/checkmk_relay:checkmk_sync"
-        "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --force --user cmkadmin --password cmk"
+        "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass"
         "cat *" # Heredoc writes, path varies
         "chmod 755 *checkmk_relay-update-manager.sh"
         "cat *" # More heredoc writes

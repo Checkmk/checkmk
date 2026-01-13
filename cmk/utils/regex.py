@@ -7,6 +7,7 @@
 import contextlib
 import re
 import warnings
+from collections.abc import Sequence
 from typing import Final
 
 from cmk.utils.exceptions import MKGeneralException
@@ -52,7 +53,7 @@ def _extract_global_modifiers(pattern: str) -> tuple[str, str]:
     return "", pattern
 
 
-def combine_patterns(pattern_parts: list[tuple[bool, str]] | list[str]) -> str:
+def combine_patterns(pattern_parts: Sequence[tuple[bool, str]] | Sequence[str]) -> str:
     patterns = []
 
     for pattern_part in pattern_parts:

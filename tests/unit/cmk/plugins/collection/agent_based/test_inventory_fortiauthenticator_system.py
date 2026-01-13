@@ -5,15 +5,15 @@
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.inventory_fortiauthenticator_system import (
-    inventory_fortiauthenticator_system,  # fmt: off
+    inventorize_fortiauthenticator_system,  # fmt: off
 )
 
 from .utils_inventory import sort_inventory_result
 
 
-def test_inventory_fortiauthenticator_system() -> None:
+def test_inventorize_fortiauthenticator_system() -> None:
     assert sort_inventory_result(
-        inventory_fortiauthenticator_system(
+        inventorize_fortiauthenticator_system(
             {
                 "model": "FACVM",
                 "serial": "FAC-VMTM18000123",

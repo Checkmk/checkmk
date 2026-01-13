@@ -47,7 +47,7 @@ snmp_section_fortiauthenticator_system = SimpleSNMPSection(
 )
 
 
-def inventory_fortiauthenticator_system(section: Section) -> InventoryResult:
+def inventorize_fortiauthenticator_system(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -59,5 +59,5 @@ def inventory_fortiauthenticator_system(section: Section) -> InventoryResult:
 
 inventory_plugin_fortiauthenticator_system = InventoryPlugin(
     name="fortiauthenticator_system",
-    inventory_function=inventory_fortiauthenticator_system,
+    inventory_function=inventorize_fortiauthenticator_system,
 )

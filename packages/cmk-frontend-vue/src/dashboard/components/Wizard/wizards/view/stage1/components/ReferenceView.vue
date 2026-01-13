@@ -83,14 +83,16 @@ watch(
       <ContentSpacer :dimension="5" />
       <SelectorView v-model:selected-view="referencedView" :read-only="false" />
     </div>
-    <ContentSpacer :dimension="5" />
-    <div v-if="referencedView">
-      <SingleInfosSpecifier
-        v-model:context-infos="contextInfos"
-        v-model:restricted-ids="restrictedToSingleInfos"
-        v-model:mode="singleInfosMode"
-        :read-only="true"
-      />
-    </div>
+    <template v-if="referencedView">
+      <ContentSpacer :dimension="5" />
+      <div>
+        <SingleInfosSpecifier
+          v-model:context-infos="contextInfos"
+          v-model:restricted-ids="restrictedToSingleInfos"
+          v-model:mode="singleInfosMode"
+          :read-only="true"
+        />
+      </div>
+    </template>
   </CmkIndent>
 </template>

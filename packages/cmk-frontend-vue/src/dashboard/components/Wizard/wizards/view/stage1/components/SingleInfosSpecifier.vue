@@ -71,11 +71,9 @@ watch(
       :disabled="props.readOnly"
       :label="_t('Select specific object type')"
     />
-    <ContentSpacer :dimension="5" />
-    <SelectorSingleInfo
-      v-if="mode === RestrictedToSingle.CUSTOM"
-      v-model:selected-ids="restrictedIds"
-      :only-ids="props.contextInfos"
-    />
+    <template v-if="mode === RestrictedToSingle.CUSTOM">
+      <ContentSpacer :dimension="5" />
+      <SelectorSingleInfo v-model:selected-ids="restrictedIds" :only-ids="props.contextInfos" />
+    </template>
   </div>
 </template>

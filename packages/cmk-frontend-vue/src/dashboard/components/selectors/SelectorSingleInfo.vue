@@ -52,6 +52,9 @@ const dataElements = computed<DualListElement[]>({
 
     return effective.map((id) => {
       const found = filteredElements.value.find((e) => e.name === id)
+      if (!found) {
+        return { name: id, title: id }
+      }
       const baseTitle = found!.title!
       return { name: id, title: _t('Single %{title}', { title: baseTitle }) }
     })

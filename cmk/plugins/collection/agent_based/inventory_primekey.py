@@ -48,10 +48,10 @@ snmp_section_primekey = SimpleSNMPSection(
 )
 
 
-def inventory_primekey(section: _Section) -> InventoryResult:
+def inventorize_primekey(section: _Section) -> InventoryResult:
     """
     >>> section = parse([['PrimeKeyAppliance.3.9.2', '1']])
-    >>> next(inventory_primekey(section))
+    >>> next(inventorize_primekey(section))
     Attributes(path=['hardware', 'system'], inventory_attributes={'pki_appliance_version': 'PrimeKeyAppliance.3.9.2', 'node_name': '1'}, status_attributes={})
     """
 
@@ -66,5 +66,5 @@ def inventory_primekey(section: _Section) -> InventoryResult:
 
 inventory_plugin_primekey = InventoryPlugin(
     name="primekey",
-    inventory_function=inventory_primekey,
+    inventory_function=inventorize_primekey,
 )

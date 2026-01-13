@@ -346,7 +346,10 @@ class ImpersonatedDashboardTokenIssuer:
     context manager.
     """
 
-    def __init__(self, token_details: DashboardToken, user_permissions: UserPermissions) -> None:
+    def __init__(
+        self, token_issuer: UserId, token_details: DashboardToken, user_permissions: UserPermissions
+    ) -> None:
+        self._token_issuer = token_issuer
         self._token_details = token_details
         self._user_permissions = user_permissions
         self.__invalidated: bool = False
@@ -370,7 +373,19 @@ class ImpersonatedDashboardTokenIssuer:
             # due to caching within DashboardStore we can only safely take the `all` part
             # then we calculate the permitted dashboards again for the impersonated user
             store = DashboardStore.get_instance()
-            permitted = visuals.available_by_owner("dashboards", store.all, self._user_permissions)
+
+            # Administrative override for users who can edit foreign dashboards
+            if self._user_permissions.user_may(
+                self._token_issuer, "general.edit_foreign_dashboards"
+            ):
+                permitted: dict[str, dict[UserId, DashboardConfig]] = {}
+                for (owner_id, dashboard_name), board in store.all.items():
+                    permitted.setdefault(dashboard_name, {})[owner_id] = board
+            else:
+                permitted = visuals.available_by_owner(
+                    "dashboards", store.all, self._user_permissions
+                )
+
             try:
                 self.__dashboard_cache = permitted[self._token_details.dashboard_name][
                     self._token_details.owner
@@ -418,7 +433,7 @@ def impersonate_dashboard_token_issuer(
 
     The context yields an object which can be used to load user specific data."""
     with UserContext(token_issuer, user_permissions):
-        issuer = ImpersonatedDashboardTokenIssuer(token_details, user_permissions)
+        issuer = ImpersonatedDashboardTokenIssuer(token_issuer, token_details, user_permissions)
         try:
             yield issuer
         finally:

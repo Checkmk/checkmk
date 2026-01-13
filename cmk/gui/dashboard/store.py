@@ -18,6 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
 from cmk.gui.user_async_replication import user_profile_async_replication_page
@@ -70,6 +71,14 @@ class DashboardStore:
         user_permissions: UserPermissions,
     ) -> dict[DashboardName, dict[UserId, DashboardConfig]]:
         """Returns all definitions that a user is allowed to use"""
+        # Administrative override for users who can edit foreign dashboards
+        if user.may("general.edit_foreign_dashboards"):
+            result: dict[DashboardName, dict[UserId, DashboardConfig]] = {}
+            for (owner_id, dashboard_name), board in all_dashboards.items():
+                result.setdefault(dashboard_name, {})[owner_id] = board
+            return result
+
+        # Load dashboards based on standard visibility rules (own, public, etc.)
         return visuals.available_by_owner("dashboards", all_dashboards, user_permissions)
 
 

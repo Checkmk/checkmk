@@ -50,7 +50,7 @@ agent_section_mem = AgentSection(
 )
 
 
-def inventory_mem(section: memory.SectionMem) -> InventoryResult:
+def inventorize_mem(section: memory.SectionMem) -> InventoryResult:
     yield Attributes(
         path=["hardware", "memory"],
         inventory_attributes={
@@ -67,5 +67,5 @@ def inventory_mem(section: memory.SectionMem) -> InventoryResult:
 
 inventory_plugin_mem = InventoryPlugin(
     name="mem",
-    inventory_function=inventory_mem,
+    inventory_function=inventorize_mem,
 )

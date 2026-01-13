@@ -18,7 +18,7 @@ from cmk.base.legacy_checks.mem_linux import (
 )
 
 
-def test_inventory_mem_linux_basic() -> None:
+def test_inventorize_mem_linux_basic() -> None:
     """Test inventory function for mem_linux check with basic Linux memory data."""
     # The inventory function requires specific keys to be present via memory.is_linux_section
     section = {

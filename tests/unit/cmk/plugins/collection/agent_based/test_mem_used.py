@@ -805,7 +805,7 @@ def test_check_memory(
         ),
     ],
 )
-def test_inventory_memory(
+def test_inventorize_memory(
     section: memory.SectionMemUsed,
     expected_result: Sequence[Attributes],
 ) -> None:

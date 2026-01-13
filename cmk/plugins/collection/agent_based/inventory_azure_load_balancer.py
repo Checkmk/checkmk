@@ -117,7 +117,7 @@ def iter_outbound_rules(
             )
 
 
-def inventory_load_balancer(
+def inventorize_load_balancer(
     section: Section,
 ) -> InventoryResult:
     path = ["software", "applications", "azure", "load_balancers"]
@@ -145,5 +145,5 @@ def inventory_load_balancer(
 inventory_plugin_azure_load_balancer = InventoryPlugin(
     name="azure_load_balancer",
     sections=["azure_loadbalancers"],
-    inventory_function=inventory_load_balancer,
+    inventory_function=inventorize_load_balancer,
 )

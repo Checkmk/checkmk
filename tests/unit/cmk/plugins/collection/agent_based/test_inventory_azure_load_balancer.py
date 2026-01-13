@@ -8,7 +8,9 @@ import pytest
 from cmk.agent_based.v2 import InventoryResult, TableRow
 from cmk.plugins.azure.lib_load_balancer import Section
 from cmk.plugins.azure_deprecated.agent_based.azure_load_balancer import parse_load_balancer
-from cmk.plugins.collection.agent_based.inventory_azure_load_balancer import inventory_load_balancer
+from cmk.plugins.collection.agent_based.inventory_azure_load_balancer import (
+    inventorize_load_balancer,
+)
 
 SECTION = parse_load_balancer(
     [
@@ -235,5 +237,5 @@ SECTION = parse_load_balancer(
         )
     ],
 )
-def test_inventory_load_balancer(section: Section, expected_result: InventoryResult) -> None:
-    assert list(inventory_load_balancer(section)) == expected_result
+def test_inventorize_load_balancer(section: Section, expected_result: InventoryResult) -> None:
+    assert list(inventorize_load_balancer(section)) == expected_result

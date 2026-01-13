@@ -29,17 +29,19 @@ STRING_TABLE = [
     ],
 ]
 
+NO_ERRORS_STRING_TABLE = [["{}"]]
+
 
 def test_discover_podman_status() -> None:
     assert list(discover_podman_status(parse_podman_status(STRING_TABLE))) == [Service()]
-    assert list(discover_podman_status(parse_podman_status([[]]))) == [Service()]
+    assert list(discover_podman_status(parse_podman_status(NO_ERRORS_STRING_TABLE))) == [Service()]
 
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [
         pytest.param(
-            [[]],
+            NO_ERRORS_STRING_TABLE,
             [Result(state=State.OK, summary="No errors")],
             id="No Errors present -> OK",
         ),

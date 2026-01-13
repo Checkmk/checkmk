@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 interface DashboardContentContainerProps {
@@ -14,13 +16,12 @@ interface DashboardContentContainerProps {
 const { general_settings: generalSettings, contentOverflow = 'auto' } =
   defineProps<DashboardContentContainerProps>()
 
-let titleRenderClass: string = 'db-content-container__title--with-background'
-if (
-  generalSettings.title &&
-  ['hidden', 'without_background'].includes(generalSettings.title.render_mode)
-) {
-  titleRenderClass = ''
-}
+const titleRenderClass = computed<string>(() => {
+  if (generalSettings.title?.render_mode === 'with_background') {
+    return 'db-content-container__title--with-background'
+  }
+  return ''
+})
 </script>
 
 <template>

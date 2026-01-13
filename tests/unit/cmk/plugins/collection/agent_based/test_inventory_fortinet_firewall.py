@@ -9,13 +9,13 @@ from collections.abc import Sequence
 from cmk.agent_based.v2 import StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_fortinet_firewall import (
     Interface,
-    inventory_fortinet_firewall,
+    inventorize_fortinet_firewall,
     parse_fortinet_firewall_network_interfaces,
     SectionFortinetInterface,
 )
 
 
-def test_parse_inventory_fortinet_firewall() -> None:
+def test_parse_inventorize_fortinet_firewall() -> None:
     string_table = [
         [
             ["127.0.0.1", "20", "255.255.255.0"],
@@ -76,7 +76,7 @@ def test_parse_inventory_fortinet_firewall() -> None:
     assert parse_result == expected_parse_result
 
 
-def test_parse_inventory_fortinet_firewall_empty_string_table() -> None:
+def test_parse_inventorize_fortinet_firewall_empty_string_table() -> None:
     string_table: list[StringTable] = []
 
     expected_parse_result: SectionFortinetInterface = {}
@@ -86,7 +86,7 @@ def test_parse_inventory_fortinet_firewall_empty_string_table() -> None:
     assert parse_result == expected_parse_result
 
 
-def test_inventory_fortinet_firewall_with_section() -> None:
+def test_inventorize_fortinet_firewall_with_section() -> None:
     section = {
         "127.0.0.3": Interface(
             if_index="22",
@@ -97,7 +97,7 @@ def test_inventory_fortinet_firewall_with_section() -> None:
         ),
     }
 
-    inventory_result = inventory_fortinet_firewall(section)
+    inventory_result = inventorize_fortinet_firewall(section)
 
     expected_inventory_result = [
         TableRow(
@@ -117,10 +117,10 @@ def test_inventory_fortinet_firewall_with_section() -> None:
     assert list(inventory_result) == expected_inventory_result
 
 
-def test_inventory_fortinet_firewall_no_section() -> None:
+def test_inventorize_fortinet_firewall_no_section() -> None:
     section: SectionFortinetInterface = {}
 
-    inventory_result = inventory_fortinet_firewall(section)
+    inventory_result = inventorize_fortinet_firewall(section)
 
     expected_inventory_result: Sequence[TableRow] = []
 

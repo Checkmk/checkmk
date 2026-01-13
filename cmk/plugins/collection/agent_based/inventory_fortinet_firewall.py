@@ -87,7 +87,7 @@ snmp_section_fortinet_firewall_network_interfaces = SNMPSection(
 )
 
 
-def inventory_fortinet_firewall(section: SectionFortinetInterface) -> InventoryResult:
+def inventorize_fortinet_firewall(section: SectionFortinetInterface) -> InventoryResult:
     for interface in section.values():
         yield TableRow(
             path=["networking", "addresses"],
@@ -105,5 +105,5 @@ def inventory_fortinet_firewall(section: SectionFortinetInterface) -> InventoryR
 
 inventory_plugin_fortinet_firewall_network_interfaces = InventoryPlugin(
     name="fortinet_firewall_network_interfaces",
-    inventory_function=inventory_fortinet_firewall,
+    inventory_function=inventorize_fortinet_firewall,
 )

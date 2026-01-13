@@ -215,7 +215,7 @@ snmp_section_audiocodes_sip_interfaces = SNMPSection(
 )
 
 
-def inventory_audiocodes_sip_interfaces(section: Sequence[Interface]) -> InventoryResult:
+def inventorize_audiocodes_sip_interfaces(section: Sequence[Interface]) -> InventoryResult:
     for interface in section:
         yield TableRow(
             path=["networking", "sip_interfaces"],
@@ -234,5 +234,5 @@ def inventory_audiocodes_sip_interfaces(section: Sequence[Interface]) -> Invento
 
 inventory_plugin_audiocodes_sip_interfaces = InventoryPlugin(
     name="audiocodes_sip_interfaces",
-    inventory_function=inventory_audiocodes_sip_interfaces,
+    inventory_function=inventorize_audiocodes_sip_interfaces,
 )

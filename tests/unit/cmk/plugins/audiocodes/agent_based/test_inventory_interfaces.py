@@ -10,7 +10,7 @@ import pytest
 
 from cmk.agent_based.v2 import StringTable, TableRow
 from cmk.plugins.audiocodes.agent_based.interfaces import (
-    inventory_audiocodes_sip_interfaces,
+    inventorize_audiocodes_sip_interfaces,
     parse_audiocodes_interfaces,
 )
 
@@ -121,7 +121,9 @@ def test_inventory_interfaces(
 ) -> None:
     table_rows = {}
 
-    for table_row in inventory_audiocodes_sip_interfaces(parse_audiocodes_interfaces(string_table)):
+    for table_row in inventorize_audiocodes_sip_interfaces(
+        parse_audiocodes_interfaces(string_table)
+    ):
         assert isinstance(table_row, TableRow)
         table_rows[table_row.key_columns["name"]] = table_row
 

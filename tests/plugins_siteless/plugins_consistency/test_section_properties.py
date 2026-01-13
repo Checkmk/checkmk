@@ -212,6 +212,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
         ".1.3.6.1.4.1.47196.4.1.1.3.11.3.1.1.*": {"aruba_sw_temp"},
         ".1.3.6.1.4.1.9.9.23.1.2.1.1.*": {"inv_cdp_cache"},
         ".1.0.8802.1.1.2.1.4.1.1.4.*": {"inv_lldp_cache"},
+        ".1.3.6.1.2.1.4.20.1.1.*": {"ip_addresses"},
     }
 
     current_offenders: dict[str, set[str]] = defaultdict(set)

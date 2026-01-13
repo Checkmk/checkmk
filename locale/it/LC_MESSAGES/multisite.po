@@ -12665,7 +12665,7 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Uso dell'helper Checkmk"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgid "Checkmk metrics are created from OpenTelemetry datapoints."
 msgstr ""
 
 msgid "Checkmk partner or reseller"
@@ -37234,6 +37234,10 @@ msgstr "Livelli per la dimensione del Tablespace"
 msgid "Levels for the Tablespace usage"
 msgstr "Livelli per l'uso del Tablespace"
 
+#, fuzzy
+msgid "Levels for the consumer count"
+msgstr "Livelli per il conteggio dei consumatori"
+
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Livelli per il consumo di energia elettrica di un dispositivo "
 
@@ -39071,10 +39075,6 @@ msgstr "Livelli superiori di utilizzo del disco"
 
 msgid "Lower levels for reservation utilization"
 msgstr "Livelli più bassi per l'utilizzo delle prenotazioni"
-
-#, fuzzy
-msgid "Lower levels for the consumer count"
-msgstr "Livelli per il conteggio dei consumatori"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -56684,7 +56684,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 
 msgid ""
@@ -78742,10 +78742,6 @@ msgstr "Pacchetto di estensione caricato %s-%s (%s)"
 msgid "Upper"
 msgstr "Superiore"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Livelli per il conteggio dei consumatori"
-
 msgid "Upper Temperature Levels"
 msgstr "Livelli superiori di temperatura"
 
@@ -89165,6 +89161,10 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "⚠ <b>non disponibile</b> poiché lo MKP di Robotmk Core è stato installato"
+
+#, fuzzy
+#~ msgid "Lower levels for the consumer count"
+#~ msgstr "Livelli per il conteggio dei consumatori"
 
 #, fuzzy
 #~ msgid "Prometheus scrape configurations"

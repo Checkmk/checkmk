@@ -12744,7 +12744,7 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmk utilização do helper"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgid "Checkmk metrics are created from OpenTelemetry datapoints."
 msgstr ""
 
 msgid "Checkmk partner or reseller"
@@ -37464,6 +37464,10 @@ msgstr "Níveis para o tamanho do espaço das mesas"
 msgid "Levels for the Tablespace usage"
 msgstr "Níveis para o uso do Espaço de Tabelas"
 
+#, fuzzy
+msgid "Levels for the consumer count"
+msgstr "Níveis para a contagem do consumidor"
+
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Níveis para o consumo de energia elétrica de um dispositivo "
 
@@ -39327,10 +39331,6 @@ msgstr "Níveis mais baixos de utilização dos pedidos"
 #, fuzzy
 msgid "Lower levels for reservation utilization"
 msgstr "Níveis mais baixos de utilização dos pedidos"
-
-#, fuzzy
-msgid "Lower levels for the consumer count"
-msgstr "Níveis para a contagem do consumidor"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -57089,7 +57089,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 
 msgid ""
@@ -79300,10 +79300,6 @@ msgstr "Pacote de extensão carregado %s-%s (%s)"
 msgid "Upper"
 msgstr "Alto"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Níveis para a contagem do consumidor"
-
 msgid "Upper Temperature Levels"
 msgstr "Níveis superiores de temperatura"
 
@@ -89768,6 +89764,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Lower levels for the consumer count"
+#~ msgstr "Níveis para a contagem do consumidor"
 
 #, fuzzy
 #~ msgid "Prometheus scrape configurations"

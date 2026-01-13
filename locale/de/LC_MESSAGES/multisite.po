@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-12-16 21:04+0000\n"
+"PO-Revision-Date: 2026-01-12 23:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -7627,9 +7627,8 @@ msgstr "Auto-Shrink aus"
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
 
-#, fuzzy
 msgid "Auto-detect proxy settings for this network"
-msgstr "Unstetigkeitserkennnung für Hosts"
+msgstr "Automatische Erkennung von Proxy-Einstellungen für dieses Netzwerk"
 
 msgid "Auto-disconnect time"
 msgstr "Automatische Abschaltzeit"
@@ -12345,7 +12344,8 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Auslastung Checkmk-Helper"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+#, fuzzy
+msgid "Checkmk metrics are created from OpenTelemetry datapoints."
 msgstr ""
 "Checkmk-Metriken werden aus OTel-Datenpunkten erstellt. Konfigurieren Sie "
 "diese hier."
@@ -13967,9 +13967,8 @@ msgstr "Einstellungen"
 msgid "Configuration Error"
 msgstr "Konfigurationsfehler"
 
-#, fuzzy
 msgid "Configuration activation"
-msgstr "Konfigurationsverbindung"
+msgstr "Aktivierung der Konfiguration"
 
 msgid "Configuration bundle ID"
 msgstr "Konfigurationsbündel-ID"
@@ -14607,9 +14606,9 @@ msgstr "Direkt verbinden (nicht in CRE verfügbar)"
 msgid "Connect directly to the destination instead of using a proxy."
 msgstr "Direkt mit dem Ziel verbinden anstatt einen Proxy zu verwenden."
 
-#, fuzzy
 msgid "Connect directly to the license server instead of using a proxy."
-msgstr "Direkt mit dem Ziel verbinden anstatt einen Proxy zu verwenden."
+msgstr ""
+"Direkt mit dem Lizenzserver verbinden anstatt einen Proxy zu verwenden."
 
 msgid "Connect directly, without Livestatus Proxy"
 msgstr "Direkt verbinden, ohne Livestatus-Proxy"
@@ -20057,9 +20056,8 @@ msgstr "Keine Spalten-Header hinzufügen"
 msgid "Do not add text"
 msgstr "Keinen Text hinzufügen"
 
-#, fuzzy
 msgid "Do not apply this configuration"
-msgstr "Diese Konfiguration löschen"
+msgstr "Diese Konfiguration nicht anwenden"
 
 msgid "Do not ask for a comment"
 msgstr "Frage nicht nach einem Kommentar"
@@ -26065,7 +26063,7 @@ msgid "GPU utilization"
 msgstr "GPU-Auslastung"
 
 msgid "GRPC-based receiver"
-msgstr ""
+msgstr "GRPC-basierter Empfänger"
 
 msgid "GUI"
 msgstr "GUI"
@@ -26337,9 +26335,8 @@ msgstr "Globale Einstellungen zum Suchbegriff '%s'"
 msgid "GlobalProtect Utilization"
 msgstr "GlobalProtect-Auslastung"
 
-#, fuzzy
 msgid "Globally configured proxy"
-msgstr "Verwendung eines global konfigurierten Proxy"
+msgstr "Global konfigurierter Proxy"
 
 msgid "Globbing pattern for input files"
 msgstr "Globbing Pattern für Eingabedateien"
@@ -26978,7 +26975,7 @@ msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, E-Mail, ..."
 
 msgid "HTTP-based receiver"
-msgstr ""
+msgstr "HTTP-basierter Empfänger"
 
 msgid "HTTP: Active Requests"
 msgstr "HTTP: aktive Anfragen"
@@ -29535,9 +29532,8 @@ msgstr "Host-Namens-Konflikt"
 msgid "Host name contains illegal characters: %s"
 msgstr "Host-Name enthält unzulässige Zeichen: %s"
 
-#, fuzzy
 msgid "Host name lookup"
-msgstr "Host-Name"
+msgstr "Suche nach Host-Name"
 
 msgid "Host name matching"
 msgstr "Abgleich der Host-Namen"
@@ -30344,9 +30340,8 @@ msgstr "IP-Adresse der Hosts"
 msgid "IP address"
 msgstr "IP-Adresse"
 
-#, fuzzy
 msgid "IP address (IPv4 or IPv6)"
-msgstr "Host-Adressen (IPv4/IPv6)"
+msgstr "IP-Adresse (IPv4 oder IPv6)"
 
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
@@ -36172,6 +36167,10 @@ msgstr "Levels für die Tablespace-Grösse"
 msgid "Levels for the Tablespace usage"
 msgstr "Levels für die Tablespacebelegung"
 
+#, fuzzy
+msgid "Levels for the consumer count"
+msgstr "Obergrenzen für die Consumer-Zählung"
+
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Levels für den Stromverbrauch eines Gerätes "
 
@@ -37975,9 +37974,6 @@ msgstr "Untergrenzen für die Auslastung von Anfragen"
 msgid "Lower levels for reservation utilization"
 msgstr "Untergrenzen für die Reservierungsauslastung"
 
-msgid "Lower levels for the consumer count"
-msgstr "Untergrenzen für die Anzahl der Consumer"
-
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
 
@@ -39321,10 +39317,10 @@ msgid ""
 "1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
 "Maximale Gesamtmenge an Speicher, die vom Prozess-Heap zugewiesen werden "
-"soll. Diese Option wird verwendet, um die Speichergrenze aus dem insgesamt "
-"verfügbaren Speicher zu berechnen. Wenn Sie beispielsweise bei einem "
-"Gesamtspeicher von 1 GiB einen Wert von 75 % einstellen, ergibt sich eine "
-"Grenze von 750 MiB."
+"soll. Diese Option wird verwendet, um die feste Speichergrenze aus dem "
+"insgesamt verfügbaren Speicher zu berechnen. Wenn Sie beispielsweise die "
+"Grenze auf 75 % auf einem Rechner mit insgesamt 1000 MiB verfügbarem "
+"Speicher festlegen, ergibt sich eine feste Grenze von 750 MiB."
 
 msgid "Maximum bulk size"
 msgstr "Maximale Bulk-Größe"
@@ -39415,7 +39411,6 @@ msgstr "Maximales Logalter"
 msgid "Maximum long output size"
 msgstr "Maximale Größe der langen Ausgabe"
 
-#, fuzzy
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -39424,12 +39419,14 @@ msgid ""
 "memory available will result in a 600 MiB hard limit and a 350 MiB soft "
 "limit (the spike limit being equal to 250MiB)"
 msgstr ""
-"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
-"erwartet wird. Der Wert muss unter dem Limit liegen. Diese Option wird "
-"verwendet, um den Spitzenwertgrenzwert aus dem insgesamt verfügbaren "
-"Speicher zu berechnen. Bei einer Einstellung von 25 % bei einem "
-"Gesamtspeicher von 1 GiB ergibt sich beispielsweise ein Spitzenwertgrenzwert "
-"von 250 MiB."
+"Maximal zulässiger Speicheranstieg zwischen den Messungen der "
+"Speichernutzung. Der Wert muss unter dem Grenzwert liegen. Diese Option wird "
+"verwendet, um den maximalen Anstiegswert aus dem insgesamt verfügbaren "
+"Speicher zu berechnen. Wenn Sie beispielsweise den Grenzwert auf 60 % und "
+"den Spitzenwertgrenzwert auf 25 % auf einem Rechner mit insgesamt 1000 MiB "
+"verfügbarem Speicher festlegen, ergibt sich ein harter Grenzwert von 600 MiB "
+"und ein weicher Grenzwert von 350 MiB (der Spitzenwertgrenzwert entspricht "
+"250 MiB)."
 
 #, fuzzy, python-format
 msgid ""
@@ -39438,10 +39435,11 @@ msgid ""
 "maximum spike value. The soft limit value will be equal to (limit - spike "
 "limit). The recommended value for spike limit is about 20% limit."
 msgstr ""
-"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
-"erwartet wird. Der Wert muss unter dem Limit liegen. Der Soft-Grenzwert "
-"entspricht (Grenzwert – Spitzenwertgrenze). Der empfohlene Wert für die "
-"Spitzenwertgrenze liegt bei etwa 20 % des Grenzwerts."
+"Maximal zulässiger Speicherauslastungsanstieg zwischen den Messungen der "
+"Speichernutzung. Der Wert muss unter dem Grenzwert liegen. Diese Option wird "
+"zur Berechnung des maximalen Anstiegswerts verwendet. Der Soft-Grenzwert "
+"entspricht (Grenzwert – Anstiegsgrenzwert). Der empfohlene Wert für den "
+"Anstiegsgrenzwert liegt bei etwa 20 % des Grenzwerts."
 
 msgid "Maximum messages per save interval"
 msgstr "Maximale Meldungen pro Speicher-Intervall"
@@ -40149,13 +40147,11 @@ msgstr "Metriken der Services"
 msgid "Metrics path"
 msgstr "Pfad der Metriken"
 
-#, fuzzy
 msgid "Metrics path must be a string."
-msgstr "Wert muss ein String sein"
+msgstr "Der Metrikpfad muss ein String sein."
 
-#, fuzzy
 msgid "Metrics path must start with a '/'."
-msgstr "Der Pfad darf nicht mit '/' beginnen"
+msgstr "Der Metrikpfad muss mit '/' beginnen."
 
 msgid "Metrics system"
 msgstr "Metrik-System"
@@ -45288,15 +45284,12 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry Collector (Experimental)"
-msgstr "OpenTelemetry Collector aktivieren (experimentell)"
+msgstr "OpenTelemetry Collector (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry Collector (experimental)"
-msgstr "OpenTelemetry Collector aktivieren (experimentell)"
+msgstr "OpenTelemetry Collector (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry Collector memory limit"
 msgstr "OpenTelemetry Collector Speicherlimit"
 
@@ -50036,13 +50029,11 @@ msgstr "Benutzerdefinierter Prometheus-Service"
 msgid "Prometheus custom services"
 msgstr "Benutzerdefinierte Prometheus-Services"
 
-#, fuzzy
 msgid "Prometheus scraping (Experimental)"
-msgstr "OpenTelemetry Collector: Prometheus-Scraping (experimentell)"
+msgstr "Prometheus-Scraping (experimentell)"
 
-#, fuzzy
 msgid "Prometheus scraping (experimental)"
-msgstr "OpenTelemetry Collector: Prometheus-Scraping (experimentell)"
+msgstr "Prometheus-Scraping (experimentell)"
 
 msgid "Prometheus targets"
 msgstr "Prometheus Ziele"
@@ -50096,6 +50087,10 @@ msgid ""
 "If the response fails the condition (E.g., expected string not found in "
 "body), this will result in a CRITICAL state."
 msgstr ""
+"Geben Sie feste Zeichenfolgen oder reguläre Ausdrücke als Bedingungen für "
+"die HTTP-Antwort an. Wenn die Antwort die Bedingung nicht erfüllt (z. B. "
+"wenn die erwartete Zeichenfolge im Textkörper nicht gefunden wird), führt "
+"dies zu einem Zustand CRITICAL."
 
 msgid "Provide levels"
 msgstr "Grenzwerte bereitstellen"
@@ -54367,9 +54362,8 @@ msgstr ""
 msgid "Score"
 msgstr "Punktzahl"
 
-#, fuzzy
 msgid "Scrape configurations"
-msgstr "Aktiviere Konfiguration"
+msgstr "Scrape-Konfigurationen"
 
 msgid "Scrape interval"
 msgstr "Scrape-Intervall"
@@ -54881,6 +54875,7 @@ msgstr "Wählen Sie aus einer Liste von Metriken, die Checkmk bekannt sind"
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Service-Namen, die Checkmk bekannt sind"
 
+#, fuzzy
 msgid ""
 "Select how multiple data points from replicas of the same service should be "
 "aggregated. By default, the latest value independent of replica is taken. "
@@ -54888,7 +54883,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 "Legen Sie fest, wie mehrere Datenpunkte von Replikaten desselben Services "
 "aggregiert werden sollen. Standardmäßig wird der letzte Wert unabhängig von "
@@ -62369,12 +62364,12 @@ msgstr ""
 "#HTTPCredentials' oder über die REST-API erstellt werden. HINWEIS: Sie "
 "sollten hier NICHT Ihre Anmeldedaten für das Konto eingeben!"
 
-#, fuzzy
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
 "with a '/'."
 msgstr ""
-"Der Pfad zur HTTP-Ressource, über den Metriken von Zielen abgerufen werden."
+"Der Pfad zur HTTP-Ressource, über den Metriken von Zielen abgerufen werden "
+"sollen. Muss mit einem '/' beginnen."
 
 #, python-format
 msgid "The ID %s is already used by another connection."
@@ -64406,7 +64401,7 @@ msgstr ""
 msgid "The host name is missing."
 msgstr "Der Host-Name fehlt."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The host name lookup computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
@@ -64427,26 +64422,26 @@ msgid ""
 "will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
 "</li></ol>"
 msgstr ""
-"Die Berechnung des Host-Namens ermittelt den Namen des Hosts, der die "
-"entsprechenden Checkmk Services haben sollte. Die Berechnung erfolgt durch "
+"Die Hostnamen-Suche berechnet den Namen des Hosts, der über die "
+"entsprechenden Checkmk-Service verfügen sollte. Die Berechnung erfolgt durch "
 "den OpenTelemetry Collector und das Ergebnis wird im Attribut \"%s\" "
 "gespeichert. Für jede hier konfigurierte Regel werden die angegebenen Felder "
-"in der Reihenfolge, in der sie aufgelistet sind, aneinandergereiht. Die "
-"erste Regel, die einen nicht leeren Wert ergibt, wird verwendet. Zum "
-"Beispiel:\n"
+"in der Reihenfolge ihrer Auflistung verkettet. Die erste Regel, die zu einem "
+"nicht leeren Wert führt, wird verwendet. Beispiel:\n"
+"\n"
 "<ol><li>Eine erste Regel, die aus einem Feld \"Wert des Attributs: "
-"service.name\" besteht, setzt \"%s\" auf den Wert dieses Attributs, wenn es "
-"vorhanden ist. Dieses Attribut wird beispielsweise auf den Namen des "
+"service.name\" besteht, setzt \"%s\" auf den Wert dieses Attributs, sofern "
+"es vorhanden ist. Dieses Attribut wird beispielsweise auf den Namen des "
 "Prometheus-Scrape-Jobs gesetzt. </li><li>Eine zweite Regel, bestehend aus "
-"einem Feld \"Wert des Attributs: container.name\", setzt „%s” auf den Wert "
+"einem Feld \"Wert des Attributs: container.name\", setzt \"%s\" auf den Wert "
 "dieses Attributs, sofern es vorhanden ist und \"%s\" nicht durch die "
 "vorherige Regel gesetzt wurde. </li><li>Eine dritte Regel, bestehend aus "
-"zwei Feldern \"Ressourcen-Attribut-Wert: custom_attr\" und \"Literalstring: "
-"some_suffix\", setzt \"%s\" auf \"VALUEsome_suffix\", wenn das Attribut "
-"vorhanden ist und \"%s\" nicht durch die vorherigen Regeln gesetzt wurde. </"
-"li><li>Eine letzte Regel, bestehend aus einem Feld \"Literal string: "
-"fallback_host\", setzt alle \"%s\"-Attribute, die noch nicht ausgefüllt "
-"sind, auf \"fallback_host\".</li></ol>"
+"zwei Feldern \"Wert des Ressourcenattributs: custom_attr\" und \"Literal "
+"string: some_suffix\", setzt \"%s\" auf \"VALUEsome_suffix\", wenn das "
+"Attribut vorhanden ist und \"%s\" nicht durch die vorherigen Regeln gesetzt "
+"wurde. </li><li>Eine letzte Regel, bestehend aus einem Feld \"Literal "
+"string: fallback_host\", setzt alle \"%s\"-Attribute, die noch nicht "
+"ausgefüllt sind, auf \"fallback_host\".</li></ol>"
 
 msgid "The host name may not contain spaces."
 msgstr "Der Host-Name darf keine Leerzeichen enthalten."
@@ -72948,6 +72943,8 @@ msgid ""
 "To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
 "proxy settings there."
 msgstr ""
+"Um einen Proxy zu konfigurieren, gehen Sie zu <a href='{}'>Globale "
+"Einstellungen</a> und legen Sie dort Ihre Proxy-Einstellungen fest."
 
 msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
@@ -76659,10 +76656,6 @@ msgstr "Hochgeladenes Erweiterungspaket %s-%s (%s)"
 
 msgid "Upper"
 msgstr "Obere"
-
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Levels für die Consumer-Zählung"
 
 msgid "Upper Temperature Levels"
 msgstr "Obergrenzen für Temperatur"
@@ -86944,6 +86937,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Lower levels for the consumer count"
+#~ msgstr "Untergrenzen für die Anzahl der Consumer"
 
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus scrape Konfiguration"

@@ -11976,7 +11976,8 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
-msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+#, fuzzy
+msgid "Checkmk metrics are created from OpenTelemetry datapoints."
 msgstr ""
 "CheckmkメトリクスはOtel(Open Telemetry)データポイントから作成されます。ここで"
 "設定してください。"
@@ -35196,6 +35197,10 @@ msgstr "表領域サイズのレベル"
 msgid "Levels for the Tablespace usage"
 msgstr "表領域の使用レベル"
 
+#, fuzzy
+msgid "Levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
+
 msgid "Levels for the electrical power consumption of a device "
 msgstr "デバイスの電力消費量のレベル "
 
@@ -36959,10 +36964,6 @@ msgstr "リクエスト使用率の下位レベル"
 
 msgid "Lower levels for reservation utilization"
 msgstr "予約使用率の下位レベル"
-
-#, fuzzy
-msgid "Lower levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
@@ -53542,6 +53543,7 @@ msgstr "Checkmkが把握しているメトリクスのリストから選択す�
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Checkmkで認識されているサービス名の一覧から選択してください"
 
+#, fuzzy
 msgid ""
 "Select how multiple data points from replicas of the same service should be "
 "aggregated. By default, the latest value independent of replica is taken. "
@@ -53549,7 +53551,7 @@ msgid ""
 "sum, average) to apply over all the latest samples of differing replicas for "
 "the same host (e.g. same service.name, different service.instance.id)."
 "<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check"
+"replica since the last check."
 msgstr ""
 "同じサービスのレプリカからの複数のデータポイントをどのように集計するかを選択"
 "します。デフォルトでは、レプリカに依存しない最新の値が使用されます。この設定"
@@ -74411,10 +74413,6 @@ msgstr "アップロードされた拡張パッケージ %s-%s (%s)"
 msgid "Upper"
 msgstr "アッパー"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
-
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
 
@@ -84309,6 +84307,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#, fuzzy
+#~ msgid "Lower levels for the consumer count"
+#~ msgstr "コンシューマーカウントのレベル"
 
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus スクレイプ構成"

@@ -1319,7 +1319,12 @@ def host_service_graph_dashlet_cmk(
     else:
         start_time, end_time = Timerange.compute_range(time_range).range
 
-    graph_data_range = make_graph_data_range((start_time, end_time), graph_render_config.size[1])
+    try:
+        graph_data_range = make_graph_data_range(
+            (start_time, end_time), graph_render_config.size[1]
+        )
+    except ZeroDivisionError:
+        return HTML("", escape=False)
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.

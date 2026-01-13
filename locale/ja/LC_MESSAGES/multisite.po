@@ -25276,6 +25276,10 @@ msgstr "値のレンダリングに失敗しました: %r"
 msgid "Failed to search rule of rule set '%s' in folder '%s' (%r): %s"
 msgstr "ルールセット '%s' ルの検索に失敗しましたフォルダ内 '%s' (%r): %s"
 
+#, fuzzy, python-format
+msgid "Failed to search rule of rule set '%s': %s"
+msgstr "ルールセット '%s' ルの検索に失敗しましたフォルダ内 '%s' (%r): %s"
+
 #, python-format
 msgid "Failed to send %s messages to the following users:"
 msgstr "次のユーザーに%sメッセージを送信できませんでした:"
@@ -27795,9 +27799,7 @@ msgstr ""
 "Oracleバイナリへの書き込みアクセスを許可するグループおよび/またはユーザー"
 
 #, fuzzy
-msgid ""
-"Groups and/or users in format domain\n"
-"ame"
+msgid "Groups and/or users in format domain\\name"
 msgstr "Domain\\Name 形式のグループおよび/またはユーザー"
 
 msgid "Groups on cluster"
@@ -89335,6 +89337,10 @@ msgstr "の"
 msgid "No filter category available"
 msgstr "利用可能な情報はありません"
 
+#, fuzzy
+msgid "Widget"
+msgstr "ターゲットを追加"
+
 msgid "Anchor"
 msgstr ""
 
@@ -89344,6 +89350,18 @@ msgstr " 待ち "
 
 msgid "Toggle sizing for height"
 msgstr ""
+
+#, fuzzy
+msgid "Delete widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Clone widget"
+msgstr "クローン ビュー"
+
+#, fuzzy
+msgid "Edit widget"
+msgstr "ターゲットを追加"
 
 msgid "Loading datasources..."
 msgstr "データソースを読み込み中..."
@@ -93250,10 +93268,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Monitor Oracle Databases"
 #~ msgstr "データベースの監視"
-
-#, fuzzy
-#~ msgid "Add Widget"
-#~ msgstr "ターゲットを追加"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"

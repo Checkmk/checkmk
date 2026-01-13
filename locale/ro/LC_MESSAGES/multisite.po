@@ -26763,6 +26763,12 @@ msgstr ""
 "Nu s-a reușit căutarea regulii din setul de reguli \"%s\" în dosarul \"%s\" "
 "(%r): %s"
 
+#, fuzzy, python-format
+msgid "Failed to search rule of rule set '%s': %s"
+msgstr ""
+"Nu s-a reușit căutarea regulii din setul de reguli \"%s\" în dosarul \"%s\" "
+"(%r): %s"
+
 #, python-format
 msgid "Failed to send %s messages to the following users:"
 msgstr "Nu s-a reușit trimiterea mesajelor %s către următorii utilizatori:"
@@ -29383,9 +29389,7 @@ msgstr "Grupuri"
 msgid "Groups and/or users allowed to have write access to Oracle binaries"
 msgstr ""
 
-msgid ""
-"Groups and/or users in format domain\n"
-"ame"
+msgid "Groups and/or users in format domain\\name"
 msgstr ""
 
 msgid "Groups on cluster"
@@ -95172,6 +95176,10 @@ msgstr "off"
 msgid "No filter category available"
 msgstr "Nu există informații disponibile"
 
+#, fuzzy
+msgid "Widget"
+msgstr "Adăugați o țintă"
+
 msgid "Anchor"
 msgstr ""
 
@@ -95181,6 +95189,18 @@ msgstr "Un titlu pentru view"
 
 msgid "Toggle sizing for height"
 msgstr ""
+
+#, fuzzy
+msgid "Delete widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Clone widget"
+msgstr "Vizualizare clonă"
+
+#, fuzzy
+msgid "Edit widget"
+msgstr "Adăugați o țintă"
 
 #, fuzzy
 msgid "Loading datasources..."
@@ -99111,10 +99131,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Monitor Oracle Databases"
 #~ msgstr "Baza de date a evenimentelor"
-
-#, fuzzy
-#~ msgid "Add Widget"
-#~ msgstr "Adăugați o țintă"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"

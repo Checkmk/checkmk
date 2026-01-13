@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-12-16 21:04+0000\n"
+"PO-Revision-Date: 2026-01-13 06:52+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -14914,9 +14914,8 @@ msgstr "Einstellungen"
 msgid "Configuration Error"
 msgstr "Konfigurationsfehler"
 
-#, fuzzy
 msgid "Configuration activation"
-msgstr "Konfigurationsverbindung"
+msgstr "Aktivierung der Konfiguration"
 
 msgid "Configuration bundle ID"
 msgstr "Konfigurationsbündel-ID"
@@ -21359,9 +21358,8 @@ msgstr "Keine Spalten-Header hinzufügen"
 msgid "Do not add text"
 msgstr "Keinen Text hinzufügen"
 
-#, fuzzy
 msgid "Do not apply this configuration"
-msgstr "Diese Konfiguration löschen"
+msgstr "Diese Konfiguration nicht anwenden"
 
 msgid "Do not apply this rule"
 msgstr "Diese Regel nicht anwenden"
@@ -25736,6 +25734,12 @@ msgstr ""
 "Fehler beim Durchsuchen der Regel des Regelsatzes '%s' im Ordner '%s' (%r): "
 "%s"
 
+#, fuzzy, python-format
+msgid "Failed to search rule of rule set '%s': %s"
+msgstr ""
+"Fehler beim Durchsuchen der Regel des Regelsatzes '%s' im Ordner '%s' (%r): "
+"%s"
+
 #, python-format
 msgid "Failed to send %s messages to the following users:"
 msgstr "Senden von %s Meldungen an folgende Benutzer fehlgeschlagen:"
@@ -27609,7 +27613,7 @@ msgid "GPU utilization"
 msgstr "GPU-Auslastung"
 
 msgid "GRPC-based receiver"
-msgstr ""
+msgstr "GRPC-basierter Empfänger"
 
 msgid "GUI design"
 msgstr "GUI-Design"
@@ -28294,9 +28298,7 @@ msgstr ""
 "dürfen"
 
 #, fuzzy
-msgid ""
-"Groups and/or users in format domain\n"
-"ame"
+msgid "Groups and/or users in format domain\\name"
 msgstr "Gruppen und/oder Benutzer im Format Domain\\Name"
 
 msgid "Groups on cluster"
@@ -28529,7 +28531,7 @@ msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, E-Mail, ..."
 
 msgid "HTTP-based receiver"
-msgstr ""
+msgstr "HTTP-basierter Empfänger"
 
 msgid "HTTP: Active Requests"
 msgstr "HTTP: aktive Anfragen"
@@ -32003,9 +32005,8 @@ msgstr "IP-Adresse der Hosts"
 msgid "IP address"
 msgstr "IP-Adresse"
 
-#, fuzzy
 msgid "IP address (IPv4 or IPv6)"
-msgstr "Host-Adressen (IPv4/IPv6)"
+msgstr "IP-Adresse (IPv4 oder IPv6)"
 
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
@@ -41413,10 +41414,10 @@ msgid ""
 "1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
 "Maximale Gesamtmenge an Speicher, die vom Prozess-Heap zugewiesen werden "
-"soll. Diese Option wird verwendet, um die Speichergrenze aus dem insgesamt "
-"verfügbaren Speicher zu berechnen. Wenn Sie beispielsweise bei einem "
-"Gesamtspeicher von 1 GiB einen Wert von 75 % einstellen, ergibt sich eine "
-"Grenze von 750 MiB."
+"soll. Diese Option wird verwendet, um die feste Speichergrenze aus dem "
+"insgesamt verfügbaren Speicher zu berechnen. Wenn Sie beispielsweise die "
+"Grenze auf 75 % auf einem Rechner mit insgesamt 1000 MiB verfügbarem "
+"Speicher festlegen, ergibt sich eine feste Grenze von 750 MiB."
 
 msgid "Maximum bulk size"
 msgstr "Maximale Bulk-Größe"
@@ -41516,7 +41517,6 @@ msgstr "Maximales Logalter"
 msgid "Maximum long output size"
 msgstr "Maximale Größe der langen Ausgabe"
 
-#, fuzzy
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -41525,12 +41525,14 @@ msgid ""
 "memory available will result in a 600 MiB hard limit and a 350 MiB soft "
 "limit (the spike limit being equal to 250MiB)"
 msgstr ""
-"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
-"erwartet wird. Der Wert muss unter dem Limit liegen. Diese Option wird "
-"verwendet, um den Spitzenwertgrenzwert aus dem insgesamt verfügbaren "
-"Speicher zu berechnen. Bei einer Einstellung von 25 % bei einem "
-"Gesamtspeicher von 1 GiB ergibt sich beispielsweise ein Spitzenwertgrenzwert "
-"von 250 MiB."
+"Maximal zulässiger Speicheranstieg zwischen den Messungen der "
+"Speichernutzung. Der Wert muss unter dem Grenzwert liegen. Diese Option wird "
+"verwendet, um den maximalen Anstiegswert aus dem insgesamt verfügbaren "
+"Speicher zu berechnen. Wenn Sie beispielsweise den Grenzwert auf 60 % und "
+"den Spitzenwertgrenzwert auf 25 % auf einem Rechner mit insgesamt 1000 MiB "
+"verfügbarem Speicher festlegen, ergibt sich ein harter Grenzwert von 600 MiB "
+"und ein weicher Grenzwert von 350 MiB (der Spitzenwertgrenzwert entspricht "
+"250 MiB)."
 
 #, fuzzy, python-format
 msgid ""
@@ -41539,10 +41541,11 @@ msgid ""
 "maximum spike value. The soft limit value will be equal to (limit - spike "
 "limit). The recommended value for spike limit is about 20% limit."
 msgstr ""
-"Maximaler Spitzenwert, der zwischen den Messungen der Speicherauslastung "
-"erwartet wird. Der Wert muss unter dem Limit liegen. Der Soft-Grenzwert "
-"entspricht (Grenzwert – Spitzenwertgrenze). Der empfohlene Wert für die "
-"Spitzenwertgrenze liegt bei etwa 20 % des Grenzwerts."
+"Maximal zulässiger Speicherauslastungsanstieg zwischen den Messungen der "
+"Speichernutzung. Der Wert muss unter dem Grenzwert liegen. Diese Option wird "
+"zur Berechnung des maximalen Anstiegswerts verwendet. Der Soft-Grenzwert "
+"entspricht (Grenzwert – Anstiegsgrenzwert). Der empfohlene Wert für den "
+"Anstiegsgrenzwert liegt bei etwa 20 % des Grenzwerts."
 
 msgid "Maximum messages per save interval"
 msgstr "Maximale Meldungen pro Speicher-Intervall"
@@ -42322,13 +42325,11 @@ msgstr "Metriken der Services"
 msgid "Metrics path"
 msgstr "Pfad der Metriken"
 
-#, fuzzy
 msgid "Metrics path must be a string."
-msgstr "Wert muss ein String sein"
+msgstr "Der Metrikpfad muss ein String sein."
 
-#, fuzzy
 msgid "Metrics path must start with a '/'."
-msgstr "Der Pfad darf nicht mit '/' beginnen"
+msgstr "Der Metrikpfad muss mit '/' beginnen."
 
 #, fuzzy
 msgid "Metrics related to sizing, e.g. number of helpers, hosts, services"
@@ -48013,7 +48014,6 @@ msgstr "OpenTelemetry (experimentell)"
 msgid "OpenTelemetry Collector"
 msgstr "Daten des OpenTelemetry Collectors"
 
-#, fuzzy
 msgid "OpenTelemetry Collector (Experimental)"
 msgstr "OpenTelemetry Collector (experimentell)"
 
@@ -48025,7 +48025,6 @@ msgstr "Prometheus-Scraping-Konfigurationen des OpenTelemetry Collectors"
 msgid "OpenTelemetry Collector configuration"
 msgstr "Konfiguration des OpenTelemetry Collectors"
 
-#, fuzzy
 msgid "OpenTelemetry Collector memory limit"
 msgstr "OpenTelemetry Collector Speicherlimit"
 
@@ -52828,9 +52827,8 @@ msgstr "Benutzerdefinierte Prometheus-Services"
 msgid "Prometheus scraping"
 msgstr "Prometheus Alertmanager"
 
-#, fuzzy
 msgid "Prometheus scraping (Experimental)"
-msgstr "OpenTelemetry Collector: Prometheus-Scraping (experimentell)"
+msgstr "Prometheus-Scraping (experimentell)"
 
 msgid "Prometheus targets"
 msgstr "Prometheus Ziele"
@@ -52881,10 +52879,10 @@ msgid ""
 "If the response fails the condition (E.g., expected string not found in "
 "body), this will result in a CRITICAL state."
 msgstr ""
-"Geben Sie feste Zeichenfolgen oder Bedingungen für reguläre Ausdrücke für "
+"Geben Sie feste Zeichenfolgen oder reguläre Ausdrücke als Bedingungen für "
 "die HTTP-Antwort an. Wenn die Antwort die Bedingung nicht erfüllt (z. B. "
 "wenn die erwartete Zeichenfolge im Textkörper nicht gefunden wird), führt "
-"dies zu einem CRITICAL Status."
+"dies zu einem Zustand CRITICAL."
 
 msgid "Provide levels"
 msgstr "Grenzwerte bereitstellen"
@@ -57448,9 +57446,8 @@ msgstr ""
 msgid "Score"
 msgstr "Punktzahl"
 
-#, fuzzy
 msgid "Scrape configurations"
-msgstr "Aktiviere Konfiguration"
+msgstr "Scrape-Konfigurationen"
 
 msgid "Scrape interval"
 msgstr "Scrape-Intervall"
@@ -65715,12 +65712,12 @@ msgstr ""
 "Der HTTP-Port kann für den Zugriff auf die ClickHouse WEb-UI genutzt werden. "
 "Für Standard-Operationen wird er nicht benötigt."
 
-#, fuzzy
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
 "with a '/'."
 msgstr ""
-"Der Pfad zur HTTP-Ressource, über den Metriken von Zielen abgerufen werden."
+"Der Pfad zur HTTP-Ressource, über den Metriken von Zielen abgerufen werden "
+"sollen. Muss mit einem '/' beginnen."
 
 #, python-format
 msgid "The ID %s is already used by another connection."
@@ -80619,9 +80616,8 @@ msgstr "Hochgeladene Dateien"
 msgid "Upper"
 msgstr "Obere"
 
-#, fuzzy
 msgid "Upper Levels for the consumer count"
-msgstr "Levels für die Consumer-Zählung"
+msgstr "Obergrenzen für die Consumer-Zählung"
 
 msgid "Upper Temperature Levels"
 msgstr "Obergrenzen für Temperatur"
@@ -91510,6 +91506,10 @@ msgstr "von"
 msgid "No filter category available"
 msgstr "Keine Filterkategorie verfügbar"
 
+#, fuzzy
+msgid "Widget"
+msgstr "Widget hinzufügen"
+
 msgid "Anchor"
 msgstr "Anker"
 
@@ -91518,6 +91518,18 @@ msgstr "Größe für Breite umschalten"
 
 msgid "Toggle sizing for height"
 msgstr "Größe für Höhe umschalten"
+
+#, fuzzy
+msgid "Delete widget"
+msgstr "Widget definieren"
+
+#, fuzzy
+msgid "Clone widget"
+msgstr "Tabellenansicht klonen"
+
+#, fuzzy
+msgid "Edit widget"
+msgstr "Widgets bearbeiten"
 
 msgid "Loading datasources..."
 msgstr "Datenquellen werden geladen..."
@@ -95379,9 +95391,6 @@ msgstr ""
 
 #~ msgid "Monitor Oracle Databases"
 #~ msgstr "Oracle-Datenbanken überwachen"
-
-#~ msgid "Add Widget"
-#~ msgstr "Widget hinzufügen"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"

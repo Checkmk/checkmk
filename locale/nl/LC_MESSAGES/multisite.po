@@ -26657,6 +26657,10 @@ msgstr "Mislukt om waarde te renderen: %r"
 msgid "Failed to search rule of rule set '%s' in folder '%s' (%r): %s"
 msgstr "Regel van regelset '%s' in map '%s' (%r) zoeken mislukt: %s"
 
+#, fuzzy, python-format
+msgid "Failed to search rule of rule set '%s': %s"
+msgstr "Regel van regelset '%s' in map '%s' (%r) zoeken mislukt: %s"
+
 #, python-format
 msgid "Failed to send %s messages to the following users:"
 msgstr "Mislukt in het verzenden van %s berichten naar de volgende gebruikers:"
@@ -29282,9 +29286,7 @@ msgstr "Groepen"
 msgid "Groups and/or users allowed to have write access to Oracle binaries"
 msgstr ""
 
-msgid ""
-"Groups and/or users in format domain\n"
-"ame"
+msgid "Groups and/or users in format domain\\name"
 msgstr ""
 
 msgid "Groups on cluster"
@@ -94884,6 +94886,10 @@ msgstr "van"
 msgid "No filter category available"
 msgstr "Geen informatie beschikbaar"
 
+#, fuzzy
+msgid "Widget"
+msgstr "Doel toevoegen"
+
 msgid "Anchor"
 msgstr ""
 
@@ -94893,6 +94899,18 @@ msgstr "Een rubriek voor het uitzicht"
 
 msgid "Toggle sizing for height"
 msgstr ""
+
+#, fuzzy
+msgid "Delete widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Clone widget"
+msgstr "Kloon uitzicht"
+
+#, fuzzy
+msgid "Edit widget"
+msgstr "Doel toevoegen"
 
 #, fuzzy
 msgid "Loading datasources..."
@@ -98779,10 +98797,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Monitor Oracle Databases"
 #~ msgstr "Gebeurtenisendatabase"
-
-#, fuzzy
-#~ msgid "Add Widget"
-#~ msgstr "Doel toevoegen"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"

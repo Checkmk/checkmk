@@ -26864,6 +26864,12 @@ msgstr ""
 "Échec de la recherche d'une règle du jeu de règles '%s' dans le dossier '%s' "
 "(%r) : %s"
 
+#, fuzzy, python-format
+msgid "Failed to search rule of rule set '%s': %s"
+msgstr ""
+"Échec de la recherche d'une règle du jeu de règles '%s' dans le dossier '%s' "
+"(%r) : %s"
+
 #, python-format
 msgid "Failed to send %s messages to the following users:"
 msgstr "Impossible d'envoyer des messages %s aux utilisateurs suivants :"
@@ -29503,9 +29509,7 @@ msgstr "Groupes"
 msgid "Groups and/or users allowed to have write access to Oracle binaries"
 msgstr ""
 
-msgid ""
-"Groups and/or users in format domain\n"
-"ame"
+msgid "Groups and/or users in format domain\\name"
 msgstr ""
 
 msgid "Groups on cluster"
@@ -95723,6 +95727,10 @@ msgstr "off"
 msgid "No filter category available"
 msgstr "Aucune information disponible"
 
+#, fuzzy
+msgid "Widget"
+msgstr "Ajouter une cible"
+
 msgid "Anchor"
 msgstr ""
 
@@ -95732,6 +95740,18 @@ msgstr " dans l'attente de "
 
 msgid "Toggle sizing for height"
 msgstr ""
+
+#, fuzzy
+msgid "Delete widget"
+msgstr "Ajouter une cible"
+
+#, fuzzy
+msgid "Clone widget"
+msgstr "Vue clonée"
+
+#, fuzzy
+msgid "Edit widget"
+msgstr "Ajouter une cible"
 
 #, fuzzy
 msgid "Loading datasources..."
@@ -99634,10 +99654,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Monitor Oracle Databases"
 #~ msgstr "Base de données des événements"
-
-#, fuzzy
-#~ msgid "Add Widget"
-#~ msgstr "Ajouter une cible"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"

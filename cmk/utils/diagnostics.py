@@ -786,4 +786,10 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="",
         encryption=CheckmkFileEncryption.none,
     ),
+    "product_usage_analytics.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="This log file contains all activity and errors of the product usage analytics module.",
+        encryption=CheckmkFileEncryption.none,
+    ),
 }

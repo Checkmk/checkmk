@@ -20,11 +20,10 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
 
-import cmk.gui.watolib.activate_changes as activate_changes
-import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.mkeventd
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
+from cmk.gui.watolib import activate_changes, config_sync
 
 from cmk.bi.type_defs import frozen_aggregations_dir
 
@@ -283,6 +282,7 @@ def _get_expected_paths(
         "etc/check_mk/mkeventd.d/wato",
         "etc/check_mk/multisite.d/wato",
         "etc/check_mk/multisite.d/wato/global.mk",
+        "etc/check_mk/product_usage_analytics.mk",
         "var/check_mk",
         "var/check_mk/web",
         "etc/htpasswd",

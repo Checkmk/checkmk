@@ -8,8 +8,14 @@ Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
 
+from pathlib import Path
+
+from cmk.utils import paths
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._graph_images import graph_spec_from_request
+from cmk.gui.http import request
+from cmk.gui.log import logger
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (
     graph_id_from_request,
@@ -19,6 +25,8 @@ from cmk.gui.openapi.endpoints.metric.common import (
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
+
+import cmk.product_usage.collectors.grafana as grafana_collector
 
 
 # This is the only endpoint that is available in the raw edition
@@ -36,6 +44,10 @@ def get_graph(params):
 
     This endpoint retrieves a predefined graph (consisting of multiple metrics) or a single metric.
     """
+    grafana_collector.store_usage_data(
+        headers=request.headers, var_dir=Path(paths.var_dir), logger=logger
+    )
+
     body = params["body"]
 
     try:

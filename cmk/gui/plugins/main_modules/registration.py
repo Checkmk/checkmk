@@ -34,6 +34,7 @@ from cmk.gui import (
     notifications,
     painter_options,
     prediction,
+    product_usage_analytics,
     rulespec,
     sidebar,
     sites,
@@ -270,6 +271,11 @@ def register() -> None:
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
+    product_usage_analytics.register(
+        config_domain_registry,
+        config_variable_registry,
+        config_variable_group_registry,
+    )
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)

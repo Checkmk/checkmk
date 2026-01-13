@@ -31,6 +31,7 @@ def test_registered_config_domains() -> None:
         "multisite",
         "omd",
         "rrdcached",
+        "product_usage_analytics",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
@@ -142,6 +143,7 @@ def test_registered_configvars() -> None:
         "pagetitle_date_format",
         "password_policy",
         "piggyback_max_cachefile_age",
+        "product_usage_analytics",
         "profile",
         "quicksearch_dropdown_limit",
         "quicksearch_search_order",
@@ -303,6 +305,7 @@ def test_registered_configvar_groups() -> None:
         "User interface",
         "User management",
         "Support",
+        "Product usage analytics",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:

@@ -244,6 +244,9 @@ def _allow_for_gui(
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
+            _in_component(
+                imported=imported, component=Component("cmk.product_usage.collectors.grafana")
+            ),
         )
     )
 
@@ -275,6 +278,9 @@ def _allow_for_gui_cee(
             _in_component(
                 imported=imported,
                 component=Component("cmk.cee.robotmk.free_tier_banner"),
+            ),
+            _in_component(
+                imported=imported, component=Component("cmk.product_usage.collectors.grafana")
             ),
         )
     )
@@ -583,6 +589,27 @@ def _allow_for_cmk_fetchers(
     )
 
 
+def _allow_for_product_usage(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.base.app.make_app")),
+            _in_component(imported=imported, component=Component("cmk.base.config.load")),
+            _in_component(imported=imported, component=Component("cmk.livestatus_client")),
+            _in_component(imported=imported, component=Component("cmk.utils.http_proxy_config")),
+            _in_component(imported=imported, component=Component("cmk.utils.livestatus_helpers")),
+            _in_component(imported=imported, component=Component("cmk.utils.paths")),
+            _in_component(imported=imported, component=Component("cmk.utils.version")),
+            _in_component(imported=imported, component=Component("cmk.utils")),
+            _in_component(imported=imported, component=Component("cmk.base")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -671,6 +698,7 @@ _COMPONENTS = (
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
     (Component("cmk.active_checks"), _is_default_allowed_import),
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
+    (Component("cmk.product_usage"), _allow_for_product_usage),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -678,6 +706,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-product-usage"): Component("cmk.product_usage"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
     ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),

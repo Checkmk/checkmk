@@ -18,9 +18,9 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.utils
 from cmk.gui.http import Request
+from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 
@@ -42,6 +42,9 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),
+        ReplicationPath(
+            "file", "product_usage_analytics", "etc/check_mk/product_usage_analytics.mk", []
+        ),
         ReplicationPath(
             "dir",
             "usersettings",

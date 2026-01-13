@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: Customize service namespace
-# Menu: Addons
+# Menu: Add-ons
 # Description:
 #  If sending traces is configured, they are sent with the "site_id" as the service namespace by
 #  default, which can be changed to the string provided with this option.

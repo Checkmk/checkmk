@@ -40,7 +40,7 @@ CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 # Links for everyone
 custom_links_guest: list[CustomLinkSpec] = [
     (
-        "Addons",
+        "Add-ons",
         True,
         [
             ("NagVis", "../nagvis/", "icon_nagvis.png", "main"),

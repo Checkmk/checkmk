@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: Process performance data with PNP4Nagios
-# Menu: Addons
+# Menu: Add-ons
 # Description:
 #  PNP4Nagios is a great addon for storing Nagios performance data
 #  into round robin databases. This switch enabled the processing

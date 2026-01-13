@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: Start Daemon for Checkmk Event Console
-# Menu: Addons
+# Menu: Add-ons
 # Description:
 #  This option enables mkeventd - the event correlation and
 #  classification daemon of Checkmk. This daemon will receive

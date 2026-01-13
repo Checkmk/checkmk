@@ -58,7 +58,7 @@ snmp_section_enviromux_micro_information = SimpleSNMPSection(
 )
 
 
-def inventory_enviromux_micro_information(
+def inventorize_enviromux_micro_information(
     section: EnviromuxMicroInformation | None,
 ) -> InventoryResult:
     if not section:
@@ -83,5 +83,5 @@ def inventory_enviromux_micro_information(
 
 inventory_plugin_enviromux_micro_information = InventoryPlugin(
     name="enviromux_micro_information",
-    inventory_function=inventory_enviromux_micro_information,
+    inventory_function=inventorize_enviromux_micro_information,
 )

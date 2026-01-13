@@ -50,7 +50,7 @@ agent_section_mssql_clusters = AgentSection(
 )
 
 
-def inventory_mssql_clusters(section: Section) -> InventoryResult:
+def inventorize_mssql_clusters(section: Section) -> InventoryResult:
     for inst in section:
         yield TableRow(
             path=["software", "applications", "mssql", "instances"],
@@ -67,5 +67,5 @@ def inventory_mssql_clusters(section: Section) -> InventoryResult:
 
 inventory_plugin_mssql_clusters = InventoryPlugin(
     name="mssql_clusters",
-    inventory_function=inventory_mssql_clusters,
+    inventory_function=inventorize_mssql_clusters,
 )

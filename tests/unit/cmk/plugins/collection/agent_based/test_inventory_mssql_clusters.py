@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_mssql_clusters import (
-    inventory_mssql_clusters,
+    inventorize_mssql_clusters,
     parse_mssql_clusters,
 )
 
@@ -60,9 +60,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_mssql_clusters(
+def test_inventorize_mssql_clusters(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_mssql_clusters(parse_mssql_clusters(string_table))
+        inventorize_mssql_clusters(parse_mssql_clusters(string_table))
     ) == sort_inventory_result(expected_result)

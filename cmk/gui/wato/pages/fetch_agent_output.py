@@ -39,7 +39,6 @@ from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -157,7 +156,7 @@ class AgentOutputPage(Page, abc.ABC):
         if not host:
             raise MKGeneralException(
                 _('Host is not managed by Setup. Click <a href="%s">here</a> to go back.')
-                % escape_attribute(self._back_url)
+                % self._back_url
             )
         host.permissions.need_permission("read")
 

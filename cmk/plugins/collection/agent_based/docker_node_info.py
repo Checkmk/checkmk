@@ -65,7 +65,7 @@ agent_section_docker_node_info = AgentSection(
 )
 
 
-def inventory_docker_node_info(section: docker.NodeInfoSection) -> InventoryResult:
+def inventorize_docker_node_info(section: docker.NodeInfoSection) -> InventoryResult:
     if not section:
         return
 
@@ -127,5 +127,5 @@ def inventory_docker_node_info(section: docker.NodeInfoSection) -> InventoryResu
 
 inventory_plugin_docker_node_info = InventoryPlugin(
     name="docker_node_info",
-    inventory_function=inventory_docker_node_info,
+    inventory_function=inventorize_docker_node_info,
 )

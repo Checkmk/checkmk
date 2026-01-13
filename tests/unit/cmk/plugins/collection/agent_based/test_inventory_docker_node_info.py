@@ -10,7 +10,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
-from cmk.plugins.collection.agent_based.docker_node_info import inventory_docker_node_info
+from cmk.plugins.collection.agent_based.docker_node_info import inventorize_docker_node_info
 from cmk.plugins.docker.lib import NodeInfoSection as Section
 
 from .utils_inventory import sort_inventory_result
@@ -157,6 +157,6 @@ from .utils_inventory import sort_inventory_result
     ],
 )
 def test_inv_docker_node_info(parsed: Section, expected: InventoryResult) -> None:
-    assert sort_inventory_result(inventory_docker_node_info(parsed)) == sort_inventory_result(
+    assert sort_inventory_result(inventorize_docker_node_info(parsed)) == sort_inventory_result(
         expected
     )

@@ -175,7 +175,7 @@ check_plugin_hp_proliant_mem = CheckPlugin(
 )
 
 
-def inventory_hp_proliant_mem(section: Section) -> InventoryResult:
+def inventorize_hp_proliant_mem(section: Section) -> InventoryResult:
     for module in section.values():
         yield TableRow(
             path=["hardware", "memory", "arrays", "devices"],
@@ -194,5 +194,5 @@ def inventory_hp_proliant_mem(section: Section) -> InventoryResult:
 
 inventory_plugin_hp_proliant_mem = InventoryPlugin(
     name="hp_proliant_mem",
-    inventory_function=inventory_hp_proliant_mem,
+    inventory_function=inventorize_hp_proliant_mem,
 )

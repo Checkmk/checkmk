@@ -220,7 +220,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                                 CascadingSingleChoiceElement(
                                     name=name,
                                     title=Title(name),  # astrein: disable=localization-checker
-                                    parameter_form=FixedValue(value=value),
+                                    parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in syslog_facilities
                             ],
@@ -239,7 +239,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                                 CascadingSingleChoiceElement(
                                     name=name,
                                     title=Title(name),  # astrein: disable=localization-checker
-                                    parameter_form=FixedValue(value=value),
+                                    parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in syslog_priorities
                             ],
@@ -254,7 +254,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                                 CascadingSingleChoiceElement(
                                     name=_format_service_level(value),
                                     title=Title(name),  # astrein: disable=localization-checker
-                                    parameter_form=FixedValue(value=value),
+                                    parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in service_levels()
                             ],
@@ -359,7 +359,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                                 CascadingSingleChoiceElement(
                                     name=name,
                                     title=Title(name),  # astrein: disable=localization-checker
-                                    parameter_form=FixedValue(value=value),
+                                    parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in syslog_facilities
                             ],
@@ -374,7 +374,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                                 CascadingSingleChoiceElement(
                                     name=_format_service_level(value),
                                     title=Title(name),  # astrein: disable=localization-checker
-                                    parameter_form=FixedValue(value=value),
+                                    parameter_form=FixedValue(value=value, label=Label("")),
                                 )
                                 for value, name in service_levels()
                             ],

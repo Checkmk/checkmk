@@ -106,8 +106,8 @@ class SwitchPortStatus(BaseModel, frozen=True):
 
     @computed_field
     @property
-    def admin_status(self) -> str:
-        return "1" if self.enabled else "2"
+    def admin_status(self) -> int:
+        return 1 if self.enabled else 2
 
     @computed_field
     @property
@@ -116,12 +116,12 @@ class SwitchPortStatus(BaseModel, frozen=True):
 
     @computed_field
     @property
-    def oper_status(self) -> str | None:
+    def oper_status(self) -> int | None:
         match self.status.lower():
             case "connected":
-                return "1"
+                return 1
             case "disconnected":
-                return "2"
+                return 2
             case _:
                 return None
 

@@ -507,13 +507,14 @@ class PerformanceDb:
 
         Fetches metric names and their measured values associated with the specified test ID,
         ignoring any values that are not of type int or float. The results are returned as a
-        dictionary mapping metric names to their float values, sorted by metric name in ascending order.
+        dictionary mapping metric names to their float values, sorted by metric name in
+        ascending order.
 
         Args:
             test_id (int): The ID of the benchmark test to retrieve statistics for.
 
         Returns:
-            Measurements: A dictionary containing metric names as keys and their corresponding float values.
+            Measurements: A dict containing metric names and their corresponding float values.
 
         Note:
             Any value types other than int and float are ignored.
@@ -1949,7 +1950,10 @@ def parse_args() -> PerftestPlotArgs:
         dest="baseline_offset",
         type=int,
         default=0,
-        help="Specifies the number of days in the past to use for the baseline validation (default: %(default)s).",
+        help=(
+            "Specifies the number of days in the past to use for the baseline validation"
+            "(default: %(default)s)."
+        ),
     )
     parser.add_argument(
         "--cpu-tolerance",

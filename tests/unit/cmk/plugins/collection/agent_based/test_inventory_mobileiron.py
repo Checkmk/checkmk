@@ -6,7 +6,9 @@ import json
 from collections.abc import Iterable
 
 from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.plugins.collection.agent_based.inventory_mobileiron import inventory_mobileiron
+from cmk.plugins.collection.agent_based.inventory_mobileiron import (
+    inventorize_mobileiron,
+)
 from cmk.plugins.collection.agent_based.mobileiron_section import parse_mobileiron
 
 from .utils_inventory import sort_inventory_result
@@ -65,7 +67,7 @@ EXPECTED: Iterable[Attributes | TableRow] = [
 ]
 
 
-def test_inventory_mobileiron() -> None:
-    assert sort_inventory_result(inventory_mobileiron(DEVICE_DATA)) == sort_inventory_result(
+def test_inventorize_mobileiron() -> None:
+    assert sort_inventory_result(inventorize_mobileiron(DEVICE_DATA)) == sort_inventory_result(
         EXPECTED
     )

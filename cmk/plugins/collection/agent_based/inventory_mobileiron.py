@@ -7,7 +7,7 @@ from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, Tab
 from cmk.plugins.mobileiron.lib import Section
 
 
-def inventory_mobileiron(section: Section | None) -> InventoryResult:
+def inventorize_mobileiron(section: Section | None) -> InventoryResult:
     if section is None:
         return
 
@@ -48,5 +48,5 @@ def inventory_mobileiron(section: Section | None) -> InventoryResult:
 inventory_plugin_mobileiron_inventory = InventoryPlugin(
     name="mobileiron_inventory",
     sections=["mobileiron_section"],
-    inventory_function=inventory_mobileiron,
+    inventory_function=inventorize_mobileiron,
 )

@@ -6,7 +6,7 @@
 from typing import Final
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.lnx_distro import inventory_lnx_distro, parse_lnx_distro
+from cmk.plugins.collection.agent_based.lnx_distro import inventorize_lnx_distro, parse_lnx_distro
 
 STRING_TABLE_RH_OLD: Final = [
     [
@@ -63,9 +63,9 @@ STRING_TABLE_NEW: Final = [
 ]
 
 
-def test_inventory_lnx_distro_rh_old() -> None:
+def test_inventorize_lnx_distro_rh_old() -> None:
     assert (section := parse_lnx_distro(STRING_TABLE_RH_OLD))
-    assert list(inventory_lnx_distro(section)) == [
+    assert list(inventorize_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={
@@ -79,9 +79,9 @@ def test_inventory_lnx_distro_rh_old() -> None:
     ]
 
 
-def test_inventory_lnx_distro_oracle() -> None:
+def test_inventorize_lnx_distro_oracle() -> None:
     assert (section := parse_lnx_distro(STRING_TABLE_ORACLE_OLD))
-    assert list(inventory_lnx_distro(section)) == [
+    assert list(inventorize_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={
@@ -94,9 +94,9 @@ def test_inventory_lnx_distro_oracle() -> None:
     ]
 
 
-def test_inventory_lnx_distro_suse() -> None:
+def test_inventorize_lnx_distro_suse() -> None:
     assert (section := parse_lnx_distro(STRING_TABLE_SUSE))
-    assert list(inventory_lnx_distro(section)) == [
+    assert list(inventorize_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={
@@ -110,9 +110,9 @@ def test_inventory_lnx_distro_suse() -> None:
     ]
 
 
-def test_inventory_lnx_distro_new() -> None:
+def test_inventorize_lnx_distro_new() -> None:
     assert (section := parse_lnx_distro(STRING_TABLE_NEW))
-    assert list(inventory_lnx_distro(section)) == [
+    assert list(inventorize_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

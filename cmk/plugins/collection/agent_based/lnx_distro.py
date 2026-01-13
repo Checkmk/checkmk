@@ -185,7 +185,7 @@ agent_section_lnx_distro = AgentSection(
 )
 
 
-def inventory_lnx_distro(section: Section) -> InventoryResult:
+def inventorize_lnx_distro(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
@@ -197,5 +197,5 @@ def inventory_lnx_distro(section: Section) -> InventoryResult:
 
 inventory_plugin_lnx_distro = InventoryPlugin(
     name="lnx_distro",
-    inventory_function=inventory_lnx_distro,
+    inventory_function=inventorize_lnx_distro,
 )

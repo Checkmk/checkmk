@@ -71,7 +71,7 @@ agent_section_aix_packages = AgentSection(
 )
 
 
-def inventory_aix_packages(section: Section) -> InventoryResult:
+def inventorize_aix_packages(section: Section) -> InventoryResult:
     for row in section:
         yield TableRow(
             path=["software", "packages"],
@@ -88,5 +88,5 @@ def inventory_aix_packages(section: Section) -> InventoryResult:
 
 inventory_plugin_aix_packages = InventoryPlugin(
     name="aix_packages",
-    inventory_function=inventory_aix_packages,
+    inventory_function=inventorize_aix_packages,
 )

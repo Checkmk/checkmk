@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_aix_packages import (
-    inventory_aix_packages,
+    inventorize_aix_packages,
     parse_aix_packages,
 )
 
@@ -138,5 +138,5 @@ from .utils_inventory import sort_inventory_result
 )
 def test_inv_aix_packages(raw_section: StringTable, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
-        inventory_aix_packages(parse_aix_packages(raw_section))
+        inventorize_aix_packages(parse_aix_packages(raw_section))
     ) == sort_inventory_result(expected_result)

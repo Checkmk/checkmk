@@ -153,7 +153,7 @@ def create_tar(parent: Path) -> bytes:
     tar_buffer = io.BytesIO()
 
     # Create tar archive in memory
-    with tarfile.open(fileobj=tar_buffer, mode="w", dereference=True) as tar:
+    with tarfile.open(fileobj=tar_buffer, mode="w", dereference=False) as tar:
         tar.add(parent, arcname=CONFIG_ARCHIVE_ROOT_FOLDER_NAME)
 
     # Get the binary content of the tar archive

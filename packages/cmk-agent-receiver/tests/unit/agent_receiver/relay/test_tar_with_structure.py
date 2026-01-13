@@ -74,12 +74,8 @@ def test_create_tar_with_symlink(common_parent: Path) -> None:
         assert tar.getmember(ROOT).isdir()
 
         member = tar.getmember(f"{ROOT}/link.txt")
-
-        # Verify file content
-        file_obj = tar.extractfile(member)
-        assert file_obj is not None
-        content = file_obj.read().decode("utf-8")
-        assert content == test_content
+        assert member.issym()
+        assert member.linkname == "../text.txt"
 
 
 def test_create_tar_with_multiple_files(common_parent: Path) -> None:

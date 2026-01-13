@@ -36,7 +36,7 @@ class Device(RawDevice):
 
     organisation_id: str
     organisation_name: str
-    networkName: str
+    network_name: str
 
 
 class _Detail(TypedDict):

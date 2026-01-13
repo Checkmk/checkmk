@@ -27,7 +27,7 @@ def test_host_label_meraki_device_info() -> None:
         organisation_id="123",
         organisation_name="org-name",
         networkId="N_24329156",
-        networkName="work",
+        network_name="work",
     )
     string_table = [[f"[{json.dumps(device)}]"]]
     section = parse_device_info(string_table)
@@ -57,7 +57,7 @@ def test_inventory_device_info() -> None:
         organisation_id="123",
         organisation_name="org-name",
         networkId="N_24329156",
-        networkName="work",
+        network_name="work",
         address="1600 Pennsylvania Ave",
     )
     string_table = [[f"[{json.dumps(device)}]"]]

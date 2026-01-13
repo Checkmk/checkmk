@@ -14,7 +14,7 @@ class RawSwitchPortStatus(TypedDict):
     <https://developer.cisco.com/meraki/api-v1/get-device-switch-ports-statuses/>
     """
 
-    portId: str
+    portId: int
     enabled: bool
     status: str
     isUplink: bool

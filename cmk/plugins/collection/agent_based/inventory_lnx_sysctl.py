@@ -44,7 +44,9 @@ agent_section_lnx_sysctl = AgentSection(
 )
 
 
-def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) -> InventoryResult:
+def inventorize_lnx_sysctl(
+    params: Mapping[str, Sequence[str]], section: Section
+) -> InventoryResult:
     include_patterns = params["include_patterns"]
     if not include_patterns:
         return
@@ -81,7 +83,7 @@ def _include_parameter(
 
 inventory_plugin_lnx_sysctl = InventoryPlugin(
     name="lnx_sysctl",
-    inventory_function=inventory_lnx_sysctl,
+    inventory_function=inventorize_lnx_sysctl,
     inventory_default_parameters={
         "include_patterns": [],
         "exclude_patterns": [],

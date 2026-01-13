@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_lnx_sysctl import (
-    inventory_lnx_sysctl,
+    inventorize_lnx_sysctl,
     parse_lnx_sysctl,
 )
 
@@ -184,5 +184,5 @@ def test_inv_oracle_systemparameter(
     inventory_data: InventoryResult,
 ) -> None:
     assert sort_inventory_result(
-        inventory_lnx_sysctl(params, parse_lnx_sysctl(info))
+        inventorize_lnx_sysctl(params, parse_lnx_sysctl(info))
     ) == sort_inventory_result(inventory_data)

@@ -163,7 +163,7 @@ snmp_section_snmp_extended_info = SimpleSNMPSection(
 )
 
 
-def inventory_snmp_extended_info(section: Section) -> InventoryResult:
+def inventorize_snmp_extended_info(section: Section) -> InventoryResult:
     if section.serial is not None or section.model is not None:
         yield Attributes(
             path=["hardware", "system"],
@@ -196,5 +196,5 @@ def inventory_snmp_extended_info(section: Section) -> InventoryResult:
 
 inventory_plugin_snmp_extended_info = InventoryPlugin(
     name="snmp_extended_info",
-    inventory_function=inventory_snmp_extended_info,
+    inventory_function=inventorize_snmp_extended_info,
 )

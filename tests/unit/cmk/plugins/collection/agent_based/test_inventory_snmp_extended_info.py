@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes, HostLabel, InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_snmp_extended_info import (
-    inventory_snmp_extended_info,
+    inventorize_snmp_extended_info,
     parse_snmp_extended_info,
 )
 from cmk.plugins.lib.device_types import get_device_type_label
@@ -41,7 +41,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_snmp_extended_info_host_labels(
+def test_inventorize_snmp_extended_info_host_labels(
     string_table: StringTable, expected_result: Iterable[HostLabel]
 ) -> None:
     section = parse_snmp_extended_info(string_table)
@@ -158,9 +158,9 @@ def test_inventory_snmp_extended_info_host_labels(
         ),
     ],
 )
-def test_inventory_snmp_extended_info(
+def test_inventorize_snmp_extended_info(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_snmp_extended_info(parse_snmp_extended_info(string_table))
+        inventorize_snmp_extended_info(parse_snmp_extended_info(string_table))
     ) == sort_inventory_result(expected_result)

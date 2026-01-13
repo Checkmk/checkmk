@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.lnx_uname import inventory_lnx_uname, parse_lnx_uname
+from cmk.plugins.collection.agent_based.lnx_uname import inventorize_lnx_uname, parse_lnx_uname
 
 
 @pytest.fixture(name="section", scope="module")
@@ -17,7 +17,7 @@ def _get_section() -> Mapping[str, str]:
 
 
 def test_inventory_solaris_uname(section: Mapping[str, str]) -> None:
-    assert list(inventory_lnx_uname(section)) == [
+    assert list(inventorize_lnx_uname(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

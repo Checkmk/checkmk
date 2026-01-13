@@ -24,11 +24,11 @@ agent_section_lnx_uname = AgentSection(
 )
 
 
-def inventory_lnx_uname(section: Mapping[str, str]) -> InventoryResult:
+def inventorize_lnx_uname(section: Mapping[str, str]) -> InventoryResult:
     yield Attributes(path=["software", "os"], inventory_attributes=section)
 
 
 inventory_plugin_lnx_uname = InventoryPlugin(
     name="lnx_uname",
-    inventory_function=inventory_lnx_uname,
+    inventory_function=inventorize_lnx_uname,
 )

@@ -31,44 +31,44 @@ struct LogDef {
 const std::vector<LogDef> log_definitions{
     LogDef{.prefix = "INITIAL HOST STATE",
            .log_class = LogEntry::Class::state,
-           .log_type = LogEntryKind::state_host_initial,
+           .log_type = LogEntryKind::initial_host_state,
            .params = {LogEntryParam::HostName, LogEntryParam::HostState,
                       LogEntryParam::StateType, LogEntryParam::Attempt,
                       LogEntryParam::PluginOutput,
                       LogEntryParam::LongPluginOutput}},
     LogDef{.prefix = "CURRENT HOST STATE",
            .log_class = LogEntry::Class::state,
-           .log_type = LogEntryKind::state_host,
+           .log_type = LogEntryKind::current_host_state,
            .params = {LogEntryParam::HostName, LogEntryParam::HostState,
                       LogEntryParam::StateType, LogEntryParam::Attempt,
                       LogEntryParam::PluginOutput,
                       LogEntryParam::LongPluginOutput}},
     LogDef{.prefix = "HOST ALERT",
            .log_class = LogEntry::Class::alert,
-           .log_type = LogEntryKind::alert_host,
+           .log_type = LogEntryKind::host_alert,
            .params = {LogEntryParam::HostName, LogEntryParam::HostState,
                       LogEntryParam::StateType, LogEntryParam::Attempt,
                       LogEntryParam::PluginOutput,
                       LogEntryParam::LongPluginOutput}},
     LogDef{.prefix = "HOST DOWNTIME ALERT",
            .log_class = LogEntry::Class::alert,
-           .log_type = LogEntryKind::downtime_alert_host,
+           .log_type = LogEntryKind::host_downtime_alert,
            .params = {LogEntryParam::HostName, LogEntryParam::StateType,
                       LogEntryParam::Comment}},
     LogDef{.prefix = "HOST ACKNOWLEDGE ALERT",
            .log_class = LogEntry::Class::alert,
-           .log_type = LogEntryKind::acknowledge_alert_host,
+           .log_type = LogEntryKind::host_acknowledge_alert,
            .params = {LogEntryParam::HostName, LogEntryParam::StateType,
                       LogEntryParam::ContactName, LogEntryParam::Comment}},
     LogDef{.prefix = "HOST FLAPPING ALERT",
            .log_class = LogEntry::Class::alert,
-           .log_type = LogEntryKind::flapping_host,
+           .log_type = LogEntryKind::host_flapping_alert,
            .params = {LogEntryParam::HostName, LogEntryParam::StateType,
                       LogEntryParam::Comment}},
     LogDef{
         .prefix = "INITIAL SERVICE STATE",
         .log_class = LogEntry::Class::state,
-        .log_type = LogEntryKind::state_service_initial,
+        .log_type = LogEntryKind::initial_service_state,
         .params = {LogEntryParam::HostName, LogEntryParam::ServiceDescription,
                    LogEntryParam::ServiceState, LogEntryParam::StateType,
                    LogEntryParam::Attempt, LogEntryParam::PluginOutput,
@@ -76,7 +76,7 @@ const std::vector<LogDef> log_definitions{
     LogDef{
         .prefix = "CURRENT SERVICE STATE",
         .log_class = LogEntry::Class::state,
-        .log_type = LogEntryKind::state_service,
+        .log_type = LogEntryKind::current_service_state,
         .params = {LogEntryParam::HostName, LogEntryParam::ServiceDescription,
                    LogEntryParam::ServiceState, LogEntryParam::StateType,
                    LogEntryParam::Attempt, LogEntryParam::PluginOutput,
@@ -84,7 +84,7 @@ const std::vector<LogDef> log_definitions{
     LogDef{
         .prefix = "SERVICE ALERT",
         .log_class = LogEntry::Class::alert,
-        .log_type = LogEntryKind::alert_service,
+        .log_type = LogEntryKind::service_alert,
         .params = {LogEntryParam::HostName, LogEntryParam::ServiceDescription,
                    LogEntryParam::ServiceState, LogEntryParam::StateType,
                    LogEntryParam::Attempt, LogEntryParam::PluginOutput,
@@ -92,20 +92,20 @@ const std::vector<LogDef> log_definitions{
     LogDef{
         .prefix = "SERVICE DOWNTIME ALERT",
         .log_class = LogEntry::Class::alert,
-        .log_type = LogEntryKind::downtime_alert_service,
+        .log_type = LogEntryKind::service_downtime_alert,
         .params = {LogEntryParam::HostName, LogEntryParam::ServiceDescription,
                    LogEntryParam::StateType, LogEntryParam::Comment}},
     LogDef{
         .prefix = "SERVICE ACKNOWLEDGE ALERT",
         .log_class = LogEntry::Class::alert,
-        .log_type = LogEntryKind::acknowledge_alert_service,
+        .log_type = LogEntryKind::service_acknowledge_alert,
         .params = {LogEntryParam::HostName, LogEntryParam::ServiceDescription,
                    LogEntryParam::StateType, LogEntryParam::ContactName,
                    LogEntryParam::Comment}},
     LogDef{
         .prefix = "SERVICE FLAPPING ALERT",
         .log_class = LogEntry::Class::alert,
-        .log_type = LogEntryKind::flapping_service,
+        .log_type = LogEntryKind::service_flapping_alert,
         .params = {LogEntryParam::HostName, LogEntryParam::ServiceDescription,
                    LogEntryParam::StateType, LogEntryParam::Comment}},
     LogDef{.prefix = "TIMEPERIOD TRANSITION",
@@ -358,7 +358,7 @@ void LogEntry::classifyLogMessage() {
     if (textStartsWith("logging initial states") ||
         textStartsWith("logging intitial states")) {
         class_ = LogEntry::Class::program;
-        kind_ = LogEntryKind::log_initial_states;
+        kind_ = LogEntryKind::logging_initial_states;
         return;
     }
     if (textContains("starting...") || textContains("active mode...")) {
@@ -492,14 +492,14 @@ std::string to_exit_code(int state) {
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 std::string LogEntry::state_info() const {
     switch (kind_) {
-        case LogEntryKind::state_host_initial:
-        case LogEntryKind::state_host:
-        case LogEntryKind::alert_host:
+        case LogEntryKind::initial_host_state:
+        case LogEntryKind::current_host_state:
+        case LogEntryKind::host_alert:
             return parens(state_type_, to_host_state(state_));
 
-        case LogEntryKind::state_service_initial:
-        case LogEntryKind::state_service:
-        case LogEntryKind::alert_service:
+        case LogEntryKind::initial_service_state:
+        case LogEntryKind::current_service_state:
+        case LogEntryKind::service_alert:
             return parens(state_type_, to_service_state(state_));
 
         case LogEntryKind::none:
@@ -542,19 +542,19 @@ std::string LogEntry::state_info() const {
             }
             return "";
 
-        case LogEntryKind::downtime_alert_host:
-        case LogEntryKind::downtime_alert_service:
-        case LogEntryKind::flapping_host:
-        case LogEntryKind::flapping_service:
-        case LogEntryKind::acknowledge_alert_host:
-        case LogEntryKind::acknowledge_alert_service:
+        case LogEntryKind::host_downtime_alert:
+        case LogEntryKind::service_downtime_alert:
+        case LogEntryKind::host_flapping_alert:
+        case LogEntryKind::service_flapping_alert:
+        case LogEntryKind::host_acknowledge_alert:
+        case LogEntryKind::service_acknowledge_alert:
             return std::string{state_type_};
 
         case LogEntryKind::timeperiod_transition:
         case LogEntryKind::core_starting:
         case LogEntryKind::core_stopping:
         case LogEntryKind::log_version:
-        case LogEntryKind::log_initial_states:
+        case LogEntryKind::logging_initial_states:
             return "";
     }
     return "";  // unreachable, make the compiler happy

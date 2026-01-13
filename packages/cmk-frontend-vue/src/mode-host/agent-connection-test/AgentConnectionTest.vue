@@ -40,6 +40,7 @@ interface Props {
   ipv6InputButtonElement: HTMLInputElement
   siteSelectElement: HTMLSelectElement
   ipAddressFamilySelectElement: HTMLSelectElement
+  ipAddressFamilyInputElement: HTMLInputElement
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
   sites: Array<ModeHostSite>
   serverPerSite: Array<ModeHostServerPerSite>
@@ -55,6 +56,26 @@ const slideInOpen = ref(false)
 const showTest = ref(true)
 const isPushMode = ref(false)
 const switchVisibility = () => {
+  showTest.value = true
+  if (
+    props.ipAddressFamilyInputElement.checked &&
+    props.ipAddressFamilySelectElement.value === 'no-ip'
+  ) {
+    showTest.value = false
+    return
+  }
+
+  if (props.ipAddressFamilyInputElement.checked && props.ipAddressFamilySelectElement.value) {
+    isLoading.value = false
+    isSuccess.value = false
+    isError.value = false
+    if (props.setupError) {
+      setupErrorActive.value = false
+    }
+    ipV6.value = ''
+    ipV4.value = ''
+  }
+
   if (props.changeTagAgent.checked) {
     showTest.value = props.tagAgent.value === 'all-agents' || props.tagAgent.value === 'cmk-agent'
     return
@@ -235,8 +256,8 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
     const siteIdHash = props.siteSelectElement.value
     const siteIdent = props.sites.find((site) => site.id_hash === siteIdHash)?.site_id ?? ''
     const postDataRaw = new URLSearchParams({
-      host_name: hostname.value ?? '',
-      ipaddress: ipV4.value ?? ipV6.value ?? '',
+      host_name: hostname.value || '',
+      ipaddress: ipV4.value || ipV6.value || '',
       address_family: props.ipAddressFamilySelectElement.value ?? 'ip-v4-only',
       agent_port: '6556',
       timeout: '5',
@@ -376,7 +397,7 @@ function onClose() {
       type="button"
       :title="tooltipText"
       class="agent-test-button"
-      :disabled="hostname === '' && ipV4 === '' && ipV6 === ''"
+      :disabled="!hostname && !ipV4 && !ipV6"
       @click="startAjax"
     >
       <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />

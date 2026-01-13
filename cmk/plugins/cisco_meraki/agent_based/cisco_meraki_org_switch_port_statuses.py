@@ -87,7 +87,7 @@ class SwitchPortStatus(BaseModel, frozen=True):
     enabled: bool
     errors: list[str]
     is_uplink: bool = Field(alias="isUplink")
-    port_id: str = Field(alias="portId")
+    port_id: int = Field(alias="portId")
     speed: str
     status: str
     warnings: list[str]
@@ -151,7 +151,7 @@ def parse_switch_ports_statuses(string_table: StringTable) -> Section:
     match string_table:
         case [[payload]] if payload:
             statuses = (SwitchPortStatus.model_validate(data) for data in json.loads(payload))
-            return {switch_port.port_id: switch_port for switch_port in statuses}
+            return {str(switch_port.port_id): switch_port for switch_port in statuses}
         case _:
             return {}
 

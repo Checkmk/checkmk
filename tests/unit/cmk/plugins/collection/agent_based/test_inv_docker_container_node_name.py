@@ -7,7 +7,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.inventory_docker_container_node_name import (
-    inventory_docker_container_node_name,
+    inventorize_docker_container_node_name,
     parse_docker_container_node_name,
     Section,
 )
@@ -23,7 +23,7 @@ def _get_section() -> Section:
 
 
 def test_inv_docker_container_node_name(section: Section) -> None:
-    assert list(inventory_docker_container_node_name(section)) == [
+    assert list(inventorize_docker_container_node_name(section)) == [
         Attributes(
             path=["software", "applications", "docker", "container"],
             inventory_attributes={"node_name": "klappben"},

@@ -21,13 +21,13 @@ def parse_docker_container_node_name(string_table: StringTable) -> Section:
     return docker.parse(string_table).data
 
 
-agent_section_inventory_docker_container_node_name = AgentSection(
-    name="inventory_docker_container_node_name",
+agent_section_inventorize_docker_container_node_name = AgentSection(
+    name="inventorize_docker_container_node_name",
     parse_function=parse_docker_container_node_name,
 )
 
 
-def inventory_docker_container_node_name(section: Section) -> InventoryResult:
+def inventorize_docker_container_node_name(section: Section) -> InventoryResult:
     if (node := section.get("NodeName")) is not None:
         yield Attributes(
             path=["software", "applications", "docker", "container"],
@@ -35,7 +35,7 @@ def inventory_docker_container_node_name(section: Section) -> InventoryResult:
         )
 
 
-inventory_plugin_inventory_docker_container_node_name = InventoryPlugin(
-    name="inventory_docker_container_node_name",
-    inventory_function=inventory_docker_container_node_name,
+inventory_plugin_inventorize_docker_container_node_name = InventoryPlugin(
+    name="inventorize_docker_container_node_name",
+    inventory_function=inventorize_docker_container_node_name,
 )

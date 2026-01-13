@@ -34,8 +34,8 @@ def _get_section() -> la.Section:
     )
 
 
-def test_inventory_lparstat_aix() -> None:
-    assert list(la.inventory_lparstat_aix(_get_section())) == [
+def test_inventorize_lparstat_aix() -> None:
+    assert list(la.inventorize_lparstat_aix(_get_section())) == [
         Attributes(
             path=["hardware", "cpu"],
             inventory_attributes={

@@ -75,7 +75,7 @@ agent_section_lparstat_aix = AgentSection(
 )
 
 
-def inventory_lparstat_aix(section: Section) -> InventoryResult:
+def inventorize_lparstat_aix(section: Section) -> InventoryResult:
     data = section.get("system_config", {})
     attr = {}
 
@@ -102,7 +102,7 @@ def inventory_lparstat_aix(section: Section) -> InventoryResult:
 
 inventory_plugin_lparstat_aix = InventoryPlugin(
     name="lparstat_aix",
-    inventory_function=inventory_lparstat_aix,
+    inventory_function=inventorize_lparstat_aix,
 )
 
 

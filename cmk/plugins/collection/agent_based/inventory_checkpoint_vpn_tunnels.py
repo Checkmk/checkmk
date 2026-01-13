@@ -67,7 +67,7 @@ snmp_section_checkpoint_vpn_tunnels = SimpleSNMPSection(
 )
 
 
-def inventory_checkpoint_vpn_tunnels(section: Section) -> InventoryResult:
+def inventorize_checkpoint_vpn_tunnels(section: Section) -> InventoryResult:
     for vpn_tunnel in section:
         yield TableRow(
             path=["networking", "tunnels"],
@@ -86,5 +86,5 @@ def inventory_checkpoint_vpn_tunnels(section: Section) -> InventoryResult:
 
 inventory_plugin_checkpoint_vpn_tunnels = InventoryPlugin(
     name="checkpoint_vpn_tunnels",
-    inventory_function=inventory_checkpoint_vpn_tunnels,
+    inventory_function=inventorize_checkpoint_vpn_tunnels,
 )

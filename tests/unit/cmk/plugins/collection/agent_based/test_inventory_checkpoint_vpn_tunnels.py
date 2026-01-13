@@ -7,7 +7,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_checkpoint_vpn_tunnels import (
-    inventory_checkpoint_vpn_tunnels,
+    inventorize_checkpoint_vpn_tunnels,
     parse_checkpoint_vpn_tunnels,
 )
 
@@ -68,6 +68,6 @@ from cmk.plugins.collection.agent_based.inventory_checkpoint_vpn_tunnels import 
 )
 def test_inv_aix_baselevel(raw_section: StringTable, expected_result: InventoryResult) -> None:
     assert (
-        list(inventory_checkpoint_vpn_tunnels(parse_checkpoint_vpn_tunnels(raw_section)))
+        list(inventorize_checkpoint_vpn_tunnels(parse_checkpoint_vpn_tunnels(raw_section)))
         == expected_result
     )

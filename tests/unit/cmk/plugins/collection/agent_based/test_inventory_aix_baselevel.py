@@ -7,16 +7,16 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based import inventory_aix_baselevel as abl
+from cmk.plugins.collection.agent_based import inventory_aix_baselevel
 
 
 @pytest.fixture(name="section")
-def _get_section() -> abl.Section:
-    return abl.parse_aix_baselevel([["some version"]])
+def _get_section() -> inventory_aix_baselevel.Section:
+    return inventory_aix_baselevel.parse_aix_baselevel([["some version"]])
 
 
-def test_inventory(section: abl.Section) -> None:
-    assert list(abl.inventory_aix_baselevel(section)) == [
+def test_inventory(section: inventory_aix_baselevel.Section) -> None:
+    assert list(inventory_aix_baselevel.inventorize_aix_baselevel(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

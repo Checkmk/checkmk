@@ -28,7 +28,7 @@ agent_section_aix_baselevel = AgentSection(
 )
 
 
-def inventory_aix_baselevel(section: Section) -> InventoryResult:
+def inventorize_aix_baselevel(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
@@ -42,5 +42,5 @@ def inventory_aix_baselevel(section: Section) -> InventoryResult:
 
 inventory_plugin_aix_baselevel = InventoryPlugin(
     name="aix_baselevel",
-    inventory_function=inventory_aix_baselevel,
+    inventory_function=inventorize_aix_baselevel,
 )

@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.collection.agent_based.hp_proliant_da_phydrv import (
     check_hp_proliant_da_phydrv,
     discover_hp_proliant_da_phydrv,
-    inventory_hp_proliant_da_phydrv,
+    inventorize_hp_proliant_da_phydrv,
     parse_hp_proliant_da_phydrv,
 )
 
@@ -1084,9 +1084,9 @@ def test_check_hp_proliant_da_phydrv(
         ),
     ],
 )
-def test_inventory_hp_proliant_da_phydrv(
+def test_inventorize_hp_proliant_da_phydrv(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table))
+        inventorize_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table))
     ) == sort_inventory_result(expected_result)

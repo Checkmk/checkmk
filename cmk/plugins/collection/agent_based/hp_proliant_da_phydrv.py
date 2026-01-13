@@ -187,7 +187,7 @@ check_plugin_hp_proliant_da_phydrv = CheckPlugin(
 )
 
 
-def inventory_hp_proliant_da_phydrv(section: Section) -> InventoryResult:
+def inventorize_hp_proliant_da_phydrv(section: Section) -> InventoryResult:
     for physical_drive in section.values():
         yield TableRow(
             path=["hardware", "storage", "disks"],
@@ -210,5 +210,5 @@ def inventory_hp_proliant_da_phydrv(section: Section) -> InventoryResult:
 
 inventory_plugin_hp_proliant_da_phydrv = InventoryPlugin(
     name="hp_proliant_da_phydrv",
-    inventory_function=inventory_hp_proliant_da_phydrv,
+    inventory_function=inventorize_hp_proliant_da_phydrv,
 )

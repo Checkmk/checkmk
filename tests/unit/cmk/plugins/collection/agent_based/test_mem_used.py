@@ -17,7 +17,7 @@ from cmk.plugins.collection.agent_based import mem_used
 from cmk.plugins.collection.agent_based.mem_used import (
     check_mem_used,
     discover_mem_used,
-    inventory_mem_used,
+    inventorize_mem_used,
     MemBytes,
 )
 from cmk.plugins.lib import memory
@@ -809,7 +809,7 @@ def test_inventory_memory(
     section: memory.SectionMemUsed,
     expected_result: Sequence[Attributes],
 ) -> None:
-    assert sort_inventory_result(inventory_mem_used(section)) == sort_inventory_result(
+    assert sort_inventory_result(inventorize_mem_used(section)) == sort_inventory_result(
         expected_result
     )
 

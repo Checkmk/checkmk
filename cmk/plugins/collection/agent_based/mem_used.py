@@ -221,7 +221,7 @@ check_plugin_fortisandbox_mem_usage = CheckPlugin(
 )
 
 
-def inventory_mem_used(section: memory.SectionMemUsed) -> InventoryResult:
+def inventorize_mem_used(section: memory.SectionMemUsed) -> InventoryResult:
     yield from (  #
         Attributes(
             path=["hardware", "memory"],
@@ -237,5 +237,5 @@ def inventory_mem_used(section: memory.SectionMemUsed) -> InventoryResult:
 
 inventory_plugin_mem_used = InventoryPlugin(
     name="mem_used",
-    inventory_function=inventory_mem_used,
+    inventory_function=inventorize_mem_used,
 )

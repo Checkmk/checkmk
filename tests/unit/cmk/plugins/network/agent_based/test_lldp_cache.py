@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.network.agent_based.lldp_cache import (
     host_label_lldp_cache,
-    inventory_lldp_cache,
+    inventorize_lldp_cache,
     Lldp,
     LldpGlobal,
     LldpNeighbor,
@@ -281,6 +281,6 @@ LLDP_NEIGHBOUR_ATTRIBUTE = TableRow(
     ],
     ids=["no neighbors", "with neighbors"],
 )
-def test_inventory_lldp_cache(section: Lldp, params: Any, expected: InventoryResult) -> None:  # type: ignore[misc]
-    parsed = list(inventory_lldp_cache(params=params, section=section))
+def test_inventorize_lldp_cache(section: Lldp, params: Any, expected: InventoryResult) -> None:  # type: ignore[misc]
+    parsed = list(inventorize_lldp_cache(params=params, section=section))
     assert parsed == expected

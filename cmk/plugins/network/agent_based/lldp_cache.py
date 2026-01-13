@@ -322,7 +322,7 @@ def host_label_lldp_cache(section: Lldp) -> HostLabelGenerator:
             yield HostLabel(name=f"cmk/lldp_neighbor/{neighbor_id}", value="yes")
 
 
-def inventory_lldp_cache(params: InventoryParams, section: Lldp) -> InventoryResult:
+def inventorize_lldp_cache(params: InventoryParams, section: Lldp) -> InventoryResult:
     path = ["networking", "lldp_cache"]
     if section.lldp_global:
         yield Attributes(
@@ -462,7 +462,7 @@ snmp_section_inv_lldp_cache = SNMPSection(
 
 inventory_plugin_inv_lldp_cache = InventoryPlugin(
     name="inv_lldp_cache",
-    inventory_function=inventory_lldp_cache,
+    inventory_function=inventorize_lldp_cache,
     inventory_default_parameters=InventoryParams(),
     inventory_ruleset_name="inv_lldp_cache",
 )

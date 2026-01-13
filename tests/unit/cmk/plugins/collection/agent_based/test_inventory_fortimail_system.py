@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inventory_fortimail_system import inventory_fortimail_system
+from cmk.plugins.collection.agent_based.inventory_fortimail_system import (
+    inventorize_fortimail_system,
+)
 
 
 def test_fortimail_serial_inventory() -> None:
     assert list(
-        inventory_fortimail_system(
+        inventorize_fortimail_system(
             {
                 "model": "FortiMail-VM",
                 "serial": "FEVM1234567890",

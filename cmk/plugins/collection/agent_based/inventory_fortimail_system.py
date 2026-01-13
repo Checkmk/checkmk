@@ -54,7 +54,7 @@ snmp_section_fortimail_system = SimpleSNMPSection(
 )
 
 
-def inventory_fortimail_system(section: Section) -> InventoryResult:
+def inventorize_fortimail_system(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -72,5 +72,5 @@ def inventory_fortimail_system(section: Section) -> InventoryResult:
 
 inventory_plugin_fortimail_system = InventoryPlugin(
     name="fortimail_system",
-    inventory_function=inventory_fortimail_system,
+    inventory_function=inventorize_fortimail_system,
 )

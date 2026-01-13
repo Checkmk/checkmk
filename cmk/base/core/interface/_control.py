@@ -310,6 +310,7 @@ def _create_active_config(
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
         _backup_objects_file(core),
     ):
+        snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
         core.create_config(
             config_creation_context,
             config_cache,
@@ -331,7 +332,6 @@ def _create_active_config(
             {k: s.reveal() for k, s in passwords.items()},
             cmk.utils.password_store.active_secrets_path_site(config_creation_context.path_created),
         )
-        snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
 
     core.cleanup_old_configs(cmk.utils.paths.omd_root)
 

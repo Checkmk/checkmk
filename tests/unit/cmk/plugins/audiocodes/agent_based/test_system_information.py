@@ -10,7 +10,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes, StringTable
 from cmk.plugins.audiocodes.agent_based.system_information import (
-    inventory_audiocodes_system_information,
+    inventorize_audiocodes_system_information,
     parse_audiocodes_system_information,
 )
 
@@ -59,4 +59,4 @@ def test_inventory_system_information(
 ) -> None:
     section = parse_audiocodes_system_information(string_table)
     assert section is not None
-    assert list(inventory_audiocodes_system_information(section)) == expected_result
+    assert list(inventorize_audiocodes_system_information(section)) == expected_result

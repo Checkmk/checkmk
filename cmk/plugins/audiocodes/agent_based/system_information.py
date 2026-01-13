@@ -68,7 +68,7 @@ snmp_section_audiocodes_system_information = SNMPSection(
 )
 
 
-def inventory_audiocodes_system_information(section: System) -> InventoryResult:
+def inventorize_audiocodes_system_information(section: System) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -89,5 +89,5 @@ def inventory_audiocodes_system_information(section: System) -> InventoryResult:
 
 inventory_plugin_audiocodes_system_information = InventoryPlugin(
     name="audiocodes_system_information",
-    inventory_function=inventory_audiocodes_system_information,
+    inventory_function=inventorize_audiocodes_system_information,
 )

@@ -41,7 +41,7 @@ snmp_section_juniper_info = SimpleSNMPSection(
 )
 
 
-def inventory_juniper_info(section: Section) -> InventoryResult:
+def inventorize_juniper_info(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -53,5 +53,5 @@ def inventory_juniper_info(section: Section) -> InventoryResult:
 
 inventory_plugin_juniper_info = InventoryPlugin(
     name="juniper_info",
-    inventory_function=inventory_juniper_info,
+    inventory_function=inventorize_juniper_info,
 )

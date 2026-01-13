@@ -54,7 +54,9 @@ test_main_loginctl_fails() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>/dev/null
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>/dev/null
     )
     local exit_code=$?
     set -e

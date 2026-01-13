@@ -57,7 +57,9 @@ test_registry_not_accessible() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e

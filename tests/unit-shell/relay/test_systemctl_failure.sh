@@ -57,7 +57,9 @@ test_systemctl_daemon_reload_failure() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e
@@ -100,7 +102,9 @@ test_systemctl_enable_path_failure() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e
@@ -147,7 +151,9 @@ test_systemctl_enable_update_service_failure() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e
@@ -198,7 +204,9 @@ test_systemctl_start_relay_service_failure() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e

@@ -61,7 +61,9 @@ test_missing_systemd() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e
@@ -86,7 +88,9 @@ test_missing_podman() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e
@@ -114,7 +118,9 @@ test_runs_as_root() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e

@@ -57,7 +57,9 @@ test_registration_fails() {
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
-            --target-site-name "mysite" 2>&1
+            --target-site-name "mysite" \
+            --user "testuser" \
+            --password "testpass" 2>&1
     )
     local exit_code=$?
     set -e
@@ -74,7 +76,7 @@ test_registration_fails() {
     assertTrue "podman run with cmk-relay register should have been called" $?
 
     # Verify the arguments to podman run for registration
-    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --force" "$PODMAN_CALLS_FILE"
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
     assertTrue "podman run should have been called with correct registration arguments" $?
 }
 

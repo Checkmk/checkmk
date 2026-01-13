@@ -82,7 +82,7 @@ _MAP_TYPES = {
 }
 
 
-def inventory_perle_chassis_slots(section: Section) -> InventoryResult:
+def inventorize_perle_chassis_slots(section: Section) -> InventoryResult:
     for index, name, modelname, serial, bootloader, fw, _alarms, _diagstate, ty, descr in section:
         if ty != "0":
             yield TableRow(
@@ -105,5 +105,5 @@ def inventory_perle_chassis_slots(section: Section) -> InventoryResult:
 
 inventory_plugin_perle_chassis_slots = InventoryPlugin(
     name="perle_chassis_slots",
-    inventory_function=inventory_perle_chassis_slots,
+    inventory_function=inventorize_perle_chassis_slots,
 )

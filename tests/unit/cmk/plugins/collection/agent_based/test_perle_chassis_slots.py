@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
 from cmk.plugins.collection.agent_based.perle_chassis_slots import (
-    inventory_perle_chassis_slots,
+    inventorize_perle_chassis_slots,
     Section,
 )
 
@@ -83,9 +83,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_perle_chassis_slots(
+def test_inventorize_perle_chassis_slots(
     string_table: Section, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_perle_chassis_slots(string_table)
+        inventorize_perle_chassis_slots(string_table)
     ) == sort_inventory_result(expected_result)

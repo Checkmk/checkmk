@@ -106,7 +106,7 @@ TEST(LogEntry, InitialHostState) {
             EXPECT_EQ(size_t{42}, e.lineno());
             EXPECT_EQ(tp(1551424305), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
-            EXPECT_EQ(LogEntryKind::state_host_initial, e.kind());
+            EXPECT_EQ(LogEntryKind::initial_host_state, e.kind());
             EXPECT_EQ(line, e.message());
             EXPECT_EQ("huey;"s.append(state_name)
                           .append(";")
@@ -136,7 +136,7 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
-    EXPECT_EQ(LogEntryKind::state_host_initial, e.kind());
+    EXPECT_EQ(LogEntryKind::initial_host_state, e.kind());
     EXPECT_EQ(line, e.message());
     EXPECT_EQ("huey;UP;HARD;7;Krasser Output"s, e.options());
     EXPECT_EQ("INITIAL HOST STATE"s, e.type());
@@ -160,7 +160,7 @@ TEST(LogEntry, InitialHostStateWithMultiLine) {
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
-    EXPECT_EQ(LogEntryKind::state_host_initial, e.kind());
+    EXPECT_EQ(LogEntryKind::initial_host_state, e.kind());
     EXPECT_EQ(line, e.message());
     EXPECT_EQ("huey;UP;HARD;7;Krasser Output;Laaanger\\nLong\\nOutput"s,
               e.options());
@@ -191,7 +191,7 @@ TEST(LogEntry, CurrentHostState) {
             EXPECT_EQ(size_t{43}, e.lineno());
             EXPECT_EQ(tp(1551424315), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
-            EXPECT_EQ(LogEntryKind::state_host, e.kind());
+            EXPECT_EQ(LogEntryKind::current_host_state, e.kind());
             EXPECT_EQ(line, e.message());
             EXPECT_EQ("dewey;"s.append(state_name)
                           .append(";")
@@ -226,7 +226,7 @@ TEST(LogEntry, HostAlert) {
             EXPECT_EQ(size_t{123456}, e.lineno());
             EXPECT_EQ(tp(1551424323), e.time());
             EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-            EXPECT_EQ(LogEntryKind::alert_host, e.kind());
+            EXPECT_EQ(LogEntryKind::host_alert, e.kind());
             EXPECT_EQ(line, e.message());
             EXPECT_EQ("huey;"s.append(state_name)
                           .append(";")
@@ -257,7 +257,7 @@ TEST(LogEntry, HostDowntimeAlert) {
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-        EXPECT_EQ(LogEntryKind::downtime_alert_host, e.kind());
+        EXPECT_EQ(LogEntryKind::host_downtime_alert, e.kind());
         EXPECT_EQ(line, e.message());
         EXPECT_EQ("huey;" + state_type + ";Komisch...", e.options());
         EXPECT_EQ("HOST DOWNTIME ALERT"s, e.type());
@@ -283,7 +283,7 @@ TEST(LogEntry, HostAcknowledgeAlert) {
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-        EXPECT_EQ(LogEntryKind::acknowledge_alert_host, e.kind());
+        EXPECT_EQ(LogEntryKind::host_acknowledge_alert, e.kind());
         EXPECT_EQ(line, e.message());
         EXPECT_EQ("huey;" + state_type + ";King Kong;foo bar", e.options());
         EXPECT_EQ("HOST ACKNOWLEDGE ALERT"s, e.type());
@@ -309,7 +309,7 @@ TEST(LogEntry, HostFlappingAlert) {
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-        EXPECT_EQ(LogEntryKind::flapping_host, e.kind());
+        EXPECT_EQ(LogEntryKind::host_flapping_alert, e.kind());
         EXPECT_EQ(line, e.message());
         EXPECT_EQ("huey;" + state_type + ";foo bar", e.options());
         EXPECT_EQ("HOST FLAPPING ALERT"s, e.type());
@@ -340,7 +340,7 @@ TEST(LogEntry, InitialServiceState) {
             EXPECT_EQ(size_t{1234567}, e.lineno());
             EXPECT_EQ(tp(1551424325), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
-            EXPECT_EQ(LogEntryKind::state_service_initial, e.kind());
+            EXPECT_EQ(LogEntryKind::initial_service_state, e.kind());
             EXPECT_EQ(line, e.message());
             EXPECT_EQ("louie;servus 1;"s.append(state_name)
                           .append(";")
@@ -376,7 +376,7 @@ TEST(LogEntry, CurrentServiceState) {
             EXPECT_EQ(size_t{1234567}, e.lineno());
             EXPECT_EQ(tp(1551424335), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
-            EXPECT_EQ(LogEntryKind::state_service, e.kind());
+            EXPECT_EQ(LogEntryKind::current_service_state, e.kind());
             EXPECT_EQ(line, e.message());
             EXPECT_EQ("donald;gruezi 2;"s.append(state_name)
                           .append(";")
@@ -412,7 +412,7 @@ TEST(LogEntry, ServiceAlert) {
             EXPECT_EQ(size_t{123456}, e.lineno());
             EXPECT_EQ(tp(1551424323), e.time());
             EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-            EXPECT_EQ(LogEntryKind::alert_service, e.kind());
+            EXPECT_EQ(LogEntryKind::service_alert, e.kind());
             EXPECT_EQ(line, e.message());
             EXPECT_EQ("huey;hi!;"s.append(state_name)
                           .append(";")
@@ -443,7 +443,7 @@ TEST(LogEntry, ServiceDowntimeAlert) {
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-        EXPECT_EQ(LogEntryKind::downtime_alert_service, e.kind());
+        EXPECT_EQ(LogEntryKind::service_downtime_alert, e.kind());
         EXPECT_EQ(line, e.message());
         EXPECT_EQ("huey;hi, ho!;" + state_type + ";Komisch...", e.options());
         EXPECT_EQ("SERVICE DOWNTIME ALERT"s, e.type());
@@ -469,7 +469,7 @@ TEST(LogEntry, ServiceAcknowledgeAlert) {
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-        EXPECT_EQ(LogEntryKind::acknowledge_alert_service, e.kind());
+        EXPECT_EQ(LogEntryKind::service_acknowledge_alert, e.kind());
         EXPECT_EQ(line, e.message());
         EXPECT_EQ("huey;hi!;" + state_type + ";King Kong;foo bar", e.options());
         EXPECT_EQ("SERVICE ACKNOWLEDGE ALERT"s, e.type());
@@ -495,7 +495,7 @@ TEST(LogEntry, ServiceFlappingAlert) {
         EXPECT_EQ(size_t{123456}, e.lineno());
         EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
-        EXPECT_EQ(LogEntryKind::flapping_service, e.kind());
+        EXPECT_EQ(LogEntryKind::service_flapping_alert, e.kind());
         EXPECT_EQ(line, e.message());
         EXPECT_EQ("huey;hi!;" + state_type + ";foo bar", e.options());
         EXPECT_EQ("SERVICE FLAPPING ALERT"s, e.type());
@@ -931,7 +931,7 @@ TEST(LogEntry, LogInitialStates) {
     EXPECT_EQ(size_t{42}, e.lineno());
     EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
-    EXPECT_EQ(LogEntryKind::log_initial_states, e.kind());
+    EXPECT_EQ(LogEntryKind::logging_initial_states, e.kind());
     EXPECT_EQ(line, e.message());
     EXPECT_EQ(""s, e.options());
     EXPECT_EQ("logging initial states"s, e.type());

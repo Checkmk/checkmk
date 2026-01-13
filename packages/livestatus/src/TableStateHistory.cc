@@ -369,21 +369,21 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::core_starting:
             case LogEntryKind::core_stopping:
             case LogEntryKind::log_version:
-            case LogEntryKind::acknowledge_alert_host:
-            case LogEntryKind::acknowledge_alert_service:
+            case LogEntryKind::host_acknowledge_alert:
+            case LogEntryKind::service_acknowledge_alert:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                 }
                 in_nagios_initial_states = false;
                 break;
-            case LogEntryKind::state_service_initial:
+            case LogEntryKind::initial_service_state:
                 handle_state_entry(processor, core, entry, only_update,
                                    time_periods, state_info, blacklist);
                 break;
-            case LogEntryKind::alert_service:
-            case LogEntryKind::state_service:
-            case LogEntryKind::downtime_alert_service:
-            case LogEntryKind::flapping_service:
+            case LogEntryKind::service_alert:
+            case LogEntryKind::current_service_state:
+            case LogEntryKind::service_downtime_alert:
+            case LogEntryKind::service_flapping_alert:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                 }
@@ -391,14 +391,14 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                    time_periods, state_info, blacklist);
                 in_nagios_initial_states = false;
                 break;
-            case LogEntryKind::state_host_initial:
+            case LogEntryKind::initial_host_state:
                 handle_state_entry(processor, core, entry, only_update,
                                    time_periods, state_info, blacklist);
                 break;
-            case LogEntryKind::alert_host:
-            case LogEntryKind::state_host:
-            case LogEntryKind::downtime_alert_host:
-            case LogEntryKind::flapping_host:
+            case LogEntryKind::host_alert:
+            case LogEntryKind::current_host_state:
+            case LogEntryKind::host_downtime_alert:
+            case LogEntryKind::host_flapping_alert:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                 }
@@ -415,7 +415,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                              state_info);
                 in_nagios_initial_states = false;
                 break;
-            case LogEntryKind::log_initial_states:
+            case LogEntryKind::logging_initial_states:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                 }
@@ -443,9 +443,9 @@ void TableStateHistory::handle_state_entry(
     auto state_changed = updateHostServiceState(processor, entry, *hss,
                                                 only_update, time_periods);
     // Host downtime or state changes also affect its services
-    if (entry->kind() == LogEntryKind::alert_host ||
-        entry->kind() == LogEntryKind::state_host ||
-        entry->kind() == LogEntryKind::downtime_alert_host) {
+    if (entry->kind() == LogEntryKind::host_alert ||
+        entry->kind() == LogEntryKind::current_host_state ||
+        entry->kind() == LogEntryKind::host_downtime_alert) {
         if (state_changed == ModificationStatus::changed) {
             for (auto &svc : hss->_services) {
                 updateHostServiceState(processor, entry, *svc, only_update,
@@ -692,15 +692,15 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         case LogEntryKind::core_starting:
         case LogEntryKind::core_stopping:
         case LogEntryKind::log_version:
-        case LogEntryKind::log_initial_states:
-        case LogEntryKind::acknowledge_alert_host:
-        case LogEntryKind::acknowledge_alert_service:
+        case LogEntryKind::logging_initial_states:
+        case LogEntryKind::host_acknowledge_alert:
+        case LogEntryKind::service_acknowledge_alert:
         case LogEntryKind::timeperiod_transition:
             abort();  // should not happen
             break;
-        case LogEntryKind::state_host:
-        case LogEntryKind::state_host_initial:
-        case LogEntryKind::alert_host: {
+        case LogEntryKind::current_host_state:
+        case LogEntryKind::initial_host_state:
+        case LogEntryKind::host_alert: {
             if (hss._is_host) {
                 if (hss._state != entry->state()) {
                     if (!only_update) {
@@ -721,9 +721,9 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             }
             break;
         }
-        case LogEntryKind::state_service:
-        case LogEntryKind::state_service_initial:
-        case LogEntryKind::alert_service: {
+        case LogEntryKind::current_service_state:
+        case LogEntryKind::initial_service_state:
+        case LogEntryKind::service_alert: {
             if (hss._state != entry->state()) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);
@@ -733,7 +733,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             }
             break;
         }
-        case LogEntryKind::downtime_alert_host: {
+        case LogEntryKind::host_downtime_alert: {
             const bool downtime_active =
                 entry->state_type().starts_with("STARTED");
 
@@ -752,7 +752,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             }
             break;
         }
-        case LogEntryKind::downtime_alert_service: {
+        case LogEntryKind::service_downtime_alert: {
             const bool downtime_active =
                 entry->state_type().starts_with("STARTED");
             if (hss._in_downtime != downtime_active) {
@@ -764,8 +764,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             }
             break;
         }
-        case LogEntryKind::flapping_host:
-        case LogEntryKind::flapping_service: {
+        case LogEntryKind::host_flapping_alert:
+        case LogEntryKind::service_flapping_alert: {
             const bool flapping_active =
                 entry->state_type().starts_with("STARTED");
             if (hss._is_flapping != flapping_active) {
@@ -782,8 +782,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     }
 
     const bool fix_me =
-        (entry->kind() == LogEntryKind::state_host_initial ||
-         entry->kind() == LogEntryKind::state_service_initial) &&
+        (entry->kind() == LogEntryKind::initial_host_state ||
+         entry->kind() == LogEntryKind::initial_service_state) &&
         entry->plugin_output() == "(null)";
     hss._log_output = fix_me ? "" : entry->plugin_output();
     hss._long_log_output = entry->long_plugin_output();

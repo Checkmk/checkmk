@@ -200,7 +200,7 @@ def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
                     yield HostLabel(name="cmk/l3v6_topology", value="multihomed")
 
 
-def inventory_ip_addresses(section: Section) -> InventoryResult:
+def inventorize_ip_addresses(section: Section) -> InventoryResult:
     address_type = {
         4: "ipv4",
         6: "ipv6",
@@ -279,5 +279,5 @@ snmp_section_ip_address = SNMPSection(
 
 inventory_plugin_ip_address = InventoryPlugin(
     name="ip_addresses",
-    inventory_function=inventory_ip_addresses,
+    inventory_function=inventorize_ip_addresses,
 )

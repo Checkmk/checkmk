@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.network.agent_based.ip_addresses import (
     host_label_ip_addresses,
-    inventory_ip_addresses,
+    inventorize_ip_addresses,
     parse_ip_addresses,
     Section,
 )
@@ -254,5 +254,5 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
         ),
     ],
 )
-def test_inventory_ip_addresses(section: Section, expected_result: InventoryResult) -> None:
-    assert list(inventory_ip_addresses(section)) == expected_result
+def test_inventorize_ip_addresses(section: Section, expected_result: InventoryResult) -> None:
+    assert list(inventorize_ip_addresses(section)) == expected_result

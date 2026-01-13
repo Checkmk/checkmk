@@ -44,7 +44,7 @@ agent_section_ibm_mq_managers = AgentSection(
 )
 
 
-def inventory_ibm_mq_managers(section: Section) -> InventoryResult:
+def inventorize_ibm_mq_managers(section: Section) -> InventoryResult:
     for item, attrs in section.items():
         yield TableRow(
             path=["software", "applications", "ibm_mq", "managers"],
@@ -65,5 +65,5 @@ def inventory_ibm_mq_managers(section: Section) -> InventoryResult:
 
 inventory_plugin_ibm_mq_managers = InventoryPlugin(
     name="ibm_mq_managers",
-    inventory_function=inventory_ibm_mq_managers,
+    inventory_function=inventorize_ibm_mq_managers,
 )

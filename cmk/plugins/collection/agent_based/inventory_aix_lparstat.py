@@ -33,7 +33,7 @@ agent_section_aix_lparstat_inventory = AgentSection(
 )
 
 
-def inventory_aix_lparstat_inventory(section: Section) -> InventoryResult:
+def inventorize_aix_lparstat_inventory(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "cpu"],
         inventory_attributes={
@@ -61,5 +61,5 @@ def inventory_aix_lparstat_inventory(section: Section) -> InventoryResult:
 
 inventory_plugin_aix_lparstat_inventory = InventoryPlugin(
     name="aix_lparstat_inventory",
-    inventory_function=inventory_aix_lparstat_inventory,
+    inventory_function=inventorize_aix_lparstat_inventory,
 )

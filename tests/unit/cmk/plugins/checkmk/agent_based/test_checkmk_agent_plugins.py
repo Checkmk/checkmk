@@ -165,5 +165,7 @@ def test_parse_ok(os_type: _OsType) -> None:
 @pytest.mark.parametrize("os_type", [_OsType.lnx, _OsType.win])
 def test_inventory(os_type: _OsType) -> None:
     expected_inventory = [f.as_table_row() for f in _file_list(os_type)]
-    obtained_inventory = list(cap.inventory_checkmk_agent_plugins(_produce_plugin_section(os_type)))
+    obtained_inventory = list(
+        cap.inventorize_checkmk_agent_plugins(_produce_plugin_section(os_type))
+    )
     assert obtained_inventory == expected_inventory

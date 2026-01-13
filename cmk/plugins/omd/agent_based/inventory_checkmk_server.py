@@ -192,7 +192,7 @@ def generate_inventory(merged_sections: dict[str, Any]) -> InventoryResult:
     )
 
 
-def inventory_checkmk(
+def inventorize_checkmk(
     section_livestatus_status: dict[str, dict[str, str]] | None,
     section_omd_status: dict[str, dict] | None,
     section_omd_info: dict[str, dict[str, dict]] | None,
@@ -205,8 +205,8 @@ def inventory_checkmk(
     yield from generate_inventory(merged_sections)
 
 
-inventory_plugin_inventory_checkmk = InventoryPlugin(
-    name="inventory_checkmk",
-    inventory_function=inventory_checkmk,
+inventory_plugin_inventorize_checkmk = InventoryPlugin(
+    name="inventorize_checkmk",
+    inventory_function=inventorize_checkmk,
     sections=["livestatus_status", "omd_status", "omd_info"],
 )

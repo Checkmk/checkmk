@@ -92,7 +92,7 @@ agent_section_check_mk = AgentSection(
 )
 
 
-def inventory_checkmk(section: CheckmkSection) -> InventoryResult:
+def inventorize_checkmk(section: CheckmkSection) -> InventoryResult:
     yield Attributes(
         path=["networking"],
         inventory_attributes={"hostname": section.get("hostname")},
@@ -122,5 +122,5 @@ def inventory_checkmk(section: CheckmkSection) -> InventoryResult:
 
 inventory_plugin_check_mk = InventoryPlugin(
     name="check_mk",
-    inventory_function=inventory_checkmk,
+    inventory_function=inventorize_checkmk,
 )

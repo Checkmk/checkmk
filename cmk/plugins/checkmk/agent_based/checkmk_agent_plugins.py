@@ -132,7 +132,7 @@ agent_section_checkmk_agent_plugins_win = AgentSection(
 )
 
 
-def inventory_checkmk_agent_plugins(section: PluginSection) -> InventoryResult:
+def inventorize_checkmk_agent_plugins(section: PluginSection) -> InventoryResult:
     for type_, plugins in zip(("plugins", "local_checks"), (section.plugins, section.local_checks)):
         yield from (
             TableRow(
@@ -151,5 +151,5 @@ def inventory_checkmk_agent_plugins(section: PluginSection) -> InventoryResult:
 
 inventory_plugin_checkmk_agent_plugins = InventoryPlugin(
     name="checkmk_agent_plugins",
-    inventory_function=inventory_checkmk_agent_plugins,
+    inventory_function=inventorize_checkmk_agent_plugins,
 )

@@ -6,7 +6,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.plugins.omd.agent_based import inventory_checkmk_server as inv_checkmk
+from cmk.plugins.omd.agent_based import inventory_checkmk_server
 
 SECTION_LIVESTATUS_STATUS = {
     "heute": {
@@ -310,13 +310,13 @@ MERGED_SECTION_ENTERPRISE = {
 
 
 def test_merge_sections() -> None:
-    assert MERGED_SECTION_ENTERPRISE == inv_checkmk.merge_sections(
+    assert MERGED_SECTION_ENTERPRISE == inventory_checkmk_server.merge_sections(
         SECTION_LIVESTATUS_STATUS, SECTION_OMD_STATUS, SECTION_OMD_INFO
     )
 
 
-def test_inventory_checkmk() -> None:
-    assert list(inv_checkmk.generate_inventory(MERGED_SECTION_ENTERPRISE)) == [
+def test_inventorize_checkmk() -> None:
+    assert list(inventory_checkmk_server.generate_inventory(MERGED_SECTION_ENTERPRISE)) == [
         TableRow(
             path=["software", "applications", "check_mk", "sites"],
             key_columns={"site": "cisco"},

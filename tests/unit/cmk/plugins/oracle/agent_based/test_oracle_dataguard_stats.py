@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.oracle.agent_based.oracle_dataguard_stats import (
     check_plugin_oracle_dataguard_stats,
-    inventory_oracle_dataguard_stats,
+    inventorize_oracle_dataguard_stats,
     parse_oracle_dataguard_stats,
 )
 
@@ -176,10 +176,10 @@ def test_check_oracle_dataguard_stats(
         ),
     ],
 )
-def test_inventory_oracle_dataguard_stats(
+def test_inventorize_oracle_dataguard_stats(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert (
-        list(inventory_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table)))
+        list(inventorize_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table)))
         == expected_result
     )

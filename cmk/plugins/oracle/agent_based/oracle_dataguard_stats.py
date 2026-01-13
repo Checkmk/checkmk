@@ -272,7 +272,7 @@ check_plugin_oracle_dataguard_stats = CheckPlugin(
 )
 
 
-def inventory_oracle_dataguard_stats(section: Section) -> InventoryResult:
+def inventorize_oracle_dataguard_stats(section: Section) -> InventoryResult:
     for inst, data in section.items():
         try:
             db_name, db_unique_name = inst.split(".", 1)
@@ -295,5 +295,5 @@ def inventory_oracle_dataguard_stats(section: Section) -> InventoryResult:
 
 inventory_plugin_oracle_dataguard_stats = InventoryPlugin(
     name="oracle_dataguard_stats",
-    inventory_function=inventory_oracle_dataguard_stats,
+    inventory_function=inventorize_oracle_dataguard_stats,
 )

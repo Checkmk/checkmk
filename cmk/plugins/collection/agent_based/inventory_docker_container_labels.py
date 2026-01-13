@@ -32,7 +32,7 @@ agent_section_docker_container_labels = AgentSection(
 )
 
 
-def inventory_docker_container_labels(section: Section) -> InventoryResult:
+def inventorize_docker_container_labels(section: Section) -> InventoryResult:
     if isinstance(section, docker.MultipleNodesMarker):
         return
 
@@ -44,5 +44,5 @@ def inventory_docker_container_labels(section: Section) -> InventoryResult:
 
 inventory_plugin_docker_container_labels = InventoryPlugin(
     name="docker_container_labels",
-    inventory_function=inventory_docker_container_labels,
+    inventory_function=inventorize_docker_container_labels,
 )

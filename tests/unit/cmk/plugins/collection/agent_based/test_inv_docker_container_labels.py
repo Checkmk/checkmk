@@ -5,7 +5,7 @@
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.inventory_docker_container_labels import (
-    inventory_docker_container_labels,
+    inventorize_docker_container_labels,
     parse_docker_container_labels,
 )
 
@@ -37,7 +37,7 @@ def test_inv_docker_container_labels_parse() -> None:
 def test_inv_docker_container_labels() -> None:
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     assert sort_inventory_result(
-        inventory_docker_container_labels(parse_docker_container_labels(info))
+        inventorize_docker_container_labels(parse_docker_container_labels(info))
     ) == sort_inventory_result(
         [
             Attributes(

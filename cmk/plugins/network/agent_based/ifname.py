@@ -46,7 +46,7 @@ def parse_if_name(string_table: StringTable) -> list[IfNameEntry]:
     ]
 
 
-def inventory_if_name(section: list[IfNameEntry]) -> InventoryResult:
+def inventorize_if_name(section: list[IfNameEntry]) -> InventoryResult:
     path = ["networking", "interfaces"]
     for entry in section:
         yield TableRow(
@@ -71,5 +71,5 @@ snmp_section_inv_if_name = SimpleSNMPSection(
 
 inventory_plugin_if_name = InventoryPlugin(
     name="inv_if_name",
-    inventory_function=inventory_if_name,
+    inventory_function=inventorize_if_name,
 )

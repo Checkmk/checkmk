@@ -9,7 +9,7 @@ import pytest
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.network.agent_based.ifname import (
     IfNameEntry,
-    inventory_if_name,
+    inventorize_if_name,
     parse_if_name,
 )
 
@@ -110,4 +110,4 @@ def test_check_interface_name_result(
     section: list[IfNameEntry],
     result: InventoryResult,
 ) -> None:
-    assert list(inventory_if_name(section)) == result
+    assert list(inventorize_if_name(section)) == result

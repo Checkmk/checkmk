@@ -107,7 +107,7 @@ check_plugin_oracle_recovery_area = CheckPlugin(
 )
 
 
-def inventory_oracle_recovery_area(section: Section) -> InventoryResult:
+def inventorize_oracle_recovery_area(section: Section) -> InventoryResult:
     for line in section:
         yield TableRow(
             path=["software", "applications", "oracle", "recovery_area"],
@@ -123,5 +123,5 @@ def inventory_oracle_recovery_area(section: Section) -> InventoryResult:
 
 inventory_plugin_oracle_recovery_area = InventoryPlugin(
     name="oracle_recovery_area",
-    inventory_function=inventory_oracle_recovery_area,
+    inventory_function=inventorize_oracle_recovery_area,
 )

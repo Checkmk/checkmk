@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.oracle.agent_based.oracle_recovery_area import (
     check_plugin_oracle_recovery_area,
-    inventory_oracle_recovery_area,
+    inventorize_oracle_recovery_area,
 )
 
 _AGENT_OUTPUT = [
@@ -106,7 +106,7 @@ def test_check_oracle_recovery_area(
         ),
     ],
 )
-def test_inventory_oracle_recovery_area(
+def test_inventorize_oracle_recovery_area(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert list(inventory_oracle_recovery_area(string_table)) == expected_result
+    assert list(inventorize_oracle_recovery_area(string_table)) == expected_result

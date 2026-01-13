@@ -70,7 +70,7 @@ class WirelessEthernetStatus(BaseModel, frozen=True):
 
 @dataclass(frozen=True)
 class WirelessEthernetPort(BaseModel, frozen=True):
-    index: str
+    index: int
     name: str
     poe: str
     duplex: str
@@ -80,7 +80,7 @@ class WirelessEthernetPort(BaseModel, frozen=True):
     @classmethod
     def build(cls, port: Port, power: Power) -> Self:
         return cls(
-            index=port.name.split()[-1],  # "Port 2" -> "2"
+            index=int(port.name.split()[-1]),  # "Port 2" -> "2"
             name=port.name,
             poe=port.poe.standard,
             duplex=port.link_negotiation.duplex,

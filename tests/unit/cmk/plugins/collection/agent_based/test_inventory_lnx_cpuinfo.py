@@ -11,7 +11,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.lnx_cpuinfo import (
-    inventory_lnx_cpuinfo,
+    inventorize_lnx_cpuinfo,
     parse_lnx_cpuinfo,
     Section,
 )
@@ -191,8 +191,8 @@ def _get_info_1():
     return parse_lnx_cpuinfo([line.split(":") for line in OUTPUT_1.split("\n") if line.strip()])
 
 
-def test_inventory_lnx_cpuinfo(section_1: Section) -> None:
-    assert list(inventory_lnx_cpuinfo(section_1)) == [
+def test_inventorize_lnx_cpuinfo(section_1: Section) -> None:
+    assert list(inventorize_lnx_cpuinfo(section_1)) == [
         Attributes(
             path=["hardware", "cpu"],
             inventory_attributes={

@@ -71,7 +71,7 @@ agent_section_lnx_cpuinfo = AgentSection(
 
 
 # Note: This node is also being filled by dmidecode
-def inventory_lnx_cpuinfo(section: Section) -> InventoryResult:
+def inventorize_lnx_cpuinfo(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "cpu"],
         inventory_attributes=section,
@@ -80,5 +80,5 @@ def inventory_lnx_cpuinfo(section: Section) -> InventoryResult:
 
 inventory_plugin_lnx_cpuinfo = InventoryPlugin(
     name="lnx_cpuinfo",
-    inventory_function=inventory_lnx_cpuinfo,
+    inventory_function=inventorize_lnx_cpuinfo,
 )

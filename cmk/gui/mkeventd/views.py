@@ -1609,7 +1609,7 @@ def command_archive_events_of_host_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_archive_events_of_hosts"):
-        commands = [ECDeleteEventsOfHost(HostName(row["host_name"]), row["event_host"])]
+        commands = [ECDeleteEventsOfHost(HostName(row["host_name"]), user.ident)]
         return (
             commands,
             command.confirm_dialog_options(cmdtag, row, action_rows),

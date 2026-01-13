@@ -6,7 +6,10 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_lnx_ip_r import inventory_lnx_ip_r, parse_lnx_ip_r
+from cmk.plugins.collection.agent_based.inventory_lnx_ip_r import (
+    inventorize_lnx_ip_r,
+    parse_lnx_ip_r,
+)
 
 
 @pytest.mark.parametrize(
@@ -87,4 +90,4 @@ from cmk.plugins.collection.agent_based.inventory_lnx_ip_r import inventory_lnx_
     ],
 )
 def test_lnx_ip_r(string_table: StringTable, expected_result: InventoryResult) -> None:
-    assert list(inventory_lnx_ip_r(parse_lnx_ip_r(string_table))) == expected_result
+    assert list(inventorize_lnx_ip_r(parse_lnx_ip_r(string_table))) == expected_result

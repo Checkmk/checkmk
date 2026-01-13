@@ -52,7 +52,7 @@ agent_section_lnx_ip_r = AgentSection(
 )
 
 
-def inventory_lnx_ip_r(section: Section) -> InventoryResult:
+def inventorize_lnx_ip_r(section: Section) -> InventoryResult:
     for route in sorted(section, key=lambda r: r["target"]):
         yield TableRow(
             path=["networking", "routes"],
@@ -70,5 +70,5 @@ def inventory_lnx_ip_r(section: Section) -> InventoryResult:
 
 inventory_plugin_lnx_ip_r = InventoryPlugin(
     name="lnx_ip_r",
-    inventory_function=inventory_lnx_ip_r,
+    inventory_function=inventorize_lnx_ip_r,
 )

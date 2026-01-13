@@ -87,7 +87,7 @@ agent_section_solaris_pkginfo = AgentSection(
 )
 
 
-def inventory_solaris_pkginfo(section: Section) -> InventoryResult:
+def inventorize_solaris_pkginfo(section: Section) -> InventoryResult:
     for package in section:
         yield TableRow(
             path=["software", "packages"],
@@ -108,5 +108,5 @@ def inventory_solaris_pkginfo(section: Section) -> InventoryResult:
 
 inventory_plugin_solaris_pkginfo = InventoryPlugin(
     name="solaris_pkginfo",
-    inventory_function=inventory_solaris_pkginfo,
+    inventory_function=inventorize_solaris_pkginfo,
 )

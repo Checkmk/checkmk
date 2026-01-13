@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_solaris_pkginfo import (
-    inventory_solaris_pkginfo,
+    inventorize_solaris_pkginfo,
     parse_solaris_pkginfo,
 )
 
@@ -82,12 +82,12 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_solaris_pkginfo(
+def test_inventorize_solaris_pkginfo(
     monkeypatch: pytest.MonkeyPatch,
     string_table: StringTable,
     expected_result: InventoryResult,
 ) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert sort_inventory_result(
-        inventory_solaris_pkginfo(parse_solaris_pkginfo(string_table))
+        inventorize_solaris_pkginfo(parse_solaris_pkginfo(string_table))
     ) == sort_inventory_result(expected_result)

@@ -129,6 +129,8 @@ def write_serialized_section(name: str, json_content: str) -> None:
 
 try:
     import requests_unixsocket  # type: ignore[import-untyped]
+
+    write_serialized_section("errors", json.dumps({}))
 except ImportError:
     write_section(
         Error(

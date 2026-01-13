@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import json
 from collections.abc import Sequence
 
 from pydantic import BaseModel
@@ -29,7 +30,11 @@ class Error(BaseModel, frozen=True):
 
 
 def parse_podman_status(string_table: StringTable) -> Section:
-    return [Error.model_validate_json(line[0]) for line in string_table if line]
+    return [
+        Error.model_validate(content)
+        for line in string_table
+        if line and (content := json.loads(line[0]))
+    ]
 
 
 agent_section_podman_status: AgentSection = AgentSection(

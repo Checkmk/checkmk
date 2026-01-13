@@ -16,7 +16,7 @@ def _get_section() -> Mapping[str, str]:
     return parse_lnx_uname([["x86_64"], ["5.4.0-99-generic"]])
 
 
-def test_inventory_solaris_uname(section: Mapping[str, str]) -> None:
+def test_inventorize_solaris_uname(section: Mapping[str, str]) -> None:
     assert list(inventorize_lnx_uname(section)) == [
         Attributes(
             path=["software", "os"],

@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.solaris_uname import (
-    inventory_solaris_uname,
+    inventorize_solaris_uname,
     parse_solaris_uname,
     Section,
 )
@@ -33,8 +33,8 @@ def _get_section() -> Section:
     )
 
 
-def test_inventory_solaris_uname(section: Section) -> None:
-    assert list(inventory_solaris_uname(section)) == [
+def test_inventorize_solaris_uname(section: Section) -> None:
+    assert list(inventorize_solaris_uname(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

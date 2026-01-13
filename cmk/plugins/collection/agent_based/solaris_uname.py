@@ -26,7 +26,7 @@ agent_section_solaris_uname = AgentSection(
 )
 
 
-def inventory_solaris_uname(section: Section) -> InventoryResult:
+def inventorize_solaris_uname(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
@@ -42,5 +42,5 @@ def inventory_solaris_uname(section: Section) -> InventoryResult:
 
 inventory_plugin_solaris_uname = InventoryPlugin(
     name="solaris_uname",
-    inventory_function=inventory_solaris_uname,
+    inventory_function=inventorize_solaris_uname,
 )

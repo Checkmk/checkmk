@@ -128,10 +128,11 @@ _PERMISSIONS_GRAPH_WIDGET = permissions.Optional(
 PERMISSIONS_DASHBOARD = permissions.AllPerm(
     [
         permissions.Perm("general.edit_dashboards"),  # always required, even for reads
-        # these 3 are optional, allowing access to more dashboards the user doesn't own
+        # these 4 are optional, allowing access to more dashboards the user doesn't own
         permissions.Optional(permissions.Perm("general.force_dashboards")),
         permissions.Optional(permissions.Perm("general.see_user_dashboards")),
         permissions.Optional(permissions.Perm("general.see_packaged_dashboards")),
+        permissions.Optional(permissions.Perm("general.edit_foreign_dashboards")),
         # breadcrumb metadata optional, required for every dashboard
         _PERMISSIONS_PAGE_TOPICS,
         # every dashboard has its own permissions, all of which might be checked (and are optional)

@@ -72,6 +72,9 @@
 
 .wato div.inherited {
   color: $font-color-dimmed;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
 
   a {
     color: $font-color-dimmed;

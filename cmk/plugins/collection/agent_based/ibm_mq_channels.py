@@ -22,7 +22,7 @@ agent_section_ibm_mq_channels = AgentSection(
 )
 
 
-def inventory_ibm_mq_channels(section: Section) -> InventoryResult:
+def inventorize_ibm_mq_channels(section: Section) -> InventoryResult:
     for item, attrs in section.items():
         if ":" not in item:
             # Do not show queue manager in inventory
@@ -47,5 +47,5 @@ def inventory_ibm_mq_channels(section: Section) -> InventoryResult:
 
 inventory_plugin_ibm_mq_channels = InventoryPlugin(
     name="ibm_mq_channels",
-    inventory_function=inventory_ibm_mq_channels,
+    inventory_function=inventorize_ibm_mq_channels,
 )

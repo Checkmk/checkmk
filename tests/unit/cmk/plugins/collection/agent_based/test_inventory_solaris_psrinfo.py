@@ -10,7 +10,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, StringTable
 from cmk.plugins.collection.agent_based.inventory_solaris_psrinfo import (
-    inventory_solaris_cpus,
+    inventorize_solaris_cpus,
     parse_solaris_psrinfo_physical,
     parse_solaris_psrinfo_table,
     parse_solaris_psrinfo_verbose,
@@ -207,9 +207,9 @@ def _section(section_function: Callable[[StringTable], T], agent_output: str | N
         ),
     ],
 )
-def test_inventory_solaris_cpus(test_set: PsrInfo, expected_result: InventoryResult) -> None:
+def test_inventorize_solaris_cpus(test_set: PsrInfo, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
-        inventory_solaris_cpus(
+        inventorize_solaris_cpus(
             _section(parse_solaris_psrinfo_physical, test_set.psrinfo_p),
             _section(parse_solaris_psrinfo_virtual, test_set.psrinfo),
             _section(parse_solaris_psrinfo_verbose, test_set.psrinfo_pv),

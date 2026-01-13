@@ -197,7 +197,7 @@ agent_section_solaris_psrinfo_table = AgentSection(
 )
 
 
-def inventory_solaris_cpus(
+def inventorize_solaris_cpus(
     section_solaris_psrinfo_physical: int | None,
     section_solaris_psrinfo_virtual: int | None,
     section_solaris_psrinfo_verbose: ProcessorInfo | None,
@@ -279,5 +279,5 @@ inventory_plugin_solaris_cpus = InventoryPlugin(
         "solaris_psrinfo_verbose",
         "solaris_psrinfo_table",
     ],
-    inventory_function=inventory_solaris_cpus,
+    inventory_function=inventorize_solaris_cpus,
 )

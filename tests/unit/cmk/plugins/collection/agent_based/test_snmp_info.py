@@ -10,7 +10,7 @@ from cmk.agent_based.v2 import Attributes, Result, Service, State
 from cmk.plugins.collection.agent_based.snmp_info import (
     check_snmp_info,
     discover_snmp_info,
-    inventory_snmp_info,
+    inventorize_snmp_info,
     parse_snmp_info,
     SNMPInfo,
 )
@@ -66,8 +66,8 @@ def test_check_snmp_info(section: SNMPInfo) -> None:
     ]
 
 
-def test_inventory_snmp_info(section: SNMPInfo) -> None:
-    assert list(inventory_snmp_info(section)) == [
+def test_inventorize_snmp_info(section: SNMPInfo) -> None:
+    assert list(inventorize_snmp_info(section)) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={

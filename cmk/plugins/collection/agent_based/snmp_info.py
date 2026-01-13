@@ -76,7 +76,7 @@ check_plugin_snmp_info = CheckPlugin(
 )
 
 
-def inventory_snmp_info(section: SNMPInfo) -> InventoryResult:
+def inventorize_snmp_info(section: SNMPInfo) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -124,5 +124,5 @@ def inventory_snmp_info(section: SNMPInfo) -> InventoryResult:
 
 inventory_plugin_snmp_info = InventoryPlugin(
     name="snmp_info",
-    inventory_function=inventory_snmp_info,
+    inventory_function=inventorize_snmp_info,
 )

@@ -61,7 +61,7 @@ snmp_section_perle_chassis = SimpleSNMPSection(
 )
 
 
-def inventory_perle_chassis(section: _Section) -> InventoryResult:
+def inventorize_perle_chassis(section: _Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "chassis"],
         inventory_attributes={
@@ -75,5 +75,5 @@ def inventory_perle_chassis(section: _Section) -> InventoryResult:
 
 inventory_plugin_perle_chassis = InventoryPlugin(
     name="perle_chassis",
-    inventory_function=inventory_perle_chassis,
+    inventory_function=inventorize_perle_chassis,
 )

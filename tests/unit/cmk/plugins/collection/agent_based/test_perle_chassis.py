@@ -29,8 +29,8 @@ def _get_section() -> pc._Section:
     return section
 
 
-def test_inventory_perle_chassis(section: pc._Section) -> None:
-    assert list(pc.inventory_perle_chassis(section)) == [
+def test_inventorize_perle_chassis(section: pc._Section) -> None:
+    assert list(pc.inventorize_perle_chassis(section)) == [
         Attributes(
             path=["hardware", "chassis"],
             inventory_attributes={

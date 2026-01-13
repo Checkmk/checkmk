@@ -64,7 +64,7 @@ agent_section_lnx_video = AgentSection(
 )
 
 
-def inventory_lnx_video(section: Section) -> InventoryResult:
+def inventorize_lnx_video(section: Section) -> InventoryResult:
     for graphics_card in section.values():
         if graphics_card.name:
             yield TableRow(
@@ -82,5 +82,5 @@ def inventory_lnx_video(section: Section) -> InventoryResult:
 
 inventory_plugin_lnx_video = InventoryPlugin(
     name="lnx_video",
-    inventory_function=inventory_lnx_video,
+    inventory_function=inventorize_lnx_video,
 )

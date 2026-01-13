@@ -7,7 +7,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_lnx_video import (
-    inventory_lnx_video,
+    inventorize_lnx_video,
     parse_lnx_video,
 )
 
@@ -127,5 +127,5 @@ from cmk.plugins.collection.agent_based.inventory_lnx_video import (
         ),
     ],
 )
-def test_inventory_lnx_video(string_table: StringTable, expected_result: InventoryResult) -> None:
-    assert list(inventory_lnx_video(parse_lnx_video(string_table))) == expected_result
+def test_inventorize_lnx_video(string_table: StringTable, expected_result: InventoryResult) -> None:
+    assert list(inventorize_lnx_video(parse_lnx_video(string_table))) == expected_result

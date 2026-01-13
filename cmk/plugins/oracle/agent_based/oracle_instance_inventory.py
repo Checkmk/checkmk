@@ -22,7 +22,7 @@ def _parse_raw_db_creation_time(raw_str: str | None) -> str | None:
     return f"{raw_str[4:8]}-{raw_str[2:4]}-{raw_str[:2]} {raw_str[8:10]}:{raw_str[10:]}"
 
 
-def inventory_oracle_instance(section: Section) -> InventoryResult:
+def inventorize_oracle_instance(section: Section) -> InventoryResult:
     path = ["software", "applications", "oracle", "instance"]
 
     for item_data in section.values():
@@ -70,5 +70,5 @@ def inventory_oracle_instance(section: Section) -> InventoryResult:
 
 inventory_plugin_oracle_instance = InventoryPlugin(
     name="oracle_instance",
-    inventory_function=inventory_oracle_instance,
+    inventory_function=inventorize_oracle_instance,
 )

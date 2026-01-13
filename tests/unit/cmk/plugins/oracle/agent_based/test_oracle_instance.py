@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.oracle.agent_based import oracle_instance_check
 from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
-from cmk.plugins.oracle.agent_based.oracle_instance_inventory import inventory_oracle_instance
+from cmk.plugins.oracle.agent_based.oracle_instance_inventory import inventorize_oracle_instance
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
 
@@ -666,7 +666,7 @@ def test_inv_oracle_instance(
     line: list[str],
     expected_data: InventoryResult,
 ) -> None:
-    assert list(inventory_oracle_instance(parse_oracle_instance([line]))) == expected_data
+    assert list(inventorize_oracle_instance(parse_oracle_instance([line]))) == expected_data
 
 
 def test_inv_oracle_instance_multiline() -> None:
@@ -780,7 +780,7 @@ def test_inv_oracle_instance_multiline() -> None:
     ]
 
     assert sort_inventory_result(
-        inventory_oracle_instance(parse_oracle_instance(lines))
+        inventorize_oracle_instance(parse_oracle_instance(lines))
     ) == sort_inventory_result(expected_data)
 
 

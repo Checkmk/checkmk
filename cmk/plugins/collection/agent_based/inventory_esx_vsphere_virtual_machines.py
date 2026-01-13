@@ -7,7 +7,13 @@ import json
 from collections.abc import Sequence
 from typing import TypedDict
 
-from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
+from cmk.agent_based.v2 import (
+    AgentSection,
+    InventoryPlugin,
+    InventoryResult,
+    StringTable,
+    TableRow,
+)
 
 
 class VM(TypedDict):
@@ -32,7 +38,7 @@ agent_section_esx_vsphere_virtual_machines = AgentSection(
 )
 
 
-def inventory_esx_vsphere_virtual_machines(section: Section) -> InventoryResult:
+def inventorize_esx_vsphere_virtual_machines(section: Section) -> InventoryResult:
     for vm in section:
         yield TableRow(
             path=["software", "virtual_machines"],
@@ -46,8 +52,8 @@ def inventory_esx_vsphere_virtual_machines(section: Section) -> InventoryResult:
         )
 
 
-inventory_plugin_inventory_esx_vsphere_virtual_machines = InventoryPlugin(
+inventory_plugin_esx_vsphere_virtual_machines = InventoryPlugin(
     name="inventory_esx_vsphere_virtual_machines",
     sections=["esx_vsphere_virtual_machines"],
-    inventory_function=inventory_esx_vsphere_virtual_machines,
+    inventory_function=inventorize_esx_vsphere_virtual_machines,
 )

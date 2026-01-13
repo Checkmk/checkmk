@@ -58,7 +58,7 @@ def _get_section() -> ais.Section:
 
 
 def test_allnet_ip_sensoric(section: ais.Section) -> None:
-    assert list(ais.inventory_allnet_ip_sensoric(section)) == [
+    assert list(ais.inventorize_allnet_ip_sensoric(section)) == [
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={

@@ -64,7 +64,7 @@ agent_section_allnet_ip_sensoric = AgentSection(
 )
 
 
-def inventory_allnet_ip_sensoric(section: Mapping[str, Mapping[str, str]]) -> InventoryResult:
+def inventorize_allnet_ip_sensoric(section: Mapping[str, Mapping[str, str]]) -> InventoryResult:
     if model := section.get("system", {}).get("devicetype"):
         yield Attributes(
             path=["hardware", "system"],
@@ -74,5 +74,5 @@ def inventory_allnet_ip_sensoric(section: Mapping[str, Mapping[str, str]]) -> In
 
 inventory_plugin_allnet_ip_sensoric = InventoryPlugin(
     name="allnet_ip_sensoric",
-    inventory_function=inventory_allnet_ip_sensoric,
+    inventory_function=inventorize_allnet_ip_sensoric,
 )

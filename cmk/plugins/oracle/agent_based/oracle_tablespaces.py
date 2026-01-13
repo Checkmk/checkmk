@@ -398,7 +398,7 @@ check_plugin_oracle_tablespaces = CheckPlugin(
 # 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
 
-def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> InventoryResult:
+def inventorize_oracle_tablespaces(section: oracle.SectionTableSpaces) -> InventoryResult:
     tablespaces = section["tablespaces"]
     for tablespace in tablespaces:
         sid, name = tablespace
@@ -438,6 +438,6 @@ def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Inventor
 
 inventory_plugin_oracle_tablespaces = InventoryPlugin(
     name="oracle_tablespaces",
-    inventory_function=inventory_oracle_tablespaces,
+    inventory_function=inventorize_oracle_tablespaces,
     sections=["oracle_tablespaces"],
 )

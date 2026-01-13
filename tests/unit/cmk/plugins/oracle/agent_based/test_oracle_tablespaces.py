@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.oracle.agent_based import oracle_tablespaces
 from cmk.plugins.oracle.agent_based.liboracle import OraErrors, SectionTableSpaces
-from cmk.plugins.oracle.agent_based.oracle_tablespaces import inventory_oracle_tablespaces
+from cmk.plugins.oracle.agent_based.oracle_tablespaces import inventorize_oracle_tablespaces
 from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
 
 STRING_TABLE = [
@@ -655,7 +655,9 @@ InvSection: SectionTableSpaces = {
 
 
 def test_inventory() -> None:
-    assert sort_inventory_result(inventory_oracle_tablespaces(InvSection)) == sort_inventory_result(
+    assert sort_inventory_result(
+        inventorize_oracle_tablespaces(InvSection)
+    ) == sort_inventory_result(
         [
             TableRow(
                 path=["software", "applications", "oracle", "tablespaces"],

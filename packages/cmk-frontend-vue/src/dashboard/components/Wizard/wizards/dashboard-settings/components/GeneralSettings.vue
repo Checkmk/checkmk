@@ -22,6 +22,7 @@ interface GeneralSettingsProps {
   uniqueIdValidationErrors: string[]
   dashboardType: string
   originalDashboardId: string
+  loggedInUser: string
 }
 
 defineProps<GeneralSettingsProps>()
@@ -63,6 +64,7 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
     :name-validation-errors="nameValidationErrors"
     :unique-id-validation-errors="uniqueIdValidationErrors"
     :original-dashboard-id="originalDashboardId"
+    :logged-in-user="loggedInUser"
   />
 
   <ContentSpacer />

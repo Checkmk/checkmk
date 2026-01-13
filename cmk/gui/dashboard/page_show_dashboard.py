@@ -131,6 +131,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
         },
         "available_layouts": available_layouts,
         "available_features": available_features,
+        "logged_in_user": user.id,
     }
 
     html.vue_component("cmk-dashboard", data=page_properties)

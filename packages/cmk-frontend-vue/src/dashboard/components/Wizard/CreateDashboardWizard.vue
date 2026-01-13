@@ -15,6 +15,7 @@ import CreateDashboardWizard from './wizards/create-dashboard/CreateDashboardWiz
 
 interface CreateDashboardWizardProps {
   availableLayouts?: DashboardLayout[]
+  loggedInUser: string
 }
 
 const { _t } = usei18n()
@@ -54,6 +55,7 @@ const cancel = () => {
     <Suspense>
       <CreateDashboardWizard
         :available-layouts="props.availableLayouts"
+        :logged-in-user="loggedInUser"
         @create-dashboard="(...args) => emit('create-dashboard', ...args)"
         @cancel-creation="cancel"
       />

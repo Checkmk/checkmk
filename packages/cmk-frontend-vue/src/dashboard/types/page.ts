@@ -44,6 +44,7 @@ export interface DashboardPageProperties {
   }
   available_layouts: DashboardLayout[]
   available_features: DashboardFeatures
+  logged_in_user: string
 }
 
 export interface SharedDashboardPageProperties {

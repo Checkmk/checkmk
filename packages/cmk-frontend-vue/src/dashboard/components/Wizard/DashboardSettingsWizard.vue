@@ -15,6 +15,7 @@ defineProps<{
   activeDashboardId: string
   dashboardGeneralSettings: DashboardGeneralSettings
   dashboardRestrictedToSingle: string[]
+  loggedInUser: string
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +35,7 @@ const save = (dashboardId: string, generalSettings: DashboardGeneralSettings) =>
         :active-dashboard-id="activeDashboardId"
         :dashboard-general-settings="dashboardGeneralSettings"
         :dashboard-restricted-to-single="dashboardRestrictedToSingle"
+        :logged-in-user="loggedInUser"
         @cancel="() => emit('cancel')"
         @save="save"
       />

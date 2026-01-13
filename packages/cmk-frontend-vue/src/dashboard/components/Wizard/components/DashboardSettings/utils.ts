@@ -18,7 +18,11 @@ export const isValidSnakeCase = (string: string): boolean => {
   return snakeCaseRegex.test(string)
 }
 
-export const isIdInUse = async (uniqueId: string, ignoreId?: string): Promise<boolean> => {
+export const isIdInUse = async (
+  owner: string,
+  uniqueId: string,
+  ignoreId?: string
+): Promise<boolean> => {
   if (ignoreId && uniqueId === ignoreId) {
     return false
   }
@@ -26,13 +30,39 @@ export const isIdInUse = async (uniqueId: string, ignoreId?: string): Promise<bo
   const { listDashboardMetadata } = dashboardAPI
   const result = await listDashboardMetadata()
 
-  return result.map((dashboard) => dashboard.name).includes(uniqueId)
+  return result
+    .filter((dashboard) => dashboard.owner === owner)
+    .map((dashboard) => dashboard.name)
+    .includes(uniqueId)
 }
 
-export const generateUniqueId = async (baseId: string, ignoreId?: string): Promise<string> => {
+export const generateUniqueId = async (
+  owner: string,
+  baseId: string,
+  ignoreId?: string
+): Promise<string> => {
+  if (ignoreId && baseId === ignoreId) {
+    return baseId
+  }
+
+  const _isIdInUse = (dashboardIds: string[], uniqueId: string, ignoreId?: string) => {
+    if (ignoreId && uniqueId === ignoreId) {
+      return false
+    }
+
+    return dashboardIds.includes(uniqueId)
+  }
+
   let uniqueId = baseId
   let counter = 1
-  while (await isIdInUse(uniqueId, ignoreId)) {
+
+  const { listDashboardMetadata } = dashboardAPI
+  const result = await listDashboardMetadata()
+  const dashboardIds: string[] = result
+    .filter((dashboard) => dashboard.owner === owner)
+    .map((dashboard) => dashboard.name)
+
+  while (_isIdInUse(dashboardIds, uniqueId, ignoreId)) {
     uniqueId = `${baseId}_${counter}`
     counter++
   }

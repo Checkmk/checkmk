@@ -40,6 +40,7 @@ interface CreateDashboardWizardProps {
   referenceDashboardLayoutType: DashboardLayout
   referenceDashboardType: DashboardOwnerType
   availableLayouts: DashboardLayout[]
+  loggedInUser: string
 }
 
 const props = defineProps<CreateDashboardWizardProps>()
@@ -105,7 +106,12 @@ const {
   validateGeneralSettings,
   addFilterSuffix,
   buildSettings
-} = await useDashboardGeneralSettings(clonedSettings, clonedDashboardId, avoidInitialCollision)
+} = await useDashboardGeneralSettings(
+  props.loggedInUser,
+  clonedSettings,
+  clonedDashboardId,
+  avoidInitialCollision
+)
 createUniqueId.value = false
 
 const dashboardLayout = ref<DashboardLayout>(props.referenceDashboardLayoutType)
@@ -204,6 +210,7 @@ const cancel = () => {
             v-model:add-filter-suffix="addFilterSuffix"
             :name-validation-errors="nameErrors"
             :unique-id-validation-errors="uniqueIdErrors"
+            :logged-in-user="loggedInUser"
           />
           <ContentSpacer />
           <DashboardLayoutSelector

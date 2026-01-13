@@ -210,17 +210,17 @@ onUnmounted(() => {
 
 <template>
   <div class="db-filter-selection__main-container">
-    <div v-if="processedCategory" class="filter-menu">
+    <template v-if="processedCategory">
       <div class="filter-menu__sticky-header">
         <CmkHeading type="h2">
           {{ `${untranslated(processedCategory.title)} ${_t('filter')}` }}
         </CmkHeading>
 
-        <div ref="searchDropdownRef" class="filter-menu__search-container">
+        <div ref="searchDropdownRef" class="db-filter-selection__search-container">
           <input
             v-model="searchTerm"
             type="text"
-            :placeholder="_t('Search Filter')"
+            :placeholder="_t('Search')"
             class="filter-menu__search-input"
             @input="handleSearchInput"
           />
@@ -303,78 +303,75 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <CmkScrollContainer
-        :max-height="`calc(100% - 130px)`"
-        :height="`calc(100% - 130px)`"
-        type="outer"
-        class="db-filter-selection__scroll-container"
-      >
-        <div class="filter-menu__entries">
-          <template
-            v-for="entry in processedCategory.entries"
-            :key="`${processedCategory.name}-${entry.type === 'group' ? entry.name : entry.id}`"
-          >
-            <div
-              v-if="entry.type === 'filter'"
-              class="filter-menu__filter-item"
-              @click="filters.toggleFilter(entry.id)"
+      <div class="db-filter-selection__scroll-container">
+        <CmkScrollContainer type="outer">
+          <div class="filter-menu__entries">
+            <template
+              v-for="entry in processedCategory.entries"
+              :key="`${processedCategory.name}-${entry.type === 'group' ? entry.name : entry.id}`"
             >
-              <span
-                class="filter-menu__filter-checkmark"
-                :class="{
-                  'filter-menu__filter-checkmark--active': filters.isFilterActive(entry.id)
-                }"
-              ></span>
-              <div class="filter-menu__filter-title">
-                <CmkLabel>{{ entry.title }}</CmkLabel>
-              </div>
-            </div>
-
-            <div v-else-if="entry.type === 'group'" class="filter-menu__group">
-              <div class="filter-menu__group-header">
+              <div
+                v-if="entry.type === 'filter'"
+                class="filter-menu__filter-item"
+                @click="filters.toggleFilter(entry.id)"
+              >
                 <span
                   class="filter-menu__filter-checkmark"
                   :class="{
-                    'filter-menu__filter-checkmark--active': isGroupActive(entry)
+                    'filter-menu__filter-checkmark--active': filters.isFilterActive(entry.id)
                   }"
                 ></span>
-                <CmkCollapsibleTitle
-                  :title="untranslated(getGroupTitle(entry))"
-                  :side-title="untranslated(getGroupSideTitle(entry))"
-                  :open="collapsibleStates[`${processedCategory.name}-${entry.name}`] ?? false"
-                  @toggle-open="toggleCollapsible(entry.name)"
-                />
-              </div>
-              <CmkCollapsible
-                :open="collapsibleStates[`${processedCategory.name}-${entry.name}`] ?? false"
-              >
-                <div class="filter-menu__group-content">
-                  <div
-                    v-for="filterItem in entry.entries"
-                    :key="filterItem.id"
-                    class="filter-menu__filter-item filter-menu__filter-item--grouped"
-                    :class="{
-                      'filter-menu__filter-item--active': filters.isFilterActive(filterItem.id)
-                    }"
-                    @click="filters.toggleFilter(filterItem.id)"
-                  >
-                    <span
-                      class="filter-menu__filter-checkmark"
-                      :class="{
-                        'filter-menu__filter-checkmark--active': filters.isFilterActive(
-                          filterItem.id
-                        )
-                      }"
-                    ></span>
-                    <span class="filter-menu__filter-title">{{ filterItem.title }}</span>
-                  </div>
+                <div class="filter-menu__filter-title">
+                  <CmkLabel>{{ entry.title }}</CmkLabel>
                 </div>
-              </CmkCollapsible>
-            </div>
-          </template>
-        </div>
-      </CmkScrollContainer>
-    </div>
+              </div>
+
+              <div v-else-if="entry.type === 'group'" class="filter-menu__group">
+                <div class="filter-menu__group-header">
+                  <span
+                    class="filter-menu__filter-checkmark"
+                    :class="{
+                      'filter-menu__filter-checkmark--active': isGroupActive(entry)
+                    }"
+                  ></span>
+                  <CmkCollapsibleTitle
+                    :title="untranslated(getGroupTitle(entry))"
+                    :side-title="untranslated(getGroupSideTitle(entry))"
+                    :open="collapsibleStates[`${processedCategory.name}-${entry.name}`] ?? false"
+                    @toggle-open="toggleCollapsible(entry.name)"
+                  />
+                </div>
+                <CmkCollapsible
+                  :open="collapsibleStates[`${processedCategory.name}-${entry.name}`] ?? false"
+                >
+                  <div class="filter-menu__group-content">
+                    <div
+                      v-for="filterItem in entry.entries"
+                      :key="filterItem.id"
+                      class="filter-menu__filter-item filter-menu__filter-item--grouped"
+                      :class="{
+                        'filter-menu__filter-item--active': filters.isFilterActive(filterItem.id)
+                      }"
+                      @click="filters.toggleFilter(filterItem.id)"
+                    >
+                      <span
+                        class="filter-menu__filter-checkmark"
+                        :class="{
+                          'filter-menu__filter-checkmark--active': filters.isFilterActive(
+                            filterItem.id
+                          )
+                        }"
+                      ></span>
+                      <span class="filter-menu__filter-title">{{ filterItem.title }}</span>
+                    </div>
+                  </div>
+                </CmkCollapsible>
+              </div>
+            </template>
+          </div>
+        </CmkScrollContainer>
+      </div>
+    </template>
 
     <CmkParagraph v-else>{{ _t('No filter category available') }}</CmkParagraph>
   </div>
@@ -382,30 +379,21 @@ onUnmounted(() => {
 
 <style scoped>
 .db-filter-selection__main-container {
-  margin: var(--dimension-9) var(--dimension-7);
+  display: flex;
+  flex-direction: column;
 }
 
 .db-filter-selection__scroll-container {
+  min-height: 0;
   border-image: linear-gradient(to right, var(--color-digital-green-0), var(--color-mid-grey-60)) 1;
   border-width: 0 0 1px;
   border-style: solid;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu::-webkit-scrollbar {
-  display: none;
+.db-filter-selection__search-container {
+  position: relative;
+  margin-top: var(--dimension-4);
+  margin-bottom: var(--dimension-6);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -417,12 +405,6 @@ onUnmounted(() => {
   margin-bottom: var(--dimension-4);
   border-bottom: 1px solid transparent;
   background-color: var(--slide-in-left-part);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu__search-container {
-  position: relative;
-  margin-bottom: var(--dimension-6);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

@@ -158,7 +158,7 @@ agent_section_solaris_prtdiag = AgentSection(
 )
 
 
-def inventory_solaris_prtdiag(section: Section) -> InventoryResult:
+def inventorize_solaris_prtdiag(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "bios"],
         inventory_attributes=section.bios,
@@ -171,5 +171,5 @@ def inventory_solaris_prtdiag(section: Section) -> InventoryResult:
 
 inventory_plugin_solaris_prtdiag = InventoryPlugin(
     name="solaris_prtdiag",
-    inventory_function=inventory_solaris_prtdiag,
+    inventory_function=inventorize_solaris_prtdiag,
 )

@@ -947,7 +947,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.nonfree.pro.dcd"): _allow(
         *PACKAGE_CCC,
-        "cmk.nonfree.ultimate.metric_backend.dcd.register",
+        "cmk.nonfree.ultimate.otel.dcd.register",
         "cmk.otel_collector",
         "cmk.piggyback",
         "cmk.utils",
@@ -1054,18 +1054,18 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.events",
         "cmk.otel_collector",
     ),
-    Component("cmk.nonfree.ultimate.metric_backend.dcd"): _allow(
-        *PACKAGE_METRIC_BACKEND,
-        "cmk.ccc",
-        "cmk.nonfree.pro.dcd",
-        "cmk.utils",
-    ),
     Component("cmk.nonfree.ultimate.metric_backend.gui"): _allow(
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_METRIC_BACKEND,
         "cmk.ccc",
         "cmk.fields",
         "cmk.gui",
+        "cmk.utils",
+    ),
+    Component("cmk.nonfree.ultimate.otel.dcd"): _allow(
+        *PACKAGE_METRIC_BACKEND,
+        "cmk.ccc",
+        "cmk.nonfree.pro.dcd",
         "cmk.utils",
     ),
     Component("omdlib"): _allow(

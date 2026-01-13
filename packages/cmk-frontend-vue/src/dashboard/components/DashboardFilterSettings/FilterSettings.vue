@@ -198,6 +198,9 @@ const serviceMandatoryFilters = computed(() => {
 <template>
   <div class="db-filter-settings__main-container">
     <div class="db-filter-settings__selection-container">
+      <CmkHeading class="db-filter-settings__selection-container-header" type="h1">{{
+        _t('Add filter')
+      }}</CmkHeading>
       <FilterSelection
         :category-filter="filterCategories.get('host')!"
         :category-definition="CATEGORY_DEFINITIONS.host!"
@@ -373,12 +376,17 @@ const serviceMandatoryFilters = computed(() => {
 
 .db-filter-settings__selection-container {
   position: relative;
-  height: 100%;
+  height: calc(100% - 2 * var(--dimension-7));
+  padding: var(--dimension-7);
   flex: 1.3;
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-4);
+  gap: var(--dimension-6);
   background-color: var(--slide-in-left-part);
+}
+
+.db-filter-settings__selection-container-header {
+  margin-bottom: var(--dimension-7);
 }
 
 .db-filter-settings__selection-item {

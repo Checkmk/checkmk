@@ -5,7 +5,7 @@
 
 from cmk.agent_based.v2 import TableRow
 from cmk.plugins.collection.agent_based.inventory_fortisandbox_software import (
-    inventory_fortisandbox_software,
+    inventorize_fortisandbox_software,
     parse_fortisandbox_software,
 )
 
@@ -32,8 +32,10 @@ def test_parse_fortisandbox_software_inv() -> None:
     assert list(parsed) == SECTION
 
 
-def test_inventory_fortisandbox_software() -> None:
-    assert sort_inventory_result(inventory_fortisandbox_software(SECTION)) == sort_inventory_result(
+def test_inventorize_fortisandbox_software() -> None:
+    assert sort_inventory_result(
+        inventorize_fortisandbox_software(SECTION)
+    ) == sort_inventory_result(
         [
             TableRow(
                 path=["software", "applications", "fortinet", "fortisandbox"],

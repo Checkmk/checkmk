@@ -58,7 +58,7 @@ snmp_section_fortisandbox_software = SimpleSNMPSection(
 )
 
 
-def inventory_fortisandbox_software(section: Section) -> InventoryResult:
+def inventorize_fortisandbox_software(section: Section) -> InventoryResult:
     yield from (
         TableRow(
             path=["software", "applications", "fortinet", "fortisandbox"],
@@ -74,5 +74,5 @@ def inventory_fortisandbox_software(section: Section) -> InventoryResult:
 
 inventory_plugin_fortisandbox_software = InventoryPlugin(
     name="fortisandbox_software",
-    inventory_function=inventory_fortisandbox_software,
+    inventory_function=inventorize_fortisandbox_software,
 )

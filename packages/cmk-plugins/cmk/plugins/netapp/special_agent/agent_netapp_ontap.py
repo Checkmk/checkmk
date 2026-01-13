@@ -826,12 +826,9 @@ def fetch_qtree_quota(
     )
 
     for element in NetAppResource.QuotaReport.get_collection(
-        connection=connection, fields=",".join(field_query)
+        connection=connection, fields=",".join(field_query), type="tree"
     ):
         element_data = element.to_dict()
-
-        if element_data["type"] != "tree":
-            continue
 
         yield models.QtreeQuotaModel(
             name=element_data.get("qtree", {}).get("name"),

@@ -1449,12 +1449,24 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         site_states = {}
 
         sites = site_management_registry["site_management"].load_sites()
-        replication_sites = [
-            (site_id, remote_automation_config_from_site_config(site_config))
-            for (site_id, site_config) in sites.items()
-            if is_replication_enabled(site_config)
-        ]
-        remote_status = ReplicationStatusFetcher().fetch(replication_sites, debug=ctx.config.debug)
+
+        replication_sites = []
+        remote_status: dict[SiteId, ReplicationStatus] = {}
+        for site_id, site_config in sites.items():
+            if not is_replication_enabled(site_config):
+                continue
+            try:
+                replication_sites.append(
+                    (site_id, remote_automation_config_from_site_config(site_config))
+                )
+            except MKGeneralException as e:
+                remote_status[site_id] = ReplicationStatus(
+                    site_id=site_id, success=False, response=e
+                )
+
+        remote_status.update(
+            ReplicationStatusFetcher().fetch(replication_sites, debug=ctx.config.debug)
+        )
 
         for site_id, site in sites.items():
             site_id_str: str = site_id

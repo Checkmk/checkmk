@@ -27,11 +27,3 @@ py_binary(
         requirement("simplejson"),
     ],
 )
-
-py_library(
-    name = "agent-plugins",
-    srcs = glob(
-        include = ["**/*.py"],
-    ),
-    visibility = ["//visibility:public"],
-)

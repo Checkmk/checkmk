@@ -29,6 +29,7 @@ const props = defineProps<{
   activeDashboardId: string
   dashboardGeneralSettings: DashboardGeneralSettings
   dashboardRestrictedToSingle: string[]
+  loggedInUser: string
 }>()
 
 const emit = defineEmits<{
@@ -162,6 +163,7 @@ const save = async () => {
               :unique-id-validation-errors="uniqueIdErrors"
               :dashboard-type="dashboardTypeString"
               :original-dashboard-id="originalId"
+              :logged-in-user="loggedInUser"
               @update:description="updateDescription"
             />
           </CmkTabContent>

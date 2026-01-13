@@ -30,6 +30,7 @@ const { _t } = usei18n()
 
 interface CreateDashboardWizardProps {
   availableLayouts: DashboardLayout[]
+  loggedInUser: string
 }
 
 const props = defineProps<CreateDashboardWizardProps>()
@@ -63,7 +64,7 @@ const {
   sortIndexError,
   validateGeneralSettings,
   buildSettings
-} = await useDashboardGeneralSettings()
+} = await useDashboardGeneralSettings(props.loggedInUser)
 
 const dashboardLayout = ref<DashboardLayout>(
   props.availableLayouts.includes(DashboardLayout.RESPONSIVE_GRID)
@@ -217,6 +218,7 @@ const displayVisibility = ref<boolean>(true)
           v-model:dashboard-emblem="dashboardEmblem"
           :name-validation-errors="nameErrors"
           :unique-id-validation-errors="uniqueIdErrors"
+          :logged-in-user="loggedInUser"
         />
 
         <ContentSpacer />

@@ -453,6 +453,7 @@ function deepClone<T>(obj: T): T {
       <CreateDashboardWizard
         v-model:open="openDashboardCreationDialog"
         :available-layouts="available_layouts"
+        :logged-in-user="logged_in_user"
         @create-dashboard="(...args) => createDashboard(...args)"
         @cancel-creation="redirectToListDashboardsPage"
       />
@@ -473,6 +474,7 @@ function deepClone<T>(obj: T): T {
           dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
         "
         :reference-dashboard-type="dashboardsManager.activeDashboard.value!.model.type"
+        :logged-in-user="logged_in_user"
         @clone-dashboard="(...args) => cloneDashboard(...args)"
         @cancel-clone="openDashboardCloneDialog = false"
       />
@@ -532,6 +534,7 @@ function deepClone<T>(obj: T): T {
         :dashboard-restricted-to-single="
           dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single!
         "
+        :logged-in-user="logged_in_user"
         @cancel="openDashboardSettings = false"
         @save="updateDashboardSettings"
       />

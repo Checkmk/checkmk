@@ -29,6 +29,7 @@ interface GeneralPropertiesProps {
   nameValidationErrors: string[]
   uniqueIdValidationErrors: string[]
   originalDashboardId?: string
+  loggedInUser: string
 }
 
 const props = defineProps<GeneralPropertiesProps>()
@@ -50,8 +51,8 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
 })
 
 const _generateUniqueId = async (base: string) => {
-  uniqueId.value = (await isIdInUse(base, props?.originalDashboardId))
-    ? await generateUniqueId(base, props?.originalDashboardId)
+  uniqueId.value = (await isIdInUse(props.loggedInUser, base, props?.originalDashboardId))
+    ? await generateUniqueId(props.loggedInUser, base, props?.originalDashboardId)
     : base
 }
 const _debouncedGenerateUniqueId = useDebounceFn(_generateUniqueId, 300)

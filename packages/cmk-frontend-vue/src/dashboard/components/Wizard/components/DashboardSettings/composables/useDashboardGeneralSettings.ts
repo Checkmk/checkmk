@@ -15,6 +15,7 @@ import { generateUniqueId, isIdInUse, isValidSnakeCase } from '../utils'
 const { _t } = usei18n()
 
 export async function useDashboardGeneralSettings(
+  loggedInUser: string,
   initialSettings?: DashboardGeneralSettings,
   dashboardId?: string,
   avoidInitialCollision: boolean = false
@@ -70,7 +71,7 @@ export async function useDashboardGeneralSettings(
       return
     }
 
-    if (await isIdInUse(trimmed)) {
+    if (await isIdInUse(loggedInUser, trimmed)) {
       uniqueIdErrors.value.push(_t('This Unique ID is already in use. Please choose another one.'))
     }
   }
@@ -114,8 +115,8 @@ export async function useDashboardGeneralSettings(
     return { title, menu, visibility }
   }
 
-  if (avoidInitialCollision && (await isIdInUse(uniqueId.value))) {
-    uniqueId.value = await generateUniqueId(uniqueId.value)
+  if (avoidInitialCollision && (await isIdInUse(loggedInUser, uniqueId.value))) {
+    uniqueId.value = await generateUniqueId(loggedInUser, uniqueId.value)
   }
 
   return {

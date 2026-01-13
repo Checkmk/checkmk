@@ -22,6 +22,7 @@ interface CreateDashboardWizardProps {
   referenceDashboardLayoutType: DashboardLayout
   referenceDashboardType: DashboardOwnerType
   availableLayouts: DashboardLayout[]
+  loggedInUser: string
 }
 
 const props = defineProps<CreateDashboardWizardProps>()
@@ -61,6 +62,7 @@ const cancel = () => {
         :reference-dashboard-restricted-to-single="referenceDashboardRestrictedToSingle"
         :reference-dashboard-layout-type="referenceDashboardLayoutType"
         :reference-dashboard-type="referenceDashboardType"
+        :logged-in-user="loggedInUser"
         @clone-dashboard="(...args) => emit('clone-dashboard', ...args)"
         @cancel-clone="cancel"
       />

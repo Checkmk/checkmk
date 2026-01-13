@@ -440,7 +440,7 @@ def _make_inventory_interface(
     )
 
 
-def inventory_lnx_if(
+def inventorize_lnx_if(
     section_lnx_if: Section | None,
     section_bonding: bonding.Section | None,
 ) -> InventoryResult:
@@ -518,7 +518,7 @@ def _get_address(network: str) -> str:
 inventory_plugin_lnx_if = InventoryPlugin(
     name="lnx_if",
     sections=["lnx_if", "bonding"],
-    inventory_function=inventory_lnx_if,
+    inventory_function=inventorize_lnx_if,
     # TODO Use inv_if? Also have a look at winperf_if and other interface intentories..
     # inventory_ruleset_name="inv_if",
     # inventory_default_parameters={},

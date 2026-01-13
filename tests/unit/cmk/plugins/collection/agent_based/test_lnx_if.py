@@ -1180,8 +1180,8 @@ def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-def test_inventory_lnx_if_empty() -> None:
-    assert list(lnx_if.inventory_lnx_if(lnx_if.parse_lnx_if([]), None)) == [
+def test_inventorize_lnx_if_empty() -> None:
+    assert list(lnx_if.inventorize_lnx_if(lnx_if.parse_lnx_if([]), None)) == [
         Attributes(
             path=["networking"],
             inventory_attributes={
@@ -1193,10 +1193,10 @@ def test_inventory_lnx_if_empty() -> None:
     ]
 
 
-def test_inventory_lnx_if_no_bonding() -> None:
+def test_inventorize_lnx_if_no_bonding() -> None:
     assert [
         e
-        for e in lnx_if.inventory_lnx_if(
+        for e in lnx_if.inventorize_lnx_if(
             lnx_if.parse_lnx_if(
                 [
                     ["[start_iplink]"],
@@ -1245,10 +1245,10 @@ def test_inventory_lnx_if_no_bonding() -> None:
     ]
 
 
-def test_inventory_lnx_if_with_bonding() -> None:
+def test_inventorize_lnx_if_with_bonding() -> None:
     assert [
         e
-        for e in lnx_if.inventory_lnx_if(
+        for e in lnx_if.inventorize_lnx_if(
             lnx_if.parse_lnx_if(
                 [
                     ["[start_iplink]"],
@@ -1390,8 +1390,8 @@ def test_host_label_lnx_ip_address(
         ),
     ],
 )
-def test_inventory_lnx_if_ip(section: lnx_if.Section, expected_result: InventoryResult) -> None:
-    assert list(lnx_if.inventory_lnx_if(section, None)) == list(expected_result)
+def test_inventorize_lnx_if_ip(section: lnx_if.Section, expected_result: InventoryResult) -> None:
+    assert list(lnx_if.inventorize_lnx_if(section, None)) == list(expected_result)
 
 
 if __name__ == "__main__":

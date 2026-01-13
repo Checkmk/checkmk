@@ -174,7 +174,7 @@ export abstract class FigureBase<
     json(encodeURI(post_settings.url), {
       credentials: 'include',
       method: 'POST',
-      body: encodeURIComponent(post_settings.body),
+      body: post_settings.body,
       headers: {
         'Content-type': 'application/x-www-form-urlencoded'
       }

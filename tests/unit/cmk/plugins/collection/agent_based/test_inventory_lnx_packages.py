@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_lnx_packages import (
-    inventory_lnx_packages,
+    inventorize_lnx_packages,
     parse_lnx_packages,
 )
 
@@ -88,9 +88,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_lnx_packages(
+def test_inventorize_lnx_packages(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
-        inventory_lnx_packages(parse_lnx_packages(string_table))
+        inventorize_lnx_packages(parse_lnx_packages(string_table))
     ) == sort_inventory_result(expected_result)

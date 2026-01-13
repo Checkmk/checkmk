@@ -94,7 +94,7 @@ agent_section_lnx_packages = AgentSection(
 )
 
 
-def inventory_lnx_packages(section: Section) -> InventoryResult:
+def inventorize_lnx_packages(section: Section) -> InventoryResult:
     for package in section:
         inventory_columns = {
             "version": package.version,
@@ -117,5 +117,5 @@ def inventory_lnx_packages(section: Section) -> InventoryResult:
 
 inventory_plugin_lnx_packages = InventoryPlugin(
     name="lnx_packages",
-    inventory_function=inventory_lnx_packages,
+    inventory_function=inventorize_lnx_packages,
 )

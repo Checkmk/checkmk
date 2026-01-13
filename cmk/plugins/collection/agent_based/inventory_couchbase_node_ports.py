@@ -17,7 +17,7 @@ def _get_path(name: str) -> list[str]:
     return ["software", "applications", "couchbase", "nodes", node, "ports"]
 
 
-def inventory_couchbase_nodes_ports(section: couchbase.Section) -> InventoryResult:
+def inventorize_couchbase_nodes_ports(section: couchbase.Section) -> InventoryResult:
     yield from (
         Attributes(
             path=_get_path(name),
@@ -29,5 +29,5 @@ def inventory_couchbase_nodes_ports(section: couchbase.Section) -> InventoryResu
 
 inventory_plugin_couchbase_nodes_ports = InventoryPlugin(
     name="couchbase_nodes_ports",
-    inventory_function=inventory_couchbase_nodes_ports,
+    inventory_function=inventorize_couchbase_nodes_ports,
 )

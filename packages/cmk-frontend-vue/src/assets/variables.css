@@ -138,8 +138,8 @@
     --toggle-button-group-hover-bg-color: var(--color-daylight-grey-80);
 
     /* Cmk Inline Validation */
-    --inline-error-border-color: var(--color-light-red-50);
-    --inline-error-text-color: var(--color-light-red-50);
+    --inline-error-border-color: var(--color-dark-red-50);
+    --inline-error-text-color: var(--color-dark-red-50);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
@@ -258,8 +258,8 @@
     --toggle-button-group-hover-bg-color: var(--color-midnight-grey-50);
 
     /* Cmk Inline Validation */
-    --inline-error-border-color: var(--color-light-red-40);
-    --inline-error-text-color: var(--color-light-red-30);
+    --inline-error-border-color: var(--color-dark-red-40);
+    --inline-error-text-color: var(--color-dark-red-30);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);

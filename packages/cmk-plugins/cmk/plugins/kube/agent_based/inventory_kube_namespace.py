@@ -7,7 +7,7 @@ from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult
 from cmk.plugins.kube.schemata.section import NamespaceInfo
 
 
-def inventory_kube_namespace(
+def inventorize_kube_namespace(
     section: NamespaceInfo,
 ) -> InventoryResult:
     yield Attributes(
@@ -23,5 +23,5 @@ def inventory_kube_namespace(
 inventory_plugin_kube_namespace = InventoryPlugin(
     name="kube_namespace",
     sections=["kube_namespace_info"],
-    inventory_function=inventory_kube_namespace,
+    inventory_function=inventorize_kube_namespace,
 )

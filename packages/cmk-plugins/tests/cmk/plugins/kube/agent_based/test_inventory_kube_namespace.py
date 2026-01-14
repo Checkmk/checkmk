@@ -11,7 +11,9 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.kube.agent_based.inventory_kube_namespace import inventory_kube_namespace
+from cmk.plugins.kube.agent_based.inventory_kube_namespace import (
+    inventorize_kube_namespace,
+)
 from cmk.plugins.kube.schemata.api import NamespaceName
 from cmk.plugins.kube.schemata.section import FilteredAnnotations, NamespaceInfo
 from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_result
@@ -43,10 +45,10 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
         ),
     ],
 )
-def test_inventory_kube_namespace(
+def test_inventorize_kube_namespace(
     section_info: NamespaceInfo,
     expected_inventory_result: Sequence[Any],
 ) -> None:
-    assert sort_inventory_result(inventory_kube_namespace(section_info)) == sort_inventory_result(
+    assert sort_inventory_result(inventorize_kube_namespace(section_info)) == sort_inventory_result(
         expected_inventory_result
     )

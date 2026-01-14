@@ -181,7 +181,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_jira"),
     SpecialAgent("agent_jolokia"),
     SpecialAgent("agent_kube"),
-    SpecialAgent("agent_metric_backend_custom_query"),
+    SpecialAgent("agent_custom_query_metric_backend"),
     SpecialAgent("agent_mobileiron"),
     SpecialAgent("agent_mqtt"),
     SpecialAgent("agent_netapp_ontap"),
@@ -214,7 +214,7 @@ _SKIPPED_SPECIAL_AGENTS = {
 }
 
 _ULTIMATE_AGENTS = {
-    "agent_metric_backend_custom_query",
+    "agent_custom_query_metric_backend",
     "agent_otel",
 }
 

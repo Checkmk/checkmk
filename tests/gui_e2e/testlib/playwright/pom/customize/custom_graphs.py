@@ -141,7 +141,7 @@ class DesignGraph(BaseGraph):
             "tbody > tr > td:nth-child(3) > img:nth-child(4)"
         )
         self.main_area.locator(slide_in_selector).click()
-        ruleset_name = "special_agents:metric_backend_custom_query"
+        ruleset_name = "special_agents:custom_query_metric_backend"
         expect(
             self.main_area.get_text(ruleset_name),
             f"Ruleset name'{ruleset_name}' not visible.",

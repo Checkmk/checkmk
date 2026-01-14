@@ -96,7 +96,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
     "netapp_ontap": agent_netapp_ontap,
-    **({} if custom_query is None else {"metric_backend_custom_query": custom_query}),
+    **({} if custom_query is None else {"custom_query_metric_backend": custom_query}),
     "prism": None,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,
@@ -267,7 +267,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--host-name",
         "HOSTNAME",
     ],
-    "metric_backend_custom_query": [
+    "custom_query_metric_backend": [
         json.dumps(
             {
                 "queries": [

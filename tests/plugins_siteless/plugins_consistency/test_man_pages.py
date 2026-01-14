@@ -249,6 +249,7 @@ _ALLOWED_AGENTS = [
     "azure_v2",
     "azure_status",
     "cisco_meraki",
+    "custom_query_metric_backend",
     "datadog",
     "ddn_s2a",
     "elasticsearch",

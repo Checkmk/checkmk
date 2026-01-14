@@ -33,6 +33,7 @@ interface Props {
   isEditMode: boolean
   publicToken: DashboardTokenModel | null
   isEmptyDashboard: boolean
+  isDashboardLoading: boolean
 }
 
 const { _t } = usei18n()
@@ -138,10 +139,15 @@ const pageNavigation = parsePageNavigation()
       <div class="selection-section">
         <DashboardSelector
           :selected-dashboard="props.selectedDashboard"
+          :disabled="props.isDashboardLoading"
           @dashboard-change="handleDashboardChange"
         />
 
-        <MenuButton v-if="!isEditMode" @click="emit('open-filter')">
+        <MenuButton
+          v-if="!isEditMode"
+          :disabled="props.isDashboardLoading"
+          @click="emit('open-filter')"
+        >
           <CmkIcon name="filter" size="large" />
           <span>{{ _t('Filter') }}</span>
         </MenuButton>
@@ -160,6 +166,7 @@ const pageNavigation = parsePageNavigation()
         <DropdownMenu
           icon="export-link"
           :label="_t('Share')"
+          :disabled="props.isDashboardLoading"
           :options="[
             { label: _t('Copy internal link'), action: copyInternalDashboardLink },
             {
@@ -189,6 +196,7 @@ const pageNavigation = parsePageNavigation()
           icon="global-settings"
           :label="_t('Settings')"
           :right="!(isBuiltInDashboard || canEditDashboard)"
+          :disabled="props.isDashboardLoading"
           :options="[
             {
               label: _t('Dashboard settings'),
@@ -212,7 +220,11 @@ const pageNavigation = parsePageNavigation()
           ]"
         />
 
-        <MenuButton v-if="isBuiltInDashboard" @click="emit('open-clone-workflow')">
+        <MenuButton
+          v-if="isBuiltInDashboard"
+          :disabled="props.isDashboardLoading"
+          @click="emit('open-clone-workflow')"
+        >
           <CmkIcon name="clone" size="large" />
           <span>{{ _t('Clone') }}</span>
         </MenuButton>
@@ -220,6 +232,7 @@ const pageNavigation = parsePageNavigation()
         <MenuButton
           v-else-if="canEditDashboard"
           class="menu-btn"
+          :disabled="props.isDashboardLoading"
           @click="isEmptyDashboard ? handleAddWidget() : enterEditMode()"
         >
           <CmkIcon name="dashboard-grid" size="large" />
@@ -229,16 +242,20 @@ const pageNavigation = parsePageNavigation()
 
       <template v-else>
         <div class="edit-mode-actions">
-          <MenuButton variant="primary" @click="handleSave">
+          <MenuButton variant="primary" :disabled="props.isDashboardLoading" @click="handleSave">
             {{ _t('Save') }}
           </MenuButton>
 
-          <MenuButton @click="handleCancel">
+          <MenuButton :disabled="props.isDashboardLoading" @click="handleCancel">
             <CmkIcon name="cancel" />
             {{ _t('Cancel') }}
           </MenuButton>
 
-          <MenuButton variant="secondary" @click="handleAddWidget">
+          <MenuButton
+            variant="secondary"
+            :disabled="props.isDashboardLoading"
+            @click="handleAddWidget"
+          >
             <CmkIcon name="plus" />
             {{ _t('Add widget') }}
           </MenuButton>

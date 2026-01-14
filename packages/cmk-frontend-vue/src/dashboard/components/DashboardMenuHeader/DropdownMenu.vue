@@ -36,6 +36,7 @@ interface DropdownMenuProps {
   label: TranslatedString
   options: DropdownMenuOption[]
   right?: boolean
+  disabled?: boolean
 }
 
 const props = defineProps<DropdownMenuProps>()
@@ -46,7 +47,7 @@ const visibleOptions = computed(() => {
 </script>
 
 <template>
-  <ButtonDropdownMenu :label="label" :right="!!right">
+  <ButtonDropdownMenu :label="label" :right="!!right" :disabled="props.disabled">
     <template #button>
       <CmkIcon v-if="icon" :name="icon" size="large" />
       <span>{{ label }}</span>

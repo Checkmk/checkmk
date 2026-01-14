@@ -769,7 +769,7 @@ watch(
 type ObjectId = string
 
 const configEntityType = 'rule_form_spec'
-const configEntityTypeSpecifier = 'special_agents:metric_backend_custom_query'
+const configEntityTypeSpecifier = 'special_agents:custom_query_metric_backend'
 const configEntityTypeData = ref<ObjectId | null>(null)
 
 const slideInObjectId = ref<ObjectId | null>(null)

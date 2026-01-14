@@ -32,7 +32,7 @@ agent_section_ipmi_firmware = AgentSection(
 )
 
 
-def inventory_ipmi_firmware(section: Section) -> InventoryResult:
+def inventorize_ipmi_firmware(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "management_interface"],
         inventory_attributes=section,
@@ -41,5 +41,5 @@ def inventory_ipmi_firmware(section: Section) -> InventoryResult:
 
 inventory_plugin_ipmi_firmware = InventoryPlugin(
     name="ipmi_firmware",
-    inventory_function=inventory_ipmi_firmware,
+    inventory_function=inventorize_ipmi_firmware,
 )

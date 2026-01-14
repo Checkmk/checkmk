@@ -9,7 +9,7 @@ import { defineComponent, ref } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import CmkDropdown from '@/components/CmkDropdown'
-import { Response } from '@/components/CmkSuggestions'
+import { ErrorResponse, Response } from '@/components/CmkSuggestions'
 
 test('dropdown shows options', async () => {
   render(CmkDropdown, {
@@ -829,4 +829,71 @@ test('dropdown unselectable is unselectable', async () => {
 
   expect(selectedOption).toBe('one')
   expect(screen.getByText('unselectable')).toBeInTheDocument()
+})
+
+test('dropdown with callback-filtered shows error message when callback returns ErrorResponse', async () => {
+  const errorMessage = 'Failed to load suggestions from backend'
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new ErrorResponse(errorMessage)
+        }
+      },
+      selectedOption: 'invalid_value',
+      inputHint: 'Select an option',
+      label: 'dropdown-label'
+    }
+  })
+
+  await screen.findByText(errorMessage)
+
+  expect(screen.getByRole('combobox', { name: 'dropdown-label' })).toHaveTextContent(
+    'invalid_value'
+  )
+})
+
+test('dropdown with callback-filtered clears error message after successful selection', async () => {
+  const errorMessage = 'Failed to load suggestions'
+  let callCount = 0
+  let selectedOption: string | null = 'invalid_value'
+
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          callCount++
+          if (callCount === 1) {
+            return new ErrorResponse(errorMessage)
+          }
+          return new Response([
+            { name: 'one', title: 'one' },
+            { name: 'two', title: 'two' }
+          ])
+        }
+      },
+      selectedOption,
+      inputHint: 'Select an option',
+      label: 'dropdown-label',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option
+      }
+    }
+  })
+
+  await screen.findByText(errorMessage)
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  const option = await screen.findByText('one')
+  await fireEvent.click(option)
+
+  await waitFor(() => {
+    expect(screen.queryByText(errorMessage)).not.toBeInTheDocument()
+  })
+
+  expect(selectedOption).toBe('one')
 })

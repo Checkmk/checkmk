@@ -18,6 +18,7 @@ import CmkSuggestions, {
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
+import CmkInlineValidation from '../user-input/CmkInlineValidation.vue'
 import CmkDropdownButton, { type ButtonVariants } from './CmkDropdownButton.vue'
 
 export interface DropdownOption {
@@ -55,6 +56,7 @@ const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const buttonLabel = ref<string>(inputHint)
+const callbackFilteredErrorMessage = ref<string | null>(null)
 
 immediateWatch(
   () => ({
@@ -93,8 +95,10 @@ async function getButtonLabel(options: Suggestions, selected: string | null): Pr
       }
       const result = await options.querySuggestions(selected)
       if (result instanceof ErrorResponse) {
-        throw new Error(`Error fetching suggestions: ${result.error}`)
+        callbackFilteredErrorMessage.value = result.error
+        return selected
       } else {
+        callbackFilteredErrorMessage.value = null
         currentOptions = result.choices
       }
       break
@@ -153,6 +157,7 @@ function hideSuggestions(): void {
 
 function handleUpdate(selected: Suggestion | null): void {
   selectedOption.value = selected?.name || null
+  callbackFilteredErrorMessage.value = null
   hideSuggestions()
 }
 
@@ -173,6 +178,10 @@ const truncatedButtonLabel = computed(() =>
     "
     class="cmk-dropdown"
   >
+    <CmkInlineValidation
+      v-if="callbackFilteredErrorMessage !== null"
+      :validation="[callbackFilteredErrorMessage]"
+    ></CmkInlineValidation>
     <slot name="buttons-start"></slot>
     <CmkDropdownButton
       v-bind="componentId!! ? { id: componentId } : {}"

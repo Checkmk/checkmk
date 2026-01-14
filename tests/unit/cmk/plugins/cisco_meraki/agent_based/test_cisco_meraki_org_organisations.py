@@ -10,7 +10,7 @@ from polyfactory.factories import TypedDictFactory
 
 from cmk.agent_based.v2 import StringTable, TableRow
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_organisations import (
-    inventory_meraki_organizations,
+    inventorize_meraki_organizations,
     parse_meraki_organizations,
 )
 from cmk.plugins.cisco_meraki.lib.schema import RawOrganisation
@@ -32,7 +32,9 @@ def test_inventory_organisations() -> None:
     string_table = [[f"[{json.dumps(org)}]"]]
     section = parse_meraki_organizations(string_table)
 
-    row = next(row for row in inventory_meraki_organizations(section) if isinstance(row, TableRow))
+    row = next(
+        row for row in inventorize_meraki_organizations(section) if isinstance(row, TableRow)
+    )
 
     assert row.key_columns == {"org_id": "123"}
     assert row.path == ["software", "applications", "cisco_meraki", "organisations"]
@@ -50,7 +52,9 @@ def test_inventory_organisations_disabled_api() -> None:
     string_table = [[f"[{json.dumps(org)}]"]]
     section = parse_meraki_organizations(string_table)
 
-    row = next(row for row in inventory_meraki_organizations(section) if isinstance(row, TableRow))
+    row = next(
+        row for row in inventorize_meraki_organizations(section) if isinstance(row, TableRow)
+    )
 
     assert row.inventory_columns["api"] == "disabled"
 
@@ -58,4 +62,4 @@ def test_inventory_organisations_disabled_api() -> None:
 @pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])
 def test_inventorize_device_info_no_payload(string_table: StringTable) -> None:
     section = parse_meraki_organizations(string_table)
-    assert not list(inventory_meraki_organizations(section))
+    assert not list(inventorize_meraki_organizations(section))

@@ -70,7 +70,7 @@ agent_section_cisco_meraki_org_organisations = AgentSection(
 )
 
 
-def inventory_meraki_organizations(section: Section) -> InventoryResult:
+def inventorize_meraki_organizations(section: Section) -> InventoryResult:
     for organization in section:
         yield TableRow(
             path=["software", "applications", "cisco_meraki", "organisations"],
@@ -88,5 +88,5 @@ def inventory_meraki_organizations(section: Section) -> InventoryResult:
 inventory_plugin_cisco_meraki_org_organisations = InventoryPlugin(
     name="cisco_meraki_org_organisations",
     sections=["cisco_meraki_org_organisations"],
-    inventory_function=inventory_meraki_organizations,
+    inventory_function=inventorize_meraki_organizations,
 )

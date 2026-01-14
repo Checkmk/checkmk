@@ -4,23 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue'
+import { ref } from 'vue'
 
-import usei18n, { untranslated } from '@/lib/i18n'
-
-import CmkDropdown from '@/components/CmkDropdown'
-import CmkIndent from '@/components/CmkIndent.vue'
-import type { Suggestion } from '@/components/CmkSuggestions'
+import usei18n from '@/lib/i18n'
 
 import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 
-import { dashboardAPI } from '../../../../../../utils.ts'
-import ContentSpacer from '../../../../components/ContentSpacer.vue'
-import FieldComponent from '../../../../components/TableForm/FieldComponent.vue'
-import FieldDescription from '../../../../components/TableForm/FieldDescription.vue'
-import TableForm from '../../../../components/TableForm/TableForm.vue'
-import TableFormRow from '../../../../components/TableForm/TableFormRow.vue'
 import WidgetVisualization from '../../../../components/WidgetVisualization/WidgetVisualization.vue'
 import { type UseInventory } from './useInventory'
 
@@ -35,19 +25,6 @@ function validate(): boolean {
 }
 
 const displayVisualizationSettings = ref<boolean>(true)
-const displayHwSwPropertySelection = ref<boolean>(true)
-
-const inventoryPaths = ref<Suggestion[]>([])
-
-onBeforeMount(async () => {
-  const result = await dashboardAPI.listAvailableInventory()
-  inventoryPaths.value = Array.isArray(result.value)
-    ? result.value.map((item) => ({
-        name: item.id ?? null,
-        title: untranslated(item.title ?? '')
-      }))
-    : []
-})
 </script>
 
 <template>
@@ -75,39 +52,6 @@ onBeforeMount(async () => {
       ]"
       :target-options="handler.linkTargetSuggestions.value"
     />
-  </CollapsibleContent>
-
-  <ContentSpacer />
-
-  <CollapsibleTitle
-    :title="_t('Metric selection')"
-    :open="displayHwSwPropertySelection"
-    class="collapsible"
-    @toggle-open="displayHwSwPropertySelection = !displayHwSwPropertySelection"
-  />
-  <CollapsibleContent :open="displayHwSwPropertySelection">
-    <CmkIndent>
-      <TableForm>
-        <TableFormRow>
-          <FieldDescription>
-            {{ _t('HW/SW inventory property') }}
-          </FieldDescription>
-          <FieldComponent>
-            <div class="db-inventory-widget__field-component-item">
-              <CmkDropdown
-                v-model:selected-option="handler.inventoryPath.value"
-                :input-hint="_t('Select inventory path')"
-                :label="_t('Inventory path')"
-                :options="{
-                  type: 'fixed',
-                  suggestions: inventoryPaths
-                }"
-              />
-            </div>
-          </FieldComponent>
-        </TableFormRow>
-      </TableForm>
-    </CmkIndent>
   </CollapsibleContent>
 </template>
 

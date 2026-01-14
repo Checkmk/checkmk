@@ -4,9 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, h, ref } from 'vue'
+import { computed, h, onBeforeMount, ref } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
+
+import type { Suggestion } from '@/components/CmkSuggestions'
 
 import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
@@ -22,6 +24,7 @@ import type {
   WidgetGeneralSettings,
   WidgetSpec
 } from '../../../../types/widget'
+import { dashboardAPI } from '../../../../utils'
 import AddFilters from '../../components/AddFilters/AddFilters.vue'
 import CloseButton from '../../components/CloseButton.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
@@ -32,7 +35,7 @@ import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import { useWidgetFilterManager } from '../../components/filter/composables/useWidgetFilterManager'
-import type { WidgetContentType, WidgetProps } from '../../types'
+import type { InventoryContent, WidgetContentType, WidgetProps } from '../../types'
 import { ElementSelection } from '../../types'
 import { generateWidgetProps } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
@@ -60,6 +63,17 @@ const emit = defineEmits<{
   ]
 }>()
 
+const inventoryPaths = ref<Suggestion[]>([])
+onBeforeMount(async () => {
+  const result = await dashboardAPI.listAvailableInventory()
+  inventoryPaths.value = Array.isArray(result.value)
+    ? result.value.map((item) => ({
+        name: item.id ?? null,
+        title: untranslated(item.title ?? '')
+      }))
+    : []
+})
+
 const editWidget = computed<WidgetProps | null>(() => {
   if (!props.editWidgetSpec) {
     return null
@@ -83,6 +97,13 @@ const hostFilterType = ref<ElementSelection>(
     ? ElementSelection.SPECIFIC
     : ElementSelection.MULTIPLE
 )
+const inventoryPath = ref<string | null>(null)
+if (
+  props.editWidgetSpec &&
+  (props.editWidgetSpec.content as InventoryContent).type === 'inventory'
+) {
+  inventoryPath.value = (props.editWidgetSpec.content as InventoryContent).path
+}
 
 const wizardHandler = useWizard(2)
 
@@ -104,6 +125,12 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
 })
 
 const recapAndNext = () => {
+  if (!inventoryPath.value) {
+    wizardStages[0]!.errors = [_t('Please select a HW/SW inventory property.')]
+    return
+  }
+  wizardStages[0]!.errors = []
+
   widgetFilterManager.closeSelectionMenu()
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     contextConfiguredFilters: contextConfiguredFilters.value,
@@ -165,7 +192,9 @@ const handleAddWidget = (
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:host-filter-type="hostFilterType"
+        v-model:inventory-path="inventoryPath"
         :context-filters="contextFilters"
+        :inventory-paths="inventoryPaths"
         :widget-configured-filters="widgetFilterManager.getConfiguredFilters()"
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
@@ -187,6 +216,7 @@ const handleAddWidget = (
           :widget-filters="widgetFilterManager.getConfiguredFilters()"
           :edit-widget="editWidget"
           :dashboard-constants="dashboardConstants"
+          :inventory-path="inventoryPath"
           @go-prev="wizardHandler.prev"
           @add-widget="handleAddWidget"
         />

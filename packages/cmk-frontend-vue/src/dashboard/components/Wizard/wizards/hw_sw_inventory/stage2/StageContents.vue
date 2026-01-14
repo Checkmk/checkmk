@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { toRef } from 'vue'
+
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import type { WidgetProps } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
@@ -21,6 +23,7 @@ interface Stage2Props {
   dashboardKey: DashboardKey
   dashboardConstants: DashboardConstants
   editWidget: WidgetProps | null
+  inventoryPath: string | null
 }
 
 const props = defineProps<Stage2Props>()
@@ -56,6 +59,7 @@ const gotoPrevStage = () => {
 
 // Pass the editWidget prop to the composable for state hydration
 const inventoryHandler = await useInventory(
+  toRef(props, 'inventoryPath'),
   props.filters,
   props.dashboardConstants,
   props.editWidget

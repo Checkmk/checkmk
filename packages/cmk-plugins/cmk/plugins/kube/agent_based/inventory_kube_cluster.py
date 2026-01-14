@@ -7,7 +7,7 @@ from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult
 from cmk.plugins.kube.schemata.section import ClusterInfo
 
 
-def inventory_kube_cluster(
+def inventorize_kube_cluster(
     section: ClusterInfo,
 ) -> InventoryResult:
     yield Attributes(
@@ -29,5 +29,5 @@ def inventory_kube_cluster(
 inventory_plugin_kube_cluster = InventoryPlugin(
     name="kube_cluster",
     sections=["kube_cluster_info"],
-    inventory_function=inventory_kube_cluster,
+    inventory_function=inventorize_kube_cluster,
 )

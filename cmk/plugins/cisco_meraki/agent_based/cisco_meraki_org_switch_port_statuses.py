@@ -376,7 +376,7 @@ inventory_plugin_inv_meraki_interfaces = InventoryPlugin(
 )
 
 
-def inventory_meraki_cdp_cache(section: Section) -> InventoryResult:
+def inventorize_meraki_cdp_cache(section: Section) -> InventoryResult:
     path = ["networking", "cdp_cache", "neighbors"]
 
     for port in section.values():
@@ -403,7 +403,7 @@ def inventory_meraki_cdp_cache(section: Section) -> InventoryResult:
 inventory_plugin_inv_meraki_cdp_cache = InventoryPlugin(
     name="inv_meraki_cdp_cache",
     sections=["cisco_meraki_org_switch_ports_statuses"],
-    inventory_function=inventory_meraki_cdp_cache,
+    inventory_function=inventorize_meraki_cdp_cache,
 )
 
 

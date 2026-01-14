@@ -15,7 +15,7 @@ from ._utils import (
     compute_input_hint,
     compute_label,
     get_prefill_default,
-    get_title_and_help,
+    get_title_and_help_with_optional_macro_support,
 )
 from .validators import build_vue_validators
 
@@ -45,7 +45,9 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _Fa
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.FormSpec, object]:
-        title, help_text = get_title_and_help(self.form_spec)
+        title, help_text = get_title_and_help_with_optional_macro_support(
+            self.form_spec, self.form_spec.macro_support
+        )
         return (
             shared_type_defs.MultilineText(
                 title=title,

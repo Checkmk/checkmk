@@ -65,7 +65,7 @@ snmp_section_fortigate_ha = SimpleSNMPSection(
 )
 
 
-def inventory_fortigate_ha(section: Section) -> InventoryResult:
+def inventorize_fortigate_ha(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "applications", "fortinet", "fortigate_high_availability"],
         inventory_attributes={
@@ -80,5 +80,5 @@ def inventory_fortigate_ha(section: Section) -> InventoryResult:
 
 inventory_plugin_fortigate_ha = InventoryPlugin(
     name="fortigate_ha",
-    inventory_function=inventory_fortigate_ha,
+    inventory_function=inventorize_fortigate_ha,
 )

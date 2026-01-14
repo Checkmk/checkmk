@@ -5,7 +5,7 @@
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.inventory_fortigate_ha import (
-    inventory_fortigate_ha,
+    inventorize_fortigate_ha,
     parse_fortigate_ha,
 )
 
@@ -37,8 +37,8 @@ def test_parse_fortigate_ha() -> None:
     )
 
 
-def test_inventory_fortigate_ha() -> None:
-    assert sort_inventory_result(inventory_fortigate_ha(SECTION)) == sort_inventory_result(
+def test_inventorize_fortigate_ha() -> None:
+    assert sort_inventory_result(inventorize_fortigate_ha(SECTION)) == sort_inventory_result(
         [
             Attributes(
                 path=["software", "applications", "fortinet", "fortigate_high_availability"],

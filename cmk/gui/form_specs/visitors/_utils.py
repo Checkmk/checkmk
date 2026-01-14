@@ -14,6 +14,7 @@ from typing import Any, Protocol, TypeVar
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils import escaping
+from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint, Prefill
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -29,6 +30,27 @@ def get_title_and_help(form_spec: FormSpec[ModelT]) -> tuple[str, str]:
     translated_help_text = localize(form_spec.help_text)
     escaped_help_text = escaping.escape_to_html_permissive(translated_help_text, escape_links=False)
     return title_text, html.HTMLGenerator.resolve_help_text_macros(str(escaped_help_text))
+
+
+def get_title_and_help_with_optional_macro_support(
+    form_spec: FormSpec[ModelT], macro_support: bool
+) -> tuple[str, str]:
+    title_text, help_text = get_title_and_help(form_spec)
+
+    if not macro_support:
+        return title_text, help_text
+
+    macros_help_text = (
+        "This field supports the use of macros. "
+        "The corresponding plug-in replaces the macros with the actual values. "
+        "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
+    )
+    localized_macros_text = ruleset_api_v1.Help(macros_help_text).localize(
+        translate_to_current_language
+    )
+    combined_help = f"{help_text} {localized_macros_text}" if help_text else localized_macros_text
+
+    return title_text, combined_help
 
 
 class SupportsLocalize(Protocol):

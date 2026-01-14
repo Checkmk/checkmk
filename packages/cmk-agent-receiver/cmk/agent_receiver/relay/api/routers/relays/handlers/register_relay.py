@@ -7,9 +7,12 @@ import dataclasses
 from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.relays.handlers.cert_retriever import get_certificates
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.relays_repository import (
+    RelayNotFoundError,
+    RelaysRepository,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import InternalAuth, UserAuth
 from cmk.relay_protocols import relays as relay_protocols
 
 
@@ -38,10 +41,15 @@ class RegisterRelayHandler:
 
 @dataclasses.dataclass
 class RefreshCertHandler:
+    relays_repository: RelaysRepository
+
     def process(
-        self, relay_id: str, request: relay_protocols.RelayRefreshCertRequest
+        self, relay_id: RelayID, request: relay_protocols.RelayRefreshCertRequest
     ) -> relay_protocols.RelayRefreshCertResponse:
-        certificates = get_certificates(request.csr, RelayID(relay_id))
+        auth = InternalAuth()
+        if not self.relays_repository.relay_exists(auth, relay_id):
+            raise RelayNotFoundError(relay_id)
+        certificates = get_certificates(request.csr, relay_id)
         return relay_protocols.RelayRefreshCertResponse(
             root_cert=certificates.root_cert,
             client_cert=certificates.client_cert,

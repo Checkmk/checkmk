@@ -20,6 +20,13 @@ class CheckmkAPIError(Exception):
         self.msg = msg
 
 
+@final
+class RelayNotFoundError(Exception):
+    def __init__(self, relay_id: str) -> None:
+        super().__init__(f"Relay {relay_id} not found")
+        self.relay_id = relay_id
+
+
 logger = logging.getLogger("agent-receiver")
 default_num_fetchers = 13
 default_log_level = "INFO"
@@ -74,3 +81,14 @@ class RelaysRepository:
         except StopIteration:
             # The folder does not exist
             return []
+
+    def relay_exists(self, auth: SiteAuth, relay_id: RelayID) -> bool:
+        """Check if a relay exists by querying the REST API."""
+        resp = self.client.get(f"/objects/relay/{relay_id}", auth=auth)
+        if resp.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR:
+            raise CheckmkAPIError(resp.text)
+        elif resp.status_code == HTTPStatus.NOT_FOUND:
+            return False
+        elif resp.status_code >= HTTPStatus.BAD_REQUEST:
+            raise CheckmkAPIError(resp.text)
+        return True

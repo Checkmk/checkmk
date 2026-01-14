@@ -19,8 +19,10 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import (
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
-def get_refresh_cert_handler() -> RefreshCertHandler:
-    return RefreshCertHandler()
+def get_refresh_cert_handler(
+    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
+) -> RefreshCertHandler:
+    return RefreshCertHandler(relays_repository=relays_repository)
 
 
 def get_register_relay_handler(

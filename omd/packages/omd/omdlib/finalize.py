@@ -16,6 +16,7 @@ from omdlib.config_hooks import (
     config_set_all,
     create_config_environment,
     load_config,
+    read_site_config,
     save_site_conf,
     update_cmk_core_config,
 )
@@ -216,7 +217,7 @@ def finalize_site(
     # The config changes above, made with the site user, have to be also available for
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
-    config = load_config(site, verbose)
+    config = read_site_config(site_home)
     register_with_system_apache(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,

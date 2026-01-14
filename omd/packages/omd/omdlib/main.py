@@ -2683,7 +2683,7 @@ def main_init_action(
         if is_disabled(site_paths.apache_conf):
             continue
 
-        config = load_config(site, global_opts.verbose)
+        config = read_site_config(site_home)
 
         # Handle non autostart sites
         if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):

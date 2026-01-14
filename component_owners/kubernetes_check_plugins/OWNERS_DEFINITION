@@ -1,8 +1,5 @@
-wontek.hong@checkmk.com  # component lead
+rick.elrod@checkmk.com  # component lead
 
+wontek.hong@checkmk.com
 solomon.jacobs@checkmk.com
-
-# Find information about code-owners (+ find-owners syntax) here:
-#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
-#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
-
+david.gervasoni@checkmk.com

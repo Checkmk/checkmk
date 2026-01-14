@@ -1091,20 +1091,20 @@ def _render_time_range_selection(
 
 def make_graph_data_range(
     time_range: tuple[int, int],
-    width_in_ex: int,
+    height_in_ex: int,
 ) -> GraphDataRange:
     return GraphDataRange(
         time_range=time_range,
-        step=estimate_graph_step_for_html(time_range, width_in_ex),
+        step=estimate_graph_step_for_html(time_range, height_in_ex),
     )
 
 
 def estimate_graph_step_for_html(
     time_range: tuple[int, int],
-    width_in_ex: int,
+    height_in_ex: int,
 ) -> int:
     steps_per_ex = html_size_per_ex * 4
-    number_of_steps = width_in_ex * steps_per_ex
+    number_of_steps = height_in_ex * steps_per_ex
     return int((time_range[1] - time_range[0]) / number_of_steps)
 
 

@@ -177,7 +177,7 @@ check_plugin_cisco_meraki_org_wireless_ethernet_statuses = CheckPlugin(
 )
 
 
-def inventory_meraki_wireless_ethernet(section: Section) -> InventoryResult:
+def inventorize_meraki_wireless_ethernet(section: Section) -> InventoryResult:
     for port in section.values():
         yield TableRow(
             path=["networking", "interfaces"],
@@ -195,5 +195,5 @@ def inventory_meraki_wireless_ethernet(section: Section) -> InventoryResult:
 inventory_plugin_inv_meraki_wireless_ethernet = InventoryPlugin(
     name="inv_meraki_wireless_ethernet",
     sections=["cisco_meraki_org_wireless_ethernet_statuses"],
-    inventory_function=inventory_meraki_wireless_ethernet,
+    inventory_function=inventorize_meraki_wireless_ethernet,
 )

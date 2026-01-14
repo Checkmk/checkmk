@@ -13,7 +13,7 @@ from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_wireless_ethernet_sta
     check_wireless_ethernet_statuses,
     CheckParams,
     discover_wireless_ethernet_statuses,
-    inventory_meraki_wireless_ethernet,
+    inventorize_meraki_wireless_ethernet,
     parse_wireless_ethernet_statuses,
 )
 from cmk.plugins.cisco_meraki.lib.schema import RawWirelessEthernetStatus
@@ -169,7 +169,7 @@ def test_inventory_wireless_ethernet_statuses() -> None:
     string_table = [[f"[{json.dumps(status)}]"]]
     section = parse_wireless_ethernet_statuses(string_table)
 
-    row, *_ = list(inventory_meraki_wireless_ethernet(section))
+    row, *_ = list(inventorize_meraki_wireless_ethernet(section))
 
     assert isinstance(row, TableRow)
     assert not row.status_columns
@@ -187,4 +187,4 @@ def test_inventory_wireless_ethernet_statuses() -> None:
 @pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])
 def test_inventory_wireless_ethernet_statuses_no_payload(string_table: StringTable) -> None:
     section = parse_wireless_ethernet_statuses(string_table)
-    assert not list(inventory_meraki_wireless_ethernet(section))
+    assert not list(inventorize_meraki_wireless_ethernet(section))

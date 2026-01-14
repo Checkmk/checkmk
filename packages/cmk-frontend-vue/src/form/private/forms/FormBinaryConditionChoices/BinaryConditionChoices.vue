@@ -77,6 +77,7 @@ function addItem() {
                 type: 'fixed',
                 suggestions: firstOperatorSuggestions
               }"
+              class="form-binary-condition-choices__dropdown"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
               :width="'max'"
@@ -90,6 +91,7 @@ function addItem() {
                 type: 'fixed',
                 suggestions: operatorSuggestions
               }"
+              class="form-binary-condition-choices__dropdown"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
               :width="'max'"
@@ -137,6 +139,7 @@ function addItem() {
                 type: 'fixed',
                 suggestions: firstOperatorSuggestions
               }"
+              class="form-binary-condition-choices__dropdown"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
               :width="'max'"
@@ -150,6 +153,7 @@ function addItem() {
                 type: 'fixed',
                 suggestions: operatorSuggestions
               }"
+              class="form-binary-condition-choices__dropdown"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
               :width="'max'"
@@ -189,6 +193,10 @@ div.form-binary-condition-choices__label-group {
   padding: 2px;
   background-color: var(--default-tooltip-background-color);
   border: 1px solid var(--default-form-element-border-color);
+}
+
+.form-binary-condition-choices__dropdown {
+  width: 100%;
 }
 
 table.form-binary-condition-choices__label-group {

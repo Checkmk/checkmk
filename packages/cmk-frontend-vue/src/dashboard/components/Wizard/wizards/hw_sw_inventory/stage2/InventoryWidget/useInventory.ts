@@ -36,22 +36,16 @@ export interface UseInventory
     UseValidate {
   toggleTitleUrl: ToggleFunction
 
-  //Inventory
-  inventoryPath: Ref<string | null>
-
   //Validation
   titleUrlValidationErrors: Ref<string[]>
 }
 
 export const useInventory = async (
+  inventoryPath: Ref<string | null>,
   filters: ConfiguredFilters,
   dashboardConstants: DashboardConstants,
   editWidget: WidgetProps | null = null
 ): Promise<UseInventory> => {
-  const content =
-    editWidget?.content?.type === CONTENT_TYPE
-      ? (editWidget?.content as InventoryContent)
-      : undefined
   const {
     title,
     showTitle,
@@ -65,8 +59,6 @@ export const useInventory = async (
 
     widgetGeneralSettings
   } = useWidgetVisualizationProps('$DEFAULT_TITLE$', editWidget?.general_settings)
-
-  const inventoryPath = ref<string | null>(content?.path ?? null)
 
   const {
     linkType,
@@ -144,8 +136,6 @@ export const useInventory = async (
     titleUrlEnabled,
     titleUrl,
     toggleTitleUrl,
-
-    inventoryPath,
 
     linkType,
     linkTarget,

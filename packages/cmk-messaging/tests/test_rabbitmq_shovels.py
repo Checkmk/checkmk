@@ -241,7 +241,7 @@ def test_compute_distributed_definitions_parameters(
     connections: Sequence[rabbitmq.Connection],
     parameters: Mapping[str, Sequence[rabbitmq.Shovel]],
 ) -> None:
-    definitions = rabbitmq.compute_distributed_definitions(connections)
+    definitions = rabbitmq.compute_distributed_definitions(connections, "central")
 
     for site_id, site_parameters in parameters.items():
         assert list(definitions[site_id].parameters) == site_parameters

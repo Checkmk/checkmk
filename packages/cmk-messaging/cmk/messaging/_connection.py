@@ -21,7 +21,7 @@ from pika.exceptions import AMQPConnectionError, StreamLostError
 from pydantic import BaseModel
 
 from ._config import get_local_port, make_connection_params
-from ._constants import APP_PREFIX, INTERSITE_EXCHANGE, LOCAL_EXCHANGE
+from ._constants import APP_PREFIX, DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE, LOCAL_EXCHANGE
 
 
 @dataclass(frozen=True)
@@ -322,7 +322,12 @@ class Connection:
     """
 
     def __init__(
-        self, app: AppName, omd_root: Path, omd_site: str, connection_name: str | None = None
+        self,
+        app: AppName,
+        omd_root: Path,
+        omd_site: str,
+        connection_name: str | None = None,
+        vhost: str = DEFAULT_VHOST_NAME,
     ) -> None:
         """Create a connection for a specific app"""
         self.app: Final = app
@@ -335,6 +340,7 @@ class Connection:
                     get_local_port(),
                     omd_site,
                     connection_name if connection_name else app.value,
+                    vhost,
                 )
             )
         except AMQPConnectionError as e:

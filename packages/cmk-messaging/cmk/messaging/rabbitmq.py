@@ -219,7 +219,7 @@ def _base_definitions(
 
 
 def compute_distributed_definitions(
-    connections: Sequence[Connection],
+    connections: Sequence[Connection], central_site_id: str
 ) -> Mapping[str, Definitions]:
     connecting_definitions, edges_by_customer = _base_definitions(connections)
 
@@ -251,6 +251,23 @@ def compute_distributed_definitions(
                 continue
             _add_binding(*binding_group)
             bindings_present.add(binding_group)
+
+    # central site, must be able to send the piggyback-hub config msg
+    # to all other customers vhosts
+    for customer in edges_by_customer:
+        if customer == "provider":
+            continue
+
+        permission = Permission(
+            user=central_site_id,
+            vhost=customer,
+            configure="^$",
+            write=INTERSITE_EXCHANGE,
+            read="^$",
+        )
+
+        if permission not in connecting_definitions[central_site_id].permissions:
+            connecting_definitions[central_site_id].permissions.append(permission)
 
     return connecting_definitions
 

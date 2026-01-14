@@ -18,8 +18,9 @@ from ._paths import RELATIVE_CONFIG_PATH
 from ._utils import APP_NAME
 
 CONFIG_ROUTE = RoutingKey("config")
-
 CONFIG_QUEUE = QueueName("config")
+DEFAULT_VHOST_NAME = "/"
+DEFAULT_CUSTOMER = "provider"
 
 
 AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
@@ -63,7 +64,11 @@ def load_config(omd_root: Path) -> PiggybackHubConfig:
 
 
 def publish_persisted_locations(
-    destination_site: str, locations: HostLocations, omd_root: Path, omd_site: str
+    destination_site: str,
+    locations: HostLocations,
+    omd_root: Path,
+    omd_site: str,
+    customer: str = DEFAULT_CUSTOMER,
 ) -> None:
     """Publish host locations for continuous distribution of piggyback data.
 
@@ -72,9 +77,10 @@ def publish_persisted_locations(
         locations: A mapping of host names to the sites they are monitored on.
         omd_root: The path to the OMD root directory of this site.
         omd_site: The name of this OMD site
+        customer: The customer (vhost) to publish to, or None for the provider ("/") vhost
     """
     config = PiggybackHubConfig(type=ConfigType.PERSISTED, locations=locations)
-    _publish_config(destination_site, config, omd_root, omd_site)
+    _publish_config(destination_site, config, omd_root, omd_site, customer)
 
 
 def publish_one_shot_locations(
@@ -89,12 +95,18 @@ def publish_one_shot_locations(
         omd_site: The name of this OMD site
     """
     config = PiggybackHubConfig(type=ConfigType.ONESHOT, locations=locations)
-    _publish_config(destination_site, config, omd_root, omd_site)
+    # one-shot should be communicated only from central site to remote sites (customer 'provider')
+    _publish_config(destination_site, config, omd_root, omd_site, customer=DEFAULT_CUSTOMER)
 
 
 def _publish_config(
-    destination_site: str, config: PiggybackHubConfig, omd_root: Path, omd_site: str
+    destination_site: str,
+    config: PiggybackHubConfig,
+    omd_root: Path,
+    omd_site: str,
+    customer: str,
 ) -> None:
-    with Connection(APP_NAME, omd_root, omd_site) as conn:
+    vhost = DEFAULT_VHOST_NAME if customer == DEFAULT_CUSTOMER else customer
+    with Connection(APP_NAME, omd_root, omd_site, None, vhost=vhost) as conn:
         channel = conn.channel(PiggybackHubConfig)
         channel.publish_for_site(destination_site, config, routing=CONFIG_ROUTE)

@@ -84,7 +84,7 @@ from ._connections import (
 def test_compute_distributed_definitions_vhosts(
     connections: Sequence[rabbitmq.Connection], vhosts: Mapping[str, Sequence[rabbitmq.VirtualHost]]
 ) -> None:
-    definitions = rabbitmq.compute_distributed_definitions(connections)
+    definitions = rabbitmq.compute_distributed_definitions(connections, "central")
 
     for site_id, site_vhosts in vhosts.items():
         assert definitions[site_id].vhosts == site_vhosts
@@ -309,7 +309,7 @@ def test_compute_distributed_definitions_vhosts(
 def test_compute_distributed_definitions_bindings(
     connections: Sequence[rabbitmq.Connection], bindings: Mapping[str, Sequence[rabbitmq.Binding]]
 ) -> None:
-    definitions = rabbitmq.compute_distributed_definitions(connections)
+    definitions = rabbitmq.compute_distributed_definitions(connections, "central")
 
     def _key(bind: rabbitmq.Binding) -> str:
         return bind.routing_key
@@ -372,7 +372,7 @@ def test_compute_distributed_definitions_bindings(
 def test_compute_distributed_definitions_users(
     connections: Sequence[rabbitmq.Connection], users: Mapping[str, Sequence[rabbitmq.User]]
 ) -> None:
-    definitions = rabbitmq.compute_distributed_definitions(connections)
+    definitions = rabbitmq.compute_distributed_definitions(connections, "central")
 
     for site_id, site_users in users.items():
         assert list(definitions[site_id].users) == site_users
@@ -400,7 +400,7 @@ def test_compute_distributed_definitions_users(
                         configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
-                    )
+                    ),
                 ],
             },
         ),
@@ -423,7 +423,14 @@ def test_compute_distributed_definitions_users(
                         configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
-                    )
+                    ),
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost="customer1",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="^$",
+                    ),
                 ],
             },
         ),
@@ -463,6 +470,13 @@ def test_compute_distributed_definitions_users(
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost="customer1",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="^$",
+                    ),
                 ],
             },
         ),
@@ -501,6 +515,20 @@ def test_compute_distributed_definitions_users(
                         configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost="customer1",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="^$",
+                    ),
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost="customer2",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="^$",
                     ),
                 ],
             },
@@ -554,6 +582,13 @@ def test_compute_distributed_definitions_users(
                         configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost="customer1",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="^$",
                     ),
                 ],
             },
@@ -617,7 +652,7 @@ def test_compute_distributed_definitions_permissions(
     connections: Sequence[rabbitmq.Connection],
     permissions: Mapping[str, Sequence[rabbitmq.Permission]],
 ) -> None:
-    definitions = rabbitmq.compute_distributed_definitions(connections)
+    definitions = rabbitmq.compute_distributed_definitions(connections, "central")
 
     for site_id, site_permissions in permissions.items():
         assert list(definitions[site_id].permissions) == site_permissions
@@ -934,7 +969,7 @@ def test_compute_distributed_definitions_permissions(
 def test_compute_distributed_definitions_queues(
     connections: Sequence[rabbitmq.Connection], queues: Mapping[str, Sequence[rabbitmq.Queue]]
 ) -> None:
-    definitions = rabbitmq.compute_distributed_definitions(connections)
+    definitions = rabbitmq.compute_distributed_definitions(connections, "central")
 
     for site_id, site_queues in queues.items():
         assert list(definitions[site_id].queues) == site_queues

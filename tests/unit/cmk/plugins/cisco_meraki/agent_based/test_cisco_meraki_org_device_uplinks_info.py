@@ -10,7 +10,7 @@ from polyfactory.factories import TypedDictFactory
 
 from cmk.agent_based.v2 import StringTable, TableRow
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_uplinks_info import (
-    inventory_device_uplinks,
+    inventorize_device_uplinks,
     parse_device_uplinks,
 )
 from cmk.plugins.cisco_meraki.lib.schema import RawDeviceUplinksAddress
@@ -20,12 +20,12 @@ class _RawDeviceUplinksAddressFactory(TypedDictFactory[RawDeviceUplinksAddress])
     __check_model__ = False
 
 
-def test_inventory_device_uplinks_info() -> None:
+def test_inventorize_device_uplinks_info() -> None:
     uplink_address = _RawDeviceUplinksAddressFactory.build()
     string_table = [[f"[{json.dumps(uplink_address)}]"]]
     section = parse_device_uplinks(string_table)
 
-    row = next(row for row in inventory_device_uplinks(section) if isinstance(row, TableRow))
+    row = next(row for row in inventorize_device_uplinks(section) if isinstance(row, TableRow))
 
     assert not row.status_columns
     assert row.path == [
@@ -45,6 +45,6 @@ def test_inventory_device_uplinks_info() -> None:
 
 
 @pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])
-def test_inventory_device_uplinks_info_no_payload(string_table: StringTable) -> None:
+def test_inventorize_device_uplinks_info_no_payload(string_table: StringTable) -> None:
     section = parse_device_uplinks(string_table)
-    assert not list(inventory_device_uplinks(section))
+    assert not list(inventorize_device_uplinks(section))

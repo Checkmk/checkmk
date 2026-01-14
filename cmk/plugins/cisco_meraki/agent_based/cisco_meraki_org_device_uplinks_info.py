@@ -57,7 +57,7 @@ agent_section_cisco_meraki_org_device_uplinks_info = AgentSection(
 )
 
 
-def inventory_device_uplinks(section: Section) -> InventoryResult:
+def inventorize_device_uplinks(section: Section) -> InventoryResult:
     for uplink in section:
         if not uplink.interface:
             continue
@@ -80,5 +80,5 @@ def inventory_device_uplinks(section: Section) -> InventoryResult:
 
 inventory_plugin_cisco_meraki_org_device_uplinks_info = InventoryPlugin(
     name="cisco_meraki_org_device_uplinks_info",
-    inventory_function=inventory_device_uplinks,
+    inventory_function=inventorize_device_uplinks,
 )

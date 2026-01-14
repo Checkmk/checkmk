@@ -14,7 +14,7 @@ from cmk.plugins.kube.kube_strategy import strategy_text
 from cmk.plugins.kube.schemata.section import DeploymentInfo, UpdateStrategy
 
 
-def inventory_kube_deployment(
+def inventorize_kube_deployment(
     section_kube_deployment_info: DeploymentInfo | None,
     section_kube_update_strategy: UpdateStrategy | None,
 ) -> InventoryResult:
@@ -43,5 +43,5 @@ def inventory_kube_deployment(
 inventory_plugin_kube_deployment = InventoryPlugin(
     name="kube_deployment",
     sections=["kube_deployment_info", "kube_update_strategy"],
-    inventory_function=inventory_kube_deployment,
+    inventory_function=inventorize_kube_deployment,
 )

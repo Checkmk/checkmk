@@ -14,7 +14,9 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.kube.agent_based.inventory_kube_deployment import inventory_kube_deployment
+from cmk.plugins.kube.agent_based.inventory_kube_deployment import (
+    inventorize_kube_deployment,
+)
 from cmk.plugins.kube.schemata.api import (
     ContainerName,
     NamespaceName,
@@ -78,17 +80,17 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
         ),
     ],
 )
-def test_inventory_kube_deployment(
+def test_inventorize_kube_deployment(
     section_info: DeploymentInfo,
     section_strategy: UpdateStrategy,
     expected_check_result: Sequence[Any],
 ) -> None:
     assert sort_inventory_result(
-        inventory_kube_deployment(section_info, section_strategy)
+        inventorize_kube_deployment(section_info, section_strategy)
     ) == sort_inventory_result(expected_check_result)
 
 
-def test_inventory_kube_deployment_calls_labels_to_table(
+def test_inventorize_kube_deployment_calls_labels_to_table(
     mocker: MockerFixture,
 ) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
@@ -103,5 +105,5 @@ def test_inventory_kube_deployment_calls_labels_to_table(
     section_strategy = UpdateStrategy(strategy=Recreate())
 
     mock = mocker.patch("cmk.plugins.kube.agent_based.inventory_kube_deployment.labels_to_table")
-    list(inventory_kube_deployment(section_info, section_strategy))
+    list(inventorize_kube_deployment(section_info, section_strategy))
     mock.assert_called_once()

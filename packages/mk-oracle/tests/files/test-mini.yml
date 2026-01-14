@@ -3,10 +3,11 @@ oracle:
   main: # mandatory, to be used if no specific config
     connection: # mandatory
       hostname: ora-rocktest.dev.checkmk.net
+      service_name: FREE.cmkoratest
     authentication: # mandatory
       username: $CI_ORA2_DB_TEST
       password: $CI_ORA2_DB_TEST
       type: standard
 #      role: sysdba # it may be not enabled by Oracle DBA
-    sections: # optional, if absent will use default as defined below
-      - instance: # special section
+#    sections: # optional, if absent will use default as defined below
+#      - instance: # special section

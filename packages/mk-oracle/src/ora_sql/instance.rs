@@ -199,12 +199,22 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
                 .iter()
                 .flat_map(|(instance, queries)| {
                     log::info!("Instance: {}", instance);
-                    queries.iter().map(|(query, title)| {
-                        log::info!("Query: {}", title);
-                        let results =
-                            _exec_queries(&spot, instance, &[(query.clone(), title.clone())]);
-                        results.join("\n")
-                    })
+                    let r = spot.clone().connect(Some(instance));
+                    match r {
+                        Ok(opened) => queries
+                            .iter()
+                            .map(|(query, title)| {
+                                log::info!("Query: {}", title);
+                                let mut results = vec![title.clone()];
+                                results.extend(_exec_queries(&opened, instance, query));
+                                results.join("\n")
+                            })
+                            .collect::<Vec<String>>(),
+                        Err(e) => {
+                            log::error!("Failed to connect to instance {}: {}", instance, e);
+                            vec![] // Skip this instance if connection fails
+                        }
+                    }
                 })
                 .collect::<Vec<_>>()
         })
@@ -212,43 +222,29 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
 }
 
 fn _exec_queries(
-    spot: &ClosedSpot,
+    spot: &OpenedSpot,
     service_name: &InstanceName,
-    queries: &[(Vec<SqlQuery>, String)],
+    queries: &[SqlQuery],
 ) -> Vec<String> {
-    let r = spot.clone().connect(Some(service_name));
-    match r {
-        Ok(conn) => {
-            log::info!("Connected to : {}", service_name);
-            queries
-                .iter()
-                .flat_map(|(queries, title)| {
-                    let mut result: Vec<String> = queries
-                        .iter()
-                        .flat_map(|query| {
-                            log::debug!("Executing query: {}", query.as_str());
-                            conn.query_table(query)
-                                .format(&SECTION_SEPARATOR.to_string())
-                                .unwrap_or_else(|e| {
-                                    log::error!(
-                                        "Failed to execute query for instance {}: {}",
-                                        service_name,
-                                        e
-                                    );
-                                    vec![e.to_string()]
-                                })
-                        })
-                        .collect();
-                    result.insert(0, title.clone());
-                    result
-                })
-                .collect::<Vec<_>>()
-        }
-        Err(e) => {
-            log::error!("Failed to connect to instance {}: {}", service_name, e);
-            vec![] // Skip this instance if connection fails
-        }
-    }
+    log::info!("Connected to : {}", service_name);
+    queries
+        .iter()
+        .flat_map(|query| {
+            log::debug!("Executing query: {}", query.as_str());
+            let result = spot
+                .query_table(query)
+                .format(&SECTION_SEPARATOR.to_string())
+                .unwrap_or_else(|e| {
+                    log::error!(
+                        "Failed to execute query for instance {}: {}",
+                        service_name,
+                        e
+                    );
+                    vec![e.to_string()]
+                });
+            result
+        })
+        .collect::<Vec<_>>()
 }
 
 // tested only in integration tests

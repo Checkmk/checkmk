@@ -50,7 +50,7 @@ def _get_attributes(os_info: _OSInfo) -> Iterable[tuple[str, str]]:
             yield attribute
 
 
-def inventory_infoblox_osinfo(section: _OSInfo) -> InventoryResult:
+def inventorize_infoblox_osinfo(section: _OSInfo) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes=dict(_get_attributes(section)),
@@ -59,5 +59,5 @@ def inventory_infoblox_osinfo(section: _OSInfo) -> InventoryResult:
 
 inventory_plugin_infoblox_osinfo = InventoryPlugin(
     name="infoblox_osinfo",
-    inventory_function=inventory_infoblox_osinfo,
+    inventory_function=inventorize_infoblox_osinfo,
 )

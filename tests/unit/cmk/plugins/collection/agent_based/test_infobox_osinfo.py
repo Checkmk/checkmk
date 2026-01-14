@@ -39,7 +39,7 @@ def _get_section() -> iboi._OSInfo:
 
 
 def test_inventroy_infoblox_osinfo(section: iboi._OSInfo) -> None:
-    assert list(iboi.inventory_infoblox_osinfo(section)) == [
+    assert list(iboi.inventorize_infoblox_osinfo(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

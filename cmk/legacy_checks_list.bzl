@@ -149,7 +149,6 @@ LEGACY_CHECKS = [
     "ddn_s2a_stats",
     "ddn_s2a_uptime",
     "ddn_s2a_version",
-    "decru_fans",
     "decru_perf",
     "decru_temps",
     "dell_chassis_temp",

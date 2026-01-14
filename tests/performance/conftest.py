@@ -125,15 +125,28 @@ def _site(description: str, distributed: bool) -> Iterator[Site]:
 def _single_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     """Provide a default, single monitoring site."""
     with _site(description=request.node.name, distributed=False) as single_site:
-        single_site.openapi.hosts.create(
-            "local",
-            "/",
-            attributes={
+        hosts = {
+            "local": {
                 "ipaddress": "127.0.0.1",
                 "tag_address_family": "ip-v4-only",
             },
-        )
-        single_site.openapi.changes.activate_and_wait_for_completion()
+            "dummy": {
+                "tag_address_family": "no-ip",
+                "tag_agent": "no-agent",
+                "tag_snmp_ds": "no-snmp",
+            },
+        }
+        activate_changes = False
+        for host_name, attributes in hosts.items():
+            if not single_site.openapi.hosts.get(host_name):
+                single_site.openapi.hosts.create(
+                    host_name,
+                    "/",
+                    attributes=attributes,
+                )
+                activate_changes = True
+        if activate_changes:
+            single_site.openapi.changes.activate_and_wait_for_completion()
         yield single_site
 
 
@@ -204,3 +217,19 @@ def _run_cron() -> None:
 
     # Start cron daemon. It forks an will keep running in the background
     run([cron_cmd], check=True, sudo=True)
+
+
+@pytest.fixture(scope="session")
+def browser_context_args() -> dict[str, dict[str, str]]:
+    """Configure the browser context in pytest-playwright.
+
+    Set headers to disable caching.
+    """
+    return {
+        "extra_http_headers": {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "Connection": "close",
+        }
+    }

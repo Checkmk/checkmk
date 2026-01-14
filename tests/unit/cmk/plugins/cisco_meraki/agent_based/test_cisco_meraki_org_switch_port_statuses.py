@@ -15,8 +15,8 @@ from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_switch_port_statuses 
     discover_switch_ports_statuses,
     DiscoveryParams,
     host_label_meraki_switch_ports_statuses,
+    inventorize_meraki_interfaces,
     inventory_meraki_cdp_cache,
-    inventory_meraki_interfaces,
     inventory_meraki_lldp_cache,
     parse_switch_ports_statuses,
     Section,
@@ -349,7 +349,7 @@ class TestInventoryMerakiInterfaces:
     def test_with_operational_status(self) -> None:
         section = self._build_section({"status": "connected"})
 
-        value, *_ = inventory_meraki_interfaces(section)
+        value, *_ = inventorize_meraki_interfaces(section)
         expected = TableRow(
             path=["networking", "interfaces"],
             key_columns={"index": 1},
@@ -368,7 +368,7 @@ class TestInventoryMerakiInterfaces:
     def test_missing_optional_values(self) -> None:
         section = self._build_section({"status": "unknown"})
 
-        value, *_ = inventory_meraki_interfaces(section)
+        value, *_ = inventorize_meraki_interfaces(section)
         expected = TableRow(
             path=["networking", "interfaces"],
             key_columns={"index": 1},

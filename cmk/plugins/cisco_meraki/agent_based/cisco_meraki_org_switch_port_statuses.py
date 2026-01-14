@@ -354,7 +354,7 @@ check_plugin_cisco_meraki_org_switch_ports_statuses = CheckPlugin(
 )
 
 
-def inventory_meraki_interfaces(section: Section) -> InventoryResult:
+def inventorize_meraki_interfaces(section: Section) -> InventoryResult:
     for port in section.values():
         yield TableRow(
             path=["networking", "interfaces"],
@@ -372,7 +372,7 @@ def inventory_meraki_interfaces(section: Section) -> InventoryResult:
 inventory_plugin_inv_meraki_interfaces = InventoryPlugin(
     name="inv_meraki_interfaces",
     sections=["cisco_meraki_org_switch_ports_statuses"],
-    inventory_function=inventory_meraki_interfaces,
+    inventory_function=inventorize_meraki_interfaces,
 )
 
 

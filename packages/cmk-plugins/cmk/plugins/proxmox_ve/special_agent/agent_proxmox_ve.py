@@ -433,7 +433,7 @@ def _create_vm_sections(
             cluster=str(node_cluster_mapping[vm["node"]])
             if vm["node"] in node_cluster_mapping
             else None,
-        ).model_dump_json(),
+        ).model_dump(mode="json"),
     )
     if vm["type"] != "qemu":
         yield (

@@ -41,7 +41,7 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
 @pytest.mark.parametrize("info_section_model", [VM_DATA, VM_DATA_WITH_LOCK])
 def test_check_proxmox_ve_vm_info_parse_function(info_section_model: SectionVMInfo) -> None:
     assert (
-        parse_proxmox_ve_vm_info([[json.dumps(info_section_model.model_dump_json())]])
+        parse_proxmox_ve_vm_info([[json.dumps(info_section_model.model_dump(mode="json"))]])
         == info_section_model
     )
 

@@ -349,6 +349,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Notification periods information, name: active(1)/inactive(0)
     TimePeriods time_periods;
 
+    // NOLINTNEXTLINE(misc-const-correctness)
     while (LogEntry *entry = it.getNextLogentry()) {
         if (abort_query_ || entry->time() >= period.until) {
             break;

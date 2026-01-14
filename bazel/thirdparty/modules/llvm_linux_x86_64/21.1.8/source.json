@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/LLVM-21.1.8-Linux-X64.tar.xz",
+  "integrity": "sha256-s7fygB0V1Qc2rOo8c5gplNAlsBwvA1uRrjtJ0bV1cys=",
+  "strip_prefix": "LLVM-21.1.8-Linux-X64",
+  "overlay": {
+    "BUILD.bazel": "sha256-25Ahn4okYy9xCkWhTN3LeWADOchMEV2vQvfCBs/xnaQ=",
+    "MODULE.bazel": "sha256-+OBv2820J8v9rxQe22Lt7G9wXmbnjwbpuUSHnvIiAlU="
+  }
+}

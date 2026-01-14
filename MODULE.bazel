@@ -55,7 +55,7 @@ bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(name = "bazel_env.bzl", version = "0.5.0", dev_dependency = True)
 bazel_dep(
     name = "llvm_linux_x86_64",
-    version = "19.1.7",
+    version = "21.1.8",
     dev_dependency = True,
     repo_name = "clang-linux-x86_64",
 )

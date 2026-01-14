@@ -2343,10 +2343,10 @@ uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
 {
     ULONG_PTR pbi[6] = {0};
     ULONG size = 0;
-    LONG(WINAPI * nt_query_information_process)
-    (HANDLE ProcessHandle, ULONG ProcessInformationClass,
-     PVOID ProcessInformation, ULONG ProcessInformationLength,
-     PULONG ReturnLength) = nullptr;
+    LONG(WINAPI * nt_query_information_process)(
+        HANDLE ProcessHandle, ULONG ProcessInformationClass,
+        PVOID ProcessInformation, ULONG ProcessInformationLength,
+        PULONG ReturnLength) = nullptr;
     *(FARPROC *)&nt_query_information_process = ::GetProcAddress(
         LoadLibraryA("NTDLL.DLL"), "NtQueryInformationProcess");  // NOLINT
     if (nt_query_information_process == nullptr) {

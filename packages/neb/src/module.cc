@@ -67,10 +67,10 @@ using namespace std::string_literals;
 using namespace std::string_view_literals;
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
-NEB_API_VERSION(CURRENT_NEB_API_VERSION)
-
 // TODO(sp) Globals are accessed in NebCore/TimeperiodsCache without any header.
 // NOLINTBEGIN(misc-use-internal-linkage)
+NEB_API_VERSION(CURRENT_NEB_API_VERSION)
+
 size_t g_livestatus_threads = 10;
 int g_num_queued_connections = 0;
 std::atomic_int32_t g_livestatus_active_connections{0};
@@ -134,6 +134,7 @@ void update_status() {
     int num_active_checks{0};
 
     int num_hosts = 0;
+    // NOLINTNEXTLINE(misc-const-correctness)
     for (host *h = host_list; h != nullptr; h = h->next) {
         num_hosts++;
         any_event_handler_enabled =
@@ -145,6 +146,7 @@ void update_status() {
     }
 
     int num_services = 0;
+    // NOLINTNEXTLINE(misc-const-correctness)
     for (service *s = service_list; s != nullptr; s = s->next) {
         num_services++;
         any_event_handler_enabled =
@@ -1322,7 +1324,8 @@ void omd_advertize(Logger *logger) {
                    << __TIMESTAMP__ << " with " << BUILD_CXX << ", using "
                    << RegExp::engine() << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";
-    if (char *omd_site = getenv("OMD_SITE")) {  // NOLINT(concurrency-mt-unsafe)
+    // NOLINTNEXTLINE(concurrency-mt-unsafe,misc-const-correctness)
+    if (char *omd_site = getenv("OMD_SITE")) {
         Informational(logger)
             << "running on Checkmk site " << omd_site << ", cool.";
     } else {

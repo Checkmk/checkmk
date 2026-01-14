@@ -18,16 +18,21 @@ Checks: >
   -cppcoreguidelines-avoid-do-while,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-special-member-functions,
   -misc-include-cleaner,
   -misc-non-private-member-variables-in-classes,
+  -modernize-use-designated-initializers,
   -modernize-use-trailing-return-type,
+  -modernize-use-integer-sign-comparison,
+  -modernize-use-scoped-lock,
   -performance-enum-size,
   -readability-avoid-nested-conditional-operator,
   -readability-avoid-return-with-void-value,
+  -readability-container-contains,
   -readability-identifier-length,
   -readability-magic-numbers,
-  -modernize-use-designated-initializers,
+  -readability-math-missing-parentheses,
 
 WarningsAsErrors: '*'
 

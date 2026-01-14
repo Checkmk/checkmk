@@ -111,6 +111,7 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
         _hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
     }
 
+    // NOLINTNEXTLINE(misc-const-correctness)
     for (::service *svc = service_list; svc != nullptr; svc = svc->next) {
         iservices_by_handle_[svc] = std::make_unique<NebService>(*svc, *this);
     }
@@ -273,7 +274,7 @@ size_t NebCore::maxLinesPerLogFile() const {
 
 Command NebCore::find_command(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast,misc-const-correctness)
     if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
         return Command{._name = cmd->name, ._command_line = cmd->command_line};
     }
@@ -282,6 +283,7 @@ Command NebCore::find_command(const std::string &name) const {
 
 std::vector<Command> NebCore::commands() const {
     std::vector<Command> commands;
+    // NOLINTNEXTLINE(misc-const-correctness)
     for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
         commands.push_back(
             Command{._name = cmd->name, ._command_line = cmd->command_line});

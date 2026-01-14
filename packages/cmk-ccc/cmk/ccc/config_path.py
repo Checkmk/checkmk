@@ -114,14 +114,11 @@ def create(base: Path) -> Iterator[ConfigCreationContext]:
         shutil.rmtree(under_construction_path)
     under_construction_path.mkdir(parents=True, exist_ok=False)
 
-    try:
-        yield ConfigCreationContext(
-            path_active=current_config_path,
-            path_created=under_construction_path,
-            serial_created=serial,
-        )
-    except Exception:
-        raise
-    else:
-        latest_link_path.unlink(missing_ok=True)
-        latest_link_path.symlink_to(under_construction_path.name)
+    yield ConfigCreationContext(
+        path_active=current_config_path,
+        path_created=under_construction_path,
+        serial_created=serial,
+    )
+    # upon exiting the context, do this if and only if no exception ocurred:
+    latest_link_path.unlink(missing_ok=True)
+    latest_link_path.symlink_to(under_construction_path.name)

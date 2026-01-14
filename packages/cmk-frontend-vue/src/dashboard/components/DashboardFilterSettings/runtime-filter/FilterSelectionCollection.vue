@@ -46,7 +46,7 @@ const emit = defineEmits<{
       </button>
     </div>
     <div class="db-filter-selection-collection__item-placeholder">
-      {{ _t('Select from list') }}
+      {{ _t('Add filter from left panel') }}
     </div>
   </div>
 </template>

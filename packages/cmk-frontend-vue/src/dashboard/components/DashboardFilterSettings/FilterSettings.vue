@@ -81,11 +81,11 @@ const configurationTabs: {
 }[] = [
   {
     id: 'dashboard-filter',
-    title: 'Dashboard filter setup'
+    title: 'Default filters'
   },
   {
     id: 'required-filter',
-    title: 'Runtime filter setup'
+    title: 'Runtime filters'
   }
 ]
 
@@ -217,12 +217,12 @@ const serviceMandatoryFilters = computed(() => {
     <div class="db-filter-settings__definition-container">
       <div class="db-filter-settings__header">
         <CmkHeading type="h1">
-          {{ isConfigurationWindowOpen ? _t('Filter configuration') : _t('Runtime filters') }}
+          {{ isConfigurationWindowOpen ? _t('Filter settings') : _t('Runtime filters') }}
         </CmkHeading>
         <button
           class="db-filter-settings__close-button"
           type="button"
-          :aria-label="_t('Close filter configuration')"
+          :aria-label="_t('Close filter settings')"
           @click="closeWindow"
         >
           <CmkIcon :aria-label="_t('Clear search')" name="close" size="xxsmall" />
@@ -300,7 +300,7 @@ const serviceMandatoryFilters = computed(() => {
                   :title="_t('Host filters')"
                   :filters="hostDashboardFilters"
                   :get-filter-values="dashboardFilters.getFilterValues"
-                  additional-item-label="Select from list"
+                  :additional-item-label="_t('Add filter from left panel')"
                 >
                   <template #default="{ filterId, configuredFilterValues }">
                     <FilterCollectionInputItem
@@ -316,7 +316,7 @@ const serviceMandatoryFilters = computed(() => {
                   :title="_t('Service filters')"
                   :filters="serviceDashboardFilters"
                   :get-filter-values="dashboardFilters.getFilterValues"
-                  additional-item-label="Select from list"
+                  :additional-item-label="_t('Add filter from left panel')"
                 >
                   <template #default="{ filterId, configuredFilterValues }">
                     <FilterCollectionInputItem

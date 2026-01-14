@@ -20,7 +20,7 @@ defineProps<AddFilterMessageProps>()
 <template>
   <div class="db-add-filter-message__container">
     <div class="db-add-filter-message__inner">
-      <CmkParagraph>{{ label ?? _t('Select from list') }}</CmkParagraph>
+      <CmkParagraph>{{ label ?? _t('Add filter from left panel') }}</CmkParagraph>
     </div>
   </div>
 </template>

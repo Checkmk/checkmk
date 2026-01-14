@@ -45,7 +45,7 @@ def _image_to_table(image: Entity) -> TableRow:
     )
 
 
-def inventory_podman(
+def inventorize_podman(
     section_podman_engine: SectionPodmanEngineStats | None,
     section_podman_containers: SectionContainers | None,
     section_podman_disk_usage: DiskUsageSection | None,
@@ -78,11 +78,11 @@ def inventory_podman(
 
 
 inventory_plugin_podman = InventoryPlugin(
-    name="inventory_podman",
+    name="inventorize_podman",
     sections=[
         "podman_engine",
         "podman_containers",
         "podman_disk_usage",
     ],
-    inventory_function=inventory_podman,
+    inventory_function=inventorize_podman,
 )

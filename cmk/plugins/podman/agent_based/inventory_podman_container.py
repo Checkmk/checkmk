@@ -9,7 +9,7 @@ from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult
 from .lib import SectionPodmanContainerInspect
 
 
-def inventory_podman_container(
+def inventorize_podman_container(
     section: SectionPodmanContainerInspect,
 ) -> InventoryResult:
     yield Attributes(
@@ -34,7 +34,7 @@ def inventory_podman_container(
 
 
 inventory_plugin_podman_container = InventoryPlugin(
-    name="inventory_podman_container",
+    name="inventorize_podman_container",
     sections=["podman_container_inspect"],
-    inventory_function=inventory_podman_container,
+    inventory_function=inventorize_podman_container,
 )

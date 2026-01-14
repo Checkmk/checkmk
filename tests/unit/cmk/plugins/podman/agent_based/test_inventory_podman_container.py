@@ -5,7 +5,9 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult
-from cmk.plugins.podman.agent_based.inventory_podman_container import inventory_podman_container
+from cmk.plugins.podman.agent_based.inventory_podman_container import (
+    inventorize_podman_container,
+)
 from cmk.plugins.podman.agent_based.lib import SectionPodmanContainerInspect
 
 from .lib import SECTION_RUNNING
@@ -40,8 +42,8 @@ from .lib import SECTION_RUNNING
         )
     ],
 )
-def test_inventory_podman(
+def test_inventorize_podman(
     section: SectionPodmanContainerInspect,
     expected_result: InventoryResult,
 ) -> None:
-    assert list(inventory_podman_container(section)) == expected_result
+    assert list(inventorize_podman_container(section)) == expected_result

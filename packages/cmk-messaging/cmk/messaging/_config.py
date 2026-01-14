@@ -140,10 +140,11 @@ def multisite_cert_file(omd_root: Path, site: str) -> Path:
 
 
 def make_connection_params(
-    omd_root: Path, server: str, port: int, omd_site: str, connection_name: str
+    omd_root: Path, server: str, port: int, omd_site: str, connection_name: str, vhost: str = "/"
 ) -> pika.ConnectionParameters:
     client_props: dict[str, str] = {"connection_name": connection_name}
     return pika.ConnectionParameters(
+        virtual_host=vhost,
         host=server,
         port=port,
         ssl_options=pika.SSLOptions(_make_ssl_context(omd_root), omd_site),

@@ -1318,7 +1318,7 @@ def default_rabbitmq_definitions(
     _add_peer_to_peer_connections(
         replicated_sites_configs, connection_info, peer_to_peer_connections
     )
-    return rabbitmq.compute_distributed_definitions(connection_info)
+    return rabbitmq.compute_distributed_definitions(connection_info, omd_site())
 
 
 @contextmanager

@@ -108,7 +108,6 @@ def _merge_if_counters_sections(
     """
 
     if_mac_list: dict[str, MACList] = {}
-    virtual_interfaces = []
 
     # collect broadcast ports for broadcast_domain and node
     broadcast_domains_ports: MutableMapping[str, set[str]] = {}
@@ -150,10 +149,6 @@ def _merge_if_counters_sections(
         elif port_state := interface.get("port_state"):
             computed_state = "1" if port_state == "up" else "2"
 
-        # ! if the port type is not physical, than is virtual?!?!?!?
-        if interface.get("port_type") != "physical":
-            virtual_interfaces.append(interface_name)
-
         computed_speed = 0
         if interface.get("port_speed"):
             computed_speed = interface["port_speed"] * 1000 * 1000
@@ -180,7 +175,7 @@ def _merge_if_counters_sections(
             case _:
                 ...
 
-    return merge_if_sections(interfaces_data_section, if_mac_list, virtual_interfaces, timestamp)
+    return merge_if_sections(interfaces_data_section, if_mac_list, timestamp)
 
 
 def discover_netapp_ontap_if(

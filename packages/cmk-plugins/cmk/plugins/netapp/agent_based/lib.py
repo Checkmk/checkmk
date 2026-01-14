@@ -302,7 +302,6 @@ def check_netapp_luns(
 def merge_if_sections(
     interfaces_section: SectionSingleInstance,
     if_mac_list: MutableMapping[str, MACList],
-    virtual_interfaces: Sequence[str],
     timestamp: float,
 ) -> IfSection:
     nics = []

@@ -56,6 +56,6 @@ def test_inventory_organisations_disabled_api() -> None:
 
 
 @pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])
-def test_inventory_device_info_no_payload(string_table: StringTable) -> None:
+def test_inventorize_device_info_no_payload(string_table: StringTable) -> None:
     section = parse_meraki_organizations(string_table)
     assert not list(inventory_meraki_organizations(section))

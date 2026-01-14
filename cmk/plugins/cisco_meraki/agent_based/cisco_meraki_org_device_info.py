@@ -79,7 +79,7 @@ agent_section_cisco_meraki_org_device_info = AgentSection(
 )
 
 
-def inventory_device_info(section: Section) -> InventoryResult:
+def inventorize_device_info(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -111,5 +111,5 @@ def inventory_device_info(section: Section) -> InventoryResult:
 
 inventory_plugin_cisco_meraki_org_device_info = InventoryPlugin(
     name="cisco_meraki_org_device_info",
-    inventory_function=inventory_device_info,
+    inventory_function=inventorize_device_info,
 )

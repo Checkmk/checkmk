@@ -20,7 +20,7 @@ class _NetworkFactory(TypedDictFactory[Network]):
     __check_model__ = False
 
 
-def test_inventory_device_info() -> None:
+def test_inventorize_device_info() -> None:
     device = _NetworkFactory.build(id="netid-123")
     string_table = [[f"[{json.dumps({device['id']: device})}]"]]
     section = parse_meraki_networks(string_table)
@@ -48,6 +48,6 @@ def test_inventory_device_info() -> None:
 
 
 @pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])
-def test_inventory_device_info_no_payload(string_table: StringTable) -> None:
+def test_inventorize_device_info_no_payload(string_table: StringTable) -> None:
     section = parse_meraki_networks(string_table)
     assert not list(inventory_meraki_networks(section))

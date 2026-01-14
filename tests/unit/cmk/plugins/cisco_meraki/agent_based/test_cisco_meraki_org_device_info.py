@@ -10,7 +10,7 @@ from polyfactory.factories import TypedDictFactory
 from cmk.agent_based.v2 import Attributes, HostLabel
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_info import (
     host_label_meraki_device_info,
-    inventory_device_info,
+    inventorize_device_info,
     parse_device_info,
 )
 from cmk.plugins.cisco_meraki.lib.schema import Device
@@ -46,7 +46,7 @@ def test_host_label_meraki_device_info() -> None:
     assert value == expected
 
 
-def test_inventory_device_info() -> None:
+def test_inventorize_device_info() -> None:
     device = _DeviceFactory.build(
         name="My AP",
         serial="Q234-ABCD-5678",
@@ -64,7 +64,7 @@ def test_inventory_device_info() -> None:
     section = parse_device_info(string_table)
     assert section
 
-    value = list(inventory_device_info(section))
+    value = list(inventorize_device_info(section))
     expected = [
         Attributes(
             path=["hardware", "system"],

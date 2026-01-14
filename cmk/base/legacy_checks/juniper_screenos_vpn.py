@@ -13,7 +13,7 @@ from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 check_info = {}
 
 
-def inventory_juniper_screenos_vpn(info):
+def discover_juniper_screenos_vpn(info):
     return [(line[0], None) for line in info]
 
 
@@ -41,6 +41,6 @@ check_info["juniper_screenos_vpn"] = LegacyCheckDefinition(
         oids=["4", "23"],
     ),
     service_name="VPN %s",
-    discovery_function=inventory_juniper_screenos_vpn,
+    discovery_function=discover_juniper_screenos_vpn,
     check_function=check_juniper_screenos_vpn,
 )

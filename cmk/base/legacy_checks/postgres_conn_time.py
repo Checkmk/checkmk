@@ -33,7 +33,7 @@ def parse_postgres_conn_time(string_table):
     return parsed
 
 
-def inventory_postgres_conn_time(parsed):
+def discover_postgres_conn_time(parsed):
     for instance_name in parsed:
         yield instance_name, None
 
@@ -53,6 +53,6 @@ check_info["postgres_conn_time"] = LegacyCheckDefinition(
     name="postgres_conn_time",
     parse_function=parse_postgres_conn_time,
     service_name="PostgreSQL Connection Time %s",
-    discovery_function=inventory_postgres_conn_time,
+    discovery_function=discover_postgres_conn_time,
     check_function=check_postgres_conn_time,
 )

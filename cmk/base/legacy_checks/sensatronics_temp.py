@@ -30,7 +30,7 @@ def parse_sensatronics_temp(string_table: list[list[list[str]]]) -> Section:
     return parsed
 
 
-def inventory_sensatronics_temp(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_sensatronics_temp(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((item, {}) for item in section)
 
 
@@ -57,7 +57,7 @@ check_info["sensatronics_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_sensatronics_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_sensatronics_temp,
+    discovery_function=discover_sensatronics_temp,
     check_function=check_sensatronics_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (23.0, 25.0)},

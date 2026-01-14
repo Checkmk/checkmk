@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.f5_bigip_psu import (
     check_f5_bigip_psu,
-    inventory_f5_bigip_psu,
+    discover_f5_bigip_psu,
     parse_f5_bigip_psu,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.f5_bigip_psu import (
         ([["1", "1"], ["2", "1"]], [("1", None), ("2", None)]),
     ],
 )
-def test_inventory_f5_bigip_psu(
+def test_discover_f5_bigip_psu(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for f5_bigip_psu check."""
     parsed = parse_f5_bigip_psu(string_table)
-    result = list(inventory_f5_bigip_psu(parsed))
+    result = list(discover_f5_bigip_psu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

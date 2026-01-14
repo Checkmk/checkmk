@@ -37,7 +37,7 @@ def parse_veeam_tapejobs(string_table):
     return parsed
 
 
-def inventory_veeam_tapejobs(parsed):
+def discover_veeam_tapejobs(parsed):
     for job in parsed:
         yield job, {}
 
@@ -81,7 +81,7 @@ check_info["veeam_tapejobs"] = LegacyCheckDefinition(
     name="veeam_tapejobs",
     parse_function=parse_veeam_tapejobs,
     service_name="VEEAM Tape Job %s",
-    discovery_function=inventory_veeam_tapejobs,
+    discovery_function=discover_veeam_tapejobs,
     check_function=check_veeam_tapejobs,
     check_ruleset_name="veeam_tapejobs",
     check_default_parameters={

@@ -23,11 +23,11 @@ from cmk.base.legacy_checks.ibm_svc_nodestats import (
     check_ibm_svc_nodestats_disk_latency,
     check_ibm_svc_nodestats_diskio,
     check_ibm_svc_nodestats_iops,
-    inventory_ibm_svc_nodestats_cache,
-    inventory_ibm_svc_nodestats_cpu,
-    inventory_ibm_svc_nodestats_disk_latency,
-    inventory_ibm_svc_nodestats_diskio,
-    inventory_ibm_svc_nodestats_iops,
+    discover_ibm_svc_nodestats_cache,
+    discover_ibm_svc_nodestats_cpu,
+    discover_ibm_svc_nodestats_disk_latency,
+    discover_ibm_svc_nodestats_diskio,
+    discover_ibm_svc_nodestats_iops,
     parse_ibm_svc_nodestats,
 )
 
@@ -125,17 +125,17 @@ def test_parse_ibm_svc_nodestats(parsed: Mapping[str, Any]) -> None:
     assert parsed["BLUBBSVC02"]["cpu_pc"] == 1.0
 
 
-def test_inventory_ibm_svc_nodestats_cache(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_cache(parsed: Mapping[str, Any]) -> None:
     """Test discovery of cache monitoring services."""
-    result = list(inventory_ibm_svc_nodestats_cache(parsed))
+    result = list(discover_ibm_svc_nodestats_cache(parsed))
 
     assert len(result) == 1
     assert ("BLUBBSVC01", None) in result
 
 
-def test_inventory_ibm_svc_nodestats_cpu(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_cpu(parsed: Mapping[str, Any]) -> None:
     """Test discovery of CPU utilization services."""
-    result = list(inventory_ibm_svc_nodestats_cpu(parsed))
+    result = list(discover_ibm_svc_nodestats_cpu(parsed))
 
     assert len(result) == 2
     # Check service discovery returns Service objects with item names
@@ -144,9 +144,9 @@ def test_inventory_ibm_svc_nodestats_cpu(parsed: Mapping[str, Any]) -> None:
     assert "BLUBBSVC02" in service_items
 
 
-def test_inventory_ibm_svc_nodestats_diskio(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_diskio(parsed: Mapping[str, Any]) -> None:
     """Test discovery of disk I/O monitoring services."""
-    result = list(inventory_ibm_svc_nodestats_diskio(parsed))
+    result = list(discover_ibm_svc_nodestats_diskio(parsed))
 
     assert len(result) == 3
     assert ("VDisks BLUBBSVC01", None) in result
@@ -154,9 +154,9 @@ def test_inventory_ibm_svc_nodestats_diskio(parsed: Mapping[str, Any]) -> None:
     assert ("Drives BLUBBSVC01", None) in result
 
 
-def test_inventory_ibm_svc_nodestats_iops(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_iops(parsed: Mapping[str, Any]) -> None:
     """Test discovery of IOPS monitoring services."""
-    result = list(inventory_ibm_svc_nodestats_iops(parsed))
+    result = list(discover_ibm_svc_nodestats_iops(parsed))
 
     assert len(result) == 3
     assert ("VDisks BLUBBSVC01", None) in result
@@ -164,9 +164,9 @@ def test_inventory_ibm_svc_nodestats_iops(parsed: Mapping[str, Any]) -> None:
     assert ("Drives BLUBBSVC01", None) in result
 
 
-def test_inventory_ibm_svc_nodestats_disk_latency(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_nodestats_disk_latency(parsed: Mapping[str, Any]) -> None:
     """Test discovery of disk latency monitoring services."""
-    result = list(inventory_ibm_svc_nodestats_disk_latency(parsed))
+    result = list(discover_ibm_svc_nodestats_disk_latency(parsed))
 
     assert len(result) == 3
     assert ("VDisks BLUBBSVC01", None) in result
@@ -373,13 +373,13 @@ def test_parse_ibm_svc_nodestats_empty_data() -> None:
     assert parsed == {}
 
 
-def test_inventory_ibm_svc_nodestats_empty_section() -> None:
+def test_discover_ibm_svc_nodestats_empty_section() -> None:
     """Test discovery with empty section."""
-    cache_items = list(inventory_ibm_svc_nodestats_cache({}))
-    cpu_items = list(inventory_ibm_svc_nodestats_cpu({}))
-    diskio_items = list(inventory_ibm_svc_nodestats_diskio({}))
-    iops_items = list(inventory_ibm_svc_nodestats_iops({}))
-    latency_items = list(inventory_ibm_svc_nodestats_disk_latency({}))
+    cache_items = list(discover_ibm_svc_nodestats_cache({}))
+    cpu_items = list(discover_ibm_svc_nodestats_cpu({}))
+    diskio_items = list(discover_ibm_svc_nodestats_diskio({}))
+    iops_items = list(discover_ibm_svc_nodestats_iops({}))
+    latency_items = list(discover_ibm_svc_nodestats_disk_latency({}))
 
     assert len(cache_items) == 0
     assert len(cpu_items) == 0

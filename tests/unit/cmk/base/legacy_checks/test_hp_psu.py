@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.hp_psu import check_hp_psu, inventory_hp_psu, parse_hp_psu
+from cmk.base.legacy_checks.hp_psu import check_hp_psu, discover_hp_psu, parse_hp_psu
 
 
 @pytest.mark.parametrize(
@@ -21,12 +21,12 @@ from cmk.base.legacy_checks.hp_psu import check_hp_psu, inventory_hp_psu, parse_
         ([["1", "3", "25"], ["2", "3", "23"]], [("1", None), ("2", None)]),
     ],
 )
-def test_inventory_hp_psu(
+def test_discover_hp_psu(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for hp_psu check."""
     parsed = parse_hp_psu(string_table)
-    result = list(inventory_hp_psu(parsed))
+    result = list(discover_hp_psu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

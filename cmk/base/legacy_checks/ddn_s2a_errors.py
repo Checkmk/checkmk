@@ -29,7 +29,7 @@ def parse_ddn_s2a_errors(string_table):
     }
 
 
-def inventory_ddn_s2a_errors(parsed):
+def discover_ddn_s2a_errors(parsed):
     def value_to_levels(value):
         # As the values in this check are all error counters since last reset,
         # we calculate default levels according to the current counter state,
@@ -107,7 +107,7 @@ check_info["ddn_s2a_errors"] = LegacyCheckDefinition(
     name="ddn_s2a_errors",
     parse_function=parse_ddn_s2a_errors,
     service_name="DDN S2A Port Errors %s",
-    discovery_function=inventory_ddn_s2a_errors,
+    discovery_function=discover_ddn_s2a_errors,
     check_function=check_ddn_s2a_errors,
     check_ruleset_name="ddn_s2a_port_errors",
 )

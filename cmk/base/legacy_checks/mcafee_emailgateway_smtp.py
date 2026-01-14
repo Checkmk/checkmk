@@ -17,7 +17,7 @@ def parse_mcafee_emailgateway_smtp(string_table: StringTable) -> StringTable | N
     return string_table or None
 
 
-def inventory_mcafee_gateway_generic(info):
+def discover_mcafee_gateway_generic(info):
     return [(None, {})]
 
 
@@ -38,6 +38,6 @@ check_info["mcafee_emailgateway_smtp"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     service_name="SMTP",
-    discovery_function=inventory_mcafee_gateway_generic,
+    discovery_function=discover_mcafee_gateway_generic,
     check_function=check_mcafee_emailgateway_smtp,
 )

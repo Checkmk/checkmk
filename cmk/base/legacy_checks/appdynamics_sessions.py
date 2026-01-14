@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 check_info = {}
 
 
-def inventory_appdynamics_sessions(info):
+def discover_appdynamics_sessions(info):
     for line in info:
         yield " ".join(line[0:2]), {}
 
@@ -65,7 +65,7 @@ check_info["appdynamics_sessions"] = LegacyCheckDefinition(
     name="appdynamics_sessions",
     parse_function=parse_appdynamics_sessions,
     service_name="AppDynamics Sessions %s",
-    discovery_function=inventory_appdynamics_sessions,
+    discovery_function=discover_appdynamics_sessions,
     check_function=check_appdynamics_sessions,
     check_ruleset_name="jvm_sessions",
     check_default_parameters={

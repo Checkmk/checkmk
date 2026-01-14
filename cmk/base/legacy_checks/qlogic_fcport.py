@@ -37,7 +37,7 @@ def qlogic_fcport_generate_port_id(port_id):
     return port_id
 
 
-def inventory_qlogic_fcport(info):
+def discover_qlogic_fcport(info):
     inventory = []
 
     for (
@@ -300,6 +300,6 @@ check_info["qlogic_fcport"] = LegacyCheckDefinition(
         ],
     ),
     service_name="FC Port %s",
-    discovery_function=inventory_qlogic_fcport,
+    discovery_function=discover_qlogic_fcport,
     check_function=check_qlogic_fcport,
 )

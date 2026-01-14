@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_ibm_rsa_health(info):
+def discover_ibm_rsa_health(info):
     if len(info) > 0:
         return [(None, None)]
     return []
@@ -63,6 +63,6 @@ check_info["ibm_rsa_health"] = LegacyCheckDefinition(
         oids=["7"],
     ),
     service_name="System health",
-    discovery_function=inventory_ibm_rsa_health,
+    discovery_function=discover_ibm_rsa_health,
     check_function=check_ibm_rsa_health,
 )

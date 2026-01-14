@@ -14,7 +14,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.legacy_checks.ucd_mem import check_ucd_mem, inventory_ucd_mem
+from cmk.base.legacy_checks.ucd_mem import check_ucd_mem, discover_ucd_mem
 from cmk.plugins.collection.agent_based.ucd_mem import parse_ucd_mem
 
 
@@ -43,7 +43,7 @@ def parsed() -> Mapping[str, Any]:
 
 def test_ucd_mem_1_discovery():
     """Test ucd_mem discovery."""
-    services = list(inventory_ucd_mem(parsed()))
+    services = list(discover_ucd_mem(parsed()))
 
     assert len(services) == 1
     assert services == [(None, {})]

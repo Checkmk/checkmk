@@ -50,7 +50,7 @@ def h3c_lanswitch_cpu_genitem(item):
     return "Switch %d %s %d" % (switchid, cputype, cpunum)
 
 
-def inventory_h3c_lanswitch_cpu(info):
+def discover_h3c_lanswitch_cpu(info):
     return [(h3c_lanswitch_cpu_genitem(line[0]), {}) for line in info]
 
 
@@ -84,7 +84,7 @@ check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "3"],
     ),
     service_name="CPU Utilization %s",
-    discovery_function=inventory_h3c_lanswitch_cpu,
+    discovery_function=discover_h3c_lanswitch_cpu,
     check_function=check_h3c_lanswitch_cpu,
     check_default_parameters={"levels": (50, 75)},
 )

@@ -13,7 +13,7 @@ import pytest
 
 from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.hwg import parse_hwg
-from cmk.base.legacy_checks.hwg_temp import check_hwg_temp, inventory_hwg_temp
+from cmk.base.legacy_checks.hwg_temp import check_hwg_temp, discover_hwg_temp
 
 
 @pytest.mark.parametrize(
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.hwg_temp import check_hwg_temp, inventory_hwg_temp
         ),
     ],
 )
-def test_inventory_hwg_temp(
+def test_discover_hwg_temp(
     info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for hwg_temp check."""
     parsed = parse_hwg(info)
-    result = list(inventory_hwg_temp(parsed))
+    result = list(discover_hwg_temp(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

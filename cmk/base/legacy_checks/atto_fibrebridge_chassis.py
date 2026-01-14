@@ -45,7 +45,7 @@ def parse_atto_fibrebridge_chassis(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_atto_fibrebridge_chassis_temp(parsed):
+def discover_atto_fibrebridge_chassis_temp(parsed):
     return [("Chassis", {})]
 
 
@@ -59,7 +59,7 @@ check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
     name="atto_fibrebridge_chassis_temp",
     service_name="Temperature %s",
     sections=["atto_fibrebridge_chassis"],
-    discovery_function=inventory_atto_fibrebridge_chassis_temp,
+    discovery_function=discover_atto_fibrebridge_chassis_temp,
     check_function=check_atto_fibrebridge_chassis_temp,
     check_ruleset_name="temperature",
 )
@@ -75,7 +75,7 @@ check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_atto_fibrebridge_chassis(parsed):
+def discover_atto_fibrebridge_chassis(parsed):
     return [(None, None)]
 
 
@@ -97,6 +97,6 @@ check_info["atto_fibrebridge_chassis"] = LegacyCheckDefinition(
     ),
     parse_function=parse_atto_fibrebridge_chassis,
     service_name="Throughput Status",
-    discovery_function=inventory_atto_fibrebridge_chassis,
+    discovery_function=discover_atto_fibrebridge_chassis,
     check_function=check_atto_fibrebridge_chassis,
 )

@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.citrix_licenses import (
     check_citrix_licenses,
-    inventory_citrix_licenses,
+    discover_citrix_licenses,
     parse_citrix_licenses,
 )
 
@@ -44,12 +44,12 @@ from cmk.base.legacy_checks.citrix_licenses import (
         ),
     ],
 )
-def test_inventory_citrix_licenses(
+def test_discover_citrix_licenses(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for citrix_licenses check."""
     parsed = parse_citrix_licenses(string_table)
-    result = list(inventory_citrix_licenses(parsed))
+    result = list(discover_citrix_licenses(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

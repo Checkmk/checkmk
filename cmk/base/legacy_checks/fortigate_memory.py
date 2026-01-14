@@ -19,7 +19,7 @@ def parse_fortigate_memory(string_table):
         return None
 
 
-def inventory_fortigate_memory(parsed):
+def discover_fortigate_memory(parsed):
     if parsed is not None:
         return [(None, {})]
     return []
@@ -58,7 +58,7 @@ check_info["fortigate_memory"] = LegacyCheckDefinition(
     ),
     parse_function=parse_fortigate_memory,
     service_name="Memory",
-    discovery_function=inventory_fortigate_memory,
+    discovery_function=discover_fortigate_memory,
     check_function=check_fortigate_memory,
     check_ruleset_name="memory",
     check_default_parameters={"levels": (70.0, 80.0)},

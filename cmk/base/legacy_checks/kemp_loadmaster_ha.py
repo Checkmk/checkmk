@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, StringT
 check_info = {}
 
 
-def inventory_kemp_loadmaster_ha(info):
+def discover_kemp_loadmaster_ha(info):
     if info and info[0][0] != "0":
         return [(None, None)]
     return []
@@ -51,6 +51,6 @@ check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
         oids=["9", "10"],
     ),
     service_name="HA State",
-    discovery_function=inventory_kemp_loadmaster_ha,
+    discovery_function=discover_kemp_loadmaster_ha,
     check_function=check_kemp_loadmaster_ha,
 )

@@ -21,7 +21,7 @@ from cmk.plugins.enterasys.lib import DETECT_ENTERASYS
 check_info = {}
 
 
-def inventory_enterasys_powersupply(info):
+def discover_enterasys_powersupply(info):
     inventory = []
     for num, state, _typ, _redun in info:
         if state == "3":
@@ -70,7 +70,7 @@ check_info["enterasys_powersupply"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2", "3", "4"],
     ),
     service_name="PSU %s",
-    discovery_function=inventory_enterasys_powersupply,
+    discovery_function=discover_enterasys_powersupply,
     check_function=check_enterasys_powersupply,
     check_ruleset_name="enterasys_powersupply",
     check_default_parameters={

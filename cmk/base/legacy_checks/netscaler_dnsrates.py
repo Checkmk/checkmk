@@ -20,7 +20,7 @@ from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
 check_info = {}
 
 
-def inventory_netscaler_dnsrates(info):
+def discover_netscaler_dnsrates(info):
     if info:
         return [(None, {})]
     return []
@@ -57,7 +57,7 @@ check_info["netscaler_dnsrates"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="DNS rates",
-    discovery_function=inventory_netscaler_dnsrates,
+    discovery_function=discover_netscaler_dnsrates,
     check_function=check_netscaler_dnsrates,
     check_ruleset_name="netscaler_dnsrates",
     check_default_parameters={

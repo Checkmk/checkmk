@@ -45,7 +45,7 @@ def parsed_fixture(string_table: list[list[str]]) -> dict[str, Any]:
     return parse_filestats(string_table)
 
 
-def test_inventory_filestats(parsed: dict[str, Any]) -> None:
+def test_discover_filestats(parsed: dict[str, Any]) -> None:
     """Test filestats discovery finds all valid subsections"""
     discovered = list(discover_filestats(parsed))
     assert len(discovered) == 4

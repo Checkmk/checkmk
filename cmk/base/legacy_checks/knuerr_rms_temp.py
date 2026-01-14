@@ -14,7 +14,7 @@ from cmk.plugins.knuerr.lib import DETECT_KNUERR
 check_info = {}
 
 
-def inventory_knuerr_rms_temp(info):
+def discover_knuerr_rms_temp(info):
     return [("Ambient", {})]
 
 
@@ -35,7 +35,7 @@ check_info["knuerr_rms_temp"] = LegacyCheckDefinition(
         oids=["4"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_knuerr_rms_temp,
+    discovery_function=discover_knuerr_rms_temp,
     check_function=check_knuerr_rms_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

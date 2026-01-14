@@ -30,7 +30,7 @@ check_info = {}
 # /dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 
 
-def inventory_smart_temp(section):
+def discover_smart_temp(section):
     relevant = {"Temperature_Celsius", "Temperature_Internal", "Temperature"}
     for disk_name, disk in section.items():
         if relevant.intersection(disk):
@@ -52,7 +52,7 @@ check_info["smart.temp"] = LegacyCheckDefinition(
     # section already migrated!
     service_name="Temperature SMART %s",
     sections=["smart"],  # This agent plugin was superseded by smart_posix
-    discovery_function=inventory_smart_temp,
+    discovery_function=discover_smart_temp,
     check_function=check_smart_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},

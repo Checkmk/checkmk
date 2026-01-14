@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.raritan_px_outlets import (
     check_raritan_px_outlets,
-    inventory_raritan_px_outlets,
+    discover_raritan_px_outlets,
     parse_raritan_px_outlets,
 )
 
@@ -28,12 +28,12 @@ from cmk.base.legacy_checks.raritan_px_outlets import (
         ),
     ],
 )
-def test_inventory_raritan_px_outlets(
+def test_discover_raritan_px_outlets(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for raritan_px_outlets check."""
     parsed = parse_raritan_px_outlets(string_table)
-    result = list(inventory_raritan_px_outlets(parsed))
+    result = list(discover_raritan_px_outlets(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

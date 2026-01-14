@@ -62,7 +62,7 @@ DETECT_SUPERMICRO = any_of(
 )
 
 
-def inventory_supermicro_health(info):
+def discover_supermicro_health(info):
     if info:
         return [(None, None)]
     return []
@@ -85,7 +85,7 @@ check_info["supermicro"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Overall Hardware Health",
-    discovery_function=inventory_supermicro_health,
+    discovery_function=discover_supermicro_health,
     check_function=check_supermicro_health,
 )
 
@@ -100,7 +100,7 @@ check_info["supermicro"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_supermicro_sensors(info):
+def discover_supermicro_sensors(info):
     for name, _sensor_type, _reading, _high, _low, _unit, _status in info:
         yield name, None
 
@@ -173,7 +173,7 @@ check_info["supermicro_sensors"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6", "11", "12"],
     ),
     service_name="Sensor %s",
-    discovery_function=inventory_supermicro_sensors,
+    discovery_function=discover_supermicro_sensors,
     check_function=check_supermicro_sensors,
 )
 
@@ -192,7 +192,7 @@ def format_item_supermicro_smart(name):
     return name.replace(r"\\\\.\\", "")
 
 
-def inventory_supermicro_smart(info):
+def discover_supermicro_smart(info):
     for _serial, name, _status in info:
         yield format_item_supermicro_smart(name), None
 
@@ -222,6 +222,6 @@ check_info["supermicro_smart"] = LegacyCheckDefinition(
         oids=["1", "2", "4"],
     ),
     service_name="SMART Health %s",
-    discovery_function=inventory_supermicro_smart,
+    discovery_function=discover_supermicro_smart,
     check_function=check_supermicro_smart,
 )

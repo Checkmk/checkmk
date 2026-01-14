@@ -13,7 +13,7 @@ from cmk.plugins.steelhead.lib import DETECT_STEELHEAD
 check_info = {}
 
 
-def inventory_steelhead_status(info):
+def discover_steelhead_status(info):
     if len(info) == 1:
         yield None, {}
 
@@ -38,6 +38,6 @@ check_info["steelhead_status"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Status",
-    discovery_function=inventory_steelhead_status,
+    discovery_function=discover_steelhead_status,
     check_function=check_steelhead_status,
 )

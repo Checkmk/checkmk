@@ -15,7 +15,7 @@ check_info = {}
 # example output
 
 
-def inventory_nimble_volumes(info):
+def discover_nimble_volumes(info):
     for line in info:
         if line[4] == "1":
             yield (line[1], {})
@@ -45,7 +45,7 @@ check_info["nimble_volumes"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "6", "10"],
     ),
     service_name="Volume %s",
-    discovery_function=inventory_nimble_volumes,
+    discovery_function=discover_nimble_volumes,
     check_function=check_nimble_volumes,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

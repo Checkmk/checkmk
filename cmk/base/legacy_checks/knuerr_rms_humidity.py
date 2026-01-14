@@ -15,7 +15,7 @@ from cmk.plugins.knuerr.lib import DETECT_KNUERR
 check_info = {}
 
 
-def inventory_knuerr_rms_humidity(info):
+def discover_knuerr_rms_humidity(info):
     yield None, {}
 
 
@@ -37,7 +37,7 @@ check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
         oids=["2", "4"],
     ),
     service_name="Humidity",
-    discovery_function=inventory_knuerr_rms_humidity,
+    discovery_function=discover_knuerr_rms_humidity,
     check_function=check_knuerr_rms_humidity,
     check_ruleset_name="single_humidity",
     check_default_parameters={

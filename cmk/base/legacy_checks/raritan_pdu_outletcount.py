@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_raritan_pdu_outletcount(info):
+def discover_raritan_pdu_outletcount(info):
     if info and info[0]:
         yield None, {}
 
@@ -46,7 +46,7 @@ check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Outlet Count",
-    discovery_function=inventory_raritan_pdu_outletcount,
+    discovery_function=discover_raritan_pdu_outletcount,
     check_function=check_raritan_pdu_outletcount,
     check_ruleset_name="plug_count",
     check_default_parameters={},

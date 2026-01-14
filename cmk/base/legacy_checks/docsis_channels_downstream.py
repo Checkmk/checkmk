@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_docsis_channels_downstream(info):
+def discover_docsis_channels_downstream(info):
     for line in info:
         if line[1] != "0":
             yield line[0], {}
@@ -76,7 +76,7 @@ check_info["docsis_channels_downstream"] = LegacyCheckDefinition(
         oids=["1", "2", "6"],
     ),
     service_name="Downstream Channel %s",
-    discovery_function=inventory_docsis_channels_downstream,
+    discovery_function=discover_docsis_channels_downstream,
     check_function=check_docsis_channels_downstream,
     check_ruleset_name="docsis_channels_downstream",
     check_default_parameters={

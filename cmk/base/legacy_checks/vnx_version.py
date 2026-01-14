@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_vnx_version(info):
+def discover_vnx_version(info):
     return [(None, None)]
 
 
@@ -29,6 +29,6 @@ check_info["vnx_version"] = LegacyCheckDefinition(
     name="vnx_version",
     parse_function=parse_vnx_version,
     service_name="VNX Version",
-    discovery_function=inventory_vnx_version,
+    discovery_function=discover_vnx_version,
     check_function=check_vnx_version,
 )

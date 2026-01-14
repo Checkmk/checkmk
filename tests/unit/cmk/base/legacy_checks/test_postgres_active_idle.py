@@ -18,7 +18,7 @@ import pytest
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.base.legacy_checks.postgres_connections import (
     check_postgres_connections,
-    inventory_postgres_connections,
+    discover_postgres_connections,
 )
 from cmk.plugins.postgres.lib import parse_dbs
 
@@ -43,7 +43,7 @@ def parsed() -> Mapping[str, Sequence[Mapping[str, str]]]:
 
 def test_postgres_connections_discovery() -> None:
     """Test discovery of postgres_connections items."""
-    discovery_result = list(inventory_postgres_connections(parsed()))
+    discovery_result = list(discover_postgres_connections(parsed()))
 
     expected: list[tuple[str, dict]] = [("app", {}), ("app_test", {}), ("postgres", {})]
 

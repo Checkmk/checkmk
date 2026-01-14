@@ -122,7 +122,7 @@ def parse_cisco_ip_sla(string_table):
     return parsed
 
 
-def inventory_cisco_ip_sla(parsed):
+def discover_cisco_ip_sla(parsed):
     for index in parsed:
         yield index, {}
 
@@ -191,7 +191,7 @@ check_info["cisco_ip_sla"] = LegacyCheckDefinition(
     ],
     parse_function=parse_cisco_ip_sla,
     service_name="Cisco IP SLA %s",
-    discovery_function=inventory_cisco_ip_sla,
+    discovery_function=discover_cisco_ip_sla,
     check_function=check_cisco_ip_sla,
     check_ruleset_name="cisco_ip_sla",
     check_default_parameters={

@@ -38,7 +38,7 @@ def parse_casa_info_temp(string_table):
     return data
 
 
-def inventory_casa_cpu_temp(parsed):
+def discover_casa_cpu_temp(parsed):
     for key, value in parsed.items():
         if value.get("temp_value"):
             yield key, None
@@ -76,7 +76,7 @@ check_info["casa_cpu_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_casa_info_temp,
     service_name="Temperature CPU %s",
-    discovery_function=inventory_casa_cpu_temp,
+    discovery_function=discover_casa_cpu_temp,
     check_function=check_casa_cpu_temp,
     check_ruleset_name="temperature",
 )

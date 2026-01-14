@@ -47,7 +47,7 @@ def parse_db2_logsizes(string_table):
     return parsed
 
 
-def inventory_db2_logsizes(parsed):
+def discover_db2_logsizes(parsed):
     for db, db_info in parsed.items():
         if "logfilsiz" in db_info:
             yield db, {}
@@ -103,7 +103,7 @@ check_info["db2_logsizes"] = LegacyCheckDefinition(
     name="db2_logsizes",
     parse_function=parse_db2_logsizes,
     service_name="DB2 Logsize %s",
-    discovery_function=inventory_db2_logsizes,
+    discovery_function=discover_db2_logsizes,
     check_function=check_db2_logsizes,
     check_ruleset_name="db2_logsize",
     check_default_parameters={

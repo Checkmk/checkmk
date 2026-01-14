@@ -14,7 +14,7 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 check_info = {}
 
 
-def inventory_alcatel_timetra_cpu(info):
+def discover_alcatel_timetra_cpu(info):
     yield None, {}
 
 
@@ -36,7 +36,7 @@ check_info["alcatel_timetra_cpu"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_alcatel_timetra_cpu,
+    discovery_function=discover_alcatel_timetra_cpu,
     check_function=check_alcatel_timetra_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},

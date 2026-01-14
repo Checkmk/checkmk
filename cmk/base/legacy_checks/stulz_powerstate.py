@@ -13,7 +13,7 @@ from cmk.plugins.stulz.lib import DETECT_STULZ
 check_info = {}
 
 
-def inventory_stulz_powerstate(info):
+def discover_stulz_powerstate(info):
     return [(x[0], None) for x in info]
 
 
@@ -44,6 +44,6 @@ check_info["stulz_powerstate"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     service_name="State %s ",
-    discovery_function=inventory_stulz_powerstate,
+    discovery_function=discover_stulz_powerstate,
     check_function=check_stulz_powerstate,
 )

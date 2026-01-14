@@ -51,7 +51,7 @@ def parse_etherbox2_temp(string_table):
     return parsed
 
 
-def inventory_etherbox2_temp(parsed):
+def discover_etherbox2_temp(parsed):
     return [(sensor, {}) for sensor in parsed]
 
 
@@ -78,7 +78,7 @@ check_info["etherbox2_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_etherbox2_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_etherbox2_temp,
+    discovery_function=discover_etherbox2_temp,
     check_function=check_etherbox2_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

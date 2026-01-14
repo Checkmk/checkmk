@@ -62,7 +62,7 @@ def _transform_params(params):
     return transformed_params
 
 
-def inventory_postgres_connections(parsed):
+def discover_postgres_connections(parsed):
     return [(db, {}) for db in parsed]
 
 
@@ -136,7 +136,7 @@ check_info["postgres_connections"] = LegacyCheckDefinition(
     name="postgres_connections",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Connections %s",
-    discovery_function=inventory_postgres_connections,
+    discovery_function=discover_postgres_connections,
     check_function=check_postgres_connections,
     check_ruleset_name="db_connections",
     check_default_parameters={

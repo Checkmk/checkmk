@@ -23,7 +23,7 @@ def parse_raritan_pdu_plugs(string_table):
     return parsed
 
 
-def inventory_raritan_pdu_plugs(parsed):
+def discover_raritan_pdu_plugs(parsed):
     for key, value in parsed.items():
         if (state := value["state"]) != "unknown":
             yield key, {"discovered_state": state}
@@ -60,7 +60,7 @@ check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
     ),
     parse_function=parse_raritan_pdu_plugs,
     service_name="Plug %s",
-    discovery_function=inventory_raritan_pdu_plugs,
+    discovery_function=discover_raritan_pdu_plugs,
     check_function=check_raritan_pdu_plugs,
     check_ruleset_name="plugs",
     check_default_parameters={"required_state": None},

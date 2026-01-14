@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_sansymphony_serverstatus(info):
+def discover_sansymphony_serverstatus(info):
     if info:
         return [(None, None)]
     return []
@@ -40,6 +40,6 @@ check_info["sansymphony_serverstatus"] = LegacyCheckDefinition(
     name="sansymphony_serverstatus",
     parse_function=parse_sansymphony_serverstatus,
     service_name="sansymphony Serverstatus",
-    discovery_function=inventory_sansymphony_serverstatus,
+    discovery_function=discover_sansymphony_serverstatus,
     check_function=check_sansymphony_serverstatus,
 )

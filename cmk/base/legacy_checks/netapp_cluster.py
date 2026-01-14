@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import all_of, contains, SNMPTree, startswith, StringTab
 check_info = {}
 
 
-def inventory_netapp_cluster(info):
+def discover_netapp_cluster(info):
     inventory = []
     if info:
         (
@@ -108,6 +108,6 @@ check_info["netapp_cluster"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "6", "8"],
     ),
     service_name="metrocluster_w_%s",
-    discovery_function=inventory_netapp_cluster,
+    discovery_function=discover_netapp_cluster,
     check_function=check_netapp_cluster,
 )

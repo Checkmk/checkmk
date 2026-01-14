@@ -14,7 +14,7 @@ from cmk.plugins.enterasys.lib import DETECT_ENTERASYS
 check_info = {}
 
 
-def inventory_enterasys_temp(info):
+def discover_enterasys_temp(info):
     if info and info[0][0] != "0":
         return [("Ambient", {})]
     return []
@@ -46,7 +46,7 @@ check_info["enterasys_temp"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_enterasys_temp,
+    discovery_function=discover_enterasys_temp,
     check_function=check_enterasys_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},

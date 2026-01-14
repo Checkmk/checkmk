@@ -19,7 +19,7 @@ import pytest
 
 from cmk.base.legacy_checks.ibm_svc_mdisk import (
     check_ibm_svc_mdisk,
-    inventory_ibm_svc_mdisk,
+    discover_ibm_svc_mdisk,
     parse_ibm_svc_mdisk,
 )
 
@@ -61,13 +61,13 @@ def test_parse_ibm_svc_mdisk_regression_2(string_table: list[list[str]]) -> None
     assert len(result) == 0  # Empty because 'name' field is missing from header
 
 
-def test_inventory_ibm_svc_mdisk_regression_2_empty_section(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_mdisk_regression_2_empty_section(parsed: Mapping[str, Any]) -> None:
     """Test discovery with empty parsed section."""
-    result = list(inventory_ibm_svc_mdisk(parsed))
+    result = list(discover_ibm_svc_mdisk(parsed))
     assert result == []  # No items discovered
 
 
-def test_inventory_ibm_svc_mdisk_regression_2() -> None:
+def test_discover_ibm_svc_mdisk_regression_2() -> None:
     """Test discovery behavior with properly named mdisk (simulated scenario)."""
     # Simulate what would happen if the data was properly parsed with name field
     mock_parsed = {
@@ -81,7 +81,7 @@ def test_inventory_ibm_svc_mdisk_regression_2() -> None:
         }
     }
 
-    result = list(inventory_ibm_svc_mdisk(mock_parsed))
+    result = list(discover_ibm_svc_mdisk(mock_parsed))
     assert result == [("mdisk_0", {})]
 
 
@@ -196,7 +196,7 @@ def test_ibm_svc_mdisk_regression_2() -> None:
     assert parsed == {}
 
     # Verify discovery finds no items
-    discovery_result = list(inventory_ibm_svc_mdisk(parsed))
+    discovery_result = list(discover_ibm_svc_mdisk(parsed))
     assert discovery_result == []
 
     # Verify check function handles missing items

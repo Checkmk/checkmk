@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_hp_webmgmt_status(info):
+def discover_hp_webmgmt_status(info):
     for index, _health in info[0]:
         yield index, None
 
@@ -67,6 +67,6 @@ check_info["hp_webmgmt_status"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Status %s",
-    discovery_function=inventory_hp_webmgmt_status,
+    discovery_function=discover_hp_webmgmt_status,
     check_function=check_hp_webmgmt_status,
 )

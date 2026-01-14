@@ -43,7 +43,7 @@ def parse_kentix_temp(string_table: list[StringTable]) -> Section:
     }
 
 
-def inventory_kentix_temp(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_kentix_temp(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((item, {}) for item in section)
 
 
@@ -77,7 +77,7 @@ check_info["kentix_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_kentix_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_kentix_temp,
+    discovery_function=discover_kentix_temp,
     check_function=check_kentix_temp,
     check_ruleset_name="temperature",
 )

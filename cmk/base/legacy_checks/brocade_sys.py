@@ -33,7 +33,7 @@ def parse_brocade_sys(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_brocade_sys_mem(parsed):
+def discover_brocade_sys_mem(parsed):
     yield None, {}
 
 
@@ -50,7 +50,7 @@ check_info["brocade_sys.mem"] = LegacyCheckDefinition(
     name="brocade_sys_mem",
     service_name="Memory",
     sections=["brocade_sys"],
-    discovery_function=inventory_brocade_sys_mem,
+    discovery_function=discover_brocade_sys_mem,
     check_function=check_brocade_sys_mem,
     check_ruleset_name="memory_relative",
     check_default_parameters={"levels": None},
@@ -67,7 +67,7 @@ check_info["brocade_sys.mem"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_brocade_sys(parsed):
+def discover_brocade_sys(parsed):
     return [(None, {})]
 
 
@@ -87,7 +87,7 @@ check_info["brocade_sys"] = LegacyCheckDefinition(
     ),
     parse_function=parse_brocade_sys,
     service_name="CPU utilization",
-    discovery_function=inventory_brocade_sys,
+    discovery_function=discover_brocade_sys,
     check_function=check_brocade_sys,
     check_ruleset_name="cpu_utilization",
 )

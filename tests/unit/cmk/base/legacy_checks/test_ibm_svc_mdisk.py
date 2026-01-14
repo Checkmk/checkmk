@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ibm_svc_mdisk import (
     check_ibm_svc_mdisk,
-    inventory_ibm_svc_mdisk,
+    discover_ibm_svc_mdisk,
     parse_ibm_svc_mdisk,
 )
 
@@ -170,12 +170,12 @@ from cmk.base.legacy_checks.ibm_svc_mdisk import (
         ),
     ],
 )
-def test_inventory_ibm_svc_mdisk(
+def test_discover_ibm_svc_mdisk(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ibm_svc_mdisk check."""
     parsed = parse_ibm_svc_mdisk(string_table)
-    result = list(inventory_ibm_svc_mdisk(parsed))
+    result = list(discover_ibm_svc_mdisk(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

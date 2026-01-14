@@ -18,12 +18,12 @@ from cmk.base.legacy_checks.hpux_tunables import (
     check_hpux_tunables_semmni,
     check_hpux_tunables_semmns,
     check_hpux_tunables_shmseg,
-    inventory_hpux_tunables_maxfiles_lim,
-    inventory_hpux_tunables_nkthread,
-    inventory_hpux_tunables_nproc,
-    inventory_hpux_tunables_semmni,
-    inventory_hpux_tunables_semmns,
-    inventory_hpux_tunables_shmseg,
+    discover_hpux_tunables_maxfiles_lim,
+    discover_hpux_tunables_nkthread,
+    discover_hpux_tunables_nproc,
+    discover_hpux_tunables_semmni,
+    discover_hpux_tunables_semmns,
+    discover_hpux_tunables_shmseg,
     parse_hpux_tunables,
 )
 
@@ -59,15 +59,15 @@ _INFO = [
 @pytest.mark.parametrize(
     "discovery_function, expected_discoveries",
     [
-        (inventory_hpux_tunables_maxfiles_lim, [(None, {})]),
-        (inventory_hpux_tunables_nkthread, [(None, {})]),
-        (inventory_hpux_tunables_nproc, [(None, {})]),
-        (inventory_hpux_tunables_semmni, [(None, {})]),
-        (inventory_hpux_tunables_semmns, [(None, {})]),
-        (inventory_hpux_tunables_shmseg, [(None, {})]),
+        (discover_hpux_tunables_maxfiles_lim, [(None, {})]),
+        (discover_hpux_tunables_nkthread, [(None, {})]),
+        (discover_hpux_tunables_nproc, [(None, {})]),
+        (discover_hpux_tunables_semmni, [(None, {})]),
+        (discover_hpux_tunables_semmns, [(None, {})]),
+        (discover_hpux_tunables_shmseg, [(None, {})]),
     ],
 )
-def test_inventory_hpux_tunables(
+def test_discover_hpux_tunables(
     discovery_function: Callable[[Any], Any], expected_discoveries: list[Any]
 ) -> None:
     """Test discovery functions for hpux_tunables checks."""

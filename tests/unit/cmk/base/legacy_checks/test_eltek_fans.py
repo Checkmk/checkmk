@@ -15,7 +15,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.eltek_fans import (
     check_eltek_fans,
-    inventory_eltek_fans,
+    discover_eltek_fans,
     parse_eltek_fans,
 )
 
@@ -31,10 +31,10 @@ from cmk.base.legacy_checks.eltek_fans import (
         ([["3", "60", "0"], ["4", "0", "80"]], [("1/3", {}), ("2/4", {})]),
     ],
 )
-def test_inventory_eltek_fans(info: StringTable, expected_discoveries: Sequence[tuple]) -> None:
+def test_discover_eltek_fans(info: StringTable, expected_discoveries: Sequence[tuple]) -> None:
     """Test discovery function for eltek_fans check."""
     parsed = parse_eltek_fans(info)
-    result = list(inventory_eltek_fans(parsed))
+    result = list(discover_eltek_fans(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

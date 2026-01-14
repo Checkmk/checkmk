@@ -20,7 +20,7 @@ check_info = {}
 # .1.3.6.1.4.1.272.4.17.4.1.1.17.1.0 9 --> BIANCA-BRICK-MIBRES-MIB::CpuLoadStreams60s.1.0
 
 
-def inventory_bintec_cpu(info):
+def discover_bintec_cpu(info):
     if info:
         return [(None, {})]
     return []
@@ -56,7 +56,7 @@ check_info["bintec_cpu"] = LegacyCheckDefinition(
         oids=["15", "16", "17"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_bintec_cpu,
+    discovery_function=discover_bintec_cpu,
     check_function=check_bintec_cpu,
     check_ruleset_name="cpu_utilization_os",
 )

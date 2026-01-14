@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_packeteer_ps_status(info):
+def discover_packeteer_ps_status(info):
     if info:
         return [(None, None)]
     return []
@@ -39,6 +39,6 @@ check_info["packeteer_ps_status"] = LegacyCheckDefinition(
         oids=["8", "10"],
     ),
     service_name="Power Supply Status",
-    discovery_function=inventory_packeteer_ps_status,
+    discovery_function=discover_packeteer_ps_status,
     check_function=check_packeteer_ps_status,
 )

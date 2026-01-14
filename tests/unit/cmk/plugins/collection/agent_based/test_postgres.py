@@ -8,8 +8,8 @@
 from typing import Any
 
 from cmk.base.legacy_checks.postgres_stat_database import (
-    inventory_postgres_stat_database,
-    inventory_postgres_stat_database_size,
+    discover_postgres_stat_database,
+    discover_postgres_stat_database_size,
     parse_postgres_stat_database,
 )
 
@@ -103,7 +103,7 @@ def test_parse() -> None:
 
 
 def test_discover_database_size() -> None:
-    assert inventory_postgres_stat_database_size(section()) == [
+    assert discover_postgres_stat_database_size(section()) == [
         ("MAIN/template0", {}),
         ("MAIN/template1", {}),
         ("MAIN/nnnnnn", {}),
@@ -112,7 +112,7 @@ def test_discover_database_size() -> None:
 
 
 def test_discover_database() -> None:
-    assert list(inventory_postgres_stat_database(section())) == [
+    assert list(discover_postgres_stat_database(section())) == [
         ("MAIN/access_to_shared_objects", {}),
         ("MAIN/template0", {}),
         ("MAIN/template1", {}),

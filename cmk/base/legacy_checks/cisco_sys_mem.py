@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import render, SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_cisco_sys_mem(info):
+def discover_cisco_sys_mem(info):
     if info:
         yield None, {}
 
@@ -47,7 +47,7 @@ check_info["cisco_sys_mem"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="Supervisor Mem Used",
-    discovery_function=inventory_cisco_sys_mem,
+    discovery_function=discover_cisco_sys_mem,
     check_function=check_cisco_sys_mem,
     check_ruleset_name="cisco_supervisor_mem",  # separate group since only percentage,
     check_default_parameters={"levels": (80.0, 90.0)},

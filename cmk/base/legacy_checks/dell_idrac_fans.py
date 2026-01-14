@@ -27,7 +27,7 @@ DELL_IDRAC_FANS_STATE_MAP = {
 }
 
 
-def inventory_dell_idrac_fans(info):
+def discover_dell_idrac_fans(info):
     for index, state, _value, _name, _warn_upper, _crit_upper, _warn_lower, _crit_lower in info:
         # don't discover fans with a state of other or unknown
         if DELL_IDRAC_FANS_STATE_MAP[state][1] not in ("OTHER", "UNKNOWN"):
@@ -64,7 +64,7 @@ check_info["dell_idrac_fans"] = LegacyCheckDefinition(
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_dell_idrac_fans,
+    discovery_function=discover_dell_idrac_fans,
     check_function=check_dell_idrac_fans,
     check_ruleset_name="hw_fans",
 )

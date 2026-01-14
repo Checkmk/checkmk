@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.rabbitmq_cluster import (
     check_rabbitmq_cluster,
-    inventory_rabbitmq_cluster,
+    discover_rabbitmq_cluster,
     parse_rabbitmq_cluster,
 )
 
@@ -32,12 +32,12 @@ from cmk.base.legacy_checks.rabbitmq_cluster import (
         ),
     ],
 )
-def test_inventory_rabbitmq_cluster(
+def test_discover_rabbitmq_cluster(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for rabbitmq_cluster check."""
     parsed = parse_rabbitmq_cluster(string_table)
-    result = list(inventory_rabbitmq_cluster(parsed))
+    result = list(discover_rabbitmq_cluster(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

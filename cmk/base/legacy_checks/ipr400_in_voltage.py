@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_ipr400_in_voltage(info):
+def discover_ipr400_in_voltage(info):
     if len(info) > 0:
         yield "1", {}
 
@@ -44,7 +44,7 @@ check_info["ipr400_in_voltage"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="IN Voltage %s",
-    discovery_function=inventory_ipr400_in_voltage,
+    discovery_function=discover_ipr400_in_voltage,
     check_function=check_ipr400_in_voltage,
     check_ruleset_name="evolt",
     check_default_parameters={

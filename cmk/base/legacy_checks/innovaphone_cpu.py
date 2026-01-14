@@ -27,7 +27,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_innovaphone_cpu(info):
+def discover_innovaphone_cpu(info):
     yield None, {}
 
 
@@ -44,7 +44,7 @@ check_info["innovaphone_cpu"] = LegacyCheckDefinition(
     name="innovaphone_cpu",
     parse_function=parse_innovaphone_cpu,
     service_name="CPU utilization",
-    discovery_function=inventory_innovaphone_cpu,
+    discovery_function=discover_innovaphone_cpu,
     check_function=check_innovaphone_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},

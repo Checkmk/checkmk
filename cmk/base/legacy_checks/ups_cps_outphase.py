@@ -42,7 +42,7 @@ def parse_ups_cps_outphase(string_table: list[str]) -> Section | None:
     )
 
 
-def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:
     yield "1", {}
 
 
@@ -55,7 +55,7 @@ check_info["ups_cps_outphase"] = LegacyCheckDefinition(
     ),
     parse_function=parse_ups_cps_outphase,
     service_name="UPS Output Phase %s",
-    discovery_function=inventory_ups_cps_outphase,
+    discovery_function=discover_ups_cps_outphase,
     check_function=check_elphase,
     check_ruleset_name="ups_outphase",
 )

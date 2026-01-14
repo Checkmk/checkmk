@@ -43,7 +43,7 @@ def check_vbox_guest(_no_item, _no_params, info):
     return (0, infotext)
 
 
-def inventory_vbox_guest(info):
+def discover_vbox_guest(info):
     if len(info) > 0:
         return [(None, None)]
     return []
@@ -57,7 +57,7 @@ check_info["vbox_guest"] = LegacyCheckDefinition(
     name="vbox_guest",
     parse_function=parse_vbox_guest,
     service_name="VBox Guest Additions",
-    discovery_function=inventory_vbox_guest,
+    discovery_function=discover_vbox_guest,
     check_function=check_vbox_guest,
     check_ruleset_name="vm_state",
 )

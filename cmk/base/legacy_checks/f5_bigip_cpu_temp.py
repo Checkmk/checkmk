@@ -13,7 +13,7 @@ from cmk.plugins.f5_bigip.lib import F5_BIGIP
 check_info = {}
 
 
-def inventory_f5_bigip_cpu_temp(info):
+def discover_f5_bigip_cpu_temp(info):
     for line in info:
         yield line[0], {}
 
@@ -38,7 +38,7 @@ check_info["f5_bigip_cpu_temp"] = LegacyCheckDefinition(
         oids=["4", "2"],
     ),
     service_name="Temperature CPU %s",
-    discovery_function=inventory_f5_bigip_cpu_temp,
+    discovery_function=discover_f5_bigip_cpu_temp,
     check_function=check_f5_bigip_cpu_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (60.0, 80.0)},

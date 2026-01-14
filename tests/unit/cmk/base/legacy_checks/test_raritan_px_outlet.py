@@ -16,7 +16,7 @@ from typing import Any
 
 from cmk.base.legacy_checks.raritan_px_outlets import (
     check_raritan_px_outlets,
-    inventory_raritan_px_outlets,
+    discover_raritan_px_outlets,
     parse_raritan_px_outlets,
 )
 
@@ -51,7 +51,7 @@ def parsed() -> Mapping[str, Any]:
 
 def test_raritan_px_outlets_discovery() -> None:
     """Test discovery of raritan_px_outlets items."""
-    discovery_result = list(inventory_raritan_px_outlets(parsed()))
+    discovery_result = list(discover_raritan_px_outlets(parsed()))
 
     # Sort for comparison since order may vary
     assert sorted(discovery_result) == sorted([("3", {}), ("2", {})])

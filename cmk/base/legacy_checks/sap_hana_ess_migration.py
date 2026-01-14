@@ -46,7 +46,7 @@ def parse_sap_hana_ess_migration(string_table):
     return parsed
 
 
-def inventory_sap_hana_ess_migration(parsed):
+def discover_sap_hana_ess_migration(parsed):
     for item in parsed:
         yield item, {}
 
@@ -73,6 +73,6 @@ check_info["sap_hana_ess_migration"] = LegacyCheckDefinition(
     name="sap_hana_ess_migration",
     parse_function=parse_sap_hana_ess_migration,
     service_name="SAP HANA ESS Migration %s",
-    discovery_function=inventory_sap_hana_ess_migration,
+    discovery_function=discover_sap_hana_ess_migration,
     check_function=check_sap_hana_ess_migration,
 )

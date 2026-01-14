@@ -54,7 +54,7 @@ def parse_cmctc_temp(string_table: list[StringTable]) -> Section:
     }
 
 
-def inventory_cmctc_temp(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_cmctc_temp(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((item, {}) for item in section)
 
 
@@ -128,7 +128,7 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_cmctc_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_cmctc_temp,
+    discovery_function=discover_cmctc_temp,
     check_function=check_cmctc_temp,
     check_ruleset_name="temperature",
 )

@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ups_cps_battery import (
     check_ups_cps_battery,
-    inventory_ups_cps_battery,
+    discover_ups_cps_battery,
     parse_ups_cps_battery,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.ups_cps_battery import (
         ([["73", "41", "528000"]], [(None, {})]),
     ],
 )
-def test_inventory_ups_cps_battery(
+def test_discover_ups_cps_battery(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ups_cps_battery check."""
     parsed = parse_ups_cps_battery(string_table)
-    result = list(inventory_ups_cps_battery(parsed))
+    result = list(discover_ups_cps_battery(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

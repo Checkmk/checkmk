@@ -77,7 +77,7 @@ def parse_docsis_channels_upstream(string_table):
     return parsed
 
 
-def inventory_docsis_channels_upstream(parsed):
+def discover_docsis_channels_upstream(parsed):
     for unique_name, entry in parsed.items():
         if entry[0] != "0" and entry[4] != "0":
             yield unique_name, {}
@@ -183,7 +183,7 @@ check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
     ],
     parse_function=parse_docsis_channels_upstream,
     service_name="Upstream Channel %s",
-    discovery_function=inventory_docsis_channels_upstream,
+    discovery_function=discover_docsis_channels_upstream,
     check_function=check_docsis_channels_upstream,
     check_ruleset_name="docsis_channels_upstream",
     check_default_parameters={

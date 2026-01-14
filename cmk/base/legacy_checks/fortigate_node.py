@@ -74,7 +74,7 @@ def parse_fortigate_node(string_table):
     return parsed
 
 
-def inventory_fortigate_cluster(parsed):
+def discover_fortigate_cluster(parsed):
     if "cluster_info" in parsed:
         return [(None, None)]
     return []
@@ -111,7 +111,7 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
     ],
     parse_function=parse_fortigate_node,
     service_name="Cluster Info",
-    discovery_function=inventory_fortigate_cluster,
+    discovery_function=discover_fortigate_cluster,
     check_function=check_fortigate_cluster,
 )
 
@@ -126,7 +126,7 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fortigate_node_cpu(section):
+def discover_fortigate_node_cpu(section):
     for hostname in section["nodes"]:
         yield hostname, {}
 
@@ -141,7 +141,7 @@ check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
     name="fortigate_node_cpu",
     service_name="CPU utilization %s",
     sections=["fortigate_node"],
-    discovery_function=inventory_fortigate_node_cpu,
+    discovery_function=discover_fortigate_node_cpu,
     check_function=check_fortigate_node_cpu,
     check_default_parameters={"levels": (80.0, 90.0)},
 )
@@ -157,7 +157,7 @@ check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fortigate_node_ses(parsed):
+def discover_fortigate_node_ses(parsed):
     for hostname in parsed["nodes"]:
         yield hostname, {}
 
@@ -175,7 +175,7 @@ check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
     name="fortigate_node_sessions",
     service_name="Sessions %s",
     sections=["fortigate_node"],
-    discovery_function=inventory_fortigate_node_ses,
+    discovery_function=discover_fortigate_node_ses,
     check_function=check_fortigate_node_ses,
     check_ruleset_name="fortigate_node_sessions",
     check_default_parameters={"levels": (100000, 150000)},

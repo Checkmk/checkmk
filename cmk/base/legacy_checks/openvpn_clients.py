@@ -30,7 +30,7 @@ check_info = {}
 # wilhelmshilfe-karlshof,92.198.38.214:3078,810996228,716994592,Fri Mar  8 10:02:39 2013
 
 
-def inventory_openvpn_clients(info):
+def discover_openvpn_clients(info):
     return [(l[0], None) for l in info]
 
 
@@ -61,6 +61,6 @@ check_info["openvpn_clients"] = LegacyCheckDefinition(
     name="openvpn_clients",
     parse_function=parse_openvpn_clients,
     service_name="OpenVPN Client %s",
-    discovery_function=inventory_openvpn_clients,
+    discovery_function=discover_openvpn_clients,
     check_function=check_openvpn_clients,
 )

@@ -19,7 +19,7 @@ check_info = {}
 # As in some other checks
 
 
-def inventory_netextreme_cpu_util(info):
+def discover_netextreme_cpu_util(info):
     if info:
         yield None, {}
 
@@ -41,7 +41,7 @@ check_info["netextreme_cpu_util"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_netextreme_cpu_util,
+    discovery_function=discover_netextreme_cpu_util,
     check_function=check_netextreme_cpu_util,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

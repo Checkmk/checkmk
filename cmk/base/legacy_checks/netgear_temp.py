@@ -76,7 +76,7 @@ def parse_netgear_temp(string_table):
     return parsed
 
 
-def inventory_netgear_temp(parsed):
+def discover_netgear_temp(parsed):
     return [
         (sensorname, {})
         for sensorname, info in parsed.items()
@@ -123,7 +123,7 @@ check_info["netgear_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_netgear_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_netgear_temp,
+    discovery_function=discover_netgear_temp,
     check_function=check_netgear_temp,
     check_ruleset_name="temperature",
 )

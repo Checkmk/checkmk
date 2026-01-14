@@ -13,7 +13,7 @@ from cmk.plugins.fortinet.lib import DETECT_FORTIGATE
 check_info = {}
 
 
-def inventory_fortigate_ipsecvpn(info):
+def discover_fortigate_ipsecvpn(info):
     if len(info) > 0:
         return [(None, {})]
     return []
@@ -81,7 +81,7 @@ check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
         oids=["3", "20"],
     ),
     service_name="VPN IPSec Tunnels",
-    discovery_function=inventory_fortigate_ipsecvpn,
+    discovery_function=discover_fortigate_ipsecvpn,
     check_function=check_fortigate_ipsecvpn,
     check_ruleset_name="ipsecvpn",
     check_default_parameters={

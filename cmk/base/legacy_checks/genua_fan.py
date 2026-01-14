@@ -29,7 +29,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_genua_fan(string_table: list[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
+def discover_genua_fan(string_table: list[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
     for tree in string_table:
         if not tree:
             continue
@@ -81,7 +81,7 @@ check_info["genua_fan"] = LegacyCheckDefinition(
         ),
     ],
     service_name="FAN %s",
-    discovery_function=inventory_genua_fan,
+    discovery_function=discover_genua_fan,
     check_function=check_genua_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={

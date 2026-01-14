@@ -13,7 +13,7 @@ from cmk.plugins.hitachi_hnas.lib import DETECT
 check_info = {}
 
 
-def inventory_hitachi_hnas_cifs(info):
+def discover_hitachi_hnas_cifs(info):
     inventory = []
     for evs_id, share_name, _users in info:
         inventory.append((evs_id + " " + share_name, None))
@@ -41,6 +41,6 @@ check_info["hitachi_hnas_cifs"] = LegacyCheckDefinition(
         oids=["1", "2", "5"],
     ),
     service_name="CIFS Share EVS %s",
-    discovery_function=inventory_hitachi_hnas_cifs,
+    discovery_function=discover_hitachi_hnas_cifs,
     check_function=check_hitachi_hnas_cifs,
 )

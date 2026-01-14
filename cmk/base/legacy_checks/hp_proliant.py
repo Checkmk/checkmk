@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import all_of, any_of, contains, exists, SNMPTree, Strin
 check_info = {}
 
 
-def inventory_proliant_general(info):
+def discover_proliant_general(info):
     if info and len(info[0]) > 1 and info[0][0]:
         yield None, {}
 
@@ -57,6 +57,6 @@ check_info["hp_proliant"] = LegacyCheckDefinition(
         oids=["11.1.3.0", "11.2.14.1.1.5.0", "2.2.2.1.0"],
     ),
     service_name="General Status",
-    discovery_function=inventory_proliant_general,
+    discovery_function=discover_proliant_general,
     check_function=check_proliant_general,
 )

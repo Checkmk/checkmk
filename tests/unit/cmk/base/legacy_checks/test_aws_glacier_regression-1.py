@@ -21,8 +21,8 @@ import pytest
 from cmk.base.legacy_checks.aws_glacier import (
     check_aws_glacier_archives,
     check_aws_glacier_summary,
+    discover_aws_glacier,
     discover_aws_glacier_summary,
-    inventory_aws_glacier,
     parse_aws_glacier,
 )
 
@@ -157,9 +157,9 @@ def test_parse_aws_glacier(parsed: dict[str, Any]) -> None:
     assert vault["VaultName"] == "axi_vault"
 
 
-def test_inventory_aws_glacier(parsed: dict[str, Any]) -> None:
+def test_discover_aws_glacier(parsed: dict[str, Any]) -> None:
     """Test discovery of AWS Glacier vaults"""
-    result = list(inventory_aws_glacier(parsed))
+    result = list(discover_aws_glacier(parsed))
 
     expected = [
         ("axi_empty_vault", {}),
@@ -170,7 +170,7 @@ def test_inventory_aws_glacier(parsed: dict[str, Any]) -> None:
     assert sorted(result) == sorted(expected)
 
 
-def test_inventory_aws_glacier_summary(parsed: dict[str, Any]) -> None:
+def test_discover_aws_glacier_summary(parsed: dict[str, Any]) -> None:
     """Test discovery of AWS Glacier summary service"""
     result = list(discover_aws_glacier_summary(parsed))
     assert result == [(None, {})]

@@ -65,7 +65,7 @@ check_info["ibm_svc_enclosurestats"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_enclosurestats_temp(section):
+def discover_ibm_svc_enclosurestats_temp(section):
     for enclosure_id, data in section.items():
         if "temp_c" in data:
             yield enclosure_id, {}
@@ -82,7 +82,7 @@ check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
     name="ibm_svc_enclosurestats_temp",
     service_name="Temperature Enclosure %s",
     sections=["ibm_svc_enclosurestats"],
-    discovery_function=inventory_ibm_svc_enclosurestats_temp,
+    discovery_function=discover_ibm_svc_enclosurestats_temp,
     check_function=check_ibm_svc_enclosurestats_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},
@@ -99,7 +99,7 @@ check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_enclosurestats_power(section):
+def discover_ibm_svc_enclosurestats_power(section):
     for enclosure_id, data in section.items():
         if "power_w" in data:
             yield enclosure_id, {}
@@ -117,6 +117,6 @@ check_info["ibm_svc_enclosurestats.power"] = LegacyCheckDefinition(
     name="ibm_svc_enclosurestats_power",
     service_name="Power Enclosure %s",
     sections=["ibm_svc_enclosurestats"],
-    discovery_function=inventory_ibm_svc_enclosurestats_power,
+    discovery_function=discover_ibm_svc_enclosurestats_power,
     check_function=check_ibm_svc_enclosurestats_power,
 )

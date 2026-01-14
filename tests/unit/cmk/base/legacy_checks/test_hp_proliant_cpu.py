@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.hp_proliant_cpu import (
     check_hp_proliant_cpu,
-    inventory_hp_proliant_cpu,
+    discover_hp_proliant_cpu,
     parse_hp_proliant_cpu,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.hp_proliant_cpu import (
         ([["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]], [("0", {}), ("1", {})]),
     ],
 )
-def test_inventory_hp_proliant_cpu(
+def test_discover_hp_proliant_cpu(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for hp_proliant_cpu check."""
     parsed = parse_hp_proliant_cpu(string_table)
-    result = list(inventory_hp_proliant_cpu(parsed))
+    result = list(discover_hp_proliant_cpu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

@@ -14,7 +14,7 @@ from cmk.plugins.avaya.lib import DETECT_AVAYA
 check_info = {}
 
 
-def inventory_avaya_chassis_temp(info):
+def discover_avaya_chassis_temp(info):
     if info:
         return [("Chassis", {})]
     return []
@@ -37,7 +37,7 @@ check_info["avaya_chassis_temp"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_avaya_chassis_temp,
+    discovery_function=discover_avaya_chassis_temp,
     check_function=check_avaya_chassis_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

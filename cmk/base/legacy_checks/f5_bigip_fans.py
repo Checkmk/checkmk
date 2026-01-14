@@ -52,7 +52,7 @@ def parse_f5_bigip_fans(string_table):
     return parsed
 
 
-def inventory_f5_bigip_fans(parsed):
+def discover_f5_bigip_fans(parsed):
     for item in parsed.keys():
         yield item, {}
 
@@ -93,7 +93,7 @@ check_info["f5_bigip_fans"] = LegacyCheckDefinition(
     ],
     parse_function=parse_f5_bigip_fans,
     service_name="FAN %s",
-    discovery_function=inventory_f5_bigip_fans,
+    discovery_function=discover_f5_bigip_fans,
     check_function=check_f5_bigip_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={"lower": (2000, 500)},

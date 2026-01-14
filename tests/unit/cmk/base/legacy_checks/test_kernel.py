@@ -42,10 +42,10 @@ def parsed() -> Section:
     return parse_kernel(string_table)
 
 
-def test_inventory_kernel_performance(parsed: Section) -> None:
+def test_discover_kernel_performance(parsed: Section) -> None:
     """Test kernel performance discovery function."""
 
-    result = kernel.inventory_kernel_performance(parsed)
+    result = kernel.discover_kernel_performance(parsed)
 
     assert len(result) == 1
     assert result[0] == (None, {})
@@ -190,5 +190,5 @@ def test_kernel_parse_function_empty() -> None:
     assert items == {}
 
 
-def test_inventory_kernel_performance_no_data() -> None:
-    assert not list(kernel.inventory_kernel_performance((11238.0, {})))
+def test_discover_kernel_performance_no_data() -> None:
+    assert not list(kernel.discover_kernel_performance((11238.0, {})))

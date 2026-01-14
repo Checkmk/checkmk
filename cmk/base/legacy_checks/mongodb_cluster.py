@@ -44,7 +44,7 @@ def parse_mongodb_cluster(string_table):
 # .
 
 
-def inventory_mongodb_cluster_databases(databases_dict):
+def discover_mongodb_cluster_databases(databases_dict):
     """
     one service per database
     :param databases_dict:
@@ -85,7 +85,7 @@ check_info["mongodb_cluster"] = LegacyCheckDefinition(
     name="mongodb_cluster",
     parse_function=parse_mongodb_cluster,
     service_name="MongoDB Database: %s",
-    discovery_function=inventory_mongodb_cluster_databases,
+    discovery_function=discover_mongodb_cluster_databases,
     check_function=check_mongodb_cluster_databases,
     check_ruleset_name="mongodb_cluster",
 )
@@ -104,7 +104,7 @@ check_info["mongodb_cluster"] = LegacyCheckDefinition(
 BALANCE_THRESHOLDS = [((0, 20), 2), ((21, 79), 4), ((80, 2**31 - 1), 8)]
 
 
-def inventory_mongodb_cluster_shards(databases_dict):
+def discover_mongodb_cluster_shards(databases_dict):
     """
     one service per collection
     :param databases_dict:
@@ -488,7 +488,7 @@ check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
     name="mongodb_cluster_collections",
     service_name="MongoDB Cluster: %s",
     sections=["mongodb_cluster"],
-    discovery_function=inventory_mongodb_cluster_shards,
+    discovery_function=discover_mongodb_cluster_shards,
     check_function=check_mongodb_cluster_shards,
     check_ruleset_name="mongodb_cluster",
     check_default_parameters={"levels_number_jumbo": (1, 2)},

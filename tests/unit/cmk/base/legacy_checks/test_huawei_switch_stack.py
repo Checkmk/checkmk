@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.huawei_switch_stack import (
     check_huawei_switch_stack,
-    inventory_huawei_switch_stack,
+    discover_huawei_switch_stack,
     parse_huawei_switch_stack,
 )
 
@@ -34,12 +34,12 @@ from cmk.base.legacy_checks.huawei_switch_stack import (
         ),
     ],
 )
-def test_inventory_huawei_switch_stack(
+def test_discover_huawei_switch_stack(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for huawei_switch_stack check."""
     parsed = parse_huawei_switch_stack(string_table)
-    result = list(inventory_huawei_switch_stack(parsed))
+    result = list(discover_huawei_switch_stack(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

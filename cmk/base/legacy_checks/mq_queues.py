@@ -26,7 +26,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_mq_queues(info):
+def discover_mq_queues(info):
     inventory = []
     for line in info:
         if line[0].startswith("[["):
@@ -75,7 +75,7 @@ check_info["mq_queues"] = LegacyCheckDefinition(
     name="mq_queues",
     parse_function=parse_mq_queues,
     service_name="Queue %s",
-    discovery_function=inventory_mq_queues,
+    discovery_function=discover_mq_queues,
     check_function=check_mq_queues,
     check_ruleset_name="mq_queues",
     check_default_parameters={

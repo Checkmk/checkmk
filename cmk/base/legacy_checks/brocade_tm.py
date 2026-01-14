@@ -32,7 +32,7 @@ LEVELS = {
 check_info = {}
 
 
-def inventory_brocade_tm(info):
+def discover_brocade_tm(info):
     inventory = []
     for line in info:
         inventory.append((line[0], None))
@@ -99,6 +99,6 @@ check_info["brocade_tm"] = LegacyCheckDefinition(
         oids=["3", "4", "5", "6", "9", "11", "13", "15"],
     ),
     service_name="TM %s",
-    discovery_function=inventory_brocade_tm,
+    discovery_function=discover_brocade_tm,
     check_function=check_brocade_tm,
 )

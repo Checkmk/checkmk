@@ -59,7 +59,7 @@ from cmk.plugins.eltek.lib import DETECT_ELTEK
 check_info = {}
 
 
-def inventory_eltek_fans(info):
+def discover_eltek_fans(info):
     inventory = []
     for index, fan1, fan2 in info:
         if fan1 and int(fan1) > 0:
@@ -110,7 +110,7 @@ check_info["eltek_fans"] = LegacyCheckDefinition(
         oids=["1", "4", "6"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_eltek_fans,
+    discovery_function=discover_eltek_fans,
     check_function=check_eltek_fans,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={

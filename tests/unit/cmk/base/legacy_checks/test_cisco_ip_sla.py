@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.cisco_ip_sla import (
     check_cisco_ip_sla,
-    inventory_cisco_ip_sla,
+    discover_cisco_ip_sla,
     parse_cisco_ip_sla,
 )
 
@@ -33,12 +33,12 @@ from cmk.base.legacy_checks.cisco_ip_sla import (
         ),
     ],
 )
-def test_inventory_cisco_ip_sla(
+def test_discover_cisco_ip_sla(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for cisco_ip_sla check."""
     parsed = parse_cisco_ip_sla(string_table)
-    result = list(inventory_cisco_ip_sla(parsed))
+    result = list(discover_cisco_ip_sla(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

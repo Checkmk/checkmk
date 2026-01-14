@@ -59,7 +59,7 @@ check_info = {}
 #   '----------------------------------------------------------------------'
 
 
-def inventory_didactum_sensors_analog_temp(parsed):
+def discover_didactum_sensors_analog_temp(parsed):
     return discover_didactum_sensors(parsed, "temperature")
 
 
@@ -72,7 +72,7 @@ check_info["didactum_sensors_analog"] = LegacyCheckDefinition(
     ),
     parse_function=parse_didactum_sensors,
     service_name="Temperature %s",
-    discovery_function=inventory_didactum_sensors_analog_temp,
+    discovery_function=discover_didactum_sensors_analog_temp,
     check_function=check_didactum_sensors_temp,
     check_ruleset_name="temperature",
 )
@@ -88,7 +88,7 @@ check_info["didactum_sensors_analog"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_didactum_sensors_analog_humid(parsed):
+def discover_didactum_sensors_analog_humid(parsed):
     return discover_didactum_sensors(parsed, "humidity")
 
 
@@ -96,7 +96,7 @@ check_info["didactum_sensors_analog.humidity"] = LegacyCheckDefinition(
     name="didactum_sensors_analog_humidity",
     service_name="Humidity %s",
     sections=["didactum_sensors_analog"],
-    discovery_function=inventory_didactum_sensors_analog_humid,
+    discovery_function=discover_didactum_sensors_analog_humid,
     check_function=check_didactum_sensors_humidity,
     check_ruleset_name="humidity",
 )
@@ -112,7 +112,7 @@ check_info["didactum_sensors_analog.humidity"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_didactum_sensors_analog_volt(parsed):
+def discover_didactum_sensors_analog_volt(parsed):
     return discover_didactum_sensors(parsed, "voltage")
 
 
@@ -120,7 +120,7 @@ check_info["didactum_sensors_analog.voltage"] = LegacyCheckDefinition(
     name="didactum_sensors_analog_voltage",
     service_name="Phase %s",
     sections=["didactum_sensors_analog"],
-    discovery_function=inventory_didactum_sensors_analog_volt,
+    discovery_function=discover_didactum_sensors_analog_volt,
     check_function=check_didactum_sensors_voltage,
     check_ruleset_name="el_inphase",
 )

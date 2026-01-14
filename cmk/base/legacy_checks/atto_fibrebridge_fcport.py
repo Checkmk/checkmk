@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import get_rate, get_value_store, OIDEnd, SNMPTree, star
 check_info = {}
 
 
-def inventory_atto_fibrebridge_fcport(info):
+def discover_atto_fibrebridge_fcport(info):
     for line in info:
         yield line[0], {}
 
@@ -51,7 +51,7 @@ check_info["atto_fibrebridge_fcport"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2", "3"],
     ),
     service_name="FC Port %s",
-    discovery_function=inventory_atto_fibrebridge_fcport,
+    discovery_function=discover_atto_fibrebridge_fcport,
     check_function=check_atto_fibrebridge_fcport,
     check_ruleset_name="fcport_words",
     check_default_parameters={

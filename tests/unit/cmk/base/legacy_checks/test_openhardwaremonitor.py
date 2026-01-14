@@ -66,7 +66,7 @@ from cmk.base.legacy_checks.openhardwaremonitor import (
         ),
     ],
 )
-def test_inventory_openhardwaremonitor(
+def test_discover_openhardwaremonitor(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for openhardwaremonitor check."""

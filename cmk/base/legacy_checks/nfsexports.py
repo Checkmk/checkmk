@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_nfsexports(info):
+def discover_nfsexports(info):
     # reminder to self: inventorize the exported fs, and maybe even the fs id.
     # but do not inventorize the allowed clients unless i'm really sure that
     # it's not bugged for "features" like multiple different option exports of
@@ -57,6 +57,6 @@ check_info["nfsexports"] = LegacyCheckDefinition(
     name="nfsexports",
     parse_function=parse_nfsexports,
     service_name="NFS export %s",
-    discovery_function=inventory_nfsexports,
+    discovery_function=discover_nfsexports,
     check_function=check_nfsexports,
 )

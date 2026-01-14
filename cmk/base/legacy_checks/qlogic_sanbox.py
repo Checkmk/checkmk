@@ -48,7 +48,7 @@ check_info["qlogic_sanbox"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_qlogic_sanbox_temp(info):
+def discover_qlogic_sanbox_temp(info):
     inventory = []
     for (
         sensor_name,
@@ -112,7 +112,7 @@ check_info["qlogic_sanbox.temp"] = LegacyCheckDefinition(
     name="qlogic_sanbox_temp",
     service_name="Temperature Sensor %s",
     sections=["qlogic_sanbox"],
-    discovery_function=inventory_qlogic_sanbox_temp,
+    discovery_function=discover_qlogic_sanbox_temp,
     check_function=check_qlogic_sanbox_temp,
 )
 
@@ -128,7 +128,7 @@ check_info["qlogic_sanbox.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_qlogic_sanbox_psu(info):
+def discover_qlogic_sanbox_psu(info):
     inventory = []
     for (
         _sensor_name,
@@ -178,6 +178,6 @@ check_info["qlogic_sanbox.psu"] = LegacyCheckDefinition(
     name="qlogic_sanbox_psu",
     service_name="PSU %s",
     sections=["qlogic_sanbox"],
-    discovery_function=inventory_qlogic_sanbox_psu,
+    discovery_function=discover_qlogic_sanbox_psu,
     check_function=check_qlogic_sanbox_psu,
 )

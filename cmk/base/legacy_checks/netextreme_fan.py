@@ -17,7 +17,7 @@ check_info = {}
 # Just an assumption, levels as in other fan checks
 
 
-def inventory_netextreme_fan(info):
+def discover_netextreme_fan(info):
     return [(line[0], {}) for line in info]
 
 
@@ -47,7 +47,7 @@ check_info["netextreme_fan"] = LegacyCheckDefinition(
         oids=["1", "2", "4"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_netextreme_fan,
+    discovery_function=discover_netextreme_fan,
     check_function=check_netextreme_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={

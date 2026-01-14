@@ -14,7 +14,7 @@ from cmk.plugins.dell.lib import DETECT_CHASSIS
 check_info = {}
 
 
-def inventory_dell_chassis_temp(info):
+def discover_dell_chassis_temp(info):
     if info and len(info[0]) == 3:
         yield "Front Panel", {}
         yield "CMC Ambient", {}
@@ -50,7 +50,7 @@ check_info["dell_chassis_temp"] = LegacyCheckDefinition(
         oids=["10", "11", "12"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_dell_chassis_temp,
+    discovery_function=discover_dell_chassis_temp,
     check_function=check_dell_chassis_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (60.0, 80.0)},

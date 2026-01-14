@@ -18,7 +18,7 @@ import pytest
 
 from cmk.base.legacy_checks.fsc_fans import (
     check_fsc_fans,
-    inventory_fsc_fans,
+    discover_fsc_fans,
     parse_fsc_fans,
 )
 
@@ -38,9 +38,9 @@ def parsed_fixture(string_table: list[list[str]]) -> dict[str, Any]:
     return parse_fsc_fans(string_table)
 
 
-def test_inventory_fsc_fans(parsed: dict[str, Any]) -> None:
+def test_discover_fsc_fans(parsed: dict[str, Any]) -> None:
     """Test FSC fan discovery finds valid fans"""
-    discovered = list(inventory_fsc_fans(parsed))
+    discovered = list(discover_fsc_fans(parsed))
     assert len(discovered) == 1
     assert discovered[0][0] == "FAN1 SYS"
     assert discovered[0][1] == {}  # Empty parameters
@@ -149,14 +149,14 @@ def test_check_fsc_fans_zero_speed() -> None:
         assert "0" in message
 
 
-def test_inventory_fsc_fans_empty_data() -> None:
+def test_discover_fsc_fans_empty_data() -> None:
     """Test FSC fan discovery with empty data"""
     empty_parsed: dict[str, Any] = {}
-    discovered = list(inventory_fsc_fans(empty_parsed))
+    discovered = list(discover_fsc_fans(empty_parsed))
     assert len(discovered) == 0
 
 
-def test_inventory_fsc_fans_multiple_fans() -> None:
+def test_discover_fsc_fans_multiple_fans() -> None:
     """Test FSC fan discovery with multiple valid fans"""
     multi_fan_data = [
         ["FAN1 SYS", "4140"],
@@ -166,7 +166,7 @@ def test_inventory_fsc_fans_multiple_fans() -> None:
     ]
 
     parsed = parse_fsc_fans(multi_fan_data)
-    discovered = list(inventory_fsc_fans(parsed))
+    discovered = list(discover_fsc_fans(parsed))
 
     assert len(discovered) == 3
     fan_names = [item[0] for item in discovered]

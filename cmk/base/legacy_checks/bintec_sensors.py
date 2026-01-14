@@ -41,7 +41,7 @@ check_info["bintec_sensors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_bintec_sensors_fan(info):
+def discover_bintec_sensors_fan(info):
     inventory = []
     for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "2":
@@ -60,7 +60,7 @@ check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
     name="bintec_sensors_fan",
     service_name="%s",
     sections=["bintec_sensors"],
-    discovery_function=inventory_bintec_sensors_fan,
+    discovery_function=discover_bintec_sensors_fan,
     check_function=check_bintec_sensors_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={
@@ -79,7 +79,7 @@ check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_bintec_sensors_temp(info):
+def discover_bintec_sensors_temp(info):
     for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "1":
             yield sensor_descr, {}
@@ -97,7 +97,7 @@ check_info["bintec_sensors.temp"] = LegacyCheckDefinition(
     name="bintec_sensors_temp",
     service_name="Temperature %s",
     sections=["bintec_sensors"],
-    discovery_function=inventory_bintec_sensors_temp,
+    discovery_function=discover_bintec_sensors_temp,
     check_function=check_bintec_sensors_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},
@@ -114,7 +114,7 @@ check_info["bintec_sensors.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_bintec_sensors_voltage(info):
+def discover_bintec_sensors_voltage(info):
     inventory = []
     for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "3":
@@ -139,7 +139,7 @@ check_info["bintec_sensors.voltage"] = LegacyCheckDefinition(
     name="bintec_sensors_voltage",
     service_name="Voltage %s",
     sections=["bintec_sensors"],
-    discovery_function=inventory_bintec_sensors_voltage,
+    discovery_function=discover_bintec_sensors_voltage,
     check_function=check_bintec_sensors_voltage,
 )
 

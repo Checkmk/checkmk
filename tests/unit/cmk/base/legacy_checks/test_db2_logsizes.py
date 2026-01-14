@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.db2_logsizes import (
     check_db2_logsizes,
-    inventory_db2_logsizes,
+    discover_db2_logsizes,
     parse_db2_logsizes,
 )
 
@@ -35,12 +35,12 @@ from cmk.base.legacy_checks.db2_logsizes import (
         ),
     ],
 )
-def test_inventory_db2_logsizes(
+def test_discover_db2_logsizes(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for db2_logsizes check."""
     parsed = parse_db2_logsizes(string_table)
-    result = list(inventory_db2_logsizes(parsed))
+    result = list(discover_db2_logsizes(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

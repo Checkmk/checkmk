@@ -16,7 +16,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def inventory_dell_poweredge_cpu(info):
+def discover_dell_poweredge_cpu(info):
     for _chassisIndex, _Index, StateSettings, _Status, LocationName in info[0]:
         if LocationName != "" and StateSettings != "1":
             yield LocationName, None
@@ -41,6 +41,6 @@ check_info["dell_poweredge_cpu"] = LegacyCheckDefinition(
         ),
     ],
     service_name="%s",
-    discovery_function=inventory_dell_poweredge_cpu,
+    discovery_function=discover_dell_poweredge_cpu,
     check_function=check_dell_poweredge_cpu,
 )

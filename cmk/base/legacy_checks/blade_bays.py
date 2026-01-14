@@ -53,7 +53,7 @@ def parse_blade_bays(string_table):
     return parsed
 
 
-def inventory_blade_bays(parsed):
+def discover_blade_bays(parsed):
     for entry, attrs in parsed.items():
         if attrs["device_state"][1] in ["standby", "on"]:
             yield entry, {}
@@ -92,6 +92,6 @@ check_info["blade_bays"] = LegacyCheckDefinition(
     ],
     parse_function=parse_blade_bays,
     service_name="BAY %s",
-    discovery_function=inventory_blade_bays,
+    discovery_function=discover_blade_bays,
     check_function=check_blade_bays,
 )

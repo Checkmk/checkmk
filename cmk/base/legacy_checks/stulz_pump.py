@@ -15,7 +15,7 @@ from cmk.plugins.stulz.lib import DETECT_STULZ
 check_info = {}
 
 
-def inventory_stulz_pump(info):
+def discover_stulz_pump(info):
     inventory = []
     for pump_id, _pump_status in info[0]:
         pump_id = pump_id.replace(".1", "")
@@ -61,6 +61,6 @@ check_info["stulz_pump"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Pump %s",
-    discovery_function=inventory_stulz_pump,
+    discovery_function=discover_stulz_pump,
     check_function=check_stulz_pump,
 )

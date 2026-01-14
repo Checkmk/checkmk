@@ -13,7 +13,7 @@ from cmk.plugins.domino.lib import DETECT
 check_info = {}
 
 
-def inventory_domino_transactions(info):
+def discover_domino_transactions(info):
     if info:
         yield None, {}
 
@@ -42,7 +42,7 @@ check_info["domino_transactions"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     service_name="Domino Server Transactions",
-    discovery_function=inventory_domino_transactions,
+    discovery_function=discover_domino_transactions,
     check_function=check_domino_transactions,
     check_ruleset_name="domino_transactions",
     check_default_parameters={"levels": (30000, 35000)},

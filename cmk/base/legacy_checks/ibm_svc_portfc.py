@@ -76,7 +76,7 @@ def parse_ibm_svc_portfc(string_table):
     return parsed
 
 
-def inventory_ibm_svc_portfc(parsed):
+def discover_ibm_svc_portfc(parsed):
     for item_name, data in parsed.items():
         if data["status"] != "active":
             continue
@@ -103,6 +103,6 @@ check_info["ibm_svc_portfc"] = LegacyCheckDefinition(
     name="ibm_svc_portfc",
     parse_function=parse_ibm_svc_portfc,
     service_name="FC %s",
-    discovery_function=inventory_ibm_svc_portfc,
+    discovery_function=discover_ibm_svc_portfc,
     check_function=check_ibm_svc_portfc,
 )

@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.postgres_connections import (
     check_postgres_connections,
-    inventory_postgres_connections,
+    discover_postgres_connections,
 )
 from cmk.plugins.postgres.lib import parse_dbs
 
@@ -39,13 +39,13 @@ from cmk.plugins.postgres.lib import parse_dbs
         ),
     ],
 )
-def test_inventory_postgres_connections(
+def test_discover_postgres_connections(
     info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for postgres_connections check."""
 
     parsed = parse_dbs(info)
-    result = list(inventory_postgres_connections(parsed))
+    result = list(discover_postgres_connections(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

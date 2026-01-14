@@ -29,7 +29,7 @@ def strem1_sensors_parse_info(info):
     return parsed
 
 
-def inventory_strem1_sensors(info):
+def discover_strem1_sensors(info):
     return [
         (index, {})
         for index, _typ, val, _intval in strem1_sensors_parse_info(info[1])
@@ -91,6 +91,6 @@ check_info["strem1_sensors"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Sensor - %s",
-    discovery_function=inventory_strem1_sensors,
+    discovery_function=discover_strem1_sensors,
     check_function=check_strem1_sensors,
 )

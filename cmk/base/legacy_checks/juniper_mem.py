@@ -29,7 +29,7 @@ def parse_juniper_mem(string_table: StringTable) -> Section:
     return {k: float(v) for k, v in string_table}
 
 
-def inventory_juniper_mem(section: Section) -> DiscoveryResult:
+def discover_juniper_mem(section: Section) -> DiscoveryResult:
     yield from ((k, {}) for k in section)
 
 
@@ -57,7 +57,7 @@ check_info["juniper_mem"] = LegacyCheckDefinition(
     ),
     parse_function=parse_juniper_mem,
     service_name="Memory %s",
-    discovery_function=inventory_juniper_mem,
+    discovery_function=discover_juniper_mem,
     check_function=check_juniper_mem,
     check_ruleset_name="juniper_mem_modules",
     check_default_parameters={

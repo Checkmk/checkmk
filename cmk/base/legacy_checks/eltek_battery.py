@@ -48,7 +48,7 @@ def parse_eltek_battery(string_table):
     }
 
 
-def inventory_eltek_battery(parsed):
+def discover_eltek_battery(parsed):
     if "breaker" in parsed:
         return [(None, None)]
     return []
@@ -74,7 +74,7 @@ check_info["eltek_battery"] = LegacyCheckDefinition(
     ),
     parse_function=parse_eltek_battery,
     service_name="Battery Breaker Status",
-    discovery_function=inventory_eltek_battery,
+    discovery_function=discover_eltek_battery,
     check_function=check_eltek_battery,
 )
 
@@ -91,7 +91,7 @@ check_info["eltek_battery"] = LegacyCheckDefinition(
 # suggested by customer
 
 
-def inventory_eltek_battery_temp(parsed):
+def discover_eltek_battery_temp(parsed):
     if "temp" in parsed:
         return [("Battery", {})]
     return []
@@ -108,7 +108,7 @@ check_info["eltek_battery.temp"] = LegacyCheckDefinition(
     name="eltek_battery_temp",
     service_name="Temperature %s",
     sections=["eltek_battery"],
-    discovery_function=inventory_eltek_battery_temp,
+    discovery_function=discover_eltek_battery_temp,
     check_function=check_eltek_battery_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

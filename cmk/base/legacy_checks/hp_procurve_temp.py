@@ -21,7 +21,7 @@ check_info = {}
 # .1.3.6.1.4.1.11.2.14.11.1.2.8.1.1.9.0 17      # average temperature
 
 
-def inventory_hp_procurve_temp(info):
+def discover_hp_procurve_temp(info):
     if len(info) == 1:
         return [(info[0][0], {})]
     return []
@@ -47,7 +47,7 @@ check_info["hp_procurve_temp"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_hp_procurve_temp,
+    discovery_function=discover_hp_procurve_temp,
     check_function=check_hp_procurve_temp,
     check_ruleset_name="temperature",
 )

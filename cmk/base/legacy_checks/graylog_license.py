@@ -37,7 +37,7 @@ check_info = {}
 # false,"nodes_exceeded": false,"remote_checks_failed": true,"valid": false}]}
 
 
-def inventory_graylog_license(parsed):
+def discover_graylog_license(parsed):
     license_state = parsed.get("status")
     if license_state is not None:
         return [(None, {})]
@@ -114,7 +114,7 @@ check_info["graylog_license"] = LegacyCheckDefinition(
     name="graylog_license",
     parse_function=parse_graylog_agent_data,
     service_name="Graylog License",
-    discovery_function=inventory_graylog_license,
+    discovery_function=discover_graylog_license,
     check_function=check_graylog_license,
     check_ruleset_name="graylog_license",
     check_default_parameters={

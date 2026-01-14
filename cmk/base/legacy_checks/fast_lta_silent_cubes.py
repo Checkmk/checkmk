@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYST
 check_info = {}
 
 
-def inventory_fast_lta_silent_cubes_status(info):
+def discover_fast_lta_silent_cubes_status(info):
     if len(info) > 0 and len(info[0]) > 1:
         return [("Total", {})]
     return []
@@ -54,7 +54,7 @@ check_info["fast_lta_silent_cubes.capacity"] = LegacyCheckDefinition(
     name="fast_lta_silent_cubes_capacity",
     service_name="Fast LTA SC Capacity %s",
     sections=["fast_lta_silent_cubes"],
-    discovery_function=inventory_fast_lta_silent_cubes_status,
+    discovery_function=discover_fast_lta_silent_cubes_status,
     check_function=check_fast_lta_silent_cubes_status,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

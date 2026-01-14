@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.hp_proliant_temp import (
     check_hp_proliant_temp,
-    inventory_hp_proliant_temp,
+    discover_hp_proliant_temp,
     parse_hp_proliant_temp,
 )
 
@@ -109,12 +109,12 @@ from cmk.base.legacy_checks.hp_proliant_temp import (
         ),
     ],
 )
-def test_inventory_hp_proliant_temp(
+def test_discover_hp_proliant_temp(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for hp_proliant_temp check."""
     parsed = parse_hp_proliant_temp(string_table)
-    result = list(inventory_hp_proliant_temp(parsed))
+    result = list(discover_hp_proliant_temp(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

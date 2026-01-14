@@ -25,7 +25,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_mailman_lists(info):
+def discover_mailman_lists(info):
     return [(i[0], None) for i in info]
 
 
@@ -45,6 +45,6 @@ check_info["mailman_lists"] = LegacyCheckDefinition(
     name="mailman_lists",
     parse_function=parse_mailman_lists,
     service_name="Mailinglist %s",
-    discovery_function=inventory_mailman_lists,
+    discovery_function=discover_mailman_lists,
     check_function=check_mailman_lists,
 )

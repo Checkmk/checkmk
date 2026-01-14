@@ -31,7 +31,7 @@ def parse_ups_cps_inphase(
     return {"1": parsed} if parsed else {}
 
 
-def inventory_ups_cps_inphase(parsed):
+def discover_ups_cps_inphase(parsed):
     if parsed:
         yield "1", {}
 
@@ -45,7 +45,7 @@ check_info["ups_cps_inphase"] = LegacyCheckDefinition(
     ),
     parse_function=parse_ups_cps_inphase,
     service_name="UPS Input Phase %s",
-    discovery_function=inventory_ups_cps_inphase,
+    discovery_function=discover_ups_cps_inphase,
     check_function=check_elphase,
     check_ruleset_name="el_inphase",
 )

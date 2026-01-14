@@ -18,7 +18,7 @@ import pytest
 
 from cmk.base.legacy_checks.db2_bp_hitratios import (
     check_db2_bp_hitratios,
-    inventory_db2_bp_hitratios,
+    discover_db2_bp_hitratios,
     parse_db2_bp_hitratios,
 )
 
@@ -48,9 +48,9 @@ def parsed_fixture(string_table: list[list[str]]) -> dict[str, Any]:
     return parse_db2_bp_hitratios(string_table)
 
 
-def test_inventory_db2_bp_hitratios(parsed: dict[str, Any]) -> None:
+def test_discover_db2_bp_hitratios(parsed: dict[str, Any]) -> None:
     """Test DB2 buffer pool discovery finds IBMDEFAULTBP buffer pool"""
-    discovered = list(inventory_db2_bp_hitratios(parsed))
+    discovered = list(discover_db2_bp_hitratios(parsed))
     assert len(discovered) == 1
     assert discovered[0][0] == "serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP"
     assert discovered[0][1] == {}  # Empty parameters
@@ -194,7 +194,7 @@ def test_check_db2_bp_hitratios_comma_decimal() -> None:
     assert total_result[2] == [("total_hitratio", 95.75, None, None, 0, 100)]
 
 
-def test_inventory_db2_bp_hitratios_filters_system_bp() -> None:
+def test_discover_db2_bp_hitratios_filters_system_bp() -> None:
     """Test that IBMSYSTEMBP buffer pools are filtered from discovery"""
     test_data = [
         ["[[[testdb:DB3]]]"],
@@ -211,7 +211,7 @@ def test_inventory_db2_bp_hitratios_filters_system_bp() -> None:
     ]
 
     parsed = parse_db2_bp_hitratios(test_data)
-    discovered = list(inventory_db2_bp_hitratios(parsed))
+    discovered = list(discover_db2_bp_hitratios(parsed))
 
     # Should discover 2 buffer pools (excluding IBMSYSTEMBP4K)
     assert len(discovered) == 2

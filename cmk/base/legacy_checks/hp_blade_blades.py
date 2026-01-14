@@ -57,7 +57,7 @@ def saveint(i: object) -> int:
         return 0
 
 
-def inventory_hp_blade_blades(info):
+def discover_hp_blade_blades(info):
     return [
         (line[0], None) for line in info if hp_blade_present_map.get(int(line[1]), "") == "present"
     ]
@@ -102,6 +102,6 @@ check_info["hp_blade_blades"] = LegacyCheckDefinition(
         oids=["3", "12", "21", "17", "4", "16"],
     ),
     service_name="Blade %s",
-    discovery_function=inventory_hp_blade_blades,
+    discovery_function=discover_hp_blade_blades,
     check_function=check_hp_blade_blades,
 )

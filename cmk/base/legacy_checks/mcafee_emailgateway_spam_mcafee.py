@@ -17,7 +17,7 @@ def parse_mcafee_emailgateway_spam_mcafee(string_table: StringTable) -> StringTa
     return string_table or None
 
 
-def inventory_mcafee_gateway_generic(info):
+def discover_mcafee_gateway_generic(info):
     return [(None, {})]
 
 
@@ -35,6 +35,6 @@ check_info["mcafee_emailgateway_spam_mcafee"] = LegacyCheckDefinition(
         oids=["10", "11"],
     ),
     service_name="Spam McAfee",
-    discovery_function=inventory_mcafee_gateway_generic,
+    discovery_function=discover_mcafee_gateway_generic,
     check_function=check_mcafee_emailgateway_spam_mcafee,
 )

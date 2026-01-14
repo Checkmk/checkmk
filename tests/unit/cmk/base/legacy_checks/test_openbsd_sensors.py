@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.openbsd_sensors import (
     check_openbsd_sensors,
-    inventory_openbsd_sensors,
+    discover_openbsd_sensors,
     parse_openbsd_sensors,
 )
 
@@ -94,12 +94,12 @@ from cmk.base.legacy_checks.openbsd_sensors import (
         ),
     ],
 )
-def test_inventory_openbsd_sensors(
+def test_discover_openbsd_sensors(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for openbsd_sensors check."""
     parsed = parse_openbsd_sensors(string_table)
-    result = list(inventory_openbsd_sensors(parsed, "temp"))
+    result = list(discover_openbsd_sensors(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

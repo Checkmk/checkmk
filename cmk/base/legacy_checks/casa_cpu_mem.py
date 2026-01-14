@@ -31,7 +31,7 @@ def parse_casa_cpu_mem(string_table: list[StringTable]) -> Section:
     return data
 
 
-def inventory_casa_cpu_mem(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_casa_cpu_mem(section: Section) -> Iterable[tuple[str, dict]]:
     for k, v in section.items():
         if v.get("mem_total"):
             yield k, {}
@@ -76,7 +76,7 @@ check_info["casa_cpu_mem"] = LegacyCheckDefinition(
     ],
     parse_function=parse_casa_cpu_mem,
     service_name="Memory %s",
-    discovery_function=inventory_casa_cpu_mem,
+    discovery_function=discover_casa_cpu_mem,
     check_function=check_casa_cpu_mem,
     check_ruleset_name="memory_multiitem",
     check_default_parameters={"levels": None},

@@ -20,7 +20,7 @@ def format_item_checkpoint_temp(name):
     return name.upper().replace(" TEMP", "")
 
 
-def inventory_checkpoint_temp(info):
+def discover_checkpoint_temp(info):
     for name, _value, _unit, _dev_status in info:
         yield format_item_checkpoint_temp(name), {}
 
@@ -58,7 +58,7 @@ check_info["checkpoint_temp"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "6"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_checkpoint_temp,
+    discovery_function=discover_checkpoint_temp,
     check_function=check_checkpoint_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (50.0, 60.0)},

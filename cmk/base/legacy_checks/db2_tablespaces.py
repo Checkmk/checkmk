@@ -38,7 +38,7 @@ check_info = {}
 db_get_tablespace_levels_in_bytes = cmk.plugins.lib.db.get_tablespace_levels_in_bytes
 
 
-def inventory_db2_tablespaces(parsed):
+def discover_db2_tablespaces(parsed):
     for instance, values in parsed[1].items():
         for table in values[1:]:
             yield f"{instance}.{table[0]}", {}
@@ -108,7 +108,7 @@ check_info["db2_tablespaces"] = LegacyCheckDefinition(
     name="db2_tablespaces",
     parse_function=parse_db2_dbs,
     service_name="DB2 Tablespace %s",
-    discovery_function=inventory_db2_tablespaces,
+    discovery_function=discover_db2_tablespaces,
     check_function=check_db2_tablespaces,
     check_ruleset_name="db2_tablespaces",
     check_default_parameters={

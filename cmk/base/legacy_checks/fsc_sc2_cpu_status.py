@@ -30,7 +30,7 @@ def parse_fsc_sc2_cpu_status(string_table: StringTable) -> StringTable:
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.13.1.2 0
 
 
-def inventory_fsc_sc2_cpu_status(info):
+def discover_fsc_sc2_cpu_status(info):
     for line in info:
         if line[1] != "2":
             yield line[0], None
@@ -64,6 +64,6 @@ check_info["fsc_sc2_cpu_status"] = LegacyCheckDefinition(
         oids=["3", "4", "5", "8", "13"],
     ),
     service_name="FSC %s",
-    discovery_function=inventory_fsc_sc2_cpu_status,
+    discovery_function=discover_fsc_sc2_cpu_status,
     check_function=check_fsc_sc2_cpu_status,
 )

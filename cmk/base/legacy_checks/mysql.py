@@ -338,7 +338,7 @@ def _has_wsrep_provider(data: Mapping[str, object]) -> bool:
     return data.get("wsrep_provider") not in (None, "none")
 
 
-def inventory_mysql_galerasync(parsed):
+def discover_mysql_galerasync(parsed):
     for instance, data in parsed.items():
         if _has_wsrep_provider(data) and "wsrep_local_state_comment" in data:
             yield instance, {}
@@ -362,7 +362,7 @@ check_info["mysql.galerasync"] = LegacyCheckDefinition(
     name="mysql_galerasync",
     service_name="MySQL Galera Sync %s",
     sections=["mysql"],
-    discovery_function=inventory_mysql_galerasync,
+    discovery_function=discover_mysql_galerasync,
     check_function=check_mysql_galerasync,
 )
 
@@ -377,7 +377,7 @@ check_info["mysql.galerasync"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_mysql_galeradonor(parsed):
+def discover_mysql_galeradonor(parsed):
     for instance, data in parsed.items():
         if _has_wsrep_provider(data) and "wsrep_sst_donor" in data:
             yield instance, {"wsrep_sst_donor": data["wsrep_sst_donor"]}
@@ -405,7 +405,7 @@ check_info["mysql.galeradonor"] = LegacyCheckDefinition(
     name="mysql_galeradonor",
     service_name="MySQL Galera Donor %s",
     sections=["mysql"],
-    discovery_function=inventory_mysql_galeradonor,
+    discovery_function=discover_mysql_galeradonor,
     check_function=check_mysql_galeradonor,
     check_default_parameters={},
 )
@@ -421,7 +421,7 @@ check_info["mysql.galeradonor"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_mysql_galerastartup(parsed):
+def discover_mysql_galerastartup(parsed):
     for instance, data in parsed.items():
         if _has_wsrep_provider(data) and "wsrep_cluster_address" in data:
             yield instance, {}
@@ -444,7 +444,7 @@ check_info["mysql.galerastartup"] = LegacyCheckDefinition(
     name="mysql_galerastartup",
     service_name="MySQL Galera Startup %s",
     sections=["mysql"],
-    discovery_function=inventory_mysql_galerastartup,
+    discovery_function=discover_mysql_galerastartup,
     check_function=check_mysql_galerastartup,
 )
 
@@ -465,7 +465,7 @@ check_info["mysql.galerastartup"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_mysql_galerasize(parsed):
+def discover_mysql_galerasize(parsed):
     for instance, data in parsed.items():
         if _has_wsrep_provider(data) and "wsrep_cluster_size" in data:
             yield instance, {"invsize": data["wsrep_cluster_size"]}
@@ -493,7 +493,7 @@ check_info["mysql.galerasize"] = LegacyCheckDefinition(
     name="mysql_galerasize",
     service_name="MySQL Galera Size %s",
     sections=["mysql"],
-    discovery_function=inventory_mysql_galerasize,
+    discovery_function=discover_mysql_galerasize,
     check_function=check_mysql_galerasize,
     check_default_parameters={},
 )
@@ -509,7 +509,7 @@ check_info["mysql.galerasize"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_mysql_galerastatus(parsed):
+def discover_mysql_galerastatus(parsed):
     for instance, data in parsed.items():
         if _has_wsrep_provider(data) and "wsrep_cluster_status" in data:
             yield instance, {}
@@ -533,6 +533,6 @@ check_info["mysql.galerastatus"] = LegacyCheckDefinition(
     name="mysql_galerastatus",
     service_name="MySQL Galera Status %s",
     sections=["mysql"],
-    discovery_function=inventory_mysql_galerastatus,
+    discovery_function=discover_mysql_galerastatus,
     check_function=check_mysql_galerastatus,
 )

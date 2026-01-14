@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ddn_s2a_stats import (
     check_ddn_s2a_stats,
-    inventory_ddn_s2a_stats,
+    discover_ddn_s2a_stats,
     parse_ddn_s2a_stats,
 )
 
@@ -38,12 +38,12 @@ from cmk.base.legacy_checks.ddn_s2a_stats import (
         ),
     ],
 )
-def test_inventory_ddn_s2a_stats(
+def test_discover_ddn_s2a_stats(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ddn_s2a_stats check."""
     parsed = parse_ddn_s2a_stats(string_table)
-    result = list(inventory_ddn_s2a_stats(parsed))
+    result = list(discover_ddn_s2a_stats(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

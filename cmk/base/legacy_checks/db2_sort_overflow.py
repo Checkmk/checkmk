@@ -18,7 +18,7 @@ check_info = {}
 # Sort overflows 3
 
 
-def inventory_db2_sort_overflow(parsed):
+def discover_db2_sort_overflow(parsed):
     for key in parsed[1]:
         yield key, {}
 
@@ -49,7 +49,7 @@ check_info["db2_sort_overflow"] = LegacyCheckDefinition(
     name="db2_sort_overflow",
     parse_function=parse_db2_dbs,
     service_name="DB2 Sort Overflow %s",
-    discovery_function=inventory_db2_sort_overflow,
+    discovery_function=discover_db2_sort_overflow,
     check_function=check_db2_sort_overflow,
     check_ruleset_name="db2_sortoverflow",
     check_default_parameters={"levels_perc": (2.0, 4.0)},

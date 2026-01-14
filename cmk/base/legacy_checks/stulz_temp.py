@@ -69,7 +69,7 @@ def parse_stulz_temp(string_table):
     return parsed
 
 
-def inventory_stulz_temp(parsed):
+def discover_stulz_temp(parsed):
     for item in parsed:
         yield item, {}
 
@@ -89,7 +89,7 @@ check_info["stulz_temp"] = LegacyCheckDefinition(
     ),
     parse_function=parse_stulz_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_stulz_temp,
+    discovery_function=discover_stulz_temp,
     check_function=check_stulz_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (25.0, 28.0)},

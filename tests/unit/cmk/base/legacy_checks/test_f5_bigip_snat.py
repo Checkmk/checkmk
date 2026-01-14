@@ -64,7 +64,7 @@ def _f5_bigip_snat_parsed(f5_bigip_snat_string_table: StringTable) -> dict[str, 
 
 def test_discover_f5_bigip_snat(f5_bigip_snat_parsed: dict[str, dict[str, Any]]) -> None:
     """Test discovery function for F5 BigIP SNAT."""
-    result = list(f5_bigip_snat.inventory_f5_bigip_snat(f5_bigip_snat_parsed))
+    result = list(f5_bigip_snat.discover_f5_bigip_snat(f5_bigip_snat_parsed))
     # Should discover all SNAT entries including zero value ones
     expected_items = [
         "AS2_proxy",

@@ -13,7 +13,7 @@ from cmk.plugins.bvip.lib import DETECT_BVIP
 check_info = {}
 
 
-def inventory_bvip_link(info):
+def discover_bvip_link(info):
     if info:
         return [(None, {})]
     return []
@@ -63,7 +63,7 @@ check_info["bvip_link"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Network Link",
-    discovery_function=inventory_bvip_link,
+    discovery_function=discover_bvip_link,
     check_function=check_bvip_link,
     check_ruleset_name="bvip_link",
     check_default_parameters={

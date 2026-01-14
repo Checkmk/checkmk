@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.seh_ports import check_seh_ports, inventory_seh_ports, parse_seh_ports
+from cmk.base.legacy_checks.seh_ports import check_seh_ports, discover_seh_ports, parse_seh_ports
 
 
 @pytest.mark.parametrize(
@@ -65,12 +65,12 @@ from cmk.base.legacy_checks.seh_ports import check_seh_ports, inventory_seh_port
         ),
     ],
 )
-def test_inventory_seh_ports(
+def test_discover_seh_ports(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for seh_ports check."""
     parsed = parse_seh_ports(string_table)
-    result = list(inventory_seh_ports(parsed))
+    result = list(discover_seh_ports(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

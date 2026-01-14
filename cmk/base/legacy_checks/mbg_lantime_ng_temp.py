@@ -14,7 +14,7 @@ from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 check_info = {}
 
 
-def inventory_mbg_lantime_ng_temp(info):
+def discover_mbg_lantime_ng_temp(info):
     if info:
         return [("System", {})]
     return []
@@ -37,7 +37,7 @@ check_info["mbg_lantime_ng_temp"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_mbg_lantime_ng_temp,
+    discovery_function=discover_mbg_lantime_ng_temp,
     check_function=check_mbg_lantime_ng_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

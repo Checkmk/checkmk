@@ -115,7 +115,7 @@ def jolokia_metrics_serv(info, split_item):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_jolokia_metrics_serv(info):
+def discover_jolokia_metrics_serv(info):
     parsed = jolokia_metrics_parse(info)
     needed_key = "Requests"
     for inst, vals in parsed.items():
@@ -160,7 +160,7 @@ check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
     name="jolokia_metrics_serv_req",
     service_name="JVM %s Requests",
     sections=["jolokia_metrics"],
-    discovery_function=inventory_jolokia_metrics_serv,
+    discovery_function=discover_jolokia_metrics_serv,
     check_function=check_jolokia_metrics_serv_req,
     check_ruleset_name="jvm_requests",
     check_default_parameters={

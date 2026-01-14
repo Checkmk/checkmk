@@ -57,7 +57,7 @@ def parse_ibm_svc_mdisk(string_table):
     return parsed
 
 
-def inventory_ibm_svc_mdisk(parsed):
+def discover_ibm_svc_mdisk(parsed):
     for mdisk_name in parsed:
         yield mdisk_name, {}
 
@@ -76,7 +76,7 @@ check_info["ibm_svc_mdisk"] = LegacyCheckDefinition(
     name="ibm_svc_mdisk",
     parse_function=parse_ibm_svc_mdisk,
     service_name="MDisk %s",
-    discovery_function=inventory_ibm_svc_mdisk,
+    discovery_function=discover_ibm_svc_mdisk,
     check_function=check_ibm_svc_mdisk,
     check_ruleset_name="ibm_svc_mdisk",
     check_default_parameters={

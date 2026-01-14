@@ -30,7 +30,7 @@ def parse_vms_cpu(string_table):
     return parsed
 
 
-def inventory_vms_cpu(info):
+def discover_vms_cpu(info):
     if info:
         yield None, {}
 
@@ -70,7 +70,7 @@ check_info["vms_cpu"] = LegacyCheckDefinition(
     name="vms_cpu",
     parse_function=parse_vms_cpu,
     service_name="CPU utilization",
-    discovery_function=inventory_vms_cpu,
+    discovery_function=discover_vms_cpu,
     check_function=check_vms_cpu,
     check_ruleset_name="cpu_iowait",
 )

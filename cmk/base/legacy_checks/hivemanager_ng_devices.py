@@ -36,7 +36,7 @@ def parse_hivemanager_ng_devices(string_table):
     return parsed
 
 
-def inventory_hivemanager_ng_devices(parsed):
+def discover_hivemanager_ng_devices(parsed):
     for host in parsed:
         yield host, {}
 
@@ -77,7 +77,7 @@ check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(
     name="hivemanager_ng_devices",
     parse_function=parse_hivemanager_ng_devices,
     service_name="Client %s",
-    discovery_function=inventory_hivemanager_ng_devices,
+    discovery_function=discover_hivemanager_ng_devices,
     check_function=check_hivemanager_ng_devices,
     check_ruleset_name="hivemanager_ng_devices",
     check_default_parameters={

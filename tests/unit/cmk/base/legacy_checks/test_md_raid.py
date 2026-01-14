@@ -16,7 +16,7 @@ from typing import Any
 
 from cmk.base.legacy_checks.md import (
     check_md,
-    inventory_md,
+    discover_md,
     parse_md,
 )
 
@@ -76,7 +76,7 @@ def test_md_raid_discovery() -> None:
     """Test discovery function."""
     section = parsed()
 
-    discoveries = list(inventory_md(section))
+    discoveries = list(discover_md(section))
 
     # Should discover RAID devices but exclude RAID0
     assert len(discoveries) >= 3

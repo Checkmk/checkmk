@@ -25,7 +25,7 @@ from cmk.base.legacy_checks.pulse_secure_log_util import (
         ([["19"]], [(None, {})]),
     ],
 )
-def test_inventory_pulse_secure_log(
+def test_discover_pulse_secure_log(
     info: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for pulse_secure_log_util check."""

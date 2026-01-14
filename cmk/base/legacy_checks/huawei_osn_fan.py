@@ -13,7 +13,7 @@ from cmk.plugins.huawei.lib import DETECT_HUAWEI_OSN
 check_info = {}
 
 
-def inventory_huawei_osn_fan(info):
+def discover_huawei_osn_fan(info):
     for line in info:
         yield (line[0], None)
 
@@ -47,6 +47,6 @@ check_info["huawei_osn_fan"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="Unit %s (Fan)",
-    discovery_function=inventory_huawei_osn_fan,
+    discovery_function=discover_huawei_osn_fan,
     check_function=check_huawei_osn_fan,
 )

@@ -13,7 +13,7 @@ from .checktestlib import Check
 @pytest.mark.parametrize(
     "info, expected_result", [([["", "", ""], ["2", "237273", "130456"]], [("2", {})])]
 )
-def test_inventory_dell_compellent_folder(
+def test_discover_dell_compellent_folder(
     info: Sequence[Sequence[str]], expected_result: Sequence[tuple[str, Mapping[object, object]]]
 ) -> None:
     result = Check("dell_compellent_folder").run_discovery(info)

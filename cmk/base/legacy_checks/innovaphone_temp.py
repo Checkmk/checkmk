@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 check_info = {}
 
 
-def inventory_innovaphone_temp(info):
+def discover_innovaphone_temp(info):
     yield "Ambient", {}
 
 
@@ -29,7 +29,7 @@ check_info["innovaphone_temp"] = LegacyCheckDefinition(
     name="innovaphone_temp",
     parse_function=parse_innovaphone_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_innovaphone_temp,
+    discovery_function=discover_innovaphone_temp,
     check_function=check_innovaphone_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (45.0, 50.0)},

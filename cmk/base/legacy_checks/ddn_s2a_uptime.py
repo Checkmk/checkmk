@@ -18,7 +18,7 @@ def parse_ddn_s2a_uptime(string_table):
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
 
 
-def inventory_ddn_s2a_uptime(parsed):
+def discover_ddn_s2a_uptime(parsed):
     return [(None, {})]
 
 
@@ -40,7 +40,7 @@ check_info["ddn_s2a_uptime"] = LegacyCheckDefinition(
     service_name="DDN S2A Power-On Time",  # We don't use "Uptime" as a service name here,
     # because this value is different from the uptime value
     # supplied via SNMP.,
-    discovery_function=inventory_ddn_s2a_uptime,
+    discovery_function=discover_ddn_s2a_uptime,
     check_function=check_ddn_s2a_uptime,
     check_ruleset_name="uptime",
 )

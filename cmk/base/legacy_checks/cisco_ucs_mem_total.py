@@ -17,7 +17,7 @@ check_info = {}
 # .1.3.6.1.4.1.9.9.719.1.9.35.1.9   cucsComputeRackUnitAvailableMemory
 
 
-def inventory_cisco_ucs_mem_total(info):
+def discover_cisco_ucs_mem_total(info):
     return [(None, None)]
 
 
@@ -39,6 +39,6 @@ check_info["cisco_ucs_mem_total"] = LegacyCheckDefinition(
         oids=["9"],
     ),
     service_name="Memory total",
-    discovery_function=inventory_cisco_ucs_mem_total,
+    discovery_function=discover_cisco_ucs_mem_total,
     check_function=check_cisco_ucs_mem_total,
 )

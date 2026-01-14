@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 check_info = {}
 
 
-def inventory_avaya_45xx_temp(info):
+def discover_avaya_45xx_temp(info):
     for idx, _line in enumerate(info):
         yield str(idx), {}
 
@@ -38,7 +38,7 @@ check_info["avaya_45xx_temp"] = LegacyCheckDefinition(
         oids=["5"],
     ),
     service_name="Temperature Chassis %s",
-    discovery_function=inventory_avaya_45xx_temp,
+    discovery_function=discover_avaya_45xx_temp,
     check_function=check_avaya_45xx_temp,
     check_ruleset_name="temperature",
     # S5-CHASSIS-MIB::s5ChasTmpSnrTmpValue

@@ -28,7 +28,7 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_juniper_trpz_flash(info):
+def discover_juniper_trpz_flash(info):
     yield None, {}
 
 
@@ -69,7 +69,7 @@ check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     service_name="Flash",
-    discovery_function=inventory_juniper_trpz_flash,
+    discovery_function=discover_juniper_trpz_flash,
     check_function=check_juniper_trpz_flash,
     check_ruleset_name="general_flash_usage",
     check_default_parameters={"levels": (90.0, 95.0)},

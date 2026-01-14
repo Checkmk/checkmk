@@ -83,7 +83,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_ibm_svc_system(info):
+def discover_ibm_svc_system(info):
     return [(None, None)]
 
 
@@ -105,6 +105,6 @@ check_info["ibm_svc_system"] = LegacyCheckDefinition(
     name="ibm_svc_system",
     parse_function=parse_ibm_svc_system,
     service_name="Info",
-    discovery_function=inventory_ibm_svc_system,
+    discovery_function=discover_ibm_svc_system,
     check_function=check_ibm_svc_system,
 )

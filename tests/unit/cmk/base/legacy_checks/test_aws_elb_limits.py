@@ -22,7 +22,7 @@ from cmk.base.legacy_checks.aws_elb_limits import check_aws_elb_limits, discover
         ([['[["load_balancers",', '"TITLE",', "10,", "1,", '"REGION"]]']], [("REGION", {})]),
     ],
 )
-def test_inventory_aws_elb_limits(
+def test_discover_aws_elb_limits(
     info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for aws_elb_limits check."""

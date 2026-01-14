@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import render, StringTable
 check_info = {}
 
 
-def inventory_innovaphone_mem(info):
+def discover_innovaphone_mem(info):
     yield None, {}
 
 
@@ -34,7 +34,7 @@ check_info["innovaphone_mem"] = LegacyCheckDefinition(
     name="innovaphone_mem",
     parse_function=parse_innovaphone_mem,
     service_name="Memory",
-    discovery_function=inventory_innovaphone_mem,
+    discovery_function=discover_innovaphone_mem,
     check_function=check_innovaphone_mem,
     check_ruleset_name="innovaphone_mem",
     check_default_parameters={

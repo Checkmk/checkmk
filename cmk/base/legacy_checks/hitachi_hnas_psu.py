@@ -13,7 +13,7 @@ from cmk.plugins.hitachi_hnas.lib import DETECT
 check_info = {}
 
 
-def inventory_hitachi_hnas_psu(info):
+def discover_hitachi_hnas_psu(info):
     inventory = []
     for clusternode, id_, _status in info:
         inventory.append((clusternode + "." + id_, None))
@@ -54,6 +54,6 @@ check_info["hitachi_hnas_psu"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     service_name="PSU %s",
-    discovery_function=inventory_hitachi_hnas_psu,
+    discovery_function=discover_hitachi_hnas_psu,
     check_function=check_hitachi_hnas_psu,
 )

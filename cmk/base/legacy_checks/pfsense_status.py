@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_pfsense_status(info):
+def discover_pfsense_status(info):
     if info:
         return [(None, None)]
     return []
@@ -41,6 +41,6 @@ check_info["pfsense_status"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="pfSense Status",
-    discovery_function=inventory_pfsense_status,
+    discovery_function=discover_pfsense_status,
     check_function=check_pfsense_status,
 )

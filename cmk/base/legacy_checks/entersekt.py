@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_entersekt(info):
+def discover_entersekt(info):
     if info:
         yield None, {}
 
@@ -54,7 +54,7 @@ check_info["entersekt"] = LegacyCheckDefinition(
         oids=["3.1.0", "3.4.0", "3.8.0", "3.9.0", "17.1.0"],
     ),
     service_name="Entersekt Server Status",
-    discovery_function=inventory_entersekt,
+    discovery_function=discover_entersekt,
     check_function=check_entersekt_status,
 )
 
@@ -76,7 +76,7 @@ check_info["entersekt"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def inventory_entersekt_emrerrors(info):
+def discover_entersekt_emrerrors(info):
     if info:
         yield None, {}
 
@@ -105,7 +105,7 @@ check_info["entersekt.emrerrors"] = LegacyCheckDefinition(
     name="entersekt_emrerrors",
     service_name="Entersekt http EMR Errors",
     sections=["entersekt"],
-    discovery_function=inventory_entersekt_emrerrors,
+    discovery_function=discover_entersekt_emrerrors,
     check_function=check_entersekt_emrerrors,
     check_ruleset_name="entersekt_emrerrors",
 )
@@ -129,7 +129,7 @@ check_info["entersekt.emrerrors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_entersekt_ecerterrors(info):
+def discover_entersekt_ecerterrors(info):
     if info:
         yield None, {}
 
@@ -158,7 +158,7 @@ check_info["entersekt.ecerterrors"] = LegacyCheckDefinition(
     name="entersekt_ecerterrors",
     service_name="Entersekt http Ecert Errors",
     sections=["entersekt"],
-    discovery_function=inventory_entersekt_ecerterrors,
+    discovery_function=discover_entersekt_ecerterrors,
     check_function=check_entersekt_ecerterrors,
     check_ruleset_name="entersekt_ecerterrors",
 )
@@ -181,7 +181,7 @@ check_info["entersekt.ecerterrors"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def inventory_entersekt_soaperrors(info):
+def discover_entersekt_soaperrors(info):
     if info:
         yield None, {}
 
@@ -200,7 +200,7 @@ check_info["entersekt.soaperrors"] = LegacyCheckDefinition(
     name="entersekt_soaperrors",
     service_name="Entersekt Soap Service Errors",
     sections=["entersekt"],
-    discovery_function=inventory_entersekt_soaperrors,
+    discovery_function=discover_entersekt_soaperrors,
     check_function=check_entersekt_soaperrors,
     check_ruleset_name="entersekt_soaperrors",
 )
@@ -230,7 +230,7 @@ check_info["entersekt.soaperrors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_entersekt_certexpiry(info):
+def discover_entersekt_certexpiry(info):
     if info:
         yield None, {}
 
@@ -261,7 +261,7 @@ check_info["entersekt.certexpiry"] = LegacyCheckDefinition(
     name="entersekt_certexpiry",
     service_name="Entersekt Certificate Expiration",
     sections=["entersekt"],
-    discovery_function=inventory_entersekt_certexpiry,
+    discovery_function=discover_entersekt_certexpiry,
     check_function=check_entersekt_certexpiry,
     check_ruleset_name="entersekt_certexpiry",
 )

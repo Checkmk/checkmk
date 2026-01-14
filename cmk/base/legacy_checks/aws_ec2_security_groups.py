@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.aws import parse_aws
 check_info = {}
 
 
-def inventory_aws_ec2_security_groups(parsed):
+def discover_aws_ec2_security_groups(parsed):
     if parsed:
         yield None, {"groups": [group["GroupId"] for group in parsed]}
 
@@ -36,7 +36,7 @@ check_info["aws_ec2_security_groups"] = LegacyCheckDefinition(
     name="aws_ec2_security_groups",
     parse_function=parse_aws,
     service_name="AWS/EC2 Security Groups",
-    discovery_function=inventory_aws_ec2_security_groups,
+    discovery_function=discover_aws_ec2_security_groups,
     check_function=check_aws_ec2_security_groups,
     check_default_parameters={},
 )

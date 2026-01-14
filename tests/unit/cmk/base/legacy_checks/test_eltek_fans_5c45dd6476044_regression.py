@@ -18,7 +18,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.eltek_fans import (
     check_eltek_fans,
-    inventory_eltek_fans,
+    discover_eltek_fans,
     parse_eltek_fans,
 )
 
@@ -40,7 +40,7 @@ class TestEltekFansRegression:
     def test_discovery_no_fans(self, eltek_fans_regression_data: StringTable) -> None:
         """Test discovery function with no working fans."""
         parsed = parse_eltek_fans(eltek_fans_regression_data)
-        result = list(inventory_eltek_fans(parsed))
+        result = list(discover_eltek_fans(parsed))
         # No fans discovered since both fan speed values are empty
         assert result == []
 
@@ -80,7 +80,7 @@ def test_eltek_fans_discovery_scenarios(
 ) -> None:
     """Test discovery function with various scenarios."""
     parsed = parse_eltek_fans(test_data)
-    result = list(inventory_eltek_fans(parsed))
+    result = list(discover_eltek_fans(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 
@@ -131,7 +131,7 @@ def test_eltek_fans_empty_string_handling() -> None:
     """Test that empty strings are handled correctly in discovery."""
     test_data = [["1", "", ""], ["2", "0", ""], ["3", "", "50"]]
     parsed = parse_eltek_fans(test_data)
-    result = list(inventory_eltek_fans(parsed))
+    result = list(discover_eltek_fans(parsed))
     # Only fan 2/3 should be discovered since it has value 50
     assert result == [("2/3", {})]
 
@@ -140,7 +140,7 @@ def test_eltek_fans_zero_value_handling() -> None:
     """Test that zero values are correctly excluded from discovery."""
     test_data = [["1", "0", "0"], ["2", "45", "0"], ["3", "0", "60"]]
     parsed = parse_eltek_fans(test_data)
-    result = list(inventory_eltek_fans(parsed))
+    result = list(discover_eltek_fans(parsed))
     # Only fans with non-zero values should be discovered
     assert sorted(result) == sorted([("1/2", {}), ("2/3", {})])
 

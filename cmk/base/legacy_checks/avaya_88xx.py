@@ -23,7 +23,7 @@ def parse_avaya_88xx(string_table):
     return parsed
 
 
-def inventory_avaya_88xx_fan(parsed):
+def discover_avaya_88xx_fan(parsed):
     for idx, _state in enumerate(parsed["fanstate"]):
         yield str(idx), None
 
@@ -45,7 +45,7 @@ def check_avaya_88xx_fan(item, _no_params, parsed):
     return state, text
 
 
-def inventory_avaya_88xx(parsed):
+def discover_avaya_88xx(parsed):
     sensors = parsed["temp"]
     for idx, temp in enumerate(sensors):
         if temp:
@@ -73,7 +73,7 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
     ),
     parse_function=parse_avaya_88xx,
     service_name="Temperature Fan %s",
-    discovery_function=inventory_avaya_88xx,
+    discovery_function=discover_avaya_88xx,
     check_function=check_avaya_88xx,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -85,6 +85,6 @@ check_info["avaya_88xx.fan"] = LegacyCheckDefinition(
     name="avaya_88xx_fan",
     service_name="Fan %s Status",
     sections=["avaya_88xx"],
-    discovery_function=inventory_avaya_88xx_fan,
+    discovery_function=discover_avaya_88xx_fan,
     check_function=check_avaya_88xx_fan,
 )

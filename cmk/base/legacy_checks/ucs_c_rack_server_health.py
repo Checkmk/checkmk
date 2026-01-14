@@ -36,7 +36,7 @@ def parse_ucs_c_rack_server_health(string_table):
     return parsed
 
 
-def inventory_ucs_c_rack_server_health(parsed):
+def discover_ucs_c_rack_server_health(parsed):
     """
     Input: dict containing items as keys or empty dict.
     Output: Yields indexed racks and storage controllers as items (e.g. Rack Unit 1 Storage SAS SLOT HBA vd 0) in case parsed contains items.
@@ -77,6 +77,6 @@ check_info["ucs_c_rack_server_health"] = LegacyCheckDefinition(
     name="ucs_c_rack_server_health",
     parse_function=parse_ucs_c_rack_server_health,
     service_name="Health %s",
-    discovery_function=inventory_ucs_c_rack_server_health,
+    discovery_function=discover_ucs_c_rack_server_health,
     check_function=check_ucs_c_rack_server_health,
 )

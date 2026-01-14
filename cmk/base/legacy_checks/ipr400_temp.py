@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 check_info = {}
 
 
-def inventory_ipr400_temp(info):
+def discover_ipr400_temp(info):
     if len(info) > 0:
         yield "Ambient", None
 
@@ -35,7 +35,7 @@ check_info["ipr400_temp"] = LegacyCheckDefinition(
         oids=["9"],
     ),
     service_name="Temperature %s ",
-    discovery_function=inventory_ipr400_temp,
+    discovery_function=discover_ipr400_temp,
     check_function=check_ipr400_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

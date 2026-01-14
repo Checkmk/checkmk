@@ -62,7 +62,7 @@ def parse_mcafee_emailgateway_entities(string_table):
     )
 
 
-def inventory_mcafee_emailgateway_entities(parsed):
+def discover_mcafee_emailgateway_entities(parsed):
     for title, dev_state in parsed.items():
         if dev_state not in ["10", "11"]:
             yield title, {}
@@ -131,6 +131,6 @@ check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
     ],
     parse_function=parse_mcafee_emailgateway_entities,
     service_name="Entity %s",
-    discovery_function=inventory_mcafee_emailgateway_entities,
+    discovery_function=discover_mcafee_emailgateway_entities,
     check_function=check_mcafee_emailgateway_entities,
 )

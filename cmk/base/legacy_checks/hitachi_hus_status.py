@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_hitachi_hus_status(info):
+def discover_hitachi_hus_status(info):
     return [(None, None)]
 
 
@@ -60,6 +60,6 @@ check_info["hitachi_hus_status"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Status",
-    discovery_function=inventory_hitachi_hus_status,
+    discovery_function=discover_hitachi_hus_status,
     check_function=check_hitachi_hus_status,
 )

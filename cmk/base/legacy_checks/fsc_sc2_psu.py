@@ -22,7 +22,7 @@ check_info = {}
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.7.1.2 448
 
 
-def inventory_fsc_sc2_psu(info):
+def discover_fsc_sc2_psu(info):
     for line in info:
         if line[1] not in ["2"]:
             yield line[0], None
@@ -70,6 +70,6 @@ check_info["fsc_sc2_psu"] = LegacyCheckDefinition(
         oids=["3", "5", "6", "7"],
     ),
     service_name="FSC %s",
-    discovery_function=inventory_fsc_sc2_psu,
+    discovery_function=discover_fsc_sc2_psu,
     check_function=check_fsc_sc2_psu,
 )

@@ -93,7 +93,7 @@ check_info["graylog_cluster_stats"] = LegacyCheckDefinition(
 )
 
 
-def inventory_graylog_cluster_stats_elastic(parsed):
+def discover_graylog_cluster_stats_elastic(parsed):
     elastic_data = parsed.get("elasticsearch")
     if elastic_data is not None:
         return [(None, {})]
@@ -191,7 +191,7 @@ check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
     name="graylog_cluster_stats_elastic",
     service_name="Graylog Cluster Elasticsearch Stats",
     sections=["graylog_cluster_stats"],
-    discovery_function=inventory_graylog_cluster_stats_elastic,
+    discovery_function=discover_graylog_cluster_stats_elastic,
     check_function=check_graylog_cluster_stats_elastic,
     check_ruleset_name="graylog_cluster_stats_elastic",
     check_default_parameters={
@@ -202,7 +202,7 @@ check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
 )
 
 
-def inventory_graylog_cluster_stats_mongodb(parsed):
+def discover_graylog_cluster_stats_mongodb(parsed):
     mongo_data = parsed.get("mongo")
     if mongo_data is not None:
         return [(None, {})]
@@ -266,7 +266,7 @@ check_info["graylog_cluster_stats.mongodb"] = LegacyCheckDefinition(
     name="graylog_cluster_stats_mongodb",
     service_name="Graylog Cluster MongoDB Stats",
     sections=["graylog_cluster_stats"],
-    discovery_function=inventory_graylog_cluster_stats_mongodb,
+    discovery_function=discover_graylog_cluster_stats_mongodb,
     check_function=check_graylog_cluster_stats_mongodb,
     check_ruleset_name="graylog_cluster_stats_mongodb",
 )

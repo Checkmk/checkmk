@@ -17,7 +17,7 @@ from cmk.plugins.avaya.lib import DETECT_AVAYA
 check_info = {}
 
 
-def inventory_avaya_88xx_cpu(info):
+def discover_avaya_88xx_cpu(info):
     return [(None, {})]
 
 
@@ -40,7 +40,7 @@ check_info["avaya_88xx_cpu"] = LegacyCheckDefinition(
         oids=["20"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_avaya_88xx_cpu,
+    discovery_function=discover_avaya_88xx_cpu,
     check_function=check_avaya_88xx_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},

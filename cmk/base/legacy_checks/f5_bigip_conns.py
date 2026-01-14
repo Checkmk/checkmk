@@ -20,7 +20,7 @@ from cmk.plugins.f5_bigip.lib import F5_BIGIP
 check_info = {}
 
 
-def inventory_f5_bigip_conns(info):
+def discover_f5_bigip_conns(info):
     if info:
         return [(None, {})]
     return []
@@ -103,7 +103,7 @@ check_info["f5_bigip_conns"] = LegacyCheckDefinition(
         oids=["1.8", "9.2", "9.6", "9.9", "1.56"],
     ),
     service_name="Open Connections",
-    discovery_function=inventory_f5_bigip_conns,
+    discovery_function=discover_f5_bigip_conns,
     check_function=check_f5_bigip_conns,
     check_ruleset_name="f5_connections",
     check_default_parameters={

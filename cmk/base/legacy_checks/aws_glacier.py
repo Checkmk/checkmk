@@ -42,7 +42,7 @@ def parse_aws_glacier(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_aws_glacier(parsed):
+def discover_aws_glacier(parsed):
     for vault_name in parsed:
         yield vault_name, {}
 
@@ -77,7 +77,7 @@ check_info["aws_glacier"] = LegacyCheckDefinition(
     name="aws_glacier",
     parse_function=parse_aws_glacier,
     service_name="AWS/Glacier Vault: %s",
-    discovery_function=inventory_aws_glacier,
+    discovery_function=discover_aws_glacier,
     check_function=check_aws_glacier_archives,
     check_ruleset_name="aws_glacier_vault_archives",
 )

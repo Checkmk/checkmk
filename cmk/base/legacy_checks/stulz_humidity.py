@@ -28,7 +28,7 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_stulz_humidity(info):
+def discover_stulz_humidity(info):
     return [(x[0], {}) for x in info]
 
 
@@ -52,7 +52,7 @@ check_info["stulz_humidity"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     service_name="Humidity %s ",
-    discovery_function=inventory_stulz_humidity,
+    discovery_function=discover_stulz_humidity,
     check_function=check_stulz_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={

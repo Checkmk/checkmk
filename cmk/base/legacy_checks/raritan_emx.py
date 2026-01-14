@@ -72,7 +72,7 @@ def inventory_raritan_emx(parsed, rack_type):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_raritan_emx_temp(parsed):
+def discover_raritan_emx_temp(parsed):
     for rack_name, values in parsed.items():
         if values["rack_type"] == "temp":
             yield rack_name, {}
@@ -113,7 +113,7 @@ check_info["raritan_emx"] = LegacyCheckDefinition(
     ),
     parse_function=parse_raritan_emx,
     service_name="Temperature %s",
-    discovery_function=inventory_raritan_emx_temp,
+    discovery_function=discover_raritan_emx_temp,
     check_function=check_raritan_emx_temp,
     check_ruleset_name="temperature",
 )

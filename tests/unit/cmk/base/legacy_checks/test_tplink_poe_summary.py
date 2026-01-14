@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.tplink_poe_summary import (
     check_tplink_poe_summary,
-    inventory_tplink_poe_summary,
+    discover_tplink_poe_summary,
     parse_tplink_poe_summary,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.tplink_poe_summary import (
         ([["150"]], [(None, {})]),
     ],
 )
-def test_inventory_tplink_poe_summary(
+def test_discover_tplink_poe_summary(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for tplink_poe_summary check."""
     parsed = parse_tplink_poe_summary(string_table)
-    result = list(inventory_tplink_poe_summary(parsed))
+    result = list(discover_tplink_poe_summary(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

@@ -45,7 +45,7 @@ def parse_win_license(string_table):
     return parsed
 
 
-def inventory_win_license(parsed):
+def discover_win_license(parsed):
     if "License" in parsed:
         return [(None, {})]
     return []
@@ -89,7 +89,7 @@ check_info["win_license"] = LegacyCheckDefinition(
     name="win_license",
     parse_function=parse_win_license,
     service_name="Windows License",
-    discovery_function=inventory_win_license,
+    discovery_function=discover_win_license,
     check_function=check_win_license,
     check_ruleset_name="win_license",
     check_default_parameters=DEFAULT_PARAMETERS,

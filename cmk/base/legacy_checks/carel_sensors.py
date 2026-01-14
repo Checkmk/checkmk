@@ -66,7 +66,7 @@ def carel_sensors_parse(string_table):
     return parsed
 
 
-def inventory_carel_sensors_temp(parsed):
+def discover_carel_sensors_temp(parsed):
     for sensor in parsed:
         levels = carel_temp_defaultlevels[sensor]
         yield sensor, {"levels": levels}
@@ -90,7 +90,7 @@ check_info["carel_sensors"] = LegacyCheckDefinition(
     ),
     parse_function=carel_sensors_parse,
     service_name="Temperature %s",
-    discovery_function=inventory_carel_sensors_temp,
+    discovery_function=discover_carel_sensors_temp,
     check_function=check_carel_sensors_temp,
     check_ruleset_name="temperature",
 )

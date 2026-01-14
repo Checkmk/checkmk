@@ -89,7 +89,7 @@ def parse_hyperv_vms(string_table):
     return parsed
 
 
-def inventory_hyperv_vms(parsed):
+def discover_hyperv_vms(parsed):
     return [(vm_name, {"discovered_state": vm["state"]}) for (vm_name, vm) in parsed.items()]
 
 
@@ -177,7 +177,7 @@ check_info["hyperv_vms"] = LegacyCheckDefinition(
     name="hyperv_vms",
     parse_function=parse_hyperv_vms,
     service_name="VM %s",
-    discovery_function=inventory_hyperv_vms,
+    discovery_function=discover_hyperv_vms,
     check_function=check_hyperv_vms,
     check_ruleset_name="hyperv_vms",
     check_default_parameters=DEFAULT_PARAMETERS,

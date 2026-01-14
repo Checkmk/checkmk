@@ -15,7 +15,7 @@ from cmk.plugins.enterasys.lib import DETECT_ENTERASYS
 check_info = {}
 
 
-def inventory_enterasys_cpu_util(info):
+def discover_enterasys_cpu_util(info):
     # [:-2] to remove the oid end
     return [(x[0][:-2], {}) for x in info]
 
@@ -41,7 +41,7 @@ check_info["enterasys_cpu_util"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "3"],
     ),
     service_name="CPU util %s",
-    discovery_function=inventory_enterasys_cpu_util,
+    discovery_function=discover_enterasys_cpu_util,
     check_function=check_enterasys_cpu_util,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={

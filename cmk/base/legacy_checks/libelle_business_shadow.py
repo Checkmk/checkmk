@@ -282,7 +282,7 @@ def check_libelle_business_shadow_parse(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_libelle_business_shadow_info(info):
+def discover_libelle_business_shadow_info(info):
     return [(None, None)]
 
 
@@ -304,7 +304,7 @@ check_info["libelle_business_shadow.info"] = LegacyCheckDefinition(
     name="libelle_business_shadow_info",
     service_name="Libelle Business Shadow Info",
     sections=["libelle_business_shadow"],
-    discovery_function=inventory_libelle_business_shadow_info,
+    discovery_function=discover_libelle_business_shadow_info,
     check_function=check_libelle_business_shadow_info,
 )
 
@@ -319,7 +319,7 @@ check_info["libelle_business_shadow.info"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_libelle_business_shadow_status(info):
+def discover_libelle_business_shadow_status(info):
     parsed = check_libelle_business_shadow_parse(info)
     if "libelle_status" in parsed:
         return [(None, None)]
@@ -344,7 +344,7 @@ check_info["libelle_business_shadow.status"] = LegacyCheckDefinition(
     name="libelle_business_shadow_status",
     service_name="Libelle Business Shadow Status",
     sections=["libelle_business_shadow"],
-    discovery_function=inventory_libelle_business_shadow_status,
+    discovery_function=discover_libelle_business_shadow_status,
     check_function=check_libelle_business_shadow_status,
 )
 
@@ -359,7 +359,7 @@ check_info["libelle_business_shadow.status"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_libelle_business_shadow_process(info):
+def discover_libelle_business_shadow_process(info):
     parsed = check_libelle_business_shadow_parse(info)
     if "process" in parsed:
         return [(None, None)]
@@ -387,7 +387,7 @@ check_info["libelle_business_shadow.process"] = LegacyCheckDefinition(
     name="libelle_business_shadow_process",
     service_name="Libelle Business Shadow Process",
     sections=["libelle_business_shadow"],
-    discovery_function=inventory_libelle_business_shadow_process,
+    discovery_function=discover_libelle_business_shadow_process,
     check_function=check_libelle_business_shadow_process,
 )
 
@@ -402,7 +402,7 @@ check_info["libelle_business_shadow.process"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_libelle_business_shadow_archive_dir(info):
+def discover_libelle_business_shadow_archive_dir(info):
     parsed = check_libelle_business_shadow_parse(info)
     parsed_keys = list(parsed)
     if "arch_total_mb" in parsed_keys and "arch_free_mb" in parsed_keys:
@@ -422,7 +422,7 @@ check_info["libelle_business_shadow.archive_dir"] = LegacyCheckDefinition(
     name="libelle_business_shadow_archive_dir",
     service_name="Libelle Business Shadow %s",
     sections=["libelle_business_shadow"],
-    discovery_function=inventory_libelle_business_shadow_archive_dir,
+    discovery_function=discover_libelle_business_shadow_archive_dir,
     check_function=check_libelle_business_shadow_archive_dir,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

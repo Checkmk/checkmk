@@ -39,7 +39,7 @@ def parse_aix_hacmp_resources(string_table):
     return parsed
 
 
-def inventory_aix_hacmp_resources(parsed):
+def discover_aix_hacmp_resources(parsed):
     return [(key, None) for key in parsed]
 
 
@@ -72,7 +72,7 @@ check_info["aix_hacmp_resources"] = LegacyCheckDefinition(
     name="aix_hacmp_resources",
     parse_function=parse_aix_hacmp_resources,
     service_name="HACMP RG %s",
-    discovery_function=inventory_aix_hacmp_resources,
+    discovery_function=discover_aix_hacmp_resources,
     check_function=check_aix_hacmp_resources,
     check_ruleset_name="hacmp_resources",
     check_default_parameters={

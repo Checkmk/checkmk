@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_solaris_prtdiag_status(info):
+def discover_solaris_prtdiag_status(info):
     if info:
         return [(None, None)]
     return []
@@ -45,6 +45,6 @@ check_info["solaris_prtdiag_status"] = LegacyCheckDefinition(
     name="solaris_prtdiag_status",
     parse_function=parse_solaris_prtdiag_status,
     service_name="Hardware Overall State",
-    discovery_function=inventory_solaris_prtdiag_status,
+    discovery_function=discover_solaris_prtdiag_status,
     check_function=check_solaris_prtdiag_status,
 )

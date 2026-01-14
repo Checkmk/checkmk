@@ -124,7 +124,7 @@ def lgp_pdu_aux_fmt(info):
     return new_info
 
 
-def inventory_lgp_pdu_aux(info):
+def discover_lgp_pdu_aux(info):
     info = lgp_pdu_aux_fmt(info)
     inv = []
     for pdu in info.values():
@@ -207,6 +207,6 @@ check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     service_name="Liebert PDU AUX %s",
-    discovery_function=inventory_lgp_pdu_aux,
+    discovery_function=discover_lgp_pdu_aux,
     check_function=check_lgp_pdu_aux,
 )

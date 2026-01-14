@@ -59,7 +59,7 @@ def parse_db2_bp_hitratios(string_table):
     return databases
 
 
-def inventory_db2_bp_hitratios(parsed):
+def discover_db2_bp_hitratios(parsed):
     for key, values in parsed.items():
         for field in values[1:]:
             if not field[0].startswith("IBMSYSTEMBP"):
@@ -98,6 +98,6 @@ check_info["db2_bp_hitratios"] = LegacyCheckDefinition(
     name="db2_bp_hitratios",
     parse_function=parse_db2_bp_hitratios,
     service_name="DB2 BP-Hitratios %s",
-    discovery_function=inventory_db2_bp_hitratios,
+    discovery_function=discover_db2_bp_hitratios,
     check_function=check_db2_bp_hitratios,
 )

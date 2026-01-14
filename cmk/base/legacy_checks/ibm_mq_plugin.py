@@ -27,7 +27,7 @@ def parse_ibm_mq_plugin(string_table):
     return parsed
 
 
-def inventory_ibm_mq_plugin(parsed):
+def discover_ibm_mq_plugin(parsed):
     if parsed:
         return [(None, {})]
     return []
@@ -57,7 +57,7 @@ check_info["ibm_mq_plugin"] = LegacyCheckDefinition(
     name="ibm_mq_plugin",
     parse_function=parse_ibm_mq_plugin,
     service_name="IBM MQ Plugin",
-    discovery_function=inventory_ibm_mq_plugin,
+    discovery_function=discover_ibm_mq_plugin,
     check_function=check_ibm_mq_plugin,
     check_ruleset_name="ibm_mq_plugin",
 )

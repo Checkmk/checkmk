@@ -14,7 +14,7 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 check_info = {}
 
 
-def inventory_hp_procurve_cpu(string_table: StringTable) -> DiscoveryResult:
+def discover_hp_procurve_cpu(string_table: StringTable) -> DiscoveryResult:
     if len(string_table) == 1 and 0 <= int(string_table[0][0]) <= 100:
         yield Service()
 
@@ -46,7 +46,7 @@ check_info["hp_procurve_cpu"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_hp_procurve_cpu,
+    discovery_function=discover_hp_procurve_cpu,
     check_function=check_hp_procurve_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

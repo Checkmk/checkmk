@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ups_eaton_enviroment import (
     check_ups_eaton_enviroment,
-    inventory_ups_eaton_enviroment,
+    discover_ups_eaton_enviroment,
     parse_ups_eaton_enviroment,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.ups_eaton_enviroment import (
         ([["1", "40", "3"]], [(None, {})]),
     ],
 )
-def test_inventory_ups_eaton_enviroment(
+def test_discover_ups_eaton_enviroment(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ups_eaton_enviroment check."""
     parsed = parse_ups_eaton_enviroment(string_table)
-    result = list(inventory_ups_eaton_enviroment(parsed))
+    result = list(discover_ups_eaton_enviroment(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

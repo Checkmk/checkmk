@@ -13,7 +13,7 @@
 
 from cmk.base.legacy_checks.ups_socomec_in_voltage import (
     check_socomec_ups_in_voltage,
-    inventory_socomec_ups_in_voltage,
+    discover_socomec_ups_in_voltage,
     parse_ups_socomec_in_voltage,
 )
 
@@ -25,14 +25,14 @@ def parsed() -> list[list[str]]:
 
 def test_ups_socomec_in_voltage_discovery():
     """Test discovery function finds voltage phases."""
-    discovery_result = list(inventory_socomec_ups_in_voltage(parsed()))
+    discovery_result = list(discover_socomec_ups_in_voltage(parsed()))
     assert discovery_result == [("1", {})]
 
 
 def test_ups_socomec_in_voltage_discovery_zero_voltage():
     """Test discovery ignores phases with zero voltage."""
     zero_data = parse_ups_socomec_in_voltage([["1", "0"]])
-    discovery_result = list(inventory_socomec_ups_in_voltage(zero_data))
+    discovery_result = list(discover_socomec_ups_in_voltage(zero_data))
     assert discovery_result == []
 
 

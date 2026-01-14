@@ -19,7 +19,7 @@ check_info = {}
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.2.1.4.1 3 --> ISPRO-MIB::isDeviceMonitorHumidityAlarm
 
 
-def inventory_ispro_sensors_humid(info):
+def discover_ispro_sensors_humid(info):
     return [(name, None) for name, _reading_str, status in info if status not in ["1", "2"]]
 
 
@@ -44,7 +44,7 @@ check_info["ispro_sensors_humid"] = LegacyCheckDefinition(
         oids=["2", "3", "4"],
     ),
     service_name="Humidity %s",
-    discovery_function=inventory_ispro_sensors_humid,
+    discovery_function=discover_ispro_sensors_humid,
     check_function=check_ispro_sensors_humid,
     check_ruleset_name="humidity",
 )

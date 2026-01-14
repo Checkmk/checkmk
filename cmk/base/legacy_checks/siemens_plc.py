@@ -55,7 +55,7 @@ check_info["siemens_plc"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_siemens_plc_temp(info):
+def discover_siemens_plc_temp(info):
     return [(l[0] + " " + l[2], {}) for l in info if l[1] == "temp"]
 
 
@@ -71,7 +71,7 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
     name="siemens_plc_temp",
     service_name="Temperature %s",
     sections=["siemens_plc"],
-    discovery_function=inventory_siemens_plc_temp,
+    discovery_function=discover_siemens_plc_temp,
     check_function=check_siemens_plc_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -93,7 +93,7 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_siemens_plc_flag(info):
+def discover_siemens_plc_flag(info):
     return [(l[0] + " " + l[2], {}) for l in info if l[1] == "flag"]
 
 
@@ -115,7 +115,7 @@ check_info["siemens_plc.flag"] = LegacyCheckDefinition(
     name="siemens_plc_flag",
     service_name="Flag %s",
     sections=["siemens_plc"],
-    discovery_function=inventory_siemens_plc_flag,
+    discovery_function=discover_siemens_plc_flag,
     check_function=check_siemens_plc_flag,
     check_ruleset_name="siemens_plc_flag",
     check_default_parameters={"expected_state": False},
@@ -134,7 +134,7 @@ check_info["siemens_plc.flag"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_siemens_plc_duration(info):
+def discover_siemens_plc_duration(info):
     return [
         (l[0] + " " + l[2], {})
         for l in info
@@ -181,7 +181,7 @@ check_info["siemens_plc.duration"] = LegacyCheckDefinition(
     name="siemens_plc_duration",
     service_name="Duration %s",
     sections=["siemens_plc"],
-    discovery_function=inventory_siemens_plc_duration,
+    discovery_function=discover_siemens_plc_duration,
     check_function=check_siemens_plc_duration,
     check_ruleset_name="siemens_plc_duration",
 )
@@ -199,7 +199,7 @@ check_info["siemens_plc.duration"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_siemens_plc_counter(info):
+def discover_siemens_plc_counter(info):
     return [(l[0] + " " + l[2], {}) for l in info if l[1].startswith("counter")]
 
 
@@ -231,7 +231,7 @@ check_info["siemens_plc.counter"] = LegacyCheckDefinition(
     name="siemens_plc_counter",
     service_name="Counter %s",
     sections=["siemens_plc"],
-    discovery_function=inventory_siemens_plc_counter,
+    discovery_function=discover_siemens_plc_counter,
     check_function=check_siemens_plc_counter,
     check_ruleset_name="siemens_plc_counter",
 )
@@ -249,7 +249,7 @@ check_info["siemens_plc.counter"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_siemens_plc_info(info):
+def discover_siemens_plc_info(info):
     return [(l[0] + " " + l[2], {}) for l in info if l[1] == "text"]
 
 
@@ -264,7 +264,7 @@ check_info["siemens_plc.info"] = LegacyCheckDefinition(
     name="siemens_plc_info",
     service_name="Info %s",
     sections=["siemens_plc"],
-    discovery_function=inventory_siemens_plc_info,
+    discovery_function=discover_siemens_plc_info,
     check_function=check_siemens_plc_info,
 )
 
@@ -281,7 +281,7 @@ check_info["siemens_plc.info"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_siemens_plc_cpu_state(info):
+def discover_siemens_plc_cpu_state(info):
     return [(None, None)]
 
 
@@ -306,6 +306,6 @@ check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
     name="siemens_plc_cpu_state",
     parse_function=parse_siemens_plc_cpu_state,
     service_name="CPU state",
-    discovery_function=inventory_siemens_plc_cpu_state,
+    discovery_function=discover_siemens_plc_cpu_state,
     check_function=check_siemens_plc_cpu_state,
 )

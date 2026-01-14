@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.citrix_sessions import (
     check_citrix_sessions,
-    inventory_citrix_sessions,
+    discover_citrix_sessions,
     parse_citrix_sessions,
 )
 
@@ -28,12 +28,12 @@ from cmk.base.legacy_checks.citrix_sessions import (
         ),
     ],
 )
-def test_inventory_citrix_sessions(
+def test_discover_citrix_sessions(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for citrix_sessions check."""
     parsed = parse_citrix_sessions(string_table)
-    result = list(inventory_citrix_sessions(parsed))
+    result = list(discover_citrix_sessions(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

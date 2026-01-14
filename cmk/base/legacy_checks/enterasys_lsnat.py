@@ -25,7 +25,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_enterasys_lsnat(info):
+def discover_enterasys_lsnat(info):
     return [(None, {})]
 
 
@@ -60,7 +60,7 @@ check_info["enterasys_lsnat"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="LSNAT Bindings",
-    discovery_function=inventory_enterasys_lsnat,
+    discovery_function=discover_enterasys_lsnat,
     check_function=check_enterasys_lsnat,
     check_ruleset_name="lsnat",
     check_default_parameters={

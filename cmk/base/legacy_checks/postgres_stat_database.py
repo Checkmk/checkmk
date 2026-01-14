@@ -56,11 +56,11 @@ def parse_postgres_stat_database(string_table):
 
 # Create a check for all databases that have seen at least
 # one commit in their live.
-def inventory_postgres_stat_database(parsed):
+def discover_postgres_stat_database(parsed):
     return [(k, {}) for k in parsed if parsed[k]["xact_commit"] > 0]
 
 
-def inventory_postgres_stat_database_size(parsed):
+def discover_postgres_stat_database_size(parsed):
     # https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STAT-DATABASE-VIEW
     # > datid: OID of this database, or 0 for objects belonging to a shared relation
     # shared relations don't have a size, so we don't want to discover them.
@@ -110,7 +110,7 @@ check_info["postgres_stat_database"] = LegacyCheckDefinition(
     name="postgres_stat_database",
     parse_function=parse_postgres_stat_database,
     service_name="PostgreSQL DB %s Statistics",
-    discovery_function=inventory_postgres_stat_database,
+    discovery_function=discover_postgres_stat_database,
     check_function=check_postgres_stat_database,
     check_ruleset_name="postgres_stat_database",
 )
@@ -143,7 +143,7 @@ check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
     name="postgres_stat_database_size",
     service_name="PostgreSQL DB %s Size",
     sections=["postgres_stat_database"],
-    discovery_function=inventory_postgres_stat_database_size,
+    discovery_function=discover_postgres_stat_database_size,
     check_function=check_postgres_stat_database_size,
     check_ruleset_name="postgres_stat_database",
 )

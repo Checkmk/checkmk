@@ -16,7 +16,7 @@ check_info = {}
 # {"events": 1268586}
 
 
-def inventory_graylog_messages(parsed):
+def discover_graylog_messages(parsed):
     events = parsed.get("events")
     if events is not None:
         return [(None, {})]
@@ -35,7 +35,7 @@ check_info["graylog_messages"] = LegacyCheckDefinition(
     name="graylog_messages",
     parse_function=parse_graylog_agent_data,
     service_name="Graylog Messages",
-    discovery_function=inventory_graylog_messages,
+    discovery_function=discover_graylog_messages,
     check_function=check_graylog_messages,
     check_ruleset_name="graylog_messages",
 )

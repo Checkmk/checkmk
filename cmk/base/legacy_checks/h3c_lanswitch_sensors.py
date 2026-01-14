@@ -23,7 +23,7 @@ def parse_h3c_lanswitch_sensors(string_table: list[list[list[str]]]) -> Section:
     }
 
 
-def inventory_h3c_lanswitch_sensors(section: Section) -> list[tuple[str, dict]]:
+def discover_h3c_lanswitch_sensors(section: Section) -> list[tuple[str, dict]]:
     return [(item, {}) for item, state in section.items() if state in ["1", "2"]]
 
 
@@ -58,7 +58,7 @@ check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
     ],
     parse_function=parse_h3c_lanswitch_sensors,
     service_name="%s",
-    discovery_function=inventory_h3c_lanswitch_sensors,
+    discovery_function=discover_h3c_lanswitch_sensors,
     check_function=check_h3c_lanswitch_sensors,
 )
 

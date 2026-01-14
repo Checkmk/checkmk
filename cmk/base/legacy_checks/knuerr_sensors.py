@@ -13,7 +13,7 @@ from cmk.plugins.knuerr.lib import DETECT_KNUERR
 check_info = {}
 
 
-def inventory_knuerr_sensors(info):
+def discover_knuerr_sensors(info):
     for sensor, _state in info:
         if sensor:
             yield sensor, None
@@ -41,6 +41,6 @@ check_info["knuerr_sensors"] = LegacyCheckDefinition(
         oids=["1", "5"],
     ),
     service_name="Sensor %s",
-    discovery_function=inventory_knuerr_sensors,
+    discovery_function=discover_knuerr_sensors,
     check_function=check_knuerr_sensors,
 )

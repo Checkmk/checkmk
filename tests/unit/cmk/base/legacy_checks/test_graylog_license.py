@@ -17,7 +17,7 @@ from typing import Any
 from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
 from cmk.base.legacy_checks.graylog_license import (
     check_graylog_license,
-    inventory_graylog_license,
+    discover_graylog_license,
 )
 
 
@@ -29,7 +29,7 @@ def test_discovery_graylog_license() -> None:
     ]
 
     parsed = parse_graylog_agent_data(info)
-    result = list(inventory_graylog_license(parsed))
+    result = list(discover_graylog_license(parsed))
 
     # Should discover one item with None as the item name
     assert len(result) == 1

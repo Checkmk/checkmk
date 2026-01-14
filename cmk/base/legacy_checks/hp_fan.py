@@ -18,7 +18,7 @@ def parse_hp_fan(string_table):
     }
 
 
-def inventory_hp_fan(parsed):
+def discover_hp_fan(parsed):
     for fan in parsed:
         yield fan, None
 
@@ -50,6 +50,6 @@ check_info["hp_fan"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hp_fan,
     service_name="Fan %s",
-    discovery_function=inventory_hp_fan,
+    discovery_function=discover_hp_fan,
     check_function=check_hp_fan,
 )

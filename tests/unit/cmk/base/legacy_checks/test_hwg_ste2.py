@@ -14,11 +14,11 @@
 from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.legacy_checks.hwg_humidity import (
     check_hwg_humidity,
-    inventory_hwg_humidity,
+    discover_hwg_humidity,
 )
 from cmk.base.legacy_checks.hwg_temp import (
     check_hwg_temp,
-    inventory_hwg_temp,
+    discover_hwg_temp,
 )
 
 
@@ -68,7 +68,7 @@ def test_hwg_ste2_temperature_discovery() -> None:
         },
     }
 
-    discovery_result = list(inventory_hwg_temp(parsed))
+    discovery_result = list(discover_hwg_temp(parsed))
 
     expected: list[tuple[str, dict]] = [("1", {})]
 
@@ -93,7 +93,7 @@ def test_hwg_ste2_humidity_discovery() -> None:
         },
     }
 
-    discovery_result = list(inventory_hwg_humidity(parsed))
+    discovery_result = list(discover_hwg_humidity(parsed))
 
     expected: list[tuple[str, dict]] = [("2", {})]
 

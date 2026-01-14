@@ -28,7 +28,7 @@ def parse_gude_temp(string_table: list[StringTable]) -> Section:
     }
 
 
-def inventory_gude_temp(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_gude_temp(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((name, {}) for name, reading in section.items() if reading != -999.9)
 
 
@@ -57,7 +57,7 @@ check_info["gude_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_gude_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_gude_temp,
+    discovery_function=discover_gude_temp,
     check_function=check_gude_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

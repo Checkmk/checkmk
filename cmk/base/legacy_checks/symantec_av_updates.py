@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import render, StringTable
 check_info = {}
 
 
-def inventory_symantec_av_updates(info):
+def discover_symantec_av_updates(info):
     return [(None, {})]
 
 
@@ -57,7 +57,7 @@ check_info["symantec_av_updates"] = LegacyCheckDefinition(
     name="symantec_av_updates",
     parse_function=parse_symantec_av_updates,
     service_name="AV Update Status",
-    discovery_function=inventory_symantec_av_updates,
+    discovery_function=discover_symantec_av_updates,
     check_function=check_symantec_av_updates,
     check_ruleset_name="antivir_update_age",
     check_default_parameters={

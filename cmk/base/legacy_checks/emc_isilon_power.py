@@ -21,7 +21,7 @@ def isilon_power_item_name(sensor_name):
     return sensor_name.replace("Voltage", "").replace("  ", " ").strip()
 
 
-def inventory_emc_isilon_power(info):
+def discover_emc_isilon_power(info):
     for line in info:
         # only monitor power supply currently
         if "Power Supply" in line[0] or "PS" in line[0]:
@@ -63,7 +63,7 @@ check_info["emc_isilon_power"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     service_name="Voltage %s",
-    discovery_function=inventory_emc_isilon_power,
+    discovery_function=discover_emc_isilon_power,
     check_function=check_emc_isilon_power,
     check_ruleset_name="evolt",
     check_default_parameters={

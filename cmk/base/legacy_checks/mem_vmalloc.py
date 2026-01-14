@@ -14,7 +14,7 @@ from cmk.plugins.lib import memory
 check_info = {}
 
 
-def inventory_mem_vmalloc(section):
+def discover_mem_vmalloc(section):
     if memory.is_linux_section(section):
         return  # handled by new Linux memory check
 
@@ -58,7 +58,7 @@ check_info["mem.vmalloc"] = LegacyCheckDefinition(
     name="mem_vmalloc",
     service_name="Vmalloc address space",
     sections=["mem"],
-    discovery_function=inventory_mem_vmalloc,
+    discovery_function=discover_mem_vmalloc,
     check_function=check_mem_vmalloc,
     check_default_parameters={
         "levels_used_perc": (80.0, 90.0),

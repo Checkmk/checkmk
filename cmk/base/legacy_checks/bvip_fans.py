@@ -15,7 +15,7 @@ from cmk.plugins.bvip.lib import DETECT_BVIP
 check_info = {}
 
 
-def inventory_bvip_fans(info):
+def discover_bvip_fans(info):
     for line in info:
         rpm = int(line[1])
         if rpm != 0:
@@ -43,7 +43,7 @@ check_info["bvip_fans"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_bvip_fans,
+    discovery_function=discover_bvip_fans,
     check_function=check_bvip_fans,
     check_ruleset_name="hw_fans",
 )

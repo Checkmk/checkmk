@@ -13,7 +13,7 @@ from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 check_info = {}
 
 
-def inventory_viprinet_serial(info):
+def discover_viprinet_serial(info):
     if info:
         return [(None, None)]
     return []
@@ -36,6 +36,6 @@ check_info["viprinet_serial"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     service_name="Serial Number",
-    discovery_function=inventory_viprinet_serial,
+    discovery_function=discover_viprinet_serial,
     check_function=check_viprinet_serial,
 )

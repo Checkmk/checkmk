@@ -34,7 +34,7 @@ check_info = {}
 # Disk Cache Policy                : Unchanged
 
 
-def inventory_dell_om_vdisks(parsed):
+def discover_dell_om_vdisks(parsed):
     return [(key, None) for key in parsed]
 
 
@@ -57,6 +57,6 @@ check_info["dell_om_vdisks"] = LegacyCheckDefinition(
     name="dell_om_vdisks",
     parse_function=parse_omreport,
     service_name="Virtual Disk %s",
-    discovery_function=inventory_dell_om_vdisks,
+    discovery_function=discover_dell_om_vdisks,
     check_function=check_dell_om_vdisks,
 )

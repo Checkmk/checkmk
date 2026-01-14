@@ -65,7 +65,7 @@ def parse_cmciii_lcp_water(string_table: StringTable) -> Section:
     return []
 
 
-def inventory_cmciii_lcp_water(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_cmciii_lcp_water(section: Section) -> Iterable[tuple[str, dict]]:
     if section:
         yield "IN", {}
         yield "OUT", {}
@@ -120,7 +120,7 @@ check_info["cmciii_lcp_water"] = LegacyCheckDefinition(
     ),
     parse_function=parse_cmciii_lcp_water,
     service_name="Temperature Water LCP %s",
-    discovery_function=inventory_cmciii_lcp_water,
+    discovery_function=discover_cmciii_lcp_water,
     check_function=check_cmciii_lcp_water,
     check_ruleset_name="temperature",
 )

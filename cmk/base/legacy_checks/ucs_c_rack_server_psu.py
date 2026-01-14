@@ -41,14 +41,14 @@ def parse_ucs_c_rack_server_psu(string_table):
     return parsed
 
 
-def inventory_ucs_c_rack_server_psu_voltage(parsed):
+def discover_ucs_c_rack_server_psu_voltage(parsed):
     for key, value in parsed.items():
         if value.get("voltage") == "unknown" and value.get("model", "").startswith("UCS-"):
             continue  # see SUP-11285
         yield key, {}
 
 
-def inventory_ucs_c_rack_server_psu(parsed):
+def discover_ucs_c_rack_server_psu(parsed):
     """
     Yields indexed PSUs as items (e.g. Rack Unit 1 PSU 1).
     """
@@ -110,7 +110,7 @@ check_info["ucs_c_rack_server_psu"] = LegacyCheckDefinition(
     name="ucs_c_rack_server_psu",
     parse_function=parse_ucs_c_rack_server_psu,
     service_name="Output Power %s",
-    discovery_function=inventory_ucs_c_rack_server_psu,
+    discovery_function=discover_ucs_c_rack_server_psu,
     check_function=check_ucs_c_rack_server_psu,
 )
 
@@ -148,6 +148,6 @@ check_info["ucs_c_rack_server_psu.voltage"] = LegacyCheckDefinition(
     name="ucs_c_rack_server_psu_voltage",
     service_name="Output Voltage %s",
     sections=["ucs_c_rack_server_psu"],
-    discovery_function=inventory_ucs_c_rack_server_psu_voltage,
+    discovery_function=discover_ucs_c_rack_server_psu_voltage,
     check_function=check_ucs_c_rack_server_psu_voltage,
 )

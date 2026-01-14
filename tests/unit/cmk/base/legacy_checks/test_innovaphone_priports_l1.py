@@ -45,8 +45,8 @@ def test_parse_innovaphone_priports_l1() -> None:
     assert result == expected
 
 
-def test_inventory_innovaphone_priports_l1(parsed: dict[str, Any]) -> None:
-    result = list(innovaphone_priports_l1.inventory_innovaphone_priports_l1(parsed))
+def test_discover_innovaphone_priports_l1(parsed: dict[str, Any]) -> None:
+    result = list(innovaphone_priports_l1.discover_innovaphone_priports_l1(parsed))
 
     # Only "Bar" should be discovered because it has state != 1
     assert result == [("Bar", {"err_slip_count": 23})]

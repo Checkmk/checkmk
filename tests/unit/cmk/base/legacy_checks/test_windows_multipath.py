@@ -12,7 +12,7 @@ import pytest
 
 from cmk.base.legacy_checks.windows_multipath import (
     check_windows_multipath,
-    inventory_windows_multipath,
+    discover_windows_multipath,
     parse_windows_multipath,
 )
 
@@ -42,12 +42,10 @@ from cmk.base.legacy_checks.windows_multipath import (
         ([["0"]], []),
     ],
 )
-def test_inventory_windows_multipath(
-    info: list[list[str]], expected_discoveries: list[Any]
-) -> None:
+def test_discover_windows_multipath(info: list[list[str]], expected_discoveries: list[Any]) -> None:
     """Test discovery function for windows_multipath check."""
     parsed = parse_windows_multipath(info)
-    result = list(inventory_windows_multipath(parsed))
+    result = list(discover_windows_multipath(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

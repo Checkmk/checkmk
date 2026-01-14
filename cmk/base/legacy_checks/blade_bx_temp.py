@@ -59,7 +59,7 @@ def check_blade_bx_temp(item, params, info):
     return (3, "Device %s not found in SNMP data" % item, [])
 
 
-def inventory_blade_bx_temp(info):
+def discover_blade_bx_temp(info):
     for line in info:
         if int(line[1]) != 7:
             yield line[2], None
@@ -78,7 +78,7 @@ check_info["blade_bx_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5", "6", "7"],
     ),
     service_name="Temperature Blade %s",
-    discovery_function=inventory_blade_bx_temp,
+    discovery_function=discover_blade_bx_temp,
     check_function=check_blade_bx_temp,
     check_ruleset_name="temperature",
 )

@@ -26,7 +26,7 @@ from cmk.agent_based.v2 import (
 check_info = dict[str, LegacyCheckDefinition]()
 
 
-def inventory_cisco_cpu(info):
+def discover_cisco_cpu(info):
     if info and (info[0][0].isdigit() or info[0][1].isdigit()):
         yield None, {}
 
@@ -75,7 +75,7 @@ check_info["cisco_cpu"] = LegacyCheckDefinition(
         oids=["5", "8"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_cisco_cpu,
+    discovery_function=discover_cisco_cpu,
     check_function=check_cisco_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

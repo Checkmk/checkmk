@@ -70,7 +70,7 @@ def parse_raritan_px_outlets(string_table):
     return parsed
 
 
-def inventory_raritan_px_outlets(parsed):
+def discover_raritan_px_outlets(parsed):
     return [(index, {}) for index, values in parsed.items() if values["device_state"][1] == "on"]
 
 
@@ -90,7 +90,7 @@ check_info["raritan_px_outlets"] = LegacyCheckDefinition(
     ),
     parse_function=parse_raritan_px_outlets,
     service_name="Outlet %s",
-    discovery_function=inventory_raritan_px_outlets,
+    discovery_function=discover_raritan_px_outlets,
     check_function=check_raritan_px_outlets,
     check_ruleset_name="el_inphase",
 )

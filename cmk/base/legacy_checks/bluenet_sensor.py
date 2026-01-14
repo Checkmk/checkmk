@@ -26,7 +26,7 @@ check_info = {}
 # ambient temperature levels for a datacenter
 
 
-def inventory_bluenet_sensor_temp(info):
+def discover_bluenet_sensor_temp(info):
     for sensor_id, sensor_type, _temp, _hum in info:
         # temperature and combined temperature/humidity sensor
         if sensor_type in ("1", "2"):
@@ -62,7 +62,7 @@ check_info["bluenet_sensor"] = LegacyCheckDefinition(
         oids=["1", "2", "4", "5"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_bluenet_sensor_temp,
+    discovery_function=discover_bluenet_sensor_temp,
     check_function=check_bluenet_sensor_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -85,7 +85,7 @@ check_info["bluenet_sensor"] = LegacyCheckDefinition(
 bluenet_sensor_humidity_default_levels = (35, 40, 60, 65)
 
 
-def inventory_bluenet_sensor_hum(info):
+def discover_bluenet_sensor_hum(info):
     for sensor_id, sensor_type, _temp, _hum in info:
         # humidity for combined temperature/humidity sensor
         if sensor_type == "2":
@@ -112,7 +112,7 @@ check_info["bluenet_sensor.hum"] = LegacyCheckDefinition(
     name="bluenet_sensor_hum",
     service_name="Humidity %s",
     sections=["bluenet_sensor"],
-    discovery_function=inventory_bluenet_sensor_hum,
+    discovery_function=discover_bluenet_sensor_hum,
     check_function=check_bluenet_sensor_hum,
     check_ruleset_name="humidity",
 )

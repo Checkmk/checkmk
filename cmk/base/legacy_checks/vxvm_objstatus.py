@@ -34,7 +34,7 @@ def vxvm_objstatus_disks(info):
     return groups
 
 
-def inventory_vxvm_objstatus(info):
+def discover_vxvm_objstatus(info):
     return [(k, {}) for k in vxvm_objstatus_disks(info)]
 
 
@@ -71,6 +71,6 @@ check_info["vxvm_objstatus"] = LegacyCheckDefinition(
     name="vxvm_objstatus",
     parse_function=parse_vxvm_objstatus,
     service_name="VXVM objstatus %s",
-    discovery_function=inventory_vxvm_objstatus,
+    discovery_function=discover_vxvm_objstatus,
     check_function=check_vxvm_objstatus,
 )

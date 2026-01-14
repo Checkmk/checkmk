@@ -42,7 +42,7 @@ def parse_fsc_sc2_fans(string_table: StringTable) -> StringTable:
 # .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.7 2400
 
 
-def inventory_fsc_sc2_fans(info):
+def discover_fsc_sc2_fans(info):
     for line in info:
         if line[1] not in ["8"]:
             yield line[0], {}
@@ -81,7 +81,7 @@ check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
         oids=["3", "5", "6"],
     ),
     service_name="FSC %s",
-    discovery_function=inventory_fsc_sc2_fans,
+    discovery_function=discover_fsc_sc2_fans,
     check_function=check_fsc_sc2_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={

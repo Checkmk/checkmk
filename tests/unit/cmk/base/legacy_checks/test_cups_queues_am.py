@@ -18,7 +18,7 @@ import time_machine
 
 from cmk.base.legacy_checks.cups_queues import (
     check_cups_queues,
-    inventory_cups_queues,
+    discover_cups_queues,
     parse_cups_queues,
 )
 
@@ -77,7 +77,7 @@ def test_cups_queues_am_discovery():
     # 2010-06-29 10:00:00
     with time_machine.travel(datetime.datetime.fromtimestamp(1277805600.0, tz=ZoneInfo("CET"))):
         parsed = parse_cups_queues(string_table)
-        discovery = list(inventory_cups_queues(parsed))
+        discovery = list(discover_cups_queues(parsed))
     assert len(discovery) == 2
     items = [item for item, _params in discovery]
     assert "lpr2" in items

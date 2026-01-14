@@ -14,7 +14,7 @@ from cmk.plugins.dell.lib import DETECT_DELL_COMPELLENT
 check_info = {}
 
 
-def inventory_dell_compellent_folder(info):
+def discover_dell_compellent_folder(info):
     for line in info:
         if line[1] and float(line[1]) != 0:
             yield (line[0], {})
@@ -42,7 +42,7 @@ check_info["dell_compellent_folder"] = LegacyCheckDefinition(
         oids=["2", "5", "6"],
     ),
     service_name="Folder %s",
-    discovery_function=inventory_dell_compellent_folder,
+    discovery_function=discover_dell_compellent_folder,
     check_function=check_dell_compellent_folder,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

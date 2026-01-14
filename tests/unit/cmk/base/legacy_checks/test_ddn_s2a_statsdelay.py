@@ -15,7 +15,7 @@
 
 from cmk.base.legacy_checks.ddn_s2a_statsdelay import (
     check_ddn_s2a_statsdelay,
-    inventory_ddn_s2a_statsdelay,
+    discover_ddn_s2a_statsdelay,
     parse_ddn_s2a_statsdelay,
 )
 
@@ -33,7 +33,7 @@ def test_ddn_s2a_statsdelay_discovery():
     ]
 
     parsed = parse_ddn_s2a_statsdelay(string_table)
-    result = list(inventory_ddn_s2a_statsdelay(parsed))
+    result = list(discover_ddn_s2a_statsdelay(parsed))
 
     # Should discover both Disk and Host services
     assert len(result) == 2

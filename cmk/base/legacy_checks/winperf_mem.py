@@ -49,7 +49,7 @@ from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 check_info = {}
 
 
-def inventory_winperf_mem(info):
+def discover_winperf_mem(info):
     if len(info) > 1:
         return [(None, {})]
     return []
@@ -91,7 +91,7 @@ check_info["winperf_mem"] = LegacyCheckDefinition(
     name="winperf_mem",
     parse_function=parse_winperf_mem,
     service_name="Memory Pages",
-    discovery_function=inventory_winperf_mem,
+    discovery_function=discover_winperf_mem,
     check_function=check_winperf_mem,
     check_ruleset_name="mem_pages",
 )

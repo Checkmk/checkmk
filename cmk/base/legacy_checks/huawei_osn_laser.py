@@ -16,7 +16,7 @@ check_info = {}
 # The dBm should not get too low. So we check only for lower levels
 
 
-def inventory_huawei_osn_laser(info):
+def discover_huawei_osn_laser(info):
     for line in info:
         yield (line[0], None)
 
@@ -81,7 +81,7 @@ check_info["huawei_osn_laser"] = LegacyCheckDefinition(
         oids=["6.200", "2.200", "2.203", "2.252", "2.253"],
     ),
     service_name="Laser %s",
-    discovery_function=inventory_huawei_osn_laser,
+    discovery_function=discover_huawei_osn_laser,
     check_function=check_huawei_osn_laser,
     check_ruleset_name="huawei_osn_laser",
     check_default_parameters={

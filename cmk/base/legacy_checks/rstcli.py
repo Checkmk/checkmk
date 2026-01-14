@@ -125,7 +125,7 @@ def parse_rstcli(string_table):
     return volumes
 
 
-def inventory_rstcli(parsed):
+def discover_rstcli(parsed):
     return [(name, None) for name in parsed]
 
 
@@ -154,12 +154,12 @@ check_info["rstcli"] = LegacyCheckDefinition(
     name="rstcli",
     parse_function=parse_rstcli,
     service_name="RAID Volume %s",
-    discovery_function=inventory_rstcli,
+    discovery_function=discover_rstcli,
     check_function=check_rstcli,
 )
 
 
-def inventory_rstcli_pdisks(parsed):
+def discover_rstcli_pdisks(parsed):
     for key, volume in parsed.items():
         for disk in volume["Disks"]:
             yield "{}/{}".format(key, disk["ID"]), None
@@ -187,6 +187,6 @@ check_info["rstcli.pdisks"] = LegacyCheckDefinition(
     name="rstcli_pdisks",
     service_name="RAID Disk %s",
     sections=["rstcli"],
-    discovery_function=inventory_rstcli_pdisks,
+    discovery_function=discover_rstcli_pdisks,
     check_function=check_rstcli_pdisks,
 )

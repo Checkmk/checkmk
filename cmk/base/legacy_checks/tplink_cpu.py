@@ -15,7 +15,7 @@ from cmk.plugins.tplink.lib import DETECT_TPLINK
 check_info = {}
 
 
-def inventory_tplink_cpu(info):
+def discover_tplink_cpu(info):
     if len(info) >= 1:
         yield None, {}
 
@@ -54,7 +54,7 @@ check_info["tplink_cpu"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_tplink_cpu,
+    discovery_function=discover_tplink_cpu,
     check_function=check_tplink_cpu,
     check_ruleset_name="cpu_utilization_os",
 )

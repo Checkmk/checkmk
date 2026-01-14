@@ -23,7 +23,7 @@ def parse_aws_elbv2_summary(string_table):
     return application_lbs, network_lbs
 
 
-def inventory_aws_elbv2_summary_application(parsed):
+def discover_aws_elbv2_summary_application(parsed):
     application_lbs, _network_lbs = parsed
     if application_lbs:
         return [(None, {})]
@@ -39,12 +39,12 @@ check_info["aws_elbv2_summary"] = LegacyCheckDefinition(
     name="aws_elbv2_summary",
     parse_function=parse_aws_elbv2_summary,
     service_name="AWS/ApplicationELB Summary",
-    discovery_function=inventory_aws_elbv2_summary_application,
+    discovery_function=discover_aws_elbv2_summary_application,
     check_function=check_aws_elbv2_summary_application,
 )
 
 
-def inventory_aws_elbv2_summary_network(parsed):
+def discover_aws_elbv2_summary_network(parsed):
     _application_lbs, network_lbs = parsed
     if network_lbs:
         return [(None, {})]
@@ -60,6 +60,6 @@ check_info["aws_elbv2_summary.network"] = LegacyCheckDefinition(
     name="aws_elbv2_summary_network",
     service_name="AWS/NetworkELB Summary",
     sections=["aws_elbv2_summary"],
-    discovery_function=inventory_aws_elbv2_summary_network,
+    discovery_function=discover_aws_elbv2_summary_network,
     check_function=check_aws_elbv2_summary_network,
 )

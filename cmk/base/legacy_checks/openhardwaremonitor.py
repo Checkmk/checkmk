@@ -306,7 +306,7 @@ openhardwaremonitor_smart_readings = {
 }
 
 
-def inventory_openhardwaremonitor_smart(parsed):
+def discover_openhardwaremonitor_smart(parsed):
     devices = set()
     # find all devices for which at least one known smart reading is available
     for sensor_type in openhardwaremonitor_smart_readings:
@@ -348,7 +348,7 @@ check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
     name="openhardwaremonitor_smart",
     service_name="SMART %s Stats",
     sections=["openhardwaremonitor"],
-    discovery_function=inventory_openhardwaremonitor_smart,
+    discovery_function=discover_openhardwaremonitor_smart,
     check_function=check_openhardwaremonitor_smart,
     check_ruleset_name="openhardwaremonitor_smart",
     check_default_parameters={

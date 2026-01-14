@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.scaleio_mdm import (
     check_scaleio_mdm,
-    inventory_scaleio_mdm,
+    discover_scaleio_mdm,
     parse_scaleio_mdm,
 )
 
@@ -115,12 +115,12 @@ from cmk.base.legacy_checks.scaleio_mdm import (
         ),
     ],
 )
-def test_inventory_scaleio_mdm(
+def test_discover_scaleio_mdm(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for scaleio_mdm check."""
     parsed = parse_scaleio_mdm(string_table)
-    result = list(inventory_scaleio_mdm(parsed))
+    result = list(discover_scaleio_mdm(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

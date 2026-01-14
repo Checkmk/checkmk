@@ -17,7 +17,7 @@ check_info = {}
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.3.1.4.1.1 0 --> PERLE-MCR-MGT-MIB::mcrMgtLedALM.1.1
 
 
-def inventory_perle_modules_mgt(info):
+def discover_perle_modules_mgt(info):
     return [(index, None) for index, _name, _descr, _alarm_led, _status in info]
 
 
@@ -57,6 +57,6 @@ check_info["perle_modules_mgt"] = LegacyCheckDefinition(
         oids=["1.1.2", "1.1.3", "1.1.4", "3.1.3", "3.1.4"],
     ),
     service_name="Chassis slot %s MGT",
-    discovery_function=inventory_perle_modules_mgt,
+    discovery_function=discover_perle_modules_mgt,
     check_function=check_perle_modules_mgt,
 )

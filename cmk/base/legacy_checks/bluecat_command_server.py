@@ -13,7 +13,7 @@ from cmk.plugins.bluecat.lib import DETECT_BLUECAT
 check_info = {}
 
 
-def inventory_bluecat_command_server(info):
+def discover_bluecat_command_server(info):
     return [(None, None)]
 
 
@@ -47,7 +47,7 @@ check_info["bluecat_command_server"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Command Server",
-    discovery_function=inventory_bluecat_command_server,
+    discovery_function=discover_bluecat_command_server,
     check_function=check_bluecat_command_server,
     check_ruleset_name="bluecat_command_server",
     check_default_parameters={

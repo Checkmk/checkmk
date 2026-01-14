@@ -27,7 +27,7 @@ def parse_scaleio_pd(string_table: StringTable) -> ScaleioSection:
     return parse_scaleio(string_table, "PROTECTION_DOMAIN")
 
 
-def inventory_scaleio_pd(parsed):
+def discover_scaleio_pd(parsed):
     for entry in parsed:
         yield entry, {}
 
@@ -49,14 +49,14 @@ check_info["scaleio_pd"] = LegacyCheckDefinition(
     name="scaleio_pd",
     parse_function=parse_scaleio_pd,
     service_name="ScaleIO PD capacity %s",
-    discovery_function=inventory_scaleio_pd,
+    discovery_function=discover_scaleio_pd,
     check_function=check_scaleio_pd,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 
-def inventory_scaleio_pd_status(parsed):
+def discover_scaleio_pd_status(parsed):
     for entry in parsed:
         yield entry, None
 
@@ -76,6 +76,6 @@ check_info["scaleio_pd.status"] = LegacyCheckDefinition(
     name="scaleio_pd_status",
     service_name="ScaleIO PD status %s",
     sections=["scaleio_pd"],
-    discovery_function=inventory_scaleio_pd_status,
+    discovery_function=discover_scaleio_pd_status,
     check_function=check_scaleio_pd_status,
 )

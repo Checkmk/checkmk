@@ -15,7 +15,7 @@ from cmk.plugins.barracuda.lib import DETECT_BARRACUDA
 check_info = {}
 
 
-def inventory_barracuda_mail_latency(info):
+def discover_barracuda_mail_latency(info):
     yield None, {}
 
 
@@ -45,7 +45,7 @@ check_info["barracuda_mail_latency"] = LegacyCheckDefinition(
         oids=["5"],
     ),
     service_name="Mail Latency",
-    discovery_function=inventory_barracuda_mail_latency,
+    discovery_function=discover_barracuda_mail_latency,
     check_function=check_barracuda_mail_latency,
     check_ruleset_name="mail_latency",
     check_default_parameters={

@@ -25,7 +25,7 @@ from cmk.plugins.sni_octopuse.lib import DETECT_SNI_OCTOPUSE
 check_info = {}
 
 
-def inventory_octopus_trunks(info):
+def discover_octopus_trunks(info):
     trunkports = ["S0 trunk: extern"]
     inventory = []
     for line in info[0]:
@@ -66,6 +66,6 @@ check_info["sni_octopuse_trunks"] = LegacyCheckDefinition(
         )
     ],
     service_name="Trunk Port %s",
-    discovery_function=inventory_octopus_trunks,
+    discovery_function=discover_octopus_trunks,
     check_function=check_octopus_trunks,
 )

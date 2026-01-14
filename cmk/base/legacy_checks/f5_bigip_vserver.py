@@ -101,7 +101,7 @@ def parse_f5_bigip_vserver(string_table):
     return vservers
 
 
-def inventory_f5_bigip_vserver(parsed):
+def discover_f5_bigip_vserver(parsed):
     for name in parsed:
         yield name, {}
 
@@ -251,7 +251,7 @@ check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
     ),
     parse_function=parse_f5_bigip_vserver,
     service_name="Virtual Server %s",
-    discovery_function=inventory_f5_bigip_vserver,
+    discovery_function=discover_f5_bigip_vserver,
     check_function=check_f5_bigip_vserver,
     check_ruleset_name="f5_bigip_vserver",
 )

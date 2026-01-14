@@ -34,7 +34,7 @@ def test_discovery_graylog_messages() -> None:
     ]
 
     parsed = graylog.parse_graylog_agent_data(info)
-    result = list(graylog_messages.inventory_graylog_messages(parsed))
+    result = list(graylog_messages.discover_graylog_messages(parsed))
 
     # Should discover one item with None as the item name
     assert len(result) == 1

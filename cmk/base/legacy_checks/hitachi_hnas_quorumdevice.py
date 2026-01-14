@@ -13,7 +13,7 @@ from cmk.plugins.hitachi_hnas.lib import DETECT
 check_info = {}
 
 
-def inventory_hitachi_hnas_quorumdevice(info):
+def discover_hitachi_hnas_quorumdevice(info):
     return [(None, None)]
 
 
@@ -52,6 +52,6 @@ check_info["hitachi_hnas_quorumdevice"] = LegacyCheckDefinition(
         oids=["7"],
     ),
     service_name="Quorum Device",
-    discovery_function=inventory_hitachi_hnas_quorumdevice,
+    discovery_function=discover_hitachi_hnas_quorumdevice,
     check_function=check_hitachi_hnas_quorumdevice,
 )

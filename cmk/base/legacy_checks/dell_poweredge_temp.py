@@ -18,7 +18,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def inventory_dell_poweredge_temp(info):
+def discover_dell_poweredge_temp(info):
     for line in info:
         if line[2] != "1":  # StateSettings not 'unknown'
             item = dell_poweredge_temp_makeitem(line[0], line[1], line[5])
@@ -38,7 +38,7 @@ check_info["dell_poweredge_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "4", "5", "6", "8", "10", "11", "12", "13"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_dell_poweredge_temp,
+    discovery_function=discover_dell_poweredge_temp,
     check_function=check_dell_poweredge_temp,
     check_ruleset_name="temperature",
 )

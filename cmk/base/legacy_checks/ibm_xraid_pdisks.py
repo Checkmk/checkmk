@@ -30,7 +30,7 @@ def parse_ibm_xraid_pdisks(info):
     return data
 
 
-def inventory_ibm_xraid_pdisks(section):
+def discover_ibm_xraid_pdisks(section):
     return [(disk_id, None) for disk_id in section]
 
 
@@ -62,7 +62,7 @@ check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(
     ),
     parse_function=parse_ibm_xraid_pdisks,
     service_name="RAID PDisk %s",
-    discovery_function=inventory_ibm_xraid_pdisks,
+    discovery_function=discover_ibm_xraid_pdisks,
     # there is no information about the ext mib in the right place
     # (at least on windows)
     # this means the check has to fetch a specific oid. Limit this

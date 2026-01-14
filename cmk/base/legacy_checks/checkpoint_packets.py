@@ -38,7 +38,7 @@ def parse_checkpoint_packets(string_table):
     return parsed
 
 
-def inventory_checkpoint_packets(parsed):
+def discover_checkpoint_packets(parsed):
     if parsed:
         return [(None, {})]
     return []
@@ -72,7 +72,7 @@ check_info["checkpoint_packets"] = LegacyCheckDefinition(
     ],
     parse_function=parse_checkpoint_packets,
     service_name="Packet Statistics",
-    discovery_function=inventory_checkpoint_packets,
+    discovery_function=discover_checkpoint_packets,
     check_function=check_checkpoint_packets,
     check_ruleset_name="checkpoint_packets",
     check_default_parameters={

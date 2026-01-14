@@ -24,7 +24,7 @@ check_info = {}
 # .1.3.6.1.4.1.19011.1.3.2.1.3.2.2.1.6.1 3800 --> ISPRO-MIB::isDeviceConfigTemperatureHighCritical
 
 
-def inventory_ispro_sensors_temp(info):
+def discover_ispro_sensors_temp(info):
     return [(line[0], {}) for line in info if line[2] not in ["1", "2"]]
 
 
@@ -57,7 +57,7 @@ check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
         oids=["1.1.1.2", "1.1.1.3", "1.1.1.4", "2.2.1.3", "2.2.1.4", "2.2.1.5", "2.2.1.6"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_ispro_sensors_temp,
+    discovery_function=discover_ispro_sensors_temp,
     check_function=check_ispro_sensors_temp,
     check_ruleset_name="temperature",
 )

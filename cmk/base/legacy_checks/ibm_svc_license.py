@@ -47,7 +47,7 @@ def parse_ibm_svc_license(string_table):
     return licenses
 
 
-def inventory_ibm_svc_license(parsed):
+def discover_ibm_svc_license(parsed):
     for item, data in parsed.items():
         if data != [0.0, 0.0]:
             # Omit unused svc features
@@ -63,7 +63,7 @@ check_info["ibm_svc_license"] = LegacyCheckDefinition(
     name="ibm_svc_license",
     parse_function=parse_ibm_svc_license,
     service_name="License %s",
-    discovery_function=inventory_ibm_svc_license,
+    discovery_function=discover_ibm_svc_license,
     check_function=check_ibm_svc_license,
     check_ruleset_name="ibmsvc_licenses",
     check_default_parameters={"levels": ("crit_on_all", None)},

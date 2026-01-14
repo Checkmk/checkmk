@@ -89,9 +89,9 @@ def test_parse_veeam_tapejobs_incomplete_lines() -> None:
     assert "Incomplete" not in parsed
 
 
-def test_inventory_veeam_tapejobs(parsed_data: dict[str, dict[str, str]]) -> None:
+def test_discover_veeam_tapejobs(parsed_data: dict[str, dict[str, str]]) -> None:
     """Test discovery of all Veeam tape backup jobs."""
-    assert list(veeam_tapejobs.inventory_veeam_tapejobs(parsed_data)) == [
+    assert list(veeam_tapejobs.discover_veeam_tapejobs(parsed_data)) == [
         ("Job One", {}),
         ("Job Two", {}),
         ("Job Three", {}),

@@ -13,7 +13,7 @@ from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
 check_info = {}
 
 
-def inventory_palo_alto_sessions(info):
+def discover_palo_alto_sessions(info):
     return [(None, None)]
 
 
@@ -74,7 +74,7 @@ check_info["palo_alto_sessions"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6", "7"],
     ),
     service_name="Palo Alto Sessions",
-    discovery_function=inventory_palo_alto_sessions,
+    discovery_function=discover_palo_alto_sessions,
     check_function=check_palo_alto_sessions,
     check_ruleset_name="palo_alto_sessions",
     check_default_parameters={

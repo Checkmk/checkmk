@@ -15,7 +15,7 @@ from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 check_info = {}
 
 
-def inventory_dell_om_fans(info):
+def discover_dell_om_fans(info):
     for line in info:
         yield (line[0], {})
 
@@ -84,7 +84,7 @@ check_info["dell_om_fans"] = LegacyCheckDefinition(
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_dell_om_fans,
+    discovery_function=discover_dell_om_fans,
     check_function=check_dell_om_fans,
     check_ruleset_name="hw_fans",
 )

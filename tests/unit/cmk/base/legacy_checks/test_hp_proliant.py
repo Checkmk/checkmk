@@ -11,7 +11,7 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from cmk.base.legacy_checks.hp_proliant import check_proliant_general, inventory_proliant_general
+from cmk.base.legacy_checks.hp_proliant import check_proliant_general, discover_proliant_general
 
 
 def test_hp_proliant_discovery():
@@ -20,7 +20,7 @@ def test_hp_proliant_discovery():
     string_table = [["2", "2.60 May 23 2018", "CXX43801XX"]]
 
     # Test discovery
-    discovery = list(inventory_proliant_general(string_table))
+    discovery = list(discover_proliant_general(string_table))
     assert len(discovery) == 1
     assert discovery[0] == (None, {})
 

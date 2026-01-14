@@ -92,7 +92,7 @@ def parse_ibm_svc_mdiskgrp(
     return parsed
 
 
-def inventory_ibm_svc_mdiskgrp(
+def discover_ibm_svc_mdiskgrp(
     parsed: Mapping[str, Mapping[str, str]],
 ) -> Iterable[tuple[str, dict[str, object]]]:
     for mdisk_name in parsed:
@@ -167,7 +167,7 @@ check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(
     name="ibm_svc_mdiskgrp",
     parse_function=parse_ibm_svc_mdiskgrp,
     service_name="Pool Capacity %s",
-    discovery_function=inventory_ibm_svc_mdiskgrp,
+    discovery_function=discover_ibm_svc_mdiskgrp,
     check_function=check_ibm_svc_mdiskgrp,
     check_ruleset_name="ibm_svc_mdiskgrp",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

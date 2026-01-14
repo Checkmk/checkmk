@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_orion_backup(info):
+def discover_orion_backup(info):
     return [(None, {})]
 
 
@@ -42,6 +42,6 @@ check_info["orion_backup"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Backup",
-    discovery_function=inventory_orion_backup,
+    discovery_function=discover_orion_backup,
     check_function=check_orion_backup,
 )

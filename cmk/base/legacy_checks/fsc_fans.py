@@ -27,7 +27,7 @@ def parse_fsc_fans(string_table):
     return parsed
 
 
-def inventory_fsc_fans(parsed):
+def discover_fsc_fans(parsed):
     return [(fan_name, {}) for fan_name in parsed]
 
 
@@ -58,7 +58,7 @@ check_info["fsc_fans"] = LegacyCheckDefinition(
     ),
     parse_function=parse_fsc_fans,
     service_name="FSC %s",
-    discovery_function=inventory_fsc_fans,
+    discovery_function=discover_fsc_fans,
     check_function=check_fsc_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={

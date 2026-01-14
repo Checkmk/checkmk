@@ -77,8 +77,8 @@ def test_parse_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -
     assert vs_data["packet_velocity_asic"] == [0]
 
 
-def test_inventory_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -> None:
-    result = list(f5_bigip_vserver.inventory_f5_bigip_vserver(parsed))
+def test_discover_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -> None:
+    result = list(f5_bigip_vserver.discover_f5_bigip_vserver(parsed))
     assert result == [("VS_BM", {})]
 
 

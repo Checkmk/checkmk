@@ -18,7 +18,7 @@ check_info = {}
 # Just an assumption
 
 
-def inventory_netextreme_temp(info):
+def discover_netextreme_temp(info):
     return [("System", {})]
 
 
@@ -39,7 +39,7 @@ check_info["netextreme_temp"] = LegacyCheckDefinition(
         oids=["8"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_netextreme_temp,
+    discovery_function=discover_netextreme_temp,
     check_function=check_netextreme_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

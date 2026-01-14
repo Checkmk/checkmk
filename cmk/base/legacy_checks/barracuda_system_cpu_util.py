@@ -19,7 +19,7 @@ check_info = {}
 # Suggested by customer
 
 
-def inventory_barracuda_system_cpu_util(info):
+def discover_barracuda_system_cpu_util(info):
     yield None, {}
 
 
@@ -43,7 +43,7 @@ check_info["barracuda_system_cpu_util"] = LegacyCheckDefinition(
         oids=["13"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_barracuda_system_cpu_util,
+    discovery_function=discover_barracuda_system_cpu_util,
     check_function=check_barracuda_system_cpu_util,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

@@ -17,7 +17,7 @@ from typing import Any
 
 import pytest
 
-from cmk.base.legacy_checks.md import check_md, inventory_md, parse_md
+from cmk.base.legacy_checks.md import check_md, discover_md, parse_md
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def parsed() -> Mapping[str, Any]:
 
 def test_md_discovery(parsed: Mapping[str, Any]) -> None:
     """Test MD RAID discovery function."""
-    result = list(inventory_md(parsed))
+    result = list(discover_md(parsed))
 
     # Should discover md1 (linear) but not md0 (raid0)
     assert len(result) == 1

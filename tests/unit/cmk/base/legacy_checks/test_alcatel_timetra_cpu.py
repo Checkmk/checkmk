@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.alcatel_timetra_cpu import (
     check_alcatel_timetra_cpu,
-    inventory_alcatel_timetra_cpu,
+    discover_alcatel_timetra_cpu,
     parse_alcatel_timetra_cpu,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.alcatel_timetra_cpu import (
         ([["92"]], [(None, {})]),
     ],
 )
-def test_inventory_alcatel_timetra_cpu(
+def test_discover_alcatel_timetra_cpu(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for alcatel_timetra_cpu check."""
     parsed = parse_alcatel_timetra_cpu(string_table)
-    result = list(inventory_alcatel_timetra_cpu(parsed))
+    result = list(discover_alcatel_timetra_cpu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

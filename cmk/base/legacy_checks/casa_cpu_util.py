@@ -32,7 +32,7 @@ def parse_casa_info_util(info):
     return data
 
 
-def inventory_casa_cpu_util(string_table: StringTable) -> Iterable[tuple[str, dict]]:
+def discover_casa_cpu_util(string_table: StringTable) -> Iterable[tuple[str, dict]]:
     for key, value in parse_casa_info_util(string_table).items():
         if value.get("cpu_util"):
             yield key, {}
@@ -73,7 +73,7 @@ check_info["casa_cpu_util"] = LegacyCheckDefinition(
         ),
     ],
     service_name="CPU utilization %s",
-    discovery_function=inventory_casa_cpu_util,
+    discovery_function=discover_casa_cpu_util,
     check_function=check_casa_cpu_util,
     check_ruleset_name="cpu_utilization_multiitem",
 )

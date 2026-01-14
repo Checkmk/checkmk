@@ -69,7 +69,7 @@ def brocade_sensor_convert(info, what):
     return return_list
 
 
-def inventory_brocade_fan(info):
+def discover_brocade_fan(info):
     converted = brocade_sensor_convert(info, "FAN")
     return [(x[0], {}) for x in converted]
 
@@ -89,14 +89,14 @@ check_info["brocade.fan"] = LegacyCheckDefinition(
     name="brocade_fan",
     service_name="FAN %s",
     sections=["brocade"],
-    discovery_function=inventory_brocade_fan,
+    discovery_function=discover_brocade_fan,
     check_function=check_brocade_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={"lower": (3000, 2800)},
 )
 
 
-def inventory_brocade_power(info):
+def discover_brocade_power(info):
     converted = brocade_sensor_convert(info, "Power")
     return [(x[0], None) for x in converted]
 
@@ -117,12 +117,12 @@ check_info["brocade.power"] = LegacyCheckDefinition(
     name="brocade_power",
     service_name="Power supply %s",
     sections=["brocade"],
-    discovery_function=inventory_brocade_power,
+    discovery_function=discover_brocade_power,
     check_function=check_brocade_power,
 )
 
 
-def inventory_brocade_temp(info):
+def discover_brocade_temp(info):
     converted = brocade_sensor_convert(info, "SLOT")
     return [(x[0], {}) for x in converted]
 
@@ -139,7 +139,7 @@ check_info["brocade.temp"] = LegacyCheckDefinition(
     name="brocade_temp",
     service_name="Temperature Ambient %s",
     sections=["brocade"],
-    discovery_function=inventory_brocade_temp,
+    discovery_function=discover_brocade_temp,
     check_function=check_brocade_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (55.0, 60.0)},

@@ -12,7 +12,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ra32e_switch import (
     check_ra32e_switch,
-    inventory_ra32e_switch,
+    discover_ra32e_switch,
     parse_ra32e_switch,
 )
 
@@ -63,7 +63,7 @@ from cmk.base.legacy_checks.ra32e_switch import (
     ],
 )
 def test_ra32e_switch_discovery(info: StringTable, result: Sequence[tuple[str, None]]) -> None:
-    assert list(inventory_ra32e_switch(parse_ra32e_switch(info))) == result
+    assert list(discover_ra32e_switch(parse_ra32e_switch(info))) == result
 
 
 def test_ra32e_switch_check_closed_no_rule() -> None:

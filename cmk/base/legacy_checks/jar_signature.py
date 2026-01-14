@@ -35,7 +35,7 @@ from cmk.agent_based.v2 import render, StringTable
 check_info = {}
 
 
-def inventory_jar_signature(info):
+def discover_jar_signature(info):
     inventory = []
     for line in info:
         if line[0].startswith("[[["):
@@ -116,6 +116,6 @@ check_info["jar_signature"] = LegacyCheckDefinition(
     name="jar_signature",
     parse_function=parse_jar_signature,
     service_name="Jar-Signature %s",
-    discovery_function=inventory_jar_signature,
+    discovery_function=discover_jar_signature,
     check_function=check_jar_signature,
 )

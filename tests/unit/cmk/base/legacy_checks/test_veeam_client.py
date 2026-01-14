@@ -15,7 +15,7 @@ import time_machine
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.veeam_client import (
     check_veeam_client,
-    inventory_veeam_client,
+    discover_veeam_client,
     parse_veeam_client,
 )
 
@@ -39,10 +39,10 @@ from cmk.base.legacy_checks.veeam_client import (
         ),
     ],
 )
-def test_inventory_veeam_client(
+def test_discover_veeam_client(
     string_table: StringTable, expected_result: Sequence[tuple[str, Mapping[str, object]]]
 ) -> None:
-    assert list(inventory_veeam_client(parse_veeam_client(string_table))) == expected_result
+    assert list(discover_veeam_client(parse_veeam_client(string_table))) == expected_result
 
 
 @pytest.mark.parametrize(

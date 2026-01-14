@@ -49,7 +49,7 @@ netctr_counter_indices = {
 }
 
 
-def inventory_netctr_combined(info):
+def discover_netctr_combined(info):
     if linux_nic_check != "legacy":
         return []
     if len(info) == 0:
@@ -113,7 +113,7 @@ check_info["netctr.combined"] = LegacyCheckDefinition(
     name="netctr_combined",
     service_name="NIC %s counters",
     sections=["netctr"],
-    discovery_function=inventory_netctr_combined,
+    discovery_function=discover_netctr_combined,
     check_function=check_netctr_combined,
     check_default_parameters={"levels": (0.01, 0.1)},
 )

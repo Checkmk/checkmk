@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_symantec_av_quarantine(info):
+def discover_symantec_av_quarantine(info):
     return [(None, None)]
 
 
@@ -34,6 +34,6 @@ check_info["symantec_av_quarantine"] = LegacyCheckDefinition(
     name="symantec_av_quarantine",
     parse_function=parse_symantec_av_quarantine,
     service_name="AV Quarantine",
-    discovery_function=inventory_symantec_av_quarantine,
+    discovery_function=discover_symantec_av_quarantine,
     check_function=check_symantec_av_quarantine,
 )

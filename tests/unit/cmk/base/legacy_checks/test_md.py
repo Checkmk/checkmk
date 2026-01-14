@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.md import check_md, inventory_md, parse_md
+from cmk.base.legacy_checks.md import check_md, discover_md, parse_md
 
 
 @pytest.mark.parametrize(
@@ -31,12 +31,12 @@ from cmk.base.legacy_checks.md import check_md, inventory_md, parse_md
         ),
     ],
 )
-def test_inventory_md(
+def test_discover_md(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for md check."""
     parsed = parse_md(string_table)
-    result = list(inventory_md(parsed))
+    result = list(discover_md(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_temp
 from cmk.base.legacy_checks.dell_poweredge_temp import (
-    inventory_dell_poweredge_temp,
+    discover_dell_poweredge_temp,
     parse_dell_poweredge_temp,
 )
 
@@ -33,12 +33,12 @@ from cmk.base.legacy_checks.dell_poweredge_temp import (
         ),
     ],
 )
-def test_inventory_dell_poweredge_temp(
+def test_discover_dell_poweredge_temp(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for dell_poweredge_temp check."""
     parsed = parse_dell_poweredge_temp(string_table)
-    result = list(inventory_dell_poweredge_temp(parsed))
+    result = list(discover_dell_poweredge_temp(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

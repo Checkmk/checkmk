@@ -17,7 +17,7 @@ check_info = {}
 # .1.3.6.1.4.1.19011.1.3.2.1.3.2.4.1.3.1 2 --> ISPRO-MIB::isDeviceConfigDigitalInState
 
 
-def inventory_ispro_sensors_digital(info):
+def discover_ispro_sensors_digital(info):
     return [(line[0], None) for line in info if line[0] and line[2] != "1"]
 
 
@@ -59,6 +59,6 @@ check_info["ispro_sensors_digital"] = LegacyCheckDefinition(
         oids=["1.3.1.2", "1.3.1.4", "2.4.1.3"],
     ),
     service_name="Digital in %s",
-    discovery_function=inventory_ispro_sensors_digital,
+    discovery_function=discover_ispro_sensors_digital,
     check_function=check_ispro_sensors_digital,
 )

@@ -19,7 +19,7 @@ def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable |
     return string_table or None
 
 
-def inventory_mcafee_gateway_generic(info):
+def discover_mcafee_gateway_generic(info):
     return [(None, {})]
 
 
@@ -76,7 +76,7 @@ check_info["mcafee_emailgateway_bridge"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5"],
     ),
     service_name="Bridge",
-    discovery_function=inventory_mcafee_gateway_generic,
+    discovery_function=discover_mcafee_gateway_generic,
     check_function=check_mcafee_emailgateway_bridge,
     check_ruleset_name="mcafee_emailgateway_bridge",
 )

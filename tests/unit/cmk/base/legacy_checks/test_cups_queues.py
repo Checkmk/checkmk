@@ -17,7 +17,7 @@ import time_machine
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.cups_queues import (
     check_cups_queues,
-    inventory_cups_queues,
+    discover_cups_queues,
     parse_cups_queues,
 )
 
@@ -76,14 +76,14 @@ from cmk.base.legacy_checks.cups_queues import (
         ),
     ],
 )
-def test_inventory_cups_queues(
+def test_discover_cups_queues(
     string_table: StringTable,
     expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]],
 ) -> None:
     """Test discovery function for cups_queues check."""
     with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("CET"))):
         parsed = parse_cups_queues(string_table)
-        result = list(inventory_cups_queues(parsed))
+        result = list(discover_cups_queues(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

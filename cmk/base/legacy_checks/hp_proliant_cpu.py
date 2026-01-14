@@ -27,7 +27,7 @@ hp_proliant_cpu_status2nagios_map = {
 }
 
 
-def inventory_hp_proliant_cpu(info):
+def discover_hp_proliant_cpu(info):
     yield from ((sanitize_item(line[0]), {}) for line in info)
 
 
@@ -54,6 +54,6 @@ check_info["hp_proliant_cpu"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "6"],
     ),
     service_name="HW CPU %s",
-    discovery_function=inventory_hp_proliant_cpu,
+    discovery_function=discover_hp_proliant_cpu,
     check_function=check_hp_proliant_cpu,
 )

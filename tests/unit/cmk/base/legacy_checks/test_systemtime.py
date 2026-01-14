@@ -25,7 +25,7 @@ from cmk.plugins.collection.agent_based.systemtime import (
         ([["1593509210"]], [Service()]),
     ],
 )
-def test_inventory_systemtime(
+def test_discover_systemtime(
     string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for systemtime check."""

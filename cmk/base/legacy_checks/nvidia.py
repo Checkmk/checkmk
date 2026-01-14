@@ -80,7 +80,7 @@ check_info["nvidia.temp_core"] = LegacyCheckDefinition(
 )
 
 
-def inventory_nvidia_errors(info):
+def discover_nvidia_errors(info):
     for line in info:
         if line[0] == "GPUErrors:":
             return [(None, None)]
@@ -101,7 +101,7 @@ check_info["nvidia.errors"] = LegacyCheckDefinition(
     name="nvidia_errors",
     service_name="NVIDIA GPU Errors",
     sections=["nvidia"],
-    discovery_function=inventory_nvidia_errors,
+    discovery_function=discover_nvidia_errors,
     check_function=check_nvidia_errors,
     check_ruleset_name="hw_errors",
 )

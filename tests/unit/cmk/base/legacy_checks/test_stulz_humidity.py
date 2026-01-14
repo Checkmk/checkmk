@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.stulz_humidity import (
     check_stulz_humidity,
-    inventory_stulz_humidity,
+    discover_stulz_humidity,
     parse_stulz_humidity,
 )
 
@@ -31,12 +31,12 @@ from cmk.base.legacy_checks.stulz_humidity import (
         ),
     ],
 )
-def test_inventory_stulz_humidity(
+def test_discover_stulz_humidity(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for stulz_humidity check."""
     parsed = parse_stulz_humidity(string_table)
-    result = list(inventory_stulz_humidity(parsed))
+    result = list(discover_stulz_humidity(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

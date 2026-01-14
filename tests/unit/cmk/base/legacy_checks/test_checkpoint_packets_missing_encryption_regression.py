@@ -19,7 +19,7 @@ import time_machine
 
 from cmk.base.legacy_checks.checkpoint_packets import (
     check_checkpoint_packets,
-    inventory_checkpoint_packets,
+    discover_checkpoint_packets,
     parse_checkpoint_packets,
 )
 
@@ -57,11 +57,11 @@ def test_parse_checkpoint_packets_missing_encryption(
     assert parsed == expected
 
 
-def test_inventory_checkpoint_packets_missing_encryption(
+def test_discover_checkpoint_packets_missing_encryption(
     parsed_missing_encryption: dict[str, Any],
 ) -> None:
     """Test checkpoint packet discovery with missing encryption data"""
-    discovered = list(inventory_checkpoint_packets(parsed_missing_encryption))
+    discovered = list(discover_checkpoint_packets(parsed_missing_encryption))
     assert len(discovered) == 1
     assert discovered[0] == (None, {})
 
@@ -97,7 +97,7 @@ def test_check_checkpoint_packets_missing_encryption_only_basic_metrics() -> Non
 
     # Should not cause any errors, just skip missing metrics
     # This verifies the parser handles missing encryption data gracefully
-    discovered = list(inventory_checkpoint_packets(test_data))
+    discovered = list(discover_checkpoint_packets(test_data))
     assert len(discovered) == 1  # Still creates a service
 
     # Check that parsing works with partial data

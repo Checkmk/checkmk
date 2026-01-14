@@ -79,7 +79,7 @@ def check_aws_elbv2_target_groups(item, params, target_groups):
         yield state, f"{state_readable} ({len(groups)})"
 
 
-def inventory_aws_application_elb_target_groups(parsed):
+def discover_aws_application_elb_target_groups(parsed):
     application_target_groups, _network_target_groups = parsed
     if application_target_groups:
         return [(None, {})]
@@ -95,12 +95,12 @@ check_info["aws_elbv2_target_groups"] = LegacyCheckDefinition(
     name="aws_elbv2_target_groups",
     parse_function=parse_aws_elbv2_target_groups,
     service_name="AWS/ApplicationELB Target Groups",
-    discovery_function=inventory_aws_application_elb_target_groups,
+    discovery_function=discover_aws_application_elb_target_groups,
     check_function=check_aws_application_elb_target_groups,
 )
 
 
-def inventory_aws_network_elb_target_groups(parsed):
+def discover_aws_network_elb_target_groups(parsed):
     _application_target_groups, network_target_groups = parsed
     if network_target_groups:
         return [(None, {})]
@@ -116,6 +116,6 @@ check_info["aws_elbv2_target_groups.network"] = LegacyCheckDefinition(
     name="aws_elbv2_target_groups_network",
     service_name="AWS/NetworkELB Target Groups",
     sections=["aws_elbv2_target_groups"],
-    discovery_function=inventory_aws_network_elb_target_groups,
+    discovery_function=discover_aws_network_elb_target_groups,
     check_function=check_aws_network_elb_target_groups,
 )

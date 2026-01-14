@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 
 from cmk.base.legacy_checks.ucs_c_rack_server_psu import (
-    inventory_ucs_c_rack_server_psu_voltage,
+    discover_ucs_c_rack_server_psu_voltage,
     parse_ucs_c_rack_server_psu,
 )
 
@@ -20,5 +20,5 @@ def test_discovery_does_not_discover_UCS_voltage_unknown() -> None:
     # see SUP-11285
     string_table = [line.split("\t") for line in SECTION.strip().split("\n")]
     section = parse_ucs_c_rack_server_psu(string_table)
-    result = list(inventory_ucs_c_rack_server_psu_voltage(section))
+    result = list(discover_ucs_c_rack_server_psu_voltage(section))
     assert result == [("Rack Unit 7 PSU 2", {})]

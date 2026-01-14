@@ -66,7 +66,7 @@ hp_blade_psu_inputline_status = {
 }
 
 
-def inventory_hp_blade_psu(info):
+def discover_hp_blade_psu(info):
     return [(line[0], None) for line in info if hp_blade_present_map[int(line[1])] == "present"]
 
 
@@ -119,6 +119,6 @@ check_info["hp_blade_psu"] = LegacyCheckDefinition(
         oids=["3", "16", "17", "10", "14", "15", "5"],
     ),
     service_name="PSU %s",
-    discovery_function=inventory_hp_blade_psu,
+    discovery_function=discover_hp_blade_psu,
     check_function=check_hp_blade_psu,
 )

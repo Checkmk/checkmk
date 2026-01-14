@@ -14,7 +14,7 @@ import pytest
 
 from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_temp
 from cmk.base.legacy_checks.dell_poweredge_temp import (
-    inventory_dell_poweredge_temp,
+    discover_dell_poweredge_temp,
     parse_dell_poweredge_temp,
 )
 
@@ -42,9 +42,9 @@ def test_parse_dell_poweredge_temp(string_table: list[list[str]]) -> None:
     assert parsed == string_table  # Parse function is passthrough
 
 
-def test_inventory_dell_poweredge_temp(parsed: list[list[str]]) -> None:
+def test_discover_dell_poweredge_temp(parsed: list[list[str]]) -> None:
     """Test Dell PowerEdge temperature discovery"""
-    discovered = list(inventory_dell_poweredge_temp(parsed))
+    discovered = list(discover_dell_poweredge_temp(parsed))
 
     # Should discover 2 sensors (ones with StateSettings != "1")
     assert len(discovered) == 2
@@ -59,7 +59,7 @@ def test_inventory_dell_poweredge_temp(parsed: list[list[str]]) -> None:
         assert params == {}
 
 
-def test_inventory_dell_poweredge_temp_filters_unknown_state() -> None:
+def test_discover_dell_poweredge_temp_filters_unknown_state() -> None:
     """Test that sensors with StateSettings = '1' (unknown) are filtered out"""
     test_data = [
         [
@@ -77,7 +77,7 @@ def test_inventory_dell_poweredge_temp_filters_unknown_state() -> None:
         ["1", "2", "2", "3", "300", "Good Sensor", "750", "700", "80", "30"],  # StateSettings = 2
     ]
 
-    discovered = list(inventory_dell_poweredge_temp(test_data))
+    discovered = list(discover_dell_poweredge_temp(test_data))
 
     # Should only discover the sensor with StateSettings = 2
     assert len(discovered) == 1
@@ -225,7 +225,7 @@ def test_check_dell_poweredge_temp_item_name_trimming() -> None:
         ["1", "2", "2", "3", "280", "Memory Module", "700", "600", "200", "100"],
     ]
 
-    discovered = list(inventory_dell_poweredge_temp(test_data))
+    discovered = list(discover_dell_poweredge_temp(test_data))
 
     # Should discover 2 items with trimmed names
     assert len(discovered) == 2
@@ -267,7 +267,7 @@ def test_check_dell_poweredge_temp_edge_case_fallback_naming() -> None:
         ["2", "5", "2", "3", "350", "", "700", "600", "200", "100"],  # Empty LocationName
     ]
 
-    discovered = list(inventory_dell_poweredge_temp(test_data))
+    discovered = list(discover_dell_poweredge_temp(test_data))
 
     # Should use chassisIndex-Index format when LocationName is empty
     assert len(discovered) == 1

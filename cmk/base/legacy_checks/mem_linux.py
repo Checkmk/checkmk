@@ -16,7 +16,7 @@ from cmk.plugins.lib import memory
 check_info = {}
 
 
-def inventory_mem_linux(section):
+def discover_mem_linux(section):
     if memory.is_linux_section(section):
         yield None, {}
 
@@ -127,7 +127,7 @@ check_info["mem.linux"] = LegacyCheckDefinition(
     name="mem_linux",
     service_name="Memory",
     sections=["mem"],
-    discovery_function=inventory_mem_linux,
+    discovery_function=discover_mem_linux,
     check_function=check_mem_linux,
     check_ruleset_name="memory_linux",
     check_default_parameters={

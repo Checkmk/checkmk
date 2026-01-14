@@ -17,7 +17,7 @@ check_info = {}
 # suggested by customer
 
 
-def inventory_artec_temp(info):
+def discover_artec_temp(info):
     return [("Disk", {})]
 
 
@@ -42,7 +42,7 @@ check_info["artec_temp"] = LegacyCheckDefinition(
         oids=["48"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_artec_temp,
+    discovery_function=discover_artec_temp,
     check_function=check_artec_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

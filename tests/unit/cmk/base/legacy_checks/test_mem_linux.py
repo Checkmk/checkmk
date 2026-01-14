@@ -14,7 +14,7 @@ from typing import Any
 
 from cmk.base.legacy_checks.mem_linux import (
     check_mem_linux,
-    inventory_mem_linux,
+    discover_mem_linux,
 )
 
 
@@ -32,7 +32,7 @@ def test_inventorize_mem_linux_basic() -> None:
         "Writeback": 512,  # Required by is_linux_section
     }
 
-    result = list(inventory_mem_linux(section))
+    result = list(discover_mem_linux(section))
 
     # Should discover the service now that all required keys are present
     assert result == [(None, {})]

@@ -170,7 +170,7 @@ def parse_solaris_fmadm(string_table):
     }
 
 
-def inventory_solaris_fmadm(parsed):
+def discover_solaris_fmadm(parsed):
     return [(None, None)]
 
 
@@ -198,6 +198,6 @@ check_info["solaris_fmadm"] = LegacyCheckDefinition(
     name="solaris_fmadm",
     parse_function=parse_solaris_fmadm,
     service_name="FMD Status",
-    discovery_function=inventory_solaris_fmadm,
+    discovery_function=discover_solaris_fmadm,
     check_function=check_solaris_fmadm,
 )

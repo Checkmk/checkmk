@@ -25,7 +25,7 @@ check_info = {}
 #   notpresent(2)
 
 
-def inventory_f5_bigip_psu(info):
+def discover_f5_bigip_psu(info):
     inventory = []
     for line in info:
         psu = line[0]
@@ -66,6 +66,6 @@ check_info["f5_bigip_psu"] = LegacyCheckDefinition(
     ),
     service_name="PSU %s",
     # Get ID and status from the SysChassisPowerSupplyTable,
-    discovery_function=inventory_f5_bigip_psu,
+    discovery_function=discover_f5_bigip_psu,
     check_function=check_f5_bigip_psu,
 )

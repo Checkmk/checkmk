@@ -13,7 +13,7 @@ from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 check_info = {}
 
 
-def inventory_juniper_screenos_fan(info):
+def discover_juniper_screenos_fan(info):
     # SNMP outputs "Fan 1". Our item is just '1'
     return [(line[0].split()[-1], None) for line in info]
 
@@ -42,6 +42,6 @@ check_info["juniper_screenos_fan"] = LegacyCheckDefinition(
         oids=["3", "2"],
     ),
     service_name="FAN %s",
-    discovery_function=inventory_juniper_screenos_fan,
+    discovery_function=discover_juniper_screenos_fan,
     check_function=check_juniper_screenos_fan,
 )

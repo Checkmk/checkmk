@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.juniper_trpz_flash import (
     check_juniper_trpz_flash,
-    inventory_juniper_trpz_flash,
+    discover_juniper_trpz_flash,
     parse_juniper_trpz_flash,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.juniper_trpz_flash import (
         ([["51439616", "62900224"]], [(None, {})]),
     ],
 )
-def test_inventory_juniper_trpz_flash(
+def test_discover_juniper_trpz_flash(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for juniper_trpz_flash check."""
     parsed = parse_juniper_trpz_flash(string_table)
-    result = list(inventory_juniper_trpz_flash(parsed))
+    result = list(discover_juniper_trpz_flash(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

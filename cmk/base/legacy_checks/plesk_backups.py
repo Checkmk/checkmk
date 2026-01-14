@@ -38,7 +38,7 @@ def parse_plesk_backups(string_table: StringTable) -> Section:
     return {line[0]: line for line in string_table}
 
 
-def inventory_plesk_backups(section: Section) -> Iterable[tuple[str, Mapping]]:
+def discover_plesk_backups(section: Section) -> Iterable[tuple[str, Mapping]]:
     yield from ((item, {}) for item in section)
 
 
@@ -98,7 +98,7 @@ check_info["plesk_backups"] = LegacyCheckDefinition(
     name="plesk_backups",
     parse_function=parse_plesk_backups,
     service_name="Plesk Backup %s",
-    discovery_function=inventory_plesk_backups,
+    discovery_function=discover_plesk_backups,
     check_function=check_plesk_backups,
     check_ruleset_name="plesk_backups",
     check_default_parameters={

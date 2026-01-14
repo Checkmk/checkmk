@@ -17,7 +17,7 @@ check_info = {}
 # .1.3.6.1.4.1.9.9.441.1.3.4 CISCO-SRST-MIB::csrstTotalUpTime
 
 
-def inventory_cisco_srst_state(info):
+def discover_cisco_srst_state(info):
     return [(None, None)]
 
 
@@ -49,6 +49,6 @@ check_info["cisco_srst_state"] = LegacyCheckDefinition(
         oids=["1", "4"],
     ),
     service_name="SRST State",
-    discovery_function=inventory_cisco_srst_state,
+    discovery_function=discover_cisco_srst_state,
     check_function=check_cisco_srst_state,
 )

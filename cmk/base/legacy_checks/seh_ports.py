@@ -25,7 +25,7 @@ def parse_seh_ports(string_table):
     return parsed
 
 
-def inventory_seh_ports(parsed):
+def discover_seh_ports(parsed):
     for key, port in parsed.items():
         yield key, {"status_at_discovery": port.get("status")}
 
@@ -81,6 +81,6 @@ check_info["seh_ports"] = LegacyCheckDefinition(
     ],
     parse_function=parse_seh_ports,
     service_name="Port %s",
-    discovery_function=inventory_seh_ports,
+    discovery_function=discover_seh_ports,
     check_function=check_seh_ports,
 )

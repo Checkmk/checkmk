@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.heartbeat_rscstatus import (
     check_heartbeat_rscstatus,
-    inventory_heartbeat_rscstatus,
+    discover_heartbeat_rscstatus,
     parse_heartbeat_rscstatus,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.heartbeat_rscstatus import (
         ([["all"]], [(None, {"discovered_state": "all"})]),
     ],
 )
-def test_inventory_heartbeat_rscstatus(
+def test_discover_heartbeat_rscstatus(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for heartbeat_rscstatus check."""
     parsed = parse_heartbeat_rscstatus(string_table)
-    result = list(inventory_heartbeat_rscstatus(parsed))
+    result = list(discover_heartbeat_rscstatus(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

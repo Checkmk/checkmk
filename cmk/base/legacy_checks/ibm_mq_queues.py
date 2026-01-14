@@ -49,7 +49,7 @@ check_info = {}
 # All valid MQSC commands were processed.
 
 
-def inventory_ibm_mq_queues(parsed):
+def discover_ibm_mq_queues(parsed):
     for service_name in parsed:
         if ":" not in service_name:
             # Do not show queue manager entry in inventory
@@ -197,7 +197,7 @@ def ibm_mq_get_qtime(qtime, label, key):
 check_info["ibm_mq_queues"] = LegacyCheckDefinition(
     name="ibm_mq_queues",
     service_name="IBM MQ Queue %s",
-    discovery_function=inventory_ibm_mq_queues,
+    discovery_function=discover_ibm_mq_queues,
     check_function=check_ibm_mq_queues,
     check_ruleset_name="ibm_mq_queues",
     check_default_parameters={},

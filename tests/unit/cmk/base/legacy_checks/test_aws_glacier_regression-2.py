@@ -18,8 +18,8 @@ import pytest
 from cmk.base.legacy_checks.aws_glacier import (
     check_aws_glacier_archives,
     check_aws_glacier_summary,
+    discover_aws_glacier,
     discover_aws_glacier_summary,
-    inventory_aws_glacier,
     parse_aws_glacier,
 )
 
@@ -83,9 +83,9 @@ def parsed_fixture(string_table: list[list[str]]) -> dict[str, dict]:
     return parse_aws_glacier(string_table)
 
 
-def test_inventory_aws_glacier(parsed: dict[str, dict]) -> None:
+def test_discover_aws_glacier(parsed: dict[str, dict]) -> None:
     """Test vault discovery finds both vaults"""
-    discovered = list(inventory_aws_glacier(parsed))
+    discovered = list(discover_aws_glacier(parsed))
     assert len(discovered) == 2
     vault_names = [item[0] for item in discovered]
     assert "axi_empty_vault" in vault_names
@@ -140,7 +140,7 @@ def test_check_aws_glacier_summary(parsed: dict[str, dict]) -> None:
         assert "Largest vault" in largest_vault_result[1]
 
 
-def test_inventory_aws_glacier_summary(parsed: dict[str, dict]) -> None:
+def test_discover_aws_glacier_summary(parsed: dict[str, dict]) -> None:
     """Test summary discovery creates summary item"""
     discovered = list(discover_aws_glacier_summary(parsed))
     assert len(discovered) == 1

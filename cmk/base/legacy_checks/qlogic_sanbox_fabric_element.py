@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_qlogic_sanbox_fabric_element(info):
+def discover_qlogic_sanbox_fabric_element(info):
     inventory = []
     for _fe_status, fe_id in info:
         inventory.append((fe_id, None))
@@ -51,6 +51,6 @@ check_info["qlogic_sanbox_fabric_element"] = LegacyCheckDefinition(
         oids=["4", OIDEnd()],
     ),
     service_name="Fabric Element %s",
-    discovery_function=inventory_qlogic_sanbox_fabric_element,
+    discovery_function=discover_qlogic_sanbox_fabric_element,
     check_function=check_qlogic_sanbox_fabric_element,
 )

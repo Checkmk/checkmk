@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import render, StringTable
 check_info = {}
 
 
-def inventory_citrix_serverload(info):
+def discover_citrix_serverload(info):
     yield None, {}
 
 
@@ -46,7 +46,7 @@ check_info["citrix_serverload"] = LegacyCheckDefinition(
     name="citrix_serverload",
     parse_function=parse_citrix_serverload,
     service_name="Citrix Serverload",
-    discovery_function=inventory_citrix_serverload,
+    discovery_function=discover_citrix_serverload,
     check_function=check_citrix_serverload,
     check_ruleset_name="citrix_load",
     check_default_parameters={

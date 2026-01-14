@@ -37,7 +37,7 @@ def parse_veeam_client(string_table):
     return data
 
 
-def inventory_veeam_client(parsed):
+def discover_veeam_client(parsed):
     for job in parsed:
         yield job, {}
 
@@ -151,7 +151,7 @@ check_info["veeam_client"] = LegacyCheckDefinition(
     name="veeam_client",
     parse_function=parse_veeam_client,
     service_name="VEEAM Client %s",
-    discovery_function=inventory_veeam_client,
+    discovery_function=discover_veeam_client,
     check_function=check_veeam_client,
     check_ruleset_name="veeam_backup",
     check_default_parameters={

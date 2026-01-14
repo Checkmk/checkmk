@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.f5_bigip_chassis_temp import (
     check_f5_bigip_chassis_temp,
-    inventory_f5_bigip_chassis_temp,
+    discover_f5_bigip_chassis_temp,
     parse_f5_bigip_chassis_temp,
 )
 
@@ -28,12 +28,12 @@ from cmk.base.legacy_checks.f5_bigip_chassis_temp import (
         ),
     ],
 )
-def test_inventory_f5_bigip_chassis_temp(
+def test_discover_f5_bigip_chassis_temp(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for f5_bigip_chassis_temp check."""
     parsed = parse_f5_bigip_chassis_temp(string_table)
-    result = list(inventory_f5_bigip_chassis_temp(parsed))
+    result = list(discover_f5_bigip_chassis_temp(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

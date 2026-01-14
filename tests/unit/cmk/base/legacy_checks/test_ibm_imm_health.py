@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ibm_imm_health import (
     check_ibm_imm_health,
-    inventory_ibm_imm_health,
+    discover_ibm_imm_health,
     parse_ibm_imm_health,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.ibm_imm_health import (
         ([["223523"], ["2342"], ["234"], ["23352"]], [(None, None)]),
     ],
 )
-def test_inventory_ibm_imm_health(
+def test_discover_ibm_imm_health(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ibm_imm_health check."""
     parsed = parse_ibm_imm_health(string_table)
-    result = list(inventory_ibm_imm_health(parsed))
+    result = list(discover_ibm_imm_health(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

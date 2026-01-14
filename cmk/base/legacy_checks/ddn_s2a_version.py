@@ -16,7 +16,7 @@ def parse_ddn_s2a_version(string_table):
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
 
 
-def inventory_ddn_s2a_version(parsed):
+def discover_ddn_s2a_version(parsed):
     return [(None, None)]
 
 
@@ -30,6 +30,6 @@ check_info["ddn_s2a_version"] = LegacyCheckDefinition(
     name="ddn_s2a_version",
     parse_function=parse_ddn_s2a_version,
     service_name="DDN S2A Version",
-    discovery_function=inventory_ddn_s2a_version,
+    discovery_function=discover_ddn_s2a_version,
     check_function=check_ddn_s2a_version,
 )

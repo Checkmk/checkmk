@@ -31,7 +31,7 @@ check_info = {}
 # .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
 
 
-def inventory_ucd_mem(parsed):
+def discover_ucd_mem(parsed):
     if parsed:
         yield None, {}
 
@@ -62,7 +62,7 @@ def check_ucd_mem(_no_item, params, parsed):
 check_info["ucd_mem"] = LegacyCheckDefinition(
     name="ucd_mem",
     service_name="Memory",
-    discovery_function=inventory_ucd_mem,
+    discovery_function=discover_ucd_mem,
     check_function=check_ucd_mem,
     check_ruleset_name="memory_simple_single",
     check_default_parameters={

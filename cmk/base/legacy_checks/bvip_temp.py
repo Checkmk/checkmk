@@ -14,7 +14,7 @@ from cmk.plugins.bvip.lib import DETECT_BVIP
 check_info = {}
 
 
-def inventory_bvip_temp(info):
+def discover_bvip_temp(info):
     for line in info:
         # line[0] contains nice names like "CPU" and "System"
         yield line[0], {}
@@ -41,7 +41,7 @@ check_info["bvip_temp"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_bvip_temp,
+    discovery_function=discover_bvip_temp,
     check_function=check_bvip_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (50.0, 60.0)},

@@ -15,7 +15,7 @@ check_info = {}
 # .1.3.6.1.4.1.10222.2.1.5.2.0 0 --> ICS-CHASSIS-MIB::icsChassisTemperatureWarning.0
 
 
-def inventory_intel_true_scale_chassis_temp(info):
+def discover_intel_true_scale_chassis_temp(info):
     if info and info[0][0] != "6":
         return [(None, None)]
     return []
@@ -55,6 +55,6 @@ check_info["intel_true_scale_chassis_temp"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="Temperature status chassis",
-    discovery_function=inventory_intel_true_scale_chassis_temp,
+    discovery_function=discover_intel_true_scale_chassis_temp,
     check_function=check_intel_true_scale_chassis_temp,
 )

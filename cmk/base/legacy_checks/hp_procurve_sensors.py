@@ -76,7 +76,7 @@ def get_hp_procurve_sensor_type(type_input):
     return type_
 
 
-def inventory_hp_procurve_sensors(info):
+def discover_hp_procurve_sensors(info):
     inventory = []
     for line in info:
         if len(line) == 4 and hp_procurve_status_map[line[2]] != "notPresent":
@@ -113,6 +113,6 @@ check_info["hp_procurve_sensors"] = LegacyCheckDefinition(
         oids=["1", "2", "4", "7"],
     ),
     service_name="Sensor %s",
-    discovery_function=inventory_hp_procurve_sensors,
+    discovery_function=discover_hp_procurve_sensors,
     check_function=check_hp_procurve_sensors,
 )

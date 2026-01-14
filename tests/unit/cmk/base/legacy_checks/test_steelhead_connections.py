@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.steelhead_connections import (
     check_steelhead_connections,
-    inventory_steelhead_connections,
+    discover_steelhead_connections,
     parse_steelhead_connections,
 )
 
@@ -36,12 +36,12 @@ from cmk.base.legacy_checks.steelhead_connections import (
         ),
     ],
 )
-def test_inventory_steelhead_connections(
+def test_discover_steelhead_connections(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for steelhead_connections check."""
     parsed = parse_steelhead_connections(string_table)
-    result = list(inventory_steelhead_connections(parsed))
+    result = list(discover_steelhead_connections(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_ucs_bladecenter_topsystem(info):
+def discover_ucs_bladecenter_topsystem(info):
     yield None, None
 
 
@@ -34,6 +34,6 @@ check_info["ucs_bladecenter_topsystem"] = LegacyCheckDefinition(
     name="ucs_bladecenter_topsystem",
     parse_function=parse_ucs_bladecenter_topsystem,
     service_name="UCS TopSystem Info",
-    discovery_function=inventory_ucs_bladecenter_topsystem,
+    discovery_function=discover_ucs_bladecenter_topsystem,
     check_function=check_ucs_bladecenter_topsystem,
 )

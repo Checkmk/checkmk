@@ -14,7 +14,7 @@ check_info = {}
 # The typical OSN power unit delivers 750 W max
 
 
-def inventory_huawei_osn_power(info):
+def discover_huawei_osn_power(info):
     for line in info:
         yield (line[0], None)
 
@@ -50,7 +50,7 @@ check_info["huawei_osn_power"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="Unit %s (Power)",
-    discovery_function=inventory_huawei_osn_power,
+    discovery_function=discover_huawei_osn_power,
     check_function=check_huawei_osn_power,
     check_default_parameters={
         "levels": (700, 730),

@@ -31,7 +31,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_vms_users(info):
+def discover_vms_users(info):
     if len(info) > 0:
         return [(None, {})]
     return []
@@ -63,6 +63,6 @@ check_info["vms_users"] = LegacyCheckDefinition(
     name="vms_users",
     parse_function=parse_vms_users,
     service_name="VMS Users",
-    discovery_function=inventory_vms_users,
+    discovery_function=discover_vms_users,
     check_function=check_vms_users,
 )

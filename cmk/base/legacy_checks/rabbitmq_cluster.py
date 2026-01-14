@@ -106,7 +106,7 @@ def parse_rabbitmq_cluster(string_table):
     return parsed
 
 
-def inventory_rabbitmq_cluster(parsed):
+def discover_rabbitmq_cluster(parsed):
     info_data = parsed.get("info")
     if info_data:
         yield None, {}
@@ -130,12 +130,12 @@ check_info["rabbitmq_cluster"] = LegacyCheckDefinition(
     name="rabbitmq_cluster",
     parse_function=parse_rabbitmq_cluster,
     service_name="RabbitMQ Cluster",
-    discovery_function=inventory_rabbitmq_cluster,
+    discovery_function=discover_rabbitmq_cluster,
     check_function=check_rabbitmq_cluster,
 )
 
 
-def inventory_rabbitmq_cluster_messages(parsed):
+def discover_rabbitmq_cluster_messages(parsed):
     msg_data = parsed.get("msg")
     if msg_data:
         yield None, {}
@@ -167,13 +167,13 @@ check_info["rabbitmq_cluster.messages"] = LegacyCheckDefinition(
     name="rabbitmq_cluster_messages",
     service_name="RabbitMQ Cluster Messages",
     sections=["rabbitmq_cluster"],
-    discovery_function=inventory_rabbitmq_cluster_messages,
+    discovery_function=discover_rabbitmq_cluster_messages,
     check_function=check_rabbitmq_cluster_messages,
     check_ruleset_name="rabbitmq_cluster_messages",
 )
 
 
-def inventory_rabbitmq_cluster_stats(parsed):
+def discover_rabbitmq_cluster_stats(parsed):
     msg_data = parsed.get("msg")
     if msg_data:
         yield None, {}
@@ -216,7 +216,7 @@ check_info["rabbitmq_cluster.stats"] = LegacyCheckDefinition(
     name="rabbitmq_cluster_stats",
     service_name="RabbitMQ Cluster Stats",
     sections=["rabbitmq_cluster"],
-    discovery_function=inventory_rabbitmq_cluster_stats,
+    discovery_function=discover_rabbitmq_cluster_stats,
     check_function=check_rabbitmq_cluster_stats,
     check_ruleset_name="rabbitmq_cluster_stats",
 )

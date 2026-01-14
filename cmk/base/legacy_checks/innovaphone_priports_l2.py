@@ -25,7 +25,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_innovaphone_priports_l2(info):
+def discover_innovaphone_priports_l2(info):
     inventory = []
     for line in info:
         if line[1] != "1":
@@ -78,7 +78,7 @@ check_info["innovaphone_priports_l2"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     service_name="Port L2 %s",
-    discovery_function=inventory_innovaphone_priports_l2,
+    discovery_function=discover_innovaphone_priports_l2,
     check_function=check_innovaphone_priports_l2,
     check_default_parameters={},
 )

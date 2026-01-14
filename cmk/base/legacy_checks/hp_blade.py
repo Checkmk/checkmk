@@ -32,7 +32,7 @@ hp_blade_status2nagios_map = {
 }
 
 
-def inventory_hp_blade_general(info):
+def discover_hp_blade_general(info):
     if len(info) > 0 and len(info[0]) > 1:
         return [(None, None)]
     return []
@@ -60,6 +60,6 @@ check_info["hp_blade"] = LegacyCheckDefinition(
         oids=["8", "16", "7"],
     ),
     service_name="General Status",
-    discovery_function=inventory_hp_blade_general,
+    discovery_function=discover_hp_blade_general,
     check_function=check_hp_blade_general,
 )

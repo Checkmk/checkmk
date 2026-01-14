@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_arris_cmts_cpu(info):
+def discover_arris_cmts_cpu(info):
     for oid_id, cpu_id, _cpu_idle_util in info:
         # Sadly the cpu_id seams empty. Referring to
         # the MIB, its slot id
@@ -58,7 +58,7 @@ check_info["arris_cmts_cpu"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1", "8"],
     ),
     service_name="CPU utilization Module %s",
-    discovery_function=inventory_arris_cmts_cpu,
+    discovery_function=discover_arris_cmts_cpu,
     check_function=check_arris_cmts_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (90.0, 95.0)},

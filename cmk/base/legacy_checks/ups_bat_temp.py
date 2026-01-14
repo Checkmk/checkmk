@@ -34,7 +34,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_ups_bat_temp(info):
+def discover_ups_bat_temp(info):
     # 2nd condition is needed to catch some UPS devices which do not have
     # any temperature sensor but report a 0 as upsBatteryTemperature. Skip those lines
     if len(info) > 0 and saveint(info[0][1]) != 0:
@@ -67,7 +67,7 @@ check_info["ups_bat_temp"] = LegacyCheckDefinition(
         oids=["1.5", "2.7"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_ups_bat_temp,
+    discovery_function=discover_ups_bat_temp,
     check_function=check_ups_bat_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

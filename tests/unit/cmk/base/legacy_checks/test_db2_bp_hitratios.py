@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.db2_bp_hitratios import (
     check_db2_bp_hitratios,
-    inventory_db2_bp_hitratios,
+    discover_db2_bp_hitratios,
     parse_db2_bp_hitratios,
 )
 
@@ -41,12 +41,12 @@ from cmk.base.legacy_checks.db2_bp_hitratios import (
         ),
     ],
 )
-def test_inventory_db2_bp_hitratios(
+def test_discover_db2_bp_hitratios(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for db2_bp_hitratios check."""
     parsed = parse_db2_bp_hitratios(string_table)
-    result = list(inventory_db2_bp_hitratios(parsed))
+    result = list(discover_db2_bp_hitratios(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

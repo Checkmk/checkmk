@@ -16,7 +16,7 @@ import pytest
 
 from cmk.base.legacy_checks.emc_isilon_cpu import (
     check_emc_isilon_cpu_utilization,
-    inventory_emc_isilon_cpu_utilization,
+    discover_emc_isilon_cpu_utilization,
     parse_emc_isilon_cpu,
 )
 
@@ -85,19 +85,19 @@ def test_parse_emc_isilon_cpu_multiple_lines(
     ]
 
 
-def test_inventory_emc_isilon_cpu_utilization(string_table_normal: list[list[str]]) -> None:
+def test_discover_emc_isilon_cpu_utilization(string_table_normal: list[list[str]]) -> None:
     """Test discovery of EMC Isilon CPU utilization."""
     parsed = parse_emc_isilon_cpu(string_table_normal)
-    result = list(inventory_emc_isilon_cpu_utilization(parsed))
+    result = list(discover_emc_isilon_cpu_utilization(parsed))
     assert result == [(None, {})]
 
 
-def test_inventory_emc_isilon_cpu_utilization_empty(
+def test_discover_emc_isilon_cpu_utilization_empty(
     string_table_empty: list[list[str]],
 ) -> None:
     """Test discovery with empty data."""
     parsed = parse_emc_isilon_cpu(string_table_empty)
-    result = list(inventory_emc_isilon_cpu_utilization(parsed))
+    result = list(discover_emc_isilon_cpu_utilization(parsed))
     assert result == [(None, {})]
 
 

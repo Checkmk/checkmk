@@ -23,7 +23,7 @@ def parse_heartbeat_rscstatus(string_table):
         return None
 
 
-def inventory_heartbeat_rscstatus(heartbeat_rsc_status):
+def discover_heartbeat_rscstatus(heartbeat_rsc_status):
     if heartbeat_rsc_status is not None:
         yield None, {"discovered_state": heartbeat_rsc_status}
 
@@ -50,7 +50,7 @@ check_info["heartbeat_rscstatus"] = LegacyCheckDefinition(
     name="heartbeat_rscstatus",
     parse_function=parse_heartbeat_rscstatus,
     service_name="Heartbeat Ressource Status",
-    discovery_function=inventory_heartbeat_rscstatus,
+    discovery_function=discover_heartbeat_rscstatus,
     check_function=check_heartbeat_rscstatus,
     check_ruleset_name="heartbeat_rscstatus",
 )

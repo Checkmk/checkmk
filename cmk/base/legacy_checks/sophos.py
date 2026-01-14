@@ -126,7 +126,7 @@ sophos_map_oid: Mapping[str, tuple[str, Mapping[str, str]]] = {
 }
 
 
-def inventory_sophos(info):
+def discover_sophos(info):
     inventory = []
     for item_oid, item_state in info:
         if item_oid in sophos_map_oid and item_state in ["2", "3", "4"]:
@@ -168,6 +168,6 @@ check_info["sophos"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "3"],
     ),
     service_name="%s",
-    discovery_function=inventory_sophos,
+    discovery_function=discover_sophos,
     check_function=check_sophos,
 )

@@ -19,7 +19,7 @@ def parse_perle_modules(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def inventory_perle_cm_modules(info):
+def discover_perle_cm_modules(info):
     yield from ((index, {}) for _name, _led, index, *_rest in info)
 
 
@@ -127,7 +127,7 @@ check_info["perle_modules_cm1110"] = LegacyCheckDefinition(
         ],
     ),
     service_name="Chassis slot %s CM1110",
-    discovery_function=inventory_perle_cm_modules,
+    discovery_function=discover_perle_cm_modules,
     check_function=check_perle_cm_modules,
 )
 
@@ -153,6 +153,6 @@ check_info["perle_modules_cm1000"] = LegacyCheckDefinition(
         ],
     ),
     service_name="Chassis slot %s CM1000",
-    discovery_function=inventory_perle_cm_modules,
+    discovery_function=discover_perle_cm_modules,
     check_function=check_perle_cm_modules,
 )

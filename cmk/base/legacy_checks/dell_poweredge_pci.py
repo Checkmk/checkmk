@@ -14,7 +14,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def inventory_dell_poweredge_pci(info):
+def discover_dell_poweredge_pci(info):
     inventory = []
     for line in info:
         fqdd = line[4]
@@ -36,6 +36,6 @@ check_info["dell_poweredge_pci"] = LegacyCheckDefinition(
         oids=["5", "7", "8", "9", "12"],
     ),
     service_name="PCI %s",
-    discovery_function=inventory_dell_poweredge_pci,
+    discovery_function=discover_dell_poweredge_pci,
     check_function=check_dell_poweredge_pci,
 )

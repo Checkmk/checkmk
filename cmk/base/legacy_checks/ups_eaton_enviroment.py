@@ -25,7 +25,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_ups_eaton_enviroment(info):
+def discover_ups_eaton_enviroment(info):
     if len(info) > 0:
         return [(None, {})]
     return []
@@ -67,7 +67,7 @@ check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
         oids=["1", "5", "6"],
     ),
     service_name="Enviroment",
-    discovery_function=inventory_ups_eaton_enviroment,
+    discovery_function=discover_ups_eaton_enviroment,
     check_function=check_ups_eaton_enviroment,
     check_ruleset_name="eaton_enviroment",
     check_default_parameters={

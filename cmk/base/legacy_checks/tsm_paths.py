@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_tsm_paths(info):
+def discover_tsm_paths(info):
     return [(None, None)]
 
 
@@ -32,6 +32,6 @@ check_info["tsm_paths"] = LegacyCheckDefinition(
     name="tsm_paths",
     parse_function=parse_tsm_paths,
     service_name="TSM Paths",
-    discovery_function=inventory_tsm_paths,
+    discovery_function=discover_tsm_paths,
     check_function=check_tsm_paths,
 )

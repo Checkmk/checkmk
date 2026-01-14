@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.mq_queues import check_mq_queues, inventory_mq_queues, parse_mq_queues
+from cmk.base.legacy_checks.mq_queues import check_mq_queues, discover_mq_queues, parse_mq_queues
 
 
 @pytest.mark.parametrize(
@@ -21,12 +21,12 @@ from cmk.base.legacy_checks.mq_queues import check_mq_queues, inventory_mq_queue
         ([["[[Queue_App1_App2]]"], ["1", "2", "3", "4"]], [("Queue_App1_App2", {})]),
     ],
 )
-def test_inventory_mq_queues(
+def test_discover_mq_queues(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for mq_queues check."""
     parsed = parse_mq_queues(string_table)
-    result = list(inventory_mq_queues(parsed))
+    result = list(discover_mq_queues(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

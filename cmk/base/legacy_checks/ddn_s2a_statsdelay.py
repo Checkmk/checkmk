@@ -35,7 +35,7 @@ def parse_ddn_s2a_statsdelay(string_table: StringTable) -> SectionStatsDelay:
     return parsed
 
 
-def inventory_ddn_s2a_statsdelay(parsed):
+def discover_ddn_s2a_statsdelay(parsed):
     yield "Disk", {}
     yield "Host", {}
 
@@ -161,7 +161,7 @@ check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
     name="ddn_s2a_statsdelay",
     parse_function=parse_ddn_s2a_statsdelay,
     service_name="DDN S2A Delay %s",
-    discovery_function=inventory_ddn_s2a_statsdelay,
+    discovery_function=discover_ddn_s2a_statsdelay,
     check_function=check_ddn_s2a_statsdelay,
     check_ruleset_name="ddn_s2a_wait",
     check_default_parameters={

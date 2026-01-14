@@ -25,7 +25,7 @@ from cmk.base.legacy_checks.pulse_secure_cpu_util import (
         ([["1"]], [(None, {})]),
     ],
 )
-def test_inventory_pulse_secure_cpu(
+def test_discover_pulse_secure_cpu(
     info: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for pulse_secure_cpu_util check."""

@@ -14,7 +14,7 @@ check_info = {}
 threads_default_levels = {"levels": ("levels", (2000, 4000))}
 
 
-def inventory_bluecat_threads(info):
+def discover_bluecat_threads(info):
     if info:
         return [(None, threads_default_levels)]
     return []
@@ -47,7 +47,7 @@ check_info["bluecat_threads"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Number of threads",
-    discovery_function=inventory_bluecat_threads,
+    discovery_function=discover_bluecat_threads,
     check_function=check_bluecat_threads,
     check_ruleset_name="threads",
 )

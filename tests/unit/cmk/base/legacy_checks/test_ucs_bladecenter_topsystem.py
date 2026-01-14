@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ucs_bladecenter_topsystem import (
     check_ucs_bladecenter_topsystem,
-    inventory_ucs_bladecenter_topsystem,
+    discover_ucs_bladecenter_topsystem,
     parse_ucs_bladecenter_topsystem,
 )
 
@@ -38,12 +38,12 @@ from cmk.base.legacy_checks.ucs_bladecenter_topsystem import (
         ),
     ],
 )
-def test_inventory_ucs_bladecenter_topsystem(
+def test_discover_ucs_bladecenter_topsystem(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ucs_bladecenter_topsystem check."""
     parsed = parse_ucs_bladecenter_topsystem(string_table)
-    result = list(inventory_ucs_bladecenter_topsystem(parsed))
+    result = list(discover_ucs_bladecenter_topsystem(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

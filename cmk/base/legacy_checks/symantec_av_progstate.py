@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_symantec_av_progstate(info):
+def discover_symantec_av_progstate(info):
     return [(None, None)]
 
 
@@ -32,6 +32,6 @@ check_info["symantec_av_progstate"] = LegacyCheckDefinition(
     name="symantec_av_progstate",
     parse_function=parse_symantec_av_progstate,
     service_name="AV Program Status",
-    discovery_function=inventory_symantec_av_progstate,
+    discovery_function=discover_symantec_av_progstate,
     check_function=check_symantec_av_progstate,
 )

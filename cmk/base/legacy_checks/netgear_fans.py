@@ -104,7 +104,7 @@ def parse_netgear_fans(string_table):
     return parsed
 
 
-def inventory_netgear_fans(parsed):
+def discover_netgear_fans(parsed):
     for sensorname, sensorinfo in parsed["__fans__"].items():
         state = sensorinfo["state"]
         if state != "1" and not (state == "2" and sensorinfo["reading_str"] in ["0"]):
@@ -140,7 +140,7 @@ check_info["netgear_fans"] = LegacyCheckDefinition(
     ],
     parse_function=parse_netgear_fans,
     service_name="Fan %s",
-    discovery_function=inventory_netgear_fans,
+    discovery_function=discover_netgear_fans,
     check_function=check_netgear_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={

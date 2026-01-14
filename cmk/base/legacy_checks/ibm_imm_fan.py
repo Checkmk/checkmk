@@ -12,7 +12,7 @@ from cmk.plugins.ibm.lib import DETECT_IBM_IMM
 check_info = {}
 
 
-def inventory_ibm_imm_fan(info):
+def discover_ibm_imm_fan(info):
     for descr, speed_text in info:
         if speed_text.lower() != "offline":
             yield descr, {}
@@ -67,7 +67,7 @@ check_info["ibm_imm_fan"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_ibm_imm_fan,
+    discovery_function=discover_ibm_imm_fan,
     check_function=check_ibm_imm_fan,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={

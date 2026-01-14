@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import render, StringTable
 check_info = {}
 
 
-def inventory_hyperv_checkpoints(info):
+def discover_hyperv_checkpoints(info):
     return [(None, {})]
 
 
@@ -57,7 +57,7 @@ check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
     name="hyperv_checkpoints",
     parse_function=parse_hyperv_checkpoints,
     service_name="HyperV Checkpoints",
-    discovery_function=inventory_hyperv_checkpoints,
+    discovery_function=discover_hyperv_checkpoints,
     check_function=check_hyperv_checkpoints,
     check_ruleset_name="vm_snapshots",
 )

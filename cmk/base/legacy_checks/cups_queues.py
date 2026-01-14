@@ -82,7 +82,7 @@ def parse_cups_queues(string_table: list[list[str]]) -> Section:
     return parsed
 
 
-def inventory_cups_queues(parsed):
+def discover_cups_queues(parsed):
     for item in parsed:
         yield item, {}
 
@@ -130,7 +130,7 @@ check_info["cups_queues"] = LegacyCheckDefinition(
     name="cups_queues",
     parse_function=parse_cups_queues,
     service_name="CUPS Queue %s",
-    discovery_function=inventory_cups_queues,
+    discovery_function=discover_cups_queues,
     check_function=check_cups_queues,
     check_ruleset_name="cups_queues",
     check_default_parameters={

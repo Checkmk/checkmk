@@ -50,7 +50,7 @@ from cmk.agent_based.v2 import (
 check_info = {}
 
 
-def inventory_hpux_snmp_cpu(info):
+def discover_hpux_snmp_cpu(info):
     if len(info) > 0:
         return [(None, None)]
     return []
@@ -102,6 +102,6 @@ check_info["hpux_snmp_cs.cpu"] = LegacyCheckDefinition(
     name="hpux_snmp_cs_cpu",
     service_name="CPU utilization",
     sections=["hpux_snmp_cs"],
-    discovery_function=inventory_hpux_snmp_cpu,
+    discovery_function=discover_hpux_snmp_cpu,
     check_function=check_hpux_snmp_cpu,
 )

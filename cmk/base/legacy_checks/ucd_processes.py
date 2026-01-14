@@ -38,7 +38,7 @@ check_info = {}
 # .1.3.6.1.4.1.2021.2.1.101.4              --> UCD-SNMP-MIB::prErrMessage.4
 
 
-def inventory_ucd_processes(info):
+def discover_ucd_processes(info):
     return [(line[0].replace("-Processes", ""), None) for line in info]
 
 
@@ -72,6 +72,6 @@ check_info["ucd_processes"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "100", "101"],
     ),
     service_name="Processes %s",
-    discovery_function=inventory_ucd_processes,
+    discovery_function=discover_ucd_processes,
     check_function=check_ucd_processes,
 )

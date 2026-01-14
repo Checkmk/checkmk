@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.tplink_cpu import (
     check_tplink_cpu,
-    inventory_tplink_cpu,
+    discover_tplink_cpu,
     parse_tplink_cpu,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.tplink_cpu import (
         ([["21"]], [(None, {})]),
     ],
 )
-def test_inventory_tplink_cpu(
+def test_discover_tplink_cpu(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for tplink_cpu check."""
     parsed = parse_tplink_cpu(string_table)
-    result = list(inventory_tplink_cpu(parsed))
+    result = list(discover_tplink_cpu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

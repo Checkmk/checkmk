@@ -325,7 +325,7 @@ def test_discovery_ibm_svc_mdiskgrp(
 ) -> None:
     """Test discovery function for ibm_svc_mdiskgrp check."""
     parsed = ibm_svc_mdiskgrp.parse_ibm_svc_mdiskgrp(string_table)
-    result = list(ibm_svc_mdiskgrp.inventory_ibm_svc_mdiskgrp(parsed))
+    result = list(ibm_svc_mdiskgrp.discover_ibm_svc_mdiskgrp(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

@@ -21,7 +21,7 @@ def format_emc_datadomain_temp(descr, encid, index, new_format):
     return encid + "-" + index
 
 
-def inventory_emc_datadomain_temps(info):
+def discover_emc_datadomain_temps(info):
     for encid, index, descr, _reading, status in info:
         if status != "2":
             yield format_emc_datadomain_temp(descr, encid, index, True), {}
@@ -62,7 +62,7 @@ check_info["emc_datadomain_temps"] = LegacyCheckDefinition(
         oids=["1", "2", "4", "5", "6"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_emc_datadomain_temps,
+    discovery_function=discover_emc_datadomain_temps,
     check_function=check_emc_datadomain_temps,
     check_ruleset_name="temperature",
 )

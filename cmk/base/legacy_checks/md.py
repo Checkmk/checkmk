@@ -175,7 +175,7 @@ def parse_md(string_table):
     return parsed
 
 
-def inventory_md(parsed):
+def discover_md(parsed):
     for device, attrs in parsed.items():
         if attrs["raid_name"] != "raid0":
             yield device, None
@@ -243,7 +243,7 @@ check_info["md"] = LegacyCheckDefinition(
     name="md",
     parse_function=parse_md,
     service_name="MD Softraid %s",
-    discovery_function=inventory_md,
+    discovery_function=discover_md,
     check_function=check_md,
     check_ruleset_name="raid",
 )

@@ -22,7 +22,7 @@ check_info = {}
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.9.1 23 --> PERLE-MCR-MGT-MIB::chassisTemperature.1
 
 
-def inventory_perle_chassis(section):
+def discover_perle_chassis(section):
     return [(None, None)]
 
 
@@ -41,12 +41,12 @@ def check_perle_chassis(_no_item, _no_params, section):
 check_info["perle_chassis"] = LegacyCheckDefinition(
     name="perle_chassis",
     service_name="Chassis status",
-    discovery_function=inventory_perle_chassis,
+    discovery_function=discover_perle_chassis,
     check_function=check_perle_chassis,
 )
 
 
-def inventory_perle_chassis_temp(info):
+def discover_perle_chassis_temp(info):
     return [("chassis", {})]
 
 
@@ -58,7 +58,7 @@ check_info["perle_chassis.temp"] = LegacyCheckDefinition(
     name="perle_chassis_temp",
     service_name="Temperature %s",
     sections=["perle_chassis"],
-    discovery_function=inventory_perle_chassis_temp,
+    discovery_function=discover_perle_chassis_temp,
     check_function=check_perle_chassis_temp,
     check_ruleset_name="temperature",
 )

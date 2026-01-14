@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ibm_rsa_health import (
     check_ibm_rsa_health,
-    inventory_ibm_rsa_health,
+    discover_ibm_rsa_health,
     parse_ibm_rsa_health,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.ibm_rsa_health import (
         ([["0"], ["1"], ["Critical"], ["SSL Server Certificate Error"]], [(None, None)]),
     ],
 )
-def test_inventory_ibm_rsa_health(
+def test_discover_ibm_rsa_health(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ibm_rsa_health check."""
     parsed = parse_ibm_rsa_health(string_table)
-    result = list(inventory_ibm_rsa_health(parsed))
+    result = list(discover_ibm_rsa_health(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

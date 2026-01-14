@@ -18,7 +18,7 @@ from cmk.plugins.steelhead.lib import DETECT_STEELHEAD
 check_info = {}
 
 
-def inventory_steelhead_peers(info):
+def discover_steelhead_peers(info):
     return [(x[0], None) for x in info if x[-1] != "Steelhead Mobile"]
 
 
@@ -42,6 +42,6 @@ check_info["steelhead_peers"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5"],
     ),
     service_name="Peer %s",
-    discovery_function=inventory_steelhead_peers,
+    discovery_function=discover_steelhead_peers,
     check_function=check_steelhead_peers,
 )

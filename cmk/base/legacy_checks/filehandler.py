@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import render, StringTable
 check_info = {}
 
 
-def inventory_filehandler(info):
+def discover_filehandler(info):
     return [(None, {})]
 
 
@@ -52,7 +52,7 @@ check_info["filehandler"] = LegacyCheckDefinition(
     name="filehandler",
     parse_function=parse_filehandler,
     service_name="Filehandler",
-    discovery_function=inventory_filehandler,
+    discovery_function=discover_filehandler,
     check_function=check_filehandler,
     check_ruleset_name="filehandler",
     check_default_parameters={"levels": (80.0, 90.0)},

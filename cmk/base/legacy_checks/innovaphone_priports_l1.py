@@ -38,7 +38,7 @@ def parse_innovaphone_priports_l1(string_table):
     return parsed
 
 
-def inventory_innovaphone_priports_l1(parsed):
+def discover_innovaphone_priports_l1(parsed):
     return [
         (item, {"err_slip_count": data["slip"]})
         for item, data in parsed.items()
@@ -82,7 +82,7 @@ check_info["innovaphone_priports_l1"] = LegacyCheckDefinition(
     ),
     parse_function=parse_innovaphone_priports_l1,
     service_name="Port L1 %s",
-    discovery_function=inventory_innovaphone_priports_l1,
+    discovery_function=discover_innovaphone_priports_l1,
     check_function=check_innovaphone_priports_l1,
     check_default_parameters={},
 )

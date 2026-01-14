@@ -42,7 +42,7 @@ def parse_hpux_fchba(info):
     return hbas
 
 
-def inventory_hpux_fchba(section):
+def discover_hpux_fchba(section):
     return [(name, None) for name, hba in section.items() if hba["Driver state"] == "ONLINE"]
 
 
@@ -82,6 +82,6 @@ check_info["hpux_fchba"] = LegacyCheckDefinition(
     name="hpux_fchba",
     service_name="FC HBA %s",
     parse_function=parse_hpux_fchba,
-    discovery_function=inventory_hpux_fchba,
+    discovery_function=discover_hpux_fchba,
     check_function=check_hpux_fchba,
 )

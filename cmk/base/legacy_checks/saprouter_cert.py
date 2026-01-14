@@ -69,7 +69,7 @@ def parse_saprouter_cert(string_table):
     return parsed
 
 
-def inventory_saprouter_cert(parsed):
+def discover_saprouter_cert(parsed):
     if parsed:
         return [(None, None)]
     return []
@@ -104,7 +104,7 @@ check_info["saprouter_cert"] = LegacyCheckDefinition(
     name="saprouter_cert",
     parse_function=parse_saprouter_cert,
     service_name="SAP router certificate",
-    discovery_function=inventory_saprouter_cert,
+    discovery_function=discover_saprouter_cert,
     check_function=check_saprouter_cert,
     check_ruleset_name="saprouter_cert_age",
     check_default_parameters={

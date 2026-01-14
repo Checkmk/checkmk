@@ -385,7 +385,7 @@ def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
 #   +----------------------------------------------------------------------+
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
-def inventory_varnish_uptime(parsed):
+def discover_varnish_uptime(parsed):
     if "uptime" in parsed:
         return [(None, None)]
     return []
@@ -408,7 +408,7 @@ check_info["varnish"] = LegacyCheckDefinition(
     name="varnish",
     parse_function=parse_varnish,
     service_name="Varnish Uptime",
-    discovery_function=inventory_varnish_uptime,
+    discovery_function=discover_varnish_uptime,
     check_function=check_varnish_uptime,
 )
 

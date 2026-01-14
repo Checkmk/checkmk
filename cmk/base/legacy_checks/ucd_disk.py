@@ -18,7 +18,7 @@ check_info = {}
 # .1.3.6.1.4.1.2021.9.1.7.1 55330132  --> UCD-SNMP-MIB::dskAvail.1
 
 
-def inventory_ucd_disk(info):
+def discover_ucd_disk(info):
     return [(line[0], {}) for line in info]
 
 
@@ -56,7 +56,7 @@ check_info["ucd_disk"] = LegacyCheckDefinition(
         oids=["2", "6", "7"],
     ),
     service_name="Filesystem %s",
-    discovery_function=inventory_ucd_disk,
+    discovery_function=discover_ucd_disk,
     check_function=check_ucd_disk,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

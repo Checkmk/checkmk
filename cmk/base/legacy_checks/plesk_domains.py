@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_plesk_domains(info):
+def discover_plesk_domains(info):
     if info and info[0]:
         return [(None, None)]
     return None
@@ -32,6 +32,6 @@ check_info["plesk_domains"] = LegacyCheckDefinition(
     name="plesk_domains",
     parse_function=parse_plesk_domains,
     service_name="Plesk Domains",
-    discovery_function=inventory_plesk_domains,
+    discovery_function=discover_plesk_domains,
     check_function=check_plesk_domains,
 )

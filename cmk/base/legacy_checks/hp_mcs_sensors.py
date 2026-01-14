@@ -51,7 +51,7 @@ def parse_hp_mcs_sensors(string_table):
     return parsed
 
 
-def inventory_hp_mcs_sensors(parsed):
+def discover_hp_mcs_sensors(parsed):
     for entry in parsed.values():
         if int(entry["type"]) in [4, 5, 13, 14, 15, 16, 17, 18, 19, 20]:
             yield (entry["name"], {})
@@ -73,13 +73,13 @@ check_info["hp_mcs_sensors"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hp_mcs_sensors,
     service_name="Sensor %s",
-    discovery_function=inventory_hp_mcs_sensors,
+    discovery_function=discover_hp_mcs_sensors,
     check_function=check_hp_mcs_sensors,
     check_ruleset_name="temperature",
 )
 
 
-def inventory_hp_mcs_sensors_fan(parsed):
+def discover_hp_mcs_sensors_fan(parsed):
     for entry in parsed.values():
         if entry["type"] in [9, 10, 11, 26, 27, 28]:
             yield (entry["name"], {})
@@ -96,7 +96,7 @@ check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
     name="hp_mcs_sensors_fan",
     service_name="Sensor %s",
     sections=["hp_mcs_sensors"],
-    discovery_function=inventory_hp_mcs_sensors_fan,
+    discovery_function=discover_hp_mcs_sensors_fan,
     check_function=check_hp_mcs_sensors_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={

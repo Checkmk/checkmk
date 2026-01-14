@@ -35,7 +35,7 @@ def parse_huawei_switch_stack(string_table):
     return parsed
 
 
-def inventory_huawei_switch_stack(parsed):
+def discover_huawei_switch_stack(parsed):
     for item, role in parsed.items():
         yield (item, {"expected_role": role})
 
@@ -69,6 +69,6 @@ check_info["huawei_switch_stack"] = LegacyCheckDefinition(
     ],
     parse_function=parse_huawei_switch_stack,
     service_name="Stack role %s",
-    discovery_function=inventory_huawei_switch_stack,
+    discovery_function=discover_huawei_switch_stack,
     check_function=check_huawei_switch_stack,
 )

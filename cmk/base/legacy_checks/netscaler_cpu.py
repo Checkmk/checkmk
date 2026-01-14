@@ -20,7 +20,7 @@ from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
 check_info = {}
 
 
-def inventory_netscaler_cpu(info):
+def discover_netscaler_cpu(info):
     for cpu_name, _cpu_usage in info:
         yield cpu_name, {}
 
@@ -53,7 +53,7 @@ check_info["netscaler_cpu"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="CPU Utilization %s",
-    discovery_function=inventory_netscaler_cpu,
+    discovery_function=discover_netscaler_cpu,
     check_function=check_netscaler_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (90.0, 95.0)},

@@ -20,7 +20,7 @@ check_info = {}
 # .1.3.6.1.4.1.2620.1.6.7.4.4.0 2091094016 --> CHECKPOINT-MIB::memAvailReal
 
 
-def inventory_checkpoint_memory(info):
+def discover_checkpoint_memory(info):
     if info and len(info[0]) > 1:
         yield None, {}
 
@@ -52,7 +52,7 @@ check_info["checkpoint_memory"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     service_name="Memory System",
-    discovery_function=inventory_checkpoint_memory,
+    discovery_function=discover_checkpoint_memory,
     check_function=check_checkpoint_memory,
     check_ruleset_name="memory_simple_single",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},

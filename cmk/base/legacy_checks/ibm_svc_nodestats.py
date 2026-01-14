@@ -176,7 +176,7 @@ check_info["ibm_svc_nodestats"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_diskio(section):
+def discover_ibm_svc_nodestats_diskio(section):
     return [
         (node_name, None)
         for node_name, data in section.items()
@@ -204,7 +204,7 @@ check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
     name="ibm_svc_nodestats_diskio",
     service_name="Disk IO %s",
     sections=["ibm_svc_nodestats"],
-    discovery_function=inventory_ibm_svc_nodestats_diskio,
+    discovery_function=discover_ibm_svc_nodestats_diskio,
     check_function=check_ibm_svc_nodestats_diskio,
 )
 
@@ -219,7 +219,7 @@ check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_iops(section):
+def discover_ibm_svc_nodestats_iops(section):
     return [
         (node_name, None)
         for node_name, data in section.items()
@@ -243,7 +243,7 @@ check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
     name="ibm_svc_nodestats_iops",
     service_name="Disk IOPS %s",
     sections=["ibm_svc_nodestats"],
-    discovery_function=inventory_ibm_svc_nodestats_iops,
+    discovery_function=discover_ibm_svc_nodestats_iops,
     check_function=check_ibm_svc_nodestats_iops,
 )
 
@@ -258,7 +258,7 @@ check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_disk_latency(section):
+def discover_ibm_svc_nodestats_disk_latency(section):
     return [
         (node_name, None)
         for node_name, data in section.items()
@@ -282,7 +282,7 @@ check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
     name="ibm_svc_nodestats_disk_latency",
     service_name="Disk Latency %s",
     sections=["ibm_svc_nodestats"],
-    discovery_function=inventory_ibm_svc_nodestats_disk_latency,
+    discovery_function=discover_ibm_svc_nodestats_disk_latency,
     check_function=check_ibm_svc_nodestats_disk_latency,
 )
 
@@ -298,7 +298,7 @@ check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_cpu(section):
+def discover_ibm_svc_nodestats_cpu(section):
     yield from (Service(item=node_name) for node_name, data in section.items() if "cpu_pc" in data)
 
 
@@ -313,7 +313,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
     name="ibm_svc_nodestats_cpu_util",
     service_name="CPU utilization %s",
     sections=["ibm_svc_nodestats"],
-    discovery_function=inventory_ibm_svc_nodestats_cpu,
+    discovery_function=discover_ibm_svc_nodestats_cpu,
     check_function=check_ibm_svc_nodestats_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (90.0, 95.0)},
@@ -330,7 +330,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_cache(section):
+def discover_ibm_svc_nodestats_cache(section):
     return [
         (node_name, None)
         for node_name, data in section.items()
@@ -361,6 +361,6 @@ check_info["ibm_svc_nodestats.cache"] = LegacyCheckDefinition(
     name="ibm_svc_nodestats_cache",
     service_name="Cache %s",
     sections=["ibm_svc_nodestats"],
-    discovery_function=inventory_ibm_svc_nodestats_cache,
+    discovery_function=discover_ibm_svc_nodestats_cache,
     check_function=check_ibm_svc_nodestats_cache,
 )

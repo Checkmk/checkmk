@@ -13,7 +13,7 @@ from cmk.plugins.ibm.lib import DETECT_IBM_IMM
 check_info = {}
 
 
-def inventory_ibm_imm_health(info):
+def discover_ibm_imm_health(info):
     if info:
         return [(None, None)]
     return []
@@ -57,6 +57,6 @@ check_info["ibm_imm_health"] = LegacyCheckDefinition(
         oids=["4"],
     ),
     service_name="System health",
-    discovery_function=inventory_ibm_imm_health,
+    discovery_function=discover_ibm_imm_health,
     check_function=check_ibm_imm_health,
 )

@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ibm_svc_portsas import (
     check_ibm_svc_portsas,
-    inventory_ibm_svc_portsas,
+    discover_ibm_svc_portsas,
     parse_ibm_svc_portsas,
 )
 
@@ -262,12 +262,12 @@ from cmk.base.legacy_checks.ibm_svc_portsas import (
         ),
     ],
 )
-def test_inventory_ibm_svc_portsas(
+def test_discover_ibm_svc_portsas(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ibm_svc_portsas check."""
     parsed = parse_ibm_svc_portsas(string_table)
-    result = list(inventory_ibm_svc_portsas(parsed))
+    result = list(discover_ibm_svc_portsas(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

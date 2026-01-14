@@ -30,7 +30,7 @@ def parse_kentix_co(string_table: StringTable) -> int | None:
     return None
 
 
-def inventory_kentix_co(section: int) -> Iterable[tuple[None, dict]]:
+def discover_kentix_co(section: int) -> Iterable[tuple[None, dict]]:
     yield None, {}
 
 
@@ -53,7 +53,7 @@ check_info["kentix_co"] = LegacyCheckDefinition(
     ),
     parse_function=parse_kentix_co,
     service_name="Carbon Monoxide",
-    discovery_function=inventory_kentix_co,
+    discovery_function=discover_kentix_co,
     check_function=check_kentix_co,
     check_ruleset_name="carbon_monoxide",
     check_default_parameters={

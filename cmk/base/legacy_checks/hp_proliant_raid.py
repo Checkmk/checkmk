@@ -39,7 +39,7 @@ def parse_hp_proliant_raid(string_table):
     return parsed
 
 
-def inventory_hp_proliant_raid(parsed):
+def discover_hp_proliant_raid(parsed):
     for raid in parsed:
         yield raid, None
 
@@ -96,6 +96,6 @@ check_info["hp_proliant_raid"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hp_proliant_raid,
     service_name="Logical Device %s",
-    discovery_function=inventory_hp_proliant_raid,
+    discovery_function=discover_hp_proliant_raid,
     check_function=check_hp_proliant_raid,
 )

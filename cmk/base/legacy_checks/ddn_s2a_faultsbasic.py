@@ -46,7 +46,7 @@ def parse_ddn_s2a_faultsbasic(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_disks(parsed):
+def discover_ddn_s2a_faultsbasic_disks(parsed):
     if "disk_failures_count" in parsed:
         yield None, {}
 
@@ -68,7 +68,7 @@ check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_disks",
     service_name="DDN S2A Disks",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_disks,
+    discovery_function=discover_ddn_s2a_faultsbasic_disks,
     check_function=check_ddn_s2a_faultsbasic_disks,
     check_ruleset_name="disk_failures",
     check_default_parameters={
@@ -87,7 +87,7 @@ check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_temp(parsed):
+def discover_ddn_s2a_faultsbasic_temp(parsed):
     if "avr_temp_W_failures_count" in parsed:
         return [(None, None)]
     return []
@@ -121,7 +121,7 @@ check_info["ddn_s2a_faultsbasic.temp"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_temp",
     service_name="DDN S2A Temperature",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_temp,
+    discovery_function=discover_ddn_s2a_faultsbasic_temp,
     check_function=check_ddn_s2a_faultsbasic_temp,
 )
 
@@ -136,7 +136,7 @@ check_info["ddn_s2a_faultsbasic.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_ps(parsed):
+def discover_ddn_s2a_faultsbasic_ps(parsed):
     if "avr_pwr_sup_failures_count" in parsed:
         return [(None, None)]
     return []
@@ -155,7 +155,7 @@ check_info["ddn_s2a_faultsbasic.ps"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_ps",
     service_name="DDN S2A Power Supplies",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_ps,
+    discovery_function=discover_ddn_s2a_faultsbasic_ps,
     check_function=check_ddn_s2a_faultsbasic_ps,
 )
 
@@ -170,7 +170,7 @@ check_info["ddn_s2a_faultsbasic.ps"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_fans(parsed):
+def discover_ddn_s2a_faultsbasic_fans(parsed):
     if "avr_fan_ctrl_failures_count" in parsed:
         yield None, {}
 
@@ -194,7 +194,7 @@ check_info["ddn_s2a_faultsbasic.fans"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_fans",
     service_name="DDN S2A Fans",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_fans,
+    discovery_function=discover_ddn_s2a_faultsbasic_fans,
     check_function=check_ddn_s2a_faultsbasic_fans,
     check_ruleset_name="fan_failures",
     check_default_parameters={"levels": (1, 2)},
@@ -211,7 +211,7 @@ check_info["ddn_s2a_faultsbasic.fans"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_pingfault(parsed):
+def discover_ddn_s2a_faultsbasic_pingfault(parsed):
     if "ping_fault" in parsed:
         return [(None, None)]
     return []
@@ -231,7 +231,7 @@ check_info["ddn_s2a_faultsbasic.pingfault"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_pingfault",
     service_name="DDN S2A Ping Fault Status",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_pingfault,
+    discovery_function=discover_ddn_s2a_faultsbasic_pingfault,
     check_function=check_ddn_s2a_faultsbasic_pingfault,
 )
 
@@ -246,7 +246,7 @@ check_info["ddn_s2a_faultsbasic.pingfault"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_bootstatus(parsed):
+def discover_ddn_s2a_faultsbasic_bootstatus(parsed):
     if "system_fully_booted" in parsed:
         return [(None, None)]
     return []
@@ -262,7 +262,7 @@ check_info["ddn_s2a_faultsbasic.bootstatus"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_bootstatus",
     service_name="DDN S2A Boot Status",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_bootstatus,
+    discovery_function=discover_ddn_s2a_faultsbasic_bootstatus,
     check_function=check_ddn_s2a_faultsbasic_bootstatus,
 )
 
@@ -283,7 +283,7 @@ check_info["ddn_s2a_faultsbasic.bootstatus"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_cachecoh(parsed):
+def discover_ddn_s2a_faultsbasic_cachecoh(parsed):
     if "hstd1_online_failure" in parsed:
         return [(None, None)]
     return []
@@ -309,7 +309,7 @@ check_info["ddn_s2a_faultsbasic.cachecoh"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_cachecoh",
     service_name="DDN S2A Cache Coherency",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_cachecoh,
+    discovery_function=discover_ddn_s2a_faultsbasic_cachecoh,
     check_function=check_ddn_s2a_faultsbasic_cachecoh,
 )
 
@@ -324,7 +324,7 @@ check_info["ddn_s2a_faultsbasic.cachecoh"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_dualcomm(parsed):
+def discover_ddn_s2a_faultsbasic_dualcomm(parsed):
     if "hstd1_online_failure" in parsed:
         return [(None, None)]
     return []
@@ -346,7 +346,7 @@ check_info["ddn_s2a_faultsbasic.dualcomm"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_dualcomm",
     service_name="DDN S2A Dual Communication",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_dualcomm,
+    discovery_function=discover_ddn_s2a_faultsbasic_dualcomm,
     check_function=check_ddn_s2a_faultsbasic_dualcomm,
 )
 
@@ -361,7 +361,7 @@ check_info["ddn_s2a_faultsbasic.dualcomm"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic_ethernet(parsed):
+def discover_ddn_s2a_faultsbasic_ethernet(parsed):
     if "hstd1_online_failure" in parsed:
         return [(None, None)]
     return []
@@ -382,7 +382,7 @@ check_info["ddn_s2a_faultsbasic.ethernet"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic_ethernet",
     service_name="DDN S2A Ethernet",
     sections=["ddn_s2a_faultsbasic"],
-    discovery_function=inventory_ddn_s2a_faultsbasic_ethernet,
+    discovery_function=discover_ddn_s2a_faultsbasic_ethernet,
     check_function=check_ddn_s2a_faultsbasic_ethernet,
 )
 
@@ -397,7 +397,7 @@ check_info["ddn_s2a_faultsbasic.ethernet"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_faultsbasic(parsed):
+def discover_ddn_s2a_faultsbasic(parsed):
     for index in ["1", "2"]:
         if "hstd%s_online_failure" % index in parsed:
             yield index, None
@@ -420,6 +420,6 @@ check_info["ddn_s2a_faultsbasic"] = LegacyCheckDefinition(
     name="ddn_s2a_faultsbasic",
     parse_function=parse_ddn_s2a_faultsbasic,
     service_name="DDN S2A Unit %s",
-    discovery_function=inventory_ddn_s2a_faultsbasic,
+    discovery_function=discover_ddn_s2a_faultsbasic,
     check_function=check_ddn_s2a_faultsbasic,
 )

@@ -89,7 +89,7 @@ def parse_scaleio_mdm(string_table):
     return parsed
 
 
-def inventory_scaleio_mdm(parsed):
+def discover_scaleio_mdm(parsed):
     if parsed.get("Cluster"):
         yield None, {}
 
@@ -139,6 +139,6 @@ check_info["scaleio_mdm"] = LegacyCheckDefinition(
     name="scaleio_mdm",
     parse_function=parse_scaleio_mdm,
     service_name="ScaleIO cluster status",
-    discovery_function=inventory_scaleio_mdm,
+    discovery_function=discover_scaleio_mdm,
     check_function=check_scaleio_mdm,
 )

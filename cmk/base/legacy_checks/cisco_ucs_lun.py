@@ -32,7 +32,7 @@ map_luntype = {
 }
 
 
-def inventory_cisco_ucs_lun(info):
+def discover_cisco_ucs_lun(info):
     return [(None, None)]
 
 
@@ -61,6 +61,6 @@ check_info["cisco_ucs_lun"] = LegacyCheckDefinition(
         oids=["14", "13", "9"],
     ),
     service_name="LUN",
-    discovery_function=inventory_cisco_ucs_lun,
+    discovery_function=discover_cisco_ucs_lun,
     check_function=check_cisco_ucs_lun,
 )

@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import all_of, SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_iologik_register(info):
+def discover_iologik_register(info):
     inventory = []
     for line in info:
         if line[2]:
@@ -48,7 +48,7 @@ check_info["moxa_iologik_register"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     service_name="Moxa Register",
-    discovery_function=inventory_iologik_register,
+    discovery_function=discover_iologik_register,
     check_function=check_iologik_register,
 )
 

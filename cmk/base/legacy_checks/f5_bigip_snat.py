@@ -40,7 +40,7 @@ def parse_f5_bigip_snat(string_table):
     return {name: stats for name, stats in snats.items() if stats}
 
 
-def inventory_f5_bigip_snat(parsed):
+def discover_f5_bigip_snat(parsed):
     for name in parsed:
         yield name, {}
 
@@ -117,7 +117,7 @@ check_info["f5_bigip_snat"] = LegacyCheckDefinition(
     ),
     parse_function=parse_f5_bigip_snat,
     service_name="Source NAT %s",
-    discovery_function=inventory_f5_bigip_snat,
+    discovery_function=discover_f5_bigip_snat,
     check_function=check_f5_bigip_snat,
     check_ruleset_name="f5_bigip_snat",
 )

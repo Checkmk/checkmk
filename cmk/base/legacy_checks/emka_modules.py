@@ -175,7 +175,7 @@ def parse_emka_modules(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emka_modules(parsed):
+def discover_emka_modules(parsed):
     for entry, attrs in parsed["basic_components"].items():
         if attrs["activation"] != "i":
             yield entry, None
@@ -238,7 +238,7 @@ check_info["emka_modules"] = LegacyCheckDefinition(
     ],
     parse_function=parse_emka_modules,
     service_name="Module %s",
-    discovery_function=inventory_emka_modules,
+    discovery_function=discover_emka_modules,
     check_function=check_emka_modules,
 )
 
@@ -253,7 +253,7 @@ check_info["emka_modules"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emka_modules_alarm(parsed):
+def discover_emka_modules_alarm(parsed):
     for entry, attrs in parsed.get("alarm", {}).items():
         if attrs["value"] != "2":
             yield entry, None
@@ -277,7 +277,7 @@ check_info["emka_modules.alarm"] = LegacyCheckDefinition(
     name="emka_modules_alarm",
     service_name="Alarm %s",
     sections=["emka_modules"],
-    discovery_function=inventory_emka_modules_alarm,
+    discovery_function=discover_emka_modules_alarm,
     check_function=check_emka_modules_alarm,
 )
 
@@ -292,7 +292,7 @@ check_info["emka_modules.alarm"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emka_modules_handle(parsed):
+def discover_emka_modules_handle(parsed):
     for entry, spec in parsed.get("handle", {}).items():
         if "value" in spec:
             yield entry, None
@@ -317,7 +317,7 @@ check_info["emka_modules.handle"] = LegacyCheckDefinition(
     name="emka_modules_handle",
     service_name="Handle %s",
     sections=["emka_modules"],
-    discovery_function=inventory_emka_modules_handle,
+    discovery_function=discover_emka_modules_handle,
     check_function=check_emka_modules_handle,
 )
 
@@ -332,7 +332,7 @@ check_info["emka_modules.handle"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emka_modules_sensor_volt(parsed):
+def discover_emka_modules_sensor_volt(parsed):
     for entry in parsed.get("sensor_volt", {}):
         yield entry, {}
 
@@ -349,7 +349,7 @@ check_info["emka_modules.sensor_volt"] = LegacyCheckDefinition(
     name="emka_modules_sensor_volt",
     service_name="Phase %s",
     sections=["emka_modules"],
-    discovery_function=inventory_emka_modules_sensor_volt,
+    discovery_function=discover_emka_modules_sensor_volt,
     check_function=check_emka_modules_sensor_volt,
     check_ruleset_name="el_inphase",
 )
@@ -365,7 +365,7 @@ check_info["emka_modules.sensor_volt"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emka_modules_sensor_temp(parsed):
+def discover_emka_modules_sensor_temp(parsed):
     for entry in parsed.get("sensor_temp", {}):
         yield entry, {}
 
@@ -388,7 +388,7 @@ check_info["emka_modules.sensor_temp"] = LegacyCheckDefinition(
     name="emka_modules_sensor_temp",
     service_name="Temperature %s",
     sections=["emka_modules"],
-    discovery_function=inventory_emka_modules_sensor_temp,
+    discovery_function=discover_emka_modules_sensor_temp,
     check_function=check_emka_modules_sensor_temp,
     check_ruleset_name="temperature",
 )
@@ -404,7 +404,7 @@ check_info["emka_modules.sensor_temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emka_modules_sensor_humid(parsed):
+def discover_emka_modules_sensor_humid(parsed):
     for entry in parsed.get("sensor_humid", {}):
         yield entry, {}
 
@@ -421,7 +421,7 @@ check_info["emka_modules.sensor_humid"] = LegacyCheckDefinition(
     name="emka_modules_sensor_humid",
     service_name="Humidity %s",
     sections=["emka_modules"],
-    discovery_function=inventory_emka_modules_sensor_humid,
+    discovery_function=discover_emka_modules_sensor_humid,
     check_function=check_emka_modules_sensor_humid,
     check_ruleset_name="humidity",
 )
@@ -437,7 +437,7 @@ check_info["emka_modules.sensor_humid"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emka_modules_relay(parsed):
+def discover_emka_modules_relay(parsed):
     for entry, attrs in parsed.get("relay", {}).items():
         if attrs["value"] != "1":
             yield entry, None
@@ -459,6 +459,6 @@ check_info["emka_modules.relay"] = LegacyCheckDefinition(
     name="emka_modules_relay",
     service_name="Relay %s",
     sections=["emka_modules"],
-    discovery_function=inventory_emka_modules_relay,
+    discovery_function=discover_emka_modules_relay,
     check_function=check_emka_modules_relay,
 )

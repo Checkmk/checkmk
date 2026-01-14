@@ -41,7 +41,7 @@ def parsed_fixture(string_table: list[list[str]]) -> Mapping[str, Any]:
     return parse_mysql_ping(string_table)
 
 
-def test_inventory_mysql_ping(parsed: Mapping[str, Any]) -> None:
+def test_discover_mysql_ping(parsed: Mapping[str, Any]) -> None:
     """Test MySQL ping discovery finds all instances"""
     discovered = list(discover_mysql_ping(parsed))
     assert len(discovered) == 3

@@ -22,7 +22,7 @@ from cmk.plugins.lgp.lib import DETECT_LGP
 check_info = {}
 
 
-def inventory_lgp_pdu_info(info):
+def discover_lgp_pdu_info(info):
     if info:
         inv = []
         for pdu in info:
@@ -53,6 +53,6 @@ check_info["lgp_pdu_info"] = LegacyCheckDefinition(
         oids=["5", "10", "15", "45", "50"],
     ),
     service_name="Liebert PDU Info %s",
-    discovery_function=inventory_lgp_pdu_info,
+    discovery_function=discover_lgp_pdu_info,
     check_function=check_lgp_pdu_info,
 )

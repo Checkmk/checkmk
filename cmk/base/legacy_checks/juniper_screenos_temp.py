@@ -14,7 +14,7 @@ from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 check_info = {}
 
 
-def inventory_juniper_screenos_temp(info):
+def discover_juniper_screenos_temp(info):
     for name, _temp in info:
         if name.endswith("Temperature"):
             name = name.rsplit(None, 1)[0]
@@ -43,7 +43,7 @@ check_info["juniper_screenos_temp"] = LegacyCheckDefinition(
         oids=["4", "3"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_juniper_screenos_temp,
+    discovery_function=discover_juniper_screenos_temp,
     check_function=check_juniper_screenos_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (70.0, 80.0)},

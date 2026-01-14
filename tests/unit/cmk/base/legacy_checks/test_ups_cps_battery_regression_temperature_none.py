@@ -18,8 +18,8 @@ import pytest
 from cmk.base.legacy_checks.ups_cps_battery import (
     check_ups_cps_battery,
     check_ups_cps_battery_temp,
-    inventory_ups_cps_battery,
-    inventory_ups_cps_battery_temp,
+    discover_ups_cps_battery,
+    discover_ups_cps_battery_temp,
     parse_ups_cps_battery,
 )
 
@@ -58,17 +58,17 @@ def test_parse_ups_cps_battery_empty_data() -> None:
     assert parsed is None
 
 
-def test_inventory_ups_cps_battery_temperature_none(parsed_data: dict[str, float]) -> None:
+def test_discover_ups_cps_battery_temperature_none(parsed_data: dict[str, float]) -> None:
     """Test temperature discovery when temperature unavailable."""
-    items = list(inventory_ups_cps_battery_temp(parsed_data))
+    items = list(discover_ups_cps_battery_temp(parsed_data))
 
     # No temperature data available, no services discovered
     assert items == []
 
 
-def test_inventory_ups_cps_battery_capacity(parsed_data: dict[str, float]) -> None:
+def test_discover_ups_cps_battery_capacity(parsed_data: dict[str, float]) -> None:
     """Test capacity service discovery."""
-    items = list(inventory_ups_cps_battery(parsed_data))
+    items = list(discover_ups_cps_battery(parsed_data))
 
     assert len(items) == 1
     assert items[0] == (None, {})

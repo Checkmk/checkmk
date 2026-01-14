@@ -66,7 +66,7 @@ def test_parse_raritan_px2_sensors() -> None:
     )
 
 
-def test_inventory_raritan_px2_sensors_humidity() -> None:
+def test_discover_raritan_px2_sensors_humidity() -> None:
     assert list(Check("raritan_px2_sensors_humidity").run_discovery(_SECTION)) == [
         ("Sensor 2", None),
         ("Sensor 4", None),

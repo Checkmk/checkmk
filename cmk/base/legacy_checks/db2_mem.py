@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
 check_info = {}
 
 
-def inventory_db2_mem(info):
+def discover_db2_mem(info):
     return [(x[1], {}) for x in info if x[0] == "Instance"]
 
 
@@ -69,7 +69,7 @@ check_info["db2_mem"] = LegacyCheckDefinition(
     name="db2_mem",
     parse_function=parse_db2_mem,
     service_name="Memory %s",
-    discovery_function=inventory_db2_mem,
+    discovery_function=discover_db2_mem,
     check_function=check_db2_mem,
     check_ruleset_name="db2_mem",
     check_default_parameters={"levels_lower": (10.0, 5.0)},

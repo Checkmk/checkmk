@@ -13,7 +13,7 @@ from cmk.plugins.qnap.lib import DETECT_QNAP
 check_info = {}
 
 
-def inventory_qnap_disks(info):
+def discover_qnap_disks(info):
     return [(x[0], None) for x in info if x[2] != "-5"]
 
 
@@ -52,6 +52,6 @@ check_info["qnap_disks"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6", "7"],
     ),
     service_name="Disk %s",
-    discovery_function=inventory_qnap_disks,
+    discovery_function=discover_qnap_disks,
     check_function=check_qnap_disks,
 )

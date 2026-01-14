@@ -35,7 +35,7 @@ def parse_kentix_humidity(string_table: list[list[list[str]]]) -> Section | None
     )
 
 
-def inventory_kentix_humidity(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_kentix_humidity(section: Section) -> Iterable[tuple[None, dict]]:
     yield None, {}
 
 
@@ -77,6 +77,6 @@ check_info["kentix_humidity"] = LegacyCheckDefinition(
     ],
     parse_function=parse_kentix_humidity,
     service_name="Humidity",
-    discovery_function=inventory_kentix_humidity,
+    discovery_function=discover_kentix_humidity,
     check_function=check_kentix_humidity,
 )

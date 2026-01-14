@@ -28,7 +28,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_datapower_fs(info):
+def discover_datapower_fs(info):
     if info:
         # only discover filesystems with a defined total size > 0
         if saveint(info[0][0]) != 0:
@@ -71,7 +71,7 @@ check_info["datapower_fs"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5", "6", "7", "8"],
     ),
     service_name="Filesystem %s",
-    discovery_function=inventory_datapower_fs,
+    discovery_function=discover_datapower_fs,
     check_function=check_datapower_fs,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

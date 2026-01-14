@@ -15,7 +15,7 @@ from typing import Any
 
 from cmk.base.legacy_checks.smart import (
     check_smart_temp,
-    inventory_smart_temp,
+    discover_smart_temp,
 )
 from cmk.plugins.collection.agent_based.smart import parse_raw_values
 
@@ -130,7 +130,7 @@ def test_smart_temp_discovery() -> None:
     """Test discovery function for SMART temperature sensors."""
     section = parsed()
 
-    discoveries = list(inventory_smart_temp(section))
+    discoveries = list(discover_smart_temp(section))
 
     # Should discover devices with temperature sensors
     assert len(discoveries) == 2
@@ -145,7 +145,7 @@ def test_smart_temp_discovery_no_temp() -> None:
     """Test discovery with no temperature sensors."""
     section = parsed_no_temp()
 
-    discoveries = list(inventory_smart_temp(section))
+    discoveries = list(discover_smart_temp(section))
 
     # Should not discover anything without temperature sensors
     assert len(discoveries) == 0

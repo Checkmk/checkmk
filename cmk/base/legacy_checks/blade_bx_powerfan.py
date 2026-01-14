@@ -24,7 +24,7 @@ blade_bx_status = {
 }
 
 
-def inventory_blade_bx_powerfan(info):
+def discover_blade_bx_powerfan(info):
     for status, descr, _rpm, _max_speed, _speed, _ctrlstate in info:
         if status != "8":
             yield descr, {}
@@ -89,7 +89,7 @@ check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6", "7"],
     ),
     service_name="Blade Cooling %s",
-    discovery_function=inventory_blade_bx_powerfan,
+    discovery_function=discover_blade_bx_powerfan,
     check_function=check_blade_bx_powerfan,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={

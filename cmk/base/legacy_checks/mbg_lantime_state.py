@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
 check_info = {}
 
 
-def inventory_mbg_lantime_state(info):
+def discover_mbg_lantime_state(info):
     if info:
         return [(None, {})]
     return []
@@ -50,7 +50,7 @@ check_info["mbg_lantime_state"] = LegacyCheckDefinition(
         oids=["2", "3", "5", "7"],
     ),
     service_name="LANTIME State",
-    discovery_function=inventory_mbg_lantime_state,
+    discovery_function=discover_mbg_lantime_state,
     check_function=check_mbg_lantime_state,
     check_ruleset_name="mbg_lantime_state",
     check_default_parameters=MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,

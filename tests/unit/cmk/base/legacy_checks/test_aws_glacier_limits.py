@@ -33,7 +33,7 @@ from cmk.base.legacy_checks.aws_glacier_limits import (
         ),
     ],
 )
-def test_inventory_aws_glacier_limits(
+def test_discover_aws_glacier_limits(
     info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for aws_glacier_limits check."""

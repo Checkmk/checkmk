@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 check_info = {}
 
 
-def inventory_rms200_temp(info):
+def discover_rms200_temp(info):
     for line in info:
         if line[2] != "-27300":
             yield (line[0], {})
@@ -44,7 +44,7 @@ check_info["rms200_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "5"],
     ),
     service_name="Temperature %s ",
-    discovery_function=inventory_rms200_temp,
+    discovery_function=discover_rms200_temp,
     check_function=check_rms200_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (25.0, 28.0)},

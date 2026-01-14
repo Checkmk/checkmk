@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.hyperv_vms import (
     check_hyperv_vms,
-    inventory_hyperv_vms,
+    discover_hyperv_vms,
     parse_hyperv_vms,
 )
 
@@ -54,12 +54,12 @@ from cmk.base.legacy_checks.hyperv_vms import (
         ),
     ],
 )
-def test_inventory_hyperv_vms(
+def test_discover_hyperv_vms(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for hyperv_vms check."""
     parsed = parse_hyperv_vms(string_table)
-    result = list(inventory_hyperv_vms(parsed))
+    result = list(discover_hyperv_vms(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

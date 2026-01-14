@@ -21,7 +21,7 @@ def hitachi_hnas_vnode_combine_item(id_, name):
     return combined
 
 
-def inventory_hitachi_hnas_vnode(info):
+def discover_hitachi_hnas_vnode(info):
     inventory = []
     for id_, name, _status, _is_admin, _hosted_by in info:
         inventory.append((hitachi_hnas_vnode_combine_item(id_, name), None))
@@ -68,6 +68,6 @@ check_info["hitachi_hnas_vnode"] = LegacyCheckDefinition(
         oids=["1", "2", "4", "5", "6"],
     ),
     service_name="EVS %s",
-    discovery_function=inventory_hitachi_hnas_vnode,
+    discovery_function=discover_hitachi_hnas_vnode,
     check_function=check_hitachi_hnas_vnode,
 )

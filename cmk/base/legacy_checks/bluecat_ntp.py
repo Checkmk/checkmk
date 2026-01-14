@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def inventory_bluecat_ntp(info):
+def discover_bluecat_ntp(info):
     if len(info) > 0 and info[0][0] != "NULL":
         return [(None, None)]
     return []
@@ -65,7 +65,7 @@ check_info["bluecat_ntp"] = LegacyCheckDefinition(
         oids=["1.1", "2.1", "2.2"],
     ),
     service_name="NTP",
-    discovery_function=inventory_bluecat_ntp,
+    discovery_function=discover_bluecat_ntp,
     check_function=check_bluecat_ntp,
     check_ruleset_name="bluecat_ntp",
     check_default_parameters={

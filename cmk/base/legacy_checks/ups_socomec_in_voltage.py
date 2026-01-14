@@ -28,7 +28,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_socomec_ups_in_voltage(info):
+def discover_socomec_ups_in_voltage(info):
     yield from ((x[0], {}) for x in info if int(x[1]) > 0)
 
 
@@ -52,7 +52,7 @@ check_info["ups_socomec_in_voltage"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="IN voltage phase %s",
-    discovery_function=inventory_socomec_ups_in_voltage,
+    discovery_function=discover_socomec_ups_in_voltage,
     check_function=check_socomec_ups_in_voltage,
     check_ruleset_name="evolt",
     check_default_parameters={

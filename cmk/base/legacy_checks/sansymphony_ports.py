@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_sansymphony_ports(info):
+def discover_sansymphony_ports(info):
     for portname, _porttype, portstatus in info:
         if portstatus == "True":
             yield portname, None
@@ -43,6 +43,6 @@ check_info["sansymphony_ports"] = LegacyCheckDefinition(
     name="sansymphony_ports",
     parse_function=parse_sansymphony_ports,
     service_name="sansymphony Port %s",
-    discovery_function=inventory_sansymphony_ports,
+    discovery_function=discover_sansymphony_ports,
     check_function=check_sansymphony_ports,
 )

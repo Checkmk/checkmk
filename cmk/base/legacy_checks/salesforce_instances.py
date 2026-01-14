@@ -27,7 +27,7 @@ def parse_salesforce(string_table):
     return parsed
 
 
-def inventory_salesforce_instances(parsed):
+def discover_salesforce_instances(parsed):
     for instance, attrs in parsed.items():
         if attrs.get("isActive"):
             yield instance, {}
@@ -65,6 +65,6 @@ check_info["salesforce_instances"] = LegacyCheckDefinition(
     name="salesforce_instances",
     parse_function=parse_salesforce,
     service_name="Salesforce Instance %s",
-    discovery_function=inventory_salesforce_instances,
+    discovery_function=discover_salesforce_instances,
     check_function=check_salesforce_instances,
 )

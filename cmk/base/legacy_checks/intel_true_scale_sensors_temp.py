@@ -121,7 +121,7 @@ def parse_intel_true_scale_sensors(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_intel_true_scale_sensors_temp(parsed):
+def discover_intel_true_scale_sensors_temp(parsed):
     for slot_name, slot_info in parsed.items():
         if slot_info.get("temp"):
             yield slot_name, {}
@@ -147,6 +147,6 @@ check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
     ],
     parse_function=parse_intel_true_scale_sensors,
     service_name="Temperature sensors %s",
-    discovery_function=inventory_intel_true_scale_sensors_temp,
+    discovery_function=discover_intel_true_scale_sensors_temp,
     check_function=check_intel_true_scale_sensors_temp,
 )

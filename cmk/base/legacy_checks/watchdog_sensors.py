@@ -127,7 +127,7 @@ def parse_watchdog_sensors(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_watchdog_sensors(parsed):
+def discover_watchdog_sensors(parsed):
     for key in parsed.get("general", {}):
         yield (key, {})
 
@@ -165,7 +165,7 @@ check_info["watchdog_sensors"] = LegacyCheckDefinition(
     ],
     parse_function=parse_watchdog_sensors,
     service_name="%s",
-    discovery_function=inventory_watchdog_sensors,
+    discovery_function=discover_watchdog_sensors,
     check_function=check_watchdog_sensors,
 )
 
@@ -182,7 +182,7 @@ check_info["watchdog_sensors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_watchdog_sensors_temp(parsed):
+def discover_watchdog_sensors_temp(parsed):
     for key in parsed.get("temp", {}):
         yield (key, {})
 
@@ -206,7 +206,7 @@ check_info["watchdog_sensors.temp"] = LegacyCheckDefinition(
     name="watchdog_sensors_temp",
     service_name="%s ",
     sections=["watchdog_sensors"],
-    discovery_function=inventory_watchdog_sensors_temp,
+    discovery_function=discover_watchdog_sensors_temp,
     check_function=check_watchdog_sensors_temp,
     check_ruleset_name="temperature",
 )
@@ -224,7 +224,7 @@ check_info["watchdog_sensors.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_watchdog_sensors_humidity(parsed):
+def discover_watchdog_sensors_humidity(parsed):
     for key in parsed.get("humidity", {}):
         yield (key, {})
 
@@ -255,7 +255,7 @@ check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
     name="watchdog_sensors_humidity",
     service_name="%s",
     sections=["watchdog_sensors"],
-    discovery_function=inventory_watchdog_sensors_humidity,
+    discovery_function=discover_watchdog_sensors_humidity,
     check_function=check_watchdog_sensors_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={
@@ -277,7 +277,7 @@ check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_watchdog_sensors_dew(parsed):
+def discover_watchdog_sensors_dew(parsed):
     for key in parsed.get("dew", {}):
         yield (key, {})
 
@@ -299,7 +299,7 @@ check_info["watchdog_sensors.dew"] = LegacyCheckDefinition(
     name="watchdog_sensors_dew",
     service_name="%s",
     sections=["watchdog_sensors"],
-    discovery_function=inventory_watchdog_sensors_dew,
+    discovery_function=discover_watchdog_sensors_dew,
     check_function=check_watchdog_sensors_dew,
     check_ruleset_name="temperature",
 )

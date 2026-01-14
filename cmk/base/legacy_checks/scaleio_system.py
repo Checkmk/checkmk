@@ -28,7 +28,7 @@ def parse_scaleio_system(string_table: StringTable) -> ScaleioSection:
     return parse_scaleio(string_table, "SYSTEM")
 
 
-def inventory_scaleio_system(parsed):
+def discover_scaleio_system(parsed):
     for entry in parsed:
         yield entry, {}
 
@@ -52,7 +52,7 @@ check_info["scaleio_system"] = LegacyCheckDefinition(
     name="scaleio_system",
     parse_function=parse_scaleio_system,
     service_name="ScaleIO System %s",
-    discovery_function=inventory_scaleio_system,
+    discovery_function=discover_scaleio_system,
     check_function=check_scaleio_system,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

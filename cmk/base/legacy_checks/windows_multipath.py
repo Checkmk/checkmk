@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_windows_multipath(info):
+def discover_windows_multipath(info):
     try:
         num_active = int(info[0][0])
     except (ValueError, IndexError):
@@ -62,7 +62,7 @@ check_info["windows_multipath"] = LegacyCheckDefinition(
     name="windows_multipath",
     parse_function=parse_windows_multipath,
     service_name="Multipath",
-    discovery_function=inventory_windows_multipath,
+    discovery_function=discover_windows_multipath,
     check_function=check_windows_multipath,
     check_ruleset_name="windows_multipath",
     check_default_parameters={"active_paths": 4},

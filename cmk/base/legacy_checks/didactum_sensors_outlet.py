@@ -17,7 +17,7 @@ from cmk.plugins.didactum.lib import DETECT_DIDACTUM
 check_info = {}
 
 
-def inventory_didactum_sensors_outlet_relay(parsed):
+def discover_didactum_sensors_outlet_relay(parsed):
     return discover_didactum_sensors(parsed, "relay")
 
 
@@ -37,6 +37,6 @@ check_info["didactum_sensors_outlet"] = LegacyCheckDefinition(
     ),
     parse_function=parse_didactum_sensors,
     service_name="Relay %s",
-    discovery_function=inventory_didactum_sensors_outlet_relay,
+    discovery_function=discover_didactum_sensors_outlet_relay,
     check_function=check_didactum_sensors_outlet_relay,
 )

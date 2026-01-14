@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_heartbeat_nodes(info):
+def discover_heartbeat_nodes(info):
     return [(line[0], None) for line in info if line[0] != ""]
 
 
@@ -64,6 +64,6 @@ check_info["heartbeat_nodes"] = LegacyCheckDefinition(
     name="heartbeat_nodes",
     parse_function=parse_heartbeat_nodes,
     service_name="Heartbeat Node %s",
-    discovery_function=inventory_heartbeat_nodes,
+    discovery_function=discover_heartbeat_nodes,
     check_function=check_heartbeat_nodes,
 )

@@ -18,7 +18,7 @@ check_info = {}
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
 
 
-def inventory_hr_cpu(info):
+def discover_hr_cpu(info):
     if len(info) >= 1:
         return [(None, {})]
     return []
@@ -56,7 +56,7 @@ check_info["hr_cpu"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_hr_cpu,
+    discovery_function=discover_hr_cpu,
     check_function=check_hr_cpu,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_solaris_multipath(info):
+def discover_solaris_multipath(info):
     for device, _total, operational in info:
         item = device.split("/")[-1]
         yield item, {"levels": int(operational)}
@@ -78,7 +78,7 @@ check_info["solaris_multipath"] = LegacyCheckDefinition(
     name="solaris_multipath",
     parse_function=parse_solaris_multipath,
     service_name="Multipath %s",
-    discovery_function=inventory_solaris_multipath,
+    discovery_function=discover_solaris_multipath,
     check_function=check_solaris_multipath,
     check_ruleset_name="multipath",
     check_default_parameters={},  # overwritten by discovery

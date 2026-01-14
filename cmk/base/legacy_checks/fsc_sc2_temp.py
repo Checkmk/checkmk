@@ -64,7 +64,7 @@ def parse_fsc_sc2_temp(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def inventory_fsc_sc2_temp(info):
+def discover_fsc_sc2_temp(info):
     for line in info:
         if line[1] != "2":
             yield line[0], {}
@@ -117,7 +117,7 @@ check_info["fsc_sc2_temp"] = LegacyCheckDefinition(
         oids=["3", "5", "6", "7", "8"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_fsc_sc2_temp,
+    discovery_function=discover_fsc_sc2_temp,
     check_function=check_fsc_sc2_temp,
     check_ruleset_name="temperature",
 )

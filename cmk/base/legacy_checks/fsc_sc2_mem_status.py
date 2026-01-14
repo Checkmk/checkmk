@@ -47,7 +47,7 @@ def parse_fsc_sc2_mem_status(string_table: StringTable) -> StringTable:
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.9 -1
 
 
-def inventory_fsc_sc2_mem_status(info):
+def discover_fsc_sc2_mem_status(info):
     for line in info:
         if line[1] != "2":
             yield line[0], None
@@ -81,6 +81,6 @@ check_info["fsc_sc2_mem_status"] = LegacyCheckDefinition(
         oids=["3", "4", "6"],
     ),
     service_name="FSC %s",
-    discovery_function=inventory_fsc_sc2_mem_status,
+    discovery_function=discover_fsc_sc2_mem_status,
     check_function=check_fsc_sc2_mem_status,
 )

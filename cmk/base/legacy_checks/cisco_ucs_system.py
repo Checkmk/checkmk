@@ -19,7 +19,7 @@ check_info = {}
 # .1.3.6.1.4.1.9.9.719.1.9.35.1.43 cucsComputeRackUnitOperability
 
 
-def inventory_cisco_ucs_system(info):
+def discover_cisco_ucs_system(info):
     return [(None, None)]
 
 
@@ -42,6 +42,6 @@ check_info["cisco_ucs_system"] = LegacyCheckDefinition(
         oids=["32", "47", "43"],
     ),
     service_name="System health",
-    discovery_function=inventory_cisco_ucs_system,
+    discovery_function=discover_cisco_ucs_system,
     check_function=check_cisco_ucs_system,
 )

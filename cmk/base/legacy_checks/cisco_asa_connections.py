@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import any_of, contains, SNMPTree, startswith, StringTab
 check_info = {}
 
 
-def inventory_cisco_asa_connections(info):
+def discover_cisco_asa_connections(info):
     return [(None, {})]
 
 
@@ -51,7 +51,7 @@ check_info["cisco_asa_connections"] = LegacyCheckDefinition(
         oids=["5"],
     ),
     service_name="Connections",
-    discovery_function=inventory_cisco_asa_connections,
+    discovery_function=discover_cisco_asa_connections,
     check_function=check_cisco_asa_connections,
     check_ruleset_name="cisco_fw_connections",
 )

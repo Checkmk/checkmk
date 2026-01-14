@@ -26,7 +26,7 @@ from cmk.base.legacy_checks.huawei_switch_fan import (
         ),
     ],
 )
-def test_inventory_huawei_switch_fan(
+def test_discover_huawei_switch_fan(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Never]]]
 ) -> None:
     """Test discovery function for huawei_switch_fan check."""

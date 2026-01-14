@@ -13,7 +13,7 @@ from cmk.plugins.fireeye.lib import DETECT
 check_info = {}
 
 
-def inventory_fireeye_lic_expiration(info):
+def discover_fireeye_lic_expiration(info):
     for line in info:
         if line[1]:
             yield line[0], {}
@@ -47,7 +47,7 @@ check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
         oids=["1", "5"],
     ),
     service_name="License Expiration %s",
-    discovery_function=inventory_fireeye_lic_expiration,
+    discovery_function=discover_fireeye_lic_expiration,
     check_function=check_fireeye_lic_expiration,
     check_ruleset_name="fireeye_lic",
     check_default_parameters={

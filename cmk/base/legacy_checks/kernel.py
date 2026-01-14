@@ -84,7 +84,7 @@ check_info["kernel"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_kernel_performance(parsed):
+def discover_kernel_performance(parsed):
     _, items = parsed
     for _, name in kernel_counter_names.items():
         data = items.get(name)
@@ -130,7 +130,7 @@ check_info["kernel.performance"] = LegacyCheckDefinition(
     name="kernel_performance",
     service_name="Kernel Performance",
     sections=["kernel"],
-    discovery_function=inventory_kernel_performance,
+    discovery_function=discover_kernel_performance,
     check_function=check_kernel_performance,
     check_ruleset_name="kernel_performance",
 )

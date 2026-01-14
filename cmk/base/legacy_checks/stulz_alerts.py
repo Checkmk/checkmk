@@ -13,7 +13,7 @@ from cmk.plugins.stulz.lib import DETECT_STULZ
 check_info = {}
 
 
-def inventory_stulz_alerts(info):
+def discover_stulz_alerts(info):
     return [(x[0], None) for x in info]
 
 
@@ -39,6 +39,6 @@ check_info["stulz_alerts"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     service_name="Alerts %s ",
-    discovery_function=inventory_stulz_alerts,
+    discovery_function=discover_stulz_alerts,
     check_function=check_stulz_alerts,
 )

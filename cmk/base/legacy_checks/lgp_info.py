@@ -29,7 +29,7 @@ lgp_info_devices = {
 }
 
 
-def inventory_lgp_info(info):
+def discover_lgp_info(info):
     if info and info[0] and info[0][0]:
         return [(None, None)]
     return []
@@ -72,6 +72,6 @@ check_info["lgp_info"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Liebert Info",
-    discovery_function=inventory_lgp_info,
+    discovery_function=discover_lgp_info,
     check_function=check_lgp_info,
 )

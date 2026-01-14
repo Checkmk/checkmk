@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 check_info = {}
 
 
-def inventory_avaya_45xx_cpu(info):
+def discover_avaya_45xx_cpu(info):
     for idx, _line in enumerate(info):
         yield str(idx), {}
 
@@ -42,7 +42,7 @@ check_info["avaya_45xx_cpu"] = LegacyCheckDefinition(
         oids=["3"],
     ),
     service_name="CPU utilization CPU %s",
-    discovery_function=inventory_avaya_45xx_cpu,
+    discovery_function=discover_avaya_45xx_cpu,
     check_function=check_avaya_45xx_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (90.0, 95.0)},

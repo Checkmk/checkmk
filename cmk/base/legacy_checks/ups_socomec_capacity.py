@@ -19,7 +19,7 @@ from cmk.plugins.ups_socomec.lib import DETECT_SOCOMEC
 check_info = {}
 
 
-def inventory_ups_socomec_capacity(info):
+def discover_ups_socomec_capacity(info):
     if len(info) > 0:
         return [(None, {})]
     return []
@@ -91,7 +91,7 @@ check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
         oids=["2", "3", "4"],
     ),
     service_name="Battery capacity",
-    discovery_function=inventory_ups_socomec_capacity,
+    discovery_function=discover_ups_socomec_capacity,
     check_function=check_ups_socomec_capacity,
     check_ruleset_name="ups_capacity",
     check_default_parameters={"battime": (0, 0), "capacity": (95, 90)},

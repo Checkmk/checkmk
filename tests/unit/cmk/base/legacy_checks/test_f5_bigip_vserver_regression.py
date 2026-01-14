@@ -132,8 +132,8 @@ def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
     assert vs_starfleet["if_in_octets"] == [32]
 
 
-def test_inventory_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
-    result = list(f5_bigip_vserver.inventory_f5_bigip_vserver(parsed))
+def test_discover_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
+    result = list(f5_bigip_vserver.discover_f5_bigip_vserver(parsed))
 
     expected_items = [
         "/Common/sight-seeing.wurmhole.univ",

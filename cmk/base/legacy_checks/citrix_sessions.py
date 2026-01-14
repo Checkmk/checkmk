@@ -25,7 +25,7 @@ citrix_sessions_default_levels = {
 }
 
 
-def inventory_citrix_sessions(info):
+def discover_citrix_sessions(info):
     return [(None, citrix_sessions_default_levels)]
 
 
@@ -62,7 +62,7 @@ check_info["citrix_sessions"] = LegacyCheckDefinition(
     name="citrix_sessions",
     parse_function=parse_citrix_sessions,
     service_name="Citrix Sessions",
-    discovery_function=inventory_citrix_sessions,
+    discovery_function=discover_citrix_sessions,
     check_function=check_citrix_sessions,
     check_ruleset_name="citrix_sessions",
 )

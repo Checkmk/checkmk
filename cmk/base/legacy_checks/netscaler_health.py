@@ -63,7 +63,7 @@ check_info["netscaler_health"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_netscaler_health_fan(info):
+def discover_netscaler_health_fan(info):
     for name, value in info:
         if name.endswith("Speed") and value != "0":
             yield name[:-5], {}
@@ -80,7 +80,7 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
     name="netscaler_health_fan",
     service_name="FAN %s",
     sections=["netscaler_health"],
-    discovery_function=inventory_netscaler_health_fan,
+    discovery_function=discover_netscaler_health_fan,
     check_function=check_netscaler_health_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={
@@ -98,7 +98,7 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_netscaler_health_temp(info):
+def discover_netscaler_health_temp(info):
     for name, value in info:
         if name.endswith("Temperature") and value != "0":
             yield name[:-11], {}
@@ -116,7 +116,7 @@ check_info["netscaler_health.temp"] = LegacyCheckDefinition(
     name="netscaler_health_temp",
     service_name="Temperature %s",
     sections=["netscaler_health"],
-    discovery_function=inventory_netscaler_health_temp,
+    discovery_function=discover_netscaler_health_temp,
     check_function=check_netscaler_health_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -137,7 +137,7 @@ check_info["netscaler_health.temp"] = LegacyCheckDefinition(
 PSU_STATE_PATTERN = re.compile(r"PowerSupply([\d])(Failure|)Status")
 
 
-def inventory_netscaler_health_psu(info):
+def discover_netscaler_health_psu(info):
     for name, state in info:
         m = PSU_STATE_PATTERN.match(name)
         if m:
@@ -165,6 +165,6 @@ check_info["netscaler_health.psu"] = LegacyCheckDefinition(
     name="netscaler_health_psu",
     service_name="Power Supply %s",
     sections=["netscaler_health"],
-    discovery_function=inventory_netscaler_health_psu,
+    discovery_function=discover_netscaler_health_psu,
     check_function=check_netscaler_health_psu,
 )

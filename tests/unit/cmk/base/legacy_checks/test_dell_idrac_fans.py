@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.dell_idrac_fans import (
     check_dell_idrac_fans,
-    inventory_dell_idrac_fans,
+    discover_dell_idrac_fans,
     parse_dell_idrac_fans,
 )
 
@@ -32,12 +32,12 @@ from cmk.base.legacy_checks.dell_idrac_fans import (
         ),
     ],
 )
-def test_inventory_dell_idrac_fans(
+def test_discover_dell_idrac_fans(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for dell_idrac_fans check."""
     parsed = parse_dell_idrac_fans(string_table)
-    result = list(inventory_dell_idrac_fans(parsed))
+    result = list(discover_dell_idrac_fans(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

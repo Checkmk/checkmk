@@ -34,7 +34,7 @@ hp_blade_status2nagios_map = {
 }
 
 
-def inventory_hp_blade_fan(info):
+def discover_hp_blade_fan(info):
     return [(line[0], None) for line in info if hp_blade_present_map[int(line[1])] == "present"]
 
 
@@ -68,6 +68,6 @@ check_info["hp_blade_fan"] = LegacyCheckDefinition(
         oids=["3", "8", "11"],
     ),
     service_name="FAN %s",
-    discovery_function=inventory_hp_blade_fan,
+    discovery_function=discover_hp_blade_fan,
     check_function=check_hp_blade_fan,
 )

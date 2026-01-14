@@ -14,7 +14,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.legacy_checks.mem_linux import check_mem_linux, inventory_mem_linux
+from cmk.base.legacy_checks.mem_linux import check_mem_linux, discover_mem_linux
 
 
 @pytest.fixture
@@ -69,7 +69,7 @@ def section() -> Mapping[str, int]:
 
 def test_mem_linux_discovery(section: Mapping[str, int]) -> None:
     """Test Linux memory discovery function."""
-    result = list(inventory_mem_linux(section))
+    result = list(discover_mem_linux(section))
 
     # Should discover exactly one service
     assert len(result) == 1
@@ -176,7 +176,7 @@ def test_mem_linux_discovery_non_linux_section() -> None:
         # Missing required keys for Linux section
     }
 
-    result = list(inventory_mem_linux(non_linux_section))
+    result = list(discover_mem_linux(non_linux_section))
 
     # Should not discover service for non-Linux section
     assert len(result) == 0

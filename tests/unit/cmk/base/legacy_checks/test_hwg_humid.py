@@ -16,11 +16,11 @@ from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.legacy_checks.hwg_humidity import (
     check_hwg_humidity,
-    inventory_hwg_humidity,
+    discover_hwg_humidity,
 )
 
 
-def test_inventory_hwg_humidity_basic() -> None:
+def test_discover_hwg_humidity_basic() -> None:
     """Test inventory function for hwg_humidity check with basic data."""
     string_table: StringTable = [
         ["1", "Sensor 1", "2", "45.5", "4"],  # humidity sensor (%=unit 4)
@@ -29,7 +29,7 @@ def test_inventory_hwg_humidity_basic() -> None:
     ]
 
     parsed = parse_hwg(string_table)
-    result = list(inventory_hwg_humidity(parsed))
+    result = list(discover_hwg_humidity(parsed))
 
     # Should discover humidity sensors (index 1 and 2), but not temperature (index 3)
     assert sorted(result) == [("1", {}), ("2", {})]

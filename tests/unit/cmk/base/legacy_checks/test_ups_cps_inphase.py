@@ -13,7 +13,7 @@ import pytest
 
 from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.elphase import check_elphase as check_ups_cps_inphase
-from cmk.base.legacy_checks.ups_cps_inphase import inventory_ups_cps_inphase, parse_ups_cps_inphase
+from cmk.base.legacy_checks.ups_cps_inphase import discover_ups_cps_inphase, parse_ups_cps_inphase
 
 
 @pytest.mark.parametrize(
@@ -22,12 +22,12 @@ from cmk.base.legacy_checks.ups_cps_inphase import inventory_ups_cps_inphase, pa
         ([["32", "NULL"]], [("1", {})]),
     ],
 )
-def test_inventory_ups_cps_inphase(
+def test_discover_ups_cps_inphase(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ups_cps_inphase check."""
     parsed = parse_ups_cps_inphase(string_table)
-    result = list(inventory_ups_cps_inphase(parsed))
+    result = list(discover_ups_cps_inphase(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

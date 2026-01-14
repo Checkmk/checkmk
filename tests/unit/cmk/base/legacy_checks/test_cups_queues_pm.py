@@ -19,7 +19,7 @@ import time_machine
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.cups_queues import (
     check_cups_queues,
-    inventory_cups_queues,
+    discover_cups_queues,
     parse_cups_queues,
 )
 
@@ -76,7 +76,7 @@ def test_discovery_cups_queues_pm() -> None:
     ]
 
     parsed = parse_cups_queues(string_table)
-    result = list(inventory_cups_queues(parsed))
+    result = list(discover_cups_queues(parsed))
 
     # Should discover both printers
     expected_items = ["lpr2", "spr1"]

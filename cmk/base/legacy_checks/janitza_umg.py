@@ -102,7 +102,7 @@ def parse_janitza_umg_inphase(string_table):
     return result
 
 
-def inventory_janitza_umg_inphase(parsed):
+def discover_janitza_umg_inphase(parsed):
     for item in parsed:
         if item.startswith("Phase"):
             yield item, {}
@@ -155,14 +155,14 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
     ],
     parse_function=parse_janitza_umg_inphase,
     service_name="Input %s",
-    discovery_function=inventory_janitza_umg_inphase,
+    discovery_function=discover_janitza_umg_inphase,
     check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={},
 )
 
 
-def inventory_janitza_umg_freq(parsed):
+def discover_janitza_umg_freq(parsed):
     # info[0] is frequency, info[1] is first temperature reading, info[2] is second.
     if "Frequency" in parsed:
         yield "1", {}  # why?? :-(
@@ -185,14 +185,14 @@ check_info["janitza_umg.freq"] = LegacyCheckDefinition(
     name="janitza_umg_freq",
     service_name="Frequency %s",
     sections=["janitza_umg"],
-    discovery_function=inventory_janitza_umg_freq,
+    discovery_function=discover_janitza_umg_freq,
     check_function=check_janitza_umg_freq,
     check_ruleset_name="efreq",
     check_default_parameters={"levels_lower": (0, 0)},
 )
 
 
-def inventory_janitza_umg_temp(parsed):
+def discover_janitza_umg_temp(parsed):
     ctr = 1
     for temp in parsed["Temperature"]:
         if temp != -1000:
@@ -213,7 +213,7 @@ check_info["janitza_umg.temp"] = LegacyCheckDefinition(
     name="janitza_umg_temp",
     service_name="Temperature External %s",
     sections=["janitza_umg"],
-    discovery_function=inventory_janitza_umg_temp,
+    discovery_function=discover_janitza_umg_temp,
     check_function=check_janitza_umg_temp,
     check_ruleset_name="temperature",
     check_default_parameters={},

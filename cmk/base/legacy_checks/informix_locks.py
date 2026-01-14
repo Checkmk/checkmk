@@ -26,7 +26,7 @@ def parse_informix_locks(string_table):
     return parsed
 
 
-def inventory_informix_locks(parsed):
+def discover_informix_locks(parsed):
     return [(instance, {}) for instance in parsed]
 
 
@@ -44,7 +44,7 @@ check_info["informix_locks"] = LegacyCheckDefinition(
     name="informix_locks",
     parse_function=parse_informix_locks,
     service_name="Informix Locks %s",
-    discovery_function=inventory_informix_locks,
+    discovery_function=discover_informix_locks,
     check_function=check_informix_locks,
     check_ruleset_name="informix_locks",
     check_default_parameters={

@@ -75,7 +75,7 @@ def parse_orion_system(string_table):
     }
 
 
-def inventory_orion_system_temp(parsed):
+def discover_orion_system_temp(parsed):
     for entity in parsed["temperature"]:
         yield entity, {}
 
@@ -95,13 +95,13 @@ check_info["orion_system"] = LegacyCheckDefinition(
     ),
     parse_function=parse_orion_system,
     service_name="Temperature %s",
-    discovery_function=inventory_orion_system_temp,
+    discovery_function=discover_orion_system_temp,
     check_function=check_orion_system_temp,
     check_ruleset_name="temperature",
 )
 
 
-def inventory_orion_system_charging(parsed):
+def discover_orion_system_charging(parsed):
     for entity in parsed["charging"]:
         yield entity, {}
 
@@ -117,7 +117,7 @@ check_info["orion_system.charging"] = LegacyCheckDefinition(
     name="orion_system_charging",
     service_name="Charge %s",
     sections=["orion_system"],
-    discovery_function=inventory_orion_system_charging,
+    discovery_function=discover_orion_system_charging,
     check_function=check_orion_system_charging,
 )
 

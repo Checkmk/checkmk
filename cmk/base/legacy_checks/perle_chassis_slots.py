@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.perle import perle_check_alarms
 check_info = {}
 
 
-def inventory_perle_chassis_slots(info):
+def discover_perle_chassis_slots(info):
     return [
         (index, None)
         for index, _name, _modelname, _serial, _bootloader, _fw, _alarms_str, _diagstate, ty, _descr in info
@@ -50,6 +50,6 @@ check_info["perle_chassis_slots"] = LegacyCheckDefinition(
     name="perle_chassis_slots",
     # section is already migrated!
     service_name="Chassis status slot %s",
-    discovery_function=inventory_perle_chassis_slots,
+    discovery_function=discover_perle_chassis_slots,
     check_function=check_perle_chassis_slots,
 )

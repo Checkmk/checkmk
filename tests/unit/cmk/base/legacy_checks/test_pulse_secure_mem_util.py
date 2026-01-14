@@ -25,7 +25,7 @@ from cmk.base.legacy_checks.pulse_secure_mem_util import (
         ([["8", "0"]], [(None, {})]),
     ],
 )
-def test_inventory_pulse_secure_mem(
+def test_discover_pulse_secure_mem(
     info: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for pulse_secure_mem_util check."""

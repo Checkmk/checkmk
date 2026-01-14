@@ -14,7 +14,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.legacy_checks.ucd_mem import check_ucd_mem, inventory_ucd_mem
+from cmk.base.legacy_checks.ucd_mem import check_ucd_mem, discover_ucd_mem
 from cmk.plugins.collection.agent_based.ucd_mem import parse_ucd_mem
 
 
@@ -41,8 +41,8 @@ def fixture_parsed() -> Mapping[str, int]:
     return parse_ucd_mem(string_table)
 
 
-def test_inventory_ucd_mem(parsed: Mapping[str, int]) -> None:
-    result = list(inventory_ucd_mem(parsed))
+def test_discover_ucd_mem(parsed: Mapping[str, int]) -> None:
+    result = list(discover_ucd_mem(parsed))
     assert result == [(None, {})]
 
 

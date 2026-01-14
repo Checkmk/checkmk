@@ -22,7 +22,7 @@ tunnel_states = {
 }
 
 
-def inventory_checkpoint_tunnels(info):
+def discover_checkpoint_tunnels(info):
     for peer, _ in info:
         yield peer, {}
 
@@ -48,7 +48,7 @@ check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Tunnel %s",
-    discovery_function=inventory_checkpoint_tunnels,
+    discovery_function=discover_checkpoint_tunnels,
     check_function=check_checkpoint_tunnels,
     check_ruleset_name="checkpoint_tunnels",
     check_default_parameters={

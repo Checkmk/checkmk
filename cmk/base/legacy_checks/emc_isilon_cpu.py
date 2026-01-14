@@ -13,7 +13,7 @@ from cmk.plugins.emc.lib import DETECT_ISILON
 check_info = {}
 
 
-def inventory_emc_isilon_cpu_utilization(info):
+def discover_emc_isilon_cpu_utilization(info):
     # the device reports cpu utilization for each core and a total. This interprets only the total
     return [(None, {})]
 
@@ -64,7 +64,7 @@ check_info["emc_isilon_cpu"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     service_name="Node CPU utilization",
-    discovery_function=inventory_emc_isilon_cpu_utilization,
+    discovery_function=discover_emc_isilon_cpu_utilization,
     check_function=check_emc_isilon_cpu_utilization,
     check_ruleset_name="cpu_utilization",
 )

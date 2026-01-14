@@ -25,7 +25,7 @@ READABLE_STATES = {
 }
 
 
-def inventory_hwg_temp(parsed):
+def discover_hwg_temp(parsed):
     for index, attrs in parsed.items():
         if attrs.get("temperature") and attrs["dev_status_name"] not in ["invalid", ""]:
             yield index, {}
@@ -63,7 +63,7 @@ check_info["hwg_temp"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hwg,
     service_name="Temperature %s",
-    discovery_function=inventory_hwg_temp,
+    discovery_function=discover_hwg_temp,
     check_function=check_hwg_temp,
     check_ruleset_name="temperature",
     check_default_parameters=HWG_TEMP_DEFAULTLEVELS,
@@ -78,7 +78,7 @@ check_info["hwg_ste2"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hwg,
     service_name="Temperature %s",
-    discovery_function=inventory_hwg_temp,
+    discovery_function=discover_hwg_temp,
     check_function=check_hwg_temp,
     check_ruleset_name="temperature",
     check_default_parameters=HWG_TEMP_DEFAULTLEVELS,

@@ -13,7 +13,7 @@ from cmk.plugins.ra32e.lib import DETECT_RA32E
 check_info = {}
 
 
-def inventory_ra32e_switch(info):
+def discover_ra32e_switch(info):
     for index, _ in enumerate(info[0], start=1):
         yield "Sensor %02d" % index, None
 
@@ -62,7 +62,7 @@ check_info["ra32e_switch"] = LegacyCheckDefinition(
         ],
     ),
     service_name="Switch %s",
-    discovery_function=inventory_ra32e_switch,
+    discovery_function=discover_ra32e_switch,
     check_function=check_ra32e_switch,
     check_ruleset_name="switch_contact",
     check_default_parameters={"state": "ignore"},

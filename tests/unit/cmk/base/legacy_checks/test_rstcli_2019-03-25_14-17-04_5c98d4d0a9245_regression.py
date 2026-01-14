@@ -20,8 +20,8 @@ from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.rstcli import (
     check_rstcli,
     check_rstcli_pdisks,
-    inventory_rstcli,
-    inventory_rstcli_pdisks,
+    discover_rstcli,
+    discover_rstcli_pdisks,
     parse_rstcli,
 )
 
@@ -35,12 +35,12 @@ from cmk.base.legacy_checks.rstcli import (
         ),
     ],
 )
-def test_inventory_rstcli_regression(
+def test_discover_rstcli_regression(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for rstcli regression test."""
     parsed = parse_rstcli(string_table)
-    result = list(inventory_rstcli(parsed))
+    result = list(discover_rstcli(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 
@@ -53,12 +53,12 @@ def test_inventory_rstcli_regression(
         ),
     ],
 )
-def test_inventory_rstcli_pdisks_regression(
+def test_discover_rstcli_pdisks_regression(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
 ) -> None:
     """Test pdisks discovery function for rstcli regression test."""
     parsed = parse_rstcli(string_table)
-    result = list(inventory_rstcli_pdisks(parsed))
+    result = list(discover_rstcli_pdisks(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

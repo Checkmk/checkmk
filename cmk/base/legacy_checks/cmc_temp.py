@@ -17,7 +17,7 @@ check_info = {}
 # [[[u'26', u'26']], [[u'45', u'15', u'45', u'15']]]
 
 
-def inventory_cmc_temp(info):
+def discover_cmc_temp(info):
     # There are always two sensors
     yield "1", {}
     yield "2", {}
@@ -55,7 +55,7 @@ check_info["cmc_temp"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Temperature Sensor %s",
-    discovery_function=inventory_cmc_temp,
+    discovery_function=discover_cmc_temp,
     check_function=check_cmc_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

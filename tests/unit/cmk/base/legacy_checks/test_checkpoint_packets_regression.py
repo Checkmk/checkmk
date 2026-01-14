@@ -19,7 +19,7 @@ import time_machine
 
 from cmk.base.legacy_checks.checkpoint_packets import (
     check_checkpoint_packets,
-    inventory_checkpoint_packets,
+    discover_checkpoint_packets,
     parse_checkpoint_packets,
 )
 
@@ -86,16 +86,16 @@ def test_parse_checkpoint_packets_invalid_values() -> None:
     assert parsed == expected
 
 
-def test_inventory_checkpoint_packets(parsed: dict[str, Any]) -> None:
+def test_discover_checkpoint_packets(parsed: dict[str, Any]) -> None:
     """Test checkpoint packet discovery creates service when data is present"""
-    discovered = list(inventory_checkpoint_packets(parsed))
+    discovered = list(discover_checkpoint_packets(parsed))
     assert len(discovered) == 1
     assert discovered[0] == (None, {})
 
 
-def test_inventory_checkpoint_packets_empty_data() -> None:
+def test_discover_checkpoint_packets_empty_data() -> None:
     """Test checkpoint packet discovery skips when no data is present"""
-    discovered = list(inventory_checkpoint_packets({}))
+    discovered = list(discover_checkpoint_packets({}))
     assert len(discovered) == 0
 
 

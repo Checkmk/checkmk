@@ -31,7 +31,7 @@ def parse_kentix_dewpoint(string_table: list[list[str]]) -> Section | None:
     return {}
 
 
-def inventory_kentix_dewpoint(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_kentix_dewpoint(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((item, {}) for item in section)
 
 
@@ -50,7 +50,7 @@ check_info["kentix_dewpoint"] = LegacyCheckDefinition(
     ),
     parse_function=parse_kentix_dewpoint,
     service_name="Dewpoint %s",
-    discovery_function=inventory_kentix_dewpoint,
+    discovery_function=discover_kentix_dewpoint,
     check_function=check_kentix_dewpoint,
     check_ruleset_name="temperature",
 )

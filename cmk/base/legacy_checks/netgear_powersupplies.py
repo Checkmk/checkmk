@@ -27,7 +27,7 @@ def parse_netgear_powersupplies(string_table):
     return parsed
 
 
-def inventory_netgear_powersupplies(parsed):
+def discover_netgear_powersupplies(parsed):
     return [
         (sensorname, {}) for sensorname, sensorinfo in parsed.items() if sensorinfo not in ["1"]
     ]
@@ -54,6 +54,6 @@ check_info["netgear_powersupplies"] = LegacyCheckDefinition(
     ),
     parse_function=parse_netgear_powersupplies,
     service_name="Power Supply %s",
-    discovery_function=inventory_netgear_powersupplies,
+    discovery_function=discover_netgear_powersupplies,
     check_function=check_netgear_powersupplies,
 )

@@ -19,7 +19,7 @@ check_info = {}
 # 2015-03-12-04.00.13.000000
 
 
-def inventory_db2_backup(parsed):
+def discover_db2_backup(parsed):
     for instance in parsed[1]:
         yield instance, {}
 
@@ -52,7 +52,7 @@ check_info["db2_backup"] = LegacyCheckDefinition(
     name="db2_backup",
     parse_function=parse_db2_dbs,
     service_name="DB2 Backup %s",
-    discovery_function=inventory_db2_backup,
+    discovery_function=discover_db2_backup,
     check_function=check_db2_backup,
     check_ruleset_name="db2_backup",
     check_default_parameters={

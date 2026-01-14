@@ -21,7 +21,7 @@ check_info = {}
 # .1.3.6.1.4.1.9.9.719.1.41.9.1.10 cucsProcessorUnitOperability
 
 
-def inventory_cisco_ucs_cpu(info):
+def discover_cisco_ucs_cpu(info):
     for name, presence, _serial, _model, _status in info:
         if presence != "11":  # do not discover missing units
             yield name, None
@@ -54,6 +54,6 @@ check_info["cisco_ucs_cpu"] = LegacyCheckDefinition(
         oids=["3", "13", "15", "8", "10"],
     ),
     service_name="CPU %s",
-    discovery_function=inventory_cisco_ucs_cpu,
+    discovery_function=discover_cisco_ucs_cpu,
     check_function=check_cisco_ucs_cpu,
 )

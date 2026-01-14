@@ -25,7 +25,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_mikrotik_signal(info):
+def discover_mikrotik_signal(info):
     yield from ((network, {}) for network, _strength, _mode in info)
 
 
@@ -63,7 +63,7 @@ check_info["mikrotik_signal"] = LegacyCheckDefinition(
         oids=["5.2", "4.2", "8.2"],
     ),
     service_name="Signal %s",
-    discovery_function=inventory_mikrotik_signal,
+    discovery_function=discover_mikrotik_signal,
     check_function=check_mikrotik_signal,
     check_ruleset_name="signal_quality",
     check_default_parameters={

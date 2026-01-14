@@ -88,7 +88,7 @@ def parse_elasticsearch_cluster_health(string_table):
     return parsed
 
 
-def inventory_elasticsearch_cluster_health(parsed):
+def discover_elasticsearch_cluster_health(parsed):
     yield None, {}
 
 
@@ -121,7 +121,7 @@ check_info["elasticsearch_cluster_health"] = LegacyCheckDefinition(
     name="elasticsearch_cluster_health",
     parse_function=parse_elasticsearch_cluster_health,
     service_name="Elasticsearch Cluster Health",
-    discovery_function=inventory_elasticsearch_cluster_health,
+    discovery_function=discover_elasticsearch_cluster_health,
     check_function=check_elasticsearch_cluster_health,
     check_ruleset_name="elasticsearch_cluster_health",
 )
@@ -166,7 +166,7 @@ check_info["elasticsearch_cluster_health.shards"] = LegacyCheckDefinition(
     name="elasticsearch_cluster_health_shards",
     service_name="Elasticsearch Cluster Shards",
     sections=["elasticsearch_cluster_health"],
-    discovery_function=inventory_elasticsearch_cluster_health,
+    discovery_function=discover_elasticsearch_cluster_health,
     check_function=check_elasticsearch_cluster_health_shards,
     check_ruleset_name="elasticsearch_cluster_shards",
     check_default_parameters={"active_shards_percent_as_number": (100.0, 50.0)},
@@ -196,7 +196,7 @@ check_info["elasticsearch_cluster_health.tasks"] = LegacyCheckDefinition(
     name="elasticsearch_cluster_health_tasks",
     service_name="Elasticsearch Cluster Tasks",
     sections=["elasticsearch_cluster_health"],
-    discovery_function=inventory_elasticsearch_cluster_health,
+    discovery_function=discover_elasticsearch_cluster_health,
     check_function=check_elasticsearch_cluster_health_tasks,
     check_ruleset_name="elasticsearch_cluster_tasks",
 )

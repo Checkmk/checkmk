@@ -13,7 +13,7 @@ from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 check_info = {}
 
 
-def inventory_juniper_screenos_cpu(info):
+def discover_juniper_screenos_cpu(info):
     yield None, {}
 
 
@@ -43,7 +43,7 @@ check_info["juniper_screenos_cpu"] = LegacyCheckDefinition(
         oids=["2", "4"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_juniper_screenos_cpu,
+    discovery_function=discover_juniper_screenos_cpu,
     check_function=check_juniper_screenos_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

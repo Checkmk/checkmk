@@ -67,7 +67,7 @@ def parse_sym_brightmail_queues(string_table):
     return parsed
 
 
-def inventory_sym_brightmail_queues(parsed):
+def discover_sym_brightmail_queues(parsed):
     for descr in parsed:
         yield descr, {}
 
@@ -102,7 +102,7 @@ check_info["sym_brightmail_queues"] = LegacyCheckDefinition(
     ),
     parse_function=parse_sym_brightmail_queues,
     service_name="Queue %s",
-    discovery_function=inventory_sym_brightmail_queues,
+    discovery_function=discover_sym_brightmail_queues,
     check_function=check_sym_brightmail_queues,
     check_ruleset_name="sym_brightmail_queues",
 )

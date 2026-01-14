@@ -31,7 +31,7 @@ def parse_arris_cmts_mem(string_table):
     return parsed
 
 
-def inventory_arris_cmts_mem(parsed):
+def discover_arris_cmts_mem(parsed):
     for k in parsed:
         yield k, {}
 
@@ -61,7 +61,7 @@ check_info["arris_cmts_mem"] = LegacyCheckDefinition(
     ),
     parse_function=parse_arris_cmts_mem,
     service_name="Memory Module %s",
-    discovery_function=inventory_arris_cmts_mem,
+    discovery_function=discover_arris_cmts_mem,
     check_function=check_arris_cmts_mem,
     check_ruleset_name="memory_multiitem",
     check_default_parameters={

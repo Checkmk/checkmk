@@ -44,7 +44,7 @@ def parse_kentix_motion(string_table: list[StringTable]) -> Section:
     }
 
 
-def inventory_kentix_motion(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_kentix_motion(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((index, {}) for index in section)
 
 
@@ -103,7 +103,7 @@ check_info["kentix_motion"] = LegacyCheckDefinition(
     ],
     parse_function=parse_kentix_motion,
     service_name="Motion Detector %s",
-    discovery_function=inventory_kentix_motion,
+    discovery_function=discover_kentix_motion,
     check_function=check_kentix_motion,
     check_ruleset_name="motion",
 )

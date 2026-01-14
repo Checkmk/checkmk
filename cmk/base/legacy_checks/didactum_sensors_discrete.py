@@ -34,7 +34,7 @@ check_info = {}
 # .1.3.6.1.4.1.46501.5.1.1.7.101004 0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretValue.101004
 
 
-def inventory_didactum_sensors_discrete_dry(parsed):
+def discover_didactum_sensors_discrete_dry(parsed):
     yield from discover_didactum_sensors(parsed, "dry")
     yield from discover_didactum_sensors(parsed, "smoke")
 
@@ -58,6 +58,6 @@ check_info["didactum_sensors_discrete"] = LegacyCheckDefinition(
     ),
     parse_function=parse_didactum_sensors,
     service_name="Discrete sensor %s",
-    discovery_function=inventory_didactum_sensors_discrete_dry,
+    discovery_function=discover_didactum_sensors_discrete_dry,
     check_function=check_didactum_sensors_discrete_dry,
 )

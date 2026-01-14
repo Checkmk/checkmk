@@ -60,7 +60,7 @@ def map_ibm_mq_manager_status(status, params):
     return check_state
 
 
-def inventory_ibm_mq_managers(parsed):
+def discover_ibm_mq_managers(parsed):
     for item in parsed:
         yield item, {}
 
@@ -116,7 +116,7 @@ def check_ibm_mq_managers(item, params, parsed):
 check_info["ibm_mq_managers"] = LegacyCheckDefinition(
     name="ibm_mq_managers",
     service_name="IBM MQ Manager %s",
-    discovery_function=inventory_ibm_mq_managers,
+    discovery_function=discover_ibm_mq_managers,
     check_function=check_ibm_mq_managers,
     check_ruleset_name="ibm_mq_managers",
 )

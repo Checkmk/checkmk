@@ -23,7 +23,7 @@ check_info = {}
 # from a customer, its named "Emerson Energy Systems (EES) Power MIB"
 
 
-def inventory_emerson_temp(info):
+def discover_emerson_temp(info):
     # Device appears to mark missing sensors by temperature value -999999
     yield from ((str(nr), {}) for nr, line in enumerate(info) if int(line[0]) >= -273000)
 
@@ -55,7 +55,7 @@ check_info["emerson_temp"] = LegacyCheckDefinition(
         oids=["7"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_emerson_temp,
+    discovery_function=discover_emerson_temp,
     check_function=check_emerson_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (40.0, 50.0)},

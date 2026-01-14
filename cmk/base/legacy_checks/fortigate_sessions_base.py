@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_fortigate_sessions_base(info):
+def discover_fortigate_sessions_base(info):
     yield None, {}
 
 
@@ -40,7 +40,7 @@ check_info["fortigate_sessions_base"] = LegacyCheckDefinition(
         oids=["8"],
     ),
     service_name="Sessions",
-    discovery_function=inventory_fortigate_sessions_base,
+    discovery_function=discover_fortigate_sessions_base,
     check_function=check_fortigate_sessions_base,
     check_ruleset_name="fortigate_sessions",
     check_default_parameters={"levels": (100000, 150000)},

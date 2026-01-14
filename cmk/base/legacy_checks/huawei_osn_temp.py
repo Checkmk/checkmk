@@ -15,7 +15,7 @@ check_info = {}
 # The laser should not get hotter than 70°C
 
 
-def inventory_huawei_osn_temp(info):
+def discover_huawei_osn_temp(info):
     for line in info:
         yield (line[1], {})
 
@@ -40,7 +40,7 @@ check_info["huawei_osn_temp"] = LegacyCheckDefinition(
         oids=["2.190", "6.190"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_huawei_osn_temp,
+    discovery_function=discover_huawei_osn_temp,
     check_function=check_huawei_osn_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

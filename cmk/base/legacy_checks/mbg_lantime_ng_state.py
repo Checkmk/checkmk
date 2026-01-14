@@ -17,7 +17,7 @@ from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 check_info = {}
 
 
-def inventory_mbg_lantime_ng_state(info):
+def discover_mbg_lantime_ng_state(info):
     if info:
         return [(None, {})]
     return []
@@ -55,7 +55,7 @@ check_info["mbg_lantime_ng_state"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     service_name="LANTIME State",
-    discovery_function=inventory_mbg_lantime_ng_state,
+    discovery_function=discover_mbg_lantime_ng_state,
     check_function=check_mbg_lantime_ng_state,
     check_ruleset_name="mbg_lantime_state",
     check_default_parameters=MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,

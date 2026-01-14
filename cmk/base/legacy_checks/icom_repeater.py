@@ -93,7 +93,7 @@ def parse_icom_repeater(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_icom_repeater_ps_volt(parsed):
+def discover_icom_repeater_ps_volt(parsed):
     if "ps_voltage" in parsed:
         yield None, {}
 
@@ -111,7 +111,7 @@ check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
     name="icom_repeater_ps_volt",
     service_name="Power Supply Voltage",
     sections=["icom_repeater"],
-    discovery_function=inventory_icom_repeater_ps_volt,
+    discovery_function=discover_icom_repeater_ps_volt,
     check_function=check_icom_repeater_ps_volt,
     check_ruleset_name="ps_voltage",
     check_default_parameters={
@@ -133,7 +133,7 @@ check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_icom_repeater_pll_volt(parsed):
+def discover_icom_repeater_pll_volt(parsed):
     if "rx_pll_lock_voltage" in parsed:
         yield "RX", {}
     if "tx_pll_lock_voltage" in parsed:
@@ -173,7 +173,7 @@ check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
     name="icom_repeater_pll_volt",
     service_name="%s PLL Lock Voltage",
     sections=["icom_repeater"],
-    discovery_function=inventory_icom_repeater_pll_volt,
+    discovery_function=discover_icom_repeater_pll_volt,
     check_function=check_icom_repeater_pll_volt,
     check_ruleset_name="pll_lock_voltage",
 )
@@ -191,7 +191,7 @@ check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_icom_repeater_temp(parsed):
+def discover_icom_repeater_temp(parsed):
     if "temp" in parsed:
         return [("System", {})]
     return []
@@ -211,7 +211,7 @@ check_info["icom_repeater.temp"] = LegacyCheckDefinition(
     name="icom_repeater_temp",
     service_name="Temperature %s",
     sections=["icom_repeater"],
-    discovery_function=inventory_icom_repeater_temp,
+    discovery_function=discover_icom_repeater_temp,
     check_function=check_icom_repeater_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -233,7 +233,7 @@ check_info["icom_repeater.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_icom_repeater(parsed):
+def discover_icom_repeater(parsed):
     if parsed:
         return [(None, None)]
     return []
@@ -260,6 +260,6 @@ check_info["icom_repeater"] = LegacyCheckDefinition(
     ),
     parse_function=parse_icom_repeater,
     service_name="Repeater Info",
-    discovery_function=inventory_icom_repeater,
+    discovery_function=discover_icom_repeater,
     check_function=check_icom_repeater,
 )

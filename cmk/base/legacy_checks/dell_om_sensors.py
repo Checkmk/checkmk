@@ -19,7 +19,7 @@ def dell_om_sensors_item(name):
     return name.replace("Temp", "").strip()
 
 
-def inventory_dell_om_sensors(info):
+def discover_dell_om_sensors(info):
     for line in info:
         if line[3]:
             yield dell_om_sensors_item(line[3]), {}
@@ -80,7 +80,7 @@ check_info["dell_om_sensors"] = LegacyCheckDefinition(
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_dell_om_sensors,
+    discovery_function=discover_dell_om_sensors,
     check_function=check_dell_om_sensors,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (50.0, 60.0)},

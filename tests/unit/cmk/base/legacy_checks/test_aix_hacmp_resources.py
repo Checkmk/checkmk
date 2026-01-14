@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.aix_hacmp_resources import (
     check_aix_hacmp_resources,
-    inventory_aix_hacmp_resources,
+    discover_aix_hacmp_resources,
     parse_aix_hacmp_resources,
 )
 
@@ -97,12 +97,12 @@ from cmk.base.legacy_checks.aix_hacmp_resources import (
         ),
     ],
 )
-def test_inventory_aix_hacmp_resources(
+def test_discover_aix_hacmp_resources(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any] | None]]
 ) -> None:
     """Test discovery function for aix_hacmp_resources check."""
     parsed = parse_aix_hacmp_resources(string_table)
-    result = list(inventory_aix_hacmp_resources(parsed))
+    result = list(discover_aix_hacmp_resources(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

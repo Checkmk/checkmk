@@ -55,7 +55,7 @@ def parse_scaleio_sds(string_table: StringTable) -> ScaleioSection:
     return parse_scaleio(string_table, "SDS")
 
 
-def inventory_scaleio_sds(parsed):
+def discover_scaleio_sds(parsed):
     for entry in parsed:
         yield entry, {}
 
@@ -77,14 +77,14 @@ check_info["scaleio_sds"] = LegacyCheckDefinition(
     name="scaleio_sds",
     parse_function=parse_scaleio_sds,
     service_name="ScaleIO SDS capacity %s",
-    discovery_function=inventory_scaleio_sds,
+    discovery_function=discover_scaleio_sds,
     check_function=check_scaleio_sds,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 
-def inventory_scaleio_sds_status(parsed):
+def discover_scaleio_sds_status(parsed):
     for entry in parsed:
         yield entry, {}
 
@@ -117,6 +117,6 @@ check_info["scaleio_sds.status"] = LegacyCheckDefinition(
     name="scaleio_sds_status",
     service_name="ScaleIO SDS status %s",
     sections=["scaleio_sds"],
-    discovery_function=inventory_scaleio_sds_status,
+    discovery_function=discover_scaleio_sds_status,
     check_function=check_scaleio_sds_status,
 )

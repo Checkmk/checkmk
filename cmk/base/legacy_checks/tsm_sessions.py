@@ -29,7 +29,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_tsm_sessions(info):
+def discover_tsm_sessions(info):
     yield None, {}
 
 
@@ -64,6 +64,6 @@ check_info["tsm_sessions"] = LegacyCheckDefinition(
     name="tsm_sessions",
     parse_function=parse_tsm_sessions,
     service_name="tsm_sessions",
-    discovery_function=inventory_tsm_sessions,
+    discovery_function=discover_tsm_sessions,
     check_function=check_tsm_sessions,
 )

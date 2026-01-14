@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_epson_beamer_lamp(info):
+def discover_epson_beamer_lamp(info):
     if info:
         yield None, {}
 
@@ -41,7 +41,7 @@ check_info["epson_beamer_lamp"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="Beamer Lamp",
-    discovery_function=inventory_epson_beamer_lamp,
+    discovery_function=discover_epson_beamer_lamp,
     check_function=check_epson_beamer_lamp,
     check_ruleset_name="lamp_operation_time",
     check_default_parameters={

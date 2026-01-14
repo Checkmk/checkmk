@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_unitrends_backup(info):
+def discover_unitrends_backup(info):
     inventory = []
     for line in info:
         if line[0] == "HEADER":
@@ -62,6 +62,6 @@ check_info["unitrends_backup"] = LegacyCheckDefinition(
     name="unitrends_backup",
     parse_function=parse_unitrends_backup,
     service_name="Schedule %s",
-    discovery_function=inventory_unitrends_backup,
+    discovery_function=discover_unitrends_backup,
     check_function=check_unitrends_backup,
 )

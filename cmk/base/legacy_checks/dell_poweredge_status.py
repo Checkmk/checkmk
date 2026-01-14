@@ -14,7 +14,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def inventory_dell_poweredge_status(info):
+def discover_dell_poweredge_status(info):
     if info:
         return [(None, None)]
     return []
@@ -41,6 +41,6 @@ check_info["dell_poweredge_status"] = LegacyCheckDefinition(
         ],
     ),
     service_name="PowerEdge Health",
-    discovery_function=inventory_dell_poweredge_status,
+    discovery_function=discover_dell_poweredge_status,
     check_function=check_dell_poweredge_status,
 )

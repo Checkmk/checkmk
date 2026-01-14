@@ -13,7 +13,7 @@ from cmk.plugins.tplink.lib import DETECT_TPLINK
 check_info = {}
 
 
-def inventory_tplink_poe_summary(info):
+def discover_tplink_poe_summary(info):
     if info and info[0][0] != "0":
         return [(None, {})]
     return []
@@ -40,7 +40,7 @@ check_info["tplink_poe_summary"] = LegacyCheckDefinition(
         oids=["3"],
     ),
     service_name="POE Power",
-    discovery_function=inventory_tplink_poe_summary,
+    discovery_function=discover_tplink_poe_summary,
     check_function=check_tplink_poe_summary,
     check_ruleset_name="epower_single",
     check_default_parameters={"levels": None},

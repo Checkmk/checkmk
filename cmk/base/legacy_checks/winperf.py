@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, re
 check_info = {}
 
 
-def inventory_win_cpuusage(info):
+def discover_win_cpuusage(info):
     for line in info:
         try:
             if line[0] == "238:6":
@@ -70,7 +70,7 @@ def check_win_cpuusage(item, params, info):
     return (3, "counter for cpu (238:6) not found")
 
 
-def inventory_win_diskstat(info):
+def discover_win_diskstat(info):
     for line in info:
         try:
             if line[0] == "2:16" or line[0] == "2:18":
@@ -132,7 +132,7 @@ check_info["winperf.cpuusage"] = LegacyCheckDefinition(
     name="winperf_cpuusage",
     service_name="CPU Usage",
     sections=["winperf"],
-    discovery_function=inventory_win_cpuusage,
+    discovery_function=discover_win_cpuusage,
     check_function=check_win_cpuusage,
 )
 
@@ -140,6 +140,6 @@ check_info["winperf.diskstat"] = LegacyCheckDefinition(
     name="winperf_diskstat",
     service_name="Disk IO",
     sections=["winperf"],
-    discovery_function=inventory_win_diskstat,
+    discovery_function=discover_win_diskstat,
     check_function=check_win_diskstat,
 )

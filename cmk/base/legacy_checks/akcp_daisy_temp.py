@@ -25,7 +25,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 check_info = {}
 
 
-def inventory_akcp_daisy_temp(info):
+def discover_akcp_daisy_temp(info):
     for _port, subport, name, _temp in chain.from_iterable(info):
         # Ignore sensors that are found by the non-daisychaining-version of
         # this check (akcp_sensor_temp)
@@ -91,7 +91,7 @@ check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Temperature %s",
-    discovery_function=inventory_akcp_daisy_temp,
+    discovery_function=discover_akcp_daisy_temp,
     check_function=check_akcp_daisy_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (28.0, 32.0)},

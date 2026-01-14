@@ -33,7 +33,7 @@ climaveneta_sensors = {
 }
 
 
-def inventory_climaveneta_temp(info):
+def discover_climaveneta_temp(info):
     for sensor_id, value in info:
         sensor_id = int(sensor_id.split(".")[0])
         if sensor_id in climaveneta_sensors and int(value) > 0:
@@ -62,7 +62,7 @@ check_info["climaveneta_temp"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_climaveneta_temp,
+    discovery_function=discover_climaveneta_temp,
     check_function=check_climaveneta_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (28.0, 30.0)},

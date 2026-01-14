@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.enterasys_powersupply import (
     check_enterasys_powersupply,
-    inventory_enterasys_powersupply,
+    discover_enterasys_powersupply,
     parse_enterasys_powersupply,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.enterasys_powersupply import (
         ([["101", "3", "1", "1"], ["102", "", "", "1"]], [("101", {})]),
     ],
 )
-def test_inventory_enterasys_powersupply(
+def test_discover_enterasys_powersupply(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for enterasys_powersupply check."""
     parsed = parse_enterasys_powersupply(string_table)
-    result = list(inventory_enterasys_powersupply(parsed))
+    result = list(discover_enterasys_powersupply(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

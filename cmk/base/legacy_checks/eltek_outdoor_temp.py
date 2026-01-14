@@ -61,7 +61,7 @@ check_info = {}
 # suggested by customer
 
 
-def inventory_eltek_outdoor_temp(info):
+def discover_eltek_outdoor_temp(info):
     inventory = []
     for index, temp1, temp2 in info:
         if int(temp1) > 0:
@@ -92,7 +92,7 @@ check_info["eltek_outdoor_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     service_name="Temperature Outdoor %s",
-    discovery_function=inventory_eltek_outdoor_temp,
+    discovery_function=discover_eltek_outdoor_temp,
     check_function=check_eltek_outdoor_temp,
     check_default_parameters={
         "levels": (35, 40),

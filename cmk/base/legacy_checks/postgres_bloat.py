@@ -33,7 +33,7 @@ check_info = {}
 # ...
 
 
-def inventory_postgres_bloat(parsed):
+def discover_postgres_bloat(parsed):
     return [(entry, {}) for entry, values in parsed.items() if values]
 
 
@@ -159,7 +159,7 @@ check_info["postgres_bloat"] = LegacyCheckDefinition(
     name="postgres_bloat",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Bloat %s",
-    discovery_function=inventory_postgres_bloat,
+    discovery_function=discover_postgres_bloat,
     check_function=check_postgres_bloat,
     check_ruleset_name="db_bloat",
     check_default_parameters={

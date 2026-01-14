@@ -55,7 +55,7 @@ def format_hp_proliant_name(line):
     return f"{line[0]} ({hp_proliant_locale[int(line[1])]})"
 
 
-def inventory_hp_proliant_temp(info):
+def discover_hp_proliant_temp(info):
     for line in info:
         if line[-1] != "1":
             # other(1): Temperature could not be determined
@@ -97,7 +97,7 @@ check_info["hp_proliant_temp"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_hp_proliant_temp,
+    discovery_function=discover_hp_proliant_temp,
     check_function=check_hp_proliant_temp,
     check_ruleset_name="temperature",
 )

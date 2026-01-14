@@ -73,7 +73,7 @@ def parse_cisco_fru_powerusage(string_table):
     return parsed
 
 
-def inventory_cisco_fru_powerusage(parsed):
+def discover_cisco_fru_powerusage(parsed):
     for what, data in parsed.items():
         if data["current"] > 0:
             yield what, {}
@@ -94,7 +94,7 @@ check_info["cisco_fru_powerusage"] = LegacyCheckDefinition(
     ],
     parse_function=parse_cisco_fru_powerusage,
     service_name="FRU power usage %s",
-    discovery_function=inventory_cisco_fru_powerusage,
+    discovery_function=discover_cisco_fru_powerusage,
     check_function=check_elphase,
     check_ruleset_name="el_inphase",
 )

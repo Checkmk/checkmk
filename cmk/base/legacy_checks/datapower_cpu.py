@@ -15,7 +15,7 @@ from cmk.plugins.datapower.lib import DETECT
 check_info = {}
 
 
-def inventory_datapower_cpu(info):
+def discover_datapower_cpu(info):
     if info:
         yield None, {}
 
@@ -38,7 +38,7 @@ check_info["datapower_cpu"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     service_name="CPU Utilization",
-    discovery_function=inventory_datapower_cpu,
+    discovery_function=discover_datapower_cpu,
     check_function=check_datapower_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

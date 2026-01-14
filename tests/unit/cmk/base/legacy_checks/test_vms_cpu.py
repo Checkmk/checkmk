@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.vms_cpu import check_vms_cpu, inventory_vms_cpu, parse_vms_cpu
+from cmk.base.legacy_checks.vms_cpu import check_vms_cpu, discover_vms_cpu, parse_vms_cpu
 
 
 @pytest.mark.parametrize(
@@ -21,12 +21,12 @@ from cmk.base.legacy_checks.vms_cpu import check_vms_cpu, inventory_vms_cpu, par
         ([["1", "99.17", "0.54", "0.18", "0.00"]], [(None, {})]),
     ],
 )
-def test_inventory_vms_cpu(
+def test_discover_vms_cpu(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for vms_cpu check."""
     parsed = parse_vms_cpu(string_table)
-    result = list(inventory_vms_cpu(parsed))
+    result = list(discover_vms_cpu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

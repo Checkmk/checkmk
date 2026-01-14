@@ -45,7 +45,7 @@ def parse_tsm_storagepools(string_table):
     return parsed
 
 
-def inventory_tsm_storagepools(parsed):
+def discover_tsm_storagepools(parsed):
     for inst in parsed:
         yield inst, None
 
@@ -68,6 +68,6 @@ check_info["tsm_storagepools"] = LegacyCheckDefinition(
     name="tsm_storagepools",
     parse_function=parse_tsm_storagepools,
     service_name="TSM Storagepool %s",
-    discovery_function=inventory_tsm_storagepools,
+    discovery_function=discover_tsm_storagepools,
     check_function=check_tsm_storagepools,
 )

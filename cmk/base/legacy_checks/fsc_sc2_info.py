@@ -21,7 +21,7 @@ def parse_fsc_sc2_info(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def inventory_fsc_sc2_info(info):
+def discover_fsc_sc2_info(info):
     if info:
         return [(None, None)]
     return []
@@ -45,6 +45,6 @@ check_info["fsc_sc2_info"] = LegacyCheckDefinition(
         oids=["2.3.1.5.1", "2.3.1.7.1", "4.1.1.11.1"],
     ),
     service_name="Server Info",
-    discovery_function=inventory_fsc_sc2_info,
+    discovery_function=discover_fsc_sc2_info,
     check_function=check_fsc_sc2_info,
 )

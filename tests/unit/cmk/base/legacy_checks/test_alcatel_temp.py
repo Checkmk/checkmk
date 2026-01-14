@@ -24,7 +24,7 @@ pytestmark = pytest.mark.checks
         ([["0", "29"]], "CPU", {}),
     ],
 )
-def test_inventory_function(
+def test_discover_function(
     info: StringTable, item_expected: str, data_expected: Mapping[object, object]
 ) -> None:
     """

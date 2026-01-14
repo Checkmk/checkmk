@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import render, StringTable
 check_info = {}
 
 
-def inventory_appdynamics_memory(info):
+def discover_appdynamics_memory(info):
     for line in info:
         yield " ".join(line[0:2]), {}
 
@@ -111,7 +111,7 @@ check_info["appdynamics_memory"] = LegacyCheckDefinition(
     name="appdynamics_memory",
     parse_function=parse_appdynamics_memory,
     service_name="AppDynamics Memory %s",
-    discovery_function=inventory_appdynamics_memory,
+    discovery_function=discover_appdynamics_memory,
     check_function=check_appdynamics_memory,
     check_ruleset_name="jvm_memory",
 )

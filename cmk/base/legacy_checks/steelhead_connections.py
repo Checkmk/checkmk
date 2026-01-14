@@ -13,7 +13,7 @@ from cmk.plugins.steelhead.lib import DETECT_STEELHEAD
 check_info = {}
 
 
-def inventory_steelhead_connections(info):
+def discover_steelhead_connections(info):
     if len(info) >= 7:
         yield None, {}
 
@@ -77,7 +77,7 @@ check_info["steelhead_connections"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2"],
     ),
     service_name="Connections",
-    discovery_function=inventory_steelhead_connections,
+    discovery_function=discover_steelhead_connections,
     check_function=check_steelhead_connections,
     check_ruleset_name="steelhead_connections",
 )

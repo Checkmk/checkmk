@@ -74,7 +74,7 @@ def parse_intel_true_scale_psus(string_table):
     return parsed
 
 
-def inventory_intel_true_scale_psus(parsed):
+def discover_intel_true_scale_psus(parsed):
     for psu in parsed:
         if parsed[psu]["state"][-1] not in ["not present", "disabled"]:
             yield psu, {}
@@ -100,7 +100,7 @@ check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
     ),
     parse_function=parse_intel_true_scale_psus,
     service_name="Power supply %s",
-    discovery_function=inventory_intel_true_scale_psus,
+    discovery_function=discover_intel_true_scale_psus,
     check_function=check_intel_true_scale_psus,
     check_ruleset_name="el_inphase",
 )

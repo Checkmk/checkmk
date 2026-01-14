@@ -20,7 +20,7 @@ check_info = {}
 # .1.3.6.1.4.1.5951.4.1.1.41.4.0  7902
 
 
-def inventory_netscaler_mem(info):
+def discover_netscaler_mem(info):
     if info:
         yield None, {}
 
@@ -52,7 +52,7 @@ check_info["netscaler_mem"] = LegacyCheckDefinition(
         oids=["2", "4"],
     ),
     service_name="Memory",
-    discovery_function=inventory_netscaler_mem,
+    discovery_function=discover_netscaler_mem,
     check_function=check_netscaler_mem,
     check_ruleset_name="netscaler_mem",
     check_default_parameters={

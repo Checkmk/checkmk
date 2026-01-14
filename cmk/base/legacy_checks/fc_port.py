@@ -103,7 +103,7 @@ def fc_port_getitem(num_ports, index, portname):
     return itemname
 
 
-def inventory_fc_port(info):
+def discover_fc_port(info):
     for line in info:
         try:
             index = int(line[0])
@@ -389,7 +389,7 @@ check_info["fc_port"] = LegacyCheckDefinition(
         ],
     ),
     service_name="FC Interface %s",
-    discovery_function=inventory_fc_port,
+    discovery_function=discover_fc_port,
     check_function=check_fc_port,
     check_ruleset_name="fc_port",
     check_default_parameters={

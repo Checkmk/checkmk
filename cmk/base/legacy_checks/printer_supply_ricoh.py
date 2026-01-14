@@ -39,7 +39,7 @@ def parse_printer_supply_ricoh(string_table):
     return parsed
 
 
-def inventory_printer_supply_ricoh(parsed):
+def discover_printer_supply_ricoh(parsed):
     return [(key, {}) for key in parsed]
 
 
@@ -114,7 +114,7 @@ check_info["printer_supply_ricoh"] = LegacyCheckDefinition(
     ),
     parse_function=parse_printer_supply_ricoh,
     service_name="Supply %s",
-    discovery_function=inventory_printer_supply_ricoh,
+    discovery_function=discover_printer_supply_ricoh,
     check_function=check_printer_supply_ricoh,
     check_ruleset_name="printer_supply",
     check_default_parameters={"levels": (20.0, 10.0)},

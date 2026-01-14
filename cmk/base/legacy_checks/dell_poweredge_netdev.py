@@ -14,7 +14,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def inventory_dell_poweredge_netdev(info):
+def discover_dell_poweredge_netdev(info):
     inventory = []
     for line in info:
         if line[1] != "2" and line[4] != "":
@@ -35,6 +35,6 @@ check_info["dell_poweredge_netdev"] = LegacyCheckDefinition(
         oids=["3", "4", "6", "15", "30"],
     ),
     service_name="%s",
-    discovery_function=inventory_dell_poweredge_netdev,
+    discovery_function=discover_dell_poweredge_netdev,
     check_function=check_dell_poweredge_netdev,
 )

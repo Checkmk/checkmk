@@ -13,7 +13,7 @@ from cmk.plugins.bvip.lib import DETECT_BVIP
 check_info = {}
 
 
-def inventory_bvip_poe(info):
+def discover_bvip_poe(info):
     if not info:
         return []
     if info[0][0] != "0":
@@ -41,7 +41,7 @@ check_info["bvip_poe"] = LegacyCheckDefinition(
         oids=["10"],
     ),
     service_name="POE Power",
-    discovery_function=inventory_bvip_poe,
+    discovery_function=discover_bvip_poe,
     check_function=check_bvip_poe,
     check_ruleset_name="epower_single",
     check_default_parameters={"levels": (50, 60)},

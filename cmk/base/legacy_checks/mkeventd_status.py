@@ -46,7 +46,7 @@ def parse_mkeventd_status(string_table):
     return parsed
 
 
-def inventory_mkeventd_status(parsed):
+def discover_mkeventd_status(parsed):
     return [(site, {}) for (site, status) in parsed.items() if status is not None]
 
 
@@ -139,6 +139,6 @@ check_info["mkeventd_status"] = LegacyCheckDefinition(
     name="mkeventd_status",
     parse_function=parse_mkeventd_status,
     service_name="OMD %s Event Console",
-    discovery_function=inventory_mkeventd_status,
+    discovery_function=discover_mkeventd_status,
     check_function=check_mkeventd_status,
 )

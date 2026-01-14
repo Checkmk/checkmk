@@ -61,7 +61,7 @@ hp_sts_drvbox_power_map = {
 }
 
 
-def inventory_hp_sts_drvbox(info):
+def discover_hp_sts_drvbox(info):
     if info:
         return [
             (line[0] + "/" + line[1], None) for line in info if line[3] != ""
@@ -130,6 +130,6 @@ check_info["hp_sts_drvbox"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "7", "8", "9", "10", "11", "17", "23"],
     ),
     service_name="Drive Box %s",
-    discovery_function=inventory_hp_sts_drvbox,
+    discovery_function=discover_hp_sts_drvbox,
     check_function=check_hp_sts_drvbox,
 )

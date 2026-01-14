@@ -14,7 +14,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def inventory_dell_poweredge_amperage_power(info):
+def discover_dell_poweredge_amperage_power(info):
     inventory = []
     for line in info:
         if line[6] != "" and line[5] in ("24", "26"):
@@ -22,7 +22,7 @@ def inventory_dell_poweredge_amperage_power(info):
     return inventory
 
 
-def inventory_dell_poweredge_amperage_current(info):
+def discover_dell_poweredge_amperage_current(info):
     inventory = []
     for line in info:
         if line[6] != "" and line[5] in ("23", "25"):
@@ -48,7 +48,7 @@ check_info["dell_poweredge_amperage.power"] = LegacyCheckDefinition(
     name="dell_poweredge_amperage_power",
     service_name="%s",
     sections=["dell_poweredge_amperage"],
-    discovery_function=inventory_dell_poweredge_amperage_power,
+    discovery_function=discover_dell_poweredge_amperage_power,
     check_function=check_dell_poweredge_amperage,
 )
 
@@ -56,6 +56,6 @@ check_info["dell_poweredge_amperage.current"] = LegacyCheckDefinition(
     name="dell_poweredge_amperage_current",
     service_name="%s",
     sections=["dell_poweredge_amperage"],
-    discovery_function=inventory_dell_poweredge_amperage_current,
+    discovery_function=discover_dell_poweredge_amperage_current,
     check_function=check_dell_poweredge_amperage,
 )

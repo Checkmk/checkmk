@@ -15,7 +15,7 @@ from cmk.plugins.bvip.lib import DETECT_BVIP
 check_info = {}
 
 
-def inventory_bvip_util(info):
+def discover_bvip_util(info):
     if info:
         for name in ["Total", "Coder", "VCA"]:
             yield name, {}
@@ -47,7 +47,7 @@ check_info["bvip_util"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     service_name="CPU utilization %s",
-    discovery_function=inventory_bvip_util,
+    discovery_function=discover_bvip_util,
     check_function=check_bvip_util,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (90.0, 95.0)},

@@ -26,7 +26,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def inventory_juniper_trpz_power(info):
+def discover_juniper_trpz_power(info):
     return [(line[0], None) for line in info]
 
 
@@ -63,6 +63,6 @@ check_info["juniper_trpz_power"] = LegacyCheckDefinition(
         oids=["3", "2"],
     ),
     service_name="PSU %s",
-    discovery_function=inventory_juniper_trpz_power,
+    discovery_function=discover_juniper_trpz_power,
     check_function=check_juniper_trpz_power,
 )

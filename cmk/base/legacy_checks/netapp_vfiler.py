@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import all_of, contains, SNMPTree, startswith, StringTab
 check_info = {}
 
 
-def inventory_netapp_vfiler(info):
+def discover_netapp_vfiler(info):
     inventory = []
     for line in info:
         # If we find an entry consisting of name and status, add it to inventory.
@@ -55,6 +55,6 @@ check_info["netapp_vfiler"] = LegacyCheckDefinition(
         oids=["2", "9"],
     ),
     service_name="vFiler Status %s",
-    discovery_function=inventory_netapp_vfiler,
+    discovery_function=discover_netapp_vfiler,
     check_function=check_netapp_vfiler,
 )

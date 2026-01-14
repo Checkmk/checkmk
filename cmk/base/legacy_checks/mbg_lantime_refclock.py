@@ -28,7 +28,7 @@ mbg_lantime_refclock_gpsstate_map = {
 }
 
 
-def inventory_mbg_lantime_refclock(info):
+def discover_mbg_lantime_refclock(info):
     if len(info) > 0 and len(info[0]) == 6:
         return [(None, {})]
     return []
@@ -100,7 +100,7 @@ check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
         oids=["4", "6", "7", "9", "10", "16"],
     ),
     service_name="LANTIME Refclock",
-    discovery_function=inventory_mbg_lantime_refclock,
+    discovery_function=discover_mbg_lantime_refclock,
     check_function=check_mbg_lantime_refclock,
     check_default_parameters={
         "levels_lower": (3, 3),

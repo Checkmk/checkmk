@@ -40,7 +40,7 @@ def test_parse_raritan_pdu_plugs() -> None:
     )
 
 
-def test_inventory_raritan_pdu_plugs() -> None:
+def test_discover_raritan_pdu_plugs() -> None:
     assert list(Check("raritan_pdu_plugs").run_discovery(_SECTION)) == [
         (
             "1",

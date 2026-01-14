@@ -127,7 +127,7 @@ check_info["hepta"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hepta_time_sync(info):
+def discover_hepta_time_sync(info):
     yield "SyncModuleTimeSyncState", {}
 
 
@@ -148,7 +148,7 @@ check_info["hepta.syncmoduletimesyncstate"] = LegacyCheckDefinition(
     name="hepta_syncmoduletimesyncstate",
     service_name="%s",
     sections=["hepta"],
-    discovery_function=inventory_hepta_time_sync,
+    discovery_function=discover_hepta_time_sync,
     check_function=check_hepta_time_sync,
 )
 
@@ -170,7 +170,7 @@ check_info["hepta.syncmoduletimesyncstate"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def inventory_hepta_ntpsysstratum(info):
+def discover_hepta_ntpsysstratum(info):
     yield "ntpSysStratum", {}
 
 
@@ -189,7 +189,7 @@ check_info["hepta.ntpsysstratum"] = LegacyCheckDefinition(
     name="hepta_ntpsysstratum",
     service_name="%s",
     sections=["hepta"],
-    discovery_function=inventory_hepta_ntpsysstratum,
+    discovery_function=discover_hepta_ntpsysstratum,
     check_function=check_hepta_ntpsysstratum,
 )
 
@@ -211,7 +211,7 @@ check_info["hepta.ntpsysstratum"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def inventory_hepta_syncmoduletimelocal(info):
+def discover_hepta_syncmoduletimelocal(info):
     yield "SyncModuleTimeLocal", {}
 
 
@@ -223,6 +223,6 @@ check_info["hepta.syncmoduletimelocal"] = LegacyCheckDefinition(
     name="hepta_syncmoduletimelocal",
     service_name="%s",
     sections=["hepta"],
-    discovery_function=inventory_hepta_syncmoduletimelocal,
+    discovery_function=discover_hepta_syncmoduletimelocal,
     check_function=check_hepta_syncmoduletimelocal,
 )

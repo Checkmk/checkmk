@@ -19,7 +19,7 @@ check_info = {}
 # .1.3.6.1.4.1.9.9.719.1.30.12.1.6 cucsMemoryUnitEnvStatsTemperature
 
 
-def inventory_cisco_ucs_temp_mem(info):
+def discover_cisco_ucs_temp_mem(info):
     for name, _value in info:
         name = name.split("/")[3]
         yield name, {}
@@ -47,7 +47,7 @@ check_info["cisco_ucs_temp_mem"] = LegacyCheckDefinition(
         oids=["2", "6"],
     ),
     service_name="Temperature Mem %s",
-    discovery_function=inventory_cisco_ucs_temp_mem,
+    discovery_function=discover_cisco_ucs_temp_mem,
     check_function=check_cisco_ucs_temp_mem,
     check_ruleset_name="temperature",
     check_default_parameters={

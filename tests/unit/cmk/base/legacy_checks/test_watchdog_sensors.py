@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.watchdog_sensors import (
     check_watchdog_sensors,
-    inventory_watchdog_sensors,
+    discover_watchdog_sensors,
     parse_watchdog_sensors,
 )
 
@@ -34,12 +34,12 @@ from cmk.base.legacy_checks.watchdog_sensors import (
         ),
     ],
 )
-def test_inventory_watchdog_sensors(
+def test_discover_watchdog_sensors(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for watchdog_sensors check."""
     parsed = parse_watchdog_sensors(string_table)
-    result = list(inventory_watchdog_sensors(parsed))
+    result = list(discover_watchdog_sensors(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

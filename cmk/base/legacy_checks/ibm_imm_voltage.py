@@ -13,7 +13,7 @@ from cmk.plugins.ibm.lib import DETECT_IBM_IMM
 check_info = {}
 
 
-def inventory_ibm_imm_voltage(info):
+def discover_ibm_imm_voltage(info):
     for line in info:
         yield line[0], None
 
@@ -55,6 +55,6 @@ check_info["ibm_imm_voltage"] = LegacyCheckDefinition(
         oids=["2", "3", "6", "7", "9", "10"],
     ),
     service_name="Voltage %s",
-    discovery_function=inventory_ibm_imm_voltage,
+    discovery_function=discover_ibm_imm_voltage,
     check_function=check_ibm_imm_voltage,
 )

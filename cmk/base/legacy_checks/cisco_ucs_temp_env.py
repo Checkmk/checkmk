@@ -34,7 +34,7 @@ def parse_cisco_ucs_temp_env(string_table):
     )
 
 
-def inventory_cisco_ucs_temp_env(info):
+def discover_cisco_ucs_temp_env(info):
     for name, _temp in info.items():
         yield name, {}
 
@@ -54,7 +54,7 @@ check_info["cisco_ucs_temp_env"] = LegacyCheckDefinition(
     ),
     parse_function=parse_cisco_ucs_temp_env,
     service_name="Temperature %s",
-    discovery_function=inventory_cisco_ucs_temp_env,
+    discovery_function=discover_cisco_ucs_temp_env,
     check_function=check_cisco_ucs_temp_env,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},

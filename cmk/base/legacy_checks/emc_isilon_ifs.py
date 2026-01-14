@@ -16,7 +16,7 @@ from cmk.plugins.lib.df import FSBlock
 check_info = {}
 
 
-def inventory_emc_isilon_ifs(section: FSBlock) -> list[tuple[str, None]]:
+def discover_emc_isilon_ifs(section: FSBlock) -> list[tuple[str, None]]:
     return [("Cluster", None)]
 
 
@@ -28,7 +28,7 @@ check_info["emc_isilon_ifs"] = LegacyCheckDefinition(
     name="emc_isilon_ifs",
     service_name="Filesystem %s",
     # section already migrated
-    discovery_function=inventory_emc_isilon_ifs,
+    discovery_function=discover_emc_isilon_ifs,
     check_function=check_emc_isilon_ifs,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.f5_bigip_fans import (
     check_f5_bigip_fans,
-    inventory_f5_bigip_fans,
+    discover_f5_bigip_fans,
     parse_f5_bigip_fans,
 )
 
@@ -45,12 +45,12 @@ from cmk.base.legacy_checks.f5_bigip_fans import (
         ),
     ],
 )
-def test_inventory_f5_bigip_fans(
+def test_discover_f5_bigip_fans(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for f5_bigip_fans check."""
     parsed = parse_f5_bigip_fans(string_table)
-    result = list(inventory_f5_bigip_fans(parsed))
+    result = list(discover_f5_bigip_fans(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.db2_connections import check_db2_connections, inventory_db2_connections
+from cmk.base.legacy_checks.db2_connections import check_db2_connections, discover_db2_connections
 from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
 
 
@@ -34,12 +34,12 @@ from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
         ),
     ],
 )
-def test_inventory_db2_connections(
+def test_discover_db2_connections(
     info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for db2_connections check."""
     parsed = parse_db2_dbs(info)
-    result = list(inventory_db2_connections(parsed))
+    result = list(discover_db2_connections(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

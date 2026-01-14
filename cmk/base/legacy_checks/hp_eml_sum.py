@@ -22,7 +22,7 @@ hp_eml_sum_map = {
 }
 
 
-def inventory_hp_eml_sum(info):
+def discover_hp_eml_sum(info):
     if info and info[0]:
         return [(None, None)]
     return []
@@ -55,6 +55,6 @@ check_info["hp_eml_sum"] = LegacyCheckDefinition(
         oids=["3", "7", "9", "10", "11"],
     ),
     service_name="Summary Status",
-    discovery_function=inventory_hp_eml_sum,
+    discovery_function=discover_hp_eml_sum,
     check_function=check_hp_eml_sum,
 )

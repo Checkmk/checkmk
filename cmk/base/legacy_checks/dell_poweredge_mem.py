@@ -14,7 +14,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def inventory_dell_poweredge_mem(info):
+def discover_dell_poweredge_mem(info):
     inventory = []
     for line in info:
         location = line[1]
@@ -36,6 +36,6 @@ check_info["dell_poweredge_mem"] = LegacyCheckDefinition(
         oids=["5", "8", "14", "15", "21", "22", "23"],
     ),
     service_name="%s",
-    discovery_function=inventory_dell_poweredge_mem,
+    discovery_function=discover_dell_poweredge_mem,
     check_function=check_dell_poweredge_mem,
 )

@@ -53,7 +53,7 @@ def map_ibm_mq_channel_status(status, params):
     return check_state
 
 
-def inventory_ibm_mq_channels(parsed):
+def discover_ibm_mq_channels(parsed):
     for service_name in parsed:
         if ":" not in service_name:
             # Do not show queue manager entry in inventory
@@ -82,7 +82,7 @@ def check_ibm_mq_channels(item, params, parsed):
 check_info["ibm_mq_channels"] = LegacyCheckDefinition(
     name="ibm_mq_channels",
     service_name="IBM MQ Channel %s",
-    discovery_function=inventory_ibm_mq_channels,
+    discovery_function=discover_ibm_mq_channels,
     check_function=check_ibm_mq_channels,
     check_ruleset_name="ibm_mq_channels",
 )

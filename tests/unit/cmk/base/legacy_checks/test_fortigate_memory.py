@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.fortigate_memory import (
     check_fortigate_memory,
-    inventory_fortigate_memory,
+    discover_fortigate_memory,
     parse_fortigate_memory,
 )
 
@@ -25,12 +25,12 @@ from cmk.base.legacy_checks.fortigate_memory import (
         ([["42"]], [(None, {})]),
     ],
 )
-def test_inventory_fortigate_memory(
+def test_discover_fortigate_memory(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for fortigate_memory check."""
     parsed = parse_fortigate_memory(string_table)
-    result = list(inventory_fortigate_memory(parsed))
+    result = list(discover_fortigate_memory(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

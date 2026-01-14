@@ -14,7 +14,7 @@ from cmk.plugins.apc.lib_ats import DETECT
 check_info = {}
 
 
-def inventory_apc_symmetra_ext_temp(info):
+def discover_apc_symmetra_ext_temp(info):
     for index, status, _temp, _temp_unit in info:
         if status == "2":
             yield index, {}
@@ -44,7 +44,7 @@ check_info["apc_symmetra_ext_temp"] = LegacyCheckDefinition(
         oids=["1", "3", "4", "5"],
     ),
     service_name="Temperature External %s",
-    discovery_function=inventory_apc_symmetra_ext_temp,
+    discovery_function=discover_apc_symmetra_ext_temp,
     check_function=check_apc_symmetra_ext_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},

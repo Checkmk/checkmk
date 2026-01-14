@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from cmk.base.legacy_checks.carel_sensors import (
     carel_sensors_parse,
     check_carel_sensors_temp,
-    inventory_carel_sensors_temp,
+    discover_carel_sensors_temp,
 )
 
 
@@ -37,7 +37,7 @@ def parsed() -> Mapping[str, object]:
 
 def test_carel_sensors_discovery() -> None:
     """Test discovery of carel_sensors items."""
-    discovery_result = list(inventory_carel_sensors_temp(parsed()))
+    discovery_result = list(discover_carel_sensors_temp(parsed()))
 
     expected = [
         ("Room", {"levels": (30, 35)}),

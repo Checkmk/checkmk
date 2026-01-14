@@ -30,7 +30,7 @@ from cmk.agent_based.v2 import any_of, equals, OIDEnd, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_docsis_cm_status(info):
+def discover_docsis_cm_status(info):
     for line in info:
         yield line[0], {}
 
@@ -96,7 +96,7 @@ check_info["docsis_cm_status"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1", "3"],
     ),
     service_name="Cable Modem %s Status",
-    discovery_function=inventory_docsis_cm_status,
+    discovery_function=discover_docsis_cm_status,
     check_function=check_docsis_cm_status,
     check_ruleset_name="docsis_cm_status",
     check_default_parameters={

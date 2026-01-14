@@ -30,7 +30,7 @@ def parse_ddn_s2a_stats(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_stats_readhits(parsed):
+def discover_ddn_s2a_stats_readhits(parsed):
     if "All_ports_Read_Hits" in parsed:
         yield "Total", {}
     for nr, _ in enumerate(parsed.get("Read_Hits", [])):
@@ -55,7 +55,7 @@ check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
     name="ddn_s2a_stats_readhits",
     service_name="DDN S2A Read Hits %s",
     sections=["ddn_s2a_stats"],
-    discovery_function=inventory_ddn_s2a_stats_readhits,
+    discovery_function=discover_ddn_s2a_stats_readhits,
     check_function=check_ddn_s2a_stats_readhits,
     check_ruleset_name="read_hits",
     check_default_parameters={
@@ -80,7 +80,7 @@ check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_stats_io(parsed):
+def discover_ddn_s2a_stats_io(parsed):
     if "All_ports_Read_IOs" in parsed:
         yield "Total", {}
     for nr, _ in enumerate(parsed.get("Read_IOs", [])):
@@ -126,7 +126,7 @@ check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
     name="ddn_s2a_stats_io",
     service_name="DDN S2A IO %s",
     sections=["ddn_s2a_stats"],
-    discovery_function=inventory_ddn_s2a_stats_io,
+    discovery_function=discover_ddn_s2a_stats_io,
     check_function=check_ddn_s2a_stats_io,
     check_ruleset_name="storage_iops",
     check_default_parameters={
@@ -145,7 +145,7 @@ check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ddn_s2a_stats(parsed):
+def discover_ddn_s2a_stats(parsed):
     if "All_ports_Read_MBs" in parsed:
         yield "Total", {}
     for nr, _value in enumerate(parsed.get("Read_MBs", [])):
@@ -199,7 +199,7 @@ check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
     name="ddn_s2a_stats",
     parse_function=parse_ddn_s2a_stats,
     service_name="DDN S2A Data Rate %s",
-    discovery_function=inventory_ddn_s2a_stats,
+    discovery_function=discover_ddn_s2a_stats,
     check_function=check_ddn_s2a_stats,
     check_ruleset_name="storage_throughput",
     check_default_parameters={

@@ -37,7 +37,7 @@ from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 check_info = {}
 
 
-def inventory_sylo(info):
+def discover_sylo(info):
     if len(info) > 0 and len(info[0]) == 4:
         return [(None, {})]
     return []
@@ -110,7 +110,7 @@ check_info["sylo"] = LegacyCheckDefinition(
     name="sylo",
     parse_function=parse_sylo,
     service_name="Sylo",
-    discovery_function=inventory_sylo,
+    discovery_function=discover_sylo,
     check_function=check_sylo,
     check_default_parameters={
         "max_age_secs": 70,

@@ -70,7 +70,7 @@ def parse_ibm_svc_portsas(string_table):
     return parsed
 
 
-def inventory_ibm_svc_portsas(parsed):
+def discover_ibm_svc_portsas(parsed):
     for item_name, data in parsed.items():
         status = data["status"]
         if status == "offline_unconfigured":
@@ -98,7 +98,7 @@ check_info["ibm_svc_portsas"] = LegacyCheckDefinition(
     name="ibm_svc_portsas",
     parse_function=parse_ibm_svc_portsas,
     service_name="SAS %s",
-    discovery_function=inventory_ibm_svc_portsas,
+    discovery_function=discover_ibm_svc_portsas,
     check_function=check_ibm_svc_portsas,
     check_default_parameters={
         "current_state": "offline",

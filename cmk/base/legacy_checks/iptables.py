@@ -56,7 +56,7 @@ def parse_iptables(string_table):
     return config
 
 
-def inventory_iptables(parsed):
+def discover_iptables(parsed):
     return [(None, {"config_hash": iptables_hash(parsed)})]
 
 
@@ -93,7 +93,7 @@ check_info["iptables"] = LegacyCheckDefinition(
     name="iptables",
     parse_function=parse_iptables,
     service_name="Iptables",
-    discovery_function=inventory_iptables,
+    discovery_function=discover_iptables,
     check_function=check_iptables,
     check_default_parameters={},
 )

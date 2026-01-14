@@ -19,7 +19,7 @@ def format_item_checkpoint_fan(name):
     return name.replace(" Fan", "")
 
 
-def inventory_checkpoint_fan(info):
+def discover_checkpoint_fan(info):
     for name, _value, _unit, _dev_status in info:
         yield format_item_checkpoint_fan(name), {}
 
@@ -44,6 +44,6 @@ check_info["checkpoint_fan"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "6"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_checkpoint_fan,
+    discovery_function=discover_checkpoint_fan,
     check_function=check_checkpoint_fan,
 )

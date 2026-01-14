@@ -40,7 +40,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_tsm_drives(info):
+def discover_tsm_drives(info):
     inventory = []
     for line in info:
         if len(line) == 6:
@@ -89,6 +89,6 @@ check_info["tsm_drives"] = LegacyCheckDefinition(
     name="tsm_drives",
     parse_function=parse_tsm_drives,
     service_name="TSM Drive %s",
-    discovery_function=inventory_tsm_drives,
+    discovery_function=discover_tsm_drives,
     check_function=check_tsm_drives,
 )

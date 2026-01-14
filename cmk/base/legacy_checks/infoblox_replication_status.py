@@ -25,7 +25,7 @@ check_info = {}
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.6.X.X.X.X.X 2016/04/13 14:15:51 --> IB-PLATFORMONE-MIB::ibNodeLastRepTimeToMaster."11.112.133.17"
 
 
-def inventory_infoblox_replication_status(info):
+def discover_infoblox_replication_status(info):
     return [(line[0], None) for line in info]
 
 
@@ -65,6 +65,6 @@ check_info["infoblox_replication_status"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5", "6"],
     ),
     service_name="Replication %s",
-    discovery_function=inventory_infoblox_replication_status,
+    discovery_function=discover_infoblox_replication_status,
     check_function=check_infoblox_replication_status,
 )

@@ -13,7 +13,7 @@ from cmk.plugins.hitachi_hnas.lib import DETECT
 check_info = {}
 
 
-def inventory_hitachi_hnas_fan(info):
+def discover_hitachi_hnas_fan(info):
     inventory = []
     for clusternode, fan_id, _fitted_status, _speed_status, _speed in info:
         inventory.append((clusternode + "." + fan_id, None))
@@ -76,6 +76,6 @@ check_info["hitachi_hnas_fan"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_hitachi_hnas_fan,
+    discovery_function=discover_hitachi_hnas_fan,
     check_function=check_hitachi_hnas_fan,
 )

@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.ucs_c_rack_server_psu import (
     check_ucs_c_rack_server_psu,
-    inventory_ucs_c_rack_server_psu,
+    discover_ucs_c_rack_server_psu,
     parse_ucs_c_rack_server_psu,
 )
 
@@ -111,12 +111,12 @@ from cmk.base.legacy_checks.ucs_c_rack_server_psu import (
         ),
     ],
 )
-def test_inventory_ucs_c_rack_server_psu(
+def test_discover_ucs_c_rack_server_psu(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ucs_c_rack_server_psu check."""
     parsed = parse_ucs_c_rack_server_psu(string_table)
-    result = list(inventory_ucs_c_rack_server_psu(parsed))
+    result = list(discover_ucs_c_rack_server_psu(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

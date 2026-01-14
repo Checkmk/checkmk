@@ -22,7 +22,7 @@ def format_hitachi_hnas_name(nodeid, sensorid, new_format):
     return f"{nodeid}.{sensorid}"
 
 
-def inventory_hitachi_hnas_temp(info):
+def discover_hitachi_hnas_temp(info):
     for clusternode, id_, _status, _temp in info:
         yield format_hitachi_hnas_name(clusternode, id_, True), None
 
@@ -70,7 +70,7 @@ check_info["hitachi_hnas_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_hitachi_hnas_temp,
+    discovery_function=discover_hitachi_hnas_temp,
     check_function=check_hitachi_hnas_temp,
     check_ruleset_name="temperature",
 )

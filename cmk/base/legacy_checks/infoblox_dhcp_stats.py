@@ -25,7 +25,7 @@ check_info = {}
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.9.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfOthers.0
 
 
-def inventory_infoblox_statistics(info):
+def discover_infoblox_statistics(info):
     return [(None, None)]
 
 
@@ -63,6 +63,6 @@ check_info["infoblox_dhcp_stats"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
     ),
     service_name="DHCP statistics",
-    discovery_function=inventory_infoblox_statistics,
+    discovery_function=discover_infoblox_statistics,
     check_function=check_infoblox_dhcp_stats,
 )

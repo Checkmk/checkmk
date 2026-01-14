@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_msoffice_serviceplans(info):
+def discover_msoffice_serviceplans(info):
     for line in info:
         if len(line) >= 1 and "Microsoft.Graph module is not installed" in " ".join(line):
             yield "_error", {}
@@ -72,7 +72,7 @@ check_info["msoffice_serviceplans"] = LegacyCheckDefinition(
     name="msoffice_serviceplans",
     parse_function=parse_msoffice_serviceplans,
     service_name="MS Office Serviceplans %s",
-    discovery_function=inventory_msoffice_serviceplans,
+    discovery_function=discover_msoffice_serviceplans,
     check_function=check_msoffice_serviceplans,
     check_ruleset_name="msoffice_serviceplans",
 )

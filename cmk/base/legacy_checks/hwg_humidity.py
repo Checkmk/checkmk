@@ -17,7 +17,7 @@ check_info = {}
 HWG_HUMIDITY_DEFAULTLEVELS = {"levels": (60.0, 70.0)}
 
 
-def inventory_hwg_humidity(parsed):
+def discover_hwg_humidity(parsed):
     for index, attrs in parsed.items():
         if attrs.get("humidity"):
             yield index, {}
@@ -40,7 +40,7 @@ check_info["hwg_humidity"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hwg,
     service_name="Humidity %s",
-    discovery_function=inventory_hwg_humidity,
+    discovery_function=discover_hwg_humidity,
     check_function=check_hwg_humidity,
     check_ruleset_name="humidity",
     check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
@@ -50,7 +50,7 @@ check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
     name="hwg_ste2_humidity",
     service_name="Humidity %s",
     sections=["hwg_ste2"],
-    discovery_function=inventory_hwg_humidity,
+    discovery_function=discover_hwg_humidity,
     check_function=check_hwg_humidity,
     check_ruleset_name="humidity",
     check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,

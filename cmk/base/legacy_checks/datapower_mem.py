@@ -15,7 +15,7 @@ from cmk.plugins.datapower.lib import DETECT
 check_info = {}
 
 
-def inventory_datapower_mem(info):
+def discover_datapower_mem(info):
     if info:
         yield None, {}
 
@@ -46,7 +46,7 @@ check_info["datapower_mem"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Memory",
-    discovery_function=inventory_datapower_mem,
+    discovery_function=discover_datapower_mem,
     check_function=check_datapower_mem,
     check_ruleset_name="memory_simple_single",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},

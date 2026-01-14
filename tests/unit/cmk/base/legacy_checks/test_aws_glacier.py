@@ -13,7 +13,7 @@ import pytest
 
 from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.aws_glacier import check_aws_glacier_archives as check_aws_glacier
-from cmk.base.legacy_checks.aws_glacier import inventory_aws_glacier, parse_aws_glacier
+from cmk.base.legacy_checks.aws_glacier import discover_aws_glacier, parse_aws_glacier
 
 
 @pytest.mark.parametrize(
@@ -121,12 +121,12 @@ from cmk.base.legacy_checks.aws_glacier import inventory_aws_glacier, parse_aws_
         ),
     ],
 )
-def test_inventory_aws_glacier(
+def test_discover_aws_glacier(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for aws_glacier check."""
     parsed = parse_aws_glacier(string_table)
-    result = list(inventory_aws_glacier(parsed))
+    result = list(discover_aws_glacier(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

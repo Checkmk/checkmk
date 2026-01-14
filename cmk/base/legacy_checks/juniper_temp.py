@@ -28,7 +28,7 @@ def parse_juniper_temp(string_table):
     return parsed
 
 
-def inventory_juniper_temp(parsed):
+def discover_juniper_temp(parsed):
     return [(description, {}) for description in parsed]
 
 
@@ -50,7 +50,7 @@ check_info["juniper_temp"] = LegacyCheckDefinition(
     ),
     parse_function=parse_juniper_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_juniper_temp,
+    discovery_function=discover_juniper_temp,
     check_function=check_juniper_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

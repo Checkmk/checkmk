@@ -33,7 +33,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_msexch_replhealth(info):
+def discover_msexch_replhealth(info):
     for line in info:
         if line[0].strip().lower() == "check":
             yield line[1].strip(), None
@@ -65,6 +65,6 @@ check_info["msexch_replhealth"] = LegacyCheckDefinition(
     name="msexch_replhealth",
     parse_function=parse_msexch_replhealth,
     service_name="Exchange Replication Health %s",
-    discovery_function=inventory_msexch_replhealth,
+    discovery_function=discover_msexch_replhealth,
     check_function=check_msexch_replhealth,
 )

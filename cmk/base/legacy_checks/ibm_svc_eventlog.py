@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_ibm_svc_eventlog(info):
+def discover_ibm_svc_eventlog(info):
     return [(None, None)]
 
 
@@ -65,6 +65,6 @@ check_info["ibm_svc_eventlog"] = LegacyCheckDefinition(
     name="ibm_svc_eventlog",
     parse_function=parse_ibm_svc_eventlog,
     service_name="Eventlog",
-    discovery_function=inventory_ibm_svc_eventlog,
+    discovery_function=discover_ibm_svc_eventlog,
     check_function=check_ibm_svc_eventlog,
 )

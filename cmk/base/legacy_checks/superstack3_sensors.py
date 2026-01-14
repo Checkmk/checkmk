@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 check_info = {}
 
 
-def inventory_superstack3_sensors(info):
+def discover_superstack3_sensors(info):
     return [(line[0], None) for line in info if line[1] != "not present"]
 
 
@@ -40,6 +40,6 @@ check_info["superstack3_sensors"] = LegacyCheckDefinition(
         oids=["7", "10"],
     ),
     service_name="%s",
-    discovery_function=inventory_superstack3_sensors,
+    discovery_function=discover_superstack3_sensors,
     check_function=check_superstack3_sensors,
 )

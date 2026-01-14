@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_sansymphony_alerts(info):
+def discover_sansymphony_alerts(info):
     yield None, {}
 
 
@@ -35,7 +35,7 @@ check_info["sansymphony_alerts"] = LegacyCheckDefinition(
     name="sansymphony_alerts",
     parse_function=parse_sansymphony_alerts,
     service_name="sansymphony Alerts",
-    discovery_function=inventory_sansymphony_alerts,
+    discovery_function=discover_sansymphony_alerts,
     check_function=check_sansymphony_alerts,
     check_ruleset_name="sansymphony_alerts",
     check_default_parameters={

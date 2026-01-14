@@ -36,7 +36,7 @@ def parse_informix_tabextents(string_table):
     return parsed
 
 
-def inventory_informix_tabextents(parsed):
+def discover_informix_tabextents(parsed):
     return [(instance, {}) for instance in parsed]
 
 
@@ -71,7 +71,7 @@ check_info["informix_tabextents"] = LegacyCheckDefinition(
     name="informix_tabextents",
     parse_function=parse_informix_tabextents,
     service_name="Informix Table Extents %s",
-    discovery_function=inventory_informix_tabextents,
+    discovery_function=discover_informix_tabextents,
     check_function=check_informix_tabextents,
     check_ruleset_name="informix_tabextents",
     check_default_parameters={

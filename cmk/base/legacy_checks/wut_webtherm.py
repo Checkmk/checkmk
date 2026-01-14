@@ -62,7 +62,7 @@ def parse_wut_webtherm(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_wut_webtherm(parsed):
+def discover_wut_webtherm(parsed):
     return [(sensor_id, {}) for sensor_id, values in parsed.items() if values["type"] == "temp"]
 
 
@@ -88,7 +88,7 @@ check_info["wut_webtherm"] = LegacyCheckDefinition(
     ],
     parse_function=parse_wut_webtherm,
     service_name="Temperature %s",
-    discovery_function=inventory_wut_webtherm,
+    discovery_function=discover_wut_webtherm,
     check_function=check_wut_webtherm,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -107,7 +107,7 @@ check_info["wut_webtherm"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_wut_webtherm_pressure(parsed):
+def discover_wut_webtherm_pressure(parsed):
     return [
         (sensor_id, None)
         for sensor_id, values in parsed.items()
@@ -125,7 +125,7 @@ check_info["wut_webtherm.pressure"] = LegacyCheckDefinition(
     name="wut_webtherm_pressure",
     service_name="Pressure %s",
     sections=["wut_webtherm"],
-    discovery_function=inventory_wut_webtherm_pressure,
+    discovery_function=discover_wut_webtherm_pressure,
     check_function=check_wut_webtherm_pressure,
 )
 
@@ -140,7 +140,7 @@ check_info["wut_webtherm.pressure"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_wut_webtherm_humidity(parsed):
+def discover_wut_webtherm_humidity(parsed):
     return [(sensor_id, {}) for sensor_id, values in parsed.items() if values["type"] == "humid"]
 
 
@@ -154,7 +154,7 @@ check_info["wut_webtherm.humidity"] = LegacyCheckDefinition(
     name="wut_webtherm_humidity",
     service_name="Humidity %s",
     sections=["wut_webtherm"],
-    discovery_function=inventory_wut_webtherm_humidity,
+    discovery_function=discover_wut_webtherm_humidity,
     check_function=check_wut_webtherm_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={

@@ -13,7 +13,7 @@ from cmk.plugins.ups_socomec.lib import DETECT_SOCOMEC
 check_info = {}
 
 
-def inventory_ups_socomec_out_source(info):
+def discover_ups_socomec_out_source(info):
     if info:
         return [(None, None)]
     return []
@@ -62,6 +62,6 @@ check_info["ups_socomec_out_source"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Output Source",
-    discovery_function=inventory_ups_socomec_out_source,
+    discovery_function=discover_ups_socomec_out_source,
     check_function=check_ups_socomec_out_source,
 )

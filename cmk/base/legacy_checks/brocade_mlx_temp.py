@@ -29,7 +29,7 @@ def parse_brocade_mlx_temp(string_table):
     return parsed
 
 
-def inventory_brocade_mlx_temp(parsed):
+def discover_brocade_mlx_temp(parsed):
     for item in parsed:
         yield item, {}
 
@@ -53,7 +53,7 @@ check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
     ),
     parse_function=parse_brocade_mlx_temp,
     service_name="Temperature %s",
-    discovery_function=inventory_brocade_mlx_temp,
+    discovery_function=discover_brocade_mlx_temp,
     check_function=check_brocade_mlx_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (105.0, 110.0)},

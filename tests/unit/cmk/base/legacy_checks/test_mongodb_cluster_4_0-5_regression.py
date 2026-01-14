@@ -21,8 +21,8 @@ from cmk.base.legacy_checks.mongodb_cluster import (
     check_mongodb_cluster_balancer,
     check_mongodb_cluster_databases,
     discover_mongodb_cluster_balancer,
-    inventory_mongodb_cluster_databases,
-    inventory_mongodb_cluster_shards,
+    discover_mongodb_cluster_databases,
+    discover_mongodb_cluster_shards,
     parse_mongodb_cluster,
 )
 
@@ -45,12 +45,12 @@ from cmk.base.legacy_checks.mongodb_cluster import (
         ),
     ],
 )
-def test_inventory_mongodb_cluster_databases_regression(
+def test_discover_mongodb_cluster_databases_regression(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for mongodb_cluster databases regression test."""
     parsed = parse_mongodb_cluster(string_table)
-    result = list(inventory_mongodb_cluster_databases(parsed))
+    result = list(discover_mongodb_cluster_databases(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 
@@ -73,12 +73,12 @@ def test_inventory_mongodb_cluster_databases_regression(
         ),
     ],
 )
-def test_inventory_mongodb_cluster_collections_regression(
+def test_discover_mongodb_cluster_collections_regression(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for mongodb_cluster collections regression test."""
     parsed = parse_mongodb_cluster(string_table)
-    result = list(inventory_mongodb_cluster_shards(parsed))
+    result = list(discover_mongodb_cluster_shards(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 

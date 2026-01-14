@@ -15,7 +15,7 @@ check_info = {}
 # .1.3.6.1.4.1.7779.3.1.1.2.1.16.0 ONLINE --> IB-PLATFORMONE-MIB::ibGridReplicationState.0
 
 
-def inventory_infoblox_grid_status(info):
+def discover_infoblox_grid_status(info):
     return [(None, None)]
 
 
@@ -43,6 +43,6 @@ check_info["infoblox_grid_status"] = LegacyCheckDefinition(
         oids=["15", "16"],
     ),
     service_name="Grid replication",
-    discovery_function=inventory_infoblox_grid_status,
+    discovery_function=discover_infoblox_grid_status,
     check_function=check_infoblox_grid_status,
 )

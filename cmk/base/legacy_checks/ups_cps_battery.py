@@ -44,7 +44,7 @@ def parse_ups_cps_battery(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ups_cps_battery_temp(parsed):
+def discover_ups_cps_battery_temp(parsed):
     if "temperature" in parsed:
         yield "Battery", {}
 
@@ -59,7 +59,7 @@ check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
     name="ups_cps_battery_temp",
     service_name="Temperature %s",
     sections=["ups_cps_battery"],
-    discovery_function=inventory_ups_cps_battery_temp,
+    discovery_function=discover_ups_cps_battery_temp,
     check_function=check_ups_cps_battery_temp,
     check_ruleset_name="temperature",
 )
@@ -75,7 +75,7 @@ check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ups_cps_battery(parsed):
+def discover_ups_cps_battery(parsed):
     if "capacity" in parsed:
         yield None, {}
 
@@ -120,7 +120,7 @@ check_info["ups_cps_battery"] = LegacyCheckDefinition(
     ),
     parse_function=parse_ups_cps_battery,
     service_name="UPS Battery",
-    discovery_function=inventory_ups_cps_battery,
+    discovery_function=discover_ups_cps_battery,
     check_function=check_ups_cps_battery,
     check_ruleset_name="ups_capacity",
     check_default_parameters={

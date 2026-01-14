@@ -88,7 +88,7 @@ def brocade_mlx_combine_item(id_, descr):
 #   +----------------------------------------------------------------------+
 
 
-def inventory_brocade_mlx_module(info):
+def discover_brocade_mlx_module(info):
     inventory = []
     for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty
@@ -108,7 +108,7 @@ check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
     name="brocade_mlx_module_status",
     service_name="Status Module %s",
     sections=["brocade_mlx"],
-    discovery_function=inventory_brocade_mlx_module,
+    discovery_function=discover_brocade_mlx_module,
     check_function=check_brocade_mlx_module,
 )
 
@@ -153,7 +153,7 @@ def parse_brocade_mlx_module_mem(info):
     return parsed
 
 
-def inventory_brocade_mlx_module_mem(info):
+def discover_brocade_mlx_module_mem(info):
     parsed = parse_brocade_mlx_module_mem(info)
     for k, v in parsed.items():
         # do not inventorize modules reported as empty or "Blocked for full height card"
@@ -199,7 +199,7 @@ check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
     name="brocade_mlx_module_mem",
     service_name="Memory Module %s",
     sections=["brocade_mlx"],
-    discovery_function=inventory_brocade_mlx_module_mem,
+    discovery_function=discover_brocade_mlx_module_mem,
     check_function=check_brocade_mlx_module_mem,
     check_ruleset_name="memory_multiitem",
     check_default_parameters={"levels": (80.0, 90.0)},
@@ -216,7 +216,7 @@ check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_brocade_mlx_module_cpu(info):
+def discover_brocade_mlx_module_cpu(info):
     for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
@@ -279,7 +279,7 @@ check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
     name="brocade_mlx_module_cpu",
     service_name="CPU utilization Module %s",
     sections=["brocade_mlx"],
-    discovery_function=inventory_brocade_mlx_module_cpu,
+    discovery_function=discover_brocade_mlx_module_cpu,
     check_function=check_brocade_mlx_module_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (80.0, 90.0)},

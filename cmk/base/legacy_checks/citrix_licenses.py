@@ -40,7 +40,7 @@ def parse_citrix_licenses(string_table):
     return parsed
 
 
-def inventory_citrix_licenses(parsed):
+def discover_citrix_licenses(parsed):
     return [(license_type, {}) for license_type in parsed]
 
 
@@ -58,7 +58,7 @@ check_info["citrix_licenses"] = LegacyCheckDefinition(
     name="citrix_licenses",
     parse_function=parse_citrix_licenses,
     service_name="Citrix Licenses %s",
-    discovery_function=inventory_citrix_licenses,
+    discovery_function=discover_citrix_licenses,
     check_function=check_citrix_licenses,
     check_ruleset_name="citrix_licenses",
     check_default_parameters={"levels": ("crit_on_all", None)},

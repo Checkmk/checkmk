@@ -15,7 +15,7 @@
 
 from cmk.base.legacy_checks.postgres_connections import (
     check_postgres_connections,
-    inventory_postgres_connections,
+    discover_postgres_connections,
 )
 from cmk.plugins.postgres.lib import parse_dbs
 
@@ -33,7 +33,7 @@ def test_postgres_connection_old_discovery():
     ]
 
     parsed = parse_dbs(string_table)
-    result = list(inventory_postgres_connections(parsed))
+    result = list(discover_postgres_connections(parsed))
 
     # Should discover both databases
     assert len(result) == 2

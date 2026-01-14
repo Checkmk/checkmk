@@ -15,7 +15,7 @@ import pytest
 
 from cmk.base.legacy_checks.ups_eaton_enviroment import (
     check_ups_eaton_enviroment,
-    inventory_ups_eaton_enviroment,
+    discover_ups_eaton_enviroment,
     parse_ups_eaton_enviroment,
 )
 
@@ -34,9 +34,9 @@ def parsed_fixture(string_table: list[list[str]]) -> list[list[str]]:
     return parse_ups_eaton_enviroment(string_table)
 
 
-def test_inventory_ups_eaton_enviroment(parsed: list[list[str]]) -> None:
+def test_discover_ups_eaton_enviroment(parsed: list[list[str]]) -> None:
     """Test environment discovery creates single service"""
-    discovered = list(inventory_ups_eaton_enviroment(parsed))
+    discovered = list(discover_ups_eaton_enviroment(parsed))
     assert len(discovered) == 1
     assert discovered[0][0] is None  # No item name
     assert discovered[0][1] == {}  # Empty parameters
@@ -115,10 +115,10 @@ def test_check_ups_eaton_enviroment_ok_state() -> None:
     ]
 
 
-def test_inventory_ups_eaton_enviroment_empty_data() -> None:
+def test_discover_ups_eaton_enviroment_empty_data() -> None:
     """Test discovery with empty data returns no services"""
     empty_data: list[list[str]] = []
-    discovered = list(inventory_ups_eaton_enviroment(empty_data))
+    discovered = list(discover_ups_eaton_enviroment(empty_data))
     assert len(discovered) == 0
 
 

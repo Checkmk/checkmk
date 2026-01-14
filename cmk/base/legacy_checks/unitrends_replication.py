@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_unitrends_replication(info):
+def discover_unitrends_replication(info):
     inventory = []
     for _application, _result, _complete, target, _instance in info:
         if target not in [x[0] for x in inventory]:
@@ -45,6 +45,6 @@ check_info["unitrends_replication"] = LegacyCheckDefinition(
     name="unitrends_replication",
     parse_function=parse_unitrends_replication,
     service_name="Replicaion %s",
-    discovery_function=inventory_unitrends_replication,
+    discovery_function=discover_unitrends_replication,
     check_function=check_unitrends_replication,
 )

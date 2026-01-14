@@ -49,7 +49,7 @@ def parse_aws_costs_and_usage(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_aws_costs_and_usage_summary(parsed):
+def discover_aws_costs_and_usage_summary(parsed):
     if parsed:
         return [("Summary", {})]
     return []
@@ -79,7 +79,7 @@ check_info["aws_costs_and_usage"] = LegacyCheckDefinition(
     name="aws_costs_and_usage",
     parse_function=parse_aws_costs_and_usage,
     service_name="AWS/CE %s",
-    discovery_function=inventory_aws_costs_and_usage_summary,
+    discovery_function=discover_aws_costs_and_usage_summary,
     check_function=check_aws_costs_and_usage_summary,
     check_ruleset_name="aws_costs_and_usage",
 )
@@ -95,7 +95,7 @@ check_info["aws_costs_and_usage"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_aws_costs_and_usage_per_service(parsed):
+def discover_aws_costs_and_usage_per_service(parsed):
     for _timeperiod, service_name in parsed:
         yield service_name, {}
 
@@ -124,7 +124,7 @@ check_info["aws_costs_and_usage.per_service"] = LegacyCheckDefinition(
     name="aws_costs_and_usage_per_service",
     service_name="AWS/CE %s",
     sections=["aws_costs_and_usage"],
-    discovery_function=inventory_aws_costs_and_usage_per_service,
+    discovery_function=discover_aws_costs_and_usage_per_service,
     check_function=check_aws_costs_and_usage_per_service,
     check_ruleset_name="aws_costs_and_usage",
 )

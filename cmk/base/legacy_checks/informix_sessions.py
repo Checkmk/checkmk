@@ -28,7 +28,7 @@ def parse_informix_sessions(string_table):
     return parsed
 
 
-def inventory_informix_sessions(parsed):
+def discover_informix_sessions(parsed):
     return [(instance, {}) for instance in parsed]
 
 
@@ -45,7 +45,7 @@ check_info["informix_sessions"] = LegacyCheckDefinition(
     name="informix_sessions",
     parse_function=parse_informix_sessions,
     service_name="Informix Sessions %s",
-    discovery_function=inventory_informix_sessions,
+    discovery_function=discover_informix_sessions,
     check_function=check_informix_sessions,
     check_ruleset_name="informix_sessions",
     check_default_parameters={"levels": (50, 60)},

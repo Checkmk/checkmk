@@ -67,7 +67,7 @@ def parse_gude_powerbanks(string_table):
     return parsed
 
 
-def inventory_gude_powerbanks(parsed):
+def discover_gude_powerbanks(parsed):
     return [
         (powerbank, {})
         for powerbank, attrs in parsed.items()
@@ -99,7 +99,7 @@ check_info["gude_powerbanks"] = LegacyCheckDefinition(
     ],
     parse_function=parse_gude_powerbanks,
     service_name="Powerbank %s",
-    discovery_function=inventory_gude_powerbanks,
+    discovery_function=discover_gude_powerbanks,
     check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={

@@ -28,7 +28,7 @@ from cmk.agent_based.v2 import equals, get_rate, get_value_store, SNMPTree, Stri
 check_info = {}
 
 
-def inventory_sophos_messages(info):
+def discover_sophos_messages(info):
     return [(line[0].replace("InvalidRecipient", "Invalid Recipient"), None) for line in info]
 
 
@@ -60,6 +60,6 @@ check_info["sophos_messages"] = LegacyCheckDefinition(
         oids=["2", "3", "4"],
     ),
     service_name="Messages %s",
-    discovery_function=inventory_sophos_messages,
+    discovery_function=discover_sophos_messages,
     check_function=check_sophos_messages,
 )

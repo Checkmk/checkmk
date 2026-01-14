@@ -37,7 +37,7 @@ check_info = {}
 # ...
 
 
-def inventory_postgres_locks(parsed):
+def discover_postgres_locks(parsed):
     for entry in parsed:
         yield entry, {}
 
@@ -79,7 +79,7 @@ check_info["postgres_locks"] = LegacyCheckDefinition(
     name="postgres_locks",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Locks %s",
-    discovery_function=inventory_postgres_locks,
+    discovery_function=discover_postgres_locks,
     check_function=check_postgres_locks,
     check_ruleset_name="postgres_locks",
 )

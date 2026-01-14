@@ -20,7 +20,7 @@ check_info = {}
 TOKEN_MULTIPLIER = (1, 60, 3600, 86400, 31536000)
 
 
-def inventory_hivemanager_devices(info):
+def discover_hivemanager_devices(info):
     for line in info:
         infos = dict([x.split("::") for x in line])
         yield infos["hostName"], {}
@@ -102,7 +102,7 @@ check_info["hivemanager_devices"] = LegacyCheckDefinition(
     name="hivemanager_devices",
     parse_function=parse_hivemanager_devices,
     service_name="Client %s",
-    discovery_function=inventory_hivemanager_devices,
+    discovery_function=discover_hivemanager_devices,
     check_function=check_hivemanager_devices,
     check_ruleset_name="hivemanager_devices",
     check_default_parameters={

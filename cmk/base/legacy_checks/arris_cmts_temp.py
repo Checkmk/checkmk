@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 check_info = {}
 
 
-def inventory_arris_cmts_temp(info):
+def discover_arris_cmts_temp(info):
     for line in info:
         # only devices with not default temperature
         if line[1] != "999":
@@ -41,7 +41,7 @@ check_info["arris_cmts_temp"] = LegacyCheckDefinition(
         oids=["3", "29"],
     ),
     service_name="Temperature Module %s",
-    discovery_function=inventory_arris_cmts_temp,
+    discovery_function=discover_arris_cmts_temp,
     check_function=check_arris_cmts_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (40.0, 46.0)},

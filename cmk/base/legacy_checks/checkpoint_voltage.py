@@ -14,7 +14,7 @@ from cmk.plugins.checkpoint.lib import DETECT
 check_info = {}
 
 
-def inventory_checkpoint_voltage(info):
+def discover_checkpoint_voltage(info):
     for name, _value, _unit, _dev_status in info:
         yield name, {}
 
@@ -40,6 +40,6 @@ check_info["checkpoint_voltage"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "6"],
     ),
     service_name="Voltage %s",
-    discovery_function=inventory_checkpoint_voltage,
+    discovery_function=discover_checkpoint_voltage,
     check_function=check_checkpoint_voltage,
 )

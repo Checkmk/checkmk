@@ -25,7 +25,7 @@ def isilon_fan_item_name(sensor_name):
     return sensor_name.replace("Fan", "").split("(")[0].strip()
 
 
-def inventory_emc_isilon_fans(info):
+def discover_emc_isilon_fans(info):
     for fan_name, _value in info:
         yield isilon_fan_item_name(fan_name), {}
 
@@ -50,7 +50,7 @@ check_info["emc_isilon_fans"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_emc_isilon_fans,
+    discovery_function=discover_emc_isilon_fans,
     check_function=check_emc_isilon_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={"lower": (3000, 2500)},

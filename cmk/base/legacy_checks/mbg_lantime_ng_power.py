@@ -12,7 +12,7 @@ from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 check_info = {}
 
 
-def inventory_mbg_lantime_ng_power(info):
+def discover_mbg_lantime_ng_power(info):
     for line in info:
         yield line[0], None
 
@@ -44,6 +44,6 @@ check_info["mbg_lantime_ng_power"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="Power Supply %s",
-    discovery_function=inventory_mbg_lantime_ng_power,
+    discovery_function=discover_mbg_lantime_ng_power,
     check_function=check_mbg_lantime_ng_power,
 )

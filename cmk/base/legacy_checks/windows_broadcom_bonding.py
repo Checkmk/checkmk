@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def inventory_windows_broadcom_bonding(info):
+def discover_windows_broadcom_bonding(info):
     inventory = []
     for line in info[1:]:
         inventory.append((" ".join(line[:-1]), None))
@@ -47,6 +47,6 @@ check_info["windows_broadcom_bonding"] = LegacyCheckDefinition(
     name="windows_broadcom_bonding",
     parse_function=parse_windows_broadcom_bonding,
     service_name="Bonding Interface %s",
-    discovery_function=inventory_windows_broadcom_bonding,
+    discovery_function=discover_windows_broadcom_bonding,
     check_function=check_windows_broadcom_bonding,
 )

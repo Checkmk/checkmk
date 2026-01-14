@@ -13,7 +13,7 @@ from cmk.plugins.domino.lib import DETECT
 check_info = {}
 
 
-def inventory_domino_users(info):
+def discover_domino_users(info):
     if info:
         yield None, {}
 
@@ -42,7 +42,7 @@ check_info["domino_users"] = LegacyCheckDefinition(
         oids=["6"],
     ),
     service_name="Domino Users",
-    discovery_function=inventory_domino_users,
+    discovery_function=discover_domino_users,
     check_function=check_domino_users,
     check_ruleset_name="domino_users",
     check_default_parameters={

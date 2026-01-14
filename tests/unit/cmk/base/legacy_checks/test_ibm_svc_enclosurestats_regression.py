@@ -20,8 +20,8 @@ import pytest
 from cmk.base.legacy_checks.ibm_svc_enclosurestats import (
     check_ibm_svc_enclosurestats_power,
     check_ibm_svc_enclosurestats_temp,
-    inventory_ibm_svc_enclosurestats_power,
-    inventory_ibm_svc_enclosurestats_temp,
+    discover_ibm_svc_enclosurestats_power,
+    discover_ibm_svc_enclosurestats_temp,
     parse_ibm_svc_enclosurestats,
 )
 
@@ -74,9 +74,9 @@ def test_parse_ibm_svc_enclosurestats(parsed: Mapping[str, Any]) -> None:
     assert parsed["4"]["temp_f"] == 71
 
 
-def test_inventory_ibm_svc_enclosurestats_power(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_enclosurestats_power(parsed: Mapping[str, Any]) -> None:
     """Test discovery of power monitoring services."""
-    result = list(inventory_ibm_svc_enclosurestats_power(parsed))
+    result = list(discover_ibm_svc_enclosurestats_power(parsed))
 
     assert len(result) == 4
     assert ("1", {}) in result
@@ -85,9 +85,9 @@ def test_inventory_ibm_svc_enclosurestats_power(parsed: Mapping[str, Any]) -> No
     assert ("4", {}) in result
 
 
-def test_inventory_ibm_svc_enclosurestats_temp(parsed: Mapping[str, Any]) -> None:
+def test_discover_ibm_svc_enclosurestats_temp(parsed: Mapping[str, Any]) -> None:
     """Test discovery of temperature monitoring services."""
-    result = list(inventory_ibm_svc_enclosurestats_temp(parsed))
+    result = list(discover_ibm_svc_enclosurestats_temp(parsed))
 
     assert len(result) == 4
     assert ("1", {}) in result
@@ -230,7 +230,7 @@ def test_parse_ibm_svc_enclosurestats_invalid_data() -> None:
     assert parsed["2"]["power_w"] == 126
 
 
-def test_inventory_ibm_svc_enclosurestats_missing_stats() -> None:
+def test_discover_ibm_svc_enclosurestats_missing_stats() -> None:
     """Test discovery with missing power or temperature stats."""
     # Only power data, no temperature
     string_table_power_only = [
@@ -239,8 +239,8 @@ def test_inventory_ibm_svc_enclosurestats_missing_stats() -> None:
     ]
     parsed_power_only = parse_ibm_svc_enclosurestats(string_table_power_only)
 
-    power_items = list(inventory_ibm_svc_enclosurestats_power(parsed_power_only))
-    temp_items = list(inventory_ibm_svc_enclosurestats_temp(parsed_power_only))
+    power_items = list(discover_ibm_svc_enclosurestats_power(parsed_power_only))
+    temp_items = list(discover_ibm_svc_enclosurestats_temp(parsed_power_only))
 
     assert len(power_items) == 2
     assert len(temp_items) == 0
@@ -252,8 +252,8 @@ def test_inventory_ibm_svc_enclosurestats_missing_stats() -> None:
     ]
     parsed_temp_only = parse_ibm_svc_enclosurestats(string_table_temp_only)
 
-    power_items = list(inventory_ibm_svc_enclosurestats_power(parsed_temp_only))
-    temp_items = list(inventory_ibm_svc_enclosurestats_temp(parsed_temp_only))
+    power_items = list(discover_ibm_svc_enclosurestats_power(parsed_temp_only))
+    temp_items = list(discover_ibm_svc_enclosurestats_temp(parsed_temp_only))
 
     assert len(power_items) == 0
     assert len(temp_items) == 2
@@ -265,10 +265,10 @@ def test_parse_ibm_svc_enclosurestats_empty_data() -> None:
     assert parsed == {}
 
 
-def test_inventory_ibm_svc_enclosurestats_empty_section() -> None:
+def test_discover_ibm_svc_enclosurestats_empty_section() -> None:
     """Test discovery with empty section."""
-    power_items = list(inventory_ibm_svc_enclosurestats_power({}))
-    temp_items = list(inventory_ibm_svc_enclosurestats_temp({}))
+    power_items = list(discover_ibm_svc_enclosurestats_power({}))
+    temp_items = list(discover_ibm_svc_enclosurestats_temp({}))
 
     assert len(power_items) == 0
     assert len(temp_items) == 0

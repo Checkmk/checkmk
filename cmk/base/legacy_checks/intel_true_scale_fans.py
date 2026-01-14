@@ -45,7 +45,7 @@ check_info = {}
 # .1.3.6.1.4.1.10222.2.1.6.5.1.5.13.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.13.1
 
 
-def inventory_intel_true_scale_fans(info):
+def discover_intel_true_scale_fans(info):
     return [
         (fan_name.replace("Fan", "").strip(), None)
         for fan_name, operstate, _speed_state in info
@@ -92,6 +92,6 @@ check_info["intel_true_scale_fans"] = LegacyCheckDefinition(
         oids=["2", "3", "4"],
     ),
     service_name="Fan %s",
-    discovery_function=inventory_intel_true_scale_fans,
+    discovery_function=discover_intel_true_scale_fans,
     check_function=check_intel_true_scale_fans,
 )

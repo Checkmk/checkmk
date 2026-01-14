@@ -13,7 +13,7 @@ from cmk.plugins.juniper.lib import DETECT_JUNIPER_TRPZ
 check_info = {}
 
 
-def inventory_juniper_trpz_info(info):
+def discover_juniper_trpz_info(info):
     return [(None, None)]
 
 
@@ -36,6 +36,6 @@ check_info["juniper_trpz_info"] = LegacyCheckDefinition(
         oids=["1", "4"],
     ),
     service_name="Info",
-    discovery_function=inventory_juniper_trpz_info,
+    discovery_function=discover_juniper_trpz_info,
     check_function=check_juniper_trpz_info,
 )

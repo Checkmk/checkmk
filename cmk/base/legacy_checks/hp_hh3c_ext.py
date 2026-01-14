@@ -53,7 +53,7 @@ def parse_hp_hh3c_ext(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hp_hh3c_ext(parsed):
+def discover_hp_hh3c_ext(parsed):
     for k, v in parsed.items():
         # The invalid value is 65535.
         # We assume: If mem_total <= 0, this module is not installed or
@@ -86,7 +86,7 @@ check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
     ],
     parse_function=parse_hp_hh3c_ext,
     service_name="Temperature %s",
-    discovery_function=inventory_hp_hh3c_ext,
+    discovery_function=discover_hp_hh3c_ext,
     check_function=check_hp_hh3c_ext,
     check_ruleset_name="temperature",
 )
@@ -102,7 +102,7 @@ check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hp_hh3c_ext_states(parsed):
+def discover_hp_hh3c_ext_states(parsed):
     for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
@@ -147,7 +147,7 @@ check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
     name="hp_hh3c_ext_states",
     service_name="Status %s",
     sections=["hp_hh3c_ext"],
-    discovery_function=inventory_hp_hh3c_ext_states,
+    discovery_function=discover_hp_hh3c_ext_states,
     check_function=check_hp_hh3c_ext_states,
     check_ruleset_name="hp_hh3c_ext_states",
 )
@@ -163,7 +163,7 @@ check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hp_hh3c_ext_cpu(parsed):
+def discover_hp_hh3c_ext_cpu(parsed):
     for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
@@ -182,7 +182,7 @@ check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
     name="hp_hh3c_ext_cpu",
     service_name="CPU utilization %s",
     sections=["hp_hh3c_ext"],
-    discovery_function=inventory_hp_hh3c_ext_cpu,
+    discovery_function=discover_hp_hh3c_ext_cpu,
     check_function=check_hp_hh3c_ext_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
 )
@@ -198,7 +198,7 @@ check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hp_hh3c_ext_mem(parsed):
+def discover_hp_hh3c_ext_mem(parsed):
     for name, attrs in parsed.items():
         if attrs["mem_total"] > 0:
             # We assume: if mem_total > 0 then
@@ -227,7 +227,7 @@ check_info["hp_hh3c_ext.mem"] = LegacyCheckDefinition(
     name="hp_hh3c_ext_mem",
     service_name="Memory %s",
     sections=["hp_hh3c_ext"],
-    discovery_function=inventory_hp_hh3c_ext_mem,
+    discovery_function=discover_hp_hh3c_ext_mem,
     check_function=check_hp_hh3c_ext_mem,
     check_ruleset_name="memory_multiitem",
     check_default_parameters={

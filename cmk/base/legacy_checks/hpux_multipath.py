@@ -73,7 +73,7 @@ def parse_hpux_multipath(info):
     return disks
 
 
-def inventory_hpux_multipath(parsed):
+def discover_hpux_multipath(parsed):
     for wwid, (_disk, (active, standby, failed, unopen)) in parsed.items():
         if active + standby + failed >= 2:
             yield wwid, {"expected": (active, standby, failed, unopen)}
@@ -121,7 +121,7 @@ check_info["hpux_multipath"] = LegacyCheckDefinition(
     name="hpux_multipath",
     service_name="Multipath %s",
     parse_function=parse_hpux_multipath,
-    discovery_function=inventory_hpux_multipath,
+    discovery_function=discover_hpux_multipath,
     check_function=check_hpux_multipath,
     check_ruleset_name="hpux_multipath",
 )

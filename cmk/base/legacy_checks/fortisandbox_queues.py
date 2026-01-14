@@ -46,7 +46,7 @@ def parse_fortisandbox_queues(string_table):
     return {k: int(v) for k, v in zip(queues, string_table[0])} if string_table else None
 
 
-def inventory_fortisandbox_queues(parsed):
+def discover_fortisandbox_queues(parsed):
     for queue in parsed:
         yield queue, {}
 
@@ -77,7 +77,7 @@ check_info["fortisandbox_queues"] = LegacyCheckDefinition(
     ),
     parse_function=parse_fortisandbox_queues,
     service_name="Pending %s files",
-    discovery_function=inventory_fortisandbox_queues,
+    discovery_function=discover_fortisandbox_queues,
     check_function=check_fortisandbox_queues,
     check_ruleset_name="fortisandbox_queues",
 )

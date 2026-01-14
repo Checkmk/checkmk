@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
 check_info = {}
 
 
-def inventory_aironet_errors(info):
+def discover_aironet_errors(info):
     yield from ((line[0], {}) for line in info)
 
 
@@ -67,6 +67,6 @@ check_info["aironet_errors"] = LegacyCheckDefinition(
     ),
     service_name="MAC CRC errors radio %s",
     # CISCO-DOT11-IF-MIB::cd11IfRecFrameMacCrcErrors,
-    discovery_function=inventory_aironet_errors,
+    discovery_function=discover_aironet_errors,
     check_function=check_aironet_errors,
 )

@@ -15,7 +15,7 @@ from cmk.plugins.hitachi_hnas.lib import DETECT
 check_info = {}
 
 
-def inventory_hitachi_hnas_drives(info):
+def discover_hitachi_hnas_drives(info):
     if info:
         return [(None, None)]
     return []
@@ -55,6 +55,6 @@ check_info["hitachi_hnas_drives"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hitachi_hnas_drives,
     service_name="System Drives",
-    discovery_function=inventory_hitachi_hnas_drives,
+    discovery_function=discover_hitachi_hnas_drives,
     check_function=check_hitachi_hnas_drives,
 )

@@ -30,7 +30,7 @@ def parse_hp_psu(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hp_psu_temp(parsed):
+def discover_hp_psu_temp(parsed):
     for index in parsed:
         yield index, {}
 
@@ -50,7 +50,7 @@ check_info["hp_psu.temp"] = LegacyCheckDefinition(
     name="hp_psu_temp",
     service_name="Temperature Power Supply %s",
     sections=["hp_psu"],
-    discovery_function=inventory_hp_psu_temp,
+    discovery_function=discover_hp_psu_temp,
     check_function=check_hp_psu_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -68,7 +68,7 @@ check_info["hp_psu.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hp_psu(parsed):
+def discover_hp_psu(parsed):
     for item in parsed:
         yield item, None
 
@@ -103,6 +103,6 @@ check_info["hp_psu"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hp_psu,
     service_name="Power Supply Status %s",
-    discovery_function=inventory_hp_psu,
+    discovery_function=discover_hp_psu,
     check_function=check_hp_psu,
 )

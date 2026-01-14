@@ -14,7 +14,7 @@ from cmk.plugins.decru.lib import DETECT_DECRU
 check_info = {}
 
 
-def inventory_decru_temps(info):
+def discover_decru_temps(info):
     for name, rawtemp in info:
         rawtemp = int(fahrenheit_to_celsius(rawtemp))
         # device doesn't provide warning/critical levels
@@ -43,7 +43,7 @@ check_info["decru_temps"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_decru_temps,
+    discovery_function=discover_decru_temps,
     check_function=check_decru_temps,
     check_ruleset_name="temperature",
 )

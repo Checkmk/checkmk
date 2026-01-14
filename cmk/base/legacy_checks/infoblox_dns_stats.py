@@ -15,7 +15,7 @@ from cmk.plugins.infoblox.lib import DETECT_INFOBLOX
 check_info = {}
 
 
-def inventory_infoblox_statistics(info):
+def discover_infoblox_statistics(info):
     return [(None, None)]
 
 
@@ -53,6 +53,6 @@ check_info["infoblox_dns_stats"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6", "7"],
     ),
     service_name="DNS statistics",
-    discovery_function=inventory_infoblox_statistics,
+    discovery_function=discover_infoblox_statistics,
     check_function=check_infoblox_dns_stats,
 )

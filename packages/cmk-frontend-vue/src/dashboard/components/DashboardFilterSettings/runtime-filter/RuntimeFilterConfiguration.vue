@@ -142,11 +142,11 @@ watch(
       :title="editButtonTooltip"
       @click="openConfiguration"
     >
-      {{ _t('Edit filter configuration') }}
+      {{ _t('Edit filter settings') }}
     </CmkButton>
   </div>
 
-  <CmkCheckbox v-model="overrideMode" :label="_t('Override dashboard filters')" />
+  <CmkCheckbox v-model="overrideMode" :label="_t('Override default filters')" />
 
   <div v-if="showAppliedConfirmation">
     <CmkAlertBox variant="success">
@@ -160,7 +160,7 @@ watch(
     object-type="host"
     :filters="hostRuntimeFilters"
     :get-filter-values="runtimeFilters.getFilterValues"
-    additional-item-label="Select from list"
+    :additional-item-label="_t('Add filter from left panel')"
     :dashboard-filters="hostDashboardFilters"
     :dashboard-configured-filters="dashboardFilters"
     :force-override="overrideMode"
@@ -188,7 +188,7 @@ watch(
     object-type="service"
     :filters="serviceRuntimeFilters"
     :get-filter-values="runtimeFilters.getFilterValues"
-    additional-item-label="Select from list"
+    :additional-item-label="_t('Add filter from left panel')"
     :dashboard-filters="serviceDashboardFilters"
     :dashboard-configured-filters="dashboardFilters"
     :force-override="overrideMode"

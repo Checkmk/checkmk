@@ -36,7 +36,7 @@ const displayLabels = computed(() => {
   return {
     title: _t('%{n} filters', { n: capitalizedTitle }),
     contextFilterTitle: _t('Applied filters'),
-    emptyContextTitle: _t('No %{n} dashboard filters applied', { n: props.objectType }),
+    emptyContextTitle: _t('No default %{n} filters applied', { n: props.objectType }),
     emptyContextMessage: _t(
       `%{n} filters selected on dashboard level appear and apply to all widgets. You can override the values by setting widget specific or runtime filters. `,
       { n: capitalizedTitle }

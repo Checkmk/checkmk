@@ -19,7 +19,7 @@ const { _t } = usei18n()
 const LABEL_INHERITED = _t('Inherited')
 const LABEL_OVERRIDEN = _t('Overriden')
 
-const LABEL_ORIGIN_DASHBOARD = _t('Dashboard filter')
+const LABEL_ORIGIN_DASHBOARD = _t('Default filter')
 const LABEL_ORIGIN_QUICK_FILTER = _t('Runtime filter')
 
 interface FilterItemProp {

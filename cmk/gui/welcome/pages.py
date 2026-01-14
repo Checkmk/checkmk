@@ -13,7 +13,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
+from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.utils.urls import (
+    doc_reference_url,
+    DocReference,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
@@ -51,7 +57,11 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
             break
 
 
-def make_url_or_callback_from_registry(identifier: str, permitted: bool = True) -> str | None:
+def _make_url_or_callback_from_registry(
+    is_snapin: bool,
+    identifier: str,
+    permitted: bool = True,
+) -> str | None:
     url = welcome_card_registry.get(identifier)
     if url is None or not permitted:
         return None
@@ -59,10 +69,10 @@ def make_url_or_callback_from_registry(identifier: str, permitted: bool = True) 
     if isinstance(url, WelcomeCardCallback):
         return url.callback_id
 
-    return makeuri(
-        request,
+    return _make_url(
         addvars=url.vars,
         filename=url.filename,
+        is_snapin=is_snapin,
     )
 
 
@@ -78,7 +88,7 @@ def _ajax_mark_step_as_complete(ctx: PageContext) -> None:
 class PageWelcomePageStageInformation(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        return asdict(get_welcome_data().stage_information)
+        return asdict(get_welcome_data(is_snapin=True).stage_information)
 
 
 def _welcome_page(ctx: PageContext) -> None:
@@ -104,148 +114,176 @@ def _welcome_page(ctx: PageContext) -> None:
         )
         return
 
-    html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data()))
+    html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data(is_snapin=False)))
 
     html.footer()
 
 
-def get_welcome_data() -> WelcomePage:
+def _make_url(addvars: HTTPVariables, filename: str, is_snapin: bool) -> str:
+    """This ensures that the navigation is always shown"""
+    if not is_snapin:
+        return makeuri(
+            request,
+            addvars=addvars,
+            filename=filename,
+        )
+
+    return makeuri(
+        request,
+        addvars=[("start_url", makeuri(request, addvars, filename=filename))],
+        filename="index.py",
+        delvars=["start_url"],
+    )
+
+
+def get_welcome_data(is_snapin: bool) -> WelcomePage:
     return WelcomePage(
         cards=WelcomeCards(
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(DocReference.INTRO_GUI),
-            create_contactgroups=makeuri(
-                request,
+            create_contactgroups=_make_url(
                 addvars=[("mode", "contact_groups")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            users=makeuri(
-                request,
+            users=_make_url(
                 addvars=[("mode", "users")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            assign_host_to_contactgroups=makeuri(
-                request,
+            assign_host_to_contactgroups=_make_url(
                 addvars=[("mode", "edit_ruleset"), ("varname", "host_contactgroups")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            setup_backup=makeuri(
-                request,
+            setup_backup=_make_url(
                 addvars=[("mode", "backup")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
             scale_monitoring=doc_reference_url(DocReference.DISTRIBUTED_MONITORING),
             fine_tune_monitoring=doc_reference_url(DocReference.FINETUNING_MONITORING),
-            license_site=makeuri(
-                request,
+            license_site=_make_url(
                 addvars=[("mode", "licensing")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            add_host=make_url_or_callback_from_registry("add_host")
-            or makeuri(
-                request,
+            add_host=_make_url_or_callback_from_registry(
+                is_snapin=is_snapin,
+                identifier="add_host",
+            )
+            or _make_url(
                 addvars=[("mode", "newhost")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            network_devices=make_url_or_callback_from_registry("relays")
-            or makeuri(
-                request,
+            network_devices=_make_url_or_callback_from_registry(
+                is_snapin=is_snapin,
+                identifier="relays",
+            )
+            or _make_url(
                 addvars=[("mode", "newhost"), ("prefill", "snmp")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            aws_quick_setup=makeuri(
-                request,
+            aws_quick_setup=_make_url(
                 addvars=[
                     ("mode", "new_special_agent_configuration"),
                     ("varname", "special_agents:aws"),
                 ],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            azure_quick_setup=makeuri(
-                request,
+            azure_quick_setup=_make_url(
                 addvars=[
                     ("mode", "new_special_agent_configuration"),
                     ("varname", "special_agents:azure_v2"),
                 ],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            gcp_quick_setup=makeuri(
-                request,
+            gcp_quick_setup=_make_url(
                 addvars=[
                     ("mode", "new_special_agent_configuration"),
                     ("varname", "special_agents:gcp"),
                 ],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            synthetic_monitoring=make_url_or_callback_from_registry(
-                "robotmk_managed_robots_overview", user.may("edit_managed_robots")
+            synthetic_monitoring=_make_url_or_callback_from_registry(
+                is_snapin=is_snapin,
+                identifier="robotmk_managed_robots_overview",
+                permitted=user.may("edit_managed_robots"),
             ),
-            opentelemetry=make_url_or_callback_from_registry("otel_collectors"),
-            activate_changes=makeuri(
-                request,
+            opentelemetry=_make_url_or_callback_from_registry(
+                is_snapin=is_snapin,
+                identifier="otel_collectors",
+            ),
+            activate_changes=_make_url(
                 addvars=[("mode", "changelog")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            setup_hosts=makeuri(
-                request,
+            setup_hosts=_make_url(
                 addvars=[("mode", "folder")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            main_dashboard=makeuri(
-                request,
+            main_dashboard=_make_url(
                 addvars=[("name", "main")],
                 filename="dashboard.py",
+                is_snapin=is_snapin,
             ),
-            problem_dashboard=makeuri(
-                request,
+            problem_dashboard=_make_url(
                 addvars=[("name", "problems")],
                 filename="dashboard.py",
+                is_snapin=is_snapin,
             ),
-            unhandled_service_problems=makeuri(
-                request,
+            unhandled_service_problems=_make_url(
                 addvars=[("view_name", "svcproblems")],
                 filename="view.py",
+                is_snapin=is_snapin,
             ),
-            time_periods=makeuri(
-                request,
+            time_periods=_make_url(
                 addvars=[("mode", "timeperiods")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            host_groups=makeuri(
-                request,
+            host_groups=_make_url(
                 addvars=[("mode", "host_groups")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            add_notification_rule=makeuri(
-                request,
+            add_notification_rule=_make_url(
                 addvars=[("mode", "notification_rule_quick_setup")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            test_notifications=makeuri(
-                request,
+            test_notifications=_make_url(
                 addvars=[("mode", "test_notifications")],
                 filename="wato.py",
+                is_snapin=is_snapin,
             ),
-            add_custom_dashboard=makeuri(
-                request,
+            add_custom_dashboard=_make_url(
                 addvars=[],
                 filename="dashboard.py?mode=create",
+                is_snapin=is_snapin,
             ),
-            all_dashboards=makeuri(
-                request,
+            all_dashboards=_make_url(
                 addvars=[],
                 filename="edit_dashboards.py",
+                is_snapin=is_snapin,
             ),
-            mark_step_completed=makeuri(
-                request,
+            mark_step_completed=_make_url(
                 addvars=[],
                 filename="ajax_mark_step_as_complete.py",
+                is_snapin=is_snapin,
             ),
-            get_stage_information=makeuri(
-                request,
+            get_stage_information=_make_url(
                 addvars=[],
                 filename="ajax_get_welcome_page_stage_information.py",
+                is_snapin=is_snapin,
             ),
         ),
         is_start_url=user.start_url == "welcome.py",

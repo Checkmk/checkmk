@@ -52,7 +52,7 @@ from cmk.server_side_calls_backend import load_special_agents
 
 custom_query: ModuleType | None = None
 try:
-    from cmk.plugins.metric_backend.special_agents.nonfree.ultimate import (  # type: ignore[import-untyped,no-redef,unused-ignore]
+    from cmk.plugins.custom_query_metric_backend.special_agents.nonfree.ultimate import (  # type: ignore[import-untyped,no-redef,unused-ignore]
         custom_query,
     )
 except ImportError:

@@ -180,6 +180,11 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc",
     ),
     "clickhouse_omd": ("cmk.metric_backend",),
+    "custom_query_metric_backend": (
+        "cmk.metric_backend",
+        "cmk.utils.paths",
+        "cmk.gui.form_specs.nonfree.ultimate.unstable.metric_backend_custom_query",
+    ),
     "datadog": (
         "cmk.ccc.store",
         "cmk.ccc.version",  # edition detection
@@ -210,11 +215,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ec.export",
         "cmk.gui.mkeventd",
         "cmk.utils.paths",
-    ),
-    "metric_backend": (
-        "cmk.metric_backend",
-        "cmk.utils.paths",
-        "cmk.gui.form_specs.nonfree.ultimate.unstable.metric_backend_custom_query",
     ),
     "otel": (
         "cmk.gui.form_specs.unstable",

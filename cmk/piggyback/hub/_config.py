@@ -5,14 +5,17 @@
 
 import enum
 import os
+import time
 from collections.abc import Mapping
+from logging import Logger
 from pathlib import Path
 from typing import Annotated
 
 from pydantic import BaseModel, PlainValidator
 
 from cmk.ccc.hostaddress import HostName
-from cmk.messaging import Connection, QueueName, RoutingKey
+from cmk.messaging import Channel, Connection, QueueName, RoutingKey
+from cmk.messaging.rabbitmq import rabbitmqctl_process
 
 from ._paths import RELATIVE_CONFIG_PATH
 from ._utils import APP_NAME
@@ -64,6 +67,7 @@ def load_config(omd_root: Path) -> PiggybackHubConfig:
 
 
 def publish_persisted_locations(
+    logger: Logger,
     destination_site: str,
     locations: HostLocations,
     omd_root: Path,
@@ -80,11 +84,15 @@ def publish_persisted_locations(
         customer: The customer (vhost) to publish to, or None for the provider ("/") vhost
     """
     config = PiggybackHubConfig(type=ConfigType.PERSISTED, locations=locations)
-    _publish_config(destination_site, config, omd_root, omd_site, customer)
+    _publish_config(logger, destination_site, config, omd_root, omd_site, customer)
 
 
 def publish_one_shot_locations(
-    destination_site: str, locations: HostLocations, omd_root: Path, omd_site: str
+    logger: Logger,
+    destination_site: str,
+    locations: HostLocations,
+    omd_root: Path,
+    omd_site: str,
 ) -> None:
     """Publish host locations for one-shot distribution of piggyback data.
 
@@ -96,10 +104,39 @@ def publish_one_shot_locations(
     """
     config = PiggybackHubConfig(type=ConfigType.ONESHOT, locations=locations)
     # one-shot should be communicated only from central site to remote sites (customer 'provider')
-    _publish_config(destination_site, config, omd_root, omd_site, customer=DEFAULT_CUSTOMER)
+    _publish_config(logger, destination_site, config, omd_root, omd_site, customer=DEFAULT_CUSTOMER)
+
+
+def _wait_config_queue_ready(logger: Logger, channel: Channel[PiggybackHubConfig]) -> bool:
+    """
+    Wait until the config queue exists (max 1 second), to avoid publishing into non-existing queues.
+    This could happen when, after rabbitmq definitions are loaded (stop_app -> start_app),
+    RabbitMQ has not yet really created/activated this queue, created runtime.
+    """
+    queue_name = channel.make_queue_name(CONFIG_QUEUE)
+
+    def _check_queue_exists() -> bool:
+        popen = rabbitmqctl_process(
+            ("list_queues", "--quiet", "--no-table-headers", "name"), wait=True
+        )
+        if popen.stdout and (lines := popen.stdout.readlines()):
+            lines_clean = [line.strip() for line in lines]
+            return queue_name in lines_clean
+        return False
+
+    if _check_queue_exists():
+        return True
+
+    logger.warning("Config queue does not exist, waiting...")
+    start = time.time()
+    while time.time() - start <= 2.0:
+        if _check_queue_exists():
+            return True
+    return False
 
 
 def _publish_config(
+    logger: Logger,
     destination_site: str,
     config: PiggybackHubConfig,
     omd_root: Path,
@@ -109,4 +146,7 @@ def _publish_config(
     vhost = DEFAULT_VHOST_NAME if customer == DEFAULT_CUSTOMER else customer
     with Connection(APP_NAME, omd_root, omd_site, None, vhost=vhost) as conn:
         channel = conn.channel(PiggybackHubConfig)
+        if vhost == DEFAULT_VHOST_NAME and not _wait_config_queue_ready(logger, channel):
+            logger.error("Cannot publish piggyback hub config: Config queue does not exist")
+            return
         channel.publish_for_site(destination_site, config, routing=CONFIG_ROUTE)

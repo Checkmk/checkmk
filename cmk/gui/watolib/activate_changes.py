@@ -1705,6 +1705,7 @@ class ActivateChangesManager:
                 _debug_log_message("Starting piggyback hub config distribution"),
             ):
                 activation_features.distribute_piggyback_hub_configs(
+                    logger,
                     load_configuration_settings(),
                     all_site_configs,
                     {
@@ -3927,6 +3928,7 @@ class ActivationFeatures:
     ]
     distribute_piggyback_hub_configs: Callable[
         [
+            logging.Logger,
             GlobalSettings,
             Mapping[SiteId, SiteConfiguration],
             Collection[SiteId],

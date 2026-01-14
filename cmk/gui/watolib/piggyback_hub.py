@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Collection, Iterable, Mapping
+from logging import Logger
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
@@ -43,6 +44,7 @@ def has_piggyback_hub_relevant_changes(pending_changes: Iterable[ChangeSpec]) ->
 
 
 def distribute_piggyback_hub_configs(
+    logger: Logger,
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
     dirty_sites: Collection[SiteId],  # only needed in multi-tenancy case.
@@ -51,7 +53,7 @@ def distribute_piggyback_hub_configs(
     for destination_site, locations in compute_new_config(
         global_settings, configured_sites, hosts_sites
     ):
-        publish_persisted_locations(destination_site, locations, omd_root, omd_site())
+        publish_persisted_locations(logger, destination_site, locations, omd_root, omd_site())
 
 
 def compute_new_config(

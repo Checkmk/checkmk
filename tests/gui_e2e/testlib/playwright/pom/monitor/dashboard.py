@@ -167,6 +167,9 @@ class BaseDashboard(CmkPage):
     def edit_widget_properties_button(self, widget_title: str) -> Locator:
         return self.get_widget(widget_title).get_by_role("button", name="Edit widget")
 
+    def delete_widget_button(self, widget_title: str) -> Locator:
+        return self.get_widget(widget_title).get_by_role("button", name="Delete widget")
+
 
 class MainDashboard(BaseDashboard):
     """Represent the page `Main dashboard`."""

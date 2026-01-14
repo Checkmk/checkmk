@@ -95,6 +95,7 @@ class WidgetType(StrEnum):
 
 class ServiceMetricDropdownOptions(DropdownOptions):
     CPU_UTILIZATION = "CPU utilization"
+    TOTAL_EXECUTION_TIME = "Total execution time"
 
 
 class SiteFilterDropdownOptions(DropdownOptions):

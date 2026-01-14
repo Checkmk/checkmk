@@ -57,7 +57,10 @@ class DropdownHelper[TDropdownOptions: DropdownOptions]:
         """
         logger.info("Select option '%s' in '%s' dropdown", option, self.__dropdown_name)
         self.__dropdown_box.click()
-        self.__dropdown_list.wait_for(state="visible")
+        expect(
+            self.__dropdown_list.get_by_role("option"),
+            message=f"Dropdown '{self.__dropdown_name}' has no options",
+        ).not_to_have_count(0)
 
         if search:
             self.__search_option(option)

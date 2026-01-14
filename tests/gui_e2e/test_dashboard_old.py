@@ -21,9 +21,6 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard_old import (
     MainDashboard,
     SummaryDashletType,
 )
-from tests.gui_e2e.testlib.playwright.pom.monitor.edit_element_top_list import (
-    AddElementTopList,
-)
 from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard_old import (
     LinuxHostsDashboard,
     WindowsHostsDashboard,
@@ -223,50 +220,6 @@ def test_host_dashboard(
             assert int(hosts_dashboard_page.total_count(dashlet_title).inner_text()) > 0, (
                 f"Total count in dashlet '{dashlet_title}' is 0"
             )
-
-
-def test_add_top_list_dashlet(
-    linux_hosts: list[str], cloned_linux_hosts_dashboard: CustomDashboard
-) -> None:
-    """Test 'Top list' dashlet for 'Total execution time' metric can be added to the dashboard.
-
-    Add 'Top list' dashlet for 'Total execution time' metric to the 'Linux Hosts' dashboard. Check
-    that the dashlet is visible and not empty.
-
-    Steps:
-        1. Navigate to the 'Linux Hosts' dashboard page.
-        2. Clone the built-in dashboard.
-        3. Enter layout mode.
-        4. Add 'Top list' dashlet for 'Total execution time' metric.
-        5. Check that the dashlet is visible and not empty.
-        6. Delete the dashlet.
-    """
-    hosts_count = len(linux_hosts)
-    metric = "Total execution time"
-    cloned_linux_hosts_dashboard.enter_layout_mode()
-
-    logger.info("Create 'Top list' dashlet for '%s' metric", metric)
-    cloned_linux_hosts_dashboard.main_area.click_item_in_dropdown_list("Add", "Top list")
-    add_element_top_list_page = AddElementTopList(
-        cloned_linux_hosts_dashboard.page, navigate_to_page=False
-    )
-    add_element_top_list_page.select_metric(metric)
-    add_element_top_list_page.check_show_service_name_checkbox(True)
-    add_element_top_list_page.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
-
-    logger.info("Check that new dashlet is visible and not empty")
-    cloned_linux_hosts_dashboard.check_dashlet_is_present(f"Top 10: {metric}")
-    rows_count = cloned_linux_hosts_dashboard.dashlet_table_rows(f"Top 10: {metric}").count()
-    assert rows_count % hosts_count == 0, "Dashlet table has unexpected amount of rows"
-
-    logger.info("Delete 'Top list' dashlet for '%s' metric", metric)
-    cloned_linux_hosts_dashboard.delete_dashlet_button(f"Top 10: {metric}").click()
-    cloned_linux_hosts_dashboard.delete_confirmation_button.click()
-    expect(
-        cloned_linux_hosts_dashboard.dashlet(f"Top 10: {metric}"),
-        message=f"Dashlet 'Top 10: {metric}' is still present after deletion",
-    ).not_to_be_attached()
 
 
 def test_dashboard_required_context_filter_by_host_name(

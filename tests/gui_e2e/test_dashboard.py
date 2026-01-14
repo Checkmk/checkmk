@@ -266,3 +266,54 @@ def test_widget_filters(
             f" rows but {hosts_count} rows were expected"
         ),
     ).to_have_count(hosts_count)
+
+
+def test_add_top_list_widget(
+    linux_hosts: list[str], cloned_linux_hosts_dashboard: CustomDashboard
+) -> None:
+    """Test 'Top list' widget for 'Total execution time' metric can be added to the dashboard.
+
+    Add 'Top list' widget for 'Total execution time' metric to the 'Linux Hosts' dashboard. Check
+    that the widget is visible and not empty.
+
+    Steps:
+        1. Navigate to the 'Linux Hosts' dashboard page.
+        2. Clone the built-in dashboard.
+        3. Enter 'Edit widgets' mode.
+        4. Add 'Top list' widget for 'Total execution time' metric.
+        5. Check that the widget is visible and not empty.
+        6. Delete the widget.
+    """
+    hosts_count = len(linux_hosts)
+    metric = ServiceMetricDropdownOptions.TOTAL_EXECUTION_TIME
+    widget_title = f"Top 10: {metric}"
+
+    cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
+    widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
+        WidgetType.METRICS_AND_GRAPHS
+    )
+
+    widget_wizard.select_service_metric(metric)
+    widget_wizard.select_visualization_type(VisualizationType.TOP_LIST)
+
+    widget_wizard.add_and_place_widget_button.click()
+
+    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.validate_page()
+
+    cloned_linux_hosts_dashboard.check_widget_is_present(widget_title)
+
+    rows_count = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title).count()
+
+    assert rows_count % hosts_count == 0, (
+        f"Widget table has unexpected amount of rows; expected a number divisible by {hosts_count},"
+        f" but found {rows_count} rows"
+    )
+
+    cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
+    cloned_linux_hosts_dashboard.delete_widget_button(widget_title).click()
+
+    expect(
+        cloned_linux_hosts_dashboard.get_widget(widget_title),
+        message=f"Widget '{widget_title}' is still present after deletion",
+    ).not_to_be_attached()

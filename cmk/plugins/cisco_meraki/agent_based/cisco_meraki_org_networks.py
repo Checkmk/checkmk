@@ -50,7 +50,7 @@ agent_section_cisco_meraki_org_networks = AgentSection(
 )
 
 
-def inventory_meraki_networks(section: Section) -> InventoryResult:
+def inventorize_meraki_networks(section: Section) -> InventoryResult:
     for network in section:
         inventory_columns = {
             "is_bound_to_template": "yes" if network.is_bound_to_config_template else "no",
@@ -77,5 +77,5 @@ def inventory_meraki_networks(section: Section) -> InventoryResult:
 
 inventory_plugin_cisco_meraki_org_networks = InventoryPlugin(
     name="cisco_meraki_org_networks",
-    inventory_function=inventory_meraki_networks,
+    inventory_function=inventorize_meraki_networks,
 )

@@ -10,7 +10,7 @@ from polyfactory.factories import TypedDictFactory
 
 from cmk.agent_based.v2 import StringTable, TableRow
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_networks import (
-    inventory_meraki_networks,
+    inventorize_meraki_networks,
     parse_meraki_networks,
 )
 from cmk.plugins.cisco_meraki.lib.schema import Network
@@ -25,7 +25,7 @@ def test_inventorize_device_info() -> None:
     string_table = [[f"[{json.dumps({device['id']: device})}]"]]
     section = parse_meraki_networks(string_table)
 
-    row = next(row for row in inventory_meraki_networks(section) if isinstance(row, TableRow))
+    row = next(row for row in inventorize_meraki_networks(section) if isinstance(row, TableRow))
 
     assert not row.status_columns
     assert row.key_columns == {"network_id": "netid-123"}
@@ -50,4 +50,4 @@ def test_inventorize_device_info() -> None:
 @pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])
 def test_inventorize_device_info_no_payload(string_table: StringTable) -> None:
     section = parse_meraki_networks(string_table)
-    assert not list(inventory_meraki_networks(section))
+    assert not list(inventorize_meraki_networks(section))

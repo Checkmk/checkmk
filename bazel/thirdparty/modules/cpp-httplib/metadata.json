@@ -7,6 +7,6 @@
     }
   ],
   "repository": ["github:yhirose/cpp-httplib"],
-  "versions": ["0.22.0.cmk.1"],
+  "versions": ["0.30.1.cmk.1"],
   "yanked_versions": {}
 }

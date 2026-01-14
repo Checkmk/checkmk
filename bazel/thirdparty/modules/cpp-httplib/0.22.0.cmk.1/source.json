@@ -1,9 +1,0 @@
-{
-  "url": "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.22.0.tar.gz",
-  "integrity": "sha256-/P6kjI8sOG5whe+FRcikh176MPptXPndMfA8atA42p0=",
-  "strip_prefix": "cpp-httplib-0.22.0",
-  "overlay": {
-    "BUILD.bazel": "sha256-wikd/FkA/MZxO2Rmkzw8k6ZX4+lWdcfXZiXm1MIb9JI=",
-    "MODULE.bazel": "sha256-zH37YKwFH7o4yIzyR/te2r6dz/iITMFjJVcHbvc1M+I="
-  }
-}

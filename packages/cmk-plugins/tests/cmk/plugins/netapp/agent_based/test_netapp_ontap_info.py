@@ -10,7 +10,7 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from cmk.agent_based.v2 import Result, State, TableRow
 from cmk.plugins.netapp.agent_based.netapp_ontap_info import (
     check_netapp_ontap_info,
-    inventory_netapp_ontap_info,
+    inventorize_netapp_ontap_info,
 )
 from cmk.plugins.netapp.models import NodeModel, Version
 
@@ -36,7 +36,7 @@ def test_check_netapp_ontap_info() -> None:
     assert result == [Result(state=State.OK, summary="Version: Release Full string description")]
 
 
-def test_inventory_netapp_ontap_info() -> None:
+def test_inventorize_netapp_ontap_info() -> None:
     node_models = [
         NodeModelFactory.build(
             namne="Node 1 name",
@@ -59,7 +59,7 @@ def test_inventory_netapp_ontap_info() -> None:
     ]
     section = {node_model.name: node_model for node_model in node_models}
 
-    result = list(inventory_netapp_ontap_info(section))
+    result = list(inventorize_netapp_ontap_info(section))
 
     assert isinstance(result[0], TableRow)
     assert result[0].inventory_columns == {"cores": 36, "model": "Cpu rocessor 1"}

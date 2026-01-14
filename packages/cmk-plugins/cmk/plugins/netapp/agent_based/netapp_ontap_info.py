@@ -73,7 +73,7 @@ check_plugin_netapp_ontap_info = CheckPlugin(
 )
 
 
-def inventory_netapp_ontap_info(section: Section) -> InventoryResult:
+def inventorize_netapp_ontap_info(section: Section) -> InventoryResult:
     for node in section.values():
         hw_system = {
             "model": node.model,
@@ -108,5 +108,5 @@ def inventory_netapp_ontap_info(section: Section) -> InventoryResult:
 inventory_plugin_netapp_ontap_info = InventoryPlugin(
     name="netapp_ontap_info",
     sections=["netapp_ontap_node"],
-    inventory_function=inventory_netapp_ontap_info,
+    inventory_function=inventorize_netapp_ontap_info,
 )

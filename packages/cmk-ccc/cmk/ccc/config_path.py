@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import shutil
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -109,7 +109,11 @@ def create(base: Path) -> Iterator[ConfigCreationContext]:
     serial = _increment_to_next_serial(base)
     under_construction_path = Path(VersionedConfigPath(base, serial))
 
-    under_construction_path.mkdir(parents=True, exist_ok=True)
+    with suppress(FileNotFoundError):
+        # this should not exist, but we must be robust.
+        shutil.rmtree(under_construction_path)
+    under_construction_path.mkdir(parents=True, exist_ok=False)
+
     try:
         yield ConfigCreationContext(
             path_active=current_config_path,

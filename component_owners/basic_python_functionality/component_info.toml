@@ -1,0 +1,6 @@
+type = "Component"
+has_support_component = true
+members_required = 2
+description = """
+- Basic functionality that is required for any program e.g. Logging, File-IO
+"""

@@ -1,0 +1,8 @@
+type = "System"
+members_required = 3
+description = """
+- The testing framework provides developers with the required functionalities for system level tests
+- The framework works reliably and with high performance
+- We use the right tools efficiently
+- A solution for reliable performance tests is developed and established
+"""

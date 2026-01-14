@@ -1,0 +1,8 @@
+type = "System"
+members_required = 2
+description = """
+- As a developer on the Checkmk I have the necessary tools to work efficiently on the Checkmk
+- For newcomers the start is made as easy as possible
+- Frequently used development environments are known to us
+- Standard tools are known and documented
+"""

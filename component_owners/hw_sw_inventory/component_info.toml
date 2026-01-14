@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "HW/SW Inventory"
+has_support_component = true
+members_required = 2
+description = """
+- Includes GUI, check engine integration and plugin API
+"""

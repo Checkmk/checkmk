@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "CMK Crypto"
+has_support_component = true
+members_required = 3
+description = """
+-
+"""

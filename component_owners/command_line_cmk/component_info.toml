@@ -1,0 +1,8 @@
+type = "Component"
+display_name = "Command Line cmk"
+has_support_component = true
+members_required = 2
+description = """
+- The cmk command line is well documented
+- Responsible for command parsing, help texts and action routing. The actions themselves are part of the components.
+"""

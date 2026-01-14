@@ -1,0 +1,7 @@
+type = "System"
+members_required = 2
+description = """
+- The setup is documented
+- The synchronization jobs are executed regularly and monitored
+- Includes weblate and synchronization with Checkmk
+"""

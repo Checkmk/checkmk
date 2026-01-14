@@ -1,0 +1,8 @@
+type = "System"
+members_required = 3
+description = """
+- The testing framework provides developers with the required functionalities for unit tests
+- The framework works reliably and with high performance
+- We use the right tools efficiently
+- Test jobs are available for all important languages (linter, test jobs)
+"""

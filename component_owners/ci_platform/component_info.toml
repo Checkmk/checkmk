@@ -1,0 +1,14 @@
+type = "System"
+display_name = "CI Platform"
+members_required = 3
+description = """
+- The CI system works reliably and performs well
+- The system is continuously updated
+- Includes Jenkins & Nexus: Setup, Maintainance, Updates
+- The version control system works reliably and performs well
+- The system is continuously updated
+- Includes setup, maintenance, updates and configuration
+- The Jenkins jobs are set up according to a uniform concept
+- Redundant logic is implemented in common configurations/code
+- Configuration is maintainable and under version control
+"""

@@ -1,0 +1,7 @@
+type = "System"
+members_required = 2
+description = """
+- Sending crash reports from Checkmk works from all major components of Checkmk
+- Crash reports are generated in useful places
+- The crash reports contain as much information as possible to reproduce a crash
+"""

@@ -43,8 +43,10 @@ span {
   position: relative;
   display: inline-block;
 
-  &::first-letter {
-    text-transform: capitalize;
+  &.title {
+    &::first-letter {
+      text-transform: capitalize;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 module(
     name = "cpp-httplib",
-    version = "0.22.0.cmk.1",
+    version = "0.30.1.cmk.1",
     bazel_compatibility = [">=7.2.1"],
     compatibility_level = 1,
 )

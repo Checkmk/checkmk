@@ -34,9 +34,9 @@ _HOST_CHANGES = (
 def has_piggyback_hub_relevant_changes(pending_changes: Iterable[ChangeSpec]) -> bool:
     def _is_relevant_config_change(change: ChangeSpec) -> bool:
         return (
-            change["action_name"] == "edit-configvar"
-            and "piggyback_hub" in change["domains"]
+            (change["action_name"] == "edit-configvar" and "piggyback_hub" in change["domains"])
             or change["action_name"] in _HOST_CHANGES
+            or change["action_name"] == "edit-sites"
         )
 
     return any(_is_relevant_config_change(change) for change in pending_changes)

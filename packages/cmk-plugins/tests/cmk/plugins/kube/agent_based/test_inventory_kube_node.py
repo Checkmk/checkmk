@@ -12,8 +12,14 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.plugins.kube.agent_based.inventory_kube_node import inventory_kube_node
-from cmk.plugins.kube.schemata.api import HealthZ, IpAddress, NodeAddress, NodeName, Timestamp
+from cmk.plugins.kube.agent_based.inventory_kube_node import inventorize_kube_node
+from cmk.plugins.kube.schemata.api import (
+    HealthZ,
+    IpAddress,
+    NodeAddress,
+    NodeName,
+    Timestamp,
+)
 from cmk.plugins.kube.schemata.section import FilteredAnnotations, KubeletInfo, NodeInfo
 from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_result
 
@@ -82,17 +88,17 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
         ),
     ],
 )
-def test_inventory_kube_node(
+def test_inventorize_kube_node(
     section_info: NodeInfo,
     section_kubelet: KubeletInfo,
     expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
     assert sort_inventory_result(
-        inventory_kube_node(section_info, section_kubelet)
+        inventorize_kube_node(section_info, section_kubelet)
     ) == sort_inventory_result(expected_check_result)
 
 
-def test_inventory_kube_node_calls_labels_to_table(mocker: MockerFixture) -> None:
+def test_inventorize_kube_node_calls_labels_to_table(mocker: MockerFixture) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 
@@ -107,5 +113,5 @@ def test_inventory_kube_node_calls_labels_to_table(mocker: MockerFixture) -> Non
     section_kubelet = KubeletInfoFactory.build()
 
     mock = mocker.patch("cmk.plugins.kube.agent_based.inventory_kube_node.labels_to_table")
-    list(inventory_kube_node(section_info, section_kubelet))
+    list(inventorize_kube_node(section_info, section_kubelet))
     mock.assert_called_once()

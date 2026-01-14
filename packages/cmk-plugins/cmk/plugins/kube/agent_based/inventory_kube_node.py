@@ -9,7 +9,7 @@ from cmk.plugins.kube.kube_inventory import labels_to_table
 from cmk.plugins.kube.schemata.section import KubeletInfo, NodeInfo
 
 
-def inventory_kube_node(
+def inventorize_kube_node(
     section_kube_node_info: NodeInfo | None,
     section_kube_node_kubelet: KubeletInfo | None,
 ) -> InventoryResult:
@@ -47,5 +47,5 @@ def inventory_kube_node(
 inventory_plugin_kube_node = InventoryPlugin(
     name="kube_node",
     sections=["kube_node_info", "kube_node_kubelet"],
-    inventory_function=inventory_kube_node,
+    inventory_function=inventorize_kube_node,
 )

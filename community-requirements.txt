@@ -401,31 +401,31 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.26 \
-    --hash=sha256:0fbcf1922e62d180f3644bc1139425821b38d93c1e6ec27409325d2ae86131aa \
-    --hash=sha256:f116cfbe7408e0a9153da363f134d2f1b5008f17ee86af104f0ce59a62be1833
+boto3==1.42.27 \
+    --hash=sha256:39dfec51aff3f9356e8c7331195f324cb498ec75b2601a902fc62aa127b8fd00 \
+    --hash=sha256:a8a53abb98ff1a24d9a88d9d8c0285bf02d23189666130456e8951ede2f7db98
     # via
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.42.26 \
-    --hash=sha256:009e6763a3fe4013293abb64b8bc92593361f8deb1e961b844ba645b2d6f70f2 \
-    --hash=sha256:537b38828ae036a40ac103fc2bcc520e933759816da9cabfbfece9ed175d7c7e
+boto3-stubs[logs]==1.42.27 \
+    --hash=sha256:2ce6bc2c71d19eade43179b9fa76ff5726b59668c1e6eef0c1f5aed6406675d3 \
+    --hash=sha256:9c35521b704a0b9f7bd2ce226d07d6eb94c0c35d5663fb7a2e7521d747cef967
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.42.26 \
-    --hash=sha256:1c8855e3e811f015d930ccfe8751d4be295aae0562133d14b6f0b247cd6fd8d3 \
-    --hash=sha256:71171c2d09ac07739f4efce398b15a4a8bc8769c17fb3bc99625e43ed11ad8b7
+botocore==1.42.27 \
+    --hash=sha256:c8e1e3ffb6c871622b1c8054f064d60cbc786aa5ca1f97f5f9fd5fa0a9d82d05 \
+    --hash=sha256:d51fb3b8dd1a944c8d238d2827a0dd6e5528d6da49a3bd9eccad019c533e4c9c
     # via
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.42.26 \
-    --hash=sha256:548380a16d31234255c00a4a4a15a5c8cdad360ba1af6dac5202111ec258155c \
-    --hash=sha256:5b0946681d46ce8acb0a3b8494bdf76d34bc26276f0b7baedcf88a6cf1dd798b
+botocore-stubs==1.42.27 \
+    --hash=sha256:1e5bc3f8879dc0c8cf98e668d108b3314d34db8f342ade2a9a53d88f27dc3292 \
+    --hash=sha256:b0075eb627800cc3bb6486595b4322e2ed3b3e36925bf1700d7b48ac14bfa37f
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -1173,9 +1173,9 @@ execnet==2.1.2 \
     # via
     #   -c requirements.txt
     #   pytest-xdist
-faker==40.1.0 \
-    --hash=sha256:a616d35818e2a2387c297de80e2288083bc915e24b7e39d2fb5bc66cce3a929f \
-    --hash=sha256:c402212a981a8a28615fea9120d789e3f6062c0c259a82bfb8dff5d273e539d2
+faker==40.1.2 \
+    --hash=sha256:93503165c165d330260e4379fd6dc07c94da90c611ed3191a0174d2ab9966a42 \
+    --hash=sha256:b76a68163aa5f171d260fc24827a8349bc1db672f6a665359e8d0095e8135d30
     # via
     #   -c requirements.txt
     #   polyfactory
@@ -1763,9 +1763,9 @@ httpcore==1.0.9 \
     # via
     #   -c requirements.txt
     #   httpx
-httplib2==0.31.0 \
-    --hash=sha256:ac7ab497c50975147d4f7b1ade44becc7df2f8954d42b38b3d69c515f531135c \
-    --hash=sha256:b9cd78abea9b4e43a7714c6e0f8b6b8561a6fc1e95d5dbd367f5bf0ef35f5d24
+httplib2==0.31.1 \
+    --hash=sha256:21591655ac54953624c6ab8d587c71675e379e31e2cfe3147c83c11e9ef41f92 \
+    --hash=sha256:d520d22fa7e50c746a7ed856bac298c4300105d01bc2d8c2580a9b57fb9ed617
     # via
     #   -c requirements.txt
     #   google-api-python-client
@@ -1778,9 +1778,9 @@ httpx==0.28.1 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   schemathesis
-hypothesis==6.150.1 \
-    --hash=sha256:7badb28a0da323d6afaf25eae1c93932cb8ac06193355f5e080d6e6465a51da5 \
-    --hash=sha256:dc79672b3771e92e6563ca0c56a24135438f319b257a1a1982deb8fbb791be89
+hypothesis==6.150.2 \
+    --hash=sha256:648d6a2be435889e713ba3d335b0fb5e7a250f569b56e6867887c1e7a0d1f02f \
+    --hash=sha256:deb043c41c53eaf0955f4a08739c2a34c3d8040ee3d9a2da0aa5470122979f75
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -6068,7 +6068,6 @@ tzdata==2025.3 \
     #   -c requirements.txt
     #   arrow
     #   exchangelib
-    #   faker
     #   icalendar
     #   recurring-ical-events
     #   x-wr-timezone

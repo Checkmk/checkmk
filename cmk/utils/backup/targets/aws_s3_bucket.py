@@ -7,7 +7,7 @@
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import Final, NotRequired, ReadOnly, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
@@ -15,9 +15,10 @@ from cmk.utils.password_store import extract, PasswordId
 
 
 class S3Params(TypedDict):
-    access_key: str
-    secret: PasswordId
-    bucket: str
+    access_key: ReadOnly[str]
+    secret: ReadOnly[PasswordId]
+    bucket: ReadOnly[str]
+    endpoint_url: ReadOnly[NotRequired[str]]  # Optional: for S3-compatible providers
 
 
 class S3Bucket:
@@ -27,16 +28,10 @@ class S3Bucket:
 
         if not (secret_extracted := extract(params["secret"])):
             raise MKGeneralException("Failed to retrieve secret")
-        self.client: Final = boto3.client(
-            "s3",
-            aws_access_key_id=params["access_key"],
-            aws_secret_access_key=secret_extracted,
-        )
-        self.bucket: Final = boto3.resource(
-            "s3",
-            aws_access_key_id=params["access_key"],
-            aws_secret_access_key=secret_extracted,
-        ).Bucket(params["bucket"])
+
+        client_args = _client_args(params, secret_extracted)
+        self.client: Final = boto3.client("s3", **client_args)
+        self.bucket: Final = boto3.resource("s3", **client_args).Bucket(params["bucket"])
 
     def ready(self) -> None:
         try:
@@ -78,6 +73,17 @@ class S3Bucket:
         for page in paginator.paginate(Bucket=self.bucket.name):
             for obj in page["Contents"]:
                 yield Path(obj["Key"])
+
+
+def _client_args(params: S3Params, secret: str) -> dict[str, str]:
+    endpoint_url = params.get("endpoint_url")
+    client_args = dict(
+        aws_access_key_id=params["access_key"],
+        aws_secret_access_key=secret,
+    )
+    if endpoint_url:
+        client_args["endpoint_url"] = endpoint_url
+    return client_args
 
 
 class S3Target(RemoteTarget[S3Params, S3Bucket]):

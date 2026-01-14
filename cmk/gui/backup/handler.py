@@ -1424,6 +1424,21 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
                     ],
                 ),
             ),
+            "endpoint_url": DictElement(
+                required=False,
+                parameter_form=String(
+                    title=Title("Endpoint URL (optional)"),
+                    help_text=Help(
+                        "Custom endpoint URL for S3-compatible storage services (e.g., Backblaze B2). "
+                        "Leave empty to use the default AWS S3 endpoint."
+                    ),
+                    custom_validate=[
+                        validators.Url(
+                            protocols=[validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS]
+                        ),
+                    ],
+                ),
+            ),
         }
 
 

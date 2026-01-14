@@ -165,7 +165,7 @@ class Channel(Generic[_ModelT]):
         self._pchannel: Final = pchannel
         self._model = message_model
 
-    def _make_queue_name(self, suffix: QueueName) -> str:
+    def make_queue_name(self, suffix: QueueName) -> str:
         return f"{APP_PREFIX}.{self.app_name.value}.{suffix.value}"
 
     def _make_binding_key(self, suffix: BindingKey) -> str:
@@ -191,7 +191,7 @@ class Channel(Generic[_ModelT]):
         You _must_ bind in order to consume messages.
         """
         bindings = bindings or [BindingKey(queue.value)]
-        full_queue_name = self._make_queue_name(queue)
+        full_queue_name = self.make_queue_name(queue)
         try:
             self._pchannel.queue_declare(
                 queue=full_queue_name,
@@ -264,7 +264,7 @@ class Channel(Generic[_ModelT]):
             )
 
         self._pchannel.basic_consume(
-            queue=self._make_queue_name(queue),
+            queue=self.make_queue_name(queue),
             on_message_callback=_on_message,
             auto_ack=auto_ack,
         )

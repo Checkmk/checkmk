@@ -1506,6 +1506,7 @@ class ActivateChangesManager(ActivateChanges):
                 _debug_log_message("Starting piggyback hub config distribution"),
             ):
                 activation_features.distribute_piggyback_hub_configs(
+                    logger,
                     load_configuration_settings(),
                     configured_sites(),
                     {site_id for site_id, _site_config in self.dirty_sites()},
@@ -3503,6 +3504,7 @@ class ActivationFeatures:
     get_rabbitmq_definitions: Callable[[BrokerConnections], Mapping[str, rabbitmq.Definitions]]
     distribute_piggyback_hub_configs: Callable[
         [
+            logging.Logger,
             GlobalSettings,
             Mapping[SiteId, SiteConfiguration],
             Collection[SiteId],

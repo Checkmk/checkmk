@@ -39,7 +39,7 @@ snmp_section_fortisandbox_system = SimpleSNMPSection(
 )
 
 
-def inventory_fortisandbox_system(section: Section) -> InventoryResult:
+def inventorize_fortisandbox_system(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
@@ -50,5 +50,5 @@ def inventory_fortisandbox_system(section: Section) -> InventoryResult:
 
 inventory_plugin_fortisandbox_system = InventoryPlugin(
     name="fortisandbox_system",
-    inventory_function=inventory_fortisandbox_system,
+    inventory_function=inventorize_fortisandbox_system,
 )

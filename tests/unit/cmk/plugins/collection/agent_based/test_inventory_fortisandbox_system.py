@@ -5,15 +5,15 @@
 
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.inventory_fortisandbox_system import (
-    inventory_fortisandbox_system,
+    inventorize_fortisandbox_system,
 )
 
 from .utils_inventory import sort_inventory_result
 
 
-def test_inventory_fortisandbox_system() -> None:
+def test_inventorize_fortisandbox_system() -> None:
     assert sort_inventory_result(
-        inventory_fortisandbox_system(["v2.52-build0340 (GA)"])
+        inventorize_fortisandbox_system(["v2.52-build0340 (GA)"])
     ) == sort_inventory_result(
         [
             Attributes(

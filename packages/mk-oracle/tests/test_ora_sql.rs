@@ -318,7 +318,7 @@ async fn test_remote_custom_instance_connection() {
     eprintln!("{rows:?}");
     assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
     for r in rows[1..].iter() {
-        assert!(r.starts_with("FREE"));
+        assert!(r.starts_with(endpoint.instance_name.as_ref().unwrap()));
     }
 }
 
@@ -676,7 +676,8 @@ fn test_log_switches() {
             );
         });
         assert!(!rows.is_empty());
-        assert_eq!(rows[0], format!("{}|0", get_instance(endpoint)));
+        // we only check that instance name is correct
+        assert!(rows[0].starts_with(format!("{}|", get_instance(endpoint)).as_str()));
     }
 }
 

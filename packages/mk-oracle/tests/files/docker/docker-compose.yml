@@ -40,9 +40,9 @@ services:
         healthcheck:
             test: [
                 "CMD-SHELL",
-                "echo 'SELECT 1 FROM DUAL; exit' | sqlplus -s -L system/oracle"
+                "grep -q 'XDB initialized' /u01/app/oracle/diag/rdbms/*/*/trace/alert*.log 2>/dev/null || exit 1",
             ]
-            interval: 10s
+            interval: 20s
             timeout: 5s
             retries: 10
             start_period: 60s

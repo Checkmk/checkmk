@@ -158,7 +158,7 @@ oracle:
           username: "{0}"
           password: "{1}"
           type: standard
-  #      role: sysdba # it may be not enabled by Oracle DBA
+          role: {3} # it may be not enabled by Oracle DBA
 "#,
         credentials.user,
         credentials.password,

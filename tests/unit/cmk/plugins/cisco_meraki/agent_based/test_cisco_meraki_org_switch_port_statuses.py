@@ -17,7 +17,7 @@ from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_switch_port_statuses 
     host_label_meraki_switch_ports_statuses,
     inventorize_meraki_cdp_cache,
     inventorize_meraki_interfaces,
-    inventory_meraki_lldp_cache,
+    inventorize_meraki_lldp_cache,
     parse_switch_ports_statuses,
     Section,
 )
@@ -464,7 +464,7 @@ class TestInventoryLLDPCache:
 
     def test_without_data(self) -> None:
         section = self._build_section({})
-        assert not list(inventory_meraki_lldp_cache(section))
+        assert not list(inventorize_meraki_lldp_cache(section))
 
     def test_missing_optional_values(self) -> None:
         section = self._build_section(
@@ -481,7 +481,7 @@ class TestInventoryLLDPCache:
             }
         )
 
-        value, *_ = inventory_meraki_lldp_cache(section)
+        value, *_ = inventorize_meraki_lldp_cache(section)
         expected = TableRow(
             path=["networking", "lldp_cache", "neighbors"],
             key_columns={
@@ -510,7 +510,7 @@ class TestInventoryLLDPCache:
             }
         )
 
-        value, *_ = inventory_meraki_lldp_cache(section)
+        value, *_ = inventorize_meraki_lldp_cache(section)
         expected = TableRow(
             path=["networking", "lldp_cache", "neighbors"],
             key_columns={

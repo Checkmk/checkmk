@@ -34,6 +34,7 @@ defineProps<CmkHeadingProps>()
   <component
     :is="type || 'h1'"
     :class="[propsCva({ type }), { 'cmk-heading--clickable': onClick!! }]"
+    @click="onClick"
   >
     <slot />
   </component>

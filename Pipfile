@@ -168,7 +168,7 @@ python-active-directory = "==2.0.1"
 rrdtool = "==0.1.16"  # Actually we ship the binding which comes with rrdtool itself...
 docstring-parser = "==0.15"  # direct dependency
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
-pyparsing = "==3.0.9"  # direct dependency
+pyparsing = "==3.1.4"  # direct dependency
 redis = "==4.5.4"  # needed by GUI (caching)
 fido2 = "==1.1.2"  # used for GUI 2fa webauthn
 tenacity = "==8.2.2"  # needed by opsgenie-sdk

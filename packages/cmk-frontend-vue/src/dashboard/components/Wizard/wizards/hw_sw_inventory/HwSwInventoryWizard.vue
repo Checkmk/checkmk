@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, h, onBeforeMount, ref } from 'vue'
+import { computed, h, onBeforeMount, reactive, ref } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
@@ -107,7 +107,7 @@ if (
 
 const wizardHandler = useWizard(2)
 
-const wizardStages: QuickSetupStageSpec[] = [
+const wizardStages = reactive<QuickSetupStageSpec[]>([
   {
     title: _t('Data selection'),
     actions: [],
@@ -118,7 +118,7 @@ const wizardStages: QuickSetupStageSpec[] = [
     actions: [],
     errors: []
   }
-]
+])
 
 const contextConfiguredFilters = computed((): ConfiguredFilters => {
   return parseContextConfiguredFilters(props.contextFilters)

@@ -223,3 +223,29 @@ class SiteMock:
                 ),
             )
             self.wiremock.setup_mapping(mapping)
+
+    def mock_relay_get_error(self, relay_id: Relay, status: HTTPStatus, error_message: str) -> None:
+        """Mock a GET request for a specific relay to return an error status code.
+
+        Args:
+            relay_id: The relay ID to mock the error for
+            status: The HTTP status code to return
+            error_message: The error message to include in the response body
+        """
+        mapping = WMapping(
+            priority=0,
+            request=Request(
+                method="GET",
+                url=f"{self.base_route}/objects/relay/{relay_id}",
+                headers={
+                    "Authorization": {
+                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
+                    },
+                },
+            ),
+            response=Response(
+                status=status,
+                body=error_message,
+            ),
+        )
+        self.wiremock.setup_mapping(mapping)

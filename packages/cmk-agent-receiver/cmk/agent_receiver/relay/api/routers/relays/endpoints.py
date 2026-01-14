@@ -13,8 +13,8 @@ from cmk.agent_receiver.relay.api.routers.relays import dependencies, handlers
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     FailedToSendMonitoringDataError,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
-from cmk.agent_receiver.relay.lib.shared_types import Serial
+from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError, RelayNotFoundError
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols import relays as relay_protocols
 from cmk.relay_protocols.monitoring_data import MonitoringData
 
@@ -66,7 +66,12 @@ async def refresh_cert(
     payload: relay_protocols.RelayRefreshCertRequest,
 ) -> relay_protocols.RelayRefreshCertResponse:
     try:
-        return handler.process(relay_id=relay_id, request=payload)
+        return handler.process(relay_id=RelayID(relay_id), request=payload)
+    except RelayNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Relay {relay_id} not found",
+        )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

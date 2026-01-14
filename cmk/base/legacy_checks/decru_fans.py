@@ -5,15 +5,20 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer untile we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
 )
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.decru.lib import DETECT_DECRU
-
-check_info = {}
 
 
 def parse_decru_fans(string_table: StringTable) -> Mapping[str, int]:
@@ -27,10 +32,10 @@ def discover_decru_fans(section: Mapping[str, int]) -> DiscoveryResult:
 
 def check_decru_fans(
     item: str, params: Mapping[str, tuple[int, int]], section: Mapping[str, int]
-) -> LegacyCheckResult:
+) -> CheckResult:
     if (rpm := section.get(item)) is None:
         return
-    yield check_levels(
+    yield from check_levels(
         int(rpm),
         "rpm",
         (None, None) + params["levels_lower"],
@@ -39,7 +44,7 @@ def check_decru_fans(
     )
 
 
-check_info["decru_fans"] = LegacyCheckDefinition(
+snmp_section_decru_fans = SimpleSNMPSection(
     name="decru_fans",
     detect=DETECT_DECRU,
     fetch=SNMPTree(
@@ -47,6 +52,11 @@ check_info["decru_fans"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     parse_function=parse_decru_fans,
+)
+
+
+check_plugin_decru_fans = CheckPlugin(
+    name="decru_fans",
     service_name="FAN %s",
     discovery_function=discover_decru_fans,
     check_function=check_decru_fans,

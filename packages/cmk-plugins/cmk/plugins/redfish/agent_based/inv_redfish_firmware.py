@@ -51,7 +51,7 @@ def _item_name(item_data, padding):
     return item_name
 
 
-def inventory_redfish_firmware(section: RedfishAPIData) -> InventoryResult:
+def inventorize_redfish_firmware(section: RedfishAPIData) -> InventoryResult:
     """create inventory table for firmware"""
     path = ["hardware", "firmware", "redfish"]
     if section.get("FirmwareInventory", {}).get("Current"):
@@ -95,7 +95,7 @@ def inventory_redfish_firmware(section: RedfishAPIData) -> InventoryResult:
 
 inventory_plugin_redfish_firmware = InventoryPlugin(
     name="redfish_firmware",
-    inventory_function=inventory_redfish_firmware,
+    inventory_function=inventorize_redfish_firmware,
 )
 
 

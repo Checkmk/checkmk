@@ -13,7 +13,11 @@ import ArrowDown from '@/components/graphics/ArrowDown.vue'
 
 import MenuButton from './MenuButton.vue'
 
-const { label, right = false } = defineProps<{ label: TranslatedString; right?: boolean }>()
+const {
+  label,
+  right = false,
+  disabled = false
+} = defineProps<{ label: TranslatedString; right?: boolean; disabled?: boolean }>()
 
 const vClickOutside = useClickOutside()
 
@@ -56,7 +60,12 @@ defineExpose({
     "
     class="db-button-dropdown-menu"
   >
-    <MenuButton :aria-label="label" :aria-expanded="menuShown" @click="showMenu">
+    <MenuButton
+      :aria-label="label"
+      :aria-expanded="menuShown"
+      :disabled="disabled"
+      @click="showMenu"
+    >
       <slot name="button" />
       <ArrowDown
         class="db-button-dropdown-menu__arrow"

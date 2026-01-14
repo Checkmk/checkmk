@@ -61,6 +61,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const props = defineProps<DashboardPageProperties>()
 
+const isDashboardLoading = ref(false)
 const isDashboardEditingMode = ref(props.mode === 'edit_layout')
 const openDashboardFilterSettings = ref(false)
 const openDashboardSettings = ref(props.mode === 'edit_settings')
@@ -102,7 +103,12 @@ onBeforeMount(async () => {
       name: dashboard.metadata.name,
       owner: dashboard.metadata.owner || '' // built-in conversion: null -> ""
     }
-    await dashboardsManager.loadDashboard(key, dashboard.metadata.layout_type as DashboardLayout)
+    isDashboardLoading.value = true
+    try {
+      await dashboardsManager.loadDashboard(key, dashboard.metadata.layout_type as DashboardLayout)
+    } finally {
+      isDashboardLoading.value = false
+    }
     dashboardFilters.handleApplyRuntimeFilters(dashboard.filter_context.context)
     if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
       openDashboardFilterSettings.value = true
@@ -130,7 +136,12 @@ watch(dashboardsManager.activeDashboard, (value) => {
 })
 
 const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
-  await dashboardsManager.loadDashboard(dashboardKey, layout)
+  isDashboardLoading.value = true
+  try {
+    await dashboardsManager.loadDashboard(dashboardKey, layout)
+  } finally {
+    isDashboardLoading.value = false
+  }
 
   const updatedDashboardUrl = urlHandler.getDashboardUrl(
     dashboardKey,
@@ -202,10 +213,15 @@ async function saveDashboard() {
 
 async function cancelEdit() {
   // we overwrite all changes by reloading the dashboard
-  await dashboardsManager.loadDashboard(
-    dashboardsManager.activeDashboardKey.value!,
-    dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
-  )
+  isDashboardLoading.value = true
+  try {
+    await dashboardsManager.loadDashboard(
+      dashboardsManager.activeDashboardKey.value!,
+      dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
+    )
+  } finally {
+    isDashboardLoading.value = false
+  }
   isDashboardEditingMode.value = false
 }
 
@@ -430,6 +446,7 @@ function deepClone<T>(obj: T): T {
       <DashboardMenuHeader
         v-model:is-edit-mode="isDashboardEditingMode"
         :selected-dashboard="selectedDashboard"
+        :is-dashboard-loading="isDashboardLoading"
         :can-edit-dashboard="dashboardsManager.activeDashboard.value?.metadata.is_editable ?? false"
         :link-user-guide="props.links.user_guide"
         :link-navigation-embedding-page="props.links.navigation_embedding_page"

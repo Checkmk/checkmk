@@ -62,6 +62,17 @@ def _compute_widget_title(widget_config: DashletConfig) -> str:
     return widget.compute_title()
 
 
+def compute_widget_titles(board: DashboardConfig) -> dict[str, str]:
+    """Compute widget titles for all dashlets in a dashboard.
+
+    NOTE: the widget IDs (keys) must match the conversion functions that build the dashboard spec
+    """
+    return {
+        f"{board['name']}-{idx}": _compute_widget_title(widget)
+        for idx, widget in enumerate(board["dashlets"])
+    }
+
+
 def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
@@ -74,12 +85,7 @@ def page_shared_dashboard(
         # this can end up loading views when computing the used infos,
         # so it needs the impersonation context
         internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
-
-        # NOTE: the widget IDs must match convert_internal_relative_dashboard_to_api_model_dict
-        widget_titles = {
-            f"{board['name']}-{idx}": _compute_widget_title(widget)
-            for idx, widget in enumerate(board["dashlets"])
-        }
+        widget_titles = compute_widget_titles(board)
 
     title = visuals.visual_title("dashboard", board, board["context"])
     dashboard_properties = {

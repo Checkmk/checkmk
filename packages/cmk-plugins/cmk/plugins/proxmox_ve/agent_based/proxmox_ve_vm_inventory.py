@@ -8,7 +8,7 @@ from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult
 from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 
 
-def inventory_proxmox_ve_vm(
+def inventorize_proxmox_ve_vm(
     section: SectionVMInfo,
 ) -> InventoryResult:
     yield Attributes(
@@ -23,7 +23,7 @@ def inventory_proxmox_ve_vm(
 
 
 inventory_plugin_proxmox_ve_vm = InventoryPlugin(
-    name="inventory_proxmox_ve_vm",
+    name="inventorize_proxmox_ve_vm",
     sections=["proxmox_ve_vm_info"],
-    inventory_function=inventory_proxmox_ve_vm,
+    inventory_function=inventorize_proxmox_ve_vm,
 )

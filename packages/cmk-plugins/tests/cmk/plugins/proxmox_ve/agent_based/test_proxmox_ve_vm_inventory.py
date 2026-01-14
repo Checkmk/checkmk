@@ -6,7 +6,9 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult
-from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_inventory import inventory_proxmox_ve_vm
+from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_inventory import (
+    inventorize_proxmox_ve_vm,
+)
 from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 
 SECTION_VM_INFO_QEMU = SectionVMInfo(
@@ -65,7 +67,9 @@ SECTION_VM_INFO_LXC = SectionVMInfo(
         ),
     ],
 )
-def test_inventory_proxmox_ve_vm(
+def test_inventorize_proxmox_ve_vm(
     section_proxmox_ve_vm_info: SectionVMInfo, expected_attributes: InventoryResult
 ) -> None:
-    assert list(inventory_proxmox_ve_vm(section=section_proxmox_ve_vm_info)) == expected_attributes
+    assert (
+        list(inventorize_proxmox_ve_vm(section=section_proxmox_ve_vm_info)) == expected_attributes
+    )

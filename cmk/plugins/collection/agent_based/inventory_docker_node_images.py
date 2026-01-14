@@ -50,7 +50,7 @@ agent_section_docker_node_images = AgentSection(
 )
 
 
-def inventory_docker_node_images(section: Section) -> InventoryResult:
+def inventorize_docker_node_images(section: Section) -> InventoryResult:
     images = section.get("images", {})
     for image_id, image in sorted(images.items()):
         repodigests = ", ".join(image.get("RepoDigests", []))
@@ -92,5 +92,5 @@ def inventory_docker_node_images(section: Section) -> InventoryResult:
 
 inventory_plugin_docker_node_images = InventoryPlugin(
     name="docker_node_images",
-    inventory_function=inventory_docker_node_images,
+    inventory_function=inventorize_docker_node_images,
 )

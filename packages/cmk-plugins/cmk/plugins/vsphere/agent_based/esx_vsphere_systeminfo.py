@@ -71,7 +71,7 @@ agent_section_esx_systeminfo = AgentSection(
 )
 
 
-def inventory_esx_systeminfo(section: Section) -> InventoryResult:
+def inventorize_esx_systeminfo(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={
@@ -93,5 +93,5 @@ def inventory_esx_systeminfo(section: Section) -> InventoryResult:
 
 inventory_plugin_esx_systeminfo = InventoryPlugin(
     name="esx_systeminfo",
-    inventory_function=inventory_esx_systeminfo,
+    inventory_function=inventorize_esx_systeminfo,
 )

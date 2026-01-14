@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_aix_service_packs import (
-    inventory_aix_service_packs,
+    inventorize_aix_service_packs,
     parse_aix_service_packs,
 )
 
@@ -49,5 +49,5 @@ from .utils_inventory import sort_inventory_result
 )
 def test_inv_aix_baselevel(raw_section: StringTable, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
-        inventory_aix_service_packs(parse_aix_service_packs(raw_section))
+        inventorize_aix_service_packs(parse_aix_service_packs(raw_section))
     ) == sort_inventory_result(expected_result)

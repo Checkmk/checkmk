@@ -43,7 +43,7 @@ agent_section_aix_service_packs = AgentSection(
 )
 
 
-def inventory_aix_service_packs(section: Section) -> InventoryResult:
+def inventorize_aix_service_packs(section: Section) -> InventoryResult:
     yield Attributes(
         path=["software", "os"],
         inventory_attributes={"service_pack": section.latest_service_pack},
@@ -58,5 +58,5 @@ def inventory_aix_service_packs(section: Section) -> InventoryResult:
 
 inventory_plugin_aix_service_packs = InventoryPlugin(
     name="aix_service_packs",
-    inventory_function=inventory_aix_service_packs,
+    inventory_function=inventorize_aix_service_packs,
 )

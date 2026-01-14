@@ -14,7 +14,7 @@ from cmk.plugins.kube.kube_strategy import strategy_text
 from cmk.plugins.kube.schemata.section import DaemonSetInfo, UpdateStrategy
 
 
-def inventory_kube_daemonset(
+def inventorize_kube_daemonset(
     section_kube_daemonset_info: DaemonSetInfo | None,
     section_kube_update_strategy: UpdateStrategy | None,
 ) -> InventoryResult:
@@ -43,5 +43,5 @@ def inventory_kube_daemonset(
 inventory_plugin_kube_daemonset = InventoryPlugin(
     name="kube_daemonset",
     sections=["kube_daemonset_info", "kube_update_strategy"],
-    inventory_function=inventory_kube_daemonset,
+    inventory_function=inventorize_kube_daemonset,
 )

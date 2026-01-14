@@ -22,7 +22,7 @@ agent_section_ibm_mq_queues = AgentSection(
 )
 
 
-def inventory_ibm_mq_queues(section: Section) -> InventoryResult:
+def inventorize_ibm_mq_queues(section: Section) -> InventoryResult:
     for item, attrs in sorted(section.items(), key=lambda t: t[0]):
         if ":" not in item:
             # Do not show queue manager in inventory
@@ -56,5 +56,5 @@ def inventory_ibm_mq_queues(section: Section) -> InventoryResult:
 
 inventory_plugin_ibm_mq_queues = InventoryPlugin(
     name="ibm_mq_queues",
-    inventory_function=inventory_ibm_mq_queues,
+    inventory_function=inventorize_ibm_mq_queues,
 )

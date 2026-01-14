@@ -39,14 +39,14 @@ impl Clone for StdEngine {
     }
 }
 
-pub trait OraDbEngine {
+pub trait OraDbEngine: Send {
     fn connect(&mut self, target: &Target, instance: Option<&InstanceName>) -> Result<()>;
 
     fn close(&mut self) -> Result<()>;
 
     fn query_table(&self, query: &SqlQuery) -> QueryResult;
 
-    fn clone_box(&self) -> Box<dyn OraDbEngine>;
+    fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync>;
 }
 
 impl OraDbEngine for StdEngine {
@@ -111,13 +111,13 @@ impl OraDbEngine for StdEngine {
         QueryResult(result)
     }
 
-    fn clone_box(&self) -> Box<dyn OraDbEngine> {
+    fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
-impl Clone for Box<dyn OraDbEngine> {
-    fn clone(&self) -> Box<dyn OraDbEngine> {
+impl Clone for Box<dyn OraDbEngine + Send + Sync> {
+    fn clone(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         self.clone_box()
     }
 }
@@ -166,7 +166,7 @@ impl OraDbEngine for SqlPlusEngine {
         let result = Err(anyhow::anyhow!("Sql*Plus engine is not implemented yet"));
         QueryResult(result)
     }
-    fn clone_box(&self) -> Box<dyn OraDbEngine> {
+    fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         Box::new(self.clone())
     }
 }
@@ -185,7 +185,7 @@ impl OraDbEngine for JdbcEngine {
         let result = Err(anyhow::anyhow!("Sql*Plus engine is not implemented yet"));
         QueryResult(result)
     }
-    fn clone_box(&self) -> Box<dyn OraDbEngine> {
+    fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         Box::new(self.clone())
     }
 }
@@ -197,7 +197,7 @@ enum EngineType {
 }
 
 impl EngineType {
-    fn create_engine(&self) -> Box<dyn OraDbEngine> {
+    fn create_engine(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         match self {
             EngineType::Std => Box::new(StdEngine { connection: None }),
             EngineType::SqlPlus => Box::new(SqlPlusEngine {}),
@@ -219,9 +219,10 @@ pub struct Opened;
 
 pub type OpenedSpot = Spot<Opened>;
 pub type ClosedSpot = Spot<Closed>;
-pub struct Spot<State> {
+
+pub struct Spot<State: Send> {
     pub target: Target,
-    engine: Box<dyn OraDbEngine>,
+    engine: Box<dyn OraDbEngine + Send + Sync>,
     _database: Option<String>,
     _state: PhantomData<State>,
 }
@@ -359,7 +360,7 @@ impl SpotBuilder {
             engine: self
                 .engine_type
                 .map(|e| e.create_engine())
-                .or(self.custom_engine)
+                .or(self.custom_engine.map(|v| v.clone_box()))
                 .context("Engine is not defined")?,
             target: self
                 .target

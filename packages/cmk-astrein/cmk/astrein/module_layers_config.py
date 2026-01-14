@@ -179,6 +179,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils",
         "cmk.ccc",
     ),
+    "clickhouse_omd": ("cmk.metric_backend",),
     "datadog": (
         "cmk.ccc.store",
         "cmk.ccc.version",  # edition detection

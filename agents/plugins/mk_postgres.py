@@ -104,9 +104,11 @@ LINUX_PROCESS_MATCH_PATTERNS = [
         "(.*)bin/postgres(.*)",
         "(.*)bin/postmaster(.*)",
         "(.*)bin/edb-postgres(.*)",
+        "(.*)bin/edb-postmaster(.*)",
         "^[0-9]+ postgres(.*)",
         "^[0-9]+ postmaster(.*)",
         "^[0-9]+ edb-postgres(.*)",
+        "^[0-9]+ edb-postmaster(.*)",
     ]
 ]
 WINDOWS_PROCESS_MATCH_PATTERNS = [

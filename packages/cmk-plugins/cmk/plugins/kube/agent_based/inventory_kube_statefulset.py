@@ -14,7 +14,7 @@ from cmk.plugins.kube.kube_strategy import strategy_text
 from cmk.plugins.kube.schemata.section import StatefulSetInfo, UpdateStrategy
 
 
-def inventory_kube_statefulset(
+def inventorize_kube_statefulset(
     section_kube_statefulset_info: StatefulSetInfo | None,
     section_kube_update_strategy: UpdateStrategy | None,
 ) -> InventoryResult:
@@ -43,5 +43,5 @@ def inventory_kube_statefulset(
 inventory_plugin_kube_statefulset = InventoryPlugin(
     name="kube_statefulset",
     sections=["kube_statefulset_info", "kube_update_strategy"],
-    inventory_function=inventory_kube_statefulset,
+    inventory_function=inventorize_kube_statefulset,
 )

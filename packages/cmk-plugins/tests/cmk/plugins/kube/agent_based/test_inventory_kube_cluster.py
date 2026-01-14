@@ -45,7 +45,7 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
         ),
     ],
 )
-def test_inventory_kube_statefulset(
+def test_inventorize_kube_statefulset(
     section_info: ClusterInfo,
     expected_inventory_result: Sequence[Any],
 ) -> None:

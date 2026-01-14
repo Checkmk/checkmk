@@ -22,7 +22,7 @@ agent_section_redfish_firmware_hpe_ilo4 = AgentSection(
 )
 
 
-def inventory_redfish_firmware_hpe_ilo4(section: RedfishAPIData) -> InventoryResult:
+def inventorize_redfish_firmware_hpe_ilo4(section: RedfishAPIData) -> InventoryResult:
     """create inventory table for firmware"""
     path = ["hardware", "firmware", "redfish"]
     padding = len(str(len(section)))
@@ -43,5 +43,5 @@ def inventory_redfish_firmware_hpe_ilo4(section: RedfishAPIData) -> InventoryRes
 
 inventory_plugin_redfish_firmware_hpe_ilo4 = InventoryPlugin(
     name="redfish_firmware_hpe_ilo4",
-    inventory_function=inventory_redfish_firmware_hpe_ilo4,
+    inventory_function=inventorize_redfish_firmware_hpe_ilo4,
 )

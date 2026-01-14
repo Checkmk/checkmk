@@ -39,7 +39,7 @@ agent_section_kube_pod_init_container_specs_v1 = AgentSection(
 )
 
 
-def inventory_kube_pod(
+def inventorize_kube_pod(
     section_kube_pod_info: PodInfo | None,
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_init_containers: PodContainers | None,
@@ -118,5 +118,5 @@ inventory_plugin_kube_pod = InventoryPlugin(
         "kube_pod_container_specs",
         "kube_pod_init_container_specs",
     ],
-    inventory_function=inventory_kube_pod,
+    inventory_function=inventorize_kube_pod,
 )

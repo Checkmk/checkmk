@@ -14,7 +14,7 @@ from pytest_mock import MockerFixture
 from cmk.agent_based.v2 import Attributes, TableRow
 from cmk.plugins.kube.agent_based.inventory_kube_pod import (
     _containers_to_table,
-    inventory_kube_pod,
+    inventorize_kube_pod,
 )
 from cmk.plugins.kube.schemata.api import (
     ContainerName,
@@ -69,7 +69,9 @@ from cmk.plugins.kube.schemata.section import (
                         image="busybox",
                         ready=False,
                         state=ContainerWaitingState(
-                            type=ContainerStateType.waiting, reason="PodInitializing", detail=None
+                            type=ContainerStateType.waiting,
+                            reason="PodInitializing",
+                            detail=None,
                         ),
                         restart_count=0,
                     )
@@ -157,7 +159,7 @@ from cmk.plugins.kube.schemata.section import (
         ),
     ],
 )
-def test_inventory_kube_pod(
+def test_inventorize_kube_pod(
     section_info: PodInfo,
     section_containers: PodContainers | None,
     section_init_containers: PodContainers | None,
@@ -166,7 +168,7 @@ def test_inventory_kube_pod(
     expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
     assert expected_check_result == list(
-        inventory_kube_pod(
+        inventorize_kube_pod(
             section_info,
             section_containers,
             section_init_containers,
@@ -213,7 +215,9 @@ def test_inventory_kube_pod(
                         image="busybox",
                         ready=False,
                         state=ContainerWaitingState(
-                            type=ContainerStateType.waiting, reason="PodInitializing", detail=None
+                            type=ContainerStateType.waiting,
+                            reason="PodInitializing",
+                            detail=None,
                         ),
                         restart_count=0,
                     )
@@ -287,7 +291,7 @@ def test_container_to_table(
     )
 
 
-def test_inventory_kube_pod_calls_labels_to_table(mocker: MockerFixture) -> None:
+def test_inventorize_kube_pod_calls_labels_to_table(mocker: MockerFixture) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 
@@ -303,5 +307,5 @@ def test_inventory_kube_pod_calls_labels_to_table(mocker: MockerFixture) -> None
     section_specs = ContainerSpecsFactory.build()
 
     mock = mocker.patch("cmk.plugins.kube.agent_based.inventory_kube_pod.labels_to_table")
-    list(inventory_kube_pod(section_info, None, None, section_init_specs, section_specs))
+    list(inventorize_kube_pod(section_info, None, None, section_init_specs, section_specs))
     mock.assert_called_once()

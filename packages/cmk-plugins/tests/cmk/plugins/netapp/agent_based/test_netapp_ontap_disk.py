@@ -15,7 +15,7 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, TableRow
 from cmk.plugins.netapp.agent_based.netapp_ontap_disk import (
     check_netapp_ontap_disk_summary,
-    inventory_netapp_ontap_disk,
+    inventorize_netapp_ontap_disk,
 )
 from cmk.plugins.netapp.models import DiskModel
 
@@ -24,7 +24,7 @@ class DiskModelFactory(ModelFactory):
     __model__ = DiskModel
 
 
-def test_inventory_netapp_ontap_disk() -> None:
+def test_inventorize_netapp_ontap_disk() -> None:
     disk_models = [
         # inventory function will sort the disks by uid
         DiskModelFactory.build(uid="sort_c", serial_number="serial1", vendor="vendor1", bay=1),
@@ -32,7 +32,7 @@ def test_inventory_netapp_ontap_disk() -> None:
         DiskModelFactory.build(uid="sort_z", serial_number="serial3", vendor="vendor3", bay=None),
     ]
 
-    result = inventory_netapp_ontap_disk(section=disk_models)
+    result = inventorize_netapp_ontap_disk(section=disk_models)
     assert list(result) == [
         TableRow(
             path=["hardware", "storage", "disks"],

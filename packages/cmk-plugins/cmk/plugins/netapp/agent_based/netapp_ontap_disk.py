@@ -54,7 +54,7 @@ agent_section_netapp_ontap_disk = AgentSection(
 )
 
 
-def inventory_netapp_ontap_disk(section: Section) -> InventoryResult:
+def inventorize_netapp_ontap_disk(section: Section) -> InventoryResult:
     for disk in sorted(section, key=lambda disk: disk.uid):
         yield TableRow(
             path=["hardware", "storage", "disks"],
@@ -71,7 +71,8 @@ def inventory_netapp_ontap_disk(section: Section) -> InventoryResult:
 
 
 inventory_plugin_netapp_ontap_disk = InventoryPlugin(
-    name="netapp_ontap_disk", inventory_function=inventory_netapp_ontap_disk
+    name="netapp_ontap_disk",
+    inventory_function=inventorize_netapp_ontap_disk,
 )
 
 
@@ -140,7 +141,8 @@ def _check_parity_disks(disks: Sequence[FilerDisk]) -> CheckResult:
                 info_texts.append(disk.identifier)
             if len(info_texts) > 0:
                 yield Result(
-                    state=State.OK, summary=f"{name} Disk Details: {' / '.join(info_texts)}"
+                    state=State.OK,
+                    summary=f"{name} Disk Details: {' / '.join(info_texts)}",
                 )
 
 

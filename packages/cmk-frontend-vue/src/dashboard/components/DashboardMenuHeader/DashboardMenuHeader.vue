@@ -164,7 +164,7 @@ const pageNavigation = parsePageNavigation()
             { label: _t('Copy internal link'), action: copyInternalDashboardLink },
             {
               label: _t('Copy public link'),
-              hidden: isBuiltInDashboard,
+              hidden: isBuiltInDashboard || !canEditDashboard,
               disabled: !publicToken,
               action: () => {
                 copyToClipboard(urlHandler.getSharedDashboardLink(publicToken!.token_id))

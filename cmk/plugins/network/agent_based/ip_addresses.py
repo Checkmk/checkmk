@@ -13,8 +13,6 @@ from ipaddress import (
 )
 
 from cmk.agent_based.v2 import (
-    all_of,
-    any_of,
     exists,
     HostLabel,
     HostLabelGenerator,
@@ -24,7 +22,6 @@ from cmk.agent_based.v2 import (
     OIDEnd,
     SNMPSection,
     SNMPTree,
-    startswith,
     StringByteTable,
     TableRow,
 )
@@ -33,7 +30,7 @@ NamedInterface = Mapping[str, IPv4Interface | IPv6Interface]
 Section = Sequence[NamedInterface]
 
 
-def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int]) -> str:
+def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int]) -> None | str:
     """Returns an address string from 'raw' data encoded in OID suffixes. Addresses
     can be both IPv4 and IPv6 with or without a 'scope_id' (IPv6z). IPv4 and IPv6
     can be represented as a list of integers (as you would expect it) or as a
@@ -74,6 +71,9 @@ def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int])
             ipv4_adr = ":".join(hex_str[i : i + 4] for i in range(0, 32, 4))
             scope_id = ".".join(hex_str[i : i + 2] for i in range(32, len(hex_str), 2))
             return f"{ipv4_adr}%{scope_id}"
+        # not supported
+        case (1, 10) | (1, 151) | (1, 192) | (3, 8) | (2, 110):
+            return None
         case _:
             raise ValueError(f"{adr_type} {adr_length} {raw_address}")
 
@@ -106,7 +106,9 @@ def ip_info_34_from(
         (len(dec_ip_address), dec_ip_address) if dec_ip_address else (oid_adr_length, oid_adr)
     )
 
-    address_str = address_str_from(adr_type, adr_length, raw_address)
+    if not (address_str := address_str_from(adr_type, adr_length, raw_address)):
+        return None
+
     interface_ip = ip_interface(f"{address_str}/{prefix}")
 
     if interface_ip.ip.compressed == interface_ip.network.broadcast_address.compressed:
@@ -132,6 +134,10 @@ def ip_info_20_from(
     match entry:
         # this checks the input against our expectation regarding types and structure
         case (str() as _raw_address, str() as if_index, str() as _raw_netmask):
+            if not (_raw_address and if_index and _raw_netmask):
+                return None
+            if _raw_address == "0.0.0.0":  # storage-isilon-onefs
+                return None
             interface_ip = ip_interface(f"{_raw_address}/{_raw_netmask}")
         case _:
             return None
@@ -261,20 +267,7 @@ snmp_section_ip_address = SNMPSection(
             ],
         ),
     ],
-    detect=all_of(
-        any_of(
-            startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.9."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12740."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2356."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.30065."),
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4329."),
-        ),
-        exists(".1.3.6.1.2.1.4.20.1.1.*"),
-    ),
+    detect=exists(".1.3.6.1.2.1.4.20.1.1.*"),
 )
 
 inventory_plugin_ip_address = InventoryPlugin(

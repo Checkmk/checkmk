@@ -164,6 +164,8 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     then add hosts and wait for services update. Create 3 hosts using linux agent dump and one
     host using windows dump. Delete all the created objects at the end of the session.
     """
+    python_script_name = "generate_windows_and_linux_dumps.py"
+    python_script_path = repo_path() / "tests/scripts" / python_script_name
     test_site_dump_path = test_site.path("var/check_mk/dumps")
     data_source_dump_path = repo_path() / "tests" / "gui_e2e" / "data"
     faker = Faker()
@@ -175,8 +177,16 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     logger.info("Create a rule to read agent-output data from file")
     rule_id = test_site.openapi.rules.create(
         ruleset_name="datasource_programs",
-        value=f"cat {test_site_dump_path}/<HOST>",
+        value=f"python3 {test_site_dump_path}/{python_script_name} {test_site_dump_path}/<HOST>",
     )
+
+    assert (
+        run(
+            ["cp", "-f", str(python_script_path), str(test_site_dump_path)],
+            sudo=True,
+        ).returncode
+        == 0
+    ), f"Error copying '{python_script_path}' file"
 
     dump_path_to_host_name_dict = defaultdict(list)
 
@@ -190,16 +200,11 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
             logger.info("Copy a dump to the new folder")
             assert (
                 run(
-                    [
-                        "cp",
-                        "-f",
-                        f"{dump_path}",
-                        f"{test_site_dump_path}/{host_name}",
-                    ],
+                    ["cp", "-f", str(dump_path), f"{test_site_dump_path}/{host_name}"],
                     sudo=True,
                 ).returncode
                 == 0
-            )
+            ), f"Error copying '{dump_path}' file"
             dump_path_to_host_name_dict[dump_path.name].append(host_name)
 
     created_hosts_list = [

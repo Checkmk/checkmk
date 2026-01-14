@@ -124,8 +124,6 @@ single_version_override(
         "//bazel/patches:rules_lint-no_lint_tag_with_clang_tidy.patch",
         # https://github.com/aspect-build/rules_lint/issues/690
         "//bazel/patches:rules_lint-fix-ruff-sarif-output.patch",
-        # https://github.com/aspect-build/rules_lint/pull/704
-        "//bazel/patches:rules_lint-bandit.patch",
     ],
     version = "2.0.0-beta.0",
 )

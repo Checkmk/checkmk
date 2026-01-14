@@ -1,12 +1,3 @@
-[tool.bandit]
-exclude_dirs = ["tests"]
-skips = [
-  "B104", # hardcoded_bind_all_interfaces -> high false-positive rate ref: CMK-15199
-  "B314", # xml_bad_ElementTree consider safe since python 3.6 >= ref: CMK-15194
-  "B318", # xml_bad_minidom same as above
-  # "B415",  # pyghmi is needed by our core
-]
-
 [tool.ruff]
 extend-exclude = ["doc/**/*.py"]
 target-version = "py313"

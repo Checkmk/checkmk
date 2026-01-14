@@ -20,6 +20,7 @@ void main() {
         "test-integration-agent-plugin",
         "test-plugins-siteless",
         "test-python3-astrein",
+        "test-python3-bandit",
         "test-python3-code-quality",
         "test-python3-ruff",
         "test-python3-typing",

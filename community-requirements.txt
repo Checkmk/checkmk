@@ -214,11 +214,9 @@ attrs==25.4.0 \
     # via
     #   -c requirements.txt
     #   aiohttp
-    #   jschema-to-python
     #   jsonschema
     #   pytest-subtests
     #   referencing
-    #   sarif-om
 azure-common==1.1.28 \
     --hash=sha256:4ac0cd3214e36b6a1b6a442686722a5d8cc449603aa833f3f0f40bda836704a3 \
     --hash=sha256:5c12d3dcf4ec20599ca6b0d3e09e86e146353d443e7fcc050c9a19c1f9df20ad
@@ -277,7 +275,7 @@ backoff==2.2.1 \
     # via
     #   -c requirements.txt
     #   schemathesis
-bandit[sarif, toml]==1.9.2 \
+bandit==1.9.2 \
     --hash=sha256:32410415cd93bf9c8b91972159d5cf1e7f063a9146d70345641cd3877de348ce \
     --hash=sha256:bda8d68610fc33a6e10b7a8f1d61d92c8f6c004051d5e946406be1fb1b16a868
     # via
@@ -1937,12 +1935,6 @@ jsbeautifier==1.15.4 \
     #   -c requirements.txt
     #   cssbeautifier
     #   djlint
-jschema-to-python==1.2.3 \
-    --hash=sha256:76ff14fe5d304708ccad1284e4b11f96a658949a31ee7faed9e0995279549b91 \
-    --hash=sha256:8a703ca7604d42d74b2815eecf99a33359a8dccbb80806cce386d5e2dd992b05
-    # via
-    #   -c requirements.txt
-    #   bandit
 json5==0.13.0 \
     --hash=sha256:9a08e1dd65f6a4d4c6fa82d216cf2477349ec2346a38fd70cc11d2557499fbcc \
     --hash=sha256:b1edf8d487721c0bf64d83c28e91280781f6e21f4a797d3261c7c828d4c165bf
@@ -1967,12 +1959,6 @@ jsonpath-rw==1.4.0 \
     # via
     #   -c requirements.txt
     #   redfish
-jsonpickle==4.1.1 \
-    --hash=sha256:bb141da6057898aa2438ff268362b126826c812a1721e31cf08a6e142910dc91 \
-    --hash=sha256:f86e18f13e2b96c1c1eede0b7b90095bbb61d99fedc14813c44dc2f361dbbae1
-    # via
-    #   -c requirements.txt
-    #   jschema-to-python
 jsonpointer==3.0.0 \
     --hash=sha256:13e088adc14fca8b6aa8177c044e12701e6ad4b28ff10e65f2267a90109c9942 \
     --hash=sha256:2b2d729f2091522d61c3b31f82e11870f60b68f43fbc705cb76bf4b832af59ef
@@ -3480,9 +3466,7 @@ pbr==7.0.3 \
     --hash=sha256:ff223894eb1cd271a98076b13d3badff3bb36c424074d26334cd25aebeecea6b
     # via
     #   -c requirements.txt
-    #   jschema-to-python
     #   python-jenkins
-    #   sarif-om
 pexpect==4.9.0 \
     --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523 \
     --hash=sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f
@@ -5191,12 +5175,6 @@ s3transfer==0.16.0 \
     # via
     #   -c requirements.txt
     #   boto3
-sarif-om==1.0.4 \
-    --hash=sha256:539ef47a662329b1c8502388ad92457425e95dc0aaaf995fe46f4984c4771911 \
-    --hash=sha256:cd5f416b3083e00d402a92e449a7ff67af46f11241073eea0461802a3b5aef98
-    # via
-    #   -c requirements.txt
-    #   bandit
 sarif-tools==3.0.5 \
     --hash=sha256:52d09c101121231fb3489ad8c7af56896b8a95415cef726a6db5e7d74c6834d2 \
     --hash=sha256:682d22559095ca4a210a401e21f0585fdb8015e826c0d160ab3cbadee326952f

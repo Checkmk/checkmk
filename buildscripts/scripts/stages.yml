@@ -451,6 +451,17 @@ STAGES:
       TEXT_ON_SKIP: "No Werk code files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"
 
+    - NAME: "Python Bandit"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT
+      DIR: "tests"
+      ENV_VARS:
+          BANDIT_OUTPUT_ARGS: "-f xml -o ${RESULTS}/bandit_results.xml"
+      COMMAND: "make test-bandit"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No Python files changed"
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/bandit_results.xml"
+
     - NAME: "Python semgrep"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYTHON_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT,CHANGED_SEMGREP_RULE_FILES
       DIR: "tests"
@@ -576,7 +587,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_PLUGIN_APIS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-plugin-apis"
       BAZEL_LOCKS_AMOUNT: 1
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-plugin-apis.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-plugin-apis.txt"
       TEXT_ON_SKIP: "No cmk-plugin-apis files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-plugin-apis.txt"
 
@@ -584,7 +595,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_PLUGINS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-plugins"
       BAZEL_LOCKS_AMOUNT: 1
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-plugins.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-plugins.txt"
       TEXT_ON_SKIP: "No cmk-plugins files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-plugins.txt"
 
@@ -599,7 +610,7 @@ STAGES:
     - NAME: "Package cmk-agent-receiver"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_RECEIVER_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES
       DIR: "packages/cmk-agent-receiver"
-      COMMAND: "./run --component-tests --testlib-tests --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-agent-receiver.txt"
+      COMMAND: "./run --component-tests --testlib-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-agent-receiver.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
@@ -607,7 +618,7 @@ STAGES:
     - NAME: "Package cmk-astrein"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_ASTREIN_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-astrein"
-      COMMAND: "./run --unit-tests --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-astrein.txt"
+      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-astrein.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-astrein files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-astrein.txt"
@@ -615,7 +626,7 @@ STAGES:
     - NAME: "Package cmk-ccc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-ccc"
-      COMMAND: "./run --unit-tests --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-ccc.txt"
+      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-ccc.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-ccc files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-ccc.txt"
@@ -623,7 +634,7 @@ STAGES:
     - NAME: "Package cmk-check-engine"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_CMK_CHECK_ENGINE_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-check-engine"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-check-engine.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-check-engine.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-check-engine files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-check-engine.txt"
@@ -631,7 +642,7 @@ STAGES:
     - NAME: "Package cmk-core-helpers"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_CMK_CORE_HELPERS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES
       DIR: "non-free/packages/cmk-core-helpers"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-core-helpers.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-core-helpers.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-core-helpers files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-core-helpers.txt"
@@ -639,7 +650,7 @@ STAGES:
     - NAME: "Package cmk-crypto"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CRYPTO_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-crypto"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-crypto.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-crypto.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-crypto files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-crypto.txt"
@@ -647,7 +658,7 @@ STAGES:
     - NAME: "Package cmk-ec"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EC_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-ec"
-      COMMAND: "./run --unit-tests --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-ec.txt"
+      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-ec.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-ec files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-ec.txt"
@@ -655,7 +666,7 @@ STAGES:
     - NAME: "Package cmk-events"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EVENTS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-mkp-tool"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-events.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-events.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-events files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-events.txt"
@@ -663,7 +674,7 @@ STAGES:
     - NAME: "Package cmk-livestatus-client"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-livestatus-client"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-livestatus-client.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-livestatus-client.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-livestatus-client files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
@@ -671,7 +682,7 @@ STAGES:
     - NAME: "Package cmk-messaging"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MESSAGING_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-messaging"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-messaging.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-messaging.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-messaging files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-messaging.txt"
@@ -679,7 +690,7 @@ STAGES:
     - NAME: "Package cmk-metric-backend"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_METRIC_BACKEND_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "non-free/packages/cmk-metric-backend"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-metric-backend.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-metric-backend.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-metric-backend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-metric-backend.txt"
@@ -687,7 +698,7 @@ STAGES:
     - NAME: "Package cmk-mknotifyd"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKNOTIFYD_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "non-free/packages/cmk-mknotifyd"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-mknotifyd.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-mknotifyd.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-mknotifyd files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mknotifyd.txt"
@@ -695,7 +706,7 @@ STAGES:
     - NAME: "Package cmk-mkp-tool"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKP_TOOL_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-mkp-tool"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-mkp-tool.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-mkp-tool.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
@@ -703,7 +714,7 @@ STAGES:
     - NAME: "Package cmk-relay-protocols"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_RELAY_PROTOCOLS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-relay-protocols"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-relay-protocols.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-relay-protocols.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-relay-protocols files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-protocols.txt"
@@ -711,7 +722,7 @@ STAGES:
     - NAME: "Package cmk-otel-collector"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "non-free/packages/cmk-otel-collector"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-otel-collector.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-otel-collector.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-otel-collector files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-otel-collector.txt"
@@ -728,7 +739,7 @@ STAGES:
     - NAME: "Package cmk-werks"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-werks"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-werks.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-werks.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-werks package files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
@@ -736,7 +747,7 @@ STAGES:
     - NAME: "Package cmk-trace"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_TRACE_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-trace"
-      COMMAND: "./run --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-trace.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-trace.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-trace package files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-trace.txt"
@@ -744,7 +755,7 @@ STAGES:
     - NAME: "Package cmk-update-agent"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_UPDATE_AGENT_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "non-free/packages/cmk-update-agent"
-      COMMAND: "./run --unit-tests --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-update-agent.txt"
+      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-update-agent.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-update-agent files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-update-agent.txt"
@@ -815,7 +826,7 @@ STAGES:
     - NAME: "Package cmk-relay-engine"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RELAY_ENGINE_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES
       DIR: "non-free/packages/cmk-relay-engine"
-      COMMAND: "./run --unit-tests --component-tests --testlib-tests --lint=mypy --lint=semgrep &> ${RESULTS}/cmk-relay-engine.txt"
+      COMMAND: "./run --unit-tests --component-tests --testlib-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-relay-engine.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-relay-engine files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-engine.txt"

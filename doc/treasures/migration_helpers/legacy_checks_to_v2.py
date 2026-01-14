@@ -27,8 +27,7 @@ _ADDED_IMPORTS = (
     "from typing import Any",
     (
         "from cmk.agent_based.legacy.conversion import (\n"
-        "    # TODO: replace this by 'from cmk.agent_based.v2 import check_levels'.\n"
-        "    # This might require you to migrate the corresponding ruleset.\n"
+        "    # Temporary compatibility layer untile we migrate the corresponding ruleset.\n"
         "    check_levels_legacy_compatible as check_levels,\n"
         ")"
     ),
@@ -178,10 +177,37 @@ def _make_results_and_metrics(tpl: cst.Tuple) -> Iterable[cst.Call | cst.Name | 
     yield from _make_metrics(tpl.elements[2].value)
 
 
-class AddImportsTransformer(cst.CSTTransformer):
+class ImportsTransformer(cst.CSTTransformer):
     def __init__(self) -> None:
         super().__init__()
         self.added_import = False
+
+    def leave_ImportFrom(
+        self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom
+    ) -> cst.ImportFrom | cst.RemovalSentinel:
+        """Remove imports from cmk.agent_based.legacy.v0_unstable"""
+        if updated_node.module is None:
+            return updated_node
+
+        # Build the full module path
+        module_parts = list[str]()
+        current: object = updated_node.module
+        while current:
+            if isinstance(current, cst.Attribute):
+                if isinstance(current.attr, cst.Name):
+                    module_parts.insert(0, current.attr.value)
+                current = current.value
+            elif isinstance(current, cst.Name):
+                module_parts.insert(0, current.value)
+                break
+            else:
+                break
+
+        module_path = ".".join(module_parts)
+        if module_path == "cmk.agent_based.legacy.v0_unstable":
+            return cst.RemovalSentinel.REMOVE
+
+        return updated_node
 
     def leave_SimpleStatementLine(
         self, original_node: cst.SimpleStatementLine, updated_node: cst.SimpleStatementLine
@@ -729,7 +755,7 @@ def _tranform_file(content: str) -> str:
     check_defs = _extract_check_defs(cs_tree)
     types_collector = SectionTypeCollector(check_defs)
     return (
-        cs_tree.visit(AddImportsTransformer())
+        cs_tree.visit(ImportsTransformer())
         .visit(types_collector)
         .visit(SignatureTransformer(check_defs, types_collector.section_types))
         .visit(DiscoveryTransformer(check_defs))

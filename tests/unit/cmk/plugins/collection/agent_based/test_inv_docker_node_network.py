@@ -5,7 +5,7 @@
 
 from cmk.agent_based.v2 import TableRow
 from cmk.plugins.collection.agent_based.inventory_docker_node_network import (
-    inventory_docker_node_network,
+    inventorize_docker_node_network,
     parse_docker_node_network,
 )
 
@@ -22,7 +22,7 @@ AGENT_OUTPUT = (
 def test_inv_docker_node_network() -> None:
     pre_parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     assert sort_inventory_result(
-        inventory_docker_node_network(parse_docker_node_network(pre_parsed))
+        inventorize_docker_node_network(parse_docker_node_network(pre_parsed))
     ) == sort_inventory_result(
         [
             TableRow(

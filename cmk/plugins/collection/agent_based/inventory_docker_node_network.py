@@ -27,7 +27,7 @@ agent_section_docker_node_network = AgentSection(
 )
 
 
-def inventory_docker_node_network(section: Section) -> InventoryResult:
+def inventorize_docker_node_network(section: Section) -> InventoryResult:
     for network_id, network in section.items():
         network_path = ["software", "applications", "docker", "networks"]
         container_path = network_path + ["containers"]
@@ -69,5 +69,5 @@ def inventory_docker_node_network(section: Section) -> InventoryResult:
 
 inventory_plugin_docker_node_network = InventoryPlugin(
     name="docker_node_network",
-    inventory_function=inventory_docker_node_network,
+    inventory_function=inventorize_docker_node_network,
 )

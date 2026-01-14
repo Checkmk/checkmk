@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: PLR2004
+
 import logging
 import time
 from collections.abc import Iterator, Mapping
@@ -23,7 +25,7 @@ class RequestSessionRequestHandler(RequestHandler):
     def __init__(self) -> None:
         self.session = requests.session()
 
-    def request(
+    def request(  # noqa: PLR0913
         self,
         method: HTTPMethod,
         url: str,
@@ -79,7 +81,7 @@ class User(NamedTuple):
 
 
 class CMKOpenApiSession(requests.Session):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         host: str,
         user: str,
@@ -193,7 +195,7 @@ class CMKOpenApiSession(requests.Session):
                 ), f"There are pending changes that were not activated: {pending_changes}"
             return activation_started
 
-    def create_user(
+    def create_user(  # noqa: PLR0913
         self,
         username: str,
         fullname: str,
@@ -301,6 +303,27 @@ class CMKOpenApiSession(requests.Session):
             response.json()["extensions"],
             response.headers["Etag"],
         )
+
+    def delete_folder(self, folder: str, delete_mode: str = "recursive") -> None:
+        """Delete a folder.
+
+        Args:
+            folder: The path of the folder to delete. Path delimiters should be '/'.
+            delete_mode: Delete policy. Options:
+                - 'recursive': Deletes the folder and all elements it contains (default)
+                - 'abort_on_nonempty': Deletes the folder only if it is empty
+        Raises:
+            UnexpectedResponse: If the delete operation fails
+        """
+        # Convert folder path delimiters from '/' to '~' for the API
+        folder_path = folder.replace("/", "~")
+
+        response = self.delete(
+            f"/objects/folder_config/{folder_path}", params={"delete_mode": delete_mode}
+        )
+
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
     def create_host(
         self,
@@ -450,7 +473,7 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def bulk_discover_services_and_wait_for_completion(
+    def bulk_discover_services_and_wait_for_completion(  # noqa: PLR0913
         self,
         hostnames: list[str],
         monitor_undecided_services: bool = True,

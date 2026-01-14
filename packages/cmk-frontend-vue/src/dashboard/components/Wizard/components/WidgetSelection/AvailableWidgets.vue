@@ -25,6 +25,8 @@ const emit = defineEmits<AvailableWidgetsEmits>()
     <div
       v-for="(item, index) in availableItems"
       :key="index"
+      role="button"
+      :aria-label="item.label"
       class="db-available-widgets__item"
       @click="
         () => {

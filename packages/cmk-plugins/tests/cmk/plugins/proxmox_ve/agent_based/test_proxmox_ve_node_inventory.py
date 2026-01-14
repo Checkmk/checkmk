@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_inventory import inventory_proxmox_ve_node
+from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_inventory import (
+    inventorize_proxmox_ve_node,
+)
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
 
 SECTION_NODE_ATTRIBUTES = SectionNodeAttributes(
@@ -13,8 +15,8 @@ SECTION_NODE_ATTRIBUTES = SectionNodeAttributes(
 )
 
 
-def test_inventory_proxmox_ve_node() -> None:
-    assert list(inventory_proxmox_ve_node(section=SECTION_NODE_ATTRIBUTES)) == [
+def test_inventorize_proxmox_ve_node() -> None:
+    assert list(inventorize_proxmox_ve_node(section=SECTION_NODE_ATTRIBUTES)) == [
         Attributes(
             path=["software", "applications", "proxmox_ve", "metadata"],
             inventory_attributes={

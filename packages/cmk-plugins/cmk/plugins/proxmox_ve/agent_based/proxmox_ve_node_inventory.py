@@ -8,7 +8,7 @@ from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
 
 
-def inventory_proxmox_ve_node(
+def inventorize_proxmox_ve_node(
     section: SectionNodeAttributes,
 ) -> InventoryResult:
     yield Attributes(
@@ -30,7 +30,7 @@ def inventory_proxmox_ve_node(
 
 
 inventory_plugin_proxmox_ve_node = InventoryPlugin(
-    name="inventory_proxmox_ve_node",
+    name="inventorize_proxmox_ve_node",
     sections=["proxmox_ve_node_attributes"],
-    inventory_function=inventory_proxmox_ve_node,
+    inventory_function=inventorize_proxmox_ve_node,
 )

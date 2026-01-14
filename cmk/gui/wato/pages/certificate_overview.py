@@ -31,6 +31,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.messaging import get_cert_info
 from cmk.utils.paths import (
@@ -156,7 +157,7 @@ class ModeCertificateOverview(WatoMode):
         ]
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="related",
@@ -179,3 +180,5 @@ class ModeCertificateOverview(WatoMode):
             ],
             breadcrumb=breadcrumb,
         )
+        menu.add_doc_reference(_("Certificate overview in Checkmk"), DocReference.CERTIFICATES)
+        return menu

@@ -32,9 +32,11 @@ const ott = defineModel<string | null | Error>({ required: true })
 const ottGenerating = ref(false)
 const ottGenerated = ref(false)
 const ottError = ref<Error | null>(null)
+const noOTT = ref(false)
 const api = new Api('api/internal/', [['Content-Type', 'application/json']])
 
 async function generateOTT() {
+  noOTT.value = false
   ottGenerating.value = true
 
   try {
@@ -50,6 +52,12 @@ async function generateOTT() {
     ottGenerating.value = false
     ottGenerated.value = true
   }
+}
+
+function registerWithUser() {
+  noOTT.value = true
+  ottGenerated.value = false
+  ott.value = new Error('Register agent with user')
 }
 </script>
 
@@ -68,12 +76,26 @@ async function generateOTT() {
     </CmkButton>
 
     <CmkAlertBox v-else variant="loading">{{ _t('Generating token') }}</CmkAlertBox>
+
+    <CmkAlertBox v-if="noOTT">{{
+      _t('Regenerate a token to use token authentication.')
+    }}</CmkAlertBox>
   </template>
   <template v-else>
     <CmkAlertBox v-if="ottError" variant="error">{{
       _t(`Error on generating token: ${ottError.message}`)
     }}</CmkAlertBox>
-    <CmkAlertBox v-else variant="success">{{ _t('Successfully generated token') }}</CmkAlertBox>
+    <template v-else>
+      <CmkAlertBox variant="success">{{ _t('Successfully generated token') }}</CmkAlertBox>
+      <CmkAlertBox>
+        {{ _t('If an error occurs during OTT authentication, try to authenticate with a user.') }}
+        <br />
+        <CmkButton size="small" class="mh-generate-token__auth-with-user" @click="registerWithUser">
+          <CmkIcon name="main-user-active" class="mh-generate-token__auth-with-user-icon" />
+          {{ _t('Authenticate with user') }}</CmkButton
+        ></CmkAlertBox
+      >
+    </template>
   </template>
 </template>
 
@@ -82,6 +104,14 @@ async function generateOTT() {
   margin: var(--dimension-4) 0 var(--dimension-6);
 
   .mh-generate-token__icon {
+    margin-right: var(--dimension-4);
+  }
+}
+
+.mh-generate-token__auth-with-user {
+  margin-top: var(--dimension-4);
+
+  .mh-generate-token__auth-with-user-icon {
     margin-right: var(--dimension-4);
   }
 }

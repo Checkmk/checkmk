@@ -58736,6 +58736,10 @@ msgstr "Roteador que deve ou não deve ser usado"
 msgid "Routes"
 msgstr "Rotas"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "limite mínimo"
+
 msgid "Rows"
 msgstr "Linhas"
 
@@ -61899,6 +61903,10 @@ msgstr "Definir tema personalizado"
 #, fuzzy
 msgid "Set custom UID"
 msgstr "Definir tema personalizado"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "Definir modo de exibição personalizado"
 
 msgid "Set custom show mode"
 msgstr "Definir modo de exibição personalizado"
@@ -84706,6 +84714,10 @@ msgstr "Utilização para todas as ligações"
 msgid "Use global connection parameters"
 msgstr "Use parâmetros de conexão global"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "Usar limite de regra global"
+
 msgid "Use global rule limit"
 msgstr "Usar limite de regra global"
 
@@ -94590,6 +94602,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "Clonar o painel de controlo incorporado"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "é necessário"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "Remover filtro"
 
@@ -95863,6 +95883,14 @@ msgid "Specific object type"
 msgstr "Selecione o tipo de objeto específico"
 
 #, fuzzy
+msgid "You must select a data source."
+msgstr "Selecione Datasource"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "Você precisa selecionar um ícone."
+
+#, fuzzy
 msgid "Next step: Data configuration"
 msgstr "Adicionar configuração do estado"
 
@@ -96723,8 +96751,15 @@ msgstr "O guia oficial do usuário Checkmk"
 msgid "Close & run service discovery"
 msgstr "Guardar & executar a descoberta de serviços"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "Dados líquidos recebidos"
 
 #, fuzzy
 msgid "Backup code:"
@@ -98418,9 +98453,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "Elemento de tablier"
-
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "Clonar o painel de controlo incorporado"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "Cópia da visão existente"

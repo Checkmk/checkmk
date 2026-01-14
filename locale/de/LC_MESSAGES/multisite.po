@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-01-13 06:52+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -56234,6 +56234,10 @@ msgstr "Erforderlicher oder verbotener Router"
 msgid "Routes"
 msgstr "Routen"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "unterer Grenze"
+
 msgid "Rows"
 msgstr "Zeilen"
 
@@ -59276,6 +59280,10 @@ msgstr "Benutzerdefinierte GID festlegen"
 
 msgid "Set custom UID"
 msgstr "Benutzerdefinierte UID festlegen"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "Benutzerdefinierten Show-Modus festlegen"
 
 msgid "Set custom show mode"
 msgstr "Benutzerdefinierten Show-Modus festlegen"
@@ -81635,6 +81643,10 @@ msgstr "Für alle Verbindungen verwenden"
 msgid "Use global connection parameters"
 msgstr "Globale Verbindungsparameter nutzen"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "Globales Regel-Limit nutzen"
+
 msgid "Use global rule limit"
 msgstr "Globales Regel-Limit nutzen"
 
@@ -91348,6 +91360,14 @@ msgstr ""
 "widgetspezifische oder Laufzeitfilter festlegen. "
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "Mitgeliefertes Dashboard klonen"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "ist erforderlich"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "Auf vordefinierte Filter zurücksetzen"
 
@@ -92438,6 +92458,14 @@ msgstr "Name anzeigen"
 msgid "Specific object type"
 msgstr "Spezifischer Objekttyp"
 
+#, fuzzy
+msgid "You must select a data source."
+msgstr "Datenquelle auswählen"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "Sie müssen ein Symbol auswählen."
+
 msgid "Next step: Data configuration"
 msgstr "Nächster Schritt: Datenkonfiguration"
 
@@ -93247,8 +93275,15 @@ msgstr "Lesen Sie das Checkmk-Handbuch"
 msgid "Close & run service discovery"
 msgstr "Schließen & Service-Erkennung durchführen"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr "\"${props.title}\" zur Seitenleiste hinzufügen"
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "Empfangene Netzwerkdaten"
 
 #, fuzzy
 msgid "Backup code:"
@@ -95123,9 +95158,6 @@ msgstr ""
 
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "Dashboard hinzufügen (Prototyp)"
-
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "Mitgeliefertes Dashboard klonen"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "Kopie der bestehenden Ansicht"

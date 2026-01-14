@@ -59208,6 +59208,10 @@ msgstr "Enrutador que debe o no debe ser utilizado"
 msgid "Routes"
 msgstr "Rutas"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "límite inferior"
+
 msgid "Rows"
 msgstr "Filas"
 
@@ -62393,6 +62397,10 @@ msgstr "Establecer un tema personalizado"
 #, fuzzy
 msgid "Set custom UID"
 msgstr "Establecer un tema personalizado"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "Establecer el modo de espectáculo personalizado"
 
 msgid "Set custom show mode"
 msgstr "Establecer el modo de espectáculo personalizado"
@@ -85441,6 +85449,10 @@ msgstr "Utilizar para todas las conexiones"
 msgid "Use global connection parameters"
 msgstr "Utilizar los parámetros globales de conexión"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "Utilizar el límite de la regla global"
+
 msgid "Use global rule limit"
 msgstr "Utilizar el límite de la regla global"
 
@@ -95431,6 +95443,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "Clonar salpicadero integrado"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "es necesario"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "Eliminar el filtro"
 
@@ -96707,6 +96727,14 @@ msgid "Specific object type"
 msgstr "Seleccione un tipo de objeto específico"
 
 #, fuzzy
+msgid "You must select a data source."
+msgstr "Seleccione la fuente de datos"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "Tienes que seleccionar un icono."
+
+#, fuzzy
 msgid "Next step: Data configuration"
 msgstr "Añadir configuración de estado"
 
@@ -97570,8 +97598,15 @@ msgstr "La guía oficial del usuario de Checkmk"
 msgid "Close & run service discovery"
 msgstr "Guardar & ejecutar la detección de servicios"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "Datos netos recibidos"
 
 #, fuzzy
 msgid "Backup code:"
@@ -99257,10 +99292,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "Elemento del cuadro de mandos"
-
-#, fuzzy
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "Clonar salpicadero integrado"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "Copia de la vista existente"

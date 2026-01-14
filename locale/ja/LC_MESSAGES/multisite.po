@@ -55293,6 +55293,10 @@ msgstr "使用する必要がある、または使用してはならないルー
 msgid "Routes"
 msgstr "ルート"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "下限"
+
 msgid "Rows"
 msgstr "行"
 
@@ -58300,6 +58304,10 @@ msgstr "カスタムGIDを設定する"
 
 msgid "Set custom UID"
 msgstr "カスタムUIDを設定する"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "カスタム表示モードを設定する"
 
 msgid "Set custom show mode"
 msgstr "カスタム表示モードを設定する"
@@ -79779,6 +79787,10 @@ msgstr "すべての接続に使用"
 msgid "Use global connection parameters"
 msgstr "グローバル接続パラメータを使用する"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "グローバルルール制限を使用する"
+
 msgid "Use global rule limit"
 msgstr "グローバルルール制限を使用する"
 
@@ -89141,6 +89153,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "組み込みダッシュボードを複製する"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "必須"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "フィルタを取り外します"
 
@@ -90390,6 +90410,14 @@ msgid "Specific object type"
 msgstr "特定のオブジェクトタイプを選択します"
 
 #, fuzzy
+msgid "You must select a data source."
+msgstr "データソースを選択"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "アイコンを選択する必要があります。"
+
+#, fuzzy
 msgid "Next step: Data configuration"
 msgstr "状態構成を追加する"
 
@@ -91221,8 +91249,15 @@ msgstr "Checkmk公式ユーザーガイドをお読みください"
 msgid "Close & run service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "受信したネットデータ"
 
 #, fuzzy
 msgid "Backup code:"
@@ -92965,9 +93000,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "ダッシュボード要素"
-
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "組み込みダッシュボードを複製する"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "既存のビューのコピー"

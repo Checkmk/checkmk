@@ -58374,6 +58374,10 @@ msgstr "Router che deve o non deve essere usato"
 msgid "Routes"
 msgstr "Percorsi"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "limite inferiore"
+
 msgid "Rows"
 msgstr "Righe"
 
@@ -61511,6 +61515,10 @@ msgstr "Imposta tema personalizzato"
 #, fuzzy
 msgid "Set custom UID"
 msgstr "Imposta tema personalizzato"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "Impostare la modalità di spettacolo personalizzata"
 
 msgid "Set custom show mode"
 msgstr "Impostare la modalità di spettacolo personalizzata"
@@ -84176,6 +84184,10 @@ msgstr "Utilizzare per tutte le connessioni"
 msgid "Use global connection parameters"
 msgstr "Utilizzare i parametri globali di connessione"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "Utilizzare il limite della regola globale"
+
 msgid "Use global rule limit"
 msgstr "Utilizzare il limite della regola globale"
 
@@ -94026,6 +94038,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "Clonare il cruscotto integrato"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "è necessario"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "Rimuovi filtro"
 
@@ -95296,6 +95316,14 @@ msgid "Specific object type"
 msgstr "Seleziona il tipo di oggetto specifico"
 
 #, fuzzy
+msgid "You must select a data source."
+msgstr "Seleziona sorgente di dati"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "È necessario selezionare un'icona."
+
+#, fuzzy
 msgid "Next step: Data configuration"
 msgstr "Aggiungere la configurazione dello stato"
 
@@ -96157,8 +96185,15 @@ msgstr "La guida utente ufficiale di Checkmk"
 msgid "Close & run service discovery"
 msgstr "Salvare & eseguire il rilevamento dei servizi"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "Dati netti ricevuti"
 
 #, fuzzy
 msgid "Backup code:"
@@ -97849,9 +97884,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "Elemento del cruscotto"
-
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "Clonare il cruscotto integrato"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "Copia della vista esistente"

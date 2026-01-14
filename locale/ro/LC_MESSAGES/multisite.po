@@ -58872,6 +58872,10 @@ msgstr "Router care trebuie sau nu trebuie utilizat"
 msgid "Routes"
 msgstr "Rute"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "limita inferioară"
+
 msgid "Rows"
 msgstr "Rânduri"
 
@@ -62078,6 +62082,10 @@ msgstr "Setați o temă personalizată"
 #, fuzzy
 msgid "Set custom UID"
 msgstr "Setați o temă personalizată"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "Setați modul de spectacol personalizat"
 
 msgid "Set custom show mode"
 msgstr "Setați modul de spectacol personalizat"
@@ -85012,6 +85020,10 @@ msgstr "Utilizați pentru toate conexiunile"
 msgid "Use global connection parameters"
 msgstr "Utilizați parametrii globali de conectare"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "Utilizați limita globală a regulilor"
+
 msgid "Use global rule limit"
 msgstr "Utilizați limita globală a regulilor"
 
@@ -94974,6 +94986,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "Clonarea tabloului de bord încorporat"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "este necesară"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "Eliminați filtrul"
 
@@ -96254,6 +96274,14 @@ msgid "Specific object type"
 msgstr "Selectați un anumit tip de obiect"
 
 #, fuzzy
+msgid "You must select a data source."
+msgstr "Selectați sursa de date"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "Trebuie să selectați o pictogramă."
+
+#, fuzzy
 msgid "Next step: Data configuration"
 msgstr "Adăugați configurația de stare"
 
@@ -97119,8 +97147,15 @@ msgstr "Ghidul oficial al utilizatorului Checkmk"
 msgid "Close & run service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "Date nete primite"
 
 #, fuzzy
 msgid "Backup code:"
@@ -98821,9 +98856,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "Element de tablou de bord"
-
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "Clonarea tabloului de bord încorporat"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "Copie a vizualizării existente"

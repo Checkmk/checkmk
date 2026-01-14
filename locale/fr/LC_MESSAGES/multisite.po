@@ -59210,6 +59210,10 @@ msgstr "Routeur qui doit ou ne doit pas être utilisé"
 msgid "Routes"
 msgstr "Routes"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "limite inférieure"
+
 msgid "Rows"
 msgstr "Rangs"
 
@@ -62395,6 +62399,10 @@ msgstr "Définir un thème personnalisé"
 #, fuzzy
 msgid "Set custom UID"
 msgstr "Définir un thème personnalisé"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "Définir le mode d'exposition personnalisé"
 
 msgid "Set custom show mode"
 msgstr "Définir le mode d'exposition personnalisé"
@@ -85488,6 +85496,10 @@ msgstr "Utilisation pour toutes les connexions"
 msgid "Use global connection parameters"
 msgstr "Utiliser les paramètres de connexion globaux"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "Utiliser la limite globale des règles"
+
 msgid "Use global rule limit"
 msgstr "Utiliser la limite globale des règles"
 
@@ -95525,6 +95537,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "Cloner le tableau de bord intégré"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "est nécessaire"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "Supprimer le filtre"
 
@@ -96804,6 +96824,14 @@ msgid "Specific object type"
 msgstr "Sélectionner un type d'objet spécifique"
 
 #, fuzzy
+msgid "You must select a data source."
+msgstr "Sélectionner la source de données"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "Vous devez sélectionner une icône."
+
+#, fuzzy
 msgid "Next step: Data configuration"
 msgstr "Ajouter une configuration d'état"
 
@@ -97665,8 +97693,15 @@ msgstr "Le guide officiel de l'utilisateur de Checkmk"
 msgid "Close & run service discovery"
 msgstr "Sauvegarder & ; lancer la découverte des services"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "Données nettes reçues"
 
 #, fuzzy
 msgid "Backup code:"
@@ -99346,9 +99381,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "Élément du tableau de bord"
-
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "Cloner le tableau de bord intégré"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "Copie de la vue existante"

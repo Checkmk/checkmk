@@ -58730,6 +58730,10 @@ msgstr "Router die wel of niet gebruikt moet worden"
 msgid "Routes"
 msgstr "Routes"
 
+#, fuzzy
+msgid "Row limit"
+msgstr "ondergrens"
+
 msgid "Rows"
 msgstr "Rijen"
 
@@ -61894,6 +61898,10 @@ msgstr "Aangepast thema instellen"
 #, fuzzy
 msgid "Set custom UID"
 msgstr "Aangepast thema instellen"
+
+#, fuzzy
+msgid "Set custom row limit"
+msgstr "Aangepaste showmodus instellen"
 
 msgid "Set custom show mode"
 msgstr "Aangepaste showmodus instellen"
@@ -84756,6 +84764,10 @@ msgstr "Gebruik voor alle verbindingen"
 msgid "Use global connection parameters"
 msgstr "Globale verbindingsparameters gebruiken"
 
+#, fuzzy
+msgid "Use global hard/soft limit behavior"
+msgstr "Globale regel limiet gebruiken"
+
 msgid "Use global rule limit"
 msgstr "Globale regel limiet gebruiken"
 
@@ -94684,6 +94696,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Editing is disabled for built-in dashboards"
+msgstr "Kloon ingebouwd dashboard"
+
+#, fuzzy
+msgid "Edit access required"
+msgstr "is vereist"
+
+#, fuzzy
 msgid "Reset to pre-selected filters"
 msgstr "Verwijder filter"
 
@@ -95959,6 +95979,14 @@ msgid "Specific object type"
 msgstr "Selecteer specifiek objecttype"
 
 #, fuzzy
+msgid "You must select a data source."
+msgstr "Selecteer gegevensbron"
+
+#, fuzzy
+msgid "You must select a view."
+msgstr "U moet een icoon kiezen."
+
+#, fuzzy
 msgid "Next step: Data configuration"
 msgstr "Configuratie toestand toevoegen"
 
@@ -96818,8 +96846,15 @@ msgstr "De officiële Checkmk gebruikershandleiding"
 msgid "Close & run service discovery"
 msgstr "Save & run service discovery"
 
+msgid "Add snapin ${props.name}"
+msgstr ""
+
 msgid "Add \"${props.title}\" to sidebar"
 msgstr ""
+
+#, fuzzy
+msgid "No data recieved"
+msgstr "Netto ontvangen gegevens"
 
 #, fuzzy
 msgid "Backup code:"
@@ -98489,10 +98524,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add dashboard (prototype)"
 #~ msgstr "Dashboard-element"
-
-#, fuzzy
-#~ msgid "Clone built-in dashboard"
-#~ msgstr "Kloon ingebouwd dashboard"
 
 #~ msgid "Copy of existing view"
 #~ msgstr "Kopie van bestaand beeld"

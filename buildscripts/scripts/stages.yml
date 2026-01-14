@@ -840,7 +840,11 @@ STAGES:
 
     - NAME: "Lint repository"
       DIR: ""
-      COMMAND: "set -o pipefail && bazel lint --machine --fixes=false ... | bazel run //scripts:sarif_preparse > ${RESULTS}/lint.txt"
+      COMMAND: |
+          bazel lint --machine --fixes=false ... > /dev/null
+          exit_code=$?
+          bazel run //scripts:sarif_preparse -- --root_dir=$PWD/bazel-bin --output ${RESULTS}/lint.txt || true
+          exit $exit_code
       TEXT_ON_SKIP: "inconditional"
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "SARIF"

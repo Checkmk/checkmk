@@ -8,7 +8,7 @@ import { ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
-import { Response } from '@/components/CmkSuggestions'
+import { ErrorResponse, Response } from '@/components/CmkSuggestions'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -22,6 +22,8 @@ const defaultEmpty5 = ref<string | null>(null)
 const defaultEmpty6 = ref<string | null>(null)
 const defaultEmpty7 = ref<string | null>(null)
 const defaultEmpty8 = ref<string | null>(null)
+const errorCase = ref<string | null>('invalid_backend_value')
+const callCount = ref<number>(0)
 </script>
 
 <template>
@@ -217,4 +219,34 @@ const defaultEmpty8 = ref<string | null>(null)
   <h2>group</h2>
   <CmkDropdownButton group="start">start</CmkDropdownButton
   ><CmkDropdownButton group="end">end</CmkDropdownButton>
+
+  <h1>Error Handling for Callback-Filtered Dropdowns</h1>
+  <h2>Graceful error handling with recovery</h2>
+  <CmkDropdown
+    v-model:selected-option="errorCase"
+    :options="{
+      type: 'callback-filtered',
+      querySuggestions: async () => {
+        callCount++
+        if (callCount <= 2) {
+          return new ErrorResponse('Backend error: Failed to load suggestions')
+        }
+        return new Response([
+          { name: 'valid1', title: 'Valid Option 1' },
+          { name: 'valid2', title: 'Valid Option 2' },
+          { name: 'valid3', title: 'Valid Option 3' }
+        ])
+      }
+    }"
+    input-hint="Select an option"
+    no-results-hint="no results"
+    label="Dropdown with error recovery"
+  >
+    <template #buttons-start>
+      <CmkDropdownButton>start</CmkDropdownButton>
+    </template>
+    <template #buttons-end>
+      <CmkDropdownButton>end</CmkDropdownButton>
+    </template>
+  </CmkDropdown>
 </template>

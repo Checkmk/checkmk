@@ -406,6 +406,7 @@ class DocReference(Enum):
     BACKUPS = "backup"
     BI = "bi"  # Business Intelligence
     BOOKMARK_LIST = "user_interface#bookmarks"
+    CERTIFICATES = "certificates"
     COMMANDS = "commands"
     COMMANDS_ACK = "basics_ackn"
     COMMANDS_DOWNTIME = "basics_downtimes"

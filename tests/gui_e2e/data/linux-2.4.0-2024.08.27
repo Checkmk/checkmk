@@ -158,7 +158,7 @@ Address: 4c:5f:70:9e:63:17
 05 3
 06 34
 <<<diskstat>>>
-1724756915
+{{ timestamp }}
  259       0 nvme0n1 120546 37633 8940235 24611 418859 166974 13205442 672730 0 278872 726652 0 0 0 0 62859 29311
  252       0 dm-0 157491 0 8910050 49860 575354 0 13205176 1445540 0 281172 1495400 0 0 0 0 0 0
  252       1 dm-1 157253 0 8899594 49976 573225 0 13205176 1424708 0 281144 1474684 0 0 0 0 0 0
@@ -173,7 +173,7 @@ nvme-eui.000000000000000100a0752346045327-part1 /dev/nvme0n1p1
 nvme-eui.000000000000000100a0752346045327-part2 /dev/nvme0n1p2
 nvme-eui.000000000000000100a0752346045327-part3 /dev/nvme0n1p3
 <<<kernel>>>
-1724756915
+{{ timestamp }}
 nr_free_pages 3499388
 nr_zone_inactive_anon 0
 nr_zone_active_anon 2081898
@@ -383,8 +383,8 @@ QUEUE_active 4 0
 default:the Postfix mail system is running:PID:2959
 <<<livestatus_status:sep(59)>>>
 [gui_e2e_central]
-accept_passive_host_checks;accept_passive_service_checks;average_latency_checker;average_latency_fetcher;average_latency_generic;average_latency_real_time;average_runnable_jobs_checker;average_runnable_jobs_fetcher;cached_log_messages;carbon_bytes_sent;carbon_bytes_sent_rate;carbon_overflows;carbon_overflows_rate;carbon_queue_usage;carbon_queue_usage_rate;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;core_pid;edition;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;has_event_handlers;helper_usage_checker;helper_usage_fetcher;helper_usage_generic;helper_usage_real_time;host_checks;host_checks_rate;influxdb_bytes_sent;influxdb_bytes_sent_rate;influxdb_overflows;influxdb_overflows_rate;influxdb_queue_usage;influxdb_queue_usage_rate;interval_length;last_command_check;last_log_rotation;license_usage_history;livechecks;livechecks_rate;livestatus_active_connections;livestatus_overflows;livestatus_overflows_rate;livestatus_queued_connections;livestatus_threads;livestatus_usage;livestatus_version;log_messages;log_messages_rate;max_long_output_size;metrics_count;metrics_count_rate;mk_inventory_last;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_queued_alerts;num_queued_notifications;num_services;obsess_over_hosts;obsess_over_services;perf_data_count;perf_data_count_rate;process_performance_data;program_start;program_version;requests;requests_rate;rrdcached_bytes_sent;rrdcached_bytes_sent_rate;rrdcached_overflows;rrdcached_overflows_rate;rrdcached_queue_usage;rrdcached_queue_usage_rate;service_checks;service_checks_rate;state_file_created
-1;1;0;1.46875e-06;1.50039;0;0;0;18;0;0;0;0;5e-05;1.34543e-13;1;1;1;154;0.128381;161518;enterprise;1;1;1;1;1;8;0;0;16;1.64443e-06;0;0;0;3.56016e-09;0.00150109;1.85758e-09;0;289;0.600146;0;0;0;0;0;0;60;0;1724756546;LQ't#$x~}Qi Qb]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Q`gd72afd\b3ga\c64a\gfbe\4445hheca4agQ[ QD:E6092D9Qi Q_gd6fgddb_fba_ehd6366egf36fea6d4df`ddc2h3a577befghf`76e_e46622b6Q[ QG6CD:@?Qi Qa]c]_\a_ac]_g]af]466Q[ Q65:E:@?Qi Q466Q[ QA=2E7@C>Qi Q&3F?EF aa]_c]c {%$Q[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `facf`eg__[ QE:>6K@?6Qi Q&%rQ[ Q?F>09@DEDQi _[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi _[ Q?F>0D6CG:46DQi _[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi _[ Q?F>0DJ?E96E:40E6DEDQi _[ Q?F>0DJ?E96E:40E6DED06I4=F565Qi _[ Q6IE6?D:@?0?E@AQi 72=D6N.N;1;2.68478e-07;1;0;0;0;20;2.20981e-09;2.4.0-2024.08.27;80;1.48089e-05;2000;2590;1.43205;1724756674;161518;0;0;1;0;0;43;0;0;324;0.175776;1;1724756673;Check_MK 2.4.0-2024.08.27;489;0.459585;44518;27.4871;0;0;5e-05;-7.02827e-06;397;0.211965;0
+{% raw %}accept_passive_host_checks;accept_passive_service_checks;average_latency_checker;average_latency_fetcher;average_latency_generic;average_latency_real_time;average_runnable_jobs_checker;average_runnable_jobs_fetcher;cached_log_messages;carbon_bytes_sent;carbon_bytes_sent_rate;carbon_overflows;carbon_overflows_rate;carbon_queue_usage;carbon_queue_usage_rate;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;core_pid;edition;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;has_event_handlers;helper_usage_checker;helper_usage_fetcher;helper_usage_generic;helper_usage_real_time;host_checks;host_checks_rate;influxdb_bytes_sent;influxdb_bytes_sent_rate;influxdb_overflows;influxdb_overflows_rate;influxdb_queue_usage;influxdb_queue_usage_rate;interval_length;last_command_check;last_log_rotation;license_usage_history;livechecks;livechecks_rate;livestatus_active_connections;livestatus_overflows;livestatus_overflows_rate;livestatus_queued_connections;livestatus_threads;livestatus_usage;livestatus_version;log_messages;log_messages_rate;max_long_output_size;metrics_count;metrics_count_rate;mk_inventory_last;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_queued_alerts;num_queued_notifications;num_services;obsess_over_hosts;obsess_over_services;perf_data_count;perf_data_count_rate;process_performance_data;program_start;program_version;requests;requests_rate;rrdcached_bytes_sent;rrdcached_bytes_sent_rate;rrdcached_overflows;rrdcached_overflows_rate;rrdcached_queue_usage;rrdcached_queue_usage_rate;service_checks;service_checks_rate;state_file_created
+1;1;0;1.46875e-06;1.50039;0;0;0;18;0;0;0;0;5e-05;1.34543e-13;1;1;1;154;0.128381;161518;enterprise;1;1;1;1;1;8;0;0;16;1.64443e-06;0;0;0;3.56016e-09;0.00150109;1.85758e-09;0;289;0.600146;0;0;0;0;0;0;60;0;1724756546;LQ't#$x~}Qi Qb]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Q`gd72afd\b3ga\c64a\gfbe\4445hheca4agQ[ QD:E6092D9Qi Q_gd6fgddb_fba_ehd6366egf36fea6d4df`ddc2h3a577befghf`76e_e46622b6Q[ QG6CD:@?Qi Qa]c]_\a_ac]_g]af]466Q[ Q65:E:@?Qi Q466Q[ QA=2E7@C>Qi Q&3F?EF aa]_c]c {%$Q[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `facf`eg__[ QE:>6K@?6Qi Q&%rQ[ Q?F>09@DEDQi _[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi _[ Q?F>0D6CG:46DQi _[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi _[ Q?F>0DJ?E96E:40E6DEDQi _[ Q?F>0DJ?E96E:40E6DED06I4=F565Qi _[ Q6IE6?D:@?0?E@AQi 72=D6N.N;1;2.68478e-07;1;0;0;0;20;2.20981e-09;2.4.0-2024.08.27;80;1.48089e-05;2000;2590;1.43205;1724756674;161518;0;0;1;0;0;43;0;0;324;0.175776;1;1724756673;Check_MK 2.4.0-2024.08.27;489;0.459585;44518;27.4871;0;0;5e-05;-7.02827e-06;397;0.211965;0{% endraw %}
 <<<livestatus_ssl_certs:sep(124)>>>
 [gui_e2e_central]
 /omd/sites/gui_e2e_central/etc/ssl/ca.pem|2040289320
@@ -410,7 +410,7 @@ thermal_zone7|enabled|TCPU|65050|110050|critical|110050|hot|110050|passive|10905
 thermal_zone8|enabled|TCPU_PCI|66000|-274000|passive
 thermal_zone9|enabled|iwlwifi_1|42000|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive
 <<<mknotifyd:sep(0)>>>
-1724756915
+{{ timestamp }}
 [gui_e2e_central]
 Version:         2.4.0-2024.08.27
 Updated:         1724756908 (2024-08-27 11:08:28)

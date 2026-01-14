@@ -41,7 +41,7 @@ PageFree:      5759092 kB
 VirtualTotal:  137438953344 kB
 VirtualFree:   137434596908 kB
 <<<fileinfo:sep(124)>>>
-1724760575
+{{ timestamp }}
 <<<df:sep(9)>>>
 C:\	NTFS	125827068	66236472	59590596	53%	C:\
 <<<logwatch>>>
@@ -348,7 +348,7 @@ AllocatedBytesPersec|Caption|Description|FinalizationSurvivors|Frequency_Object|
 455336330888|||0|0|10000000|10000000|6291456|5715456|12583480|0|7711632|21405760|sqlceip#1|41700872|357|31920|17880|8216|0|0|27|41742336|402644992|62376|234638|1096|0|5715456|0|0|35307058458304|133692413757140000|OK
 0|||0|0|10000000|10000000|0|0|0|0|0|0|sqlservr|0|0|0|0|0|0|0|1|0|0|0|0|0|0|0|0|0|35307058458304|133692413757140000|OK
 <<<winperf_phydisk>>>
-1724760575.65 234 10000000
+{{ timestamp }} 234 10000000
 2 instances: 0_C: _Total
 -36 0 0 rawcount
 -34 129203443492420 129203443492420 type(542573824)
@@ -382,7 +382,7 @@ AllocatedBytesPersec|Caption|Description|FinalizationSurvivors|Frequency_Object|
 1248 133692341756361838 133692341756361838 type(1073939712)
 1250 14634257 14634257 counter
 <<<winperf_if>>>
-1724760575.67 510 10000000
+{{ timestamp }} 510 10000000
 1 instances: Amazon_Elastic_Network_Adapter
 -122 115394976541 bulk_count
 -110 90462307 bulk_count
@@ -408,7 +408,7 @@ AllocatedBytesPersec|Caption|Description|FinalizationSurvivors|Frequency_Object|
 1094 7277 large_rawcount
 2002 1 text
 <<<winperf_processor>>>
-1724760575.71 238 10000000
+{{ timestamp }} 238 10000000
 3 instances: 0 1 _Total
 -232 31186936562500 30880049375000 31033492968750 100nsec_timer_inv
 -96 2639894843750 3011489531250 2825692187500 100nsec_timer
@@ -426,7 +426,7 @@ AllocatedBytesPersec|Caption|Description|FinalizationSurvivors|Frequency_Object|
 1518 0 0 0 bulk_count
 1520 0 0 0 bulk_count
 <<<winperf_tcp_conn>>>
-1724760575.73 638 10000000
+{{ timestamp }} 638 10000000
 2 233414485 counter
 4 1 rawcount
 6 568107 rawcount
@@ -437,7 +437,7 @@ AllocatedBytesPersec|Caption|Description|FinalizationSurvivors|Frequency_Object|
 16 127981268 counter
 18 45495 counter
 <<<winperf_ts_sessions>>>
-1724760575.82 5162 10000000
+{{ timestamp }} 5162 10000000
 2 0 rawcount
 4 2 rawcount
 6 2 rawcount

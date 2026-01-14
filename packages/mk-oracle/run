@@ -25,10 +25,10 @@ if
     [ $? -eq 4 ]
 then
     # Provide better commandline with enhanced 'getopt' from util-linux
-    GETOPT_OPTIONS=(--options 'buFl:aRCfDj:h' --long 'build,unit-tests,check-format,lint:,all,remote-host,component-tests,format,documentation,jobs:,help' --name "$(basename "$0")" --)
+    GETOPT_OPTIONS=(--options 'buFl:aRCfDTj:h' --long 'build,unit-tests,check-format,lint:,all,remote-host,component-tests,format,documentation,docker-tests:,jobs:,help' --name "$(basename "$0")" --)
 else
     # Compatibility with basic 'getopt' as found on non-Linux systems.
-    GETOPT_OPTIONS=('buFl:aRCfDj:h')
+    GETOPT_OPTIONS=('buFl:aRCfDTj:h')
 fi
 
 failure() {
@@ -48,6 +48,8 @@ usage() {
     echo "  -a, --all                   shortcut for -b -u -F -l all"
     echo "  -C, --component-tests       run all component tests"
     echo "  -R, --remote-host           run tests on a remote host"
+    echo "  -T VER, --docker-tests=VER"
+    echo "                              run component tests against Oracle Database in Docker (VER: 23, 19, 12, 11)"
     echo "  -f, --format                format sources"
     echo "  -D, --documentation         generate documentation"
     echo "  -j N, --jobs=N              allow N jobs at once, default is ${JOBS}"
@@ -64,6 +66,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
     RUN_COMPONENT_TESTS_REMOTE_HOST=no
+    RUN_DOCKER_TESTS=no
 
     if ! OPTIONS=$(getopt "${GETOPT_OPTIONS[@]}" "$@"); then
         usage >&2
@@ -123,6 +126,14 @@ parse_options() {
                 RUN_DOCUMENTATION=yes
                 shift
                 ;;
+            '-T' | '--docker-tests')
+                RUN_DOCKER_TESTS=yes
+                if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+                    ORACLE_DOCKER_VERSION="$2"
+                    shift
+                fi
+                shift
+                ;;
             '-j' | '--jobs')
                 JOBS="$2"
                 shift 2
@@ -140,7 +151,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_BUILD RUN_UNIT_TESTS RUN_COMPONENT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_BUILD RUN_UNIT_TESTS RUN_COMPONENT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION RUN_DOCKER_TESTS ORACLE_DOCKER_VERSION JOBS
 }
 
 run_build() {
@@ -255,6 +266,104 @@ run_test_component_remote_host() {
 EOF
 }
 
+cleanup_docker_container() {
+    local version="$1"
+    local service
+
+    # Map version to service name
+    case ${version} in
+        23) service="oracle-free" ;;
+        11) service="oracle-xe" ;;
+        12 | 12c) service="oracle-12c" ;;
+        19 | 19c) service="oracle-19c" ;;
+        *)
+            echo "Warning: Unknown version '${version}' for cleanup"
+            return 1
+            ;;
+    esac
+
+    echo "Stopping Docker container for Oracle ${version}..."
+    local docker_compose_file="${PWD}/tests/files/docker/docker-compose.yml"
+    docker compose -f "${docker_compose_file}" down "${service}"
+    echo "Container ${service} stopped successfully"
+}
+
+run_test_component_docker() {
+    # Check if platform supports Docker tests before doing anything
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            failure "Docker tests are not supported on $(uname)"
+            ;;
+    esac
+
+    echo "Running component tests against Oracle ${ORACLE_DOCKER_VERSION} in Docker..."
+
+    local run_db_script="${PWD}/tests/files/docker/run-db.sh"
+
+    # Start the database
+    if ! "${run_db_script}" -v "${ORACLE_DOCKER_VERSION}"; then
+        failure "Failed to start Oracle ${ORACLE_DOCKER_VERSION} database container"
+    fi
+
+    # Determine SID based on version
+    local db_sid
+    local db_service_name
+    case ${ORACLE_DOCKER_VERSION} in
+        23) db_sid="FREE" db_service_name="FREE" ;;
+        11) db_sid="XE" db_service_name="XE" ;;
+        12 | 12c) db_sid="XE" db_service_name="xe.oracle.docker" ;;
+        19 | 19c) db_sid="ORCLCDB" db_service_name="ORCLCDB" ;;
+        *)
+            cleanup_docker_container "${ORACLE_DOCKER_VERSION}"
+            failure "Unsupported Oracle version: ${ORACLE_DOCKER_VERSION}"
+            ;;
+    esac
+
+    # Set up test environment variables for Docker Oracle
+    export CI_ORA2_DB_TEST="localhost:sys:oracle:1521:${db_sid}::${db_service_name}:_:_:"
+    echo "CI_ORA2_DB_TEST set to: ${CI_ORA2_DB_TEST}"
+
+    setup_tests
+
+    # Run the tests and capture exit code
+    local test_exit_code=0
+
+    # 1. obtain rebundled client
+    bazel build //omd/packages/oci:oci_light_lin_x64
+
+    # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
+    # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
+    path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
+    path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
+    unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
+
+    # 3. relink libaio
+    libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')
+    if [ -e "${libaio}" ]; then
+        ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
+    else
+        cleanup_docker_container "${ORACLE_DOCKER_VERSION}"
+        failure "libaio absent. Integration testing is not possible"
+    fi
+
+    export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
+
+    # Run tests and capture exit code
+    if ! bazel test :mk-oracle-lib-test-external; then
+        test_exit_code=$?
+    fi
+
+    # Always cleanup Docker container
+    cleanup_docker_container "${ORACLE_DOCKER_VERSION}"
+
+    # Exit with the test exit code
+    if [ ${test_exit_code} -ne 0 ]; then
+        failure "Component tests failed with exit code ${test_exit_code}"
+    fi
+
+    echo "Component tests completed successfully"
+}
+
 run_test_unit() {
     setup_tests
 
@@ -303,6 +412,7 @@ main() {
     test ${RUN_UNIT_TESTS} = yes && run_test_unit
     test ${RUN_COMPONENT_TESTS} = yes && run_test_component
     test ${RUN_COMPONENT_TESTS_REMOTE_HOST} = yes && run_test_component_remote_host
+    test ${RUN_DOCKER_TESTS} = yes && run_test_component_docker
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && run_clippy
     test ${RUN_FORMAT} = yes && run_format

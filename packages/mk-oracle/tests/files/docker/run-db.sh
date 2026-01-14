@@ -62,10 +62,8 @@ docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d "$SERVICE"
 if [[ "$VERSION" == "23" || "$VERSION" == "11" || "$VERSION" == "12" || "$VERSION" == "12c" || "$VERSION" == "19" || "$VERSION" == "19c" ]]; then
     echo "Waiting for $SERVICE to be healthy..."
 
-    # Get container ID
-    CONTAINER_ID=$(docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps -q "$SERVICE")
-
     while true; do
+        CONTAINER_ID=$(docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps -q "$SERVICE")
         STATUS=$(docker inspect --format '{{.State.Health.Status}}' "$CONTAINER_ID")
 
         if [ "$STATUS" == "healthy" ]; then
@@ -79,18 +77,22 @@ if [[ "$VERSION" == "23" || "$VERSION" == "11" || "$VERSION" == "12" || "$VERSIO
         fi
 
         echo "Current status: $STATUS. Waiting..."
-        sleep 5
+        sleep 10
     done
 
     # Determine SID based on version
     if [ "$VERSION" == "23" ]; then
         SID="FREE"
+        SERVICE_NAME="FREE"
     elif [ "$VERSION" == "11" ]; then
         SID="XE"
+        SERVICE_NAME="XE"
     elif [[ "$VERSION" == "12" || "$VERSION" == "12c" ]]; then
         SID="XE"
+        SERVICE_NAME="xe.oracle.docker"
     elif [[ "$VERSION" == "19" || "$VERSION" == "19c" ]]; then
         SID="ORCLCDB"
+        SERVICE_NAME="ORCLCDB"
     fi
 
     echo ""
@@ -100,6 +102,7 @@ if [[ "$VERSION" == "23" || "$VERSION" == "11" || "$VERSION" == "12" || "$VERSIO
     echo "Host:      localhost"
     echo "Port:      $PORT"
     echo "SID:       $SID"
+    echo "Service:   $SERVICE_NAME"
     echo "Password:  oracle"
     echo "=================================================="
 fi

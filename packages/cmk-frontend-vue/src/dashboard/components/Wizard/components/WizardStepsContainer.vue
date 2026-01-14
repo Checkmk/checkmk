@@ -16,7 +16,7 @@ conditions defined in the file COPYING, which is part of this source code packag
   padding-top: var(--spacing);
   padding-bottom: var(--spacing);
   padding-left: var(--spacing);
-  height: 100%;
+  height: calc(100% - var(--spacing) * 2);
   gap: 0;
 }
 </style>

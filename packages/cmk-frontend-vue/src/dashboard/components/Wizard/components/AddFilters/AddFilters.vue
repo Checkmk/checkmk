@@ -39,18 +39,37 @@ const filterCategory = computed(() => {
 </script>
 
 <template>
-  <StepsHeader :title="_t('Add filter')" @back="props.close" />
-  <ContentSpacer />
+  <div class="db-add-filters__container">
+    <StepsHeader :title="_t('Add filter')" @back="props.close" />
+    <ContentSpacer :height="40" />
 
-  <FilterSelection
-    :key="`${filterSelectionTarget}`"
-    :category-filter="filterCategory || []"
-    :category-definition="
-      (filterSelectionTarget === 'service'
-        ? CATEGORY_DEFINITIONS.service
-        : CATEGORY_DEFINITIONS.host)!
-    "
-    :filters="filters"
-    class="filter-selection__item"
-  />
+    <FilterSelection
+      :key="`${filterSelectionTarget}`"
+      :category-filter="filterCategory || []"
+      :category-definition="
+        (filterSelectionTarget === 'service'
+          ? CATEGORY_DEFINITIONS.service
+          : CATEGORY_DEFINITIONS.host)!
+      "
+      :filters="filters"
+      class="db-add-filters__selection"
+    />
+  </div>
 </template>
+
+<style scoped>
+.db-add-filters__container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.db-add-filters__selection {
+  min-height: 0;
+  flex-grow: 1;
+
+  /* We want the same padding on both sides and the bottom, however the parent already sets some. */
+  padding: 0 var(--dimension-7) calc(var(--dimension-7) - var(--spacing))
+    calc(var(--dimension-7) - var(--spacing));
+}
+</style>

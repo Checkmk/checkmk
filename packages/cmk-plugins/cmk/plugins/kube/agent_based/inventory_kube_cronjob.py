@@ -7,7 +7,7 @@ from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult
 from cmk.plugins.kube.schemata.section import CronJobInfo
 
 
-def inventory_kube_cronjob(
+def inventorize_kube_cronjob(
     section: CronJobInfo,
 ) -> InventoryResult:
     yield Attributes(
@@ -23,5 +23,5 @@ def inventory_kube_cronjob(
 inventory_plugin_kube_cronjob = InventoryPlugin(
     name="kube_cronjob",
     sections=["kube_cronjob_info"],
-    inventory_function=inventory_kube_cronjob,
+    inventory_function=inventorize_kube_cronjob,
 )

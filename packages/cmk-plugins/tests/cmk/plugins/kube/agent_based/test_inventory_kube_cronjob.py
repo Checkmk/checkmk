@@ -9,7 +9,7 @@
 import polyfactory.factories.pydantic_factory
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.kube.agent_based.inventory_kube_cronjob import inventory_kube_cronjob
+from cmk.plugins.kube.agent_based.inventory_kube_cronjob import inventorize_kube_cronjob
 from cmk.plugins.kube.schemata.section import CronJobInfo
 
 
@@ -17,9 +17,9 @@ class CronJobInfoFactory(polyfactory.factories.pydantic_factory.ModelFactory):
     __model__ = CronJobInfo
 
 
-def test_inventory_kube_cronjob() -> None:
+def test_inventorize_kube_cronjob() -> None:
     section = CronJobInfoFactory.build(name="name", namespace="namespace")
-    attributes = list(inventory_kube_cronjob(section))
+    attributes = list(inventorize_kube_cronjob(section))
     assert attributes == [
         Attributes(
             path=["software", "applications", "kube", "metadata"],

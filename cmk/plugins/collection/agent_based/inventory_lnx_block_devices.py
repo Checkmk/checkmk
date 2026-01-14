@@ -84,7 +84,7 @@ agent_section_lnx_block_devices = AgentSection(
 )
 
 
-def inventory_lnx_block_devices(section: Section) -> InventoryResult:
+def inventorize_lnx_block_devices(section: Section) -> InventoryResult:
     for row in section:
         yield TableRow(
             path=["hardware", "storage", "disks"],
@@ -104,5 +104,5 @@ def inventory_lnx_block_devices(section: Section) -> InventoryResult:
 
 inventory_plugin_lnx_block_devices = InventoryPlugin(
     name="lnx_block_devices",
-    inventory_function=inventory_lnx_block_devices,
+    inventory_function=inventorize_lnx_block_devices,
 )

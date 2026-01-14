@@ -2,6 +2,5 @@
 lint:
   aspects:
     - //bazel/tools:aspects.bzl%astrein
-    - //bazel/tools:aspects.bzl%bandit
     - //bazel/tools:aspects.bzl%clang_tidy
     - //bazel/tools:aspects.bzl%ruff

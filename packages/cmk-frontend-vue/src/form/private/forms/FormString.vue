@@ -54,14 +54,17 @@ const componentId = useId()
           <FormAutocompleter
             :id="componentId"
             v-model="value"
-            class="form-string--dropdown"
             :autocompleter="spec.autocompleter"
             :placeholder="untranslated(spec.input_hint ?? '')"
             :label="spec.label || ''"
             :start-of-group="true"
-          /><CmkDropdownButton group="end" @click="value = ''">
-            <X class="form-string__button-clear-x" />
-          </CmkDropdownButton>
+          >
+            <template #buttons-end>
+              <CmkDropdownButton class="form-string__button-clear" group="end" @click="value = ''">
+                <X class="form-string__button-clear-x" />
+              </CmkDropdownButton>
+            </template>
+          </FormAutocompleter>
         </div>
       </div>
     </template>
@@ -94,14 +97,13 @@ const componentId = useId()
   flex-direction: column;
 }
 
+.form-string__button-clear {
+  vertical-align: bottom;
+  margin-left: 1px;
+}
+
 .form-string__button-clear-x {
   width: 13px;
   height: 14px;
-}
-
-.form-string--dropdown {
-  display: block;
-  float: left; /* align nicely with clear button */
-  margin-right: 1px;
 }
 </style>

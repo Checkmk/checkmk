@@ -43,6 +43,7 @@ pub struct Options {
     max_queries: MaxQueries,
     use_host_client: UseHostClient,
     params: Vec<SqlBindParam>,
+    threads: usize,
 }
 
 impl Default for Options {
@@ -52,6 +53,7 @@ impl Default for Options {
             max_queries: defaults::MAX_QUERIES.into(),
             use_host_client: UseHostClient::default(),
             params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
+            threads: 1,
         }
     }
 }
@@ -63,6 +65,7 @@ impl Options {
             max_queries: defaults::MAX_QUERIES.into(),
             use_host_client: UseHostClient::default(),
             params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
+            threads: 1,
         }
     }
 
@@ -80,6 +83,10 @@ impl Options {
 
     pub fn params(&self) -> &Vec<SqlBindParam> {
         &self.params
+    }
+
+    pub fn threads(&self) -> usize {
+        self.threads
     }
 
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
@@ -110,6 +117,7 @@ impl Options {
                     .get_int::<u8>(keys::IGNORE_DB_NAME)
                     .unwrap_or_default(),
             )],
+            threads: 1,
         }))
     }
 }

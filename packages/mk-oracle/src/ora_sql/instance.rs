@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::{self, OracleConfig};
-use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, OpenedSpot};
+use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
 use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
@@ -27,7 +27,8 @@ use crate::config::connection::add_tns_admin_to_env;
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomService;
 use crate::platform::get_local_instances;
-use anyhow::Result;
+use anyhow::{Context, Result};
+use std::sync::{Arc, Mutex};
 
 impl OracleConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
@@ -140,7 +141,11 @@ pub async fn generate_data(
         .filter_map(|s| s.to_signaling_header())
         .collect();
     let works = make_spot_works(connected, sections, ora_sql.params());
-    output.extend(process_spot_works(works));
+    if ora_sql.options().threads() > 1 {
+        output.extend(process_spot_works_para(works, ora_sql.options().threads()));
+    } else {
+        output.extend(process_spot_works(works));
+    }
     Ok(output)
 }
 
@@ -219,6 +224,138 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<_>>()
+}
+
+fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String> {
+    let threads = threads.clamp(1, MAX_THREAD_COUNT);
+    works
+        .into_iter()
+        .flat_map(|(spot, instance_works)| {
+            log::info!("Spot: {:?}", spot.target());
+            instance_works
+                .iter()
+                .flat_map(|(instance, queries)| {
+                    log::info!("Instance: {}", instance);
+                    let spots = open_spots(&spot, instance, threads);
+                    if spots.is_empty() {
+                        log::error!("Failed to connect to instance {}", instance);
+                        return vec![];
+                    }
+                    let job_data: Vec<JobData> = make_job_data(spots, queries);
+                    let thread_pool = build_thread_pool(threads);
+                    let global_output = Arc::new(Mutex::new(Vec::new()));
+                    thread_pool.scope(|scope| {
+                        for job in job_data {
+                            let thread_output = Arc::clone(&global_output);
+                            scope.spawn(move |_| {
+                                let result = job
+                                    .blocks
+                                    .iter()
+                                    .flat_map(|block| {
+                                        let (queries, title) = block;
+                                        log::debug!("Executing queries for instance: {}", instance);
+                                        _exec_queries_on_spot(
+                                            &job.spot,
+                                            instance,
+                                            queries,
+                                            title.as_str(),
+                                        )
+                                    })
+                                    .collect::<Vec<String>>();
+                                thread_output.lock().unwrap().extend(result);
+                            })
+                        }
+                    });
+                    Arc::try_unwrap(global_output)
+                        .unwrap()
+                        .into_inner()
+                        .unwrap()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>()
+}
+
+fn open_spots(
+    spot: &ClosedSpot,
+    instance_name: &InstanceName,
+    thread_count: usize,
+) -> Vec<OpenedSpot> {
+    std::iter::repeat_with(|| spot.clone().connect(Some(instance_name)))
+        .take(thread_count)
+        .filter_map(|r| match r {
+            Ok(conn) => Some(conn),
+            Err(e) => {
+                log::error!("Failed to connect to instance {}: {}", instance_name, e);
+                None
+            }
+        })
+        .collect::<Vec<_>>()
+}
+
+fn build_thread_pool(threads: usize) -> rayon::ThreadPool {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(threads)
+        .build()
+        .context("Failed to build thread pool")
+        .unwrap()
+}
+
+/// builds a table [(OpenedSpot, ([Query, ...], Title)), ...]
+fn make_job_data(spots: Vec<Spot<Opened>>, queries: &[(Vec<SqlQuery>, String)]) -> Vec<JobData> {
+    let job_count = spots.len();
+    let chunk_size = queries.len().div_ceil(job_count);
+    let query_chunks = queries.chunks(chunk_size);
+    println!(
+        "{} {} {} {}",
+        queries.len(),
+        job_count,
+        chunk_size,
+        query_chunks.len()
+    );
+    spots
+        .into_iter()
+        .zip(query_chunks)
+        .map(|(spot, chunk)| JobData {
+            spot,
+            blocks: chunk.to_vec(),
+        })
+        .collect::<Vec<_>>()
+}
+
+/// Execute queries on an opened spot and return results with title headers ahead
+fn _exec_queries_on_spot(
+    spot: &Spot<Opened>,
+    instance_name: &InstanceName,
+    queries: &[SqlQuery],
+    title: &str,
+) -> Vec<String> {
+    queries
+        .iter()
+        .flat_map(|query| {
+            log::debug!("Executing query: {}", query.as_str());
+            let mut result = spot
+                .query_table(query)
+                .format(&SECTION_SEPARATOR.to_string())
+                .unwrap_or_else(|e| {
+                    log::error!(
+                        "Failed to execute query for instance {}: {}",
+                        instance_name,
+                        e
+                    );
+                    vec![e.to_string()]
+                });
+            result.insert(0, title.to_string());
+            result
+        })
+        .collect::<Vec<String>>()
+}
+
+const MAX_THREAD_COUNT: usize = 8;
+
+struct JobData {
+    spot: Spot<Opened>,
+    blocks: Vec<(Vec<SqlQuery>, String)>,
 }
 
 fn _exec_queries(

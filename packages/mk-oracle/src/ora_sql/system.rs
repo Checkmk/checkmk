@@ -164,7 +164,7 @@ mod tests {
             QueryResult(result)
         }
 
-        fn clone_box(&self) -> Box<dyn OraDbEngine> {
+        fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
             Box::new(TestOra)
         }
     }

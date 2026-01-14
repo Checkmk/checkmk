@@ -16,15 +16,18 @@ For more details, see pytest --help the documentation of pytest-benchmark.
 
 import logging
 from collections.abc import Iterator
-from enum import Enum
+from dataclasses import dataclass
 from time import time
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
 
 import pytest
 import requests
+from playwright._impl._api_structures import SetCookieParam
+from playwright.sync_api import BrowserContext, Page
 from pytest_benchmark.fixture import BenchmarkFixture
 from requests.auth import HTTPBasicAuth
 
+from tests.testlib.site import ADMIN_USER as site_admin_user
 from tests.testlib.site import Site
 from tests.testlib.utils import edition_from_env
 from tests.testlib.version import CMKVersion, version_from_env
@@ -36,11 +39,11 @@ from tests.performance.sysmon import track_resources
 logger = logging.getLogger(__name__)
 
 
-class CmkPageUrl(Enum):
-    LOGIN = "login.py"
-    EDIT_HOST = "wato.py?folder={folder}&host={host}&mode=edit_host"
-    SERVICE_DISCOVERY = "wato.py?folder={folder}&host={host}&mode=inventory"
-    HOST_PARAMETERS = "wato.py?folder={folder}&host={host}&mode=object_parameters"
+@dataclass
+class CmkPageUrl:
+    id: str
+    value: str
+    login: bool = True
 
 
 class PerformanceTest:
@@ -100,6 +103,52 @@ class PerformanceTest:
             hostnames, bulk_size=10
         )
         site.openapi.changes.activate_and_wait_for_completion()
+
+    @staticmethod
+    def login(site: Site, auth: HTTPBasicAuth) -> SetCookieParam:
+        """Login to the Checkmk web UI and generate an auth cookie.
+
+        Args:
+            site: The target site.
+            auth: An HTTPBasicAuth tuple with the username and password.
+
+        Returns:
+            SetCookieParam: The auth cookie for the login session.
+        """
+        login_url = urljoin(str(site.url), "login.py")
+        session = requests.session()
+        session.get(login_url, auth=auth)
+        try:
+            auth_cookie = next(
+                cookie for cookie in session.cookies if cookie.name == f"auth_{site.id}"
+            )
+            return {
+                "name": auth_cookie.name,
+                "value": auth_cookie.value or "",
+                "domain": auth_cookie.domain,
+                "path": auth_cookie.path,
+                "secure": auth_cookie.secure,
+                "sameSite": "Lax",
+            }
+        except StopIteration as excp:
+            excp.add_note(f'Failed to login to site "{site.id}"!')
+            raise excp
+
+    @staticmethod
+    def page(site: Site, context: BrowserContext, login_as_admin: bool = True) -> Page:
+        """Return a Playwright page object for a Checkmk web UI.
+
+        Args:
+            site: The target site.
+            context: The Playwright BrowserContext object.
+            login_as_admin: Specifies if the default admin user should be logged in.
+        """
+        if login_as_admin:
+            auth = HTTPBasicAuth(site_admin_user, site.admin_password)
+            auth_cookie = PerformanceTest.login(site, auth)
+            context.add_cookies([auth_cookie])
+
+        return context.new_page()
 
     @staticmethod
     def _generate_ips(offset: int, max_count: int) -> list[str]:
@@ -194,13 +243,15 @@ class PerformanceTest:
             if len(hostnames) > 0:
                 self.delete_hosts(self.central_site, hostnames)
 
-    def scenario_performance_ui_response(self, page_url: CmkPageUrl = CmkPageUrl.LOGIN) -> None:
+    def scenario_performance_ui_response(
+        self, context: BrowserContext, page_url: CmkPageUrl
+    ) -> None:
         """
         Scenario: UI response time.
 
-        Sequentially issues 100 HTTP GET requests against the sites URL login page, appending a
-        millisecond timestamp (_ts) as query parameter to reduce cache hits. Each request includes
-        cache-busting headers and uses a 30-second timeout.
+        Sequentially issues 100 Playwright requests against the sites given page_url, appending a
+        millisecond timestamp (_ts) as query parameter to avoid cache hits. Each request includes
+        cache-busting headers and uses a timeout.
 
         Behavior:
         - Logs a warning if a response is non-OK (non-2xx status).
@@ -224,11 +275,13 @@ class PerformanceTest:
         max_average_request_duration = 0.4  # seconds for the maximum average request time
 
         first_request_duration = 0.0
+        page = self.page(self.central_site, context, page_url.login)
         site_url = urljoin(str(self.central_site.internal_url), page_url.value).format_map(
             {"folder": "/", "host": "local"}
         )
         counter = self.object_count
         start_time = time()
+
         for i in range(counter):
             parsed_url = urlparse(site_url)
             query_params = parse_qs(parsed_url.query)
@@ -236,19 +289,8 @@ class PerformanceTest:
             new_query = urlencode(query_params, doseq=True)
             unique_url = urlunparse(parsed_url._replace(query=new_query))
             try:
-                resp = requests.get(
-                    unique_url,
-                    headers={
-                        "Cache-Control": "no-cache, no-store, must-revalidate",
-                        "Pragma": "no-cache",
-                        "Expires": "0",
-                        "Connection": "close",
-                    },
-                    auth=None
-                    if page_url.value == page_url.LOGIN
-                    else HTTPBasicAuth("cmkadmin", "cmk"),
-                    timeout=max_first_request_timeout if i == 0 else max_request_timeout,
-                )
+                timeout_ms = 1000 * (max_first_request_timeout if i == 0 else max_request_timeout)
+                resp = page.goto(unique_url, timeout=timeout_ms)
                 if i == 0:
                     first_request_duration = time() - start_time
                     logger.info(
@@ -256,15 +298,15 @@ class PerformanceTest:
                         first_request_duration,
                         unique_url,
                     )
-                if not resp.ok:
+                if resp and not resp.ok:
                     logger.warning(
                         "UI response request %s failed with status %s (%s)",
                         i,
-                        resp.status_code,
+                        resp.status,
                         unique_url,
                     )
             except Exception as exc:
-                logger.warning("UI response request %s raised %r (%s)", i, exc, unique_url)
+                logger.warning("UI response request %s raised %s (%s)", i, exc, unique_url)
         end_time = time()
         duration = end_time - start_time
         average_request_duration = (duration - first_request_duration) / (counter - 1)
@@ -325,17 +367,27 @@ def test_performance_services(
     )
 
 
-@pytest.mark.parametrize("page_url", CmkPageUrl, ids=[_.name.lower() for _ in CmkPageUrl])
+@pytest.mark.parametrize(
+    "page_url",
+    [
+        CmkPageUrl("login", "login.py", login=False),
+        CmkPageUrl("edit_host", "wato.py?folder={folder}&host={host}&mode=edit_host"),
+        CmkPageUrl("service_discovery", "wato.py?folder={folder}&host={host}&mode=inventory"),
+        CmkPageUrl("host_parameters", "wato.py?folder={folder}&host={host}&mode=object_parameters"),
+    ],
+    ids=lambda url: url.id,
+)
 def test_performance_ui_response(
     perftest: PerformanceTest,
     benchmark: BenchmarkFixture,
     track_system_resources: None,
     page_url: CmkPageUrl,
+    context: BrowserContext,
 ) -> None:
     print(f"Checking {page_url.value}...")
     benchmark.pedantic(
         perftest.scenario_performance_ui_response,
-        args=[page_url],
+        args=[context, page_url],
         rounds=perftest.rounds,
         iterations=perftest.iterations,
     )

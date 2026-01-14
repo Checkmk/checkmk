@@ -18,7 +18,7 @@ from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_status import 
     DeviceStatus,
     discover_device_status,
     discover_device_status_ps,
-    inventory_power_supplies,
+    inventorize_power_supplies,
     Parameters,
     parse_device_status,
 )
@@ -121,7 +121,7 @@ def test_check_device_status_ps_not_powering() -> None:
     assert value == expected
 
 
-def test_inventory_power_supplies() -> None:
+def test_inventorize_power_supplies() -> None:
     device_status = _RawDevicesStatusFactory.build(
         components={
             "powerSupplies": [
@@ -138,7 +138,7 @@ def test_inventory_power_supplies() -> None:
     string_table = _get_string_table_from_device_status(device_status)
     section = _parse_and_assert_not_none(string_table)
 
-    value = list(inventory_power_supplies(section))
+    value = list(inventorize_power_supplies(section))
     expected = [
         TableRow(
             path=["hardware", "components", "psus"],

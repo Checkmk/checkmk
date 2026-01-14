@@ -145,7 +145,7 @@ check_plugin_cisco_meraki_org_device_status_ps = CheckPlugin(
 )
 
 
-def inventory_power_supplies(section: Section) -> InventoryResult:
+def inventorize_power_supplies(section: Section) -> InventoryResult:
     for slot, power_supply in section.power_supplies.items():
         yield TableRow(
             path=["hardware", "components", "psus"],
@@ -162,6 +162,6 @@ def inventory_power_supplies(section: Section) -> InventoryResult:
 
 inventory_plugin_cisco_meraki_power_supplies = InventoryPlugin(
     name="cisco_meraki_power_supplies",
-    inventory_function=inventory_power_supplies,
+    inventory_function=inventorize_power_supplies,
     sections=["cisco_meraki_org_device_status"],
 )

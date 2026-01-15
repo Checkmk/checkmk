@@ -5,7 +5,13 @@
  */
 import { type Ref, inject } from 'vue'
 
-import type { FilterDefinition, FilterDefinitions, FilterType } from './types.ts'
+import type {
+  ComponentConfig,
+  ConfiguredValues,
+  FilterDefinition,
+  FilterDefinitions,
+  FilterType
+} from './types.ts'
 
 export function parseFilterTypes(
   filterDefsRecord: Record<string, FilterDefinition>,
@@ -54,4 +60,66 @@ export function useFilterDefinitions(): FilterDefinitions {
   }
 
   return filterDefinitions
+}
+
+/**
+ * Checks if a filter is fully configured based on its definition and current values.
+ * This is rather a manual check based upon the filter definitions. This function
+ * should not be considered ideal (or the source of truth) since the requirement to know when a filter is
+ * configured came at a later point in time (the filters logic itself was already fragile in the legacy non Vue world).
+ * TODO: This function may need to be extended to cover more component types.
+ */
+export function isFullyConfiguredFilter(
+  filterValues: ConfiguredValues,
+  filterDefinition: FilterDefinition
+): boolean {
+  function check(components: ComponentConfig[]): boolean {
+    for (const component of components) {
+      if (component.component_type === 'static_text') {
+        continue
+      }
+
+      if (component.component_type === 'horizontal_group') {
+        if (!check(component.components || [])) {
+          return false
+        }
+        continue
+      }
+
+      if (component.component_type === 'tag_filter') {
+        // TODO: may have to consider not setting this as unconfigured in future
+        continue
+      }
+
+      if (!('id' in component)) {
+        continue
+      }
+
+      const value = filterValues[component.id]
+
+      switch (component.component_type) {
+        case 'dropdown': {
+          if (value === '' && !Object.prototype.hasOwnProperty.call(component.choices, '')) {
+            return false // Not configured
+          }
+          break
+        }
+
+        case 'dynamic_dropdown':
+        case 'text_input': {
+          if (value === '') {
+            return false // Not configured
+          }
+          break
+        }
+
+        default:
+          // checkbox_group, dual_list, hidden, slider, labels
+          break
+      }
+    }
+    return true
+  }
+
+  return check(filterDefinition.extensions.components)
 }

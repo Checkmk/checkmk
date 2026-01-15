@@ -208,7 +208,7 @@ void main() {
 
         success &= smart_stage(
                 name: "Trigger Cloud Gitlab jobs",
-                condition: success && edition == "cloud",
+                condition: false,
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,

@@ -88,7 +88,7 @@ def test_client(site_context: Config) -> Iterator[TestClient]:
     client = TestClient(app)
     yield client
 
-    print(site_context.log_path.read_text())
+    print(site_context.log_path.read_text())  # nosemgrep: disallow-print
 
 
 @pytest.fixture(scope="session")

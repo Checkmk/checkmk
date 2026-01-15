@@ -35,7 +35,7 @@ def test_site_cn_validation_route(monkeypatch: pytest.MonkeyPatch) -> None:
         "/foo",
         headers={INJECTED_UUID_HEADER: "test-site-cn"},
     )
-    print(response.text)
+    print(response.text)  # nosemgrep: disallow-print
     assert response.status_code == 200
     assert response.json() == {"whatever": "data"}
 

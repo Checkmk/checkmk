@@ -42,7 +42,7 @@ def test_clean_plugin_families_list_up_to_date() -> None:
     # Get repository root by walking up from this test file
     test_file = Path(__file__).resolve()
     repo_root = test_file.parent.parent.parent.parent
-    print(f"Repository root determined as: {repo_root}")
+    print(f"Repository root determined as: {repo_root}")  # nosemgrep: disallow-print
 
     # Check that repo_root looks correct (should contain cmk/plugins/)
     plugins_dir = repo_root / "cmk" / "plugins"

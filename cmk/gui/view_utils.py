@@ -416,7 +416,7 @@ def get_themed_perfometer_bg_color() -> str:
     if theme.get() == "modern-dark":
         return "#bdbdbd"
     # else (classic and modern theme)
-    return "#7E8A95"
+    return "#ffffff"
 
 
 def render_community_upgrade_button() -> None:

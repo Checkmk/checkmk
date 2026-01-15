@@ -8,16 +8,15 @@
 
 #include <chrono>
 #include <functional>
-#include <memory>
 #include <string>
 #include <unordered_map>
 
 #include "Interface.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringFilter.h"
 
 class Logger;
-class RegExp;
 enum class RelationalOperator;
 
 class DictStrValueFilter : public ColumnFilter {
@@ -34,9 +33,7 @@ public:
 
 private:
     function_type f_;
-    std::shared_ptr<RegExp> regExp_;
-    std::string ref_string_;
-    std::string ref_varname_;
+    StringFilter filter_;
 };
 
 class DictDoubleValueFilter : public ColumnFilter {

@@ -85,8 +85,11 @@ void download_file(Map args) {
                 --show-error \
                 --fail \
                 --user "${USER}:${PASSWORD}" \
-                --output ${args.download_dest}/${args.file_name} \
-                ${args.base_url}/${args.file_name}
+                --parallel \
+                --remote-name \
+                --create-dirs \
+                --output-dir ${args.download_dest} \
+                "${args.base_url}/${args.file_name}{${hashfile_extension},}"
         """);
     }
 }
@@ -157,7 +160,7 @@ boolean download_hot_cache(Map args) {
             sh("""
                 mkdir -p ${args.download_dest}
                 ls -lisa ${env.PERSISTENT_K8S_VOLUME_PATH}
-                cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern} ${args.download_dest}
+                cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} ${args.download_dest}
             """);
         }
     }
@@ -213,7 +216,7 @@ void upload_hot_cache(Map args) {
                 create_hash("${args.download_dest}/${args.file_pattern}");
                 sh("""
                     if [ ! -s "${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}" ]; then
-                        cp ${args.download_dest}/${args.file_pattern}{.hash,} ${env.PERSISTENT_K8S_VOLUME_PATH}/
+                        cp ${args.download_dest}/${args.file_pattern}{${hashfile_extension},} ${env.PERSISTENT_K8S_VOLUME_PATH}/
                     fi
                     ls -lisa ${env.PERSISTENT_K8S_VOLUME_PATH}
                 """);

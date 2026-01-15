@@ -29,6 +29,7 @@ selected objects:
 
 import itertools
 import logging
+import os
 import pprint
 import time
 import urllib.parse
@@ -1521,18 +1522,22 @@ class PasswordsAPI(BaseAPI):
         owner: str = "admin",
     ) -> None:
         """Create a password via REST API."""
+
+        request_data = {
+            "ident": ident,
+            "title": title,
+            "comment": comment,
+            "documentation_url": "localhost",
+            "password": password,
+            "owner": owner,
+            "shared": ["all"],
+        }
+        if os.environ.get("EDITION") == "ultimatemt":
+            request_data["customer"] = "global"
+
         response = self.session.post(
             "/domain-types/password/collections/all",
-            json={
-                "ident": ident,
-                "title": title,
-                "comment": comment,
-                "documentation_url": "localhost",
-                "password": password,
-                "owner": owner,
-                "shared": ["all"],
-                "customer": "global",
-            },
+            json=request_data,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

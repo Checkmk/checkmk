@@ -18,7 +18,7 @@ import logging
 from collections.abc import Iterator
 from enum import Enum
 from time import time
-from urllib.parse import urljoin
+from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
 
 import pytest
 import requests
@@ -259,7 +259,11 @@ class PerformanceTest:
         counter = self.object_count
         start_time = time()
         for i in range(counter):
-            unique_url = f"{site_url}?_ts={int(time() * 1000)}"
+            parsed_url = urlparse(site_url)
+            query_params = parse_qs(parsed_url.query)
+            query_params["_ts"] = [f"{int(time() * 1000)}"]
+            new_query = urlencode(query_params, doseq=True)
+            unique_url = urlunparse(parsed_url._replace(query=new_query))
             try:
                 resp = requests.get(
                     unique_url,

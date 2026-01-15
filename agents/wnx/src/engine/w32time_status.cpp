@@ -13,6 +13,6 @@ namespace cma::provider {
 std::string W32TimeStatus::makeBody() {
     auto cmd = wtools::ExpandStringWithEnvironment(
         L"%SystemRoot%\\System32\\w32tm.exe /query /status /verbose");
-    return wtools::RunCommand(cmd);
+    return wtools::oemToUtf8(wtools::RunCommand(cmd));
 }
 }  // namespace cma::provider

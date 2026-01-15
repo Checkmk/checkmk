@@ -210,9 +210,10 @@ void upload_hot_cache(Map args) {
                     INTERNAL_DEPLOY_PORT,
                 );
             } else {
+                create_hash("${args.download_dest}/${args.file_pattern}");
                 sh("""
                     if [ ! -s "${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}" ]; then
-                        cp ${args.download_dest}/${args.file_pattern} ${env.PERSISTENT_K8S_VOLUME_PATH}/
+                        cp ${args.download_dest}/${args.file_pattern}{.hash,} ${env.PERSISTENT_K8S_VOLUME_PATH}/
                     fi
                     ls -lisa ${env.PERSISTENT_K8S_VOLUME_PATH}
                 """);

@@ -191,7 +191,7 @@ def main() {
 
         success &= smart_stage(
                 name: "Trigger SaaS Gitlab jobs",
-                condition: success && edition == "saas",
+                condition: false,
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,

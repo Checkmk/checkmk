@@ -8,7 +8,9 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
 
+from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
@@ -25,6 +27,7 @@ from cmk.utils.host_storage import (
     HostsStorageData,
     StandardHostsStorage,
 )
+from cmk.utils.labels import Labels
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 KNOWN_EXPLICIT_BUILTIN_ATTRS = ["cmk_agent_connection", "alias", "parents", "metrics_association"]
@@ -591,7 +594,13 @@ class AnonFolderAttributesStorage(StandardWATOInfoStorage):
 
 class HostsSteps(AnonymizeStep):
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
         logger.warning("Process hosts")
 

@@ -6,22 +6,19 @@ import logging
 import re
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
 
-from cmk.base.app import make_app
-from cmk.base.config import AutochecksConfigurer, load, load_all_plugins
+from cmk.base.config import AutochecksConfigurer, LoadingResult
 from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     make_passive_service_name_config,
 )
 from cmk.ccc import store
-from cmk.ccc.site import omd_site
-from cmk.ccc.version import edition
+from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksStore
-from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets, get_check_plugin
-from cmk.checkengine.plugins import AutocheckEntry
+from cmk.checkengine.plugin_backend import get_check_plugin
+from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry
 from cmk.checkengine.plugins._check import CheckPlugin, CheckPluginName
-from cmk.config_anonymizer.interface import AnonInterface
+from cmk.config_anonymizer.interface import AnonInterface, AnonymizationError
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
@@ -132,7 +129,7 @@ def _anonymize_service_condition(
     condition: HostOrServiceConditionRegex | str,
     ruleset: Ruleset,
     rule_folder: Folder,
-    all_service_descriptions: Mapping[str, tuple[str, Any, str]],
+    all_service_descriptions: Mapping[str, tuple[str, AutocheckEntry, HostName]],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     anon_interface: AnonInterface,
 ) -> HostOrServiceConditionRegex | str:
@@ -185,7 +182,7 @@ def _anonymize_service_condition(
                                     == ruleset.name
                                     and host in rule_folder_hosts.keys()
                                 ):
-                                    if re.match(regex_value, entry.item):
+                                    if entry.item is not None and re.match(regex_value, entry.item):
                                         matched_items.add(
                                             f"^{anon_interface.get_item(entry.item)}$"
                                         )
@@ -209,7 +206,7 @@ def _anonymize_service_description(
     service_conditions: HostOrServiceConditions | None,
     ruleset: Ruleset,
     rule_folder: Folder,
-    all_service_descriptions: Mapping[str, tuple[str, Any, str]],
+    all_service_descriptions: Mapping[str, tuple[str, AutocheckEntry, HostName]],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     anon_interface: AnonInterface,
 ) -> HostOrServiceConditions | None:
@@ -334,7 +331,7 @@ def _anonymize_rule(
     rule_folder: Folder,
     builtin_tag_config: BuiltinTagConfig,
     builtin_host_labels: Labels,
-    all_service_descriptions: Mapping[str, tuple[str, Any, str]],
+    all_service_descriptions: Mapping[str, tuple[str, AutocheckEntry, HostName]],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     anon_interface: AnonInterface,
 ) -> None:
@@ -389,16 +386,13 @@ def _anonymize_rule(
     )
 
     rule.conditions = anon_conditions
-    # TODO: anonymize rule value actually instead voiding it @AB
-    rule.value = {"voided": "by_config_anonymizer"}
+    rule.value = anon_interface.get_ruleset_value(rule.ruleset.name, rule.value)
     rule.rule_options = RuleOptions(
         disabled=rule.rule_options.disabled,
         description=anon_interface.get_generic_mapping(rule.rule_options.description, "other")
         if rule.rule_options.description
         else "",
-        comment=anon_interface.get_generic_mapping(rule.rule_options.comment, "other")
-        if rule.rule_options.comment
-        else "",
+        comment=anon_interface.get_rule_comment(rule.rule_options.comment),
         docu_url=anon_interface.get_url(rule.rule_options.docu_url)
         if rule.rule_options.docu_url
         else "",
@@ -418,29 +412,47 @@ def _anonymize_rule(
         )
 
 
+def _prepare_anonymized_service_descriptions(
+    anon_interface: AnonInterface, autochecks_config: AutochecksConfigurer
+) -> dict[str, tuple[str, AutocheckEntry, HostName]]:
+    all_service_descriptions = {}
+    for folder_rel_path, folder in folder_tree().all_folders().items():
+        for host in folder.hosts():
+            for entry in AutochecksStore(host, paths.autochecks_dir).read():
+                discovered_service_description = autochecks_config.service_description(host, entry)
+
+                anonymized_item = AutocheckEntry(
+                    check_plugin_name=entry.check_plugin_name,
+                    item=anon_interface.get_item(entry.item) if entry.item is not None else None,
+                    parameters=entry.parameters,
+                    service_labels=entry.service_labels,
+                )
+                anonymized_service_description = autochecks_config.service_description(
+                    host, anonymized_item
+                )
+                all_service_descriptions[discovered_service_description] = (
+                    anonymized_service_description,
+                    entry,
+                    host,
+                )
+    return all_service_descriptions
+
+
 class RulesStep(AnonymizeStep):
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
         logger.warning("Processing rules")
 
-        # Load rulesets
         anonymized_all_rulesets = AnonymizedAllRulesets(anon_interface)
 
         builtin_ids = BuiltinTagConfig()
-        builtin_host_labels_callable = make_app(edition(paths.omd_root)).get_builtin_host_labels
-        builtin_host_labels = builtin_host_labels_callable(omd_site())
-
-        all_plugins = load_all_plugins()
-
-        # TODO pass in loaded_config_result
-        loaded_config_result = load(
-            discovery_rulesets=extract_known_discovery_rulesets(all_plugins),
-            get_builtin_host_labels=builtin_host_labels_callable,
-            edition=edition(paths.omd_root),
-            with_conf_d=True,
-            validate_hosts=False,
-        )
 
         make_final_service_name_config(
             loaded_config=loaded_config_result.loaded_config,
@@ -458,44 +470,26 @@ class RulesStep(AnonymizeStep):
             all_plugins.check_plugins,
             passive_service_name_config,
         )
+        anonymized_service_descriptions = _prepare_anonymized_service_descriptions(
+            anon_interface, autochecks_config
+        )
 
-        # TODO optimize by moving anonymization into the _anonymize_rule
-        all_service_descriptions = {}
-        for folder_rel_path, folder in folder_tree().all_folders().items():
-            for host in folder.hosts():
-                for entry in AutochecksStore(host, paths.autochecks_dir).read():
-                    discovered_service_description = autochecks_config.service_description(
-                        host, entry
+        for ruleset_name, ruleset in list(anonymized_all_rulesets.get_rulesets().items()):
+            try:
+                for _rule_folder, _rule_index, rule in ruleset.get_rules():
+                    _anonymize_rule(
+                        rule,
+                        _rule_folder,
+                        builtin_ids,
+                        builtin_host_labels,
+                        anonymized_service_descriptions,
+                        all_plugins.check_plugins,
+                        anon_interface,
                     )
-
-                    anonymized_item = AutocheckEntry(
-                        check_plugin_name=entry.check_plugin_name,
-                        item=anon_interface.get_item(entry.item)
-                        if entry.item is not None
-                        else None,
-                        parameters=entry.parameters,
-                        service_labels=entry.service_labels,
-                    )
-                    anonymized_service_description = autochecks_config.service_description(
-                        host, anonymized_item
-                    )
-                    all_service_descriptions[discovered_service_description] = (
-                        anonymized_service_description,
-                        entry,
-                        host,
-                    )
-
-        for ruleset_name, ruleset in anonymized_all_rulesets.get_rulesets().items():
-            for _rule_folder, _rule_index, rule in ruleset.get_rules():
-                _anonymize_rule(
-                    rule,
-                    _rule_folder,
-                    builtin_ids,
-                    builtin_host_labels,
-                    all_service_descriptions,
-                    all_plugins.check_plugins,
-                    anon_interface,
-                )
+            except AnonymizationError as e:
+                logger.warning(e)
+                anonymized_all_rulesets._rulesets.pop(ruleset_name)
+                continue
 
         anonymized_all_rulesets.save_anon_rulesets(pprint_value=True)
 

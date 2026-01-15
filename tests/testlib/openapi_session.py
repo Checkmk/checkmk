@@ -134,6 +134,7 @@ class CMKOpenApiSession(requests.Session):
         self.folders = FoldersAPI(self)
         self.hosts = HostsAPI(self)
         self.host_groups = HostGroupsAPI(self)
+        self.host_tag_groups = HostTagGroupsAPI(self)
         self.service_discovery = ServiceDiscoveryAPI(self)
         self.services = ServicesAPI(self)
         self.agents = AgentsAPI(self)
@@ -761,6 +762,31 @@ class HostGroupsAPI(BaseAPI):
 
     def delete(self, name: str) -> None:
         response = self.session.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class HostTagGroupsAPI(BaseAPI):
+    def create(self, name: str, title: str, tags: list[dict[str, str]]) -> requests.Response:
+        response = self.session.post(
+            "/domain-types/host_tag_group/collections/all",
+            json={"id": name, "title": title, "tags": tags},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get(self, name: str) -> tuple[dict[Any, str], str]:
+        response = self.session.get(f"/objects/host_tag_group/{name}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/host_tag_group/{name}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 

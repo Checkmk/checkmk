@@ -12721,6 +12721,10 @@ msgid "Certificate overview"
 msgstr "Certificaatsleutelbestand"
 
 #, fuzzy
+msgid "Certificate overview in Checkmk"
+msgstr "Certificaatsleutelbestand"
+
+#, fuzzy
 msgid "Certificate signature algorithm"
 msgstr "Handtekening algoritme"
 
@@ -95778,6 +95782,10 @@ msgstr ""
 #, fuzzy
 msgid "Large"
 msgstr "Doel"
+
+#, fuzzy
+msgid "Please select a HW/SW inventory property."
+msgstr "HW/SW-inventaris"
 
 #, fuzzy
 msgid "Loading widget visualization settings..."

@@ -12284,6 +12284,10 @@ msgstr "Zertifikat ist nicht von der \"Trusted authority\" unterzeichnet"
 msgid "Certificate overview"
 msgstr "Zertifikatsübersicht"
 
+#, fuzzy
+msgid "Certificate overview in Checkmk"
+msgstr "Zertifikatsübersicht"
+
 msgid "Certificate signature algorithm"
 msgstr "Signatur-Algorithmus des Zertifikats"
 
@@ -92286,6 +92290,10 @@ msgstr "Klein"
 
 msgid "Large"
 msgstr "Groß"
+
+#, fuzzy
+msgid "Please select a HW/SW inventory property."
+msgstr "Eigentum der HW-/SW-Inventur"
 
 msgid "Loading widget visualization settings..."
 msgstr "Visualisierungseinstellungen für das Widget werden geladen..."

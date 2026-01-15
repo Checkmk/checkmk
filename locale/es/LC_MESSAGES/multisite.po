@@ -12810,6 +12810,10 @@ msgid "Certificate overview"
 msgstr "Archivo de claves de certificado"
 
 #, fuzzy
+msgid "Certificate overview in Checkmk"
+msgstr "Archivo de claves de certificado"
+
+#, fuzzy
 msgid "Certificate signature algorithm"
 msgstr "Algoritmo de firma"
 
@@ -96525,6 +96529,10 @@ msgstr ""
 #, fuzzy
 msgid "Large"
 msgstr "Objetivo"
+
+#, fuzzy
+msgid "Please select a HW/SW inventory property."
+msgstr "Inventario de HW/SW"
 
 #, fuzzy
 msgid "Loading widget visualization settings..."

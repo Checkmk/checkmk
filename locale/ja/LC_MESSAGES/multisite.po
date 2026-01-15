@@ -12014,6 +12014,10 @@ msgstr "証明書が信頼できる機関により署名されていない"
 msgid "Certificate overview"
 msgstr "証明書概要"
 
+#, fuzzy
+msgid "Certificate overview in Checkmk"
+msgstr "証明書概要"
+
 msgid "Certificate signature algorithm"
 msgstr "証明書署名アルゴリズム"
 
@@ -90213,6 +90217,10 @@ msgstr ""
 
 msgid "Large"
 msgstr "大きい"
+
+#, fuzzy
+msgid "Please select a HW/SW inventory property."
+msgstr "HW/SWインベントリ"
 
 #, fuzzy
 msgid "Loading widget visualization settings..."

@@ -12696,6 +12696,10 @@ msgstr "Il certificato non è firmato da un'autorità affidabile"
 msgid "Certificate overview"
 msgstr "File chiave del certificato"
 
+#, fuzzy
+msgid "Certificate overview in Checkmk"
+msgstr "File chiave del certificato"
+
 msgid "Certificate signature algorithm"
 msgstr "Algoritmo di firma del certificato"
 
@@ -95117,6 +95121,10 @@ msgstr ""
 #, fuzzy
 msgid "Large"
 msgstr "Obiettivo"
+
+#, fuzzy
+msgid "Please select a HW/SW inventory property."
+msgstr "Inventario HW/SW"
 
 #, fuzzy
 msgid "Loading widget visualization settings..."

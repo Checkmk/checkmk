@@ -468,6 +468,7 @@ class NodeModel(BaseModel):
 
     processor_utilization: float
     processor_utilization_timestamp: datetime.datetime  # provided in ISO 8601 format
+    date: datetime.datetime | None = None
 
 
 class ShelfObjectModel(BaseModel):

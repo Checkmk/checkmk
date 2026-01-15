@@ -915,9 +915,9 @@ execnet==2.1.2 \
     --hash=sha256:63d83bfdd9a23e35b9c6a3261412324f964c2ec8dcd8d3c6916ee9373e0befcd \
     --hash=sha256:67fba928dd5a544b783f6056f449e5e3931a5c378b128bc18501f7ea79e296ec
     # via pytest-xdist
-faker==40.1.0 \
-    --hash=sha256:a616d35818e2a2387c297de80e2288083bc915e24b7e39d2fb5bc66cce3a929f \
-    --hash=sha256:c402212a981a8a28615fea9120d789e3f6062c0c259a82bfb8dff5d273e539d2
+faker==40.1.2 \
+    --hash=sha256:93503165c165d330260e4379fd6dc07c94da90c611ed3191a0174d2ab9966a42 \
+    --hash=sha256:b76a68163aa5f171d260fc24827a8349bc1db672f6a665359e8d0095e8135d30
     # via polyfactory
 fakeredis[lua]==2.26.1 \
     --hash=sha256:68a5615d7ef2529094d6958677e30a6d30d544e203a5ab852985c19d7ad57e32 \
@@ -4709,7 +4709,6 @@ tzdata==2025.3 \
     #   -r requirements_all.txt
     #   arrow
     #   exchangelib
-    #   faker
 tzlocal==5.3.1 \
     --hash=sha256:cceffc7edecefea1f595541dbd6e990cb1ea3d19bf01b2809f362a03dd7921fd \
     --hash=sha256:eb1a66c3ef5847adf7a834f1be0800581b683b5608e74f86ecbcef8ab91bb85d

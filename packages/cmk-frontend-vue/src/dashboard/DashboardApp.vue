@@ -306,31 +306,21 @@ const createDashboard = async (
   dashboardId: string,
   settings: DashboardGeneralSettings,
   layout: DashboardLayout,
-  scopeIds: string[],
-  nextStep: 'setFilters' | 'viewList'
+  scopeIds: string[]
 ) => {
   openDashboardCreationDialog.value = false
   // avoid showing the new dashboard, while the dashboard list is loading
-  const postCreateMode = nextStep === 'viewList' ? null : 'setDashboardAsActive'
   const key = await dashboardsManager.createDashboard(
     dashboardId,
     settings,
     layout,
     scopeIds,
-    postCreateMode
+    'setDashboardAsActive'
   )
   isDashboardEditingMode.value = false
-
-  if (nextStep === 'setFilters') {
-    dashboardFilterSettingsStartingWindow.value = 'filter-configuration'
-    openDashboardFilterSettings.value = true
-    const updatedDashboardUrl = urlHandler.getDashboardUrl(key, {})
-    urlHandler.updateCurrentUrl(updatedDashboardUrl)
-  } else if (nextStep === 'viewList') {
-    redirectToListDashboardsPage()
-  } else {
-    throw new Error(`Unknown next step: ${nextStep}`)
-  }
+  openDashboardFilterSettings.value = false
+  const updatedDashboardUrl = urlHandler.getDashboardUrl(key, {})
+  urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
 
 const cloneDashboard = async (

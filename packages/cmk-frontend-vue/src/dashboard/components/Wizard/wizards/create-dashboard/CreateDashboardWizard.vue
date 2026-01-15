@@ -40,8 +40,7 @@ const emit = defineEmits<{
     dashboardId: string,
     settings: DashboardGeneralSettings,
     layout: DashboardLayout,
-    scopeIds: string[],
-    nextStep: 'setFilters' | 'viewList'
+    scopeIds: string[]
   ]
   'cancel-creation': []
 }>()
@@ -104,22 +103,7 @@ const createAndSetFilters = async () => {
       uniqueId.value.trim(),
       buildSettings(),
       dashboardLayout.value,
-      dashboardScopeIds.value,
-      'setFilters'
-    )
-  }
-}
-
-const createAndViewList = async () => {
-  if (await validate()) {
-    _selectSingleInfo()
-    emit(
-      'create-dashboard',
-      uniqueId.value.trim(),
-      buildSettings(),
-      dashboardLayout.value,
-      dashboardScopeIds.value,
-      'viewList'
+      dashboardScopeIds.value
     )
   }
 }
@@ -146,17 +130,7 @@ const displayVisibility = ref<boolean>(true)
       <ContentSpacer :dimension="6" />
 
       <ActionBar>
-        <ActionButton
-          variant="primary"
-          :label="_t('Create & set dashboard filters')"
-          :action="createAndSetFilters"
-        />
-
-        <ActionButton
-          variant="secondary"
-          :label="_t('Create & view list')"
-          :action="createAndViewList"
-        />
+        <ActionButton variant="primary" :label="_t('Create')" :action="createAndSetFilters" />
 
         <ActionButton
           variant="secondary"

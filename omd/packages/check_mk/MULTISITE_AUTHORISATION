@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Alias: Control permissions in addons with Multisite
+# Alias: Control permissions in add-ons with Multisite
 # Menu: Web GUI
 # Description:
 #  Multisite can be used to manage the permissions of
-#  the users in the addons e.g. if a user can edit NagVis
+#  the users in the add-ons e.g. if a user can edit NagVis
 #  maps.
 
 case "$1" in

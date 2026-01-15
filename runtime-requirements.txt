@@ -3526,6 +3526,7 @@ tenacity==9.1.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   opsgenie-sdk
 tqdm==4.67.1 \

@@ -77,6 +77,7 @@ class EngineConfig(UserEngineConfig):
     bin_adhoc_fetcher: Path = Path("/opt/check-mk-relay/bin/fetch-ad-hoc")
     num_adhoc_fetchers: int = 4
     poll_sleep: float = 0.5
+    config_cleanup_schedule: float = 60
     host_scheduler_sleep: float = 0.5
     poll_history: HistoryConfig = HistoryConfig()
     third_party_log_level: LogLevel = LogLevel.CRITICAL

@@ -40,7 +40,7 @@ metric_mem_free = Metric(
 )
 metric_mem_total = Metric(
     name="mem_total",
-    title=Title("RAM installed"),
+    title=Title("Total usable RAM"),
     unit=UNIT_BYTES,
     color=Color.BLUE,
 )
@@ -161,6 +161,26 @@ graph_mem_absolute_2 = Graph(
                 "sreclaimable",
             ),
         ),
+        WarningOf("mem_used"),
+        CriticalOf("mem_used"),
+    ),
+    compound_lines=(
+        "mem_used",
+        "mem_free",
+        "sreclaimable",
+        "mem_lnx_cached",
+        "mem_lnx_buffers",
+        "swap_cached",
+    ),
+    optional=("swap_cached", "sreclaimable"),
+    conflicting=("mem_total",),
+)
+graph_mem_absolute_3 = Graph(
+    name="mem_absolute_3",
+    title=Title("RAM (Total, cached, buffers)"),
+    simple_lines=(
+        # see mem_linux.py
+        "mem_total",
         WarningOf("mem_used"),
         CriticalOf("mem_used"),
     ),

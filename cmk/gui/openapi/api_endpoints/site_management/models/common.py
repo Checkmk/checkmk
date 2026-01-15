@@ -394,7 +394,7 @@ class StatusConnectionModel:
             TypedPlainValidator(str, RelativeUrlConverter(must_endwith_one=["/"]).validate),
         ]
     ) = api_field(
-        description="The URL prefix will be prepended to links of addons like NagVis when a link"
+        description="The URL prefix will be prepended to links of add-ons like NagVis when a link"
         " to such applications points to a host or service on that site.",
         example="/remote_1/",
         default_factory=ApiOmitted,

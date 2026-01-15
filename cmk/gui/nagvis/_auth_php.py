@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Creates a includable file for the needed programming languages.
-# It can be used to use the multisite permissions in other addons
+# It can be used to use the multisite permissions in other add-ons
 # for checking permissions.
 #
 # This declares the following API:
@@ -195,7 +195,7 @@ def _create_auth_file(
 
 def _on_userdb_job(users: Users, user_permissions: UserPermissions) -> None:
     # Working around the problem that the auth.php file needed for multisite based
-    # authorization of external addons might not exist when setting up a new installation
+    # authorization of external add-ons might not exist when setting up a new installation
     # This is a good place to replace old api based files in the future.
     if not _auth_php().exists() or _auth_php().stat().st_size == 0:
         _create_auth_file("page_hook", users, user_permissions)

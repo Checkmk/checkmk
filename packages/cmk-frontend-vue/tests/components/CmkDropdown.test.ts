@@ -158,7 +158,7 @@ test('dropdown shows and hides options', async () => {
   expect(screen.queryByText('Option 2')).toBeNull()
 })
 
-test('dropdown keeps label even if options change', async () => {
+test('dropdown changes label if options change', async () => {
   const testComponent = defineComponent({
     components: { CmkDropdown },
     setup() {
@@ -169,7 +169,7 @@ test('dropdown keeps label even if options change', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       })
-      const selectedOption = ref<string | null>('option1')
+      const selectedOption = ref<string | null>('option3')
       return { options, selectedOption }
     },
     template: `
@@ -194,7 +194,7 @@ test('dropdown keeps label even if options change', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Change Options' }))
 
   // Label is still that of selected option even if options are changed
-  await screen.findByText('Option 1')
+  await screen.findByText('Option 3')
 })
 
 test('dropdown resets label if option is reset', async () => {

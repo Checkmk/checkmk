@@ -542,6 +542,24 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
     return ToUtf8(src, _);
 }
 
+/// Converts  CP to UTF-8
+inline std::string oemToUtf8(
+    std::string_view oem, std::optional<UINT> cp_opt = std::nullopt) noexcept {
+    UINT cp = cp_opt.has_value() ? *cp_opt : GetConsoleCP();
+
+    auto wlen = MultiByteToWideChar(cp, 0, oem.data(), -1, nullptr, 0);
+    if (wlen == 0) {
+        return {};
+    }
+
+    auto wide = std::make_unique<wchar_t[]>(wlen);
+    if (MultiByteToWideChar(cp, 0, oem.data(), -1, wide.get(), wlen) > 0) {
+        return ToUtf8(wide.get());
+    }
+
+    return {};
+}
+
 inline std::string ToUtf8(std::string_view src) noexcept {
     return std::string{src};
 }

@@ -57,9 +57,12 @@ const selectedOption = defineModel<string | null>('selectedOption', { required: 
 const buttonLabel = ref<string>(inputHint)
 
 immediateWatch(
-  () => selectedOption.value,
-  async (newValue) => {
-    const label = await getButtonLabel(options, newValue)
+  () => ({
+    newValue: selectedOption.value,
+    newOptions: options
+  }),
+  async ({ newValue, newOptions }) => {
+    const label = await getButtonLabel(newOptions, newValue)
     // Only update if the selected option hasn't changed again while awaiting
     if (newValue === selectedOption.value) {
       buttonLabel.value = label

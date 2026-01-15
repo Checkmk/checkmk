@@ -32,11 +32,25 @@ logger = logging.getLogger(__name__)
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
+        "--iterations",
+        action="store",
+        type=int,
+        help=(
+            "The number of iterations used for each scenario call. "
+            "Iterations may be grouped into rounds. "
+            "Must be 1 for scenarios with setup and teardown logic."
+        ),
+        default=1,
+    )
+    parser.addoption(
         "--rounds",
         action="store",
         type=int,
-        help="The number of rounds used for each scenario.",
-        default=4,
+        help=(
+            "The number of rounds (i.e. batches) of iterations used for each scenario. "
+            "Any setup and teardown logic will per executed once per round."
+        ),
+        default=16,
     )
     parser.addoption(
         "--warmup-rounds",
@@ -44,13 +58,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         type=int,
         help="The number of warmup rounds used for each scenario.",
         default=0,
-    )
-    parser.addoption(
-        "--iterations",
-        action="store",
-        type=int,
-        help="The number of iterations used for each scenario.",
-        default=4,
     )
     parser.addoption(
         "--object-count",

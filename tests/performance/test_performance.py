@@ -55,12 +55,12 @@ class PerformanceTest:
         self.central_site = central_site
         self.remote_sites = remote_sites or []
 
-        self.rounds = val if isinstance((val := pytestconfig.getoption("rounds")), int) else 4
+        self.rounds = val if isinstance((val := pytestconfig.getoption("rounds")), int) else 16
         self.warmup_rounds = (
             val if isinstance((val := pytestconfig.getoption("warmup_rounds")), int) else 0
         )
         self.iterations = (
-            val if isinstance((val := pytestconfig.getoption("iterations")), int) else 4
+            val if isinstance((val := pytestconfig.getoption("iterations")), int) else 1
         )
         self.object_count = (
             val if isinstance((val := pytestconfig.getoption("object_count")), int) else 100
@@ -163,17 +163,26 @@ class PerformanceTest:
                 break
         return ips
 
-    def generate_hosts(self, host_count: int = 0) -> list[dict[str, object]]:
-        host_count = host_count or self.object_count
+    @staticmethod
+    def generate_hosts(
+        host_count: int,
+        central_site: Site,
+        target_sites: list[Site] | None = None,
+        host_ip_offset: int = 0,
+        folder: str = "/",
+    ) -> list[dict[str, object]]:
+        target_sites = target_sites or [central_site]
         unixtime = int(time())
         hosts = []
-        for site in self.sites:
-            is_central_site = site.id == self.central_site.id
-            for idx, ip in enumerate(PerformanceTest._generate_ips(0, host_count), start=1):
+        for site in target_sites:
+            is_central_site = site.id == central_site.id
+            for idx, ip in enumerate(
+                PerformanceTest._generate_ips(host_ip_offset, host_count), start=1
+            ):
                 hostname = f"{site.id}_{unixtime}_{idx}"
                 entry: dict[str, object] = {
                     "host_name": hostname,
-                    "folder": "/",
+                    "folder": folder,
                     "attributes": {
                         "ipaddress": ip,
                         "tag_agent": "cmk-agent",
@@ -195,7 +204,7 @@ class PerformanceTest:
         Activate the changes.
         Delete all hosts.
         Activate the changes."""
-        hosts = self.generate_hosts(self.object_count)
+        hosts = self.generate_hosts(self.object_count, self.central_site, self.sites)
         hostnames = self.create_hosts(self.central_site, hosts)
         assert hostnames
         try:
@@ -221,7 +230,7 @@ class PerformanceTest:
         Drop the hosts.
         Activate changes.
         """
-        hosts = self.generate_hosts(self.object_count)
+        hosts = self.generate_hosts(self.object_count, self.central_site)
         hostnames = self.create_hosts(self.central_site, hosts)
         assert hostnames
         try:
@@ -312,6 +321,88 @@ class PerformanceTest:
         average_request_duration = (duration - first_request_duration) / (counter - 1)
         assert average_request_duration < max_average_request_duration
 
+    def setup_bulk_change_activation(self) -> None:
+        """Setup: Bulk change activation
+
+        Create location folders: "site-a", "site-b" and "site-c".
+        In each location folder, create system folders: "windows", "linux" and "network".
+        In each system folder, create environment folders: "dev", "qa" and "prod".
+        In each environment folder, create 10 hosts, which inherit a host tag from each folder.
+        """
+        host_tag_groups = {
+            "location": [
+                {"id": "site-a", "title": "Site A"},
+                {"id": "site-b", "title": "Site B"},
+                {"id": "site-c", "title": "Site C"},
+            ],
+            "system": [
+                {"id": "linux", "title": "Linux"},
+                {"id": "windows", "title": "Windows"},
+                {"id": "network", "title": "Network Device"},
+            ],
+            "environment": [
+                {"id": "dev", "title": "Development"},
+                {"id": "qa", "title": "QA"},
+                {"id": "prod", "title": "Production"},
+            ],
+        }
+        for host_tag_group_name, host_tag_group in host_tag_groups.items():
+            self.central_site.openapi.host_tag_groups.create(
+                name=host_tag_group_name,
+                title=host_tag_group_name.capitalize(),
+                tags=host_tag_group,
+            )
+        host_ip_offset = 0
+        host_count = 10
+        for location_id, location in enumerate(host_tag_groups["location"]):
+            self.central_site.openapi.folders.create(
+                folder=location["id"],
+                title=location["title"],
+                attributes={"tag_location": location["id"]},
+            )
+            for system in host_tag_groups["system"]:
+                system_folder = f"/{location['id']}/{system['id']}"
+                self.central_site.openapi.folders.create(
+                    folder=system_folder,
+                    title=system["title"],
+                    attributes={"tag_system": system["id"]},
+                )
+                for environment in host_tag_groups["environment"]:
+                    environment_folder = f"{system_folder}/{environment['id']}"
+                    self.central_site.openapi.folders.create(
+                        folder=environment_folder,
+                        title=environment["title"],
+                        attributes={"tag_environment": environment["id"]},
+                    )
+                    self.central_site.openapi.hosts.bulk_create(
+                        self.generate_hosts(
+                            host_count,
+                            self.central_site,
+                            [self.sites[location_id]],
+                            host_ip_offset,
+                            folder=environment_folder,
+                        )
+                    )
+                    host_ip_offset += host_count
+
+    def teardown_bulk_change_activation(self) -> None:
+        """Teardown: Bulk change activation"""
+        for location_name in ("site-a", "site-b", "site-c"):
+            self.central_site.openapi.folders.delete(folder=location_name, delete_mode="recursive")
+        for tag_group_name in ("location", "system", "environment"):
+            self.central_site.openapi.host_tag_groups.delete(name=tag_group_name)
+        assert self.central_site.openapi.changes.activate_and_wait_for_completion()
+
+    def scenario_bulk_change_activation(self) -> None:
+        """Scenario: Bulk change activation
+
+        Setup: See setup_bulk_change_activation.
+        Activate all pending changes and wait for completion.
+        Teardown: See teardown_bulk_change_activation
+        """
+        self.central_site.ensure_running()
+        assert self.central_site.openapi.changes.activate_and_wait_for_completion()
+
 
 @pytest.fixture(name="perftest", scope="session")
 def _perftest(single_site: Site, pytestconfig: pytest.Config) -> Iterator[PerformanceTest]:
@@ -390,4 +481,18 @@ def test_performance_ui_response(
         args=[context, page_url],
         rounds=perftest.rounds,
         iterations=perftest.iterations,
+    )
+
+
+def test_performance_bulk_change_activation(
+    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
+) -> None:
+    """Bulk host creation"""
+    benchmark.pedantic(
+        perftest_dist.scenario_bulk_change_activation,
+        args=[],
+        setup=perftest_dist.setup_bulk_change_activation,
+        teardown=perftest_dist.teardown_bulk_change_activation,
+        rounds=perftest_dist.rounds,
+        iterations=perftest_dist.iterations,
     )

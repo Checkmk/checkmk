@@ -756,6 +756,15 @@ TEST(Wtools, GetMultiSz) {
     EXPECT_EQ(GetMultiSzEntry(pos, end), nullptr);
 }
 
+TEST(Wtools, oemToUtf8) {
+    EXPECT_EQ(wtools::oemToUtf8("abc"), "abc");
+    EXPECT_EQ(wtools::oemToUtf8(""), "");
+    EXPECT_EQ(wtools::oemToUtf8("\x84\x94\x81 \x8E\x99\x9A \xE1", 850),
+              "äöü ÄÖÜ ß");
+    EXPECT_NE(wtools::oemToUtf8("\x84\x94\x81 \x8E\x99\x9A \xE1", 1252),
+              "äöü ÄÖÜ ß");
+}
+
 TEST(Wtools, ExecuteCommandsAsync) {
     namespace fs = std::filesystem;
     using namespace std::chrono_literals;

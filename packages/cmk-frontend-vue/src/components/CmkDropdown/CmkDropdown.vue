@@ -173,6 +173,7 @@ const truncatedButtonLabel = computed(() =>
     "
     class="cmk-dropdown"
   >
+    <slot name="buttons-start"></slot>
     <CmkDropdownButton
       v-bind="componentId!! ? { id: componentId } : {}"
       ref="comboboxButtonRef"
@@ -196,6 +197,7 @@ const truncatedButtonLabel = computed(() =>
         class="cmk-dropdown--arrow"
         :class="{ rotated: suggestionsShown, disabled: disabled || !canOpenDropdown }"
     /></CmkDropdownButton>
+    <slot name="buttons-end"></slot>
     <CmkSuggestions
       v-if="!!suggestionsShown"
       ref="suggestionsRef"

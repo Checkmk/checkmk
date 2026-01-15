@@ -25,7 +25,7 @@ def load_all(root_dir: Path) -> SarifFileSet:
             with file_path.open("rt") as fd:
                 results.add_file(SarifFile(file_path, json.load(fd)))
         except (json.JSONDecodeError, OSError) as exc:
-            sys.stderr.write("{!s}: {!s}\n".format(file_path, exc))
+            sys.stderr.write(f"{file_path!s}: {exc!s}\n")
     return results
 
 

@@ -83,6 +83,7 @@ def test_check_mk_base(
     assert _INTERNAL_SECTIONS.issubset(set(sections)), (
         f"Missing sections: {_INTERNAL_SECTIONS.difference(set(sections))}"
     )
+    assert sections[-1] == "<<<systemtime>>>"
     assert len(sections) == SECTION_COUNT
 
     # Validate controller status is the expected one.
@@ -116,3 +117,4 @@ def test_check_mk_no_wmi(
     assert sections[1] == "<<<cmk_agent_ctl_status:sep(0)>>>"
     assert sections.count("<<<>>>") == 2
     assert len(_WMI_SECTIONS.intersection(set(sections))) == 0
+    assert sections[-1] == "<<<systemtime>>>"

@@ -104,6 +104,11 @@ class QuickSetupPage(CmkPage):
             condition_name="Quick setup active stage change",
         )
 
+        expect(
+            self.main_area.locator("div.content-leave-active"),
+            message="Previous active stage was not collapsed",
+        ).to_have_count(0)
+
         if not is_last_stage:
             logger.debug("Wait for animation to complete")
             self.active_stage.element_handle().wait_for_element_state("stable")

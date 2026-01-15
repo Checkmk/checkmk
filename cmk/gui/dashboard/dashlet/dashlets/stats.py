@@ -291,15 +291,8 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
         infos: SingleInfos,
     ) -> FigureResponseData:
         return {
-            "title": dashlet_spec.get("title", cls._title()),
-            "title_url": dashlet_spec.get("title_url"),
             "data": cls._collect_data(dashlet_spec, context, infos).serialize(),
         }
-
-    @classmethod
-    @abc.abstractmethod
-    def _title(cls) -> str:
-        raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
@@ -383,10 +376,6 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
 
 class HostStatsDashletDataGenerator(StatsDashletDataGenerator[HostStats]):
     @classmethod
-    def _title(cls) -> str:
-        return HostStatsDashlet.title()
-
-    @classmethod
     def _livestatus_table(cls) -> str:
         return "hosts"
 
@@ -426,10 +415,6 @@ class HostStatsDashletDataGenerator(StatsDashletDataGenerator[HostStats]):
 
 
 class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator[ServiceStats]):
-    @classmethod
-    def _title(cls) -> str:
-        return ServiceStatsDashlet.title()
-
     @classmethod
     def _livestatus_table(cls) -> str:
         return "services"
@@ -493,10 +478,6 @@ class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator[ServiceStats]):
 
 
 class EventStatsDashletDataGenerator(StatsDashletDataGenerator[EventStats]):
-    @classmethod
-    def _title(cls) -> str:
-        return EventStatsDashlet.title()
-
     @classmethod
     def _livestatus_table(cls) -> str:
         return "eventconsoleevents"

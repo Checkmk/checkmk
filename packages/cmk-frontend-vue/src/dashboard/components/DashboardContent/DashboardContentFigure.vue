@@ -15,6 +15,7 @@ import {
   watch
 } from 'vue'
 
+import DashboardContentContainer from '@/dashboard/components/DashboardContent/DashboardContentContainer.vue'
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
 
@@ -173,19 +174,25 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="wrapperDiv" class="db-content-figure__wrapper">
-    <div
-      :id="`db-content-figure-${widget_id}`"
-      class="db-content-figure cmk_figure"
-      :class="[
-        {
-          'db-content-figure__size-svg': sizeSvg,
-          'db-content-figure__background': !!general_settings.render_background
-        },
-        legacyFigureType
-      ]"
-    ></div>
-  </div>
+  <DashboardContentContainer
+    :effective-title="effectiveTitle"
+    :general_settings="general_settings"
+    content-overflow="hidden"
+  >
+    <div ref="wrapperDiv" class="db-content-figure__wrapper">
+      <div
+        :id="`db-content-figure-${widget_id}`"
+        class="db-content-figure cmk_figure"
+        :class="[
+          {
+            'db-content-figure__size-svg': sizeSvg,
+            'db-content-figure__background': !!general_settings.render_background
+          },
+          legacyFigureType
+        ]"
+      ></div>
+    </div>
+  </DashboardContentContainer>
 </template>
 
 <style scoped>

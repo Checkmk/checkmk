@@ -18,7 +18,7 @@ TEST_HOST = "test_host"
 
 @pytest.fixture
 def fixed_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
-    monkeypatch.setenv("SERVER_SIDE_PROGRAM_CRASH_PATH", str(tmp_path))
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_CRASHES_PATH", str(tmp_path))
     return tmp_path
 
 
@@ -65,7 +65,7 @@ def test_crash_reported_for_exception(monkeypatch: pytest.MonkeyPatch, fixed_pat
 def test_no_crash_reported_for_missing_env(
     monkeypatch: pytest.MonkeyPatch, fixed_path: Path
 ) -> None:
-    monkeypatch.delenv("SERVER_SIDE_PROGRAM_CRASH_PATH")
+    monkeypatch.delenv("SERVER_SIDE_PROGRAM_CRASHES_PATH")
 
     @report_agent_crashes("smith", "3.14.15p92")
     def main() -> int:

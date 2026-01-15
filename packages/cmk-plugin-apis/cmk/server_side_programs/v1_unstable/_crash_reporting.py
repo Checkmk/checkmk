@@ -22,7 +22,7 @@ from typing import Final, Literal, ParamSpec, Self
 _P = ParamSpec("_P")
 _CrashType = Literal["agent", "active_check"]
 
-_SSP_CRASH_REPORT_PATH_ENV_VAR = "SERVER_SIDE_PROGRAM_CRASH_PATH"
+_SSP_CRASH_REPORT_PATH_ENV_VAR = "SERVER_SIDE_PROGRAM_CRASHES_PATH"
 
 _SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
 

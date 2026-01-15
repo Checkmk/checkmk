@@ -7,7 +7,7 @@ export LD_LIBRARY_PATH=$OMD_ROOT/local/lib:$OMD_ROOT/lib
 # export special agent / active check environment
 export PASSWORD_STORE_SECRET_FILE="${OMD_ROOT}/etc/password_store.secret"
 export SERVER_SIDE_PROGRAM_STORAGE_PATH="${OMD_ROOT}/var/check_mk/server_side_program_storage"
-export SERVER_SIDE_PROGRAM_CRASH_PATH="${OMD_ROOT}/var/check_mk/crashes"
+export SERVER_SIDE_PROGRAM_CRASHES_PATH="${OMD_ROOT}/var/check_mk/crashes"
 
 # Create files and directories not accessible for "world" and "group" by default
 umask 0077

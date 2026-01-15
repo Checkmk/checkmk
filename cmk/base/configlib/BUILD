@@ -7,6 +7,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/config_anonymizer:__pkg__",
         "//non-free/packages/cmk-bakery:__pkg__",
         "//tests:__subpackages__",
     ],

@@ -18,7 +18,7 @@ from types import ModuleType
 from cmk.ccc.version import edition
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
-from cmk.gui import main_modules
+from cmk.gui import main_modules as main_modules
 from cmk.gui.config import active_config
 from cmk.gui.log import init_logging, logger
 from cmk.gui.script_helpers import gui_context
@@ -65,7 +65,6 @@ def load_plugins(logger: logging.Logger, raise_errors: bool) -> list[AnonymizeSt
         if filename.endswith(".py") and filename != "__init__.py":
             module_name = f"cmk.config_anonymizer.plugins.{filename[:-3]}"
             module = _import_optionally(module_name, raise_errors=raise_errors)
-
             for key, value in vars(module).items():
                 if key.startswith("anonymize_step") and isinstance(value, AnonymizeStep):
                     plugins[key] = value
@@ -76,6 +75,7 @@ def load_plugins(logger: logging.Logger, raise_errors: bool) -> list[AnonymizeSt
 def main(argv: Sequence[str]) -> None:
     args = parse_arguments(argv)
     init_logging()
+    logger.info(f"Anonymizing configuration to {args.target_dirname}...")
 
     try:
         main_modules.register(edition(paths.omd_root))

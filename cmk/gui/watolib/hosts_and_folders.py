@@ -737,7 +737,7 @@ def _get_fully_loaded_wato_folders(
     return wato_folders
 
 
-class _ABCWATOInfoStorage:
+class ABCWATOInfoStorage:
     def read(self, file_path: Path) -> WATOFolderInfo | None:
         raise NotImplementedError()
 
@@ -745,7 +745,7 @@ class _ABCWATOInfoStorage:
         raise NotImplementedError()
 
 
-class _StandardWATOInfoStorage(_ABCWATOInfoStorage):
+class StandardWATOInfoStorage(ABCWATOInfoStorage):
     def read(self, file_path: Path) -> WATOFolderInfo:
         return store.load_object_from_file(file_path, default={})
 
@@ -753,7 +753,7 @@ class _StandardWATOInfoStorage(_ABCWATOInfoStorage):
         store.save_object_to_file(file_path, data)
 
 
-class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
+class _PickleWATOInfoStorage(ABCWATOInfoStorage):
     def read(self, file_path: Path) -> WATOFolderInfo | None:
         pickle_path = self._add_suffix(file_path)
         if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
@@ -789,10 +789,14 @@ class _WATOInfoStorageManager:
         self._write_storages = self._get_write_storages(storage_format)
         self._read_storages = list(reversed(self._write_storages))
 
+    @property
+    def write_storages(self) -> list[ABCWATOInfoStorage]:
+        return self._write_storages
+
     def _get_write_storages(
         self, storage_format: Literal["standard", "pickle", "raw", "anon"]
-    ) -> list[_ABCWATOInfoStorage]:
-        storages: list[_ABCWATOInfoStorage] = [_StandardWATOInfoStorage()]
+    ) -> list[ABCWATOInfoStorage]:
+        storages: list[ABCWATOInfoStorage] = [StandardWATOInfoStorage()]
         if get_storage_format(storage_format) == StorageFormat.PICKLE:
             storages.append(_PickleWATOInfoStorage())
         return storages
@@ -1657,10 +1661,16 @@ class Folder(FolderProtocol):
     def save_folder_attributes(self) -> None:
         """Save the current state of the instance to a file."""
         self.attributes = update_metadata(self.attributes)
-        Path(self.wato_info_path()).parent.mkdir(mode=0o770, parents=True, exist_ok=True)
-        self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
+        self._save_folder_attributes(
+            storage_list=self.wato_info_storage_manager().write_storages,
+        )
         if may_use_redis():
             self.tree.redis_client.save_folder_info(self)
+
+    def _save_folder_attributes(self, *, storage_list: Sequence[ABCWATOInfoStorage]) -> None:
+        Path(self.wato_info_path()).parent.mkdir(mode=0o770, parents=True, exist_ok=True)
+        for storage in storage_list:
+            storage.write(Path(self.wato_info_path()), self.serialize())
 
     def has_rules(self) -> bool:
         return self.rules_file_path().exists()

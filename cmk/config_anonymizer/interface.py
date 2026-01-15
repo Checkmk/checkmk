@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import logging
+import random
+import string
 from logging import Logger
 from pathlib import Path
 from typing import Literal
@@ -20,18 +22,23 @@ class ANONTYPE(enum.Enum):
     SITE_ALIAS = "site_alias"
     HOST = "host"
     HOST_ALIAS = "host_alias"
+    HOST_GROUP = "host_group"
+    HOST_GROUP_ALIAS = "host_group_alias"
     SERVICE_DESCRIPTION = "service_description"
     SERVICE_LABEL_KEY = "service_label_key"
     SERVICE_LABEL_VALUE = "service_label_value"
+    SERVICE_GROUP = "service_group"
+    SERVICE_GROUP_ALIAS = "service_group_alias"
     TAG_GROUP = "tag_group"
     TAG_VALUE = "tag_value"
-    LABEL_KEY = "label_key"
-    LABEL_VALUE = "label_value"
+    HOST_LABEL_KEY = "host_label_key"
+    HOST_LABEL_VALUE = "host_label_value"
     USER = "user"
     ITEM = "item"
     IPv4_ADDRESS = "ipv4_address"
     IPv6_ADDRESS = "ipv6_address"
     CONTACT_GROUP = "contact_group"
+    CONTACT_GROUP_ALIAS = "contact_group_alias"
     FOLDER_NAME = "folder"
     CUSTOM_HOST_ATTR_NAME = "custom_host_attr_name"
     CUSTOM_HOST_ATTR_VALUE = "custom_host_attr_value"
@@ -99,6 +106,11 @@ class AnonInterface:
     def get_service_description(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.SERVICE_DESCRIPTION)
 
+    def get_host_label_groups(self, key: str, value: str) -> tuple[str, str]:
+        return self._get_entry(key, ANONTYPE.HOST_LABEL_KEY), self._get_entry(
+            value, ANONTYPE.HOST_LABEL_VALUE
+        )
+
     def get_service_label_groups(self, key: str, value: str) -> tuple[str, str]:
         return self._get_entry(key, ANONTYPE.SERVICE_LABEL_KEY), self._get_entry(
             value, ANONTYPE.SERVICE_LABEL_VALUE
@@ -106,9 +118,6 @@ class AnonInterface:
 
     def get_tags(self, key: str, value: str) -> tuple[str, str]:
         return self.get_id_of_tag_group(key), self.get_tag_value(value)
-
-    def get_labels(self, key: str, value: str) -> tuple[str, str]:
-        return self.get_label_key(key), self.get_label_value(value)
 
     def get_user(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.USER)
@@ -130,16 +139,12 @@ class AnonInterface:
     def get_tag_value(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.TAG_VALUE)
 
-    def get_label_key(self, original: str) -> str:
-        return self._get_entry(original, ANONTYPE.LABEL_KEY)
-
-    def get_label_value(self, original: str) -> str:
-        return self._get_entry(original, ANONTYPE.LABEL_VALUE)
-
     def get_contact_group(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.CONTACT_GROUP)
 
     def get_folder_path(self, original: str) -> str:
+        if original == "/":
+            return "/"
         assert original.startswith("/") and original.endswith("/"), (
             f"Folder '{original}' must start and end with '/'"
         )
@@ -157,6 +162,16 @@ class AnonInterface:
                 self._get_entry(folder_part, ANONTYPE.FOLDER_NAME) for folder_part in original_parts
             ]
         return f"/{'/'.join(anon_folder_parts)}/"
+
+    def get_rule_folder_path(self, original: str) -> str:
+        if not original:
+            return ""
+        original_parts = original.split("/")
+        # same folder conceptually as folder paths, but without leading and trailing slash
+        anon_folder_parts = [
+            self._get_entry(folder_part, ANONTYPE.FOLDER_NAME) for folder_part in original_parts
+        ]
+        return "/".join(anon_folder_parts)
 
     def get_custom_host_attr_name(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.CUSTOM_HOST_ATTR_NAME)
@@ -208,7 +223,7 @@ class AnonInterface:
                 raise ValueError(f"Invalid password format: {original}")
 
     def get_secret(self, original: str) -> str:
-        return self._get_entry(original, ANONTYPE.PASSWORD)
+        return "".join(random.choices(string.ascii_letters + string.digits, k=len(original)))
 
     def get_ldap_connection(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.LDAP_CONNECTION)
@@ -224,3 +239,18 @@ class AnonInterface:
 
     def get_id_of_tag(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.TAG_ID)
+
+    def get_host_group(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.HOST_GROUP)
+
+    def get_host_group_alias(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.HOST_GROUP_ALIAS)
+
+    def get_service_group(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.SERVICE_GROUP)
+
+    def get_service_group_alias(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.SERVICE_GROUP_ALIAS)
+
+    def get_contact_group_alias(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.CONTACT_GROUP_ALIAS)

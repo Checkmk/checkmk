@@ -2008,15 +2008,26 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
     def save(self, cfg: Mapping[RulesetName, Any], pprint_value: bool) -> None:
         self._save_and_validate_folder(self.folder, cfg, {}, pprint_value)
 
-    @staticmethod
     def _save_and_validate_folder(
+        self,
         folder: Folder,
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
         pprint_value: bool,
     ) -> None:
-        Path(folder.tree.get_root_dir()).mkdir(mode=0o770, exist_ok=True)
-        content = [
+        self._save_content_to_rules_file(
+            folder,
+            self.get_content_for_rules_file(folder, rulesets, unknown_rulesets, pprint_value),
+        )
+
+    @staticmethod
+    def get_content_for_rules_file(
+        folder: Folder,
+        rulesets: Mapping[RulesetName, Ruleset],
+        unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+        pprint_value: bool,
+    ) -> list[str]:
+        return [
             *(
                 ruleset.to_config(folder, pprint_value)
                 for _name, ruleset in sorted(rulesets.items())
@@ -2030,6 +2041,9 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
             ),
         ]
 
+    @staticmethod
+    def _save_content_to_rules_file(folder: Folder, content: list[str]) -> None:
+        Path(folder.tree.get_root_dir()).mkdir(mode=0o770, exist_ok=True)
         rules_file_path = folder.rules_file_path()
         try:
             # Remove empty rules files. This prevents needless reads

@@ -8,6 +8,10 @@ py_library(
     imports = ["../.."],
     visibility = ["//cmk:__subpackages__"],
     deps = [
+        "//cmk/base:app",
+        "//cmk/base:base-app",
+        "//cmk/base:config",
+        "//cmk/base/configlib",
         "//cmk/checkengine",
         "//cmk/gui",
         "//cmk/utils",

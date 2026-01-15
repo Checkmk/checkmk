@@ -56,7 +56,7 @@ const {
   titleUrlValidationErrors,
   validate: validateTitle,
   widgetGeneralSettings
-} = useWidgetVisualizationProps('', props.editWidgetSpec?.general_settings)
+} = useWidgetVisualizationProps('$DEFAULT_TITLE$', props.editWidgetSpec?.general_settings)
 
 const content: EventStatsContent = { type: 'event_stats' }
 const debouncedGeneralSettings = useDebounceRef(widgetGeneralSettings, 300)

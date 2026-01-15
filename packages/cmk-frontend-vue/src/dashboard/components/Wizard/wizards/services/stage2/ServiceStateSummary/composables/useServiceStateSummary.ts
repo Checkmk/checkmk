@@ -47,7 +47,7 @@ export const useServiceStateSummary = async (
     titleUrlValidationErrors,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
 
   const selectedState = ref<string>(currentContent?.state || 'OK')
 

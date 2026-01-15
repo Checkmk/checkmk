@@ -70,7 +70,7 @@ export const useCustomGraph = async (
     titleUrlValidationErrors,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps(customGraph.value || '', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
 
   const {
     horizontalAxis,

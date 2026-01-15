@@ -181,7 +181,7 @@ const viewSelection = ref<NewViewSelection | CopyExistingViewSelection>()
 
 // Stage 3
 const content = ref<EmbeddedViewContent | LinkedViewContent | undefined>(getDefaultContent())
-const visualizationProps = useWidgetVisualizationProps('')
+const visualizationProps = useWidgetVisualizationProps('$DEFAULT_TITLE$')
 
 const wizardHandler = useWizard(3)
 const wizardStages: QuickSetupStageSpec[] = [

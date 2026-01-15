@@ -59,7 +59,7 @@ export const useScatterplot = async (
     titleUrlValidationErrors,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps(metric, currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
 
   const { metricColor, averageColor, medianColor } = useAdditionalOptions(
     currentContent?.metric_color,

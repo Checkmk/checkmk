@@ -18,7 +18,10 @@ import usei18n from '@/lib/i18n'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
+import CmkLabel from '@/components/CmkLabel.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
@@ -259,7 +262,7 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
       host_name: hostname.value || '',
       ipaddress: ipV4.value || ipV6.value || '',
       address_family: props.ipAddressFamilySelectElement.value ?? 'ip-v4-only',
-      agent_port: '6556',
+      agent_port: String(agentPort.value),
       timeout: '5',
       site_id: siteIdent
     })
@@ -388,6 +391,7 @@ function onClose() {
     void startAjax()
   }
 }
+const agentPort: Ref<number> = ref(6556)
 </script>
 
 <template>
@@ -397,7 +401,7 @@ function onClose() {
       type="button"
       :title="tooltipText"
       class="agent-test-button"
-      :disabled="!hostname && !ipV4 && !ipV6"
+      :disabled="!hostname"
       @click="startAjax"
     >
       <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />
@@ -438,6 +442,14 @@ function onClose() {
         </div>
       </div>
     </CmkAlertBox>
+    <div v-if="!hostname" class="label-container disabled">
+      <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+      <CmkInput v-model="agentPort" :disabled="true" type="number" />
+    </div>
+    <div v-else-if="!isLoading && hostname" class="label-container enabled">
+      <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+      <CmkInput v-model="agentPort" type="number" />
+    </div>
 
     <CmkSlideInDialog
       :header="{
@@ -490,12 +502,17 @@ button {
   }
 }
 
+.label-container,
 .warn-container,
 .loading-container,
 .success-container {
   display: inline-flex;
   color: var(--font-color);
   margin: 0 0 0 var(--dimension-4);
+}
+
+.label-container.disabled {
+  opacity: 0.5;
 }
 
 .warn-container {

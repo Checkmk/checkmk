@@ -101,6 +101,11 @@ class QuickSetupPage(CmkPage):
             timeout=(10 * ANIMATION_TIMEOUT / 1000),  # Convert ms to seconds and multiply by 10
         )
 
+        expect(
+            self.main_area.locator("div.content-leave-active"),
+            message="Previous active stage was not collapsed",
+        ).to_have_count(0)
+
         if not is_last_stage:
             logger.debug("Wait for animation to complete")
             self.active_stage.element_handle().wait_for_element_state("stable")

@@ -246,4 +246,9 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         return visuals.visual_title("view", self._get_view_spec(), self.context)
 
     def infos(self) -> SingleInfos:
-        return self._get_infos_from_view_spec(self._get_view_spec())
+        try:
+            return self._get_infos_from_view_spec(self._get_view_spec())
+        except MKUserError:
+            # If the linked view does not exist anymore, we cannot determine infos for it
+            # which can potentially crash the entire dashboard instead of just this dashlet
+            return []

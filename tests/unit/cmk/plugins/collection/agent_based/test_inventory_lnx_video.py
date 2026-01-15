@@ -30,9 +30,10 @@ from cmk.plugins.collection.agent_based.inventory_lnx_video import (
                 TableRow(
                     path=["hardware", "video"],
                     key_columns={
-                        "name": "Advanced Micro Devices [AMD] nee ATI Cape Verde PRO [Radeon HD 7700 Series] (prog-if 00 [VGA controller])",
+                        "slot": "05:00.0",
                     },
                     inventory_columns={
+                        "name": "Advanced Micro Devices [AMD] nee ATI Cape Verde PRO [Radeon HD 7700 Series] (prog-if 00 [VGA controller])",
                         "subsystem": "Hightech Information System Ltd. Device 200b",
                         "driver": "fglrx_pci",
                     },
@@ -53,9 +54,10 @@ from cmk.plugins.collection.agent_based.inventory_lnx_video import (
                 TableRow(
                     path=["hardware", "video"],
                     key_columns={
-                        "name": "Advanced Micro Devices [AMD] nee ATI Cape Verde PRO [Radeon HD 7700 Series] (prog-if 00 [VGA controller])",
+                        "slot": "05:00.0",
                     },
                     inventory_columns={
+                        "name": "Advanced Micro Devices [AMD] nee ATI Cape Verde PRO [Radeon HD 7700 Series] (prog-if 00 [VGA controller])",
                         "subsystem": None,
                         "driver": None,
                     },
@@ -88,9 +90,10 @@ from cmk.plugins.collection.agent_based.inventory_lnx_video import (
                 TableRow(
                     path=["hardware", "video"],
                     key_columns={
-                        "name": "Intel Corporation Device 9a49 (rev 01) (prog-if 00 [VGA controller])",
+                        "slot": "0000:00:02.0",
                     },
                     inventory_columns={
+                        "name": "Intel Corporation Device 9a49 (rev 01) (prog-if 00 [VGA controller])",
                         "subsystem": "Dell Device 0a38",
                         "driver": "i915",
                     },
@@ -99,9 +102,10 @@ from cmk.plugins.collection.agent_based.inventory_lnx_video import (
                 TableRow(
                     path=["hardware", "video"],
                     key_columns={
-                        "name": "Second graphics card",
+                        "slot": "00:03.0",
                     },
                     inventory_columns={
+                        "name": "Second graphics card",
                         "subsystem": "Some subsystem",
                         "driver": "Some driver",
                     },
@@ -109,6 +113,51 @@ from cmk.plugins.collection.agent_based.inventory_lnx_video import (
                 ),
             ],
             id="Two graphics cards",
+        ),
+        pytest.param(
+            [
+                [
+                    "00",
+                    "08.0 VGA compatible controller",
+                    " Microsoft Corporation Hyper-V virtual VGA (prog-if 00 [VGA controller])",
+                ],
+                ["Subsystem", " Hightech Information System Ltd. Device 200b"],
+                ["Kernel driver in use", " hyperv_drm"],
+                [
+                    "00",
+                    "08.1 VGA compatible controller",
+                    " Microsoft Corporation Hyper-V virtual VGA (prog-if 00 [VGA controller])",
+                ],
+                ["Subsystem", " Hightech Information System Ltd. Device 200c"],
+                ["Kernel driver in use", " hyperv_drm"],
+            ],
+            [
+                TableRow(
+                    path=["hardware", "video"],
+                    key_columns={
+                        "slot": "00:08.0",
+                    },
+                    inventory_columns={
+                        "name": "Microsoft Corporation Hyper-V virtual VGA (prog-if 00 [VGA controller])",
+                        "subsystem": "Hightech Information System Ltd. Device 200b",
+                        "driver": "hyperv_drm",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["hardware", "video"],
+                    key_columns={
+                        "slot": "00:08.1",
+                    },
+                    inventory_columns={
+                        "name": "Microsoft Corporation Hyper-V virtual VGA (prog-if 00 [VGA controller])",
+                        "subsystem": "Hightech Information System Ltd. Device 200c",
+                        "driver": "hyperv_drm",
+                    },
+                    status_columns={},
+                ),
+            ],
+            id="Two identical graphics cards",
         ),
         pytest.param(
             [

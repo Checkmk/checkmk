@@ -6,6 +6,7 @@
 
 from cmk import fields
 from cmk.gui import fields as gui_fields
+from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.fields.attributes import HostContactGroup
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import CustomHostAttributesAndTagGroups
@@ -43,6 +44,7 @@ class BaseFolderAttribute(BaseSchema):
     )
 
     bake_agent_package = gui_fields.bake_agent_field()
+    cmk_agent_connection = CONNECTION_MODE_FIELD
     snmp_community = HostAttributeSNMPCommunity().openapi_field()
 
     labels = HostAttributeLabels().openapi_field()

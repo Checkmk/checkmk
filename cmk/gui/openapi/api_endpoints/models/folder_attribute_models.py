@@ -9,6 +9,8 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator
 
+from cmk.ccc.version import Edition
+from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.api_endpoints.models.attributes import (
     FolderCustomHostAttributesAndTagGroupsModel,
     HostContactGroupModel,
@@ -23,7 +25,9 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import BaseHostTagGroupModel
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import HostConverter
+from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
+from cmk.utils.agent_registration import HostAgentConnectionMode
 
 
 @api_model(slots=False)
@@ -48,6 +52,28 @@ class BaseFolderAttributeModel:
     # TODO: evaluate if edition handling should be included
     bake_agent_package: bool | ApiOmitted = api_field(
         description="Bake agent packages for this folder even if it is empty.",
+        default_factory=ApiOmitted,
+    )
+    cmk_agent_connection: Annotated[
+        Literal["push-agent", "pull-agent"] | ApiOmitted,
+        RestrictEditions(
+            supported_editions={
+                Edition.ULTIMATEMT,
+                Edition.ULTIMATE,
+                Edition.CLOUD,
+            }
+        ),
+    ] = api_field(
+        description=edition_field_description(
+            "This configures the communication direction of this host.\n"
+            f" * `{HostAgentConnectionMode.PULL.value}` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
+            f" * `{HostAgentConnectionMode.PUSH.value}` - the host is expected to send the data to the monitoring server without being triggered\n",
+            supported_editions={
+                Edition.ULTIMATEMT,
+                Edition.ULTIMATE,
+                Edition.CLOUD,
+            },
+        ),
         default_factory=ApiOmitted,
     )
     snmp_community: SNMPCredentialsModel | ApiOmitted = api_field(

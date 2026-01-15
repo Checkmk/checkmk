@@ -6,6 +6,7 @@ package lib
 hashfile_extension = ".hash";
 downloads_path = "/var/downloads/checkmk/";
 smb_base_path = "/smb-share-customer/checkmk/"
+cache_directories = [".cache", ".java-caller"]
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 /* groovylint-disable ParameterCount */
@@ -138,8 +139,9 @@ void upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
 }
 
 void clean_caches() {
+    def dirs = cache_directories.collect { "~/${it}/" }.join(" ");
     sh("""
-        rm -rf ~/.cache/ ~/.java-caller/
+        rm -rf ${dirs}
     """);
 }
 
@@ -178,12 +180,15 @@ boolean download_hot_cache(Map args) {
 
 void upload_hot_cache(Map args) {
     try {
+        def dirs = cache_directories.join(" ");
+        def check_conditions = cache_directories.collect { "[ -d \"${it}\" ]" }.join(" || ");
+        def du_commands = cache_directories.collect { "[ -d \"${it}\" ] && du -sh ${it}" }.join("\n            ");
+
         sh("""
         cd ${args.download_dest}
-        if [ -d ".cache" ] || [ -d ".java-caller" ]; then
-            [ -d ".cache" ] && du -sh .cache
-            [ -d ".java-caller" ] && du -sh .java-caller
-            time tar -cf - .cache .java-caller 2>/dev/null | lz4 > ${args.file_pattern}
+        if ${check_conditions}; then
+            ${du_commands}
+            time tar -cf - ${dirs} 2>/dev/null | lz4 > ${args.file_pattern}
         fi
     """);
 

@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { useSlots } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -50,6 +51,8 @@ async function suggestionCallback(query: string): Promise<ErrorResponse | Respon
 
   return new Response(result)
 }
+
+const slots = useSlots()
 </script>
 
 <template>
@@ -62,5 +65,12 @@ async function suggestionCallback(query: string): Promise<ErrorResponse | Respon
     :width="width || 'wide'"
     :form-validation="hasError || false"
     :disabled="disabled || false"
-  />
+  >
+    <template v-if="slots['buttons-start']" #buttons-start>
+      <slot name="buttons-start"></slot>
+    </template>
+    <template v-if="slots['buttons-end']" #buttons-end>
+      <slot name="buttons-end"></slot>
+    </template>
+  </CmkDropdown>
 </template>

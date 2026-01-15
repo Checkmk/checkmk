@@ -217,3 +217,29 @@ def test_active_check_httpv2_ipv6_macro(
             command_arguments=["--url", expected_url],
         ),
     ]
+
+
+def test_active_check_httpv2_macros_in_body_fixed_string() -> None:
+    assert list(
+        active_check_httpv2(
+            {
+                "endpoints": [
+                    {
+                        "service_name": {"prefix": "auto", "name": "My service"},
+                        "url": "https://checkmk.com",
+                    }
+                ],
+                "standard_settings": {"content": {"body": ("string", "$HOSTNAME$")}},
+            },
+            HostConfig(
+                name="testhost",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+                macros={"$HOSTNAME$": "testhost"},
+            ),
+        )
+    ) == [
+        ActiveCheckCommand(
+            service_description="HTTPS My service",
+            command_arguments=["--url", "https://checkmk.com", "--body-string", "testhost"],
+        ),
+    ]

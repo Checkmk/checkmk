@@ -641,7 +641,10 @@ def _valuespec_content() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="string",
                             title=Title("Fixed string"),
-                            parameter_form=String(title=Title("Fixed string")),
+                            parameter_form=String(
+                                title=Title("Fixed string"),
+                                macro_support=True,
+                            ),
                         ),
                         CascadingSingleChoiceElement(
                             name="regex",

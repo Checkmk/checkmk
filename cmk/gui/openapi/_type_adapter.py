@@ -34,7 +34,8 @@ class _HashableArgs[T]:
 @lru_cache(maxsize=128)  # arbitrarily chosen, should be ~2x of what EndpointModel.build uses
 def _get_type_adapter[T](args: _HashableArgs[T]) -> TypeAdapter[T]:
     """Get a TypeAdapter for the given type."""
-    return TypeAdapter(args.type, config=args.config)  # nosemgrep: type-adapter-detected
+    # nosemgrep: type-adapter-detected
+    return TypeAdapter(args.type, config=args.config)
 
 
 def get_cached_type_adapter[T](

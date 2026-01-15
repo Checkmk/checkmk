@@ -6,6 +6,9 @@ rules:
                 TypeAdapter(...)
           - pattern-inside: |
                 def $FUNC(...): ...
+          - pattern-inside: |
+                @decorator
+                def $FUNC(...): ...
       message: >-
           Detected the use of TypeAdapter(). Executing TypeAdapter() is a costly operation which can
             lead to a major performance issue if used wrong. Its use may be acceptable when invoked

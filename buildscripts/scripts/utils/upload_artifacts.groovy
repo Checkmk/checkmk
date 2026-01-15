@@ -163,6 +163,10 @@ boolean download_hot_cache(Map args) {
                 cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} ${args.download_dest}
             """);
         }
+
+        if (!verify_hash("${args.download_dest}/${args.file_pattern}")) {
+            raise("The sha256sum of the downloaded file does not match the expectation");
+        }
     }
     catch (Exception exc) {
         print("hot cache: ran into exception while running download_hot_cache() for ${args.file_pattern}: ${exc}");
@@ -346,6 +350,15 @@ void create_hash(FILE_PATH) {
         cd \$(dirname ${FILE_PATH});
         sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH})${hashfile_extension}";
     """);
+}
+
+boolean verify_hash(HASH_FILE) {
+    return sh(script: """
+        cd \$(dirname ${HASH_FILE});
+        sha256sum --check --status \$(basename ${HASH_FILE})
+        """,
+        returnStatus: true
+    );
 }
 
 void execute_cmd_on_archive_server(cmd) {

@@ -17,6 +17,7 @@ import urllib3
 from redfish import redfish_logger  # type: ignore[import-untyped]
 from redfish.rest.v1 import (  # type: ignore[import-untyped]
     HttpClient,
+    InvalidCredentialsError,
     JsonDecodingError,
     redfish_client,
     RestResponse,
@@ -771,9 +772,13 @@ def get_session(args: Args) -> RedfishData:
         redfishobj.redfish_connection.make_session(redfishobj.hostname, auth="session")
 
     except ServerDownOrUnreachableError as excp:
-        raise CannotRecover("ERROR: server not reachable or does not support RedFish") from excp
+        raise CannotRecover(
+            f"Server not reachable or does not support RedFish. Error message: {excp}"
+        ) from excp
     except RetriesExhaustedError as excp:
-        raise CannotRecover("ERROR: too many retries for connection attempt") from excp
+        raise CannotRecover(f"Too many retries for connection attempt: {excp}") from excp
+    except InvalidCredentialsError as excp:
+        raise CannotRecover(str(excp))
 
     return redfishobj
 

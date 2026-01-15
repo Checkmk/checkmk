@@ -16,6 +16,7 @@ import urllib3
 from redfish import redfish_logger  # type: ignore[import-untyped]
 from redfish.rest.v1 import (  # type: ignore[import-untyped]
     HttpClient,
+    InvalidCredentialsError,
     JsonDecodingError,
     redfish_client,
     RetriesExhaustedError,
@@ -312,33 +313,24 @@ def get_information(redfishobj):
 
 def get_session(args: Args) -> HttpClient:
     """create a Redfish session with given arguments"""
-    try:
-        redfish_host = f"{args.proto}://{args.host}:{args.port}"
-        if args.password_id:
-            pw_id, pw_path = args.password_id.split(":")
-        # Create a Redfish client object
-        redfishobj = redfish_client(
-            base_url=redfish_host,
-            username=args.user,
-            password=(
-                args.password
-                if args.password is not None
-                else password_store.lookup(Path(pw_path), pw_id)
-            ),
-            cafile="",
-            default_prefix="/redfish/v1",
-            timeout=args.timeout,
-            max_retry=args.retries,
-        )
-        redfishobj.login(auth="basic")
-    except ServerDownOrUnreachableError as excp:
-        sys.stderr.write(
-            f"ERROR: server not reachable or does not support RedFish. Error Message: {excp}\n"
-        )
-        sys.exit(1)
-    except RetriesExhaustedError as excp:
-        sys.stderr.write(f"ERROR: too many retries for connection attempt: {excp}\n")
-        sys.exit(1)
+    redfish_host = f"{args.proto}://{args.host}:{args.port}"
+    if args.password_id:
+        pw_id, pw_path = args.password_id.split(":")
+    # Create a Redfish client object
+    redfishobj = redfish_client(
+        base_url=redfish_host,
+        username=args.user,
+        password=(
+            args.password
+            if args.password is not None
+            else password_store.lookup(Path(pw_path), pw_id)
+        ),
+        cafile="",
+        default_prefix="/redfish/v1",
+        timeout=args.timeout,
+        max_retry=args.retries,
+    )
+    redfishobj.login(auth="basic")
     return redfishobj
 
 
@@ -356,11 +348,32 @@ def agent_redfish_main(args: Args) -> int:
         logger.info("Redfish API")
 
     # Start Redfish Session Object
-    redfishobj = get_session(args)
+    try:
+        redfishobj = get_session(args)
+    except (
+        ()
+        if args.debug
+        else (ServerDownOrUnreachableError, RetriesExhaustedError, InvalidCredentialsError)
+    ) as exc:
+        sys.stderr.write(f"{_render_login_error(exc)}\n")
+        return 1
+
     get_information(redfishobj)
     redfishobj.logout()
 
     return 0
+
+
+def _render_login_error(
+    exc: ServerDownOrUnreachableError | RetriesExhaustedError | InvalidCredentialsError,
+) -> str:
+    match exc:
+        case ServerDownOrUnreachableError():
+            return f"Server not reachable or does not support RedFish. Error Message: {exc}"
+        case RetriesExhaustedError():
+            return f"Too many retries for connection attempt: {exc}"
+
+    return str(exc)
 
 
 def main() -> int:

@@ -55,12 +55,12 @@ def make_site_version_info(
         # No licensing in Checkmk Community, information not necessary
         return _("Version: %s, Edition: %s") % (
             version,
-            edition_short.upper() if edition_short else _("unknown"),
+            edition_short.title() if edition_short else _("unknown"),
         )
 
     return _("Version: %s, Edition: %s, License state: %s") % (
         version,
-        edition_short.upper() if edition_short else _("unknown"),
+        edition_short.title() if edition_short else _("unknown"),
         license_state.readable if license_state else _("unknown"),
     )
 

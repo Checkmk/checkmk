@@ -19,6 +19,7 @@ import type {
   ConfiguredValues,
   FilterDefinition
 } from '@/dashboard/components/filter/types.ts'
+import { isFullyConfiguredFilter } from '@/dashboard/components/filter/utils.ts'
 import { RuntimeFilterMode } from '@/dashboard/types/filter.ts'
 
 import FilterCollectionInputItem from '../FilterCollectionInputItem.vue'
@@ -55,7 +56,9 @@ const editButtonTooltip = computed(() => {
   return undefined
 })
 
+const misconfiguredFilters = ref<string[]>([])
 const showAppliedConfirmation = ref(false)
+
 const overrideMode = ref(props.runtimeFiltersMode === RuntimeFilterMode.OVERRIDE)
 
 watch(
@@ -96,9 +99,37 @@ const serviceRuntimeFilters = computed(() => {
 })
 
 const applyRuntimeFilters = () => {
-  emit('apply-runtime-filters')
+  const filters = props.runtimeFilters.getFilters()
+  const notFullyConfigured: string[] = []
+
+  Object.keys(filters).forEach((filterId) => {
+    const filterValues = filters[filterId]!
+    const filterDef = props.filterDefinitions[filterId]
+    if (filterDef && !isFullyConfiguredFilter(filterValues, filterDef)) {
+      notFullyConfigured.push(filterDef.title!)
+    }
+  })
+
+  if (notFullyConfigured.length > 0) {
+    misconfiguredFilters.value = notFullyConfigured
+    showAppliedConfirmation.value = false
+    return
+  }
+
+  misconfiguredFilters.value = []
   showAppliedConfirmation.value = true
+  emit('apply-runtime-filters')
 }
+
+watch(
+  () => JSON.stringify(props.runtimeFilters.getFilters()),
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      showAppliedConfirmation.value = false
+      misconfiguredFilters.value = []
+    }
+  }
+)
 
 const resetRuntimeFilters = () => {
   emit('reset-runtime-filters')
@@ -115,15 +146,6 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
 const handleRemoveFilter = (filterId: string) => {
   props.runtimeFilters.removeFilter(filterId)
 }
-
-watch(
-  () => JSON.stringify(props.runtimeFilters.getFilters()),
-  (newVal, oldVal) => {
-    if (showAppliedConfirmation.value && newVal !== oldVal) {
-      showAppliedConfirmation.value = false
-    }
-  }
-)
 </script>
 
 <template>
@@ -148,8 +170,14 @@ watch(
 
   <CmkCheckbox v-model="overrideMode" :label="_t('Override default filters')" />
 
-  <div v-if="showAppliedConfirmation">
-    <CmkAlertBox variant="success">
+  <div>
+    <CmkAlertBox v-if="misconfiguredFilters.length > 0" variant="error">
+      <CmkLabel>
+        {{ _t('Please configure the following filters: ') }}
+        {{ misconfiguredFilters.join(', ') }}
+      </CmkLabel>
+    </CmkAlertBox>
+    <CmkAlertBox v-else-if="showAppliedConfirmation" variant="success">
       <CmkLabel>
         {{ _t('Success! Your runtime filters have been applied') }}
       </CmkLabel>

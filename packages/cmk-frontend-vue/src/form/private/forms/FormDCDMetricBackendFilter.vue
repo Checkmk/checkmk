@@ -20,14 +20,16 @@ const data = defineModel<DcdMetricBackendFilter>('data', { required: true })
 </script>
 
 <template>
-  <FormMetricBackendAttributes
-    v-model:resource-attributes="data.resource_attributes"
-    v-model:scope-attributes="data.scope_attributes"
-    v-model:data-point-attributes="data.data_point_attributes"
-    :strict="false"
-    :disable-values-on-empty-key="true"
-    :static-resource-attribute-keys="['service.name']"
-  />
+  <table>
+    <FormMetricBackendAttributes
+      v-model:resource-attributes="data.resource_attributes"
+      v-model:scope-attributes="data.scope_attributes"
+      v-model:data-point-attributes="data.data_point_attributes"
+      :strict="false"
+      :disable-values-on-empty-key="true"
+      :static-resource-attribute-keys="['service.name']"
+    />
+  </table>
 </template>
 
 <style scoped>

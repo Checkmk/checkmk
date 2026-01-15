@@ -109,7 +109,7 @@ function dragEnd(_e: DragEvent, index: number) {
     </CmkScrollContainer>
     <div class="sidebar-app__add-snapin">
       <CmkButton @click="addSnapinSlideoutOpen = true">
-        <CmkIcon name="add" size="large" />
+        <CmkIcon name="plus" size="large" />
         <span>{{ _t('Add element') }}</span>
       </CmkButton>
     </div>
@@ -173,7 +173,6 @@ function dragEnd(_e: DragEvent, index: number) {
       padding: var(--dimension-5);
 
       img {
-        opacity: 0.5;
         margin-right: var(--dimension-4);
       }
     }

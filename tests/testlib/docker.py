@@ -337,6 +337,7 @@ class CheckmkApp:
             user=self.username,
             password=self.password,
             site_version=self.package_info.version,
+            site_edition=self.package_info.edition,
             port=self.port,
             site=self.site_id,
             api_version=self.api_version,

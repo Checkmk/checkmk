@@ -147,6 +147,7 @@ class Site:
             password=self.admin_password,
             site=self.id,
             site_version=self._package.version,
+            site_edition=self._package.edition,
         )
         self.openapi_agent_receiver = AgentReceiverApiSession(
             openapi_session=self.openapi,

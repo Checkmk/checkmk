@@ -174,13 +174,23 @@ class BaseHostAttributeModel:
     )
     cmk_agent_connection: Annotated[
         Literal["push-agent", "pull-agent"] | ApiOmitted,
-        RestrictEditions(excluded_editions={Edition.COMMUNITY}),
+        RestrictEditions(
+            supported_editions={
+                Edition.ULTIMATEMT,
+                Edition.ULTIMATE,
+                Edition.CLOUD,
+            }
+        ),
     ] = api_field(
         description=edition_field_description(
             "This configures the communication direction of this host.\n"
             f" * `{HostAgentConnectionMode.PULL.value}` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
             f" * `{HostAgentConnectionMode.PUSH.value}` - the host is expected to send the data to the monitoring server without being triggered\n",
-            excluded_editions={Edition.COMMUNITY},
+            supported_editions={
+                Edition.ULTIMATEMT,
+                Edition.ULTIMATE,
+                Edition.CLOUD,
+            },
         ),
         default_factory=ApiOmitted,
     )

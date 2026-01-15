@@ -1088,3 +1088,34 @@ def test_openapi_delete_folder_default_mode_recursive(clients: ClientRegistry) -
 
     clients.Folder.get(folder_name="~new_folder", expect_ok=False).assert_status_code(404)
     assert no_force_delete_result.status_code == 204
+
+
+@pytest.mark.skipif(
+    version.edition(paths.omd_root)
+    not in {
+        version.Edition.ULTIMATEMT,
+        version.Edition.ULTIMATE,
+        version.Edition.CLOUD,
+    },
+    reason="Tested attribute is available in ULTIMATEMT, ULTIMATE, and CLOUD editions.",
+)
+@pytest.mark.parametrize(
+    "field_value, status_code",
+    [
+        ("push-agent", 200),
+        ("pull-agent", 200),
+        ("invalid-value", 400),
+    ],
+)
+def test_cmk_agent_connection_attribute_regression(
+    clients: ClientRegistry,
+    field_value: str,
+    status_code: int,
+) -> None:
+    clients.Folder.create(
+        folder_name="push-agent-folder",
+        title="push-agent-folder",
+        parent="~",
+        attributes={"cmk_agent_connection": field_value},
+        expect_ok=status_code == 200,
+    ).assert_status_code(status_code)

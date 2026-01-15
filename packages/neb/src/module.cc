@@ -134,8 +134,7 @@ void update_status() {
     int num_active_checks{0};
 
     int num_hosts = 0;
-    // NOLINTNEXTLINE(misc-const-correctness)
-    for (host *h = host_list; h != nullptr; h = h->next) {
+    for (const host *h = host_list; h != nullptr; h = h->next) {
         num_hosts++;
         any_event_handler_enabled =
             any_event_handler_enabled || (h->event_handler_enabled > 0);
@@ -146,8 +145,7 @@ void update_status() {
     }
 
     int num_services = 0;
-    // NOLINTNEXTLINE(misc-const-correctness)
-    for (service *s = service_list; s != nullptr; s = s->next) {
+    for (const service *s = service_list; s != nullptr; s = s->next) {
         num_services++;
         any_event_handler_enabled =
             any_event_handler_enabled || (s->event_handler_enabled > 0);
@@ -1324,8 +1322,8 @@ void omd_advertize(Logger *logger) {
                    << __TIMESTAMP__ << " with " << BUILD_CXX << ", using "
                    << RegExp::engine() << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";
-    // NOLINTNEXTLINE(concurrency-mt-unsafe,misc-const-correctness)
-    if (char *omd_site = getenv("OMD_SITE")) {
+    // NOLINTNEXTLINE(concurrency-mt-unsafe)
+    if (const char *omd_site = getenv("OMD_SITE")) {
         Informational(logger)
             << "running on Checkmk site " << omd_site << ", cool.";
     } else {

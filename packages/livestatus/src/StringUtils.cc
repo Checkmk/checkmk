@@ -285,6 +285,8 @@ std::pair<char *, std::error_code> from_chars(const char *first,
                                               double &value) {
     errno = 0;
     char dummy = '\0';
+    // False positive of misc-const-correctness.AnalyzePointers, see e.g.
+    // https://github.com/llvm/llvm-project/issues/157320
     // NOLINTNEXTLINE(misc-const-correctness)
     char *end = &dummy;  // must not be nullptr
     value = strtod(first, &end);

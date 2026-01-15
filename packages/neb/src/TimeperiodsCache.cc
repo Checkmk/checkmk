@@ -68,8 +68,7 @@ void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
 }
 
 bool TimeperiodsCache::inTimeperiod(const std::string &tpname) const {
-    // NOLINTNEXTLINE(misc-const-correctness)
-    for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
+    for (const timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         if (tpname == tp->name) {
             return inTimeperiod(tp);
         }

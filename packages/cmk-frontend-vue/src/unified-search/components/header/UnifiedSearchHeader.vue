@@ -138,7 +138,7 @@ const getSearchInputPlaceholder = computed(() => {
       <div class="unified-search-input-wrapper" @click="searchUtils.input.setFocus">
         <div class="unified-search-input-tag-root">
           <UnifiedSearchProviderSelect></UnifiedSearchProviderSelect>
-          <CmkIcon class="unified-search-icon" name="search" size="medium"></CmkIcon>
+          <CmkIcon class="unified-search-icon" name="main-search" size="medium"></CmkIcon>
           <input
             id="unified-search-input"
             ref="unified-search-input"

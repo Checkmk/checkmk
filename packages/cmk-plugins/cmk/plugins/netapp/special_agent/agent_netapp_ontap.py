@@ -512,6 +512,7 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
         "controller.cpu.processor",
         "metric.processor_utilization",
         "metric.timestamp",
+        "date",
     )
 
     for element in NetAppResource.Node.get_collection(
@@ -532,6 +533,7 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
             cpu_processor=element_data.get("controller", {}).get("cpu", {}).get("processor"),
             processor_utilization=element_data["metric"]["processor_utilization"],
             processor_utilization_timestamp=element_data["metric"]["timestamp"],
+            date=element_data.get("date"),
         )
 
 

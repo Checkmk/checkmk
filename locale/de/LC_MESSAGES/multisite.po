@@ -36167,10 +36167,6 @@ msgstr "Levels für die Tablespace-Grösse"
 msgid "Levels for the Tablespace usage"
 msgstr "Levels für die Tablespacebelegung"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Obergrenzen für die Consumer-Zählung"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Levels für den Stromverbrauch eines Gerätes "
 
@@ -37973,6 +37969,9 @@ msgstr "Untergrenzen für die Auslastung von Anfragen"
 
 msgid "Lower levels for reservation utilization"
 msgstr "Untergrenzen für die Reservierungsauslastung"
+
+msgid "Lower levels for the consumer count"
+msgstr "Untergrenzen für die Anzahl der Consumer"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
@@ -76657,6 +76656,10 @@ msgstr "Hochgeladenes Erweiterungspaket %s-%s (%s)"
 msgid "Upper"
 msgstr "Obere"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Obergrenzen für die Consumer-Zählung"
+
 msgid "Upper Temperature Levels"
 msgstr "Obergrenzen für Temperatur"
 
@@ -86937,9 +86940,6 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
-
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Untergrenzen für die Anzahl der Consumer"
 
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus scrape Konfiguration"

@@ -35197,10 +35197,6 @@ msgstr "表領域サイズのレベル"
 msgid "Levels for the Tablespace usage"
 msgstr "表領域の使用レベル"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "デバイスの電力消費量のレベル "
 
@@ -36964,6 +36960,10 @@ msgstr "リクエスト使用率の下位レベル"
 
 msgid "Lower levels for reservation utilization"
 msgstr "予約使用率の下位レベル"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
@@ -74413,6 +74413,10 @@ msgstr "アップロードされた拡張パッケージ %s-%s (%s)"
 msgid "Upper"
 msgstr "アッパー"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
+
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
 
@@ -84307,10 +84311,6 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "コンシューマーカウントのレベル"
 
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus スクレイプ構成"

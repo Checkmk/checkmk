@@ -37486,10 +37486,6 @@ msgstr "Niveaus voor de Tablespace grootte"
 msgid "Levels for the Tablespace usage"
 msgstr "Niveaus voor het gebruik van de Tablespace"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Niveaus voor de consumententelling"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveaus voor het elektriciteitsverbruik van een apparaat "
 
@@ -39353,6 +39349,10 @@ msgstr "Hogere niveaus voor verzoeken gebruik"
 #, fuzzy
 msgid "Lower levels for reservation utilization"
 msgstr "Hogere niveaus voor verzoeken gebruik"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveaus voor de consumententelling"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Lagere niveaus voor de ventilatorsnelheid van een hardwareapparaat"
@@ -79365,6 +79365,10 @@ msgstr "Uploaden uitbreidingspakket %s-%s (%s)"
 msgid "Upper"
 msgstr "Boven"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveaus voor de consumententelling"
+
 msgid "Upper Temperature Levels"
 msgstr "Bovenste temperatuurniveaus"
 
@@ -89876,10 +89880,6 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Niveaus voor de consumententelling"
 
 #, fuzzy
 #~ msgid "Prometheus scrape configurations"

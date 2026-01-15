@@ -37810,10 +37810,6 @@ msgstr "Niveaux pour la taille du Tablespace"
 msgid "Levels for the Tablespace usage"
 msgstr "Niveaux d'utilisation du Tablespace"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Niveaux pour le comptage des consommateurs"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveaux de consommation d'énergie électrique d'un appareil "
 
@@ -39680,6 +39676,10 @@ msgstr "Niveaux inférieurs pour l'utilisation des demandes"
 #, fuzzy
 msgid "Lower levels for reservation utilization"
 msgstr "Niveaux inférieurs pour l'utilisation des demandes"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveaux pour le comptage des consommateurs"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -80086,6 +80086,10 @@ msgstr "Téléchargement du paquet d'extensions %s-%s (%s)"
 msgid "Upper"
 msgstr "Upper"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveaux pour le comptage des consommateurs"
+
 msgid "Upper Temperature Levels"
 msgstr "Niveaux de température supérieurs"
 
@@ -90748,10 +90752,6 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Niveaux pour le comptage des consommateurs"
 
 #, fuzzy
 #~ msgid "Prometheus scrape configurations"

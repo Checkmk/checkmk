@@ -37560,10 +37560,6 @@ msgstr "Niveluri pentru dimensiunea Tablespace"
 msgid "Levels for the Tablespace usage"
 msgstr "Niveluri pentru utilizarea Tablespace"
 
-#, fuzzy
-msgid "Levels for the consumer count"
-msgstr "Niveluri pentru numărul de consumatori"
-
 msgid "Levels for the electrical power consumption of a device "
 msgstr "Niveluri pentru consumul de energie electrică al unui dispozitiv "
 
@@ -39407,6 +39403,10 @@ msgstr "Niveluri inferioare de utilizare a cererilor"
 
 msgid "Lower levels for reservation utilization"
 msgstr "Niveluri mai mici de utilizare a rezervărilor"
+
+#, fuzzy
+msgid "Lower levels for the consumer count"
+msgstr "Niveluri pentru numărul de consumatori"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -79528,6 +79528,10 @@ msgstr "Pachet de extensie încărcat %s-%s (%s)"
 msgid "Upper"
 msgstr "Partea superioară"
 
+#, fuzzy
+msgid "Upper Levels for the consumer count"
+msgstr "Niveluri pentru numărul de consumatori"
+
 msgid "Upper Temperature Levels"
 msgstr "Niveluri superioare de temperatură"
 
@@ -90072,10 +90076,6 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
-
-#, fuzzy
-#~ msgid "Lower levels for the consumer count"
-#~ msgstr "Niveluri pentru numărul de consumatori"
 
 #, fuzzy
 #~ msgid "Prometheus scrape configurations"

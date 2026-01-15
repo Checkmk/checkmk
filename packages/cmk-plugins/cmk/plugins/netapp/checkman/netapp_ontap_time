@@ -1,0 +1,30 @@
+title: NetApp Filer: System time offset
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the system time of the NetApp node. It computes the
+ difference between the time measured on the monitored node and the time
+ of the Checkmk server when the data is processed. The resulting difference
+ is referred to as "time_offset" here (this is also the metrics name).
+
+ Returns {WARN}/{CRIT} if the absolute system time offset is above the
+ given levels.
+
+ By default, the check uses warning level of 30 seconds and critical level
+ of 60 seconds. These levels may be configured with WATO rule group
+ {Netapp system time offset}.
+
+ As the offset includes the systematic time delay between querying the host
+ and querying the reference time, it is never expected to be zero.
+
+ Please note: You need the Special Agent "NetApp via ONTAP REST Api" to
+ retrieve the monitoring data from the device. The Special Agent itself can
+ be configured by WATO.
+
+item:
+ Name of the node
+
+discovery:
+ One service is created for each node.

@@ -38,7 +38,7 @@ export const useServiceStatistics = async (
     titleUrlValidationErrors,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
 
   const widgetProps = ref<WidgetProps>()
 

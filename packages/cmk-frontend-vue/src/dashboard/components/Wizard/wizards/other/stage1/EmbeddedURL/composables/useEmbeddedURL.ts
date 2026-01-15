@@ -35,7 +35,7 @@ export function useEmbeddedURL(
     titleUrlValidationErrors,
     validate,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
 
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as URLContent) : undefined

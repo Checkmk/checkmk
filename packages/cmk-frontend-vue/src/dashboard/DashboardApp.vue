@@ -26,6 +26,7 @@ import WizardSelector from '@/dashboard/components/WizardSelector/WizardSelector
 import { widgetTypeToSelectorMatcher } from '@/dashboard/components/WizardSelector/utils.ts'
 import type { ConfiguredFilters, FilterDefinition } from '@/dashboard/components/filter/types.ts'
 import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters.ts'
+import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
@@ -169,10 +170,16 @@ const selectedDashboard = computed(() => {
   return {
     name: dashboardsManager.activeDashboardKey.value!.name,
     owner: dashboardsManager.activeDashboardKey.value!.owner,
-    title: dashboardsManager.activeDashboard.value.model.general_settings.title.text,
+    title: dashboardVisualTitle.value,
     type: dashboardsManager.activeDashboard.value.model.type
   } as SelectedDashboard
 })
+
+const dashboardVisualTitle = useDashboardVisualTitle(
+  computed(() => dashboardsManager.activeDashboard.value?.model ?? null),
+  filterCollection,
+  dashboardFilters.baseFilters
+)
 
 const handleWizardSelectorGoBack = () => {
   // when editing, do not go back to widget type selection (and clear the edit state)

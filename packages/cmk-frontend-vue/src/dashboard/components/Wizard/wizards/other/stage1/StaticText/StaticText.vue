@@ -59,6 +59,8 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
       <CmkInput v-model="handler.text.value" type="text" field-size="LARGE" />
     </DataSettings>
 
+    <ContentSpacer :dimension="6" />
+
     <CollapsibleTitle
       :title="_t('Widget settings')"
       :open="displayVisualizationSettings"

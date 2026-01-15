@@ -72,6 +72,8 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
       />
     </DataSettings>
 
+    <ContentSpacer :dimension="6" />
+
     <CollapsibleTitle
       :title="_t('Widget settings')"
       :open="displayVisualizationSettings"

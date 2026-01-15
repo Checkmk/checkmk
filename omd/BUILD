@@ -10,6 +10,7 @@ load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
+load("//bazel/rules:pkg_cma_from_tar.bzl", "pkg_cma_from_tar")
 load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
 load("//bazel/rules:pkg_rpm_from_tar.bzl", "pkg_rpm_from_tar")
 load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
@@ -36,6 +37,20 @@ file_from_flag(
     out = "omd_root_dir.txt",
     content = [
         "/opt/omd/versions/{cmk_version}.{cmk_edition}",
+        "",
+    ],
+    replace_labels = {
+        "cmk_edition": "@cmk//edition",
+        "cmk_version": "@cmk//version",
+    },
+    tags = ["manual"],
+)
+
+file_from_flag(
+    name = "omd_root_dir_appliance",
+    out = "omd_root_dir_appliance.txt",
+    content = [
+        "{cmk_version}.{cmk_edition}",
         "",
     ],
     replace_labels = {
@@ -272,7 +287,7 @@ pkg_files(
 )
 
 [pkg_tar(
-    name = "deps_install_" + edition,
+    name = "deps_packages_" + edition,
     srcs = [
         ":agents",
         ":agents_cfg_examples",
@@ -295,7 +310,6 @@ pkg_files(
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
     ],
-    package_dir_file = ":omd_root_dir",
     tags = ["manual"],
     deps = [
                "//bin:pkg_tar",
@@ -373,6 +387,21 @@ pkg_files(
                "//conditions:default": [],
            }) +
            edition_deps[edition],
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
+[pkg_tar(
+    name = "deps_install_" + edition,
+    package_dir_file = ":omd_root_dir",
+    tags = ["manual"],
+    deps = [
+        ":deps_packages_" + edition,
+    ],
 ) for edition in [
     "community",
     "ultimate",
@@ -629,3 +658,46 @@ write_omd_spec(
     "ultimatemt",
     "cloud",
 ]]
+
+[
+    pkg_tar(
+        name = "appliance_" + edition,
+        extension = "tar.gz",
+        package_dir_file = "//omd:omd_root_dir_appliance",
+        visibility = ["//visibility:public"],
+        deps = [
+            "//omd:deps_packages_" + edition,
+            "//omd/packages/appliance:appliance_install_" + edition,
+        ],
+    )
+    for edition in [
+        "pro",
+        "ultimate",
+        "ultimatemt",
+    ]
+]
+
+[
+    pkg_cma_from_tar(
+        name = "cma_" + edition,
+        cma = "cma_file_" + edition,
+        distro_code = select({
+            # CMA 4 is based on Debian 12
+            "@cmk//distro:debian-12": "4",
+            "//conditions:default": "",
+        }),
+        edition = "@cmk//edition",
+        input_tarball = ":appliance_" + edition,
+        tags = ["manual"],
+        target_compatible_with = select({
+            "@cmk//distro:debian-12": [],
+            "//conditions:default": ["@platforms//:incompatible"],
+        }),
+        version = "@cmk//version",
+    )
+    for edition in [
+        "pro",
+        "ultimate",
+        "ultimatemt",
+    ]
+]

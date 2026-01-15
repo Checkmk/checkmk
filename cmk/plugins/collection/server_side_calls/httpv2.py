@@ -300,7 +300,7 @@ def _command_arguments(endpoint: HttpEndpoint, host_config: HostConfig) -> Itera
     if (document := endpoint.settings.document) is not None:
         yield from _document_args(document)
     if (content := endpoint.settings.content) is not None:
-        yield from _content_args(content)
+        yield from _content_args(content, host_config.macros)
 
 
 def _connection_args(connection: Connection, host_config: HostConfig) -> Iterator[str | Secret]:
@@ -529,11 +529,11 @@ def _page_size_args(page_size: PageSize) -> Iterator[str]:
     yield f"{min_part}{max_part}"
 
 
-def _content_args(content: Content) -> Iterator[str]:
+def _content_args(content: Content, macros: Mapping[str, str]) -> Iterator[str]:
     if (header := content.header) is not None:
         yield from _header_match_args(header)
     if (body := content.body) is not None:
-        yield from _body_match_args(body)
+        yield from _body_match_args(body, macros)
     if (fail_state := content.fail_state) is not None:
         yield "--content-search-fail-state"
         match fail_state:
@@ -575,11 +575,12 @@ def _header_match_args(
 
 def _body_match_args(
     body: (tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex]),
+    macros: Mapping[str, str],
 ) -> Iterator[str]:
     match body:
         case (MatchType.STRING, str(string)):
             yield "--body-string"
-            yield string
+            yield replace_macros(string, macros)
 
         case (
             MatchType.REGEX,

@@ -29,7 +29,6 @@ selected objects:
 
 import itertools
 import logging
-import os
 import pprint
 import time
 import urllib.parse
@@ -52,7 +51,7 @@ from cmk.relay_protocols.tasks import (
     TaskListResponse,
     TaskResponse,
 )
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion, TypeCMKEdition, TypeCMKEditionOld
 
 logger = logging.getLogger("rest-session")
 tracer = trace.get_tracer()
@@ -114,6 +113,7 @@ class CMKOpenApiSession(requests.Session):
         user: str,
         password: str,
         site_version: CMKVersion,
+        site_edition: TypeCMKEdition | TypeCMKEditionOld,
         port: int = 80,
         site: str = "heute",
         api_version: str = "1.0",
@@ -123,6 +123,7 @@ class CMKOpenApiSession(requests.Session):
         self.port = port
         self.site = site
         self.site_version = site_version
+        self.site_edition = site_edition
         self.api_version = api_version
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
@@ -443,7 +444,6 @@ class UsersAPI(BaseAPI):
         password: str,
         email: str,
         contactgroups: list[str],
-        customer: None | str = None,
         roles: list[str] | None = None,
         is_automation_user: bool = False,
         store_automation_secret: bool = False,
@@ -473,8 +473,8 @@ class UsersAPI(BaseAPI):
             "contactgroups": contactgroups,
             "roles": roles or [],
         }
-        if customer:
-            body["customer"] = customer
+        if self.session.site_edition.is_ultimatemt_edition():
+            body["customer"] = "global"
         response = self.session.post(
             "domain-types/user_config/collections/all",
             json=body,
@@ -1532,7 +1532,7 @@ class PasswordsAPI(BaseAPI):
             "owner": owner,
             "shared": ["all"],
         }
-        if os.environ.get("EDITION") == "ultimatemt":
+        if self.session.site_edition.is_ultimatemt_edition():
             request_data["customer"] = "global"
 
         response = self.session.post(

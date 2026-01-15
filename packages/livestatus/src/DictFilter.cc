@@ -7,11 +7,12 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <memory>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "livestatus/DoubleFilter.h"
-#include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringFilter.h"
 #include "livestatus/opids.h"
@@ -63,33 +64,33 @@ DictStrValueFilter::DictStrValueFilter(Kind kind, std::string columnName,
                                        function_type f,
                                        RelationalOperator relOp,
                                        const std::string &value)
-    : ColumnFilter{kind, std::move(columnName), relOp, value}
-    , f_{std::move(f)} {
-    std::string rest;
-    auto [starts_with_quote1, pos1] = skip_whitespace(value);
-    std::tie(ref_varname_, rest) = starts_with_quote1
+    : ColumnFilter{kind, columnName, relOp, value}
+    , f_{std::move(f)}
+    , filter_{[this, kind, columnName = std::move(columnName), relOp, &value] {
+        auto [starts_with_quote1, pos1] = skip_whitespace(value);
+        auto [ref_varname, rest] = starts_with_quote1
                                        ? parse_quoted(value, pos1 + 1)
                                        : parse_unquoted(value, pos1);
-    auto [starts_with_quote2, pos2] = skip_whitespace(rest);
-    ref_string_ = starts_with_quote2 ? parse_quoted(rest, pos2 + 1).first
-                                     : rest.substr(pos2);
-    regExp_ = makeRegExpFor(oper(), ref_string_);
-}
+        auto [starts_with_quote2, pos2] = skip_whitespace(rest);
+        const auto ref_string = starts_with_quote2
+                                    ? parse_quoted(rest, pos2 + 1).first
+                                    : rest.substr(pos2);
+        return StringFilter{
+            kind,
+            columnName,
+            [get_column = f_, ref_varname = std::move(ref_varname)](Row row) {
+                auto cvm = get_column(row);
+                auto it = cvm.find(ref_varname);
+                return it == cvm.end() ? "" : it->second;
+            },
+            relOp,
+            ref_string,
+        };
+    }()} {}
 
 bool DictStrValueFilter::accepts(Row row, const User &user,
                                  std::chrono::seconds timezone_offset) const {
-    auto filter = StringFilter{
-        kind(),
-        columnName(),
-        [this](Row row) {
-            auto cvm = f_(row);
-            auto it = cvm.find(ref_varname_);
-            return it == cvm.end() ? "" : it->second;
-        },
-        oper(),
-        ref_string_,
-    };
-    return filter.accepts(row, user, timezone_offset);
+    return filter_.accepts(row, user, timezone_offset);
 }
 
 std::unique_ptr<Filter> DictStrValueFilter::copy() const {

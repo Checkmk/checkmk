@@ -5298,6 +5298,7 @@ tenacity==9.1.2 \
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   opsgenie-sdk

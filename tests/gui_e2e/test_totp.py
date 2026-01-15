@@ -45,6 +45,11 @@ def test_totp(test_site: Site, dashboard_page: MainDashboard, credentials: CmkCr
     dashboard_page.main_area.get_input("auth_code").fill(otp_value)
     dashboard_page.main_area.get_suggestion("Save").click()
 
+    expect(
+        dashboard_page.main_area.locator("div.success", has_text="Registration successful"),
+        message="Authenticator app registration settings not saved",
+    ).to_be_visible()
+
     # Log out stuff here
     dashboard_page.main_menu.logout()
     login_page = LoginPage(dashboard_page.page, navigate_to_page=False)

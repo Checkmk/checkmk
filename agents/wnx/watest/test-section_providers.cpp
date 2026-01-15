@@ -99,10 +99,7 @@ TEST(SectionProviders, SystemTime) {
 
     EXPECT_EQ(engine.getUniqName(), section::kSystemTime);
 
-    auto system_time_default = engine.generateContent(section_name);
-    EXPECT_TRUE(system_time_default.empty());
-
-    auto system_time = engine.generateContent(section_name, true);
+    auto system_time = engine.generateContent(section_name);
     EXPECT_EQ(system_time.back(), '\n');
 
     auto result = tools::SplitString(system_time, "\n");

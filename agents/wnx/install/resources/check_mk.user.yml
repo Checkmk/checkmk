@@ -82,7 +82,7 @@ global:
     # Include all possible sections:
     # sections: []
 
-    # Valid example, but section is renamed to _sections and will be ignored
+    # Valid example, but section is renamed to _sections and wil be ignored
     _sections:
         - check_mk
         - mrpe
@@ -92,6 +92,7 @@ global:
         - local
         - winperf
         - uptime
+        - systemtime
         - df
         - mem
         - services

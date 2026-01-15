@@ -60,6 +60,7 @@ global:
         - local
         - winperf
         - uptime
+        - systemtime
         - df
         - mem
         - services

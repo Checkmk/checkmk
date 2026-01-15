@@ -307,7 +307,7 @@ TEST(AgentConfig, SmartMerge) {
         ASSERT_EQ(run_node.size(), 3);
 
         sections_enabled = GetInternalArray(gl, vars::kSectionsEnabled);
-        ASSERT_EQ(sections_enabled.size(), 22);
+        ASSERT_EQ(sections_enabled.size(), 23);
 
         ASSERT_EQ(gl[vars::kSectionsDisabled].size(), 0);
     }
@@ -604,7 +604,7 @@ TEST(AgentConfig, FactoryConfig) {
     EXPECT_GT(GetInternalArray(groups::kGlobal, vars::kExecute).size(), 3U);
     EXPECT_TRUE(GetInternalArray(groups::kGlobal, vars::kOnlyFrom).empty());
     EXPECT_EQ(GetInternalArray(groups::kGlobal, vars::kSectionsEnabled).size(),
-              22U);
+              23U);
     EXPECT_TRUE(
         GetInternalArray(groups::kGlobal, vars::kSectionsDisabled).empty());
 
@@ -959,7 +959,7 @@ TEST(AgentConfig, GlobalTest) {
     EXPECT_TRUE(groups::g_global.allowedSection("check_mk"));
     EXPECT_TRUE(groups::g_global.allowedSection("winperf"));
     EXPECT_TRUE(groups::g_global.allowedSection("uptime"));
-    EXPECT_FALSE(groups::g_global.allowedSection("systemtime"));
+    EXPECT_TRUE(groups::g_global.allowedSection("systemtime"));
     EXPECT_TRUE(groups::g_global.allowedSection("df"));
     EXPECT_TRUE(groups::g_global.allowedSection("mem"));
     EXPECT_TRUE(groups::g_global.allowedSection("services"));

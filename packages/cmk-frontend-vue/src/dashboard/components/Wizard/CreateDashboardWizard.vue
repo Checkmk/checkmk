@@ -38,8 +38,7 @@ const emit = defineEmits<{
     dashboardId: string,
     settings: DashboardGeneralSettings,
     layout: DashboardLayout,
-    scopeIds: string[],
-    nextStep: 'setFilters' | 'viewList'
+    scopeIds: string[]
   ]
   'cancel-creation': []
 }>()

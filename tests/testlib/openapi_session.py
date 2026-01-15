@@ -29,6 +29,7 @@ selected objects:
 
 import itertools
 import logging
+import os
 import pprint
 import time
 import urllib.parse
@@ -40,7 +41,6 @@ from typing import Any, NamedTuple
 import requests
 
 from cmk import trace
-from cmk.ccc import version
 from cmk.gui.http import HTTPMethod
 from cmk.gui.type_defs import KeyId
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
@@ -52,7 +52,6 @@ from cmk.relay_protocols.tasks import (
     TaskListResponse,
     TaskResponse,
 )
-from cmk.utils import paths
 from tests.testlib.version import CMKVersion
 
 logger = logging.getLogger("rest-session")
@@ -1533,7 +1532,7 @@ class PasswordsAPI(BaseAPI):
             "owner": owner,
             "shared": ["all"],
         }
-        if version.edition(paths.omd_root) is version.Edition.ULTIMATEMT:
+        if os.environ.get("EDITION") == "ultimatemt":
             request_data["customer"] = "global"
 
         response = self.session.post(

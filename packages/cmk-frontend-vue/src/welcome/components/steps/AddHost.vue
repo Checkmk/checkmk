@@ -58,10 +58,10 @@ if (props.cards.add_host === 'cse-first-host-slideout') {
     <StepParagraph>
       {{
         _t(
-          `Each host includes a number of services that represent what you want to monitor, for example,
-  CPU usage, disk space, running processes, or hardware sensors. Checkmk makes this easy with the
-  Service Discovery, which automatically detects relevant services on your host, so you can start
-  monitoring with minimal setup.`
+          `In Checkmk, a host is any standalone physical or virtual system that is monitored.
+Each host has services which represent what is monitored, for example CPU usage, disk space, processes, or hardware sensors.
+The service discovery of Checkmk automatically detects these services.
+This allows monitoring to start with minimal configuration effort.`
         )
       }}
     </StepParagraph>

@@ -718,7 +718,12 @@ class LDAPRoleElementRequest(BaseSchema):
 
 class LDAPEnableGroupsToRoles(ValueTypedDictSchema):
     class ValueTypedDict:
-        value_type = LDAPRoleElementRequest
+        value_type = ValueTypedDictSchema.wrap_field(
+            fields.Nested(
+                LDAPRoleElementRequest,
+                many=True,
+            )
+        )
 
     class Meta:
         unknown = INCLUDE
@@ -761,36 +766,6 @@ class LDAPEnableGroupsToRoles(ValueTypedDictSchema):
     @pre_load
     def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         return {k: v for k, v in data.items() if k in self.fields}
-
-    @post_load(pass_original=True)
-    def _validate_extra_attributes(
-        self,
-        result_data: dict[str, Any],
-        original_data: MutableMapping[str, Any],
-        **_unused_args: Any,
-    ) -> dict[str, Any]:
-        for field in self.fields:
-            original_data.pop(field, None)
-
-        if not original_data:
-            return result_data
-
-        roles = UserRolesConfigFile().load_for_reading()
-        test_field = fields.Nested(LDAPRoleElementRequest, many=True, required=False)
-
-        for name, value in original_data.items():
-            if name not in roles:
-                raise ValidationError(f"Unknown user role: {name!r}")
-
-            try:
-                test_field.deserialize(value)
-
-            except ValidationError as e:
-                raise ValidationError(f"Invalid value for {name!r}: {e.messages}")
-
-            result_data[name] = value
-
-        return result_data
 
 
 class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
@@ -933,6 +908,23 @@ class LDAPSyncPluginsRequest(BaseSchema):
         original_data: MutableMapping[str, Any],
         **_unused_args: Any,
     ) -> dict[str, Any]:
+        if custom_userroles := {
+            k: v
+            for k, v in original_data.get("groups_to_roles", {}).items()
+            if k not in LDAPEnableGroupsToRoles().fields
+        }:
+            roles = UserRolesConfigFile().load_for_reading()
+            test_field = fields.Nested(LDAPRoleElementRequest, many=True, required=False)
+            for custom_userrole, roledata in custom_userroles.items():
+                if custom_userrole not in roles:
+                    raise ValidationError(f"Unknown user role: {custom_userrole!r}")
+                try:
+                    test_field.deserialize(roledata)
+                except ValidationError as e:
+                    raise ValidationError(f"Invalid value for {custom_userrole!r}: {e.messages}")
+
+                result_data["groups_to_roles"][custom_userrole] = roledata
+
         for field in self.fields:
             original_data.pop(field, None)
 

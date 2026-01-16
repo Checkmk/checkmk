@@ -54,11 +54,9 @@ class WidgetTitle:
                 assert_never(x)
 
     @classmethod
-    def from_internal(cls, config: DashletConfig) -> Self | ApiOmitted:
-        if "title" not in config:
-            return ApiOmitted()
+    def from_internal(cls, config: DashletConfig) -> Self:
         return cls(
-            text=config["title"],
+            text=config.get("title", "$DEFAULT_TITLE$"),
             url=config.get("title_url", ApiOmitted()),
             render_mode=cls._render_mode_from_internal(config.get("show_title", True)),
         )
@@ -142,9 +140,7 @@ class WidgetRelativeGridLayout:
 
 @api_model
 class WidgetGeneralSettings:
-    title: WidgetTitle | ApiOmitted = api_field(
-        description="Title settings for the widget.", default_factory=ApiOmitted
-    )
+    title: WidgetTitle = api_field(description="Title settings for the widget.")
     render_background: bool = api_field(
         description="Whether the widget should render a gray background.",
         # default=True,

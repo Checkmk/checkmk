@@ -13,7 +13,7 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import DashboardContent from '@/dashboard/components/DashboardContent/DashboardContent.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
-import MissingRuntimeFiltersMsg from '@/dashboard/components/DashboardFilterSettings/runtime-filter/MissingRuntimeFiltersMsg.vue'
+import MissingFiltersMsg from '@/dashboard/components/DashboardFilterSettings/MissingFiltersMsg.vue'
 
 import type { ResizeDirection } from './helpers/resizeHelper.ts'
 import { ANCHOR_POSITION, type DimensionModes, SIZING_MODE } from './types'
@@ -86,7 +86,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
     :style="{ ...containerStyle }"
     :aria-label="_t('Widget')"
   >
-    <MissingRuntimeFiltersMsg>
+    <MissingFiltersMsg>
       <div :style="{ position: 'relative', height: '100%', width: '100%', zIndex: zIndex }">
         <DashboardContent v-bind="contentProps" />
 
@@ -190,7 +190,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
           </div>
         </div>
       </div>
-    </MissingRuntimeFiltersMsg>
+    </MissingFiltersMsg>
   </div>
 </template>
 

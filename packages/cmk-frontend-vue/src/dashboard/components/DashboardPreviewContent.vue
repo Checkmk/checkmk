@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import MissingRuntimeFiltersMsg from '@/dashboard/components/DashboardFilterSettings/runtime-filter/MissingRuntimeFiltersMsg.vue'
+import MissingFiltersMsg from '@/dashboard/components/DashboardFilterSettings/MissingFiltersMsg.vue'
 
 import DashboardContent from './DashboardContent/DashboardContent.vue'
 import type { ContentProps } from './DashboardContent/types.ts'
@@ -14,11 +14,11 @@ defineProps<ContentProps>()
 
 <template>
   <div class="db-preview-content">
-    <MissingRuntimeFiltersMsg render-context="configurationPreview">
+    <MissingFiltersMsg render-context="configurationPreview">
       <div class="db-preview-content__click-shield">
         <DashboardContent v-bind="$props" />
       </div>
-    </MissingRuntimeFiltersMsg>
+    </MissingFiltersMsg>
   </div>
 </template>
 

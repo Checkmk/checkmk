@@ -53,6 +53,7 @@ import type {
 } from '@/dashboard/types/widget'
 import { dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
 
+import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 import DashboardSharingWizard from './components/Wizard/wizards/dashboard-sharing/DashboardSharingWizard.vue'
 
@@ -74,6 +75,7 @@ const openWizard = ref(false)
 const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
+const isCloned = ref(false)
 
 const dashboardFilterSettingsStartingWindow = ref<'runtime-filters' | 'filter-configuration'>(
   'runtime-filters'
@@ -333,8 +335,7 @@ const createDashboard = async (
 const cloneDashboard = async (
   dashboardId: string,
   generalSettings: DashboardGeneralSettings,
-  layout: DashboardLayout,
-  nextStep: 'setFilters' | 'viewList'
+  layout: DashboardLayout
 ) => {
   const key = dashboardsManager.activeDashboardKey.value
   if (!key) {
@@ -361,23 +362,25 @@ const cloneDashboard = async (
       )
       newOwner = response.extensions.owner
     }
-    if (nextStep === 'setFilters') {
-      const newKey: DashboardKey = {
-        name: dashboardId,
-        owner: newOwner
-      }
-      await setAsActiveDashboard(newKey, layout)
-      await nextTick()
-      openDashboardFilterSettings.value = true
-    } else if (nextStep === 'viewList') {
-      redirectToListDashboardsPage()
-    } else {
-      throw new Error(`Unknown next step: ${nextStep}`)
+
+    const newKey: DashboardKey = {
+      name: dashboardId,
+      owner: newOwner
     }
+    await setAsActiveDashboard(newKey, layout)
+    await nextTick()
+
+    isCloned.value = true
   } finally {
     isCloning.value = false
   }
 }
+
+const dashboardHasFilters = computed(
+  () =>
+    Object.keys(dashboardsManager.activeDashboard.value?.model?.filter_context?.filters || {})
+      .length > 0
+)
 
 const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards
@@ -554,6 +557,11 @@ function deepClone<T>(obj: T): T {
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">
+      <CloneSuccessAlert
+        v-if="isCloned"
+        :has-filters="dashboardHasFilters"
+        @edit-filters="openDashboardFilterSettings = true"
+      />
       <AddWidgetPage
         v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
         :workflow-items="dashboardWidgetWorkflows"

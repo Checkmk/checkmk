@@ -331,7 +331,6 @@ STAGES:
               -//packages/neb/... \
               -//packages/unixcat/... \
               -//packages/cmk-frontend/... \
-              -//packages/cmk-ccc/... \
               //non-free/packages/... \
               -//non-free/packages/cmc/... \
               -//non-free/packages/cmk-relay-engine/... \
@@ -612,7 +611,7 @@ STAGES:
     - NAME: "Package cmk-ccc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-ccc"
-      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-ccc.txt"
+      COMMAND: "./run --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-ccc.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-ccc files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-ccc.txt"

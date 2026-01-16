@@ -156,6 +156,13 @@ class EmailManager:
         return dict_result
 
     def clean_emails(self, email_subject: str | None = None) -> None:
+        if not self.unread_folder.exists():
+            logger.info(
+                "Skipping emails cleaning because unread folder ('%s') does not exist",
+                self.unread_folder,
+            )
+            return
+
         while file_path := self.find_email_by_subject(email_subject):
             file_path.unlink()
 

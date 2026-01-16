@@ -40,6 +40,9 @@ class BaseNotificationPage(QuickSetupPage):
 
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
+        self.page.wait_for_url(
+            url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
+        )
         self.main_area.check_page_title(self.page_title)
         expect(self.overview_mode_button).to_be_visible()
 
@@ -311,6 +314,14 @@ class BaseNotificationPage(QuickSetupPage):
         logger.info("Save the changes")
         self.apply_and_create_another_rule_button.click()
 
+        self.validate_page()
+
+        success_message = "Notification rule successfully edited!"
+        expect(
+            self.main_area.page_menu_popups,
+            message=f"'{success_message}' message not displayed",
+        ).to_contain_text(success_message)
+
 
 class EditNotificationRule(BaseNotificationPage):
     """Represent the 'Edit notification rule' page.
@@ -337,9 +348,6 @@ class EditNotificationRule(BaseNotificationPage):
         # The scrollbar interrupts the interaction with rule edit button -> -> collapse overview
         notification_configuration_page.collapse_notification_overview(True)
         notification_configuration_page.notification_rule_edit_button(self.rule_position).click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
-        )
         self.validate_page()
 
 
@@ -362,9 +370,6 @@ class AddNotificationRule(BaseNotificationPage):
     def navigate(self) -> None:
         notification_configuration_page = NotificationConfiguration(self.page)
         notification_configuration_page.add_notification_rule_button.click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
-        )
         self.validate_page()
 
     @property

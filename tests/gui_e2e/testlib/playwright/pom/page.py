@@ -390,11 +390,11 @@ class MainArea(LocatorHelper):
         return self.locator("table#page_menu_bar")
 
     @property
-    def _page_menu_popups(self) -> Locator:
+    def page_menu_popups(self) -> Locator:
         return self.locator("div#page_menu_popups")
 
     def get_confirmation_popup_button(self, button_name: str) -> Locator:
-        return self._page_menu_popups.locator("div.confirm_container").get_by_role(
+        return self.page_menu_popups.locator("div.confirm_container").get_by_role(
             "button", name=button_name
         )
 

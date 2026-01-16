@@ -21,7 +21,8 @@ const buttonVariants = cva('', {
     group: {
       no: '',
       start: 'cmk-dropdown-button--group-start',
-      end: 'cmk-dropdown-button--variant-group-end'
+      end: 'cmk-dropdown-button--variant-group-end',
+      center: 'cmk-dropdown-button--group-start cmk-dropdown-button--variant-group-end'
     },
     width: {
       default: '',

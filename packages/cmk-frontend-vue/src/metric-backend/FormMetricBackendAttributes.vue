@@ -10,10 +10,11 @@ import {
   type GraphLineQueryAttributes
 } from 'cmk-shared-typing/typescript/graph_designer'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkIndent from '@/components/CmkIndent.vue'
 import CmkList from '@/components/CmkList'
 
 import FormMetricBackendCustomQueryAttribute, {
@@ -28,14 +29,22 @@ const props = withDefaults(
     disableValuesOnEmptyKey?: boolean
     strict?: boolean
     staticResourceAttributeKeys?: string[] | null
+    indent?: boolean
+    orientation?: 'horizontal' | 'vertical'
   }>(),
   {
     metricName: null,
     disableValuesOnEmptyKey: false,
     strict: false,
-    staticResourceAttributeKeys: null
+    staticResourceAttributeKeys: null,
+    indent: false,
+    orientation: 'horizontal'
   }
 )
+
+const valueCellComponent = computed(() => (props.indent ? CmkIndent : 'div'))
+const labelCellComponent = computed(() => (props.indent ? 'div' : 'td'))
+const valueCellWrapperComponent = computed(() => (props.indent ? 'div' : 'td'))
 
 const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
   default: []
@@ -283,94 +292,114 @@ function deleteDataPointAttribute(index: number) {
 
 <template>
   <tr>
-    <td>{{ _t('Resource attributes') }}</td>
-    <td>
-      <CmkList
-        :items-props="{ itemData: resourceAttributes }"
-        orientation="horizontal"
-        :try-delete="deleteResourceAttribute"
-      >
-        <template #item-props="{ index, itemData }">
-          <FormMetricBackendCustomQueryAttribute
-            :model-value="itemData"
-            :autocompleter-getter="
-              (key: string | null, isForKey: boolean) =>
-                resourceAttributesAutocompleter(key, isForKey, index)
-            "
-            :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-            @update:model-value="addResourceAttribute"
-          />
-        </template>
-      </CmkList>
-      <FormMetricBackendCustomQueryAttribute
-        v-model="resourceAttribute"
-        :autocompleter-getter="resourceAttributesAutocompleter"
-        :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-        @update:model-value="addResourceAttribute"
-      />
-    </td>
+    <component
+      :is="labelCellComponent"
+      class="metric-backend-form-metric-backend-attributes__label-cell"
+    >
+      {{ _t('Resource attributes') }}
+    </component>
+    <component :is="valueCellWrapperComponent">
+      <component :is="valueCellComponent">
+        <CmkList
+          :items-props="{ itemData: resourceAttributes }"
+          :orientation="props.orientation"
+          :try-delete="deleteResourceAttribute"
+        >
+          <template #item-props="{ index, itemData }">
+            <FormMetricBackendCustomQueryAttribute
+              :model-value="itemData"
+              :autocompleter-getter="
+                (key: string | null, isForKey: boolean) =>
+                  resourceAttributesAutocompleter(key, isForKey, index)
+              "
+              :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
+              @update:model-value="addResourceAttribute"
+            />
+          </template>
+        </CmkList>
+        <FormMetricBackendCustomQueryAttribute
+          v-model="resourceAttribute"
+          :autocompleter-getter="resourceAttributesAutocompleter"
+          :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
+          @update:model-value="addResourceAttribute"
+        />
+      </component>
+    </component>
   </tr>
   <tr>
-    <td>{{ _t('Scope attributes') }}</td>
-    <td>
-      <CmkList
-        :items-props="{ itemData: scopeAttributes }"
-        orientation="horizontal"
-        :try-delete="deleteScopeAttribute"
-      >
-        <template #item-props="{ index, itemData }">
-          <FormMetricBackendCustomQueryAttribute
-            :model-value="itemData"
-            :autocompleter-getter="
-              (key: string | null, isForKey: boolean) =>
-                scopeAttributesAutocompleter(key, isForKey, index)
-            "
-            :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-            @update:model-value="addScopeAttribute"
-          />
-        </template>
-      </CmkList>
-      <FormMetricBackendCustomQueryAttribute
-        v-model="scopeAttribute"
-        :autocompleter-getter="scopeAttributesAutocompleter"
-        :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-        @update:model-value="addScopeAttribute"
-      />
-    </td>
+    <component
+      :is="labelCellComponent"
+      class="metric-backend-form-metric-backend-attributes__label-cell"
+    >
+      {{ _t('Scope attributes') }}
+    </component>
+    <component :is="valueCellWrapperComponent">
+      <component :is="valueCellComponent">
+        <CmkList
+          :items-props="{ itemData: scopeAttributes }"
+          :orientation="props.orientation"
+          :try-delete="deleteScopeAttribute"
+        >
+          <template #item-props="{ index, itemData }">
+            <FormMetricBackendCustomQueryAttribute
+              :model-value="itemData"
+              :autocompleter-getter="
+                (key: string | null, isForKey: boolean) =>
+                  scopeAttributesAutocompleter(key, isForKey, index)
+              "
+              :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
+              @update:model-value="addScopeAttribute"
+            />
+          </template>
+        </CmkList>
+        <FormMetricBackendCustomQueryAttribute
+          v-model="scopeAttribute"
+          :autocompleter-getter="scopeAttributesAutocompleter"
+          :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
+          @update:model-value="addScopeAttribute"
+        />
+      </component>
+    </component>
   </tr>
   <tr>
-    <td>{{ _t('Data point attributes') }}</td>
-    <td>
-      <CmkList
-        :items-props="{ itemData: dataPointAttributes }"
-        orientation="horizontal"
-        :try-delete="deleteDataPointAttribute"
-      >
-        <template #item-props="{ index, itemData }">
-          <FormMetricBackendCustomQueryAttribute
-            :model-value="itemData"
-            :autocompleter-getter="
-              (key: string | null, isForKey: boolean) =>
-                dataPointAttributesAutocompleter(key, isForKey, index)
-            "
-            :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-            @update:model-value="addDataPointAttribute"
-          />
-        </template>
-      </CmkList>
-      <FormMetricBackendCustomQueryAttribute
-        v-model="dataPointAttribute"
-        :autocompleter-getter="dataPointAttributesAutocompleter"
-        :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-        @update:model-value="addDataPointAttribute"
-      />
-    </td>
+    <component
+      :is="labelCellComponent"
+      class="metric-backend-form-metric-backend-attributes__label-cell"
+    >
+      {{ _t('Data point attributes') }}
+    </component>
+    <component :is="valueCellWrapperComponent">
+      <component :is="valueCellComponent">
+        <CmkList
+          :items-props="{ itemData: dataPointAttributes }"
+          :orientation="props.orientation"
+          :try-delete="deleteDataPointAttribute"
+        >
+          <template #item-props="{ index, itemData }">
+            <FormMetricBackendCustomQueryAttribute
+              :model-value="itemData"
+              :autocompleter-getter="
+                (key: string | null, isForKey: boolean) =>
+                  dataPointAttributesAutocompleter(key, isForKey, index)
+              "
+              :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
+              @update:model-value="addDataPointAttribute"
+            />
+          </template>
+        </CmkList>
+        <FormMetricBackendCustomQueryAttribute
+          v-model="dataPointAttribute"
+          :autocompleter-getter="dataPointAttributesAutocompleter"
+          :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
+          @update:model-value="addDataPointAttribute"
+        />
+      </component>
+    </component>
   </tr>
 </template>
 
 <style scoped>
-div {
-  display: inline-block;
-  margin-right: 1px;
+.metric-backend-form-metric-backend-attributes__label-cell {
+  vertical-align: top;
 }
 </style>

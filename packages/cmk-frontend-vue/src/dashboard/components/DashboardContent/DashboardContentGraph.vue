@@ -54,6 +54,9 @@ const handleRefreshData = (widgetId: string, body: string) => {
 }
 
 const updateGraph = () => {
+  if (sizeVars.value.width === '0' || sizeVars.value.height === '0') {
+    return
+  }
   cmkToolkit.ajax.call_ajax(dataEndpointUrl.value, {
     post_data: new URLSearchParams({ ...httpVars.value, ...sizeVars.value }).toString(),
     method: 'POST',

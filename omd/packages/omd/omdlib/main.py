@@ -3197,7 +3197,7 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteContext:
+def _site_environment(site_name: str, switch: bool, verbose: bool) -> SiteContext:
     site = SiteContext(site_name)
     site.set_config(load_config(site, verbose))
 
@@ -3205,7 +3205,7 @@ def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteCo
     # site user should always run with site user privileges. That way
     # we are sure that new files and processes are created under the
     # site user and never as root.
-    if not command.no_suid and is_root() and not command.only_root:
+    if switch:
         switch_to_site_user(site.name)
 
     # Make sure environment is in a defined state
@@ -3324,7 +3324,11 @@ def main() -> None:
     site = (
         RootContext()
         if site_name is None
-        else _site_environment(site_name, command, global_opts.verbose)
+        else _site_environment(
+            site_name,
+            not command.no_suid and is_root() and not command.only_root,
+            global_opts.verbose,
+        )
     )
 
     _run_command(

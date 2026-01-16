@@ -27,6 +27,7 @@ def test_registered_ac_tests() -> None:
     expected_ac_tests = [
         "ACTestApacheNumberOfProcesses",
         "ACTestApacheProcessUsage",
+        "ACTestAutomationUserSecret",
         "ACTestBackupConfigured",
         "ACTestBackupNotEncryptedConfigured",
         "ACTestBrokenGUIExtension",

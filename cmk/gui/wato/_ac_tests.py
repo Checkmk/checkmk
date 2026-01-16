@@ -29,12 +29,15 @@ from cmk.gui.backup.handler import BackupConfig
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
     is_distributed_setup_remote_site,
 )
+from cmk.gui.type_defs import Users
 from cmk.gui.userdb import get_user_attributes, htpasswd
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
@@ -104,6 +107,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestDeprecatedPNPTemplates)
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
+    ac_test_registry.register(ACTestAutomationUserSecret)
 
 
 class ACTestPersistentConnections(ACTest):
@@ -1797,3 +1801,79 @@ class ACTestCheckMKCheckerNumber(ACTest):
             text=_("Number of Checkmk checkers is less than number of CPUs"),
             site_id=site_id,
         )
+
+
+# We consider a permission as dangerous if we can run arbitrary code with that permission.
+# The wato.users can change permissions so we include it here as well.
+DANGEROUS_PERMISSIONS: frozenset[str] = frozenset(
+    {
+        "wato.add_or_modify_executables",
+        "wato.automation",
+        "wato.backups",
+        "wato.users",
+        "wato.manage_mkps",
+    }
+)
+
+
+class ACTestAutomationUserSecret(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.security
+
+    def title(self) -> str:
+        return _("Stored secrets for automation users")
+
+    def help(self) -> str:
+        return _(
+            "With 2.4.0 (Werk #17344) it was made optional to store the secret of an automation user. "
+            "We do not recommend to store the secret for automation users with high privileges."
+        )
+
+    def is_relevant(self) -> bool:
+        return True
+
+    @staticmethod
+    def get_flagged_users(
+        user_permissions: UserPermissions, user_db: Users
+    ) -> dict[UserId, list[str]]:
+        return {
+            user_id: sorted(dps)
+            for user_id, user_spec in user_db.items()
+            if user_spec.get("store_automation_secret", False)
+            and (
+                dps := [
+                    dp for dp in DANGEROUS_PERMISSIONS if user_permissions.user_may(user_id, dp)
+                ]
+            )
+        }
+
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        flagged_users = self.get_flagged_users(
+            UserPermissions.from_config(config, permission_registry),
+            userdb.load_users(),
+        )
+
+        if not flagged_users:
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_(
+                    "No automation users with stored secrets have dangerous permissions configured"
+                ),
+                site_id=site_id,
+            )
+            return
+
+        for user_id, dangerous_perms in flagged_users.items():
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_("Automation user %s has stored secret with %d dangerous permission(s): %s")
+                % (
+                    user_id,
+                    len(dangerous_perms),
+                    ", ".join(
+                        (perm.title if (perm := permission_registry.get(p)) else p)
+                        for p in dangerous_perms
+                    ),
+                ),
+                site_id=site_id,
+            )

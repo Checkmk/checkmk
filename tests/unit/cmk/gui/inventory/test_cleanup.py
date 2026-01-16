@@ -136,7 +136,7 @@ class _FilesNoHistory:
     status_data_tree: TreePath
 
 
-def _setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArchiveFile:
+def _legacy_setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArchiveFile:
     inv_paths = InventoryPaths(tmp_path)
     host_name = HostName("hostname")
 
@@ -167,8 +167,8 @@ def _setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArchiveFil
     )
 
 
-def test_one_archive(tmp_path: Path) -> None:
-    files = _setup_one_archive_file(tmp_path, timestamp=100)
+def test_legacy_one_archive(tmp_path: Path) -> None:
+    files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -186,8 +186,8 @@ def test_one_archive(tmp_path: Path) -> None:
     assert files.archive_tree.legacy.exists()
 
 
-def test_one_archive_file_file_age(tmp_path: Path) -> None:
-    files = _setup_one_archive_file(tmp_path, timestamp=100)
+def test_legacy_one_archive_file_file_age(tmp_path: Path) -> None:
+    files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -210,8 +210,8 @@ def test_one_archive_file_file_age(tmp_path: Path) -> None:
     assert not files.archive_tree.legacy.exists()
 
 
-def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
-    files = _setup_one_archive_file(tmp_path, timestamp=100)
+def test_legacy_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
+    files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -234,8 +234,8 @@ def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
     assert files.archive_tree.legacy.exists()
 
 
-def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
-    files = _setup_one_archive_file(tmp_path, timestamp=100)
+def test_legacy_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
+    files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -265,8 +265,8 @@ def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path)
     assert not files.archive_tree.legacy.exists()
 
 
-def test_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
-    files = _setup_one_archive_file(tmp_path, timestamp=100)
+def test_legacy_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
+    files = _legacy_setup_one_archive_file(tmp_path, timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -296,7 +296,7 @@ def test_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) 
     assert not files.archive_tree.legacy.exists()
 
 
-def _setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Files:
+def _legacy_setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Files:
     inv_paths = InventoryPaths(tmp_path)
 
     inventory_tree = inv_paths.inventory_tree(host_name)
@@ -354,8 +354,8 @@ def _setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Fil
     )
 
 
-def test_file_age(tmp_path: Path) -> None:
-    files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
+def test_legacy_file_age(tmp_path: Path) -> None:
+    files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -386,8 +386,8 @@ def test_file_age(tmp_path: Path) -> None:
     assert not files.delta_cache_tree_4_ts.legacy.exists()
 
 
-def test_number_of_history_entries(tmp_path: Path) -> None:
-    files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
+def test_legacy_number_of_history_entries(tmp_path: Path) -> None:
+    files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -418,8 +418,8 @@ def test_number_of_history_entries(tmp_path: Path) -> None:
     assert not files.delta_cache_tree_4_ts.legacy.exists()
 
 
-def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
-    files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
+def test_legacy_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
+    files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -457,8 +457,8 @@ def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
     assert not files.delta_cache_tree_4_ts.legacy.exists()
 
 
-def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
-    files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
+def test_legacy_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
+    files = _legacy_setup_files(tmp_path, HostName("hostname"), timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -496,9 +496,9 @@ def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
     assert not files.delta_cache_tree_4_ts.legacy.exists()
 
 
-def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
-    known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
-    unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
+def test_legacy_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
+    known_files = _legacy_setup_files(tmp_path, HostName("known"), timestamp=100)
+    unknown_files = _legacy_setup_files(tmp_path, HostName("unknown"), timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -538,9 +538,9 @@ def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
     assert not unknown_files.delta_cache_tree_4_ts.legacy.parent.exists()
 
 
-def test_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
-    known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
-    unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
+def test_legacy_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
+    known_files = _legacy_setup_files(tmp_path, HostName("known"), timestamp=100)
+    unknown_files = _legacy_setup_files(tmp_path, HostName("unknown"), timestamp=100)
     InventoryCleanup(tmp_path)._run(
         Config(
             inventory_cleanup=InvCleanupParams(
@@ -578,7 +578,7 @@ def test_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
     assert unknown_files.delta_cache_tree_4_ts.legacy.exists()
 
 
-def _setup_files_no_history(
+def _legacy_setup_files_no_history(
     tmp_path: Path, host_name: HostName, *, timestamp: int
 ) -> _FilesNoHistory:
     inv_paths = InventoryPaths(tmp_path)
@@ -605,10 +605,10 @@ def _setup_files_no_history(
     )
 
 
-def test_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> None:
-    known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
-    unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    unknown_files_no_history = _setup_files_no_history(
+def test_legacy_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> None:
+    known_files = _legacy_setup_files(tmp_path, HostName("known"), timestamp=100)
+    unknown_files = _legacy_setup_files(tmp_path, HostName("unknown"), timestamp=100)
+    unknown_files_no_history = _legacy_setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=99
     )
     InventoryCleanup(tmp_path)._run(
@@ -651,10 +651,10 @@ def test_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> None:
     assert not unknown_files_no_history.status_data_tree.legacy.exists()
 
 
-def test_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
-    known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
-    unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    unknown_files_no_history = _setup_files_no_history(
+def test_legacy_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
+    known_files = _legacy_setup_files(tmp_path, HostName("known"), timestamp=100)
+    unknown_files = _legacy_setup_files(tmp_path, HostName("unknown"), timestamp=100)
+    unknown_files_no_history = _legacy_setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=100
     )
     InventoryCleanup(tmp_path)._run(

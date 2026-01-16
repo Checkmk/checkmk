@@ -8,7 +8,10 @@ from pathlib import Path
 import pytest
 
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import (
+    ServiceSearchPage,
+    ServiceState,
+)
 from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
 from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration import (
     NotificationConfiguration,
@@ -138,7 +141,7 @@ def test_add_new_notification_rule(
         logger.info("Reschedule the '%s' service to trigger the notification", checkmk_agent)
         service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
         service_search_page.reschedule_check(host_name, checkmk_agent)
-        service_search_page.wait_for_check_status_update(host_name, service_name, "warn/crit at")
+        service_search_page.wait_for_check_status_update(host_name, service_name, ServiceState.WARN)
 
         logger.info("Waiting for email %s from for user %s", username, email)
         email_manager.wait_for_email(expected_notification_subject)
@@ -160,4 +163,11 @@ def test_add_new_notification_rule(
             logger.info("Delete the filesystems rule")
             filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
             filesystems_rules_page.activate_changes(test_site)
-            test_site.schedule_check(host_name, checkmk_agent)
+
+            # Expect for the service to be OK after rule removal
+            service_search_page.navigate()
+            service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
+            service_search_page.reschedule_check(host_name, checkmk_agent)
+            service_search_page.wait_for_check_status_update(
+                host_name, service_name, ServiceState.OK
+            )

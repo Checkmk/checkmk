@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import configparser
 import json
 import os
 import sys
@@ -13,7 +14,12 @@ from typing import Literal, TypedDict, Union
 
 __version__ = "2.6.0b1"
 
-DEFAULT_CFG_PATH = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman_cfg.json"
+DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman.cfg"
+
+DEFAULT_CFG_SECTION = {
+    "socket_detection_method": "auto",
+    "socket_paths": "",
+}
 
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
 
@@ -28,21 +34,31 @@ class PodmanConfig(TypedDict):
     socket_detection: Union[AutomaticSocketDetectionMethod, tuple[Literal["manual"], Sequence[str]]]
 
 
-def load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> Union[PodmanConfig, None]:
-    if not cfg_file_path.is_file():
+def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
+    config = configparser.ConfigParser(DEFAULT_CFG_SECTION)
+
+    if not cfg_file.is_file():
         return None
+
     try:
-        data = json.loads(cfg_file_path.read_text())
-        return PodmanConfig(
-            socket_detection=tuple(data["socket_detection"])
-            if isinstance(data["socket_detection"], list)
-            else AutomaticSocketDetectionMethod(data["socket_detection"]),
-        )
+        config.read(cfg_file)
+        section_name = "PODMAN" if config.sections() else "DEFAULT"
+        conf_dict = dict(config.items(section_name))
+
+        method = conf_dict["socket_detection_method"]
+        socket_paths_str = conf_dict["socket_paths"]
+
+        if method == "manual" and socket_paths_str:
+            socket_paths = [p.strip() for p in socket_paths_str.split(",") if p.strip()]
+            return PodmanConfig(socket_detection=("manual", socket_paths))
+
+        return PodmanConfig(socket_detection=AutomaticSocketDetectionMethod(method))
+
     except Exception as e:
         write_section(
             Error(
                 "config",
-                f"Failed to load config file {cfg_file_path}: {e}. Using 'auto' method as default.",
+                f"Failed to load config file {cfg_file}: {e}. Using 'auto' method as default.",
             )
         )
         return None

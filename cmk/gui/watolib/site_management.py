@@ -21,7 +21,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
-from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login, remote_automation_config_from_site_config
 from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.changes import add_change
@@ -134,7 +133,7 @@ def add_changes_after_editing_broker_connection(
     is_new_broker_connection: bool,
     sites: list[SiteId],
     use_git: bool,
-) -> LogMessage:
+) -> str:
     change_message = (
         _("Created new peer-to-peer broker connection ID %s") % connection_id
         if is_new_broker_connection
@@ -163,7 +162,7 @@ def add_changes_after_editing_site_connection(
     is_local_site: bool,
     connected_sites: Set[SiteId],
     use_git: bool,
-) -> LogMessage:
+) -> str:
     change_message = (
         _("Created new connection to site %s") % site_id
         if is_new_connection

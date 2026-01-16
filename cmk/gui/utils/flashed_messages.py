@@ -19,7 +19,6 @@ import flask
 
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.speaklater import LazyString
 
 MsgType = Literal["message", "waiting", "warning", "error", "info"]
 
@@ -32,7 +31,7 @@ def _parse_valid_msg_type(val: str) -> MsgType:
 
 
 def flash(
-    message: str | HTML | LazyString,
+    message: str | HTML,
     msg_type: MsgType = "message",
 ) -> None:
     """To handle both, HTML and str, correctly we need to
@@ -43,10 +42,10 @@ def flash(
     Before handing back the messages to the consumer, all need to converted back to HTML
     (see get_flashed_messages())
     """
-    if isinstance(message, str):
-        normalized = escape_text(message)
-    else:
+    if isinstance(message, HTML):
         normalized = str(message)
+    else:
+        normalized = escape_text(message)
     flask.flash(normalized, msg_type)
 
 

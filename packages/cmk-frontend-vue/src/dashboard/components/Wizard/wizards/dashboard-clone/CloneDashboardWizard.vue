@@ -49,8 +49,7 @@ const emit = defineEmits<{
   'clone-dashboard': [
     dashboardId: string,
     settings: DashboardGeneralSettings,
-    layout: DashboardLayout,
-    nextStep: 'setFilters' | 'viewList'
+    layout: DashboardLayout
   ]
   'cancel-clone': []
 }>()
@@ -120,27 +119,9 @@ const validate = async (): Promise<boolean> => {
   return await validateGeneralSettings()
 }
 
-const cloneAndSetFilters = async () => {
+const clone = async () => {
   if (await validate()) {
-    emit(
-      'clone-dashboard',
-      uniqueId.value.trim(),
-      buildSettings(),
-      dashboardLayout.value,
-      'setFilters'
-    )
-  }
-}
-
-const cloneAndViewList = async () => {
-  if (await validate()) {
-    emit(
-      'clone-dashboard',
-      uniqueId.value.trim(),
-      buildSettings(),
-      dashboardLayout.value,
-      'viewList'
-    )
+    emit('clone-dashboard', uniqueId.value.trim(), buildSettings(), dashboardLayout.value)
   }
 }
 
@@ -157,17 +138,7 @@ const cancel = () => {
       <ContentSpacer />
 
       <ActionBar>
-        <ActionButton
-          variant="primary"
-          :label="_t('Clone & review dashboard filters')"
-          :action="cloneAndSetFilters"
-        />
-
-        <ActionButton
-          variant="secondary"
-          :label="_t('Clone & view list')"
-          :action="cloneAndViewList"
-        />
+        <ActionButton variant="primary" :label="_t('Clone')" :action="clone" />
 
         <ActionButton
           variant="secondary"

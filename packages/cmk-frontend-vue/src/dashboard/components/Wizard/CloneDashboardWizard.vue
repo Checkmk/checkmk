@@ -44,8 +44,7 @@ const emit = defineEmits<{
   'clone-dashboard': [
     dashboardId: string,
     generalSettings: DashboardGeneralSettings,
-    layout: DashboardLayout,
-    nextStep: 'setFilters' | 'viewList'
+    layout: DashboardLayout
   ]
   'cancel-clone': []
 }>()

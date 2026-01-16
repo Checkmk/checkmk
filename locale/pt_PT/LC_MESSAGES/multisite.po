@@ -46064,7 +46064,8 @@ msgstr "Utilização da memória da GPU da Nvidia"
 msgid "Nvidia GPU Power"
 msgstr "Potência da GPU Nvidia"
 
-msgid "Nvidia GPU monitoring (Windows)"
+#, fuzzy
+msgid "Nvidia GPU monitoring (Linux, Windows)"
 msgstr "Monitorização de GPU da Nvidia (Windows)"
 
 msgid "Nvidia GPU utilization"
@@ -49440,7 +49441,8 @@ msgstr "Caminho para as categorias"
 msgid "Path to ceph.conf"
 msgstr "Caminho para as categorias"
 
-msgid "Path to nvidia-smi.exe"
+#, fuzzy
+msgid "Path to nvidia-smi.exe (Windows only)"
 msgstr "Caminho para nvidia-smi.exe"
 
 msgid "Path to sapgenpse"
@@ -52249,9 +52251,12 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Coloque aqui o nome da base de dados, por exemplo, SATURN\\ARCSERVE_DB"
 
+#, fuzzy
 msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program "
-"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. Under Linux, the relevant "
+"executable is usually defined in the PATH variable. Therefore, this setting "
+"is ignored under Linux."
 msgstr ""
 "Coloque o caminho para o executável nvidia-smi.exe aqui, por exemplo, C:"
 "\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"

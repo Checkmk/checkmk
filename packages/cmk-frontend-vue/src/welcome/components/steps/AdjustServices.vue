@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
@@ -99,6 +100,13 @@ const currentStep: Ref<number> = usePersistentRef<number>(
             <CmkIcon name="check-parameters" variant="inline" size="small" />{{
               _t('-icon next to it to open the corresponding ruleset.')
             }}
+            <CmkHelpText
+              :help="
+                _t(
+                  'This icon is only visible after the service has been added to monitoring and is listed under <b>Monitored services</b>'
+                )
+              "
+            />
           </StepParagraph>
         </template>
         <template #actions>

@@ -111,6 +111,11 @@ onBeforeMount(async () => {
     } finally {
       isDashboardLoading.value = false
     }
+
+    if (dashboardsManager.activeDashboard.value?.metadata?.is_built_in) {
+      isDashboardEditingMode.value = false
+    }
+
     dashboardFilters.handleApplyRuntimeFilters(dashboard.filter_context.context)
     if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
       openDashboardFilterSettings.value = true
@@ -134,7 +139,7 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
 })
 
 watch(dashboardsManager.activeDashboard, (value) => {
-  selectedDashboardBreadcrumb.value = value?.metadata.display.topic.breadcrumb ?? null
+  selectedDashboardBreadcrumb.value = value?.metadata?.display?.topic?.breadcrumb ?? null
 })
 
 const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
@@ -450,7 +455,9 @@ function deepClone<T>(obj: T): T {
         v-model:is-edit-mode="isDashboardEditingMode"
         :selected-dashboard="selectedDashboard"
         :is-dashboard-loading="isDashboardLoading"
-        :can-edit-dashboard="dashboardsManager.activeDashboard.value?.metadata.is_editable ?? false"
+        :can-edit-dashboard="
+          dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
+        "
         :link-user-guide="props.links.user_guide"
         :link-navigation-embedding-page="props.links.navigation_embedding_page"
         :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
@@ -535,8 +542,8 @@ function deepClone<T>(obj: T): T {
         :configured-runtime-filters-mode="
           dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
         "
-        :can-edit="dashboardsManager.activeDashboard.value?.metadata.is_editable ?? false"
-        :is-built-in="dashboardsManager.activeDashboard.value?.metadata.is_built_in ?? false"
+        :can-edit="dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false"
+        :is-built-in="dashboardsManager.activeDashboard.value?.metadata?.is_built_in ?? false"
         :starting-window="dashboardFilterSettingsStartingWindow"
         @apply-runtime-filters="handleApplyRuntimeFilters"
         @save-filter-settings="handleSaveFilterSettings"

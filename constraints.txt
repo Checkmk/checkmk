@@ -5,7 +5,7 @@ pytest<8.4 # breaking changes with pytest-playwright CMK-24472
 marshmallow<4 # breaking changes CMK-25251
 time-machine<3.0.0 # breaks agent-receiver tests CMK-27768
 pysnmp<7.0.0 # CMK-27817
-datamodel-code-generator==0.39.0  # CMK-28525
+datamodel-code-generator==0.42.0 #CMK-29509
 mypy-protobuf==3.7.0  # CMK-28939
 types-lxml==2025.11.25  # CMK-28940
 google-cloud-asset==4.1.0  # CMK-29107

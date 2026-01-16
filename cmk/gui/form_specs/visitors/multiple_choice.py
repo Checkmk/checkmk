@@ -148,6 +148,7 @@ class MultipleChoiceVisitor(
                 help=help_text,
                 elements=elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
+                show_toggle_all=self.form_spec.show_toggle_all,
                 i18n=self._get_i18n(),
             ),
             [] if isinstance(parsed_value, InvalidValue) else parsed_value,

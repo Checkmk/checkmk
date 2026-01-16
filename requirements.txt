@@ -955,9 +955,8 @@ cycler==0.12.1 \
     --hash=sha256:85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30 \
     --hash=sha256:88bb128f02ba341da8ef447245a9e138fae777f6a23943da4540077d3601eb1c
     # via matplotlib
-datamodel-code-generator==0.39.0 \
-    --hash=sha256:d08b5f9cce8fff2b57784c8f1d737fa91ad22ac621a6a732946307730f24f887 \
-    --hash=sha256:f08cd8cf826d3556f638989af4851037026a93cfb846aa6429b13cd622714775
+datamodel-code-generator==0.42.0 \
+    --hash=sha256:ce0ba9cc21ead530e54daa2f5b8ab7dbdc1531edfbf8fbd3ad1a4ab1815b2663
     # via
     #   -c constraints.txt
     #   -r tests/dev-requirements.in

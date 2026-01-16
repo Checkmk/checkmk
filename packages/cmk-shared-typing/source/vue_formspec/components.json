@@ -168,7 +168,7 @@
               "type": "string"
             }
           },
-          "required": ["type", "html", "varprefix"]
+          "required": ["type", "varprefix"]
         }
       ]
     },
@@ -208,7 +208,7 @@
               ]
             }
           },
-          "required": ["label", "placeholder", "input_hint", "field_size", "autocompleter"]
+          "required": ["label", "input_hint", "field_size", "autocompleter"]
         }
       ],
       "required": ["type"]
@@ -455,13 +455,7 @@
               "type": ["object", "null"]
             }
           },
-          "required": [
-            "elements",
-            "static_elements_key",
-            "additional_static_elements",
-            "no_elements_text",
-            "groups"
-          ]
+          "required": ["elements", "additional_static_elements", "no_elements_text", "groups"]
         }
       ],
       "required": ["type"]
@@ -503,7 +497,6 @@
           "required": [
             "type",
             "elements",
-            "static_elements_key",
             "additional_static_elements",
             "no_elements_text",
             "groups"
@@ -993,7 +986,14 @@
               "default": "metric_backend_custom_query"
             },
             "metric_name": {
-              "oneOf": [{ "type": "null" }, { "type": "string" }]
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "resource_attributes": {
               "$ref": "#/$defs/metric_backend_attributes"
@@ -1236,11 +1236,15 @@
             {
               "type": "object",
               "properties": {
-                "message": { "type": "string" }
+                "message": {
+                  "type": "string"
+                }
               },
               "required": ["message"]
             },
-            { "type": "null" }
+            {
+              "type": "null"
+            }
           ]
         }
       },
@@ -1329,7 +1333,7 @@
               "type": ["number", "null"]
             }
           },
-          "required": ["type", "displayed_magnitudes", "label", "i18n", "prefill", "input_hint"]
+          "required": ["type", "displayed_magnitudes", "label", "i18n", "input_hint"]
         }
       ]
     },

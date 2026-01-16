@@ -9,7 +9,6 @@ import re
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime
 from ipaddress import ip_address, ip_network
 from pathlib import Path
 from typing import Final, Literal
@@ -248,9 +247,7 @@ class SiteCA:
         key_size: int,
     ) -> SiteCA:
         ca = CertificateWithPrivateKey.generate_self_signed(
-            common_name=(
-                f"{CN_TEMPLATE.format(site=site_id)} {datetime.now().isoformat(timespec='seconds')}"
-            ),
+            common_name=(f"{CN_TEMPLATE.format(site=site_id)}"),
             organization=f"Checkmk Site {site_id}",
             expiry=expiry,
             key_size=key_size,

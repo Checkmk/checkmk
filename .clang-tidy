@@ -22,7 +22,6 @@ Checks: >
   -cppcoreguidelines-special-member-functions,
   -misc-include-cleaner,
   -misc-non-private-member-variables-in-classes,
-  -modernize-use-designated-initializers,
   -modernize-use-trailing-return-type,
   -performance-enum-size,
   -readability-avoid-nested-conditional-operator,

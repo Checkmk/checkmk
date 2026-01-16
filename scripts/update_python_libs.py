@@ -42,11 +42,12 @@ class RequriementsTxtParser:
                 assert line.strip().startswith("--index-url")
                 continue
 
-            name_version = line.replace(" @ git+", "==git+").split(maxsplit=1)[0]
+            # e.g. pyjwt[crypto], bandit[sarif, toml]
+            stripped_line = re.sub(r"\[[^\\]+\]", "", line.strip())
+            name_version = stripped_line.replace(" @ git+", "==git+").split(maxsplit=1)[0]
             name, version = name_version.split("==", 1)
             info = Info(
-                # e.g. pyjwt[crypto]
-                name=re.sub(r"\[\w+\]", "", name),
+                name=name,
                 version=version,
                 hashes=[],
             )

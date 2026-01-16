@@ -538,11 +538,13 @@ class FoldersAPI(BaseAPI):
         title: str | None = None,
         attributes: Mapping[str, Any] | None = None,
     ) -> None:
-        if folder.count("/") > 1:
-            parent_folder, folder_name = folder.rsplit("/", 1)
-        else:
-            parent_folder = "/"
-            folder_name = folder.replace("/", "")
+        # Convert folder path delimiters from '/' to '~' for the API
+        folder_path = folder.replace("/", "~")
+        # Ensure we are using the correct prefix
+        folder_path = folder_path if folder_path.startswith("~") else f"~{folder_path}"
+
+        parent_folder, folder_name = folder_path.rsplit("~", 1)
+        parent_folder = parent_folder or "~"
         response = self.session.post(
             "/domain-types/folder_config/collections/all",
             json={
@@ -584,7 +586,8 @@ class FoldersAPI(BaseAPI):
         """
         # Convert folder path delimiters from '/' to '~' for the API
         folder_path = folder.replace("/", "~")
-
+        # Ensure we are using the correct prefix
+        folder_path = folder_path if folder_path.startswith("~") else f"~{folder_path}"
         response = self.session.delete(
             f"/objects/folder_config/{folder_path}", params={"delete_mode": delete_mode}
         )

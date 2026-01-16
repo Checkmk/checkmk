@@ -69,7 +69,7 @@ export class AiApiClient extends Api {
       ['x-checkmk-site-name', siteName]
       // Uncomment this line for local testing,
       // in production the reverse proxy will set the correct host header:
-      //, ['x-forwarded-host', 'localhost:3000']
+      // , ['x-forwarded-host', 'localhost:3000'], ['x-forwarded-proto', 'http']
     ])
   }
 

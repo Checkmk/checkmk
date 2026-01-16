@@ -10,7 +10,7 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import DashboardContent from '@/dashboard/components/DashboardContent/DashboardContent.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
-import MissingRuntimeFiltersMsg from '@/dashboard/components/DashboardFilterSettings/runtime-filter/MissingRuntimeFiltersMsg.vue'
+import MissingFiltersMsg from '@/dashboard/components/DashboardFilterSettings/MissingFiltersMsg.vue'
 
 const { _t } = usei18n()
 
@@ -57,9 +57,9 @@ defineEmits<{
         />
       </div>
     </div>
-    <MissingRuntimeFiltersMsg>
+    <MissingFiltersMsg>
       <DashboardContent v-bind="spec" class="db-responsive-grid-widget__content" />
-    </MissingRuntimeFiltersMsg>
+    </MissingFiltersMsg>
   </div>
 </template>
 

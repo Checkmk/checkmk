@@ -18,7 +18,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 </script>
 
 <template>
-  <div v-if="enterMissingRuntimeFiltersAction !== null" class="db-missing-runtime-filters-msg">
+  <div v-if="enterMissingRuntimeFiltersAction !== null" class="db-missing-filters-msg">
     <div>
       <a @click="enterMissingRuntimeFiltersAction()">{{ _t('Enter runtime filter') }}</a>
       <span v-if="renderContext === 'configurationPreview'">{{ _t('to load preview') }}</span>
@@ -29,7 +29,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 </template>
 
 <style scoped>
-.db-missing-runtime-filters-msg {
+.db-missing-filters-msg {
   display: flex;
   height: 100%;
   background-color: var(--db-content-bg-color);

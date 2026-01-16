@@ -170,8 +170,10 @@ def inject_rules(site: Site) -> None:
 def check_errors_in_log_files(site: Site) -> None:
     """Assert that there are no unexpected errors in the site log-files"""
     # Default pattern should be "^.*error.*$"
-    # TODO: Remove negative lookahead '(?!.*(sigterm))' from pattern after CMK-18520 is done
-    content_pattern = "^(?!.*(sigterm)).*error.*$"
+    # * TODO: Remove negative lookahead '(?!.*(sigterm))' from pattern after CMK-18520 is done
+    # * using OPENSSL version > 3.4.0 in test-containers leads to an error in web.log when starting
+    #   a cmk site with version <= 2.3.0p40 or <= 2.4.0p16. Related: werk #18935
+    content_pattern = "^(?!.*(sigterm))(?!.*(bake-agents)).*error.*$"
 
     error_match_dict = parse_files(
         path_name=site.logs_dir,

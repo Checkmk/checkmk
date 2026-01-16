@@ -400,6 +400,17 @@ class Site:
                 ",".join(list(pending_services.keys())),
             )
 
+    def is_service_in_expected_state_after_rescheduling(
+        self, host_name: str, service_name: str, expected_state: int
+    ) -> bool:
+        """Reschedule the 'Check_MK' and check if the service reaches the expected state."""
+        self.schedule_check(host_name, "Check_MK", 0, 5)
+        actual_service_state: int = self.live.query_value(
+            f"GET services\nColumns: state\nFilter: host_name = {host_name}\n"
+            f"Filter: service_description = {service_name}\n"
+        )
+        return actual_service_state == expected_state
+
     @tracer.instrument("Site.wait_for_service_state_update")
     def wait_for_services_state_update(
         self,

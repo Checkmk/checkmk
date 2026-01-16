@@ -9,6 +9,7 @@ import { computed, nextTick, onBeforeMount, provide, ref, watch } from 'vue'
 import { randomId } from '@/lib/randomId'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
+import CmkErrorAlert from '@/components/CmkErrorBoundary/CmkErrorAlert.vue'
 import CmkIcon from '@/components/CmkIcon'
 
 import DashboardBreadcrumb from '@/dashboard/components/DashboardBreadcrumb/DashboardBreadcrumb.vue'
@@ -63,6 +64,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 const props = defineProps<DashboardPageProperties>()
 
 const isDashboardLoading = ref(false)
+const loadingError = ref<Error | null>(null)
 const isDashboardEditingMode = ref(props.mode === 'edit_layout')
 const openDashboardFilterSettings = ref(false)
 const openDashboardSettings = ref(props.mode === 'edit_settings')
@@ -108,6 +110,8 @@ onBeforeMount(async () => {
     isDashboardLoading.value = true
     try {
       await dashboardsManager.loadDashboard(key, dashboard.metadata.layout_type as DashboardLayout)
+    } catch (e) {
+      loadingError.value = e instanceof Error ? e : new Error(String(e))
     } finally {
       isDashboardLoading.value = false
     }
@@ -144,8 +148,11 @@ watch(dashboardsManager.activeDashboard, (value) => {
 
 const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
   isDashboardLoading.value = true
+  loadingError.value = null
   try {
     await dashboardsManager.loadDashboard(dashboardKey, layout)
+  } catch (e) {
+    loadingError.value = e instanceof Error ? e : new Error(String(e))
   } finally {
     isDashboardLoading.value = false
   }
@@ -221,11 +228,14 @@ async function saveDashboard() {
 async function cancelEdit() {
   // we overwrite all changes by reloading the dashboard
   isDashboardLoading.value = true
+  loadingError.value = null
   try {
     await dashboardsManager.loadDashboard(
       dashboardsManager.activeDashboardKey.value!,
       dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
     )
+  } catch (e) {
+    loadingError.value = e instanceof Error ? e : new Error(String(e))
   } finally {
     isDashboardLoading.value = false
   }
@@ -596,8 +606,9 @@ function deepClone<T>(obj: T): T {
         :workflow-items="dashboardWidgetWorkflows"
         :available-features="available_features"
       />
+      <CmkErrorAlert v-if="loadingError" :error="loadingError" />
       <CmkIcon
-        v-if="isCloning || !(openDashboardCreationDialog || openDashboardCloneDialog)"
+        v-else-if="isCloning || !(openDashboardCreationDialog || openDashboardCloneDialog)"
         name="load-graph"
         size="xxlarge"
       />

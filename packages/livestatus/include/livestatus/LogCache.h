@@ -84,7 +84,7 @@ public:
                const std::filesystem::path &history_archive_directory,
                std::chrono::system_clock::time_point last_logfile_rotation,
                F f) {
-        const std::lock_guard<std::mutex> lg{lock_};
+        const std::scoped_lock sl{lock_};
         update(history_file, history_archive_directory, last_logfile_rotation);
         return f(LogFiles{log_files_}, num_cached_log_messages_);
     }

@@ -172,7 +172,7 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
         return false;
     }
     auto key = makeKey(entry->time(), entry->lineno());
-    if (_entries.find(key) != _entries.end()) {
+    if (_entries.contains(key)) {
         // this should never happen. The lineno must be unique!
         Error(_logger) << "strange duplicate logfile line " << entry->message();
         return false;

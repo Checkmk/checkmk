@@ -310,16 +310,6 @@ STAGES:
       # Can't be more specific due to disjunct pytest.tests.unit.omdlib pytest.omd.packages.omd.omdlib
       JENKINS_TEST_RESULT_PATH: "testReport/"
 
-    - NAME: "Python Doc Tests"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT,CHANGED_CHECKMAN_FILES,CHANGED_CMK_BUILD_FILE,CHANGED_AGENT_FILES,CHANGED_CMK_TRACE_FILES,CHANGED_CMK_CCC_FILES
-      DIR: "tests"
-      COMMAND: "make test-doctest"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No Python files changed"
-      # TODO: Fix parsing of result files
-      # RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/test-doctest.txt"
-
     - NAME: "All unit tests"
       SEC_VAR_LIST:
         - "CI_TEST_SQL_DB_ENDPOINT"
@@ -330,18 +320,17 @@ STAGES:
               --test_env=TZ="America/Chicago" \
               --test_tag_filters=-component \
               --keep_going \
-              -- //packages/... \
+              -- //... \
+              -//agents/... -//omd/... \
               -//packages/mk-oracle/... \
               -//packages/livestatus/... \
               -//packages/cmk-frontend-vue/... \
               -//packages/neb/... \
               -//packages/unixcat/... \
               -//packages/cmk-frontend/... \
-              //non-free/packages/... \
               -//non-free/packages/cmc/... \
               -//non-free/packages/cmk-relay-engine/... \
               -//non-free/packages/cmk-update-agent/... \
-              //tests/unit/...
           make_rc=$?
           set -e
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :

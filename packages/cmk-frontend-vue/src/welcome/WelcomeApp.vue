@@ -34,6 +34,11 @@ async function stepCompleted(stepId: StepId): Promise<void> {
       (await getWelcomeStageInformation(props.cards.get_stage_information)) ||
       currentStageInformation.value
   })
+
+  const parentDoc = window.parent?.document
+  if (parentDoc?.getElementById('snapin_a_welcome')) {
+    window.top?.location.reload()
+  }
 }
 </script>
 

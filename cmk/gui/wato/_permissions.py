@@ -508,20 +508,6 @@ def register(
     permission_registry.register(
         Permission(
             section=PERMISSION_SECTION_WATO,
-            name="snapshots",
-            title=_l("Manage snapshots"),
-            description=_l(
-                "Access to the module <i>Snapshots</i>. Please note: a user with "
-                "write access to this module "
-                "can make arbitrary changes to the configuration by restoring uploaded snapshots."
-            ),
-            defaults=["admin"],
-        )
-    )
-
-    permission_registry.register(
-        Permission(
-            section=PERMISSION_SECTION_WATO,
             name="backups",
             title=_l("Backup & restore"),
             description=_l(

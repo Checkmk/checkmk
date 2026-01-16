@@ -28,11 +28,7 @@ CI ?= false
 help:
 	@echo "setup                          --> Prepare system for development and building"
 	@echo "make dist                      --> Create source tgz for later building of rpm/deb and livestatus tgz"
-	@echo "make cma                       --> Create cma package"
 	@echo "make version                   --> Switch to new version"
-
-cma:
-	$(MAKE) -C omd cma
 
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
@@ -117,7 +113,6 @@ endif
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
-	$(MAKE) -C omd clean
 	rm -rf *.rpm *.deb *.exe \
 	       *~ counters autochecks \
 	       precompiled cache announce*

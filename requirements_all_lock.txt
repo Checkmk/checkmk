@@ -1244,15 +1244,15 @@ google-cloud-monitoring==2.24.0 \
     --hash=sha256:25c36c7fdedb1e7a5a80f187866c410847aa809c8055dc0dc8161d4404403c25 \
     --hash=sha256:a0d3848f4ef0f774bbb3021c86fd765dbbc6db176d78f71e96cf3398d3be1bb7
     # via -r requirements_all.txt
-google-cloud-org-policy==1.15.0 \
-    --hash=sha256:271d16a10e75347eace60d02cde322b2b1b613bcc99917109e0ebf2a4102253a \
-    --hash=sha256:5da410288236b334b8d05010501ea6180c5dc9e30888ff09488f2f107632f35b
+google-cloud-org-policy==1.16.0 \
+    --hash=sha256:96d1ed38f795182600a58f8eb2879e1577ce663b6b27df0b8a3050960cff87a5 \
+    --hash=sha256:c72147127d88d9809af8738b2abe34806eac529c3cdc57aa915cc08a1b842a13
     # via
     #   -r requirements_all.txt
     #   google-cloud-asset
-google-cloud-os-config==1.22.0 \
-    --hash=sha256:92afa402aa3b94d765751907fded1ef5908a6a5322f1fc88dee9e4c7f1cd7e54 \
-    --hash=sha256:d79a310f6fa1ce7470aaa084c70e38dc05d98531f468f821b3a526e4d33a70e4
+google-cloud-os-config==1.23.0 \
+    --hash=sha256:a629cf55b3ede36b2df89814c6ccf3c1d43c7f1b43db6c7c02eb4860851baf3a \
+    --hash=sha256:fea865018391abca42a9a74d270ddab516ae0865d6e9ad3bcb503286ca01c069
     # via
     #   -r requirements_all.txt
     #   google-cloud-asset
@@ -4548,9 +4548,9 @@ twine==6.0.1 \
     --hash=sha256:36158b09df5406e1c9c1fb8edb24fc2be387709443e7376689b938531582ee27 \
     --hash=sha256:9c6025b203b51521d53e200f4a08b116dee7500a38591668c6a6033117bdc218
     # via -r requirements_dev.txt
-types-awscrt==0.31.0 \
-    --hash=sha256:009cfe5b9af8c75e8304243490e20a5229e7a56203f1d41481f5522233453f51 \
-    --hash=sha256:aa8b42148af0847be14e2b8ea3637a3518ffab038f8d3be7083950f3ce87d3ff
+types-awscrt==0.31.1 \
+    --hash=sha256:08b13494f93f45c1a92eb264755fce50ed0d1dc75059abb5e31670feb9a09724 \
+    --hash=sha256:7e4364ac635f72bd57f52b093883640b1448a6eded0ecbac6e900bf4b1e4777b
     # via botocore-stubs
 types-beautifulsoup4==4.12.0.20241020 \
     --hash=sha256:158370d08d0cd448bd11b132a50ff5279237a5d4b5837beba074de152a513059 \

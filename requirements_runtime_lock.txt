@@ -811,13 +811,13 @@ google-cloud-monitoring==2.24.0 \
     --hash=sha256:25c36c7fdedb1e7a5a80f187866c410847aa809c8055dc0dc8161d4404403c25 \
     --hash=sha256:a0d3848f4ef0f774bbb3021c86fd765dbbc6db176d78f71e96cf3398d3be1bb7
     # via -r _requirements_runtime.txt
-google-cloud-org-policy==1.15.0 \
-    --hash=sha256:271d16a10e75347eace60d02cde322b2b1b613bcc99917109e0ebf2a4102253a \
-    --hash=sha256:5da410288236b334b8d05010501ea6180c5dc9e30888ff09488f2f107632f35b
+google-cloud-org-policy==1.16.0 \
+    --hash=sha256:96d1ed38f795182600a58f8eb2879e1577ce663b6b27df0b8a3050960cff87a5 \
+    --hash=sha256:c72147127d88d9809af8738b2abe34806eac529c3cdc57aa915cc08a1b842a13
     # via google-cloud-asset
-google-cloud-os-config==1.22.0 \
-    --hash=sha256:92afa402aa3b94d765751907fded1ef5908a6a5322f1fc88dee9e4c7f1cd7e54 \
-    --hash=sha256:d79a310f6fa1ce7470aaa084c70e38dc05d98531f468f821b3a526e4d33a70e4
+google-cloud-os-config==1.23.0 \
+    --hash=sha256:a629cf55b3ede36b2df89814c6ccf3c1d43c7f1b43db6c7c02eb4860851baf3a \
+    --hash=sha256:fea865018391abca42a9a74d270ddab516ae0865d6e9ad3bcb503286ca01c069
     # via google-cloud-asset
 googleapis-common-protos[grpc]==1.72.0 \
     --hash=sha256:4299c5a82d5ae1a9702ada957347726b167f9f8d1fc352477702a1e851ff4038 \

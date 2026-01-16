@@ -10,6 +10,7 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
+from typing import Literal
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -67,10 +68,12 @@ class TDSpec:
     html_value: HTML
 
 
-def compute_cell_spec(td_spec: TDSpec) -> tuple[str, HTML]:
+def compute_cell_spec(td_spec: TDSpec, text_align: Literal["", "left"]) -> tuple[str, HTML]:
     css_classes = list(td_spec.css_classes)
     styles = []
-    if td_spec.text_align:
+    if text_align:
+        styles.append(f"text-align: {text_align};")
+    elif td_spec.text_align:
         styles.append(f"text-align: {td_spec.text_align};")
     if td_spec.color:
         styles.append(f"color: {td_spec.color};")
@@ -499,7 +502,7 @@ class TreeRenderer:
         for item in sorted_pairs:
             html.open_tr()
             html.th(self._get_header(item.title, item.key))
-            css_class, html_value = compute_cell_spec(item.compute_td_spec(now))
+            css_class, html_value = compute_cell_spec(item.compute_td_spec(now), text_align="left")
             if css_class:
                 html.open_td(class_=css_class)
             else:
@@ -546,7 +549,7 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                css_class, html_value = compute_cell_spec(item.compute_td_spec(now))
+                css_class, html_value = compute_cell_spec(item.compute_td_spec(now), text_align="")
                 if css_class:
                     html.open_td(class_=css_class)
                 else:

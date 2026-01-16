@@ -4,17 +4,30 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
+
 import { useInjectMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
+import { type EffectiveWidgetFilterContext } from '@/dashboard/types/widget.ts'
 
 interface Props {
   renderContext?: 'configurationPreview' | 'activeDashboard'
+  effectiveFilterContext: EffectiveWidgetFilterContext
 }
-const { renderContext = 'activeDashboard' } = defineProps<Props>()
+const { renderContext = 'activeDashboard', effectiveFilterContext } = defineProps<Props>()
 const { _t } = usei18n()
 
 const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
+
+const missingSingleInfosString = computed(() => {
+  const missingSingleInfos = effectiveFilterContext.restricted_to_single.filter(
+    (key: string) => !(key in effectiveFilterContext.filters)
+  )
+  return missingSingleInfos.sort().join(', ')
+})
 </script>
 
 <template>
@@ -25,6 +38,14 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
       <span v-else>{{ _t('to load data') }}</span>
     </div>
   </div>
+  <CmkAlertBox v-else-if="missingSingleInfosString!!" variant="warning">
+    {{
+      _t(
+        'This widget cannot be displayed because required context information is missing (%{ missingSingleInfosString }). Please add dashboard or widget filters to provide the missing context.',
+        { missingSingleInfosString }
+      )
+    }}
+  </CmkAlertBox>
   <slot v-else />
 </template>
 

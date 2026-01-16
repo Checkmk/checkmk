@@ -57,7 +57,7 @@ defineEmits<{
         />
       </div>
     </div>
-    <MissingFiltersMsg>
+    <MissingFiltersMsg :effective-filter-context="spec.effective_filter_context">
       <DashboardContent v-bind="spec" class="db-responsive-grid-widget__content" />
     </MissingFiltersMsg>
   </div>

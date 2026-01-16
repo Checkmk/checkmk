@@ -67,7 +67,7 @@ def do_reload(
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     bake_on_restart: Callable[[], None],
-    notify_relay: Callable[[], None],
+    notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
 ) -> None:
     do_restart(
         config_cache,
@@ -118,7 +118,7 @@ def do_restart(
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     bake_on_restart: Callable[[], None],
-    notify_relay: Callable[[], None],
+    notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
 ) -> None:
     try:
         with activation_lock(
@@ -175,7 +175,7 @@ def do_create_config(
     *,
     duplicates: Collection[HostName],
     bake_on_restart: Callable[[], None],
-    notify_relay: Callable[[], None],
+    notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -222,7 +222,7 @@ def do_create_config(
         bake_on_restart()
 
     with tracer.span("announce_new_serial"):
-        notify_relay()
+        notify_relay(config_warnings.warn)
 
 
 @contextmanager

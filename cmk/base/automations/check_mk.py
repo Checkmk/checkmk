@@ -1024,8 +1024,10 @@ def automation_autodiscovery(
     return AutodiscoveryResult(*result)
 
 
-def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
-    noop = lambda: None
+def _make_configured_notify_relay(
+    relays_present: bool,
+) -> Callable[[Callable[[str], object]], None]:
+    noop = lambda *a, **kw: None
 
     if not relays_present:
         return noop
@@ -2716,7 +2718,7 @@ def _execute_silently(
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     bake_on_restart: Callable[[], None],
-    notify_relay: Callable[[], None],
+    notify_relay: Callable[[Callable[[str], object]], None],
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.

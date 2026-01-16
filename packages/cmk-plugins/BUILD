@@ -4,6 +4,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
+load("//:relay_supported_plugins.bzl", "RELAY_SUPPORTED_PLUGIN_FAMILIES")
 load("//bazel/rules:concat_files.bzl", "concat_files")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -613,7 +614,9 @@ filegroup(
     name = "wheel-for-f12-%s" % family,
     distribution = "cmk-plugins-%s-tar" % family,
     entry_points = {
-        "cmk.special_agent_supported_on_relay": ["%s = %s" % (family, family)],
+        "cmk.special_agent_supported_on_relay": [
+            "%s = %s" % (family, family),
+        ] if family in RELAY_SUPPORTED_PLUGIN_FAMILIES else [],
     },
     strip_path_prefixes = ["packages/cmk-plugins"],
     tags = ["manual"],
@@ -630,7 +633,9 @@ filegroup(
     name = "wheel-for-pkg_tar-%s" % family,
     distribution = "cmk-plugins-%s-tar" % family,
     entry_points = {
-        "cmk.special_agent_supported_on_relay": ["%s = %s" % (family, family)],
+        "cmk.special_agent_supported_on_relay": [
+            "%s = %s" % (family, family),
+        ] if family in RELAY_SUPPORTED_PLUGIN_FAMILIES else [],
     },
     strip_path_prefixes = ["packages/cmk-plugins"],
     version = "1.0.0",

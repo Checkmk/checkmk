@@ -397,29 +397,29 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.28 \
-    --hash=sha256:7994bc2a094c1894f6a4221a1696c5d18af6c9c888191051866f1d05c4fba431 \
-    --hash=sha256:7d56c298b8d98f5e9b04cf5d6627f68e7792e25614533aef17f815681b5e1096
+boto3==1.42.29 \
+    --hash=sha256:247e54f24116ad6792cfc14b274288383af3ec3433b0547da8a14a8bd6e81950 \
+    --hash=sha256:6c9c4dece67bf72d82ba7dff48e33a56a87cdf9b16c8887f88ca7789a95d3317
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.42.28 \
-    --hash=sha256:6ee83bd1457d6377130d709fcb0f8b2b95ca7928b0657d18abb1d08d19db6ec9 \
-    --hash=sha256:f3ff19e73973c392aaeb3a419848cdbe7e54d6219ef43a23fcd168a0d69033d4
+boto3-stubs[logs]==1.42.29 \
+    --hash=sha256:7dc0e2231f1f77fc5282c4fc4b7e4627c78fa95851eec16952df8c696b67855f \
+    --hash=sha256:7e38ea78e2d11e6c899da1ab267ccacaab32efcf365a96c6eba94482829e2b63
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.42.28 \
-    --hash=sha256:0c15e78d1accf97df691083331f682e97b1bef73ef12dcdaadcf652abf9c182c \
-    --hash=sha256:d26c7a0851489ce1a18279f9802fe434bd736ea861d4888cc2c7d83fb1f6af8f
+botocore==1.42.29 \
+    --hash=sha256:0fe869227a1dfe818f691a31b8c1693e39be8056a6dff5d6d4b3fc5b3a5e7d42 \
+    --hash=sha256:b45f8dfc1de5106a9d040c5612f267582e68b2b2c5237477dff85c707c1c5d11
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.42.28 \
-    --hash=sha256:aa131f92f266c0ac479873e8e914c46256c39db3aecea0c73edf0846d304e9df \
-    --hash=sha256:ce16fb37db1b2d6f8877b9ca2a03cabb6bc67bd40e9f22de8001bc536eecd10d
+botocore-stubs==1.42.29 \
+    --hash=sha256:be706a37e4c0d1515ec869b9429a98a16a14702caca515166287f39ab4a203ff \
+    --hash=sha256:f2f6edca9d537b1865992a9392a1814cdf793d6031978bb16498605a8758266a
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -1508,7 +1508,6 @@ google-auth==2.47.0 \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-    #   kubernetes
 google-auth-httplib2==0.3.0 \
     --hash=sha256:177898a0175252480d5ed916aeea183c2df87c1f9c26705d74ae6b951c268b0b \
     --hash=sha256:426167e5df066e3f5a0fc7ea18768c08e7296046594ce4c8c409c2457dd1f776
@@ -1528,21 +1527,21 @@ google-cloud-asset==4.1.0 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-google-cloud-monitoring==2.28.0 \
-    --hash=sha256:25175590907e038add644b5b744941d221776342924637095a879973a7c0ac37 \
-    --hash=sha256:64f4c57cc465dd51cceffe559f0ec6fa9f96aa6d82790cd8d3af6d5cc3795160
+google-cloud-monitoring==2.29.0 \
+    --hash=sha256:93aa264da0f57f3de2900b0250a37ca27068984f6d94e54175d27aea12a4637f \
+    --hash=sha256:eedb8afd1c4e80e8c62435f05c448e9e65be907250a66d81e6af5909778267b6
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-google-cloud-org-policy==1.15.0 \
-    --hash=sha256:271d16a10e75347eace60d02cde322b2b1b613bcc99917109e0ebf2a4102253a \
-    --hash=sha256:5da410288236b334b8d05010501ea6180c5dc9e30888ff09488f2f107632f35b
+google-cloud-org-policy==1.16.0 \
+    --hash=sha256:96d1ed38f795182600a58f8eb2879e1577ce663b6b27df0b8a3050960cff87a5 \
+    --hash=sha256:c72147127d88d9809af8738b2abe34806eac529c3cdc57aa915cc08a1b842a13
     # via
     #   -c requirements.txt
     #   google-cloud-asset
-google-cloud-os-config==1.22.0 \
-    --hash=sha256:92afa402aa3b94d765751907fded1ef5908a6a5322f1fc88dee9e4c7f1cd7e54 \
-    --hash=sha256:d79a310f6fa1ce7470aaa084c70e38dc05d98531f468f821b3a526e4d33a70e4
+google-cloud-os-config==1.23.0 \
+    --hash=sha256:a629cf55b3ede36b2df89814c6ccf3c1d43c7f1b43db6c7c02eb4860851baf3a \
+    --hash=sha256:fea865018391abca42a9a74d270ddab516ae0865d6e9ad3bcb503286ca01c069
     # via
     #   -c requirements.txt
     #   google-cloud-asset
@@ -2121,9 +2120,9 @@ kiwisolver==1.4.9 \
     # via
     #   -c requirements.txt
     #   matplotlib
-kubernetes==33.1.0 \
-    --hash=sha256:544de42b24b64287f7e0aa9513c93cb503f7f40eea39b20f66810011a86eabc5 \
-    --hash=sha256:f64d829843a54c251061a8e7a14523b521f2dc5c896cf6d65ccf348648a88993
+kubernetes==35.0.0 \
+    --hash=sha256:39e2b33b46e5834ef6c3985ebfe2047ab39135d41de51ce7641a7ca5b372a13d \
+    --hash=sha256:3d00d344944239821458b9efd484d6df9f011da367ecb155dadf9513f05f09ee
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -3208,7 +3207,6 @@ oauthlib==3.3.1 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   exchangelib
-    #   kubernetes
     #   requests-oauthlib
 openapi-schema-validator==0.6.3 \
     --hash=sha256:f37bace4fc2a5d96692f4f8b31dc0f8d7400fd04f3a937798eaf880d425de6ee \
@@ -4911,9 +4909,9 @@ regex==2026.1.15 \
     # via
     #   -c requirements.txt
     #   djlint
-reportlab==4.4.7 \
-    --hash=sha256:41e8287af965e5996764933f3e75e7f363c3b6f252ba172f9429e81658d7b170 \
-    --hash=sha256:8fa05cbf468e0e76745caf2029a4770276edb3c8e86a0b71e0398926baf50673
+reportlab==4.4.9 \
+    --hash=sha256:68e2d103ae8041a37714e8896ec9b79a1c1e911d68c3bd2ea17546568cf17bfd \
+    --hash=sha256:7cf487764294ee791a4781f5a157bebce262a666ae4bbb87786760a9676c9378
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -5849,9 +5847,9 @@ typeguard==4.4.4 \
     # via
     #   -c requirements.txt
     #   inflect
-types-awscrt==0.31.0 \
-    --hash=sha256:009cfe5b9af8c75e8304243490e20a5229e7a56203f1d41481f5522233453f51 \
-    --hash=sha256:aa8b42148af0847be14e2b8ea3637a3518ffab038f8d3be7083950f3ce87d3ff
+types-awscrt==0.31.1 \
+    --hash=sha256:08b13494f93f45c1a92eb264755fce50ed0d1dc75059abb5e31670feb9a09724 \
+    --hash=sha256:7e4364ac635f72bd57f52b093883640b1448a6eded0ecbac6e900bf4b1e4777b
     # via
     #   -c requirements.txt
     #   botocore-stubs
@@ -5912,9 +5910,9 @@ types-protobuf==6.32.1.20251210 \
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
     #   mypy-protobuf
-types-psutil==7.2.1.20251231 \
-    --hash=sha256:40735ca2fc818aed9dcbff7acb3317a774896615e3f4a7bd356afa224b9178e3 \
-    --hash=sha256:dbf9df530b1130e131e4211ed8cea62c08007bfa69faf2883d296bd241d30e4a
+types-psutil==7.2.1.20260116 \
+    --hash=sha256:4661be5d5d7acd5d8afb02a92d05160a6cbb2ce74723245b51f7ba7dfdb9f981 \
+    --hash=sha256:f516d2a71b28a4fd290f065cb30d7e7141ee605899aa592d8d4b80e45c9849be
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in

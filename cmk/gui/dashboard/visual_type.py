@@ -217,6 +217,19 @@ class VisualTypeDashboards(VisualType):
             % graph_specification.graph_type
         )
 
+    @staticmethod
+    def _add_relative_grid_layout_to_dashlet_spec(
+        dashlet_spec: DashletConfig,
+        dashboard: DashboardConfig,
+        add_type: str,
+    ) -> None:
+        initial_position = dashlet_registry[add_type].initial_position()
+        # Add a static vertical offset to reduce the chance of placing the new widget in a way
+        # where it covers existing widgets
+        y_offset = 5 if len(dashboard["dashlets"]) > 0 else 0
+        dashlet_spec["position"] = (initial_position[0], initial_position[1] + y_offset)
+        dashlet_spec["size"] = dashlet_registry[add_type].initial_size()
+
     def _update_dashlet_spec(
         self,
         dashlet_spec: DashletConfig,
@@ -225,12 +238,7 @@ class VisualTypeDashboards(VisualType):
     ) -> None:
         """Allow subclasses to update the dashlet spec before adding it to the dashboard."""
         if dashboard_uses_relative_grid(dashboard):
-            initial_position = dashlet_registry[add_type].initial_position()
-            # Add a static vertical offset to reduce the chance of placing the new widget in a way
-            # where it covers existing widgets
-            y_offset = 5 if len(dashboard["dashlets"]) > 0 else 0
-            dashlet_spec["position"] = (initial_position[0], initial_position[1] + y_offset)
-            dashlet_spec["size"] = dashlet_registry[add_type].initial_size()
+            self._add_relative_grid_layout_to_dashlet_spec(dashlet_spec, dashboard, add_type)
         else:
             raise ValueError("Unexpected layout type for dashboard")
 

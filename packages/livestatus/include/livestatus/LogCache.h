@@ -85,7 +85,7 @@ public:
     // lock and the update function local.
     template <typename F>
     auto apply(F f) {
-        const std::lock_guard<std::mutex> lg{lock_};
+        const std::scoped_lock sl{lock_};
         update();
         return f(LogFiles{log_files_}, num_cached_log_messages_);
     }

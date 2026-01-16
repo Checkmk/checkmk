@@ -33,7 +33,7 @@ void logTransition(char *name, int from, int to) {
 }  // namespace
 
 void TimeperiodsCache::logCurrentTimeperiods() {
-    const std::lock_guard<std::mutex> lg(_mutex);
+    const std::scoped_lock sl{_mutex};
     // Loop over all timeperiods and compute if we are currently in. Detect the
     // case where no time periods are known (yet!). This might be the case when
     // a timed event broker message arrives *before* the start of the event
@@ -54,7 +54,7 @@ void TimeperiodsCache::logCurrentTimeperiods() {
 }
 
 void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
-    const std::lock_guard<std::mutex> lg(_mutex);
+    const std::scoped_lock sl{_mutex};
     // Update cache only once a minute. The timeperiod definitions have a
     // 1-minute granularity, so a 1-second resolution is not needed.
     if (now < _last_update + 1min) {
@@ -99,7 +99,7 @@ bool TimeperiodsCache::inTimeperiod(const timeperiod *tp) const {
     if (tp == nullptr) {
         return true;  // unknown timeperiod is assumed to be 24X7
     }
-    const std::lock_guard<std::mutex> lg(_mutex);
+    const std::scoped_lock sl{_mutex};
     auto it = _cache.find(tp);
     if (it == _cache.end()) {
         // Problem: check_time_against_period is not thread safe, so we can't

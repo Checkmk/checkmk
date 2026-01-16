@@ -13,6 +13,7 @@
 
 #include "Interface.h"
 #include "livestatus/ColumnFilter.h"
+#include "livestatus/DoubleFilter.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringFilter.h"
 
@@ -53,8 +54,7 @@ public:
 
 private:
     function_type f_;
-    std::string ref_value_;
-    std::string ref_varname_;
+    DoubleFilter filter_;
     Logger *logger_;
 };
 

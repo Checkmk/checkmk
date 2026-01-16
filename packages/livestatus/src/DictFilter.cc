@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -108,33 +107,35 @@ DictDoubleValueFilter::DictDoubleValueFilter(Kind kind, std::string columnName,
                                              RelationalOperator relOp,
                                              const std::string &value,
                                              Logger *logger)
-    : ColumnFilter{kind, std::move(columnName), relOp, value}
+    : ColumnFilter{kind, columnName, relOp, value}
     , f_{std::move(f)}
-    , logger_{logger} {
-    std::string rest;
-    auto [starts_with_quote1, pos1] = skip_whitespace(value);
-    std::tie(ref_varname_, rest) = starts_with_quote1
+    , filter_{[this, kind, columnName = std::move(columnName), &value, logger] {
+        auto [starts_with_quote1, pos1] = skip_whitespace(value);
+        auto [ref_varname, rest] = starts_with_quote1
                                        ? parse_quoted(value, pos1 + 1)
                                        : parse_unquoted(value, pos1);
-    auto [starts_with_quote2, pos2] = skip_whitespace(rest);
-    ref_value_ = starts_with_quote2 ? parse_quoted(rest, pos2 + 1).first
-                                    : rest.substr(pos2);
-}
+        auto [starts_with_quote2, pos2] = skip_whitespace(rest);
+        const auto ref_value = starts_with_quote2
+                                   ? parse_quoted(rest, pos2 + 1).first
+                                   : rest.substr(pos2);
+        return DoubleFilter{
+            kind,
+            columnName,
+            [this, ref_varname = std::move(ref_varname)](Row row) {
+                auto cvm = f_(row);
+                auto it = cvm.find(ref_varname);
+                return it == cvm.end() ? 0.0 : it->second;
+            },
+            oper(),
+            ref_value,
+            logger};
+    }()}
+    , logger_(logger) {}
 
 bool DictDoubleValueFilter::accepts(Row row, const User &user,
                                     std::chrono::seconds timezone_offset,
                                     const ICore &core) const {
-    auto filter = DoubleFilter{kind(),
-                               columnName(),
-                               [this](Row row) {
-                                   auto cvm = f_(row);
-                                   auto it = cvm.find(ref_varname_);
-                                   return it == cvm.end() ? 0.0 : it->second;
-                               },
-                               oper(),
-                               ref_value_,
-                               logger()};
-    return filter.accepts(row, user, timezone_offset, core);
+    return filter_.accepts(row, user, timezone_offset, core);
 }
 
 std::unique_ptr<Filter> DictDoubleValueFilter::copy() const {

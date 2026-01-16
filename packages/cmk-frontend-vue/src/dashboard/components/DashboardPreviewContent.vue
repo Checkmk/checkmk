@@ -14,7 +14,10 @@ defineProps<ContentProps>()
 
 <template>
   <div class="db-preview-content">
-    <MissingFiltersMsg render-context="configurationPreview">
+    <MissingFiltersMsg
+      render-context="configurationPreview"
+      :effective-filter-context="effective_filter_context"
+    >
       <div class="db-preview-content__click-shield">
         <DashboardContent v-bind="$props" />
       </div>

@@ -86,7 +86,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
     :style="{ ...containerStyle }"
     :aria-label="_t('Widget')"
   >
-    <MissingFiltersMsg>
+    <MissingFiltersMsg :effective-filter-context="contentProps.effective_filter_context">
       <div :style="{ position: 'relative', height: '100%', width: '100%', zIndex: zIndex }">
         <DashboardContent v-bind="contentProps" />
 

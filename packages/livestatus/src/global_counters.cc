@@ -43,7 +43,7 @@ double lerp(double a, double b, double t) { return ((1 - t) * a) + (t * b); }
 
 void counterReset(Counter which) {
     auto &c = counter(which);
-    const std::lock_guard<std::mutex> lg(c.mutex);
+    const std::scoped_lock sl{c.mutex};
     c.value = 0.0;
     c.last_value = 0.0;
     c.rate = 0.0;
@@ -51,31 +51,31 @@ void counterReset(Counter which) {
 
 void counterSet(Counter which, double value) {
     auto &c = counter(which);
-    const std::lock_guard<std::mutex> lg(c.mutex);
+    const std::scoped_lock sl{c.mutex};
     c.value = value;
 }
 
 void counterIncrement(Counter which) {
     auto &c = counter(which);
-    const std::lock_guard<std::mutex> lg(c.mutex);
+    const std::scoped_lock sl{c.mutex};
     c.value++;
 }
 
 void counterIncrementBy(Counter which, std::size_t value) {
     auto &c = counter(which);
-    const std::lock_guard<std::mutex> lg(c.mutex);
+    const std::scoped_lock sl{c.mutex};
     c.value += double(value);
 }
 
 double counterValue(Counter which) {
     auto &c = counter(which);
-    const std::lock_guard<std::mutex> lg(c.mutex);
+    const std::scoped_lock sl{c.mutex};
     return c.value;
 }
 
 double counterRate(Counter which) {
     auto &c = counter(which);
-    const std::lock_guard<std::mutex> lg(c.mutex);
+    const std::scoped_lock sl{c.mutex};
     return c.rate;
 }
 
@@ -91,7 +91,7 @@ void do_statistics() {
     }
     last_statistics_update = now;
     for (auto &c : counters) {
-        const std::lock_guard<std::mutex> lg(c.mutex);
+        const std::scoped_lock sl{c.mutex};
         auto age_secs = mk::ticks<std::chrono::seconds>(age);
         const double old_rate = c.rate;
         const double new_rate = (c.value - c.last_value) / double(age_secs);

@@ -13,7 +13,7 @@ class Average {
 public:
     void update(double value);
     [[nodiscard]] double get() const {
-        const std::scoped_lock l(_lock);
+        const std::scoped_lock sl{_lock};
         return _average;
     }
 

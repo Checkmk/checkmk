@@ -68,7 +68,7 @@ Queue<T, Q>::~Queue() {
 
 template <typename T, typename Q>
 typename Queue<T, Q>::size_type Queue<T, Q>::approx_size() const {
-    std::lock_guard<std::mutex> lock(mutex_);
+    const std::scoped_lock sl{mutex_};
     return q_.size();
 }
 

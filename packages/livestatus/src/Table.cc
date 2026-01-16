@@ -16,7 +16,7 @@
 Table::~Table() = default;
 
 void Table::addColumn(std::unique_ptr<Column> col) {
-    if (_columns.find(col->name()) != _columns.end()) {
+    if (_columns.contains(col->name())) {
         // NOTE: We can't uses Table::logger() here, because there might be no
         // monitoring core yet. We get called *very* early...
         Emergency(col->logger()) << "overwriting column '" << col->name()

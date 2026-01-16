@@ -9,6 +9,7 @@
 #include <atomic>
 #include <cstdlib>
 #include <iterator>
+#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
@@ -779,6 +780,6 @@ void NebCore::answerCommandEventConsole(const std::string &command) {
 }
 
 void NebCore::answerCommandNagios(const ExternalCommand &command) {
-    const std::lock_guard<std::mutex> lg(_command_mutex);
+    const std::scoped_lock sl{_command_mutex};
     nagios_compat_submit_external_command(command.str().c_str());
 }

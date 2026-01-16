@@ -54,20 +54,14 @@ class PageUnifiedSearch(AjaxPage):
         )
 
     def _parse_provider_query_param(self, request: Request) -> ProviderName | None:
-        if (provider := request.get_str_input("provider")) is None:
+        if (provider := request.get_str_input("provider")) is None or provider not in ProviderName:
             return None
-        try:
-            return ProviderName(provider)
-        except ValueError:
-            return None
+        return ProviderName(provider)
 
     def _parse_sort_query_param(self, request: Request) -> SortType | None:
-        if (sort_type := request.get_str_input("sort")) is None:
+        if (sort_type := request.get_str_input("sort")) is None or sort_type not in SortType:
             return None
-        try:
-            return SortType(sort_type)
-        except ValueError:
-            return None
+        return SortType(sort_type)
 
     def _parse_disabled_collapser(self, request: Request) -> bool:
         return request.get_str_input("collapse") is None

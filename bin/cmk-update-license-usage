@@ -7,6 +7,10 @@ import argparse
 import sys
 
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import edition, Edition
+from cmk.metric_backend.client import ClickHouseClient
+from cmk.utils import paths
+from cmk.utils.licensing.active_metric_series_retriever_registry import active_metric_series_retriever_registry
 from cmk.utils.licensing.helper import (
     get_instance_id_file_path,
     hash_site_id,
@@ -37,9 +41,22 @@ def _parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def active_metric_series_retriever() -> int | None:
+    try:
+        client = ClickHouseClient.read_only_from_omd_root(paths.omd_root)
+    except RuntimeError:
+        # Here we just return None as this happens when
+        # the customer has not configured the metric backend at all
+        return None
+
+    return client.active_series_count()
+
 def main() -> int:
     args = _parse_arguments()
     logger = init_logging()
+
+    if edition(paths.omd_root) in [Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD]:
+        active_metric_series_retriever_registry.register(active_metric_series_retriever)
 
     if args.force:
         get_next_run_file_path().unlink(missing_ok=True)

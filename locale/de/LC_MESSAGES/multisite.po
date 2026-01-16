@@ -42255,6 +42255,10 @@ msgstr "Metrik-Backend (benutzerdefinierte Anfrage)"
 msgid "Metric backend filter criteria"
 msgstr "Metrik-Backend ist deaktiviert."
 
+#, fuzzy
+msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "Metrik-Backend ist deaktiviert."
+
 msgid "Metric configuration"
 msgstr "Metrik-Konfiguration"
 
@@ -42308,9 +42312,6 @@ msgstr "Metriken"
 
 msgid "Metrics Group"
 msgstr "Gruppe der Metriken"
-
-msgid "Metrics backend is disabled."
-msgstr "Metrik-Backend ist deaktiviert."
 
 #, fuzzy
 msgid "Metrics error state"
@@ -47020,7 +47021,8 @@ msgstr "Nvidia GPU Memory Auslastung"
 msgid "Nvidia GPU Power"
 msgstr "Nvidia GPU Power"
 
-msgid "Nvidia GPU monitoring (Windows)"
+#, fuzzy
+msgid "Nvidia GPU monitoring (Linux, Windows)"
 msgstr "Nvidia GPU-Monitoring (Windows)"
 
 msgid "Nvidia GPU utilization"
@@ -50373,7 +50375,8 @@ msgstr "Pfad zu den Kategorien"
 msgid "Path to ceph.conf"
 msgstr "Pfad zu ceph.conf"
 
-msgid "Path to nvidia-smi.exe"
+#, fuzzy
+msgid "Path to nvidia-smi.exe (Windows only)"
 msgstr "Pfad zur nvidia-smi.exe"
 
 msgid "Path to sapgenpse"
@@ -53123,9 +53126,12 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Geben Sie hier den Namen der Datenbank an, z.B. SATURN\\ARCSERVE_DB"
 
+#, fuzzy
 msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program "
-"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. Under Linux, the relevant "
+"executable is usually defined in the PATH variable. Therefore, this setting "
+"is ignored under Linux."
 msgstr ""
 "Geben Sie hier den Pfad zur ausführbaren Datei nvidia-smi.exe an, z. B. C:"
 "\\Program Files\\NVSMI\\nvidia-smi.exe"
@@ -91299,14 +91305,16 @@ msgstr "Dashboard-Filter"
 msgid "Remove row"
 msgstr "Zeile entfernen"
 
-msgid "Filter configuration"
-msgstr "Filterkonfiguration"
+#, fuzzy
+msgid "Filter settings"
+msgstr "%d Filtereinstellungen"
 
 msgid "Runtime filters"
 msgstr "Laufzeit-Filter"
 
-msgid "Close filter configuration"
-msgstr "Schließe Filterkonfiguration"
+#, fuzzy
+msgid "Close filter settings"
+msgstr "%d Filtereinstellungen"
 
 msgid "Clear search"
 msgstr "Suche leeren"
@@ -91326,13 +91334,13 @@ msgid "Values can be overridden by runtime or widget filters."
 msgstr ""
 "Die Werte können durch Laufzeit- oder Widget-Filter überschrieben werden."
 
+msgid "Add filter from left panel"
+msgstr ""
+
 msgid "Set required filters for viewers to enter on load."
 msgstr ""
 "Legen Sie die erforderlichen Filter fest, welche die Betrachter beim Laden "
 "eingeben müssen."
-
-msgid "Select from list"
-msgstr "Aus der Liste auswählen"
 
 #, fuzzy
 msgid "Enter runtime filter"
@@ -91352,8 +91360,9 @@ msgstr "%{n} Filter"
 msgid "Applied filters"
 msgstr "Angewendete Filter"
 
-msgid "No %{n} dashboard filters applied"
-msgstr "Keine %{n} Dashboard-Filter angewendet"
+#, fuzzy
+msgid "No default %{n} filters applied"
+msgstr "Keine %{n} Filter angewendet"
 
 msgid ""
 "%{n} filters selected on dashboard level appear and apply to all widgets. "
@@ -91375,10 +91384,12 @@ msgstr "ist erforderlich"
 msgid "Reset to pre-selected filters"
 msgstr "Auf vordefinierte Filter zurücksetzen"
 
-msgid "Edit filter configuration"
-msgstr "Filterkonfiguration bearbeiten"
+#, fuzzy
+msgid "Edit filter settings"
+msgstr "%d Filtereinstellungen"
 
-msgid "Override dashboard filters"
+#, fuzzy
+msgid "Override default filters"
 msgstr "Dashboard-Filter überschreiben"
 
 msgid "Success! Your runtime filters have been applied"
@@ -91512,12 +91523,6 @@ msgstr "Wert auswählen..."
 msgid "(required)"
 msgstr "(erforderlich)"
 
-msgid "Search Filter"
-msgstr "Suchfilter"
-
-msgid "No filters found matching"
-msgstr "Keine passenden Filter gefunden"
-
 msgid "Expand all"
 msgstr "Alle erweitern"
 
@@ -91529,6 +91534,13 @@ msgstr "von"
 
 msgid "No filter category available"
 msgstr "Keine Filterkategorie verfügbar"
+
+msgid "%{filterName} in %{filterGroup}"
+msgstr ""
+
+#, fuzzy
+msgid "No filters found matching: %{search}"
+msgstr "Keine passenden Filter gefunden"
 
 #, fuzzy
 msgid "Widget"
@@ -91775,6 +91787,10 @@ msgstr "Geerbt"
 msgid "Overriden"
 msgstr "Überschrieben"
 
+#, fuzzy
+msgid "Default filter"
+msgstr "Standard-Profil"
+
 msgid "Runtime filter"
 msgstr "Laufzeit-Filter"
 
@@ -91807,7 +91823,8 @@ msgstr "Keine %{n} Filter angewendet"
 msgid "Widget filters"
 msgstr "Widget-Filter"
 
-msgid "Widget configured filters override dashboard and runtime filters"
+#, fuzzy
+msgid "Widget configured filters override default and runtime filters"
 msgstr ""
 "Vom Widget konfigurierte Filter überschreiben Dashboard- und Laufzeitfilter"
 
@@ -92109,12 +92126,6 @@ msgstr "Benutzerdefiniert"
 
 msgid "At least one scope must be selected."
 msgstr "Mindestens ein Ziel muss ausgewählt werden."
-
-msgid "Create & set dashboard filters"
-msgstr "Erstelle & setze Dashboard-Filter"
-
-msgid "Create & view list"
-msgstr "Erstelle & betrachte die Liste"
 
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
@@ -92983,12 +92994,25 @@ msgstr "Erstelle Schlüssel"
 msgid "Generating token"
 msgstr "Generation 1"
 
+#, fuzzy
+msgid "Regenerate a token to use token authentication."
+msgstr "Benutzername, welcher für die Broker-Authentifizierung verwendet wird."
+
 msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
 msgid "Successfully generated token"
 msgstr "Erfolgreich mit Agent verbunden."
+
+msgid ""
+"If an error occurs during OTT authentication, try to authenticate with a "
+"user."
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate with user"
+msgstr "Authentifizierung mit TLS"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
@@ -93886,11 +93910,30 @@ msgstr ""
 "            Sie können Ihr eigenes Dashboard erstellen oder die Liste aller "
 "Dashboards durchsuchen, um nützliche Voreinstellungen zu finden."
 
+#, fuzzy
+msgid "Explore the Checkmk built-in dashboards"
+msgstr "Mitgelieferte Dashboards"
+
+msgid ""
+"Explore all of the built-in dashboards available in Checkmk. You can also "
+"clone and modify them to suit your needs."
+msgstr ""
+
+#, fuzzy
+msgid "View list of all dashboards"
+msgstr "Liste aller Dashboards"
+
+#, fuzzy
+msgid "Create your own custom dashboard"
+msgstr "Erstelle ein Dashboard"
+
+msgid ""
+"Now it's time to create your own customized dashboard so you can see what "
+"matters at a glance."
+msgstr ""
+
 msgid "Add custom dashboard"
 msgstr "Benutzerdefiniertes Dashboard hinzufügen"
-
-msgid "List of all dashboards"
-msgstr "Liste aller Dashboards"
 
 msgid "Enable notifications"
 msgstr "Benachrichtigungen aktivieren"
@@ -93948,6 +93991,30 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Filter configuration"
+#~ msgstr "Filterkonfiguration"
+
+#~ msgid "Close filter configuration"
+#~ msgstr "Schließe Filterkonfiguration"
+
+#~ msgid "Select from list"
+#~ msgstr "Aus der Liste auswählen"
+
+#~ msgid "No %{n} dashboard filters applied"
+#~ msgstr "Keine %{n} Dashboard-Filter angewendet"
+
+#~ msgid "Edit filter configuration"
+#~ msgstr "Filterkonfiguration bearbeiten"
+
+#~ msgid "Search Filter"
+#~ msgstr "Suchfilter"
+
+#~ msgid "Create & set dashboard filters"
+#~ msgstr "Erstelle & setze Dashboard-Filter"
+
+#~ msgid "Create & view list"
+#~ msgstr "Erstelle & betrachte die Liste"
 
 #~ msgid "Background in status color and label"
 #~ msgstr "Hintergrund in Statusfarbe und -label"

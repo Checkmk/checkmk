@@ -43888,6 +43888,10 @@ msgid "Metric backend filter criteria"
 msgstr "Oracle gevallen"
 
 #, fuzzy
+msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "Oracle gevallen"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "Host configuratie"
 
@@ -43944,10 +43948,6 @@ msgstr "Metriek"
 #, fuzzy
 msgid "Metrics Group"
 msgstr "Metriek"
-
-#, fuzzy
-msgid "Metrics backend is disabled."
-msgstr "Oracle gevallen"
 
 #, fuzzy
 msgid "Metrics error state"
@@ -48930,7 +48930,8 @@ msgstr "Nvidia GPU Geheugengebruik"
 msgid "Nvidia GPU Power"
 msgstr "Nvidia GPU Vermogen"
 
-msgid "Nvidia GPU monitoring (Windows)"
+#, fuzzy
+msgid "Nvidia GPU monitoring (Linux, Windows)"
 msgstr "Nvidia GPU-bewaking (Windows)"
 
 msgid "Nvidia GPU utilization"
@@ -52558,7 +52559,8 @@ msgstr "Pad naar categorieën"
 msgid "Path to ceph.conf"
 msgstr "Pad naar categorieën"
 
-msgid "Path to nvidia-smi.exe"
+#, fuzzy
+msgid "Path to nvidia-smi.exe (Windows only)"
 msgstr "Pad naar nvidia-smi.exe"
 
 msgid "Path to sapgenpse"
@@ -55452,9 +55454,12 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Zet hier de naam van de database, bijv. SATURN\\ARCSERVE_DB"
 
+#, fuzzy
 msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program "
-"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. Under Linux, the relevant "
+"executable is usually defined in the PATH variable. Therefore, this setting "
+"is ignored under Linux."
 msgstr ""
 "Zet hier het pad naar de nvidia-smi.exe executable, bijv. C:\\Program "
 "Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
@@ -94634,16 +94639,16 @@ msgid "Remove row"
 msgstr "Verwijderd: %s"
 
 #, fuzzy
-msgid "Filter configuration"
-msgstr "Iptables filter configuratie"
+msgid "Filter settings"
+msgstr "%d Filter instellingen"
 
 #, fuzzy
 msgid "Runtime filters"
 msgstr "Verwijder filter"
 
 #, fuzzy
-msgid "Close filter configuration"
-msgstr "Iptables filter configuratie"
+msgid "Close filter settings"
+msgstr "%d Filter instellingen"
 
 #, fuzzy
 msgid "Clear search"
@@ -94663,12 +94668,11 @@ msgstr "Standaardwaarden instellen voor alle secties"
 msgid "Values can be overridden by runtime or widget filters."
 msgstr "U kunt de ingebouwde tag groep \"%s\" niet overschrijven."
 
-msgid "Set required filters for viewers to enter on load."
+msgid "Add filter from left panel"
 msgstr ""
 
-#, fuzzy
-msgid "Select from list"
-msgstr "Selecteer individuele bestanden uit de lijst"
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
 
 #, fuzzy
 msgid "Enter runtime filter"
@@ -94691,7 +94695,7 @@ msgid "Applied filters"
 msgstr "Toegepaste filters:"
 
 #, fuzzy
-msgid "No %{n} dashboard filters applied"
+msgid "No default %{n} filters applied"
 msgstr "Ntop gastheer"
 
 msgid ""
@@ -94712,11 +94716,11 @@ msgid "Reset to pre-selected filters"
 msgstr "Verwijder filter"
 
 #, fuzzy
-msgid "Edit filter configuration"
-msgstr "Host configuratie"
+msgid "Edit filter settings"
+msgstr "%d Filter instellingen"
 
 #, fuzzy
-msgid "Override dashboard filters"
+msgid "Override default filters"
 msgstr "Gerelateerde dashboards"
 
 msgid "Success! Your runtime filters have been applied"
@@ -94887,14 +94891,6 @@ msgid "(required)"
 msgstr "is vereist"
 
 #, fuzzy
-msgid "Search Filter"
-msgstr "Zoekfilter"
-
-#, fuzzy
-msgid "No filters found matching"
-msgstr "Procesnaam matching"
-
-#, fuzzy
 msgid "Expand all"
 msgstr "Uitbreiden"
 
@@ -94909,6 +94905,13 @@ msgstr "van"
 #, fuzzy
 msgid "No filter category available"
 msgstr "Geen informatie beschikbaar"
+
+msgid "%{filterName} in %{filterGroup}"
+msgstr ""
+
+#, fuzzy
+msgid "No filters found matching: %{search}"
+msgstr "Procesnaam matching"
 
 #, fuzzy
 msgid "Widget"
@@ -95195,6 +95198,10 @@ msgid "Overriden"
 msgstr "Overzicht"
 
 #, fuzzy
+msgid "Default filter"
+msgstr "Standaard gebruikersprofiel"
+
+#, fuzzy
 msgid "Runtime filter"
 msgstr "Verwijder filter"
 
@@ -95228,7 +95235,7 @@ msgstr "Ntop gastheer"
 msgid "Widget filters"
 msgstr "Filter toevoegen"
 
-msgid "Widget configured filters override dashboard and runtime filters"
+msgid "Widget configured filters override default and runtime filters"
 msgstr ""
 
 #, fuzzy
@@ -95569,14 +95576,6 @@ msgstr "Klant"
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Staat wanneer bestand ontbreekt"
-
-#, fuzzy
-msgid "Create & set dashboard filters"
-msgstr "Gerelateerde dashboards"
-
-#, fuzzy
-msgid "Create & view list"
-msgstr "Map opslaan en bekijken"
 
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
@@ -96533,12 +96532,25 @@ msgstr "Genereer"
 msgid "Generating token"
 msgstr "Algemene opties"
 
+#, fuzzy
+msgid "Regenerate a token to use token authentication."
+msgstr "De gebruikersnaam die wordt gebruikt voor de brokerauthenticatie."
+
 msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
 msgid "Successfully generated token"
 msgstr "Wachtwoord succesvol gewijzigd."
+
+msgid ""
+"If an error occurs during OTT authentication, try to authenticate with a "
+"user."
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate with user"
+msgstr "Authenticatie met TLS"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
@@ -97431,12 +97443,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Add custom dashboard"
-msgstr "Link naar dashboard"
+msgid "Explore the Checkmk built-in dashboards"
+msgstr "Kloon ingebouwd dashboard"
+
+msgid ""
+"Explore all of the built-in dashboards available in Checkmk. You can also "
+"clone and modify them to suit your needs."
+msgstr ""
 
 #, fuzzy
-msgid "List of all dashboards"
+msgid "View list of all dashboards"
 msgstr "Links naar alle dashboards"
+
+#, fuzzy
+msgid "Create your own custom dashboard"
+msgstr "Gerelateerde dashboards"
+
+msgid ""
+"Now it's time to create your own customized dashboard so you can see what "
+"matters at a glance."
+msgstr ""
+
+#, fuzzy
+msgid "Add custom dashboard"
+msgstr "Link naar dashboard"
 
 #, fuzzy
 msgid "Enable notifications"
@@ -97489,6 +97519,38 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Filter configuration"
+#~ msgstr "Iptables filter configuratie"
+
+#, fuzzy
+#~ msgid "Close filter configuration"
+#~ msgstr "Iptables filter configuratie"
+
+#, fuzzy
+#~ msgid "Select from list"
+#~ msgstr "Selecteer individuele bestanden uit de lijst"
+
+#, fuzzy
+#~ msgid "No %{n} dashboard filters applied"
+#~ msgstr "Ntop gastheer"
+
+#, fuzzy
+#~ msgid "Edit filter configuration"
+#~ msgstr "Host configuratie"
+
+#, fuzzy
+#~ msgid "Search Filter"
+#~ msgstr "Zoekfilter"
+
+#, fuzzy
+#~ msgid "Create & set dashboard filters"
+#~ msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+#~ msgid "Create & view list"
+#~ msgstr "Map opslaan en bekijken"
 
 #~ msgid "Background in status color and label"
 #~ msgstr "Achtergrond in statuskleur en label"

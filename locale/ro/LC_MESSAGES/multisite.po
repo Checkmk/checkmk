@@ -44009,6 +44009,10 @@ msgid "Metric backend filter criteria"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
+msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "Instanțe Oracle"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "Configurație gazdă"
 
@@ -44065,10 +44069,6 @@ msgstr "Metrici"
 #, fuzzy
 msgid "Metrics Group"
 msgstr "Metrici"
-
-#, fuzzy
-msgid "Metrics backend is disabled."
-msgstr "Instanțe Oracle"
 
 #, fuzzy
 msgid "Metrics error state"
@@ -49053,7 +49053,8 @@ msgstr "Utilizarea memoriei Nvidia GPU"
 msgid "Nvidia GPU Power"
 msgstr "Puterea GPU-ului Nvidia"
 
-msgid "Nvidia GPU monitoring (Windows)"
+#, fuzzy
+msgid "Nvidia GPU monitoring (Linux, Windows)"
 msgstr "Monitorizarea GPU Nvidia (Windows)"
 
 msgid "Nvidia GPU utilization"
@@ -52689,7 +52690,8 @@ msgstr "Calea către categorii"
 msgid "Path to ceph.conf"
 msgstr "Calea către categorii"
 
-msgid "Path to nvidia-smi.exe"
+#, fuzzy
+msgid "Path to nvidia-smi.exe (Windows only)"
 msgstr "Cărare către nvidia-smi.exe"
 
 msgid "Path to sapgenpse"
@@ -55585,9 +55587,12 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Scrieți aici numele bazei de date, de exemplu SATURN\\ARCSERVE_DB"
 
+#, fuzzy
 msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program "
-"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. Under Linux, the relevant "
+"executable is usually defined in the PATH variable. Therefore, this setting "
+"is ignored under Linux."
 msgstr ""
 "Puneți aici calea către executabilul nvidia-smi.exe, de exemplu C:\\Program "
 "Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
@@ -94924,16 +94929,16 @@ msgid "Remove row"
 msgstr "Eliminat: %s"
 
 #, fuzzy
-msgid "Filter configuration"
-msgstr "Configurația filtrului Iptables"
+msgid "Filter settings"
+msgstr "%d setări de Filtrare"
 
 #, fuzzy
 msgid "Runtime filters"
 msgstr "Eliminați filtrul"
 
 #, fuzzy
-msgid "Close filter configuration"
-msgstr "Configurația filtrului Iptables"
+msgid "Close filter settings"
+msgstr "%d setări de Filtrare"
 
 #, fuzzy
 msgid "Clear search"
@@ -94953,12 +94958,11 @@ msgstr "Setați valorile implicite pentru toate secțiunile"
 msgid "Values can be overridden by runtime or widget filters."
 msgstr "Nu puteți suprascrie grupul de etichete încorporat \"%s\"."
 
-msgid "Set required filters for viewers to enter on load."
+msgid "Add filter from left panel"
 msgstr ""
 
-#, fuzzy
-msgid "Select from list"
-msgstr "Selectați tipul din listă"
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
 
 #, fuzzy
 msgid "Enter runtime filter"
@@ -94981,7 +94985,7 @@ msgid "Applied filters"
 msgstr "Filtre aplicate:"
 
 #, fuzzy
-msgid "No %{n} dashboard filters applied"
+msgid "No default %{n} filters applied"
 msgstr "Gazda Ntopng"
 
 msgid ""
@@ -95002,11 +95006,11 @@ msgid "Reset to pre-selected filters"
 msgstr "Eliminați filtrul"
 
 #, fuzzy
-msgid "Edit filter configuration"
-msgstr "Configurație gazdă"
+msgid "Edit filter settings"
+msgstr "%d setări de Filtrare"
 
 #, fuzzy
-msgid "Override dashboard filters"
+msgid "Override default filters"
 msgstr "Tablouri de bord conexe"
 
 msgid "Success! Your runtime filters have been applied"
@@ -95177,14 +95181,6 @@ msgid "(required)"
 msgstr " (obligatoriu)"
 
 #, fuzzy
-msgid "Search Filter"
-msgstr "Filtru de căutare"
-
-#, fuzzy
-msgid "No filters found matching"
-msgstr "Potrivirea numelui procesului"
-
-#, fuzzy
 msgid "Expand all"
 msgstr "Extindeți"
 
@@ -95199,6 +95195,13 @@ msgstr "off"
 #, fuzzy
 msgid "No filter category available"
 msgstr "Nu există informații disponibile"
+
+msgid "%{filterName} in %{filterGroup}"
+msgstr ""
+
+#, fuzzy
+msgid "No filters found matching: %{search}"
+msgstr "Potrivirea numelui procesului"
 
 #, fuzzy
 msgid "Widget"
@@ -95487,6 +95490,10 @@ msgid "Overriden"
 msgstr "Prezentare generală"
 
 #, fuzzy
+msgid "Default filter"
+msgstr "Profil implicit"
+
+#, fuzzy
 msgid "Runtime filter"
 msgstr "Eliminați filtrul"
 
@@ -95520,7 +95527,7 @@ msgstr "Gazda Ntopng"
 msgid "Widget filters"
 msgstr "Adaugă filtre"
 
-msgid "Widget configured filters override dashboard and runtime filters"
+msgid "Widget configured filters override default and runtime filters"
 msgstr ""
 
 #, fuzzy
@@ -95861,14 +95868,6 @@ msgstr "Client"
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Starea când lipsește fișierul"
-
-#, fuzzy
-msgid "Create & set dashboard filters"
-msgstr "Tablouri de bord conexe"
-
-#, fuzzy
-msgid "Create & view list"
-msgstr "Salvați & vizualizați folderul"
 
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
@@ -96828,12 +96827,25 @@ msgstr "Generarea cheii"
 msgid "Generating token"
 msgstr "Opțiuni generale"
 
+#, fuzzy
+msgid "Regenerate a token to use token authentication."
+msgstr "Numele de utilizator utilizat pentru autentificarea brokerului."
+
 msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
 msgid "Successfully generated token"
 msgstr "Copiat cu succes în clipboard."
+
+msgid ""
+"If an error occurs during OTT authentication, try to authenticate with a "
+"user."
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate with user"
+msgstr "Autentificare cu TLS"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
@@ -97740,12 +97752,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Add custom dashboard"
-msgstr "Adăugați la tabloul de bord"
+msgid "Explore the Checkmk built-in dashboards"
+msgstr "Clonarea tabloului de bord încorporat"
+
+msgid ""
+"Explore all of the built-in dashboards available in Checkmk. You can also "
+"clone and modify them to suit your needs."
+msgstr ""
 
 #, fuzzy
-msgid "List of all dashboards"
+msgid "View list of all dashboards"
 msgstr "Legături către toate tablourile de bord"
+
+#, fuzzy
+msgid "Create your own custom dashboard"
+msgstr "Tablouri de bord conexe"
+
+msgid ""
+"Now it's time to create your own customized dashboard so you can see what "
+"matters at a glance."
+msgstr ""
+
+#, fuzzy
+msgid "Add custom dashboard"
+msgstr "Adăugați la tabloul de bord"
 
 #, fuzzy
 msgid "Enable notifications"
@@ -97798,6 +97828,38 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Filter configuration"
+#~ msgstr "Configurația filtrului Iptables"
+
+#, fuzzy
+#~ msgid "Close filter configuration"
+#~ msgstr "Configurația filtrului Iptables"
+
+#, fuzzy
+#~ msgid "Select from list"
+#~ msgstr "Selectați tipul din listă"
+
+#, fuzzy
+#~ msgid "No %{n} dashboard filters applied"
+#~ msgstr "Gazda Ntopng"
+
+#, fuzzy
+#~ msgid "Edit filter configuration"
+#~ msgstr "Configurație gazdă"
+
+#, fuzzy
+#~ msgid "Search Filter"
+#~ msgstr "Filtru de căutare"
+
+#, fuzzy
+#~ msgid "Create & set dashboard filters"
+#~ msgstr "Tablouri de bord conexe"
+
+#, fuzzy
+#~ msgid "Create & view list"
+#~ msgstr "Salvați & vizualizați folderul"
 
 #~ msgid "Background in status color and label"
 #~ msgstr "Fundalul în culoarea de stare și eticheta"

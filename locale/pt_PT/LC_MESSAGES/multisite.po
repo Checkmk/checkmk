@@ -43897,6 +43897,10 @@ msgid "Metric backend filter criteria"
 msgstr "instâncias Oracle"
 
 #, fuzzy
+msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "instâncias Oracle"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "Configuração do anfitrião"
 
@@ -43953,10 +43957,6 @@ msgstr "Métricas"
 #, fuzzy
 msgid "Metrics Group"
 msgstr "Métricas"
-
-#, fuzzy
-msgid "Metrics backend is disabled."
-msgstr "instâncias Oracle"
 
 #, fuzzy
 msgid "Metrics error state"
@@ -48916,7 +48916,8 @@ msgstr "Utilização da memória da GPU da Nvidia"
 msgid "Nvidia GPU Power"
 msgstr "Potência da GPU Nvidia"
 
-msgid "Nvidia GPU monitoring (Windows)"
+#, fuzzy
+msgid "Nvidia GPU monitoring (Linux, Windows)"
 msgstr "Monitorização de GPU da Nvidia (Windows)"
 
 msgid "Nvidia GPU utilization"
@@ -52537,7 +52538,8 @@ msgstr "Caminho para as categorias"
 msgid "Path to ceph.conf"
 msgstr "Caminho para as categorias"
 
-msgid "Path to nvidia-smi.exe"
+#, fuzzy
+msgid "Path to nvidia-smi.exe (Windows only)"
 msgstr "Caminho para nvidia-smi.exe"
 
 msgid "Path to sapgenpse"
@@ -55436,9 +55438,12 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Coloque aqui o nome da base de dados, por exemplo, SATURN\\ARCSERVE_DB"
 
+#, fuzzy
 msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program "
-"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. Under Linux, the relevant "
+"executable is usually defined in the PATH variable. Therefore, this setting "
+"is ignored under Linux."
 msgstr ""
 "Coloque o caminho para o executável nvidia-smi.exe aqui, por exemplo, C:"
 "\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
@@ -94540,16 +94545,16 @@ msgid "Remove row"
 msgstr "Removido: %s"
 
 #, fuzzy
-msgid "Filter configuration"
-msgstr "Configuração do filtro Iptables"
+msgid "Filter settings"
+msgstr "%d Configurações de filtro"
 
 #, fuzzy
 msgid "Runtime filters"
 msgstr "Remover filtro"
 
 #, fuzzy
-msgid "Close filter configuration"
-msgstr "Configuração do filtro Iptables"
+msgid "Close filter settings"
+msgstr "%d Configurações de filtro"
 
 #, fuzzy
 msgid "Clear search"
@@ -94569,12 +94574,11 @@ msgstr "Definir valores padrão para todas as seções"
 msgid "Values can be overridden by runtime or widget filters."
 msgstr "Não é possível substituir o grupo de etiquetas incorporado \"%s\"."
 
-msgid "Set required filters for viewers to enter on load."
+msgid "Add filter from left panel"
 msgstr ""
 
-#, fuzzy
-msgid "Select from list"
-msgstr "Selecione arquivos individuais da lista"
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
 
 #, fuzzy
 msgid "Enter runtime filter"
@@ -94597,7 +94601,7 @@ msgid "Applied filters"
 msgstr "Filtros Aplicados:"
 
 #, fuzzy
-msgid "No %{n} dashboard filters applied"
+msgid "No default %{n} filters applied"
 msgstr "Anfitrião Ntop"
 
 msgid ""
@@ -94618,11 +94622,11 @@ msgid "Reset to pre-selected filters"
 msgstr "Remover filtro"
 
 #, fuzzy
-msgid "Edit filter configuration"
-msgstr "Configuração do anfitrião"
+msgid "Edit filter settings"
+msgstr "%d Configurações de filtro"
 
 #, fuzzy
-msgid "Override dashboard filters"
+msgid "Override default filters"
 msgstr "Painéis de controlo relacionados"
 
 msgid "Success! Your runtime filters have been applied"
@@ -94793,14 +94797,6 @@ msgid "(required)"
 msgstr " é necessário"
 
 #, fuzzy
-msgid "Search Filter"
-msgstr "Filtro de busca"
-
-#, fuzzy
-msgid "No filters found matching"
-msgstr "Correspondência de nomes de processos"
-
-#, fuzzy
 msgid "Expand all"
 msgstr "Expandir"
 
@@ -94815,6 +94811,13 @@ msgstr "em"
 #, fuzzy
 msgid "No filter category available"
 msgstr "Não há informação disponível"
+
+msgid "%{filterName} in %{filterGroup}"
+msgstr ""
+
+#, fuzzy
+msgid "No filters found matching: %{search}"
+msgstr "Correspondência de nomes de processos"
 
 #, fuzzy
 msgid "Widget"
@@ -95100,6 +95103,10 @@ msgid "Overriden"
 msgstr "Visão geral"
 
 #, fuzzy
+msgid "Default filter"
+msgstr "Perfil de usuário predefinido"
+
+#, fuzzy
 msgid "Runtime filter"
 msgstr "Remover filtro"
 
@@ -95133,7 +95140,7 @@ msgstr "Anfitrião Ntop"
 msgid "Widget filters"
 msgstr "Adicionar filtro"
 
-msgid "Widget configured filters override dashboard and runtime filters"
+msgid "Widget configured filters override default and runtime filters"
 msgstr ""
 
 #, fuzzy
@@ -95474,14 +95481,6 @@ msgstr "Cliente"
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Indique quando falta o arquivo"
-
-#, fuzzy
-msgid "Create & set dashboard filters"
-msgstr "Painéis de controlo relacionados"
-
-#, fuzzy
-msgid "Create & view list"
-msgstr "Guardar & ver pasta"
 
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
@@ -96436,12 +96435,25 @@ msgstr "Gerar"
 msgid "Generating token"
 msgstr "Opções Gerais"
 
+#, fuzzy
+msgid "Regenerate a token to use token authentication."
+msgstr "O nome de utilizador utilizado para a autenticação do corretor."
+
 msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
 msgid "Successfully generated token"
 msgstr "Mudança de senha com sucesso."
+
+msgid ""
+"If an error occurs during OTT authentication, try to authenticate with a "
+"user."
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate with user"
+msgstr "Autenticação com TLS"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
@@ -97338,12 +97350,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Add custom dashboard"
-msgstr "Ligação ao tablier"
+msgid "Explore the Checkmk built-in dashboards"
+msgstr "Clonar o painel de controlo incorporado"
+
+msgid ""
+"Explore all of the built-in dashboards available in Checkmk. You can also "
+"clone and modify them to suit your needs."
+msgstr ""
 
 #, fuzzy
-msgid "List of all dashboards"
+msgid "View list of all dashboards"
 msgstr "Links para todos os painéis de bordo"
+
+#, fuzzy
+msgid "Create your own custom dashboard"
+msgstr "Painéis de controlo relacionados"
+
+msgid ""
+"Now it's time to create your own customized dashboard so you can see what "
+"matters at a glance."
+msgstr ""
+
+#, fuzzy
+msgid "Add custom dashboard"
+msgstr "Ligação ao tablier"
 
 #, fuzzy
 msgid "Enable notifications"
@@ -97396,6 +97426,38 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Filter configuration"
+#~ msgstr "Configuração do filtro Iptables"
+
+#, fuzzy
+#~ msgid "Close filter configuration"
+#~ msgstr "Configuração do filtro Iptables"
+
+#, fuzzy
+#~ msgid "Select from list"
+#~ msgstr "Selecione arquivos individuais da lista"
+
+#, fuzzy
+#~ msgid "No %{n} dashboard filters applied"
+#~ msgstr "Anfitrião Ntop"
+
+#, fuzzy
+#~ msgid "Edit filter configuration"
+#~ msgstr "Configuração do anfitrião"
+
+#, fuzzy
+#~ msgid "Search Filter"
+#~ msgstr "Filtro de busca"
+
+#, fuzzy
+#~ msgid "Create & set dashboard filters"
+#~ msgstr "Painéis de controlo relacionados"
+
+#, fuzzy
+#~ msgid "Create & view list"
+#~ msgstr "Guardar & ver pasta"
 
 #~ msgid "Background in status color and label"
 #~ msgstr "Fundo em cor de status e etiqueta"

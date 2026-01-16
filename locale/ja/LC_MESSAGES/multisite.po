@@ -41454,6 +41454,10 @@ msgid "Metric backend filter criteria"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
+msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "Oracleインスタンス"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "テスト構成"
 
@@ -41507,10 +41511,6 @@ msgstr "メトリクス"
 
 msgid "Metrics Group"
 msgstr "メトリクスグループ"
-
-#, fuzzy
-msgid "Metrics backend is disabled."
-msgstr "Oracleインスタンス"
 
 #, fuzzy
 msgid "Metrics error state"
@@ -46177,7 +46177,8 @@ msgstr "Nvidia GPUメモリ使用率"
 msgid "Nvidia GPU Power"
 msgstr "Nvidia GPUパワー"
 
-msgid "Nvidia GPU monitoring (Windows)"
+#, fuzzy
+msgid "Nvidia GPU monitoring (Linux, Windows)"
 msgstr "Nvidia GPU監視(Windows)"
 
 msgid "Nvidia GPU utilization"
@@ -49481,7 +49482,8 @@ msgstr "カテゴリのパス"
 msgid "Path to ceph.conf"
 msgstr "カテゴリのパスceph.conf へのパス"
 
-msgid "Path to nvidia-smi.exe"
+#, fuzzy
+msgid "Path to nvidia-smi.exe (Windows only)"
 msgstr "nvidia-smi.exeファイルへのパス"
 
 msgid "Path to sapgenpse"
@@ -52176,9 +52178,12 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "ここにデータベースの名前を入力します(例: SATURN\\ARCSERVE_DB)"
 
+#, fuzzy
 msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program "
-"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+"Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. Under Linux, the relevant "
+"executable is usually defined in the PATH variable. Therefore, this setting "
+"is ignored under Linux."
 msgstr ""
 "ここに nvidia-smi.exe の実行ファイルのパスを入れてください。例: C:\\Program "
 "Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
@@ -89091,16 +89096,16 @@ msgid "Remove row"
 msgstr "削除：%r"
 
 #, fuzzy
-msgid "Filter configuration"
-msgstr "Iptablesフィルター構成"
+msgid "Filter settings"
+msgstr "%d フィルター設定"
 
 #, fuzzy
 msgid "Runtime filters"
 msgstr "フィルタを取り外します"
 
 #, fuzzy
-msgid "Close filter configuration"
-msgstr "Iptablesフィルター構成"
+msgid "Close filter settings"
+msgstr "%d フィルター設定"
 
 #, fuzzy
 msgid "Clear search"
@@ -89120,12 +89125,11 @@ msgstr "すべてのセクションにデフォルト値を設定する"
 msgid "Values can be overridden by runtime or widget filters."
 msgstr "クイックフィルターを追加することでこれらを上書きできます"
 
-msgid "Set required filters for viewers to enter on load."
+msgid "Add filter from left panel"
 msgstr ""
 
-#, fuzzy
-msgid "Select from list"
-msgstr "リストからタイプを選択"
+msgid "Set required filters for viewers to enter on load."
+msgstr ""
 
 #, fuzzy
 msgid "Enter runtime filter"
@@ -89148,7 +89152,7 @@ msgid "Applied filters"
 msgstr "適用されたフィルター:"
 
 #, fuzzy
-msgid "No %{n} dashboard filters applied"
+msgid "No default %{n} filters applied"
 msgstr "%{n} 対象フィルターは適用されていません"
 
 msgid ""
@@ -89169,11 +89173,11 @@ msgid "Reset to pre-selected filters"
 msgstr "フィルタを取り外します"
 
 #, fuzzy
-msgid "Edit filter configuration"
-msgstr "この接続を編集する"
+msgid "Edit filter settings"
+msgstr "%d フィルター設定"
 
 #, fuzzy
-msgid "Override dashboard filters"
+msgid "Override default filters"
 msgstr "関連ダッシュボード"
 
 msgid "Success! Your runtime filters have been applied"
@@ -89339,14 +89343,6 @@ msgid "(required)"
 msgstr " (必須)"
 
 #, fuzzy
-msgid "Search Filter"
-msgstr "検索フィルター"
-
-#, fuzzy
-msgid "No filters found matching"
-msgstr "プロセス名照合"
-
-#, fuzzy
 msgid "Expand all"
 msgstr "展開"
 
@@ -89360,6 +89356,13 @@ msgstr "の"
 #, fuzzy
 msgid "No filter category available"
 msgstr "利用可能な情報はありません"
+
+msgid "%{filterName} in %{filterGroup}"
+msgstr ""
+
+#, fuzzy
+msgid "No filters found matching: %{search}"
+msgstr "プロセス名照合"
 
 #, fuzzy
 msgid "Widget"
@@ -89637,6 +89640,10 @@ msgid "Overriden"
 msgstr "概要"
 
 #, fuzzy
+msgid "Default filter"
+msgstr "デフォルトのプロファイル"
+
+#, fuzzy
 msgid "Runtime filter"
 msgstr "フィルタを取り外します"
 
@@ -89669,7 +89676,7 @@ msgstr "%{n} 対象フィルターは適用されていません"
 msgid "Widget filters"
 msgstr "フィルタを追加"
 
-msgid "Widget configured filters override dashboard and runtime filters"
+msgid "Widget configured filters override default and runtime filters"
 msgstr ""
 
 #, fuzzy
@@ -90007,14 +90014,6 @@ msgstr "カスタム"
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
-
-#, fuzzy
-msgid "Create & set dashboard filters"
-msgstr "関連ダッシュボード"
-
-#, fuzzy
-msgid "Create & view list"
-msgstr "保存してフォルダを確認"
 
 msgid ""
 "Dashboards can display one or multiple entries depending on the selected "
@@ -90941,12 +90940,25 @@ msgstr "キーを生成する"
 msgid "Generating token"
 msgstr "一般的なオプション"
 
+#, fuzzy
+msgid "Regenerate a token to use token authentication."
+msgstr "ブローカー認証に使用されるユーザー名。"
+
 msgid "Error on generating token: ${ottError.message}"
 msgstr ""
 
 #, fuzzy
 msgid "Successfully generated token"
 msgstr "クリップボードへのコピーに成功しました。"
+
+msgid ""
+"If an error occurs during OTT authentication, try to authenticate with a "
+"user."
+msgstr ""
+
+#, fuzzy
+msgid "Authenticate with user"
+msgstr "TLS認証"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
@@ -91829,12 +91841,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Add custom dashboard"
-msgstr "ダッシュボードに追加"
+msgid "Explore the Checkmk built-in dashboards"
+msgstr "組み込みダッシュボードを複製する"
+
+msgid ""
+"Explore all of the built-in dashboards available in Checkmk. You can also "
+"clone and modify them to suit your needs."
+msgstr ""
 
 #, fuzzy
-msgid "List of all dashboards"
+msgid "View list of all dashboards"
 msgstr "すべてのダッシュボードへのリンク"
+
+#, fuzzy
+msgid "Create your own custom dashboard"
+msgstr "関連ダッシュボード"
+
+msgid ""
+"Now it's time to create your own customized dashboard so you can see what "
+"matters at a glance."
+msgstr ""
+
+#, fuzzy
+msgid "Add custom dashboard"
+msgstr "ダッシュボードに追加"
 
 msgid "Enable notifications"
 msgstr "通知を有効にする"
@@ -91885,6 +91915,38 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Filter configuration"
+#~ msgstr "Iptablesフィルター構成"
+
+#, fuzzy
+#~ msgid "Close filter configuration"
+#~ msgstr "Iptablesフィルター構成"
+
+#, fuzzy
+#~ msgid "Select from list"
+#~ msgstr "リストからタイプを選択"
+
+#, fuzzy
+#~ msgid "No %{n} dashboard filters applied"
+#~ msgstr "%{n} 対象フィルターは適用されていません"
+
+#, fuzzy
+#~ msgid "Edit filter configuration"
+#~ msgstr "この接続を編集する"
+
+#, fuzzy
+#~ msgid "Search Filter"
+#~ msgstr "検索フィルター"
+
+#, fuzzy
+#~ msgid "Create & set dashboard filters"
+#~ msgstr "関連ダッシュボード"
+
+#, fuzzy
+#~ msgid "Create & view list"
+#~ msgstr "保存してフォルダを確認"
 
 #~ msgid "Background in status color and label"
 #~ msgstr "ステータスの色とラベルの背景"

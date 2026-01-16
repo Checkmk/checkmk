@@ -111,7 +111,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
 
       <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
         <template #header>
-          <CmkHeading type="h3">{{ _t('Assign the contact group to hosts') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Assign hosts to a contact group') }}</CmkHeading>
         </template>
         <template #content>
           <StepParagraph>

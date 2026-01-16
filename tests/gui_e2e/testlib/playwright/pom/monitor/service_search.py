@@ -5,6 +5,7 @@
 
 import logging
 import re
+from enum import StrEnum
 from typing import override
 from urllib.parse import quote_plus
 
@@ -14,6 +15,12 @@ from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
+
+
+class ServiceState(StrEnum):
+    OK = "OK"
+    WARN = "WARN"
+    CRIT = "CRIT"
 
 
 class ServiceSearchPage(CmkPage):
@@ -66,6 +73,9 @@ class ServiceSearchPage(CmkPage):
     def service_summary(self, host_name: str, service_name: str) -> Locator:
         return self.service_row(host_name, service_name).locator("td:nth-child(4)")
 
+    def get_service_state(self, host_name: str, service_name: str) -> Locator:
+        return self.service_row(host_name, service_name).locator("span.state_rounded_fill")
+
     @property
     def action_menu(self) -> Locator:
         return self.main_area.locator("div#popup_menu")
@@ -109,24 +119,24 @@ class ServiceSearchPage(CmkPage):
         self.page.wait_for_load_state("load")
 
     def wait_for_check_status_update(
-        self, host_name: str, service_name: str, expected_string: str, attempts: int = 5
-    ) -> str:
+        self, host_name: str, service_name: str, expected_state: ServiceState, attempts: int = 5
+    ) -> None:
         """Wait for the service summary to contain the expected string.
 
         After applying a new rule, the service summary should be updated accordingly.
         This process may take some time, so an attempt is made to check the service summary and
-        reschedule the check if the expected string is not found. Returns the service summary.
+        reschedule the check if the expected string is not found.
         """
         for _ in range(attempts):
             logger.debug("Attempt-%d", _ + 1)
             try:
-                expect(self.service_summary(host_name, service_name)).to_contain_text(
-                    expected_string
-                )
-                return self.service_summary(host_name, service_name).inner_text()
+                expect(self.get_service_state(host_name, service_name)).to_have_text(expected_state)
             except AssertionError:
                 self.reschedule_check(host_name, "Check_MK")
+            else:
+                return
+
         raise AssertionError(
-            f"Expected string '{expected_string}' not found in '{service_name}' service summary "
+            f"Expected string '{expected_state}' not found in '{service_name}' service summary "
             f"after {attempts} attempts"
         )

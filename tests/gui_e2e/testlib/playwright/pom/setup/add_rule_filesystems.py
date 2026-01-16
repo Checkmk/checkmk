@@ -71,6 +71,48 @@ class AddRuleFilesystems(CmkPage):
             "input[name*='_p_levels_0_0_0']"
         )
 
+    @property
+    def explicit_hosts_checkbox(self) -> Locator:
+        return self.main_area.locator().get_by_role("checkbox", name="Explicit hosts")
+
+    @property
+    def explicit_hosts_combobox(self) -> Locator:
+        return (
+            self.main_area.locator()
+            .get_by_role("group", name="Explicit hosts")
+            .get_by_role("combobox")
+            .first
+        )
+
+    @property
+    def explicit_hosts_listbox(self) -> Locator:
+        return (
+            self.main_area.locator()
+            .get_by_role("group", name="Explicit hosts")
+            .get_by_role("listbox")
+        )
+
     def check_levels_for_user_free_space(self, check: bool) -> None:
         if self._levels_for_used_free_space_checkbox.is_checked() != check:
             self._levels_for_used_free_space_checkbox.click()
+
+    def select_explicit_host(self, host_name: str) -> None:
+        self.explicit_hosts_checkbox.check()
+        expect(
+            self.explicit_hosts_combobox,
+            message=(
+                "'Explicit hosts' combobox not present after checking 'Explicit hosts' checkbox"
+            ),
+        ).to_be_visible()
+
+        self.explicit_hosts_combobox.click()
+        expect(
+            self.explicit_hosts_listbox,
+            message="'Explicit hosts' listbox not deployed",
+        ).to_be_visible()
+
+        self.explicit_hosts_listbox.get_by_role("option", name=host_name).click()
+        expect(
+            self.explicit_hosts_combobox,
+            message=f"Host '{host_name}' not selected",
+        ).to_have_text(host_name)

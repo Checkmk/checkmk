@@ -216,9 +216,40 @@ const callCount = ref<number>(0)
   <h1>CmkDropdownButton</h1>
   <h2>button</h2>
   <CmkDropdownButton>default button</CmkDropdownButton>
-  <h2>group</h2>
-  <CmkDropdownButton group="start">start</CmkDropdownButton
-  ><CmkDropdownButton group="end">end</CmkDropdownButton>
+
+  <h2>group start</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty4"
+    :options="{ type: 'filtered', suggestions: [] }"
+    no-elements-text="no elements"
+    label="some label"
+    required
+  >
+    <template #buttons-start><CmkDropdownButton group="start">start</CmkDropdownButton></template>
+  </CmkDropdown>
+
+  <h2>group end</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty4"
+    :options="{ type: 'filtered', suggestions: [] }"
+    no-elements-text="no elements"
+    label="some label"
+    required
+  >
+    <template #buttons-end><CmkDropdownButton group="end">end</CmkDropdownButton></template>
+  </CmkDropdown>
+
+  <h2>group both</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty4"
+    :options="{ type: 'filtered', suggestions: [] }"
+    no-elements-text="no elements"
+    label="some label"
+    required
+  >
+    <template #buttons-start><CmkDropdownButton group="start">start</CmkDropdownButton></template>
+    <template #buttons-end><CmkDropdownButton group="end">end</CmkDropdownButton></template>
+  </CmkDropdown>
 
   <h1>Error Handling for Callback-Filtered Dropdowns</h1>
   <h2>Graceful error handling with recovery</h2>
@@ -243,10 +274,16 @@ const callCount = ref<number>(0)
     label="Dropdown with error recovery"
   >
     <template #buttons-start>
-      <CmkDropdownButton>start</CmkDropdownButton>
+      <CmkDropdownButton :group="'start'">start</CmkDropdownButton>
     </template>
     <template #buttons-end>
-      <CmkDropdownButton>end</CmkDropdownButton>
+      <CmkDropdownButton :group="'end'">end</CmkDropdownButton>
     </template>
   </CmkDropdown>
 </template>
+
+<style scoped>
+h1 {
+  margin-top: 2rem;
+}
+</style>

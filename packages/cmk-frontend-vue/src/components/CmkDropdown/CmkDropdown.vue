@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useSlots, useTemplateRef } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 import useClickOutside from '@/lib/useClickOutside'
@@ -33,7 +33,6 @@ const {
   componentId = null,
   noElementsText = '',
   required = false,
-  startOfGroup = false,
   width,
   options,
   label,
@@ -47,7 +46,6 @@ const {
   noElementsText?: TranslatedString
   required?: boolean
   label: TranslatedString
-  startOfGroup?: boolean
   width?: ButtonVariants['width']
   formValidation?: boolean
 }>()
@@ -161,6 +159,21 @@ const truncatedButtonLabel = computed(() =>
     ? `${buttonLabel.value.slice(0, maxLabelLength / 2 - 5)}...${buttonLabel.value.slice(-maxLabelLength / 2 + 5)}`
     : buttonLabel.value
 )
+
+const slots = useSlots()
+const group = computed<ButtonVariants['group']>(() => {
+  const hasButtonsStart = !!slots['buttons-start']
+  const hasButtonsEnd = !!slots['buttons-end']
+  if (hasButtonsStart && hasButtonsEnd) {
+    return 'center'
+  } else if (hasButtonsStart) {
+    return 'end'
+  } else if (hasButtonsEnd) {
+    return 'start'
+  } else {
+    return 'no'
+  }
+})
 </script>
 
 <template>
@@ -187,7 +200,7 @@ const truncatedButtonLabel = computed(() =>
       :disabled="disabled"
       :multiple-choices-available="canOpenDropdown"
       :value-is-selected="selectedOption !== null"
-      :group="startOfGroup ? 'start' : 'no'"
+      :group="group"
       :width="width"
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"

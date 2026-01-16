@@ -101,7 +101,9 @@ class IncorrectLabelInputError(MKUserError):
 
 def _build_url(url_params: HTTPVariables) -> str:
     new_params = url_params[:]
-    return makeuri(request, new_params, delvars=["q"], filename="view.py")
+    return makeuri(
+        request, new_params, delvars=["q", "sort", "collapse", "provider"], filename="view.py"
+    )
 
 
 class ABCQuicksearchConductor(abc.ABC):

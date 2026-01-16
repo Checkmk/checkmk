@@ -200,12 +200,12 @@ void upload_hot_cache(Map args) {
         def du_commands = cache_directories.collect { "[ -d \"${it}\" ] && du -sh ${it}" }.join("\n            ");
 
         sh("""
-        cd ${args.download_dest}
-        if ${check_conditions}; then
-            ${du_commands}
-            time tar -cf - ${dirs} 2>/dev/null | lz4 > ${args.file_pattern}
-        fi
-    """);
+            cd ${args.download_dest}
+            if ${check_conditions}; then
+                ${du_commands}
+                time tar -cf - ${dirs} 2>/dev/null | lz4 > ${args.file_pattern}
+            fi
+        """);
 
         if (!sh(script:"test -f ${args.download_dest}/${args.file_pattern}", returnStatus:true)) {
             if (args.remote_upload) {

@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Final
 
 from cmk.ccc import tty
 from cmk.utils.log import console
+
+type IssueConfigWarning = Callable[[str], None]
+
 
 ConfigurationWarnings = list[str]
 

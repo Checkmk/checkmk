@@ -1551,8 +1551,10 @@ _NAGIOS_CONFIG_MODE = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
-    noop = lambda: None
+def _make_configured_notify_relay(
+    relays_present: bool,
+) -> Callable[[Callable[[str], object]], None]:
+    noop = lambda *a, **kw: None
 
     if not relays_present:
         return noop

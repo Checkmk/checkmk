@@ -24,7 +24,6 @@ Checks: >
   -misc-non-private-member-variables-in-classes,
   -modernize-use-designated-initializers,
   -modernize-use-trailing-return-type,
-  -modernize-use-integer-sign-comparison,
   -performance-enum-size,
   -readability-avoid-nested-conditional-operator,
   -readability-avoid-return-with-void-value,

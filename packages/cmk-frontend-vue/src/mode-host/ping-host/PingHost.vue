@@ -67,6 +67,12 @@ const showPingHost = computed(() => {
 })
 
 onMounted(() => {
+  if (props.ipv4InputElement.value) {
+    callPingHostOnElement(props.ipv4InputElement, PingCmd.Ping, true)
+  }
+  if (props.ipv6InputElement.value) {
+    callPingHostOnElement(props.ipv6InputElement, PingCmd.Ping6, true)
+  }
   props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
       case props.formElement:

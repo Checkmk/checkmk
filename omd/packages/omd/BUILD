@@ -200,6 +200,7 @@ py_library(
         "omdlib/scripts.py",
         "omdlib/site_name.py",
         "omdlib/site_paths.py",
+        "omdlib/site_user.py",
         "omdlib/sites.py",
         "omdlib/skel_permissions.py",
         "omdlib/system_apache.py",

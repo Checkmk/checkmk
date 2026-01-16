@@ -41,7 +41,6 @@ from omdlib.config_hooks import (
     ConfigHook,
     ConfigHookChoices,
     ConfigHooks,
-    create_config_environment,
     load_config,
     load_config_hooks,
     load_hook_dependencies,
@@ -74,6 +73,7 @@ from omdlib.restore import prepare_restore_as_root, prepare_restore_as_site_user
 from omdlib.scripts import _call_script, call_scripts
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
+from omdlib.site_user import site_environment
 from omdlib.sites import all_sites, is_disabled, main_sites
 from omdlib.skel_permissions import (
     get_skel_permissions,
@@ -104,7 +104,6 @@ from omdlib.users_and_groups import (
     group_exists,
     group_id,
     groupdel,
-    switch_to_site_user,
     user_id,
     user_logged_in,
     user_verify,
@@ -1687,59 +1686,6 @@ def init_action(
 #   '----------------------------------------------------------------------'
 
 
-def clear_environment() -> None:
-    # first remove *all* current environment variables, except:
-    # TERM
-    # CMK_CONTAINERIZED: To better detect when running inside container (e.g. used for omd update)
-    keep = ["TERM", "CMK_CONTAINERIZED"]
-    for key in os.environ:
-        if key not in keep:
-            del os.environ[key]
-
-
-def set_environment(site_name: str, config: Config) -> None:
-    site_home = SitePaths.from_site_name(site_name).home
-    os.environ["OMD_SITE"] = site_name
-    os.environ["OMD_ROOT"] = site_home
-    os.environ["PATH"] = (
-        f"{site_home}/local/bin:{site_home}/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin"
-    )
-    os.environ["USER"] = site_name
-
-    os.environ["LD_LIBRARY_PATH"] = f"{site_home}/local/lib:{site_home}/lib"
-    os.environ["HOME"] = site_home
-
-    # allow user to define further environment variable in ~/etc/environment
-    envfile = Path(site_home, "etc", "environment")
-    if envfile.exists():
-        lineno = 0
-        with envfile.open() as opened_file:
-            for line in opened_file:
-                lineno += 1
-                line = line.strip()
-                if line == "" or line[0] == "#":
-                    continue  # allow empty lines and comments
-                parts = line.split("=")
-                if len(parts) != 2:
-                    sys.exit("%s: syntax error in line %d" % (envfile, lineno))
-                varname = parts[0]
-                value = parts[1]
-                if value.startswith('"'):
-                    value = value.strip('"')
-
-                # Add the present environment when someone wants to append some
-                if value.startswith("$%s:" % varname):
-                    before = os.environ.get(varname)
-                    if before:
-                        value = before + ":" + value.replace("$%s:" % varname, "")
-
-                if value.startswith("'"):
-                    value = value.strip("'")
-                os.environ[varname] = value
-
-    create_config_environment(config)
-
-
 def hostname() -> str:
     try:
         completed_process = subprocess.run(
@@ -3197,23 +3143,6 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _site_environment(site_name: str, switch: bool, verbose: bool) -> SiteContext:
-    site = SiteContext(site_name)
-    site.set_config(load_config(site, verbose))
-
-    # Commands which affect a site and can be called as root *or* as
-    # site user should always run with site user privileges. That way
-    # we are sure that new files and processes are created under the
-    # site user and never as root.
-    if switch:
-        switch_to_site_user(site.name)
-
-    # Make sure environment is in a defined state
-    clear_environment()
-    set_environment(site.name, site.conf)
-    return site
-
-
 def _run_command(
     command: Command,
     version_info: VersionInfo,
@@ -3324,7 +3253,7 @@ def main() -> None:
     site = (
         RootContext()
         if site_name is None
-        else _site_environment(
+        else site_environment(
             site_name,
             not command.no_suid and is_root() and not command.only_root,
             global_opts.verbose,

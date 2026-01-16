@@ -28,6 +28,8 @@ const data = defineModel<DcdMetricBackendFilter>('data', { required: true })
       :strict="false"
       :disable-values-on-empty-key="true"
       :static-resource-attribute-keys="['service.name']"
+      :indent="true"
+      :orientation="'vertical'"
     />
   </table>
 </template>

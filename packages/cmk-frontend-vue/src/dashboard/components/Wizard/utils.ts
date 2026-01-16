@@ -3,8 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ComponentConfig, ConfiguredFilters } from '@/dashboard/components/filter/types'
-import type { FilterDefinitions } from '@/dashboard/components/filter/types'
+import type {
+  ComponentConfig,
+  ConfiguredFilters,
+  FilterDefinitions
+} from '@/dashboard/components/filter/types'
 import type { UseViewsCollection } from '@/dashboard/composables/api/useViewsCollection'
 import type { UseVisualInfoCollection } from '@/dashboard/composables/api/useVisualInfoCollection'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
@@ -16,7 +19,7 @@ import { ElementSelection } from './types'
 
 export const isUrl = (text: string): boolean => {
   try {
-    new URL(text)
+    new URL(text, 'http://checkmk.com')
     return true
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {

@@ -171,6 +171,7 @@ const truncatedButtonLabel = computed(() =>
       }
     "
     class="cmk-dropdown"
+    :class="{ 'cmk-dropdown__max-width': width === 'max' }"
   >
     <CmkInlineValidation
       v-if="callbackFilteredErrorMessage !== null"
@@ -235,6 +236,10 @@ const truncatedButtonLabel = computed(() =>
       opacity: 0.4;
     }
   }
+}
+
+.cmk-dropdown__max-width {
+  width: 100%;
 }
 
 .cmk-dropdown__validation-error {

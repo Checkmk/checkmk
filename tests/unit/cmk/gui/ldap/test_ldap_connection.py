@@ -525,7 +525,7 @@ def test_start_url_values(clients: ClientRegistry) -> None:
 
 def test_create_with_custom_user_role(clients: ClientRegistry) -> None:
     clients.UserRole.clone(body={"role_id": "admin"})
-    clients.LdapConnection.create(
+    resp = clients.LdapConnection.create(
         ldap_data={
             "general_properties": {"id": "LDAP_1"},
             "ldap_connection": {
@@ -561,3 +561,10 @@ def test_create_with_custom_user_role(clients: ClientRegistry) -> None:
             },
         }
     )
+
+    assert resp.json["extensions"]["sync_plugins"]["groups_to_roles"]["adminx"] == [
+        {
+            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+            "search_in": "this_connection",
+        }
+    ]

@@ -339,7 +339,8 @@ def _paint_host_inventory_attribute(
             retention_interval=attributes.retentions.get(key),
             paint_function=hint.paint_function,
             icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
-        ).compute_td_spec(time.time())
+        ).compute_td_spec(time.time()),
+        text_align="",
     )
 
 
@@ -408,7 +409,8 @@ def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> Cel
             retention_interval=row.get("_".join([hint.name, "retention_interval"])),
             paint_function=hint.paint_function,
             icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
-        ).compute_td_spec(time.time())
+        ).compute_td_spec(time.time()),
+        text_align="",
     )
 
 

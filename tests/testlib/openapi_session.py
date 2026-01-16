@@ -479,11 +479,13 @@ class FoldersAPI(BaseAPI):
         title: str | None = None,
         attributes: Mapping[str, Any] | None = None,
     ) -> None:
-        if folder.count("/") > 1:
-            parent_folder, folder_name = folder.rsplit("/", 1)
-        else:
-            parent_folder = "/"
-            folder_name = folder.replace("/", "")
+        # Convert folder path delimiters from '/' to '~' for the API
+        folder_path = folder.replace("/", "~")
+        # Ensure we are using the correct prefix
+        folder_path = folder_path if folder_path.startswith("~") else f"~{folder_path}"
+
+        parent_folder, folder_name = folder_path.rsplit("~", 1)
+        parent_folder = parent_folder or "~"
         response = self.session.post(
             "/domain-types/folder_config/collections/all",
             json={
@@ -511,6 +513,28 @@ class FoldersAPI(BaseAPI):
             response.json()["extensions"],
             response.headers["Etag"],
         )
+
+    def delete(self, folder: str, delete_mode: str = "recursive") -> None:
+        """Delete a folder.
+
+        Args:
+            folder: The path of the folder to delete. Path delimiters should be '/'.
+            delete_mode: Delete policy. Options:
+                - 'recursive': Deletes the folder and all elements it contains (default)
+                - 'abort_on_nonempty': Deletes the folder only if it is empty
+        Raises:
+            UnexpectedResponse: If the delete operation fails
+        """
+        # Convert folder path delimiters from '/' to '~' for the API
+        folder_path = folder.replace("/", "~")
+        # Ensure we are using the correct prefix
+        folder_path = folder_path if folder_path.startswith("~") else f"~{folder_path}"
+        response = self.session.delete(
+            f"/objects/folder_config/{folder_path}", params={"delete_mode": delete_mode}
+        )
+
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
 
 class HostsAPI(BaseAPI):

@@ -315,6 +315,8 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/test-doctest.txt"
 
     - NAME: "All unit tests"
+      SEC_VAR_LIST:
+        - "CI_TEST_SQL_DB_ENDPOINT"
       DIR: "tests"
       COMMAND: |
           set +e
@@ -329,7 +331,6 @@ STAGES:
               -//packages/neb/... \
               -//packages/unixcat/... \
               -//packages/cmk-frontend/... \
-              -//packages/mk-sql/... \
               -//packages/cmk-ccc/... \
               //non-free/packages/... \
               -//non-free/packages/cmc/... \
@@ -763,10 +764,8 @@ STAGES:
 
     - NAME: "Package mk-sql"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES
-      SEC_VAR_LIST:
-          - "CI_TEST_SQL_DB_ENDPOINT"
       DIR: "packages/mk-sql"
-      COMMAND: "./run --build --unit-tests --lint=clippy &> ${RESULTS}/mk-sql.txt"
+      COMMAND: "./run --build --lint=clippy &> ${RESULTS}/mk-sql.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-sql files changed"
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"

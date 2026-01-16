@@ -2664,12 +2664,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return self.mode_url(user=self._user_id())
 
     def _user_id(self) -> UserId:
-        if (user_id := request.get_str_input("user")) is None:
-            raise MKUserError("user", _("User ID must not be None"))
-        try:
-            return UserId(user_id)
-        except ValueError as e:
-            raise MKUserError("user", str(e))
+        return request.get_validated_type_input_mandatory(UserId, "user")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -3472,10 +3467,7 @@ class ModeEditUserNotificationRule(ABCEditNotificationRuleMode):
         return ModeUserNotifications
 
     def _user_id(self) -> UserId:
-        try:
-            return UserId(request.get_str_input_mandatory("user"))
-        except ValueError as e:
-            raise MKUserError("user", str(e))
+        return request.get_validated_type_input_mandatory(UserId, "user")
 
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("user_notifications", user=self._user_id()))

@@ -1,0 +1,18 @@
+---
+rules:
+  - id: use-request-getvalidatedinputtype
+    mode: taint
+    pattern-sources:
+      - pattern: request.var(...)
+      - pattern: request.get_str_input(...)
+      - pattern: request.get_str_input_mandatory(...)
+    pattern-sinks:
+      - pattern: UserId(...)
+      - pattern: HostAddress(...)
+      - pattern: Hostname(...)
+    message: |
+      `Hostname`, `UserId` raise ValueErrors which cause Crashes if not caught properly.
+      There is `request.get_validated_type_input` that re-raises the ValueError as MKUserError.
+    languages:
+      - python
+    severity: ERROR

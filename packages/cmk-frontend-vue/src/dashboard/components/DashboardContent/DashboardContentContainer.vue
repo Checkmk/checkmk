@@ -26,6 +26,10 @@ const titleRenderClass = computed<string>(() => {
   }
   return ''
 })
+
+const hasBackground = computed<boolean>(() => {
+  return !!generalSettings.render_background
+})
 </script>
 
 <template>
@@ -43,7 +47,7 @@ const titleRenderClass = computed<string>(() => {
     </div>
     <div
       class="db-content-container__content"
-      :class="{ 'db-content-container__content-background': !!generalSettings.render_background }"
+      :class="{ 'db-content-container__content-background': hasBackground }"
     >
       <slot />
     </div>
@@ -82,6 +86,8 @@ const titleRenderClass = computed<string>(() => {
   flex: 1;
   flex-direction: column;
   overflow: v-bind('contentOverflow');
+  justify-content: center;
+  align-items: center;
 
   &.db-content-container__content-background {
     background-color: var(--db-content-bg-color);

@@ -113,6 +113,29 @@ class _OneArchiveFile:
     archive_tree: TreePath
 
 
+@dataclass(frozen=True, kw_only=True)
+class _Files:
+    inventory_tree: TreePath
+    inventory_tree_gz: TreePathGz
+    status_data_tree: TreePath
+    archive_tree_1: TreePath
+    archive_tree_2: TreePath
+    archive_tree_3: TreePath
+    archive_tree_4: TreePath
+    delta_cache_tree_None_1: TreePath
+    delta_cache_tree_1_2: TreePath
+    delta_cache_tree_2_3: TreePath
+    delta_cache_tree_3_4: TreePath
+    delta_cache_tree_4_ts: TreePath
+
+
+@dataclass(frozen=True, kw_only=True)
+class _FilesNoHistory:
+    inventory_tree: TreePath
+    inventory_tree_gz: TreePathGz
+    status_data_tree: TreePath
+
+
 def _setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArchiveFile:
     inv_paths = InventoryPaths(tmp_path)
     host_name = HostName("hostname")
@@ -271,22 +294,6 @@ def test_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) 
     assert files.inventory_tree_gz.legacy.exists()
     assert files.status_data_tree.legacy.exists()
     assert not files.archive_tree.legacy.exists()
-
-
-@dataclass(frozen=True, kw_only=True)
-class _Files:
-    inventory_tree: TreePath
-    inventory_tree_gz: TreePathGz
-    status_data_tree: TreePath
-    archive_tree_1: TreePath
-    archive_tree_2: TreePath
-    archive_tree_3: TreePath
-    archive_tree_4: TreePath
-    delta_cache_tree_None_1: TreePath
-    delta_cache_tree_1_2: TreePath
-    delta_cache_tree_2_3: TreePath
-    delta_cache_tree_3_4: TreePath
-    delta_cache_tree_4_ts: TreePath
 
 
 def _setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Files:
@@ -569,13 +576,6 @@ def test_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
     assert unknown_files.delta_cache_tree_2_3.legacy.exists()
     assert unknown_files.delta_cache_tree_3_4.legacy.exists()
     assert unknown_files.delta_cache_tree_4_ts.legacy.exists()
-
-
-@dataclass(frozen=True, kw_only=True)
-class _FilesNoHistory:
-    inventory_tree: TreePath
-    inventory_tree_gz: TreePathGz
-    status_data_tree: TreePath
 
 
 def _setup_files_no_history(

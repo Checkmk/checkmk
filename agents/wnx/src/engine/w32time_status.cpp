@@ -13,6 +13,16 @@ namespace cma::provider {
 std::string W32TimeStatus::makeBody() {
     auto cmd = wtools::ExpandStringWithEnvironment(
         L"%SystemRoot%\\System32\\w32tm.exe /query /status /verbose");
-    return wtools::oemToUtf8(wtools::RunCommand(cmd));
+    auto data = wtools::oemToUtf8(wtools::RunCommand(cmd));
+    if (data.empty()) {
+        // special case: service not running|crashed
+        // - we send _approximate_ error status
+        // - we do not care about details as long known that service failed
+        // - final decision what to do with that is left to the _check plugin_
+        // - : is added to satisfy hack in check plugin
+        return "Error: Windows time service is not running";
+    }
+
+    return data;
 }
 }  // namespace cma::provider

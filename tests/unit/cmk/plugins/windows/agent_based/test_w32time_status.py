@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.windows.agent_based import w32time_status
+from cmk.plugins.windows.agent_based.w32time_status import DEFAULT_PARAMS
 
 EN_GOOD_SYNC = [
     ["Leap", "Indicator:", "0(no", "warning)"],
@@ -170,6 +171,13 @@ DE_LINE_WRAP = [
         "Synchronisierungszeit:",
         "4812.7981071s",
     ],
+]
+
+# Example with output when w32time is not running / misconfigured
+# <<<w32time_status>>>
+# Windows time service is not running
+NO_WIN32TIME = [
+    ["Error: Windows time service is not running"],
 ]
 
 NEVER_SYNCED = [
@@ -470,3 +478,17 @@ def test_check_w32time_status_never_synced() -> None:
         ),
     ]
     assert list(w32time_status.check_plugin_w32time_status.check_function(params, qs)) == expected
+
+
+def test_check_w32time_status_no_win32time() -> None:
+    qs = w32time_status.parse_w32time_status(NO_WIN32TIME)
+    expected = [
+        Result(
+            state=State.WARN,
+            summary="Windows time service is not running",
+        ),
+    ]
+    assert (
+        list(w32time_status.check_plugin_w32time_status.check_function(DEFAULT_PARAMS, qs))
+        == expected
+    )

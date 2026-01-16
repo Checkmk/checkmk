@@ -116,12 +116,18 @@ class QueryStatus:
     seconds_since_last_good_sync: float
 
 
-def parse_w32time_status(string_table: StringTable) -> QueryStatus:
-    lines = []
+@dataclass(frozen=True, kw_only=True)
+class ErrorStatus:
+    error: str
+
+
+def parse_w32time_status(string_table: StringTable) -> QueryStatus | ErrorStatus:
+    lines: list[str] = []
 
     for row in string_table:
         line = " ".join(row)
 
+        # TODO(sk,re): Kill hack using proper section separator(lack of them), ':'. Win Agent!
         # Hack, in some languages (e.g. German) some lines may run long and wrap
         # If there is no ":" to split on, just drop the lines. In theory this isn't
         # really enough, because a partial line could probably have a ":" in it. In
@@ -133,6 +139,11 @@ def parse_w32time_status(string_table: StringTable) -> QueryStatus:
         value = line.split(":", 1)[1].strip()
         lines.append(value)
 
+    # If service is not available we expect 1 line with error only(see agent code).
+    if len(lines) == 1:
+        return ErrorStatus(error=lines[0])
+
+    # We expect exactly 16 lines after filtering, this is not robust still simple and clear.
     # Some of these are probably not useful and can go away.
     query_status = QueryStatus(
         leap_indicator=parse_int(before_parens(lines[0])),
@@ -193,7 +204,11 @@ def _sync_result_to_check_result(state_params: StateParams, result: int) -> Chec
             yield Result(state=State.UNKNOWN, notice="Sync status: Unexpected sync result")
 
 
-def check_w32time_status(params: Params, section: QueryStatus) -> CheckResult:
+def check_w32time_status(params: Params, section: QueryStatus | ErrorStatus) -> CheckResult:
+    if isinstance(section, ErrorStatus):
+        yield Result(state=State.WARN, summary=section.error)
+        return
+
     if section.state_machine == 0 and section.reference_id == 0:
         yield Result(
             state=State(params["states"]["never_synced"]),

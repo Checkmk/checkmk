@@ -78,7 +78,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
             ),
             "fetch": DictElement(
                 required=True,
-                parameter_form=options.fetching({"IMAP", "POP3", "EWS"}),
+                parameter_form=options.fetching({"IMAP", "POP3", "EWS", "GRAPHAPI"}),
             ),
             "mail_from": DictElement(
                 parameter_form=String(

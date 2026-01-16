@@ -10786,7 +10786,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -11057,7 +11059,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -11208,7 +11212,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -11358,7 +11364,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -11534,27 +11542,29 @@ paths:
         \ seeing dashboards that other users have created.\n   * Optionally:\n   \
         \  * See packaged dashboards (`general.see_packaged_dashboards`): Is needed\
         \ for seeing dashboards that are provided via extension packages.\n   * Optionally:\n\
-        \     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
-        \ Is needed for seeing topics that other users have created.\n       * Some\
-        \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
-        \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
-        \ views and use them (`general.edit_views`): Allows to create own views, customize\
-        \ built-in views and use them.\n       * See user views (`general.see_user_views`):\
-        \ Is needed for seeing views that other users have created.\n       * See\
-        \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
-        \ that are provided via extension packages.\n       * Some permissions starting\
-        \ with `view`:\n   * Optionally:\n     * Customize and use custom graphs (`general.edit_custom_graph`):\
-        \ Allows to create own custom graphs, customize built-in custom graphs and\
-        \ use them.\n   * Optionally:\n     * All of:\n       * See all host and services\
-        \ (`general.see_all`): See all objects regardless of contacts and contact\
-        \ groups. If combined with 'perform commands' then commands may be done on\
-        \ all objects.\n       * See all hosts and services (`bi.see_all`): With this\
-        \ permission set, the BI aggregation rules are applied to all hosts and services\
-        \ - not only those the user is a contact for. If you remove this permissions\
-        \ then the user will see incomplete aggregation trees with status based only\
-        \ on those items.\n       * See all events (`mkeventd.seeall`): If a user\
-        \ lacks this permission then he/she can see only those events that originate\
-        \ from a host that he/she is a contact for.\n"
+        \     * Edit foreign dashboards (`general.edit_foreign_dashboards`): Allows\
+        \ to edit dashboards created by other users.\n   * Optionally:\n     * All\
+        \ of:\n       * See user topics (`general.see_user_pagetype_topic`): Is needed\
+        \ for seeing topics that other users have created.\n       * Some permissions\
+        \ starting with `pagetype_topic`:\n   * Some permissions starting with `dashboard`:\n\
+        \   * Optionally:\n     * All of:\n       * Customize views and use them (`general.edit_views`):\
+        \ Allows to create own views, customize built-in views and use them.\n   \
+        \    * See user views (`general.see_user_views`): Is needed for seeing views\
+        \ that other users have created.\n       * See packaged views (`general.see_packaged_views`):\
+        \ Is needed for seeing views that are provided via extension packages.\n \
+        \      * Some permissions starting with `view`:\n   * Optionally:\n     *\
+        \ Customize and use custom graphs (`general.edit_custom_graph`): Allows to\
+        \ create own custom graphs, customize built-in custom graphs and use them.\n\
+        \   * Optionally:\n     * All of:\n       * See all host and services (`general.see_all`):\
+        \ See all objects regardless of contacts and contact groups. If combined with\
+        \ 'perform commands' then commands may be done on all objects.\n       * See\
+        \ all hosts and services (`bi.see_all`): With this permission set, the BI\
+        \ aggregation rules are applied to all hosts and services - not only those\
+        \ the user is a contact for. If you remove this permissions then the user\
+        \ will see incomplete aggregation trees with status based only on those items.\n\
+        \       * See all events (`mkeventd.seeall`): If a user lacks this permission\
+        \ then he/she can see only those events that originate from a host that he/she\
+        \ is a contact for.\n"
       summary: Show a dashboard.
       operationId: Dashboards.show_responsive_grid_dashboard_v1
       parameters:
@@ -11685,29 +11695,30 @@ paths:
         \ seeing dashboards that other users have created.\n   * Optionally:\n   \
         \  * See packaged dashboards (`general.see_packaged_dashboards`): Is needed\
         \ for seeing dashboards that are provided via extension packages.\n   * Optionally:\n\
-        \     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
-        \ Is needed for seeing topics that other users have created.\n       * Some\
-        \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
-        \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
-        \ views and use them (`general.edit_views`): Allows to create own views, customize\
-        \ built-in views and use them.\n       * See user views (`general.see_user_views`):\
-        \ Is needed for seeing views that other users have created.\n       * See\
-        \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
-        \ that are provided via extension packages.\n       * Some permissions starting\
-        \ with `view`:\n   * Optionally:\n     * Customize and use custom graphs (`general.edit_custom_graph`):\
-        \ Allows to create own custom graphs, customize built-in custom graphs and\
-        \ use them.\n   * Optionally:\n     * All of:\n       * See all host and services\
-        \ (`general.see_all`): See all objects regardless of contacts and contact\
-        \ groups. If combined with 'perform commands' then commands may be done on\
-        \ all objects.\n       * See all hosts and services (`bi.see_all`): With this\
-        \ permission set, the BI aggregation rules are applied to all hosts and services\
-        \ - not only those the user is a contact for. If you remove this permissions\
-        \ then the user will see incomplete aggregation trees with status based only\
-        \ on those items.\n       * See all events (`mkeventd.seeall`): If a user\
-        \ lacks this permission then he/she can see only those events that originate\
-        \ from a host that he/she is a contact for.\n   * Optionally:\n     * Edit\
-        \ foreign dashboards (`general.edit_foreign_dashboards`): Allows to edit dashboards\
-        \ created by other users.\n"
+        \     * Edit foreign dashboards (`general.edit_foreign_dashboards`): Allows\
+        \ to edit dashboards created by other users.\n   * Optionally:\n     * All\
+        \ of:\n       * See user topics (`general.see_user_pagetype_topic`): Is needed\
+        \ for seeing topics that other users have created.\n       * Some permissions\
+        \ starting with `pagetype_topic`:\n   * Some permissions starting with `dashboard`:\n\
+        \   * Optionally:\n     * All of:\n       * Customize views and use them (`general.edit_views`):\
+        \ Allows to create own views, customize built-in views and use them.\n   \
+        \    * See user views (`general.see_user_views`): Is needed for seeing views\
+        \ that other users have created.\n       * See packaged views (`general.see_packaged_views`):\
+        \ Is needed for seeing views that are provided via extension packages.\n \
+        \      * Some permissions starting with `view`:\n   * Optionally:\n     *\
+        \ Customize and use custom graphs (`general.edit_custom_graph`): Allows to\
+        \ create own custom graphs, customize built-in custom graphs and use them.\n\
+        \   * Optionally:\n     * All of:\n       * See all host and services (`general.see_all`):\
+        \ See all objects regardless of contacts and contact groups. If combined with\
+        \ 'perform commands' then commands may be done on all objects.\n       * See\
+        \ all hosts and services (`bi.see_all`): With this permission set, the BI\
+        \ aggregation rules are applied to all hosts and services - not only those\
+        \ the user is a contact for. If you remove this permissions then the user\
+        \ will see incomplete aggregation trees with status based only on those items.\n\
+        \       * See all events (`mkeventd.seeall`): If a user lacks this permission\
+        \ then he/she can see only those events that originate from a host that he/she\
+        \ is a contact for.\n   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n"
       summary: Edit a dashboard.
       operationId: Dashboards.edit_responsive_grid_dashboard_v1
       parameters:
@@ -11988,7 +11999,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -12134,7 +12147,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -12280,7 +12295,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -12426,7 +12443,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -12574,7 +12593,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -12721,27 +12742,29 @@ paths:
         \ seeing dashboards that other users have created.\n   * Optionally:\n   \
         \  * See packaged dashboards (`general.see_packaged_dashboards`): Is needed\
         \ for seeing dashboards that are provided via extension packages.\n   * Optionally:\n\
-        \     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
-        \ Is needed for seeing topics that other users have created.\n       * Some\
-        \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
-        \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
-        \ views and use them (`general.edit_views`): Allows to create own views, customize\
-        \ built-in views and use them.\n       * See user views (`general.see_user_views`):\
-        \ Is needed for seeing views that other users have created.\n       * See\
-        \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
-        \ that are provided via extension packages.\n       * Some permissions starting\
-        \ with `view`:\n   * Optionally:\n     * Customize and use custom graphs (`general.edit_custom_graph`):\
-        \ Allows to create own custom graphs, customize built-in custom graphs and\
-        \ use them.\n   * Optionally:\n     * All of:\n       * See all host and services\
-        \ (`general.see_all`): See all objects regardless of contacts and contact\
-        \ groups. If combined with 'perform commands' then commands may be done on\
-        \ all objects.\n       * See all hosts and services (`bi.see_all`): With this\
-        \ permission set, the BI aggregation rules are applied to all hosts and services\
-        \ - not only those the user is a contact for. If you remove this permissions\
-        \ then the user will see incomplete aggregation trees with status based only\
-        \ on those items.\n       * See all events (`mkeventd.seeall`): If a user\
-        \ lacks this permission then he/she can see only those events that originate\
-        \ from a host that he/she is a contact for.\n"
+        \     * Edit foreign dashboards (`general.edit_foreign_dashboards`): Allows\
+        \ to edit dashboards created by other users.\n   * Optionally:\n     * All\
+        \ of:\n       * See user topics (`general.see_user_pagetype_topic`): Is needed\
+        \ for seeing topics that other users have created.\n       * Some permissions\
+        \ starting with `pagetype_topic`:\n   * Some permissions starting with `dashboard`:\n\
+        \   * Optionally:\n     * All of:\n       * Customize views and use them (`general.edit_views`):\
+        \ Allows to create own views, customize built-in views and use them.\n   \
+        \    * See user views (`general.see_user_views`): Is needed for seeing views\
+        \ that other users have created.\n       * See packaged views (`general.see_packaged_views`):\
+        \ Is needed for seeing views that are provided via extension packages.\n \
+        \      * Some permissions starting with `view`:\n   * Optionally:\n     *\
+        \ Customize and use custom graphs (`general.edit_custom_graph`): Allows to\
+        \ create own custom graphs, customize built-in custom graphs and use them.\n\
+        \   * Optionally:\n     * All of:\n       * See all host and services (`general.see_all`):\
+        \ See all objects regardless of contacts and contact groups. If combined with\
+        \ 'perform commands' then commands may be done on all objects.\n       * See\
+        \ all hosts and services (`bi.see_all`): With this permission set, the BI\
+        \ aggregation rules are applied to all hosts and services - not only those\
+        \ the user is a contact for. If you remove this permissions then the user\
+        \ will see incomplete aggregation trees with status based only on those items.\n\
+        \       * See all events (`mkeventd.seeall`): If a user lacks this permission\
+        \ then he/she can see only those events that originate from a host that he/she\
+        \ is a contact for.\n"
       summary: Create a dashboard.
       operationId: Dashboards.create_responsive_grid_dashboard_v1
       parameters:
@@ -12867,7 +12890,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -12989,7 +13014,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -13137,7 +13164,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -13285,7 +13314,9 @@ paths:
         \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
         \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
         \ Is needed for seeing dashboards that are provided via extension packages.\n\
-        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n   * Optionally:\n  \
+        \   * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
         \ Is needed for seeing topics that other users have created.\n       * Some\
         \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
         \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
@@ -27039,6 +27070,12 @@ paths:
             in the background. Redirecting to the ''Get background job status snapshot''
             endpoint.'
           content: {}
+        '403':
+          description: 'Forbidden: Configuration via Setup is disabled.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api403DefaultError'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
@@ -27202,6 +27239,12 @@ paths:
             in the background. Redirecting to the ''Get background job status snapshot''
             endpoint.'
           content: {}
+        '403':
+          description: 'Forbidden: Configuration via Setup is disabled.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api403DefaultError'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
@@ -27321,7 +27364,19 @@ paths:
     post:
       tags:
       - Quick setup
-      description: 'Available in the following editions: all'
+      description: 'Available in the following editions: all
+
+
+        This endpoint performs permission validation but since permissions depend
+        on dynamic actions
+
+        and each action has its own required permission, they cannot be statically
+        defined. If the
+
+        required permissions for an action are not met, the endpoint returns a 403
+        Forbidden error
+
+        informing the action ID and the missing permission.'
       summary: Run a Quick setup stage validation and recap action
       operationId: cmk.gui.openapi.endpoints.quick_setup.quicksetup_run_stage_action
       parameters:
@@ -27353,6 +27408,12 @@ paths:
             started in the background. Redirecting to the ''Get background job status
             snapshot'' endpoint.'
           content: {}
+        '403':
+          description: 'Forbidden: Configuration via Setup is disabled.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api403DefaultError'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
@@ -44255,12 +44316,12 @@ components:
         title:
           $ref: '#/components/schemas/WidgetTitle'
           description: Title settings for the widget.
-          title: Title
         render_background:
           description: Whether the widget should render a gray background.
           title: Render Background
           type: boolean
       required:
+      - title
       - render_background
       title: WidgetGeneralSettings
       type: object
@@ -61303,8 +61364,7 @@ components:
         customer:
           description: '[Only in editions: Ultimate with multi-tenancy] By specifying
             a customer, you configure on which sites the user object will be available.
-            ''global'' will make the object available on all sites. This field is
-            required for the following editions: Ultimate with multi-tenancy.'
+            ''global'' will make the object available on all sites.'
           examples:
           - provider
           title: Customer

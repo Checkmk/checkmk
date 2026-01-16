@@ -145,9 +145,9 @@ def query_containers(
 ) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/containers/json"
     try:
-        response = session.get(build_url_callable(socket_path, endpoint))
+        response = session.get(build_url_callable(socket_path, endpoint), params={"all": "true"})
         response.raise_for_status()
-        output = response.json()
+        output = [c for c in response.json() if not c.get("IsInfra", False)]
     except Exception as e:
         return Error(build_url_human_readable(socket_path, endpoint), str(e))
     return JSONSection("containers", json.dumps(output))

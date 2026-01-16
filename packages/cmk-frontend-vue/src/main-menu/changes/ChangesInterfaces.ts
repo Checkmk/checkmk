@@ -4,6 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+export interface NumberOfPendingChangesResponse {
+  number_of_pending_changes: number
+}
+
 export interface StatusPerSiteResponse {
   site: string
   phase: 'initialized' | 'queued' | 'started' | 'sync' | 'activate' | 'finishing' | 'done'

@@ -23,6 +23,7 @@ import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 import type {
   ActivatePendingChangesResponse,
   ActivationStatusResponse,
+  NumberOfPendingChangesResponse,
   PendingChanges,
   Site,
   SitesAndChanges
@@ -267,10 +268,33 @@ function calcChangesHeight(): number {
   }
 }
 
+async function pollNumberPendingChanges() {
+  const response: NumberOfPendingChangesResponse = (await ajaxCall.get(
+    'ajax_sidebar_get_number_of_pending_changes.py'
+  )) as NumberOfPendingChangesResponse
+
+  const l = document.getElementById('changes_label')
+
+  if (l) {
+    if (response.number_of_pending_changes === 0) {
+      l.style.display = 'none'
+      return
+    }
+    l.innerText =
+      response.number_of_pending_changes > 9 ? '9+' : response.number_of_pending_changes.toString()
+    l.style.display = 'inline'
+  }
+
+  setTimeout(() => {
+    void pollNumberPendingChanges()
+  }, 3000)
+}
+
 onMounted(async () => {
   // Fetch once on mount, then again when popup is opened to refresh data.
   // This avoids showing no changes when opening the menu for the first time,
   // while the ajax call is in progress.
+  await pollNumberPendingChanges()
   await fetchPendingChangesAjax()
   void checkIfMenuActive()
 })

@@ -13107,8 +13107,8 @@ msgid "Check HTML form submit"
 msgstr "Verificați Formularul HTML Trimitere"
 
 #, fuzzy
-msgid "Check HTTP service (deprecated)"
-msgstr "Verificați serviciul HTTP"
+msgid "Check HTTP service"
+msgstr "Verificați serviciul web HTTP"
 
 msgid "Check HTTP web service"
 msgstr "Verificați serviciul web HTTP"
@@ -54291,7 +54291,8 @@ msgstr "Vă rugăm să specificați cel puțin un tip de nivel"
 msgid "Please specify at least one value"
 msgstr "Vă rugăm să specificați cel puțin o valoare"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "Vă rugăm să specificați gazda sau hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -94898,6 +94899,14 @@ msgstr "secunde"
 msgid "The time span cannot be negative."
 msgstr "Cheia secretă"
 
+#, fuzzy
+msgid "Dashboard cloned."
+msgstr "Tabloul de bord"
+
+#, fuzzy
+msgid "Review applied filters."
+msgstr "Filtre aplicate:"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -95894,14 +95903,6 @@ msgstr "Clonarea graficului personalizat"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonarea graficului personalizat"
-
-#, fuzzy
-msgid "Clone & review dashboard filters"
-msgstr "Tablouri de bord conexe"
-
-#, fuzzy
-msgid "Clone & view list"
-msgstr "Salvați & vizualizați folderul"
 
 msgid "Only me (private)"
 msgstr ""
@@ -97673,6 +97674,11 @@ msgstr "Verificați URL-ul"
 msgid "-icon next to it to open the corresponding ruleset."
 msgstr ""
 
+msgid ""
+"This icon is only visible after the service has been added to monitoring and "
+"is listed under <b>Monitored services</b>"
+msgstr ""
+
 #, fuzzy
 msgid "Create a check parameter rule"
 msgstr "Afișarea parametrilor de verificare"
@@ -97724,8 +97730,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Assign the contact group to hosts"
-msgstr "Adăugați aceste grupuri de contacte la gazdă"
+msgid "Assign hosts to a contact group"
+msgstr "Atribuirea serviciilor la grupurile de contact"
 
 msgid ""
 "There are two options available for assigning hosts to contact groups. "
@@ -97828,6 +97834,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Check HTTP service (deprecated)"
+#~ msgstr "Verificați serviciul HTTP"
+
+#, fuzzy
+#~ msgid "Clone & review dashboard filters"
+#~ msgstr "Tablouri de bord conexe"
+
+#, fuzzy
+#~ msgid "Clone & view list"
+#~ msgstr "Salvați & vizualizați folderul"
+
+#, fuzzy
+#~ msgid "Assign the contact group to hosts"
+#~ msgstr "Adăugați aceste grupuri de contacte la gazdă"
 
 #, fuzzy
 #~ msgid "Filter configuration"

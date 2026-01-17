@@ -12332,8 +12332,9 @@ msgstr "FTPサービスを確認する"
 msgid "Check HTML form submit"
 msgstr "HTMLフォームの送信をチェックする"
 
-msgid "Check HTTP service (deprecated)"
-msgstr "チェック HTTPサービス（非推奨）"
+#, fuzzy
+msgid "Check HTTP service"
+msgstr "チェック HTTP webサービス"
 
 msgid "Check HTTP web service"
 msgstr "チェック HTTP webサービス"
@@ -50958,7 +50959,8 @@ msgstr "レベルの種類を少なくとも1つ指定してください"
 msgid "Please specify at least one value"
 msgstr "少なくとも1つの値を指定してください"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "ホストまたはハッシュを指定してください。"
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -89067,6 +89069,14 @@ msgstr "秒"
 msgid "The time span cannot be negative."
 msgstr "入力を空にすることはできません"
 
+#, fuzzy
+msgid "Dashboard cloned."
+msgstr "ダッシュボード"
+
+#, fuzzy
+msgid "Review applied filters."
+msgstr "適用されたフィルター:"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -90040,14 +90050,6 @@ msgstr "カスタムグラフのクローンを作成する"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "カスタムグラフのクローンを作成する"
-
-#, fuzzy
-msgid "Clone & review dashboard filters"
-msgstr "関連ダッシュボード"
-
-#, fuzzy
-msgid "Clone & view list"
-msgstr "保存してフォルダを確認"
 
 msgid "Only me (private)"
 msgstr ""
@@ -91764,6 +91766,11 @@ msgstr "URLを確認する"
 msgid "-icon next to it to open the corresponding ruleset."
 msgstr ""
 
+msgid ""
+"This icon is only visible after the service has been added to monitoring and "
+"is listed under <b>Monitored services</b>"
+msgstr ""
+
 #, fuzzy
 msgid "Create a check parameter rule"
 msgstr "不明なチェックパラメータールールセット"
@@ -91813,8 +91820,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Assign the contact group to hosts"
-msgstr "これらの連絡先グループをホストに追加します"
+msgid "Assign hosts to a contact group"
+msgstr "連絡先グループへのサービスの割り当て"
 
 msgid ""
 "There are two options available for assigning hosts to contact groups. "
@@ -91915,6 +91922,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Check HTTP service (deprecated)"
+#~ msgstr "チェック HTTPサービス（非推奨）"
+
+#, fuzzy
+#~ msgid "Clone & review dashboard filters"
+#~ msgstr "関連ダッシュボード"
+
+#, fuzzy
+#~ msgid "Clone & view list"
+#~ msgstr "保存してフォルダを確認"
+
+#, fuzzy
+#~ msgid "Assign the contact group to hosts"
+#~ msgstr "これらの連絡先グループをホストに追加します"
 
 #, fuzzy
 #~ msgid "Filter configuration"

@@ -13015,8 +13015,9 @@ msgstr "Controllare il servizio FTP"
 msgid "Check HTML form submit"
 msgstr "Controlla l'invio del modulo HTML"
 
-msgid "Check HTTP service (deprecated)"
-msgstr "Controllo HTTP (Deprecato)"
+#, fuzzy
+msgid "Check HTTP service"
+msgstr "Controllare il servizio web HTTP"
 
 msgid "Check HTTP web service"
 msgstr "Controllare il servizio web HTTP"
@@ -53823,7 +53824,8 @@ msgstr "Si prega di specificare almeno un tipo di livelli"
 msgid "Please specify at least one value"
 msgstr "Si prega di specificare almeno un valore"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "Specificare l'host o l'hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -93950,6 +93952,14 @@ msgstr "secondi"
 msgid "The time span cannot be negative."
 msgstr "Chiave segreta"
 
+#, fuzzy
+msgid "Dashboard cloned."
+msgstr "Dashboard"
+
+#, fuzzy
+msgid "Review applied filters."
+msgstr "Filtri applicati:"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -94943,14 +94953,6 @@ msgstr "Clonare un grafico personalizzato"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonare un grafico personalizzato"
-
-#, fuzzy
-msgid "Clone & review dashboard filters"
-msgstr "Cruscotti correlati"
-
-#, fuzzy
-msgid "Clone & view list"
-msgstr "Salvare e visualizzare la cartella"
 
 msgid "Only me (private)"
 msgstr ""
@@ -96706,6 +96708,11 @@ msgstr "Controlla l'URL"
 msgid "-icon next to it to open the corresponding ruleset."
 msgstr ""
 
+msgid ""
+"This icon is only visible after the service has been added to monitoring and "
+"is listed under <b>Monitored services</b>"
+msgstr ""
+
 #, fuzzy
 msgid "Create a check parameter rule"
 msgstr "Mostra i parametri di controllo"
@@ -96754,8 +96761,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Assign the contact group to hosts"
-msgstr "Aggiungere questi gruppi di contatti all'host"
+msgid "Assign hosts to a contact group"
+msgstr "Assegnazione di servizi a gruppi di contatto"
 
 msgid ""
 "There are two options available for assigning hosts to contact groups. "
@@ -96858,6 +96865,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Check HTTP service (deprecated)"
+#~ msgstr "Controllo HTTP (Deprecato)"
+
+#, fuzzy
+#~ msgid "Clone & review dashboard filters"
+#~ msgstr "Cruscotti correlati"
+
+#, fuzzy
+#~ msgid "Clone & view list"
+#~ msgstr "Salvare e visualizzare la cartella"
+
+#, fuzzy
+#~ msgid "Assign the contact group to hosts"
+#~ msgstr "Aggiungere questi gruppi di contatti all'host"
 
 #, fuzzy
 #~ msgid "Filter configuration"

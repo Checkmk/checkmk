@@ -13049,7 +13049,7 @@ msgid "Check HTML form submit"
 msgstr "Controleer HTML-formulier verzenden"
 
 #, fuzzy
-msgid "Check HTTP service (deprecated)"
+msgid "Check HTTP service"
 msgstr "Controleer HTTP service"
 
 #, fuzzy
@@ -54153,7 +54153,8 @@ msgstr "Geef ten minste één type niveau aan"
 msgid "Please specify at least one value"
 msgstr "Geef ten minste één waarde op"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "Specificeer host of hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -94608,6 +94609,14 @@ msgstr "seconden"
 msgid "The time span cannot be negative."
 msgstr "Geheime sleutel"
 
+#, fuzzy
+msgid "Dashboard cloned."
+msgstr "Dashboard"
+
+#, fuzzy
+msgid "Review applied filters."
+msgstr "Toegepaste filters:"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -95602,14 +95611,6 @@ msgstr "Kloon aangepaste grafiek"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Kloon aangepaste grafiek"
-
-#, fuzzy
-msgid "Clone & review dashboard filters"
-msgstr "Gerelateerde dashboards"
-
-#, fuzzy
-msgid "Clone & view list"
-msgstr "Map opslaan en bekijken"
 
 msgid "Only me (private)"
 msgstr ""
@@ -97367,6 +97368,11 @@ msgstr "Controleer de URL"
 msgid "-icon next to it to open the corresponding ruleset."
 msgstr ""
 
+msgid ""
+"This icon is only visible after the service has been added to monitoring and "
+"is listed under <b>Monitored services</b>"
+msgstr ""
+
 #, fuzzy
 msgid "Create a check parameter rule"
 msgstr "Toon controleparameters"
@@ -97415,8 +97421,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Assign the contact group to hosts"
-msgstr "Voeg deze contactgroepen toe aan de host"
+msgid "Assign hosts to a contact group"
+msgstr "Toewijzing van diensten aan contactgroepen"
 
 msgid ""
 "There are two options available for assigning hosts to contact groups. "
@@ -97519,6 +97525,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Check HTTP service (deprecated)"
+#~ msgstr "Controleer HTTP service"
+
+#, fuzzy
+#~ msgid "Clone & review dashboard filters"
+#~ msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+#~ msgid "Clone & view list"
+#~ msgstr "Map opslaan en bekijken"
+
+#, fuzzy
+#~ msgid "Assign the contact group to hosts"
+#~ msgstr "Voeg deze contactgroepen toe aan de host"
 
 #, fuzzy
 #~ msgid "Filter configuration"

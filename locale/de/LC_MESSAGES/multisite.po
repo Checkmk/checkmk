@@ -12606,8 +12606,9 @@ msgstr "Prüfe FTP-Dienst"
 msgid "Check HTML form submit"
 msgstr "Einreichung des HTML-Formulars prüfen"
 
-msgid "Check HTTP service (deprecated)"
-msgstr "Prüfe HTTP Service (veraltet)"
+#, fuzzy
+msgid "Check HTTP service"
+msgstr "Prüfe HTTP Webdienst"
 
 msgid "Check HTTP web service"
 msgstr "Prüfe HTTP Webdienst"
@@ -51905,7 +51906,8 @@ msgstr "Bitte geben Sie mindestens einen Typ von Levels an"
 msgid "Please specify at least one value"
 msgstr "Bitte mindestens einen Wert angeben"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "Bitte Host oder Hash angeben."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -91272,6 +91274,14 @@ msgstr "Sekunden"
 msgid "The time span cannot be negative."
 msgstr "Textfeld darf nicht leer sein"
 
+#, fuzzy
+msgid "Dashboard cloned."
+msgstr "Dashboard-Symbol"
+
+#, fuzzy
+msgid "Review applied filters."
+msgstr "Angewendete Filter"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -92151,12 +92161,6 @@ msgstr "Es muss ein benutzerdefinierter Graph ausgewählt werden"
 
 msgid "Select a custom graph"
 msgstr "Einen benutzerdefinierten Graph auswählen"
-
-msgid "Clone & review dashboard filters"
-msgstr "Schließen & Dashboard-Filter prüfen"
-
-msgid "Clone & view list"
-msgstr "Klonen & Liste ansehen"
 
 msgid "Only me (private)"
 msgstr "Nur ich (privat)"
@@ -93812,6 +93816,11 @@ msgstr "Klicken Sie auf"
 msgid "-icon next to it to open the corresponding ruleset."
 msgstr "-Symbol neben ihm, um den zugehörigen Regelsatz zu öffnen."
 
+msgid ""
+"This icon is only visible after the service has been added to monitoring and "
+"is listed under <b>Monitored services</b>"
+msgstr ""
+
 msgid "Create a check parameter rule"
 msgstr "Eine Check-Parameter-Regel erstellen"
 
@@ -93870,8 +93879,9 @@ msgstr ""
 "\"Kontaktgruppen\" können Sie einen Benutzer bei seiner Bearbeitung oder "
 "Erstellung Kontaktgruppen zuweisen."
 
-msgid "Assign the contact group to hosts"
-msgstr "Hosts die Kontaktgruppe zuweisen"
+#, fuzzy
+msgid "Assign hosts to a contact group"
+msgstr "Benutzer einer Kontaktgruppe zuweisen"
 
 msgid ""
 "There are two options available for assigning hosts to contact groups. "
@@ -93991,6 +94001,18 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Check HTTP service (deprecated)"
+#~ msgstr "Prüfe HTTP Service (veraltet)"
+
+#~ msgid "Clone & review dashboard filters"
+#~ msgstr "Schließen & Dashboard-Filter prüfen"
+
+#~ msgid "Clone & view list"
+#~ msgstr "Klonen & Liste ansehen"
+
+#~ msgid "Assign the contact group to hosts"
+#~ msgstr "Hosts die Kontaktgruppe zuweisen"
 
 #~ msgid "Filter configuration"
 #~ msgstr "Filterkonfiguration"

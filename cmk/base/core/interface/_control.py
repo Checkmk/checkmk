@@ -35,6 +35,7 @@ from cmk.utils.servicename import ServiceName
 
 from ._base_core import CoreAction, MonitoringCore
 from ._snapshot_local_dir import snapshot_local_dir
+from ._snapshot_trusted_cas import snapshot_trusted_cas
 
 tracer = trace.get_tracer()
 
@@ -311,6 +312,7 @@ def _create_active_config(
         _backup_objects_file(core),
     ):
         snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
+        snapshot_trusted_cas(cmk.utils.paths.trusted_ca_file, config_creation_context.path_created)
         core.create_config(
             config_creation_context,
             config_cache,

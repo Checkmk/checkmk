@@ -19,6 +19,7 @@ CONFIG_ARCHIVE_ROOT_FOLDER_NAME: Final = "config"
 CONFIG_ARCHIVE_RELATIVE_PATH_ENGINE_CONFIG: Final = "engine/config.json"
 CONFIG_ARCHIVE_RELATIVE_PATH_SECRETS_KEY: Final = "secrets/key"
 CONFIG_ARCHIVE_RELATIVE_PATH_ACTIVE_SECRETS: Final = "secrets/active_secrets"
+CONFIG_ARCHIVE_RELATIVE_PATH_CA_FILE: Final = "ssl/ca-certificates.crt"
 
 Timestamp = NewType("Timestamp", float)
 Seconds = NewType("Seconds", float)

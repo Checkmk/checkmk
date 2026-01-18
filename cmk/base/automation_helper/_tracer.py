@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 from pathlib import Path
 from typing import Final
 
@@ -27,5 +28,8 @@ def configure_tracer(omd_root: Path) -> None:
             service_name=TRACER_SERVICE_NAME,
             service_instance_id=instance_id,
         ),
-        exporter_from_config(config),
+        exporter_from_config(
+            exporter_log_level=logging.ERROR,
+            config=config,
+        ),
     )

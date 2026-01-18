@@ -905,6 +905,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.update_config"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_TRACE,
         *PACKAGE_WERKS,
         "cmk.base",
         "cmk.nonfree.ultimate.metric_backend",

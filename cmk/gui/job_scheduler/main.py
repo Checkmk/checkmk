@@ -90,7 +90,10 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                     service_instance_id=omd_site(),
                     extra_resource_attributes=resource_attributes_from_config(omd_root),
                 ),
-                exporter_from_config(trace.trace_send_config(get_omd_config(omd_root))),
+                exporter_from_config(
+                    exporter_log_level=logging.ERROR,
+                    config=trace.trace_send_config(get_omd_config(omd_root)),
+                ),
             )
             add_span_log_handler()
 

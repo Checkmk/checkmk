@@ -108,7 +108,8 @@ def test_trace_send_config(trace_enabled: bool, expected_target: trace.LocalTarg
 def test_exporter_from_config_disabled() -> None:
     assert (
         export.exporter_from_config(
-            trace.TraceSendConfig(enabled=False, target=""),
+            exporter_log_level=logging.INFO,
+            config=trace.TraceSendConfig(enabled=False, target=""),
         )
         is None
     )
@@ -136,7 +137,11 @@ class StubExporter(OTLPSpanExporter):
 
 def test_exporter_from_config_local_site() -> None:
     config = trace.TraceSendConfig(enabled=True, target=trace.LocalTarget(1234))
-    exporter = export.exporter_from_config(config, StubExporter)
+    exporter = export.exporter_from_config(
+        exporter_log_level=logging.INFO,
+        config=config,
+        exporter_class=StubExporter,
+    )
     assert isinstance(exporter, StubExporter)
     assert exporter.test_timeout == 3
     assert exporter.test_endpoint == "http://localhost:1234"

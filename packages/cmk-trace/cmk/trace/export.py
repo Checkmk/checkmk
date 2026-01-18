@@ -5,6 +5,7 @@
 
 import logging
 
+import opentelemetry.exporter.otlp.proto.grpc.exporter as grpc_exporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import export as sdk_export
 from opentelemetry.sdk.trace import TracerProvider
@@ -16,22 +17,17 @@ BatchSpanProcessor = sdk_export.BatchSpanProcessor
 SpanExporter = sdk_export.SpanExporter
 SpanExportResult = sdk_export.SpanExportResult
 
-# Reduce the log level of the OTLP exporter to suppress messages like this:
-#
-#   Transient error StatusCode.UNAVAILABLE encountered while exporting traces to localhost:4321,
-#   retrying in 1s.
-#
-# Those may occur during reloads or restarts of services. For us it is fine to loose some spans in
-# such situations, so we rather silence the warnings instead of making users worry about such
-# messages.
-logging.getLogger("opentelemetry.exporter.otlp.proto.grpc.exporter").setLevel(logging.ERROR)
-
 
 def exporter_from_config(
-    config: TraceSendConfig, exporter_class: type[OTLPSpanExporter] = OTLPSpanExporter
+    exporter_log_level: int,
+    config: TraceSendConfig,
+    exporter_class: type[OTLPSpanExporter] = OTLPSpanExporter,
 ) -> OTLPSpanExporter | None:
     if not config.enabled:
         return None
+
+    _set_exporter_logging(exporter_log_level)
+
     if isinstance(config.target, LocalTarget):
         return exporter_class(
             endpoint=f"http://localhost:{config.target.port}",
@@ -45,3 +41,18 @@ def init_span_processor(provider: TracerProvider, exporter: SpanExporter | None 
     """Add a span processor to the applications tracer provider"""
     if exporter is not None:
         provider.add_span_processor(BatchSpanProcessor(exporter, export_timeout_millis=3000))
+
+
+def _set_exporter_logging(level: int) -> None:
+    """Set the log level of the OTLP exporter
+
+    Set to logging.ERROR or higher to suppress messages like this:
+
+    `Transient error StatusCode.UNAVAILABLE encountered while exporting traces to localhost:4321,
+    retrying in 1s.`
+
+    Set to logging.CRITICAL to suppress error messages like
+
+    `Failed to export traces to localhost:4418, error code: StatusCode.UNAVAILABLE`
+    """
+    logging.getLogger(grpc_exporter.__name__).setLevel(level)

@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import logging
 from wsgiref.types import WSGIEnvironment
 
 from opentelemetry.instrumentation.wsgi import get_default_span_name, OpenTelemetryMiddleware
@@ -67,7 +68,10 @@ init_span_processor(
         service_instance_id=omd_site(),
         extra_resource_attributes=resource_attributes_from_config(paths.omd_root),
     ),
-    exporter_from_config(trace.trace_send_config(omd_config)),
+    exporter_from_config(
+        exporter_log_level=logging.ERROR,
+        config=trace.trace_send_config(omd_config),
+    ),
 )
 
 Application = OpenTelemetryMiddleware(

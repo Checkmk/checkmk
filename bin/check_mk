@@ -63,7 +63,10 @@ init_span_processor(
         service_instance_id=omd_site(),
         extra_resource_attributes=resource_attributes_from_config(cmk.utils.paths.omd_root),
     ),
-    exporter_from_config(trace.trace_send_config(omd_config)),
+    exporter_from_config(
+        exporter_log_level=logging.CRITICAL,
+        config=trace.trace_send_config(omd_config),
+    ),
 )
 
 

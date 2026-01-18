@@ -27,6 +27,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
+from cmk.core_client import CoreAction, CoreClient
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
@@ -34,7 +35,7 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
-from ._base_core import CoreAction, MonitoringCore
+from ._base_core import MonitoringCore
 from ._snapshot_local_dir import snapshot_local_dir
 from ._snapshot_trusted_cas import snapshot_trusted_cas
 
@@ -145,7 +146,7 @@ def do_restart(
                 bake_on_restart=bake_on_restart,
                 notify_relay=notify_relay,
             )
-            core.run(action)
+            core.core_client.run(action, log=_print)
 
     except Exception as e:
         if cmk.ccc.debug.enabled():
@@ -228,12 +229,12 @@ def do_create_config(
 
 
 @contextmanager
-def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
-    objects_file = core.objects_file()
+def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
+    objects_file = core_client.objects_file()
 
     backup_path = None
     if os.path.exists(objects_file):
-        backup_path = objects_file + ".save"
+        backup_path = f"{objects_file}.save"
         shutil.copy2(objects_file, backup_path)
 
     try:
@@ -245,7 +246,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             raise
 
         if (  # TODO: should also be a property of the core?
-            core.name() == "nagios"
+            core_client.name() == "nagios"
             and cmk.utils.paths.nagios_config_file.exists()
             and not _do_check_nagiosconfig()
         ):
@@ -310,7 +311,7 @@ def _create_active_config(
 
     with (
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
-        _backup_objects_file(core),
+        _backup_objects_file(core.core_client),
     ):
         snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
         snapshot_trusted_cas(cmk.utils.paths.trusted_ca_file, config_creation_context.path_created)
@@ -338,7 +339,7 @@ def _create_active_config(
             ),
         )
 
-    core.cleanup_old_configs(cmk.utils.paths.omd_root)
+    core.core_client.cleanup_old_configs()
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:

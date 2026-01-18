@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from ._base_core import CoreAction as CoreAction
 from ._base_core import MonitoringCore as MonitoringCore
 from ._control import do_create_config as do_create_config
 from ._control import do_reload as do_reload

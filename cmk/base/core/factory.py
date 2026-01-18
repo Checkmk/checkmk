@@ -10,6 +10,7 @@ from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.core_client import NagiosClient
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import paths
 from cmk.utils.labels import LabelManager
@@ -32,9 +33,12 @@ def create_core(
             from cmk.base.core.nagios import NagiosCore
 
             return NagiosCore(
+                NagiosClient(
+                    objects_file=paths.nagios_objects_file,
+                    init_script=paths.nagios_startscript,
+                    cleanup_base=paths.omd_root,
+                ),
                 CRELicensingHandler,
-                paths.nagios_startscript,
-                paths.nagios_objects_file,
                 get_all_timeperiods(loaded_config.timeperiods),
             )
         case "cmc":

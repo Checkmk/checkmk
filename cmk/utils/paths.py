@@ -90,6 +90,8 @@ predictions_dir = var_dir / "prediction"
 user_messages_spool_dir = var_dir / "user_messages/spool"
 diskspace_config_dir = default_config_dir / "diskspace.d/wato/"
 
+cmc_objects_file = var_dir / "core/config"
+
 configuration_lockfile = default_config_dir / "multisite.mk"
 
 # persisted secret files

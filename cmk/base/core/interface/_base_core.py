@@ -6,23 +6,17 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-import enum
 import socket
-import subprocess
-import sys
 from collections.abc import Callable, Mapping, Sequence
-from contextlib import suppress
-from pathlib import Path
 from typing import Final, Literal
 
 from cmk import trace
 from cmk.base.config import ConfigCache
-from cmk.ccc import tty
 from cmk.ccc.config_path import ConfigCreationContext
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
+from cmk.core_client import CoreClient
 from cmk.password_store.v1_unstable import Secret
 from cmk.utils import ip_lookup
 from cmk.utils.labels import Labels
@@ -35,30 +29,14 @@ from cmk.utils.servicename import ServiceName
 tracer = trace.get_tracer()
 
 
-class CoreAction(enum.Enum):
-    START = "start"
-    RESTART = "restart"
-    RELOAD = "reload"
-    STOP = "stop"
-
-
 class MonitoringCore(abc.ABC):
-    def __init__(self, licensing_handler_type: type[LicensingHandler]):
+    def __init__(self, core_client: CoreClient, licensing_handler_type: type[LicensingHandler]):
         self.licensing_handler_type: Final = licensing_handler_type
+        self.core_client: Final = core_client
 
     @classmethod
     @abc.abstractmethod
     def name(cls) -> Literal["nagios", "cmc"]:
-        raise NotImplementedError
-
-    @staticmethod
-    @abc.abstractmethod
-    def cleanup_old_configs(base: Path) -> None:
-        raise NotImplementedError
-
-    @staticmethod
-    @abc.abstractmethod
-    def objects_file() -> str:
         raise NotImplementedError
 
     def create_config(
@@ -134,37 +112,3 @@ class MonitoringCore(abc.ABC):
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         raise NotImplementedError
-
-    def run(
-        self,
-        action: CoreAction,
-        *,
-        log: Callable[[str], None] | None = None,
-    ) -> None:
-        if log is None:
-            log = _print_
-        with tracer.span(
-            f"do_core_action[{action.value}]",
-            attributes={
-                "cmk.core_config.core": self.name(),
-            },
-        ):
-            log("%sing monitoring core..." % action.value.title())
-
-            completed_process = self._run_command(action)
-            if completed_process.returncode != 0:
-                log("ERROR: %r\n" % completed_process.stdout)
-                raise MKGeneralException(
-                    f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
-                )
-            log(tty.ok + "\n")
-
-    @abc.abstractmethod
-    def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
-        raise NotImplementedError
-
-
-def _print_(txt: str) -> None:
-    with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()

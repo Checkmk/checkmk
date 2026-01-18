@@ -9,9 +9,7 @@
 
 import base64
 import itertools
-import os
 import socket
-import subprocess
 import sys
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
@@ -21,7 +19,6 @@ from pathlib import Path
 from socket import AddressFamily
 from typing import Any, assert_never, Final, IO, Literal
 
-import cmk.utils.paths
 from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
@@ -30,7 +27,7 @@ from cmk.base.config import (
     ServicegroupName,
 )
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import CoreAction, MonitoringCore
+from cmk.base.core.interface import MonitoringCore
 from cmk.base.core.shared import (
     AbstractServiceID,
     autodetect_plugin,
@@ -46,7 +43,7 @@ from cmk.base.core.shared import (
     host_check_command,
 )
 from cmk.ccc import store, tty
-from cmk.ccc.config_path import cleanup_old_configs, ConfigCreationContext
+from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -57,6 +54,7 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     ServiceID,
 )
+from cmk.core_client import NagiosClient
 from cmk.fetchers import StoredSecrets
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ActiveServiceData
@@ -86,38 +84,17 @@ ObjectSpec = dict[str, Any]
 class NagiosCore(MonitoringCore):
     def __init__(
         self,
+        core_client: NagiosClient,
         licensing_handler_type: type[LicensingHandler],
-        init_script_path: Path,
-        objects_file_path: Path,
         # we should consider passing a NagiosConfig here, in analogy to CmcPb
         timeperiods: TimeperiodSpecs,
     ) -> None:
-        super().__init__(licensing_handler_type)
-        self.init_script_path: Final = init_script_path
-        self.objects_file_path: Final = objects_file_path
+        super().__init__(core_client, licensing_handler_type)
         self.timeperiods: Final = timeperiods
 
     @classmethod
     def name(cls) -> Literal["nagios"]:
         return "nagios"
-
-    @staticmethod
-    def cleanup_old_configs(base: Path) -> None:
-        cleanup_old_configs(base)
-
-    @staticmethod
-    def objects_file() -> str:
-        return str(cmk.utils.paths.nagios_objects_file)
-
-    def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
-        os.putenv("CORE_NOVERIFY", "yes")
-        return subprocess.run(
-            [str(self.init_script_path), action.value],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True,
-            check=False,
-        )
 
     def _create_config(
         self,
@@ -233,7 +210,7 @@ class NagiosCore(MonitoringCore):
             ),
         )
 
-        store.save_text_to_file(self.objects_file_path, config_buffer.getvalue())
+        store.save_text_to_file(self.core_client.objects_file(), config_buffer.getvalue())
         for host, content in notify_host_files.items():
             store.save_bytes_to_file(make_notify_host_file_path(config_path, host), content)
 

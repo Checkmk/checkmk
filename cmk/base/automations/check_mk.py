@@ -113,7 +113,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.base.core.interface import CoreAction, do_reload, do_restart, MonitoringCore
+from cmk.base.core.interface import do_reload, do_restart, MonitoringCore
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
@@ -160,6 +160,7 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
+from cmk.core_client import CoreAction
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
     ActivatedSecrets,
@@ -1574,7 +1575,7 @@ class AutomationRenameHosts:
         # it now.
         core_was_running = self._core_is_running(loading_result.loaded_config.monitoring_core)
         if core_was_running:
-            core.run(CoreAction.STOP, log=lambda x: None)
+            core.core_client.run(CoreAction.STOP, log=lambda x: None)
 
         try:
             for oldname, newname in renamings:
@@ -1646,6 +1647,7 @@ class AutomationRenameHosts:
 
         return RenameHostsResult(action_counts)
 
+    # TODO: move to cmk.core_client
     def _core_is_running(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:
         if monitoring_core == "nagios":
             command = str(nagios_startscript) + " status"

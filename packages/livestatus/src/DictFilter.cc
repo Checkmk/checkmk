@@ -77,8 +77,8 @@ DictStrValueFilter::DictStrValueFilter(Kind kind, std::string columnName,
         return StringFilter{
             kind,
             columnName,
-            [this, ref_varname = std::move(ref_varname)](Row row) {
-                auto cvm = f_(row);
+            [get_col = f_, ref_varname = std::move(ref_varname)](Row row) {
+                auto cvm = get_col(row);
                 auto it = cvm.find(ref_varname);
                 return it == cvm.end() ? "" : it->second;
             },

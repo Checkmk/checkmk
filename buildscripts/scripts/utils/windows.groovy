@@ -85,7 +85,7 @@ void build(Map args) {
                 try {
                     cmd_output("pwsh -c rm -Force ${artifacts_dir} -ErrorAction SilentlyContinue");
                 }
-                catch(Exception exc) {
+                catch (Exception exc) {
                     println("FAILED TO DELETE FILE ${artifact} due to: ${exc}");
                 }
             }

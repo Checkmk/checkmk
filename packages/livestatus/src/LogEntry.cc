@@ -302,6 +302,7 @@ void LogEntry::assign(LogEntryParam par, std::string_view field) {
             return;
         case LogEntryParam::State:
             state_ = 0;
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             std::from_chars(field.data(), field.data() + field.size(), state_);
             return;
         case LogEntryParam::StateType:
@@ -309,6 +310,7 @@ void LogEntry::assign(LogEntryParam par, std::string_view field) {
             return;
         case LogEntryParam::Attempt:
             attempt_ = 0;
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             std::from_chars(field.data(), field.data() + field.size(),
                             attempt_);
             return;

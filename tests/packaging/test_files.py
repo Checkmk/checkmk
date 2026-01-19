@@ -273,8 +273,8 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
     # All files below the standard directories are allowed
     for basedir in ["bin", "etc", "include", "lib", "local", "share", "skel", "tmp", "var"]:
         version_allowed_patterns += [
-            "%sopt/omd/versions/###OMD_VERSION###/%s/?$" % (prefix, basedir),
-            "%sopt/omd/versions/###OMD_VERSION###/%s/.*" % (prefix, basedir),
+            f"{prefix}opt/omd/versions/###OMD_VERSION###/{basedir}/?$",
+            f"{prefix}opt/omd/versions/###OMD_VERSION###/{basedir}/.*",
         ]
 
     if package_path.endswith(".rpm"):

@@ -21,7 +21,7 @@ def format_sarif(errors: Sequence[CheckerError]) -> str:
 
     Spec: https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html
     """
-    rule_ids = sorted(set(error.checker_id for error in errors))
+    rule_ids = sorted({error.checker_id for error in errors})
 
     rules = [
         {

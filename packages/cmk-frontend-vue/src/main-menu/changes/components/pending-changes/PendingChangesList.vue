@@ -47,7 +47,10 @@ const changesSideTitle = computed(() => {
 </script>
 
 <template>
-  <div class="pending-changes-container">
+  <div
+    v-if="selectedSites.length === 0 || pendingChanges.length > 0"
+    class="pending-changes-container"
+  >
     <CmkCollapsibleTitle
       :title="changesTitle"
       :side-title="changesSideTitle"

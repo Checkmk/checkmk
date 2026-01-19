@@ -79,6 +79,18 @@ void build(Map args) {
             raise("${args.TARGET} is not known!")
         )
 
+        dir(artifacts_dir) {
+            for (artifact in artifacts.split(",")) {
+                println("Removing may existing build output file ${artifact} from ${artifacts_dir}");
+                try {
+                    cmd_output("pwsh -c rm -Force ${artifacts_dir} -ErrorAction SilentlyContinue");
+                }
+                catch(Exception exc) {
+                    println("FAILED TO DELETE FILE ${artifact} due to: ${exc}");
+                }
+            }
+        }
+
         timeout(time: 60, unit: 'MINUTES') {
             dir(subdir) {
                 bat(command);

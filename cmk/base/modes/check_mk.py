@@ -1522,6 +1522,7 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
+        get_relay_id=lambda host_name: config.get_relay_id(label_manager.labels_of_host(host_name)),
     )
 
 

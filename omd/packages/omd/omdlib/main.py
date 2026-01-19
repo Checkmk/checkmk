@@ -2238,7 +2238,7 @@ def main_mv_or_cp(
             remove_from_fstab(old_site.name, old_site.tmp_dir)
 
     sys.stdout.write(
-        "{}ing site {} to {}...".format(
+        "{}ing site {} to {}...\n".format(
             command_type is CommandType.move and "Mov" or "Copy", old_site.name, new_site.name
         )
     )
@@ -2300,8 +2300,6 @@ def main_mv_or_cp(
     # clean up old site
     if command_type is CommandType.move and reuse:
         _main_rm(version_info, old_site, global_opts, {"reuse": None})
-
-    sys.stdout.write("OK\n")
 
     # Now switch over to the new site as currently active site
     new_config = load_config(new_site, global_opts.verbose)

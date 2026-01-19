@@ -16,31 +16,31 @@ Dear friends of Checkmk,
 
 the new {{release_type}} release {{version}} of Checkmk is ready for download.
 
-This {{release_type}} release ships with {{werks.cre.len}} changes affecting all editions of Checkmk,
-{{ werks.cee.len }} changes for all commercial editions, {{ werks.cce.len }} Ultimate specific and
-{{ werks.cme.len }} Ultimate with multi-tenancy specific changes.
+This {{release_type}} release ships with {{werks.community.len}} changes affecting all editions of Checkmk,
+{{ werks.pro.len }} changes for all commercial editions, {{ werks.ultimate.len }} Ultimate specific and
+{{ werks.ultimatemt.len }} Ultimate with multi-tenancy specific changes.
 
 Support periods can be found here: https://docs.checkmk.com/latest/en/cmk_versions.html
 
 
 Changes in all Checkmk editions:
-{{ changes(werks.cre.werks) }}
+{{ changes(werks.community.werks) }}
 
 
 Changes in Checkmk commercial editions:
-{{ changes(werks.cee.werks) }}
+{{ changes(werks.pro.werks) }}
 
 
 Changes in Checkmk Ultimate:
-{{ changes(werks.cce.werks) }}
+{{ changes(werks.ultimate.werks) }}
 
 
 Changes in Checkmk Cloud:
-{{ changes(werks.cse.werks) }}
+{{ changes(werks.cloud.werks) }}
 
 
 Changes in Checkmk Ultimate with multi-tenancy:
-{{ changes(werks.cme.werks) }}
+{{ changes(werks.ultimatemt.werks) }}
 
 You can download Checkmk from our download page:
  * https://checkmk.com/download

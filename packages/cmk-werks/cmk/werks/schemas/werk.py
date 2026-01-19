@@ -12,7 +12,7 @@ from typing import ClassVar, Literal, NamedTuple, override, TypeVar
 from pydantic import BaseModel, Field
 
 from ..in_out_elements import TTY_NORMAL, TTY_RED
-from ..parse import WerkV2ParseResult
+from ..parse import WerkV2ParseResult, WerkV3ParseResult
 
 T = TypeVar("T", bound="Stash")
 
@@ -116,7 +116,7 @@ class WerkId:
 class Werk(NamedTuple):
     path: Path
     id: WerkId
-    content: WerkV2ParseResult
+    content: WerkV2ParseResult | WerkV3ParseResult
 
     @property
     def date(self) -> datetime.datetime:

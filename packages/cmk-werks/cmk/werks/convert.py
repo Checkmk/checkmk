@@ -14,7 +14,7 @@ def _table_entry(key: str, value: str) -> str:
     return f"{key} | {value}"
 
 
-def werkv1_metadata_to_werkv2_metadata(metadata: dict[str, str]) -> dict[str, str]:
+def werkv1_metadata_to_markdown_werk_metadata(metadata: dict[str, str]) -> dict[str, str]:
     metadata = metadata.copy()
     metadata.pop("knowledge", None)  # removed field
     metadata.pop("state", None)  # removed field
@@ -41,7 +41,7 @@ def werkv1_metadata_to_werkv2_metadata(metadata: dict[str, str]) -> dict[str, st
 def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
     # try to keep errors in place, so the validation of werkv2 will show errors in werkv1
     parsed = parse_werk_v1(werkv1_content, werk_id)
-    metadata = werkv1_metadata_to_werkv2_metadata(parsed.metadata)
+    metadata = werkv1_metadata_to_markdown_werk_metadata(parsed.metadata)
     metadata.pop("id", None)  # is the filename
 
     def generator() -> Iterator[str]:

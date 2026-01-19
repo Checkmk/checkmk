@@ -20,6 +20,7 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 import CmkInlineValidation from '../user-input/CmkInlineValidation.vue'
 import CmkDropdownButton, { type ButtonVariants } from './CmkDropdownButton.vue'
+import TruncateText from './TruncateText.vue'
 
 export interface DropdownOption {
   name: string
@@ -153,13 +154,6 @@ function handleUpdate(selected: Suggestion | null): void {
   hideSuggestions()
 }
 
-const maxLabelLength = 60
-const truncatedButtonLabel = computed(() =>
-  buttonLabel.value.length > maxLabelLength
-    ? `${buttonLabel.value.slice(0, maxLabelLength / 2 - 5)}...${buttonLabel.value.slice(-maxLabelLength / 2 + 5)}`
-    : buttonLabel.value
-)
-
 const slots = useSlots()
 const group = computed<ButtonVariants['group']>(() => {
   const hasButtonsStart = !!slots['buttons-start']
@@ -184,7 +178,7 @@ const group = computed<ButtonVariants['group']>(() => {
       }
     "
     class="cmk-dropdown"
-    :class="{ 'cmk-dropdown__max-width': width === 'max' }"
+    :class="{ 'cmk-dropdown__fill': width === 'fill' }"
   >
     <CmkInlineValidation
       v-if="callbackFilteredErrorMessage !== null"
@@ -196,7 +190,6 @@ const group = computed<ButtonVariants['group']>(() => {
       ref="comboboxButtonRef"
       :aria-label="label"
       :aria-expanded="suggestionsShown"
-      :title="buttonLabel.length > maxLabelLength ? buttonLabel : ''"
       :disabled="disabled"
       :multiple-choices-available="canOpenDropdown"
       :value-is-selected="selectedOption !== null"
@@ -205,11 +198,9 @@ const group = computed<ButtonVariants['group']>(() => {
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"
     >
-      <span class="cmk-dropdown--text"
-        >{{ truncatedButtonLabel
-        }}<CmkLabelRequired :show="required && selectedOption === null" :space="'before'" />
-        <template v-if="!buttonLabel">&nbsp;</template>
-      </span>
+      <span style="display: contents"><TruncateText :text="buttonLabel" /></span
+      ><CmkLabelRequired :show="required && selectedOption === null" :space="'before'" />
+      <template v-if="!buttonLabel">&nbsp;</template>
       <ArrowDown
         class="cmk-dropdown--arrow"
         :class="{ rotated: suggestionsShown, disabled: disabled || !canOpenDropdown }"
@@ -235,9 +226,12 @@ const group = computed<ButtonVariants['group']>(() => {
   white-space: nowrap;
 
   .cmk-dropdown--arrow {
+    flex-shrink: 0;
     width: 0.7em;
     color: var(--dropdown-arrow-color);
-    margin: 0 3px 0 10px;
+    margin-left: auto;
+    padding: 0 4px;
+    margin-top: -1px;
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.rotated {
@@ -251,7 +245,7 @@ const group = computed<ButtonVariants['group']>(() => {
   }
 }
 
-.cmk-dropdown__max-width {
+.cmk-dropdown__fill {
   width: 100%;
 }
 

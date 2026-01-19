@@ -27,6 +27,5 @@ const { show = true, space = null } = defineProps<{
 <style scoped>
 span.cmk-label-required {
   color: var(--form-element-required-color);
-  padding: 3px 0;
 }
 </style>

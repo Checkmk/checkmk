@@ -46,7 +46,7 @@ const dropdownOptions = computed<Suggestion[]>(() =>
       v-model:selected-option="selectedSidebarElement"
       :options="{ type: 'filtered', suggestions: dropdownOptions }"
       :label="_t('Select option')"
-      width="max"
+      width="fill"
     />
   </template>
 </template>

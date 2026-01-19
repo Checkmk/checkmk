@@ -35,7 +35,7 @@ describe('FormAutocompleter', () => {
         id: 'test'
       }
     })
-    expect(screen.getByText('Search...')).toBeInTheDocument()
+    expect(screen.getByLabelText('Search...')).toBeInTheDocument()
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {

@@ -17,5 +17,9 @@ const { spec, space = null } = defineProps<{
 </script>
 
 <template>
-  <CmkLabelRequired :show="spec?.validators?.some(required) ?? false" :space="space" />
+  <CmkLabelRequired
+    :show="spec?.validators?.some(required) ?? false"
+    :style="{ padding: '3px 0' }"
+    :space="space"
+  />
 </template>

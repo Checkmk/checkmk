@@ -27,7 +27,7 @@ const buttonVariants = cva('', {
     width: {
       default: '',
       wide: 'wide',
-      max: 'cmk-dropdown-button--width-max'
+      fill: 'cmk-dropdown-button--width-fill'
     }
   },
   defaultVariants: {
@@ -85,12 +85,13 @@ defineEmits(['click'])
 .cmk-dropdown-button {
   display: inline-flex;
   height: var(--form-field-height);
+  max-width: 350px;
   margin: 0;
-  padding: 3px 6px 4px;
+  padding: 3px 6px 0;
   vertical-align: baseline;
   background-color: var(--default-form-element-bg-color);
   border: none;
-  justify-content: space-between;
+  justify-content: flex-start;
   font-weight: var(--font-weight-default);
   cursor: pointer;
 
@@ -99,12 +100,18 @@ defineEmits(['click'])
     min-width: 10em;
   }
 
-  &.cmk-dropdown-button--width-max {
+  &.cmk-dropdown-button--width-fill {
+    min-width: 10em;
     width: 100%;
+    max-width: 100%;
   }
 
   &:hover {
     background-color: var(--input-hover-bg-color);
+  }
+
+  &:focus {
+    box-shadow: none;
   }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

@@ -193,6 +193,6 @@ describe('FormLabels', () => {
     await userEvent.keyboard('[Enter]')
     expect(getCurrentData()).toBe('{"key3":"value3"}')
 
-    expect(dropdown.textContent).toBe('Add some labels')
+    await screen.findByText('Add some labels')
   })
 })

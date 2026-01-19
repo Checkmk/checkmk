@@ -123,6 +123,12 @@ type RRDData = Mapping[RRDDataKey, TimeSeries]
 type QueryData = Mapping[QueryDataKey, Sequence[QueryDataValue]]
 
 
+@dataclass(frozen=True)
+class QueryDataError:
+    keys: Sequence[QueryDataKey]
+    exception: Exception
+
+
 def _derive_num_points(rrd_data: RRDData) -> tuple[int, int, int, int]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))

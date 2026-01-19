@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.resulttype import Result
 from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 
-from ._graph_metric_expressions import QueryData, QueryDataKey
+from ._graph_metric_expressions import QueryData, QueryDataError, QueryDataKey
 
 
 class FetchTimeSeries(Protocol):
@@ -22,7 +23,7 @@ class FetchTimeSeries(Protocol):
         start_time: float,
         end_time: float,
         step: int,
-    ) -> QueryData: ...
+    ) -> Iterator[Result[QueryData, QueryDataError]]: ...
 
 
 @dataclass(frozen=True, kw_only=True)

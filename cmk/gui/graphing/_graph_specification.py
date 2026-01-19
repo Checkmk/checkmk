@@ -128,6 +128,9 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def graph_type(self) -> str:
         return self.graph_type_name()
 
+    def url(self) -> str:
+        return ""
+
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
     def plugin_name(self, instance: type[GraphSpecification]) -> str:

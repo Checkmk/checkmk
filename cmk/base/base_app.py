@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import FetcherTrigger, ProgramFetcher
+from cmk.fetchers import FetcherTriggerFactory, ProgramFetcher
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.licensing.handler import LicensingHandler
@@ -48,7 +48,7 @@ class CheckmkBaseApp:
             MonitoringCore,
         ],
         licensing_handler_type: type[LicensingHandler],
-        make_fetcher_trigger: Callable[[str | None], FetcherTrigger],
+        make_fetcher_trigger: FetcherTriggerFactory,
         make_metric_backend_fetcher: Callable[
             [
                 HostAddress,

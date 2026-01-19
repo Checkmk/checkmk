@@ -8,8 +8,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import type { ButtonVariants } from '@/components/CmkButton.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 
 interface ActionButtonIcon {
   name: SimpleIcons
@@ -29,8 +29,14 @@ defineProps<ActionButtonProps>()
 
 <template>
   <CmkButton :variant="variant" @click="action">
-    <span v-if="!icon || icon?.side === 'right'">{{ label }}{{ '\xa0' }}</span>
-    <CmkIcon v-if="icon" :name="icon.name" :rotate="icon.rotate || 0" variant="inline" />
-    <span v-if="icon?.side === 'left'">{{ '\xa0' }}{{ label }}</span>
+    <span v-if="icon?.side === 'left'">
+      <CmkIcon v-if="icon" :name="icon.name" :rotate="icon.rotate || 0" variant="inline" />
+      {{ '\xa0' }}
+    </span>
+    {{ label }}
+    <span v-if="icon?.side === 'right'">
+      {{ '\xa0' }}
+      <CmkIcon v-if="icon" :name="icon.name" :rotate="icon.rotate || 0" variant="inline" />
+    </span>
   </CmkButton>
 </template>

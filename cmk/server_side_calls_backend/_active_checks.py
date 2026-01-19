@@ -15,6 +15,7 @@ from cmk.utils import config_warnings, password_store
 from cmk.utils.servicename import ServiceName
 
 from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords, SecretsConfig
+from ._relay_compatibility import NotSupportedError
 from .config_processing import (
     GlobalProxiesWithLookup,
     OAuth2Connection,
@@ -44,6 +45,7 @@ class ActiveCheck:
         finder: ExecutableFinderProtocol,
         *,
         ip_lookup_failed: bool,
+        for_relay: bool,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -55,13 +57,20 @@ class ActiveCheck:
         self._secrets_config = secrets_config
         self._finder = finder
         self._ip_lookup_failed = ip_lookup_failed
+        self._for_relay = for_relay
 
     def get_active_service_data(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]
     ) -> Sequence[ActiveServiceData]:
-        return self._deduplicate_service_descriptions(
+        active_services_data = self._deduplicate_service_descriptions(
             self._drop_empty_service_descriptions(self._make_services(plugin_name, plugin_params))
         )
+        if not self._for_relay or not active_services_data:
+            return active_services_data
+
+        # Currently no active checks are relay compatible.
+        # This will depend on the plugin family in the future.
+        raise NotSupportedError("Active checks are not supported on relays.")
 
     def _make_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]

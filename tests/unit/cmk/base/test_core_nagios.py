@@ -652,6 +652,7 @@ def test_create_nagios_servicedefs_active_check(
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
         service_depends_on=lambda *a: (),
+        for_relay=False,
     )
 
     assert outfile.getvalue() == expected_result
@@ -698,6 +699,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
         service_depends_on=lambda *a: (),
+        for_relay=False,
     )
 
     config_snippet = outfile.getvalue()
@@ -834,6 +836,7 @@ def test_create_nagios_servicedefs_with_warnings(
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
         service_depends_on=lambda *a: (),
+        for_relay=False,
     )
 
     assert outfile.getvalue() == expected_result
@@ -909,6 +912,7 @@ def test_create_nagios_servicedefs_omit_service(
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
         service_depends_on=lambda *a: (),
+        for_relay=False,
     )
 
     assert outfile.getvalue() == expected_result
@@ -986,6 +990,7 @@ def test_create_nagios_servicedefs_invalid_args(
         license_counter=license_counter,
         ip_address_of=ip_address_of_return_local,
         service_depends_on=lambda *a: (),
+        for_relay=False,
     )
 
     assert error_message == capsys.readouterr().err
@@ -1084,6 +1089,7 @@ def test_create_nagios_config_commands(
         license_counter=license_counter,
         ip_address_of=lambda *a: HostAddress("127.0.0.1"),
         service_depends_on=lambda *a: (),
+        for_relay=False,
     )
     create_nagios_config_commands(cfg)
 

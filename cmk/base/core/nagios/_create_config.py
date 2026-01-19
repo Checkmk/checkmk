@@ -227,6 +227,9 @@ class NagiosCore(MonitoringCore):
             ip_address_of=ip_address_of,
             service_depends_on=service_depends_on,
             timeperiods=self.timeperiods,
+            get_relay_id=lambda host_name: config.get_relay_id(
+                self._config_cache.label_manager.labels_of_host(host_name)
+            ),
         )
 
         store.save_text_to_file(self.objects_file_path, config_buffer.getvalue())
@@ -332,6 +335,7 @@ def create_config(
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     timeperiods: TimeperiodSpecs,
+    get_relay_id: Callable[[HostName], str | None],
 ) -> NotifyHostFiles:
     cfg = NagiosConfig(outfile, hostnames, timeperiods)
 
@@ -354,6 +358,7 @@ def create_config(
             licensing_counter,
             ip_address_of,
             service_depends_on,
+            for_relay=get_relay_id(hostname) is not None,
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
@@ -404,6 +409,8 @@ def _create_nagios_config_host(
     license_counter: Counter,
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+    *,
+    for_relay: bool,
 ) -> NotificationHostConfig:
     cfg.write_str("\n# ----------------------------------------------------\n")
     cfg.write_str("# %s\n" % hostname)
@@ -433,6 +440,7 @@ def _create_nagios_config_host(
             license_counter,
             ip_address_of,
             service_depends_on,
+            for_relay=for_relay,
         ),
         tags=get_tags_with_groups_from_attributes(list(host_attrs.items())),
     )
@@ -684,6 +692,8 @@ def create_nagios_servicedefs(
     license_counter: Counter,
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+    *,
+    for_relay: bool,
 ) -> dict[ServiceName, Labels]:
     check_mk_labels = _get_service_labels(config_cache.label_manager, hostname, "Check_MK")
     check_mk_attrs = _to_nagios_core_attributes(
@@ -730,6 +740,7 @@ def create_nagios_servicedefs(
             path=password_store.active_secrets_path_site(),
             secrets=stored_passwords,
         ),
+        for_relay=for_relay,
     ):
         active_service_labels = _get_service_labels(
             config_cache.label_manager, hostname, service_data.description

@@ -2379,6 +2379,8 @@ class ConfigCache:
         ip_address_of: IPLookupOptional,
         secrets_config: SecretsConfig,
         single_plugin: str | None = None,
+        *,
+        for_relay: bool,
     ) -> Iterator[ActiveServiceData]:
         plugin_configs = (
             self.active_checks(host_name)
@@ -2433,6 +2435,7 @@ class ConfigCache:
                 prefix_map=(),  # no relay support yet.
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
+            for_relay=for_relay,
         )
 
         for plugin_name, plugin_params in plugin_configs:

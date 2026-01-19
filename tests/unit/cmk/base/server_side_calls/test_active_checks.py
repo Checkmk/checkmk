@@ -27,7 +27,12 @@ from cmk.server_side_calls.v1 import (
     IPv4Config,
     IPv6Config,
 )
-from cmk.server_side_calls_backend import ActiveCheck, ActiveServiceData, config_processing
+from cmk.server_side_calls_backend import (
+    ActiveCheck,
+    ActiveServiceData,
+    config_processing,
+    NotSupportedError,
+)
 from cmk.utils import password_store
 
 HOST_CONFIG = HostConfig(
@@ -105,10 +110,37 @@ def test_get_active_service_data_respects_finalizer(
         ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
+        for_relay=False,
     )
 
     (service,) = active_check.get_active_service_data("my_active_check", [{}])
     assert service.description == "MY SERVICE"
+
+
+def test_get_active_service_data_raises_for_relay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", False)
+    active_check = ActiveCheck(
+        TEST_PLUGIN_STORE,
+        HostName("myhost"),
+        HOST_CONFIG,
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
+        oauth2_connections={},
+        service_name_finalizer=str,
+        secrets_config=StoredSecrets(
+            path=Path("/pw/store"),
+            secrets={},
+        ),
+        finder=lambda executable, module: f"/path/to/{executable}",
+        ip_lookup_failed=False,
+        for_relay=True,
+    )
+
+    with pytest.raises(NotSupportedError):
+        active_check.get_active_service_data("my_active_check", [{}])
 
 
 def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
@@ -293,6 +325,7 @@ def test_get_active_service_data(
         ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
+        for_relay=False,
     )
 
     services = active_check.get_active_service_data(*active_check_rule)
@@ -342,6 +375,7 @@ def test_get_active_service_data_password_with_hack(
         ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
+        for_relay=False,
     )
 
     assert active_check.get_active_service_data(
@@ -393,6 +427,7 @@ def test_get_active_service_data_password_without_hack() -> None:
         ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
+        for_relay=False,
     )
 
     assert active_check.get_active_service_data(
@@ -471,6 +506,7 @@ def test_test_get_active_service_data_crash_with_debug(
         ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
+        for_relay=False,
     )
 
     with pytest.raises(
@@ -595,6 +631,7 @@ def test_get_active_service_data_warnings(
         ),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
+        for_relay=False,
     )
 
     services = active_check_config.get_active_service_data(*active_check_rule)

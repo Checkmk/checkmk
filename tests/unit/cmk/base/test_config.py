@@ -3124,6 +3124,7 @@ def test_get_active_service_data_crash(
             FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
             lambda *a, **kw: HostAddress(""),
             _SecretsConfig(path=Path(), secrets={}),
+            for_relay=False,
         )
     )
 

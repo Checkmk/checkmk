@@ -558,6 +558,7 @@ def automation_special_agent_discovery_preview(
         _disabled_ip_lookup,
         run_settings.host_config.ip_address,
         secrets_config=ad_hoc_secrets,
+        for_relay=run_settings.host_config.relay_id is not None,
     )
 
     return preview
@@ -702,6 +703,7 @@ def automation_discovery_preview(
         ip_address_of=ip_address_of_with_fallback,
         ip_address=ip_address,
         secrets_config=secrets_config_relay if relay_id else secrets_config_site,
+        for_relay=relay_id is not None,
     )
 
 
@@ -724,6 +726,8 @@ def _get_discovery_preview(
     ip_address_of: ip_lookup.IPLookupOptional,
     ip_address: HostAddress | None,
     secrets_config: SecretsConfig,
+    *,
+    for_relay: bool,
 ) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
 
@@ -747,6 +751,7 @@ def _get_discovery_preview(
             config_cache,
             plugins=plugins,
             secrets_config=secrets_config,
+            for_relay=for_relay,
         )
 
         def make_discovered_host_labels(
@@ -793,6 +798,8 @@ def _active_check_preview_rows(
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ip_address_of: ip_lookup.IPLookupOptional,
     secrets_config: SecretsConfig,
+    *,
+    for_relay: bool,
 ) -> Sequence[CheckPreviewEntry]:
     ignored_services = config.IgnoredActiveServices(config_cache, host_name)
 
@@ -829,6 +836,7 @@ def _active_check_preview_rows(
             final_service_name_config,
             ip_address_of,
             secrets_config,
+            for_relay=for_relay,
         )
     ]
 
@@ -886,6 +894,7 @@ def _execute_discovery(
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
     secrets_config: SecretsConfig,
+    for_relay: bool,
 ) -> CheckPreview:
     logger = logging.getLogger("cmk.base.discovery")
     hosts_config = config.make_hosts_config(loaded_config)
@@ -1001,6 +1010,7 @@ def _execute_discovery(
                     default_address_family(h),
                     ip_address_of,
                     secrets_config,
+                    for_relay=for_relay,
                 ),
                 *config_cache.custom_check_preview_rows(h),
             ]
@@ -2045,6 +2055,9 @@ class AutomationAnalyseServices:
                     timeperiod_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                         livestatus.get_optional_timeperiods_active_map, log=logger.warning
                     ).get,
+                    for_relay=(
+                        config.get_relay_id(label_manager.labels_of_host(host_name)) is not None
+                    ),
                 )
             )
             else AnalyseServiceResult(
@@ -2071,6 +2084,8 @@ class AutomationAnalyseServices:
         servicedesc: str,
         ip_address_of: ip_lookup.IPLookup,
         timeperiod_active: Callable[[cmk.utils.timeperiod.TimeperiodName], bool | None],
+        *,
+        for_relay: bool,
     ) -> _FoundService | None:
         return next(
             chain(
@@ -2099,6 +2114,7 @@ class AutomationAnalyseServices:
                     host_ip_family,
                     ip_address_of,
                     servicedesc,
+                    for_relay=for_relay,
                 ),
             ),
             None,
@@ -2235,6 +2251,7 @@ class AutomationAnalyseServices:
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address_of: ip_lookup.IPLookup,
         servicedesc: str,
+        for_relay: bool,
     ) -> Iterable[_FoundService]:
         secrets_config = StoredSecrets(
             path=(p := cmk.utils.password_store.pending_secrets_path_site()),
@@ -2249,6 +2266,7 @@ class AutomationAnalyseServices:
             final_service_name_config,
             ip_address_of,
             secrets_config=secrets_config,
+            for_relay=for_relay,
         ):
             if active_service.description == servicedesc:
                 yield _FoundService(
@@ -3690,6 +3708,7 @@ class AutomationActiveCheck:
         )
         config_cache = loading_result.config_cache
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+        label_manager = loading_result.config_cache.label_manager
 
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_family = ip_lookup_config.default_address_family(host_name)
@@ -3749,6 +3768,7 @@ class AutomationActiveCheck:
             ip_address_of,
             secrets_config=secrets_config,
             single_plugin=plugin,
+            for_relay=config.get_relay_id(label_manager.labels_of_host(host_name)) is not None,
         ):
             if service_data.description != item:
                 continue
@@ -3756,9 +3776,7 @@ class AutomationActiveCheck:
             command_line = self._replace_service_macros(
                 host_name,
                 service_data.description,
-                config_cache.label_manager.labels_of_service(
-                    host_name, service_data.description, {}
-                ),
+                label_manager.labels_of_service(host_name, service_data.description, {}),
                 " ".join(service_data.command),
                 config_cache=config_cache,
             )

@@ -181,7 +181,6 @@ class TestMerakiOrganizationPiggybackDevice:
 
         assert value == expected
 
-    @pytest.mark.xfail(strict=True, reason="CMK-29076")
     def test_fallback_mechanism(self, meraki_org: MerakiOrganisation) -> None:
         devices_by_serial = {"xyz": DeviceFactory.build(name="", productType="switch")}
 
@@ -190,7 +189,6 @@ class TestMerakiOrganizationPiggybackDevice:
 
         assert value == expected
 
-    @pytest.mark.xfail(strict=True, reason="CMK-29076")
     def test_fallback_mechanism_no_product_type(self, meraki_org: MerakiOrganisation) -> None:
         devices_by_serial = {"xyz": DeviceFactory.build(name="", productType="")}
         assert meraki_org._get_device_piggyback("xyz", devices_by_serial) is None

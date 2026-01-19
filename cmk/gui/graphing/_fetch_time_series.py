@@ -124,7 +124,7 @@ def _refine_augmented_time_series(
                 for key, value in ats.meta_data.attributes.get("scope", {}).items():
                     macros[f"$SCOPE_ATTR.{key}$"] = value
                 for key, value in ats.meta_data.attributes.get("data_point", {}).items():
-                    macros[f"$DATAPOINT_ATTR.{key}$"] = value
+                    macros[f"$DATA_POINT_ATTR.{key}$"] = value
 
                 title = replace_macros_in_str(graph_metric_title, macros)
             elif (

@@ -1009,6 +1009,9 @@
             },
             "aggregation_histogram_percentile": {
               "type": "number"
+            },
+            "service_name_template": {
+              "type": "string"
             }
           },
           "required": [
@@ -1018,7 +1021,8 @@
             "scope_attributes",
             "data_point_attributes",
             "aggregation_lookback",
-            "aggregation_histogram_percentile"
+            "aggregation_histogram_percentile",
+            "service_name_template"
           ]
         }
       ]

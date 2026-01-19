@@ -77,6 +77,7 @@ const autocompleter: Autocompleter = {
       v-model="currentValue"
       :autocompleter="autocompleter"
       :size="0"
+      :width="'fill'"
       :placeholder="_t('Type to search...')"
     />
 

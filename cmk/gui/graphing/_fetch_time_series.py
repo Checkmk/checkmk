@@ -6,6 +6,7 @@
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Literal
 
+from cmk.ccc.resulttype import Error, OK, Result
 from cmk.gui.color import fade_color, parse_color, render_color
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.macros import replace_macros_in_str
@@ -14,7 +15,9 @@ from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AugmentedTimeSeries,
     LineType,
+    QueryDataError,
     QueryDataKey,
+    QueryDataValue,
     RRDDataKey,
     TimeSeriesMetaData,
 )
@@ -31,7 +34,7 @@ def fetch_augmented_time_series(
     *,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
-) -> Iterator[AugmentedTimeSeries]:
+) -> Iterator[Result[AugmentedTimeSeries, QueryDataError]]:
     consolidation_function = graph_recipe.consolidation_function
     conversion = user_specific_unit(graph_recipe.unit_spec, temperature_unit).conversion
     start_time = graph_data_range.time_range[0]
@@ -59,6 +62,7 @@ def fetch_augmented_time_series(
         step=step,
     )
 
+    query_data: dict[QueryDataKey, Sequence[QueryDataValue]] = {}
     if backend_time_series_fetcher and query_keys:
         # Align grid (start, end, step) to RRD data if available. We need this because our graph
         # rendering code assumes a fixed grid for all time series in a graph. The RRDs are already
@@ -75,27 +79,30 @@ def fetch_augmented_time_series(
             # precision than they store it.
             step = max(int(step), 60)
 
-        query_data = backend_time_series_fetcher(
+        for result in backend_time_series_fetcher(
             list(query_keys),
             start_time=start_time,
             end_time=end_time,
             step=step,
-        )
-    else:
-        query_data = {}
+        ):
+            if result.is_ok():
+                query_data.update(result.ok)
+            else:
+                yield Error(result.error)
 
     for graph_metric in graph_recipe.metrics:
         if augmented_time_series := graph_metric.operation.compute_augmented_time_series(
             registered_metrics, rrd_data, query_data
         ):
-            yield from _refine_augmented_time_series(
+            for refined_augmented_time_series in _refine_augmented_time_series(
                 augmented_time_series,
                 graph_metric_title=graph_metric.title,
                 graph_metric_line_type=graph_metric.line_type,
                 graph_metric_color=graph_metric.color,
                 graph_metric_expression_name=graph_metric.operation.expression_name(),
                 fade_odd_color=graph_metric.operation.fade_odd_color(),
-            )
+            ):
+                yield OK(refined_augmented_time_series)
 
 
 def _refine_augmented_time_series(

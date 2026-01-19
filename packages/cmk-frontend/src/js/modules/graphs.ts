@@ -81,6 +81,7 @@ export interface AjaxGraph {
   html: string
   graph: GraphArtwork
   context: AjaxContext
+  error?: string
 }
 
 interface LayoutedCurveArea {
@@ -256,11 +257,26 @@ function get_id_of_graph(ajax_context: AjaxContext) {
   return 'graph_' + g_current_graph_id++
 }
 
+function show_error(container: HTMLDivElement, msg: string) {
+  let element = document.getElementById('error_container')
+  if (element === null) {
+    element = document.createElement('div')
+    element.id = 'error_container'
+    element.className = 'error'
+    container.parentNode!.insertBefore(element, container)
+  }
+  element.innerHTML = msg
+}
+
 export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: HTMLDivElement) {
   // Detect whether or not a new graph_id has to be calculated. During the view
   // data reload create_graph() is called again for all already existing graphs.
   // In this situation the graph_id needs to be detected and reused instead of
   // calculating a new one. Otherwise e.g. g_graphs will grow continously.
+  const error = ajax_graph['error']
+  if (error) {
+    show_error(container, error)
+  }
   const ajax_context = ajax_graph['context']
   const graph_id = get_id_of_graph(ajax_context)
 

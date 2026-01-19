@@ -57,6 +57,7 @@ from ._artwork import (
     compute_graph_artwork_curves,
     get_step_label,
     GraphArtwork,
+    GraphArtworkOrErrors,
     order_graph_curves_for_legend_and_mouse_hover,
     save_graph_pin,
 )
@@ -766,7 +767,7 @@ def render_ajax_graph(
         assert user.id is not None
         UserGraphDataRangeStore(user.id).save(specification_id, graph_data_range)
 
-    graph_artwork = compute_graph_artwork(
+    graph_artwork_or_errors = compute_graph_artwork(
         graph_recipe,
         graph_data_range,
         graph_render_config.size,
@@ -775,19 +776,34 @@ def render_ajax_graph(
         backend_time_series_fetcher=backend_time_series_fetcher,
     )
 
+    if graph_artwork_or_errors.errors:
+        error_msg = _(
+            "Error while querying the following metrics: %s."
+            "<br>Last error message: %s."
+            "<br>See web.log for further details."
+        ) % (
+            ", ".join(f"{k.metric_name!r}" for e in graph_artwork_or_errors.errors for k in e.keys),
+            str(graph_artwork_or_errors.errors[-1].exception),
+        )
+    else:
+        error_msg = ""
+
     with output_funnel.plugged():
-        _show_graph_html_content(request, graph_artwork, graph_data_range, graph_render_config)
+        _show_graph_html_content(
+            request, graph_artwork_or_errors.artwork, graph_data_range, graph_render_config
+        )
         html_code = HTML.without_escaping(output_funnel.drain())
 
     return {
         "html": str(html_code),
-        "graph": graph_artwork.model_dump(),
+        "graph": graph_artwork_or_errors.artwork.model_dump(),
         "context": {
             "graph_id": context["graph_id"],
             "definition": graph_recipe.model_dump(),
             "data_range": graph_data_range.model_dump(),
             "render_config": graph_render_config.model_dump(),
         },
+        "error": error_msg,
     }
 
 
@@ -989,7 +1005,7 @@ def _render_graph_content_html(
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
-    graph_artwork: GraphArtwork,
+    graph_artwork_or_errors: GraphArtworkOrErrors,
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
@@ -997,13 +1013,34 @@ def _render_graph_content_html(
     backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str = "",
 ) -> HTML:
+    if graph_artwork_or_errors.errors:
+        if url := graph_recipe.specification.url():
+            output = HTMLWriter.render_div(
+                _(
+                    "Cannot render complete graph. See graph '<a href='%s'>%s</a>' for further details."
+                )
+                % (url, graph_recipe.title),
+                class_="error",
+            )
+        else:
+            output = HTMLWriter.render_div(
+                _("Cannot render complete graph"),
+                class_="error",
+            )
+        graph_render_config.size = (graph_render_config.size[0], graph_render_config.size[1] - 6)
+    else:
+        output = HTML.empty()
+
     try:
-        main_graph_html = _render_graph_html(
-            request, graph_artwork, graph_data_range, graph_render_config
+        output += _render_graph_html(
+            request,
+            graph_artwork_or_errors.artwork,
+            graph_data_range,
+            graph_render_config,
         )
         if graph_render_config.show_time_range_previews:
             return HTMLWriter.render_div(
-                main_graph_html
+                output
                 + _render_time_range_selection(
                     request,
                     graph_recipe,
@@ -1016,7 +1053,7 @@ def _render_graph_content_html(
                 ),
                 class_="graph_with_timeranges",
             )
-        return main_graph_html
+        return output
 
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
@@ -1081,7 +1118,7 @@ def _render_time_range_selection(
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
             graph_display_id=graph_display_id,
-        )
+        ).artwork
         rows.append(
             HTMLWriter.render_td(
                 _render_graph_html(request, graph_artwork, graph_data_range, graph_render_config),
@@ -1168,13 +1205,17 @@ def _render_ajax_graph_hover(
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
 
-    curves = compute_graph_artwork_curves(
-        graph_recipe,
-        graph_data_range,
-        registered_metrics,
-        temperature_unit=temperature_unit,
-        backend_time_series_fetcher=backend_time_series_fetcher,
-    )
+    curves = [
+        r.ok
+        for r in compute_graph_artwork_curves(
+            graph_recipe,
+            graph_data_range,
+            registered_metrics,
+            temperature_unit=temperature_unit,
+            backend_time_series_fetcher=backend_time_series_fetcher,
+        )
+        if r.is_ok()
+    ]
 
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
@@ -1304,7 +1345,7 @@ def host_service_graph_dashlet_cmk(
     except ZeroDivisionError:
         return HTML("", escape=False)
 
-    graph_artwork = compute_graph_artwork(
+    graph_artwork_or_errors = compute_graph_artwork(
         graph_recipe,
         graph_data_range,
         graph_render_config.size,
@@ -1315,19 +1356,25 @@ def host_service_graph_dashlet_cmk(
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.
-    if graph_render_config.show_legend and graph_artwork.curves:
+    if graph_render_config.show_legend and graph_artwork_or_errors.artwork.curves:
         # Estimates the height of the graph legend in pixels TODO: This is not
         # acurate! Especially when the font size is changed this does not lead
         # to correct results. But this is a more generic problem of the
         # html_size_per_ex which is hard coded instead of relying on the font
         # as it should.
         height -= int(
-            3.0 + (len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules)) * 1.3
+            3.0
+            + (
+                len(list(graph_artwork_or_errors.artwork.curves))
+                + len(graph_artwork_or_errors.artwork.horizontal_rules)
+            )
+            * 1.3
         )
         if height <= 0:
             raise MKGraphDashletTooSmallError(
                 _("Either increase the dashlet height or disable the graph legend.")
             )
+
         graph_render_config.size = (width, height)
 
     return _render_graph_content_html(
@@ -1336,7 +1383,7 @@ def host_service_graph_dashlet_cmk(
         graph_data_range.model_copy(update=dict(graph_recipe.data_range or {})),
         graph_render_config.update_from_options(graph_recipe.render_options),
         registered_metrics,
-        graph_artwork,
+        graph_artwork_or_errors,
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,

@@ -13,6 +13,7 @@
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
@@ -22,6 +23,7 @@ from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
 
 import cmk.utils.render
+from cmk.ccc.resulttype import Error, OK, Result
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -35,7 +37,11 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import RegisteredMetric
-from ._graph_metric_expressions import clean_time_series_point, LineType
+from ._graph_metric_expressions import (
+    clean_time_series_point,
+    LineType,
+    QueryDataError,
+)
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
@@ -152,6 +158,12 @@ class GraphArtwork(BaseModel):
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(frozen=True)
+class GraphArtworkOrErrors:
+    artwork: GraphArtwork
+    errors: Sequence[QueryDataError] | None
+
+
 def compute_graph_artwork(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
@@ -161,18 +173,22 @@ def compute_graph_artwork(
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str = "",
-) -> GraphArtwork:
+) -> GraphArtworkOrErrors:
     unit_spec = user_specific_unit(graph_recipe.unit_spec, temperature_unit)
 
-    curves = list(
-        compute_graph_artwork_curves(
-            graph_recipe,
-            graph_data_range,
-            registered_metrics,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
-        )
-    )
+    curves = []
+    errors: list[QueryDataError] = []
+    for result in compute_graph_artwork_curves(
+        graph_recipe,
+        graph_data_range,
+        registered_metrics,
+        temperature_unit=temperature_unit,
+        backend_time_series_fetcher=backend_time_series_fetcher,
+    ):
+        if result.is_ok():
+            curves.append(result.ok)
+        else:
+            errors.append(result.error)
 
     pin_time = _load_graph_pin()
     _compute_scalars(unit_spec.formatter.render, curves, pin_time)
@@ -185,40 +201,43 @@ def compute_graph_artwork(
     except IndexError:  # Empty graph
         (start_time, end_time), step = graph_data_range.time_range, 60
 
-    return GraphArtwork(
-        # Labelling, size, layout
-        title=graph_recipe.title,
-        width=(width := size[0]),  # in widths of lower case 'x'
-        height=(height := size[1]),
-        mirrored=mirrored,
-        # Actual data and axes
-        curves=layouted_curves,
-        horizontal_rules=graph_recipe.horizontal_rules,
-        vertical_axis=_compute_graph_v_axis(
-            unit_spec,
-            graph_recipe.explicit_vertical_range,
-            graph_data_range,
-            SizeEx(height),
-            layouted_curves,
-            mirrored,
+    return GraphArtworkOrErrors(
+        GraphArtwork(
+            # Labelling, size, layout
+            title=graph_recipe.title,
+            width=(width := size[0]),  # in widths of lower case 'x'
+            height=(height := size[1]),
+            mirrored=mirrored,
+            # Actual data and axes
+            curves=layouted_curves,
+            horizontal_rules=graph_recipe.horizontal_rules,
+            vertical_axis=_compute_graph_v_axis(
+                unit_spec,
+                graph_recipe.explicit_vertical_range,
+                graph_data_range,
+                SizeEx(height),
+                layouted_curves,
+                mirrored,
+            ),
+            time_axis=_compute_graph_t_axis(start_time, end_time, width, step),
+            mark_requested_end_time=graph_recipe.mark_requested_end_time,
+            # Displayed range
+            start_time=int(start_time),
+            end_time=int(end_time),
+            step=int(step),
+            explicit_vertical_range=graph_recipe.explicit_vertical_range,
+            requested_vrange=graph_data_range.vertical_range,
+            requested_start_time=graph_data_range.time_range[0],
+            requested_end_time=graph_data_range.time_range[1],
+            requested_step=graph_data_range.step,
+            pin_time=pin_time,
+            # Definition itself, for reproducing the graph
+            definition=graph_recipe,
+            # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
+            # graph collections and dashboards. Often set to the empty string when not needed.
+            display_id=graph_display_id,
         ),
-        time_axis=_compute_graph_t_axis(start_time, end_time, width, step),
-        mark_requested_end_time=graph_recipe.mark_requested_end_time,
-        # Displayed range
-        start_time=int(start_time),
-        end_time=int(end_time),
-        step=int(step),
-        explicit_vertical_range=graph_recipe.explicit_vertical_range,
-        requested_vrange=graph_data_range.vertical_range,
-        requested_start_time=graph_data_range.time_range[0],
-        requested_end_time=graph_data_range.time_range[1],
-        requested_step=graph_data_range.step,
-        pin_time=pin_time,
-        # Definition itself, for reproducing the graph
-        definition=graph_recipe,
-        # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
-        # graph collections and dashboards. Often set to the empty string when not needed.
-        display_id=graph_display_id,
+        errors,
     )
 
 
@@ -347,15 +366,20 @@ def compute_graph_artwork_curves(
     *,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
-) -> list[Curve]:
+) -> Iterator[Result[Curve, QueryDataError]]:
     curves = []
-    for augmented_time_series in fetch_augmented_time_series(
+    for result in fetch_augmented_time_series(
         registered_metrics,
         graph_recipe,
         graph_data_range,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
     ):
+        if result.is_error():
+            yield Error(result.error)
+            continue
+
+        augmented_time_series = result.ok
         if not augmented_time_series.meta_data:
             continue
         if (
@@ -374,7 +398,9 @@ def compute_graph_artwork_curves(
             )
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
-    return curves
+
+    for curve in curves:
+        yield OK(curve)
 
 
 def _halfstep_interpolation(rrddata: TimeSeries) -> Iterator[TimeSeriesValue]:

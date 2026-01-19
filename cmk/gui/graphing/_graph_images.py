@@ -166,7 +166,7 @@ def _answer_graph_image_request(
                 registered_metrics,
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=backend_time_series_fetcher,
-            )
+            ).artwork
             graph_png = render_graph_image(graph_artwork, graph_render_config)
 
             graphs.append(base64.b64encode(graph_png).decode("ascii"))
@@ -336,13 +336,17 @@ def graph_spec_from_request(
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 
-    curves = compute_graph_artwork_curves(
-        graph_recipe,
-        graph_data_range,
-        registered_metrics,
-        temperature_unit=temperature_unit,
-        backend_time_series_fetcher=backend_time_series_fetcher,
-    )
+    curves = [
+        r.ok
+        for r in compute_graph_artwork_curves(
+            graph_recipe,
+            graph_data_range,
+            registered_metrics,
+            temperature_unit=temperature_unit,
+            backend_time_series_fetcher=backend_time_series_fetcher,
+        )
+        if r.is_ok()
+    ]
 
     api_curves = []
     (start, end), step = graph_data_range.time_range, 60  # empty graph

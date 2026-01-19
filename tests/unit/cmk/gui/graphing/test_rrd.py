@@ -9,12 +9,15 @@ from contextlib import contextmanager
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.resulttype import OK, Result
 from cmk.ccc.site import SiteId
 from cmk.gui.graphing._fetch_time_series import fetch_augmented_time_series
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     AugmentedTimeSeries,
     GraphMetricRRDSource,
+    QueryData,
+    QueryDataError,
     TimeSeriesMetaData,
 )
 from cmk.gui.graphing._graph_specification import (
@@ -103,19 +106,25 @@ _GRAPH_RECIPE = GraphRecipe(
 _GRAPH_DATA_RANGE = GraphDataRange(time_range=(1681985455, 1681999855), step=20)
 
 
+def _fetch() -> Iterator[Result[QueryData, QueryDataError]]:
+    yield OK({})
+
+
 def test_fetch_augmented_time_series(
     mock_livestatus: MockLiveStatusConnection, request_context: None
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert list(
-            fetch_augmented_time_series(
+        assert [
+            r.ok
+            for r in fetch_augmented_time_series(
                 {},
                 _GRAPH_RECIPE,
                 _GRAPH_DATA_RANGE,
                 temperature_unit=TemperatureUnit.CELSIUS,
-                backend_time_series_fetcher=lambda *args, **kwargs: {},
+                backend_time_series_fetcher=lambda *args, **kwargs: _fetch(),
             )
-        ) == [
+            if r.is_ok()
+        ] == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
                 meta_data=TimeSeriesMetaData(
@@ -132,15 +141,17 @@ def test_fetch_augmented_time_series_with_conversion(
     mock_livestatus: MockLiveStatusConnection, request_context: None
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert list(
-            fetch_augmented_time_series(
+        assert [
+            r.ok
+            for r in fetch_augmented_time_series(
                 {},
                 _GRAPH_RECIPE,
                 _GRAPH_DATA_RANGE,
                 temperature_unit=TemperatureUnit.FAHRENHEIT,
-                backend_time_series_fetcher=lambda *args, **kwargs: {},
+                backend_time_series_fetcher=lambda *args, **kwargs: _fetch(),
             )
-        ) == [
+            if r.is_ok()
+        ] == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
                 meta_data=TimeSeriesMetaData(

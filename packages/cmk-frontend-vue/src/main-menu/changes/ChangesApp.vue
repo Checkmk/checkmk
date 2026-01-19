@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
-import { CmkError } from '@/lib/error'
+import { CmkFetchError } from '@/lib/cmkFetch'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -90,12 +90,9 @@ async function pollActivationStatusUntilComplete(activationId: string) {
       activateChangesInProgress.value = false
     }
   } catch (error) {
-    // TODO use some real Fetch class with return code
-    if (error instanceof CmkError) {
-      const cmkError = error as CmkError
-      const context = cmkError.getContext() || ''
-      const statusMatch = context.match(/STATUS\s+(\d+)/)
-      const statusCode = statusMatch ? Number(statusMatch[1]) : undefined
+    if (error instanceof CmkFetchError) {
+      const cmkError = error as CmkFetchError
+      const statusCode = cmkError.getStatusCode()
 
       if (
         statusCode === 503 &&

@@ -16,19 +16,25 @@ export function iconSizeNametoNumber(sizeName: IconSizeNames | undefined) {
   return size
 }
 
-const imageMap = new Map(
+const iconResolver = new Map(
   Object.entries(
-    import.meta.glob('~cmk-frontend/themes/**/*.{png,svg}', {
-      eager: true,
-      import: 'default'
-    })
-  ).flatMap(([path, url]) => {
+    import.meta.glob(
+      [
+        '~cmk-frontend/themes/*/images/*.{png,svg}',
+        // Non-icon image exceptions which are statically imported elsewhere
+        '!~cmk-frontend/themes/facelift/images/checkmk_logo.svg'
+      ],
+      {
+        import: 'default'
+      }
+    )
+  ).flatMap(([path, resolver]) => {
     const match = path.match(/themes\/.*$/)
-    return match ? [[match[0], url as string]] : []
+    return match ? [[match[0], resolver as () => Promise<string>]] : []
   })
 )
 
-export const getIconPath = (name: SimpleIcons, theme: string): string => {
+export const getIconPath = async (name: SimpleIcons, theme: string): Promise<string> => {
   let filename = themedIcons[name]
   let themeToUse = theme
 
@@ -41,6 +47,11 @@ export const getIconPath = (name: SimpleIcons, theme: string): string => {
     return ''
   }
 
-  const suffix = `themes/${themeToUse}/images/${filename}`
-  return imageMap.get(suffix) || ''
+  const resolver = iconResolver.get(`themes/${themeToUse}/images/${filename}`)
+
+  if (!resolver) {
+    return ''
+  }
+
+  return resolver()
 }

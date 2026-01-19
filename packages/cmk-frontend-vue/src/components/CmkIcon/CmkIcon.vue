@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, watchEffect } from 'vue'
 
 import { useTheme } from '@/lib/useTheme.ts'
 
@@ -15,7 +15,23 @@ import { getIconPath } from './utils.ts'
 const props = defineProps<CmkIconProps>()
 const { theme } = useTheme()
 
-const iconSrc = computed(() => getIconPath(props.name, theme.value))
+const iconSrc = ref('')
+
+watchEffect((onCleanup) => {
+  let isCancelled = false
+  onCleanup(() => {
+    isCancelled = true
+  })
+
+  const fetchIcon = async () => {
+    const path = await getIconPath(props.name, theme.value)
+
+    if (!isCancelled) {
+      iconSrc.value = path
+    }
+  }
+  void fetchIcon()
+})
 
 const getTransformRotate = () => {
   return `rotate(${props.rotate || 0}deg)`

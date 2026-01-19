@@ -271,10 +271,7 @@ class MerakiOrganisation:
         return None
 
     def _get_piggyback_prefix(self) -> str:
-        prefix = ""
-        if self.config.org_id_as_prefix:
-            prefix += self.id + "-"
-        return prefix
+        return f"{self.id}-" if self.config.org_id_as_prefix else ""
 
     def _get_usage_by_serial(self) -> UplinkUsageByInterface:
         return {

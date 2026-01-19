@@ -106,7 +106,7 @@ run_check_format() {
 }
 
 run_tsc() {
-    bazel test :type-check
+    bazel test :cmk-frontend-ts_typecheck_test
 }
 
 run_eslint() {

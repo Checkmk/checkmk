@@ -23,6 +23,7 @@ import {
 } from './ntop_utils'
 
 export class NtopAlertsTabBar extends TabsBar {
+  _cmk_token: string | null
   constructor(div_selector: string, cmk_token: string | undefined | null = null) {
     super(div_selector)
     this._cmk_token = typeof cmk_token !== 'undefined' ? cmk_token : null
@@ -699,14 +700,15 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
   abstract _get_columns(): NtopColumn[]
 
   get_multi_data_fetcher() {
-    return self._multi_data_fetcher
+    return this._multi_data_fetcher
   }
 }
 
 // Base class for all alert tabs
 export abstract class ABCAlertsTab<Page extends ABCAlertsPage = ABCAlertsPage> extends Tab {
-  _page_class: null | (new (div_selector: string) => Page)
+  _page_class: null | (new (div_selector: string, cmk_token?: string | null) => Page)
   _alerts_page!: Page
+  _cmk_token: string | null
   constructor(tabs_bar: TabsBar, cmk_token: string | null = null) {
     super(tabs_bar)
     this._page_class = null
@@ -717,8 +719,10 @@ export abstract class ABCAlertsTab<Page extends ABCAlertsPage = ABCAlertsPage> e
   initialize() {
     const div_id = this.tab_id() + '_alerts_table'
     this._tab_selection.append('div').attr('id', div_id)
-    this._alerts_page = new this._page_class!('#' + div_id, this._cmk_token)
-    this._alerts_page.initialize()
+    if (this._page_class) {
+      this._alerts_page = new this._page_class('#' + div_id, this._cmk_token)
+      this._alerts_page.initialize()
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -728,7 +732,7 @@ export abstract class ABCAlertsTab<Page extends ABCAlertsPage = ABCAlertsPage> e
   deactivate() {}
 
   get_page() {
-    return self._alerts_page
+    return this._alerts_page
   }
 }
 

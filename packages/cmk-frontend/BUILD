@@ -1,6 +1,5 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
 load("@npm//packages/cmk-frontend:webpack-cli/package_json.bzl", webpack_cli_bin = "bin")
@@ -94,11 +93,6 @@ ts_project(
     transpiler = "tsc",
     visibility = ["//packages:__subpackages__"],
     deps = BUILD_DEPS,
-)
-
-build_test(
-    name = "type-check",
-    targets = [":cmk-frontend-ts"],
 )
 
 pkg_files(

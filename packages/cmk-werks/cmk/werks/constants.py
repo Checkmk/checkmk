@@ -11,3 +11,6 @@ NON_WERK_FILES_IN_WERK_FOLDER = {
     ".gitignore",
     "README.md",
 }
+
+WERK_V2_START = "[//]: # (werk v2)\n"
+WERK_V3_START = "[//]: # (werk v3)\n"

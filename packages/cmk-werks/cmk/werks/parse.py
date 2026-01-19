@@ -6,7 +6,13 @@
 import re
 from typing import NamedTuple
 
+from . import constants
 from .error import WerkError
+
+
+class WerkV3ParseResult(NamedTuple):
+    metadata: dict[str, str]
+    description: str
 
 
 class WerkV2ParseResult(NamedTuple):
@@ -44,20 +50,32 @@ def markdown_table_to_dict(markdown_table: str) -> dict[str, str]:
     return dict(elements)
 
 
+def parse_werk_v3(content: str, werk_id: str) -> WerkV3ParseResult:
+    if not content.startswith(constants.WERK_V3_START):
+        raise WerkError(
+            "V3 Markdown formatted werks need to start with header: '[//]: # (werk v3)\\n'"
+        )
+    return WerkV3ParseResult(*_parse_markdown_werk(content, werk_id))
+
+
 def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
     """
     parse werk v2 but do not validate
     """
-    metadata: dict[str, str] = {
-        "id": werk_id,
-    }
     # no need to parse the werk version here. markdown version and werk version
     # could potentially be different: a markdown version 3 could be parsed to a
     # werk version 2. let's hope we will keep v2 for a long time :-)
-    if not content.startswith("[//]: # (werk v2)\n"):
+    if not content.startswith(constants.WERK_V2_START):
         raise WerkError(
-            "Markdown formatted werks need to start with header: '[//]: # (werk v2)\\n'"
+            "V2 Markdown formatted werks need to start with header: '[//]: # (werk v2)\\n'"
         )
+    return WerkV2ParseResult(*_parse_markdown_werk(content, werk_id))
+
+
+def _parse_markdown_werk(content: str, werk_id: str) -> tuple[dict[str, str], str]:
+    metadata: dict[str, str] = {
+        "id": werk_id,
+    }
 
     sections = content.split("\n\n", 2)
     if len(sections) == 2:
@@ -71,7 +89,9 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
             "header, headline, empty line, table and optionally empty line, description"
         )
 
-    title = md_title.removeprefix("[//]: # (werk v2)\n")
+    header, title = md_title.split("\n", 1)
+    assert header.startswith("[//]: # (werk v")
+    assert header.endswith(")")
 
     # TODO: check if it really is a h1 headline?!
     if not title.startswith("#"):
@@ -83,8 +103,7 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
 
     # we parse the table on our own, converting it to html and parsing the html is quite slow
     metadata.update(markdown_table_to_dict(md_table))
-
-    return WerkV2ParseResult(metadata, md_description)
+    return metadata, md_description
 
 
 class WerkV1ParseResult(NamedTuple):

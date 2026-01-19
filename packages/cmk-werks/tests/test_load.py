@@ -9,9 +9,9 @@ import pytest
 
 from cmk.werks import load_werk
 from cmk.werks.error import WerkError
-from cmk.werks.load import _format_title, load_werk_v2
-from cmk.werks.models import Werk
-from cmk.werks.parse import parse_werk_v2
+from cmk.werks.load import _format_title, load_werk_v2, load_werk_v3
+from cmk.werks.models import WerkV2
+from cmk.werks.parse import parse_werk_v2, parse_werk_v3
 
 WERK_V1 = {
     "class": "fix",
@@ -81,12 +81,12 @@ def test_werk_loading_unknown_field() -> None:
     bad_werk["foo"] = "bar"
     with pytest.raises(
         TypeError,
-        match="validation error for Werk\nfoo\n  Extra inputs are not permitted",
+        match="validation error for WerkV2\nfoo\n  Extra inputs are not permitted",
     ):
         load_werk(file_content=get_werk_v1(bad_werk), file_name="1")
 
 
-def _markdown_string_to_werk(md: str) -> Werk:
+def _markdown_string_to_werk(md: str) -> WerkV2:
     return load_werk_v2(parse_werk_v2(md, werk_id="1234"))
 
 
@@ -374,3 +374,33 @@ edition | cre
     assert _markdown_string_to_werk(md + "\n\n").to_json_dict() == expected
     assert _markdown_string_to_werk(md + "\n\n\n").to_json_dict() == expected
     assert _markdown_string_to_werk(md + "\n\n\n\n").to_json_dict() == expected
+
+
+def test_loading_v3_werk() -> None:
+    md = """[//]: # (werk v3)
+# Oooooo weeeee
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2025-12-22T14:19:19+00:00
+level | 1
+version | 2.5.0b1
+compatible | yes
+edition | community
+"""
+    expected = {
+        "__version__": "3",
+        "id": 1234,
+        "class": "fix",
+        "compatible": "yes",
+        "component": "core",
+        "date": "2025-12-22T14:19:19Z",
+        "edition": "community",
+        "level": 1,
+        "title": "Oooooo weeeee",
+        "version": "2.5.0b1",
+        "description": "",
+    }
+    assert load_werk_v3(parse_werk_v3(md, werk_id="1234")).to_json_dict() == expected

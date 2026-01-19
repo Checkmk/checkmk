@@ -14,15 +14,22 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, TypeAdapter
 from .markup import markdown_to_html, nowiki_to_markdown
 
 
-class Edition(Enum):
+class EditionV2(Enum):
     # would love to use cmk.ccc.version.Edition
     # but pydantic does not understand it.
-    # TODO change values
-    COMMUNITY = "cre"
-    PRO = "cee"
-    ULTIMATE = "cce"
-    ULTIMATEMT = "cme"
-    CLOUD = "cse"
+    CRE = "cre"
+    CEE = "cee"
+    CCE = "cce"
+    CME = "cme"
+    CSE = "cse"
+
+
+class EditionV3(Enum):
+    COMMUNITY = "community"
+    PRO = "pro"
+    ULTIMATE = "ultimate"
+    ULTIMATEMT = "ultimatemt"
+    CLOUD = "cloud"
 
 
 class Level(Enum):
@@ -42,20 +49,20 @@ class Class(Enum):
     SECURITY = "security"
 
 
-class WerkV2Base(BaseModel):
+class WerkV3Base(BaseModel):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    werk_version: Literal["2"] = Field(default="2", alias="__version__")
+    werk_version: Literal["3"] = Field(default="3", alias="__version__")
     id: int
     class_: Class = Field(alias="class")
     component: str
     level: Level
     date: datetime.datetime
     compatible: Compatibility
-    edition: Edition
+    edition: EditionV3
     description: str
     title: str
 
@@ -73,13 +80,54 @@ class WerkV2Base(BaseModel):
         return self.model_dump(by_alias=True, mode="json")
 
 
-class Werk(WerkV2Base):
+class WerkV2Base(BaseModel):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    werk_version: Literal["2"] = Field(default="2", alias="__version__")
+    id: int
+    class_: Class = Field(alias="class")
+    component: str
+    level: Level
+    date: datetime.datetime
+    compatible: Compatibility
+    edition: EditionV2
+    description: str
+    title: str
+
+    @field_validator("level", mode="before")
+    @classmethod
+    def parse_level(cls, v: str) -> Level:
+        if isinstance(v, Level):
+            return v
+        try:
+            return Level(int(v))
+        except ValueError as e:
+            raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead") from e
+
+    def to_json_dict(self) -> dict[str, object]:
+        return self.model_dump(by_alias=True, mode="json")
+
+
+class WerkV3(WerkV3Base):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     version: str
 
     @classmethod
-    def from_json(cls, data: dict[str, object]) -> Werk:
+    def from_json(cls, data: dict[str, object]) -> WerkV3:
+        return cls.model_validate(data)
+
+
+class WerkV2(WerkV2Base):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    version: str
+
+    @classmethod
+    def from_json(cls, data: dict[str, object]) -> WerkV2:
         return cls.model_validate(data)
 
 
@@ -109,8 +157,8 @@ class WerkV1(BaseModel):
     targetversion: str | None = None
     description: list[str]
 
-    def to_werk(self) -> Werk:
-        return Werk(
+    def to_werk(self) -> WerkV2:
+        return WerkV2(
             compatible=(
                 Compatibility.COMPATIBLE
                 if self.compatible == "compat"
@@ -124,14 +172,26 @@ class WerkV1(BaseModel):
             level=Level(self.level),
             class_=Class(self.class_),
             component=self.component,
-            edition=Edition(self.edition),
+            edition=EditionV2(self.edition),
         )
 
     def to_json_dict(self) -> dict[str, object]:
         return self.model_dump(by_alias=True)
 
 
-class WebsiteWerk(WerkV2Base):
+class WebsiteWerkV2(WerkV2Base):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
+    """
+    This Model is used to built up a file containing all werks.
+    The file is called all_werks.json or all_werks_v2.json
+    """
+
+    versions: dict[str, str]
+    product: Literal["cmk", "cma", "checkmk_kube_agent", "cloudmk"]
+
+
+class WebsiteWerkV3(WerkV3Base):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
     """
@@ -146,4 +206,4 @@ class WebsiteWerk(WerkV2Base):
 # ATTENTION! If you change this model, you have to inform
 # the website team first! They rely on those fields.
 # The key of the dict is the werk id
-AllWerks = TypeAdapter(dict[str, WebsiteWerk])
+AllWerks = TypeAdapter(dict[str, WebsiteWerkV2 | WebsiteWerkV3])

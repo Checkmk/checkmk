@@ -1,9 +1,9 @@
 editions = [
-    ( "cre",          "Raw Edition" ),
-    ( "cee",          "Enterprise Edition" ),
-    ( "cme",          "Managed Services Edition" ),
-    ( "cce",          "Cloud Edition" ),
-    ( "cse",          "SaaS Edition" ),
+    ( "community",    "Checkmk Community (formerly Raw)" ),
+    ( "pro",          "Checkmk Pro (formerly Enterprise)" ),
+    ( "ultimate",     "Checkmk Ultimate (formerly Cloud)" ),
+    ( "ultimatemt",   "Checkmk Ultimate with multi-tenancy (formerly MSP)" ),
+    ( "cloud",        "Checkmk Cloud (formerly SaaS)" ),
 ]
 
 components = [

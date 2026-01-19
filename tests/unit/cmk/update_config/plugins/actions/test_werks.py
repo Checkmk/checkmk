@@ -13,20 +13,20 @@ from pydantic import TypeAdapter
 import cmk.utils.werks
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.actions.werks import load_unacknowledged_werks, UnacknowledgedWerks
-from cmk.werks.models import Class, Compatibility, Edition, Level, Werk
+from cmk.werks.models import Class, Compatibility, EditionV2, Level, WerkV2, WerkV3
 
 
 def generate_werk(
     version: str, id_: int, compatible: Compatibility = Compatibility.COMPATIBLE
-) -> dict[int, Werk]:
-    werk = Werk(
+) -> dict[int, WerkV2 | WerkV3]:
+    werk = WerkV2(
         id=id_,
         class_=Class.FIX,
         compatible=compatible,
         component="component",
         level=Level.LEVEL_1,
         date=datetime.datetime.now(),
-        edition=Edition.PRO,
+        edition=EditionV2.CCE,
         description="description ut",
         title="title ut",
         version=version,
@@ -46,12 +46,12 @@ WERKS_250 = {
     **generate_werk("2.5.0p2", 55),
     **generate_werk("2.5.0p2", 60, compatible=Compatibility.NOT_COMPATIBLE),
 }
-WERKS_260: dict[int, Werk] = {}
+WERKS_260: dict[int, WerkV2 | WerkV3] = {}
 
 
 def test_update_livecycle() -> None:
     # we start with a 2.4.0:
-    unacknowledged_werks: dict[int, Werk] = {}  # does not exist in 2.3.0
+    unacknowledged_werks: dict[int, WerkV2 | WerkV3] = {}  # does not exist in 2.3.0
     acknowledge_werks = {11, 12}  # some very early werks have been acknowledged
 
     # update from 2.3.0 to 2.4.0:
@@ -78,8 +78,8 @@ def test_version_of_werk_keeps_first_incompatible_version(
     compiled_werks_dir = Path(tmp_path, "ut_compiled")
     compiled_werks_dir.mkdir()
 
-    def save_werks_to_site(werks: dict[int, Werk]) -> None:
-        adapter = TypeAdapter(dict[int, Werk])  # nosemgrep: type-adapter-detected
+    def save_werks_to_site(werks: dict[int, WerkV2 | WerkV3]) -> None:
+        adapter = TypeAdapter(dict[int, WerkV2 | WerkV3])  # nosemgrep: type-adapter-detected
         (compiled_werks_dir / "werks").write_bytes(adapter.dump_json(werks, by_alias=True))
 
     def update_config() -> None:
@@ -92,7 +92,7 @@ def test_version_of_werk_keeps_first_incompatible_version(
             compiled_werks_folder=compiled_werks_dir,
         )
 
-    def werks_load() -> dict[int, Werk]:
+    def werks_load() -> dict[int, WerkV2 | WerkV3]:
         return cmk.utils.werks.load(
             base_dir=compiled_werks_dir,
             unacknowledged_werks_json=unacknowledged_werks_file,

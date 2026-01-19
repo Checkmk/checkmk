@@ -21,14 +21,6 @@ py_binary(
     deps = ["//packages/cmk-werks"],
 )
 
-short_editions = {
-    "cloud": "cse",
-    "community": "cre",
-    "pro": "cee",
-    "ultimate": "cce",
-    "ultimatemt": "cme",
-}
-
 [run_binary(
     name = "run_werks_precompile_" + edition,
     srcs = [
@@ -42,7 +34,7 @@ short_editions = {
         "precompile",
         "$(location //:werks_group)",
         "--filter-by-edition",
-        short_editions[edition],
+        edition,
         "$(location werks_precompiled_%s)" % edition,
     ],
     tags = ["manual"],

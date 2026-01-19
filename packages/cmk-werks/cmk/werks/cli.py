@@ -22,8 +22,8 @@ from typing import Literal, NamedTuple
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
 from .config import Config, load_config, try_load_current_version_from_defines_make
-from .convert import werkv1_metadata_to_werkv2_metadata
-from .format import format_as_werk_v2
+from .convert import werkv1_metadata_to_markdown_werk_metadata
+from .format import format_as_markdown_werk
 from .in_out_elements import (
     bail_out,
     get_input,
@@ -49,7 +49,7 @@ from .meisterwerk import (
     rewrite_werk,
     user_understanding_of_werk,
 )
-from .parse import WerkV2ParseResult
+from .parse import WerkV3ParseResult
 from .schemas.requests import Werk as WerkRequest
 from .schemas.werk import (
     Stash,
@@ -57,7 +57,7 @@ from .schemas.werk import (
     WerkId,
 )
 
-WerkVersion = Literal["v1", "v2"]
+WerkVersion = Literal["v1", "markdown"]
 
 WerkMetadata = dict[str, str]
 
@@ -355,8 +355,8 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
     if destination is None:
         destination = werk.path
     with destination.open("w") as f:
-        if werk_version == "v2":
-            f.write(format_as_werk_v2(werk.content))
+        if werk_version == "markdown":
+            f.write(format_as_markdown_werk(werk.content))
         else:
             raise NotImplementedError(
                 "Writing v1 Werks is no longer supported. "
@@ -643,8 +643,8 @@ def main_new(args: argparse.Namespace) -> None:
     werk = Werk(
         id=werk_id,
         path=werk_path,
-        content=WerkV2ParseResult(
-            metadata=werkv1_metadata_to_werkv2_metadata(metadata), description="\n"
+        content=WerkV3ParseResult(
+            metadata=werkv1_metadata_to_markdown_werk_metadata(metadata), description="\n"
         ),
     )
     save_werk(werk, get_werk_file_version())
@@ -680,8 +680,8 @@ def meisterwerk_for_new_werk(
             werk = Werk(
                 id=werk_id,
                 path=werk_path,
-                content=WerkV2ParseResult(
-                    metadata=werkv1_metadata_to_werkv2_metadata(metadata),
+                content=WerkV3ParseResult(
+                    metadata=werkv1_metadata_to_markdown_werk_metadata(metadata),
                     description=rewritten_werk.rewritten_text,
                 ),
             )
@@ -728,7 +728,7 @@ def prepare_for_meisterwerk(
     if not werk_path.exists():
         bail_out("No Werk with this id.")
     if werk_path.suffix != ".md":
-        bail_out("Can only evaluate Werk v2 files (with .md suffix).")
+        bail_out("Can only evaluate Werk markdown files (with .md suffix).")
     werk = load_werk(werk_path)
     payload = build_meisterwerk_payload(werk)
     return werk_path, werk, payload, werk_id
@@ -1090,15 +1090,15 @@ def get_werk_file_version() -> WerkVersion:
     """
     for path in Path(".").iterdir():
         if path.name.endswith(".md") and path.name.removesuffix(".md").isdigit():
-            return "v2"
+            return "markdown"
     if {p.name for p in Path(".").iterdir()} == {"config", "first_free"}:
         # folder is empty, there are only mandatory files
-        return "v2"
+        return "markdown"
     return "v1"
 
 
 def get_werk_filename(werk_id: WerkId, werk_version: WerkVersion) -> Path:
-    return Path(f"{werk_id.id}.md" if werk_version == "v2" else str(werk_id.id))
+    return Path(f"{werk_id.id}.md" if werk_version == "markdown" else str(werk_id.id))
 
 
 #                    _

@@ -67,7 +67,7 @@ from cmk.utils.werks import load_werk_entries
 from cmk.utils.werks.acknowledgement import is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
-from cmk.werks.models import Compatibility, Werk
+from cmk.werks.models import Compatibility, WerkV2, WerkV3
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -77,18 +77,18 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("werk", page_werk))
 
 
-def get_werk_by_id(werk_id: int) -> Werk:
+def get_werk_by_id(werk_id: int) -> WerkV2 | WerkV3:
     for werk in load_werk_entries():
         if werk.id == werk_id:
             return werk
     raise MKUserError("werk", _("This werk does not exist."))
 
 
-def sort_by_date(werks: Iterable[Werk]) -> list[Werk]:
+def sort_by_date(werks: Iterable[WerkV2 | WerkV3]) -> list[WerkV2 | WerkV3]:
     return sorted(werks, key=lambda werk: werk.date, reverse=True)
 
 
-def unacknowledged_incompatible_werks() -> list[Werk]:
+def unacknowledged_incompatible_werks() -> list[WerkV2 | WerkV3]:
     acknowledged_werk_ids = load_acknowledgements()
     return sort_by_date(
         werk
@@ -335,7 +335,7 @@ def page_werk(ctx: PageContext) -> None:
     html.footer()
 
 
-def _page_menu_werk(request: Request, breadcrumb: Breadcrumb, werk: Werk) -> PageMenu:
+def _page_menu_werk(request: Request, breadcrumb: Breadcrumb, werk: WerkV2 | WerkV3) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -353,7 +353,7 @@ def _page_menu_werk(request: Request, breadcrumb: Breadcrumb, werk: Werk) -> Pag
     )
 
 
-def _page_menu_entries_ack_werk(request: Request, werk: Werk) -> Iterator[PageMenuEntry]:
+def _page_menu_entries_ack_werk(request: Request, werk: WerkV2 | WerkV3) -> Iterator[PageMenuEntry]:
     if not may_acknowledge():
         return
 
@@ -374,11 +374,11 @@ def may_acknowledge() -> bool:
     return user.may("general.acknowledge_werks")
 
 
-def acknowledge_werk(werk: Werk) -> None:
+def acknowledge_werk(werk: WerkV2 | WerkV3) -> None:
     acknowledge_werks([werk])
 
 
-def acknowledge_werks(werks: Iterable[Werk], check_permission: bool = True) -> None:
+def acknowledge_werks(werks: Iterable[WerkV2 | WerkV3], check_permission: bool = True) -> None:
     if check_permission:
         user.need_permission("general.acknowledge_werks")
 
@@ -560,7 +560,7 @@ def render_unacknowleged_werks(request: Request) -> None:
 
 
 def get_sort_key_by_version_and_component(
-    translator: werks_utils.WerkTranslator, werk: Werk
+    translator: werks_utils.WerkTranslator, werk: WerkV2 | WerkV3
 ) -> tuple[str | int, ...]:
     werk_result = werks_utils.get_sort_key_by_version_and_component(translator, werk)
     result = (
@@ -571,12 +571,12 @@ def get_sort_key_by_version_and_component(
     return result
 
 
-def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
+def sort_by_version_and_component(werks: Iterable[WerkV2 | WerkV3]) -> list[WerkV2 | WerkV3]:
     translator = werks_utils.WerkTranslator()
     return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
 
-def get_date_formatted(werk: Werk) -> str:
+def get_date_formatted(werk: WerkV2 | WerkV3) -> str:
     # return date formatted as string in local timezone
     return werk.date.astimezone().strftime(TIME_FORMAT)
 
@@ -585,8 +585,8 @@ def get_date_formatted(werk: Werk) -> str:
 _SORT_AND_GROUP: dict[
     str | None,
     tuple[
-        Callable[[Iterator[Werk]], list[Werk]],
-        Callable[[Werk], None | str],
+        Callable[[Iterator[WerkV2 | WerkV3]], list[WerkV2 | WerkV3]],
+        Callable[[WerkV2 | WerkV3], None | str],
     ],
 ] = {
     "version": (sort_by_version_and_component, lambda werk: werk.version),
@@ -637,7 +637,7 @@ def compatibility_of(compatible: Compatibility, acknowledged: bool) -> str:
 
 
 def render_werks_table_row(
-    request: Request, table: Table, translator: werks_utils.WerkTranslator, werk: Werk
+    request: Request, table: Table, translator: werks_utils.WerkTranslator, werk: WerkV2 | WerkV3
 ) -> None:
     table.row()
     table.cell(_("ID"), render_werk_link(request, werk), css=["number narrow"])
@@ -662,7 +662,7 @@ def render_werks_table_row(
     table.cell(_("Title"), render_werk_title(request, werk))
 
 
-def _to_ternary_compatibility(werk: Werk) -> str:
+def _to_ternary_compatibility(werk: WerkV2 | WerkV3) -> str:
     if werk.compatible == Compatibility.NOT_COMPATIBLE:
         if is_acknowledged(werk, load_acknowledgements()):
             return "incomp_ack"
@@ -670,7 +670,7 @@ def _to_ternary_compatibility(werk: Werk) -> str:
     return "compat"
 
 
-def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bool:
+def werk_matches_options(werk: WerkV2 | WerkV3, werk_table_options: WerkTableOptions) -> bool:
     # TODO: Fix this silly typing chaos below!
     # check if werk id is int because valuespec is TextInput
     # else, set empty id to return all results beside input warning
@@ -740,17 +740,17 @@ def _werk_table_options_from_request(request: Request) -> WerkTableOptions:
     return cast(WerkTableOptions, werk_table_options)
 
 
-def render_werk_id(werk: Werk) -> str:
+def render_werk_id(werk: WerkV2 | WerkV3) -> str:
     return "#%04d" % werk.id
 
 
-def render_werk_link(request: Request, werk: Werk) -> HTML:
+def render_werk_link(request: Request, werk: WerkV2 | WerkV3) -> HTML:
     werk_id = render_werk_id(werk)
     url = makeuri_contextless(request, [("werk", werk.id)], filename="werk.py")
     return HTMLWriter.render_a(werk_id, href=url)
 
 
-def render_werk_title(request: Request, werk: Werk) -> HTML:
+def render_werk_title(request: Request, werk: WerkV2 | WerkV3) -> HTML:
     title = werk.title
     # if the title begins with the name or names of check plug-ins, then
     # we link to the man pages of those checks

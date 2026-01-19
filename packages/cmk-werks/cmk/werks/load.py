@@ -10,8 +10,8 @@ from pydantic import ValidationError
 
 from .error import WerkError
 from .markup import markdown_to_html
-from .models import Werk
-from .parse import WerkV2ParseResult
+from .models import WerkV2, WerkV3
+from .parse import WerkV2ParseResult, WerkV3ParseResult
 
 VALID_TAGS = {
     "code",
@@ -42,7 +42,23 @@ VALID_TAGS = {
 }
 
 
-def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
+def load_werk_v3(parsed: WerkV3ParseResult) -> WerkV3:
+    # TODO: c&p from v2
+    werk = parsed.metadata
+    werk["__version__"] = "3"
+    werk["description"] = markdown_to_html(parsed.description)
+    _check_html(werk["description"])
+
+    try:
+        result = WerkV3.model_validate(werk)
+        result.title = _format_title(result.title)
+    except (ValidationError, WerkError) as e:
+        raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
+
+    return result
+
+
+def load_werk_v2(parsed: WerkV2ParseResult) -> WerkV2:
     werk = parsed.metadata
     werk["__version__"] = "2"
 
@@ -50,7 +66,7 @@ def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
     _check_html(werk["description"])
 
     try:
-        result = Werk.model_validate(werk)
+        result = WerkV2.model_validate(werk)
         result.title = _format_title(result.title)
     except (ValidationError, WerkError) as e:
         raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e

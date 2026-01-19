@@ -5,7 +5,7 @@
 
 
 from cmk.werks import parse_werk
-from cmk.werks.format import format_as_werk_v2
+from cmk.werks.format import format_as_markdown_werk
 from cmk.werks.parse import parse_werk_v2, WerkV2ParseResult
 
 
@@ -29,7 +29,7 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
     # change version and expect another version in result
     parsed.metadata["version"] = "99.99.99p99"
-    content = format_as_werk_v2(parsed)
+    content = format_as_markdown_werk(parsed)
     assert (
         content
         == """[//]: # (werk v2)
@@ -51,7 +51,7 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
     # change version back, expect exactly the same result as the input
     parsed.metadata["version"] = "2.0.0p7"
-    assert format_as_werk_v2(parsed) == md
+    assert format_as_markdown_werk(parsed) == md
 
 
 def test_nowiki_parse_roundtrip() -> None:
@@ -112,7 +112,7 @@ def test_markdown_output_keys_stable() -> None:
         },
         description="description",
     )
-    content = format_as_werk_v2(parsed)
+    content = format_as_markdown_werk(parsed)
     assert (
         content
         == """[//]: # (werk v2)

@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator
 
-from .parse import WerkV2ParseResult
+from .parse import WerkV2ParseResult, WerkV3ParseResult
 
 
 def _sort_keys(key_value: tuple[str, str]) -> int:
@@ -24,7 +24,7 @@ def _sort_keys(key_value: tuple[str, str]) -> int:
         return 99
 
 
-def format_as_werk_v2(werk: WerkV2ParseResult) -> str:
+def format_as_markdown_werk(werk: WerkV2ParseResult | WerkV3ParseResult) -> str:
     metadata = werk.metadata.copy()
 
     metadata.pop("id")
@@ -33,7 +33,12 @@ def format_as_werk_v2(werk: WerkV2ParseResult) -> str:
     len_key = max(len(key) for key in metadata.keys())
 
     def _content() -> Iterator[str]:
-        yield "[//]: # (werk v2)"
+        if isinstance(werk, WerkV2ParseResult):
+            yield "[//]: # (werk v2)"
+        elif isinstance(werk, WerkV3ParseResult):
+            yield "[//]: # (werk v3)"
+        else:
+            raise RuntimeError()
         yield f"# {title}"
         yield ""
         yield f"{'key': <{len_key}} | value"

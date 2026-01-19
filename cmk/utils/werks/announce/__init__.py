@@ -11,8 +11,9 @@ from typing import NamedTuple
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
 from cmk.ccc.version import ReleaseType, Version
-from cmk.werks.models import Class, Compatibility, Edition, Werk
+from cmk.werks.models import Class, Compatibility, EditionV3, WerkV2, WerkV3
 from cmk.werks.utils import (
+    edition_v2_to_v3,
     has_content,
     load_raw_files,
     sort_by_version_and_component,
@@ -29,7 +30,7 @@ class SimpleWerk(NamedTuple):
     url: str
 
     @classmethod
-    def from_werk(cls, werk: Werk) -> "SimpleWerk":
+    def from_werk(cls, werk: WerkV2 | WerkV3) -> "SimpleWerk":
         prefix = ""
         if werk.class_ == Class.FIX:
             prefix = "FIX: "
@@ -56,8 +57,14 @@ class WerksByEdition(NamedTuple):
     len: int
 
 
-def get_werks_by_edition(werks: list[Werk], edition: Edition) -> WerksByEdition:
-    werks_by_edition = [werk for werk in werks if werk.edition == edition]
+def get_werks_by_edition(werks: list[WerkV2 | WerkV3], edition: EditionV3) -> WerksByEdition:
+    def matches_edition(werk: WerkV2 | WerkV3) -> bool:
+        if isinstance(werk.edition, EditionV3):
+            return werk.edition == edition
+        else:
+            return edition_v2_to_v3(werk.edition) == edition
+
+    werks_by_edition = [werk for werk in werks if matches_edition(werk)]
     result = []
     translator = WerkTranslator()
     werklist = sort_by_version_and_component(werks_by_edition)
@@ -76,11 +83,11 @@ def main(args: argparse.Namespace) -> None:
 
     werks = {}
     for edition in [
-        Edition.COMMUNITY,
-        Edition.PRO,
-        Edition.ULTIMATE,
-        Edition.ULTIMATEMT,
-        Edition.CLOUD,
+        EditionV3.COMMUNITY,
+        EditionV3.PRO,
+        EditionV3.ULTIMATE,
+        EditionV3.ULTIMATEMT,
+        EditionV3.CLOUD,
     ]:
         werks[edition.value] = get_werks_by_edition(version_werks, edition)
 

@@ -7,14 +7,14 @@ from pathlib import Path
 
 import cmk.utils.paths
 from cmk.ccc import store
-from cmk.werks.models import Werk
+from cmk.werks.models import WerkV2, WerkV3
 from cmk.werks.utils import write_precompiled_werks
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir / "acknowledged_werks.mk"
 UNACKNOWLEDGED_WERKS_JSON = cmk.utils.paths.var_dir / "unacknowledged_werks.json"
 
 
-def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
+def is_acknowledged(werk: WerkV2 | WerkV3, acknowledged_werk_ids: set[int]) -> bool:
     return werk.id in acknowledged_werk_ids
 
 
@@ -36,7 +36,7 @@ def save_acknowledgements(
 
 
 def write_unacknowledged_werks(
-    werks: dict[int, Werk],
+    werks: dict[int, WerkV2 | WerkV3],
     *,
     unacknowledged_werks_json: Path | None = None,
 ) -> None:

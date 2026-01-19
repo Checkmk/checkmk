@@ -4,10 +4,10 @@
 
 void main() {
     if (params.CUSTOM_GIT_REF != "") {
-        raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
+        raise("The werk jobs are not meant to be triggered with a custom git ref to not miss any werks.");
     }
 
-    def target_path = "/home/mkde/werks/all_werks_v2.json";
+    def target_path = "/home/mkde/werks/all_werks_v3.json";
     def targets_credentials = [
         [env.WEB_STAGING, "web-staging"],
         ["checkmk.com", "checkmk-deploy"],

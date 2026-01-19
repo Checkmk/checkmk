@@ -219,7 +219,7 @@ def test_main_evaluate_rejects_v1_werks() -> None:
             with pytest.raises(SystemExit):
                 main_evaluate(args)
             mock_bail_out.assert_called_once_with(
-                "Can only evaluate Werk v2 files (with .md suffix)."
+                "Can only evaluate Werk markdown files (with .md suffix)."
             )
 
 
@@ -237,7 +237,7 @@ def test_main_rewrite_werk_rejects_v1_werks() -> None:
             with pytest.raises(SystemExit):
                 main_rewrite_werk(args)
             mock_bail_out.assert_called_once_with(
-                "Can only evaluate Werk v2 files (with .md suffix)."
+                "Can only evaluate Werk markdown files (with .md suffix)."
             )
 
 

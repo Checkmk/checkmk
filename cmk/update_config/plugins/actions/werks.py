@@ -11,7 +11,7 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.werks import load as load_werks
 from cmk.utils.werks.acknowledgement import load_acknowledgements, write_unacknowledged_werks
-from cmk.werks.models import Compatibility, Werk
+from cmk.werks.models import Compatibility, WerkV2, WerkV3
 
 # we only ship the werks of the current major version with checkmk.
 # a user might have unacknowledged werks before updating
@@ -44,7 +44,7 @@ from cmk.werks.models import Compatibility, Werk
 #
 # see also: werk #15365
 
-Werks = dict[int, Werk]
+Werks = dict[int, WerkV2 | WerkV3]
 
 
 def load_unacknowledged_werks(acknowledged_werks: set[int], werks: Werks) -> Werks:

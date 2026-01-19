@@ -17,7 +17,7 @@ from git.repo import Repo
 from cmk.werks import load_werk, parse_werk
 
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
-from .models import AllWerks, WebsiteWerk
+from .models import AllWerks, WebsiteWerkV2, WebsiteWerkV3
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             )
 
     werk_string = None
-    all_werks_by_id: dict[str, WebsiteWerk] = {}
+    all_werks_by_id: dict[str, WebsiteWerkV2 | WebsiteWerkV3] = {}
     for werk_id, werk_by_branch in werk_files_by_id_and_branch.items():
         versions: dict[str, str] = {}
         # werks are defined multiple times, the werk that is defined in the "latest" branch wins.
@@ -150,12 +150,21 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
 
         werk_dict = {k: v for k, v in werk.to_json_dict().items() if v is not None}
         werk_dict.pop("version")
-        # WebsiteWerk is not really needed here, but we want
-        # to make sure we comply to the WebsiteWerk schema.
-        all_werks_by_id[str(werk_id)] = WebsiteWerk(
-            versions=versions,
-            product=config.flavor,
-            **werk_dict,  # type: ignore[arg-type]
-        )
+        website_werk: WebsiteWerkV2 | WebsiteWerkV3
+        if werk_dict["__version__"] == "2":
+            website_werk = WebsiteWerkV2(
+                versions=versions,
+                product=config.flavor,
+                **werk_dict,  # type: ignore[arg-type]
+            )
+        elif werk_dict["__version__"] == "3":
+            website_werk = WebsiteWerkV3(
+                versions=versions,
+                product=config.flavor,
+                **werk_dict,  # type: ignore[arg-type]
+            )
+        else:
+            raise RuntimeError()
+        all_werks_by_id[str(werk_id)] = website_werk
 
     sys.stdout.write(AllWerks.dump_json(all_werks_by_id, by_alias=True).decode("utf-8") + "\n")

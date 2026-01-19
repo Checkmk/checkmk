@@ -35,7 +35,7 @@ def initialize_werks_project(
     if commit is False:
         commit_option = "create_commit = False"
     (werks / "config").write_text(f"""
-editions = [("cre", "CRE")]
+editions = [("community", "COMMUNITY")]
 components = [("ccc", "CCC")]
 edition_components = {"{}"}
 classes = [

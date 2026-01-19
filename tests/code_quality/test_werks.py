@@ -18,7 +18,7 @@ import pytest
 import cmk.ccc.version as cmk_version
 import cmk.utils.werks
 import cmk.werks.utils
-from cmk.werks.models import Werk
+from cmk.werks.models import WerkV2, WerkV3
 from tests.testlib.common.repo import repo_path
 
 CVSS_REGEX_V31 = re.compile(
@@ -32,7 +32,7 @@ JIRA_ISSUE_REGEX = re.compile(r"(CMK|SUP|KNW|SAASDEV)-\d+")
 
 class WerksLoader(NamedTuple):
     base_dir: Path
-    load: Callable[[], dict[int, Werk]]
+    load: Callable[[], dict[int, WerkV2 | WerkV3]]
 
 
 @pytest.fixture(scope="function", name="werks_loader_empty")
@@ -56,7 +56,7 @@ def fixture_werks_loader_empty(tmp_path: Path) -> WerksLoader:
 
 
 @pytest.fixture(scope="function", name="werks_loaded")
-def fixture_werks_loader(tmp_path: Path) -> dict[int, Werk]:
+def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV2 | WerkV3]:
     """
     provide all werks available in the git repository
     """
@@ -76,11 +76,12 @@ def fixture_werks_loader(tmp_path: Path) -> dict[int, Werk]:
 
 def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
     all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
-    cre_werks = {w.id: w for w in all_werks if w.edition.value == "cre"}
-    cee_werks = {w.id: w for w in all_werks if w.edition.value == "cee"}
-    cme_werks = {w.id: w for w in all_werks if w.edition.value == "cme"}
-    cce_werks = {w.id: w for w in all_werks if w.edition.value == "cce"}
-    cse_werks = {w.id: w for w in all_werks if w.edition.value == "cse"}
+    # Handle both v2 editions (cre, cee, cme, cce, cse) and v3 editions (community, pro, ultimatemt, ultimate, cloud)
+    cre_werks = {w.id: w for w in all_werks if w.edition.value in ("cre", "community")}
+    cee_werks = {w.id: w for w in all_werks if w.edition.value in ("cee", "pro")}
+    cme_werks = {w.id: w for w in all_werks if w.edition.value in ("cme", "ultimatemt")}
+    cce_werks = {w.id: w for w in all_werks if w.edition.value in ("cce", "ultimate")}
+    cse_werks = {w.id: w for w in all_werks if w.edition.value in ("cse", "cloud")}
     assert len(all_werks) == sum(
         [len(cre_werks), len(cee_werks), len(cme_werks), len(cce_werks), len(cse_werks)]
     )
@@ -122,7 +123,7 @@ def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
         assert werk.description == raw_werk.description
 
 
-def test_werk_versions(werks_loaded: dict[int, Werk]) -> None:
+def test_werk_versions(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
     parsed_version = cmk_version.Version.from_str(cmk_version.__version__)
 
     for werk_id, werk in werks_loaded.items():
@@ -133,7 +134,7 @@ def test_werk_versions(werks_loaded: dict[int, Werk]) -> None:
         )
 
 
-def test_secwerk_has_cvss(werks_loaded: dict[int, Werk]) -> None:
+def test_secwerk_has_cvss(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
     # The CVSS in Sec Werks is only mandatory for new Werks, so we start with 14485
     skip_lower = 14485
     for werk_id, werk in werks_loaded.items():
@@ -147,7 +148,7 @@ def test_secwerk_has_cvss(werks_loaded: dict[int, Werk]) -> None:
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 
-def test_werk_versions_after_tagged(werks_loaded: dict[int, Werk]) -> None:
+def test_werk_versions_after_tagged(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
     _assert_git_tags_available()
 
     list_of_offenders = []

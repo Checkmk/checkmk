@@ -25,7 +25,7 @@ from functools import cache
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.werks.models import Werk
+from cmk.werks.models import WerkV2, WerkV3
 from cmk.werks.utils import (
     load_precompiled_werks_file,
 )
@@ -40,13 +40,13 @@ def load(
     base_dir: Path | None = None,
     unacknowledged_werks_json: Path | None = None,
     acknowledged_werks_mk: Path | None = None,
-) -> dict[int, Werk]:
+) -> dict[int, WerkV2 | WerkV3]:
     if base_dir is None:
         base_dir = COMPILED_WERKS_DIR
     if unacknowledged_werks_json is None:
         unacknowledged_werks_json = UNACKNOWLEDGED_WERKS_JSON
 
-    werks: dict[int, Werk] = {}
+    werks: dict[int, WerkV2 | WerkV3] = {}
 
     unacknowledged_werks = {}
     if unacknowledged_werks_json.exists():
@@ -73,7 +73,7 @@ def load(
 
 
 @cache
-def load_werk_entries() -> Sequence[Werk]:
+def load_werk_entries() -> Sequence[WerkV2 | WerkV3]:
     # we have a small caching inconsistency here:
     # load() will also load unacknowledged incompatible werks of previous versions
     # when those werks are acknowledged, they will be visible until checkmk is restarted and this

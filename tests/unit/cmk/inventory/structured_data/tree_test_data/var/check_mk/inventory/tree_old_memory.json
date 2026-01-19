@@ -1,0 +1,17 @@
+{
+  "Attributes": {},
+  "Table": {},
+  "Nodes": {
+    "hardware": {
+      "Attributes": {},
+      "Table": {},
+      "Nodes": {
+        "memory": {
+          "Attributes": { "Pairs": { "ram": 1024, "swap": 0 } },
+          "Table": {},
+          "Nodes": {}
+        }
+      }
+    }
+  }
+}

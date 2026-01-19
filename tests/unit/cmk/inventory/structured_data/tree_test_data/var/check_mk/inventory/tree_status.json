@@ -1,0 +1,19 @@
+{
+  "Attributes": {},
+  "Table": {},
+  "Nodes": {
+    "foobar": {
+      "Attributes": {},
+      "Table": {
+        "KeyColumns": ["another_status", "descr", "index", "other_status", "status"],
+        "Rows": [
+          { "index": 1, "descr": "eins", "status": "status 1" },
+          { "index": 2, "descr": "zwei", "status": "status 2", "other_status": "other status 2" },
+          { "index": 4, "another_status": "another_status 4" },
+          { "index": 5, "descr": "fuenf", "another_status": "another_status 5" }
+        ]
+      },
+      "Nodes": {}
+    }
+  }
+}

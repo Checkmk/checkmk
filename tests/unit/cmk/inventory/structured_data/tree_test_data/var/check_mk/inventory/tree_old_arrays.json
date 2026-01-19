@@ -1,0 +1,58 @@
+{
+  "Attributes": {},
+  "Table": {},
+  "Nodes": {
+    "hardware": {
+      "Attributes": {},
+      "Table": {},
+      "Nodes": {
+        "memory": {
+          "Attributes": {},
+          "Table": {},
+          "Nodes": {
+            "arrays": {
+              "Attributes": {},
+              "Table": {},
+              "Nodes": {
+                "0": {
+                  "Attributes": { "Pairs": { "use": "what ever", "location": "foobar" } },
+                  "Table": {},
+                  "Nodes": {
+                    "devices": {
+                      "Attributes": {},
+                      "Table": {
+                        "KeyColumns": ["index", "name"],
+                        "Rows": [
+                          { "index": "1", "name": "Device 1" },
+                          { "index": "2", "name": "Device 2" }
+                        ]
+                      },
+                      "Nodes": {}
+                    }
+                  }
+                },
+                "1": {
+                  "Attributes": {},
+                  "Table": {},
+                  "Nodes": {
+                    "others": {
+                      "Attributes": {},
+                      "Table": {
+                        "KeyColumns": ["index", "name"],
+                        "Rows": [
+                          { "index": "1", "name": "Other 1" },
+                          { "index": "2", "name": "Other 2" }
+                        ]
+                      },
+                      "Nodes": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

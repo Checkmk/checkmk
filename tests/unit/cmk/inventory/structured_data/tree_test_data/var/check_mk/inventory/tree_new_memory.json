@@ -1,0 +1,17 @@
+{
+  "Attributes": {},
+  "Table": {},
+  "Nodes": {
+    "hardware": {
+      "Attributes": {},
+      "Table": {},
+      "Nodes": {
+        "memory": {
+          "Attributes": { "Pairs": { "ram": 10000, "foo": 1 } },
+          "Table": {},
+          "Nodes": {}
+        }
+      }
+    }
+  }
+}

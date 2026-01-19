@@ -144,6 +144,11 @@ div.graph {
         margin-left: 5px;
       }
     }
+
+    td.with_attributes:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
   }
 
   div.popup_trigger {

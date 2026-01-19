@@ -523,10 +523,12 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
             html.open_tr(
                 onclick=f"const el = document.getElementById('{table_uuid_str}'); el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';"
             )
+            class_ = ["with_attributes"]
         else:
             html.open_tr()
+            class_ = []
 
-        html.open_td(style=font_size_style)
+        html.open_td(class_=class_, style=[font_size_style])
         html.write_html(render_color_icon(curve["color"]))
         html.write_text_permissive(curve["title"])
         html.close_td()

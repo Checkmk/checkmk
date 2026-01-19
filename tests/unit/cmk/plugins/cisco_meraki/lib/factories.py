@@ -24,6 +24,10 @@ class RawDeviceFactory(TypedDictFactory[schema.RawDevice]):
     __check_model__ = False
 
 
+class DeviceFactory(TypedDictFactory[schema.Device]):
+    __check_model__ = False
+
+
 class RawDevicesStatusFactory(TypedDictFactory[schema.RawDevicesStatus]):
     __check_model__ = False
 

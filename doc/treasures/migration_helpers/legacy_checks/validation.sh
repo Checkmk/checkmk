@@ -17,6 +17,10 @@ bazel lint --fix //cmk:lib_cmk_repo || exit 1
 scripts/run-uvenv mypy {tests/unit/,}cmk/base/{legacy_checks,check_legacy_includes} || exit 1
 
 # ignore some that fail on collection.
-scripts/run-uvenv pytest tests/unit/cmk/base/legacy_checks tests/unit/cmk/plugins/ --ignore tests/unit/cmk/plugins/metric_backend/ --ignore tests/unit/cmk/plugins/ceph || exit 1
+scripts/run-uvenv pytest tests/unit/cmk/base/legacy_checks tests/unit/cmk/plugins/ \
+    --ignore tests/unit/cmk/plugins/metric_backend/ \
+    --ignore tests/unit/cmk/plugins/custom_query_metric_backend/ \
+    --ignore tests/unit/cmk/plugins/clickhouse_omd/ \
+    --ignore tests/unit/cmk/plugins/ceph || exit 1
 
 make -C tests test-plugins-consistency

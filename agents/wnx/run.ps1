@@ -519,6 +519,8 @@ function Start-BazelSigning {
     Write-Host "Bazel signing..." -ForegroundColor White
 
     try {
+        $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
+        $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
         &bazel build //agents/windows/plugins:all
         if ($LASTEXITCODE -eq 0) {
             $signed_dir = (&bazel info bazel-bin )

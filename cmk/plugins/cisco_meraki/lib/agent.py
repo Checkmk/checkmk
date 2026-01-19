@@ -140,10 +140,11 @@ class MerakiOrganisation:
             return
 
         for device in devices_by_serial.values():
+            serial = device["serial"]
             yield Section(
                 name="cisco_meraki_org_device_info",
                 data=device,
-                piggyback=self._get_device_piggyback(device["serial"], devices_by_serial),
+                piggyback=self._get_device_piggyback(serial, devices_by_serial),
             )
 
         if self.config.required.device_statuses:
@@ -173,9 +174,8 @@ class MerakiOrganisation:
         if devices_by_type.get("sensor"):
             if self.config.required.sensor_readings:
                 for sensor_reading in self.client.get_sensor_readings(self.id):
-                    if piggyback := self._get_device_piggyback(
-                        sensor_reading["serial"], devices_by_serial
-                    ):
+                    serial = sensor_reading["serial"]
+                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                         yield Section(
                             name="cisco_meraki_org_sensor_readings",
                             data=sensor_reading,
@@ -185,9 +185,8 @@ class MerakiOrganisation:
         if devices_by_type.get("appliance"):
             if self.config.required.appliance_uplinks:
                 for raw_statuses in self.client.get_uplink_statuses(self.id):
-                    if piggyback := self._get_device_piggyback(
-                        raw_statuses["serial"], devices_by_serial
-                    ):
+                    serial = raw_statuses["serial"]
+                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                         uplink_statuses = UplinkStatuses(
                             networkName=networks[raw_statuses["networkId"]]["organizationName"],
                             usageByInterface=self._get_usage_by_serial(),
@@ -201,9 +200,8 @@ class MerakiOrganisation:
 
             if self.config.required.appliance_vpns:
                 for vpn_status in self.client.get_uplink_vpn_statuses(self.id):
-                    if piggyback := self._get_device_piggyback(
-                        vpn_status["deviceSerial"], devices_by_serial
-                    ):
+                    serial = vpn_status["deviceSerial"]
+                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                         yield Section(
                             name="cisco_meraki_org_appliance_vpns",
                             data=vpn_status,

@@ -38,7 +38,21 @@
     },
     "site_version": {
       "type": "string"
+    },
+    "is_cloud_edition": {
+      "type": "boolean"
+    },
+    "user_id": {
+      "type": "string"
     }
   },
-  "required": ["alias_validation", "urls", "site_name", "domain", "site_version"]
+  "required": [
+    "alias_validation",
+    "urls",
+    "site_name",
+    "domain",
+    "site_version",
+    "is_cloud_edition",
+    "user_id"
+  ]
 }

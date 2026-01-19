@@ -6,6 +6,7 @@
 #include "neb/TimeperiodsCache.h"
 
 #include <compare>
+#include <sstream>
 #include <utility>
 
 #include "livestatus/Logger.h"
@@ -13,6 +14,17 @@
 using namespace std::chrono_literals;
 
 TimeperiodsCache::TimeperiodsCache(Logger *logger) : _logger(logger) {}
+
+namespace {
+void logTransition(char *name, int from, int to) {
+    std::ostringstream os;
+    os << "TIMEPERIOD TRANSITION: " << name << ";" << from << ";" << to;
+    write_to_all_logs(
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        const_cast<char *>(os.str().c_str()), NSLOG_INFO_MESSAGE);
+}
+}  // namespace
 
 void TimeperiodsCache::logCurrentTimeperiods() {
     const std::scoped_lock sl{_mutex};
@@ -90,9 +102,4 @@ bool TimeperiodsCache::inTimeperiod(const timeperiod *tp) const {
         return false;
     }
     return it->second;
-}
-
-void TimeperiodsCache::logTransition(char *name, int from, int to) const {
-    Informational(_logger) << "TIMEPERIOD TRANSITION: " << name << ";" << from
-                           << ";" << to;
 }

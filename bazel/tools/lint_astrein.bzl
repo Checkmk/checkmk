@@ -154,7 +154,7 @@ def astrein_action(ctx, executable, srcs, stdout, exit_code, format, astrein_run
     )
 
 def _astrein_aspect_impl(target, ctx):
-    if "lint-with-astrein" not in ctx.rule.attr.tags:
+    if "no-astrein" in ctx.rule.attr.tags:
         return []
 
     if not should_visit(ctx.rule, ctx.attr._rule_kinds, ctx.attr._filegroup_tags):

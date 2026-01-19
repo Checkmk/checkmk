@@ -132,6 +132,11 @@ def test_component_for_cmk_utils_paths() -> None:
     assert checker.component == Component("cmk.utils.paths")
 
 
+def test_component_for_cmk_ccc() -> None:
+    checker = _make_checker("cmk/ccc/version.py")
+    assert checker.component == Component("cmk.ccc")
+
+
 def test_component_for_explicit_mapping_bin_check_mk() -> None:
     checker = _make_checker("bin/check_mk")
     assert checker.component == Component("cmk.base")
@@ -307,6 +312,17 @@ import requests
     assert len(errors) == 0
 
 
+def test_package_tests_directory_excluded() -> None:
+    source_code = """from cmk.base.config import load_config
+from cmk.gui.pages import Page
+"""
+    checker = _make_checker("packages/cmk-agent-based/tests/test_something.py", source_code)
+    tree = ast.parse(source_code)
+    errors = checker.check(tree)
+
+    assert len(errors) == 0
+
+
 def test_package_cmk_code_checked() -> None:
     source_code = "from cmk.gui.pages import Page"
     checker = _make_checker("packages/cmk-ccc/cmk/ccc/module.py", source_code)
@@ -315,6 +331,15 @@ def test_package_cmk_code_checked() -> None:
 
     assert len(errors) == 1
     assert "cmk.gui.pages" in errors[0].message
+
+
+def test_nonfree_package_tests_excluded() -> None:
+    source_code = "from cmk.base.config import load_config"
+    checker = _make_checker("non-free/packages/cmk-bla/tests/test_something.py", source_code)
+    tree = ast.parse(source_code)
+    errors = checker.check(tree)
+
+    assert len(errors) == 0
 
 
 def test_file_without_component_rejects_cmk_imports() -> None:

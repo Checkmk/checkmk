@@ -338,6 +338,11 @@ CROSS_DEPENDING_UTILS_MODULES = (
 )
 
 COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
+    Component("cmk.agent_based"): _allow(),
+    Component("cmk.agent_receiver"): _allow(
+        *PACKAGE_CCC,
+        "cmk.relay_protocols",
+    ),
     Component("cmk.automations"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_TRACE,
@@ -357,6 +362,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.servicename",
         "cmk.utils.unixsocket_http",
     ),
+    Component("cmk.astrein"): _allow(),
     # only allow itself, this is the future :-)
     Component("cmk.bakery"): _allow(),
     Component("cmk.base.api.bakery"): _allow(
@@ -511,6 +517,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.fields",
         "cmk.utils",
     ),
+    Component("cmk.ccc"): _allow(
+        *PACKAGE_TRACE,
+    ),
     Component("cmk.config_anonymizer"): _allow(
         *PACKAGE_CCC,
         "cmk.config_anonymizer",
@@ -534,6 +543,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui.main_modules",
         "cmk.gui.session",
         "cmk.livestatus_client",
+    ),
+    Component("cmk.check_helper_protocol"): _allow(
+        *PACKAGE_CCC,
+        "cmk.snmplib",
+        "cmk.helper_interface",
+        "cmk.fetchers",
     ),
     Component("cmk.checkengine.value_store"): _allow(
         *PACKAGE_CCC,
@@ -561,6 +576,17 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.servicename",
         "cmk.utils.timeperiod",
     ),
+    Component("cmk.crypto"): _allow(
+        *PACKAGE_CCC,
+    ),
+    Component("cmk.diskspace"): _allow(*PACKAGE_CCC),
+    Component("cmk.events"): _allow(
+        *PACKAGE_CCC,
+        "cmk.livestatus_client",
+    ),
+    Component("cmk.fetcher_encoder"): _allow(
+        "cmk.fetchers",
+    ),
     Component("cmk.fetcher_helper"): _allow(
         *PACKAGE_CCC,
         "cmk.fetchers",
@@ -568,6 +594,10 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.snmplib",
         "cmk.utils.caching",
         "cmk.utils.paths",
+        "cmk.check_helper",
+        "cmk.relay_protocols",
+        "cmk.check_helper_protocol",
+        "cmk.relay_fetcher_trigger",
     ),
     Component("cmk.gui.cmkcert"): _allow(
         *PACKAGE_CCC,
@@ -576,11 +606,18 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils",
         "cmk.crypto.certificate",
     ),
+    Component("cmk.messaging"): _allow(
+        *PACKAGE_CCC,
+    ),
     Component("cmk.message_broker_certs"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MESSAGING,
         "cmk.utils",
     ),
+    Component("cmk.metric_backend"): _allow(
+        *PACKAGE_CCC,
+    ),
+    Component("cmk.mkp_tool"): _allow(),
     Component("cmk.cmkpasswd"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
@@ -600,8 +637,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_RELAY_PROTOCOLS,
         "cmk.helper_interface",
         "cmk.snmplib",
+        "cmk.password_store.v1_unstable",
+        "cmk.agent_based.v1",
+        "cmk.inline_snmp",
     ),
     Component("cmk.fields"): _allow(*PACKAGE_CCC),
+    Component("cmk.graphing"): _allow(),
     Component("cmk.gui.main_modules"): _allow(
         *PACKAGE_CCC,
         "cmk.utils.paths",
@@ -847,9 +888,15 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     # should become a package
     Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),
+    Component("cmk.inline_snmp"): _allow(
+        *PACKAGE_CCC,
+        "cmk.helper_interface",
+        "cmk.snmplib",
+    ),
     Component("cmk.inventory"): _allow(
         *PACKAGE_CCC,
     ),
+    Component("cmk.inventory_ui"): _allow(),
     Component("cmk.notification_plugins"): _allow(
         *PACKAGE_CCC,
         "cmk.utils",
@@ -877,6 +924,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         )
         for family in CLEAN_PLUGIN_FAMILIES
     },
+    Component("cmk.password_store"): _allow(),
     Component("cmk.plugins"): _allow(
         *PACKAGE_PLUGIN_APIS,
     ),
@@ -889,19 +937,25 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.livestatus_helpers",
         "cmk.utils.paths",
     ),
+    Component("cmk.rulesets"): _allow(),
+    Component("cmk.server_side_calls"): _allow(),
     Component("cmk.server_side_calls_backend"): _allow(
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CCC,
         "cmk.discover_plugins",
         "cmk.utils",
     ),
+    Component("cmk.server_side_programs"): _allow(),
     Component("cmk.special_agents"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         "cmk.utils.password_store",
         "cmk.utils.paths",
     ),
-    Component("cmk.snmplib"): _allow(*PACKAGE_CCC),
+    Component("cmk.snmplib"): _allow(
+        *PACKAGE_CCC,
+        "cmk.agent_based.v1",
+    ),
     Component("cmk.update_config"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
@@ -935,6 +989,28 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.paths",
         "cmk.utils.rulesets",
     ),
+    Component("cmk.livestatus_client"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_TRACE,
+    ),
+    Component("cmk.mknotifyd"): _allow(
+        *PACKAGE_CCC,
+        "cmk.events",
+    ),
+    Component("cmk.nonfree.ultimate.metric_backend.dcd"): _allow(
+        *PACKAGE_METRIC_BACKEND,
+        "cmk.ccc",
+        "cmk.nonfree.pro.dcd",
+        "cmk.utils",
+    ),
+    Component("cmk.nonfree.ultimate.metric_backend.gui"): _allow(
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_METRIC_BACKEND,
+        "cmk.ccc",
+        "cmk.fields",
+        "cmk.gui",
+        "cmk.utils",
+    ),
     Component("cmk.nonfree.pro.bakery"): _allow(
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CCC,
@@ -956,7 +1032,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.piggyback",
         "cmk.utils",
     ),
-    Component("cmk.mknotifyd"): _allow(),
     Component("cmk.nonfree.pro.snmp_backend"): _allow(),
     Component("cmk.nonfree.pro.liveproxy"): _allow(
         *PACKAGE_CCC,
@@ -977,7 +1052,43 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.shared_typing",
         "cmk.utils",
     ),
-    Component("cmk.diskspace"): _allow(*PACKAGE_CCC),
+    Component("cmk.otel_collector"): _allow(
+        *PACKAGE_CCC,
+    ),
+    Component("cmk.relay"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        *PACKAGE_RELAY_PROTOCOLS,
+        "cmk.check_helper_protocol",
+    ),
+    Component("cmk.relay_engine"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        "cmk.check_helper_protocol",
+        "cmk.relay",
+        "cmk.relay_protocols",
+        "cmk.testlib.relay",
+    ),
+    Component("cmk.relay_protocols"): _allow(),
+    Component("cmk.relay_fetcher_trigger"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_RELAY_PROTOCOLS,
+        "cmk.check_helper_protocol",
+        "cmk.fetchers",
+        "cmk.fetcher_encoder",
+        "cmk.helper_interface",
+        "cmk.snmplib",
+    ),
+    Component("cmk.testlib.agent_receiver"): _allow(
+        "cmk.agent_receiver",
+        "cmk.relay_protocols",
+    ),
+    Component("cmk.testlib.relay"): _allow(
+        *PACKAGE_CCC,
+        "cmk.check_helper_protocol",
+        "cmk.relay",
+        "cmk.relay_protocols",
+    ),
     Component("cmk.rrd"): _allow(
         *PACKAGE_CCC,
         "cmk.utils",
@@ -988,6 +1099,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui",
         "cmk.utils",
     ),
+    Component("cmk.trace"): _allow(),
     Component("cmk.utils.certs"): _allow(
         *PACKAGE_CRYPTO,
         *PACKAGE_CCC,
@@ -1074,6 +1186,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_PLUGIN_APIS,
         "cmk.fields",
         "cmk.gui",
+    ),
+    Component("cmk.werks"): _allow(
+        *PACKAGE_CCC,
     ),
     Component("omdlib"): _allow(
         *PACKAGE_CCC,
@@ -1203,6 +1318,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     # Tests are allowed to import everything for now. Should be cleaned up soon (TM)
     Component("tests.testlib"): lambda *_a, **_kw: True,
+    Component("tests.unit.cmk.nonfree.ultimate.otel.dcd"): _allow(
+        *PACKAGE_CCC,
+        "cmk.nonfree.ultimate.otel.dcd",
+        "cmk.nonfree.pro.dcd",
+        "cmk.utils.paths",
+    ),
     Component("tests.unit.cmk.base.legacy_checks"): _allow(
         *PACKAGE_PLUGIN_APIS,
         "cmk.base.check_legacy_includes",

@@ -92,10 +92,10 @@ py_library(
         "//packages/cmk-crypto",
         "//packages/cmk-plugin-apis:password_store",
     ] + select({
-        "@//:gpl_repo": [],
         "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-core-helpers:inline-snmp",
         ],
+        "@//:gpl_repo": [],
     }),
 )
 

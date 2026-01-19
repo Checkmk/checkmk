@@ -119,6 +119,9 @@ class ModuleLayersChecker(ASTVisitorChecker):
 
     def _check_import(self, node: ast.Import | ast.ImportFrom, imported: ModuleName) -> None:
         """Check if an import is allowed"""
+        if self._shall_exclude_file_below_packages(self.relative_path):
+            return
+
         # We only care about imports of our own modules.
         # ... blissfully ignoring tests/.
         if not imported.in_component(Component("cmk")):
@@ -129,6 +132,22 @@ class ModuleLayersChecker(ASTVisitorChecker):
                 f"Import of {imported} not allowed in {self.component or self.module_name!r}",
                 node,
             )
+
+    @staticmethod
+    def _shall_exclude_file_below_packages(relative_path: ModulePath) -> bool:
+        """Exclude files in "tests" or other non cmk related directories below packages
+
+        This is not just a lazy shortcut. The layer checker is supposed to ensure
+        rules in the cmk namespace. Dependencies of the package's tests are managed through
+        bazel dependencies. We feel no need to enforce cmk module layer rules there.
+        """
+        base_paths = ["packages", "non-free/packages"]
+        for base_path in base_paths:
+            if relative_path.is_below(base_path):
+                relative_to_pkg = ModulePath(*relative_path.relative_to(base_path).parts[1:])
+                if not relative_to_pkg.is_below("cmk"):
+                    return True
+        return False
 
     def _is_import_allowed(
         self, component: Component | None, importing_path: ModulePath, imported: ModuleName

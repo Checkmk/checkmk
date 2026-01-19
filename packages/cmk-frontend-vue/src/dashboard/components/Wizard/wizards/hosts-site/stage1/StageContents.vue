@@ -54,9 +54,9 @@ const hostFilterType = defineModel<ElementSelection>('hostFilterType', { require
 const enabledWidgets = useSelectGraphTypes(hostFilterType, props.availableFeatures)
 const availableWidgets: WidgetItemList = [
   { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
-  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'folder' },
-  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'folder' },
-  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'folder' }
+  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'host-statistics' },
+  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'host-state' },
+  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'host-state-summary' }
 ]
 
 // Filters

@@ -356,6 +356,8 @@
         "hostgroups",
         "host-problems",
         "host-state",
+        "host-state-summary",
+        "host-statistics",
         "host-svc-problems",
         "host-svc-problems-dark",
         "hyphen",

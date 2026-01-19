@@ -59,6 +59,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
       :content="handler.widgetProps.value.content!"
       :effective-title="handler.widgetProps.value!.effectiveTitle"
       :effective_filter_context="handler.widgetProps.value.effective_filter_context!"
+      :content_center="true"
     />
 
     <ContentSpacer />

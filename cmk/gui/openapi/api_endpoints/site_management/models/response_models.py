@@ -20,8 +20,7 @@ from cmk.gui.site_config import site_is_local
 from cmk.utils import paths
 
 from .common import (
-    ConnectionWithoutReplicationModel,
-    ConnectionWithReplicationModel,
+    ConnectionModel,
     SiteConnectionBaseModel,
     StatusConnectionModel,
     UserSyncAllModel,
@@ -82,10 +81,7 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
     def from_internal(cls, site_configuration: SiteConfiguration) -> Self:
         def _configuration_connection_from_internal(
             site_configuration: SiteConfiguration,
-        ) -> ConnectionWithReplicationModel | ConnectionWithoutReplicationModel:
-            if site_configuration.get("replication") is None:
-                return ConnectionWithoutReplicationModel(enable_replication=False)
-
+        ) -> ConnectionModel:
             def _user_sync_from_internal(
                 user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None,
             ) -> UserSyncWithLdapModel | UserSyncAllModel | UserSyncDisabledModel:
@@ -99,8 +95,8 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
                     )
                 return UserSyncDisabledModel(sync_with_ldap_connections="disabled")
 
-            return ConnectionWithReplicationModel(
-                enable_replication=True,
+            return ConnectionModel(
+                enable_replication=False if site_configuration.get("replication") is None else True,
                 url_of_remote_site=site_configuration["multisiteurl"],
                 disable_remote_configuration=site_configuration["disable_wato"],
                 ignore_tls_errors=site_configuration["insecure"],

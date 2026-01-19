@@ -376,10 +376,14 @@ class PasswordConverter:
 
 @dataclass(slots=True)
 class RelativeUrlConverter:
+    allowed_to_be_empty: bool = False
     must_endwith_one: list[str] | None = None
     must_startwith_one: list[str] | None = None
 
     def validate(self, value: str) -> str:
+        if self.allowed_to_be_empty and not value:
+            return value
+
         if self.must_endwith_one is not None:
             if not any({value.endswith(postfix) for postfix in self.must_endwith_one}):
                 raise ValueError(

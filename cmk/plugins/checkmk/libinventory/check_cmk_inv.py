@@ -24,7 +24,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
 from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.base.modes.check_mk import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
@@ -177,7 +177,9 @@ def _inventory_as_check(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=app.make_fetcher_trigger,
+        make_trigger=lambda relay_id: app.make_fetcher_trigger(
+            relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
+        ),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,

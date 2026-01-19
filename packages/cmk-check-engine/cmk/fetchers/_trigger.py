@@ -6,6 +6,7 @@
 import abc
 from collections.abc import Mapping, Sized
 from functools import partial
+from pathlib import Path
 from typing import final, Protocol, Self, TypeVar
 
 import cmk.ccc.resulttype as result
@@ -76,7 +77,7 @@ class FetcherTrigger(abc.ABC):
 
 
 class FetcherTriggerFactory(Protocol):
-    def __call__(self, relay_id: str | None) -> FetcherTrigger: ...
+    def __call__(self, relay_id: str | None, trusted_ca_file: Path) -> FetcherTrigger: ...
 
 
 class PlainFetcherTrigger(FetcherTrigger):

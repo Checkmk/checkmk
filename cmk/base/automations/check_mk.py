@@ -112,7 +112,7 @@ from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     PassiveServiceNameConfig,
 )
-from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
 from cmk.base.core.interface import CoreAction, do_reload, do_restart, MonitoringCore
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump
@@ -374,7 +374,9 @@ def automation_service_discovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=ctx.make_fetcher_trigger,
+        make_trigger=lambda relay_id: ctx.make_fetcher_trigger(
+            relay_id, cmk.utils.paths.trusted_ca_file
+        ),
         factory=config_cache.fetcher_factory(
             service_configurer,
             ip_address_of,
@@ -537,7 +539,9 @@ def automation_special_agent_discovery_preview(
     )
 
     fetcher = SpecialAgentFetcher(
-        ctx.make_fetcher_trigger(run_settings.host_config.relay_id),
+        ctx.make_fetcher_trigger(
+            run_settings.host_config.relay_id, cmk.utils.paths.trusted_ca_file
+        ),
         ad_hoc_secrets,
         agent_name=run_settings.agent_name,
         cmds=cmds,
@@ -628,7 +632,9 @@ def automation_discovery_preview(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: relay_id,
-        make_trigger=ctx.make_fetcher_trigger,
+        make_trigger=lambda relay_id: ctx.make_fetcher_trigger(
+            relay_id, cmk.utils.paths.trusted_ca_file
+        ),
         factory=config_cache.fetcher_factory(
             service_configurer,
             ip_address_of_with_fallback,
@@ -1125,7 +1131,9 @@ def _execute_autodiscovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=ctx.make_fetcher_trigger,
+        make_trigger=lambda relay_id: ctx.make_fetcher_trigger(
+            relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
+        ),
         factory=config_cache.fetcher_factory(
             service_configurer,
             slightly_different_ip_address_of,
@@ -3413,7 +3421,7 @@ class AutomationDiagHost:
             )
         )
 
-        trigger = ctx.make_fetcher_trigger(host_relay_id)
+        trigger = ctx.make_fetcher_trigger(host_relay_id, cmk.utils.paths.trusted_ca_file)
         for source in sources.make_sources(
             plugins,
             host_name,
@@ -3965,12 +3973,15 @@ def automation_get_agent_output(
         error_handler=config.handle_ip_lookup_failure,
     )
 
+    # I am not sure we should resolve the link here. What if the core removes the config?
+    active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
+
     # No caching option over commandline here.
     file_cache_options = FileCacheOptions()
 
     host_labels = label_manager.labels_of_host(hostname)
     relay_id = config.get_relay_id(host_labels)
-    trigger = ctx.make_fetcher_trigger(relay_id)
+    trigger = ctx.make_fetcher_trigger(relay_id, active_config_path / RELATIVE_PATH_TRUSTED_CAS)
 
     success = True
     output = ""
@@ -3994,7 +4005,6 @@ def automation_get_agent_output(
             if hostname in hosts_config.clusters:
                 return GetAgentOutputResult(success, output, AgentRawData(info))
 
-            active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
             active_secrets_path = cmk.utils.password_store.active_secrets_path_site(
                 RELATIVE_PATH_SECRETS, active_config_path
             )

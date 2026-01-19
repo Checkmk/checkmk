@@ -49,11 +49,12 @@ from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
-from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
 from cmk.ccc import tty
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -656,7 +657,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
 
     host_labels = label_manager.labels_of_host(hostname)
     relay_id = config.get_relay_id(host_labels)
-    fetcher_trigger = app.make_fetcher_trigger(relay_id)
+    fetcher_trigger = app.make_fetcher_trigger(relay_id, cmk.utils.paths.trusted_ca_file)
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
@@ -2039,6 +2040,9 @@ def mode_check_discovery(
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
+    # We do not resolve the `latest` link here, as any given serial might be removed by the core.
+    latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
+
     plugins = load_checks()
     loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
@@ -2079,7 +2083,9 @@ def mode_check_discovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=app.make_fetcher_trigger,
+        make_trigger=lambda relay_id: app.make_fetcher_trigger(
+            relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
+        ),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2453,7 +2459,9 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=app.make_fetcher_trigger,
+        make_trigger=lambda relay_id: app.make_fetcher_trigger(
+            relay_id, cmk.utils.paths.trusted_ca_file
+        ),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2660,6 +2668,7 @@ def mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str]) 
         secrets_config_site=StoredSecrets(
             path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
         ),
+        trusted_ca_file=cmk.utils.paths.trusted_ca_file,
     )
 
 
@@ -2679,6 +2688,7 @@ def run_checking(
     *,
     secrets_config_relay: AdHocSecrets | StoredSecrets,
     secrets_config_site: StoredSecrets,
+    trusted_ca_file: Path,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
     try:
@@ -2725,7 +2735,7 @@ def run_checking(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=app.make_fetcher_trigger,
+        make_trigger=lambda relay_id: app.make_fetcher_trigger(relay_id, trusted_ca_file),
         factory=config_cache.fetcher_factory(
             service_configurer,
             ip_address_of,
@@ -3021,7 +3031,9 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=app.make_fetcher_trigger,
+        make_trigger=lambda relay_id: app.make_fetcher_trigger(
+            relay_id, cmk.utils.paths.trusted_ca_file
+        ),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -3305,6 +3317,9 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
         console.verbose("Autoinventory: No hosts marked by inventory check")
         return
 
+    # We do not resolve the `latest` link here, as any given serial might be removed by the core.
+    latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
+
     plugins = load_checks()
     loading_result = load_config(plugins, app.get_builtin_host_labels)
     loaded_config = loading_result.loaded_config
@@ -3340,7 +3355,9 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=app.make_fetcher_trigger,
+        make_trigger=lambda relay_id: app.make_fetcher_trigger(
+            relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
+        ),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,

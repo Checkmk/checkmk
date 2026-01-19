@@ -1928,6 +1928,11 @@ class CommandScheduleDowntimesForm:
         vs_host_downtime = self._vs_host_downtime()
         included_from_html = vs_host_downtime.from_html_vars("_include_children")
         vs_host_downtime.validate_value(included_from_html, "_include_children")
+
+        # INFO: it's necessary to check if a downtime command originates from the "All aggregations"
+        # view in BI because its "Row" payload differs from that of the "Host" and "Service" views.
+        downtime_from_bi_aggregation = "aggr_hosts" in row
+
         if "_include_children" in included_from_html:  # only for hosts
             if (recurse := included_from_html.get("_include_children")) is not None:
                 specs = [spec] + self._get_child_hosts(row["site"], [spec], recurse=recurse)
@@ -1943,16 +1948,23 @@ class CommandScheduleDowntimesForm:
                     users_sites=list({SiteId(row["site"]) for row in action_rows})
                 )
                 specs = [spec for spec in specs if spec in user_hosts]
-                action_rows = [ar for ar in action_rows if ar["host_name"] in user_hosts]
+                if downtime_from_bi_aggregation:
+                    action_rows = [
+                        ar
+                        for ar in action_rows
+                        if all(host[1] in user_hosts for host in ar["aggr_hosts"])
+                    ]
+                else:
+                    action_rows = [ar for ar in action_rows if ar["host_name"] in user_hosts]
 
-            seen = set()
-            host_action_rows = []
-            for action_row in action_rows:
-                if action_row["host_name"] not in seen:
-                    seen.add(action_row["host_name"])
-                    host_action_rows.append(action_row)
-            action_rows = host_action_rows
-
+            if not downtime_from_bi_aggregation:
+                seen = set()
+                host_action_rows = []
+                for action_row in action_rows:
+                    if action_row["host_name"] not in seen:
+                        seen.add(action_row["host_name"])
+                        host_action_rows.append(action_row)
+                action_rows = host_action_rows
         else:
             specs = [spec]
         return cmdtag, specs, action_rows

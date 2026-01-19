@@ -970,6 +970,7 @@ int broker_process(int callback_type, void *data) {
             // Called right after Nagios successfully "daemonizes"; that is,
             // detaches from the controlling terminal and is running in the
             // background.
+            break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
             // Called immediately prior to entering the main event execution.
             g_timeperiods_cache->update(from_timeval(info->timestamp));

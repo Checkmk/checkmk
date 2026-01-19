@@ -60,15 +60,17 @@ immediateWatch(
       class="cmk-changes-site-single"
     >
       <div class="cmk-changes-site-single-title">{{ _t('Site') }}</div>
-      <SiteStatusItem
-        :idx="0"
-        :site="props.sites[0]"
-        :activating="activating"
-        :checked="selectedSites.includes(props.sites[0].siteId)"
-        :is-recently-activated="recentlyActivatedSites.includes(props.sites[0].siteId)"
-        :hide-checkbox="true"
-        @update-checked="toggleSelectedSite"
-      ></SiteStatusItem>
+      <CmkScrollContainer max-height="30vh">
+        <SiteStatusItem
+          :idx="0"
+          :site="props.sites[0]"
+          :activating="activating"
+          :checked="selectedSites.includes(props.sites[0].siteId)"
+          :is-recently-activated="recentlyActivatedSites.includes(props.sites[0].siteId)"
+          :hide-checkbox="true"
+          @update-checked="toggleSelectedSite"
+        ></SiteStatusItem>
+      </CmkScrollContainer>
     </div>
 
     <CmkTabs v-if="props.sites.length > 1" v-model="activeTab">
@@ -85,7 +87,7 @@ immediateWatch(
       </template>
       <template #tab-contents>
         <CmkTabContent id="sites-with-changes" spacing="none">
-          <CmkScrollContainer height="auto" class="cmk-scroll-container">
+          <CmkScrollContainer height="auto" max-height="30vh" class="cmk-scroll-container">
             <SiteStatusItem
               v-for="(site, idx) in sitesWithChanges"
               :key="idx"
@@ -100,7 +102,7 @@ immediateWatch(
         </CmkTabContent>
 
         <CmkTabContent id="sites-with-errors" spacing="none">
-          <CmkScrollContainer height="auto" class="cmk-scroll-container">
+          <CmkScrollContainer height="auto" max-height="30vh" class="cmk-scroll-container">
             <SiteStatusItem
               v-for="(site, idx) in sitesWithErrors"
               :key="idx"
@@ -116,7 +118,7 @@ immediateWatch(
         </CmkTabContent>
 
         <CmkTabContent id="logged-out-sites" spacing="none">
-          <CmkScrollContainer height="auto" class="cmk-scroll-container">
+          <CmkScrollContainer height="50%" max-height="30vh" class="cmk-scroll-container">
             <SiteStatusItem
               v-for="(site, idx) in loggedOutSites"
               :key="idx"

@@ -211,8 +211,8 @@ class MerakiOrganisation:
             if self.config.required.appliance_performance:
                 for device in devices_by_type["appliance"]:
                     serial = device["serial"]
-                    for appliance_performance in self.client.get_appliance_performance(serial):
-                        if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                        for appliance_performance in self.client.get_appliance_performance(serial):
                             yield Section(
                                 name="cisco_meraki_org_appliance_performance",
                                 data=appliance_performance,
@@ -223,11 +223,11 @@ class MerakiOrganisation:
             if self.config.required.wireless_device_statuses:
                 for device in devices_by_type["wireless"]:
                     serial = device["serial"]
-                    for wireless_device_status in self.client.get_wireless_device_statuses(serial):
-                        if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                        for wireless_device in self.client.get_wireless_device_statuses(serial):
                             yield Section(
                                 name="cisco_meraki_org_wireless_device_statuses",
-                                data=wireless_device_status,
+                                data=wireless_device,
                                 piggyback=piggyback,
                             )
 
@@ -245,8 +245,8 @@ class MerakiOrganisation:
             if self.config.required.switch_port_statuses:
                 for switch in devices_by_type["switch"]:
                     serial = switch["serial"]
-                    for switch_port_status in self.client.get_switch_port_statuses(serial):
-                        if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                    if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                        for switch_port_status in self.client.get_switch_port_statuses(serial):
                             yield Section(
                                 name="cisco_meraki_org_switch_port_statuses",
                                 data=switch_port_status,

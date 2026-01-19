@@ -65,7 +65,7 @@ class TestMerakiAgentOutput:
             "switch-port-statuses",
             "wireless-device-statuses",
         }
-        updated_ctx = _update_section_names(ctx, sections=non_default_sections)
+        updated_ctx = self._update_section_names(ctx, sections=non_default_sections)
         agent.run(updated_ctx)
 
         # NOTE: testing on a set here because there could be duplicate matches with multiple orgs.
@@ -100,7 +100,7 @@ class TestMerakiAgentOutput:
 
     # TODO: reevaluate this test. It's a bit clunky because some sections are always written.
     def test_section_specified(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
-        updated_ctx = _update_section_names(ctx, sections={"licenses-overview"})
+        updated_ctx = self._update_section_names(ctx, sections={"licenses-overview"})
         agent.run(updated_ctx)
 
         value = re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out)
@@ -114,14 +114,14 @@ class TestMerakiAgentOutput:
         agent.run(ctx)
         agent_output_all_orgs = capsys.readouterr().out
 
-        updated_ctx = _update_section_names(ctx, sections={"licenses-overview"})
+        updated_ctx = self._update_section_names(ctx, sections={"licenses-overview"})
         agent.run(updated_ctx)
         agent_output_with_org = capsys.readouterr().out
 
         assert len(agent_output_all_orgs) > len(agent_output_with_org)
 
     def test_unknown_org(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
-        updated_ctx = _update_org_ids(ctx, org_ids=["made-up-org"])
+        updated_ctx = self._update_org_ids(ctx, org_ids=["made-up-org"])
         agent.run(updated_ctx)
         assert capsys.readouterr().out == ""
 
@@ -129,7 +129,7 @@ class TestMerakiAgentOutput:
         agent.run(ctx)
         agent_output_all_orgs = capsys.readouterr().out
 
-        updated_ctx = _update_org_ids(ctx, org_ids=["123"])
+        updated_ctx = self._update_org_ids(ctx, org_ids=["123"])
         agent.run(updated_ctx)
         agent_output_with_org = capsys.readouterr().out
 
@@ -150,13 +150,11 @@ class TestMerakiAgentOutput:
 
         assert first_run == second_run
 
+    def _update_org_ids(self, ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunContext:
+        patched_config = dataclasses.replace(ctx.config, org_ids=org_ids)
+        return dataclasses.replace(ctx, config=patched_config)
 
-def _update_org_ids(ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunContext:
-    patched_config = dataclasses.replace(ctx.config, org_ids=org_ids)
-    return dataclasses.replace(ctx, config=patched_config)
-
-
-def _update_section_names(ctx: MerakiRunContext, sections: set[str]) -> MerakiRunContext:
-    patched_required = _RequiredSections.build(sections=sections)
-    patched_config = dataclasses.replace(ctx.config, required=patched_required)
-    return dataclasses.replace(ctx, config=patched_config)
+    def _update_section_names(self, ctx: MerakiRunContext, sections: set[str]) -> MerakiRunContext:
+        patched_required = _RequiredSections.build(sections=sections)
+        patched_config = dataclasses.replace(ctx.config, required=patched_required)
+        return dataclasses.replace(ctx, config=patched_config)

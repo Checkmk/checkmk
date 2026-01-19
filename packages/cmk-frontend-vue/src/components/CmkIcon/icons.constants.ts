@@ -331,6 +331,8 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'host-graph': 'icon_host_graph.svg',
   'host-problems': 'icon_host_problems.svg',
   'host-state': 'icon_host_state.svg',
+  'host-state-summary': 'icon_host_state_summary.svg',
+  'host-statistics': 'icon_host_statistics.svg',
   'host-svc-problems-dark': 'icon_host_svc_problems_dark.svg',
   hostgroups: 'icon_hostgroups.svg',
   ical: 'icon_ical.png',

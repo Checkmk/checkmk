@@ -1987,17 +1987,14 @@ def init_site(
     # Change ownership of all files and dirs to site user
     chown_tree(site_home, site.name)
 
-    config = load_config(site, global_opts.verbose)
-    if config_settings:  # add specific settings
-        for hook_name, value in config_settings.items():
-            config[hook_name] = value
-    create_config_environment(config)
-
-    # Change the few files that config save as created as root
-    chown_tree(site_home, site.name)
-
     outcome = finalize_site(
-        version_info, site, config, CommandType.create, apache_reload, global_opts.verbose
+        version_info,
+        site.name,
+        site,
+        config_settings,
+        CommandType.create,
+        apache_reload,
+        global_opts.verbose,
     )
     return outcome, admin_password
 
@@ -2302,21 +2299,15 @@ def main_mv_or_cp(
     if command_type is CommandType.move and reuse:
         _main_rm(version_info, old_site, global_opts, {"reuse": None})
 
-    # Now switch over to the new site as currently active site
-    new_config = load_config(new_site, global_opts.verbose)
-    set_environment(new_site.name, new_config)
-
     # Entry for tmps in /etc/fstab
     if not reuse:
         add_to_fstab(new_site.name, new_site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
-    # Needed by the post-rename-site script
-    os.environ["OLD_OMD_SITE"] = old_site.name
-
     outcome = finalize_site(
         version_info,
+        old_site.name,
         new_site,
-        new_config,
+        {},
         command_type,
         "apache-reload" in options,
         global_opts.verbose,
@@ -2912,13 +2903,13 @@ def main_su(
         sys.exit("Cannot open a shell for user %s" % site.name)
 
 
-def _process_backup_tar_and_setup_env(
+def _process_backup_tar(
     tar: SafeIndexedTarFile | SafeStreamedTarFile,
     verbose: bool,
     options: CommandOptions,
     old_site_name: str,
     new_site: SiteContext,
-) -> Config:
+) -> None:
     site_home = str(SitePaths.from_site_name(new_site.name).home)
 
     # Now extract all files
@@ -2966,17 +2957,6 @@ def _process_backup_tar_and_setup_env(
             site_replacements,
         )
 
-    # Now switch over to the new site as currently active site
-    os.chdir(site_home)
-
-    new_config = load_config(new_site, verbose)
-
-    set_environment(new_site.name, new_config)
-
-    # Needed by the post-rename-site script
-    os.environ["OLD_OMD_SITE"] = old_site_name
-    return new_config
-
 
 def _restore_backup_from_tar(
     *,
@@ -3015,10 +2995,8 @@ def _restore_backup_from_tar(
         sys.stdout.flush()
 
         prepare_restore_as_root(version_info, site, options, global_opts.verbose)
-        new_config = _process_backup_tar_and_setup_env(
-            tar, global_opts.verbose, options, sitename, site
-        )
-        postprocess_restore_as_root(version_info, site, new_config, options, global_opts.verbose)
+        _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
+        postprocess_restore_as_root(version_info, sitename, site, options, global_opts.verbose)
 
     else:
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
@@ -3027,12 +3005,10 @@ def _restore_backup_from_tar(
         config = load_config(site, global_opts.verbose)
         orig_apache_port = config["APACHE_TCP_PORT"]
         prepare_restore_as_site_user(site, options, global_opts.verbose)
-        new_config = _process_backup_tar_and_setup_env(
-            tar, global_opts.verbose, options, sitename, site
-        )
+        _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
 
         postprocess_restore_as_site_user(
-            version_info, site, new_config, options, orig_apache_port, global_opts.verbose
+            version_info, sitename, site, options, orig_apache_port, global_opts.verbose
         )
 
     return site
@@ -3080,8 +3056,8 @@ def main_restore(
 
 def postprocess_restore_as_root(
     version_info: VersionInfo,
+    old_site_name: str,
     site: SiteContext,
-    config: Config,
     options: CommandOptions,
     verbose: bool,
 ) -> None:
@@ -3093,23 +3069,25 @@ def postprocess_restore_as_root(
         add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
     outcome = finalize_site(
-        version_info, site, config, command_type, "apache-reload" in options, verbose
+        version_info, old_site_name, site, {}, command_type, "apache-reload" in options, verbose
     )
     sys.exit(outcome.value)
 
 
 def postprocess_restore_as_site_user(
     version_info: VersionInfo,
+    old_site_name: str,
     site: SiteContext,
-    config: Config,
     options: CommandOptions,
     orig_apache_port: str,
     verbose: bool,
 ) -> None:
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
+    config = load_config(site, verbose)
     config["APACHE_TCP_PORT"] = orig_apache_port
-    save_site_conf(SitePaths.from_site_name(site.name).home, config)
+    # Needed by the post-rename-site script
+    os.environ["OLD_OMD_SITE"] = old_site_name
 
     finalize_site_as_user(
         version_info,

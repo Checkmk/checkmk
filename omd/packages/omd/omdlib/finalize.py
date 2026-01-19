@@ -12,7 +12,13 @@ from pathlib import Path
 from uuid import uuid4
 
 import omdlib
-from omdlib.config_hooks import config_set_all, load_config, save_site_conf, update_cmk_core_config
+from omdlib.config_hooks import (
+    config_set_all,
+    create_config_environment,
+    load_config,
+    save_site_conf,
+    update_cmk_core_config,
+)
 from omdlib.contexts import SiteContext
 from omdlib.instance_id import create_instance_id
 from omdlib.scripts import call_scripts
@@ -164,12 +170,14 @@ def _crontab_access() -> bool:
 # running the appropriate hooks.
 def finalize_site(
     version_info: VersionInfo,
+    old_site_name: str,
     site: SiteContext,
-    config: Config,
+    config_settings: Config,
     command_type: CommandType,
     apache_reload: bool,
     verbose: bool,
 ) -> FinalizeOutcome:
+    site_home = SitePaths.from_site_name(site.name).home
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
     # - We cannot use seteuid() here, since the id command call will then still
@@ -182,6 +190,14 @@ def finalize_site(
         try:
             # From now on we run as normal site user!
             switch_to_site_user(site.name)
+            os.chdir(site_home)
+            config = load_config(site, verbose)
+            if config_settings:  # add specific settings
+                for hook_name, value in config_settings.items():
+                    config[hook_name] = value
+            create_config_environment(config)
+            # Needed by the post-rename-site script
+            os.environ["OLD_OMD_SITE"] = old_site_name
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
@@ -204,7 +220,6 @@ def finalize_site(
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
     config = load_config(site, verbose)
-    site_home = SitePaths.from_site_name(site.name).home
     register_with_system_apache(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,

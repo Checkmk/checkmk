@@ -25,6 +25,7 @@ namespace {
     }
     unsigned long number = 0;
     auto [ptr, ec] =
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         std::from_chars(line.begin() + idx + 2, line.end(), number);
     return ec == std::errc{} ? number : 0;
 }

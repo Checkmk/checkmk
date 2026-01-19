@@ -88,6 +88,7 @@ void *copy_thread(void *info) {
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main(int argc, char *argv[]) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     std::vector<std::string> arguments{argv, argv + argc};
     if (argc != 2) {
         std::cerr << "Usage: " << arguments[0] << " UNIX-socket\n";

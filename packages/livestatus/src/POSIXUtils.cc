@@ -274,6 +274,7 @@ ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
                       : -1;
         }
         if (ret != -1) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             buffer = std::string_view{buffer.data() + ret, buffer.size() - ret};
         } else if (errno != EINTR) {
             return -1;

@@ -189,9 +189,15 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
         return 'translate(0,' + ((element_height + 10) * idx + 10) + ')'
       })
 
-    bar_groups.each((d, idx, nodes) => {
-      this.tooltip_generator.add_support(nodes[idx])
-    })
+    bar_groups.each(
+      (
+        _ignored: BarplotData | SVGGElement,
+        idx: number,
+        groups: SVGGElement[] | ArrayLike<SVGGElement>
+      ) => {
+        this.tooltip_generator.add_support(groups[idx])
+      }
+    )
 
     const links = bar_groups
       .selectAll<HTMLAnchorElement, BarplotData>('a')

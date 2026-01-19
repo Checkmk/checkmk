@@ -38,7 +38,9 @@ export class interface_table extends TableFigure {
     this._table = this._div_selection
       .selectAll('.interface_table')
       .data([null])
-      .join((enter) => enter.append('table').classed('interface_table', true))
+      .join((enter) =>
+        enter.append('table').classed('interface_table', true)
+      ) as unknown as Selection<HTMLTableElement, unknown, BaseType, unknown>
   }
 
   override update_gui() {

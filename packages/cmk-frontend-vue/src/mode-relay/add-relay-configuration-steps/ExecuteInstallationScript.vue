@@ -33,20 +33,25 @@ const props = defineProps<
     domain: string
     siteVersion: string
     urlToGetAnAutomationSecret: string
+    isCloudEdition: boolean
+    userId: string
   }
 >()
 
-const installCommand = computed(() =>
-  [
+const installCommand = computed(() => {
+  const username = props.isCloudEdition ? 'api_user' : props.userId
+  const passwordPlaceholder = props.isCloudEdition ? '[automation-secret]' : '[your password]'
+
+  return [
     'bash install_relay.sh \\',
     `  --relay-name ${escapeShellArg(props.relayAlias)} \\`,
     `  --initial-tag-version ${props.siteVersion} \\`,
     `  --target-server ${props.domain} \\`,
     `  --target-site-name ${props.siteName} \\`,
-    '  --user agent_registration \\',
-    '  --password [automation-secret]'
+    `  --user ${username} \\`,
+    `  --password ${passwordPlaceholder}`
   ].join('\n')
-)
+})
 </script>
 
 <template>
@@ -65,7 +70,7 @@ const installCommand = computed(() =>
           )
         }}
       </CmkParagraph>
-      <CmkAlertBox variant="info">
+      <CmkAlertBox v-if="props.isCloudEdition" variant="info">
         {{ _t('Before executing the script, visit ') }}
         <a
           :href="props.urlToGetAnAutomationSecret"
@@ -78,6 +83,9 @@ const installCommand = computed(() =>
         {{
           _t(' to get an automation secret and replace [automation-secret] in the command below.')
         }}
+      </CmkAlertBox>
+      <CmkAlertBox v-else variant="info">
+        {{ _t('Replace [your password] in the command below with your user password.') }}
       </CmkAlertBox>
       <CmkCode :code_txt="installCommand"></CmkCode>
     </template>

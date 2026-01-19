@@ -260,7 +260,7 @@ class MerakiOrganisation:
             LOGGER.debug("Device piggyback not found: org_id=%r, device=%r", self.id, serial)
             return None
 
-        prefix = self._get_piggyback_prefix()
+        prefix = f"{self.id}-" if self.config.org_id_as_prefix else ""
 
         if device_name := device.get("name"):
             return f"{prefix}{device_name}"
@@ -269,9 +269,6 @@ class MerakiOrganisation:
             return f"{prefix}{serial}-{product_type}"
 
         return None
-
-    def _get_piggyback_prefix(self) -> str:
-        return f"{self.id}-" if self.config.org_id_as_prefix else ""
 
     def _get_usage_by_serial(self) -> UplinkUsageByInterface:
         return {

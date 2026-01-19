@@ -148,24 +148,22 @@ class MerakiOrganisation:
 
         if self.config.required.device_statuses:
             for device_status in self.client.get_devices_statuses(self.id):
-                # Empty device names are possible when reading from the meraki API, let's set the
-                # piggyback to None so that the output is written to the main section.
                 serial = device_status["serial"]
-                if (piggyback := self._get_device_piggyback(serial, devices_by_serial)) is not None:
+                if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                     yield Section(
                         name="cisco_meraki_org_device_status",
                         data=device_status,
-                        piggyback=piggyback or None,
+                        piggyback=piggyback,
                     )
 
         if self.config.required.device_uplinks_info:
             for uplink_address in self.client.get_device_uplink_addresses(self.id):
                 serial = uplink_address["serial"]
-                if (piggyback := self._get_device_piggyback(serial, devices_by_serial)) is not None:
+                if piggyback := self._get_device_piggyback(serial, devices_by_serial):
                     yield Section(
                         name="cisco_meraki_org_device_uplinks_info",
                         data=uplink_address,
-                        piggyback=piggyback or None,
+                        piggyback=piggyback,
                     )
 
         devices_by_type = defaultdict(list)
@@ -175,17 +173,13 @@ class MerakiOrganisation:
         if devices_by_type.get("sensor"):
             if self.config.required.sensor_readings:
                 for sensor_reading in self.client.get_sensor_readings(self.id):
-                    # Empty device names are possible when reading from the meraki API, let's set the
-                    # piggyback to None so that the output is written to the main section.
-                    if (
-                        piggyback := self._get_device_piggyback(
-                            sensor_reading["serial"], devices_by_serial
-                        )
-                    ) is not None:
+                    if piggyback := self._get_device_piggyback(
+                        sensor_reading["serial"], devices_by_serial
+                    ):
                         yield Section(
                             name="cisco_meraki_org_sensor_readings",
                             data=sensor_reading,
-                            piggyback=piggyback or None,
+                            piggyback=piggyback,
                         )
 
         if devices_by_type.get("appliance"):

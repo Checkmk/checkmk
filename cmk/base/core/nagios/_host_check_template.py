@@ -15,10 +15,10 @@ import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
 from cmk.base.app import make_app
-from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
 from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
-from cmk.ccc.config_path import VersionedConfigPath
+from cmk.ccc.config_path import detect_latest_config_path
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
@@ -90,12 +90,16 @@ def main() -> int:
         cmk.ccc.debug.enable()
 
     try:
+        # It's safe to resolve the latest link here, as the nagios core will not remove
+        # serials while running checks.
+        active_config_path = detect_latest_config_path(omd_root)
+
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
         plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
         app = make_app(cmk_version.edition(omd_root))
         loading_result = config.load_packed_config(
-            VersionedConfigPath.make_latest_path(omd_root),
+            active_config_path,
             discovery_rulesets=extract_known_discovery_rulesets(plugins),
             get_builtin_host_labels=app.get_builtin_host_labels,
         )
@@ -104,7 +108,9 @@ def main() -> int:
         config.ipv6addresses = CONFIG.ipv6addresses
 
         secrets = load_secrets_file(
-            cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+            cmk.utils.password_store.active_secrets_path_site(
+                RELATIVE_PATH_SECRETS, active_config_path
+            )
         )
 
         return run_checking(
@@ -129,9 +135,12 @@ def main() -> int:
                 path=cmk.utils.password_store.active_secrets_path_relay(), secrets=secrets
             ),
             secrets_config_site=StoredSecrets(
-                path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
+                path=cmk.utils.password_store.active_secrets_path_site(
+                    RELATIVE_PATH_SECRETS, active_config_path
+                ),
                 secrets=secrets,
             ),
+            trusted_ca_file=(active_config_path / RELATIVE_PATH_TRUSTED_CAS),
         )
     except KeyboardInterrupt:
         with suppress(IOError):

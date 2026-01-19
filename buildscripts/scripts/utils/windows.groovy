@@ -2,13 +2,20 @@
 
 /// file: windows.groovy
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 void build(Map args) {
     def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;    // groovylint-disable JavaIoPackageAccess
     def artifacts_dir = 'artefacts';
 
-    dir(artifacts_dir) {
-        stage("Download artifacts") {
-            if (args.TARGET == "test_integration") {
+    stage("Download artifacts") {
+        def run_condition = "${args.TARGET}" == "test_integration";
+
+        /// this makes sure the stage is marked as skipped
+        if (! run_condition) {
+            Utils.markStageSkippedForConditional("not test_integration");
+        } else {
+            dir(artifacts_dir) {
                 copyArtifacts(
                     projectName: "${jenkins_base_folder}/winagt-build-modules",
                 )

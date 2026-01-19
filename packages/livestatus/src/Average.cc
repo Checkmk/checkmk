@@ -13,6 +13,7 @@ namespace {
 constexpr double percentile = 0.50;
 constexpr double horizon = 10;  // seconds
 const double weight_per_second = pow(1.0 - percentile, 1.0 / horizon);
+double lerp(double a, double b, double t) { return ((1 - t) * a) + (t * b); }
 }  // namespace
 
 // TODO (sk): unit tests
@@ -31,8 +32,7 @@ void Average::update(double value) {
             // updates
             timedif = 0.5;
         }
-        const double weight = pow(weight_per_second, timedif);
-        _average = _average * weight + value * (1 - weight);
+        _average = lerp(value, _average, pow(weight_per_second, timedif));
     }
     _last_update = now;
 }

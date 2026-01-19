@@ -9,7 +9,6 @@ import enum
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
-from typing import Literal
 
 from cmk import trace
 from cmk.ccc import tty
@@ -26,11 +25,6 @@ class CoreAction(enum.Enum):
 
 
 class CoreClient(abc.ABC):
-    # TODO: Replace the need for this by using polymorphism
-    @classmethod
-    @abc.abstractmethod
-    def name(cls) -> Literal["nagios", "cmc"]: ...
-
     @abc.abstractmethod
     def cleanup_old_configs(self) -> None: ...
 
@@ -41,7 +35,7 @@ class CoreClient(abc.ABC):
         with tracer.span(
             f"do_core_action[{action.value}]",
             attributes={
-                __name__: self.name(),
+                __name__: type(self).__name__,
             },
         ):
             log(f"Monitoring core: {action.value}")

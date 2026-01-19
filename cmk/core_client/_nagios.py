@@ -32,10 +32,6 @@ class NagiosClient(CoreClient):
         self.binary: Final = binary_file
         self.cleanup_base: Final = cleanup_base
 
-    @classmethod
-    def name(cls) -> Literal["nagios"]:
-        return "nagios"
-
     def cleanup_old_configs(self) -> None:
         cleanup_old_configs(self.cleanup_base)
 
@@ -44,7 +40,8 @@ class NagiosClient(CoreClient):
 
     def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
         return subprocess.run(
-            # can we use omd here as well? Will CORE_NOVERIFY survive?
+            # We can't _easily_ use omd here, because it will eat our CORE_NOVERIFY environment variable.
+            # TODO: fix omd in that regard
             [str(self.init_script), action.value],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

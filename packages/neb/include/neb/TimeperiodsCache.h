@@ -29,8 +29,6 @@ private:
     mutable std::mutex _mutex;
     std::chrono::system_clock::time_point _last_update;
     std::map<const timeperiod *, bool> _cache;
-
-    void logTransition(char *name, int from, int to) const;
 };
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

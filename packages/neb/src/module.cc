@@ -913,7 +913,11 @@ int broker_timed_event(int callback_type, void *data) {
                     livestatus_log_initial_states();
                 } else if (log_initial_states == 1) {
                     // initial info during startup
-                    Informational(fl_logger_nagios) << "logging initial states";
+                    write_to_all_logs(
+                        // Older Nagios headers are not const-correct... :-P
+                        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+                        const_cast<char *>("logging initial states"),
+                        NSLOG_INFO_MESSAGE);
                 }
             }
             g_timeperiods_cache->update(from_timeval(info->timestamp));

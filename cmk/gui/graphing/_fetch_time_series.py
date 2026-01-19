@@ -8,6 +8,7 @@ from typing import Literal
 
 from cmk.gui.color import fade_color, parse_color, render_color
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.utils.macros import replace_macros_in_str
 
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
@@ -112,7 +113,21 @@ def _refine_augmented_time_series(
         line_type = graph_metric_line_type
         color = graph_metric_color
         if ats.meta_data:
-            if (
+            if graph_metric_expression_name == "query" and ats.meta_data.title is not None:
+                macros: dict[str, str] = {
+                    "$SERIES_ID$": ats.meta_data.title,
+                }
+                if ats.meta_data.metric_name is not None:
+                    macros["$METRIC_NAME$"] = ats.meta_data.metric_name
+                for key, value in ats.meta_data.attributes.get("resource", {}).items():
+                    macros[f"$RESOURCE_ATTR.{key}$"] = value
+                for key, value in ats.meta_data.attributes.get("scope", {}).items():
+                    macros[f"$SCOPE_ATTR.{key}$"] = value
+                for key, value in ats.meta_data.attributes.get("data_point", {}).items():
+                    macros[f"$DATAPOINT_ATTR.{key}$"] = value
+
+                title = replace_macros_in_str(graph_metric_title, macros)
+            elif (
                 multi or graph_metric_expression_name == "query"
             ) and ats.meta_data.title is not None:
                 title = f"{graph_metric_title} - {ats.meta_data.title}"
@@ -131,5 +146,6 @@ def _refine_augmented_time_series(
                 line_type=line_type,
                 color=color,
                 attributes={} if ats.meta_data is None else ats.meta_data.attributes,
+                metric_name=None if ats.meta_data is None else ats.meta_data.metric_name,
             ),
         )

@@ -320,7 +320,6 @@ LEGACY_CHECKS = [
     "huawei_wlc_devs",
     "hwg_humidity",
     "hwg_temp",
-    "hyperv_checkpoints",
     "hyperv_vms",
     "hyperv_vmstatus",
     "ibm_imm_fan",

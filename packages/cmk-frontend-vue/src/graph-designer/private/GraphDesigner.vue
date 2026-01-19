@@ -393,7 +393,6 @@ function deleteGraphLine(graphLine: GraphLine) {
 function updateGraphLineAutoTitle(graphLine: GraphLine) {
   switch (graphLine.type) {
     case 'query':
-      graphLine.auto_title = `${_t('Query')} '${graphLine.metric_name}'`
       break
     case 'metric':
     case 'scalar': {
@@ -434,7 +433,7 @@ async function addQuery() {
       id: nextIndex(),
       type: 'query',
       color: '#ff0000',
-      auto_title: `${_t('Query')} '${dataQuery.value.metricName}'`,
+      auto_title: '$METRIC_NAME$ - $SERIES_ID$',
       custom_title: '',
       visible: true,
       line_type: 'line',

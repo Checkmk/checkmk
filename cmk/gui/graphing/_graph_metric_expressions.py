@@ -212,6 +212,7 @@ class TimeSeriesMetaData:
     line_type: LineType | Literal["ref"] | None
     color: str | None
     attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
+    metric_name: str | None = None
 
 
 @dataclass(frozen=True)

@@ -519,7 +519,8 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
     # Render the curve related rows
     for curve in order_graph_curves_for_legend_and_mouse_hover(graph_artwork.curves):
         table_uuid_str = str(uuid4())
-        if attributes_by_type := curve["attributes"]:
+        attributes_by_type = curve["attributes"]
+        if any(attributes_by_type.values()):
             html.open_tr(
                 onclick=f"const el = document.getElementById('{table_uuid_str}'); el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';"
             )

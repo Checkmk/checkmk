@@ -264,12 +264,19 @@ class MerakiOrganisation:
     def _get_device_piggyback(
         self, serial: str, devices_by_serial: Mapping[str, Device]
     ) -> str | None:
-        prefix = self._get_piggyback_prefix()
-        try:
-            return f"{prefix}{devices_by_serial[serial]['name']}"
-        except KeyError as e:
-            LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
+        if (device := devices_by_serial.get(serial)) is None:
+            LOGGER.debug("Device piggyback not found: org_id=%r, device=%r", self.id, serial)
             return None
+
+        prefix = self._get_piggyback_prefix()
+
+        if device_name := device.get("name"):
+            return f"{prefix}{device_name}"
+
+        if product_type := device.get("productType"):
+            return f"{prefix}{serial}-{product_type}"
+
+        return None
 
     def _get_piggyback_prefix(self) -> str:
         prefix = ""

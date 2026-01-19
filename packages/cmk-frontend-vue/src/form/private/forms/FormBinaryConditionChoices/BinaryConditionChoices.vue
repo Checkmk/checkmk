@@ -79,7 +79,7 @@ function addItem() {
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
-              :width="'max'"
+              :width="'fill'"
               :label="_t('Add')"
             />
           </td>
@@ -92,7 +92,7 @@ function addItem() {
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
-              :width="'max'"
+              :width="'fill'"
               :label="_t('Add')"
             />
           </td>
@@ -115,7 +115,7 @@ function addItem() {
               :input-hint="_t('Select label')"
               :no-elements-text="_t('Add')"
               :label="_t('Add')"
-              :width="'max'"
+              :width="'fill'"
               @update:selected-option="updateItem(item, itemIndex)"
             />
           </td>
@@ -139,7 +139,7 @@ function addItem() {
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
-              :width="'max'"
+              :width="'fill'"
               :label="_t('Add')"
             />
           </td>
@@ -152,7 +152,7 @@ function addItem() {
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
-              :width="'max'"
+              :width="'fill'"
               :label="_t('Add')"
             />
           </td>
@@ -173,7 +173,7 @@ function addItem() {
               :input-hint="_t('Select label')"
               :no-elements-text="_t('Add')"
               :label="_t('Add')"
-              :width="'max'"
+              :width="'fill'"
               @update:selected-option="addItem()"
             />
           </td>

@@ -65,7 +65,8 @@ test('FormConditionChoices shows backendValidation', async () => {
   })
 
   screen.getByText('some message')
-  await screen.findByText('Condition 1')
+
+  await screen.findByLabelText('Condition 1')
 })
 
 test('FormConditionChoices shows required', async () => {
@@ -78,7 +79,7 @@ test('FormConditionChoices shows required', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'select group' })
-  expect(dropdown.textContent).toBe('select group(required)')
+  expect(dropdown.textContent).toMatch(/group.*required/)
 })
 
 test('FormConditionChoices does not show required without validator', async () => {
@@ -117,7 +118,7 @@ test('FormConditionChoices does not show required without validator', async () =
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'select group' })
-  expect(dropdown.textContent).toBe('select group')
+  expect(dropdown.textContent).not.toMatch(/required/)
 })
 
 test('FormConditionChoices checks validators', async () => {

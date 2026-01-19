@@ -24,6 +24,53 @@ const defaultEmpty7 = ref<string | null>(null)
 const defaultEmpty8 = ref<string | null>(null)
 const errorCase = ref<string | null>('invalid_backend_value')
 const callCount = ref<number>(0)
+
+// Interactive width test
+const longValues = [
+  {
+    name: '0',
+    title: 'short'
+  },
+  {
+    name: '1',
+    title: 'regular value'
+  },
+  {
+    name: '2',
+    title: 'some long value that might need truncation'
+  },
+  {
+    name: '3',
+    title: 'a very very long value that will definitely need truncation in most cases'
+  },
+  {
+    name: '4',
+    title:
+      'let us be honest here this is an extremely long value that is only here to test the truncation capabilities of our CmkDropdown component'
+  }
+]
+const truncateDivWidth = ref<number>(400)
+const isResizing = ref<boolean>(false)
+
+const startResize = (e: MouseEvent) => {
+  isResizing.value = true
+  const startX = e.clientX
+  const startWidth = truncateDivWidth.value
+
+  const onMouseMove = (e: MouseEvent) => {
+    const delta = e.clientX - startX
+    truncateDivWidth.value = Math.max(100, startWidth + delta)
+  }
+
+  const onMouseUp = () => {
+    isResizing.value = false
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
 </script>
 
 <template>
@@ -204,25 +251,68 @@ const callCount = ref<number>(0)
     label="some label"
     required
   />
-  <h2>element names that are very very long</h2>
-  <CmkDropdown
-    v-model:selected-option="defaultEmpty8"
-    :options="{
-      type: 'filtered',
-      suggestions: [
-        ...Array(20)
-          .fill(0)
-          .map((_, i) => ({
-            name: i.toString(),
-            title: `some ${'very '.repeat(i)} long title`
-          }))
-      ]
+
+  <h2>Different widths</h2>
+  <div
+    :style="{
+      width: `${truncateDivWidth}px`,
+      border: '2px solid #ccc',
+      padding: '8px',
+      position: 'relative',
+      cursor: isResizing ? 'ew-resize' : 'default'
     }"
-    input-hint="long names"
-    no-results-hint="no results hint"
-    label="some label"
-    required
-  />
+  >
+    <CmkDropdown
+      v-model:selected-option="defaultEmpty8"
+      :options="{
+        type: 'filtered',
+        suggestions: longValues
+      }"
+      input-hint="long names"
+      label="some label"
+      required
+    />
+    <h2>(wide min width)</h2>
+    <CmkDropdown
+      v-model:selected-option="defaultEmpty8"
+      :options="{
+        type: 'filtered',
+        suggestions: longValues
+      }"
+      :width="'wide'"
+      input-hint="long names"
+      label="some label"
+      required
+    />
+    <h2>(fill width)</h2>
+    <CmkDropdown
+      v-model:selected-option="defaultEmpty8"
+      :options="{
+        type: 'filtered',
+        suggestions: longValues
+      }"
+      :width="'fill'"
+      input-hint="long names"
+      label="some label"
+      required
+    />
+    <div
+      :style="{
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        width: '10px',
+        height: '100%',
+        cursor: 'ew-resize',
+        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+        borderLeft: '2px solid #007bff'
+      }"
+      @mousedown.prevent="startResize"
+    />
+  </div>
+  <p style="margin-top: 8px; color: #666; font-size: 14px">
+    Current width: {{ truncateDivWidth }}px (drag the right edge to resize)
+  </p>
 
   <h1>CmkDropdownButton</h1>
   <h2>button</h2>
@@ -234,7 +324,6 @@ const callCount = ref<number>(0)
     :options="{ type: 'filtered', suggestions: [] }"
     no-elements-text="no elements"
     label="some label"
-    required
   >
     <template #buttons-start><CmkDropdownButton group="start">start</CmkDropdownButton></template>
   </CmkDropdown>
@@ -245,7 +334,6 @@ const callCount = ref<number>(0)
     :options="{ type: 'filtered', suggestions: [] }"
     no-elements-text="no elements"
     label="some label"
-    required
   >
     <template #buttons-end><CmkDropdownButton group="end">end</CmkDropdownButton></template>
   </CmkDropdown>
@@ -256,7 +344,6 @@ const callCount = ref<number>(0)
     :options="{ type: 'filtered', suggestions: [] }"
     no-elements-text="no elements"
     label="some label"
-    required
   >
     <template #buttons-start><CmkDropdownButton group="start">start</CmkDropdownButton></template>
     <template #buttons-end><CmkDropdownButton group="end">end</CmkDropdownButton></template>

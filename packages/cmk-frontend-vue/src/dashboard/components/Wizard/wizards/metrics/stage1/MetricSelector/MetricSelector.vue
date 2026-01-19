@@ -96,7 +96,7 @@ const _updateMetricType = (value: string) => {
               <div class="db-metric-selector__label-field-cell">
                 <AutocompleteHost
                   v-model:host-name="handler.host.value"
-                  width="max"
+                  width="fill"
                   class="db-metric-selector__autocompleter"
                   :placeholder="_t('Select')"
                 />
@@ -117,7 +117,7 @@ const _updateMetricType = (value: string) => {
                 <AutocompleteService
                   v-model:service-description="handler.service.value"
                   :host-name="handler.host.value"
-                  width="max"
+                  width="fill"
                   class="db-metric-selector__autocompleter"
                   :placeholder="_t('Select')"
                 />

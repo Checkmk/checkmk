@@ -69,7 +69,7 @@ function removeGroup(groupIndex: number) {
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
-              :width="'max'"
+              :width="'fill'"
               :label="_t('Add')"
             />
           </td>

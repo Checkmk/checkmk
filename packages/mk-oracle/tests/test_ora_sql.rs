@@ -1301,7 +1301,7 @@ fn test_detection_registry() {
         return;
     }
     let instances = get_instances(None).unwrap();
-    eprintln!("{:?}", instances);
+    eprintln!("Instances = {:?}", instances);
     assert!(!instances.is_empty());
     for i in instances {
         assert!(i.name == InstanceName::from("XE") || i.name == InstanceName::from("FREE"));
@@ -1476,6 +1476,7 @@ oracle:
 /// NOT ALL CONDITIONS TESTED
 #[test]
 fn test_add_runtime_to_path() {
+    use mk_oracle::platform::get_local_instances;
     use mk_oracle::setup::add_runtime_path_to_env;
     fn exec_add_runtime_to_path(
         cfg: &OracleConfig,
@@ -1490,10 +1491,20 @@ fn test_add_runtime_to_path() {
     let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
     let mut_env_var = EnvVarName::from("SOME_PATH_TEST_VAR_XXX".to_string());
     let good_path = base_dir().join("runtimes");
-    let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
-        SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
+    let local_db_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
+        && SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
+    {
+        println!("ORA_DB_ENDPOINT_LOCAL is set");
+        true
+    } else if std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty()) {
+        println!("ORACLE_HOME is set");
+        true
+    } else if !get_local_instances().unwrap_or_default().is_empty() {
+        println!("Local instances detected");
+        true
     } else {
-        std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty())
+        println!("No local Oracle client detected");
+        false
     };
     let good_path_str = good_path.clone().into_os_string().into_string().unwrap();
 
@@ -1505,7 +1516,7 @@ fn test_add_runtime_to_path() {
     }
     // depends on local SQL endpoint, if exist -> found otherwise not
     let result = exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
-    assert_eq!(result.is_some(), local_exists);
+    assert_eq!(result.is_some(), local_db_exists);
     // MK_LIBDIR is good_path
     unsafe {
         std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
@@ -1543,12 +1554,12 @@ fn test_add_runtime_to_path() {
 
     // depends on local SQL endpoint, if exist -> found otherwise not
     let result = exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
-    assert_eq!(result.is_some(), local_exists);
+    assert_eq!(result.is_some(), local_db_exists);
     assert_eq!(
         std::env::var(mut_env_var.to_str())
             .unwrap()
             .starts_with("xxx"),
-        !local_exists
+        !local_db_exists
     );
     unsafe {
         std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
@@ -1557,7 +1568,7 @@ fn test_add_runtime_to_path() {
     // depends on local SQL endpoint, if exist -> found otherwise not
     assert_eq!(
         exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_some(),
-        local_exists
+        local_db_exists
     );
 
     // SOME PATH

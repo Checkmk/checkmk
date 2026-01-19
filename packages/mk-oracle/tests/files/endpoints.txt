@@ -13,11 +13,16 @@
 # <hostname>:::<port>:<instance>:<role>:<instance_name>:<reserved>:<service_name>:_:_:
 #           ^^^ will be replaced with the user and password
 #
+# CI_ORA1_DB_TEST is used optionally.
+# It should follow to the rules above. It is assuned as a local connection endpoint.
+# Typically contains localhost:SYS:<password>:1521:XE::XE:_:_
+#
 # Notes:
-# * Currently, CI_ORA2_DB_TEST must be provided, since it's configured in CI jobs. This is also checked for in a test case.
+# * Currently, CI_ORA2_DB_TEST must be constructed, since CI delivers only password.
 # * In case of specifying a string directly, DO NOT submit to git with credentials.
 # * service_name is mandatory for connection
 # * instance_name is required to check whether test correctly identifies the database
 # * service_name and instance_name can be the same
+# * you may set CI_ORA2_DB_TEST manually too#
 #
 $CI_ORA2_DB_TEST # typically "oracle-win.dev.checkmk.net:<user>:<password>:1521:FREE::FREE.oratest:_:_"

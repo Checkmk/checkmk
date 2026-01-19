@@ -38,6 +38,7 @@ class NagiosClient(CoreClient):
 
     def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
         return subprocess.run(
+            # can we use omd here as well? Will CORE_NOVERIFY survive?
             [str(self.init_script), action.value],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -45,3 +46,6 @@ class NagiosClient(CoreClient):
             check=False,
             env={**os.environ, "CORE_NOVERIFY": "yes"},
         )
+
+    def _omd_name(self) -> Literal["nagios"]:
+        return "nagios"

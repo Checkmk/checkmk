@@ -56,3 +56,16 @@ class CoreClient(abc.ABC):
 
     @abc.abstractmethod
     def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]: ...
+
+    @abc.abstractmethod
+    def _omd_name(self) -> str: ...
+
+    def is_running(self) -> bool:
+        return (
+            subprocess.call(
+                ["omd", "status", self._omd_name()],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            == 0
+        )

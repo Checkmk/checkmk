@@ -226,7 +226,6 @@ from cmk.utils.paths import (
     local_cmk_addons_plugins_dir,
     local_cmk_plugins_dir,
     logwatch_dir,
-    nagios_startscript,
     omd_root,
     precompiled_hostchecks_dir,
     snmpwalks_dir,
@@ -1573,7 +1572,7 @@ class AutomationRenameHosts:
         # At this place WATO already has changed it's configuration. All further
         # data might be changed by the still running core. So we need to stop
         # it now.
-        core_was_running = self._core_is_running(loading_result.loaded_config.monitoring_core)
+        core_was_running = core.core_client.is_running()
         if core_was_running:
             core.core_client.run(CoreAction.STOP, log=lambda x: None)
 
@@ -1646,21 +1645,6 @@ class AutomationRenameHosts:
             action_counts[action] += 1
 
         return RenameHostsResult(action_counts)
-
-    # TODO: move to cmk.core_client
-    def _core_is_running(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:
-        if monitoring_core == "nagios":
-            command = str(nagios_startscript) + " status"
-        else:
-            command = "omd status cmc"
-        return (
-            subprocess.call(
-                shlex.split(command),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            == 0
-        )
 
     def _rename_host_files(
         self,

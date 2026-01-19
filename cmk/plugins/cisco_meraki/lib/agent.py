@@ -121,7 +121,7 @@ class MerakiOrganisation:
         if networks := {net["id"]: net for net in self.client.get_networks(self.id, self.name)}:
             yield Section(name="cisco_meraki_org_networks", data=networks)
 
-        devices_by_serial = {}
+        devices_by_serial: dict[str, Device] = {}
 
         if self.config.required.devices:
             for raw_device in self.client.get_devices(self.id):

@@ -44,6 +44,7 @@ from omdlib.config_hooks import (
     load_config,
     load_config_hooks,
     load_hook_dependencies,
+    read_site_config,
     save_site_conf,
 )
 from omdlib.console import ok, show_success
@@ -73,7 +74,7 @@ from omdlib.restore import prepare_restore_as_root, prepare_restore_as_site_user
 from omdlib.scripts import _call_script, call_scripts
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
-from omdlib.site_user import site_environment
+from omdlib.site_user import site_environment, site_environment_as_root
 from omdlib.sites import all_sites, is_disabled, main_sites
 from omdlib.skel_permissions import (
     get_skel_permissions,
@@ -1783,11 +1784,12 @@ def use_update_alternatives() -> bool:
 
 def main_create(
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     _args: object,
     options: CommandOptions,
 ) -> None:
+    site = SiteContext(site_name)
     reuse = False
     if "reuse" in options:
         reuse = True
@@ -1822,30 +1824,30 @@ def main_create(
         outcome, admin_password = init_site(
             version_info, site, global_opts, config_settings, options
         )
-        welcome_message(site, admin_password)
+        welcome_message(site_name, admin_password)
         sys.exit(outcome.value)
     else:
         sys.stdout.write(
-            f"Create new site {site.name} in disabled state and with empty {site_home}.\n"
+            f"Create new site {site_name} in disabled state and with empty {site_home}.\n"
         )
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (site_home))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 
-def welcome_message(site: SiteContext, admin_password: Password) -> None:
-    sys.stdout.write(f"Created new site {site.name} with version {omdlib.__version__}.\n\n")
+def welcome_message(site_name: str, admin_password: Password) -> None:
+    sys.stdout.write(f"Created new site {site_name} with version {omdlib.__version__}.\n\n")
     sys.stdout.write(
-        f"  The site can be started with {tty.bold}omd start {site.name}{tty.normal}.\n"
+        f"  The site can be started with {tty.bold}omd start {site_name}{tty.normal}.\n"
     )
     sys.stdout.write(
-        f"  The default web UI is available at {tty.bold}http://{hostname()}/{site.name}/{tty.normal}\n"
+        f"  The default web UI is available at {tty.bold}http://{hostname()}/{site_name}/{tty.normal}\n"
     )
     sys.stdout.write("\n")
     sys.stdout.write(
         f"  The admin user for the web applications is {tty.bold}cmkadmin{tty.normal} with password: {tty.bold}{admin_password.raw}{tty.normal}\n"
     )
     sys.stdout.write(
-        f"  For command line administration of the site, log in with {tty.bold}'omd su {site.name}'{tty.normal}.\n"
+        f"  For command line administration of the site, log in with {tty.bold}'omd su {site_name}'{tty.normal}.\n"
     )
     sys.stdout.write(
         "  After logging in, you can change the password for cmkadmin with "
@@ -1856,24 +1858,24 @@ def welcome_message(site: SiteContext, admin_password: Password) -> None:
 
 def main_init(
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     _args: object,
     options: CommandOptions,
 ) -> None:
-    site_paths = SitePaths.from_site_name(site.name)
+    site_paths = SitePaths.from_site_name(site_name)
     site_home, apache_conf = site_paths.home, site_paths.apache_conf
     if not is_disabled(apache_conf):
         sys.exit(
             "Cannot initialize site that is not disabled.\n"
-            "Please call 'omd disable %s' first." % site.name
+            "Please call 'omd disable %s' first." % site_name
         )
 
     if os.listdir(site_home):
         if not global_opts.force:
             sys.exit(
                 "The site's home directory is not empty. Please add use\n"
-                "'omd --force init %s' if you want to erase all data." % site.name
+                "'omd --force init %s' if you want to erase all data." % site_name
             )
 
         # We must not delete the directory itself, just its contents.
@@ -1895,9 +1897,9 @@ def main_init(
 
     # Do the things that have been ommited on omd create --disabled
     outcome, admin_password = init_site(
-        version_info, site, global_opts, config_settings={}, options=options
+        version_info, SiteContext(site_name), global_opts, config_settings={}, options=options
     )
-    welcome_message(site, admin_password)
+    welcome_message(site_name, admin_password)
     sys.exit(outcome.value)
 
 
@@ -1947,7 +1949,7 @@ def init_site(
 
 def main_rm(
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     _args: object,
     options: CommandOptions,
@@ -1972,12 +1974,12 @@ def main_rm(
             answer = input(confirm_text).strip().lower()
         if answer in ["", "no"]:
             sys.exit("Aborted.")
-    _main_rm(version_info, site, global_opts, options)
+    _main_rm(version_info, site_name, global_opts, options)
 
 
 def _main_rm(
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     options: CommandOptions,
 ) -> None:
@@ -1985,21 +1987,22 @@ def _main_rm(
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
-    with subprocess.Popen(["omd", "stop", site.name]):
+    with subprocess.Popen(["omd", "stop", site_name]):
         pass
 
     reuse = "reuse" in options
     kill = "kill" in options
 
-    if user_logged_in(site.name):
+    if user_logged_in(site_name):
         if not kill:
-            sys.exit("User '%s' still logged in or running processes." % site.name)
+            sys.exit("User '%s' still logged in or running processes." % site_name)
         else:
-            kill_site_user_processes(site.name, global_opts.verbose)
+            kill_site_user_processes(site_name, global_opts.verbose)
 
-    site_home = SitePaths.from_site_name(site.name).home
-    if tmpfs_mounted(site.name):
-        unmount_tmpfs(site.name, site_home, site.tmp_dir, kill=kill)
+    site_home = SitePaths.from_site_name(site_name).home
+    site = SiteContext(site_name)
+    if tmpfs_mounted(site_name):
+        unmount_tmpfs(site_name, site_home, site.tmp_dir, kill=kill)
 
     # Remove include-hook for Apache and tell apache
     # Needs to be cleaned up before removing the site directory. Otherwise a
@@ -2044,17 +2047,18 @@ def create_site_home(site_name: str) -> None:
 
 def main_disable(
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     _args: object,
     options: CommandOptions,
 ) -> None:
-    site_paths = SitePaths.from_site_name(site.name)
+    site_paths = SitePaths.from_site_name(site_name)
     site_home = site_paths.home
-    if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
+    if is_disabled(SitePaths.from_site_name(site_name).apache_conf):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
+    site = site_environment_as_root(site_name, global_opts.verbose)
     if not site.is_stopped(global_opts.verbose):
         call_init_scripts(site_home, "stop")
     unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
@@ -2069,22 +2073,22 @@ def main_disable(
 
 def main_enable(
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     _args: object,
     _options: object,
 ) -> None:
-    config = site.conf
-    site_paths = SitePaths.from_site_name(site.name)
+    site_paths = SitePaths.from_site_name(site_name)
     site_home = site_paths.home
     if not is_disabled(site_paths.apache_conf):
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
+    config = read_site_config(site_home)
     register_with_system_apache(
         version_info,
         site_paths.apache_conf,
-        site.name,
+        site_name,
         site_home,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
@@ -2095,19 +2099,19 @@ def main_enable(
 
 def main_update_apache_config(
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     _args: object,
     _options: object,
 ) -> None:
-    config = load_config(site, global_opts.verbose)
-    site_paths = SitePaths.from_site_name(site.name)
+    site_paths = SitePaths.from_site_name(site_name)
     site_home = site_paths.home
+    config = read_site_config(site_home)
     if _is_apache_enabled(config):
         register_with_system_apache(
             version_info,
             site_paths.apache_conf,
-            site.name,
+            site_name,
             site_home,
             config["APACHE_TCP_ADDR"],
             config["APACHE_TCP_PORT"],
@@ -2117,7 +2121,7 @@ def main_update_apache_config(
     else:
         unregister_from_system_apache(
             version_info,
-            SitePaths.from_site_name(site.name).apache_conf,
+            SitePaths.from_site_name(site_name).apache_conf,
             apache_reload=True,
             verbose=global_opts.verbose,
         )
@@ -2138,7 +2142,7 @@ def _get_conflict_mode(options: CommandOptions) -> Skeleton:
 
 def main_mv_or_cp(
     version_info: VersionInfo,
-    old_site: SiteContext,
+    old_site_name: str,
     global_opts: GlobalOptions,
     command_type: CommandType,
     args: Arguments,
@@ -2161,6 +2165,7 @@ def main_mv_or_cp(
     new_site_home = SitePaths.from_site_name(new_site.name).home
     sitename_must_be_valid(new_site.name, Path(new_site_home), reuse)
 
+    old_site = site_environment_as_root(old_site_name, global_opts.verbose)
     if not old_site.is_stopped(global_opts.verbose):
         sys.exit(f"Cannot {action} site '{old_site.name}' while it is running.")
 
@@ -2243,7 +2248,7 @@ def main_mv_or_cp(
 
     # clean up old site
     if command_type is CommandType.move and reuse:
-        _main_rm(version_info, old_site, global_opts, {"reuse": None})
+        _main_rm(version_info, old_site.name, global_opts, {"reuse": None})
 
     # Entry for tmps in /etc/fstab
     if not reuse:
@@ -2838,11 +2843,12 @@ def main_config(
 
 def main_su(
     _version_info: object,
-    site: SiteContext,
-    _global_opts: object,
+    site_name: str,
+    global_opts: GlobalOptions,
     _args: object,
     _options: object,
 ) -> None:
+    site = site_environment_as_root(site_name, global_opts.verbose)
     try:
         os.execl("/bin/su", "su", "-", "%s" % site.name)
     except OSError:
@@ -3146,7 +3152,7 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 def _run_command(
     command: Command,
     version_info: VersionInfo,
-    site: SiteContext | RootContext,
+    site: SiteContext | RootContext | str,
     global_opts: GlobalOptions,
     args: Arguments,
     command_options: CommandOptions,
@@ -3165,30 +3171,30 @@ def _run_command(
             case "sites":
                 main_sites(object(), object(), object(), object(), command_options)
             case "create":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_create(version_info, site, global_opts, object(), command_options)
             case "init":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_init(version_info, site, global_opts, object(), command_options)
             case "rm":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_rm(version_info, site, global_opts, object(), command_options)
             case "disable":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_disable(version_info, site, global_opts, object(), command_options)
             case "enable":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_enable(version_info, site, global_opts, object(), command_options)
             case "update-apache-config":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_update_apache_config(version_info, site, global_opts, object(), object())
             case "mv":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_mv_or_cp(
                     version_info, site, global_opts, CommandType.move, args, command_options
                 )
             case "cp":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 main_mv_or_cp(
                     version_info, site, global_opts, CommandType.copy, args, command_options
                 )
@@ -3196,14 +3202,19 @@ def _run_command(
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_update(version_info, site, global_opts, object(), command_options)
             case "start":
+                assert isinstance(site, SiteContext | RootContext)
                 main_init_action(version_info, site, global_opts, "start", args, command_options)
             case "stop":
+                assert isinstance(site, SiteContext | RootContext)
                 main_init_action(version_info, site, global_opts, "stop", args, command_options)
             case "restart":
+                assert isinstance(site, SiteContext | RootContext)
                 main_init_action(version_info, site, global_opts, "restart", args, command_options)
             case "reload":
+                assert isinstance(site, SiteContext | RootContext)
                 main_init_action(version_info, site, global_opts, "reload", args, command_options)
             case "status":
+                assert isinstance(site, SiteContext | RootContext)
                 main_init_action(version_info, site, global_opts, "status", args, command_options)
             case "config":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
@@ -3212,12 +3223,13 @@ def _run_command(
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_diff(object(), site, global_opts, args, command_options)
             case "su":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
-                main_su(object(), site, object(), object(), object())
+                assert command.needs_site == 1 and isinstance(site, str)
+                main_su(object(), site, global_opts, object(), object())
             case "umount":
+                assert isinstance(site, SiteContext | RootContext)
                 main_umount(object(), site, global_opts, object(), command_options)
             case "backup":
-                assert command.needs_site == 1 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, str)
                 omdlib.backup.main_backup(
                     object(), site, global_opts, args, command_options, orig_working_directory
                 )
@@ -3250,15 +3262,19 @@ def main() -> None:
     if not is_root() and command.only_root:
         sys.exit("omd: root permissions are needed for this command.")
 
-    site = (
-        RootContext()
-        if site_name is None
-        else site_environment(
-            site_name,
-            not command.no_suid and is_root() and not command.only_root,
-            global_opts.verbose,
-        )
-    )
+    # Commands which affect a site and can be called as root *or* as
+    # site user should always run with site user privileges. That way
+    # we are sure that new files and processes are created under the
+    # site user and never as root.
+    if site_name is None:
+        site: SiteContext | RootContext | str = RootContext()
+    elif not command.no_suid and not command.only_root:
+        if is_root():
+            site = site_environment(site_name, global_opts.verbose)
+        else:
+            site = site_environment_as_root(site_name, global_opts.verbose)
+    else:
+        site = site_name
 
     _run_command(
         command, version_info, site, global_opts, args, command_options, orig_working_directory

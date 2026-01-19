@@ -19,10 +19,10 @@ from pathlib import Path
 from types import TracebackType
 from typing import override
 
-from omdlib.contexts import SiteContext
 from omdlib.global_options import GlobalOptions
 from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
+from omdlib.site_user import site_environment_as_root
 
 from cmk.ccc.archive import BaseSafeTarFile
 
@@ -30,9 +30,10 @@ from cmk.ccc.archive import BaseSafeTarFile
 def _try_backup_site_to_tarfile(
     tar: tarfile.TarFile,
     options: CommandOptions,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
 ) -> None:
+    site = site_environment_as_root(site_name, global_opts.verbose)
     try:
         site_home = SitePaths.from_site_name(site.name).home
         _backup_site_to_tarfile(
@@ -49,7 +50,7 @@ def _try_backup_site_to_tarfile(
 
 def main_backup(
     _version_info: object,
-    site: SiteContext,
+    site_name: str,
     global_opts: GlobalOptions,
     args: list[str],
     options: CommandOptions,
@@ -67,7 +68,7 @@ def main_backup(
             fileobj=sys.stdout.buffer,
             mode="w|" if "no-compression" in options else "w|gz",
         ) as tar:
-            _try_backup_site_to_tarfile(tar, options, site, global_opts)
+            _try_backup_site_to_tarfile(tar, options, site_name, global_opts)
     else:
         if not (dest_path := Path(dest)).is_absolute():
             dest_path = orig_working_directory / dest_path
@@ -75,7 +76,7 @@ def main_backup(
             dest_path,
             mode="w:" if "no-compression" in options else "w:gz",
         ) as tar:
-            _try_backup_site_to_tarfile(tar, options, site, global_opts)
+            _try_backup_site_to_tarfile(tar, options, site_name, global_opts)
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:

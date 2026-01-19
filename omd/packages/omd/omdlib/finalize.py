@@ -23,10 +23,10 @@ from omdlib.contexts import SiteContext
 from omdlib.instance_id import create_instance_id
 from omdlib.scripts import call_scripts
 from omdlib.site_paths import SitePaths
+from omdlib.site_user import site_environment
 from omdlib.system_apache import register_with_system_apache
 from omdlib.tmpfs import prepare_and_populate_tmpfs
 from omdlib.type_defs import Config
-from omdlib.users_and_groups import switch_to_site_user
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.site import SiteId
@@ -189,20 +189,17 @@ def finalize_site(
     if pid == 0:
         try:
             # From now on we run as normal site user!
-            switch_to_site_user(site.name)
+            site = site_environment(site.name, verbose)
             os.chdir(site_home)
-            config = load_config(site, verbose)
-            if config_settings:  # add specific settings
-                for hook_name, value in config_settings.items():
-                    config[hook_name] = value
-            create_config_environment(config)
+            site.set_config(load_config(site, verbose) | config_settings)
+            create_config_environment(site.conf)
             # Needed by the post-rename-site script
             os.environ["OLD_OMD_SITE"] = old_site_name
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
             outcome = finalize_site_as_user(
-                version_info, site, config, command_type, verbose, ignored_hooks=["TMPFS"]
+                version_info, site, site.conf, command_type, verbose, ignored_hooks=["TMPFS"]
             )
             sys.exit(outcome.value)
         except Exception as e:

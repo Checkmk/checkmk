@@ -66,17 +66,14 @@ def set_environment(site_name: str, config: Config) -> None:
     create_config_environment(config)
 
 
-def site_environment(site_name: str, switch: bool, verbose: bool) -> SiteContext:
+def site_environment(site_name: str, verbose: bool) -> SiteContext:
+    switch_to_site_user(site_name)
+    return site_environment_as_root(site_name, verbose)
+
+
+def site_environment_as_root(site_name: str, verbose: bool) -> SiteContext:
     site = SiteContext(site_name)
     site.set_config(load_config(site, verbose))
-
-    # Commands which affect a site and can be called as root *or* as
-    # site user should always run with site user privileges. That way
-    # we are sure that new files and processes are created under the
-    # site user and never as root.
-    if switch:
-        switch_to_site_user(site.name)
-
     # Make sure environment is in a defined state
     _clear_environment()
     set_environment(site.name, site.conf)

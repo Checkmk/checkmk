@@ -245,6 +245,13 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     ])
   )
 
+  rows.push(
+    h('tr', [
+      h('td', { class: 'dict_title' }, ['Service name template:']),
+      h('td', [value.service_name_template])
+    ])
+  )
+
   return h('table', { class: 'form-readonly__dictionary' }, rows)
 }
 

@@ -180,6 +180,7 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
           />
         </td>
       </tr>
+      <slot name="additional-rows"></slot>
     </tbody>
   </table>
 </template>

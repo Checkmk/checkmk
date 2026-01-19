@@ -291,6 +291,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
                         "aggregation_lookback": 120,
                         "aggregation_histogram_percentile": 90,
                         "host_name": "v250",
+                        "service_name_template": "$MACRO1$ - $MACRO2$",
                     }
                 ]
             }

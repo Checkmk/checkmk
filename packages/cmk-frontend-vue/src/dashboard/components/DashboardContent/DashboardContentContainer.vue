@@ -11,13 +11,13 @@ import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
 interface DashboardContentContainerProps {
   effectiveTitle: string | undefined
   general_settings: WidgetGeneralSettings
-  contentOverflow?: string
+  contentCenter?: boolean
 }
 
 const {
   effectiveTitle,
   general_settings: generalSettings,
-  contentOverflow = 'auto'
+  contentCenter = false
 } = defineProps<DashboardContentContainerProps>()
 
 const titleRenderClass = computed<string>(() => {
@@ -47,7 +47,10 @@ const hasBackground = computed<boolean>(() => {
     </div>
     <div
       class="db-content-container__content"
-      :class="{ 'db-content-container__content-background': hasBackground }"
+      :class="{
+        'db-content-container__content-background': hasBackground,
+        'db-content-container__content-center': contentCenter
+      }"
     >
       <slot />
     </div>
@@ -85,12 +88,15 @@ const hasBackground = computed<boolean>(() => {
   display: flex;
   flex: 1;
   flex-direction: column;
-  overflow: v-bind('contentOverflow');
-  justify-content: center;
-  align-items: center;
+  overflow: auto;
 
   &.db-content-container__content-background {
     background-color: var(--db-content-bg-color);
+  }
+
+  &.db-content-container__content-center {
+    justify-content: center;
+    align-items: center;
   }
 }
 </style>

@@ -100,7 +100,13 @@ void build(Map args) {
 
         timeout(time: 60, unit: 'MINUTES') {
             dir(subdir) {
-                bat(command);
+                if ("${args.TARGET}" == "agent_with_sign") {
+                    lock(label: "win_sign_key", quantity: 1, resource : null) {
+                        bat(command);
+                    }
+                } else {
+                    bat(command);
+                }
             }
         }
 

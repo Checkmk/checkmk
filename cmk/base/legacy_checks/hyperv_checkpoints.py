@@ -3,32 +3,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # <<<hyperv_checkpoints>>>
 # Has_Checkpoints
 # f5689086-243b-4dfe-9775-571ef6be8a1b 2063
 # c85ae17b-1a6c-4a34-949a-a1b9385ef67a 2040
 
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer untile we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def discover_hyperv_checkpoints(info):
-    return [(None, {})]
+def discover_hyperv_checkpoints(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_hyperv_checkpoints(item, params, info):
+def check_hyperv_checkpoints(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     snapshots = []
-    for line in info:
+    for line in section:
         if len(line) != 2:
             continue
         snapshots.append((line[0], int(line[1])))
 
-    yield 0, "%s checkpoints" % len(snapshots)
+    yield Result(state=State.OK, summary=f"{len(snapshots)} checkpoints")
 
     if not snapshots:
         return
@@ -40,7 +52,7 @@ def check_hyperv_checkpoints(item, params, info):
         ("Last", "age", snapshots[-1]),
     ]:
         name, age = snapshot
-        yield check_levels(
+        yield from check_levels(
             age,
             key,
             params.get(key),
@@ -53,11 +65,17 @@ def parse_hyperv_checkpoints(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
+agent_section_hyperv_checkpoints = AgentSection(
     name="hyperv_checkpoints",
     parse_function=parse_hyperv_checkpoints,
+)
+
+
+check_plugin_hyperv_checkpoints = CheckPlugin(
+    name="hyperv_checkpoints",
     service_name="HyperV Checkpoints",
     discovery_function=discover_hyperv_checkpoints,
     check_function=check_hyperv_checkpoints,
     check_ruleset_name="vm_snapshots",
+    check_default_parameters={},
 )

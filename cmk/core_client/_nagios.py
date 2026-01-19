@@ -5,9 +5,11 @@
 
 import os
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from typing import Final, Literal
 
+from cmk.ccc import tty
 from cmk.ccc.config_path import cleanup_old_configs
 
 from ._interface import CoreAction, CoreClient
@@ -19,11 +21,15 @@ class NagiosClient(CoreClient):
         *,
         objects_file: Path,
         init_script: Path,
+        config_file: Path,
+        binary_file: Path,
         cleanup_base: Path,
     ) -> None:
         super().__init__()
         self._objects_file: Final = objects_file
         self.init_script: Final = init_script
+        self.config_file: Final = config_file
+        self.binary: Final = binary_file
         self.cleanup_base: Final = cleanup_base
 
     @classmethod
@@ -49,3 +55,28 @@ class NagiosClient(CoreClient):
 
     def _omd_name(self) -> Literal["nagios"]:
         return "nagios"
+
+    def config_is_valid(
+        self, log_stdout: Callable[[str], None], log_verbose: Callable[[str], None]
+    ) -> bool:
+        if not self.config_file.exists():
+            return True
+
+        command = [str(self.binary), "-vp", str(self.config_file)]
+        log_verbose(f"Running '{subprocess.list2cmdline(command)}'")
+        log_stdout("Validating Nagios configuration...")
+
+        completed_process = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            encoding="utf-8",
+            check=False,
+        )
+        if not completed_process.returncode:
+            log_stdout(tty.ok + "\n")
+            return True
+
+        log_stdout(f"ERROR:\n{completed_process.stdout}")
+        return False

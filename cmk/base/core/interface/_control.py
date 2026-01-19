@@ -9,7 +9,6 @@
 import os
 import shutil
 import socket
-import subprocess
 import sys
 from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
@@ -21,7 +20,7 @@ import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
-from cmk.ccc import config_path, tty
+from cmk.ccc import config_path
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
@@ -245,11 +244,7 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
                 os.rename(backup_path, objects_file)
             raise
 
-        if (  # TODO: should also be a property of the core?
-            core_client.name() == "nagios"
-            and cmk.utils.paths.nagios_config_file.exists()
-            and not _do_check_nagiosconfig()
-        ):
+        if not core_client.config_is_valid(log1=_print, log2=console.verbose):
             broken_config_path = cmk.utils.paths.tmp_dir / "check_mk_objects.cfg.broken"
             shutil.move(objects_file, broken_config_path)
 
@@ -355,25 +350,3 @@ def _print(txt: str) -> None:
     with suppress(IOError):
         sys.stdout.write(txt)
         sys.stdout.flush()
-
-
-def _do_check_nagiosconfig() -> bool:
-    """Execute nagios config verification to ensure the created check_mk_objects.cfg is valid"""
-    command = [str(cmk.utils.paths.nagios_binary), "-vp", str(cmk.utils.paths.nagios_config_file)]
-    console.verbose(f"Running '{subprocess.list2cmdline(command)}'")
-    _print("Validating Nagios configuration...")
-
-    completed_process = subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        close_fds=True,
-        encoding="utf-8",
-        check=False,
-    )
-    if not completed_process.returncode:
-        _print(tty.ok + "\n")
-        return True
-
-    _print(f"ERROR:\n{completed_process.stdout}")
-    return False

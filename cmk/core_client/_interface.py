@@ -69,3 +69,6 @@ class CoreClient(abc.ABC):
             )
             == 0
         )
+
+    @abc.abstractmethod
+    def config_is_valid(self, log1: Callable[[str], None], log2: Callable[[str], None]) -> bool: ...

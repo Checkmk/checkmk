@@ -36,6 +36,8 @@ def create_core(
                 NagiosClient(
                     objects_file=paths.nagios_objects_file,
                     init_script=paths.nagios_startscript,
+                    config_file=paths.nagios_config_file,
+                    binary_file=paths.nagios_binary,
                     cleanup_base=paths.omd_root,
                 ),
                 CRELicensingHandler,

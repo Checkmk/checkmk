@@ -81,8 +81,7 @@ def build(Map args) {
                 println("Removing may existing build output file ${artifact} from ${artifacts_dir}");
                 try {
                     cmd_output("pwsh -c rm -Force ${artifact} -ErrorAction SilentlyContinue");
-                }
-                catch (Exception exc) {
+                } catch (Exception exc) {    // groovylint-disable CatchException
                     println("FAILED TO DELETE FILE ${artifact} due to: ${exc}");
                 }
             }

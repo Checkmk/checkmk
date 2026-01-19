@@ -14,9 +14,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example as _default_config,
 )
-from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
-    no_replication_config_example as _no_replication_config,
-)
 from cmk.gui.rest_api_types.site_connection import (
     ConfigurationConnection,
     Connection,
@@ -30,11 +27,6 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 DOMAIN_TYPE = "site_connection"
 
 
-def _no_replication_config_with_site_id() -> tuple[SiteConfig, str]:
-    config = _no_replication_config()
-    return config, config["basic_settings"]["site_id"]
-
-
 def _default_config_with_site_id() -> tuple[SiteConfig, str]:
     config = _default_config()
     return config, config["basic_settings"]["site_id"]
@@ -46,7 +38,7 @@ def test_get_a_site_connection(clients: ClientRegistry) -> None:
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["id"] == site_id
 
-    example_config = _no_replication_config()
+    example_config = _default_config()
     assert set(resp.json["extensions"].keys()) == set(example_config.keys())
     assert set(resp.json["extensions"]["basic_settings"].keys()) == set(
         example_config["basic_settings"].keys()
@@ -135,7 +127,8 @@ def test_login_replication_disabled(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    config, remote_site_id = _no_replication_config_with_site_id()
+    config, remote_site_id = _default_config_with_site_id()
+    config["configuration_connection"]["enable_replication"] = False
     clients.SiteManagement.create(site_config=config)
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
@@ -151,6 +144,7 @@ def test_login_replication_disabled(
         lambda logger, remote_automation_configs: None,
     )
 
+    # TODO fix this.  We shouldn't return a 500 on login failure
     clients.SiteManagement.login(
         site_id=remote_site_id, username="cmkadmin", password="cmk", expect_ok=False
     ).assert_status_code(500)
@@ -617,6 +611,17 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
     },
     {
         "enable_replication": False,
+        "url_of_remote_site": "",
+        "disable_remote_configuration": True,
+        "ignore_tls_errors": True,
+        "direct_login_to_web_gui_allowed": True,
+        "user_sync": {
+            "sync_with_ldap_connections": "all",
+        },
+        "replicate_event_console": True,
+        "replicate_extensions": True,
+        "message_broker_port": 5672,
+        "is_trusted": False,
     },
     {
         "enable_replication": True,
@@ -849,8 +854,8 @@ def test_validation_layer_min_config(clients: ClientRegistry) -> None:
 
 
 def test_create_no_sync_site_connection(clients: ClientRegistry) -> None:
-    config, site_id = _no_replication_config_with_site_id()
-    config["configuration_connection"] = {"enable_replication": False}
+    config, site_id = _default_config_with_site_id()
+    config["configuration_connection"]["enable_replication"] = False
     clients.SiteManagement.create(site_config=config)
 
     resp = clients.SiteManagement.get(site_id=site_id)

@@ -63,11 +63,3 @@ def default_config_example() -> SiteConfigAPISpec:
         r["basic_settings"]["customer"] = "provider"
 
     return r
-
-
-def no_replication_config_example() -> SiteConfigAPISpec:
-    r: SiteConfigAPISpec = default_config_example()
-
-    r["configuration_connection"] = {"enable_replication": False}
-
-    return r

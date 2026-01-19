@@ -530,26 +530,32 @@ class UserSyncDisabledModel:
 
 
 @api_model
-class ConnectionWithReplicationModel:
-    enable_replication: Literal[True] = api_field(
+class ConnectionModel:
+    enable_replication: bool = api_field(
         description="Replication allows you to manage several monitoring sites with a logically"
         " centralized setup. Remote sites receive their configuration from the central sites.",
+        example=True,
     )
-    url_of_remote_site: Annotated[
-        str,
-        TypedPlainValidator(
+
+    url_of_remote_site: (
+        ApiOmitted
+        | Annotated[
             str,
-            RelativeUrlConverter(
-                must_startwith_one=["https", "http"],
-                must_endwith_one=["/check_mk/"],
-            ).validate,
-        ),
-    ] = api_field(
-        default="",
+            TypedPlainValidator(
+                str,
+                RelativeUrlConverter(
+                    allowed_to_be_empty=True,
+                    must_startwith_one=["https", "http"],
+                    must_endwith_one=["/check_mk/"],
+                ).validate,
+            ),
+        ]
+    ) = api_field(
         description="URL of the remote Checkmk including /check_mk/. This URL is in"
         " many cases the same as the URL-Prefix but with check_mk/ appended, but it must always"
         " be an absolute URL.",
         example="http://remote_site_1/check_mk/",
+        default_factory=ApiOmitted,
     )
     disable_remote_configuration: bool = api_field(
         description="It is a good idea to disable access to Setup completely on the remote site."
@@ -608,10 +614,7 @@ class SiteConnectionBaseModel:
     status_connection: StatusConnectionModel = api_field(
         description="The status connection attributes",
     )
-    configuration_connection: Annotated[
-        ConnectionWithReplicationModel | ConnectionWithoutReplicationModel,
-        Discriminator("enable_replication"),
-    ] = api_field(
+    configuration_connection: ConnectionModel = api_field(
         description="The configuration connection attributes",
     )
 
@@ -652,26 +655,25 @@ class SiteConnectionBaseModel:
         if isinstance(self.status_connection.proxy, UseProxy):
             site_configuration["proxy"] = self.status_connection.proxy.to_internal()
 
-        if isinstance(self.configuration_connection, ConnectionWithReplicationModel):
-            site_configuration["replication"] = "slave"
+        site_configuration["replication"] = (
+            "slave" if self.configuration_connection.enable_replication else None
+        )
+
+        if not isinstance(self.configuration_connection.url_of_remote_site, ApiOmitted):
             site_configuration["multisiteurl"] = self.configuration_connection.url_of_remote_site
-            site_configuration["insecure"] = self.configuration_connection.ignore_tls_errors
-            site_configuration["user_sync"] = self.configuration_connection.user_sync.to_internal()
-            site_configuration["disable_wato"] = (
-                self.configuration_connection.disable_remote_configuration
-            )
-            site_configuration["user_login"] = (
-                self.configuration_connection.direct_login_to_web_gui_allowed
-            )
-            site_configuration["replicate_ec"] = (
-                self.configuration_connection.replicate_event_console
-            )
-            site_configuration["replicate_mkps"] = (
-                self.configuration_connection.replicate_extensions
-            )
-            site_configuration["message_broker_port"] = (
-                self.configuration_connection.message_broker_port
-            )
-            site_configuration["is_trusted"] = self.configuration_connection.is_trusted
+        site_configuration["insecure"] = self.configuration_connection.ignore_tls_errors
+        site_configuration["user_sync"] = self.configuration_connection.user_sync.to_internal()
+        site_configuration["disable_wato"] = (
+            self.configuration_connection.disable_remote_configuration
+        )
+        site_configuration["user_login"] = (
+            self.configuration_connection.direct_login_to_web_gui_allowed
+        )
+        site_configuration["replicate_ec"] = self.configuration_connection.replicate_event_console
+        site_configuration["replicate_mkps"] = self.configuration_connection.replicate_extensions
+        site_configuration["message_broker_port"] = (
+            self.configuration_connection.message_broker_port
+        )
+        site_configuration["is_trusted"] = self.configuration_connection.is_trusted
 
         return site_configuration

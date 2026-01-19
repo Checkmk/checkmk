@@ -23,14 +23,14 @@ class OpenTelemetryCollectorPrometheusScraping(CmkPage):
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "OpenTelemetry Collector: Prometheus scraping (experimental)"
+        self.page_title = "OpenTelemetry Collector: Prometheus scraping"
         self.main_menu_name = "Prometheus scraping"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
         """Instructions to navigate to
-        `OpenTelemetry Collector: Prometheus scraping (experimental)` page."""
+        `OpenTelemetry Collector: Prometheus scraping` page."""
         logger.info(f"Navigate to '{self.page_title}' page")
         self.main_menu.setup_menu(self.main_menu_name).click()
         _url_pattern: str = quote_plus("wato.py?mode=otel_collectors_prom_scrapes")
@@ -60,7 +60,7 @@ class OpenTelemetryCollectorPrometheusScraping(CmkPage):
 
     def delete_collector_configuration_button(self, collector_id: str) -> Locator:
         return self.collector_configuration_row(collector_id).get_by_role(
-            "link", name="Delete this Prometheus scraping (Experimental)"
+            "link", name="Delete this Prometheus scraping"
         )
 
     @property

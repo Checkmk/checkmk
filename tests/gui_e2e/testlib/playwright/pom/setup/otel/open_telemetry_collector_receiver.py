@@ -23,13 +23,13 @@ class OpenTelemetryCollectorReceiver(CmkPage):
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "OpenTelemetry Collector: Receiver (experimental)"
+        self.page_title = "OpenTelemetry Collector: Receiver"
         self.main_menu_name = "OpenTelemetry Collector"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `OpenTelemetry Collector: Receiver (experimental)` page."""
+        """Instructions to navigate to `OpenTelemetry Collector: Receiver` page."""
         logger.info(f"Navigate to '{self.page_title}' page")
 
         self.main_menu.setup_menu(self.main_menu_name).click()
@@ -58,7 +58,7 @@ class OpenTelemetryCollectorReceiver(CmkPage):
 
     def delete_collector_configuration_button(self, collector_id: str) -> Locator:
         return self.collector_configuration_row(collector_id).get_by_role(
-            "link", name="Delete this OpenTelemetry Collector (Experimental)"
+            "link", name="Delete this OpenTelemetry Collector"
         )
 
     @property

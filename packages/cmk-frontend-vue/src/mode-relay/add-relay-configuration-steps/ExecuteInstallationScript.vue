@@ -36,29 +36,15 @@ const props = defineProps<
   }
 >()
 
-const relayImageReference = computed(() => `checkmk/check-mk-relay:${props.siteVersion}`)
-
-const registrationCommand = computed(() =>
+const installCommand = computed(() =>
   [
-    'sudo docker run --rm \\',
-    '  -v checkmk_relay_data:/opt/check-mk-relay/workdir \\',
-    `  ${relayImageReference.value} \\`,
-    `  sh -c "cmk-relay register \\`,
-    `    --server ${props.domain} \\`,
-    `    --site ${props.siteName} \\`,
-    '    --user agent_registration \\',
-    '    --password [automation-secret] \\',
-    '    --trust-cert \\',
-    `    --relay-alias ${escapeShellArg(props.relayAlias)}"`
-  ].join('\n')
-)
-
-const daemonCommand = computed(() =>
-  [
-    'sudo docker run --rm \\',
-    '  -v checkmk_relay_data:/opt/check-mk-relay/workdir \\',
-    `  ${relayImageReference.value} \\`,
-    '  sh -c "cmk-relay daemon"'
+    'bash install_relay.sh \\',
+    `  --relay-name ${escapeShellArg(props.relayAlias)} \\`,
+    `  --initial-tag-version ${props.siteVersion} \\`,
+    `  --target-server ${props.domain} \\`,
+    `  --target-site-name ${props.siteName} \\`,
+    '  --user agent_registration \\',
+    '  --password [automation-secret]'
   ].join('\n')
 )
 </script>
@@ -67,16 +53,20 @@ const daemonCommand = computed(() =>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
       <CmkHeading type="h2">
-        {{ _t('Register the relay with your Checkmk site and run it') }}</CmkHeading
+        {{ _t('Download and register the Relay with your Checkmk site') }}</CmkHeading
       >
     </template>
 
     <template #content>
       <CmkParagraph>
-        {{ _t('Register the Relay to authorize it for communication with your Checkmk site.') }}
+        {{
+          _t(
+            'The script will automatically download, register, and run the Relay with your Checkmk site.'
+          )
+        }}
       </CmkParagraph>
       <CmkAlertBox variant="info">
-        {{ _t(' Go to ') }}
+        {{ _t('Before executing the script, visit ') }}
         <a
           :href="props.urlToGetAnAutomationSecret"
           style="text-decoration: underline"
@@ -85,13 +75,11 @@ const daemonCommand = computed(() =>
         >
           {{ _t('this page') }}
         </a>
-        {{ _t(' and get an automation secret. Use it in place of [automation-secret]') }}
+        {{
+          _t(' to get an automation secret and replace [automation-secret] in the command below.')
+        }}
       </CmkAlertBox>
-      <CmkCode :code_txt="registrationCommand"></CmkCode>
-      <CmkParagraph>
-        {{ _t('After successful registration, start the Relay daemon.') }}
-      </CmkParagraph>
-      <CmkCode :code_txt="daemonCommand"></CmkCode>
+      <CmkCode :code_txt="installCommand"></CmkCode>
     </template>
 
     <template #actions>

@@ -17,24 +17,32 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<CmkWizardStepProps & { siteVersion: string }>()
+const props = defineProps<CmkWizardStepProps & { domain: string; siteName: string }>()
 
-const relayImageReference = computed(() => `checkmk/check-mk-relay:${props.siteVersion}`)
+const installScriptUrl = computed(
+  () => `https://${props.domain}/${props.siteName}/check_mk/relays/install_relay.sh`
+)
 
-const codeText = computed(() => `sudo docker pull ${relayImageReference.value}`)
+const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
 </script>
 
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2"> {{ _t('Download the relay to your environment') }}</CmkHeading>
+      <CmkHeading type="h2">
+        {{ _t('Download the Relay installation script to your environment') }}</CmkHeading
+      >
     </template>
 
     <template #content>
       <CmkParagraph>
-        {{ _t('Download the Relay container image.') }}
+        {{
+          _t(
+            'Download the Relay installation script. The script orchestrates downloading the Relay and registering it with your Checkmk site.'
+          )
+        }}
       </CmkParagraph>
-      <CmkCode :code_txt="codeText"></CmkCode>
+      <CmkCode :code_txt="downloadCommand"></CmkCode>
     </template>
 
     <template #actions>

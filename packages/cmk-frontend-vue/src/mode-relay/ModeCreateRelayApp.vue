@@ -10,9 +10,9 @@ import { ref } from 'vue'
 
 import CmkWizard from '@/components/CmkWizard'
 
-import DeployRelay from './add-relay-configuration-steps/DeployRelay.vue'
+import ExecuteInstallationScript from './add-relay-configuration-steps/ExecuteInstallationScript.vue'
+import InstallRelay from './add-relay-configuration-steps/InstallRelay.vue'
 import NameRelay from './add-relay-configuration-steps/NameRelay.vue'
-import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
 
 const props = defineProps<CreateRelay>()
@@ -33,8 +33,9 @@ const openRelayOverviewPage = () => {
 <template>
   <div class="mode-relay-mode-create-relay-app">
     <CmkWizard v-model="currentStep" mode="guided">
-      <DeployRelay
-        :site-version="props.site_version"
+      <InstallRelay
+        :domain="props.domain"
+        :site-name="props.site_name"
         :index="1"
         :is-completed="() => currentStep > 1"
       />
@@ -45,7 +46,7 @@ const openRelayOverviewPage = () => {
         :alias-validation-regex="props.alias_validation.regex"
         :alias-validation-regex-help="props.alias_validation.regex_help"
       />
-      <RegisterRelay
+      <ExecuteInstallationScript
         :relay-alias="relayAlias"
         :site-name="props.site_name"
         :domain="props.domain"

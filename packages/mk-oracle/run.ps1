@@ -225,6 +225,8 @@ try {
     }
     if ($packBuild -or $packTest -or - $packOci) {
         $target = "//omd/packages/oci:oci_light_win_x64"
+        $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
+        $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
         & bazel build $target
         if ($LASTEXITCODE -eq 0) {
             $oci_light_win_x64_zip = (& bazel cquery $target --output=starlark  --starlark:expr='target.files.to_list()[0].path' )

@@ -12,9 +12,10 @@ import pytest
 from pytest import CaptureFixture
 
 from cmk.plugins.cisco_meraki.lib import agent
-from cmk.plugins.cisco_meraki.lib.agent import MerakiRunContext
+from cmk.plugins.cisco_meraki.lib.agent import MerakiOrganisation, MerakiRunContext
 from cmk.plugins.cisco_meraki.lib.clients import MerakiClient
 from cmk.plugins.cisco_meraki.lib.config import _RequiredSections, MerakiConfig
+from tests.unit.cmk.plugins.cisco_meraki.lib.factories import DeviceFactory, RawOrganizationFactory
 
 from .fakes import FakeMerakiSDK
 
@@ -158,3 +159,37 @@ class TestMerakiAgentOutput:
         patched_required = _RequiredSections.build(sections=sections)
         patched_config = dataclasses.replace(ctx.config, required=patched_required)
         return dataclasses.replace(ctx, config=patched_config)
+
+
+class TestMerakiOrganizationPiggybackDevice:
+    @pytest.fixture
+    def meraki_org(self) -> MerakiOrganisation:
+        config = MerakiConfig.build(agent.parse_arguments(_DEFAULT_ARGS))
+        client = MerakiClient(FakeMerakiSDK(), config)
+        org = RawOrganizationFactory.build(id="123", name="Org-123")
+        return MerakiOrganisation(config=config, client=client, organisation=org)
+
+    def test_device_not_found(self, meraki_org: MerakiOrganisation) -> None:
+        assert meraki_org._get_device_piggyback(serial="xyz", devices_by_serial={}) is None
+
+    def test_device_name_available(self, meraki_org: MerakiOrganisation) -> None:
+        devices_by_serial = {"xyz": DeviceFactory.build(name="dev1")}
+        assert meraki_org._get_device_piggyback("xyz", devices_by_serial) == "dev1"
+
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        expected = "dev1"
+
+        assert value == expected
+
+    def test_with_org_id_prefix_configured(self, meraki_org: MerakiOrganisation) -> None:
+        meraki_org = self._enable_org_id_as_prefix(meraki_org)
+        devices_by_serial = {"xyz": DeviceFactory.build(organization_id="123", name="dev1")}
+
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        expected = "123-dev1"
+
+        assert value == expected
+
+    def _enable_org_id_as_prefix(self, meraki_org: MerakiOrganisation) -> MerakiOrganisation:
+        patched_config = dataclasses.replace(meraki_org.config, org_id_as_prefix=True)
+        return dataclasses.replace(meraki_org, config=patched_config)

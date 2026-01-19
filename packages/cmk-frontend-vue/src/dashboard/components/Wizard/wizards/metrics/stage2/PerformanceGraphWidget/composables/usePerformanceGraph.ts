@@ -91,7 +91,7 @@ export const usePerformanceGraph = async (
       type: CONTENT_TYPE,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
-      source: currentContent?.source ?? metric
+      source: metric
     }
   }
 

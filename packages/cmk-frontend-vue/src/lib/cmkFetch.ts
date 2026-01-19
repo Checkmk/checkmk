@@ -8,15 +8,21 @@ import type { MaybeRestApiCrashReport, MaybeRestApiError } from '@/lib/types'
 
 type FetchParams = Parameters<typeof fetch>
 
-class CmkFetchError extends CmkError<Error> {
+export class CmkFetchError extends CmkError<Error> {
   context: string
+  statusCode: number
 
-  constructor(message: string, cause: Error | null, context: string) {
+  constructor(message: string, cause: Error | null, context: string, statusCode: number) {
     super(message, cause)
     this.context = context
+    this.statusCode = statusCode
   }
   override getContext(): string {
     return this.context
+  }
+
+  getStatusCode(): number {
+    return this.statusCode
   }
 }
 
@@ -87,7 +93,7 @@ export class CmkFetchResponse {
       }
     }
 
-    return new CmkFetchError(message, cause, context.join('\n\n'))
+    return new CmkFetchError(message, cause, context.join('\n\n'), this.status)
   }
 
   // we keep the json definition of original fetch

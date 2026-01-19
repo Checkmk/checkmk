@@ -194,6 +194,7 @@ def MigrateToIndividualOrStoredPassword(
     help: valuespec.ValueSpecHelp | None = None,
     allow_empty: bool = True,
     size: int = 25,
+    validate: ValueSpecValidateFunc | None = None,
 ) -> valuespec.Migrate:
     return valuespec.Migrate(
         valuespec=IndividualOrStoredPassword(
@@ -201,6 +202,7 @@ def MigrateToIndividualOrStoredPassword(
             help=help,
             allow_empty=allow_empty,
             size=size,
+            validate=validate,
         ),
         migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
     )

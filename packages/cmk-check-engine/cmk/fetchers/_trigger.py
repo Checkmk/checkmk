@@ -6,7 +6,7 @@
 import abc
 from collections.abc import Mapping, Sized
 from functools import partial
-from typing import final, Self, TypeVar
+from typing import final, Protocol, Self, TypeVar
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTimeout
@@ -73,6 +73,10 @@ class FetcherTrigger(abc.ABC):
     @abc.abstractmethod
     def from_params(cls, params: Mapping[str, str]) -> Self:
         raise NotImplementedError()
+
+
+class FetcherTriggerFactory(Protocol):
+    def __call__(self, relay_id: str | None) -> FetcherTrigger: ...
 
 
 class PlainFetcherTrigger(FetcherTrigger):

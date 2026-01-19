@@ -23,7 +23,7 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import FetcherTrigger, ProgramFetcher
+from cmk.fetchers import FetcherTriggerFactory, ProgramFetcher
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.utils import log, paths
 from cmk.utils.labels import LabelManager, Labels
@@ -61,7 +61,7 @@ class AutomationContext:
         ],
         MonitoringCore,
     ]
-    make_fetcher_trigger: Callable[[str | None], FetcherTrigger]
+    make_fetcher_trigger: FetcherTriggerFactory
     make_metric_backend_fetcher: Callable[
         [
             HostAddress,

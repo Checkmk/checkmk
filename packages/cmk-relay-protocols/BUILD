@@ -24,6 +24,7 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         requirement("pydantic"),
+        requirement("cryptography"),
     ],
 )
 
@@ -50,6 +51,7 @@ py_test(
         ":__test__",
         ":cmk-relay-protocols",
         requirement("pytest"),
+        requirement("cryptography"),
     ],
 )
 

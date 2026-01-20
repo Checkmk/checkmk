@@ -11,4 +11,24 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.5.0b1"
 
+if [ -z "${MK_LIBDIR}" ] || [ ! -d "${MK_LIBDIR}" ]; then
+    echo "MK_LIBDIR is not set or not directory"
+    exit 1
+fi
+
+if [ ! -x "${MK_LIBDIR}/mk-oracle" ]; then
+    echo "mk-oracle in ${MK_LIBDIR} is not executable or not found"
+    exit 1
+fi
+
+if [ -z "${MK_CONFDIR}" ] || [ ! -d "${MK_CONFDIR}" ]; then
+    echo "MK_CONFDIR is not set or not directory"
+    exit 1
+fi
+
+if [ ! -f "${MK_CONFDIR}/oracle.yml" ]; then
+    echo "Configuration file oracle.yml not found in ${MK_CONFDIR}"
+    exit 1
+fi
+
 "${MK_LIBDIR}/plugins/packages/mk-oracle/mk-oracle" -c "${MK_CONFDIR}/oracle.yml" --filter async

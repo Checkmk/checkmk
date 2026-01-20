@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-01-12 23:05+0000\n"
+"PO-Revision-Date: 2026-01-20 03:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -49148,7 +49148,8 @@ msgstr "Bitte mindestens einen Wert angeben"
 msgid "Please specify at least one value for \"%s\""
 msgstr "Bitte geben Sie mindestens einen Wert für \"%s\" an"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "Bitte Host oder Hash angeben."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -50285,7 +50286,6 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Geben Sie hier den Namen der Datenbank an, z.B. SATURN\\ARCSERVE_DB"
 
-#, fuzzy
 msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program "
 "Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. Under Linux, the relevant "
@@ -50293,7 +50293,9 @@ msgid ""
 "is ignored under Linux."
 msgstr ""
 "Geben Sie hier den Pfad zur ausführbaren Datei nvidia-smi.exe an, z. B. C:"
-"\\Program Files\\NVSMI\\nvidia-smi.exe"
+"\\Program Files\\NVSMI\\nvidia-smi.exe. Unter Linux wird die entsprechende "
+"ausführbare Datei normalerweise in der Variablen PATH definiert. Daher wird "
+"diese Einstellung unter Linux ignoriert."
 
 msgid "Put this element on"
 msgstr "Dieses Element auf folgende Seiten setzen"
@@ -50511,6 +50513,10 @@ msgstr "RAID: Sammelzustand"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (Total, cached, buffers)"
+msgstr "Gesamte Cache-Auslastung"
+
 msgid "RAM (averaged)"
 msgstr "RAM (gemittelt)"
 
@@ -50534,9 +50540,6 @@ msgstr "RAM frei"
 
 msgid "RAM free (averaged)"
 msgstr "RAM frei (gemittelt)"
-
-msgid "RAM installed"
-msgstr "installierter RAM"
 
 msgid "RAM usage"
 msgstr "RAM-Auslastung"
@@ -54879,7 +54882,6 @@ msgstr "Wählen Sie aus einer Liste von Metriken, die Checkmk bekannt sind"
 msgid "Select from a list of service names known to Checkmk"
 msgstr "Wählen Sie aus einer Liste von Service-Namen, die Checkmk bekannt sind"
 
-#, fuzzy
 msgid ""
 "Select how multiple data points from replicas of the same service should be "
 "aggregated. By default, the latest value independent of replica is taken. "
@@ -54896,7 +54898,7 @@ msgstr ""
 "Stichproben unterschiedlicher Replikate für denselben Host angewendet werden "
 "(z. B. gleicher service.name, unterschiedliche service.instance.id)."
 "<br><br>Aggregationen erfolgen nur über den Satz der jüngsten Datenpunkte "
-"pro Replikat seit der letzten Überprüfung"
+"pro Replikat seit der letzten Überprüfung."
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -86945,6 +86947,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "RAM installed"
+#~ msgstr "installierter RAM"
 
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus scrape Konfiguration"

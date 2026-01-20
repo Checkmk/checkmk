@@ -51535,7 +51535,8 @@ msgstr "Veuillez indiquer au moins une valeur"
 msgid "Please specify at least one value for \"%s\""
 msgstr "Veuillez indiquer au moins une valeur"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "Veuillez spécifier l'hôte ou le hachage."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -52970,6 +52971,10 @@ msgid "RAM"
 msgstr "RAM"
 
 #, fuzzy
+msgid "RAM (Total, cached, buffers)"
+msgstr "Utilisation totale du cache"
+
+#, fuzzy
 msgid "RAM (averaged)"
 msgstr "moyenne"
 
@@ -52997,9 +53002,6 @@ msgstr "% libre"
 
 msgid "RAM free (averaged)"
 msgstr ""
-
-msgid "RAM installed"
-msgstr "RAM installée"
 
 #, fuzzy
 msgid "RAM usage"
@@ -90757,6 +90759,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#~ msgid "RAM installed"
+#~ msgstr "RAM installée"
 
 #, fuzzy
 #~ msgid "Prometheus scrape configurations"

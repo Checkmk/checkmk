@@ -47889,7 +47889,8 @@ msgstr "少なくとも1つの値を指定してください"
 msgid "Please specify at least one value for \"%s\""
 msgstr "\"%s\"には少なくとも１つの値を指定してください"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "ホストまたはハッシュを指定してください。"
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -49227,6 +49228,10 @@ msgstr "RAID: 要約状態"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (Total, cached, buffers)"
+msgstr "キャッシュの合計使用量"
+
 msgid "RAM (averaged)"
 msgstr "RAM（平均）"
 
@@ -49250,9 +49255,6 @@ msgstr "RAM空き"
 
 msgid "RAM free (averaged)"
 msgstr "RAM空き容量（平均）"
-
-msgid "RAM installed"
-msgstr "インストールされたRAM"
 
 msgid "RAM usage"
 msgstr "RAM使用量"
@@ -84316,6 +84318,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "RAM installed"
+#~ msgstr "インストールされたRAM"
 
 #~ msgid "Prometheus scrape configurations"
 #~ msgstr "Prometheus スクレイプ構成"

@@ -51166,7 +51166,8 @@ msgstr "Vă rugăm să specificați cel puțin o valoare"
 msgid "Please specify at least one value for \"%s\""
 msgstr "Vă rugăm să specificați cel puțin o valoare"
 
-msgid "Please specify host or hash."
+#, fuzzy
+msgid "Please specify either host or folder or hash."
 msgstr "Vă rugăm să specificați gazda sau hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -52588,6 +52589,10 @@ msgstr "RAID: stare sumară"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (Total, cached, buffers)"
+msgstr "Utilizarea totală a cache-ului"
+
 msgid "RAM (averaged)"
 msgstr "RAM (în medie)"
 
@@ -52614,9 +52619,6 @@ msgstr "RAM liber"
 
 msgid "RAM free (averaged)"
 msgstr "RAM liber (în medie)"
-
-msgid "RAM installed"
-msgstr "RAM instalat"
 
 #, fuzzy
 msgid "RAM usage"
@@ -90081,6 +90083,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "RAM installed"
+#~ msgstr "RAM instalat"
 
 #, fuzzy
 #~ msgid "Prometheus scrape configurations"

@@ -51,12 +51,24 @@
 # these default values were suggested by Aldi Sued
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+VMData = Mapping[str, Mapping[str, str]]
 
 
-def parse_hyperv_vms(string_table):
+def parse_hyperv_vms(string_table: StringTable) -> VMData:
     parsed = {}
     for line in string_table:
         if len(line) != 4:
@@ -89,12 +101,13 @@ def parse_hyperv_vms(string_table):
     return parsed
 
 
-def discover_hyperv_vms(parsed):
-    return [(vm_name, {"discovered_state": vm["state"]}) for (vm_name, vm) in parsed.items()]
+def discover_hyperv_vms(section: VMData) -> DiscoveryResult:
+    for vm_name, vm in section.items():
+        yield Service(item=vm_name, parameters={"discovered_state": vm["state"]})
 
 
-def check_hyperv_vms(item, params, parsed):
-    if not (vm := parsed.get(item)):
+def check_hyperv_vms(item: str, params: Mapping[str, Any], section: VMData) -> CheckResult:
+    if not (vm := section.get(item)):
         return
 
     compare_mode = params["vm_target_state"][0]
@@ -104,26 +117,22 @@ def check_hyperv_vms(item, params, parsed):
 
         # this means that the check is executed as a manual check
         if discovered_state is None:
-            yield (
-                3,
-                "State is {} ({}), discovery state is not available".format(
-                    vm["state"],
-                    vm["state_msg"],
-                ),
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"State is {vm['state']} ({vm['state_msg']}), discovery state is not available",
             )
             return
 
         if vm["state"] == discovered_state:
-            yield 0, "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
+            yield Result(
+                state=State.OK,
+                summary=f"State {vm['state']} ({vm['state_msg']}) matches discovery",
+            )
             return
 
-        yield (
-            2,
-            "State {} ({}) does not match discovery ({})".format(
-                vm["state"],
-                vm["state_msg"],
-                discovered_state,
-            ),
+        yield Result(
+            state=State.CRIT,
+            summary=f"State {vm['state']} ({vm['state_msg']}) does not match discovery ({discovered_state})",
         )
         return
 
@@ -133,9 +142,14 @@ def check_hyperv_vms(item, params, parsed):
 
     # as a precaution, if in the future there are new VM states we do not know about
     if service_state is None:
-        yield 3, "Unknown state {} ({})".format(vm["state"], vm["state_msg"])
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Unknown state {vm['state']} ({vm['state_msg']})",
+        )
     else:
-        yield service_state, "State is {} ({})".format(vm["state"], vm["state_msg"])
+        yield Result(
+            state=State(service_state), summary=f"State is {vm['state']} ({vm['state_msg']})"
+        )
 
 
 DEFAULT_STATE_MAPPING = {
@@ -172,10 +186,14 @@ DEFAULT_PARAMETERS = {
         DEFAULT_STATE_MAPPING,
     ),
 }
-
-check_info["hyperv_vms"] = LegacyCheckDefinition(
+agent_section_hyperv_vms = AgentSection(
     name="hyperv_vms",
     parse_function=parse_hyperv_vms,
+)
+
+
+check_plugin_hyperv_vms = CheckPlugin(
+    name="hyperv_vms",
     service_name="VM %s",
     discovery_function=discover_hyperv_vms,
     check_function=check_hyperv_vms,

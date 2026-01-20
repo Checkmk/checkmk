@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.base.legacy_checks.hyperv_vms import (
     check_hyperv_vms,
     discover_hyperv_vms,
@@ -43,19 +43,22 @@ from cmk.base.legacy_checks.hyperv_vms import (
                 [""],
             ],
             [
-                ("Q-WSUS", {"discovered_state": "Running"}),
-                ("AUN-CAA", {"discovered_state": "Off"}),
-                ("weg-ca-webserver", {"discovered_state": "Wrong"}),
-                ("z4058044_snap (23.05.2014 - 09:29:29)", {"discovered_state": "Running"}),
-                ("z230897", {"discovered_state": "Stopping"}),
-                ("hlv2", {"discovered_state": "UnknownState"}),
-                ("hlv3", {"discovered_state": "Running"}),
+                Service(item="Q-WSUS", parameters={"discovered_state": "Running"}),
+                Service(item="AUN-CAA", parameters={"discovered_state": "Off"}),
+                Service(item="weg-ca-webserver", parameters={"discovered_state": "Wrong"}),
+                Service(
+                    item="z4058044_snap (23.05.2014 - 09:29:29)",
+                    parameters={"discovered_state": "Running"},
+                ),
+                Service(item="z230897", parameters={"discovered_state": "Stopping"}),
+                Service(item="hlv2", parameters={"discovered_state": "UnknownState"}),
+                Service(item="hlv3", parameters={"discovered_state": "Running"}),
             ],
         ),
     ],
 )
 def test_discover_hyperv_vms(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for hyperv_vms check."""
     parsed = parse_hyperv_vms(string_table)
@@ -120,7 +123,7 @@ def test_discover_hyperv_vms(
                 ],
                 [""],
             ],
-            [(0, "State is Running (Operating normally)")],
+            [Result(state=State.OK, summary="State is Running (Operating normally)")],
         ),
         (
             "AUN-CAA",
@@ -176,7 +179,7 @@ def test_discover_hyperv_vms(
                 ],
                 [""],
             ],
-            [(1, "State is Off (Operating normally)")],
+            [Result(state=State.WARN, summary="State is Off (Operating normally)")],
         ),
         (
             "weg-ca-webserver",
@@ -232,7 +235,7 @@ def test_discover_hyperv_vms(
                 ],
                 [""],
             ],
-            [(3, "Unknown state Wrong (Operating normally)")],
+            [Result(state=State.UNKNOWN, summary="Unknown state Wrong (Operating normally)")],
         ),
         (
             "z4058044_snap (23.05.2014 - 09:29:29)",
@@ -256,7 +259,11 @@ def test_discover_hyperv_vms(
                 ],
                 [""],
             ],
-            [(0, "State Running (Operating normally) matches discovery")],
+            [
+                Result(
+                    state=State.OK, summary="State Running (Operating normally) matches discovery"
+                )
+            ],
         ),
         (
             "z230897",
@@ -280,7 +287,12 @@ def test_discover_hyperv_vms(
                 ],
                 [""],
             ],
-            [(2, "State Stopping (VM crashed) does not match discovery (Running)")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="State Stopping (VM crashed) does not match discovery (Running)",
+                )
+            ],
         ),
         (
             "hlv2",
@@ -304,7 +316,11 @@ def test_discover_hyperv_vms(
                 ],
                 [""],
             ],
-            [(0, "State UnknownState (Totally normal) matches discovery")],
+            [
+                Result(
+                    state=State.OK, summary="State UnknownState (Totally normal) matches discovery"
+                )
+            ],
         ),
         (
             "hlv3",
@@ -328,7 +344,12 @@ def test_discover_hyperv_vms(
                 ],
                 [""],
             ],
-            [(3, "State is Running (Operating normally), discovery state is not available")],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="State is Running (Operating normally), discovery state is not available",
+                )
+            ],
         ),
     ],
 )

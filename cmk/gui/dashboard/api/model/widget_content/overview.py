@@ -72,8 +72,8 @@ class SiteOverviewContent(BaseWidgetContent):
     def from_internal(cls, config: SiteOverviewDashletConfig) -> Self:
         return cls(
             type="site_overview",
-            dataset=config.get("dataset", "via_context"),
-            hexagon_size=config.get("box_scale", "default"),
+            dataset=config.get("dataset") or "via_context",
+            hexagon_size=config.get("box_scale") or "default",
         )
 
     @override

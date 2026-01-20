@@ -14,7 +14,7 @@ from pydantic import RootModel, TypeAdapter
 from cmk.ccc.i18n import _
 from cmk.ccc.version import parse_check_mk_version
 from cmk.werks import load_werk
-from cmk.werks.models import Class, Compatibility, Werk, WerkV1
+from cmk.werks.models import Class, Compatibility, Werk, WerkV1, Edition, EditionV3
 
 Werks = RootModel[dict[int, Werk]]
 
@@ -135,6 +135,17 @@ class WerkTranslator:
 
     def level_of(self, werk: Werk) -> str:
         return self._levels[werk.level.value]  # TODO: remove .value
+
+
+def edition_v3_to_v2(edition: EditionV3) -> Edition:
+    mapping = {
+        EditionV3.COMMUNITY: Edition.CRE,
+        EditionV3.PRO: Edition.CEE,
+        EditionV3.ULTIMATE: Edition.CCE,
+        EditionV3.ULTIMATEMT: Edition.CME,
+        EditionV3.CLOUD: Edition.CSE,
+    }
+    return mapping[edition]
 
 
 def load_raw_files(werks_dir: Path) -> list[Werk]:

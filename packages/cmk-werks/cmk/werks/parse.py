@@ -8,8 +8,16 @@ from typing import NamedTuple
 
 from .error import WerkError
 
+WERK_V2_START = "[//]: # (werk v2)\n"
+WERK_V3_START = "[//]: # (werk v3)\n"
+
 
 class WerkV2ParseResult(NamedTuple):
+    metadata: dict[str, str]
+    description: str
+
+
+class WerkV3ParseResult(NamedTuple):
     metadata: dict[str, str]
     description: str
 
@@ -54,7 +62,7 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
     # no need to parse the werk version here. markdown version and werk version
     # could potentially be different: a markdown version 3 could be parsed to a
     # werk version 2. let's hope we will keep v2 for a long time :-)
-    if not content.startswith("[//]: # (werk v2)\n"):
+    if not content.startswith(WERK_V2_START):
         raise WerkError(
             "Markdown formatted werks need to start with header: '[//]: # (werk v2)\\n'"
         )
@@ -71,7 +79,7 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
             "header, headline, empty line, table and optionally empty line, description"
         )
 
-    title = md_title.removeprefix("[//]: # (werk v2)\n")
+    title = md_title.removeprefix(WERK_V2_START)
 
     # TODO: check if it really is a h1 headline?!
     if not title.startswith("#"):
@@ -85,6 +93,20 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
     metadata.update(markdown_table_to_dict(md_table))
 
     return WerkV2ParseResult(metadata, md_description)
+
+
+def parse_werk_v3(content: str, werk_id: str) -> WerkV3ParseResult:
+    """
+    parse werk v3 but do not validate
+    """
+    if not content.startswith(WERK_V3_START):
+        raise WerkError(
+            "Markdown formatted werks need to start with header: '[//]: # (werk v3)\\n'"
+        )
+    # V3 has the same format as V2, just different header
+    v2_content = content.replace(WERK_V3_START, WERK_V2_START, 1)
+    result = parse_werk_v2(v2_content, werk_id)
+    return WerkV3ParseResult(result.metadata, result.description)
 
 
 class WerkV1ParseResult(NamedTuple):

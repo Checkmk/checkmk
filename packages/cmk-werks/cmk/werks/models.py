@@ -24,6 +24,14 @@ class Edition(Enum):
     CME = "cme"
 
 
+class EditionV3(Enum):
+    COMMUNITY = "community"
+    PRO = "pro"
+    ULTIMATE = "ultimate"
+    ULTIMATEMT = "ultimatemt"
+    CLOUD = "cloud"
+
+
 class Level(Enum):
     LEVEL_1 = 1
     LEVEL_2 = 2

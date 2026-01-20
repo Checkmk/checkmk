@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from .error import WerkError
 from .markup import markdown_to_html
 from .models import Werk
-from .parse import WerkV2ParseResult
+from .parse import WerkV2ParseResult, WerkV3ParseResult
 
 VALID_TAGS = {
     "code",
@@ -42,7 +42,7 @@ VALID_TAGS = {
 }
 
 
-def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
+def load_werk_v2(parsed: WerkV2ParseResult | WerkV3ParseResult) -> Werk:
     werk = parsed.metadata
     werk["__version__"] = "2"
 

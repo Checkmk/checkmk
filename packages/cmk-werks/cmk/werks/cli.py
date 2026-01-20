@@ -29,7 +29,9 @@ from . import parse_werk
 from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
-from .parse import WerkV2ParseResult
+from .models import EditionV3
+from .parse import WerkV2ParseResult, WerkV3ParseResult
+from .utils import edition_v3_to_v2
 
 T = TypeVar("T", bound="Stash")
 
@@ -134,7 +136,7 @@ class WerkId:
 class Werk(NamedTuple):
     path: Path
     id: WerkId
-    content: WerkV2ParseResult
+    content: WerkV2ParseResult | WerkV3ParseResult
 
     @property
     def date(self) -> datetime.datetime:
@@ -476,6 +478,27 @@ def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVer
     git_add(werk)
 
 
+def adapt_werk_for_target_branch(werk_path: Path, werk_version: WerkVersion) -> None:
+    """Adapt a V3 werk to V2 format if the target branch uses V2 editions."""
+    werk = load_werk(werk_path)
+
+    if not isinstance(werk.content, WerkV3ParseResult):
+        return
+
+    # Check if target branch uses V2 editions
+    editions = get_config().editions
+    if editions and editions[0][0] in {e.value for e in EditionV3}:
+        return
+
+    werk.content.metadata["edition"] = edition_v3_to_v2(
+        EditionV3(werk.content.metadata["edition"])
+    ).value
+
+    save_werk(werk, werk_version)
+    git_add(werk)
+    sys.stdout.write(f"Adapted Werk {werk_path} from v3 to v2 format (converted edition names).\n")
+
+
 def git_add(werk: Werk) -> None:
     os.system(f"git add {werk.path}")  # nosec
 
@@ -534,7 +557,7 @@ def something_in_git_index() -> bool:
 
 def add_comment(werk: Werk, title: str, comment: str) -> None:
     werk.content.metadata["description"] += f"""
-{time.strftime('%F %T')}: {title}
+{time.strftime("%F %T")}: {title}
 {comment}"""
 
 
@@ -1014,6 +1037,9 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
     pick = subprocess.run(cmd, check=False)
 
     if found_werk_path is not None:
+        # Adapt V3 werks to V2 format if necessary (e.g., when picking from master to 2.4)
+        adapt_werk_for_target_branch(found_werk_path.source, werk_version)
+
         # Find werks that have been cherry-picked and change their version
         # to our current checkmk version.
 

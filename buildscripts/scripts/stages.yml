@@ -834,12 +834,12 @@ STAGES:
           bazel lint --machine --fixes=false ... > /dev/null
           exit_code=$?
           set -e
-          bazel run //scripts:sarif_preparse -- --root_dir=$PWD/bazel-bin --output ${RESULTS}/lint.txt || true
+          bazel run //scripts:sarif_preparse -- --root_dir=$PWD/bazel-bin --output ${RESULTS}/results.sarif || true
           exit $exit_code
       TEXT_ON_SKIP: "inconditional"
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "SARIF"
-      RESULT_CHECK_FILE_PATTERN: "results/lint.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/results.sarif"
 
     - NAME: "Enforced package build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE

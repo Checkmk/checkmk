@@ -1271,10 +1271,6 @@ msgstr "Niveluri superioare de ieșire de 3,3 volți"
 msgid "30 minutes"
 msgstr "30 de minute"
 
-#, fuzzy
-msgid "32-bit packaged binary"
-msgstr "32bit binar împachetat"
-
 msgid "389 Directory Server"
 msgstr "389 Directory Server"
 
@@ -1336,10 +1332,6 @@ msgstr "Rata de eroare 5xx"
 
 msgid "6 months"
 msgstr "6 luni"
-
-#, fuzzy
-msgid "64-bit packaged binary"
-msgstr "64bit binar împachetat"
 
 #, no-python-format
 msgid "68% - One standard deviation"
@@ -2699,7 +2691,8 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "A site is allowed to be used in exactly one OpenTelemetry collector "
-"configuration: %s"
+"configuration: \n"
+"%s"
 msgstr "Adaugp o noua configurație de utilizator"
 
 msgid "A stored SNMP walk"
@@ -4020,6 +4013,10 @@ msgstr "Elemente active"
 msgid "Active jobs"
 msgstr "Locuri de muncă active"
 
+#, fuzzy
+msgid "Active metrics series"
+msgstr "Sesiuni active"
+
 msgid "Active modems"
 msgstr "Modemuri active"
 
@@ -4638,11 +4635,11 @@ msgid "Add recipient"
 msgstr "Destinatarul"
 
 #, fuzzy
-msgid "Add Relay"
+msgid "Add relay"
 msgstr "Adăugați cheia"
 
 #, fuzzy
-msgid "Add Relay configuration"
+msgid "Add relay configuration"
 msgstr "Configurația RRA"
 
 #, fuzzy
@@ -38207,6 +38204,10 @@ msgstr "IvantiNeurons pentru MDM (fostul MobileIron Cloud)"
 msgid "JMX monitoring of Java JVMs using Jolokia"
 msgstr "Monitorizarea JMX a JVM-urilor Java folosind Jolokia"
 
+#, fuzzy
+msgid "JMX monitoring of Java JVMs using Jolokia (Linux, Windows)"
+msgstr "Monitorizarea JMX a JVM-urilor Java folosind Jolokia"
+
 msgid "JQL query: "
 msgstr "Interogare JQL: "
 
@@ -40169,6 +40170,10 @@ msgid "Licensed"
 msgstr "Licențiat"
 
 #, fuzzy
+msgid "Licensed active metric series"
+msgstr "Servicii licențiate"
+
+#, fuzzy
 msgid "Licensed phase: too many services."
 msgstr "Vezi toate gazdele și serviciile"
 
@@ -41730,6 +41735,9 @@ msgstr "MB"
 
 msgid "MB/s"
 msgstr "MB/s"
+
+msgid "MBean"
+msgstr ""
 
 msgid "MByte/s"
 msgstr "MByte/s"
@@ -47077,7 +47085,7 @@ msgid "No relay ID specified."
 msgstr "Configurație gazdă"
 
 #, fuzzy
-msgid "No Relay configuration yet"
+msgid "No relay configuration yet"
 msgstr "Configurație gazdă"
 
 #, fuzzy
@@ -50319,10 +50327,11 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small and editable. Please note "
-"that the Checkmk team can offer no support for issues about the target "
-"system's python environment when choosing \"Script\"."
+"automatically regardless of this rule. The binary format yields a broader "
+"compatibility, while the Python script is small and editable.<br> Concrete "
+"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
+"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
+"_requests_ and _pysocks_ (for SOCKS proxy support)."
 msgstr ""
 "Alegeți opțional formatul fișierului executabil al agentului de actualizare. "
 "Relevant numai pentru Linux. Pe alte sisteme de operare, formatul executabil "
@@ -55630,6 +55639,10 @@ msgstr ""
 "<tt>set_environment.py:testing</tt>"
 
 #, fuzzy
+msgid "Python script"
+msgstr "Script Python executabil"
+
+#, fuzzy
 msgid "Python version for execution of Python agent plug-ins"
 msgstr "Versiunea Python pentru execuția plugin-urilor agentului python"
 
@@ -55834,6 +55847,10 @@ msgstr "RAM"
 msgid "RAM (Cached, buffers)"
 msgstr "Tampoane de refacere"
 
+#, fuzzy
+msgid "RAM (Total, cached, buffers)"
+msgstr "Tampoane de refacere"
+
 msgid "RAM (averaged)"
 msgstr "RAM (în medie)"
 
@@ -55864,9 +55881,6 @@ msgstr "RAM liber"
 
 msgid "RAM free (averaged)"
 msgstr "RAM liber (în medie)"
-
-msgid "RAM installed"
-msgstr "RAM instalat"
 
 #, fuzzy
 msgid "RAM usage"
@@ -57072,6 +57086,10 @@ msgstr "Serviciul de baze de date relaționale (RDS)"
 
 msgid "Relative"
 msgstr "Relativ"
+
+#, fuzzy
+msgid "Relative URI under which Jolokia is visible"
+msgstr "URI relativ sub care este vizibil Jolokia"
 
 msgid "Relative difference"
 msgstr "Diferența relativă"
@@ -60189,9 +60207,6 @@ msgstr "Interval de scanare"
 
 msgid "Scratch Pool"
 msgstr ""
-
-msgid "Script (Limited support, see inline help)"
-msgstr "Script (suport limitat, consultați ajutorul în linie)"
 
 msgid "Script Pattern"
 msgstr "Modelul Script"
@@ -91682,8 +91697,8 @@ msgstr "Trebuie să selectați cel puțin un utilizator."
 msgid "You have to specify a connector to migrate to."
 msgstr "Trebuie să specificați un conector către care să migrați."
 
-#, fuzzy, python-format
-msgid "You have to specify at least one receiver: %s"
+#, fuzzy
+msgid "You have to specify at least one scrape configuration"
 msgstr "Trebuie să selectați cel puțin un utilizator."
 
 msgid "You have used an invalid character"
@@ -91803,6 +91818,10 @@ msgstr ""
 
 msgid "You might want to add some helpful description for the attribute."
 msgstr "Este posibil să doriți să adăugați o descriere utilă pentru atribut."
+
+#, fuzzy
+msgid "You must configure at least one receiver."
+msgstr "Trebuie să specificați cel puțin un element."
 
 #, python-format
 msgid "You must not provide more than %d characters."
@@ -94001,6 +94020,10 @@ msgstr ""
 msgid "over threshold"
 msgstr "peste treshold"
 
+#, fuzzy
+msgid "packaged binary"
+msgstr "32bit binar împachetat"
+
 msgid "packets/s"
 msgstr "pachete/s"
 
@@ -94984,6 +95007,12 @@ msgstr "arată mai mult"
 #, fuzzy
 msgid "to load data"
 msgstr "Am primit date invalide"
+
+msgid ""
+"This widget cannot be displayed because required context information is "
+"missing (%{ missingSingleInfosString }). Please add dashboard or widget "
+"filters to provide the missing context."
+msgstr ""
 
 #, fuzzy
 msgid "%{n} filters"
@@ -97836,6 +97865,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "64-bit packaged binary"
+#~ msgstr "64bit binar împachetat"
+
+#~ msgid "RAM installed"
+#~ msgstr "RAM instalat"
+
+#~ msgid "Script (Limited support, see inline help)"
+#~ msgstr "Script (suport limitat, consultați ajutorul în linie)"
+
+#, fuzzy
 #~ msgid "Check HTTP service (deprecated)"
 #~ msgstr "Verificați serviciul HTTP"
 
@@ -98539,9 +98578,6 @@ msgstr ""
 #~ msgid "Completely ignore connection via proxy. This is the default."
 #~ msgstr ""
 #~ "Ignoră complet conexiunea prin proxy. Aceasta este valoarea implicită."
-
-#~ msgid "Executable Python script"
-#~ msgstr "Script Python executabil"
 
 #, fuzzy
 #~ msgid "Missing request variable 'widget_id'"

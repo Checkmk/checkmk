@@ -1257,10 +1257,6 @@ msgstr "Niveles superiores de salida de 3.3 voltios"
 msgid "30 minutes"
 msgstr "30 Minutos"
 
-#, fuzzy
-msgid "32-bit packaged binary"
-msgstr "paquete binario de 32 bit"
-
 msgid "389 Directory Server"
 msgstr "389 Directory Server"
 
@@ -1317,10 +1313,6 @@ msgstr "Tasa de error 5xx"
 
 msgid "6 months"
 msgstr "6 meses"
-
-#, fuzzy
-msgid "64-bit packaged binary"
-msgstr "paquete binario de 64 bit"
 
 #, no-python-format
 msgid "68% - One standard deviation"
@@ -2683,7 +2675,8 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "A site is allowed to be used in exactly one OpenTelemetry collector "
-"configuration: %s"
+"configuration: \n"
+"%s"
 msgstr "Añadir una nueva configuración de usuario"
 
 msgid "A stored SNMP walk"
@@ -4020,6 +4013,10 @@ msgstr "Elementos activos"
 msgid "Active jobs"
 msgstr "Trabajos activos"
 
+#, fuzzy
+msgid "Active metrics series"
+msgstr "Sesiones activas"
+
 msgid "Active modems"
 msgstr "Módems activos"
 
@@ -4648,11 +4645,11 @@ msgid "Add recipient"
 msgstr "Destinatario"
 
 #, fuzzy
-msgid "Add Relay"
+msgid "Add relay"
 msgstr "Añadir clave"
 
 #, fuzzy
-msgid "Add Relay configuration"
+msgid "Add relay configuration"
 msgstr "Configuración RRA"
 
 #, fuzzy
@@ -38341,6 +38338,10 @@ msgstr ""
 msgid "JMX monitoring of Java JVMs using Jolokia"
 msgstr "Monitorización JMX de JVMs de Java con Jolokia"
 
+#, fuzzy
+msgid "JMX monitoring of Java JVMs using Jolokia (Linux, Windows)"
+msgstr "Monitorización JMX de JVMs de Java con Jolokia"
+
 msgid "JQL query: "
 msgstr "Consulta JQL: "
 
@@ -40335,6 +40336,10 @@ msgid "Licensed"
 msgstr "Licencia"
 
 #, fuzzy
+msgid "Licensed active metric series"
+msgstr "Servicios con licencia: %s"
+
+#, fuzzy
 msgid "Licensed phase: too many services."
 msgstr "Ver todos los hosts y servicios"
 
@@ -41916,6 +41921,9 @@ msgstr "MB"
 
 msgid "MB/s"
 msgstr "MB/s"
+
+msgid "MBean"
+msgstr ""
 
 msgid "MByte/s"
 msgstr "MByte/s"
@@ -47307,7 +47315,7 @@ msgid "No relay ID specified."
 msgstr "Configuración de host"
 
 #, fuzzy
-msgid "No Relay configuration yet"
+msgid "No relay configuration yet"
 msgstr "Configuración de host"
 
 #, fuzzy
@@ -50571,10 +50579,11 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small and editable. Please note "
-"that the Checkmk team can offer no support for issues about the target "
-"system's python environment when choosing \"Script\"."
+"automatically regardless of this rule. The binary format yields a broader "
+"compatibility, while the Python script is small and editable.<br> Concrete "
+"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
+"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
+"_requests_ and _pysocks_ (for SOCKS proxy support)."
 msgstr ""
 "Opcionalmente, elija el formato del archivo excectable del actualizador del "
 "agente. Relevante sólo para Linux. En otros sistemas operativos, el formato "
@@ -55922,6 +55931,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Python script"
+msgstr "Script Python ejecutable"
+
+#, fuzzy
 msgid "Python version for execution of Python agent plug-ins"
 msgstr ""
 "Versión de Python para la ejecución de los plugins del agente de Python"
@@ -56128,6 +56141,10 @@ msgid "RAM (Cached, buffers)"
 msgstr "Buffer de repetición"
 
 #, fuzzy
+msgid "RAM (Total, cached, buffers)"
+msgstr "Buffer de repetición"
+
+#, fuzzy
 msgid "RAM (averaged)"
 msgstr "media"
 
@@ -56159,9 +56176,6 @@ msgstr "% free"
 
 msgid "RAM free (averaged)"
 msgstr ""
-
-msgid "RAM installed"
-msgstr "RAM instalada"
 
 #, fuzzy
 msgid "RAM usage"
@@ -57372,6 +57386,10 @@ msgstr "Servicio de base de datos relacional (RDS)"
 
 msgid "Relative"
 msgstr "Relativo"
+
+#, fuzzy
+msgid "Relative URI under which Jolokia is visible"
+msgstr "URI relativo bajo el cual es visible Jolokia"
 
 #, fuzzy
 msgid "Relative difference"
@@ -60535,9 +60553,6 @@ msgstr "Intervalo de exploración"
 
 msgid "Scratch Pool"
 msgstr ""
-
-msgid "Script (Limited support, see inline help)"
-msgstr "Script (soporte limitado, ver ayuda en línea)"
 
 msgid "Script Pattern"
 msgstr "Script Pattern"
@@ -92129,8 +92144,8 @@ msgstr "Debe seleccionar al menos un usuario."
 msgid "You have to specify a connector to migrate to."
 msgstr "Tienes que especificar un conector al que migrar."
 
-#, fuzzy, python-format
-msgid "You have to specify at least one receiver: %s"
+#, fuzzy
+msgid "You have to specify at least one scrape configuration"
 msgstr "Debe seleccionar al menos un usuario."
 
 msgid "You have used an invalid character"
@@ -92252,6 +92267,10 @@ msgstr ""
 msgid "You might want to add some helpful description for the attribute."
 msgstr ""
 "Es posible que quieras añadir alguna descripción útil para el atributo."
+
+#, fuzzy
+msgid "You must configure at least one receiver."
+msgstr "Debe especificar al menos un elemento."
 
 #, python-format
 msgid "You must not provide more than %d characters."
@@ -94461,6 +94480,10 @@ msgstr ""
 msgid "over threshold"
 msgstr "por encima del umbral"
 
+#, fuzzy
+msgid "packaged binary"
+msgstr "paquete binario de 32 bit"
+
 msgid "packets/s"
 msgstr "paquetes/s"
 
@@ -95441,6 +95464,12 @@ msgstr "ver más"
 #, fuzzy
 msgid "to load data"
 msgstr "Tengo datos no válidos"
+
+msgid ""
+"This widget cannot be displayed because required context information is "
+"missing (%{ missingSingleInfosString }). Please add dashboard or widget "
+"filters to provide the missing context."
+msgstr ""
 
 #, fuzzy
 msgid "%{n} filters"
@@ -98280,6 +98309,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "64-bit packaged binary"
+#~ msgstr "paquete binario de 64 bit"
+
+#~ msgid "RAM installed"
+#~ msgstr "RAM instalada"
+
+#~ msgid "Script (Limited support, see inline help)"
+#~ msgstr "Script (soporte limitado, ver ayuda en línea)"
+
+#, fuzzy
 #~ msgid "Check HTTP service (deprecated)"
 #~ msgstr "Comprobar el servicio HTTP"
 
@@ -98987,9 +99026,6 @@ msgstr ""
 #~ msgid "Completely ignore connection via proxy. This is the default."
 #~ msgstr ""
 #~ "Ignorar completamente la conexión vía proxy. Este es el valor por defecto."
-
-#~ msgid "Executable Python script"
-#~ msgstr "Script Python ejecutable"
 
 #, fuzzy
 #~ msgid "Missing request variable 'widget_id'"

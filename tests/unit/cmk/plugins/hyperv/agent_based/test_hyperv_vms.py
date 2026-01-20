@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.base.legacy_checks.hyperv_vms import (
+from cmk.plugins.hyperv.agent_based.hyperv_vms import (
     check_hyperv_vms,
     discover_hyperv_vms,
     parse_hyperv_vms,

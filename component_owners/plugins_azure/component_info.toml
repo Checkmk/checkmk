@@ -1,5 +1,5 @@
 type = "Component"
-display_name = "MK-SQL"
+display_name = "Plugins: Azure"
 has_support_component = true
 members_required = 1
 description = """

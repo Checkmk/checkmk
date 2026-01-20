@@ -1,7 +1,7 @@
 type = "Component"
-display_name = "MK-Oracle"
+display_name = "Plugins: Databases"
 has_support_component = true
-members_required = 1
+members_required = 2
 description = """
 -
 """

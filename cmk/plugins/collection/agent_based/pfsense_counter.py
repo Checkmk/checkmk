@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
@@ -51,6 +50,20 @@ def discovery_pfsense_counter(section: Section) -> DiscoveryResult:
 
 
 def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_pfsense_counter_pure(
+        params,
+        section,
+        time.time(),
+        get_value_store(),
+    )
+
+
+def check_pfsense_counter_pure(
+    params: Mapping[str, Any],
+    section: Section,
+    timestamp: float,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
     namestoinfo = {
         "matched": "Packets that matched a rule",
         "badoffset": "Packets with bad offset",
@@ -60,9 +73,6 @@ def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckR
         "memdrop": "Packets dropped due to memory limitations",
     }
 
-    this_time = time.time()
-    value_store = get_value_store()
-
     if backlog_minutes := params.get("average"):
         backlog_minutes = params["average"]
         yield Result(state=State.OK, summary="Values averaged over %d min" % params["average"])
@@ -70,13 +80,13 @@ def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckR
     for what in section:
         levels = params.get(what)
         rate = get_rate(
-            value_store, "pfsense_counter-%s" % what, this_time, section[what], raise_overflow=True
+            value_store, "pfsense_counter-%s" % what, timestamp, section[what], raise_overflow=True
         )
 
         if backlog_minutes:
             yield Metric("fw_packets_" + what, rate, levels=levels)
             rate = get_average(
-                value_store, "pfsense_counter-%srate" % what, this_time, rate, backlog_minutes
+                value_store, "pfsense_counter-%srate" % what, timestamp, rate, backlog_minutes
             )
 
         yield from check_levels_v1(

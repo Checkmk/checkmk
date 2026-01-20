@@ -895,6 +895,15 @@ def _render_graphs_from_definitions(
                 recipe_specific_data_range,
                 recipe_specific_render_config,
                 registered_metrics,
+                compute_graph_artwork(
+                    graph_recipe,
+                    graph_data_range,
+                    graph_render_config.size,
+                    metrics_from_api,
+                    temperature_unit=temperature_unit,
+                    backend_time_series_fetcher=backend_time_series_fetcher,
+                    graph_display_id=graph_display_id,
+                ),
                 debug=debug,
                 graph_timeranges=graph_timeranges,
                 temperature_unit=temperature_unit,
@@ -949,19 +958,34 @@ class AjaxRenderGraphContent(AjaxPage):
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""
         api_request = ctx.request.get_request()
+        graph_recipe = GraphRecipe.model_validate(api_request["graph_recipe"])
+        graph_data_range = GraphDataRange.model_validate(api_request["graph_data_range"])
+        graph_render_config = GraphRenderConfig.model_validate(api_request["graph_render_config"])
+        temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
+        backend_time_series_fetcher = metric_backend_registry[
+            str(edition(paths.omd_root))
+        ].get_time_series_fetcher(ctx.config)
+        graph_display_id = api_request["graph_display_id"]
         return _render_graph_content_html(
             ctx.request,
-            GraphRecipe.model_validate(api_request["graph_recipe"]),
-            GraphDataRange.model_validate(api_request["graph_data_range"]),
-            GraphRenderConfig.model_validate(api_request["graph_render_config"]),
+            graph_recipe,
+            graph_data_range,
+            graph_render_config,
             metrics_from_api,
+            compute_graph_artwork(
+                graph_recipe,
+                graph_data_range,
+                graph_render_config.size,
+                metrics_from_api,
+                temperature_unit=temperature_unit,
+                backend_time_series_fetcher=backend_time_series_fetcher,
+                graph_display_id=graph_display_id,
+            ),
             debug=ctx.config.debug,
             graph_timeranges=ctx.config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
-            ].get_time_series_fetcher(ctx.config),
-            graph_display_id=api_request["graph_display_id"],
+            temperature_unit=temperature_unit,
+            backend_time_series_fetcher=backend_time_series_fetcher,
+            graph_display_id=graph_display_id,
         )
 
 
@@ -971,6 +995,7 @@ def _render_graph_content_html(
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
+    graph_artwork: GraphArtwork,
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
@@ -979,19 +1004,9 @@ def _render_graph_content_html(
     graph_display_id: str = "",
 ) -> HTML:
     try:
-        graph_artwork = compute_graph_artwork(
-            graph_recipe,
-            graph_data_range,
-            graph_render_config.size,
-            registered_metrics,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
-            graph_display_id=graph_display_id,
-        )
         main_graph_html = _render_graph_html(
             request, graph_artwork, graph_data_range, graph_render_config
         )
-
         if graph_render_config.show_time_range_previews:
             return HTMLWriter.render_div(
                 main_graph_html
@@ -1308,18 +1323,18 @@ def host_service_graph_dashlet_cmk(
     except ZeroDivisionError:
         return HTML("", escape=False)
 
+    graph_artwork = compute_graph_artwork(
+        graph_recipe,
+        graph_data_range,
+        graph_render_config.size,
+        registered_metrics,
+        temperature_unit=temperature_unit,
+        backend_time_series_fetcher=backend_time_series_fetcher,
+    )
+
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.
     if graph_render_config.show_legend:
-        # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
-        graph_artwork = compute_graph_artwork(
-            graph_recipe,
-            graph_data_range,
-            graph_render_config.size,
-            registered_metrics,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
-        )
         if graph_artwork.curves:
             # Estimates the height of the graph legend in pixels TODO: This is
             # not acurate! Especially when the font size is changed this does
@@ -1349,6 +1364,7 @@ def host_service_graph_dashlet_cmk(
         recipe_specific_data_range,
         recipe_specific_render_config,
         registered_metrics,
+        graph_artwork,
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,

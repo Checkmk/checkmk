@@ -42,6 +42,7 @@ defineProps<AvailableWidgetProps>()
   padding: var(--dimension-4);
   max-width: 72px;
   text-align: center;
+  height: 80%;
 }
 
 .db-available-widget__item-button {

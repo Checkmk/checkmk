@@ -6,12 +6,11 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from livestatus import MultiSiteConnection
 
@@ -60,11 +59,11 @@ class Comment:
     is_service: bool
     site: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.persistent = bool(self.persistent)
         self.entry_time = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(float(self.entry_time)))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[str, Any]]:
         for k, v in self.__dict__.items():
             if k == "service_description":
                 if self.is_service:

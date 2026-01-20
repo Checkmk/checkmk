@@ -7,7 +7,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import hashlib
 import http.client
@@ -614,7 +613,7 @@ def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
     )
     _hash = hashlib.sha256()
 
-    def _update(d_):
+    def _update(d_: Mapping[str, Field]) -> None:
         for key, value in sorted(d_.items()):
             _hash.update(str(key).encode("utf-8"))
             if hasattr(value, "metadata"):

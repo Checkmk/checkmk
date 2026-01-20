@@ -8,10 +8,9 @@
 # mypy: disable-error-code="exhaustive-match"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Container, Iterable
+from collections.abc import Container, Iterable, Sequence
 from typing import Literal, TypeVar
 
 import cmk.utils.paths
@@ -84,7 +83,7 @@ def _vs_v1_ssc_password(title: str, allow_empty: bool) -> ValueSpec:
     )
 
 
-def _validate_aws_tags(value, varprefix):
+def _validate_aws_tags(value: Sequence[tuple[str, Sequence[str]]], varprefix: str) -> None:
     used_keys = []
     # KEY:
     # ve_p_services_p_ec2_p_choice_1_IDX_0
@@ -113,7 +112,7 @@ def _validate_aws_tags(value, varprefix):
                 raise MKUserError(values_field, _("Do not use 'aws:' prefix for the values."))
 
 
-def _vs_aws_tags(title):
+def _vs_aws_tags(title: str) -> ListOf:
     return ListOf(
         valuespec=Tuple(
             help=_(
@@ -133,7 +132,7 @@ def _vs_aws_tags(title):
     )
 
 
-def _vs_element_aws_service_selection():
+def _vs_element_aws_service_selection() -> DictionaryEntry:
     return (
         "selection",
         CascadingDropdown(
@@ -169,7 +168,7 @@ def _vs_element_aws_service_selection():
     )
 
 
-def _vs_element_aws_limits():
+def _vs_element_aws_limits() -> DictionaryEntry:
     return (
         "limits",
         FixedValue(
@@ -221,7 +220,7 @@ class AWSSpecialAgentValuespecBuilder:
     # Regional services that should be present just in the CMK cloud edition
     CCE_ONLY_REGIONAL_SERVICES = {"sns", "lambda", "ecs", "elasticache"}
 
-    def __init__(self, cloud_edition: bool):
+    def __init__(self, cloud_edition: bool) -> None:
         self.is_cloud_edition = cloud_edition
 
     def get_global_services(self) -> ServicesValueSpec:

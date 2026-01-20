@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -12,7 +12,7 @@ from cmk.gui.wato import RulespecGroupIntegrateOtherServices
 from cmk.utils.rulesets.definition import RuleGroup
 
 
-def _valuespec_active_checks_notify_count():
+def _valuespec_active_checks_notify_count() -> Migrate[dict[str, Any]]:
     return Migrate(
         migrate=lambda p: (
             p if isinstance(p, dict) else {"description": p[0], "interval": p[1], **p[2]}

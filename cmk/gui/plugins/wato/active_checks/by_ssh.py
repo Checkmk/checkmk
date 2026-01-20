@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from typing import Any, Literal
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -24,10 +22,8 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 
 # TODO: un-nest the parameters. No need for a dict in a tuple in a dict.
-def _valuespec_active_checks_by_ssh():
-    SSHOptions = dict[Literal["options"], tuple[str, dict[str, Any]]]
-
-    def to_valuespec(x: tuple[str, dict[str, Any]] | SSHOptions) -> SSHOptions:
+def _valuespec_active_checks_by_ssh() -> Migrate[dict[str, Any]]:
+    def to_valuespec(x: tuple[str, dict[str, Any]] | dict[str, Any]) -> dict[str, Any]:
         return {"options": x} if isinstance(x, tuple) else x
 
     return Migrate(

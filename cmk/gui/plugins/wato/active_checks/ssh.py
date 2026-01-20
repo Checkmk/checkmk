@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, Integer, NetworkPort, TextInput
@@ -13,7 +10,7 @@ from cmk.gui.wato import RulespecGroupIntegrateOtherServices
 from cmk.utils.rulesets.definition import RuleGroup
 
 
-def _valuespec_active_checks_ssh():
+def _valuespec_active_checks_ssh() -> Dictionary:
     return Dictionary(
         title=_("Check SSH service"),
         help=_("This rulset allow you to configure a SSH check for a host"),

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 # NOTE: The rulesets in this file were deprecated in version 2.1.0i1
 
 
-def _parameter_valuespec_mem_cluster():
+def _parameter_valuespec_mem_cluster() -> ListOf[list[Any]]:
     return ListOf(
         valuespec=Tuple(
             elements=[

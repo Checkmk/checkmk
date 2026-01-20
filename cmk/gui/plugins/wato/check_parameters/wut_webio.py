@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -19,14 +17,14 @@ AS_DISCOVERED = "as_discovered"
 STATES_DURING_DISC_KEY = "states_during_discovery"
 
 
-def _item_spec_wut_webio():
+def _item_spec_wut_webio() -> TextInput:
     return TextInput(
         title=_("Input channel"),
         help=_("Name of the input channel, e.g. WEBIO-094849 Input 0"),
     )
 
 
-def _valuespec_wut_webio_check():
+def _valuespec_wut_webio_check() -> Dictionary:
     return Dictionary(
         title=_("W&T WebIO"),
         ignored_keys=[STATE_EVAL_KEY, STATES_DURING_DISC_KEY],

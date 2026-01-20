@@ -3,16 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato import monitoring_macro_help, RulespecGroupDatasourceProgramsCustom
 
 
-def _valuespec_datasource_programs():
+def _valuespec_datasource_programs() -> TextInput:
     return TextInput(
         title=_("Individual program call instead of agent access"),
         help=_(

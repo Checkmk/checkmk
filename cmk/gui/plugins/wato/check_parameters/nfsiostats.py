@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from collections.abc import Mapping
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -31,10 +29,7 @@ def _s_to_ms(v: float) -> float:
     return v * 1000.0
 
 
-Spec = Mapping[str, tuple[float, float]]
-
-
-def _migrate_milliseconds(spec: Spec) -> Spec:
+def _migrate_milliseconds(spec: dict[str, Any]) -> dict[str, Any]:
     if "read_avg_rtt_s" in spec:
         return spec
 
@@ -44,7 +39,7 @@ def _migrate_milliseconds(spec: Spec) -> Spec:
     }
 
 
-def _parameter_valuespec_nfsiostats():
+def _parameter_valuespec_nfsiostats() -> Migrate[dict[str, Any]]:
     return Migrate(
         migrate=_migrate_milliseconds,
         valuespec=Dictionary(

@@ -818,7 +818,7 @@ STAGES:
       DIR: ""
       COMMAND: |
           set +e
-          bazel lint --machine --fixes=false ... > /dev/null
+          bazel lint --machine --fixes=false ... &> ${RESULTS}/lint.txt
           exit_code=$?
           set -e
           bazel run //scripts:sarif_preparse -- --root_dir=$PWD/bazel-bin --output ${RESULTS}/results.sarif || true

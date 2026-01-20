@@ -1337,16 +1337,21 @@ def host_service_graph_dashlet_cmk(
                 )
             graph_render_config.size = (width, graph_height)
 
-    return _render_graphs_from_definitions(
+    recipe_specific_render_config = graph_render_config.update_from_options(
+        graph_recipe.render_options
+    )
+    recipe_specific_data_range = graph_data_range.model_copy(
+        update=dict(graph_recipe.data_range or {})
+    )
+    return _render_graph_content_html(
         request,
-        [graph_recipe],
-        graph_data_range,
-        graph_render_config,
+        graph_recipe,
+        recipe_specific_data_range,
+        recipe_specific_render_config,
         registered_metrics,
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
-        render_async=False,
         graph_display_id=graph_display_id,
     )

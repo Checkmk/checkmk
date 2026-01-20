@@ -94,41 +94,32 @@ py_binary(
     ],
 )
 
-[binreplace_version_from_flag(
-    name = "run_binreplace_" + edition,
+binreplace_version_from_flag(
+    name = "run_binreplace",
     src =
         ":lib/libcrypto.so.3",
-    out = "lib/libcrypto.so.3." + edition,
-    intermediate_out = "lib/libcrypto.so.3.replaced",
-    new_value = "/omd/versions/{version}.%s/" % edition,
+    # File has to be called .replaced because this produce in this format by binreplace
+    out = "lib/libcrypto.so.3.replaced",
     reg_ex = r"/(?:home|root)/.*?/openssl\.build_tmpdir/openssl/",
+    replace_labels = {
+        "version": "@cmk//version",
+        "edition": "@cmk//edition",
+    },
     tags = ["manual"],
+    template = "/omd/versions/{version}.{edition}/",
     tool = ":binreplace_binary",
-    value = "@cmk//version",
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[pkg_files(
-    name = "openssl_lib_with_rpath_pkg_" + edition,
+pkg_files(
+    name = "openssl_lib_with_rpath_pkg",
     srcs = [
-        "run_binreplace_" + edition,
         "lib/libssl.so.3",
+        "run_binreplace",
     ],
     prefix = "lib",
-    renames = {"lib/libcrypto.so.3." + edition: "libcrypto.so.3"},
+    renames = {"lib/libcrypto.so.3.replaced": "libcrypto.so.3"},
     tags = ["manual"],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
 [pkg_mklink(
     name = link_name,
@@ -202,37 +193,24 @@ pkg_files(
     tags = ["manual"],
 )
 
-[pkg_filegroup(
-    name = "openssl_files_pkg_" + edition,
+pkg_filegroup(
+    name = "openssl_files_pkg",
     srcs = [
         ":openssl_bin_pkg",
         ":openssl_empty_dirs",
         ":openssl_executables_pkg",
         ":openssl_lib_symlinks_pkg",
+        ":openssl_lib_with_rpath_pkg",
         ":openssl_rest_pkg",
         ":openssl_skel_symlinks_pkg",
-        ":openssl_lib_with_rpath_pkg_" + edition,
     ],
     tags = ["manual"],
     visibility = ["//visibility:public"],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[pkg_tar(
-    name = "openssl_tar_" + edition,
-    srcs = [":openssl_files_pkg_" + edition],
-    package_file_name = "openssl.tar",
+pkg_tar(
+    name = "openssl_tar",
+    srcs = [":openssl_files_pkg"],
     tags = ["manual"],
     visibility = ["//visibility:public"],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)

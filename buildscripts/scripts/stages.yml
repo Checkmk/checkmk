@@ -221,7 +221,6 @@ VARIABLES:
     - NAME: CHANGED_GO_MOD
       SH: "echo '${CHANGED_FILES_REL}' | grep '^go.mod' || true"
 
-
     - NAME: CHANGED_CMK_PLUGINS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugins/' || true"
 
@@ -820,6 +819,6 @@ STAGES:
     - NAME: "Enforced relay build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE
       DIR: ""
-      COMMAND: "bazel build --cmk_version=$(make print-VERSION) //omd/non-free/relay:image_tar &> ${RESULTS}/cmk-relay-build.txt"
+      COMMAND: "bazel build --cmk_edition=ultimate --cmk_version=$(make print-VERSION) //omd/non-free/relay:image_tar &> ${RESULTS}/cmk-relay-build.txt"
       TEXT_ON_SKIP: "No package dependencies changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-build.txt"

@@ -123,19 +123,23 @@ def main(argv: Sequence[str]) -> int:
         status_data_inventory=False,
     )
 
-    return inventory_as_check(
+    # This is not race condition free, but we can not resolve the latest link:
+    # The core may choose to remove the currently latest one at any time.
+    active_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
+
+    return _inventory_as_check(
         make_app(cmk_version.edition(cmk.utils.paths.omd_root)),
         parameters,
+        active_config_path,
         args.hostname,
-        load_plugins_from_index(VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root))
-        if args.use_indexed_plugins
-        else load_checks(),
+        load_plugins_from_index(active_config_path) if args.use_indexed_plugins else load_checks(),
     )
 
 
-def inventory_as_check(
+def _inventory_as_check(
     app: CheckmkBaseApp,
     parameters: HWSWInventoryParameters,
+    latest_config_path: Path,
     hostname: HostName,
     plugins: AgentBasedPlugins,
 ) -> ServiceState:
@@ -207,12 +211,16 @@ def inventory_as_check(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(
                 secrets := load_secrets_file(
-                    cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+                    cmk.utils.password_store.active_secrets_path_site(
+                        RELATIVE_PATH_SECRETS, config_path=latest_config_path
+                    )
                 )
             ),
         ),
         secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
+            path=cmk.utils.password_store.active_secrets_path_site(
+                RELATIVE_PATH_SECRETS, config_path=latest_config_path
+            ),
             secrets=secrets,
         ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(

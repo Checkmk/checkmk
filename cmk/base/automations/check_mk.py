@@ -120,6 +120,7 @@ from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
 from cmk.ccc import config_path, tty, version
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import (
     MKBailOut,
     MKGeneralException,
@@ -1063,6 +1064,10 @@ def _execute_autodiscovery(
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
         return {}, False
 
+    # Note: we can't resolve the `latest` link here, because the core might
+    # choose to remove any given config version at any time.
+    latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
+
     ab_plugins = load_plugins() if ab_plugins is None else ab_plugins
     if loading_result is None:
         loading_result = load_config(
@@ -1156,12 +1161,16 @@ def _execute_autodiscovery(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(
                 secrets := load_secrets_file(
-                    cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+                    cmk.utils.password_store.active_secrets_path_site(
+                        RELATIVE_PATH_SECRETS, latest_config_path
+                    )
                 )
             ),
         ),
         secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
+            path=cmk.utils.password_store.active_secrets_path_site(
+                RELATIVE_PATH_SECRETS, latest_config_path
+            ),
             secrets=secrets,
         ),
         metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(

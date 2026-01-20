@@ -32,14 +32,13 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
   <CmkAccordionItem :value="value" :disabled="disabled">
     <template #header>
       <CmkBadge
-        size="medium"
+        size="small"
         :color="props.accomplished ? 'success' : 'default'"
         :type="props.accomplished ? 'fill' : 'outline'"
         shape="circle"
         class="cmk-step-panel-item-indicator"
       >
-        <CmkIcon v-if="props.accomplished" name="checkmark-bare"></CmkIcon>
-        <span v-if="!props.accomplished">{{ props.step.toString() }}</span>
+        <CmkIcon v-if="props.accomplished" size="small" name="checkmark-bare"></CmkIcon>
       </CmkBadge>
       <CmkAccordionItemStateIndicator
         v-if="!disabled"

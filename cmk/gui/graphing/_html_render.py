@@ -845,26 +845,19 @@ def render_graphs_from_specification_html(
 
     output = HTML.empty()
     for graph_recipe in graph_recipes:
-        recipe_specific_render_config = graph_render_config.update_from_options(
-            graph_recipe.render_options
-        )
-        recipe_specific_data_range = graph_data_range.model_copy(
-            update=dict(graph_recipe.data_range or {})
-        )
-
         if render_async:
             output += _render_graph_container_html(
                 graph_recipe,
-                recipe_specific_data_range,
-                recipe_specific_render_config,
+                graph_data_range.model_copy(update=dict(graph_recipe.data_range or {})),
+                graph_render_config.update_from_options(graph_recipe.render_options),
                 graph_display_id=graph_display_id,
             )
         else:
             output += _render_graph_content_html(
                 request,
                 graph_recipe,
-                recipe_specific_data_range,
-                recipe_specific_render_config,
+                graph_data_range.model_copy(update=dict(graph_recipe.data_range or {})),
+                graph_render_config.update_from_options(graph_recipe.render_options),
                 registered_metrics,
                 compute_graph_artwork(
                     graph_recipe,
@@ -1322,17 +1315,11 @@ def host_service_graph_dashlet_cmk(
             )
         graph_render_config.size = (width, height)
 
-    recipe_specific_render_config = graph_render_config.update_from_options(
-        graph_recipe.render_options
-    )
-    recipe_specific_data_range = graph_data_range.model_copy(
-        update=dict(graph_recipe.data_range or {})
-    )
     return _render_graph_content_html(
         request,
         graph_recipe,
-        recipe_specific_data_range,
-        recipe_specific_render_config,
+        graph_data_range.model_copy(update=dict(graph_recipe.data_range or {})),
+        graph_render_config.update_from_options(graph_recipe.render_options),
         registered_metrics,
         graph_artwork,
         debug=debug,

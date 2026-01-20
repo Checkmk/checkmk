@@ -161,6 +161,20 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     ),
                 )
             ),
+            "net_id_as_prefix": DictElement(
+                parameter_form=FixedValue(
+                    value=True,
+                    title=Title("Use Network-ID as host prefix"),
+                    label=Label("The Network-ID will be used as host name prefix"),
+                    help_text=Help(
+                        "The Network-ID will be used as prefix for the hostname (separated by a -). Use "
+                        'this option together with a "Hostname translation for piggybacked hosts" to add a '
+                        "network prefix to the hosts from the Cisco Meraki cloud to avoid conflicting "
+                        'hostnames. You can also use this option along with the "Dynamic host management" to '
+                        "sort the host in location specific folders."
+                    ),
+                )
+            ),
             "no_cache": DictElement(
                 parameter_form=FixedValue(
                     title=Title("Disable cache"),

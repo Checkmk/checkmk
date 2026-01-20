@@ -112,25 +112,27 @@ class _FakeOrganisationsSDK:
         devices = {
             "123": [
                 factories.RawDeviceFactory.build(
-                    serial="S124-1", name="dev1", productType="appliance"
+                    serial="S124-1", name="dev1", networkId="net1", productType="appliance"
                 ),
                 factories.RawDeviceFactory.build(
-                    serial="S123-2", name="dev2", productType="appliance"
+                    serial="S123-2", name="dev2", networkId="net2", productType="appliance"
                 ),
                 factories.RawDeviceFactory.build(
-                    serial="S123-sw", name="sw1", productType="switch"
+                    serial="S123-sw", name="sw1", networkId="net3", productType="switch"
                 ),
                 factories.RawDeviceFactory.build(
-                    serial="S123-wes", name="wes1", productType="wireless"
+                    serial="S123-wes", name="wes1", networkId="net4", productType="wireless"
                 ),
             ],
             "456": [
-                factories.RawDeviceFactory.build(serial="S456", name="dev3", productType="sensor"),
                 factories.RawDeviceFactory.build(
-                    serial="S456-sw", name="sw2", productType="switch"
+                    serial="S456", name="dev3", networkId="wan1", productType="sensor"
                 ),
                 factories.RawDeviceFactory.build(
-                    serial="S456-wes", name="wes2", productType="wireless"
+                    serial="S456-sw", name="sw2", networkId="wan2", productType="switch"
+                ),
+                factories.RawDeviceFactory.build(
+                    serial="S456-wes", name="wes2", networkId="wan3", productType="wireless"
                 ),
             ],
         }

@@ -260,7 +260,17 @@ class MerakiOrganisation:
             LOGGER.debug("Device piggyback not found: org_id=%r, device=%r", self.id, serial)
             return None
 
-        prefix = f"{self.id}-" if self.config.org_id_as_prefix else ""
+        net_id_prefix = f"{net_id}-" if (net_id := device.get("networkId")) else ""
+
+        match self.config:
+            case MerakiConfig(org_id_as_prefix=True, net_id_as_prefix=True):
+                prefix = f"{self.id}-{net_id_prefix}"
+            case MerakiConfig(org_id_as_prefix=True):
+                prefix = f"{self.id}-"
+            case MerakiConfig(net_id_as_prefix=True):
+                prefix = net_id_prefix
+            case _:
+                prefix = ""
 
         if device_name := device.get("name"):
             return f"{prefix}{device_name}"
@@ -358,6 +368,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         action="store_const",
         const=True,
         help="Use organisation ID as device piggyback prefix.",
+    )
+
+    parser.add_argument(
+        "--net-id-as-prefix",
+        default=False,
+        action="store_const",
+        const=True,
+        help="Use network ID as device piggyback prefix.",
     )
 
     parser.add_argument(

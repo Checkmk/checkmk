@@ -87,8 +87,6 @@ const switchVisibility = () => {
   /* TODO: Not the best solution but we have no value here */
   showTest.value = !props.tagAgentDefault.textContent?.includes('no Checkmk agent')
 }
-switchVisibility()
-checkPushMode()
 
 function checkPushMode() {
   const agentConnectionModeHash = props.cmkAgentConnectionModeSelectElement?.value
@@ -115,6 +113,8 @@ const targetElement = ref<HTMLElement>(
 const setupErrorActive = ref(props.setupError)
 
 onMounted(() => {
+  switchVisibility()
+  checkPushMode()
   ipV4Selected.value = props.ipv4InputButtonElement.checked
   ipV6Selected.value = props.ipv6InputButtonElement.checked
   selectedSiteIdHash.value = props.siteSelectElement.value
@@ -399,7 +399,7 @@ const agentPort: Ref<number> = ref(6556)
 </script>
 
 <template>
-  <Teleport v-if="showTest" :to="targetElement">
+  <Teleport v-if="showTest" :to="targetElement" defer>
     <CmkButton
       v-if="!isLoading && !isSuccess && !isError"
       type="button"

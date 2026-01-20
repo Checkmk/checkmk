@@ -4555,10 +4555,10 @@ msgid "Add recipient"
 msgstr "Empfänger hinzufügen"
 
 #, fuzzy
-msgid "Add relay"
+msgid "Add Relay"
 msgstr "Relais hinzufügen"
 
-msgid "Add relay configuration"
+msgid "Add Relay configuration"
 msgstr "Relais-Konfiguration hinzufügen"
 
 #, fuzzy
@@ -45212,7 +45212,7 @@ msgid "No relay ID specified."
 msgstr "Keine Relais-ID spezifiziert."
 
 #, fuzzy
-msgid "No relay configuration yet"
+msgid "No Relay configuration yet"
 msgstr "Noch keine Relais-Konfiguration"
 
 msgid "No relays configured yet."

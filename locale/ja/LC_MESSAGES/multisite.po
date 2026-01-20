@@ -4419,10 +4419,10 @@ msgid "Add recipient"
 msgstr "受取人の追加"
 
 #, fuzzy
-msgid "Add relay"
+msgid "Add Relay"
 msgstr "リレーを追加"
 
-msgid "Add relay configuration"
+msgid "Add Relay configuration"
 msgstr "リレー設定の追加"
 
 #, fuzzy
@@ -44412,7 +44412,7 @@ msgid "No relay ID specified."
 msgstr "まだリレーが設定されていません。"
 
 #, fuzzy
-msgid "No relay configuration yet"
+msgid "No Relay configuration yet"
 msgstr "%sの設定はまだありません"
 
 msgid "No relays configured yet."

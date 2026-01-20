@@ -4628,11 +4628,11 @@ msgid "Add recipient"
 msgstr "Destinatário"
 
 #, fuzzy
-msgid "Add relay"
+msgid "Add Relay"
 msgstr "Adicionar chave"
 
 #, fuzzy
-msgid "Add relay configuration"
+msgid "Add Relay configuration"
 msgstr "Configuração RRA"
 
 #, fuzzy
@@ -47043,7 +47043,7 @@ msgid "No relay ID specified."
 msgstr "Configuração do anfitrião"
 
 #, fuzzy
-msgid "No relay configuration yet"
+msgid "No Relay configuration yet"
 msgstr "Configuração do anfitrião"
 
 #, fuzzy

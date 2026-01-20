@@ -57,9 +57,15 @@ const isNoIP = ref(
 )
 const isRelay = ref(props.relayInputButtonElement?.checked)
 const controller = ref(new AbortController())
-const ajaxRequestInProgress = ref(false)
+const ajaxRequestInProgress = ref<{ [key: string]: boolean }>({
+  ping: false,
+  ping6: false
+})
 
-const typingTimer: Ref<ReturnType<typeof setTimeout> | null> = ref(null)
+const typingTimer: Ref<{ [key: string]: ReturnType<typeof setTimeout> | null }> = ref({
+  ping: null,
+  ping6: null
+})
 const doneTypingInterval = 250
 
 const showPingHost = computed(() => {
@@ -131,8 +137,8 @@ function callPingHostOnElement(
   cmd: PingCmd,
   isIpAddress: boolean
 ): void {
-  if (typingTimer.value) {
-    clearTimeout(typingTimer.value)
+  if (typingTimer.value[cmd]) {
+    clearTimeout(typingTimer.value[cmd])
   }
   const elementName = element.name
   if (!elementName) {
@@ -152,7 +158,7 @@ function callPingHostOnElement(
     },
     element: element
   }
-  typingTimer.value = setTimeout(() => {
+  typingTimer.value[cmd] = setTimeout(() => {
     callAJAX(element.value, cmd, isIpAddress)
       .then((result) => {
         if (result && statusElements.value[elementName]) {
@@ -168,7 +174,7 @@ async function callAJAX(
   cmd: PingCmd = PingCmd.Ping,
   isIpAddress: boolean = false
 ): Promise<DNSStatus | null> {
-  if (ajaxRequestInProgress.value) {
+  if (ajaxRequestInProgress.value[cmd]) {
     controller.value.abort('New request triggered, aborting previous one')
   }
   while (controller.value.signal.aborted) {
@@ -182,7 +188,7 @@ async function callAJAX(
     return null
   }
 
-  ajaxRequestInProgress.value = true
+  ajaxRequestInProgress.value[cmd] = true
   return await axios
     .post('ajax_ping_host.py', null, {
       signal: controller.value.signal,
@@ -203,7 +209,7 @@ async function callAJAX(
       return null
     })
     .finally(() => {
-      ajaxRequestInProgress.value = false
+      ajaxRequestInProgress.value[cmd] = false
     })
 }
 

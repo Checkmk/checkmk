@@ -8,6 +8,16 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
 import { nextTick, ref, watch } from 'vue'
 
+// *************************************************************************************************
+// Two different variants of SlideIn overlay are required
+// * div for index page [CMK-27892 / CMK-26086]
+// * DialogOverlay for inner iframe [CMK-28534]
+// div: inner iframe html-body will keep `pointer-events: none` forever after closing
+// DialogOverlay: the SlideIn blocks the whole page including sidebar and menubar
+//
+// As DialogContent exists outside our vue app hierarchy, we manually apply our global vue CSS class
+// *************************************************************************************************
+
 const slideInVariants = cva('', {
   variants: {
     size: {
@@ -48,18 +58,8 @@ watch(
 <template>
   <DialogRoot :open="open" :modal="!isIndexPage">
     <DialogPortal :to="isIndexPage ? '#content_area' : 'body'">
-      <!--
-        Two different variants of SlideIn overlay are required
-         * div for index page [CMK-27892 / CMK-26086]
-         * DialogOverlay for inner iframe [CMK-28534]
-        div: inner iframe html-body will keep `pointer-events: none` forever after closing
-        DialogOverlay: the SlideIn blocks the whole page including sidebar and menubar
-      -->
       <DialogOverlay v-if="!isIndexPage" class="cmk-slide-in__overlay" @click="emit('close')" />
       <div v-else-if="open" class="cmk-slide-in__overlay" @click="emit('close')" />
-
-      <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
-      <!-- @vue-ignore aria-describedby it not a property of DialogContent -->
       <DialogContent
         ref="dialogContentRef"
         class="cmk-vue-app cmk-slide-in__container"

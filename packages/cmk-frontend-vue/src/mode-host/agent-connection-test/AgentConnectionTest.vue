@@ -21,6 +21,7 @@ import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
@@ -320,37 +321,30 @@ const openSlideoutClick: () => void = () => {
 
 interface ContainerValues {
   header: string
+  error: string | null
   txt: string
   buttonOneTitle: string
   buttonOneButton: string
   buttonOneClick: () => void | Promise<void>
-  buttonTwoTitle: string
-  buttonTwoButton: string
+  buttonTwoTitle: string | null
+  buttonTwoButton: string | null
   buttonTwoClick: () => void | Promise<void>
 }
 
 const warnContainerValues = computed<ContainerValues>(() => {
-  let header = _t('Agent connection failed')
-  let txt = errorDetails.value
-  let buttonOneTitle = reTestAgentTitle
-  let buttonOneButton = reTestAgentButton
+  let header: string = _t('Agent connection failed')
+  let txt: string,
+    error: string | null = errorDetails.value
+  let buttonOneTitle: string = reTestAgentTitle
+  let buttonOneButton: string = reTestAgentButton
   let buttonOneClick: () => void | Promise<void> = reTestAgentClick
-  let buttonTwoTitle = ''
-  let buttonTwoButton = ''
+  let buttonTwoTitle: string | null = null
+  let buttonTwoButton: string | null = null
   let buttonTwoClick: () => void | Promise<void> = () => {}
 
-  if (errorDetails.value.includes('[Errno 111]')) {
-    header = _t('Failed to connect to the Checkmk agent')
-    txt = _t('This may be because the agent is not installed or not running on the target system.')
-    buttonOneTitle = _t('Download & install agent')
-    buttonOneButton = _t('Download Checkmk agent')
-    buttonOneClick = openSlideoutClick
-    buttonTwoTitle = reTestAgentTitle
-    buttonTwoButton = reTestAgentButton
-    buttonTwoClick = reTestAgentClick
-  }
   if (isNotRegistered.value) {
     header = _t('Agent not registered')
+    error = null
     txt = _t('The agent has been installed on the target system but has not yet been registered.')
     buttonOneTitle = _t('Register agent')
     buttonOneButton = _t('Register Checkmk agent')
@@ -358,9 +352,9 @@ const warnContainerValues = computed<ContainerValues>(() => {
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
     buttonTwoClick = reTestAgentClick
-  }
-  if (errorDetails.value.includes('is not providing it')) {
+  } else if (errorDetails.value.includes('is not providing it')) {
     header = _t('TLS connection not provided')
+    error = null
     txt = _t(
       'The agent has been installed on the target system but is not providing a TLS connection.'
     )
@@ -370,10 +364,20 @@ const warnContainerValues = computed<ContainerValues>(() => {
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
     buttonTwoClick = reTestAgentClick
+  } else {
+    header = _t('Failed to connect to the Checkmk agent')
+    txt = _t('This problem might be caused by a missing agent or the firewall settings.')
+    buttonOneTitle = _t('Download & install agent')
+    buttonOneButton = _t('Download Checkmk agent')
+    buttonOneClick = openSlideoutClick
+    buttonTwoTitle = reTestAgentTitle
+    buttonTwoButton = reTestAgentButton
+    buttonTwoClick = reTestAgentClick
   }
 
   return {
     header,
+    error,
     txt,
     buttonOneTitle,
     buttonOneButton,
@@ -420,6 +424,9 @@ const agentPort: Ref<number> = ref(6556)
     <CmkAlertBox v-if="isError" variant="warning" size="small" class="warn-container">
       <template #heading>{{ warnContainerValues.header }}</template>
       <div class="warn-txt-container">
+        <CmkParagraph v-if="warnContainerValues.error">
+          {{ _t('Error: ') }} {{ warnContainerValues.error }}<br /><br />
+        </CmkParagraph>
         {{ warnContainerValues.txt }}
         <div class="warn-button-container">
           <CmkButton

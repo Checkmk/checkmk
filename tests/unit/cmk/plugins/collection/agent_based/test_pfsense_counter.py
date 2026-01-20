@@ -6,6 +6,8 @@
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.collection.agent_based.pfsense_counter import (
     check_pfsense_counter_pure,
+    CheckParameters,
+    PacketCounters,
     parse_pfsense_counter,
 )
 
@@ -20,14 +22,14 @@ def test_parse_pfsense_counter() -> None:
             ["5.0", "65"],
             ["6.0", "0"],
         ]
-    ) == {
-        "matched": 42616538,
-        "badoffset": 0,
-        "fragment": 1,
-        "short": 34,
-        "normalized": 65,
-        "memdrop": 0,
-    }
+    ) == PacketCounters(
+        matched=42616538,
+        badoffset=0,
+        fragment=1,
+        short=34,
+        normalized=65,
+        memdrop=0,
+    )
 
 
 def test_parse_pfsense_counter_empty() -> None:
@@ -37,22 +39,22 @@ def test_parse_pfsense_counter_empty() -> None:
 def test_check_pfsense_counter_pure() -> None:
     assert list(
         check_pfsense_counter_pure(
-            {
-                "average": 3,
-                "badoffset": (100.0, 10000.0),
-                "fragment": (0.0, 0.0),
-                "short": (100.0, 10000.0),
-                "normalized": (0.1, 10000.0),
-                "memdrop": (100.0, 10000.0),
-            },
-            {
-                "matched": 42616538,
-                "badoffset": 0,
-                "fragment": 1,
-                "short": 34,
-                "normalized": 65,
-                "memdrop": 0,
-            },
+            CheckParameters(
+                average=3,
+                badoffset=(100.0, 10000.0),
+                fragment=(0.0, 0.0),
+                short=(100.0, 10000.0),
+                normalized=(0.1, 10000.0),
+                memdrop=(100.0, 10000.0),
+            ),
+            PacketCounters(
+                matched=42616538,
+                badoffset=0,
+                fragment=1,
+                short=34,
+                normalized=65,
+                memdrop=0,
+            ),
             100.0,
             {
                 "pfsense_counter-matched": (0, 0.0),

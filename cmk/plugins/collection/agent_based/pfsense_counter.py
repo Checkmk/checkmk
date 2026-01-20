@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping, MutableMapping
-from typing import Any
+from collections.abc import MutableMapping
+from dataclasses import asdict, dataclass
+from typing import Any, ReadOnly, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -26,30 +27,48 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-Section = Mapping[str, int]
+
+@dataclass(frozen=True, kw_only=True)
+class PacketCounters:
+    matched: int | None = None
+    badoffset: int | None = None
+    fragment: int | None = None
+    short: int | None = None
+    normalized: int | None = None
+    memdrop: int | None = None
 
 
-def parse_pfsense_counter(string_table: StringTable) -> Section | None:
-    names = {
-        "1.0": "matched",
-        "2.0": "badoffset",
-        "3.0": "fragment",
-        "4.0": "short",
-        "5.0": "normalized",
-        "6.0": "memdrop",
-    }
-
-    parsed = {}
-    for end_oid, counter_text in string_table:
-        parsed[names[end_oid]] = int(counter_text)
-    return parsed or None
+def parse_pfsense_counter(string_table: StringTable) -> PacketCounters | None:
+    raw_counters_by_end_oid = dict(string_table)
+    counters = PacketCounters(
+        matched=_parse_optional_raw_counter(raw_counters_by_end_oid.get("1.0")),
+        badoffset=_parse_optional_raw_counter(raw_counters_by_end_oid.get("2.0")),
+        fragment=_parse_optional_raw_counter(raw_counters_by_end_oid.get("3.0")),
+        short=_parse_optional_raw_counter(raw_counters_by_end_oid.get("4.0")),
+        normalized=_parse_optional_raw_counter(raw_counters_by_end_oid.get("5.0")),
+        memdrop=_parse_optional_raw_counter(raw_counters_by_end_oid.get("6.0")),
+    )
+    return counters if any(asdict(counters).values()) else None
 
 
-def discovery_pfsense_counter(section: Section) -> DiscoveryResult:
+def _parse_optional_raw_counter(raw_value: str | None) -> int | None:
+    return int(raw_value) if raw_value is not None else None
+
+
+def discovery_pfsense_counter(section: PacketCounters) -> DiscoveryResult:
     yield Service()
 
 
-def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckResult:
+class CheckParameters(TypedDict):
+    average: ReadOnly[int]
+    badoffset: ReadOnly[tuple[float, float]]
+    fragment: ReadOnly[tuple[float, float]]
+    short: ReadOnly[tuple[float, float]]
+    normalized: ReadOnly[tuple[float, float]]
+    memdrop: ReadOnly[tuple[float, float]]
+
+
+def check_pfsense_counter(params: CheckParameters, section: PacketCounters) -> CheckResult:
     yield from check_pfsense_counter_pure(
         params,
         section,
@@ -59,43 +78,104 @@ def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckR
 
 
 def check_pfsense_counter_pure(
-    params: Mapping[str, Any],
-    section: Section,
+    params: CheckParameters,
+    section: PacketCounters,
     timestamp: float,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-    namestoinfo = {
-        "matched": "Packets that matched a rule",
-        "badoffset": "Packets with bad offset",
-        "fragment": "Fragmented packets",
-        "short": "Short packets",
-        "normalized": "Normalized packets",
-        "memdrop": "Packets dropped due to memory limitations",
-    }
+    backlog_minutes = params["average"]
+    yield Result(state=State.OK, summary=f"Values averaged over {backlog_minutes} min")
 
-    if backlog_minutes := params.get("average"):
-        backlog_minutes = params["average"]
-        yield Result(state=State.OK, summary="Values averaged over %d min" % params["average"])
+    yield from _check_counter(
+        counter=section.matched,
+        backlog_minutes=backlog_minutes,
+        timestamp=timestamp,
+        value_store=value_store,
+        levels=None,
+        ident="matched",
+        label="Packets that matched a rule",
+    )
+    yield from _check_counter(
+        counter=section.badoffset,
+        backlog_minutes=backlog_minutes,
+        timestamp=timestamp,
+        value_store=value_store,
+        levels=params["badoffset"],
+        ident="badoffset",
+        label="Packets with bad offset",
+    )
+    yield from _check_counter(
+        counter=section.fragment,
+        backlog_minutes=backlog_minutes,
+        timestamp=timestamp,
+        value_store=value_store,
+        levels=params["fragment"],
+        ident="fragment",
+        label="Fragmented packets",
+    )
+    yield from _check_counter(
+        counter=section.short,
+        backlog_minutes=backlog_minutes,
+        timestamp=timestamp,
+        value_store=value_store,
+        levels=params["short"],
+        ident="short",
+        label="Short packets",
+    )
+    yield from _check_counter(
+        counter=section.normalized,
+        backlog_minutes=backlog_minutes,
+        timestamp=timestamp,
+        value_store=value_store,
+        levels=params["normalized"],
+        ident="normalized",
+        label="Normalized packets",
+    )
+    yield from _check_counter(
+        counter=section.memdrop,
+        backlog_minutes=backlog_minutes,
+        timestamp=timestamp,
+        value_store=value_store,
+        levels=params["memdrop"],
+        ident="memdrop",
+        label="Packets dropped due to memory limitations",
+    )
 
-    for what in section:
-        levels = params.get(what)
-        rate = get_rate(
-            value_store, "pfsense_counter-%s" % what, timestamp, section[what], raise_overflow=True
-        )
 
-        if backlog_minutes:
-            yield Metric("fw_packets_" + what, rate, levels=levels)
-            rate = get_average(
-                value_store, "pfsense_counter-%srate" % what, timestamp, rate, backlog_minutes
-            )
-
-        yield from check_levels_v1(
-            rate,
-            metric_name=f"fw{'_avg' if backlog_minutes else ''}_packets_{what}",
-            levels_upper=levels,
-            render_func=lambda x: "%.2f pkts" % x,
-            label=namestoinfo[what],
-        )
+def _check_counter(
+    *,
+    counter: int | None,
+    backlog_minutes: int,
+    timestamp: float,
+    value_store: MutableMapping[str, Any],
+    levels: tuple[float, float] | None,
+    ident: str,
+    label: str,
+) -> CheckResult:
+    if counter is None:
+        return
+    rate = get_rate(
+        value_store,
+        "pfsense_counter-%s" % ident,
+        timestamp,
+        counter,
+        raise_overflow=True,
+    )
+    averaged_rate = get_average(
+        value_store,
+        "pfsense_counter-%srate" % ident,
+        timestamp,
+        rate,
+        backlog_minutes,
+    )
+    yield Metric("fw_packets_" + ident, rate, levels=levels)
+    yield from check_levels_v1(
+        averaged_rate,
+        metric_name=f"fw_avg_packets_{ident}",
+        levels_upper=levels,
+        render_func=lambda x: f"{x:.2f} pkts",
+        label=label,
+    )
 
 
 snmp_section_pfsense_counter = SimpleSNMPSection(
@@ -114,12 +194,12 @@ check_plugin_pfsense_counter = CheckPlugin(
     discovery_function=discovery_pfsense_counter,
     check_function=check_pfsense_counter,
     check_ruleset_name="pfsense_counter",
-    check_default_parameters={
-        "badoffset": (100.0, 10000.0),
-        "short": (100.0, 10000.0),
-        "memdrop": (100.0, 10000.0),
-        "normalized": (100.0, 10000.0),
-        "fragment": (100.0, 10000.0),
-        "average": 3,
-    },
+    check_default_parameters=CheckParameters(
+        average=3,
+        badoffset=(100.0, 10000.0),
+        fragment=(100.0, 10000.0),
+        short=(100.0, 10000.0),
+        normalized=(100.0, 10000.0),
+        memdrop=(100.0, 10000.0),
+    ),
 )

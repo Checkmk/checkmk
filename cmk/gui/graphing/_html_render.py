@@ -301,12 +301,6 @@ def _title_info_elements(
             yield service_description, service_url
 
 
-def _graph_legend_enabled(
-    graph_render_config: GraphRenderConfig, graph_artwork: GraphArtwork
-) -> bool:
-    return bool(graph_render_config.show_legend and graph_artwork.curves)
-
-
 def _show_graph_html_content(
     request: Request,
     graph_artwork: GraphArtwork,
@@ -382,7 +376,7 @@ def _show_graph_html_content(
     )
 
     # Note: due to "omit_zero_metrics" the graph might not have any curves
-    if _graph_legend_enabled(graph_render_config, graph_artwork):
+    if graph_render_config.show_legend and graph_artwork.curves:
         _show_graph_legend(graph_artwork, graph_render_config)
 
     if additional_html := graph_artwork.definition.additional_html:
@@ -1192,7 +1186,7 @@ def _render_ajax_graph_hover(
 def _graph_legend_height_ex(
     graph_render_config: GraphRenderConfig, graph_artwork: GraphArtwork
 ) -> float:
-    if not _graph_legend_enabled(graph_render_config, graph_artwork):
+    if not graph_render_config.show_legend or not graph_artwork.curves:
         return 0.0
     # Add header line + spacing: '3.0'
     return 3.0 + (len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules)) * 1.3

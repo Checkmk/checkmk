@@ -1311,16 +1311,16 @@ def host_service_graph_dashlet_cmk(
         # to correct results. But this is a more generic problem of the
         # html_size_per_ex which is hard coded instead of relying on the font
         # as it should.
-        legend_height = (
+        height -= int(
             3.0 + (len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules)) * 1.3
         )
-        if (graph_height := int(height - legend_height)) <= 0:
+        if height <= 0:
             return render_graph_error_html(
                 title=_("Dashlet too short to render graph"),
                 msg_or_exc=_("Either increase the dashlet height or disable the graph legend."),
                 debug=debug,
             )
-        graph_render_config.size = (width, graph_height)
+        graph_render_config.size = (width, height)
 
     recipe_specific_render_config = graph_render_config.update_from_options(
         graph_recipe.render_options

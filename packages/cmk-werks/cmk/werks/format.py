@@ -8,7 +8,7 @@ from collections.abc import Iterator
 from .load import load_werk_v2
 from .markup import markdown_to_nowiki
 from .models import Compatibility
-from .parse import WerkV2ParseResult
+from .parse import WerkV2ParseResult, WerkV3ParseResult
 
 
 def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:
@@ -35,7 +35,7 @@ def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:
     return "\n".join(generator())
 
 
-def format_as_werk_v2(werk: WerkV2ParseResult) -> str:
+def format_as_werk_v2(werk: WerkV2ParseResult | WerkV3ParseResult) -> str:
     metadata = werk.metadata.copy()
 
     metadata.pop("id")

@@ -11,7 +11,7 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 
 from cmk.utils.version import RType, Version
 
-from cmk.werks.models import Class, Compatibility, Edition, Werk
+from cmk.werks.models import Class, Compatibility, Edition, Werk, WerkV3
 
 from .. import has_content, load_raw_files
 from ..werk import sort_by_version_and_component, WerkTranslator
@@ -26,7 +26,7 @@ class SimpleWerk(NamedTuple):
     url: str
 
     @classmethod
-    def from_werk(cls, werk: Werk) -> "SimpleWerk":
+    def from_werk(cls, werk: Werk | WerkV3) -> "SimpleWerk":
         prefix = ""
         if werk.class_ == Class.FIX:
             prefix = "FIX: "
@@ -53,7 +53,7 @@ class WerksByEdition(NamedTuple):
     len: int
 
 
-def get_werks_by_edition(werks: list[Werk], edition: Edition) -> WerksByEdition:
+def get_werks_by_edition(werks: list[Werk | WerkV3], edition: Edition) -> WerksByEdition:
     werks_by_edition = [werk for werk in werks if werk.edition == edition]
     result = []
     translator = WerkTranslator()

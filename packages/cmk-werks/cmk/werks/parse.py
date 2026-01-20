@@ -14,6 +14,11 @@ class WerkV2ParseResult(NamedTuple):
     description: str
 
 
+class WerkV3ParseResult(NamedTuple):
+    metadata: dict[str, str]
+    description: str
+
+
 def markdown_table_to_dict(markdown_table: str) -> dict[str, str]:
     """
     Convert a Markdown table to dictionary.
@@ -42,6 +47,43 @@ def markdown_table_to_dict(markdown_table: str) -> dict[str, str]:
         raise WerkError("Second row in markdown table should be a separator line")
 
     return dict(elements)
+
+
+def parse_werk_v3(content: str, werk_id: str) -> WerkV3ParseResult:
+    metadata: dict[str, str] = {
+        "id": werk_id,
+    }
+    if not content.startswith("[//]: # (werk v3)\n"):
+        raise WerkError(
+            "V3 Markdown formatted werks need to start with header: '[//]: # (werk v3)\\n'"
+        )
+
+    sections = content.split("\n\n", 2)
+    if len(sections) == 2:
+        md_title, md_table = sections
+        md_description = ""
+    elif len(sections) == 3:
+        md_title, md_table, md_description = sections
+    else:
+        raise WerkError(
+            "Structure of markdown werk could not be detected. Format has to be:"
+            "header, headline, empty line, table and optionally empty line, description"
+        )
+
+    title = md_title.removeprefix("[//]: # (werk v3)\n")
+
+    # TODO: check if it really is a h1 headline?!
+    if not title.startswith("#"):
+        raise WerkError(
+            "First element after the header needs to be the title as a h1 headline. "
+            "The line has to start with '#'."
+        )
+    metadata["title"] = title.removeprefix("#").strip()
+
+    # we parse the table on our own, converting it to html and parsing the html is quite slow
+    metadata.update(markdown_table_to_dict(md_table))
+
+    return WerkV3ParseResult(metadata, md_description)
 
 
 def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:

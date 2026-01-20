@@ -29,7 +29,19 @@ from . import parse_werk
 from .config import Config, load_config
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
-from .parse import WerkV2ParseResult
+from .models import Edition, EditionV3
+from .parse import WerkV2ParseResult, WerkV3ParseResult
+
+
+def edition_v3_to_v2(edition: EditionV3) -> Edition:
+    mapping = {
+        EditionV3.COMMUNITY: Edition.CRE,
+        EditionV3.PRO: Edition.CEE,
+        EditionV3.ULTIMATE: Edition.CCE,
+        EditionV3.ULTIMATEMT: Edition.CME,
+        EditionV3.CLOUD: Edition.CSE,
+    }
+    return mapping[edition]
 
 
 class WerkId:
@@ -57,14 +69,14 @@ class WerkId:
 class Werk(NamedTuple):
     path: Path
     id: WerkId
-    content: WerkV2ParseResult
+    content: WerkV2ParseResult | WerkV3ParseResult
 
     @property
     def date(self) -> datetime.datetime:
         return datetime.datetime.fromisoformat(self.content.metadata["date"])
 
 
-WerkVersion = Literal["v1", "v2"]
+WerkVersion = Literal["v1", "v2", "v3"]
 
 WerkMetadata = dict[str, str]
 
@@ -378,9 +390,10 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
     if destination is None:
         destination = werk.path
     with destination.open("w") as f:
-        if werk_version == "v2":
+        if werk_version in ("v2", "v3"):
             f.write(format_as_werk_v2(werk.content))
         else:
+            assert isinstance(werk.content, WerkV2ParseResult)
             f.write(format_as_werk_v1(werk.content))
 
     save_last_werkid(werk.id)
@@ -388,6 +401,12 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
 
 def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVersion) -> None:
     werk = load_werk(werk_path)
+    if isinstance(werk.content, WerkV3ParseResult):
+        edition_str = werk.content.metadata.get("edition", "")
+        werk.content.metadata["edition"] = edition_v3_to_v2(EditionV3(edition_str)).value
+        sys.stdout.write(
+            f"Converted edition from '{edition_str}' to '{werk.content.metadata['edition']}'.\n"
+        )
     werk.content.metadata["version"] = new_version
     save_werk(werk, werk_version)
     git_add(werk)
@@ -916,8 +935,9 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
 
         # maybe we need to adapt the filename:
         if found_werk_path.source.suffix != found_werk_path.destination.suffix:
-            # but this also means we need to change the content
+            # Converting from .md (v2/v3) to non-.md (v1) format
             werk = load_werk(found_werk_path.source)
+
             git_move(found_werk_path.source, found_werk_path.destination)
             save_werk(werk, werk_version, found_werk_path.destination)
             # git add will be executed by change_werk_version

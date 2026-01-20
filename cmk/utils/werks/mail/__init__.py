@@ -35,7 +35,7 @@ from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.version import Version
 
 from cmk.werks import load_werk
-from cmk.werks.models import Class, Level, Werk
+from cmk.werks.models import Class, Level, Werk, WerkV3
 
 from ..werk import WerkTranslator
 
@@ -97,7 +97,7 @@ SEC_ADDRESS = Address(
 )
 
 
-def get_default_addresses(werk: Werk) -> list[Address]:
+def get_default_addresses(werk: Werk | WerkV3) -> list[Address]:
     addresses = []
     if werk.class_ == Class.SECURITY:
         addresses.append(SEC_ADDRESS)
@@ -123,7 +123,7 @@ def replace_default_address(default: Address, mail: Address) -> Address:
     )
 
 
-def build_mail_addresses(werk: Werk, args: Args) -> Sequence[Address]:
+def build_mail_addresses(werk: Werk | WerkV3, args: Args) -> Sequence[Address]:
     addresses = get_default_addresses(werk)
 
     if args.mail:
@@ -180,7 +180,9 @@ class WerkCommit(NamedTuple):
     commit: Commit
 
 
-def load_werk_fixup(werk_commit: WerkCommit, change: WerkChange, repo: Repo, args: Args) -> Werk:
+def load_werk_fixup(
+    werk_commit: WerkCommit, change: WerkChange, repo: Repo, args: Args
+) -> Werk | WerkV3:
     try:
         if args.do_fetch_git_notes:
             git_notes_fetch(repo, args.ref_fixup, force=True)
@@ -363,7 +365,7 @@ def git_notes_push(repo: Repo, args: Args) -> None:
 
 
 def send_mail(
-    werk: Werk,
+    werk: Werk | WerkV3,
     change: WerkChange,
     template: Template,
     translator: WerkTranslator,

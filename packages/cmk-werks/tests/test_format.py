@@ -6,7 +6,7 @@
 
 from cmk.werks import parse_werk
 from cmk.werks.format import format_as_werk_v1, format_as_werk_v2
-from cmk.werks.parse import parse_werk_v2
+from cmk.werks.parse import parse_werk_v2, WerkV2ParseResult
 
 
 def test_markdown_parse_roundtrip() -> None:
@@ -98,6 +98,7 @@ LI: ...entries!
 
     parsed.metadata["version"] = "77.77.77p77"
 
+    assert isinstance(parsed, WerkV2ParseResult)
     content = format_as_werk_v1(parsed)
     assert (
         content

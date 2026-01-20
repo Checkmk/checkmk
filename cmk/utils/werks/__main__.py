@@ -8,7 +8,7 @@ from pathlib import Path
 
 from cmk.utils.version import __version__, Version
 
-from cmk.werks.models import Edition, Werk
+from cmk.werks.models import Edition, Werk, WerkV3
 
 from . import (
     load_precompiled_werks_file,
@@ -38,7 +38,7 @@ def main_precompile(args: argparse.Namespace) -> None:
     )
     current_version = Version.from_str(__version__)
 
-    def _filter(werk: Werk) -> bool:
+    def _filter(werk: Werk | WerkV3) -> bool:
         if filter_by_edition is not None and werk.edition != filter_by_edition:
             return False
         # only include werks of this major version:

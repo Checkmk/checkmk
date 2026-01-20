@@ -11,7 +11,7 @@ from typing import Literal
 from cmk.utils.i18n import _
 from cmk.utils.version import parse_check_mk_version
 
-from cmk.werks.models import Class, Compatibility, Werk, WerkV2Base
+from cmk.werks.models import Class, Compatibility, Werk, WerkV2Base, WerkV3
 
 _CLASS_SORTING_VALUE = {
     Class.FEATURE: 1,
@@ -38,7 +38,7 @@ class WebsiteWerk(WerkV2Base):
 
 
 def get_sort_key_by_version_and_component(
-    translator: "WerkTranslator", werk: Werk
+    translator: "WerkTranslator", werk: Werk | WerkV3
 ) -> tuple[str | int, ...]:
     return (
         -parse_check_mk_version(werk.version),
@@ -51,7 +51,7 @@ def get_sort_key_by_version_and_component(
     )
 
 
-def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
+def sort_by_version_and_component(werks: Iterable[Werk | WerkV3]) -> list[Werk | WerkV3]:
     translator = WerkTranslator()
     return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
@@ -107,13 +107,13 @@ class WerkTranslator:
     def classes(self) -> list[tuple[str, str]]:
         return list(self._classes.items())
 
-    def class_of(self, werk: Werk) -> str:
+    def class_of(self, werk: Werk | WerkV3) -> str:
         return self._classes[werk.class_.value]  # TODO: remove .value
 
     def components(self) -> list[tuple[str, str]]:
         return list(self._components.items())
 
-    def component_of(self, werk: Werk) -> str:
+    def component_of(self, werk: Werk | WerkV3) -> str:
         c = werk.component
         return self._components.get(c, c)
 

@@ -28,7 +28,7 @@ from pydantic import RootModel, TypeAdapter
 import cmk.utils.paths
 
 from cmk.werks import load_werk
-from cmk.werks.models import Class, Compatibility, Werk, WerkV1
+from cmk.werks.models import Class, Compatibility, Werk, WerkV1, WerkV3
 from cmk.werks.parse import parse_werk_v1
 
 from .werk import sort_by_version_and_component, WerkTranslator
@@ -95,10 +95,10 @@ def load_raw_files_old(werks_dir: Path) -> list[WerkV1]:
 # TEMPORARY FIX END!
 
 
-def load_raw_files(werks_dir: Path) -> list[Werk]:
+def load_raw_files(werks_dir: Path) -> list[Werk | WerkV3]:
     if werks_dir is None:
         werks_dir = _compiled_werks_dir()
-    werks: list[Werk] = []
+    werks: list[Werk | WerkV3] = []
     for file_name in werks_dir.glob("[0-9]*"):
         try:
             werks.append(load_werk(file_content=file_name.read_text(), file_name=file_name.name))
@@ -107,7 +107,7 @@ def load_raw_files(werks_dir: Path) -> list[Werk]:
     return werks
 
 
-def write_precompiled_werks(path: Path, werks: dict[int, Werk]) -> None:
+def write_precompiled_werks(path: Path, werks: dict[int, Werk | WerkV3]) -> None:
     with path.open("w", encoding="utf-8") as fp:
         fp.write(Werks.model_validate(werks).model_dump_json(by_alias=True))
 
@@ -140,7 +140,7 @@ def has_content(description: str) -> bool:
     return bool(description.strip())
 
 
-def write_werk_as_text(f: IO[str], werk: Werk) -> None:
+def write_werk_as_text(f: IO[str], werk: Werk | WerkV3) -> None:
     # TODO: use jinja templates of .announce
     prefix = ""
     if werk.class_ == Class.FIX:

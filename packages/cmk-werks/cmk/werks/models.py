@@ -24,6 +24,14 @@ class Edition(Enum):
     CME = "cme"
 
 
+class EditionV3(Enum):
+    COMMUNITY = "community"
+    PRO = "pro"
+    ULTIMATE = "ultimate"
+    ULTIMATEMT = "ultimatemt"
+    CLOUD = "cloud"
+
+
 class Level(Enum):
     LEVEL_1 = 1
     LEVEL_2 = 2
@@ -39,6 +47,37 @@ class Class(Enum):
     FEATURE = "feature"
     FIX = "fix"
     SECURITY = "security"
+
+
+class WerkV3Base(BaseModel):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    werk_version: Literal["3"] = Field(default="3", alias="__version__")
+    id: int
+    class_: Class = Field(alias="class")
+    component: str
+    level: Level
+    date: datetime.datetime
+    compatible: Compatibility
+    edition: EditionV3
+    description: str
+    title: str
+
+    @field_validator("level", mode="before")
+    @classmethod
+    def parse_level(cls, v: str) -> Level:
+        if isinstance(v, Level):
+            return v
+        try:
+            return Level(int(v))
+        except ValueError as e:
+            raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead") from e
+
+    def to_json_dict(self) -> dict[str, object]:
+        return self.model_dump(by_alias=True, mode="json")
 
 
 class WerkV2Base(BaseModel):
@@ -79,6 +118,16 @@ class Werk(WerkV2Base):
 
     @classmethod
     def from_json(cls, data: dict[str, object]) -> Werk:
+        return cls.model_validate(data)
+
+
+class WerkV3(WerkV3Base):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    version: str
+
+    @classmethod
+    def from_json(cls, data: dict[str, object]) -> WerkV3:
         return cls.model_validate(data)
 
 

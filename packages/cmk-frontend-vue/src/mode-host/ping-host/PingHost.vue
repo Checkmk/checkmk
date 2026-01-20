@@ -245,6 +245,7 @@ function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean):
     v-for="[elementName, { status, element }] in Object.entries(statusElements)"
     :key="elementName"
     :to="element.parentNode"
+    defer
   >
     <span class="mh-ping-host__status-box">
       <CmkAlertBox

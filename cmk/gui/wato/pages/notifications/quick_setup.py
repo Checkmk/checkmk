@@ -1607,6 +1607,17 @@ def recipient() -> QuickSetupStage:
                                                     Title("Select contact group")
                                                 ),
                                                 single_choice_type=SingleChoice,
+                                                help_text=Help(
+                                                    "Restricts the list of "
+                                                    "contacts created by the "
+                                                    "previous options to those "
+                                                    "who are members of the "
+                                                    "selected contact groups. If "
+                                                    "more than one contact group "
+                                                    "is selected, the contact "
+                                                    "must be a member of all "
+                                                    "selected groups."
+                                                ),
                                                 elements=_contact_group_choice(),
                                                 custom_validate=[
                                                     LengthInRange(

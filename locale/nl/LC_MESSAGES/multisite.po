@@ -4622,11 +4622,11 @@ msgid "Add recipient"
 msgstr "Ontvanger"
 
 #, fuzzy
-msgid "Add relay"
+msgid "Add Relay"
 msgstr "Sleutel toevoegen"
 
 #, fuzzy
-msgid "Add relay configuration"
+msgid "Add Relay configuration"
 msgstr "RRA-configuratie"
 
 #, fuzzy
@@ -46943,7 +46943,7 @@ msgid "No relay ID specified."
 msgstr "Host configuratie"
 
 #, fuzzy
-msgid "No relay configuration yet"
+msgid "No Relay configuration yet"
 msgstr "Host configuratie"
 
 #, fuzzy

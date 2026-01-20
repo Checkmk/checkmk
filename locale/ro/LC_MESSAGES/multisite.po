@@ -4638,11 +4638,11 @@ msgid "Add recipient"
 msgstr "Destinatarul"
 
 #, fuzzy
-msgid "Add relay"
+msgid "Add Relay"
 msgstr "Adăugați cheia"
 
 #, fuzzy
-msgid "Add relay configuration"
+msgid "Add Relay configuration"
 msgstr "Configurația RRA"
 
 #, fuzzy
@@ -47077,7 +47077,7 @@ msgid "No relay ID specified."
 msgstr "Configurație gazdă"
 
 #, fuzzy
-msgid "No relay configuration yet"
+msgid "No Relay configuration yet"
 msgstr "Configurație gazdă"
 
 #, fuzzy

@@ -279,15 +279,15 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.29 \
-    --hash=sha256:247e54f24116ad6792cfc14b274288383af3ec3433b0547da8a14a8bd6e81950 \
-    --hash=sha256:6c9c4dece67bf72d82ba7dff48e33a56a87cdf9b16c8887f88ca7789a95d3317
+boto3==1.42.30 \
+    --hash=sha256:ba9cd2f7819637d15bfbeb63af4c567fcc8a7dcd7b93dd12734ec58601169538 \
+    --hash=sha256:d7e548bea65e0ae2c465c77de937bc686b591aee6a352d5a19a16bc751e591c1
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-botocore==1.42.29 \
-    --hash=sha256:0fe869227a1dfe818f691a31b8c1693e39be8056a6dff5d6d4b3fc5b3a5e7d42 \
-    --hash=sha256:b45f8dfc1de5106a9d040c5612f267582e68b2b2c5237477dff85c707c1c5d11
+botocore==1.42.30 \
+    --hash=sha256:97070a438cac92430bb7b65f8ebd7075224f4a289719da4ee293d22d1e98db02 \
+    --hash=sha256:9bf1662b8273d5cc3828a49f71ca85abf4e021011c1f0a71f41a2ea5769a5116
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -731,9 +731,9 @@ feedparser==6.0.12 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-fido2==2.1.0 \
-    --hash=sha256:1bcc68f5664c31a184eb7c54de4dbad3bdf3ed19705e565a778ec8fd1376658a \
-    --hash=sha256:b84da93f9bf608a675feb8445cc1d0cec2b8a02d46d165a1ba2fc8a1ab3bdce1
+fido2==2.1.1 \
+    --hash=sha256:f1379f845870cc7fc64c7f07323c3ce41e8c96c37054e79e0acd5630b3fec5ac \
+    --hash=sha256:f85c16c8084abf6530b6c6ec3a0cf8575943321842e06916686943a8b784182c
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -2422,9 +2422,9 @@ psycopg2-binary==2.9.11 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-pyasn1==0.6.1 \
-    --hash=sha256:0d632f46f2ba09143da3a8afe9e33fb6f92fa2320ab7e886e2d0f7672af84629 \
-    --hash=sha256:6f580d2bdd84365380830acf45550f2511469f673cb4a5ae3857a3170128b034
+pyasn1==0.6.2 \
+    --hash=sha256:1eb26d860996a18e9b6ed05e7aae0e9fc21619fcee6af91cca9bad4fbea224bf \
+    --hash=sha256:9b59a2b25ba7e4f8197db7686c09fb33e658b98339fadb826e9512629017833b
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

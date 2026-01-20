@@ -7,7 +7,7 @@ static ArrayList secret_list(String secret_vars) {
 }
 
 void validate_parameters() {
-    if (COMMAND_LINE == "") {
+    if (params.COMMAND_LINE == "") {
         error("COMMAND_LINE parameter is empty - you need to specify a command to run.");
     }
 }
@@ -25,17 +25,17 @@ void main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-    currentBuild.description = "Running ${PACKAGE_PATH}<br>${currentBuild.description}";
+    currentBuild.description = "Running ${params.PACKAGE_PATH}<br>${currentBuild.description}";
 
-    def distro = DISTRO;
+    def distro = params.DISTRO;
 
     def safe_branch_name = versioning.safe_branch_name();
     def docker_tag = versioning.select_docker_tag(
-        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
-    def output_file = PACKAGE_PATH.split("/")[-1] + ".log"
+    def output_file = params.PACKAGE_PATH.split("/")[-1] + ".log"
 
     def inside_container_args = [
         init: true,
@@ -58,20 +58,20 @@ void main() {
 
         lock(label: lock_label, quantity: 1, resource : null) {
             inside_container(inside_container_args) {
-                withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
+                withCredentials(secret_list(params.SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
                     helper.execute_test([
-                        name       : PACKAGE_PATH,
-                        cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
+                        name       : params.PACKAGE_PATH,
+                        cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
                         output_file: output_file,
                     ]);
             }
-                sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
+                sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");
         }
     }
 
         // Can be removed once ci-artifacts doesn't fail anymore on empty files
         def is_empty = sh(script:"[[ -s ${output_file} ]]", returnStatus:true)
-        def artifacts = "${FILE_ARCHIVING_PATTERN}" + (is_empty ? "" : ", ${output_file}")
+        def artifacts = "${params.FILE_ARCHIVING_PATTERN}" + (is_empty ? "" : ", ${output_file}")
 
         archiveArtifacts(
             artifacts: artifacts,

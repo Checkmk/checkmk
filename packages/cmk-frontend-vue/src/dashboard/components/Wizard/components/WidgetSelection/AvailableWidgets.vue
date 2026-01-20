@@ -50,11 +50,10 @@ const emit = defineEmits<AvailableWidgetsEmits>()
   display: flex;
   flex-direction: row;
   gap: var(--dimension-4);
-  justify-content: space-between;
   width: 100%;
 }
 
 .db-available-widgets__item {
-  flex: 1 1 0px;
+  min-width: 90px;
 }
 </style>

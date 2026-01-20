@@ -31,7 +31,7 @@ const cards = ref<WelcomeCards>(props.cards)
 const stageInformation = ref<StageInformation>(props.stage_information)
 const slideInOpen = defineModel<boolean>({ required: true })
 const nextStepsTitle = _t('Next steps with Checkmk')
-const firstStepsTitle = _t('First steps with Checkmk')
+const firstStepsTitle = _t('Topics to explore')
 
 const completedSteps = computed(() => stageInformation.value?.finished.length || 0)
 const completed = computed(() => completedSteps.value === totalSteps)

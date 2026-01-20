@@ -50,7 +50,7 @@ immediateWatch(
 
 <template>
   <CmkHeading v-if="showHeading" type="h4">
-    {{ _t('First steps with Checkmk') }}
+    {{ _t('Topics to explore') }}
   </CmkHeading>
   <CmkSpace />
   <CmkAccordionStepPanel v-model="openedItems">

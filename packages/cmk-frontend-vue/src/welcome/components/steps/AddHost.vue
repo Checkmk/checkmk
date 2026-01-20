@@ -69,7 +69,7 @@ This allows monitoring to start with minimal configuration effort.`
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
-          <CmkHeading type="h3">{{ _t('Run a service discovery') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Open and run service discovery') }}</CmkHeading>
         </template>
         <template #content>
           <StepHeading>
@@ -144,7 +144,7 @@ This allows monitoring to start with minimal configuration effort.`
           </template>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" />
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
         </template>
       </CmkWizardStep>
 
@@ -176,7 +176,7 @@ This allows monitoring to start with minimal configuration effort.`
           <CmkWizardButton
             v-if="!accomplished && step"
             type="finish"
-            :override-label="_t('Mark as complete')"
+            :override-label="_t('Mark as done')"
           />
           <CmkWizardButton type="previous" />
         </template>

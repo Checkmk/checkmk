@@ -64,7 +64,7 @@ async function closeSlideIn() {
     class="welcome-snapin__continue"
     @click="openSlideIn"
   >
-    {{ completed ? _t("What's next") : _t('Continue setup') }}
+    {{ completed ? _t("What's next") : _t('Continue exploration') }}
   </CmkButton>
   <CmkButton v-else variant="secondary" class="welcome-snapin__continue" @click="closeSlideIn">
     {{ _t('Close') }}

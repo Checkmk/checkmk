@@ -26,7 +26,7 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
         {{ _t('Welcome to Checkmk!') }}
       </CmkHeading>
       <CmkParagraph class="welcome-banner__subtitle">
-        {{ _t('Get started with Checkmk in 5 easy steps.') }}
+        {{ _t('Explore essential concepts of Checkmk and begin your monitoring journey.') }}
       </CmkParagraph>
       <StepsProgressBar :completed-steps="completedSteps" :total-steps="totalSteps" />
     </div>

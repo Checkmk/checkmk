@@ -20,7 +20,9 @@ SOURCE_BUILT_LINUX_AGENTS := \
 	$(REPO_PATH)/agents/linux/cmk-agent-ctl-aarch64 \
 	$(REPO_PATH)/agents/linux/cmk-agent-ctl-aarch64.gz
 ifneq ($(EDITION),community)
-SOURCE_BUILT_AGENT_UPDATER := $(REPO_PATH)/non-free/packages/cmk-update-agent/cmk-update-agent
+SOURCE_BUILT_AGENT_UPDATER := \
+	$(REPO_PATH)/non-free/packages/cmk-update-agent/cmk-update-agent \
+	$(REPO_PATH)/non-free/packages/cmk-update-agent/cmk-update-agent-32
 else
 SOURCE_BUILT_AGENT_UPDATER :=
 endif

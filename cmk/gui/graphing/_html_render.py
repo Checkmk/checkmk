@@ -1179,19 +1179,6 @@ def _render_ajax_graph_hover(
     }
 
 
-# Estimates the height of the graph legend in pixels
-# TODO: This is not acurate! Especially when the font size is changed this does not lead to correct
-# results. But this is a more generic problem of the html_size_per_ex which is hard coded instead
-# of relying on the font as it should.
-def _graph_legend_height_ex(
-    graph_render_config: GraphRenderConfig, graph_artwork: GraphArtwork
-) -> float:
-    if not graph_render_config.show_legend or not graph_artwork.curves:
-        return 0.0
-    # Add header line + spacing: '3.0'
-    return 3.0 + (len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules)) * 1.3
-
-
 # .
 #   .--Graph Dashlet-------------------------------------------------------.
 #   |    ____                 _       ____            _     _      _       |
@@ -1334,9 +1321,13 @@ def host_service_graph_dashlet_cmk(
             backend_time_series_fetcher=backend_time_series_fetcher,
         )
         if graph_artwork.curves:
-            legend_height = _graph_legend_height_ex(
-                graph_render_config,
-                graph_artwork,
+            # Estimates the height of the graph legend in pixels TODO: This is
+            # not acurate! Especially when the font size is changed this does
+            # not lead to correct results. But this is a more generic problem
+            # of the html_size_per_ex which is hard coded instead of relying on
+            # the font as it should.
+            legend_height = (
+                3.0 + (len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules)) * 1.3
             )
             if (graph_height := int(height - legend_height)) <= 0:
                 return render_graph_error_html(

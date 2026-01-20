@@ -24,6 +24,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.base.modes.check_mk import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
@@ -205,11 +206,13 @@ def inventory_as_check(
         secrets_config_relay=StoredSecrets(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+                secrets := load_secrets_file(
+                    cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+                )
             ),
         ),
         secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(),
+            path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
             secrets=secrets,
         ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(

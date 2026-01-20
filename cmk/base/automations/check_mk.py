@@ -112,6 +112,7 @@ from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     PassiveServiceNameConfig,
 )
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.base.core.interface import CoreAction, do_reload, do_restart, MonitoringCore
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump
@@ -1154,11 +1155,13 @@ def _execute_autodiscovery(
         secrets_config_relay=StoredSecrets(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+                secrets := load_secrets_file(
+                    cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+                )
             ),
         ),
         secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(),
+            path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
             secrets=secrets,
         ),
         metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
@@ -3981,7 +3984,7 @@ def automation_get_agent_output(
 
             active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
             active_secrets_path = cmk.utils.password_store.active_secrets_path_site(
-                active_config_path
+                RELATIVE_PATH_SECRETS, active_config_path
             )
             secrets = (
                 StoredSecrets(

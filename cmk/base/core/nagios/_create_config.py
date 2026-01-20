@@ -29,6 +29,7 @@ from cmk.base.config import (
     ObjectAttributes,
     ServicegroupName,
 )
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.base.core.interface import CoreAction, MonitoringCore
 from cmk.base.core.shared import (
     AbstractServiceID,
@@ -737,7 +738,7 @@ def create_nagios_servicedefs(
         final_service_name_config,
         ip_address_of,
         StoredSecrets(
-            path=password_store.active_secrets_path_site(),
+            path=password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
             secrets=stored_passwords,
         ),
         for_relay=for_relay,

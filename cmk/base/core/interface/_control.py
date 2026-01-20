@@ -20,6 +20,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.ccc import config_path, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -332,7 +333,9 @@ def _create_active_config(
         )
         cmk.utils.password_store.save(
             {k: s.reveal() for k, s in passwords.items()},
-            cmk.utils.password_store.active_secrets_path_site(config_creation_context.path_created),
+            cmk.utils.password_store.active_secrets_path_site(
+                RELATIVE_PATH_SECRETS, config_creation_context.path_created
+            ),
         )
 
     core.cleanup_old_configs(cmk.utils.paths.omd_root)

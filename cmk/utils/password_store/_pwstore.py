@@ -55,7 +55,7 @@ def password_store_path() -> Path:
     return cmk.utils.paths.var_dir / "stored_passwords"
 
 
-def active_secrets_path_site(config_path: Path | None = None) -> Path:
+def active_secrets_path_site(relative_path: Path, config_path: Path | None = None) -> Path:
     """file where the passwords for use by the helpers are stored
 
     This is "frozen" in the state at config generation.
@@ -64,7 +64,7 @@ def active_secrets_path_site(config_path: Path | None = None) -> Path:
     """
     if config_path is None:
         config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
-    return config_path / "stored_passwords"
+    return config_path / relative_path
 
 
 # this might not be the best place for this funtion. But for now it keeps dependencies lean.
@@ -208,4 +208,11 @@ def lookup(pw_file: Path, pw_id: str) -> str:
 
 
 def lookup_for_bakery(pw_id: str) -> str:
-    return lookup(active_secrets_path_site(), pw_id)
+    return lookup(
+        active_secrets_path_site(
+            # Duplicated from cmk.base.core.active_config_layout.
+            # But this function is depricated anyway.
+            Path("stored_passwords"),
+        ),
+        pw_id,
+    )

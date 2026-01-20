@@ -46,8 +46,9 @@ void main() {
     ) {
         dir("${checkout_dir}") {
             stage(name: 'Build Image') {
+                // Only build the relay with ultimate edition sources
                 sh("""
-                    bazel build //omd/non-free/relay:image_tar
+                    bazel build --cmk_edition=ultimate //omd/non-free/relay:image_tar
                     mkdir -p ${artifact_directory}/${cmk_version}
                     cp \$(bazel cquery //omd/non-free/relay:image_tar --output=files) ${artifact_directory}/${cmk_version}/${tarball_name};
                 """)

@@ -41,6 +41,7 @@ class Params(BaseModel):
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
     org_id_as_prefix: bool | None = None
+    net_id_as_prefix: bool | None = None
     no_cache: bool | None = None
     timespan: int | None = None
     cache_per_section: CachePerSection | None = None
@@ -77,6 +78,9 @@ def agent_cisco_meraki_arguments(
 
     if params.org_id_as_prefix:
         args.append("--org-id-as-prefix")
+
+    if params.net_id_as_prefix:
+        args.append("--net-id-as-prefix")
 
     if params.no_cache:
         args.append("--no-cache")

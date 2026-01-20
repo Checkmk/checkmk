@@ -22,6 +22,7 @@ class MerakiConfig:
     hostname: str
     org_ids: Sequence[str]
     org_id_as_prefix: bool
+    net_id_as_prefix: bool
     no_cache: bool
     timespan: int
     cache: _CacheConfig
@@ -33,6 +34,7 @@ class MerakiConfig:
             hostname=args.hostname,
             org_ids=args.orgs,
             org_id_as_prefix=args.org_id_as_prefix,
+            net_id_as_prefix=args.net_id_as_prefix,
             no_cache=args.no_cache,
             timespan=args.timespan,
             cache=_CacheConfig.build(args),

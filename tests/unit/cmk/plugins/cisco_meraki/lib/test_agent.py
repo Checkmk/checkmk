@@ -30,7 +30,9 @@ def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 class TestMerakiAgentOutput:
     @pytest.fixture
     def ctx(self) -> MerakiRunContext:
-        args = agent.parse_arguments([*_DEFAULT_ARGS, "--no-cache", "--org-id-as-prefix"])
+        args = agent.parse_arguments(
+            [*_DEFAULT_ARGS, "--no-cache", "--org-id-as-prefix", "--net-id-as-prefix"]
+        )
         config = MerakiConfig.build(args)
         client = MerakiClient(FakeMerakiSDK(), config)
         return MerakiRunContext(config=config, client=client)
@@ -85,16 +87,16 @@ class TestMerakiAgentOutput:
     def test_piggyback_headings(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
         agent.run(ctx)
 
-        value = set(re.findall(r"<<<<(\w+-\w+)>>>>", capsys.readouterr().out))
-        # prefixed with org ID
+        value = set(re.findall(r"<<<<(\w+-\w+-\w+)>>>>", capsys.readouterr().out))
+        # prefixed with org ID and net ID: <org-id>-<net-id>-<device-name>
         expected = {
-            "123-dev1",
-            "123-dev2",
-            "123-sw1",
-            "123-wes1",
-            "456-dev3",
-            "456-sw2",
-            "456-wes2",
+            "123-net1-dev1",
+            "123-net2-dev2",
+            "123-net3-sw1",
+            "123-net4-wes1",
+            "456-wan1-dev3",
+            "456-wan2-sw2",
+            "456-wan3-wes2",
         }
 
         assert value == expected
@@ -202,6 +204,45 @@ class TestMerakiOrganizationPiggybackDevice:
 
         assert value == expected
 
+    def test_with_net_id_prefix_configured(self, meraki_org: MerakiOrganisation) -> None:
+        meraki_org = self._enable_net_id_as_prefix(meraki_org)
+        devices_by_serial = {"xyz": DeviceFactory.build(networkId="net1", name="dev1")}
+
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        expected = "net1-dev1"
+
+        assert value == expected
+
+    def test_with_both_prefixes_configured(self, meraki_org: MerakiOrganisation) -> None:
+        meraki_org = self._enable_org_id_as_prefix(meraki_org)
+        meraki_org = self._enable_net_id_as_prefix(meraki_org)
+        devices_by_serial = {
+            "xyz": DeviceFactory.build(organization_id="123", networkId="net1", name="dev1")
+        }
+
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        expected = "123-net1-dev1"
+
+        assert value == expected
+
+    def test_with_both_prefixes_configured_but_network_id_value_is_empty(
+        self, meraki_org: MerakiOrganisation
+    ) -> None:
+        meraki_org = self._enable_org_id_as_prefix(meraki_org)
+        meraki_org = self._enable_net_id_as_prefix(meraki_org)
+        devices_by_serial = {
+            "xyz": DeviceFactory.build(organization_id="123", networkId="", name="dev1")
+        }
+
+        value = meraki_org._get_device_piggyback("xyz", devices_by_serial)
+        expected = "123-dev1"
+
+        assert value == expected
+
     def _enable_org_id_as_prefix(self, meraki_org: MerakiOrganisation) -> MerakiOrganisation:
         patched_config = dataclasses.replace(meraki_org.config, org_id_as_prefix=True)
+        return dataclasses.replace(meraki_org, config=patched_config)
+
+    def _enable_net_id_as_prefix(self, meraki_org: MerakiOrganisation) -> MerakiOrganisation:
+        patched_config = dataclasses.replace(meraki_org.config, net_id_as_prefix=True)
         return dataclasses.replace(meraki_org, config=patched_config)

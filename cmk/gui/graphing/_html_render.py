@@ -843,35 +843,6 @@ def render_graphs_from_specification_html(
             debug=debug,
         )
 
-    return _render_graphs_from_definitions(
-        request,
-        graph_recipes,
-        graph_data_range,
-        graph_render_config,
-        registered_metrics,
-        debug=debug,
-        graph_timeranges=graph_timeranges,
-        temperature_unit=temperature_unit,
-        backend_time_series_fetcher=backend_time_series_fetcher,
-        render_async=render_async,
-        graph_display_id=graph_display_id,
-    )
-
-
-def _render_graphs_from_definitions(
-    request: Request,
-    graph_recipes: Sequence[GraphRecipe],
-    graph_data_range: GraphDataRange,
-    graph_render_config: GraphRenderConfig,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    *,
-    debug: bool,
-    graph_timeranges: Sequence[GraphTimerange],
-    temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
-    render_async: bool = True,
-    graph_display_id: str = "",
-) -> HTML:
     output = HTML.empty()
     for graph_recipe in graph_recipes:
         recipe_specific_render_config = graph_render_config.update_from_options(

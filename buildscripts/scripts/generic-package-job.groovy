@@ -35,14 +35,14 @@ void main() {
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
-    def output_file = params.PACKAGE_PATH.split("/")[-1] + ".log"
+    def output_file = params.PACKAGE_PATH.split("/")[-1] + ".log";
 
     def inside_container_args = [
         init: true,
         privileged: true,
         pull: true,
         set_docker_group_id: true,
-    ]
+    ];
 
     if (distro != "REFERENCE_IMAGE") {
         inside_container_args += [
@@ -64,20 +64,20 @@ void main() {
                         cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
                         output_file: output_file,
                     ]);
-            }
+                }
                 sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");
+            }
         }
-    }
 
         // Can be removed once ci-artifacts doesn't fail anymore on empty files
-        def is_empty = sh(script:"[[ -s ${output_file} ]]", returnStatus:true)
-        def artifacts = "${params.FILE_ARCHIVING_PATTERN}" + (is_empty ? "" : ", ${output_file}")
+        def is_empty = sh(script:"[[ -s ${output_file} ]]", returnStatus:true);
+        def artifacts = "${params.FILE_ARCHIVING_PATTERN}" + (is_empty ? "" : ", ${output_file}");
 
         archiveArtifacts(
             artifacts: artifacts,
             fingerprint: true,
         );
-}
+    }
 }
 
 return this;

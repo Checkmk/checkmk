@@ -121,8 +121,8 @@ DictDoubleValueFilter::DictDoubleValueFilter(Kind kind, std::string columnName,
         return DoubleFilter{
             kind,
             columnName,
-            [this, ref_varname = std::move(ref_varname)](Row row) {
-                auto cvm = f_(row);
+            [get_col = f_, ref_varname = std::move(ref_varname)](Row row) {
+                auto cvm = get_col(row);
                 auto it = cvm.find(ref_varname);
                 return it == cvm.end() ? 0.0 : it->second;
             },

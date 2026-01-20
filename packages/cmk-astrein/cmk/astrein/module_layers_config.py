@@ -182,6 +182,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     "clickhouse_omd": ("cmk.metric_backend",),
     "custom_query_metric_backend": (
         "cmk.metric_backend",
+        "cmk.utils.macros",
         "cmk.utils.paths",
         "cmk.gui.form_specs.nonfree.ultimate.unstable.metric_backend_custom_query",
     ),

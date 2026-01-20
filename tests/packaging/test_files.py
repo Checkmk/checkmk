@@ -414,6 +414,8 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
             [
                 "osslsigncode",
                 "verify",
+                "-ignore-cdp",
+                "-ignore-crl",
                 file_path,
             ],
             check=False,

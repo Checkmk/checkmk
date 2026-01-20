@@ -81,7 +81,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           </StepCardsRow>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" />
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
         </template>
       </CmkWizardStep>
 

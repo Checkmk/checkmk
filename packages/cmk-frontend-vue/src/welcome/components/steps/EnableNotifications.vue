@@ -79,7 +79,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           </StepCardsRow>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" />
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
         </template>
       </CmkWizardStep>
 
@@ -108,7 +108,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           <CmkWizardButton
             v-if="!accomplished && stepId"
             type="finish"
-            :override-label="_t('Mark as complete')"
+            :override-label="_t('Mark as done')"
             @click="emit('step-completed', stepId)"
           />
           <CmkWizardButton type="previous" />

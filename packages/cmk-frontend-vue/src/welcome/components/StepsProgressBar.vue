@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
@@ -24,6 +26,12 @@ export interface StepsProgressBarProps {
 }
 
 const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps>()
+const progressLabel = computed(() => {
+  return (
+    (totalSteps === completedSteps ? `${totalSteps} ` : `${completedSteps}/${totalSteps} `) +
+    _t('Topics explored')
+  )
+})
 </script>
 
 <template>
@@ -31,8 +39,7 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
     <CmkHeading v-if="!hideHeading" type="h4">{{ _t('Your progress') }}</CmkHeading>
     <div class="steps-progress-bar__content" :class="{ 'flex-column': flexColumn }">
       <CmkParagraph>
-        {{ completedSteps }}/{{ totalSteps }}
-        {{ _t('Steps complete') }}
+        {{ progressLabel }}
       </CmkParagraph>
       <CmkProgressbar
         class="steps-progress-bar__bar"

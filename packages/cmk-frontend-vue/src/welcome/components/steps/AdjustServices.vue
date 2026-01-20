@@ -45,7 +45,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="_t('Adjust services')"
+    :title="_t('Adjust service thresholds')"
     :info="_t('5-7 min')"
   >
     <StepParagraph>
@@ -63,7 +63,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
-          <CmkHeading type="h3">{{ _t('Run a service discovery') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Open and run service discovery') }}</CmkHeading>
         </template>
         <template #content>
           <StepParagraph>
@@ -84,7 +84,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           </StepCardsRow>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" />
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
         </template>
       </CmkWizardStep>
 
@@ -110,7 +110,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           </StepParagraph>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" />
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
           <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
@@ -133,7 +133,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           </StepParagraph>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" />
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
           <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
@@ -166,7 +166,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           <CmkWizardButton
             v-if="!accomplished && stepId"
             type="finish"
-            :override-label="_t('Mark as complete')"
+            :override-label="_t('Mark as done')"
             @click="emit('step-completed', stepId)"
           />
           <CmkWizardButton type="previous" />

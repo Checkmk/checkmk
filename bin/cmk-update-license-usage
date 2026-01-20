@@ -8,7 +8,6 @@ import sys
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition, Edition
-from cmk.metric_backend.client import ClickHouseClient
 from cmk.utils import paths
 from cmk.utils.licensing.active_metric_series_retriever_registry import active_metric_series_retriever_registry
 from cmk.utils.licensing.helper import (
@@ -42,6 +41,7 @@ def _parse_arguments() -> argparse.Namespace:
 
 
 def active_metric_series_retriever() -> int | None:
+    from cmk.metric_backend.client import ClickHouseClient
     try:
         client = ClickHouseClient.read_only_from_omd_root(paths.omd_root)
     except RuntimeError:

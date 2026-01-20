@@ -22,16 +22,130 @@ from cmk.product_telemetry.schema import Checks
                 [0, "test_host_1", "test_command_1"],
                 [0, "test_host_1", "test_command_1"],
                 [0, "test_host_1", "test_command_2"],
+                [1, "test_host_1", "check-mk-ping!-6 -w 200.00,80.00% -c 500.00,100.00% 127.0.0.1"],
+                [
+                    0,
+                    "test_host_1",
+                    "check_mk-httpv2!--url https://admin.checkmk.cloud --server 127.0.0.1 --method GET --onredirect ok",
+                ],
                 [0, "test_host_2", "test_command_1"],
+                [
+                    1,
+                    "test_host_2",
+                    "check_mk_active-httpv2!--url https://admin.checkmk.cloud --server 127.0.0.1 --method GET --onredirect ok",
+                ],
+                [1, "test_host_3", "check-mk-custom!$USER2$/some_file --secret=SECRET_API_KEY"],
+                [1, "test_host_3", "check-mk-ping!-6 -w 200.00,80.00% -c 500.00,100.00% 127.0.0.1"],
+                [
+                    1,
+                    "test_host_3",
+                    "some_random_active_check! --secret=ANOTHER_SECRET",
+                ],
+                [
+                    1,
+                    "test_host_3",
+                    "check_mk_active-httpv2!--url https://checkmk.com --server 127.0.0.1 --method GET --onredirect ok",
+                ],
+                [
+                    1,
+                    "test_host_3",
+                    "check_mk_active-httpv2!--url https://exchange.checkmk.com --server 127.0.0.1 --method GET --onredirect ok",
+                ],
+                [
+                    1,
+                    "test_host_4",
+                    "check-mk-custom!$USER2$/some_other_file --secret=SECRET_API_KEY",
+                ],
             ],
             {
                 "test_command_1": {"count": 3, "count_hosts": 2, "count_disabled": 0},
                 "test_command_2": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+                "check-mk-ping": {"count": 2, "count_hosts": 2, "count_disabled": 0},
+                "some_random_active_check": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+                "check_mk_active-httpv2": {"count": 3, "count_hosts": 2, "count_disabled": 0},
+                "check_mk-httpv2": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+                "check-mk-custom": {"count": 2, "count_hosts": 2, "count_disabled": 0},
             },
         ),
         (
             [],
             {},
+        ),
+        (
+            [
+                [
+                    1,
+                    "test_host_1",
+                    "check-mk-custom!/usr/local/bin/some_file --secret=1234",
+                ],
+                [
+                    1,
+                    "test_host_1",
+                    "check-mk-custom!$USER2$/some_other_file --secret=5678",
+                ],
+            ],
+            {
+                "check-mk-custom": {"count": 2, "count_hosts": 1, "count_disabled": 0},
+            },
+        ),
+        (
+            [
+                [
+                    1,
+                    "test_host_1",
+                    "check_mk_active-httpv2!--url https://example.com --server 0.0.0.0 --method GET --onredirect ok",
+                ],
+                [
+                    1,
+                    "test_host_1",
+                    "check_mk_active-httpv2!--url https://checkmk.com --server 127.0.0.1 --method GET --onredirect ok",
+                ],
+            ],
+            {
+                "check_mk_active-httpv2": {"count": 2, "count_hosts": 1, "count_disabled": 0},
+            },
+        ),
+        (
+            [
+                [
+                    0,
+                    "test_host_1",
+                    "check_mk-httpv2!--url https://admin.checkmk.cloud --server 127.0.0.1 --method GET --onredirect ok",
+                ],
+                [
+                    1,
+                    "test_host_1",
+                    "check_mk_active-httpv2!--url https://checkmk.com --server 127.0.0.1 --method GET --onredirect ok",
+                ],
+            ],
+            {
+                "check_mk-httpv2": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+                "check_mk_active-httpv2": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+            },
+        ),
+        (
+            [
+                [
+                    0,
+                    "test_host_1",
+                    "check_mk-something",
+                ],
+                [
+                    1,
+                    "test_host_1",
+                    "check_mk_active-something",
+                ],
+                [
+                    0,
+                    "test_host_1",
+                    "something",
+                ],
+            ],
+            {
+                "check_mk-something": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+                "check_mk_active-something": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+                "something": {"count": 1, "count_hosts": 1, "count_disabled": 0},
+            },
         ),
     ],
 )

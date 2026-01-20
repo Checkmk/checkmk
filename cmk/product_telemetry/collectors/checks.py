@@ -40,16 +40,10 @@ def _get_services(connection: LocalConnection) -> Checks:
         if len(row) != 3:
             raise ServicesInfoLengthError
 
-        # Active checks are prefixed with "check_mk_active-", while regular checks are prefixed with "check_mk-".
-        # Here we are stripping this off so that we only have the check command left
         host_name = row[1].strip()
-        if int(row[0]) == 1:
-            check_command = row[2].removeprefix("check_mk-")
-        elif row[2].startswith("check_mk_active-"):
-            match = re.search(r"check_mk_active-(.*?)(!|$)", row[2])
-            check_command = match.group(1) if match else row[2]
-        else:
-            check_command = row[2]
+
+        # We do not want to include anything after a "!" in the check command, this might contain sensitive info
+        check_command = row[2].split("!")[0]
 
         # Add the check command to the dict if it doesn't exist and increment the count
         value = checks.setdefault(

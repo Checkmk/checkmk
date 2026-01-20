@@ -7,7 +7,7 @@ def secret_list(secret_vars) {
 }
 
 def validate_parameters() {
-    if (COMMAND_LINE == "") {
+    if (params.COMMAND_LINE == "") {
         error("COMMAND_LINE parameter is empty - you need to specify a command to run.");
     }
 }
@@ -22,20 +22,20 @@ def main() {
     validate_parameters();
 
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-    currentBuild.description = "Running ${PACKAGE_PATH}<br>${currentBuild.description}";
+    currentBuild.description = "Running ${params.PACKAGE_PATH}<br>${currentBuild.description}";
 
-    def output_file = PACKAGE_PATH.split("/")[-1] + ".log"
+    def output_file = params.PACKAGE_PATH.split("/")[-1] + ".log"
     dir(checkout_dir) {
         lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {
             inside_container(init: true) {
-                withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
+                withCredentials(secret_list(params.SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
                     helper.execute_test([
-                        name       : PACKAGE_PATH,
-                        cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
+                        name       : params.PACKAGE_PATH,
+                        cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
                         output_file: output_file,
                     ]);
                 }
-                sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
+                sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");
             }
         }
 

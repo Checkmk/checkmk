@@ -834,7 +834,9 @@ const slideInAPI = {
             graphLineQuery.value.data_point_attributes
           ),
           aggregation_lookback: graphLineQuery.value.aggregation_lookback,
-          aggregation_histogram_percentile: graphLineQuery.value.aggregation_histogram_percentile
+          aggregation_histogram_percentile: graphLineQuery.value.aggregation_histogram_percentile,
+          service_name_template:
+            graphLineQuery.value.custom_title || graphLineQuery.value.auto_title
         }
         values.value = {
           value: { metric_backend_custom_query: [queryAttributes] }

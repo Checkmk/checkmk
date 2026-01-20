@@ -14,6 +14,7 @@ import { computed, ref } from 'vue'
 
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkList from '@/components/CmkList'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormMetricBackendCustomQueryAttribute, {
   type Attribute
@@ -41,6 +42,8 @@ const props = withDefaults(
     strict: false
   }
 )
+
+const validation = defineModel<string[]>('validation', { default: [] })
 
 const attributes = defineModel<GraphLineQueryAttributes>({ default: [] })
 
@@ -86,12 +89,14 @@ function addAttribute() {
   ) {
     attributes.value.push(currentAttribute.value as GraphLineQueryAttribute)
     currentAttribute.value = { key: null, value: null }
+    validation.value = []
   }
 }
 
 function deleteAttribute(index: number) {
   attributes.value.splice(index, 1)
   currentAttribute.value = { key: null, value: null }
+  validation.value = []
   return true
 }
 </script>
@@ -106,6 +111,7 @@ function deleteAttribute(index: number) {
     </component>
     <component :is="valueCellWrapperComponent">
       <component :is="valueCellComponent">
+        <FormValidation :validation="validation" />
         <CmkList
           :items-props="{ itemData: attributes }"
           :orientation="orientation"

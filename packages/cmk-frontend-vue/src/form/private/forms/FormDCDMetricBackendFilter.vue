@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { DcdMetricBackendFilter } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { type ValidationMessages } from '@/form/private/validation'
 
@@ -17,14 +18,36 @@ defineProps<{
 }>()
 
 const data = defineModel<DcdMetricBackendFilter>('data', { required: true })
+
+const attributesComponent = ref<InstanceType<typeof FormMetricBackendAttributes> | null>(null)
+const validation = ref<ValidationMessages>([])
+
+function handleSubmit(event: SubmitEvent) {
+  if (attributesComponent.value?.hasInvalidAttributes()) {
+    event.preventDefault()
+    validation.value = attributesComponent.value.getValidationMessages()
+  } else {
+    validation.value = []
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('submit', handleSubmit)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('submit', handleSubmit)
+})
 </script>
 
 <template>
   <table>
     <FormMetricBackendAttributes
+      ref="attributesComponent"
       v-model:resource-attributes="data.resource_attributes"
       v-model:scope-attributes="data.scope_attributes"
       v-model:data-point-attributes="data.data_point_attributes"
+      v-model:backend-validation="validation"
       :strict="false"
       :disable-values-on-empty-key="true"
       :static-resource-attribute-keys="['service.name']"

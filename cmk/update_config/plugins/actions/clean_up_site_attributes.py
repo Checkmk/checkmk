@@ -42,6 +42,6 @@ update_action_registry.register(
         name="clean_up_site_attributes",
         title="Clean up site connections",
         sort_index=30,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

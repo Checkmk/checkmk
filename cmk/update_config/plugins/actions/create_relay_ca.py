@@ -47,7 +47,7 @@ update_action_registry.register(
         name="create-relay-ca",
         title="Create relay CA",
         sort_index=100,  # No ordering constraints
-        expiry_version=ExpiryVersion.CMK_260,  # Expires at 2.6, for 2.5 only
+        expiry_version=ExpiryVersion.CMK_300,  # Expires at 2.6, for 2.5 only
         continue_on_failure=True,
     )
 )

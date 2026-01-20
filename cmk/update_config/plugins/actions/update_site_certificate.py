@@ -95,7 +95,7 @@ update_action_registry.register(
         name="update-site-certificate",
         title="Update Site Certificate",
         sort_index=100,  # don't care
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
         continue_on_failure=True,
     )
 )

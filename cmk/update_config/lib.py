@@ -16,4 +16,4 @@ class ExpiryVersion(Enum):
     and the linters will point you to all obsoleted update actions."""
 
     NEVER = auto()
-    CMK_260 = auto()
+    CMK_300 = auto()

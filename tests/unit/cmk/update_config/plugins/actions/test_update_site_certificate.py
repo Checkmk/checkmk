@@ -154,7 +154,7 @@ def run_update_site_certificate() -> None:
         name="update-site-certificate",
         title="Update Site Certificate",
         sort_index=100,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
         continue_on_failure=True,
     )(logging.getLogger())
 

@@ -28,6 +28,6 @@ update_action_registry.register(
         # Needs to run before "Create precompiled host and folder files". Otherwise the sites
         # attribute will be missing.
         sort_index=2,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

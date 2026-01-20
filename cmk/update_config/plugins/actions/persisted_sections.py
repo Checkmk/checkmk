@@ -38,6 +38,6 @@ update_action_registry.register(
         name="persisted_sections",
         title="Migrate Persisted Sections",
         sort_index=99,  # don't care.
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

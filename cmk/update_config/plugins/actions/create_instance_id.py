@@ -36,7 +36,7 @@ UPDATE_INSTANCE_ID = UpdateInstanceID(
     name="instance_id",
     title="Create instance ID",
     sort_index=700,  # Run anywhere
-    expiry_version=ExpiryVersion.CMK_260,
+    expiry_version=ExpiryVersion.CMK_300,
 )
 
 update_action_registry.register(UPDATE_INSTANCE_ID)

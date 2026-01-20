@@ -32,6 +32,6 @@ update_action_registry.register(
         name="azure-storage",
         title="Migrate Azure Storage",
         sort_index=29,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

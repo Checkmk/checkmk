@@ -41,6 +41,6 @@ update_action_registry.register(
         name="check_http_rules",
         title="Check for deprecated check_http plug-in rules",
         sort_index=997,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

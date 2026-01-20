@@ -26,6 +26,6 @@ update_action_registry.register(
         name="delete_ec_history_backups",
         title="Event Console: Removing temporary migration backup files",
         sort_index=136,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

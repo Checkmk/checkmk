@@ -45,7 +45,7 @@ def test_remove_invalid_host(with_admin_login: UserId, load_config: None) -> Non
         name="remove_invalid_host",
         title="Remove invalid host",
         sort_index=155,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )(logging.getLogger())
 
     root = folder_tree().root_folder()

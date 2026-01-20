@@ -66,7 +66,7 @@ update_action_registry.register(
         title="Update Broker Certificates",
         sort_index=1,  # Must be executed before initialize_site_configuration (which empties distributed_wato.mk)
         # for 2.6 also re-enable strict verification in packages/cmk-messaging/cmk/messaging/_config.py::_make_ssl_context
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
         continue_on_failure=True,
     )
 )

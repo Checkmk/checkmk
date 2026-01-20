@@ -50,6 +50,6 @@ update_action_registry.register(
         name="migrate_distributed_wato",
         title="Migrate distributed_wato.mk variable names",
         sort_index=1,  # Rename has to happen before any action that might read the file
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

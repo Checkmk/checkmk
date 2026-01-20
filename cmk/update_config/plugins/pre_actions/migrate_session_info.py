@@ -148,6 +148,6 @@ pre_update_action_registry.register(
         name="migrate_session_info",
         title="Migrating all existing user sessions",
         sort_index=25,  # run before any userdata is loaded (DCD)
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

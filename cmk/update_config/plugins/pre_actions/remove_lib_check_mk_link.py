@@ -24,6 +24,6 @@ pre_update_action_registry.register(
         name="fix_installed_lib_files",
         title="Fix installed MKPs with files in local/lib/check_mk",
         sort_index=100,  # don't care
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

@@ -47,7 +47,7 @@ update_action_registry.register(
         name="migrate_view_column_headers",
         title="Migrate view column_headers 'repeat' to 'pergroup'",
         sort_index=130,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
         continue_on_failure=True,
     )
 )

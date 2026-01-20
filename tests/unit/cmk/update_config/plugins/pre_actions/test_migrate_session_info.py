@@ -19,7 +19,7 @@ def run_migrate_session_info() -> None:
         name="migrate_session_info",
         title="Migrating all existing user sessions",
         sort_index=25,  # run before any userdata is loaded (DCD)
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )(logging.getLogger(), ConflictMode.ABORT)
 
 

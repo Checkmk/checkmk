@@ -98,6 +98,6 @@ update_action_registry.register(
         name="migrate_visuals_inventory_filters",
         title="Migrate filters of HW/SW Inventory based views or dashboards",
         sort_index=100,  # don't care
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
     )
 )

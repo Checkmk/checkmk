@@ -21,7 +21,7 @@ def update_action() -> CreateRelayCA:
         name="create-relay-ca",
         title="Create relay CA",
         sort_index=100,
-        expiry_version=ExpiryVersion.CMK_260,
+        expiry_version=ExpiryVersion.CMK_300,
         continue_on_failure=True,
     )
 

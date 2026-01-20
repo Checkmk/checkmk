@@ -15,6 +15,7 @@ import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
 from cmk.base.app import make_app
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.config_path import VersionedConfigPath
@@ -102,7 +103,9 @@ def main() -> int:
         config.ipaddresses = CONFIG.ipaddresses
         config.ipv6addresses = CONFIG.ipv6addresses
 
-        secrets = load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+        secrets = load_secrets_file(
+            cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+        )
 
         return run_checking(
             app,
@@ -126,7 +129,8 @@ def main() -> int:
                 path=cmk.utils.password_store.active_secrets_path_relay(), secrets=secrets
             ),
             secrets_config_site=StoredSecrets(
-                path=cmk.utils.password_store.active_secrets_path_site(), secrets=secrets
+                path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
+                secrets=secrets,
             ),
         )
     except KeyboardInterrupt:

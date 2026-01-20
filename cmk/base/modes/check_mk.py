@@ -49,6 +49,7 @@ from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
+from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
@@ -2118,11 +2119,13 @@ def mode_check_discovery(
         secrets_config_relay=AdHocSecrets(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+                secrets := load_secrets_file(
+                    cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+                )
             ),
         ),
         secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(),
+            path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
             secrets=secrets,
         ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
@@ -3372,11 +3375,14 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
         secrets_config_relay=StoredSecrets(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(
-                secrets := load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+                secrets := load_secrets_file(
+                    cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS)
+                )
             ),
         ),
         secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.active_secrets_path_site(), secrets=secrets
+            path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
+            secrets=secrets,
         ),
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,

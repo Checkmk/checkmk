@@ -5,6 +5,8 @@
 
 from pathlib import Path
 
+from cmk.base.core.active_config_layout import RELATIVE_PATH_TRUSTED_CAS
+
 
 def snapshot_trusted_cas(trusted_cas_file: Path, config_path: Path) -> None:
-    (config_path / trusted_cas_file.name).write_bytes(trusted_cas_file.read_bytes())
+    (config_path / RELATIVE_PATH_TRUSTED_CAS).write_bytes(trusted_cas_file.read_bytes())

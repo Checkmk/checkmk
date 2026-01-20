@@ -65,6 +65,7 @@ def clone_as_relative_grid_dashboard_v1(
         body.reference_dashboard_owner, body.reference_dashboard_id
     )
     owner = user.ident
+
     if (owner, body.dashboard_id) in get_all_dashboards():
         raise ProblemException(
             status=400,
@@ -90,6 +91,7 @@ def clone_as_relative_grid_dashboard_v1(
             **dashboard_to_clone,
             "owner": owner,
             "name": body.dashboard_id,
+            "packaged": False,
             "add_context_to_title": general_settings.title.include_context,
             "title": general_settings.title.text,
             "description": description,
@@ -108,6 +110,7 @@ def clone_as_relative_grid_dashboard_v1(
             **dashboard_to_clone,
             "owner": owner,
             "name": body.dashboard_id,
+            "packaged": False,
         }
 
     if cloned_dashboard.get("public_token_id"):

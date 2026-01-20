@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkHtml from '@/components/CmkHtml.vue'
+
 import type { StaticTextContent } from '@/dashboard/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
@@ -14,9 +16,7 @@ defineProps<ContentProps<StaticTextContent>>()
 
 <template>
   <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
-    <div class="db-content-static-text__text">
-      {{ content.text }}
-    </div>
+    <CmkHtml class="db-content-static-text__text" :html="content.text" />
   </DashboardContentContainer>
 </template>
 

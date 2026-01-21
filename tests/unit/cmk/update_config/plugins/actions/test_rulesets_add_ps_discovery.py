@@ -13,6 +13,7 @@ from cmk.gui.watolib.sample_config import PS_DISCOVERY_RULES
 from cmk.gui.watolib.sample_config._constants import _PS_COMMON_OPTS
 from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     add_ps_discovery_rules,
+    AUTOMATION_HELPER_RULE_ID,
     overwrite_ps_discovery_rules,
     PS_DISCOVERY_RULE_NAME,
     RABBITMQ_RULE_ID,
@@ -72,6 +73,24 @@ def test_update_with_preexisting_rulesets() -> None:
             "foobar",
             "foobar",
             id="keep manually changed value in rule for rabbitmq",
+        ),
+        pytest.param(
+            AUTOMATION_HELPER_RULE_ID,
+            None,
+            "~.*cmk-automation-helper.*",
+            id="no preexisting rule for automation helper",
+        ),
+        pytest.param(
+            AUTOMATION_HELPER_RULE_ID,
+            "~gunicorn:.*automation-helper",
+            "~.*cmk-automation-helper.*",
+            id="overwrite old default value in rule for automation helper",
+        ),
+        pytest.param(
+            AUTOMATION_HELPER_RULE_ID,
+            "foobar",
+            "foobar",
+            id="keep manually changed value in rule for automation helper",
         ),
     ],
 )

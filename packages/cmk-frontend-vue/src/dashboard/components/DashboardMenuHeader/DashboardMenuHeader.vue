@@ -41,7 +41,8 @@ const { _t } = usei18n()
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'open-filter': []
+  'open-runtime-filter': []
+  'open-filter-settings': []
   'open-settings': []
   'open-clone-workflow': []
   'open-share-workflow': []
@@ -146,7 +147,7 @@ const pageNavigation = parsePageNavigation()
         <MenuButton
           v-if="!isEditMode"
           :disabled="props.isDashboardLoading"
-          @click="emit('open-filter')"
+          @click="emit('open-runtime-filter')"
         >
           <CmkIcon name="filter" size="large" />
           <span>{{ _t('Filter') }}</span>
@@ -201,6 +202,11 @@ const pageNavigation = parsePageNavigation()
             {
               label: _t('Dashboard settings'),
               action: () => emit('open-settings'),
+              hidden: isBuiltInDashboard || !canEditDashboard
+            },
+            {
+              label: _t('Filter settings'),
+              action: () => emit('open-filter-settings'),
               hidden: isBuiltInDashboard || !canEditDashboard
             },
             { label: _t('Clone dashboard'), action: () => emit('open-clone-workflow') },

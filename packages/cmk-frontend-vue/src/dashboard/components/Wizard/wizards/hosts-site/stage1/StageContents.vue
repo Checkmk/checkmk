@@ -20,9 +20,7 @@ import type { ObjectType } from '@/dashboard/types/shared.ts'
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage1Header from '../../../components/Stage1Header.vue'
 import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
-import type { WidgetItemList } from '../../../components/WidgetSelection/types'
-import { useSelectGraphTypes } from '../composables/useSelectGraphTypes'
-import { Graph } from '../types'
+import { allHostSiteWidgets, useSelectGraphTypes } from '../composables/useSelectGraphTypes'
 
 const { _t } = usei18n()
 
@@ -52,12 +50,6 @@ const gotoNextStage = (preselectedWidgetType: string | null = null) => {
 const hostObjectType = 'host'
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
 const enabledWidgets = useSelectGraphTypes(hostFilterType, props.availableFeatures)
-const availableWidgets: WidgetItemList = [
-  { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
-  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'host-statistics' },
-  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'host-state' },
-  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'host-state-summary' }
-]
 
 // Filters
 const filterDefinitions = useFilterDefinitions()
@@ -90,7 +82,7 @@ const configuredFiltersByObjectType = computed(() =>
 
   <SectionBlock :title="_t('Available visualization type')">
     <AvailableWidgets
-      :available-items="availableWidgets"
+      :available-items="allHostSiteWidgets"
       :enabled-widgets="enabledWidgets"
       @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"
     />

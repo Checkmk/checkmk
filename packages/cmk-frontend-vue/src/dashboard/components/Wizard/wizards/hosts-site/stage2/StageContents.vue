@@ -24,9 +24,8 @@ import type {
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
 import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
-import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import type { ElementSelection, UseWidgetHandler } from '../../../types'
-import { getAvailableGraphs } from '../composables/useSelectGraphTypes'
+import { allHostSiteWidgets, getAvailableGraphs } from '../composables/useSelectGraphTypes'
 import { Graph } from '../types'
 import HostState from './HostState/HostState.vue'
 import { type UseHostState, useHostState } from './HostState/composables/useHostState'
@@ -89,12 +88,6 @@ const gotoPrevStage = () => {
 }
 
 const enabledWidgets = getAvailableGraphs(props.hostFilterType, props.availableFeatures)
-const availableWidgets: WidgetItemList = [
-  { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
-  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'folder' },
-  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'folder' },
-  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'folder' }
-]
 
 function getSelectedWidget(): Graph {
   const widgetType = props.preselectedWidgetType || props.editWidgetSpec?.content?.type
@@ -149,7 +142,7 @@ const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTE
   <SectionBlock :title="_t('Choose how to display your data')">
     <SelectableWidgets
       v-model:selected-widget="selectedWidget as Graph"
-      :available-items="availableWidgets"
+      :available-items="allHostSiteWidgets"
       :enabled-widgets="enabledWidgets"
     />
   </SectionBlock>

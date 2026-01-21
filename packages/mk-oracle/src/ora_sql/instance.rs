@@ -489,6 +489,7 @@ fn calc_custom_spots(instances: &[CustomService]) -> Vec<ClosedSpot> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::connection::Connection;
     use crate::config::ora_sql::Discovery;
     use crate::config::yaml::test_tools::create_yaml;
     use crate::types::ServiceName;
@@ -502,12 +503,14 @@ mod tests {
         ]);
         assert_eq!(all.len(), 2);
     }
-    fn make_instance(service_name: &str) -> config::ora_sql::CustomService {
-        config::ora_sql::CustomService::new(
-            ServiceName::from(service_name),
+    fn make_instance(service_name: &str) -> CustomService {
+        CustomService::new(
             config::authentication::Authentication::default(),
-            config::connection::Connection::default(),
-            None,
+            Connection::from_connection(
+                &Connection::default(),
+                &Some(ServiceName::from(service_name)),
+                &None,
+            ),
             None,
             None,
         )
@@ -528,15 +531,17 @@ mod tests {
     }
 
     fn make_instance_with_custom_conn(service_name: &str) -> config::ora_sql::CustomService {
-        config::ora_sql::CustomService::new(
-            ServiceName::from(service_name),
+        let base_connection =
+            Connection::from_yaml(&create_yaml("connection:\n    service_name: X"))
+                .unwrap()
+                .unwrap();
+        CustomService::new(
             config::authentication::Authentication::default(),
-            config::connection::Connection::from_yaml(&create_yaml(
-                "connection:\n    service_name: X",
-            ))
-            .unwrap()
-            .unwrap(),
-            None,
+            Connection::from_connection(
+                &base_connection,
+                &Some(ServiceName::from(service_name)),
+                &None,
+            ),
             None,
             None,
         )
@@ -551,11 +556,11 @@ mod tests {
         assert_eq!(all.len(), 2);
         assert_eq!(
             all[0].target().service_name.as_ref().unwrap(),
-            &ServiceName::from("X")
+            &ServiceName::from("A")
         );
         assert_eq!(
             all[1].target().service_name.as_ref().unwrap(),
-            &ServiceName::from("X")
+            &ServiceName::from("B")
         );
     }
     #[test]

@@ -81,7 +81,7 @@ impl EnvVarName {
     }
 }
 
-#[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
+#[derive(PartialEq, From, Debug, Display, Clone, Into, Hash, Eq)]
 pub struct ServiceName(String);
 
 impl From<&str> for ServiceName {
@@ -95,6 +95,13 @@ impl From<&String> for ServiceName {
         Self(s.clone())
     }
 }
+
+impl Default for ServiceName {
+    fn default() -> Self {
+        Self("".to_string())
+    }
+}
+
 #[derive(PartialEq, From, Clone, Debug, Display)]
 pub struct ServiceType(String);
 impl From<&str> for ServiceType {

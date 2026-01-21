@@ -93,7 +93,7 @@ fn make_base_config(
     role: Option<Role>,
     address: &str,
     port: u16,
-    instance_name: Option<InstanceName>,
+    service_name: Option<ServiceName>,
 ) -> Config {
     let role_string = if let Some(r) = role {
         format!("{}", r)
@@ -113,7 +113,7 @@ oracle:
     connection:
        hostname: {}
        port: {}
-       service_name: {}
+       service_name: "{}"
        timeout: 10
 "#,
         credentials.user,
@@ -122,7 +122,7 @@ oracle:
         role_string,
         address,
         port,
-        instance_name.unwrap_or_default()
+        service_name.unwrap_or_default()
     );
     Config::from_string(config_str).unwrap().unwrap()
 }
@@ -1468,6 +1468,7 @@ oracle:
       username: "foo" # mandatory if not using wallet, examples: "mydbuser", "c##multitenantuser"
       password: "bar" # optional
     connection: # optional
+      service_name: "will not be used"
       hostname: "localhost" # optional, default: "localhost"    "#,
         use_host
     )

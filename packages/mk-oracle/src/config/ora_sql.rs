@@ -117,7 +117,11 @@ impl Config {
                 registry_instances.len(),
                 registry_instances
                     .iter()
-                    .map(|i| format!("{}:{:?}", i.service_name(), i.conn().port()))
+                    .map(|i| format!(
+                        "{}:{:?}",
+                        i.service_name().unwrap_or(&ServiceName::default()),
+                        i.conn().port()
+                    ))
                     .collect::<Vec<_>>()
                     .join(", ")
             );
@@ -349,30 +353,24 @@ impl TryFrom<&str> for Mode {
 #[derive(PartialEq, Debug, Clone, Default)]
 pub struct CustomService {
     /// also known as sid
-    service_name: ServiceName,
     auth: Authentication,
     conn: Connection,
     alias: Option<InstanceAlias>,
     piggyback: Option<Piggyback>,
-    instance_name: Option<InstanceName>,
 }
 
 impl CustomService {
     pub fn new(
-        service_name: ServiceName,
         auth: Authentication,
         conn: Connection,
         alias: Option<InstanceAlias>,
         piggyback: Option<Piggyback>,
-        instance_name: Option<InstanceName>,
     ) -> Self {
         Self {
-            service_name,
             auth,
             conn,
             alias,
             piggyback,
-            instance_name,
         }
     }
 
@@ -382,56 +380,20 @@ impl CustomService {
         main_conn: &Connection,
         sections: &Sections,
     ) -> Result<Self> {
-        let service_name = ServiceName::from(
-            yaml.get_string(keys::SERVICE_NAME)
-                .context("Bad/Missing service name in instance")?
-                .as_str(),
-        );
-        let (auth, conn) =
-            CustomService::ensure_auth_and_conn(yaml, main_auth, main_conn, &service_name)?;
-        let instance_name = conn.instance_name().cloned();
         Ok(Self::new(
-            service_name,
-            auth,
-            conn,
+            ensure_auth(yaml, main_auth)?,
+            ensure_conn(yaml, main_conn)?,
             yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
             Piggyback::from_yaml(yaml, sections)?,
-            instance_name,
         ))
     }
 
-    /// Make auth and conn for custom instance using yaml
-    /// - fallback on main_auth and main_conn if not defined in yaml
-    /// - correct connection hostname if needed
-    fn ensure_auth_and_conn(
-        yaml: &Yaml,
-        main_auth: &Authentication,
-        main_conn: &Connection,
-        service_name: &ServiceName,
-    ) -> Result<(Authentication, Connection)> {
-        let auth = Authentication::from_yaml(yaml)?.unwrap_or(main_auth.clone());
-        let conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
-
-        let instance_host = calc_real_host(&conn);
-        let main_host = calc_real_host(main_conn);
-        if instance_host != main_host {
-            log::warn!(
-                "Host {instance_host} defined in {service_name} doesn't match to main host {main_host}"
-            );
-            if main_auth.auth_type() != auth.auth_type() {
-                log::warn!(
-                    "Auth are different {:?} {:?}",
-                    main_auth.auth_type(),
-                    auth.auth_type()
-                );
-            }
-        }
-        Ok((auth, conn))
-    }
-
     /// may be overridden with a connection value
-    pub fn service_name(&self) -> &ServiceName {
-        self.conn.service_name().unwrap_or(&self.service_name)
+    pub fn service_name(&self) -> Option<&ServiceName> {
+        self.conn.service_name()
+    }
+    pub fn instance_name(&self) -> Option<&InstanceName> {
+        self.conn.instance_name()
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
@@ -451,6 +413,25 @@ impl CustomService {
     pub fn calc_real_host(&self) -> HostName {
         calc_real_host(&self.conn)
     }
+}
+
+/// Make auth for custom instance using yaml
+/// - fallback on main_auth defined in yaml
+fn ensure_auth(yaml: &Yaml, main_auth: &Authentication) -> Result<Authentication> {
+    Ok(Authentication::from_yaml(yaml)?.unwrap_or(main_auth.clone()))
+}
+
+/// Make auth and conn for custom instance using yaml
+/// - fallback on main_conn if not defined in yaml
+/// - patch service_name and instance_name from yaml if defined
+fn ensure_conn(yaml: &Yaml, main_conn: &Connection) -> Result<Connection> {
+    let conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
+
+    Ok(Connection::from_connection(
+        &conn,
+        &yaml.get_string(keys::SERVICE_NAME).map(ServiceName::from),
+        &yaml.get_string(keys::INSTANCE_NAME).map(InstanceName::from),
+    ))
 }
 
 pub fn calc_real_host(conn: &Connection) -> HostName {
@@ -518,6 +499,7 @@ oracle:
       type: "standard" # mandatory, default: "standard", values: standard, wallet
     connection: # optional
       hostname: "localhost2" # optional(default: "localhost")
+      service_name: "orcl" # optional
       port: 1521 # optional, default: 1521
       timeout: 11 # optional, default 5
       tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
@@ -599,6 +581,7 @@ oracle:
           max_connections: 11
         connection: # optional
           hostname: "localhost" # optional(default: "localhost")
+          service_name: "will be used"
           timeout: 5 # optional(default: 5)
         piggyback_host: "no"
         discovery: # optional
@@ -840,7 +823,7 @@ authentication:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.service_name().to_string(), "INST1");
+        assert_eq!(instance.service_name().unwrap().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "customised");
         assert_eq!(instance.conn().hostname(), "h1".to_string().into());
         assert_eq!(instance.calc_real_host(), "h1".to_string().into());
@@ -867,7 +850,7 @@ connection:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.service_name().to_string(), "INST1");
+        assert_eq!(instance.service_name().unwrap().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "");
         assert_eq!(instance.conn().hostname(), "h1".to_string().into());
     }
@@ -889,7 +872,7 @@ connection:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.service_name().to_string(), "INST1");
+        assert_eq!(instance.service_name().unwrap().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "");
         assert_eq!(instance.auth().auth_type(), &AuthType::Os);
         assert_eq!(instance.conn().hostname(), "localhost".to_string().into());
@@ -897,15 +880,18 @@ connection:
     }
 
     #[test]
-    fn test_custom_instance_remote_default() {
+    fn test_custom_instance_remote_default_patch_all() {
         pub const INSTANCE_INTEGRATED: &str = r#"
-service_name: "INST1"
+service_name: "SERVICE_NAME_2"
+instance_name: "INSTANCE_NAME_2"
 authentication:
   username: "u1"
   password: "pwd"
   type: "standard"
 connection:
-  port: 5555
+  hostname: "localhost2"
+  service_name: "SERVICE_NAME_3"
+  instance_name: "INSTANCE_NAME_3"
 "#;
         let instance = CustomService::from_yaml(
             &create_yaml(INSTANCE_INTEGRATED),
@@ -914,7 +900,78 @@ connection:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.service_name().to_string(), "INST1");
+        assert_eq!(
+            instance.service_name().unwrap().to_string(),
+            "SERVICE_NAME_2"
+        );
+        assert_eq!(
+            instance.instance_name().unwrap().to_string(),
+            "INSTANCE_NAME_2"
+        );
+        assert_eq!(instance.auth().username(), "u1");
+        assert_eq!(instance.auth().password().unwrap(), "pwd");
+        assert_eq!(instance.auth().auth_type(), &AuthType::Standard);
+        assert_eq!(instance.conn().hostname(), "localhost2".to_string().into());
+        assert_eq!(instance.calc_real_host(), "localhost2".to_string().into());
+    }
+
+    #[test]
+    fn test_custom_instance_remote_default_patch_connection() {
+        pub const INSTANCE_INTEGRATED: &str = r#"
+authentication:
+  username: "u1"
+  password: "pwd"
+  type: "standard"
+connection:
+  hostname: "localhost2"
+  service_name: "SERVICE_NAME_3"
+  instance_name: "INSTANCE_NAME_3"
+"#;
+        let instance = CustomService::from_yaml(
+            &create_yaml(INSTANCE_INTEGRATED),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            instance.service_name().unwrap().to_string(),
+            "SERVICE_NAME_3"
+        );
+        assert_eq!(
+            instance.instance_name().unwrap().to_string(),
+            "INSTANCE_NAME_3"
+        );
+        assert_eq!(instance.auth().username(), "u1");
+        assert_eq!(instance.auth().password().unwrap(), "pwd");
+        assert_eq!(instance.auth().auth_type(), &AuthType::Standard);
+        assert_eq!(instance.conn().hostname(), "localhost2".to_string().into());
+        assert_eq!(instance.calc_real_host(), "localhost2".to_string().into());
+    }
+
+    #[test]
+    fn test_custom_instance_remote_default_same() {
+        pub const INSTANCE_INTEGRATED: &str = r#"
+authentication:
+  username: "u1"
+  password: "pwd"
+  type: "standard"
+connection:
+  port: 5555
+  service_name: "SERVICE_NAME_1"
+"#;
+        let instance = CustomService::from_yaml(
+            &create_yaml(INSTANCE_INTEGRATED),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            instance.service_name().unwrap().to_string(),
+            "SERVICE_NAME_1"
+        );
+        assert!(instance.instance_name().is_none());
         assert_eq!(instance.auth().username(), "u1");
         assert_eq!(instance.auth().password().unwrap(), "pwd");
         assert_eq!(instance.auth().auth_type(), &AuthType::Standard);

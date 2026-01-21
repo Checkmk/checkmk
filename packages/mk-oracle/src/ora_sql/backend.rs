@@ -325,7 +325,7 @@ impl SpotBuilder {
     pub fn endpoint_target(mut self, endpoint: &Endpoint) -> Self {
         self.target = Some(Target {
             host: endpoint.hostname().clone(),
-            service_name: endpoint.conn().service_name().map(|n| n.to_owned()),
+            service_name: endpoint.conn().service_name().map(|i| i.to_owned()),
             service_type: endpoint.conn().service_type().map(|t| t.to_owned()),
             instance_name: endpoint.conn().instance_name().map(|i| i.to_owned()),
             alias: None,
@@ -339,7 +339,7 @@ impl SpotBuilder {
         let ep = &instance.endpoint();
         self.target = Some(Target {
             host: ep.hostname().clone(),
-            service_name: Some(instance.service_name().clone()),
+            service_name: instance.service_name().map(|t| t.to_owned()),
             service_type: ep.conn().service_type().map(|t| t.to_owned()),
             instance_name: ep.conn().instance_name().map(|t| t.to_owned()),
             alias: instance.alias().clone(),

@@ -90,20 +90,24 @@ search.onSearch((result?: UnifiedSearchResult) => {
         searchError.value = usprRes
         searchResult.value = undefined
       } else {
-        usprRes.results = usprRes.results.map((i: UnifiedSearchResultItem) => {
-          i.icon = getIconForTopic(i.topic, i.provider, props.icons_per_item)
-          if (i.inline_buttons) {
-            i.inline_buttons = i.inline_buttons.map((ib) => {
-              ib.icon = getIconByTitle(ib.title)
-              return ib
-            })
-          }
-          return i
-        })
+        if (usprRes) {
+          usprRes.results = usprRes.results.map((i: UnifiedSearchResultItem) => {
+            i.icon = getIconForTopic(i.topic, i.provider, props.icons_per_item)
+            if (i.inline_buttons) {
+              i.inline_buttons = i.inline_buttons.map((ib) => {
+                ib.icon = getIconByTitle(ib.title)
+                return ib
+              })
+            }
+            return i
+          })
 
-        searchError.value = undefined
-        searchResult.value = usprRes as UnifiedSearchApiResponse
-        setRecentSearch(searchResult.value)
+          searchError.value = undefined
+          searchResult.value = usprRes as UnifiedSearchApiResponse
+          setRecentSearch(searchResult.value)
+        } else {
+          searchResult.value = undefined
+        }
       }
       waitForSearchResults.value = false
     } else {

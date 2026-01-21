@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeMagnitude,
     TimeSpan,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _netapp_system_time_offset() -> Dictionary:
@@ -44,5 +44,5 @@ rule_spec_netapp_system_time_offset = CheckParameters(
     title=Title("Netapp system time offset"),
     topic=Topic.STORAGE,
     parameter_form=_netapp_system_time_offset,
-    condition=HostCondition(),
+    condition=HostAndItemCondition(item_title=Title("Node")),
 )

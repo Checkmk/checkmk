@@ -171,26 +171,42 @@ class _PureStorageFlashArraySession:
         self._x_auth_token = ""
 
     def post(self, path: str, headers: Mapping[str, str]) -> requests.Response:
+        request = requests.Request(
+            method="POST",
+            url=f"{self._base_url}/api/{path}",
+            headers=headers,
+        )
+        prepared_request = self._session.prepare_request(request)
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
-        return self._session.post(
-            f"{self._base_url}/api/{path}",
-            headers=headers,
-            verify=self._verify,
+        settings = self._session.merge_environment_settings(
+            url=prepared_request.url, proxies={}, stream=None, verify=self._verify, cert=None
+        )
+        return self._session.send(
+            prepared_request,
             timeout=self._timeout,
+            **settings,
         )
 
     def get(
         self, path: str, headers: Mapping[str, str], params: Mapping[str, str] | None = None
     ) -> requests.Response:
-        # Watch out: we must provide the verify keyword to every individual request call!
-        # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
-        return self._session.get(
-            f"{self._base_url}/api/{path}",
+        request = requests.Request(
+            method="GET",
+            url=f"{self._base_url}/api/{path}",
             headers=headers,
             params=params,
-            verify=self._verify,
+        )
+        prepared_request = self._session.prepare_request(request)
+        # Watch out: we must provide the verify keyword to every individual request call!
+        # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
+        settings = self._session.merge_environment_settings(
+            prepared_request.url, proxies={}, stream=None, verify=self._verify, cert=None
+        )
+        return self._session.send(
+            prepared_request,
             timeout=self._timeout,
+            **settings,
         )
 
 

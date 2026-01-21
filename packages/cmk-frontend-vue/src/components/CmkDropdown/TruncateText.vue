@@ -4,12 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { type ComputedRef, computed } from 'vue'
 
-const { text, suffixCount = 6 } = defineProps<{ text: string; suffixCount?: number }>()
+import type { TranslatedString } from '@/lib/i18nString'
 
-const startText = computed(() => text.slice(0, -suffixCount))
-const endText = computed(() => text.slice(-suffixCount))
+const { text: rawText, suffixCount = 6 } = defineProps<{
+  text: TranslatedString | ComputedRef<TranslatedString>
+  suffixCount?: number
+}>()
+
+const text = computed(() => (typeof rawText === 'string' ? rawText : rawText.value))
+const startText = computed(() => text.value.slice(0, -suffixCount))
+const endText = computed(() => text.value.slice(-suffixCount))
 </script>
 
 <template>

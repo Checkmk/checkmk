@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, nextTick, ref, useSlots, useTemplateRef } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import useClickOutside from '@/lib/useClickOutside'
 import { immediateWatch } from '@/lib/watch'
@@ -28,11 +29,11 @@ export interface DropdownOption {
 }
 
 const {
-  inputHint = '',
+  inputHint = untranslated(''),
   noResultsHint = '',
   disabled = false,
   componentId = null,
-  noElementsText = '',
+  noElementsText = untranslated(''),
   required = false,
   width,
   options,
@@ -54,7 +55,7 @@ const {
 const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
-const buttonLabel = ref<string>(inputHint)
+const buttonLabel = ref<TranslatedString>(inputHint)
 const callbackFilteredErrorMessage = ref<string | null>(null)
 
 immediateWatch(
@@ -75,7 +76,10 @@ immediateWatch(
  * This function might have a performance impact as it might trigger a callback to fetch
  * suggestions. It should only be called when necessary.
  */
-async function getButtonLabel(options: Suggestions, selected: string | null): Promise<string> {
+async function getButtonLabel(
+  options: Suggestions,
+  selected: string | null
+): Promise<TranslatedString> {
   if (selected === null) {
     return inputHint
   }
@@ -89,7 +93,7 @@ async function getButtonLabel(options: Suggestions, selected: string | null): Pr
       const result = await options.querySuggestions(selected)
       if (result instanceof ErrorResponse) {
         callbackFilteredErrorMessage.value = result.error
-        return selected
+        return untranslated(selected)
       } else {
         callbackFilteredErrorMessage.value = null
         currentOptions = result.choices
@@ -101,7 +105,7 @@ async function getButtonLabel(options: Suggestions, selected: string | null): Pr
     return noElementsText
   } else {
     const selectedSuggestion = currentOptions.find((s: Suggestion) => s.name === selected)
-    return selectedSuggestion ? selectedSuggestion.title : selected
+    return selectedSuggestion ? selectedSuggestion.title : untranslated(selected)
   }
 }
 

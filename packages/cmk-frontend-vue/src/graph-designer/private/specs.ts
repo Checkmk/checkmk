@@ -20,7 +20,8 @@ export function makeFloat(title: string, label: string): FormSpec.Float {
 export function makeString(
   title: string,
   inputHint: string,
-  autocompleter: null | FormSpec.Autocompleter
+  autocompleter: null | FormSpec.Autocompleter,
+  fieldSize: FormSpec.StringFieldSize = 'MEDIUM'
 ): FormSpec.String {
   return {
     type: 'string',
@@ -29,7 +30,7 @@ export function makeString(
     label: null,
     validators: [],
     input_hint: inputHint,
-    field_size: 'MEDIUM',
+    field_size: fieldSize,
     autocompleter: autocompleter
   }
 }

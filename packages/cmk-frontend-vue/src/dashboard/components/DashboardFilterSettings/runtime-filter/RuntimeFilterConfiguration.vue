@@ -41,7 +41,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'apply-runtime-filters': []
-  'open-configuration': []
+  'open-filter-settings': []
   'update:runtime-filters-mode': [mode: RuntimeFilterMode]
   'reset-runtime-filters': []
 }>()
@@ -135,8 +135,8 @@ const resetRuntimeFilters = () => {
   emit('reset-runtime-filters')
 }
 
-const openConfiguration = () => {
-  emit('open-configuration')
+const openFilterSettings = () => {
+  emit('open-filter-settings')
 }
 
 const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) => {
@@ -162,7 +162,7 @@ const handleRemoveFilter = (filterId: string) => {
       :disabled="!canEdit || isBuiltIn"
       variant="optional"
       :title="editButtonTooltip"
-      @click="openConfiguration"
+      @click="openFilterSettings"
     >
       {{ _t('Edit filter settings') }}
     </CmkButton>

@@ -71,11 +71,11 @@ const mandatoryRuntimeFilters = useFilters(undefined, props.configuredMandatoryR
 // Unfortunate addition as the requirements changed which forces us to completely remount during filter reset
 const resetCounter = ref(0)
 
-// Track whether the configuration sub-window is open
-const isConfigurationWindowOpen = ref(props.startingWindow === 'filter-configuration')
-const configurationTab = ref<string | number>('dashboard-filter')
+// Track whether the filter settings sub-window is open
+const isFilterSettingsWindowOpen = ref(props.startingWindow === 'filter-settings')
+const filterSettingsTab = ref<string | number>('dashboard-filter')
 
-const configurationTabs: {
+const filterSettingsTabs: {
   id: string
   title: string
 }[] = [
@@ -90,10 +90,10 @@ const configurationTabs: {
 ]
 
 const targetFilters = computed(() => {
-  if (!isConfigurationWindowOpen.value) {
+  if (!isFilterSettingsWindowOpen.value) {
     return runtimeFilters
   }
-  switch (configurationTab.value) {
+  switch (filterSettingsTab.value) {
     case 'dashboard-filter':
       return dashboardFilters
     case 'required-filter':
@@ -103,9 +103,9 @@ const targetFilters = computed(() => {
   }
 })
 
-const openConfigurationWindow = () => {
-  isConfigurationWindowOpen.value = true
-  configurationTab.value = 'dashboard-filter'
+const openSettingsWindow = () => {
+  filterSettingsTab.value = 'dashboard-filter'
+  isFilterSettingsWindowOpen.value = true
 }
 
 const handleUpdateRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
@@ -124,7 +124,7 @@ const handleResetRuntimeFilters = () => {
   resetCounter.value++
 }
 
-const handleSaveConfiguration = () => {
+const handleSaveFilterSettings = () => {
   const mandatorySelectedFilters = mandatoryRuntimeFilters.getSelectedFilters()
   emit('save-filter-settings', {
     dashboardFilters: dashboardFilters.getFilters(),
@@ -139,15 +139,15 @@ const handleSaveConfiguration = () => {
 
   initialRuntimeFilters.value = JSON.parse(JSON.stringify(runtimeFilters.getFilters()))
 
-  isConfigurationWindowOpen.value = false
+  isFilterSettingsWindowOpen.value = false
 }
 
-const handleCancelConfiguration = () => {
+const handleCancelFilterSettings = () => {
   // Restore from props
   mandatoryRuntimeFilters.resetThroughSelectedFilters([...props.configuredMandatoryRuntimeFilters])
   dashboardFilters.setFilters(JSON.parse(JSON.stringify(props.configuredDashboardFilters)))
   runtimeFilters.setFilters(JSON.parse(JSON.stringify(initialRuntimeFilters.value)))
-  isConfigurationWindowOpen.value = false
+  isFilterSettingsWindowOpen.value = false
 }
 
 const hostDashboardFilters = computed(() => {
@@ -217,7 +217,7 @@ const serviceMandatoryFilters = computed(() => {
     <div class="db-filter-settings__definition-container">
       <div class="db-filter-settings__header">
         <CmkHeading type="h1">
-          {{ isConfigurationWindowOpen ? _t('Filter settings') : _t('Runtime filters') }}
+          {{ isFilterSettingsWindowOpen ? _t('Filter settings') : _t('Runtime filters') }}
         </CmkHeading>
         <button
           class="db-filter-settings__close-button"
@@ -229,7 +229,7 @@ const serviceMandatoryFilters = computed(() => {
         </button>
       </div>
 
-      <div v-if="!isConfigurationWindowOpen" class="db-filter-settings__filter-container">
+      <div v-if="!isFilterSettingsWindowOpen" class="db-filter-settings__filter-container">
         <div>
           <CmkHeading type="h3">
             {{ _t('Runtime filters are required to load data.') }}
@@ -252,30 +252,30 @@ const serviceMandatoryFilters = computed(() => {
           :reset-key="resetCounter"
           @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
           @apply-runtime-filters="applyRuntimeFilters"
-          @open-configuration="openConfigurationWindow"
+          @open-filter-settings="openSettingsWindow"
           @reset-runtime-filters="handleResetRuntimeFilters"
         />
       </div>
 
       <div v-else>
-        <div class="db-filter-settings__configuration-subwindow-actions">
-          <CmkButton variant="primary" @click="handleSaveConfiguration">
+        <div class="db-filter-settings__filter-settings-subwindow-actions">
+          <CmkButton variant="primary" @click="handleSaveFilterSettings">
             {{ _t('Save') }}
           </CmkButton>
           <CmkButton
             variant="optional"
             class="db-filter-settings__cancel-button"
-            @click="handleCancelConfiguration"
+            @click="handleCancelFilterSettings"
           >
             <CmkIcon name="cancel" size="xsmall" />
             {{ _t('Cancel') }}
           </CmkButton>
         </div>
 
-        <CmkTabs v-model="configurationTab">
+        <CmkTabs v-model="filterSettingsTab">
           <template #tabs>
             <CmkTab
-              v-for="tab in configurationTabs"
+              v-for="tab in filterSettingsTabs"
               :id="tab.id"
               :key="tab.id"
               class="cmk-demo-tabs"
@@ -430,7 +430,7 @@ const serviceMandatoryFilters = computed(() => {
   gap: var(--dimension-8);
 }
 
-.db-filter-settings__configuration-subwindow-actions {
+.db-filter-settings__filter-settings-subwindow-actions {
   display: flex;
   align-items: center;
   margin: var(--dimension-8) 0;

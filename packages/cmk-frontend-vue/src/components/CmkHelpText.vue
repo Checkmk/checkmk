@@ -25,6 +25,7 @@ defineOptions({
 
 const props = defineProps<{
   help: TranslatedString
+  ariaLabel?: string | undefined
 }>()
 
 const open = ref(false)
@@ -68,7 +69,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
           :name="open ? 'help-activated' : 'info-circle'"
           size="medium"
           class="cmk-help-text__icon"
-          aria-label="?"
+          :aria-label="props.ariaLabel || '?'"
         />
       </CmkTooltipTrigger>
       <CmkTooltipContent

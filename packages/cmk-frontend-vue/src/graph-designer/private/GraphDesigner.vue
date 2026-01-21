@@ -933,7 +933,7 @@ const graphDesignerContentAsJson = computed(() => {
 
 <template>
   <div ref="graphContainerRef"></div>
-  <table class="data oddeven graph_designer_metrics">
+  <table class="data oddeven graph_designer_metrics" :aria-label="_t('Graph lines')">
     <thead>
       <tr>
         <th class="header_narrow nowrap">#</th>
@@ -949,17 +949,20 @@ const graphDesignerContentAsJson = computed(() => {
       </tr>
     </thead>
     <tbody ref="trContainerRef">
+      <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
       <tr
         v-for="(graphLine, index) in graphLines"
         :key="graphLine.id"
         class="data"
         :class="computeOddEven(index)"
+        :aria-label="`${_t('Graph line')} ${graphLine.auto_title}`"
       >
         <td class="narrow nowrap">{{ graphLine.id }}</td>
         <td class="buttons">
           <div v-if="graphLine.type !== 'query'">
             <CmkCheckbox
               :model-value="selectedGraphLines.map((v) => v.id).includes(graphLine.id)"
+              :aria-label="_t('Select graph line to edit')"
               @update:model-value="(newValue) => changeSelection(graphLine, newValue)"
             />
           </div>
@@ -968,6 +971,7 @@ const graphDesignerContentAsJson = computed(() => {
           <img
             v-if="isDissolvable(graphLine)"
             :title="_t('Dissolve operation')"
+            :aria-label="_t('Dissolve operation')"
             src="themes/facelift/images/icon_dissolve_operation.png"
             class="icon iconbutton png"
             @click="dissolveGraphLine(graphLine)"
@@ -999,21 +1003,34 @@ const graphDesignerContentAsJson = computed(() => {
               validateFormMetricBackendCustomQuery(undefined, graphLine).length === 0
             "
             :title="_t('Add rule: Metric backend (Custom query)')"
+            :aria-label="_t('Add rule: Metric backend (Custom query)')"
             src="themes/facelift/images/icon_move.png"
             class="icon iconbutton"
             @click="openSlideIn(graphLine)"
           />
         </td>
         <td class="narrow">
-          <CmkColorPicker v-if="graphLine.type !== 'query'" v-model:data="graphLine.color" />
+          <CmkColorPicker
+            v-if="graphLine.type !== 'query'"
+            v-model:data="graphLine.color"
+            :aria-label="_t('Color picker')"
+          />
         </td>
         <td class="nobr narrow">{{ graphLine.auto_title }}</td>
         <td class="nobr narrow">
           <div style="display: flex; align-items: center; gap: 4px">
             <FormTitle v-model:data="graphLine.custom_title" />
-            <CmkHelpText v-if="graphLine.type === 'query'" :help="METRIC_BACKEND_MACRO_HELP" />
+            <CmkHelpText
+              v-if="graphLine.type === 'query'"
+              :help="METRIC_BACKEND_MACRO_HELP"
+              :aria-label="_t('Help: Metric backend (Custom query)')"
+            />
           </div>
-          <FormHelp v-if="graphLine.type === 'query'" :help="METRIC_BACKEND_MACRO_HELP" />
+          <FormHelp
+            v-if="graphLine.type === 'query'"
+            :help="METRIC_BACKEND_MACRO_HELP"
+            :aria-label="_t('Inline Help: Metric backend (Custom query)')"
+          />
         </td>
         <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>
 

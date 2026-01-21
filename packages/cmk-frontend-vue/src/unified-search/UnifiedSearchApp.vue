@@ -13,6 +13,7 @@ import type {
 import { onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import DefaultPopup from '@/main-menu/changes/components/DefaultPopup.vue'
 import {
@@ -85,6 +86,9 @@ search.onSearch((result?: UnifiedSearchResult) => {
   async function setSearchResults(uspr: SearchProviderResult<UnifiedSearchApiResponse>) {
     if (uspr) {
       waitForSearchResults.value = true
+      manipulatedMessage.value = uspr.manipulatedMessage
+      originQuery.value = uspr.originalQuery
+      isManipulated.value = uspr.isManipulated || false
       const usprRes = await uspr.result
       if (usprRes instanceof UnifiedSearchError) {
         searchError.value = usprRes
@@ -134,6 +138,9 @@ const searchError = ref<UnifiedSearchError>()
 const historyResult = ref<SearchHistorySearchResult>()
 const waitForSearchResults = ref<boolean>(true)
 const searchUtils = initSearchUtils(searchId)
+const manipulatedMessage = ref<TranslatedString>()
+const originQuery = ref<UnifiedSearchQueryLike>()
+const isManipulated = ref<boolean>(false)
 
 searchUtils.search = search
 searchUtils.history = searchHistoryService

@@ -263,7 +263,6 @@ function searchResultNotEmpty(): boolean {
     <div>
       <CmkHeading type="h4" class="result-heading">
         {{ _t('Results') }} ({{ results.length }})
-
         <CmkCheckbox
           v-model="searchUtils.result.grouping.value"
           :label="_t('Group results by topic')"
@@ -359,6 +358,10 @@ function searchResultNotEmpty(): boolean {
   justify-content: space-between;
 
   .result-heading__grouping {
+    font-weight: var(--font-weight-default);
+  }
+
+  .result-heading__info {
     font-weight: var(--font-weight-default);
   }
 }

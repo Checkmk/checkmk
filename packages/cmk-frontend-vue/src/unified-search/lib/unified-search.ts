@@ -6,6 +6,7 @@
 import { type Ref, ref } from 'vue'
 
 import type { Api } from '@/lib/api-client'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
@@ -18,6 +19,10 @@ export interface LegacySearchResult {
 export interface SearchProviderResult<T> {
   provider: string
   result: Promise<UnifiedSearchError | T>
+  query: UnifiedSearchQueryLike
+  isManipulated?: boolean | undefined
+  originalQuery?: UnifiedSearchQueryLike | undefined
+  manipulatedMessage?: TranslatedString | undefined
 }
 
 export class UnifiedSearchResult {
@@ -64,6 +69,17 @@ export abstract class SearchProvider {
   }
 
   abstract search(query: UnifiedSearchQueryLike): Promise<unknown>
+
+  /*
+  This function is used for searches to manipulate the search query without having effect on the frontend.
+  Eg.: Adjust search provider when a filter option is used, which is not available for the all search providers.s
+  */
+  public manipulateSearchQuery(query: UnifiedSearchQueryLike): {
+    manipulatedQuery: UnifiedSearchQueryLike
+    isManipulated: boolean
+  } {
+    return { manipulatedQuery: query, isManipulated: false }
+  }
 
   public shouldExecuteSearch(query: UnifiedSearchQueryLike): boolean {
     return query.input.length >= this.minInputlength
@@ -131,10 +147,14 @@ export class UnifiedSearch {
   public search(query: UnifiedSearchQueryLike): UnifiedSearchResult {
     const usr = new UnifiedSearchResult(this.id)
     for (const provider of this.providers) {
+      const { manipulatedQuery, isManipulated } = provider.manipulateSearchQuery(query)
       usr.registerProviderResult({
         provider: provider.id,
-        result: provider.shouldExecuteSearch(query)
-          ? provider.initSearch(query, provider.search.bind(provider))
+        query: manipulatedQuery,
+        isManipulated,
+        originalQuery: isManipulated ? query : undefined,
+        result: provider.shouldExecuteSearch(manipulatedQuery)
+          ? provider.initSearch(manipulatedQuery, provider.search.bind(provider))
           : new Promise((resolve) => {
               resolve(null)
             })

@@ -11,8 +11,8 @@ import pytest
 
 from cmk.astrein.checker_localization import LocalizationChecker
 from cmk.astrein.checker_module_layers import ModuleLayersChecker
+from cmk.astrein.checkers import all_checkers
 from cmk.astrein.cli import (
-    _checkers,
     _collect_files,
     _handle_results,
     _run_checkers,
@@ -22,17 +22,8 @@ from cmk.astrein.cli import (
 from cmk.astrein.framework import ASTVisitorChecker, CheckerError
 
 
-def test_checkers_returns_expected_checkers() -> None:
-    checkers = _checkers()
-
-    assert "localization" in checkers
-    assert "module-layers" in checkers
-    assert checkers["localization"] == LocalizationChecker
-    assert checkers["module-layers"] == ModuleLayersChecker
-
-
 def test_select_checkers_with_all() -> None:
-    checkers = _checkers()
+    checkers = all_checkers()
     selected = _select_checkers("all", checkers)
 
     assert len(selected) == 2
@@ -41,7 +32,7 @@ def test_select_checkers_with_all() -> None:
 
 
 def test_select_checkers_with_specific_checker() -> None:
-    checkers = _checkers()
+    checkers = all_checkers()
     selected = _select_checkers("localization", checkers)
 
     assert len(selected) == 1
@@ -49,7 +40,7 @@ def test_select_checkers_with_specific_checker() -> None:
 
 
 def test_select_checkers_with_module_layers() -> None:
-    checkers = _checkers()
+    checkers = all_checkers()
     selected = _select_checkers("module-layers", checkers)
 
     assert len(selected) == 1
@@ -57,7 +48,7 @@ def test_select_checkers_with_module_layers() -> None:
 
 
 def test_select_checkers_with_invalid_checker() -> None:
-    checkers = _checkers()
+    checkers = all_checkers()
 
     with pytest.raises(SystemExit, match="Exit: No checkers selected"):
         _select_checkers("invalid-checker", checkers)

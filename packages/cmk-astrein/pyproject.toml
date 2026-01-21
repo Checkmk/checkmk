@@ -1,14 +1,18 @@
 [project]
 name = "cmk-astrein"
 version = "1.0.0"
-dependencies = []
+dynamic = ["dependencies"]
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.in"] }
+
 [project.scripts]
 astrein = "cmk.astrein.cli:main"
+astrein-lsp = "cmk.astrein.lsp:main"
 
 [tool.setuptools]
 packages = ["cmk"]

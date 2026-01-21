@@ -14,14 +14,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from cmk.astrein.checker_localization import LocalizationChecker
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
+from cmk.astrein.checkers import all_checkers
 from cmk.astrein.framework import ASTVisitorChecker, CheckerError, run_checkers
 from cmk.astrein.sarif import format_sarif
 
 
 def main() -> int:
-    checkers = _checkers()
+    checkers = all_checkers()
 
     parser = argparse.ArgumentParser(description="Run on python files")
     parser.add_argument(
@@ -71,13 +70,6 @@ def main() -> int:
         args.format,
         args.output,
     )
-
-
-def _checkers() -> dict[str, type[ASTVisitorChecker]]:
-    return {
-        "localization": LocalizationChecker,
-        "module-layers": ModuleLayersChecker,
-    }
 
 
 def _select_checkers(

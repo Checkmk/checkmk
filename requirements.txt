@@ -189,8 +189,11 @@ attrs==25.4.0 \
     --hash=sha256:adcf7e2a1fb3b36ac48d97835bb6d8ade15b8dcce26aba8bf1d14847b57a3373
     # via
     #   aiohttp
+    #   cattrs
     #   jschema-to-python
     #   jsonschema
+    #   lsprotocol
+    #   pygls
     #   pytest-subtests
     #   referencing
     #   sarif-om
@@ -381,6 +384,12 @@ cached-property==2.0.1 \
     --hash=sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641 \
     --hash=sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb
     # via exchangelib
+cattrs==25.3.0 \
+    --hash=sha256:1ac88d9e5eda10436c4517e390a4142d88638fe682c436c93db7ce4a277b884a \
+    --hash=sha256:9896e84e0a5bf723bc7b4b68f4481785367ce07a8a02e7e9ee6eb2819bc306ff
+    # via
+    #   lsprotocol
+    #   pygls
 certifi==2026.1.4 \
     --hash=sha256:9943707519e4add1115f44c2bc244f782c0249876bf51b6599fee1ffbedd685c \
     --hash=sha256:ac726dd470482006e014ad384921ed6438c457018f4b3d204aea4281258b2120
@@ -2083,6 +2092,12 @@ librt==0.7.8 \
     --hash=sha256:ff3e9c11aa260c31493d4b3197d1e28dd07768594a4f92bec4506849d736248f \
     --hash=sha256:ff71447cb778a4f772ddc4ce360e6ba9c95527ed84a52096bd1bbf9fee2ec7c0
     # via mypy
+lsprotocol==2025.0.0 \
+    --hash=sha256:e879da2b9301e82cfc3e60d805630487ac2f7ab17492f4f5ba5aaba94fe56c29 \
+    --hash=sha256:f9d78f25221f2a60eaa4a96d3b4ffae011b107537facee61d3da3313880995c7
+    # via
+    #   -r packages/cmk-astrein/requirements.in
+    #   pygls
 lupa==2.6 \
     --hash=sha256:00a934c23331f94cb51760097ebfab14b005d55a6b30a2b480e3c53dd2fa290d \
     --hash=sha256:0334753be028358922415ca97a64a3048e4ed155413fc4eaf87dd0a7e2752983 \
@@ -3757,6 +3772,10 @@ pyghmi==1.6.11 \
     # via
     #   -r cmk/requirements.in
     #   -r packages/cmk-check-engine/requirements.in
+pygls==2.0.0 \
+    --hash=sha256:99accd03de1ca76fe1e7e317f0968ebccf7b9955afed6e2e3e188606a20b4f07 \
+    --hash=sha256:b4e54bba806f76781017ded8fd07463b98670f959042c44170cd362088b200cc
+    # via -r packages/cmk-astrein/requirements.in
 pygments==2.19.2 \
     --hash=sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887 \
     --hash=sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b
@@ -5500,6 +5519,7 @@ typing-extensions==4.15.0 \
     #   azure-mgmt-resource
     #   azure-storage-blob
     #   beautifulsoup4
+    #   cattrs
     #   docstring-to-markdown
     #   fastapi
     #   grpcio

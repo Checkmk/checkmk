@@ -23,6 +23,7 @@ filegroup(
     name = "dev_python_requirements",
     srcs = [
         "//packages/cmk-agent-receiver:dev-requirements.in",
+        "//packages/cmk-astrein:requirements.in",
         "//packages/cmk-ccc:dev-requirements.in",
         "//packages/cmk-check-engine:dev-requirements.in",
         "//packages/cmk-crypto:dev-requirements.in",

@@ -54,10 +54,76 @@ translated = _(variable_text)
 result = _(dynamic_string)  # astrein: disable=localization
 ```
 
+## LSP Server
+
+Astrein provides an LSP server for real-time linting diagnostics in editors.
+
+### Running the LSP Server
+
+```bash
+bazel run //packages/cmk-astrein:astrein-lsp
+```
+
+Options:
+
+- `--repo-root`: Override the workspace root (optional, uses client workspace by default)
+- `--log-file`: Log file path for debugging
+- `--log-level`: Log level (DEBUG, INFO, WARNING, ERROR)
+
+### Editor Integration
+
+#### Neovim
+
+Create `~/.config/nvim/lsp/astrein.lua`:
+
+```lua
+return {
+    cmd = {
+        "bazel",
+        "run",
+        "//packages/cmk-astrein:astrein-lsp",
+        "--",
+    },
+    filetypes = { "python" },
+    root_markers = { ".git", "pyproject.toml" },
+}
+```
+
+Then enable it in your LSP config:
+
+```lua
+vim.lsp.enable({ "astrein" })
+```
+
+#### VSCode
+
+Install the "Generic LSP Client (v2)" extension and add to your `settings.json`:
+
+```json
+{
+  "glspc.server.command": "bazel",
+  "glspc.server.commandArguments": ["run", "//packages/cmk-astrein:astrein-lsp", "--"],
+  "glspc.server.languageId": ["python"]
+}
+```
+
+#### PyCharm
+
+Unfortunately we haven't found a way to integrate Astrein as LSP server in PyCharm yet.
+So, the best way is to configure it's command line interface as an
+[external tool](https://www.jetbrains.com/help/pycharm/configuring-third-party-tools.html).
+
+Program: `scripts/run-uvenv`
+Arguments: `bazel run //packages/cmk-astrein:astrein -- --checker all $FilePath$ --repo-root $ContentRoot$`
+Working directory: `$ProjectFileDir$`
+
+If you have a better approach, please reach out!
+
 ## Architecture
 
 - **framework.py**: Core AST visitor framework and error handling
 - **cli.py**: Command-line interface and file discovery
+- **lsp.py**: LSP server for editor integration
 - **checker_localization.py**: Localization validation logic
 - **checker_module_layers.py**: Module layer architecture enforcement
 - **sarif.py**: SARIF output formatting

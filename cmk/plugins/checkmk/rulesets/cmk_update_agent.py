@@ -112,13 +112,13 @@ def _parse_proxy_protocol(
 
 
 def _migrate_edition(value: object) -> tuple[str, None]:
-    if isinstance(value, str) and value in ("64bit", "32bit", "script"):
+    if isinstance(value, str) and value in ("64bit", "32bit", "bit32", "script"):
         match value:
             case "64bit":
                 return "bit64", None
-            case "32bit":
-                return "bit32", None
-            case "script":
+            case "32bit" | "bit32" | "script":
+                # 32bit binaries are no longer supported, migrate to script since that is the
+                # only alternative for 32bit systems.
                 return "script", None
             case _:
                 raise ValueError(value)
@@ -244,24 +244,20 @@ def _valuespec_editions() -> CascadingSingleChoice:
         help_text=Help(
             "Optionally choose the format of the agent updater executable file. Relevant for Linux only."
             " On other OSes, the executable format will be chosen automatically regardless of this rule."
-            " The binary formats yield a broader compatibility whereas the python script is small and editable."
-            " Please note that the Checkmk team can offer no support for issues about the target"
-            ' system\'s python environment when choosing "Script".'
+            " The binary format yields a broader compatibility, while the Python script is small and editable.<br>"
+            " Concrete requirements are:<br>"
+            " <b>packaged binary:</b> x86-64 Linux system with glibc 2.17 or newer."
+            " <b>Python script:</b> Python3 with modules _cryptography_, _requests_ and _pysocks_ (for SOCKS proxy support)."
         ),
         elements=[
             CascadingSingleChoiceElement(
                 name="bit64",
-                title=Title("64-bit packaged binary"),
-                parameter_form=FixedValue(value=None),
-            ),
-            CascadingSingleChoiceElement(
-                name="bit32",
-                title=Title("32-bit packaged binary"),
+                title=Title("packaged binary"),
                 parameter_form=FixedValue(value=None),
             ),
             CascadingSingleChoiceElement(
                 name="script",
-                title=Title("Script (Limited support, see inline help)"),
+                title=Title("Python script"),
                 parameter_form=FixedValue(value=None),
             ),
         ],

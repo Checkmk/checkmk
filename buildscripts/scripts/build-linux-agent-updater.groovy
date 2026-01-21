@@ -53,31 +53,25 @@ void main() {
             versioning.set_version(cmk_version);
         }
 
-        def agent_builds = ["au-linux-64bit", "au-linux-32bit"].collectEntries { agent ->
-            [("agent ${agent}") : {
-                stage("Build Agent for ${agent}") {
-                    def suffix = agent == "au-linux-32bit" ? "-32" : "";
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'nexus',
-                            passwordVariable: 'NEXUS_PASSWORD',
-                            usernameVariable: 'NEXUS_USERNAME')
-                    ]) {
-                        dir("${checkout_dir}/non-free/packages/cmk-update-agent") {
-                            sh("""
-                                BRANCH_VERSION=${branch_version} \
-                                DOCKER_REGISTRY_NO_HTTP=${docker_registry_no_http} \
-                                ./make-agent-updater${suffix}
-                            """);
-                        }
-                    }
-                    dir("${WORKSPACE}/build") {
-                        sh("cp ${checkout_dir}/non-free/packages/cmk-update-agent/cmk-update-agent${suffix} .");
-                    }
+        stage("Build agent updater binary for Linux") {
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'nexus',
+                    passwordVariable: 'NEXUS_PASSWORD',
+                    usernameVariable: 'NEXUS_USERNAME')
+            ]) {
+                dir("${checkout_dir}/non-free/packages/cmk-update-agent") {
+                    sh("""
+                        BRANCH_VERSION=${branch_version} \
+                        DOCKER_REGISTRY_NO_HTTP=${docker_registry_no_http} \
+                        ./make-agent-updater
+                    """);
                 }
-            }]
+            }
+            dir("${WORKSPACE}/build") {
+                sh("cp ${checkout_dir}/non-free/packages/cmk-update-agent/cmk-update-agent .");
+            }
         }
-        parallel(agent_builds);
 
         stage("Create and sign deb/rpm packages") {
             dir("${checkout_dir}/agents") {

@@ -165,6 +165,7 @@ const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: Dashboar
 }
 
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
+  isDashboardEditingMode.value = false
   const key: DashboardKey = {
     name: dashboard.name,
     owner: dashboard.owner || '' // built-in conversion: null -> ""

@@ -15,9 +15,10 @@ from cmk.plugins.collection.agent_based.multipath import (
     discover_multipath,
     parse_multipath,
 )
-from cmk.plugins.lib.multipath import Section
+from cmk.plugins.lib.multipath import Group, Section
 
 STRING_TABLE: Final = [
+    # First paths
     ["ORA_ZAPPL2T_DATA_3", "(3600601604d40310047cf93ce66f7e111)", "dm-67", "DGC,RAID", "5"],
     ["size=17G", "features='1", "queue_if_no_path'", "hwhandler='1", "alua'", "wp=rw"],
     ["|-+-", "policy='round-robin", "0'", "prio=0", "status=active"],
@@ -26,6 +27,7 @@ STRING_TABLE: Final = [
     ["`-+-", "policy='round-robin", "0'", "prio=0", "status=enabled"],
     ["|-", "5:0:0:54", "sdbd", "67:112", "active", "undef", "running"],
     ["`-", "3:0:0:54", "sdhf", "133:80", "active", "undef", "running"],
+    # Second paths
     ["ORA_UC41T_OLOG_1", "(prefix.3600601604d403100912ab0b365f7e111)", "dm-112", "DGC,RAID", "5"],
     ["size=17G features='1 queue_if_no_path' hwhandler='1 alua' wp=rw"],
     ["|-+-", "policy='round-robin", "0'", "prio=0", "status=active"],
@@ -48,6 +50,77 @@ STRING_TABLE: Final = [
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> Section:
     return parse_multipath(STRING_TABLE)
+
+
+def test_parse_multipath_section_keys(section: Section) -> None:
+    assert set(section.keys()) == {
+        "3600601604d40310047cf93ce66f7e111",
+        "prefix.3600601604d403100912ab0b365f7e111",
+        "broken_paths",
+    }
+
+
+@pytest.mark.parametrize(
+    "item,expected",
+    [
+        (
+            "3600601604d40310047cf93ce66f7e111",
+            Group(
+                paths=["sddz", "sdkb", "sdbd", "sdhf"],
+                broken_paths=[],
+                luns=[
+                    "3:0:1:54(sddz)",
+                    "5:0:1:54(sdkb)",
+                    "5:0:0:54(sdbd)",
+                    "3:0:0:54(sdhf)",
+                ],
+                uuid="3600601604d40310047cf93ce66f7e111",
+                state="prio=0status=enabled",
+                numpaths=4,
+                device="dm-67",
+                alias="ORA_ZAPPL2T_DATA_3",
+            ),
+        ),
+        (
+            "prefix.3600601604d403100912ab0b365f7e111",
+            Group(
+                paths=["sdew"],
+                broken_paths=[],
+                luns=["5:0:0:77(sdew)"],
+                uuid="prefix.3600601604d403100912ab0b365f7e111",
+                state="prio=0status=active",
+                numpaths=1,
+                device="dm-112",
+                alias="ORA_UC41T_OLOG_1",
+            ),
+        ),
+        (
+            "broken_paths",
+            Group(
+                paths=["sdbd", "sdhf"],
+                broken_paths=[
+                    "5:0:0:54(sdbd)",
+                    "3:0:0:54(sdhf)",
+                ],
+                luns=[
+                    "5:0:0:54(sdbd)",
+                    "3:0:0:54(sdhf)",
+                ],
+                uuid="broken_paths",
+                state="prio=0status=active",
+                numpaths=2,
+                device="dm-67",
+                alias="BROKEN_PATH",
+            ),
+        ),
+    ],
+)
+def test_parse_multipath_groups(
+    item: str,
+    expected: Group,
+    section: Section,
+) -> None:
+    assert section[item] == expected
 
 
 def test_discovery(section: Section) -> None:
@@ -78,11 +151,19 @@ def test_check_percent_levels(section: Section) -> None:
     ]
 
 
-def test_check_count_levels(section: Section) -> None:
+@pytest.mark.parametrize(
+    "levels,state",
+    [
+        (3, State.WARN),  # Actual level is higher then expected so the state is WARN
+        (4, State.OK),  # Actual level
+        (5, State.CRIT),  # Actual level is lower then expected so the state is CRIT
+    ],
+)
+def test_check_count_levels(levels: int, state: State, section: Section) -> None:
     assert list(
         check_multipath(
             "3600601604d40310047cf93ce66f7e111",
-            {"levels": 3},
+            {"levels": levels},
             section,
         )
     ) == [
@@ -91,13 +172,13 @@ def test_check_count_levels(section: Section) -> None:
             summary="(ORA_ZAPPL2T_DATA_3): Paths active: 100.00%",
         ),
         Result(
-            state=State.WARN,
-            summary="4 of 4 (expected: 3)",
+            state=state,
+            summary=f"4 of 4 (expected: {levels})",
         ),
     ]
 
 
-def test_check_broken_paths(section: Section) -> None:
+def test_check_broken_paths_no_level_configuration(section: Section) -> None:
     assert list(
         check_multipath(
             "broken_paths",
@@ -108,3 +189,47 @@ def test_check_broken_paths(section: Section) -> None:
         state=State.CRIT,
         summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
     )
+
+
+def test_check_branch_broken_paths_result_added_with_levels_int(section: Section) -> None:
+    assert list(
+        check_multipath(
+            "broken_paths",
+            {"levels": 2},
+            section,
+        )
+    ) == [
+        Result(state=State.OK, summary="(BROKEN_PATH): Paths active: 0%"),
+        Result(state=State.CRIT, summary="0 of 2 (expected: 2)"),
+        Result(
+            state=State.CRIT,
+            summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
+        ),
+    ]
+
+
+def test_check_returns_nothing_for_unknown_item(section: Section) -> None:
+    assert list(check_multipath("does_not_exist", {"levels": 1}, section)) == []
+
+
+def test_check_branch_broken_paths_result_added_with_levels_tuple(section: Section) -> None:
+    assert list(
+        check_multipath(
+            "broken_paths",
+            {"levels": (110.0, 40.0)},
+            section,
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="(BROKEN_PATH): Paths active: 0% (warn/crit below 110.00%/40.00%)",
+        ),
+        Result(
+            state=State.OK,
+            summary="0 of 2",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
+        ),
+    ]

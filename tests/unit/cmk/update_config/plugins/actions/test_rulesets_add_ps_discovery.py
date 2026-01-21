@@ -17,6 +17,7 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     overwrite_ps_discovery_rules,
     PS_DISCOVERY_RULE_NAME,
     RABBITMQ_RULE_ID,
+    UI_JOB_SCHEDULER_RULE_ID,
 )
 
 
@@ -44,12 +45,34 @@ def test_update_without_preexisting_rulesets() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_update_with_preexisting_rulesets() -> None:
-    rulesets = _make_ruleset_collection_with_preexisting_rule(PS_DISCOVERY_RULES[0]["id"])
+@pytest.mark.parametrize(
+    ["preexisting_rule_id", "expected_num_rules", "expected_rule_match"],
+    [
+        pytest.param(
+            UI_JOB_SCHEDULER_RULE_ID,
+            1,
+            None,
+            id="new default rule already present",
+        ),
+        pytest.param(
+            PS_DISCOVERY_RULES[0]["id"],
+            2,
+            "~.*cmk-ui-job-scheduler.*",
+            id="some other preexisting rule, add new default",
+        ),
+    ],
+)
+def test_update_with_preexisting_rulesets(
+    preexisting_rule_id: str, expected_num_rules: int, expected_rule_match: str
+) -> None:
+    rulesets = _make_ruleset_collection_with_preexisting_rule(preexisting_rule_id)
     assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == 1
 
     add_ps_discovery_rules(logging.getLogger(), rulesets)
-    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == 1
+
+    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == expected_num_rules
+    rule = rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].get_rule_by_id(UI_JOB_SCHEDULER_RULE_ID)
+    assert rule.value.get("match", None) == expected_rule_match
 
 
 @pytest.mark.usefixtures("request_context")

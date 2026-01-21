@@ -63,6 +63,7 @@ from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
     affects_all_sites,
     ConfigWarnings,
+    get_status_for_site,
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
@@ -730,7 +731,8 @@ class ModeActivateChanges(WatoMode):
             for site_id, site in sort_sites(activation_sites):
                 table.row()
 
-                site_status, status = self._changes.get_site_status(site_id, site)
+                site_status = get_status_for_site(site_id, site)
+                status = site_status.get("state", "unknown")
 
                 is_online = self._changes.site_is_online(status)
                 is_logged_in = self._changes.site_is_logged_in(site_id, site)
@@ -872,7 +874,7 @@ class ModeActivateChanges(WatoMode):
             and self._is_active_site(
                 site_id=site_id,
                 site=site,
-                status=self._changes.get_site_status(site_id, site)[1],
+                status=get_status_for_site(site_id, site).get("state", "unknown"),
             )
         ]
 

@@ -49,9 +49,9 @@ def fixture_mocked_responses() -> Iterable[responses.RequestsMock]:
 def fixture_fake_site_states(monkeypatch: pytest.MonkeyPatch) -> None:
     # During these tests we treat all sites a being online
     monkeypatch.setattr(
-        activate_changes.ActivateChanges,
-        "get_site_status",
-        lambda a, b, c: (
+        activate_changes,
+        "get_status_for_site",
+        lambda a, b: (
             {
                 "state": "online",
                 "livestatus_version": "1.2.3",

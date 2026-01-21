@@ -3671,8 +3671,12 @@ ExtraServiceConfPassiveChecksEnabled = ServiceRulespec(
 
 def _valuespec_extra_service_conf_active_checks_enabled():
     return DropdownChoice(
-        title=_("Enable/disable active checks for services"),
-        help=_("This setting allows you to disable or enable active checks for a service."),
+        title=_("Enable/disable active checks for services (Nagios core)"),
+        help=_(
+            "This setting allows you to disable or enable active checks for a service. The "
+            "rule only works when the Nagios core is used. If the Checkmk Micro Core is "
+            "used, this rule has no effect at all."
+        ),
         choices=[("1", _("Enable active checks")), ("0", _("Disable active checks"))],
     )
 

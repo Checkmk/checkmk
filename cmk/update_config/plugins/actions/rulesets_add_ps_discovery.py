@@ -7,7 +7,7 @@ from logging import Logger
 from typing import override
 
 from cmk.gui.config import active_config
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.sample_config import PS_DISCOVERY_RULES
 from cmk.update_config.lib import ExpiryVersion
@@ -16,6 +16,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"
 RABBITMQ_RULE_ID = "65a3dca4-8d71-45d8-8887-53ef0c63d06f"
 AUTOMATION_HELPER_RULE_ID = "94190e27-2836-488a-b6b4-f23f694a455e"
+UI_JOB_SCHEDULER_RULE_ID = "8b5616fb-a457-404e-a136-24065da7f170"
 
 
 class UpdatePSDiscovery(UpdateAction):
@@ -34,15 +35,34 @@ def add_ps_discovery_rules(
     if (ps_discovery_rules := all_rulesets.get_rulesets().get(PS_DISCOVERY_RULE_NAME)) is None:
         return  # uh?
 
+    root_folder = folder_tree().root_folder()
     if _some_shipped_rules_present(ps_discovery_rules):
+        # a new default rule was added since the previous batch was added
+        add_new_default_rule(logger, ps_discovery_rules, root_folder)
         return
 
-    root_folder = folder_tree().root_folder()
     for rule in reversed(PS_DISCOVERY_RULES):
         logger.info("Adding: %s", rule["options"]["description"])
         ps_discovery_rules.prepend_rule(
             root_folder, Rule.from_config(root_folder, ps_discovery_rules, rule)
         )
+
+
+def add_new_default_rule(logger: Logger, ps_discovery_rules: Ruleset, root_folder: Folder) -> None:
+    if _rule_present(ps_discovery_rules, UI_JOB_SCHEDULER_RULE_ID):
+        return
+
+    ui_job_scheduler_rule = next(
+        rule for rule in PS_DISCOVERY_RULES if rule["id"] == UI_JOB_SCHEDULER_RULE_ID
+    )
+    ui_job_scheduler_rule["options"]["comment"] = (
+        "This rule is shipped with Checkmk. It is added to give insights on the resource usage of Checkmk servers. If you do not want this service, consider disabling this rule, rather than deleting it. It will be added again during future updates."
+    )
+
+    logger.info("Adding: %s", ui_job_scheduler_rule["options"]["description"])
+    ps_discovery_rules.prepend_rule(
+        root_folder, Rule.from_config(root_folder, ps_discovery_rules, ui_job_scheduler_rule)
+    )
 
 
 def overwrite_ps_discovery_rule(
@@ -87,13 +107,19 @@ def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection
     )
 
 
+def _rule_present(current_rules: Ruleset, rule_id: str) -> bool:
+    try:
+        current_rules.get_rule_by_id(rule_id)
+        return True
+    except KeyError:
+        pass
+    return False
+
+
 def _some_shipped_rules_present(current_rules: Ruleset) -> bool:
     for rule in PS_DISCOVERY_RULES:
-        try:
-            current_rules.get_rule_by_id(rule["id"])
+        if _rule_present(current_rules, rule["id"]):
             return True
-        except KeyError:
-            pass
     return False
 
 

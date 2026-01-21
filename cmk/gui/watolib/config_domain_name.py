@@ -97,8 +97,14 @@ class ABCConfigDomain(abc.ABC):
         return [d for d in config_domain_registry.values() if d.enabled()]
 
     @abc.abstractmethod
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
-        raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        """
+        This allows us to ensure that some artifacts are created by one domain
+        that are needed by the activation of another domain.
+        """
+
+    @abc.abstractmethod
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings: ...
 
     @classmethod
     def enabled(cls) -> bool:

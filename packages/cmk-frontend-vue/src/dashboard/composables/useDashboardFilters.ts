@@ -68,7 +68,7 @@ export function useDashboardFilters(
   const handleSaveDashboardFilters = (filters: ConfiguredFilters) => {
     const ctx = dashboardFilterContextRef.value
     if (!ctx) {
-      throw new Error('Cannot save dashboard filters: dashboardFilterContext is undefined')
+      throw new Error('Cannot save default filters: dashboardFilterContext is undefined')
     }
     ctx.filters = structuredClone(filters)
   }

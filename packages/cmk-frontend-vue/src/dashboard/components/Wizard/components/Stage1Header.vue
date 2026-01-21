@@ -48,7 +48,7 @@ const emit = defineEmits<Stage1HeaderEmits>()
 
   <CmkParagraph>
     {{ _t('Select the data you want to analyze') }} <br />
-    {{ _t("Dashboard filters apply here and don't have to be selected again") }}
+    {{ _t("Default filters apply here and don't have to be selected again") }}
   </CmkParagraph>
 
   <ContentSpacer :dimension="8" />

@@ -1242,7 +1242,7 @@ class ActivateChanges:
     ) -> list[SiteId]:
         dirty = []
         for site_id, site in sites:
-            status = self.get_site_status(site_id, site)[1]
+            status = get_status_for_site(site_id, site).get("state", "unknown")
             is_online = self.site_is_online(status)
             is_logged_in = self.site_is_logged_in(site_id, site)
 
@@ -1261,16 +1261,6 @@ class ActivateChanges:
 
     def site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
-
-    def get_site_status(self, site_id: SiteId, site: SiteConfiguration) -> tuple[SiteStatus, str]:
-        if site.get("disabled"):
-            site_status = SiteStatus({})
-            status = "disabled"
-        else:
-            site_status = sites_states().get(site_id, SiteStatus({}))
-            status = site_status.get("state", "unknown")
-
-        return site_status, status
 
     def site_has_foreign_changes(self, site_id: SiteId) -> bool:
         changes = self.changes_of_site(site_id)
@@ -1352,7 +1342,7 @@ class ActivateChanges:
         self.load(list(activation_sites(sites)))
 
         def _get_site_version(site_id: SiteId) -> str:
-            site_status = sites_states().get(site_id, SiteStatus({}))
+            site_status = get_status_for_site(site_id, sites[site_id])
             site_version = (
                 site_status.get("livestatus_version", "") if not site_status.get("disabled") else ""
             )
@@ -1392,9 +1382,7 @@ class ActivateChanges:
                 changes=0
                 if site["id"] not in site_change_counter
                 else site_change_counter[site["id"]],
-                onlineStatus="disabled"
-                if site.get("disabled")
-                else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
+                onlineStatus=get_status_for_site(site_id, site).get("state", "unknown"),
                 loggedIn=self.site_is_logged_in(site_id, site),
             )
             if last_status := _get_last_activation_status(site_id):
@@ -3750,7 +3738,7 @@ def _raise_for_license_block() -> None:
         raise MKLicensingError(block_effect.message_raw)
 
 
-def _get_site_status(site_id: SiteId, site: SiteConfiguration) -> SiteStatus:
+def get_status_for_site(site_id: SiteId, site: SiteConfiguration) -> SiteStatus:
     return (
         SiteStatus({"state": "disabled"})
         if site.get("disabled")
@@ -3771,7 +3759,7 @@ def _check_sites_that_cannot_be_activated(
             for site_id, site in site_configurations.items()
             if (
                 not (site_is_local(site) or "secret" in site)
-                or _get_site_status(site_id, site).get("state", "unknown")
+                or get_status_for_site(site_id, site).get("state", "unknown")
                 not in ["online", "disabled"]
             )
         }
@@ -3812,7 +3800,7 @@ def _check_sites_that_can_be_activated(
             for site_id, site in site_configurations.items()
             if (
                 (site_is_local(site) or "secret" in site)
-                and _get_site_status(site_id, site).get("state", "unknown")
+                and get_status_for_site(site_id, site).get("state", "unknown")
                 in ["online", "disabled"]
             )
         }

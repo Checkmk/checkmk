@@ -42,6 +42,10 @@ class StorageStatus(StrEnum):
     ACTIVE = "active"
 
 
+def _transform_storage_size_bytes_to_mb(storage_size: float) -> float:
+    return storage_size / (1024 * 1024)
+
+
 class Storage(BaseModel, frozen=True):
     node: str
     disk: float | None = None
@@ -124,10 +128,14 @@ def check_proxmox_ve_node_storage(
     yield from df_check_filesystem_single(
         value_store=value_store,
         mountpoint=item,
-        filesystem_size=(storage.maxdisk / (1024 * 1024)) if storage.maxdisk is not None else None,
-        free_space=((storage.maxdisk - storage.disk) / (1024 * 1024))
-        if storage.disk is not None and storage.maxdisk is not None
+        filesystem_size=_transform_storage_size_bytes_to_mb(storage.maxdisk)
+        if storage.maxdisk is not None
         else None,
+        free_space=(
+            _transform_storage_size_bytes_to_mb(storage.maxdisk - storage.disk)
+            if storage.disk is not None and storage.maxdisk is not None
+            else None
+        ),
         reserved_space=0.0,
         inodes_avail=None,
         inodes_total=None,
@@ -136,7 +144,9 @@ def check_proxmox_ve_node_storage(
     yield Result(state=State.OK, summary=f"Type: {storage.storage_type}")
     yield from _check_proxmox_ve_node_storage_provision(
         item=item,
-        storage_max_disk=storage.maxdisk,
+        storage_max_disk=_transform_storage_size_bytes_to_mb(storage.maxdisk)
+        if storage.maxdisk
+        else None,
         storage_links=storage_links,
     )
 
@@ -156,13 +166,15 @@ def _check_proxmox_ve_node_storage_provision(
         )
         return
 
-    committed = sum(link.bytes_size for link in storage if link.bytes_size is not None)
-    uncommitted = storage_max_disk - committed if storage_max_disk > committed else 0
+    committed = _transform_storage_size_bytes_to_mb(
+        sum(link.bytes_size for link in storage if link.bytes_size is not None)
+    )
+    uncommitted_mb = (storage_max_disk - committed) if storage_max_disk > committed else 0
     yield from check_levels(
-        value=uncommitted,
+        value=uncommitted_mb,
         metric_name="uncommitted",
         label="Uncommitted",
-        render_func=render.bytes,
+        render_func=lambda v: render.bytes(v * 1024 * 1024),
     )
 
     provisioned_percent = round((committed / storage_max_disk) * 100, 2)

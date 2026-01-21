@@ -78,7 +78,12 @@ from ._unit import (
     user_specific_unit,
     UserSpecificUnit,
 )
-from ._utils import MKCombinedGraphLimitExceededError
+from ._utils import (
+    MKCombinedGraphLimitExceededError,
+    MKGraphDashletTooSmallError,
+    MKGraphRecipeCalculationError,
+    MKGraphRecipeNotFoundError,
+)
 from ._valuespecs import (
     id_from_unit_spec,
     MetricName,
@@ -109,6 +114,9 @@ __all__ = [
     "GraphRenderOptions",
     "GraphSpecification",
     "MKCombinedGraphLimitExceededError",
+    "MKGraphDashletTooSmallError",
+    "MKGraphRecipeCalculationError",
+    "MKGraphRecipeNotFoundError",
     "MetricName",
     "MetricSpec",
     "RegisteredMetric",

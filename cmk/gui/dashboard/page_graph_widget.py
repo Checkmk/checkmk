@@ -15,6 +15,7 @@ from cmk.gui.dashboard.api import (
     GraphRequestInternal,
 )
 from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet
+from cmk.gui.dashboard.dashlet.dashlets.status_helpers import make_mk_missing_data_error
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.token_util import (
     DashboardTokenAuthenticatedPage,
@@ -29,6 +30,9 @@ from cmk.gui.graphing import (
     host_service_graph_dashlet_cmk,
     metric_backend_registry,
     metrics_from_api,
+    MKGraphDashletTooSmallError,
+    MKGraphRecipeCalculationError,
+    MKGraphRecipeNotFoundError,
 )
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
@@ -56,30 +60,41 @@ def render_graph_widget_content(
     # graph_dashlet.context is the combined context
     graph_spec = graph_dashlet.graph_specification(graph_dashlet.context)
 
-    html.write_html(
-        host_service_graph_dashlet_cmk(
-            # TODO: try replacing this passing on of ctx.request by adding it to
-            #       get_validated_internal_graph_request.
-            #       for that we need to adapt host_service_graph_dashlet_cmk and its call sites
-            ctx.request,
-            graph_spec,
-            GraphRenderConfig.model_validate(
-                dashlet_config["graph_render_options"]
-                | {"foreground_color": ("#ffffff" if theme.get() == "modern-dark" else "#000000")}
-            ),
-            metrics_from_api,
-            graphs_from_api,
-            UserPermissions.from_config(ctx.config, permission_registry),
-            debug=ctx.config.debug,
-            graph_timeranges=ctx.config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
-            ].get_time_series_fetcher(ctx.config),
-            graph_display_id=widget_id,
-            time_range=dashlet_config["timerange"],
+    try:
+        html.write_html(
+            host_service_graph_dashlet_cmk(
+                # TODO: try replacing this passing on of ctx.request by adding it to
+                #       get_validated_internal_graph_request.
+                #       for that we need to adapt host_service_graph_dashlet_cmk and its call sites
+                ctx.request,
+                graph_spec,
+                GraphRenderConfig.model_validate(
+                    dashlet_config["graph_render_options"]
+                    | {
+                        "foreground_color": (
+                            "#ffffff" if theme.get() == "modern-dark" else "#000000"
+                        )
+                    }
+                ),
+                metrics_from_api,
+                graphs_from_api,
+                UserPermissions.from_config(ctx.config, permission_registry),
+                debug=ctx.config.debug,
+                graph_timeranges=ctx.config.graph_timeranges,
+                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
+                backend_time_series_fetcher=metric_backend_registry[
+                    str(edition(paths.omd_root))
+                ].get_time_series_fetcher(ctx.config),
+                graph_display_id=widget_id,
+                time_range=dashlet_config["timerange"],
+            )
         )
-    )
+    except (
+        MKGraphRecipeCalculationError,
+        MKGraphRecipeNotFoundError,
+        MKGraphDashletTooSmallError,
+    ):
+        raise make_mk_missing_data_error()
 
 
 class GraphWidgetPage(cmk.gui.pages.Page):
@@ -99,7 +114,8 @@ class GraphWidgetPage(cmk.gui.pages.Page):
             # so we don't need to the dashboard
             render_graph_widget_content(ctx, dashlet_config, request_data.widget_id)
         except Exception as e:
-            html.write_html(html.render_message(str(e)))
+            # Global fallback: prevent technical error leakage to dashboard UI
+            raise make_mk_missing_data_error() from e
 
 
 class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
@@ -135,6 +151,13 @@ class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
                     # won't combine them for us
                     base_context=dashboard.get("context"),
                 )
+            except (
+                MKGraphRecipeCalculationError,
+                MKGraphRecipeNotFoundError,
+                MKGraphDashletTooSmallError,
+            ):
+                # Ensure token-authenticated users see standardized error UI
+                raise make_mk_missing_data_error()
             except KeyError:
                 # likely an edition downgrade where the graph type is not available anymore
                 raise InvalidWidgetError(disable_token=True) from None

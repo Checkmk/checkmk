@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, computed, onBeforeMount, ref } from 'vue'
+import { type Ref, computed, onBeforeMount, ref, watch } from 'vue'
 
 import { cmkAjax } from '@/lib/ajax'
 import usei18n from '@/lib/i18n'
@@ -53,6 +53,10 @@ const fetchData = async () => {
 }
 
 onBeforeMount(() => {
+  void fetchData()
+})
+
+watch(props, () => {
   void fetchData()
 })
 

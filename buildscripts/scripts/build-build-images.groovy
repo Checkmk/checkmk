@@ -218,6 +218,45 @@ void main() {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 
+    def testing_image = false;
+    stage("Build testing image") {
+        dir("${checkout_dir}") {
+            // use the a few moments earlier built image
+            def testing_distro = "ubuntu-22.04";
+            def tag_name = "testing-${testing_distro}-checkmk-${safe_branch_name}";
+            def image_base = "${docker_registry_no_http}/${testing_distro}:${safe_branch_name}-latest";
+            def docker_build_args = (""
+                + " --build-arg IMAGE_BASE='${image_base}'"
+                + " --build-arg DISTRO='${testing_distro}'"
+
+                + " -f 'buildscripts/infrastructure/build-nodes/testing/Dockerfile'"
+                + " temp-build-context"
+            );
+
+            if (params.BUILD_IMAGE_WITHOUT_CACHE) {
+                docker_build_args = "--no-cache " + docker_build_args;
+            }
+            dir("${checkout_dir}") {
+                testing_image = docker.build(tag_name, docker_build_args);
+            }
+        }
+    }
+
+    smart_stage(
+        name: "Upload 'Testing image'",
+        condition: publish_special_images && publish_images,
+        raiseOnError: true,
+    ) {
+        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+            if ("${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}" == "") {
+                testing_image.push();
+                testing_image.push("latest");
+            } else {
+                println("Skipping upload for 'Testing image' as there can be no custom version");
+            }
+        }
+    }
+
     /// build and use reference image in order to check if it's working at all
     /// and to fill caches. Also do some tests in order to check if permissions
     /// are fine and everything gets cleaned up
